@@ -1,0 +1,15 @@
+# This is the symbol export map file for glibc Linux 
+# modified for use with Accelerator Toolbox.  
+# The file specifies that in addition to mexFunction and mexVersion (standard MATLAB)
+# symbol passFunction also has global scope.
+# Andrei Terebilo 6/13/2005
+
+
+MEX {
+	global:
+		mexFunction;
+        passFunction;
+		mexVersion;
+	local:
+		*;
+};
