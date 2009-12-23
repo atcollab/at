@@ -28,7 +28,6 @@ void edge_fringe(double* r, double inv_rho, double edge_angle, double fint, doub
 }
 
 
-
 void bend6(double* r, double L, double b_angle, double grd, double ByError)
 {	
 	double M12,M21,M34,M43,MVD,MHD;  /*  non-0 elements of transfer matrix */
