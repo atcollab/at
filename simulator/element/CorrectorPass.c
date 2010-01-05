@@ -45,7 +45,7 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
 		}	
 }
 
-
+#ifndef NOMEX
 #define NUM_FIELDS_2_REMEMBER 2
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
@@ -153,3 +153,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 
 }
+#endif

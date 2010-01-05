@@ -1,13 +1,24 @@
 /* Header file for the element pass-functions */
 
+#ifndef NOMEX
 #if defined(PCWIN)
 #define ExportMode __declspec(dllexport)
 #include <float.h>
 #elif defined(GLNX86)
 #define ExportMode
+#elif defined(GLNXA64)
+#define ExportMode
 #elif defined(ALPHA)
 #define ExportMode
 #elif defined(SOL2)
+#define ExportMode
+#elif defined(SOL64)
+#define ExportMode
+#elif defined(MAC)
+#define ExportMode
+#elif defined(MACI)
+#define ExportMode
+#elif defined(MACI64)
 #define ExportMode
 #else 
 /* Default - Windows */
@@ -31,3 +42,4 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 
 #define USE_LOCAL_COPY		2  /*  Uses the previously stored local copy of the element data */
 
+#endif

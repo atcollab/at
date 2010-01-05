@@ -222,7 +222,7 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 		}	
 }
 
-
+#ifndef NOMEX
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
@@ -570,3 +570,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
  }
+ #endif
+ 

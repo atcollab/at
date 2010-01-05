@@ -15,7 +15,7 @@ function X = lyap(A, B, C)
 
 %	S.N. Bangert 1-10-86
 %	Copyright (c) 1986-1999 The Mathworks, Inc. All Rights Reserved.
-%	$Revision: 1.5 $  $Date: 1999/01/05 15:21:36 $
+%	$Revision: 1.1.1.1 $  $Date: 2006/08/29 07:25:30 $
 %	Last revised JNL 3-24-88, AFP 9-3-95
 
 ni = nargin;

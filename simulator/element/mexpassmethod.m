@@ -21,16 +21,28 @@ function mexpassmethod(PASSMETHODS, varargin)
 % See also: file:elempass.h
 
 PLATFORMOPTION = ['-D',computer,' '];
+if nargin >= 2, PLATFORMOPTION = varargin{1}; end
 CURRENTDIR = pwd;
-cd(fileparts(which('DriftPass')));
+%cd(fileparts(which('DriftPass')));
 
 tmpfile = 0;
 %Additional platform-specific options for mex
 switch computer
 case 'SOL2'
-    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-shared -W1,-M,',atroot,'/simulator/element/mexFunctionSOL2.map''',' '];
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-G -mt -M ',atroot,'/simulator/element/mexFunctionSOL2.map''',' '];
+case 'SOL64'
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-G -mt -M ',atroot,'/simulator/element/mexFunctionSOL2.map''',' '];
 case 'GLNX86'
-    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -m32 -Wl,--version-script,',atroot,'/simulator/element/mexFunctionGLNX86.map''',' '];  
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -m32 -Wl,--version-script,',atroot,'/simulator/element/mexFunctionGLNX86.map -Wl,--no-undefined''',' '];  
+case 'GLNXA64'
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -Wl,--version-script,',atroot,'/simulator/element/mexFunctionGLNX86.map -Wl,--no-undefined'' '];  
+case 'MAC'
+%   PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-Wl,-flat_namespace -undefined suppress -bundle -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMAC.map'' '];  
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined dynamic_lookup -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMAC.map'' '];  
+case 'MACI'
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch i386  -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMACI.map'' '];  
+case 'MACI64'
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch x86_64 -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMACI.map'' '];  
 end
 
 
@@ -51,11 +63,7 @@ for i = 1:length(PASSMETHODS)
 
         PM = PASSMETHODS{i};
         evalin('base',['clear ',PM]);
-        MEXSTRING = ['mex ',PLATFORMOPTION];
-        if nargin==2
-            MEXSTRING = [MEXSTRING,varargin{1},' '];
-        end
-        MEXSTRING = [MEXSTRING, PM,'.c '];
+        MEXSTRING = ['mex ',PLATFORMOPTION,PM,'.c'];
         
         %message = sprintf('%s\n',MEXSTRING);
         %disp(message);
@@ -69,7 +77,7 @@ for i = 1:length(PASSMETHODS)
         
 end
 
-cd(CURRENTDIR);
+%cd(CURRENTDIR);
 
 
 

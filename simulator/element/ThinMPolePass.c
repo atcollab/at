@@ -12,7 +12,7 @@
 
 
 
-void strthinkick(double* r, double* A, double* B,  int max_order)
+static void strthinkick(double* r, double* A, double* B,  int max_order)
 /******************************************************************************
 Calculate and apply a multipole kick to a 6-dimentional
 phase space vector in a thin element
@@ -82,124 +82,121 @@ Note:
 
 
 void ThinMPolePass(double *r, double *A, double *B, int max_order, 
- double bax, double bay, int num_particles)
+ double bax, double bay,
+					double *T1, double *T2,	
+					double *R1, double *R2, int num_particles)
 {	int c;
 	double *r6;   
 	for(c = 0;c<num_particles;c++)	/* Loop over particles */
 			{		r6 = r+c*6;
 			        if(!mxIsNaN(r6[0]))
-                    {   strthinkick(r6, A, B, max_order);
+                    {   
+			/*  misalignment at entrance  */
+			if (T1 != NULL) ATaddvv(r6,T1);
+			if (R1 != NULL) ATmultmv(r6,R1);
+		    strthinkick(r6, A, B, max_order);
                         {   r6[1] += bax*r[4];
                             r6[3] -= bay*r[4];
                             r6[5] -= bax*r[0]-bay*r[2]; /* Path lenghtening */
                         }
-                         
+			/*  misalignment at exit  */
+			if (R2 != NULL) ATmultmv(r6,R2);
+			if (T2 != NULL) ATaddvv(r6,T2);
                     }                       
 			}
 }
 
-
+#ifndef NOMEX
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 
-#define NUM_FIELDS_2_REMEMBER 4
+#define NUM_FIELDS_2_REMEMBER 8
 
 
-{	double *A , *B, *tmpdblptr, bax, bay;
+{	double *A , *B, bax, bay;
+	double  *pr1, *pr2, *pt1, *pt2;   
 	int max_order;
-	int *returnptr;
-	int *NewFieldNumbers,fnum;
-    mxArray *tmpmxptr;
+	int fnum;
 
-	
-	switch(mode)
-		{	
+	switch(mode) {	
 		    /* case NO_LOCAL_COPY:	Not used in AT1.3 */
 			
 			case MAKE_LOCAL_COPY: 	/* Find field numbers first
-									   Save a list of field number in an array
-									   and make returnptr point to that array
-									*/
-				{	
-					/* Allocate memory for integer array of 
+							Save a list of field number in an array
+							and make returnptr point to that array
+						*/
+				{	/* Allocate memory for integer array of 
 					  field numbers for faster futurereference
 					*/
 		
-					NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
+					FieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
 
 					/* Populate */
 					fnum = mxGetFieldNumber(ElemData,"PolynomA");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'PolynomA' was not found in the element data structure"); 
-					NewFieldNumbers[0] = fnum;
+					FieldNumbers[0] = fnum;
 					
 					fnum = mxGetFieldNumber(ElemData,"PolynomB");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'PolynomB' was not found in the element data structure"); 
-					NewFieldNumbers[1] = fnum;
+					FieldNumbers[1] = fnum;
 
 					fnum = mxGetFieldNumber(ElemData,"MaxOrder");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'MaxOrder' was not found in the element data structure"); 
-					NewFieldNumbers[2] = fnum;
+					FieldNumbers[2] = fnum;
 										
-					A = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[0]));
-					B = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[1]));
-					max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[2]));
 					
-                    /* Optional field 'BendingAngle' */
-                    fnum = mxGetFieldNumber(ElemData,"BendingAngle");
-	                NewFieldNumbers[3] = fnum;
-					if(fnum<0)
-                    {   bax = 0;
-                        bay = 0;
-                    }
-					else
-                    {   tmpmxptr = mxGetFieldByNumber(ElemData,0,fnum);
-                        tmpdblptr = mxGetPr(tmpmxptr);
-                        bax = tmpdblptr[0];
-                        if(mxGetNumberOfElements(tmpmxptr)>1)
-                            bay = tmpdblptr[1];
-                        else
-                            bay = 0;
-                    }
-					returnptr = NewFieldNumbers;
+					/* Optional fields */
+					FieldNumbers[3] = mxGetFieldNumber(ElemData,"BendingAngle");
+					
+					FieldNumbers[4] = mxGetFieldNumber(ElemData,"R1");
+
+					FieldNumbers[5] = mxGetFieldNumber(ElemData,"R2");
+
+					FieldNumbers[6] = mxGetFieldNumber(ElemData,"T1");
+
+					FieldNumbers[7] = mxGetFieldNumber(ElemData,"T2");
 
 				}	break;
 
 			case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-									   The second argument ponter to the array of field 
-									   numbers is previously created with 
-									   QuadLinPass( ..., MAKE_LOCAL_COPY)
-									*/
-											
-				{	A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-					B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-					max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-				    /* Optional field 'BendingAngle' */
-                    if(FieldNumbers[3]<0)
-					{   bax = 0;
-                        bay = 0;
-                    }
-					else
-					{   tmpmxptr = mxGetFieldByNumber(ElemData,0,3);
-                        tmpdblptr = mxGetPr(tmpmxptr);
-                        bax = tmpdblptr[0];
-                        if(mxGetNumberOfElements(tmpmxptr)>1)
-                            bay = tmpdblptr[1];
-                        else
-                            bay = 0;
-                    }
+							The second argument ponter to the array of field 
+							numbers is previously created with 
+							QuadLinPass( ..., MAKE_LOCAL_COPY)
+						*/
+
+				{
+
 				}	break;
 			default:
 				{	mexErrMsgTxt("No match for calling mode in function ThinMPolePass\n");
 				}
-		}
+	}
+	A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
+	B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
+	max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
+				    /* Optional fields */
+	if (FieldNumbers[3] >= 0) {
+		mxArray *tmpmxptr = mxGetFieldByNumber(ElemData,0,3);
+		double *tmpdblptr = mxGetPr(tmpmxptr);
+		bax = tmpdblptr[0];
+		bay = (mxGetNumberOfElements(tmpmxptr)>1) ? tmpdblptr[1] : 0.0;
+	}
+	else {
+		bax = 0.0;
+		bay = 0.0;
+	}
+	pr1 = (FieldNumbers[4] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
+	pr2 = (FieldNumbers[5] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
+	pt1 = (FieldNumbers[6] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
+	pt2 = (FieldNumbers[7] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
 
-	ThinMPolePass(r_in,A, B, max_order,bax,bay,num_particles);
-	
-	return(returnptr);
+	ThinMPolePass(r_in,A, B, max_order, bax, bay, pt1, pt2, pr1, pr2, num_particles);
+
+	return(FieldNumbers);
 
 }
 
@@ -213,7 +210,7 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {	int m,n;
 	double *r_in;
-	double *A, *B, *tmpdblptr, bax, bay ;  
+	double *A, *B, bax, bay, *pr1, *pr2, *pt1, *pt2 ;  
 	int max_order;
 	mxArray *tmpmxptr;
     
@@ -244,24 +241,32 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	else
 		mexErrMsgTxt("Required field 'MaxOrder' was not found in the element data structure");
 	
-    tmpmxptr = mxGetField(prhs[0],0,"BendingAngle");
-    
-    if(tmpmxptr==NULL)
-    {   bax = 0;
-        bay = 0;
-    }
-    else
-    {   tmpdblptr = mxGetPr(tmpmxptr);
-        bax = tmpdblptr[0];
-    if(mxGetNumberOfElements(tmpmxptr)>1)
-        bay = tmpdblptr[1];
-    else
-        bay = 0;
-    }
+	tmpmxptr = mxGetField(prhs[0],0,"BendingAngle");
+	if(tmpmxptr) {
+		double *tmpdblptr = mxGetPr(tmpmxptr);
+		bax = tmpdblptr[0];
+		bay = (mxGetNumberOfElements(tmpmxptr)>1) ? tmpdblptr[1] : 0.0;
+	}
+	else {
+		bax = 0;
+        	bay = 0;
+	}
+
+	tmpmxptr = mxGetField(prhs[0],0,"R1");
+	pr1 = (tmpmxptr == NULL) ? NULL : mxGetPr(tmpmxptr);
+	    
+	tmpmxptr = mxGetField(prhs[0],0,"R2");
+	pr2 = (tmpmxptr == NULL) ? NULL : mxGetPr(tmpmxptr);
+
+	tmpmxptr = mxGetField(prhs[0],0,"T1");
+	pt1 = (tmpmxptr == NULL) ? NULL : mxGetPr(tmpmxptr);
+
+	tmpmxptr = mxGetField(prhs[0],0,"T2");
+	pt2 = (tmpmxptr == NULL) ? NULL : mxGetPr(tmpmxptr);
 
     plhs[0] = mxDuplicateArray(prhs[1]);
 	r_in = mxGetPr(plhs[0]);
-	ThinMPolePass(r_in,A,B,max_order,bax, bay, n);
+	ThinMPolePass(r_in,A,B,max_order,bax, bay, pt1, pt2, pr1, pr2, n);
 	}
 	else
 	{   /* return list of required fields */
@@ -270,13 +275,15 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    mxSetCell(plhs[0],1,mxCreateString("PolynomB"));
 	    mxSetCell(plhs[0],2,mxCreateString("MaxOrder"));
         if(nlhs>1)  /* optional fields */ 
-        {   plhs[1] = mxCreateCellMatrix(1,1);
+        {   plhs[1] = mxCreateCellMatrix(5,1);
             mxSetCell(plhs[1],0,mxCreateString("BendingAngle"));
+	        mxSetCell(plhs[1],1,mxCreateString("T1"));
+	        mxSetCell(plhs[1],2,mxCreateString("T2"));
+	        mxSetCell(plhs[1],3,mxCreateString("R1"));
+	        mxSetCell(plhs[1],4,mxCreateString("R2"));
         }
 	    
 	}
 
 }
-
-
-
+#endif

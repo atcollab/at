@@ -131,7 +131,7 @@ void QuadLinearPass(double *r, double le, double kv, double *T1, double *T2, dou
 
 /********** END PHYSICS SECTION ***********************************************/
 /******************************************************************************/
-
+#ifndef NOMEX
 /********** WINDOWS DLL GATEWAY SECTION ***************************************/
 
 
@@ -329,3 +329,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    }
 	}
 }
+#endif

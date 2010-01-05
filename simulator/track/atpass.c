@@ -24,10 +24,18 @@
     #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)    
     #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
     
-    
 #elif defined(GLNX86)
     #include <dlfcn.h>
     #define MEXEXTENSIONSTRING ".mexglx"
+    #define PASSMETHODSUBDIRSTRING "/simulator/element/"
+    #define LIBRARYHANDLETYPE void*
+    #define FREELIBFCN(libfilename) dlclose(libfilename)
+    #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)    
+    #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
+    
+#elif defined(GLNXA64)
+    #include <dlfcn.h>
+    #define MEXEXTENSIONSTRING ".mexa64"
     #define PASSMETHODSUBDIRSTRING "/simulator/element/"
     #define LIBRARYHANDLETYPE void*
     #define FREELIBFCN(libfilename) dlclose(libfilename)
@@ -37,6 +45,42 @@
 #elif defined(SOL2)
     #include <dlfcn.h>
     #define MEXEXTENSIONSTRING ".mexsol"
+    #define PASSMETHODSUBDIRSTRING "/simulator/element/"
+    #define LIBRARYHANDLETYPE void*
+    #define FREELIBFCN(libfilename) dlclose(libfilename)
+    #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)    
+    #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
+        
+#elif defined(SOL64)
+    #include <dlfcn.h>
+    #define MEXEXTENSIONSTRING ".mexs64"
+    #define PASSMETHODSUBDIRSTRING "/simulator/element/"
+    #define LIBRARYHANDLETYPE void*
+    #define FREELIBFCN(libfilename) dlclose(libfilename)
+    #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)    
+    #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
+        
+#elif defined(MAC)
+    #include <dlfcn.h>
+    #define MEXEXTENSIONSTRING ".mexmac"
+    #define PASSMETHODSUBDIRSTRING "/simulator/element/"
+    #define LIBRARYHANDLETYPE void*
+    #define FREELIBFCN(libfilename) dlclose(libfilename)
+    #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)    
+    #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
+        
+#elif defined(MACI)
+    #include <dlfcn.h>
+    #define MEXEXTENSIONSTRING ".mexmaci"
+    #define PASSMETHODSUBDIRSTRING "/simulator/element/"
+    #define LIBRARYHANDLETYPE void*
+    #define FREELIBFCN(libfilename) dlclose(libfilename)
+    #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)    
+    #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
+        
+#elif defined(MACI64)
+    #include <dlfcn.h>
+    #define MEXEXTENSIONSTRING ".mexmaci64"
     #define PASSMETHODSUBDIRSTRING "/simulator/element/"
     #define LIBRARYHANDLETYPE void*
     #define FREELIBFCN(libfilename) dlclose(libfilename)

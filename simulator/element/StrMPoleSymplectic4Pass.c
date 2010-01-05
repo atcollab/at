@@ -10,7 +10,7 @@
 
 
 
-void strthinkick(double* r, double* A, double* B, double L, int max_order)
+static void strthinkick(double* r, double* A, double* B, double L, int max_order)
 /***************************************************************************** 
 Calculate and apply a multipole kick to a 6-dimentional
 phase space vector in a straight element ( quadrupole)
@@ -151,6 +151,8 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
 
 
 
+
+#ifndef NOMEX
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 #define NUM_FIELDS_2_REMEMBER 9
@@ -396,6 +398,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    }
     }
 }
-
-
-
+#endif

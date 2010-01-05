@@ -15,7 +15,7 @@
 
 
 
-double B2perp(double bx, double by, double irho, 
+static double B2perp(double bx, double by, double irho, 
                             double x, double xpr, double y, double ypr)
 /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
     
@@ -35,7 +35,7 @@ double B2perp(double bx, double by, double irho,
  
 
 
-void bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+static void bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
 
 /***************************************************************************** 
 Calculate multipole kick in a curved elemrnt (bending magnet)
@@ -248,6 +248,9 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 }
 
 
+
+#ifndef NOMEX
+					
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 
@@ -650,5 +653,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 }
 
-
-
+#endif

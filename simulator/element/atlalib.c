@@ -14,14 +14,9 @@
 3. All matrixes are 6-by-6
 4. All vectors  are 1-by-6 or 6-by-1
 */
-		
-
-#include "mex.h"
 
 
-
-
-void ATmultmv(double *r, const double* A)
+static void ATmultmv(double *r, const double* A)
 /*	multiplies 6-component column vector r by 6x6 matrix R: as in A*r 
   The result is store in the memory area of r !!!
 */
@@ -38,7 +33,7 @@ void ATmultmv(double *r, const double* A)
 	r[i]=temp[i];
 } 
 
-void ATmultmv55(double *r, const double* A)
+static void ATmultmv55(double *r, const double* A)
 /*	multiplies 5-component column vector r by 5x5 matrix R: as in A*r 
     The result is store in the memory area of r !!!
 */ 
@@ -54,7 +49,7 @@ void ATmultmv55(double *r, const double* A)
 	r[i]=temp[i];
 } 
 
-void ATaddvv(double *r, double *dr)
+static void ATaddvv(double *r, const double *dr)
 {	/*	Add two 6-component vectors vectors.
 		The result is store in the memory area of r !!!
     */
@@ -63,7 +58,7 @@ void ATaddvv(double *r, double *dr)
 		r[i]+=dr[i];
 }     	
 
-void ATdrift6(double* r, double L)
+static void ATdrift6(double* r, double L)
 /*   Input parameter L is the physical length
      1/(1+delta) normalization is done internally
 */
@@ -76,7 +71,7 @@ void ATdrift6(double* r, double L)
 
 
 
-void ATtranspm(double *M)
+static void ATtranspm(double *M)
 {	/* Transpose matrix M	
 	   The result replaces the original matrix 
 	*/
@@ -91,7 +86,7 @@ void ATtranspm(double *M)
 }
 
 
-void ATmultmm(double *M2 , double *M1)
+static void ATmultmm(const double *M2 , double *M1)
 {	/* Mutrix multiplication M2*M1, the result is stored in the M1 memory area */
 	int i,j,k;
 	double column_temp[6];
@@ -109,7 +104,7 @@ void ATmultmm(double *M2 , double *M1)
 }
 
 
-void ATmultmm55(double *M2 , double *M1)
+static void ATmultmm55(const double *M2 , double *M1)
 {	/* Mutrix multiplication M2*M1, the result is stored in the M1 memory area */
 	int i,j,k;
 	double column_temp[5];
@@ -128,7 +123,7 @@ void ATmultmm55(double *M2 , double *M1)
 
 
 
-void ATsandwichmmt(double *M ,double *B)
+static void ATsandwichmmt(const double *M ,double *B)
 /* calculates the matrix product M*B*M' (M' = M transposed)
    The result is stored in B memory area
 */
@@ -148,7 +143,7 @@ void ATsandwichmmt(double *M ,double *B)
 		}
 }
 
-void ATaddmm(double *M2 , double *M1)
+static void ATaddmm(const double *M2 , double *M1)
 /* adds two 6-by-6  matrixes  M1, M2 element-by-element
    The result is stored in M1 memory area
 */

@@ -53,7 +53,7 @@ void CavityPass(double *r_in, double le, double nv, double freq, double lag, int
 }
 
 
-
+#ifndef NOMEX
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 				double *r_in, int num_particles, int mode)
@@ -221,3 +221,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 
 }
+#endif

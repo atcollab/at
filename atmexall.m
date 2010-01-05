@@ -4,6 +4,15 @@
 % On Windows, Microsoft Visual C++ is required
 
 
+PLATFORMOPTION = ['-D',computer,' '];
+LIBDL='';
+switch computer
+case 'GLNX86'
+    PLATFORMOPTION = [PLATFORMOPTION,'CC=gcc4 LD=gcc4 ']; 
+    LIBDL=' -ldl';
+case 'GLNXA64'
+    LIBDL=' -ldl';
+end
 
 ATROOT = atroot
 % Navigate to the directory that contains pass-methods 
@@ -12,7 +21,7 @@ cd simulator
 cd element
 PASSMETHODDIR = pwd;
 disp(['Current directory: ',PASSMETHODDIR]);
-mexpassmethod('all');
+mexpassmethod('all',PLATFORMOPTION);
 
 % Navigate to the directory that contains tracking functions
 cd(ATROOT)
@@ -21,10 +30,7 @@ cd track
 
 disp(['Current directory:', pwd]);
 
-
-PLATFORMOPTION = ['-D',computer,' '];
-
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'atpass.c'];
+MEXCOMMAND = ['mex ',PLATFORMOPTION,'atpass.c',LIBDL];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
@@ -34,9 +40,10 @@ cd atphysics
 disp(['Current directory:', pwd]);
 
 % findmpoleraddiffmatrix.c
-disp('mex findmpoleraddiffmatrix.c')
+MEXCOMMAND = ['mex ',PLATFORMOPTION,'findmpoleraddiffmatrix.c -I''',PASSMETHODDIR,''''];
+disp(MEXCOMMAND);
+eval(MEXCOMMAND);
 
-eval(['mex findmpoleraddiffmatrix.c -I''',PASSMETHODDIR,'''']);
 % ADD 'MEXING' instructions for other C files
 disp('ALL mex-files created successfully')
 clear ATROOT PASSMETHODDIR WARNMSG PLATFORMOPTION MEXCOMMAND
