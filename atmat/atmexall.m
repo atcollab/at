@@ -8,24 +8,25 @@ PLATFORMOPTION = ['-D',computer,' '];
 LIBDL='';
 switch computer
 case 'GLNX86'
+    PLATFORMOPTION = [PLATFORMOPTION,'CC=gcc4 LD=gcc4 ']; % for esrflinux1-1
     LIBDL=' -ldl';
 case 'GLNXA64'
+    PLATFORMOPTION = [PLATFORMOPTION,'CC=gcc4 LD=gcc4 ']; % for coral
     LIBDL=' -ldl';
 end
 
 ATROOT = atroot
 % Navigate to the directory that contains pass-methods 
 cd(ATROOT)
-cd simulator
-cd element
+cd ..
+cd atintegrators
 PASSMETHODDIR = pwd;
 disp(['Current directory: ',PASSMETHODDIR]);
 mexpassmethod('all',PLATFORMOPTION);
 
 % Navigate to the directory that contains tracking functions
 cd(ATROOT)
-cd simulator
-cd track
+cd attrack
 
 disp(['Current directory:', pwd]);
 
