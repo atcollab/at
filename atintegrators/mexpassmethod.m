@@ -20,29 +20,26 @@ function mexpassmethod(PASSMETHODS, varargin)
 %
 % See also: file:elempass.h
 
+pdir=fileparts(mfilename('fullpath'));
 PLATFORMOPTION = ['-D',computer,' '];
 if nargin >= 2, PLATFORMOPTION = varargin{1}; end
-CURRENTDIR = pwd;
-%cd(fileparts(which('DriftPass')));
 
-tmpfile = 0;
 %Additional platform-specific options for mex
 switch computer
 case 'SOL2'
-    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-G -mt -M ',atroot,'/simulator/element/mexFunctionSOL2.map''',' '];
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-G -mt -M ',fullfile(pdir,'mexFunctionSOL2.map'),''' '];
 case 'SOL64'
-    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-G -mt -M ',atroot,'/simulator/element/mexFunctionSOL2.map''',' '];
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-G -mt -M ',fullfile(pdir,'mexFunctionSOL2.map'),''' '];
 case 'GLNX86'
-    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -m32 -Wl,--version-script,',atroot,'/simulator/element/mexFunctionGLNX86.map -Wl,--no-undefined''',' '];  
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -m32 -Wl,--no-undefined -Wl,--version-script,',fullfile(pdir,'mexFunctionGLNX86.map'),''' '];  
 case 'GLNXA64'
-    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -Wl,--version-script,',atroot,'/simulator/element/mexFunctionGLNX86.map -Wl,--no-undefined'' '];  
+    PLATFORMOPTION = [PLATFORMOPTION,'LDFLAGS=''-pthread -shared -Wl,--no-undefined -Wl,--version-script,',fullfile(pdir,'mexFunctionGLNX86.map'),''' '];  
 case 'MAC'
-%   PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-Wl,-flat_namespace -undefined suppress -bundle -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMAC.map'' '];  
-    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined dynamic_lookup -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMAC.map'' '];  
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined dynamic_lookup -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMAC.map') ''' '];  
 case 'MACI'
-    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch i386  -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMACI.map'' '];  
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch i386  -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMACI.map') ''' '];  
 case 'MACI64'
-    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch x86_64 -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' atroot '/simulator/element/mexFunctionMACI.map'' '];  
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch x86_64 -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMACI.map') ''' '];  
 end
 
 
@@ -76,8 +73,5 @@ for i = 1:length(PASSMETHODS)
         end
         
 end
-
-%cd(CURRENTDIR);
-
 
 
