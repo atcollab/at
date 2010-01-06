@@ -8,7 +8,6 @@ PLATFORMOPTION = ['-D',computer,' '];
 LIBDL='';
 switch computer
 case 'GLNX86'
-    PLATFORMOPTION = [PLATFORMOPTION,'CC=gcc4 LD=gcc4 ']; 
     LIBDL=' -ldl';
 case 'GLNXA64'
     LIBDL=' -ldl';
