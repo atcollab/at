@@ -27,7 +27,3 @@ end
 passmethoddir = fileparts(mfilename('fullpath'));
 flist=dir(fullfile(passmethoddir,['*Pass',WC]));
 files=strrep({flist.name}',WC,'');
-%files = cellstr(ls(fullfile(passmethoddir,['*Pass',WC])));
-%files = strrep(files,WC,'');
-
-
