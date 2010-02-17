@@ -62,6 +62,8 @@ end
 fprintf('theta: %g, r: %g\n',theta,rmax);
 
 function [xmax,zmax]=bscan(ring,nt,clorb,xlist,zlist)
+xmax = 0.0;
+zmax = 0.0;
 for i=1:length(xlist)
    rin=clorb+[xlist(i);0;zlist(i);0;0;0];
    [dummy,lost]=ringpass(ring,rin,nt,'reuse'); %#ok<ASGLU>
