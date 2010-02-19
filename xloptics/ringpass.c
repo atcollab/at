@@ -17,6 +17,8 @@
 
 #define NTRACKS 10
 
+static const char revision[] = "$Rev$";
+
 static const double zerodef[] = { 0.0, 0.0, 0.0, };
 static const double A0[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,};
 static double E0; /* energy in eV */
@@ -595,4 +597,11 @@ long STDCALL ataddpasselem(long tptr, const char* passmethod, const double *args
 long STDCALL xattrack(double *r_in, long np, long nturns)
 {
    return attrack(0L, r_in, np, nturns);
+}
+
+long STDCALL atversion(void)
+{
+   long revnumber = 0L;
+   int ok = sscanf(revision, "$Rev: %ld", &revnumber);
+   return revnumber;
 }
