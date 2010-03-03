@@ -4,6 +4,7 @@ function newring=atfittune(ring,newtunes,famname1,famname2,varargin)
 
 idx1=findfam(famname1);
 idx2=findfam(famname2);
+
 kl1=getcellstruct(ring,'K',idx1);
 kl2=getcellstruct(ring,'K',idx2);
 if true
