@@ -6,9 +6,16 @@ function index = findcells(CELLARRAY, field, varargin)
 %
 % INDEX = FINDCELLS(CELLARRAY, 'field', VALUE) 
 %   returns indexes of elements whose field 'field'
-%   is equal to VALUE 
+%   is equal to VALUE1, VALUE2, ... or VALUEN. Where VALUE can either be
+%   character strings or a number. If its a character string REGULAR
+%   expressions can be used.
 %
-% See also GETCELLSTRUCT, SETCELLSTRUCT, 
+% Example:
+%   findcells(THERING,'Length',0, 0.2);  % will match elements of
+%                                          lengths 0 and 0.2
+%   findcells(THERING,'FamName','SFA','SDA');
+%
+% See also GETCELLSTRUCT, SETCELLSTRUCT, REGEXPI
 
 % Check if the first argument is the cell arrray of tstructures 
 if(~iscell(CELLARRAY) | ~isstruct(CELLARRAY{1}) | isempty(CELLARRAY))
@@ -18,9 +25,9 @@ end
 if(~ischar(field))
       error('The second argument must be a character string')
 end
-if(nargin > 3)
-     error('Incorrect number of inputs')
-end
+% if(nargin > 3)
+%      error('Incorrect number of inputs')
+% end
 
 
 
@@ -35,20 +42,34 @@ for I = 1:NE
 end
 
 index =  index(1:matchesfound);
-if(nargin == 3) 
-   index1 = index;
-   matchesfound = 0;
-   for I = index
-      if isequal(getfield(CELLARRAY{I},field),varargin{1})
-         matchesfound = matchesfound+1;
-         % since 'matchesfound' counter is <= loop number,
-         % it is save to modify elements of 'index' inside the loop
-         index(matchesfound) = I; 
-         
-      end
-   end
-
-   index =  index(1:matchesfound); 
+if(nargin > 2)
+    index1 = index;
+    matchesfound = 0;
+    for I = index
+        for j=1:length(varargin)
+            if ~isnumeric(varargin{j})
+                %if isequal(getfield(CELLARRAY{I},field),varargin{j})
+                if regexpi(getfield(CELLARRAY{I},field),['^' varargin{j} '$'])
+                    matchesfound = matchesfound+1;
+                    % since 'matchesfound' counter is <= loop number,
+                    % it is save to modify elements of 'index' inside the loop
+                    index(matchesfound) = I;
+                    
+                end
+            else
+                %if you are comparing a numerical value
+                if getfield(CELLARRAY{I},field) == varargin{j}
+                    matchesfound = matchesfound+1;
+                    % since 'matchesfound' counter is <= loop number,
+                    % it is save to modify elements of 'index' inside the loop
+                    index(matchesfound) = I;
+                end
+            end
+        end
+    end
+    
+    index =  index(1:matchesfound);
 end
+
 
         
