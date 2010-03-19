@@ -50,8 +50,8 @@ newring=setcellstruct(newring,'PolynomB',idx2,kl2*(1+dK(2)),3);
     end
 
     function chrom=getchrom(ring,dpp)
-        [lindata, tunesa] = linopt(ring,0);
-        [lindata, tunesb] = linopt(ring,dpp);
+        [lindata, tunesa] = atlinopt(ring,0);
+        [lindata, tunesb] = atlinopt(ring,dpp);
         chrom = (tunesb-tunesa)/deltaP;
     end
 end

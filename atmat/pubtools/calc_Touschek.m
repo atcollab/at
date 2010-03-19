@@ -12,6 +12,7 @@ function tauT = calc_Touschek(THERING,Ib,varargin)
 %ex: 
 %tauT = calc_Touschek(THERING, 100/280, 0.015/sqrt(10.37),1.04,0.064e-2,0.001, 18)/3600
 %
+alpha=1.7e-4;
 
 hori_acceptance = Inf;
 if nargin>=3
@@ -65,7 +66,7 @@ for ii=1:length(CAVINDEX)
 	Vrf = Vrf + THERING{CAVINDEX(ii)}.Voltage;
 end
 %Vrf = 3.2e6;
-[alpha,a2] = findmcf3(THERING);
+%[alpha,a2] = findmcf3(THERING);
 
 %bunch length
 phi_s = asin(U0/Vrf);
