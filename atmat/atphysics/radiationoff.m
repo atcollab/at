@@ -18,5 +18,9 @@ localindex = findcells(THERING,'PassMethod','BndMPoleSymplectic4RadPass');
 THERING = setcellstruct(THERING,'PassMethod',localindex, 'BndMPoleSymplectic4Pass');
 totalswitched = totalswitched + length(localindex);
 
+localindex = findcells(THERING,'PassMethod','BndMPoleSymplectic4E2RadPass');
+THERING = setcellstruct(THERING,'PassMethod',localindex, 'BndMPoleSymplectic4E2Pass');
+totalswitched = totalswitched + length(localindex);
+
 disp(['PassMethod was changed to NOT include radiation in ',num2str(totalswitched),  ' elements'])     
 clear localindex totalswitched
