@@ -1,4 +1,5 @@
 function res=extrreson(X,Y,nuh,nuv,Hnuh,Hnuv,eps)
+%find resonance lines
 deltnu=log10(sqrt(nuh(:,3)+nuv(:,3)));
 
 matdeltnu=reshape(deltnu,numel(X),numel(Y))';
