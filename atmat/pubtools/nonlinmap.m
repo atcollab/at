@@ -108,8 +108,8 @@ meanv=(mean(orv(:,notloss),1))';
 maxh=(max(abs(orh(:,notloss)),[],1))';
 maxv=(max(abs(orv(:,notloss)),[],1))';
 %finds the tunes in both planes for each orbit
-[resh,numdch]=findtune(orhred-i.*phred);
-[resv,numdcv]=findtune(orvred-i.*pvred);
+[resh,numdch]=findtune2(orhred-i.*phred);
+[resv,numdcv]=findtune2(orvred-i.*pvred);
 %Fills in the matrices for Nuh and Nuv
 nuh(1:nbpart,1:5)=NaN;
 nuv(1:nbpart,1:5)=NaN;
