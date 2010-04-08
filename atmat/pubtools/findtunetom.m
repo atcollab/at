@@ -1,4 +1,4 @@
-function [tune,numdc]=findtune2(M)
+function [tune,numdc]=findtunetom(M)
 numdc=0;
 p=size(M,2);
 n=size(M,1);
