@@ -13,13 +13,15 @@ function [nux,nuz]=atnuampl(ring,ampl,xz,plt)
 % amplitude.
 
 if nargin < 3, xz=1; end
+if nargin < 4, plt=0; end
 siza=size(ampl);
 nampl=prod(siza);
-p0=repmat(0.00001*[1;0;1;0;0;0], 1,nampl);
+p0=repmat(0.00001*[1;0;1;0;-2000;0], 1,nampl);
 p0(xz,:)=p0(xz,:)+ampl(:)';
 p1=ringpass(ring,p0,128);
-x1=reshape(p1(1,:),nampl,128)';
+x1=reshape(p1(1,:)-i*p1(2,:),nampl,128)';
 nux=reshape(findtune(reshape(p1(1,:),nampl,[])',3),siza);
+%nux=reshape(findtune(reshape(p1(1,:),nampl,[])'),siza);
 nuz=reshape(findtune(reshape(p1(3,:),nampl,[])',3),siza);
 %plot((ampl.*ampl)',[nux-nux(1);nuz-nuz(1)]','o-');
 if (plt==1)
