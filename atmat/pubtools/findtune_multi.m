@@ -1,4 +1,4 @@
-function [tune,spectrum]=findtune(pos,method)
+function [tune,spectrum]=findtune_multi(pos,method)
 
 if nargin < 2, method=3; end
 
