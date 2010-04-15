@@ -10,9 +10,9 @@ xi0=[0.3644 0.33475];
 figure(fig)
 clf
 hold on
-vals = 0:0.001:0.022;
-nuampls(ring,vals,1,1);
+vals = -0.022:0.001:0.022;
+nuampls(ring,vals,1,1,'o-');
 ring=scalesext(ring,SextFam,scale);
-nuampls(ring,vals,1,1);
+nuampls(ring,vals,1,1,'x-');
 title(SextFam);
 xlabel('hor. amp. (m)')

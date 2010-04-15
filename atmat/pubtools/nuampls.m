@@ -1,4 +1,4 @@
-function [nux,nuz]=atnuampl(ring,ampl,xz,plt)
+function [nux,nuz]=nuampls(ring,ampl,xz,plt,pltype)
 %ATNUAMPL	computes tune shift with amplitude
 %[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE)
 %
@@ -14,6 +14,7 @@ function [nux,nuz]=atnuampl(ring,ampl,xz,plt)
 
 if nargin < 3, xz=1; end
 if nargin < 4, plt=0; end
+if nargin < 5, pltype='0-'; end
 siza=size(ampl);
 nampl=prod(siza);
 p0=repmat(0.00001*[1;0;7;0;0;0], 1,nampl);
@@ -28,7 +29,7 @@ nux=reshape(findtune(x1,3),siza);
 nuz=reshape(findtune(z1,3),siza);
 %plot((ampl.*ampl)',[nux-nux(1);nuz-nuz(1)]','o-');
 if (plt==1)
-    plot((ampl),[nux;nuz],'o-');
+    plot((ampl),[nux;nuz],pltype);
     legend('\nu_x','\nu_z');
     grid on
 end
