@@ -1,4 +1,4 @@
-function nuamp(ring,fig,SextFam,scale)
+function nuamp_sens(ring,fig,SextFam,scale)
 %nuamp(fig,SextFam,scale)
 xi0=[0.3644 0.33475];
 %esrf=atreadbeta('/Users/boaznash/work/current_projects/AT/s13s20thick.str');
@@ -11,8 +11,8 @@ figure(fig)
 clf
 hold on
 vals = 0:0.001:0.022;
-atnuampl(ring,vals);
-esrf=scalesext(ring,SextFam,scale);
-nuampls(ring,vals);
+nuampls(ring,vals,1,1);
+ring=scalesext(ring,SextFam,scale);
+nuampls(ring,vals,1,1);
 title(SextFam);
 xlabel('hor. amp. (m)')
