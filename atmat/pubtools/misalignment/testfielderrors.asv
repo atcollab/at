@@ -1,0 +1,23 @@
+aspinit
+numsets = 100;
+
+deletefielderr;
+setfielderr('QFA',repmat(0,1,4),[0 1 0 0]*1e-3*1.7610967,3);
+setfielderr('QDA',repmat(0,1,4),[0 1 0 0]*1e-3*1.0715748,3);
+setfielderr('QFB',repmat(0,1,4),[0 1 0 0]*1e-3*1.5406418,3);
+calcfielderr(numsets,'normal');
+
+
+ind = findcells(THERING,'FamName','QFA','QDA','QFB');
+
+vals = [];
+for i=1:numsets
+    applyfielderr quiet;
+    vals(i) = getcellstruct(THERING,'PolynomB',ind(1),2);
+end
+
+figure;
+hist(vals);
+hold on;
+sigma = 1e-3*1.7610967;
+px = (1/sigma

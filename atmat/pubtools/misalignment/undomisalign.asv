@@ -1,0 +1,38 @@
+function varargout = undomisalign(varargin)
+% UNDOMISALIGN will 'zero' all misalignments in THERING 
+
+global THERING
+
+if ~exist('THERING','var')
+    disp('Please load the model first');
+    return
+end
+
+mis = getappdata(0,'MisalignData');
+
+if isempty(mis)
+    disp('No misalignment data found. See SETMISALIGN for more info');
+    return
+end
+
+if isfield(mis,'data')    
+    % Indices of elements where misalignemnt data may need to be applied.
+    indices = find(cell2mat({mis.data.use}));
+
+    % Separate out the individual shifts dd
+    xshift = repmat(0,1,length(indices));
+    xrot   = repmat(0,1,length(indices));
+    yshift = repmat(0,1,length(indices));
+    yrot   = repmat(0,1,length(indices));
+    sshift = repmat(0,1,length(indices));
+    srot   = repmat(0,1,length(indices));
+
+    setshift(indices,xshift,yshift);
+    addsshift(indices,sshift);
+    setxrot(indices,xrot);
+    setyrot(indices,yrot);
+    setsrot(indices,srot);
+end
+
+disp('Misalignments have been reset to zero');
+
