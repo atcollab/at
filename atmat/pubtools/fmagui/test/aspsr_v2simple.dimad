@@ -1,0 +1,89 @@
+! 04/03/04 Eugene: added RF and Kickers
+! 21/05/04 Eugene: Lengths of D1 changed to get circumference to 216 (up to 1 micron)
+! 27/07/04 Eugene: Added BPMs.
+TITLE
+ASP STORAGE RING version 2 (very simple model)
+
+UTRANSPORT
+
+ECHO
+
+! ### BPMs ###
+! Will always assume zero length here
+BPM: MONITOR, L=0
+
+! ### DRIFTS ###
+D1: DRIFT, L=2.698286
+D2: DRIFT, L=0.1900
+D3: DRIFT, L=0.1650
+D4: DRIFT, L=0.2750
+D5: DRIFT, L=0.1550
+D6: DRIFT, L=0.4500
+
+! ### Dipole ###
+! Single dipole. For ANY changes ONLY alter "DIP".
+DLEN   := 1.726
+DANGLE := (360/28)  !*(pi/180)
+DK1    := 19.819    !*(-DANGLE*DANGLE/DLEN/DLEN)
+DIP: RBEND, L=DLEN, ANGLE=DANGLE, K1=DK1
+
+DIP1: LINE=(DIP)
+DIP2: LINE=(DIP)
+
+
+! ### QUADRUPOLES ###
+Q1: QUADRUPOLE, L=0.3550, K1=0.17617410683215E+01
+Q2: QUADRUPOLE, L=0.1800, K1=-0.10383770570250E+01
+Q3: QUADRUPOLE, L=0.3550, K1=0.15338016353322E+01
+
+
+! ### SEXTUPOLES ###
+! Uncomment the sextupoles that you want to use
+!S1: SEXTUPOLE, L=0.1000, K2=14.0000
+!S2: S1, K2=-15.0000
+!S3: S1, K2=-6.5000
+!S4: S1, K2=7.1000
+S1: SEXTUPOLE, L=0.1000, K2=14.0000
+S2: S1, K2=-14.0000
+S3: S1, K2=-0.70146346579091E+01
+S4: S1, K2=0.71893457157312E+01
+!S1: SEXTUPOLE, L=0.1000, K2=0
+!S2: S1, K2=0
+!S3: S1, K2=0
+!S4: S1, K2=0
+
+! ### CORRECTORS ###
+HCOR: GKICK, DXP=0
+VCOR: GKICK, DYP=0
+
+! ### DEFINE SOME BASIC SECTORS ###
+
+! Separate groups of elements into girders. The dipoles are stand alone elements.
+GIRDER1: LINE=(S1,HCOR,S1,D2,Q1,D3,S2,VCOR,S2)
+GIRDER2: LINE=(S3,VCOR,S3,D5,Q2,D6,Q3,D2,S4,HCOR,S4,D2,Q3,D6,&
+               Q2,D5,S3,VCOR,S3)
+GIRDER3: LINE=(S2,VCOR,S2,D3,Q1,D2,S1,HCOR,S1)
+
+! Basic ARC and straight sections
+CEL: LINE=(D1,GIRDER1,D4,DIP1,D4,GIRDER2,D4,DIP2,D4,&
+           GIRDER3,D1)
+            
+
+! ### DEFINE BEAMLINES/RINGS ###
+
+RING: LINE=(14*CEL)
+
+
+USE, RING
+DIMAT
+OUTPUT
+4,
+MATR
+2 -1,
+SET SYMPLECTIC
+1 3.0,
+MACHINE
+3.0 3.05 .05 2 0 1 360
+0 0 0 0
+0 0 0 0 0;
+STOP
