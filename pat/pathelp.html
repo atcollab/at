@@ -1,0 +1,200 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      --><title>pathelp</title><meta name="generator" content="MATLAB 7.10"><meta name="date" content="2010-07-12"><meta name="m-file" content="pathelp"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Introduction</a></li><li><a href="#3">Compilation</a></li><li><a href="#4">Using the parallel passmethods</a></li><li><a href="#5">Testing the parallel code</a></li></ul></div><pre class="codeinput"><span class="comment">% This provides usage information for the parallel version of AT.</span>
+<span class="comment">% Xiaobiao Huang,  SSRL/SLAC</span>
+<span class="comment">% xiahuang slac.stanford.edu</span>
+<span class="comment">% 7/12/2010</span>
+<span class="comment">%</span>
+</pre><h2>Introduction<a name="2"></a></h2><pre class="codeinput"><span class="comment">%The existing mex-based AT passmethods are converted to having</span>
+<span class="comment">%parallel-capability with the OpenMP approach. It enables the creation of</span>
+<span class="comment">%multiple threads that splits the particle tracking work. The threads are</span>
+<span class="comment">%run in parallel on different processors of a shared-memory computer, such</span>
+<span class="comment">%as the usual multi-core PCs. This is useful for large tracking studies</span>
+<span class="comment">%such as dynamic aperture and momentum aperture studies.</span>
+</pre><h2>Compilation<a name="3"></a></h2><pre class="codeinput"><span class="comment">%I have only tested the compilation on a Windows PC using VC 2008</span>
+<span class="comment">%The commands to include OpenMP option looks like</span>
+ mex <span class="string">DriftPass.c</span>  <span class="string">CFLAGS="\$CFLAGS</span> <span class="string">-fopenmp"</span> <span class="string">LDFLAGS="\$LDFLAGS</span> <span class="string">-fopenmp"</span>
+<span class="comment">%The compilation flag may be different for different compilers.</span>
+<span class="comment">%To compile all passmethods, you may use the script mexall.m</span>
+ mexall
+</pre><h2>Using the parallel passmethods<a name="4"></a></h2><pre class="codeinput"><span class="comment">%To use the parallel capability, one needs to set the desired number of</span>
+<span class="comment">%threads. This can be done by defining an environment variable</span>
+<span class="comment">%OMP_NUM_THREADS. On my desktop (with 4 processors), I define the variable</span>
+<span class="comment">%to be 3.</span>
+ getenv(<span class="string">'OMP_NUM_THREADS'</span>)
+
+ <span class="comment">%You can set this variable dynamcially within matlab by the 'setenv'</span>
+ <span class="comment">%command.</span>
+ setenv(<span class="string">'OMP_NUM_THREADS'</span>,<span class="string">'4'</span>)
+ getenv(<span class="string">'OMP_NUM_THREADS'</span>)
+</pre><pre class="codeoutput">
+ans =
+
+3
+
+
+ans =
+
+4
+
+</pre><h2>Testing the parallel code<a name="5"></a></h2><p>we test the code by tracking 1000 particles in the SPEAR3 model for 1000 turns.</p><pre class="codeinput"> sp3v82
+
+ disp(<span class="string">'First the sequential version'</span>)
+ cd <span class="string">r:\</span>
+ which <span class="string">DriftPass</span>
+ X=zeros(6,1000); X(1,:) = 0.001*rand(1,1000);
+tic; nX = ringpass(THERING, X, 1000); toc    <span class="comment">%old</span>
+
+ disp(<span class="string">'Then the parallel version'</span>)
+ cd <span class="string">r:\xiahuang\misc\pat\test</span>
+ which <span class="string">DriftPass</span>
+ tic; pX = ringpass(THERING, X, 1000); toc    <span class="comment">%parallel</span>
+
+ disp(<span class="string">'Compare the tracking results'</span>)
+ norm(pX-nX)
+
+ <span class="comment">% The Windows task manager performance page shows the CPU work loads with</span>
+ <span class="comment">% the sequential and parallel AT versions. For the test on my desktop, it</span>
+ <span class="comment">% looks like (image is from an earlier test which tracks only 100 turns.</span>
+ a=imread(<span class="string">'task_mgr_omp.jpg'</span>);
+ image(a)
+</pre><pre class="codeoutput">   Loading SPEAR-III magnet lattice sp3v82
+First the sequential version
+R:\Controls\matlab\at\simulator\element\DriftPass.mexw32
+Elapsed time is 296.995471 seconds.
+Then the parallel version
+r:\xiahuang\misc\pat\test\DriftPass.mexw32
+Elapsed time is 92.875720 seconds.
+Compare the tracking results
+
+ans =
+
+     0
+
+</pre><img vspace="5" hspace="5" src="pathelp_01.png" alt=""> <p class="footer"><br>
+      Published with MATLAB&reg; 7.10<br></p></div><!--
+##### SOURCE BEGIN #####
+% This provides usage information for the parallel version of AT.
+% Xiaobiao Huang,  SSRL/SLAC
+% xiahuang slac.stanford.edu
+% 7/12/2010
+%
+%% Introduction
+%The existing mex-based AT passmethods are converted to having
+%parallel-capability with the OpenMP approach. It enables the creation of
+%multiple threads that splits the particle tracking work. The threads are
+%run in parallel on different processors of a shared-memory computer, such
+%as the usual multi-core PCs. This is useful for large tracking studies
+%such as dynamic aperture and momentum aperture studies.
+
+%% Compilation
+%I have only tested the compilation on a Windows PC using VC 2008
+%The commands to include OpenMP option looks like 
+ mex DriftPass.c  CFLAGS="\$CFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp" 
+%The compilation flag may be different for different compilers.
+%To compile all passmethods, you may use the script mexall.m
+ mexall
+
+%% Using the parallel passmethods
+
+%To use the parallel capability, one needs to set the desired number of
+%threads. This can be done by defining an environment variable
+%OMP_NUM_THREADS. On my desktop (with 4 processors), I define the variable 
+%to be 3. 
+ getenv('OMP_NUM_THREADS')
+ 
+ %You can set this variable dynamcially within matlab by the 'setenv'
+ %command. 
+ setenv('OMP_NUM_THREADS','4')
+ getenv('OMP_NUM_THREADS')
+ 
+ %% Testing the parallel code
+ % we test the code by tracking 1000 particles in the SPEAR3 model for 1000
+ % turns. 
+ 
+ sp3v82
+ 
+ disp('First the sequential version')
+ cd r:\
+ which DriftPass
+ X=zeros(6,1000); X(1,:) = 0.001*rand(1,1000);
+tic; nX = ringpass(THERING, X, 1000); toc    %old
+
+ disp('Then the parallel version')
+ cd r:\xiahuang\misc\pat\test
+ which DriftPass
+ tic; pX = ringpass(THERING, X, 1000); toc    %parallel
+
+ disp('Compare the tracking results')
+ norm(pX-nX)
+ 
+ % The Windows task manager performance page shows the CPU work loads with
+ % the sequential and parallel AT versions. For the test on my desktop, it
+ % looks like (image is from an earlier test which tracks only 100 turns.
+ a=imread('task_mgr_omp.jpg');
+ image(a)
+
+##### SOURCE END #####
+--></body></html>
