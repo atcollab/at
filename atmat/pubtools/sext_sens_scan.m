@@ -1,7 +1,8 @@
 %esrf(:)
 xi0=[0.3644 0.33475];
 %esrf=atreadbeta('/Users/boaznash/work/current_projects/AT/esrfdata/s13s20thick.str');
-esrf=atreadbeta('s13s20thick.str');
+%esrf=atreadbeta('s13s20thick.str');
+esrf=atreadbeta('/Users/boaznash/MyDocs/work_career/current_projects/AT/esrfdata/s13s20thick.str','CavityPass');
 esrf0=atfitchrom(esrf,xi0,{'S13','S20'},'S19');
 esrf0=atfitchrom(esrf0,xi0,{'S13','S20'},'S19');
 

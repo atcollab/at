@@ -33,20 +33,22 @@ if isstruct(Trf)
     Vrf = Trf.Voltage;
     circ = Trf.circum;
 else
-    freq = 476.316e6; %Hz
-    harm = 372;
-    E0 = 3.0e9; %eV
+    freq = 352.202e6; %Hz
+    harm = 992;
+    E0 = 6.04e9; %eV
     alpha = Trf;
-    Vrf = 3.2e6;
-    circ = 234.144;
+    Vrf = 9e6;
+    circ = 844.39;
     
 end
 gamma = E0/0.511e6;
 N0 = 0.001/(freq/harm)/e0; %Number of particle per 1mA bunch. 
 
+
 %bunch length
 phi_s = asin(U0/Vrf);
 nus = sqrt(harm*Vrf*alpha*cos(phi_s)/2/pi/E0);
+
 
 sigZ = sigE/nus*harm*alpha/2/pi/freq*cspeed;
 

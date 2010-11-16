@@ -1,4 +1,4 @@
-function [nux,nuz]=atnuampl(ring,ampl,xz,pl)
+function [nux,nuz]=nuampl(ring,ampl,xz,pl)
 %ATNUAMPL	computes tune shift with amplitude
 %[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE)
 %
@@ -12,7 +12,7 @@ function [nux,nuz]=atnuampl(ring,ampl,xz,pl)
 if nargin < 3, xz=1; end
 siza=size(ampl);
 nampl=prod(siza);
-p0=repmat(0.00001*[1;0;1;0;0;0], 1,nampl);
+p0=repmat(0.00005*[1;0;1;0;0;0], 1,nampl);
 p0(xz,:)=p0(xz,:)+ampl(:)';
 p1=ringpass(ring,p0,128);
 x1=reshape(p1(1,:),nampl,128)';

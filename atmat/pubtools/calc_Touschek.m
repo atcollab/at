@@ -110,7 +110,7 @@ lossrate = Ib*N0*r0^2*cspeed/8/gamma^2/pi*avgfac;
 
 tauT = 1/lossrate;
 
-if 1
+if 0
    figure
    plot(spos, delta_max, spos, delta_max_rf*ones(size(spos))); 
    set(gca,'fontsize', 16,'xlim',[0,240])

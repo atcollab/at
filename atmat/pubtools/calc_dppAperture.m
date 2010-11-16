@@ -27,10 +27,10 @@ Vrf = 3200000;
 if nargin>=4
    Vrf = varargin{3}*1.0e6; %Volt
 end
-THERING = setcellstruct(THERING,'Voltage', ati.RF, Vrf); 
-THERING = setcellstruct(THERING,'PassMethod', ati.RF, 'ThinCavityPass'); 
+%THERING = setcellstruct(THERING,'Voltage', ati.RF, Vrf); 
+%THERING = setcellstruct(THERING,'PassMethod', ati.RF, 'ThinCavityPass'); 
 %turn cavity on
-cavityon(3e9);
+%cavityon(3e9);
 
 %turn radiation on
 %bi = findcells(THERING,'PassMethod','BendLinearPass');
@@ -44,17 +44,21 @@ THERING = setcellstruct(THERING,'NumIntSteps',bi,10);
 THERING = setcellstruct(THERING,'MaxOrder',bi,1);
 THERING = setcellstruct(THERING,'PassMethod',bi,'BndMPoleSymplectic4RadPass');
 
-allspos = findspos(THERING, 1:length(THERING));
+%allspos = findspos(THERING, 1:length(THERING));
+[curH,allspos]= getcurH(THERING);
+curH(length(allspos)+1)=curH(length(allspos)); %add an extra element for the last value.
 cnt = 0;
 RING0 = THERING;
+epsH=1e-7;
 tic
 for ii=1:length(allspos)
-   if RING0{ii}.Length>0
-      cnt = cnt + 1;
+   if (RING0{ii}.Length>0 && curH(ii+1)-curH(ii)>epsH)
+      
+       cnt = cnt + 1;
       
       indextab(cnt) = ii;
       THERING = [RING0(ii:end), RING0(1:ii-1)];
-      [dplus,dminus] = track4dppAp(THERING, 500);
+      [dplus,dminus] = track4dppAp(THERING, 500)
       deltap(cnt) = dplus;
       deltam(cnt) = dminus;
    end
@@ -80,4 +84,3 @@ taglossm = max([1 find(loss(1:indxzero))]);
 
 deltap = dpp0(taglossp);
 deltam = dpp0(taglossm);
-

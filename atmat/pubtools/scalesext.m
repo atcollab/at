@@ -1,4 +1,5 @@
 function newring=scalesext(ring,sextfam,scale)
+%newring=scalesext(ring,sextfam,scale)
 newring=ring;
 ind=findcells(newring,'FamName',sextfam);
 for j=1:length(ind)
