@@ -52,7 +52,7 @@ RING0 = THERING;
 epsH=1e-7;
 tic
 for ii=1:length(allspos)
-   if (RING0{ii}.Length>0 && curH(ii+1)-curH(ii)>epsH)
+   if (RING0{ii}.Length>0 && abs(curH(ii+1)-curH(ii))>epsH)
       
        cnt = cnt + 1;
       
