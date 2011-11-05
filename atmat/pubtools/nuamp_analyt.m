@@ -1,5 +1,6 @@
 function [xdx, xdz, zdz]=nuamp_analyt(ring,sym)
-%dnudx=nuamp_analyt(ring,sym)
+% [xdx, xdz, zdz]=nuamp_analyt(ring,sym)
+%returns dnu/dJ in mm^-1
 %looks like it works, still not fully tested.
 %B. Nash, 3 Nov. 2010
 
