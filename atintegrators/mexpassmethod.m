@@ -37,9 +37,9 @@ case 'GLNXA64'
 case 'MAC'
     PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined dynamic_lookup -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMAC.map') ''' '];  
 case 'MACI'
-    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch i386  -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMACI.map') ''' '];  
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch i386  -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMAC.map') ''' '];  
 case 'MACI64'
-    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch x86_64 -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMACI.map') ''' '];  
+    PLATFORMOPTION = [PLATFORMOPTION 'LDFLAGS=''-bundle -undefined error -arch x86_64 -mmacosx-version-min=10.5 -Wl,-exported_symbols_list,' fullfile(pdir,'mexFunctionMAC.map') ''' '];  
 end
 
 
