@@ -12,6 +12,7 @@ function rp = ringpara(THERING,varargin)
 %created on 12/17/2007
 %Part of this code was modified from atsummary.m
 %
+%Modified by Peace Chang (check if theta(ii) ~= 0.0)
 
 if nargin==0
     global THERING;
@@ -39,7 +40,7 @@ Dyp = disper(4:4:end);
 
 lendp = getcellstruct(THERING,'Length',dpindex); %bending magnet length
 theta = getcellstruct(THERING,'BendingAngle',dpindex); %bending angle
-rho = lendp./theta; %THERING{dpindex(1)}.Length/THERING{dpindex(1)}.BendingAngle;
+rho = lendp./theta;%THERING{dpindex(1)}.Length/THERING{dpindex(1)}.BendingAngle;
 
 I1 = 0;
 I2 = 0;
@@ -47,6 +48,7 @@ I3 = 0;
 I4 = 0;
 I5 = 0;
 for ii=1:length(dpindex)
+  if theta(ii) ~= 0.0
     if isfield(THERING{dpindex(ii)},'K')
         K = THERING{dpindex(ii)}.K;
     else
@@ -54,12 +56,14 @@ for ii=1:length(dpindex)
     end
     th1 = THERING{dpindex(ii)}.EntranceAngle;
     th2 = THERING{dpindex(ii)}.ExitAngle;
-    [dI1,dI2,dI3,dI4,dI5,curHavg1(ii)] = calcRadInt(rho(ii),theta(ii), alpha(ii,1),beta(ii,1),Dx(ii),Dxp(ii),K,th1,th2);
+    [dI1,dI2,dI3,dI4,dI5,curHavg1(ii)] = calcRadInt(rho(ii),theta(ii), ...
+         alpha(ii,1),beta(ii,1),Dx(ii),Dxp(ii),K,th1,th2);
     I1 = I1 + dI1;
     I2 = I2 + dI2;
     I3 = I3 + dI3;
     I4 = I4 + dI4;
     I5 = I5 + dI5;
+  end
 end
 % curHavg = sum(curHavg1.*lendp./abs(rho))/sum(lendp);
 % %emittx =  Cq*gamma^2*curHavg/Jx/rho*1e9; %nm-rad
@@ -96,6 +100,8 @@ rp.dampingalpha = [alphax, alphay, alphaE];
 rp.dampingtime = 1./[alphax, alphay, alphaE];
 rp.dampingJ = [Jx,Jy,Je];
 
+%rp.tw = tw;
+%rp.tmptw = tmptw;
 rp.tunes = tune;
 rp.chroms = chrom;
 rp.etac = 1/gamma^2-alphac;

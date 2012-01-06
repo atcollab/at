@@ -20,7 +20,8 @@ if nargin>=3
 end
 
 if nargin<7
-    atsum = atsummary;
+%   atsum = atsummary
+    atsum = tlssummary
 end
 
 
@@ -39,8 +40,8 @@ if nargin>=7
    sigE = varargin{4};
    emit_x = varargin{5}*1e-9; %m-rad
 else
-    sigE = atsum.naturalEnergySpread;  %sigma_delta
-    emit_x = atsum.naturalEmittance;
+    sigE = atsum.naturalEnergySpread  %sigma_delta
+    emit_x = atsum.naturalEmittance
 
 end
 
@@ -66,6 +67,7 @@ for ii=1:length(CAVINDEX)
 	Vrf = Vrf + THERING{CAVINDEX(ii)}.Voltage;
 end
 %Vrf = 3.2e6;
+Vrf = 1.6e6;
 %[alpha,a2] = findmcf3(THERING);
 
 %bunch length
@@ -92,11 +94,13 @@ sigX = sqrt(betxy(:,1)*emit_x+Dx(:,1).^2*sigE^2);
 sigY = sqrt(betxy(:,2)*emit_x*coupling);
 sigXp = sqrt(emit_x*(1+alfxy(:,1).^2)./betxy(:,1)+Dx(:,2).^2*sigE^2);
 %--------------------------------
-
 curH = (Dx(:,1).^2 + (betxy(:,1).*Dx(:,2)+alfxy(:,1).*Dx(:,1)).^2)./betxy(:,1);
 
+display('delta_max_perp data:  ');
 delta_max_perp = hori_acceptance./sqrt(curH);
+display('delta_max data:  ');
 delta_max = min([delta_max_perp, ones(size(curH))*delta_max_rf]')';
+display('xi data:  ');
 xi = (delta_max/gamma.*betxy(:,1)./sigX).^2;
 Dval = funcD(xi);
 
@@ -113,11 +117,13 @@ tauT = 1/lossrate;
 if 0
    figure
    plot(spos, delta_max, spos, delta_max_rf*ones(size(spos))); 
-   set(gca,'fontsize', 16,'xlim',[0,240])
+   %set(gca,'fontsize', 16,'xlim',[0,240])
+   set(gca,'fontsize', 16,'xlim',[0,120])
    xlabel('s (m)')
    ylabel('\delta_{max}')
    grid
-   set(gca,'ylim',[0,0.04]);
+   %set(gca,'ylim',[0,0.04]);
+   set(gca,'ylim',[0,0.15]);
    
 end
 
