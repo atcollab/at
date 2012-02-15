@@ -1,4 +1,4 @@
-function [z L] = idtable_zeus(fname, Nslice, filename, Energy, method)
+function [z L] = idtable_global(fname, Nslice, filename, Energy, method)
 % idtable(fname, Nslice, filename, Energy, method)
 %
 % FamName	family name
