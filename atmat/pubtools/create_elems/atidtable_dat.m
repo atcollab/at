@@ -19,13 +19,12 @@ function Elem = atidtable(fname, Nslice, filename, Energy, method)
 % -----------------
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
 % 17-11-2008:  Modificated by Z.Martí
-% 23-02-2012:  further modifications by B. Nash: reads in only matlab file
 %---------------------------------------------------------------------------
 
 Elem.FamName        = fname;  % add check for identical family names
 
 Elem.Nslice    	= Nslice;
-Elem.MaxOrder	    = 3;
+Elem.MaxOrder			= 3;
 Elem.NumIntSteps 	= 10;
 Elem.R1             = diag(ones(6,1));
 Elem.R2             = diag(ones(6,1));
@@ -37,38 +36,69 @@ Elem.PassMethod 	= method;
 factor=1/((Energy/0.299792458)^2);
 factor1=-1/((Energy/0.299792458));
     
-% Read the file, first check if its a matlab file
-%[pathstr, name, ext] = fileparts(filename)
-%if  ~isequal(ext,'.mat');
- 
-    D=load(filename);
-    x=(D.xtable)';
-    y=(D.ytable)';
-    xkick1=factor1*D.xkick1;
-    ykick1=factor1*D.ykick1;
-    xkick=factor*D.xkick;
-    ykick=factor*D.ykick;
+% Read the file
+D=importdata(filename);
+if isfield(D,'Kick1x')
+    x=(D.x)';
+    y=(D.y)';
+    xkick1=factor1*D.Kick1x;
+    ykick1=factor1*D.Kick1y;
+    xkick=factor*D.Kick2x;
+    ykick=factor*D.Kick2y;
     L=D.Len;
-    nn=size(xkick);
-    Nx=nn(1);
-    Ny=nn(2);
-% Sort arrays in ascending order and transpose (needed for "IdTablePass.c")
+    nn=size(xkick1);
+    Ny=nn(1);
+    Nx=nn(2);
+%     ElemData.MultiKick= 1;
+%     ElemData.nkicks= nn(3);
+else
+    [header_mat, data_mat]=mhdrload_bis(filename);
+    L=data_mat(:,:,1);
+    Nx=data_mat(:,:,2);
+    Ny=data_mat(:,:,3);
+    A = importdata(filename,' ',10);
+    x=A.data;
+    x=x(1,1:Nx);
+    A = importdata(filename,' ',11);
+    txkick=A.data;
+    y=txkick(1:Ny,1);
+    txkick=txkick(:,2:end);
+    A=importdata(filename,' ',11+Ny+3);
+    tykick=A.data;
+    tykick=tykick(:,2:end);
+    A=importdata(filename,' ',11+2*Ny+2*3);
+    if isstruct(A)
+        txkick1=A.data;
+        txkick1=txkick1(:,2:end);
+    else
+        txkick1=0*txkick;
+    end
+    A=importdata(filename,' ',11+3*Ny+3*3);
+    if isstruct(A)
+        tykick1=A.data;
+        tykick1=tykick1(:,2:end);
+    else
+        tykick1=0*tykick;
+    end
 
-[x indx]=sort(x);
-[y indy]=sort(y);
-
-xkick=xkick(indx,indy);
-ykick=ykick(indx,indy);
-
-xkick=xkick';
-ykick=ykick';
-xkick1=xkick1';
-ykick1=ykick1';
-
+    xkick=factor*txkick;
+    ykick=factor*tykick;
+    
+    xkick1=factor1*txkick1;
+    ykick1=factor1*tykick1;
+    
+    % Sort arrays in ascending order (needed for "IdTablePass.c")
+    [y indy]=sort(y);
+    [x indx]=sort(x);
+    x=x';
+    xkick=xkick(indy,indx);
+    ykick=ykick(indy,indx);
+    
+end
 
 Elem.Length= L;
-Elem.NumX = Nx;
-Elem.NumY = Ny;
+Elem.NumX = Ny;
+Elem.NumY = Nx;
 Elem.xtable = x;
 Elem.ytable = y;
 Elem.xkick = xkick;
