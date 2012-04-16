@@ -5,6 +5,7 @@ EXP long STDCALL ataddtypeelem(long tptr, long nargs, const double *args, const 
 EXP long STDCALL attrack(long tptr, double *r_in, long np, long nturns);
 EXP long STDCALL atstable(long tptr, const double *r_in,long nturns);
 EXP double STDCALL atgetarg(long tptr, long nel, long np);
+EXP const char* STDCALL atgetmethod(long tptr, long nel);
 EXP long STDCALL atversion(void);
 
 /* Kept for backward compatibilty */
