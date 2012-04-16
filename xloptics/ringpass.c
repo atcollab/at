@@ -480,16 +480,28 @@ long STDCALL dbgatarg(long tptr, const char* passmethod, const double *args)
 {
    const tracksel* method = trackmethod(passmethod);
    int availargs = method ? method->v5availargs : 0;
-   return addelem(tptr, NULL, method, args, method->v5availargs, zerodef);
+   return addelem(tptr, NULL, method, args, availargs, zerodef);
 }
 
 double STDCALL atgetarg(long tptr, long nel, long np)
 {
-/* tptr = 0;*/
-   if ((tptr >= 0) && (tptr < NTRACKS))
-      return (nel < n_elements[tptr]) ? tbl[tptr][nel].args[np] : 888;
+   if ((tptr >= 0) && (tptr < NTRACKS)) {
+      const elistelement *elem = (nel < n_elements[tptr]) ? tbl[tptr] + nel : NULL;
+      const tracksel* method = (elem != NULL) ? trackmethod(elem->passmethod) : NULL;
+      return ((method != NULL) && (np >= 0) && (np < method->nargs)) ? elem->args[np] : 888;
+   }
    else
-      return 888;
+      return 999;
+}
+
+const char* STDCALL atgetmethod(long tptr, long nel)
+{
+    if ((tptr >= 0) && (tptr < NTRACKS)) {
+        const elistelement *elem = (nel < n_elements[tptr]) ? tbl[tptr] + nel : NULL;
+        return (elem != NULL) ? elem->passmethod : "-";
+    }
+    else
+        return "?";
 }
 
 static long ptrack(elist firstel, int nel, const double *thresh, double *r_in, long np, long nturns)
