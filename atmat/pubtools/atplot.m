@@ -42,8 +42,10 @@ for iarg=narg:nargin
                         % explicit plot range
     if isnumeric(varargin{iarg}) && (numel(varargin{iarg})==2)
         srange=varargin{iarg};
-        el1=find(srange(1)>s0,1,'last');
-        el2=find(s0>srange(2),1,'first');
+        els=find(srange(1)>s0,1,'last');
+        if ~isempty(els), el1=els; end
+        els=find(s0>srange(2),1,'first');
+        if ~isempty(els), el2=els; end
     end
 end
 %ring=[ring0((1:el1-1)');atslice(ring0(el1:el2-1),250);ring0((el2:elt0)')];
