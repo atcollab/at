@@ -6,7 +6,7 @@ function [superp,periods]=atreadbeta(filename,cavipass,bendpass,quadpass)
 %FILENAME:	BETA file
 %CAVIPASS:	pass method for cavities (default IdentityPass)
 %BENDPASS:	pass method for dipoles (default BndMPoleSymplectic4E2Pass)
-%QUADPASS:	pass method for quadrupoles (default StrMPoleSymplectic4Pass)
+%QUADPASS:	pass method for quadrupoles (default QuadMPoleFringePass)
 %MULTIPASS:	pass method for sextupoles (default StrMPoleSymplectic4Pass)
 %
 %[superp,periods]=ATREADBETA(fname,cavipass,bendpass,quadpass)
@@ -20,7 +20,7 @@ persistent fpath
 if isempty(fpath), fpath=getenv('DBETA'); end
 
 if nargin < 5, multipass='StrMPoleSymplectic4Pass'; end
-if nargin < 4, quadpass='StrMPoleSymplectic4Pass'; end
+if nargin < 4, quadpass='QuadMPoleFringePass'; end
 if nargin < 3, bendpass='BndMPoleSymplectic4E2Pass'; end
 if nargin < 2, cavipass='IdentityPass'; end
 if nargin < 1, filename=''; end
