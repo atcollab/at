@@ -1,6 +1,7 @@
 function [xx,zz]=atdynap(ring,nt,dpp,rfrac)
 %ATDYNAP		Compute the dynamic aperture
 %
+%
 %[XX,ZZ]=ATDYNAP(RING,NTURNS,DPP,RFRAC)
 %
 %XX,ZZ :	limit of the dynamic aperture (betatron amplitudes in m)
