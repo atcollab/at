@@ -1,10 +1,11 @@
 function [lindt,pm]=atx(ring,varargin)
 %ATX				computes and displays global information
 %
-%LINDATA=ATX(RING,DPP)
+%LINDATA=ATX(RING,DPP,REFPTS)
 %
 %RING:		AT structure
 %DPP:		relative energy deviation (default: 0)
+%REFPTS:    Index of elements (default: 1:length(ring))
 %
 %LINDATA is a MATLAB structure array with fields
 %
@@ -35,6 +36,14 @@ function [lindt,pm]=atx(ring,varargin)
 %   beam44      - intersection of beam66 for dpp=0
 %   emit44	- emittances of the projections of beam44 on x and y
 %   modemit	- [emitA emitB] emittance of modes A and B (should be constant)
+%
+%[LINDATA,PARAMS]=ATX(...)  Returns also a structure PM with fields
+%   ll
+%   alpha
+%   nuh
+%   nuv
+%   fulltunes
+%   fractunes
 %
 % See also: ATREADBETA ATLINOPT ATMODUL
 
