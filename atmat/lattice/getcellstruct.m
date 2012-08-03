@@ -15,7 +15,7 @@ function values = getcellstruct(CELLARRAY,field,index,varargin)
 
 
 % See also SETCELLSTRUCT FINDCELLS 
-if(~iscell(CELLARRAY) | ~isstruct(CELLARRAY{1}) | isempty(CELLARRAY))
+if(~iscell(CELLARRAY) || ~isstruct(CELLARRAY{1}) || isempty(CELLARRAY))
    error('The first argument must be a non-empty cell array of structures') 
 end
 % Chechk if the second argument is a string
@@ -25,29 +25,24 @@ end
 
 % cell array 'mn' here is used as comma separated list 
 % to pass as an argument to getfield.
-switch nargin
-   case 5,
-      mn = {varargin{1},varargin{2}}; 
-   case 4,
-      mn = {varargin{1}};
-   case 3,
-      mn = {1};
-   otherwise 
-      error('Incorrect number of inputs');
-end % switch
+if nargin > 3
+    mn=varargin;
+else
+    mn={1};
+end
 
+selcells=CELLARRAY(index);
+NV = length(selcells);
 
-NV = length(index);
-
-if(isnumeric(getfield(CELLARRAY{index(1,1)},field)))
+if isnumeric(selcells{1}.(field))
    values = zeros(NV,1);
    for I = 1:NV
-      values(I) = getfield(CELLARRAY{index(I)},field,mn);
+      values(I) = getfield(selcells{I},field,mn);
    end 
-elseif(ischar(getfield(CELLARRAY{index(1,1)},field)))
+elseif ischar(selcells{1}.(field))
    values = cell(NV,1);
    for I = 1:NV
-      values{I} = getfield(CELLARRAY{index(I)},field);
+      values{I} = selcells{I}.(field);
    end 
 else
    error('The field data must be numeric or character array') 
