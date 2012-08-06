@@ -66,7 +66,7 @@ end
 [elt0,nperiods]=size(ring0);
 if nperiods > 1
     ring1=ring0(:,1);
-    cavindex=findcells(ring1,'HarmNumber');
+    cavindex=atgetcells(ring1,'HarmNumber');
     ring0=setcellstruct(ring1,'HarmNumber',cavindex,getcellstruct(ring1,'HarmNumber',cavindex)/nperiods);
 end
 % Select the momentum deviation

@@ -23,16 +23,20 @@ end
 
     function newelems=splitdipole(elem,elmlength)
         nsl=ceil(elem.Length/elmlength);
-        ena=elem.EntranceAngle;
-        exa=elem.ExitAngle;
+        if isfield(elem,'EntranceAngle')
+            ena=elem.EntranceAngle;
+            elem.EntranceAngle=0;
+        end
+        if isfield(elem,'ExitAngle')
+            exa=elem.ExitAngle;
+            elem.ExitAngle=0;
+        end
         elem.Length=elem.Length/nsl;
         elem.BendingAngle=elem.BendingAngle/nsl;
-        elem.EntranceAngle=0;
-        elem.ExitAngle=0;
         el={elem};
         newelems=el(ones(nsl,1));
-        newelems{1}.EntranceAngle=ena;
-        newelems{end}.ExitAngle=exa;
+        if exist('ena','var'), newelems{1}.EntranceAngle=ena; end
+        if exist('exa','var'), newelems{end}.ExitAngle=exa; end
     end
 end
 
