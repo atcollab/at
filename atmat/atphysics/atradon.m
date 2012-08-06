@@ -1,4 +1,4 @@
-function [ring2,radindex,cavindex]=atradon(ring,cavipass,bendpass,quadpass)
+function [ring2,radindex,cavindex]=atradon(ring,varargin)
 %ATRADON			switches RF and radiation on
 %
 %RING2=ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)
@@ -12,44 +12,50 @@ function [ring2,radindex,cavindex]=atradon(ring,cavipass,bendpass,quadpass)
 %					 and cavities
 
 global GLOBVAL
-if nargin < 4, quadpass=[]; end
-if nargin < 3, bendpass=[]; end
-if nargin < 2
-cavipass='CavityPass';
+quadpass='';
 bendpass='BndMPoleSymplectic4RadPass';
-end
+cavipass='CavityPass';
+if nargin >= 4, quadpass=varargin{3}; end
+if nargin >= 3, bendpass=varargin{2}; end
+if nargin >= 2, cavipass=varargin{1}; end
 
 if ~isfield(GLOBVAL,'E0')
-   error('Energy not defined in GLOBVAL');
+    error('Energy not defined in GLOBVAL');
 end
 
 if ~isempty(cavipass)
-   cavindex=findcells(ring,'Frequency');
-   if isempty(cavindex)
-      warning('No cavity found in the structure')
-   else
-      disp(['Cavities located at position ' num2str(cavindex)]);
-   end
-   ring2=setcellstruct(ring,'PassMethod',cavindex,cavipass);
+    cavities=atgetcells(ring,'Frequency');
+    cavindex=find(cavities)';
+    if sum(cavities) <= 0
+        warning('AT:atradon:NoCavity',...
+            'No cavity found in the structure')
+    else
+        disp(['Cavities located at position ' num2str(cavindex)]);
+    end
+    ring2=setcellstruct(ring,'PassMethod',cavities,cavipass);
 else
-   ring2=ring;
+    ring2=ring;
 end
 
 if ~isempty(bendpass)
-   dipindex=findcells(ring2,'BetaCode','DI');
-   if isempty(dipindex), warning('No dipole found in the structure'); end
-   ring2=setcellstruct(ring2,'PassMethod',dipindex,bendpass);
+    isdipole=@(elem,field) elem.(field)~=0;
+    dipoles=atgetcells(ring2,'BendingAngle',isdipole);
+    if sum(dipoles) <= 0, warning('AT:atradon:NoBend',...
+            'No dipole found in the structure'); end
+    ring2=setcellstruct(ring2,'PassMethod',dipoles,bendpass);
 else
-   dipindex=[];
+    dipoles=false(size(ring2));
 end
 
 if ~isempty(quadpass)
-   quadindex=findcells(ring2,'BetaCode','QP');
-   if isempty(dipindex), warning('No quadrupole found in the structure'); end
-   ring2=setcellstruct(ring2,'PassMethod',quadindex,quadpass);
+    isquadrupole=@(elem,field) length(elem.(field)) >= 2 && elem.(field)(2)~=0;
+    quadrupoles=atgetcells(ring2,'PolynomB',isquadrupole) && ~dipoles;
+    if sum(quadrupoles) <= 0, warning('AT:atradon:NoQuad',...
+            'No quadrupole found in the structure'); end
+    ring2=setcellstruct(ring2,'PassMethod',quadrupoles,quadpass);
 else
-   quadindex=[];
+    quadrupoles=false(size(ring2));
 end
 
-radindex=sort([dipindex quadindex]);
+radindex=find(dipoles | quadrupoles)';
 disp([num2str(length(radindex)) ' elements switched to include radiation']);
