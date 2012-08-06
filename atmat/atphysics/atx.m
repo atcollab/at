@@ -103,10 +103,10 @@ if ~isempty(cavindex)
 	  [envelope,espread,blength]=ohmienvelope(ring2,radindex,refpts);
 	  for i=1:length(lindata)
 		 [beamA,beamB]=beam44(lindata(i));
-		 bm66=envelope(i).R;
+		 bm66=envelope(i).R;    % bm66 is the 6x6 beam matrix
 		 %         coupled=true;
-		 if coupled
-			siginv=inv(bm66);
+		 if coupled             % bm44 in the intersection of beam66
+			siginv=inv(bm66);   % with dp/p==0  ( 4x4 betatron emittance)
 			bm44=inv(siginv(1:4,1:4));
 		 else
 			siginv=inv(bm66([1 2 5 6],[1 2 5 6]));
