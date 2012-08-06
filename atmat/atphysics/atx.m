@@ -102,7 +102,9 @@ if ~isempty(cavindex)
    try
 	  [envelope,espread,blength]=ohmienvelope(ring2,radindex,refpts);
 	  for i=1:length(lindata)
-		 [beamA,beamB]=beam44(lindata(i));
+		 [beamA,beamB]=beam44(lindata(i));  % betatron 4x4 coupled matrices
+		 %   beamA       - 2x2 beam matrix for mode A
+		 %   beamB       - 2x2 beam matrix for mode B
 		 bm66=envelope(i).R;    % bm66 is the 6x6 beam matrix
 		 %         coupled=true;
 		 if coupled             % bm44 in the intersection of beam66
@@ -114,12 +116,11 @@ if ~isempty(cavindex)
 		 end
 		 lindata(i).beam66=bm66;
 		 lindata(i).beam44=bm44;
+         % Eigen emittances: Solve bm44 = modemit(1)*beamA + modemit(2)*beamB;
 		 lindata(i).modemit=([beamA(:) beamB(:)]\bm44(:))';
-		 %   beamA       - 2x2 beam matrix for mode A
-		 %   beamB       - 2x2 beam matrix for mode B
-		 %      lindata(i).BeamA=beamA;
-		 %      lindata(i).BeamB=beamB;
+         % Projected betatron emittances
 		 lindata(i).emit44=sqrt([det(bm44(1:2,1:2)) det(bm44(3:4,3:4))]);
+         % Projected full emittances (energy spread included)
 		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
          lindata(i).tilt=envelope(i).Tilt;
 	  end

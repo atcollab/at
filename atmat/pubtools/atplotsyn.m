@@ -33,7 +33,6 @@ lplot(3:5,:)=[0.5*l;l;l];
 xplot=s(ones(6,1),:)+lplot;
 yplot=zeros(6,length(l));
 yplot(2:4,:)=0.05*ylim(2);
-whos
 yplot(3,:)=yplot(3,:)+0.02*ylim(2)*sign(strength);
 p2=patch(xplot,yplot,[1 0.5 0.5]);
 
