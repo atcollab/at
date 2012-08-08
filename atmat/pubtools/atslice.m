@@ -8,7 +8,7 @@ for i=1:length(ring)
     elem=ring{i};
     if isfield(elem,'BendingAngle')
         newelems=splitdipole(elem,elmlength);
-    elseif elem.Length > 0
+    elseif isfield(elem,'Length') && elem.Length > 0
         nslices=ceil(elem.Length/elmlength);
         elem.Length=elem.Length/nslices;
         elt={elem};
