@@ -14,5 +14,5 @@ if nargin < 4, method='CorrectorPass'; end
 
 Elem.FamName=fname;  % add check for existing identical family names
 Elem.Length=L;
-Elem.Kick=kick;
+Elem.KickAngle=kick;
 Elem.PassMethod=method;
