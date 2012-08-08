@@ -11,4 +11,5 @@ function Elem=atmarker(fname,method)
 if nargin < 2, method='IdentityPass'; end
 
 Elem.FamName=fname;
+Elem.Length=0;
 Elem.PassMethod=method;
