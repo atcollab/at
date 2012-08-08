@@ -1,4 +1,4 @@
-function Elem = atidtable(fname, Nslice, filename, Energy, method)
+function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)
 % atidtable(fname, Nslice, filename, Energy, method)
 %
 % FamName	family name

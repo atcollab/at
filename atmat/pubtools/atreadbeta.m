@@ -90,7 +90,8 @@ for el=1:nb_stru
             else
                 angleout=nextelem.Angle;    % Exit face
                 id_stru=id_stru+1;          % create immediately in case of 2 adjacent CO elems
-                superp{id_stru}=tunedipole(dipelem,anglein,angleout,lff);
+                superp{id_stru}=atelem(dipelem,'EntranceAngle',anglein,...
+                    'ExitAngle',angleout,'FullGap',0,'FringeInt',lff);
                 anglein=0;
                 angleout=0;
                 lff=0;
@@ -103,7 +104,8 @@ for el=1:nb_stru
         otherwise
             if ~isempty(dipelem)
                 id_stru=id_stru+1;
-                superp{id_stru}=tunedipole(dipelem,anglein,angleout,lff);
+                superp{id_stru}=atelem(dipelem,'EntranceAngle',anglein,...
+                    'ExitAngle',angleout,'FullGap',0,'FringeInt',lff);
                 anglein=0;
                 angleout=0;
                 lff=0;
@@ -186,53 +188,47 @@ next=next+nl;
 params=sscanf(line(next:end),'%f')';
 switch (code)
     case 'SD'
-        newelem=atelem('drift','FamName',elname,'Length',params(1));
+        newelem=atdrift(elname,params(1));
     case 'QP'
-        newelem=atelem('quadrupole','FamName',elname,'Length',params(1),...
-            'K',params(2),'PolynomA',[0 0 0],'PolynomB',[0 params(2) 0],'MaxOrder',2,'NumIntSteps',10);
-        newelem.PassMethod=quadpass;
+        newelem=atquadrupole(elname,params(1),params(2),quadpass);
     case 'DE'
-        newelem=atelem('marker','FamName',elname,'Displacement',params(1:3));
+        newelem=atelem(atmarker(elname),'Displacement',params(1:3));
     case 'RO'
-        newelem=atelem('marker','FamName',elname,'Srot',params(1));
+        newelem=atelem(atmarker(elname),'Srot',params(1));
     case 'CO'
-        newelem=atelem('marker','FamName',elname,'Angle',params(1),'Lff',params(3));
+        newelem=atelem(atmarker(elname),'Angle',params(1),'Lff',params(3));
     case 'DI'
         strength=-params(3)/params(2)/params(2);
-        newelem=atelem('sbend','FamName',elname,'Length',params(1)*params(2),'BendingAngle',params(1),...
-            'K',strength,'PolynomA',[0 0 0],'PolynomB',[0 strength 0],'MaxOrder',2,'NumIntSteps',10);
-        newelem.PassMethod=bendpass;
+        newelem=atsbend(elname,params(1)*params(2),params(1),strength,bendpass);
     case 'SX'
         if params(1) < 0.001
             code='LD3';
-            newelem=atelem('sextupole','FamName',elname,'PolynomB',[0 0 params(1)*params(2)],'PassMethod','ThinMPolePass');
+            newelem=atthinmultipole(elname,[],[0 0 params(1)*params(2)]);
         else
-            newelem=atelem('sextupole','FamName',elname,'Length',params(1),'PolynomB',[0 0 params(2)],'PassMethod',multipass);
+            newelem=atsextupole(elname,params(1),params(2),multipass);
         end
     case 'LD'
         order=params(2)/2;
         polb=[];
         polb(1,order)=params(1);
         code=[code int2str(order)];
-        newelem=atelem('marker','FamName',elname,'PolynomA',zeros(1,order),'PolynomB',polb,'MaxOrder',order-1);
-        newelem.PassMethod='ThinMPolePass';
+        newelem=atthinmultipole(elname,[],polb);
     case 'LT'
         order=params(2)/2;
         pola=[];
         pola(1,order)=params(1);
         code=[code int2str(order)];
-        newelem=atelem('marker','FamName',elname,'PolynomA',pola,'PolynomB',zeros(1,order),'MaxOrder',order-1);
-        newelem.PassMethod='ThinMPolePass';
+        newelem=atthinmultipole(elname,pola,[]);
     case 'KI'
         if params(3) > 0, code='CHV'; end
         newelem=atelem('corrector','FamName',elname,'KickAngle',[params(1) params(2)]);
         newelem.PassMethod='IdentityPass';
     case 'CA'
         GLOBVAL.E0=params(3);
-        newelem=atelem('marker','FamName',elname,'Length',0,'Voltage',abs(params(1)),'Frequency',0,'HarmNumber',params(2));
-        newelem.PassMethod=cavipass;
+        newelem=atelem(atmarker(elname,cavipass),'Length',0,...
+            'Voltage',abs(params(1)),'Frequency',0,'HarmNumber',params(2));
     otherwise
-        newelem=atelem('marker','FamName',elname);
+        newelem=atmarker(elname);
 end
 newelem.BetaCode=code;
 
@@ -245,10 +241,3 @@ while true
     end
     if ~isempty(strfind(line,code)), break; end
 end
-
-function dip2=tunedipole(dip1,anglein,angleout,lff)
-dip2=dip1;
-dip2.EntranceAngle=anglein;
-dip2.ExitAngle=angleout;
-dip2.FringeInt=lff;
-dip2.FullGap=0;
