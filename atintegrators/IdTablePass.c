@@ -514,8 +514,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    mxSetCell(plhs[0],2,mxCreateString("ykick1"));
 	    mxSetCell(plhs[0],3,mxCreateString("xkick"));
 	    mxSetCell(plhs[0],4,mxCreateString("ykick"));
-	    mxSetCell(plhs[0],5,mxCreateString("x"));
-        mxSetCell(plhs[0],6,mxCreateString("y"));
+	    mxSetCell(plhs[0],5,mxCreateString("xtable"));
+        mxSetCell(plhs[0],6,mxCreateString("ytable"));
         mxSetCell(plhs[0],7,mxCreateString("Nslice"));
                         
 	    if(nlhs>1) /* Required and optional fields */ 
