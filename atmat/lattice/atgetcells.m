@@ -1,16 +1,16 @@
 function ok=atgetcells(cellarray, field, varargin)
 %FINDCELLS performs a search on MATLAB cell arrays of structures
 %
-% INDEX = ATGETCELLS(RING, 'field')
+% OK = ATGETCELLS(RING, 'field')
 %   returns indexes of elements that have a field named 'field'
 %
-% INDEX = ATGETCELLS(RING, 'field', VALUE1...)
+% OK = ATGETCELLS(RING, 'field', VALUE1...)
 %   returns indexes of elements whose field 'field'
 %   is equal to VALUE1, VALUE2, ... or VALUEN. Where VALUE can either be
 %   character strings or a number. If its a character string REGULAR
 %   expressions can be used.
 %
-% INDEX = ATGETCELLS(RING, 'field', @TESTFUNCTION,...)
+% OK = ATGETCELLS(RING, 'field', @TESTFUNCTION,...)
 %   Uses the user-defined TESTFUNCTION to select array elements
 %   TESTFUNCTION must be of the form:
 %       OK=TESTFUNTION(ATELEM,FIELD,ARGS...)
