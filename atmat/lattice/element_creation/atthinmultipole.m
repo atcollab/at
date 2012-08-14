@@ -16,6 +16,7 @@ lb=length(PolynomB);
 lg=max(la,lb);
 
 Elem.FamName=fname;
+Elem.Length=0;
 Elem.PolynomA=[PolynomA zeros(lg-la,1)];	 
 Elem.PolynomB=[PolynomB zeros(lg-lb,1)];
 Elem.MaxOrder=lg-1;
