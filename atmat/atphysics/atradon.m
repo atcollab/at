@@ -49,7 +49,7 @@ end
 
 if ~isempty(quadpass)
     isquadrupole=@(elem,field) length(elem.(field)) >= 2 && elem.(field)(2)~=0;
-    quadrupoles=atgetcells(ring2,'PolynomB',isquadrupole) && ~dipoles;
+    quadrupoles=atgetcells(ring2,'PolynomB',isquadrupole) & ~dipoles;
     if sum(quadrupoles) <= 0, warning('AT:atradon:NoQuad',...
             'No quadrupole found in the structure'); end
     ring2=setcellstruct(ring2,'PassMethod',quadrupoles,quadpass);
