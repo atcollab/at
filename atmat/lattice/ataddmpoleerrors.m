@@ -54,3 +54,12 @@ elmnt.PolynomB=polyB2;
 elmnt.MaxOrder=length(polyB2);
 newring{elemindex(j)}=elmnt;
 end
+
+function quads = findquadrupoles(ring)
+dipoles = finddipoles(ring);
+isquadrupole=@(elem,field) length(elem.(field)) >= 2 && elem.(field)(2)~=0;
+quads=atgetcells(ring,'PolynomB',isquadrupole) & ~dipoles;
+
+function dipoles = finddipoles(ring)
+isdipole=@(elem,field) elem.(field)~=0;
+dipoles=atgetcells(ring,'BendingAngle',isdipole);
