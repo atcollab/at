@@ -1,4 +1,4 @@
-function [PolynomOut] = ataddmpolecomppoly(Polynom,refindex,newindex,strength,radius)
+function [PolynomOut] = ataddmpolecomppoly(Polynom,refindex,newindex,strength,radius,varargin)
 %ataddmpolecomppoly adds a multipole component to an existing polynomial,
 %scaling it by the reference multipole value and a radius to set the length
 %scale
@@ -13,8 +13,17 @@ function [PolynomOut] = ataddmpolecomppoly(Polynom,refindex,newindex,strength,ra
 %
 %See also: attiltelem, atshiftelem, atmodelem
 if (Polynom(refindex)==0)
-    error('reference polynomial value is 0');
+    if nargin==5
+        error('reference polynomial value is 0');
+    else
+       refvalue=varargin{1};
+    end 
+  
 else
+    
+   refvalue = Polynom(refindex);
+end
+    
     
     if(newindex > length(Polynom))
         PolynomOut=[Polynom zeros(1,newindex-length(Polynom))];
@@ -23,6 +32,6 @@ else
     end
     
     
-    val=power(radius,newindex-refindex)*strength/Polynom(refindex);
+    val=power(radius,newindex-refindex)*strength/refvalue;
     PolynomOut(newindex)=PolynomOut(newindex)+val;
 end
