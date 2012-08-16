@@ -18,17 +18,7 @@ function z=sextupole(fname,L,S,method)
 % the family
 
 
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Length = L;
-ElemData.MaxOrder = 3;
-ElemData.NumIntSteps = 10;
-ElemData.R1 = diag(ones(6,1));
-ElemData.R2 = diag(ones(6,1));
-ElemData.T1 = zeros(1,6);
-ElemData.T2 = zeros(1,6);
-ElemData.PolynomA= [0 0 0 0];	 
-ElemData.PolynomB= [0 0 S 0]; 
-ElemData.PassMethod=method;
+ElemData=atsextupole(fname,L,S,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
