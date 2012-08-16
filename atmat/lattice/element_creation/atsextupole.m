@@ -19,3 +19,4 @@ Elem.PolynomB=[0 0 S 0];
 Elem.MaxOrder=3;
 Elem.NumIntSteps=10;
 Elem.PassMethod=method;
+Elem.Class='Sextupole';

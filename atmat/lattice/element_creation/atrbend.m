@@ -24,3 +24,4 @@ Elem.EntranceAngle=0.5*A;
 Elem.ExitAngle=0.5*A;
 Elem.K=K;
 Elem.PassMethod=method;
+Elem.Class='Bend';

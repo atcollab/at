@@ -20,3 +20,4 @@ Elem.MaxOrder=2;
 Elem.NumIntSteps=10;
 Elem.K=K;
 Elem.PassMethod=method;
+Elem.Class='Quadrupole';
