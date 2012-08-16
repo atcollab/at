@@ -455,13 +455,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    if(tmpmxptr)
 	        x = mxGetPr(tmpmxptr);
 	    else
-	        mexErrMsgTxt("Required field 'x' was not found in the element data structure");           
+	        mexErrMsgTxt("Required field 'xtable' was not found in the element data structure");           
         
 	    tmpmxptr = mxGetField(prhs[0],0,"ytable");
 	    if(tmpmxptr)
 	        y = mxGetPr(tmpmxptr);
 	    else
-	        mexErrMsgTxt("Required field 'y' was not found in the element data structure");    
+	        mexErrMsgTxt("Required field 'ytable' was not found in the element data structure");    
         
   	    tmpmxptr = mxGetField(prhs[0],0,"Nslice");
 	    if(tmpmxptr)
