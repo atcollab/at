@@ -13,7 +13,7 @@ function z=rbend(fname,L,A,A1,A2,K,method)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 
-ElemData=rbend(fname,L,A,K,method);
+ElemData=atrbend(fname,L,A,K,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
