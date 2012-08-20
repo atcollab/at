@@ -84,7 +84,7 @@ static void markaslost(double *r6)
 void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, double *xkick, double *ykick, double *x, double *y,int n,int m, int Nslice, double *T1, double *T2, double *R1, double *R2, int num_particles)
 {	double *r6,f,L1,deltaxp,deltayp,deltaxp1,deltayp1,*limitsptr;   
 	int c;
-    bool useT1, useT2, useR1, useR2;
+    bool usexkick1, useykick1, useT1, useT2, useR1, useR2;
     
     /*Act as AperturePass*/
     limitsptr=(double*)mxCalloc(4,sizeof(double));
@@ -114,6 +114,16 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, do
     GLOBAL_m=m; /* y used as colums*/
     GLOBAL_n=n; /* x used as rows*/
      
+    if(xkick1==NULL)
+        usexkick1=false;
+    else
+        usexkick1=true;
+    
+    if(ykick1==NULL)
+        useykick1=false;
+    else
+        useykick1=true;
+    
 	if(T1==NULL)
 	    useT1=false;
 	else 
@@ -167,10 +177,12 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, do
                         {     /*The kick from IDs varies quadratically, not linearly, with energy.   */
                             deltaxp = (1.0/Nslice)*Map_x(r6[0],r6[2])/(1.0+r6[4]);        
                             deltayp = (1.0/Nslice)*Map_y(r6[0],r6[2])/(1.0+r6[4]); 
-                            deltaxp1 = (1.0/Nslice)*Map1_x(r6[0],r6[2]);        
-                            deltayp1 = (1.0/Nslice)*Map1_y(r6[0],r6[2]); 
-                            r6[1] = r6[1] + deltaxp + deltaxp1; 
-                            r6[3] = r6[3] + deltayp + deltayp1;
+                          if(usexkick1)  deltaxp1 = (1.0/Nslice)*Map1_x(r6[0],r6[2]);        
+                          if(useykick1)  deltayp1 = (1.0/Nslice)*Map1_y(r6[0],r6[2]); 
+                            r6[1] = r6[1] + deltaxp;
+                            if(usexkick1) r6[1]=r6[1]+deltaxp1;
+                            r6[3] = r6[3] + deltayp;
+                            if(useykick1) r6[3]= r6[3] + deltayp1;
                         }
                         ATdrift6(r6,L1);	
                     }  
@@ -247,63 +259,65 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 					NewFieldNumbers[0] = fnum;
 					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 
-					fnum = mxGetFieldNumber(ElemData,"xkick1");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'xkick1' was not found in the element data structure"); 					
-					NewFieldNumbers[1] = fnum;
-                    xkick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-                    n = mxGetN(mxGetFieldByNumber(ElemData,0,fnum));
-                    m = mxGetM(mxGetFieldByNumber(ElemData,0,fnum));
-                    
-					fnum = mxGetFieldNumber(ElemData,"ykick1");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'ykick1' was not found in the element data structure"); 					
-					NewFieldNumbers[2] = fnum;
-                     ykick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
+					
                      
                     
 					fnum = mxGetFieldNumber(ElemData,"xkick");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'xkick' was not found in the element data structure"); 					
-					NewFieldNumbers[3] = fnum;
+					NewFieldNumbers[1] = fnum;
                     xkick = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
+                    
+                    n = mxGetN(mxGetFieldByNumber(ElemData,0,fnum));
+                    m = mxGetM(mxGetFieldByNumber(ElemData,0,fnum));
                     
 					fnum = mxGetFieldNumber(ElemData,"ykick");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'ykick' was not found in the element data structure"); 					
-					NewFieldNumbers[4] = fnum;
+					NewFieldNumbers[2] = fnum;
                      ykick = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
                     
 					fnum = mxGetFieldNumber(ElemData,"xtable");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'x' was not found in the element data structure"); 					
-					NewFieldNumbers[5] = fnum;
+					NewFieldNumbers[3] = fnum;
                     x = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
                     
 					fnum = mxGetFieldNumber(ElemData,"ytable");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'y' was not found in the element data structure"); 					
-					NewFieldNumbers[6] = fnum;
+					NewFieldNumbers[4] = fnum;
                     y = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-                    
-                    
-                    
-                    					
-                    
-                    
                     
                     
                     
                     fnum = mxGetFieldNumber(ElemData,"Nslice");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'Nslice' was not found in the element data structure"); 					
-					NewFieldNumbers[7] = fnum;
+					NewFieldNumbers[5] = fnum;
                     Nslice = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
                     
 					
 					/* Optional fields */
 
 				
+                    fnum = mxGetFieldNumber(ElemData,"xkick1");
+									
+					NewFieldNumbers[6] = fnum;
+                    if(fnum<0)
+                        xkick1 = NULL;
+                    else
+                    xkick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
+                    
+                    
+					fnum = mxGetFieldNumber(ElemData,"ykick1");					
+					NewFieldNumbers[7] = fnum;
+                    if(fnum<0) 
+                        ykick1 = NULL;
+                    else
+                     ykick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
+                    
+                    
                     fnum = mxGetFieldNumber(ElemData,"R1");
 					NewFieldNumbers[8] = fnum;
 					if(fnum<0)
@@ -346,18 +360,29 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 				{	
                     /*mexPrintf("Aqui hi vas?\n");*/
                     le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-                    xkick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-                    ykick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-                    xkick = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-                    ykick = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-                    x = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-                    y = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-                    Nslice = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));       
+                    
+                    xkick = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
+                    ykick = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
+                    x = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
+                    y = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
+                    Nslice = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
+                   
                     n = mxGetN(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
                     m = mxGetM(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
                     
 					/* Optional fields */
-					if(FieldNumbers[8]<0)
+                    
+					if(FieldNumbers[6]<0)
+					    xkick1 = NULL;
+					else
+					    xkick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
+					
+					if(FieldNumbers[7]<0)
+					    ykick1 = NULL;
+					else
+					    ykick1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
+                    
+                    if(FieldNumbers[8]<0)
 					    pr1 = NULL;
 					else
 					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[8]));
@@ -420,27 +445,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    else
 	        mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
 	    
-        tmpmxptr = mxGetField(prhs[0],0,"xkick1");
-	    if(tmpmxptr)
-        {
-            xkick1 = mxGetPr(tmpmxptr);
-            n_map = mxGetN(tmpmxptr);        
-            m_map = mxGetM(tmpmxptr);
-        }
-	    else
-	        mexErrMsgTxt("Required field 'xkick1' was not found in the element data structure");    	    
-        
- 	    tmpmxptr = mxGetField(prhs[0],0,"ykick1");
-	    if(tmpmxptr)
-	        ykick1 = mxGetPr(tmpmxptr);
-	    else
-	        mexErrMsgTxt("Required field 'ykick1' was not found in the element data structure");   
         
         
 	    tmpmxptr = mxGetField(prhs[0],0,"xkick");
 	    if(tmpmxptr)
         {
             xkick = mxGetPr(tmpmxptr);
+            n_map = mxGetN(tmpmxptr);        
+            m_map = mxGetM(tmpmxptr);
         }
 	    else
 	        mexErrMsgTxt("Required field 'xkick' was not found in the element data structure");    	    
@@ -473,8 +485,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         /*Optional fields*/ 
         
+        tmpmxptr = mxGetField(prhs[0],0,"xkick1");
+	    if(tmpmxptr)
+        {
+            xkick1 = mxGetPr(tmpmxptr);
+            
+        }
+	    else
+        xkick1=NULL;
+              	    
         
-	    tmpmxptr = mxGetField(prhs[0],0,"R1");
+ 	    tmpmxptr = mxGetField(prhs[0],0,"ykick1");
+	    if(tmpmxptr)
+	        ykick1 = mxGetPr(tmpmxptr);
+	    else
+	        ykick1=NULL;
+	    
+        tmpmxptr = mxGetField(prhs[0],0,"R1");
+        
 	    if(tmpmxptr)
 	        pr1 = mxGetPr(tmpmxptr);
 	    else
@@ -508,22 +536,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	}
 	else                             
 	{   /* return list of required fields */
-	    plhs[0] = mxCreateCellMatrix(8,1);
+	    plhs[0] = mxCreateCellMatrix(6,1);
 	    mxSetCell(plhs[0],0,mxCreateString("Length"));
-	    mxSetCell(plhs[0],1,mxCreateString("xkick1"));
-	    mxSetCell(plhs[0],2,mxCreateString("ykick1"));
-	    mxSetCell(plhs[0],3,mxCreateString("xkick"));
-	    mxSetCell(plhs[0],4,mxCreateString("ykick"));
-	    mxSetCell(plhs[0],5,mxCreateString("xtable"));
-        mxSetCell(plhs[0],6,mxCreateString("ytable"));
-        mxSetCell(plhs[0],7,mxCreateString("Nslice"));
+	    mxSetCell(plhs[0],1,mxCreateString("xkick"));
+	    mxSetCell(plhs[0],2,mxCreateString("ykick"));
+	    mxSetCell(plhs[0],3,mxCreateString("xtable"));
+        mxSetCell(plhs[0],4,mxCreateString("ytable"));
+        mxSetCell(plhs[0],5,mxCreateString("Nslice"));
                         
 	    if(nlhs>1) /* Required and optional fields */ 
-	    {   plhs[1] = mxCreateCellMatrix(4,1);
-	        mxSetCell(plhs[1],0,mxCreateString("T1"));
-	        mxSetCell(plhs[1],1,mxCreateString("T2"));
-	        mxSetCell(plhs[1],2,mxCreateString("R1"));
-	        mxSetCell(plhs[1],3,mxCreateString("R2"));
+	    {   plhs[1] = mxCreateCellMatrix(6,1);
+        mxSetCell(plhs[1],0,mxCreateString("xkick1"));
+	    mxSetCell(plhs[1],1,mxCreateString("ykick1"));
+	        mxSetCell(plhs[1],2,mxCreateString("T1"));
+	        mxSetCell(plhs[1],3,mxCreateString("T2"));
+	        mxSetCell(plhs[1],4,mxCreateString("R1"));
+	        mxSetCell(plhs[1],5,mxCreateString("R2"));
 	    }
 	}
  }
