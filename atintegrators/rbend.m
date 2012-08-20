@@ -5,8 +5,8 @@ function z=rbend(fname,L,A,A1,A2,K,method)
 %		FamName        	family name
 %		Length         	length of the arc for an on-energy particle [m]
 %		BendingAngle		total bending angle [rad]
-%		EntranceAngle		[rad] (0 - for sector bends)
-%		ExitAngle			[rad] (0 - for sector bends)
+%		EntranceAngle		[rad] (A/2 - for rectangular bends)
+%		ExitAngle			[rad] (A/2 - for rectangular bends)
 %		ByError				error in the dipole field relative to the design value 
 %		K						quadrupole K-value for combined funtion bends
 %		PassMethod        name of the function to use for tracking
@@ -14,6 +14,8 @@ function z=rbend(fname,L,A,A1,A2,K,method)
 % the family
 
 ElemData=atrbend(fname,L,A,K,method);
+Elem.EntranceAngle=A1;  %for backwards compatibility
+Elem.ExitAngle=A2;
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
