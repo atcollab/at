@@ -112,17 +112,13 @@ for el=1:nb_stru
                 dipelem=[];
             end
             if srot ~= 0
-                if isfield(nextelem,'R1')
-                    srollmat=mkSRotationMatrix(srot);
-                    nextelem.R1=srollmat;
-                    nextelem.R2=srollmat';
-                end
+                srollmat=mkSRotationMatrix(srot);
+                nextelem.R1=srollmat;
+                nextelem.R2=srollmat';
             end
             if max(abs(displ)) > 0
-                if isfield(nextelem,'T1')
-                    nextelem.T1([1 3 5])=displ;
-                    nextelem.T2([1 3 5])=-displ;
-                end
+                nextelem.T1([1 3 5])=displ;
+                nextelem.T2([1 3 5])=-displ;
             end
             if strcmp(nextelem.BetaCode,'DI')
                 dipelem=nextelem;
@@ -143,7 +139,7 @@ if isempty(cavities)		% add implicit cavity if necessary
     superp{end+1}=cavilist{1};
     cavities=length(superp);
 end
-superp=setcellstruct(superp,'Energy',true(size(superp)),GLOBVAL.E0);
+superp=atsetfieldvalues(superp,true(size(superp)),'Energy',GLOBVAL.E0);
 
 if nargout >= 2
     periods=nper;
@@ -221,8 +217,7 @@ switch (code)
         newelem=atthinmultipole(elname,pola,[]);
     case 'KI'
         if params(3) > 0, code='CHV'; end
-        newelem=atelem('corrector','FamName',elname,'KickAngle',[params(1) params(2)]);
-        newelem.PassMethod='IdentityPass';
+        newelem=atcorrector(elname,0,[params(1) params(2)],'IdentityPass');
     case 'CA'
         GLOBVAL.E0=params(3);
         newelem=atelem(atmarker(elname,cavipass),'Length',0,...
