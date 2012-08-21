@@ -53,7 +53,8 @@ end
 if ischar(varargin{end})            % Character array
     values=cellstr(varargin{end});
 elseif isnumeric(varargin{end})     % Numeric data
-    if iscolumn(varargin{end})
+    [r c]=size(varargin{end}); %#ok<ASGLU>
+    if c==1
         values=num2cell(varargin{end});
     else
         values=squeeze(num2cell(varargin{end},1:ndims(varargin{end})-1));
