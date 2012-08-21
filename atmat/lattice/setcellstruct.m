@@ -32,7 +32,7 @@ function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)
 %   3. Cell array of strings, with either one element or with the same
 %       length as index.
 %
-% See also GETCELLSTRUCT FINDCELLS
+% See also ATSETFIELDVALUES GETCELLSTRUCT FINDCELLS
 
 if(~iscell(CELLARRAY) || ~isstruct(CELLARRAY{1}) || isempty(CELLARRAY))
     error('The first argument must be a non-empty cell array of structures')

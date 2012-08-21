@@ -13,7 +13,7 @@ function values = getcellstruct(CELLARRAY,field,index,varargin)
 % VALUES = GETCELLSTRUCT(CELLARRAY,'field',INDEX) is a MATLAB cell array
 % 	 of strings if specified fields contain strings.
 %
-% See also SETCELLSTRUCT FINDCELLS 
+% See also ATGETFIELDVALUES SETCELLSTRUCT FINDCELLS 
 
 if(~iscell(CELLARRAY) || ~isstruct(CELLARRAY{1}) || isempty(CELLARRAY))
    error('The first argument must be a non-empty cell array of structures') 

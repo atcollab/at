@@ -27,37 +27,25 @@ if isstruct(elem)
 elseif ischar(elem)
     switch lower(elem(1:4)) % Generic
         case 'drif'
-            E.Length = 0;
-            E.PassMethod = 'DriftPass';
+            E=atdrift('',0);
             
         case 'quad'
-            E.Length = 0;
-            E.K = 0;
-            E.PassMethod = 'QuadLinearPass';
+            E=atquadrupole('',0,0);
             
         case 'sext'
-            E.Length = 0;
-            E.PolynomB  = [0 0 0];
-            E.PolynomA  = [0 0 0];
-            E.MaxOrder = 2;
-            E.NumIntSteps = 10;
-            E.PassMethod = 'StrMPoleSymplectic4Pass';
+            E=atsextupole('',0,0);
             
         case 'mark'
-            E.Length = 0;
-            E.PassMethod = 'IdentityPass';
+            E=atmarker('');
             
-        case {'bend','rben','sben'}
-            E.Length = 0;
-            E.BendingAngle = 0;
-            E.EntranceAngle =  0;
-            E.ExitAngle = 0;
-            E.PassMethod = 'BendLinearPass';
+        case {'bend','sben'}
+            E=atsbend('',0,0,0);
+            
+        case 'rben'
+            E=atrbend('',0,0,0);
             
         case 'corr'
-            E.Length = 0;
-            E.KickAngle = [0 0];
-            E.PassMethod = 'CorrectorPass';
+            E=atcorrector('',0,[0 0]);
             
         otherwise % function that returns an at element structure
             error('AT:atelem:UnknownType',['Unknown element type: ' elem]);
