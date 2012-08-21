@@ -27,12 +27,11 @@ if ~isempty(cavipass)
     cavities=atgetcells(ring,'Frequency');
     cavindex=find(cavities)';
     if sum(cavities) <= 0
-        warning('AT:atradon:NoCavity',...
-            'No cavity found in the structure')
+        warning('AT:atradon:NoCavity', 'No cavity found in the structure');
     else
         disp(['Cavities located at position ' num2str(cavindex)]);
     end
-    ring2=setcellstruct(ring,'PassMethod',cavities,cavipass);
+    ring2=atsetfieldvalues(ring,cavities,'PassMethod',cavipass);
 else
     ring2=ring;
 end
@@ -40,9 +39,10 @@ end
 if ~isempty(bendpass)
     isdipole=@(elem,field) elem.(field)~=0;
     dipoles=atgetcells(ring2,'BendingAngle',isdipole);
-    if sum(dipoles) <= 0, warning('AT:atradon:NoBend',...
-            'No dipole found in the structure'); end
-    ring2=setcellstruct(ring2,'PassMethod',dipoles,bendpass);
+    if sum(dipoles) <= 0
+        warning('AT:atradon:NoBend', 'No dipole in the structure');
+    end
+    ring2=atsetfieldvalues(ring2,dipoles,'PassMethod',bendpass);
 else
     dipoles=false(size(ring2));
 end
@@ -50,9 +50,10 @@ end
 if ~isempty(quadpass)
     isquadrupole=@(elem,field) length(elem.(field)) >= 2 && elem.(field)(2)~=0;
     quadrupoles=atgetcells(ring2,'PolynomB',isquadrupole) & ~dipoles;
-    if sum(quadrupoles) <= 0, warning('AT:atradon:NoQuad',...
-            'No quadrupole found in the structure'); end
-    ring2=setcellstruct(ring2,'PassMethod',quadrupoles,quadpass);
+    if sum(quadrupoles) <= 0
+        warning('AT:atradon:NoQuad', 'No quadrupole in the structure');
+    end
+    ring2=atsetfieldvalues(ring2,quadrupoles,'PassMethod',quadpass);
 else
     quadrupoles=false(size(ring2));
 end
