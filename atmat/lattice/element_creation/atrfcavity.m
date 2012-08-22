@@ -21,3 +21,4 @@ Elem.Frequency = F;
 Elem.HarmNumber = H; %is this required?  not a required arg in pass method
 Elem.PhaseLag = 0;
 Elem.PassMethod=method;
+Elem.Class='RFCavity';
