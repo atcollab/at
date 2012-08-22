@@ -10,13 +10,7 @@ function z = rfcavity(fname,L,V,F,H,method)
 % returns assigned address in the FAMLIST that uniquely identifies
 % the family
 
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Length = L;
-ElemData.Voltage = V;
-ElemData.Frequency = F;
-ElemData.HarmNumber = H;
-ElemData.PhaseLag = 0;
-ElemData.PassMethod=method;
+ElemData = atrfcavity(fname,L,V,F,H,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
