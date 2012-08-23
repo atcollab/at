@@ -65,22 +65,4 @@ for ii=1:length(allspos)
 end
 toc
 
-
-function [deltap,deltam] = track4dppAp(THERING, Nturn)
-%
-%dpp0 = [-0.04:0.001:0.04];
-%dpp0 = [-0.04:0.005:0.04];
-%dpp0 = [-0.04:0.002:-0.02, 0, 0.02:0.002:0.04];
-dpp0 = [-0.04:0.0005:-0.02, 0, 0.02:0.0005:0.04];
-
-X0l = zeros(6, length(dpp0));
-X0l(5,:) = dpp0;
-%tic
-[Rfin, loss] =ringpass(THERING,X0l,Nturn);
-%toc
-[tmp, indxzero] = find(dpp0==0);
-taglossp = min([length(dpp0) indxzero-1+find(loss(indxzero:end))]);
-taglossm = max([1 find(loss(1:indxzero))]);
-
-deltap = dpp0(taglossp);
-deltam = dpp0(taglossm);
+[deltap,deltam] = atmomap(ring, Nturn);
