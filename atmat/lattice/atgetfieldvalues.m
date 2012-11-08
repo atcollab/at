@@ -35,6 +35,7 @@ nvals = numel(index);
 
 vals=cell(nvals,1);
 vnum=true;
+classnam='double';
 %vchar=true;
 dims=[0 0];
 for idv=1:nvals
