@@ -20,11 +20,11 @@ function ok=atgetcells(cellarray, field, varargin)
 % OK is a logical array with the same size as RING, refering to matching
 % elements in RING
 %
-% See also GETCELLSTRUCT, SETCELLSTRUCT, REGEXPI
+% See also ATGETFIELDVALUES, ATSETFIELDVALUES, FINDCELLS, REGEXPI
 
 % Check if the first argument is the cell array of structures
-if(~iscell(cellarray) || ~isstruct(cellarray{1}) || isempty(cellarray))
-    error('The first argument must be a non-empty cell array of structures')
+if ~(iscell(cellarray) && (isempty(cellarray) || isstruct(cellarray{1})))
+    error('The first argument must be a cell array of structures')
 end
 % Check if the second argument is a string
 if(~ischar(field))

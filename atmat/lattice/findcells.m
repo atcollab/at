@@ -15,6 +15,6 @@ function index = findcells(CELLARRAY, field, varargin)
 %                                          lengths 0 and 0.2
 %   findcells(THERING,'FamName','SFA','SDA');
 %
-% See also GETCELLSTRUCT, SETCELLSTRUCT, REGEXPI
+% See also ATGETCELLS, GETCELLSTRUCT, SETCELLSTRUCT, REGEXPI
 
 index=reshape(find(atgetcells(CELLARRAY,field,varargin{:})),1,[]);

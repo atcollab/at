@@ -1,6 +1,6 @@
 function elem = attiltelem(elem,rots)
-%ATSHIFTELEM set new rotation parameters
-%NEWELEM=ATROTELEM(OLDELEM,ROTS)
+%ATTILTELEM set new rotation parameters
+%NEWELEM=ATTILTELEM(OLDELEM,ROTS)
 %
 % ROTS - rotation angle in RADIANS
 %   POSITIVE ROTS corresponds to a CORKSCREW (right) 
