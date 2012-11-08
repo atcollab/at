@@ -128,14 +128,14 @@ if nargout < 2
 else					
    % Calculate matrixes at all REFPTS. Use linepass
    % Need to include the exit of the LATTICE to REFPTS array
-   if(REFPTS(NR)~=NE+1)
-       REFPTS = [REFPTS NE+1];
+   if NR==0 || REFPTS(NR)~=NE+1
        NR1 = NR+1;
+       REFPTS(NR1)=NE+1;
    else
        NR1 = NR;
    end
 
-   TMAT = linepass(LATTICE,RM,REFPTS);   
+   TMAT = linepass(LATTICE,RM,REFPTS);
    TMAT3 = reshape(TMAT(1:4,:),4,9,NR1);
    M44 = (TMAT3(1:4,1:4,NR1)-TMAT3(1:4,5:8,NR1))/(2*d);
    
