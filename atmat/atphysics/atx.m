@@ -74,27 +74,27 @@ if nargin < 3, dpp=0; end
 
 [lindata,tunes,xsi]=atlinopt(ring,dpp,refpts);
 %coupled=std(cat(1,lindata.gamma),1) > 1.e-5
-coupled=max(abs(1-cat(1,lindata.gamma))) > 1.e-5 %#ok<*NOPRT>
+coupled=max(abs(1-cat(1,lindata.gamma))) > 1.e-5; %#ok<*NOPRT>
 
 ts=periods*tunes;						% fractional tunes
-fractunes=ts-fix(ts)
+fractunes=ts-fix(ts);
 
-circumference=periods*lindata(end).SPos			% circumference
+circumference=periods*lindata(end).SPos;			% circumference
 
-transfer=lindata(end).M44			% transfer matrix
+transfer=lindata(end).M44;			% transfer matrix
 
-[beamA,beamB]=beam44(lindata(1))
+[beamA,beamB]=beam44(lindata(1));
 
-closedorbit=lindata(1).ClosedOrbit'		% closed orbit
+closedorbit=lindata(1).ClosedOrbit';		% closed orbit
 
-dispersion=lindata(1).Dispersion'		% dispersion
+dispersion=lindata(1).Dispersion';		% dispersion
 
-tuneper=lindata(end).mu/2/pi			% tunes
-tunes=periods*tuneper			% tunes
+tuneper=lindata(end).mu/2/pi;			% tunes
+tunes=periods*tuneper;			% tunes
 
-momcompact=mcf(ring)				% momentum compaction
+momcompact=mcf(ring);				% momentum compaction
 
-chromaticity=xsi./tuneper				% chromaticity
+chromaticity=xsi./tuneper;				% chromaticity
 
 [ring2,radindex,cavindex]=atradon(ring);
 
@@ -126,13 +126,11 @@ if ~isempty(cavindex)
 	  end
       modemit=cat(1,lindata.modemit);
       %emit6=cat(1,lindata.emit66);
-	  modemittance=mean(modemit)
-	  modcoupling=mean(modemit(:,2)./modemit(:,1))
+	  modemittance=mean(modemit);
+	  modcoupling=mean(modemit(:,2)./modemit(:,1));
       projemit=cat(1,lindata.emit44);
-	  projemittance=projemit(1,:)
-	  projcoupling=mean(projemit(:,2)./projemit(:,1))
-	  espread
-	  blength
+	  projemittance=projemit(1,:);
+	  projcoupling=mean(projemit(:,2)./projemit(:,1));
    catch %#ok<CTCH>
 	  warning('atx:unstable','Emittance computation failed');
       blength=NaN;
@@ -156,4 +154,25 @@ pm=struct('ll',circumference,'alpha',momcompact,...
    'espread',espread,...
    'blength',blength,...
    'modemittance',modemittance);
+
+if (nargout==0)
+    display(coupled);
+    display(fractunes);
+    display(circumference);
+    display(transfer);
+    display(beamA);
+    display(beamB);
+    display(closedorbit);
+    display(dispersion);
+    display(tuneper);
+    display(tunes);
+    display(momcompact);
+    display(chromaticity);
+    display(modemittance);
+    display(modcoupling);
+    display(projemittance);
+    display(projcoupling);
+    display(espread);
+    display(blength);
+end
 
