@@ -51,26 +51,26 @@ function [lindt,pm]=atx(ring,varargin)
 % See also: ATREADBETA ATLINOPT OHMIENVELOPE ATMODUL
 
 if isvector(ring)
-    [lindt,pm]=atx2(ring,1,varargin{:});
+    [lindt,pm]=atx2(ring,nargout,1,varargin{:});
 else
     periods=size(ring,2);
     ring1=ring(:,1);
     cavindex=findcells(ring1,'HarmNumber');
     ring2=setcellstruct(ring1,'HarmNumber',cavindex,getcellstruct(ring1,'HarmNumber',cavindex)/periods);
-    [lindt,pm]=atx2(ring2,periods,varargin{:});
+    [lindt,pm]=atx2(ring2,nargout,periods,varargin{:});
     lindt=repmat(lindt(:),1,periods);
 end
 
-function [linusr,pm]=atx2(ring,periods,dpp,refusr)
+function [linusr,pm]=atx2(ring,outargs,periods,dpp,refusr)
 
-if nargin < 4
+if nargin < 5
     refpts=1:length(ring)+1;
     keep=1:length(ring);
 else
     [refpts,dum,keep]=unique([1 refusr length(ring)+1]);
     keep=keep(2:end-1);
 end
-if nargin < 3, dpp=0; end
+if nargin < 4, dpp=0; end
 
 [lindata,tunes,xsi]=atlinopt(ring,dpp,refpts);
 %coupled=std(cat(1,lindata.gamma),1) > 1.e-5
@@ -155,7 +155,7 @@ pm=struct('ll',circumference,'alpha',momcompact,...
    'blength',blength,...
    'modemittance',modemittance);
 
-if (nargout==0)
+if (outargs==0)
     display(coupled);
     display(fractunes);
     display(circumference);
