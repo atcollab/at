@@ -1,5 +1,5 @@
 function ok=atgetcells(cellarray, field, varargin)
-%FINDCELLS performs a search on MATLAB cell arrays of structures
+%ATGETCELLS performs a search on MATLAB cell arrays of structures
 %
 % OK = ATGETCELLS(RING, 'field')
 %   returns indexes of elements that have a field named 'field'
