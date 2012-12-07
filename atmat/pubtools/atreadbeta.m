@@ -48,12 +48,12 @@ for el=1:nb_elems
         nextelem.FamName=['x' nextelem.FamName];
         elemtable.(nextelem.FamName)=nextelem;
     end
-    if strcmp(nextelem.BetaCode,'CA')
+    if isfield(nextelem,'Class') && strcmp(nextelem.Class,'RFCavity')
         cavilist{end+1}=nextelem; %#ok<AGROW>
     end
 end
 if isempty(cavilist)% Prepare a default cavity
-    cavilist{1}=rfcavity('RFCAV',0,0,0,1,cavipass);
+    cavilist{1}=atrfcavity('RFCAV',0,0,0,1,GLOBVAL.E0,cavipass);
 end
 eledict=fieldnames(elemtable);
 disp(['Elements processed (' num2str(nb_elems) ' elements)']);
@@ -134,7 +134,7 @@ disp(['Structure processed (' num2str(nb_stru) ' elements)']);
 nper=fscanf(fid,'%d',1);
 fclose(fid);
 
-cavities=findcells(superp,'BetaCode','CA');
+cavities=findcells(superp,'Class','RFCavity');
 if isempty(cavities)		% add implicit cavity if necessary
     superp{end+1}=cavilist{1};
     cavities=length(superp);
@@ -182,6 +182,7 @@ next=next+nl;
 [code,count,errmess,nl]=sscanf(line(next:end),'%s',1); %#ok<ASGLU>
 next=next+nl;
 params=sscanf(line(next:end),'%f')';
+params((length(params)+1):3)=0;
 switch (code)
     case 'SD'
         newelem=atdrift(elname,params(1));
@@ -220,8 +221,7 @@ switch (code)
         newelem=atcorrector(elname,0,[params(1) params(2)],'IdentityPass');
     case 'CA'
         GLOBVAL.E0=params(3);
-        newelem=atelem(atmarker(elname,cavipass),'Length',0,...
-            'Voltage',abs(params(1)),'Frequency',0,'HarmNumber',params(2));
+        newelem=atrfcavity(elname,0,abs(params(1)),0,params(2),params(3),cavipass);
     otherwise
         newelem=atmarker(elname);
 end
