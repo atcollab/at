@@ -1,12 +1,23 @@
 function newring=atfitchrom(ring,newchrom,famname1,famname2,varargin)
 %ATFITTUNE fits chromaticites by scaling 2 sextupol families
 % NEWRING = ATFITCHROM(RING,NEWCHROM,SEXTFAMILY1,SEXTFAMILY2)
+%
+%RING:          Cell array
+%NEWCHROM:      Desired non-normalized chromaticities
+%SEXTFAMILY1:   1st sextupole family
+%SEXTFAMILY2:   2nd sextupole family
+%
+%SEXTFAMILY may be:
+%   string: Family name
+%   logical array: mask of selected elements in RING
+%   Numeric array: list of selected elements in RING
+%   Cell array: All elements selected by each cell
 
 deltaP = 1e-8;
-idx1=findfam(famname1);
-idx2=findfam(famname2);
-kl1=getcellstruct(ring,'PolynomB',idx1,3);
-kl2=getcellstruct(ring,'PolynomB',idx2,3);
+idx1=varelem(ring,famname1);
+idx2=varelem(ring,famname2);
+kl1=atgetfieldvalues(ring,idx1,'PolynomB',{3});
+kl2=atgetfieldvalues(ring,idx2,'PolynomB',{3});
 if true
     deltaS = 1e-5; % step size in Sextupole strngth
     
@@ -14,9 +25,9 @@ if true
     chrom=getchrom(ring,deltaP);
     
     % Take Derivative
-    newring=setcellstruct(ring,'PolynomB',idx1,kl1*(1+deltaS),3);
+    newring=setsx(ring,idx1,kl1,deltaS);
     chrom1 = getchrom(newring,deltaP);
-    newring=setcellstruct(ring,'PolynomB',idx2,kl2*(1+deltaS),3);
+    newring=setsx(ring,idx2,kl2,deltaS);
     chrom2 = getchrom(newring,deltaP);
     
     %Construct the Jacobian
@@ -27,31 +38,42 @@ else
         optimset(optimset('fminsearch'),'Display','iter',...
 		'TolX',1.e-5,'TolFun',1.e-8));
 end
-newring=setcellstruct(ring ,'PolynomB',idx1,kl1*(1+dK(1)),3);
-newring=setcellstruct(newring,'PolynomB',idx2,kl2*(1+dK(2)),3);
+newring=setsx(ring,idx1,kl1,dK(1));
+newring=setsx(newring,idx2,kl2,dK(2));
 
     function c=funchrom(dK)
-        ring2=setcellstruct(ring ,'PolynomB',idx1,kl1*(1+dK(1)),3);
-        ring2=setcellstruct(ring2,'PolynomB',idx2,kl2*(1+dK(2)),3);
+        ring2=setsx(ring,idx1,kl1,dK(1));
+        ring2=setsx(ring2,idx2,kl2,dK(2));
         chrom = getchrom(ring2,deltaP);
         dt=abs(newchrom(:)-chrom(:));
         c=sum(dt.*dt);
     end
 
-    function idx=findfam(famname)
-        if iscell(famname)
-            idx=[];
-            for i=1:numel(famname)
-                idx=[idx findfam(famname{i})]; %#ok<AGROW>
+    function ring2=setsx(ring,idx,k0,delta)
+        ring2=atsetfieldvalues(ring,idx,'PolynomB',{3},k0*(1+delta));
+    end
+
+    function res=varelem(ring,arg)
+        if islogical(arg)
+            res=arg;
+        elseif isnumeric(arg)
+            res=false(size(ring));
+            res(arg)=true;
+        elseif ischar(arg)
+            res=atgetcells(ring,'FamName',arg);
+        elseif iscell(arg)
+            res=false(size(ring));
+            for i=1:length(arg)
+                res=res|varelem(ring,arg{i});
             end
         else
-            idx=findcells(ring,'FamName',famname);
+            error('AT:GetElemList:WrongArg','Cannot parse argument');
         end
     end
 
     function chrom=getchrom(ring,dpp)
-        [lindata, tunesa] = atlinopt(ring,0);
-        [lindata, tunesb] = atlinopt(ring,dpp);
+        [lindata, tunesa] = atlinopt(ring,0); %#ok<ASGLU>
+        [lindata, tunesb] = atlinopt(ring,dpp); %#ok<ASGLU>
         chrom = (tunesb-tunesa)/deltaP;
     end
 end
