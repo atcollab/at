@@ -5,13 +5,22 @@ function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
 % 
 % TouschekPiwinskiLifeTime(latticeATring,momentumaperturecolumnvector,0.002)
 %  or
-% TouschekPiwinskiLifeTime(latticeATring,
-%                          momentumaperturecolumnvector,
-%                          current in mA,
-%                          positoins where to evaluate,
-%                          emittancex, (default atx modemittance(1))
-%                          emittancey, (default 10 pm)
-%                          integration method) (default quad, may be integral, trapz, elegantLike) 
+% TouschekPiwinskiLifeTime(
+%  latticeATring,
+%  momentumaperturecolumnvector,  % column array (size of r or positions)
+%  current in mA,                 % scalar
+%  positions where to evaluate,  %(default all elements with length>0 )  column array
+%  emittancex, %(default atx modemittance(1))   scalar
+%  emittancey, %(default 10 pm)		       scalar
+%  integration method,  % (default quad, may be: 'integral', 'quad', 'trapz', 'elegantLike', 'Approximate') 
+%  energy sperad,	% scalar
+%  bunch length,        % scalar
+%			   )
+% 
+%  contributionsTL 1/T contribution at each element
+%
+%  Tl  Lifetime in seconds 1/Tl=sum(contributionsTL.*L)/sum(L);
+%  
 %
 % "The Touscheck Effect in strong focusing storage rings" 
 % A.Piwinski, DESY 98-179, November 1998
@@ -23,6 +32,9 @@ function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
 % created 31-10-2012 
 % updated 22-01-2013 corrected and compared with elegant
 
+%ensure a column lattice
+r=reshape(r,numel(r),1);
+
 e0 = 1.60217646e-19; %Coulomb
 r0 = 2.817940327e-15; %m %  classical electron radius
 spl=299792458; % speed of ligth
@@ -31,39 +43,83 @@ naddvar=length(varargin);
 if naddvar>=1
     positions=varargin{1};
 else
-    positions=1:length(r);
+    %    positions=1:length(r);
+    
+    % positions default= non zero length elements 
+    positions=findcells(r,'Length');
+    L=getcellstruct(r,'Length',positions);
+    positions=positions(L>0);
+    size(positions);
 end
 
 % get optics
 [lo,pa]=atx(r,0,positions);
 
 emitx=pa.modemittance(1);
-emity=emitx./2;    
+emity=emitx./2;
 integrationmethod='';
+sigp=pa.espread; % relative momentum spread
+sigs=pa.blength; % bunch length
 
 if naddvar==2
     positions=varargin{1};
     emitx=varargin{2};
     
+    disp(['set defaults: ey=ex/2'])
+    disp([' integration method is quad,'])
+    disp([' energy sperad, bunch length from ATX'])
+    
 elseif naddvar==3
     positions=varargin{1};
     emitx=varargin{2};
     emity=varargin{3};
+    disp(['set defaults: '])
+    disp([' integration method is quad,'])
+    disp([' energy sperad, bunch length from ATX'])
     
 elseif naddvar==4
     positions=varargin{1};
     emitx=varargin{2};
     emity=varargin{3};
     integrationmethod=varargin{4};
+    disp(['set defaults: '])
+    disp([' energy sperad, bunch length from ATX'])
+    
+elseif naddvar==5
+    positions=varargin{1};
+    emitx=varargin{2};
+    emity=varargin{3};
+    integrationmethod=varargin{4};
+    sigp=varargin{5};
+    disp(['set defaults: '])
+    disp(['bunch length from ATX'])
+    
+elseif naddvar==6
+    positions=varargin{1};
+    emitx=varargin{2};
+    emity=varargin{3};
+    integrationmethod=varargin{4};
+    sigp=varargin{5};
+    sigs=varargin{6};
+    
 else
-    disp('invalid number of arguments')
+    disp(['set defaults: ey=ex/2'])
+    disp([' integration method is quad,'])
+    disp([' energy sperad, bunch length, x emittance from ATX'])
+    disp([' evaluation at all points with non zero length'])
 end
+
+% if dpp is a scalar assume constant momentum aperture.
+if numel(dpp)==1
+    dpp=dpp*ones(size(positions'));
+end
+
 
 Circumference=findspos(r,length(r)+1);
 
 E0=r{1}.('Energy');%
 
-Nb = Ib/(spl/Circumference)/e0; %Number of particle per bunch. 
+Nb = Ib/(spl/Circumference)/e0; %Number of particle per bunch.
 
 relgamma = E0/0.510998928e6;
 relbeta=sqrt(1-1./relgamma.^2);
@@ -82,8 +138,13 @@ ay=aaa(:,2);
 Dpx=ddd(:,2);
 Dpy=ddd(:,4);
 
-sigp=pa.espread; % relative momentum spread
-sigs=pa.blength; % bunch length
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%
+%%%%%%%% From here calculation takes place.
+%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 sigxb=sqrt(emitx.*bx); 
