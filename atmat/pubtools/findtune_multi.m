@@ -59,11 +59,11 @@ tune(wrong)=NaN;
 errmax=2.5*std2(tune');
 keep=(abs(tune-mean2(tune'))<=errmax);
 reject=find(~(keep | wrong));
-for bpm=reject
-    [bname,kdx]=srbpmname(bpm);
-    disp(['reject ' bname ' (' num2str(kdx) ')']);
-end
-disp(sprintf('%20s tune:%g (rms:%g)',methname, mean2(tune(keep)'),std2(tune(keep)')));
+%for bpm=reject
+%    [bname,kdx]=srbpmname(bpm);
+%    disp(['reject ' bname ' (' num2str(kdx) ')']);
+%end
+%disp(sprintf('%20s tune:%g (rms:%g)',methname, mean2(tune(keep)'),std2(tune(keep)')));
 
 function vv=phi(a,b,c)
 d1=c*(a+b);

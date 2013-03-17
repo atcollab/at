@@ -23,6 +23,6 @@ p1=ringpass(ring,p0,128);
 x1=reshape(p1(1,:)-i*p1(2,:),nampl,128)';
 z1=reshape(p1(3,:)-i*p1(4,:),nampl,128)';
 
-nux=reshape(findtune(x1,3),siza);
+nux=reshape(findtune_multi(x1,3),siza);
 
-nuz=reshape(findtune(z1,3),siza);
+nuz=reshape(findtune_multi(z1,3),siza);
