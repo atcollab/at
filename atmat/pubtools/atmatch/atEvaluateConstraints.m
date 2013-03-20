@@ -33,23 +33,23 @@ for constr_indx=1:length(Constraints) % loop contraints to get value and limits.
     
     % !!!! CHANGED from MATCH_AT_GN
     
-    function_handle=Constraints{constr_indx}.('Fun');
+    function_handle=Constraints{constr_indx}.Fun;
      
     % CstrVal is a vector, output of function_handle.
     CstrVal=feval(function_handle,R); 
        
     % check if there is a weigth otherwise set to 1.
     if not(isfield(Constraints{constr_indx},'Weight'))
-        Constraints{constr_indx}.('Weight')=1;
+        Constraints{constr_indx}.Weight=1;
     end
     
     % assign values
-    Val(valuesindx:valuesindx+length(CstrVal)-1)=CstrVal.*Constraints{constr_indx}.('Weight');
+    Val(valuesindx:valuesindx+length(CstrVal)-1)=CstrVal.*Constraints{constr_indx}.Weight;
     
     % assigns values to limits of the constraint
     try
-        low(valuesindx:valuesindx+length(CstrVal)-1)=Constraints{constr_indx}.('Min').*Constraints{constr_indx}.('Weight'); % bolean vector
-        high(valuesindx:valuesindx+length(CstrVal)-1)=Constraints{constr_indx}.('Max').*Constraints{constr_indx}.('Weight'); % bolean vector
+        low(valuesindx:valuesindx+length(CstrVal)-1)=Constraints{constr_indx}.Min.*Constraints{constr_indx}.Weight; % bolean vector
+        high(valuesindx:valuesindx+length(CstrVal)-1)=Constraints{constr_indx}.Max.*Constraints{constr_indx}.Weight; % bolean vector
     catch %#ok<CTCH>
         error('size of Constraints{i}.Min and Constraints{i}.Max must be the same of the output of Constraints{i}.Fun')
     end

@@ -38,8 +38,8 @@ for constr_indx=1:length(Constraints) % loop contraints to get value and limits.
     [~,penalty1]=atGetPenaltyDif(THERING1,Constraints(constr_indx));
     [~,penalty2]=atGetPenaltyDif(THERING2,Constraints(constr_indx));
 
-    low=Constraints{constr_indx}.('Min'); % bolean vector
-    high=Constraints{constr_indx}.('Max'); % bolean vector
+    low=Constraints{constr_indx}.Min; % bolean vector
+    high=Constraints{constr_indx}.Max; % bolean vector
 % %      
 %      size(CstrVal1')
 %      size(CstrVal2')

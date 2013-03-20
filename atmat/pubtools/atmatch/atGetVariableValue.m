@@ -17,7 +17,7 @@ CurrentVal=[];
 
 % vary varaible
 for var_indx=1:length(Variables)
-   if ~strcmp(Variables{var_indx}.('FIELD'),'macro')
+   if ~strcmp(Variables{var_indx}.FIELD,'macro')
        % every variable may have more perturbed indexes.
     PERTURB=Variables{var_indx}.PERTURBINDX;
     
@@ -33,14 +33,14 @@ for var_indx=1:length(Variables)
             );
         
    if verbose
-       disp([ varname '  '  Variables{var_indx}.('FIELD') ' : ' num2str(value(i))]);
+       disp([ varname '  '  Variables{var_indx}.FIELD ' : ' num2str(value(i))]);
    end  
    
    end % end loop variables indexes
-   CurrentVal{var_indx}.('Val')=value;
+   CurrentVal{var_indx}.Val=value;
    
    else
-   CurrentVal{var_indx}.('Val')=Variables{var_indx}.('StartVALUE');
+   CurrentVal{var_indx}.Val=Variables{var_indx}.StartVALUE;
    
    end
 end % end loop variables

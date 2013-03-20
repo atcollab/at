@@ -44,9 +44,9 @@ highlim=[];
 % vary varaible
 for var_indx=1:length(Variables)
     
-     if ~strcmp(Variables{var_indx}.('FIELD'),'macro') %isempty(Variables{var_indx}.('FUN')) % is not a funcition
+     if ~strcmp(Variables{var_indx}.FIELD,'macro') %isempty(Variables{var_indx}.('FUN')) % is not a funcition
       % every variable may have more perturbed indexes.
-      PERTURB=Variables{var_indx}.('PERTURBINDX');
+      PERTURB=Variables{var_indx}.PERTURBINDX;
      
   
         for i=1:length(PERTURB)
@@ -54,7 +54,7 @@ for var_indx=1:length(Variables)
                 variation=varargin{1}(vi);
                 
             else
-                variation=Variables{var_indx}.('PVALUE');
+                variation=Variables{var_indx}.PVALUE;
                 % count variables
             end
             
@@ -62,41 +62,41 @@ for var_indx=1:length(Variables)
             
             delta_0(vi)=variation; %#ok<AGROW>
             if isfield(Variables{var_indx},'LowLim') 
-                if ~isempty(Variables{var_indx}.('LowLim'))
-                lowlim(vi)=Variables{var_indx}.('LowLim'); %#ok<AGROW>
+                if ~isempty(Variables{var_indx}.LowLim)
+                lowlim(vi)=Variables{var_indx}.LowLim; %#ok<AGROW>
                 end
             else
                 lowlim(vi)=[];
             end
             if isfield(Variables{var_indx},'HighLim')
-                if ~isempty(Variables{var_indx}.('HighLim'))
-                highlim(vi)=Variables{var_indx}.('HighLim'); %#ok<AGROW>
+                if ~isempty(Variables{var_indx}.HighLim)
+                highlim(vi)=Variables{var_indx}.HighLim; %#ok<AGROW>
                 end
             else
                 highlim(vi)=[];
             end
             
-            if ~Variables{var_indx}.('Fam')
+            if ~Variables{var_indx}.Fam
                 vi=vi+1;
             end
             
            oldvalue = ...
                 getfield(THERING{PERTURB(i)},...
-                Variables{var_indx}.('FIELD'),...
-                Variables{var_indx}.('IndxInField')...
+                Variables{var_indx}.FIELD,...
+                Variables{var_indx}.IndxInField...
                 );
             
             
             THERING{PERTURB(i)} = ...
                 setfield(THERING{PERTURB(i)},...
-                Variables{var_indx}.('FIELD'),...
-                Variables{var_indx}.('IndxInField'),...
+                Variables{var_indx}.FIELD,...
+                Variables{var_indx}.IndxInField,...
                 oldvalue+variation);
             
             
             
         end % end loop variables indexes
-        if Variables{var_indx}.('Fam')
+        if Variables{var_indx}.Fam
             vi=vi+1;
         end
     else % is a function
@@ -107,29 +107,29 @@ for var_indx=1:length(Variables)
         %length(nparam) %  number of cells.
         %for par=1:1 %length(nparam)
         vecvar=[];
-        for i=1:length(Variables{var_indx}.('StartVALUE'))  % parameters may be vectors
+        for i=1:length(Variables{var_indx}.StartVALUE)  % parameters may be vectors
             
             if length(varargin)==1
                 variation=varargin{1}(vi);
                 delta_0(vi)=variation; %#ok<AGROW>
                 
             else
-                variation=Variables{var_indx}.('PVALUE');
+                variation=Variables{var_indx}.PVALUE;
                 
-                delta_0(vi)=Variables{var_indx}.('StartVALUE')(i)+variation; %#ok<AGROW>
+                delta_0(vi)=Variables{var_indx}.StartVALUE(i)+variation; %#ok<AGROW>
             end
             
             
             if isfield(Variables{var_indx},'LowLim')
-                if ~isempty(Variables{var_indx}.('LowLim'))
-                    lowlim(vi)=Variables{var_indx}.('LowLim'); %#ok<AGROW>
+                if ~isempty(Variables{var_indx}.LowLim)
+                    lowlim(vi)=Variables{var_indx}.LowLim; %#ok<AGROW>
                 end
             else
                 lowlim(vi)=[];
             end
             if isfield(Variables{var_indx},'HighLim')
-                if ~isempty(Variables{var_indx}.('HighLim'))
-                    highlim(vi)=Variables{var_indx}.('HighLim'); %#ok<AGROW>
+                if ~isempty(Variables{var_indx}.HighLim)
+                    highlim(vi)=Variables{var_indx}.HighLim; %#ok<AGROW>
                 end
             else
                 highlim(vi)=[];
@@ -144,11 +144,11 @@ for var_indx=1:length(Variables)
         
         %funinputvariables=[funinputvariables vecvar]; %#ok<AGROW>
         
-        function_handle=Variables{var_indx}.('FUN');
+        function_handle=Variables{var_indx}.FUN;
         
         THERING=feval(function_handle,THERING,vecvar);
         
-        if Variables{var_indx}.('Fam')
+        if Variables{var_indx}.Fam
             vi=vi+1;
         end
     end

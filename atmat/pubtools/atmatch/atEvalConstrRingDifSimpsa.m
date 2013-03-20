@@ -1,4 +1,4 @@
-function sVal=EvalConstrRingDifSimpsa(d,R,v,c)
+function sVal=atEvalConstrRingDifSimpsa(d,R,v,c)
 % Get sum of squares of distances from target
 % simpsa function requires d to be the first argument.
 

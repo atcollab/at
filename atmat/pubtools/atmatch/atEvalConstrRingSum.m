@@ -1,4 +1,4 @@
-function Val=EvalConstrRingSum(R,v,c,d)
+function Val=atEvalConstrRingSum(R,v,c,d)
 
 R=ApplyVariation(R,v,d);
 
