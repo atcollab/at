@@ -102,12 +102,26 @@ Constr{c_i}=struct('Fun',@(RING)mux(RING,length(RING)),...
 disp('Horizontal phase advance = 4.35')
 
 
-
 %% MATCHING
 % disp('wait 1 iterations')
-% RING_matched=atmatch(RING,Variab,Constr,10^-25,1000,'lsqnonlin',1);%
-disp('wait 353 iterations')
-RING_matched=atmatch(RING,Variab,Constr,10^-6,1000,'fminsearch',1);%
+% RING_matched=atmatch(RING,Variab,Constr,10^-25,1000,'lsqnonlin',0);%
+% disp('wait 353 iterations')
+% RING_matched=atmatch(RING,Variab,Constr,10^-6,1000,'fminsearch',0);%
+
+ 
+% different constraint assignement using the function atConstrOptics
+% list of quintuplets
+vincoli={'betx',qfmindx(2),17.3,17.3,1,...
+         'bety',qfmindx(2),0.58,0.58,1,...
+         'dispx',1,0,0,1,...
+         ...         'mux',length(RING),4.35,4.35,1... % phase advance with few indxes is not correct
+         'Qx',length(RING),0.35,0.35,1};
+    
+c{1}=atConstrOptics(RING,0,vincoli);
+
+RING_matched=atmatch(RING,Variab,c,10^-25,1000,'lsqnonlin',0);%
+%RING_matched=atmatch(RING,Variab,c,10^-6,1000,'fminsearch',0);%
+
 
 figure;atplot(RING);% export_fig('ringdba.pdf','-transparent');
 figure;atplot(RING_matched);% export_fig('ringdba_matched.pdf','-transparent');
