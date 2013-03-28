@@ -1,50 +1,37 @@
-function CurrentVal=atGetVariableValue(THERING,Variables,verbose)
-% 
+function CurrentVal=atGetVariableValue(ring,Variables)
+%
 % this functions retrives variable Values
-% 
-% Variables is a cell array of structures
-% 
-% Variables  struct('PERTURBINDX',indx,...
-%                   'PVALUE',stepsize,
-%                   'FIELD',fieldtochange, 
-%                   'IndxInField', {M,N,...} 
-%                    )
-% 
+%
+% Variables is a structure array of structures
+%
+%
+% Variables  struct('Indx',{[indx],...
+%                           @(ring,varval)fun(ring,varval,...),...
+%                          },...
+%                   'Parameter',{{'paramname',{M,N,...},...},...
+%                                [initialvarval],...
+%                               },...
+%                   'LowLim',{[val],[val],...},...
+%                   'HighLim',{[val],[val],...},...
+%                   )
+%
+
+% history of changes
 % created 25-8-2012
-% updated 03-3-2012 to take in account of macro variables! 
-
-CurrentVal=[];
-
-% vary varaible
-for var_indx=1:length(Variables)
-   if ~strcmp(Variables{var_indx}.FIELD,'macro')
-       % every variable may have more perturbed indexes.
-    PERTURB=Variables{var_indx}.PERTURBINDX;
-    
-    
-   value=zeros(1,length(PERTURB));
-   
-   for i=1:length(PERTURB)
-    varname=getcellstruct(THERING,'FamName',PERTURB(i));
-    value(i) = ...
-            getfield(THERING{PERTURB(i)},...
-            Variables{var_indx}.FIELD,...
-            Variables{var_indx}.IndxInField...
-            );
-        
-   if verbose
-       disp([ varname '  '  Variables{var_indx}.FIELD ' : ' num2str(value(i))]);
-   end  
-   
-   end % end loop variables indexes
-   CurrentVal{var_indx}.Val=value;
-   
-   else
-   CurrentVal{var_indx}.Val=Variables{var_indx}.StartVALUE;
-   
-   end
-end % end loop variables
+% updated 03-3-2012 to take in account of macro variables!
+% updated 25-3-2013 Indx and Parameter switched in case of function.
+%                   getfield(...Parameter{:}) instead of Parameter{1} or{2}
 
 
+CurrentVal=arrayfun(@getval,Variables,'UniformOutput',false);
 
-return
+    function value=getval(v)
+        if isa(v.Indx,'function_handle')
+            value=v.Parameter;
+        else
+            value=getfield(ring{v.Indx(1)},v.Parameter{:});
+%           value=mean(cellfun(@(elem) getfield(elem,v.Parameter{:}),ring(v.Indx)));
+        end
+    end
+
+end

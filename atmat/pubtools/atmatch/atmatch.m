@@ -1,33 +1,46 @@
-function [THERINGout,penalty,dmin]=atmatch(...
-    THERING,Variables,Constraints,Tolerance,Calls,algo,verbose)
+function [NewRing,penalty,dmin]=atmatch(...
+    Ring,Variables,Constraints,Tolerance,Calls,algo,verbose)
 % this functions modifies the Variables (parameters in THERING) to obtain
 % a new THERING with the Constraints verified
 %
 % Variables   : a cell array of structures of parameters to vary with step size.
 % Constraints : a cell array of structures
 %
-% Variables:   struct('PERTURBINDX',indx,
-%                     'PVALUE',stepsize,
-%                     'Fam',1,...      % 1=change PERTURBINDX all equal
-%                                        0=change PERTURBINDX all different
-%                     'LowLim',[],...  % only for lsqnonlin
-%                     'HighLim',[],... % only for lsqnonlin
-%                     'FIELD',fieldtochange, 
-%                     'IndxInField',{{M,N,...}}) 
 %
-% Variables:   struct('FUN',@(ring,varVAL)functname(ring,varVAL,...),
-%                     'PVALUE',stepsize,
-%                     'FIELD','macro', 
-%                     'StartVALUE',valstart, % size of varVAL  
-%                     'IndxInField',{{M,N,...}}) 
-% 
-% Constraints: struct('Fun',@(ring)functname(ring,...),
+%
+% Variables  struct('Indx',{[indx],...
+%                           @(ring,varval)fun(ring,varval,...),...
+%                          },...
+%                   'Parameter',{{'paramname',{M,N,...},...},...
+%                                [initialvarval],...
+%                               },...
+%                   'LowLim',{[val],[val],...},...
+%                   'HighLim',{[val],[val],...},...
+%                   )
+%
+%
+% Constraints: structure array struct(...
+%                     'Fun',@functname(ring,lindata,globaldata),
 %                     'Min',min,
 %                     'Max',max,
-%                     'Weight',1)
+%                     'Weight',w,
+%                     'RefPoints',refpts);
 %
-% verbose (boolean) to print out end results. 
-% 
+% lindata is the output of atlinopt at the requested locations
+% globdata.fractune=tune fromk atlinopt
+% globdata.chromaticity=chrom from atlinopt
+%
+% functname must return a row vector of values to be optimized
+%
+% min, max and weight must have the same size as the return value of
+% functname
+%
+% verbose to print out results.
+%                               0 (no output)
+%                               1 (initial values)
+%                               2 (iterations)
+%                               3 (result)
+%
 % Variables are changed within the range min<res<max with a Tolerance Given
 % by Tolerance
 %
@@ -35,117 +48,164 @@ function [THERINGout,penalty,dmin]=atmatch(...
 %
 %
 
-%
+% History of changes
 % created : 27-8-2012
 % updated : 28-8-2012 constraints 'Fun' may output vectors
 % updated : 17-9-2012 output dmin
-% updated : 6-11-2012 added simulated annealing (annealing) 
+% updated : 6-11-2012 added simulated annealing (annealing)
 %                     and simplex-simulated-annealing (simpsa)
 %                     for global minimum search.
-% updated : 21-02-2013 TipicalX included in  
-% updated (major) : 11-03-2013 
+% updated : 21-02-2013 TipicalX included in
+% updated : 11-03-2013  (major)
 %                   function named 'atmatch'.
 %                   anonimous functions constraints and variable
 %                   Variable limits in variable.
-%
+% update : 23-03-2013
+%                   atGetVaraiblesNumber added.
+%                   fixed Low High lim bug.
+%                   fixed function variables treat input values as
+%                                  independent parameters to match.
+%                   introduced verbose flag.
+% updated 25-3-2013 varibles as absolute values and not variations.
+%                   Indx and Parmaeter switched in case of function.
+%                   setfield(...Parameter{:}) instead of Parameter{1} or{2}
+%                   reshaped initialization of tipx for lsqnonlin
+%                   atlinopt call optimized in the constraint evaluation call
+%                   changed constraint structure
 
+%%
+IniVals=atGetVariableValue(Ring,Variables);
+splitvar=@(varvec) reshape(mat2cell(varvec,cellfun(@length,IniVals),1),size(Variables));
 
-% get length of variations and higher and lower limits
-[~,delta_0,~,Blow,Bhigh]=atApplyVariation(THERING,Variables);
+initval=cat(1,IniVals{:});
+Blow=cat(1,Variables.LowLim);
+Bhigh=cat(1,Variables.HighLim);
 
-
-% tolfun is te precisin of the minimum value tolx the accuracy of the
+% tolfun is the precisin of the minimum value tolx the accuracy of the
 % parameters (delta_0)
-% tipicalx is the value of tipical change of a variable 
+% tipicalx is the value of tipical change of a variable
 % (useful if varibles have different ranges)
-if isempty(findcells(Variables,'FIELD','macro'))
-    tipx=ones(size(delta_0));
-    initval=atGetVariableValue(THERING,Variables,0); % get intial variable values
-    for ivar=1:length(initval)
-        a=initval{ivar};
-        if a.Val(1)~=0
-            tipx(ivar)=a.Val(1);
-        end
-    end
-    
-else
-    tipx=ones(size(delta_0)); % the default
-end
+tipx=ones(size(initval));
+notzero=initval~=0;
+tipx(notzero)=initval(notzero);
 
+[posarray,~,ic]=unique(cat(2,Constraints.RefPoints));
+indinposarray=reshape(...
+    mat2cell(ic(:),arrayfun(@(s) length(s.RefPoints), Constraints),1),...
+    size(Constraints));
+evalfunc={Constraints.Fun};
 
-options = optimset(...
-    'Display','iter',...% 
-    'MaxFunEvals',Calls*100,...
-    'MaxIter',Calls,...
-    ...'TypicalX',tipx,...
-    'TolFun',Tolerance,...);%,...'Algorithm',{''},...
-    'TolX',Tolerance);%,...  %                         
-     %'Algorithm',{'levenberg-marquardt',1e-6}
-
-   
 switch algo
     case 'lsqnonlin'
-        options = optimset('TypicalX',tipx);
-% Difference between Target constraints and actual value.
-        f = @(d)atEvalConstrRingDif(THERING,Variables,Constraints,d); % vector
+        if verbose>1
+            display('verbose display iterations')
+            
+            options = optimset(...
+                'Display','iter',...%
+                'MaxFunEvals',Calls*100,...
+                'MaxIter',Calls,...
+                'TypicalX',tipx,...
+                'TolFun',Tolerance,...
+                'TolX',Tolerance);
+        else
+            options = optimset(...
+                'MaxFunEvals',Calls*100,...
+                'MaxIter',Calls,...
+                'TypicalX',tipx,...
+                'TolFun',Tolerance,...
+                'TolX',Tolerance);
+        end
+        % Difference between Target constraints and actual value.
+        f = @(d) evalvector(Ring,Variables,Constraints,splitvar(d),...
+            evalfunc,posarray,indinposarray); % vector
     case {'fminsearch','annealing'}
-        fs = @(d)atEvalConstrRingDifS(THERING,Variables,Constraints,d); % scalar (sum of squares of f)
+        if verbose>1
+            options = optimset(...
+                'Display','iter',...%
+                'MaxFunEvals',Calls*100,...
+                'MaxIter',Calls,...
+                'TolFun',Tolerance,...
+                'TolX',Tolerance);
+        else
+            options = optimset(...
+                'MaxFunEvals',Calls*100,...
+                'MaxIter',Calls,...
+                'TolFun',Tolerance,...
+                'TolX',Tolerance);
+        end
+        
+        f = @(d)evalsum(Ring,Variables,Constraints,...
+            splitvar(d),evalfunc,posarray,indinposarray); % scalar (sum of squares of f)
 end
 
-[~,penalty]=atGetPenaltyDif(THERING,Constraints);
+cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray);
+penalty0=atGetPenalty(cstr1,Constraints);
 
-disp(['f²: ' num2str(penalty.^2)]);
-disp(['Sum of f²: ' num2str(sum(penalty.^2))]);
+if verbose>0
+    
+    disp('f2: ');
+    disp(num2str(penalty0.^2));
+    disp('Sum of f2: ');
+    disp(num2str(sum(penalty0.^2)));
+    
+end
 
 %% Least Squares
-if sum(penalty)>Tolerance
-    % minimize sum(f_i²)
+if sum(penalty0)>Tolerance
+    % minimize sum(f_2)
     switch algo
         case 'lsqnonlin'
             
-            dmin=lsqnonlin(f,delta_0,Blow,Bhigh,options);
+            dmin=lsqnonlin(f,initval,Blow,Bhigh,options);
             % dmin=lsqnonlin(f,delta_0,[],[],options);
-        
+            
         case 'fminsearch'
             %options = optimset('OutputFcn', @stopFminsearchAtTOL);
+            dmin = fminsearch(f,initval,options); % wants  a scalar
             
-            dmin = fminsearch(fs,delta_0,options); % wants  a scalar
-        
     end
 else
-    dmin=delta_0;
+    dmin=initval;
 end
 %%
 
-THERINGout=atApplyVariation(THERING,Variables,dmin);
-[~,penalty]=atGetPenaltyDif(THERINGout,Constraints);
+NewRing=atApplyVariation(Ring,Variables,splitvar(dmin));
 
-if verbose
-disp('-----oooooo----oooooo----oooooo----')
-disp('   ')
-disp(['f²: ' num2str(penalty.^2)]);
-disp(['Sum of f²: ' num2str(sum(penalty.^2))]);
-disp('   ')
-disp('-----oooooo----oooooo----oooooo----')
-disp('   ')
-disp('Final constraints values:')
-disp('   ')
-disp('Name          lat_indx      before         after           low            high       min dif before    min dif after  ')
-atDisplayConstraintsChange(THERING,THERINGout,Constraints);
-disp('   ')
-disp('-----oooooo----oooooo----oooooo----')
-disp('    ')
-disp('Final variable values:')
-disp('   ')
-disp('Name      field      before    after   variation')
-atDisplayVaribleChange(THERING,THERINGout,Variables);
-disp('   ')
-disp('-----oooooo----oooooo----oooooo----')
-disp('   ')
+cstr2=atEvaluateConstraints(NewRing,evalfunc,posarray,indinposarray);
+penalty=atGetPenalty(cstr2,Constraints);
+
+if verbose>1
+    
+    disp('-----oooooo----oooooo----oooooo----')
+    disp('   ')
+    disp('f²: ');
+    disp(num2str(penalty.^2));
+    disp('Sum of f²: ');
+    disp(num2str(sum(penalty.^2)));
+    disp('   ')
+    disp('-----oooooo----oooooo----oooooo----')
+    
+end
+if verbose>2
+    splitpen=@(pen) reshape(mat2cell(pen,1,cellfun(@length,cstr1)),size(Constraints));
+    results=struct(...
+        'val1',cstr1,...
+        'val2',cstr2,...
+        'penalty1',splitpen(penalty0),...
+        'penalty2',splitpen(penalty));
+    atDisplayConstraintsChange(Constraints,results);
+    atDisplayVariableChange(Ring,NewRing,Variables);
 end
 
-%atGetVariableValue(THERINGout,Variables,1);
-%format long
-%disp(dmin')
+    function Val=evalvector(R,v,c,d,e,posarray,indinposarray)
+        R=atApplyVariation(R,v,d);
+        cstr=atEvaluateConstraints(R,e,posarray,indinposarray);
+        Val=atGetPenalty(cstr,c);
+    end
 
-return
+    function sVal=evalsum(R,v,c,d,e,posarray,indinposarray)
+        Val=evalvector(R,v,c,d,e,posarray,indinposarray);
+        sVal=sum(Val.^2);
+    end
+
+end

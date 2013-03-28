@@ -1,8 +1,25 @@
-function atDisplayConstraintsChange(THERING1,THERING2,Constraints)
+function atDisplayConstraintsChange(Constraints,results)
 % This funciton evaluates the contraints defined in Constraints for lattice
 % Constraints: cell array of struct('Fun',@functname,'Min',min,'Max',max,'OtherParameters',otherargs}
-% 
-% 
+%
+% Constraints: structure array struct('Fun',@(ring)functname(ring,parameters),
+%                                   'Min',min, % of unweigthed funct val
+%                                   'Max',max,
+%                                   'Weight',w,
+%                                   'RefPoints',[])
+%
+% Constraints: structure array struct(...
+%                     'Fun',@(ring,lindata,globaldata,refpts)functname(...
+%                             ring,lindata,globaldata,refpts,parameters),
+%                                   'Min',min, % of unweigthed funct val
+%                                   'Max',max,
+%                                   'Weight',w,
+%                                   'RefPoints',refpts);
+%
+% lindata is the output of atlinopt
+% globdata.tune=tune fromk atlinopt
+% globdata.chrom=chrom from atlinopt
+%
 % functname: handle to vector valued function: [res]=functname(THERING,otherargs)
 %
 % min and max have to be the same size as res. (this allows to give functions as limits!)
@@ -12,52 +29,23 @@ function atDisplayConstraintsChange(THERING1,THERING2,Constraints)
 %                    transformed in a cell array
 
 
-low=[]; % bolean vector
-high=[]; % bolean vector
+disp('   ')
+disp('Final constraints values:')
+disp('   ')
+disp('Name          lat_indx      before         after           low            high       min dif before    min dif after  ')
+ok=arrayfun(@dispc, Constraints,results); %#ok<NASGU>
+disp('   ')
+disp('-----oooooo----oooooo----oooooo----')
+disp('    ')
 
-% evaluate constraints and get penalty function.
-
-
-
-for constr_indx=1:length(Constraints) % loop contraints to get value and limits.
-    ConstrName='                     ';
-    
-    function_handle=Constraints{constr_indx}.Fun;
-    fName=func2str(function_handle);
-    
-    if length(fName)<length(ConstrName)
-        ConstrName(1:length(fName))=fName;
-    else
-        ConstrName=fName(1:length(ConstrName));
+    function ok=dispc(cstr,res)
+        nv=length(res.val1);
+        ConstrName=sprintf('%-20.20s',func2str(cstr.Fun));
+        disp([repmat(ConstrName,nv,1) repmat('  ',nv,1)...
+            num2str((1:nv)','%d')  repmat('  ',nv,1) ...
+            num2str([res.val1;res.val2;cstr.Min;cstr.Max;...
+            res.penalty1;res.penalty1;]','%03.3e\t')]);
+        ok=0;
     end
-    
-    % CstrVal is a vector, output of function_handle.
-    CstrVal1=feval(function_handle,THERING1);
-    CstrVal2=feval(function_handle,THERING2);
 
-    [~,penalty1]=atGetPenaltyDif(THERING1,Constraints(constr_indx));
-    [~,penalty2]=atGetPenaltyDif(THERING2,Constraints(constr_indx));
-
-    low=Constraints{constr_indx}.Min; % bolean vector
-    high=Constraints{constr_indx}.Max; % bolean vector
-% %      
-%      size(CstrVal1')
-%      size(CstrVal2')
-%      size(low')
-%      size(high')
-%      size(penalty1')
-%      size(penalty2')
-% %     
-%     size(repmat(ConstrName,length(CstrVal1),1))
-%     size(repmat('  ',length(CstrVal1),1))
-%     size(num2str((1:length(CstrVal1))','%d'))
-%     size(num2str([ CstrVal1' CstrVal2' low' high' penalty1' penalty2' ],'%03.3e\t'))
-%     
-
-% use isrow to determine dimension ununbiguously.
-    disp([repmat(ConstrName,length(CstrVal1),1) repmat('  ',length(CstrVal1),1)...
-        num2str((1:length(CstrVal1))','%d')  repmat('  ',length(CstrVal1),1) ...
-        num2str([ CstrVal1' CstrVal2' low' high' penalty1' penalty2' ],'%03.3e\t')]);
-    
-    
 end
