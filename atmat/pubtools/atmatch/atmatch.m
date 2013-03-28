@@ -1,5 +1,5 @@
 function [NewRing,penalty,dmin]=atmatch(...
-    Ring,Variables,Constraints,Tolerance,Calls,algo,verbose)
+    Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer)
 % this functions modifies the Variables (parameters in THERING) to obtain
 % a new THERING with the Constraints verified
 %
@@ -74,6 +74,9 @@ function [NewRing,penalty,dmin]=atmatch(...
 %                   changed constraint structure
 
 %%
+if nargin<7, minimizer=@fminsearch; end
+options=optimset(minimizer);
+
 IniVals=atGetVariableValue(Ring,Variables);
 splitvar=@(varvec) reshape(mat2cell(varvec,cellfun(@length,IniVals),1),size(Variables));
 
@@ -95,47 +98,29 @@ indinposarray=reshape(...
     size(Constraints));
 evalfunc={Constraints.Fun};
 
-switch algo
+options=optimset(options,...
+    'MaxFunEvals',Calls*100,...
+    'MaxIter',Calls,...
+    'TypicalX',tipx,...
+    'TolFun',Tolerance,...
+    'TolX',Tolerance);
+
+if verbose > 1
+    options = optimset(options,...
+        'Display','iter');
+end
+
+switch func2str(minimizer)
     case 'lsqnonlin'
-        if verbose>1
-            display('verbose display iterations')
-            
-            options = optimset(...
-                'Display','iter',...%
-                'MaxFunEvals',Calls*100,...
-                'MaxIter',Calls,...
-                'TypicalX',tipx,...
-                'TolFun',Tolerance,...
-                'TolX',Tolerance);
-        else
-            options = optimset(...
-                'MaxFunEvals',Calls*100,...
-                'MaxIter',Calls,...
-                'TypicalX',tipx,...
-                'TolFun',Tolerance,...
-                'TolX',Tolerance);
-        end
-        % Difference between Target constraints and actual value.
+        
         f = @(d) evalvector(Ring,Variables,Constraints,splitvar(d),...
             evalfunc,posarray,indinposarray); % vector
+        args={initval,Blow,Bhigh};
     case {'fminsearch','annealing'}
-        if verbose>1
-            options = optimset(...
-                'Display','iter',...%
-                'MaxFunEvals',Calls*100,...
-                'MaxIter',Calls,...
-                'TolFun',Tolerance,...
-                'TolX',Tolerance);
-        else
-            options = optimset(...
-                'MaxFunEvals',Calls*100,...
-                'MaxIter',Calls,...
-                'TolFun',Tolerance,...
-                'TolX',Tolerance);
-        end
         
         f = @(d)evalsum(Ring,Variables,Constraints,...
             splitvar(d),evalfunc,posarray,indinposarray); % scalar (sum of squares of f)
+        args={initval};
 end
 
 cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray);
@@ -151,19 +136,8 @@ if verbose>0
 end
 
 %% Least Squares
-if sum(penalty0)>Tolerance
-    % minimize sum(f_2)
-    switch algo
-        case 'lsqnonlin'
-            
-            dmin=lsqnonlin(f,initval,Blow,Bhigh,options);
-            % dmin=lsqnonlin(f,delta_0,[],[],options);
-            
-        case 'fminsearch'
-            %options = optimset('OutputFcn', @stopFminsearchAtTOL);
-            dmin = fminsearch(f,initval,options); % wants  a scalar
-            
-    end
+if sum(penalty0.*penalty0)>Tolerance
+    dmin=minimizer(f,args{:},options); % wants  a scalar
 else
     dmin=initval;
 end
@@ -178,9 +152,9 @@ if verbose>1
     
     disp('-----oooooo----oooooo----oooooo----')
     disp('   ')
-    disp('f²: ');
+    disp('f??: ');
     disp(num2str(penalty.^2));
-    disp('Sum of f²: ');
+    disp('Sum of f??: ');
     disp(num2str(sum(penalty.^2)));
     disp('   ')
     disp('-----oooooo----oooooo----oooooo----')

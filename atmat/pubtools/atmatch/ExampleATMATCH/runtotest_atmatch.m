@@ -61,7 +61,7 @@ Constr=[Constr1,Constr2,Constr3];
 
 %% MATCHING
  disp('wait few iterations')
-RING_matched=atmatch(RING,Variab,Constr,10^-20,1000,'lsqnonlin',3);%
+RING_matched=atmatch(RING,Variab,Constr,10^-20,1000,3,@lsqnonlin);
 
 %return
 c1=atlinconstraint(qfmindx(2),...
@@ -78,7 +78,7 @@ c2=atlinconstraint(1,...
 
 c=[c1,c2];
 
-RING_matched_optconstr=atmatch(RING,Variab,c,10^-6,1000,'fminsearch',3);%
+RING_matched_optconstr=atmatch(RING,Variab,c,10^-6,1000,3);%
 
 figure;atplot(RING);% export_fig('ringdba.pdf','-transparent');
 figure;atplot(RING_matched);% export_fig('ringdba_matched.pdf','-transparent');
