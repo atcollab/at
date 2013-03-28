@@ -10,7 +10,7 @@ function ok=atgetcells(cellarray, field, varargin)
 %   character strings or a number. If its a character string REGULAR
 %   expressions can be used.
 %
-% OK = ATGETCELLS(RING, 'field', @TESTFUNCTION,...)
+% OK = ATGETCELLS(RING, 'field', @TESTFUNCTION, ARGS...)
 %   Uses the user-defined TESTFUNCTION to select array elements
 %   TESTFUNCTION must be of the form:
 %       OK=TESTFUNTION(ATELEM,FIELD,ARGS...)
@@ -31,9 +31,6 @@ if(~ischar(field))
     error('The second argument must be a character string')
 end
 
-NE = numel(cellarray);
-ok=false(size(cellarray));
-
 if nargin<3
     tesfunc=@(elem,field) true;
     vals={};
@@ -45,11 +42,7 @@ else
     vals=varargin;
 end
 
-for elem = 1:NE
-    if isfield(cellarray{elem},field)
-        ok(elem)=tesfunc(cellarray{elem},field,vals{:});
-    end
-end
+ok=cellfun(@(elem) isfield(elem,field) && tesfunc(elem,field,vals{:}), cellarray);
 
     function ok=defaultfunc(el,field,varargin)
         ok=false;
