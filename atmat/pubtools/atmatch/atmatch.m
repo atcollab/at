@@ -105,6 +105,11 @@ options=optimset(options,...
     'TolFun',Tolerance,...
     'TolX',Tolerance);
 
+if verbose == 0
+    options = optimset(options,...
+        'Display','off');
+end
+
 if verbose > 1
     options = optimset(options,...
         'Display','iter');
@@ -116,7 +121,7 @@ switch func2str(minimizer)
         f = @(d) evalvector(Ring,Variables,Constraints,splitvar(d),...
             evalfunc,posarray,indinposarray); % vector
         args={initval,Blow,Bhigh};
-    case {'fminsearch','annealing'}
+    case 'fminsearch'
         
         f = @(d)evalsum(Ring,Variables,Constraints,...
             splitvar(d),evalfunc,posarray,indinposarray); % scalar (sum of squares of f)
@@ -152,9 +157,9 @@ if verbose>1
     
     disp('-----oooooo----oooooo----oooooo----')
     disp('   ')
-    disp('f??: ');
+    disp('f2: ');
     disp(num2str(penalty.^2));
-    disp('Sum of f??: ');
+    disp('Sum of f2: ');
     disp(num2str(sum(penalty.^2)));
     disp('   ')
     disp('-----oooooo----oooooo----oooooo----')
