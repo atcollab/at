@@ -53,8 +53,8 @@ n5 = nn(5,[1,3,5]);
 [vals3,sind3]=sort(n3,'descend');
 [vals5,sind5]=sort(n5,'descend');
 
-orderp = [2*sind1(1)-1,2*sind3(1)-1,2*sind5(1)-1]
-ordern = [2*sind1(1),2*sind3(1),2*sind5(1)]
+orderp = [2*sind1(1)-1,2*sind3(1)-1,2*sind5(1)-1];
+ordern = [2*sind1(1),2*sind3(1),2*sind5(1)];
 
 V_ordered = Vn;
 V_ordered(:,[1,3,5])=V_ordered(:,orderp); %reorder positive modes
