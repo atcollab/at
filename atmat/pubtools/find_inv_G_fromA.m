@@ -25,6 +25,6 @@ I3 = ...
  0 0 0 0 0 1];
 
 
-G1 = A'*I1*A;
-G2 = A'*I2*A;
-G3 = A'*I3*A;
+G1 = inv(A)'*I1*inv(A);
+G2 = inv(A)'*I2*inv(A);
+G3 = inv(A)'*I3*inv(A);
