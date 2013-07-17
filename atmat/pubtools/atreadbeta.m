@@ -161,7 +161,7 @@ end
 evalin('base','global GLOBVAL');
 
 function cav=tunecavity(cav,V,clength,ncell,ntot)
-frev=2.997924E8/clength;
+frev=2.99792458E8/clength;
 if cav.Voltage == 0, cav.Voltage=V; end
 if cav.HarmNumber > 1
     harm=ceil(cav.HarmNumber/ntot);
