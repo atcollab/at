@@ -1,5 +1,9 @@
-function a=amat_order(m66)
+function a=amat(m66)
 %find A matrix from one turn map matrix
+%Order it so that it is close to the order of x,y,z
+%also ensure that positive modes are before negative so that
+%one has proper symplecticity
+%B. Nash July 18, 2013
 %we order and normalize the vectors via 
 % v_j' jmat(3) v_k = i sgn(j) delta(j,k)
 [V,d]=eigs(m66);
