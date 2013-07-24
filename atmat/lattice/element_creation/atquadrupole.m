@@ -1,6 +1,6 @@
 function Elem=atquadrupole(fname,L,K,method)
 %ATQUADRUPOLE(FAMNAME,LENGTH,K,PASSMETHOD)
-%	creates a quadrupole element
+%	creates a quadrupole element with Class 'Quadrupole'
 %
 %FAMNAME		family name
 %LENGTH			length [m]
@@ -16,7 +16,7 @@ Elem.FamName=fname;  % add check for existing identical family names
 Elem.Length=L;
 Elem.PolynomA=[0 0 0];	 
 Elem.PolynomB=[0 K 0];
-Elem.MaxOrder=2;
+Elem.MaxOrder=1;
 Elem.NumIntSteps=10;
 Elem.K=K;
 Elem.PassMethod=method;
