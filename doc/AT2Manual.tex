@@ -77,8 +77,26 @@ The pass methods have two different calling methods.  They may be called directl
 
 The moment tracking and equilibrium finding occurs via the function OhmiEnvelope().  For this to work requires pass methods that include radiation (this gives a deterministic effect which results in damping and non-symplecticity.  Further, the function findmpoleraddiffmatrix is required to compute the diffusion matrix.
 
-\section{Lattice Functions}
-Given the ability to track particles through the lattice, one can compute beam dynamics properties around the ring.  The closed orbit, or fixed point of stable motion is one example.  Next there are the various ways to characterize the betatron and synchrotron oscillations.  Twiss parameters plus various coupled generalizations may be computed.
+\section{Global parameters and Lattice Functions}
+Given the ability to track particles through the lattice, one can compute global beam dynamics parameters and properties that vary around the ring.  
+Here are some global parameters:
+\begin{itemize}
+\item tunes
+\item chromaticity
+\item momentum compaction factor
+\item tune shift with amplitude
+\end{itemize}
+
+Here are some quantities that vary around the ring:
+\begin{itemize}
+\item Closed orbit
+\item One turn map matrix
+\item Transfer matrix from one position to another
+\item Beam sizes
+\item Twiss Parameters
+\item Dispersion function
+\end{itemize}
+
 
 \section{Visualization}
 The lattice functions described in the previous section may be plotted, together with a synoptic representation of the lattice.  The function atplot is designed for this purpose.
