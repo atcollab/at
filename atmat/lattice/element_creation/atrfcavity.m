@@ -1,6 +1,6 @@
 function Elem=atrfcavity(fname,L,V,F,H,E,method)
 %ATRFCAVITY(FAMNAME,LENGTH,VOLTAGE,FREQUENCY,HARMONICNUMBER,ENERGY,PASSMETHOD)
-%	creates an rfcavity element
+%	creates an rfcavity element with Class 'RFCavity'
 %
 %		FamName			family name
 %		Length			length[m]

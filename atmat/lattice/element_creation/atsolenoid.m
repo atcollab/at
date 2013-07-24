@@ -1,7 +1,8 @@
-function Elem=solenoid(fname,L,KS,method)
+function Elem=atsolenoid(fname,L,KS,method)
 
 % z=solenoid('FAMILYNAME',Length [m],KS,'METHOD')
-%	creates a new family in the FAMLIST - a structure with field
+%	creates a new solenoid element with Class 'Solenoid'
+%   The structure with field
 %	FamName			family name
 %	Length			length[m]
 %	KS              solenoid strength KS [rad/m]
@@ -28,3 +29,4 @@ Elem.R2 = diag(ones(6,1));
 Elem.T1 = zeros(1,6);
 Elem.T2 = zeros(1,6);
 Elem.PassMethod=method;
+Elem.Class = 'Solenoid';

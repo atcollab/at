@@ -1,6 +1,6 @@
 function Elem=atthinmultipole(fname,PolynomA,PolynomB,method)
 %ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD)
-%	creates a thin multipole element
+%	creates a thin multipole element with Class 'ThinMultipole'
 %
 %	FAMNAME			family name
 %	POLYNOMA        skew [dipole quad sext oct];	 
@@ -21,3 +21,4 @@ Elem.PolynomA=[PolynomA zeros(lg-la,1)];
 Elem.PolynomB=[PolynomB zeros(lg-lb,1)];
 Elem.MaxOrder=lg-1;
 Elem.PassMethod=method;
+Elem.Class = 'ThinMultipole';

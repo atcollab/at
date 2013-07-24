@@ -1,6 +1,6 @@
 function Elem=atdrift(fname,L,method)
 %ATDRIFT(FAMNAME,LENGTH,PASSMETHOD)
-%	creates a drift space element
+%	creates a drift space element with Class 'Drift'
 %
 %FAMNAME		family name
 %LENGTH			length [m]
@@ -14,3 +14,4 @@ if nargin < 3, method='DriftPass'; end
 Elem.FamName=fname;  % add check for existing identical family names
 Elem.Length=L;
 Elem.PassMethod=method;
+Elem.Class = 'Drift';
