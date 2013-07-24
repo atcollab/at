@@ -76,3 +76,4 @@ Elem.R2             = diag(ones(6,1));
 Elem.T1             = zeros(1,6);
 Elem.T2             = zeros(1,6);
 Elem.PassMethod 	= method;
+Elem.Class          = 'Wiggler'
