@@ -12,7 +12,7 @@ function Elem = atidtable(fname, Nslice, filename, Energy, method)
 % P. Elleaume, "A new approach to the electron beam dynamics in undulators
 % and wigglers", EPAC92.
 %
-% returns assigned structure
+% returns assigned structure with class 'KickMap'
 
 %---------------------------------------------------------------------------
 % Modification Log:
@@ -64,3 +64,5 @@ Elem.xkick = xkick;
 Elem.ykick = ykick;
 Elem.xkick1 = xkick1;
 Elem.ykick1 = ykick1;
+
+Elem.Class  = 'KickMap'

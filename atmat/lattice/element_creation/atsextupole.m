@@ -1,6 +1,6 @@
 function Elem=atsextupole(fname,L,S,method)
 %ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD)
-%	creates a sextupole element
+%	creates a sextupole element with class 'Sextupole'
 %
 %FAMNAME		family name
 %LENGTH			length [m]
