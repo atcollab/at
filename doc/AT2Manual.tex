@@ -1,0 +1,99 @@
+\documentclass[acus]{article}
+
+
+
+\usepackage{booktabs} 
+\usepackage{longtable}
+\usepackage{subfig}
+
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{AT 2.0 Manual}
+\maketitle
+\begin{abstract}
+We give an overview for the AT 2.0 code and describe how the functions and repository fit into this.
+\end{abstract}
+
+
+\section{Introduction}
+
+\section{Lattice Creation}
+The element creation functions are the following:
+\begin{itemize}
+\item atdrift \ \ Class: Drift
+\item atmonitor \ \ Class: Monitor
+\item atmultipole \ \ Class: Multipole
+\item atthinmultipole \ \ Class: 
+\item atquadrupole  \ \ Class: Quadrupole
+\item atrbend  \ \ Class: Bend 
+\item atrfcavity \ \ Class: RFCavity
+\item atsbend \ \ Class: Bend
+\item at solenoid \ \ Class: Solenoid
+\item atsextupole  \ \ Class: Sextupole
+\item atwiggler  \ \ Class: Wiggler
+\item idtable  \ \ Class:  KickMap
+\end{itemize}
+
+
+\section{Pass Methods}
+
+\begin{itemize}
+\item BndMPoleSymplectic4E2Pass
+\item BndMPoleSymplectic4E2RadPass
+\item BndMPoleSymplectic4Pass
+\item BndMPoleSymplectic4RadPass
+\item BendLinearPass
+\item CavityPass
+\item CorrectorPass
+\item DriftPass
+\item QuadLinearPass
+\item QuadMPoleFringePass
+\item StrMPoleSymplectic4Pass
+\item StrMPoleSymplectic4RadPass
+\item ThinMPolePass
+\item WiggLinearPass
+\item IDTablePass
+\end{itemize}
+
+
+
+\section{Lattice Manipulation}
+A lattice manipulation function takes a lattice as an argument and produces a new lattice as a result.
+
+An important kind of operation is where one selects all elements of a certain kind and does a transformation on them.
+The Class definitions facilitate this kind of operation.
+We define the following classes:
+\begin{itemize}
+\item Bend
+\item Quadrupole
+\item Sextupole
+\item Wiggler
+\item KickMap
+\end{itemize}
+
+
+\section{Tracking Particles plus Moments}
+The pass methods have two different calling methods.  They may be called directly via the Mex interface, or they may 
+be called indirectly through the function RingPass().
+
+The moment tracking and equilibrium finding occurs via the function OhmiEnvelope()
+
+\section{Lattice Functions}
+Given the ability to track particles through the lattice, one can compute beam dynamics properties around the ring.  The closed orbit, or fixed point of stable motion is one example.  Next there are the various ways to characterize the betatron and synchrotron oscillations.  Twiss parameters plus various coupled generalizations may be computed.
+
+\section{Visualization}
+The lattice functions described in the previous section may be plotted, together with a synoptic representation of the lattice.  The function atplot is designed for this purpose.
+
+\section{AT within a larger context: Other Codes, Matlab Middle Layer}
+
+\begin{thebibliography}{2}
+
+\bibitem{KMW}
+A. Terebilo \emph{Accelerator Toolbox for Matlab}, SLAC-PUB 8732 (May 2001)
+
+\end{thebibliography}
+
+\end{document}
+
