@@ -1,5 +1,5 @@
 function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
-% wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+% atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % FamName	family name
 % Ltot		total length of the wiggle
@@ -11,8 +11,7 @@ function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 % Bx		wiggler harmonics for vertical wigglers
 % method        name of the function to use for tracking
 %
-% returns assigned address in the FAMLIST that is uniquely identifies
-% the family
+% returns a wiggler structure with class 'Wiggler'
 
 %---------------------------------------------------------------------------
 % Modification Log:
@@ -76,4 +75,4 @@ Elem.R2             = diag(ones(6,1));
 Elem.T1             = zeros(1,6);
 Elem.T2             = zeros(1,6);
 Elem.PassMethod 	= method;
-Elem.Class          = 'Wiggler'
+Elem.Class          = 'Wiggler';
