@@ -12,5 +12,6 @@ for j=1:length(refpts)
     m66=findm66(newring);
     A=amat(m66);
     [H1,H2,H3]=find_etaoids(A);
+    H3(6,6)
     disp(:,j) = H3*[0 0 0 0 1 0]';
 end
