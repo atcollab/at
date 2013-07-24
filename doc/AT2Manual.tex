@@ -61,24 +61,21 @@ The element creation functions are the following:
 
 \section{Lattice Manipulation}
 A lattice manipulation function takes a lattice as an argument and produces a new lattice as a result.
-
-An important kind of operation is where one selects all elements of a certain kind and does a transformation on them.
-The Class definitions facilitate this kind of operation.
-We define the following classes:
+Here are some lattice manipulation functions:
 \begin{itemize}
-\item Bend
-\item Quadrupole
-\item Sextupole
-\item Wiggler
-\item KickMap
+\item atsetshift
+\item atsettilt
+\item atsetfieldvalues
+\item ataddmpolecomppoly
+\item ataddmpoleerrors
+\item atloadfielderrs
 \end{itemize}
 
 
 \section{Tracking Particles plus Moments}
-The pass methods have two different calling methods.  They may be called directly via the Mex interface, or they may 
-be called indirectly through the function RingPass().
+The pass methods have two different calling methods.  They may be called directly via the Mex interface (through the MexFunction entry point in the C function), or they may be called indirectly through the function RingPass (through the passFunction entry).  The pass methods should be defined so that calling them with no arguments gives a list of required and optional parameters.
 
-The moment tracking and equilibrium finding occurs via the function OhmiEnvelope()
+The moment tracking and equilibrium finding occurs via the function OhmiEnvelope().  For this to work requires pass methods that include radiation (this gives a deterministic effect which results in damping and non-symplecticity.  Further, the function findmpoleraddiffmatrix is required to compute the diffusion matrix.
 
 \section{Lattice Functions}
 Given the ability to track particles through the lattice, one can compute beam dynamics properties around the ring.  The closed orbit, or fixed point of stable motion is one example.  Next there are the various ways to characterize the betatron and synchrotron oscillations.  Twiss parameters plus various coupled generalizations may be computed.
