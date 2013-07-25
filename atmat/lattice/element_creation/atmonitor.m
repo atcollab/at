@@ -11,6 +11,5 @@ function Elem=atmonitor(fname)
 
 Elem.FamName=fname;  % add check for existing identical family names
 Elem.Length=0;
-Elem.K=K;
 Elem.PassMethod='IdentityPass';
 Elem.Class='Monitor';
