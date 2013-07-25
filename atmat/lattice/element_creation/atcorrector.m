@@ -1,6 +1,6 @@
 function Elem=atcorrector(fname,L,kick,method)
 %ATCORRECTOR(FAMNAME,LENGTH,KICK,PASSMETHOD)
-%	creates a drift space element
+%	creates a drift space element with class 'Corrector'
 %
 %FAMNAME		family name
 %LENGTH			length [m]
@@ -16,3 +16,4 @@ Elem.FamName=fname;  % add check for existing identical family names
 Elem.Length=L;
 Elem.KickAngle=kick;
 Elem.PassMethod=method;
+Elem.Class='Corrector';
