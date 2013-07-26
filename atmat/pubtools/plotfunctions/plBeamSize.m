@@ -3,7 +3,7 @@ function plotdata=plBeamSize(lindata,r,dpp,varargin)
 %
 % created 21/09/2012
 
-[r2,radindex,~]=atradon_noout(r);
+[r2,radindex,~]=atradon(r);
 [envelope,~,~]=ohmienvelope(r2,radindex,1:length(r2)+1);
  
 s=real(cat(2,envelope.Sigma))*1e3; % mum
