@@ -1,4 +1,4 @@
-function plotdata=plCorrectorStrenght(lindata,ring,dpp,varargin) %#ok<INUSD>
+function plotdata=plCorrectorStrength(lindata,ring,dpp,varargin) %#ok<INUSD>
 %DEFAULTPLOT    Default plotting function for ATPLOT
 %
 %Plots polynomB for ring and ring1
