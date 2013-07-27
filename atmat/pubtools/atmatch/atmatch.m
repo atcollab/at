@@ -1,11 +1,18 @@
 function [NewRing,penalty,dmin]=atmatch(...
     Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer)
+%function [NewRing,penalty,dmin]=atmatch(...
+%    Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer)
+%
 % this functions modifies the Variables (parameters in THERING) to obtain
 % a new THERING with the Constraints verified
-%
+% 
+% Ring        : at lattice structure
 % Variables   : a cell array of structures of parameters to vary with step size.
 % Constraints : a cell array of structures
-%
+% Tolerance   : square sum of distance to wished constraints at which the minimizer stops  
+% Calls       : number of calls
+% verbose     : verbosity 0-3 (see later)
+% minimizer   : @fminsearch (default) or @lsnonlin 
 %
 %
 % Variables  struct('Indx',{[indx],...
