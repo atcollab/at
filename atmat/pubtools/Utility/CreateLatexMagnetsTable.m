@@ -7,6 +7,11 @@ function lmt=CreateLatexMagnetsTable(r,tabname,E0)
 % generate a latex input file for a table of magnet fields, names and length
 % lmt is a string containing the same information.
 %
+% needs package
+% \usepackage{xcolor}
+% 
+% to hide columns: 
+% \newcolumntype{H}{>{\setbox0=\hbox\bgroup}c<{\egroup}@{}}
 % 
 % in latex the table may be inserted as
 % 
@@ -43,9 +48,9 @@ function lmt=CreateLatexMagnetsTable(r,tabname,E0)
 tabhead=['\\begin{table}[!h]\n'...
     '\\caption{' tabname '}\n'...
     '\\begin{center}\n'...
-    '\\begin{tabular}{rccccccccc}\n'...
+    '\\begin{tabular}{rcccccccccc}\n'...
     '\\toprule\n'...
-    'name & L [m] & $\\rho\\,[m]$ & $\\theta\\,[rad]$& $B_0\\,[T]$ &$b_2\\,[T/m]$ &$b_3\\,[T/m^2]$ & $\\beta_x\\,[m]$& $\\beta_y\\,[m]$ &$\\eta_x\\,[m]$ \\\\\n'...
+    'name & L [m] & $\\rho\\,[m]$ & $\\theta\\,[rad]$& $B_0\\,[T]$ &$b_2\\,[T/m]$ &$b_3\\,[T/m^2]$ &$b_4\\,[T/m^3]$ & $\\beta_x\\,[m]$& $\\beta_y\\,[m]$ &$\\eta_x\\,[m]$ \\\\\n'...
     '\\midrule\n'...
     ];
 
@@ -78,23 +83,27 @@ if isfield(r{1},'Class')
     b=findcells(r,'Class','Bend');
     q=findcells(r,'Class','Quadrupole');
     s=findcells(r,'Class','Sextupole');
+    o=findcells(r,'Class','Octupole');
 else
     b=findcells(r,'BetaCode','DI');
     q=findcells(r,'BetaCode','QP');
     s=findcells(r,'BetaCode','SX');
+    o=findcells(r,'BetaCode','OC');
 end
 
 % only half cell
 b=b(b<ceil(length(r)/2+1));
 q=q(q<ceil(length(r)/2+1));
 s=s(s<ceil(length(r)/2+1));
+o=o(o<ceil(length(r)/2+1));
 
 % get magnets
-colors=[ repmat('\\color{Blue!80!White} ',length(b),1);...
-         repmat('\\color{Red!80!Black}  ',length(q),1);...
-         repmat('\\color{Green!80!Black}',length(s),1)];
+colors=[ repmat('\\color{blue!80!white}  ',length(b),1);...
+         repmat('\\color{red!80!black}   ',length(q),1);...
+         repmat('\\color{green!80!black} ',length(s),1);...
+         repmat('\\color{yellow!60!black}',length(o),1)];
 
-[mag,magord]=sort([b,q,s]);
+[mag,magord]=sort([b,q,s,o]);
 
 colors=colors(magord,:);
 
@@ -117,6 +126,10 @@ B0(dips)=cellfun(@(x)x.BendingAngle/x.Length,r(mag(dips)),'un',0);
 B1=cellfun(@(x)x.PolynomB(2),r(mag),'un',0);
 B2=cellfun(@(x)x.PolynomB(3),r(mag),'un',0);
 
+oct=findcells(r(mag),'PolynomB',1,4);
+B3_=cellfun(@(x)x.PolynomB(4),r(mag(oct)),'un',0);
+
+
 betaX=arrayfun(@(x)x.beta(1),l(mag),'un',0)';
 betaY=arrayfun(@(x)x.beta(2),l(mag),'un',0)';
 disp=arrayfun(@(x)x.Dispersion(1),l(mag),'un',0)';
@@ -128,6 +141,10 @@ TH=cell2mat(B0);
 B0=cell2mat(B0)*Brho;
 B1=cell2mat(B1)*Brho;
 B2=cell2mat(B2)*Brho;
+B3_=cell2mat(B3_)*Brho;
+B3=zeros(size(B2));
+B3(oct)=B3_;
+
 betaX=cell2mat(betaX);
 betaY=cell2mat(betaY);
 disp=cell2mat(disp);
@@ -158,6 +175,7 @@ lmt=[...
     leftparstr colors num2str(B0,'%1.3f') rightparstr andstr...
     leftparstr colors num2str(B1,'%2.1f') rightparstr andstr...
     leftparstr colors num2str(B2,'%3.1f') rightparstr andstr...
+    leftparstr colors num2str(B3,'%3.1f') rightparstr andstr...
     num2str(betaX,'%2.2f') andstr...
     num2str(betaY,'%2.2f') andstr...
     num2str(disp,'%1.3f') nlstr];
@@ -165,8 +183,14 @@ lmt=[...
 lmt=reshape(lmt',1,numel(lmt));
 
 lmt=strrep(lmt,'0.000}','    }');
-lmt=strrep(lmt,'0.00}','    }');
-lmt=strrep(lmt,'0.0}','    }');
+%lmt=strrep(lmt,'0.00}','    }');
+lmt=strrep(lmt,'}  0.0}','}  }');
+lmt=strrep(lmt,'}   0.0}','}   }');
+lmt=strrep(lmt,'}    0.0}','}   }');
+lmt=strrep(lmt,'}     0.0}','}   }');
+lmt=strrep(lmt,'}      0.0}','}   }');
+lmt=strrep(lmt,'}       0.0}','}   }');
+lmt=strrep(lmt,'}        0.0}','}   }');
 
 % print to file
 fff=fopen([tabname '.tex'],'w+');
