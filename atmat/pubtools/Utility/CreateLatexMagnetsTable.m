@@ -1,4 +1,9 @@
-function lmt=CreateLatexMagnetsTable(r,tabname)
+function lmt=CreateLatexMagnetsTable(r,tabname,E0)
+% function lmt=CreateLatexMagnetsTable(r,tabname)
+%
+% r= at lattice
+% tabname= name of table out file. (label will be refto_tabname)
+% 
 % generate a latex input file for a table of magnet fields, names and length
 % lmt is a string containing the same information.
 %
@@ -54,13 +59,22 @@ tabtail=[...
     ];
 
 % get Brho
-%E0=r{1}.Energy;
-
-E0=6.0e9;
+if nargin <3
+    try
+        E0=r{1}.Energy;
+    catch
+        try
+            E0=GLOBVAL.E0;
+        catch
+            warning('no energy defined set  E0=0.')
+            E0=0;
+        end
+    end
+end
 
 Brho=3.3356*E0/1e9;
 
-if isfield(r,'Class')
+if isfield(r{1},'Class')
     b=findcells(r,'Class','Bend');
     q=findcells(r,'Class','Quadrupole');
     s=findcells(r,'Class','Sextupole');
