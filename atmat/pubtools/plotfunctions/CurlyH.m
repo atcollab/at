@@ -1,4 +1,18 @@
 function [H,Hv]=CurlyH(RING,dp,ind)
+%function [H,Hv]=CurlyH(RING,dp,ind)
+%
+% computes Curly H (dispersion invariant)
+% 
+% RING :at lattice
+% dp  : energy deviation
+% ind : reference positions
+% 
+% output 
+% 
+% H  : horizontal dispersion invariant 
+% Hv : vertical dispersion invariant
+%
+% 
 
 %TD=twissring(RING,dp,ind);
 [TD,~,~]=atlinopt(RING,dp,ind);

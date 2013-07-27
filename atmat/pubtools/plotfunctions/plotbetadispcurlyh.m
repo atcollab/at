@@ -1,7 +1,7 @@
 function plotdata=plotbetadispcurlyh(lindata,ring,dpp,varargin)
 
 idx=cat(1,lindata.ElemIndex);
-H=CurlyH(ring,dpp,idx(:)');
+H=CurlyHlindata(lindata);
 
 beta=cat(1,lindata.beta);                     % left axis
 plotdata(1).values=beta;

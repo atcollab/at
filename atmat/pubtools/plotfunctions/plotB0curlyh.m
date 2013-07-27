@@ -4,7 +4,7 @@ spl=299792458;
 Brho=1e9/spl*(6.03);
 
 idx=cat(1,lindata.ElemIndex);
-H=CurlyH(ring,dpp,idx(:)');
+H=CurlyHlindata(lindata);
 B0=zeros(size(H));
 dips=findcells(ring,'BendingAngle');
 B0(dips)=Brho*getcellstruct(ring,'BendingAngle',dips)./...
