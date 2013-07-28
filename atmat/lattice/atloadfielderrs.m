@@ -1,5 +1,12 @@
 function ring = atloadfielderrs(ring,fielderrstruct)
 % ATLOADFIELDERRS will load a field error structure into a ring
+% field error structure has the fields: 
+% elemindex: element indices in ring to impact
+% Nval: reference mpole #, e.g. 2 for Quad, 3 for Sextupole
+% nval: multipole index to change
+% Bval: Value of relative normal coefficient
+% Aval: Value of relative skew coefficient
+% radius: reference radius used to compute error
 
 elemindex=fielderrstruct.elemindex;
 newindex=fielderrstruct.nval;
