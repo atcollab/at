@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findrespmdemo</title>
+  <meta name="keywords" content="findrespmdemo">
+  <meta name="description" content="FINDRESPMDEMO response matrix demo">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atdemos</a> &gt; findrespmdemo.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>findrespmdemo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>FINDRESPMDEMO response matrix demo</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDRESPMDEMO response matrix demo
+ This script illustrates the use of AT function FINDRESPM</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="spear2.html" class="code" title="function spear2">spear2</a>	SPEAR2 example lattice definition file</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%FINDRESPMDEMO response matrix demo</span>
+0002 <span class="comment">% This script illustrates the use of AT function FINDRESPM</span>
+0003 
+0004 <a href="spear2.html" class="code" title="function spear2">spear2</a>
+0005 <span class="comment">% The most common RM is corrector-to-BPM</span>
+0006 <span class="comment">% In this demonstration we will not use the actual correctors</span>
+0007 <span class="comment">% to keep the lattice simple.</span>
+0008 
+0009 <span class="comment">% We will use all focusing quadrupoles as correctors:</span>
+0010 <span class="comment">% In order to do this we need to use StrMPolesymplectic4 pass-method</span>
+0011 <span class="comment">% for them. This mehod looks at all terms of the polynomial</span>
+0012 <span class="comment">% expansion of transverse magnetic field.</span>
+0013 <span class="comment">% (QuadLinearPass only looks at field 'K')</span>
+0014 <span class="comment">% PolynomB(1) gives horizontal kick</span>
+0015 <span class="comment">% PolynomA(1) gives a vertical kick</span>
+0016 
+0017 <span class="comment">% Find indexes of elements that belong to QF Q1 Q2 Q3 families</span>
+0018 <span class="comment">% We will use them as corrector elements</span>
+0019 QFI = findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'QF'</span>);
+0020 Q1I = findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'Q1'</span>);
+0021 Q2I = findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'Q2'</span>);
+0022 Q3I = findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'Q3'</span>);
+0023 CORRINDEX = sort([ QFI Q1I Q2I Q3I]);
+0024 <span class="comment">% Install the new pass-method 'StrMPoleSymplectic4Pass'</span>
+0025 THERING = setcellstruct(THERING,<span class="string">'PassMethod'</span>,CORRINDEX,<span class="string">'StrMPoleSymplectic4Pass'</span>);
+0026 
+0027 <span class="comment">% We will use etrance points of all bending magnets as observation points (BPMs)</span>
+0028 BPMINDEX = findcells(THERING,<span class="string">'BendingAngle'</span>);
+0029 
+0030 NBPM = length(BPMINDEX);
+0031 NCOR = length(CORRINDEX);
+0032 
+0033 <span class="comment">% Prepare input parameters for FINDRESPM that will tell it, which</span>
+0034 <span class="comment">% parameters to use as orbit perturbations</span>
+0035 <span class="comment">% See help for FINDRESPM</span>
+0036 
+0037 <span class="comment">% Set the size of a parameter change for numeric differentiation</span>
+0038 KICKSIZE = 1e-5;
+0039 
+0040 RX = findrespm(THERING,BPMINDEX ,CORRINDEX, KICKSIZE, <span class="string">'PolynomB'</span>,1,1);
+0041 RY = findrespm(THERING,BPMINDEX ,CORRINDEX, KICKSIZE, <span class="string">'PolynomA'</span>,1,1);
+0042 <span class="comment">% Build the response matrix</span>
+0043 <span class="comment">% In the form</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">% | HH HV |</span>
+0046 <span class="comment">% | VH VV |</span>
+0047 <span class="comment">%</span>
+0048 <span class="comment">% HH - Horizontal BPM response to horizontal orbit kicks</span>
+0049 <span class="comment">% HV - Horizontal BPM response to vertical orbit kicks</span>
+0050 <span class="comment">% VH - vertical BPM response to horizontal orbit kicks</span>
+0051 <span class="comment">% VV - vertical BPM response to vertical orbit kicks</span>
+0052 RespM_XY = [RX{1} RY{1}; RX{3} RY{3}];
+0053 figure(1);
+0054 mesh(RespM_XY);
+0055 colormap(<span class="string">'copper'</span>);
+0056 xlabel(<span class="string">'Corrector Number'</span>)
+0057 ylabel(<span class="string">'BPM Number'</span>);
+0058 zlabel(<span class="string">'Normalized Orbit Response'</span>);
+0059 title(<span class="string">'Orbit Response Matrix - uncoupled lattice'</span>)
+0060 
+0061 <span class="comment">% Now we wish to introduce coupling:</span>
+0062 QDI = findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'QD'</span>);
+0063 <span class="comment">% Generate random rotations:</span>
+0064 QDTILTS =   1*(pi/180)*randn(1,length(QDI));
+0065 <span class="comment">% Put random values in the ring</span>
+0066 settilt(QDI,QDTILTS);
+0067 
+0068 <span class="comment">% Generate the new response matrix for the lattice with errors</span>
+0069 RX = findrespm(THERING,BPMINDEX ,CORRINDEX, KICKSIZE, <span class="string">'PolynomB'</span>,1,1);
+0070 RY = findrespm(THERING,BPMINDEX ,CORRINDEX, KICKSIZE, <span class="string">'PolynomA'</span>,1,1);
+0071 
+0072 RespM_XY_Coupled = [RX{1} RY{1}; RX{3} RY{3}];
+0073 figure(2);
+0074 mesh(RespM_XY_Coupled);
+0075 colormap(<span class="string">'copper'</span>);
+0076 title(<span class="string">'Orbit Response Matrix - coupled lattice'</span>)
+0077 xlabel(<span class="string">'Corrector Number'</span>)
+0078 ylabel(<span class="string">'BPM Number'</span>);
+0079 zlabel(<span class="string">'Normalized Orbit Response'</span>);
+0080</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

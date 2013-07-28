@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of run_MatchQuadLengthForEqualK1</title>
+  <meta name="keywords" content="run_MatchQuadLengthForEqualK1">
+  <meta name="description" content="run the matching on S10 ESRF upgrade arc lattice">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">atmatch</a> &gt; <a href="index.html">FitQuadrupoleLength</a> &gt; run_MatchQuadLengthForEqualK1.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/atmatch/FitQuadrupoleLength&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>run_MatchQuadLengthForEqualK1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>run the matching on S10 ESRF upgrade arc lattice</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> run the matching on S10 ESRF upgrade arc lattice</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="MatchQuadLengthForEqualK1.html" class="code" title="function arc1=MatchQuadLengthForEqualK1(arc,d)">MatchQuadLengthForEqualK1</a>	adjusts length of QFA6 QFA8 to have the same K1</li><li><a href="compK1.html" class="code" title="function dif=compK1(arc,indQ1,indQ2,varargin)">compK1</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% run the matching on S10 ESRF upgrade arc lattice</span>
+0002 
+0003 load(<span class="string">'dba.mat'</span>,<span class="string">'RING'</span>);
+0004 addpath(fullfile(pwd,<span class="string">'..'</span>))
+0005 <span class="comment">%arc=[RING(1:18);RING(128:end)];</span>
+0006 arc=RING;
+0007 
+0008 <span class="comment">% proceed in steps</span>
+0009 arc1=<a href="MatchQuadLengthForEqualK1.html" class="code" title="function arc1=MatchQuadLengthForEqualK1(arc,d)">MatchQuadLengthForEqualK1</a>(arc,0.7);
+0010 arc2=<a href="MatchQuadLengthForEqualK1.html" class="code" title="function arc1=MatchQuadLengthForEqualK1(arc,d)">MatchQuadLengthForEqualK1</a>(arc1,0.5);
+0011 arc3=<a href="MatchQuadLengthForEqualK1.html" class="code" title="function arc1=MatchQuadLengthForEqualK1(arc,d)">MatchQuadLengthForEqualK1</a>(arc2,0.3);
+0012 arc4=<a href="MatchQuadLengthForEqualK1.html" class="code" title="function arc1=MatchQuadLengthForEqualK1(arc,d)">MatchQuadLengthForEqualK1</a>(arc3,0.15);
+0013 arc1=<a href="MatchQuadLengthForEqualK1.html" class="code" title="function arc1=MatchQuadLengthForEqualK1(arc,d)">MatchQuadLengthForEqualK1</a>(arc4,0);
+0014 
+0015 indQF=findcells(arc,<span class="string">'FamName'</span>,<span class="string">'QF'</span>) ;
+0016 indQFM=findcells(arc,<span class="string">'FamName'</span>,<span class="string">'QFM'</span>) ;
+0017 
+0018 DK1_b=<a href="compK1.html" class="code" title="function dif=compK1(arc,indQ1,indQ2,varargin)">compK1</a>(arc,indQF,indQFM);
+0019 LQ6_b=getcellstruct(arc,<span class="string">'Length'</span>,indQF)*length(indQF);
+0020 LQ8_b=getcellstruct(arc,<span class="string">'Length'</span>,indQFM)*length(indQFM);
+0021 
+0022 DK1_a=<a href="compK1.html" class="code" title="function dif=compK1(arc,indQ1,indQ2,varargin)">compK1</a>(arc1,indQF,indQFM);
+0023 LQ6_a=getcellstruct(arc1,<span class="string">'Length'</span>,indQF)*length(indQF);
+0024 LQ8_a=getcellstruct(arc1,<span class="string">'Length'</span>,indQFM)*length(indQFM);
+0025 
+0026 
+0027 disp(<span class="string">'      before     after'</span>)
+0028 disp([[<span class="string">'DK1  '</span>;<span class="string">'LQF  '</span>;<span class="string">'LQFM '</span>;<span class="string">'sum L'</span>],<span class="keyword">...</span>
+0029     num2str([[DK1_b;LQ6_b(1);LQ8_b(1);LQ6_b(1)+LQ8_b(1)],<span class="keyword">...</span>
+0030     [DK1_a;LQ6_a(1);LQ8_a(1);LQ6_a(1)+LQ8_a(1)]],<span class="string">'   %1.5f'</span>)])
+0031</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

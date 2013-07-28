@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of cavityon</title>
+  <meta name="keywords" content="cavityon">
+  <meta name="description" content="CAVITYON turns Cavities ON">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; cavityon.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>cavityon
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>CAVITYON turns Cavities ON</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function varargout = cavityon(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CAVITYON turns Cavities ON
+
+ CAVITYON looks for elements that have field Frequency
+    and sets PassMethod for them to ThinCavityPass
+ CAVITYON(ENERGY)
+    In addition sets the E0 field of the global variable GLOBVAL
+    to energy - design energy [eV]
+    If GLOBVAL does not exist CAVITYON creates it
+
+ See also <a href="cavityoff.html" class="code" title="">CAVITYOFF</a>, <a href="radiationon.html" class="code" title="">RADIATIONON</a>, <a href="radiationoff.html" class="code" title="">RADIATIONOFF</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = cavityon(varargin)</a>
+0002 <span class="comment">%CAVITYON turns Cavities ON</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% CAVITYON looks for elements that have field Frequency</span>
+0005 <span class="comment">%    and sets PassMethod for them to ThinCavityPass</span>
+0006 <span class="comment">% CAVITYON(ENERGY)</span>
+0007 <span class="comment">%    In addition sets the E0 field of the global variable GLOBVAL</span>
+0008 <span class="comment">%    to energy - design energy [eV]</span>
+0009 <span class="comment">%    If GLOBVAL does not exist CAVITYON creates it</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% See also CAVITYOFF, RADIATIONON, RADIATIONOFF</span>
+0012 
+0013 <span class="keyword">if</span> ~evalin(<span class="string">'base'</span>,<span class="string">'exist(''THERING'')'</span>) | ~evalin(<span class="string">'base'</span>,<span class="string">'isglobal(THERING)'</span>);
+0014    error(<span class="string">'Global variable THERING could not be found'</span>);
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="keyword">global</span> THERING
+0018 
+0019 <span class="keyword">global</span> GLOBVAL
+0020 <span class="keyword">if</span> ~evalin(<span class="string">'base'</span>,<span class="string">'exist(''GLOBVAL'')'</span>) | ~evalin(<span class="string">'base'</span>,<span class="string">'isglobal(GLOBVAL)'</span>);
+0021     <span class="keyword">if</span> nargin==0
+0022         error(<span class="string">'global variable GLOBVAL does not exist. To create it, use CAVITYON(ENERGY)'</span>)
+0023     <span class="keyword">else</span>
+0024         evalin(<span class="string">'base'</span>,<span class="string">'global GLOBVAL'</span>);
+0025         GLOBVAL.E0 = varargin{1};
+0026         disp(<span class="string">'Global variable GLOBVAL was created'</span>);
+0027     <span class="keyword">end</span>
+0028 <span class="keyword">else</span>
+0029     <span class="keyword">if</span> nargin==1
+0030         GLOBVAL.E0 = varargin{1};
+0031     <span class="keyword">end</span>
+0032     
+0033 <span class="keyword">end</span>
+0034 
+0035 localcavindex = findcells(THERING,<span class="string">'Frequency'</span>);
+0036 
+0037 <span class="keyword">if</span> isempty(localcavindex)
+0038    error(<span class="string">'No cavities were found in the lattice'</span>);
+0039 <span class="keyword">end</span>
+0040 
+0041 THERING = setcellstruct(THERING,<span class="string">'PassMethod'</span>,localcavindex, <span class="string">'CavityPass'</span>);
+0042 
+0043 disp(strcat(<span class="string">'Cavities located at index  ['</span>,num2str(localcavindex),  <span class="string">']  were turned ON'</span>))     
+0044 <span class="keyword">if</span> nargout
+0045     varargout{1}=localcavindex;
+0046 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

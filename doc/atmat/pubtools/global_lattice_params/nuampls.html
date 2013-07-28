@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nuampls</title>
+  <meta name="keywords" content="nuampls">
+  <meta name="description" content="ATNUAMPL	computes tune shift with amplitude">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">global_lattice_params</a> &gt; nuampls.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/global_lattice_params&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>nuampls
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATNUAMPL	computes tune shift with amplitude</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [nux,nuz,jvals]=nuampls(ring,ampl,xz) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATNUAMPL    computes tune shift with amplitude
+[NUX,NUZ]=nuampls(RING,AMPLITUDE)
+
+    Computes tunes for the specified horizontal amplitudes
+
+[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE,3)
+
+    Computes tunes for the specified vertical amplitudes
+ e.g.  atnuampl(esrf,0:.0002:0.01)
+
+ setting the argument plt to 1 will plot the resulting tunes vs.
+ amplitude.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="findtune_multi.html" class="code" title="function [tune,spectrum]=findtune_multi(pos,method)">findtune_multi</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="nuamp_sens.html" class="code" title="function nuamp_sens(ring,fig,SextFam,vals,scale)">nuamp_sens</a>	nuamp(fig,SextFam,scale)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [nux,nuz,jvals]=nuampls(ring,ampl,xz)</a>
+0002 <span class="comment">%ATNUAMPL    computes tune shift with amplitude</span>
+0003 <span class="comment">%[NUX,NUZ]=nuampls(RING,AMPLITUDE)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%    Computes tunes for the specified horizontal amplitudes</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE,3)</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%    Computes tunes for the specified vertical amplitudes</span>
+0010 <span class="comment">% e.g.  atnuampl(esrf,0:.0002:0.01)</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% setting the argument plt to 1 will plot the resulting tunes vs.</span>
+0013 <span class="comment">% amplitude.</span>
+0014 
+0015 <span class="keyword">if</span> nargin &lt; 3, xz=1; <span class="keyword">end</span>
+0016 <span class="keyword">if</span> nargin &lt; 4, plt=0; <span class="keyword">end</span>
+0017 <span class="keyword">if</span> nargin &lt; 5, pltype=<span class="string">'0-'</span>; <span class="keyword">end</span>
+0018 
+0019 [lindat,nu,xi]=atlinopt(ring,0,1:length(ring));
+0020 <span class="keyword">if</span> (xz == 1)
+0021     beta=lindat(1).beta(1);
+0022 <span class="keyword">else</span>
+0023     beta=lindat(1).beta(2);
+0024 <span class="keyword">end</span>
+0025 jvals = (1/beta)*ampl.^2;
+0026 
+0027 siza=size(ampl);
+0028 nampl=prod(siza);
+0029 p0=repmat(0.00001*[1;0;1;0;0;0], 1,nampl);
+0030 p0(xz,:)=p0(xz,:)+ampl(:)';
+0031 p1=ringpass(ring,p0,128);
+0032 x1=reshape(p1(1,:)-i*p1(2,:),nampl,128)';
+0033 z1=reshape(p1(3,:)-i*p1(4,:),nampl,128)';
+0034 
+0035 nux=reshape(<a href="findtune_multi.html" class="code" title="function [tune,spectrum]=findtune_multi(pos,method)">findtune_multi</a>(x1,3),siza);
+0036 
+0037 nuz=reshape(<a href="findtune_multi.html" class="code" title="function [tune,spectrum]=findtune_multi(pos,method)">findtune_multi</a>(z1,3),siza);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

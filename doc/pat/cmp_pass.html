@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of cmp_pass</title>
+  <meta name="keywords" content="cmp_pass">
+  <meta name="description" content="sp3v82_lelt">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">pat</a> &gt; cmp_pass.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for pat&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>cmp_pass
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>sp3v82_lelt</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> sp3v82_lelt</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% sp3v82_lelt</span>
+0002 
+0003 <span class="comment">%compare results of the old and new passmethods</span>
+0004 a=ls(<span class="string">'*pass*.c'</span>);
+0005 b=cellstr(a);
+0006 X=zeros(6,11); X(1,:) = 0.001*[-5:5];
+0007 
+0008 figure(82)
+0009 <span class="keyword">for</span> ii=1:length(b)
+0010     indx = findcells(THERING, <span class="string">'PassMethod'</span>, b{ii}(1:end-2));
+0011     <span class="keyword">if</span> isempty(indx)
+0012         <span class="keyword">continue</span>
+0013     <span class="keyword">end</span>
+0014     
+0015     Elem = THERING{indx(1)};
+0016     fprintf(<span class="string">'%s\n'</span>,Elem.PassMethod);
+0017     
+0018     cd r:\xiahuang\misc\pat\
+0019     pX = ringpass({Elem}, X, 1); 
+0020     
+0021     cd R:\Controls\matlab\at\simulator\element\
+0022     nX = ringpass({Elem}, X, 1); 
+0023 
+0024     plot(X(1,:), pX(1,:),<span class="string">'s-'</span>, X(1,:), nX(1,:),<span class="string">'o-'</span>) 
+0025     title(Elem.PassMethod)
+0026    
+0027     pause
+0028 <span class="keyword">end</span>
+0029 cd r:\xiahuang\misc\pat\
+0030 
+0031 
+0032 <span class="comment">%% test tracking</span>
+0033 
+0034 &gt;&gt; X=zeros(6,1000); X(1,:) = 0.001*rand(1,1000);
+0035 tic; nX = ringpass(THERING, X, 1000); toc    <span class="comment">%old</span>
+0036 <span class="comment">%Elapsed time is 481.753373 seconds.</span>
+0037 
+0038 &gt;&gt; cd r:\xiahuang\misc\pat\
+0039 &gt;&gt; tic; pX = ringpass(THERING, X, 1000); toc    <span class="comment">%parallel</span>
+0040 <span class="comment">%Elapsed time is 116.295076 seconds.</span>
+0041 &gt;&gt; norm(pX-nX)
+0042 <span class="comment">%ans =</span>
+0043 <span class="comment">%     0</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

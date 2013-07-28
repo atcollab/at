@@ -1,0 +1,346 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of fitgaussian</title>
+  <meta name="keywords" content="fitgaussian">
+  <meta name="description" content="GAUSSIAN_PARAM FITERR GAUSSFIT SIGERROR]= FITGAUSSIAN(DATA,[property_value_pair]);">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">haissinski</a> &gt; fitgaussian.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/haissinski&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>fitgaussian
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>GAUSSIAN_PARAM FITERR GAUSSFIT SIGERROR]= FITGAUSSIAN(DATA,[property_value_pair]);</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = fitgaussian(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> GAUSSIAN_PARAM FITERR GAUSSFIT SIGERROR]= FITGAUSSIAN(DATA,[property_value_pair]);
+ 
+ DATA is a 1D vector to which we want to fit a gaussian profile. The
+ function will return a structure with various fitted parameters.
+ SCALEFACTOR is optional and is applied in the horizontal axis.
+
+ Property value pairs:
+
+  scale    : 1 (default)
+  plot     : 0 no plots (default), 1 plots fits against data
+
+ Initial Fit parameters are fit automatically unless specified.
+  integral : estimated sum integral of the function
+  mean     : estimate of the mean of the gaussian 
+  sigma    : estimated sigma of the gaussian
+  DC       : known DC component to remove (set to zero to not fit)
+  bg_grad  : known background gradient to fit (set to zero to not fit)
+  Assym    : known gaussian assymetry (set to zero to not fit)
+
+ FITERR    Final fit error returned by the internal error fuction 
+ GAUSSFIT  Final fit function
+ SIGERROR  Error estimate of the sigma fit in relative terms. Multiply by
+           100 to get in percent.
+
+ Original script by R. Dowd
+ In functional format by E. Tan 31/07/2009</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plothaissinski.html" class="code" title="function varargout = hassinskyfit(sigma0, q, R, L, frf, h, V, phis, varargin)">plothaissinski</a>	[z lambda sigma mu] = HASSINSKYFIT(SIGMA0, R, L)</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function sse=myfit(params, x, Dist, fixedvals)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = fitgaussian(varargin)</a>
+0002 
+0003 <span class="comment">% GAUSSIAN_PARAM FITERR GAUSSFIT SIGERROR]= FITGAUSSIAN(DATA,[property_value_pair]);</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% DATA is a 1D vector to which we want to fit a gaussian profile. The</span>
+0006 <span class="comment">% function will return a structure with various fitted parameters.</span>
+0007 <span class="comment">% SCALEFACTOR is optional and is applied in the horizontal axis.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% Property value pairs:</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%  scale    : 1 (default)</span>
+0012 <span class="comment">%  plot     : 0 no plots (default), 1 plots fits against data</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% Initial Fit parameters are fit automatically unless specified.</span>
+0015 <span class="comment">%  integral : estimated sum integral of the function</span>
+0016 <span class="comment">%  mean     : estimate of the mean of the gaussian</span>
+0017 <span class="comment">%  sigma    : estimated sigma of the gaussian</span>
+0018 <span class="comment">%  DC       : known DC component to remove (set to zero to not fit)</span>
+0019 <span class="comment">%  bg_grad  : known background gradient to fit (set to zero to not fit)</span>
+0020 <span class="comment">%  Assym    : known gaussian assymetry (set to zero to not fit)</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% FITERR    Final fit error returned by the internal error fuction</span>
+0023 <span class="comment">% GAUSSFIT  Final fit function</span>
+0024 <span class="comment">% SIGERROR  Error estimate of the sigma fit in relative terms. Multiply by</span>
+0025 <span class="comment">%           100 to get in percent.</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">% Original script by R. Dowd</span>
+0028 <span class="comment">% In functional format by E. Tan 31/07/2009</span>
+0029 
+0030 DEBUG = 0;
+0031 ASYM_FLAG = 0;
+0032 
+0033 [reg, prop] = parseparams(varargin);
+0034 
+0035 <span class="keyword">if</span> nargin &gt; 0
+0036     data = reg{1};
+0037 <span class="keyword">else</span>
+0038     disp(<span class="string">'No data to work with'</span>);
+0039     <span class="keyword">return</span>
+0040 <span class="keyword">end</span>
+0041 data = data(:)';
+0042 
+0043 <span class="comment">% defaults</span>
+0044 scalefac = 1;
+0045 plotfig = 0;
+0046 autofitDC = 1;
+0047 autofitGrad = 1;
+0048 autofitAssym = 1;
+0049 userx = [];
+0050 <span class="keyword">for</span> i=1:length(prop)/2
+0051     ind = (i-1)*2+1;
+0052     <span class="keyword">switch</span> lower(prop{ind})
+0053         <span class="keyword">case</span> <span class="string">'scale'</span>
+0054             scalefac = prop{ind+1};
+0055         <span class="keyword">case</span> <span class="string">'plot'</span>
+0056             plotfig = prop{ind+1};
+0057         <span class="keyword">case</span> <span class="string">'integral'</span>
+0058             guess_area = prop{ind+1};
+0059         <span class="keyword">case</span> <span class="string">'mean'</span>
+0060             guess_mu = prop{ind+1};
+0061         <span class="keyword">case</span> <span class="string">'sigma'</span>
+0062             guess_sigma = prop{ind+1};
+0063         <span class="keyword">case</span> <span class="string">'dc'</span>
+0064             DCfit = prop{ind+1};
+0065             autofitDC = 0;
+0066         <span class="keyword">case</span> <span class="string">'bg_grad'</span>
+0067             linefit = prop{ind+1};
+0068             autofitGrad = 0;
+0069         <span class="keyword">case</span> <span class="string">'assym'</span>
+0070             Assym = prop{ind+1};
+0071             autofitAssym = 0;
+0072         <span class="keyword">case</span> <span class="string">'x'</span>
+0073             userx = prop{ind+1};
+0074     <span class="keyword">end</span>
+0075 <span class="keyword">end</span>
+0076 
+0077 <span class="comment">% percentage of at the start and end of the data set assumed to be</span>
+0078 <span class="comment">% representative of the background noise.</span>
+0079 pcbackground = 0.1;
+0080 
+0081 datasize = length(data);
+0082 
+0083 <span class="keyword">if</span> isempty(userx)
+0084     x=[1:datasize]*scalefac;
+0085 <span class="keyword">else</span>
+0086     x = userx;
+0087 <span class="keyword">end</span>
+0088 
+0089 <span class="comment">% Fit a gaussian; first find some starting parameters</span>
+0090 
+0091 <span class="comment">% Used to guess the DC component. Assume flat for the first 10% of data</span>
+0092 <span class="comment">% points.</span>
+0093 startDC = mean(data(1:fix(datasize*pcbackground)));
+0094 endDC =  mean(data(end-fix(datasize*pcbackground):end));
+0095 
+0096 
+0097 <span class="keyword">if</span> ~exist(<span class="string">'guess_area'</span>,<span class="string">'var'</span>)
+0098     <span class="comment">% Guess area AUTOMATICALLY</span>
+0099 <span class="comment">%     guess_area = sum(data) - 0.5*(startDC+endDC)*datasize;</span>
+0100 <span class="comment">%     guess_area = guess_area*scalefac;</span>
+0101     guess_area = sum((data(2:end) + data(1:end-1)).*diff(x)/2) - 0.5*(startDC+endDC)*(x(end)-x(1));
+0102     guess_area = guess_area;
+0103 <span class="keyword">end</span>
+0104 
+0105 <span class="keyword">if</span> ~exist(<span class="string">'guess_mu'</span>,<span class="string">'var'</span>)
+0106     <span class="comment">% Guess the center of mass AUTOMATICALLY</span>
+0107     [~, maxind] = max(data);
+0108     guess_mu = x(maxind);
+0109 <span class="keyword">end</span>
+0110 
+0111 <span class="keyword">if</span> ~exist(<span class="string">'guess_sigma'</span>,<span class="string">'var'</span>)
+0112     <span class="comment">% Guess sigma in pixels AUTOMATICALLY</span>
+0113     maxval = max(data);
+0114     indices = find(data &gt; (maxval+((startDC+endDC)/2) )/2);
+0115     guess_sigma = (x(indices(end)) - x(indices(1)))/2.3;
+0116     guess_sigma = guess_sigma;
+0117 <span class="keyword">end</span>
+0118 
+0119 <span class="comment">% So far everything has been calculated in units of data points. Apply</span>
+0120 <span class="comment">% scaling factor here.</span>
+0121 fixedvals = [NaN NaN NaN];
+0122 
+0123 Starting(1) = guess_area;
+0124 Starting(2) = guess_mu;
+0125 Starting(3) = guess_sigma;
+0126 <span class="keyword">if</span> autofitDC
+0127     Starting(end+1) = startDC;
+0128 <span class="keyword">else</span>
+0129     fixedvals(1) = DCfit;
+0130 <span class="keyword">end</span>
+0131 <span class="keyword">if</span> autofitGrad
+0132     <span class="comment">% Guess if there is a background gradient. Again assuming first and last</span>
+0133     <span class="comment">% 10% of data set is &quot;background&quot;.</span>
+0134     Starting(end+1) = -(endDC-startDC)/datasize*scalefac;
+0135 <span class="keyword">else</span>
+0136     fixedvals(2) = linefit;
+0137 <span class="keyword">end</span>
+0138 <span class="keyword">if</span> autofitAssym
+0139     <span class="comment">% Initial Assymetry factor</span>
+0140     Starting(end+1) = 0;
+0141 <span class="keyword">else</span>
+0142     fixedvals(3) = Assym;
+0143 <span class="keyword">end</span>
+0144 
+0145 
+0146 <span class="keyword">if</span> DEBUG
+0147     options = optimset(<span class="string">'Display'</span>,<span class="string">'iter'</span>,<span class="string">'MaxIter'</span>,1500,<span class="string">'TolX'</span>,1e-6,<span class="string">'TolFun'</span>,1e-10);
+0148 <span class="keyword">else</span>        
+0149     options = optimset(<span class="string">'Display'</span>,<span class="string">'off'</span>,<span class="string">'MaxIter'</span>,1500,<span class="string">'TolX'</span>,1e-6,<span class="string">'TolFun'</span>,1e-10);
+0150 <span class="keyword">end</span>
+0151 
+0152 [Estimates fval] = fminsearch(@<a href="#_sub1" class="code" title="subfunction sse=myfit(params, x, Dist, fixedvals)">myfit</a>,Starting,options,x,data,fixedvals);
+0153 
+0154 
+0155 fitparam.xdata = x;
+0156 fitparam.rawdata = data;
+0157 fitparam.area = Estimates(1);
+0158 fitparam.mu = Estimates(2);
+0159 fitparam.sigma = Estimates(3);
+0160 i = 1;
+0161 <span class="keyword">if</span> autofitDC
+0162     fitparam.DC = Estimates(3+i);
+0163     i = i + 1;
+0164 <span class="keyword">else</span>
+0165     fitparam.DC = fixedvals(1);
+0166 <span class="keyword">end</span>
+0167 <span class="keyword">if</span> autofitGrad
+0168     fitparam.bg_gradient = Estimates(3+i);
+0169     i = i + 1;
+0170 <span class="keyword">else</span>
+0171     fitparam.bg_gradient = fixedvals(2);
+0172 <span class="keyword">end</span>
+0173 <span class="keyword">if</span> autofitAssym
+0174     fitparam.Assym_factor = Estimates(3+i);
+0175 <span class="keyword">else</span>
+0176     fitparam.Assym_factor = fixedvals(3);
+0177 <span class="keyword">end</span>
+0178 fitparam.final_fit_val = fval;
+0179 
+0180 
+0181 
+0182 varargout{1} = fitparam;
+0183 <span class="keyword">if</span> nargout &gt; 1
+0184     varargout{2} = fval;
+0185 <span class="keyword">end</span>
+0186 <span class="keyword">if</span> nargout &gt; 2
+0187     gaussianfit = ones(size(data));
+0188     <span class="keyword">for</span> i = 1:datasize
+0189         c = x(i);
+0190         gaussianfit(i) = fitparam.area * exp(-0.5*((c-fitparam.mu)./((1+sign(c-fitparam.mu)*fitparam.Assym_factor)*fitparam.sigma)).^2) / sqrt(2*pi*fitparam.sigma^2) + fitparam.bg_gradient*c + fitparam.DC;
+0191     <span class="keyword">end</span>
+0192     varargout{3} = gaussianfit;
+0193 <span class="keyword">end</span>
+0194 <span class="keyword">if</span> nargout &gt; 3
+0195     <span class="comment">% Calculate error in sigma</span>
+0196     er=[];
+0197     errscale = ones(size(Estimates));
+0198     <span class="keyword">for</span> perc=0.90:0.001:1.1;
+0199         errscale(3) = perc; <span class="comment">% change the sigma value and see the fit.</span>
+0200         er(end+1) = <a href="#_sub1" class="code" title="subfunction sse=myfit(params, x, Dist, fixedvals)">myfit</a>(Estimates.*errscale,x,data,fixedvals);
+0201     <span class="keyword">end</span>
+0202     <span class="comment">% Normalise</span>
+0203     er = er./min(er);
+0204     <span class="comment">% threshold a 5% change in the error function;</span>
+0205     ind = find(er&lt;1.05);
+0206     perc = 0.90:0.001:1.1;
+0207     <span class="comment">% percerror</span>
+0208     sigmaerror = (perc(ind(end))-1);
+0209     
+0210     varargout{4} = sigmaerror;
+0211 <span class="keyword">end</span>
+0212 
+0213 <span class="keyword">if</span> DEBUG || plotfig
+0214     gaussianfit = ones(size(data));
+0215     <span class="keyword">for</span> i = 1:datasize
+0216         c = x(i);
+0217         gaussianfit(i) = fitparam.area * exp(-0.5*((c-fitparam.mu)./((1+sign(c-fitparam.mu)*fitparam.Assym_factor)*fitparam.sigma)).^2) / sqrt(2*pi*fitparam.sigma^2) + fitparam.bg_gradient*c + fitparam.DC;
+0218     <span class="keyword">end</span>
+0219     figure(233);
+0220     plot(x,data, <span class="string">'.-r'</span>);
+0221     hold on;
+0222     plot(x,gaussianfit, <span class="string">'-b'</span>);
+0223     hold off;
+0224 <span class="comment">%     title(sprintf('Fitting STD error %g (\\sigma = %f)',...</span>
+0225 <span class="comment">%         fittingerror(end),fitsigmas(end)));</span>
+0226 <span class="keyword">end</span>
+0227 
+0228 
+0229 
+0230 
+0231 <a name="_sub1" href="#_subfunctions" class="code">function sse=myfit(params, x, Dist, fixedvals)</a>
+0232 
+0233 <span class="comment">% if length(params) &gt; 0</span>
+0234     Afit = params(1);
+0235 <span class="comment">% else</span>
+0236 <span class="comment">%     Afit = 1;</span>
+0237 <span class="comment">% end</span>
+0238 <span class="comment">% if length(params) &gt; 1</span>
+0239     mufit = params(2);
+0240 <span class="comment">% else</span>
+0241 <span class="comment">%     mufit = length(x)/2;</span>
+0242 <span class="comment">% end</span>
+0243 <span class="comment">% if length(params) &gt; 2</span>
+0244     sigmafit = params(3);
+0245 <span class="comment">% else</span>
+0246 <span class="comment">%     sigmafit = length(x)/10;</span>
+0247 <span class="comment">% end</span>
+0248 
+0249 i = 1;
+0250 <span class="keyword">if</span> isnan(fixedvals(1))
+0251     DCfit = params(3+i);
+0252     i = i + 1;
+0253 <span class="keyword">else</span>
+0254     DCfit = fixedvals(1);
+0255 <span class="keyword">end</span>
+0256 
+0257 <span class="keyword">if</span> isnan(fixedvals(2))
+0258     linefit = params(3+i);
+0259     i = i + 1;
+0260 <span class="keyword">else</span>
+0261     linefit = fixedvals(2);
+0262 <span class="keyword">end</span>
+0263 
+0264 <span class="keyword">if</span> isnan(fixedvals(3))
+0265     Asym = params(3+i);
+0266 <span class="keyword">else</span>
+0267     Asym = fixedvals(3);
+0268 <span class="keyword">end</span>
+0269 
+0270 fittedcurve = Afit * exp(-0.5*((x-mufit)./((1+sign(x-mufit)*Asym)*sigmafit)).^2) / sqrt(2*pi*sigmafit^2) + (linefit*x) + DCfit;
+0271 
+0272 sse = sum((fittedcurve - Dist).^2)/length(Dist);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

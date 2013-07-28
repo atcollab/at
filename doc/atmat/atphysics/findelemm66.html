@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findelemm66</title>
+  <meta name="keywords" content="findelemm66">
+  <meta name="description" content="FINDELEMM66 numerically finds the 6x6 transfer matrix of an element">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; findelemm66.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>findelemm66
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>FINDELEMM66 numerically finds the 6x6 transfer matrix of an element</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function M66 = findelemm66(ELEM, MethodName, orbit_in); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDELEMM66 numerically finds the 6x6 transfer matrix of an element
+  FINDELEM66(ELEM, METHODNAME, ORBITIN)
+     ELEM          - the element data structure
+     METHODNAME    - name of the pass-method function
+     ORBITIN       - 6-by-1 phase space coordinates at the entrance
+ 
+ See also <a href="findelemm44.html" class="code" title="function M44 = findelemm66(ELEM, MethodName, orbit_in);">FINDELEMM44</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findelemraddiffm.html" class="code" title="function [B, M, r] = findelemraddiffm(ELEM,rin, varargin);">findelemraddiffm</a>	FINDELEMRADDIFFM</li><li><a href="ohmienvelope.html" class="code" title="function [ENVELOPE, RMSDP, RMSBL] = ohmienvelope(RING,RADELEMINDEX,varargin)">ohmienvelope</a>	OHMIENVELOPE calculates equilibrium beam envelope in a</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function M66 = findelemm66(ELEM, MethodName, orbit_in);</a>
+0002 <span class="comment">%FINDELEMM66 numerically finds the 6x6 transfer matrix of an element</span>
+0003 <span class="comment">%  FINDELEM66(ELEM, METHODNAME, ORBITIN)</span>
+0004 <span class="comment">%     ELEM          - the element data structure</span>
+0005 <span class="comment">%     METHODNAME    - name of the pass-method function</span>
+0006 <span class="comment">%     ORBITIN       - 6-by-1 phase space coordinates at the entrance</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% See also FINDELEMM44</span>
+0009 
+0010 <span class="comment">% See if step size for numerical differentiation</span>
+0011 <span class="comment">% is set globally. Otherwise use 1e-7</span>
+0012 <span class="keyword">global</span> NUMDIFPARAMS
+0013 <span class="comment">% Transverse</span>
+0014 <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'XYStep'</span>)
+0015     dt = NUMDIFPARAMS.XYStep';
+0016 <span class="keyword">else</span>
+0017     dt =  1e-7;
+0018 <span class="keyword">end</span>
+0019 <span class="comment">% Longitudinal</span>
+0020 <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'DPStep'</span>)
+0021     dl = NUMDIFPARAMS.DPStep';
+0022 <span class="keyword">else</span>
+0023     dl =  1e-7;
+0024 <span class="keyword">end</span>
+0025 
+0026 <span class="comment">% Build a diagonal matrix of initial conditions</span>
+0027 D6 = [dt*eye(4),zeros(4,2);zeros(2,4), dl*eye(2)];
+0028 <span class="comment">% Add to the orbit_in</span>
+0029 RIN = orbit_in*ones(1,12) + [D6, -D6];
+0030 <span class="comment">% Propagate through the element</span>
+0031 ROUT = feval(MethodName,ELEM,RIN);
+0032 <span class="comment">% Calculate numerical derivative</span>
+0033 M66 = [(ROUT(:,1:4)-ROUT(:,7:10))./(2*dt), (ROUT(:,5:6)-ROUT(:,11:12))./(2*dl)];</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

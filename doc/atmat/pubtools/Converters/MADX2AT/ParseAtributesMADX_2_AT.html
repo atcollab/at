@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of ParseAtributesMADX_2_AT</title>
+  <meta name="keywords" content="ParseAtributesMADX_2_AT">
+  <meta name="description" content="determines atribute and sets field in sxs{i} structure AT">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="#">Converters</a> &gt; <a href="index.html">MADX2AT</a> &gt; ParseAtributesMADX_2_AT.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/Converters/MADX2AT&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>ParseAtributesMADX_2_AT
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>determines atribute and sets field in sxs{i} structure AT</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function R=ParseAtributesMADX_2_AT(R,elname,var,val) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> determines atribute and sets field in sxs{i} structure AT
+
+ created 6-sept-2012</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="atfrommadx.html" class="code" title="function atfrommadx(seqfilemadX,E0,outfilename)">atfrommadx</a>	tansform madX sequence file (savesequence) file into AT lattice structure.</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function R=ParseAtributesMADX_2_AT(R,elname,var,val)</a>
+0002 <span class="comment">% determines atribute and sets field in sxs{i} structure AT</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% created 6-sept-2012</span>
+0005 
+0006 <span class="comment">%disp(['checking atribute: ' S8STRING((strfind(S8STRING,'=')+1):end-1)]);</span>
+0007 
+0008 <span class="comment">%val=S8STRING((strfind(S8STRING,'=')+1):end);</span>
+0009 
+0010 val0=val;
+0011 <span class="comment">%S8STRING(1:end)</span>
+0012 <span class="keyword">if</span> ~isempty(val)
+0013     
+0014     val=strrep(val,<span class="string">'='</span>,<span class="string">''</span>);
+0015     val=strrep(val,<span class="string">','</span>,<span class="string">''</span>);
+0016     val=strrep(val,<span class="string">' '</span>,<span class="string">''</span>);
+0017     
+0018     var=strrep(var,<span class="string">'='</span>,<span class="string">''</span>);
+0019     var=strrep(var,<span class="string">','</span>,<span class="string">''</span>);
+0020     var=strrep(var,<span class="string">' '</span>,<span class="string">''</span>);
+0021     
+0022     val=strrep(val,<span class="string">'&amp;'</span>,<span class="string">'0'</span>);
+0023 <span class="comment">%    val=strrep(val,'E','e');</span>
+0024  <span class="comment">%  disp([var '= ' val])</span>
+0025     
+0026     <span class="keyword">switch</span> var
+0027         <span class="keyword">case</span> {<span class="string">'l'</span>,<span class="string">'L'</span>}
+0028             R=[R elname <span class="string">'.(''Length'')='</span> val <span class="string">'; \n'</span>];
+0029         <span class="comment">%disp([var '= ' val])</span>
+0030         <span class="keyword">case</span> {<span class="string">'angle'</span>,<span class="string">'ANGLE'</span>}
+0031             R=[R elname <span class="string">'.(''BendingAngle'')='</span> val <span class="string">'; \n'</span>];
+0032         <span class="keyword">case</span> {<span class="string">'K1'</span>,<span class="string">'k1'</span>} <span class="comment">% quadrupole</span>
+0033             R=[R elname <span class="string">'.(''PolynomB'')(2)='</span> val <span class="string">'; \n'</span>];
+0034         <span class="keyword">case</span> {<span class="string">'K1S'</span>,<span class="string">''</span>} <span class="comment">% skew quadrupole</span>
+0035             R=[R elname <span class="string">'.(''PolynomA'')(2)='</span> val <span class="string">'; \n'</span>];
+0036         <span class="keyword">case</span> {<span class="string">'K2'</span>,<span class="string">'k2'</span>} <span class="comment">% sextupole</span>
+0037             R=[R elname <span class="string">'.(''PolynomB'')(3)='</span> val <span class="string">'; \n'</span>];
+0038         <span class="keyword">case</span> {<span class="string">'K3'</span>,<span class="string">'k3'</span>} <span class="comment">% octupole</span>
+0039             R=[R elname <span class="string">'.(''PolynomB'')(4)='</span> val <span class="string">'; \n'</span>];
+0040         <span class="keyword">case</span> {<span class="string">'KS'</span>,<span class="string">'ks'</span>} <span class="comment">% solenoid</span>
+0041             <span class="comment">% R=[R elname '.(''')=[0 val];</span>
+0042         <span class="keyword">case</span> {<span class="string">'E1'</span>,<span class="string">'e1'</span>} <span class="comment">% entrance angle</span>
+0043             R=[R elname <span class="string">'.(''EntranceAngle'')='</span> val <span class="string">'; \n'</span>];
+0044         <span class="keyword">case</span> {<span class="string">'E2'</span>,<span class="string">'e2'</span>} <span class="comment">%exit angle</span>
+0045             R=[R elname <span class="string">'.(''ExitAngle'')='</span> val <span class="string">'; \n'</span>];
+0046             <span class="comment">% case 'TILT' % tilt</span>
+0047             <span class="comment">%R=[R elname '.(''R1'')=' val '; \n'];</span>
+0048             <span class="comment">% case 'APERTURE' % max aperture</span>
+0049             <span class="comment">%R=[R elname '.('''')=' val '; \n'];</span>
+0050         <span class="keyword">case</span> {<span class="string">'HGAP'</span>,<span class="string">'hgap'</span>} <span class="comment">% bending magnet gap</span>
+0051             R=[R elname <span class="string">'.(''FullGap'')='</span> val <span class="string">'; \n'</span>];
+0052             <span class="comment">% case 'FINT' %</span>
+0053             <span class="comment">% R=[R elname '.(''FringeInt'')=' val '; \n'];</span>
+0054             <span class="comment">% case 'FINTX' %</span>
+0055             <span class="comment">% R=[R elname '.(''FringeInt'')=' val '; \n'];</span>
+0056         <span class="keyword">case</span> {<span class="string">'K1L'</span>,<span class="string">'k1l'</span>} <span class="comment">% mulitpole component</span>
+0057             R=[R elname <span class="string">'.(''PolynomB'')(1)='</span> val <span class="string">'; \n'</span>];
+0058         <span class="keyword">case</span> {<span class="string">'K2L'</span>,<span class="string">'k2l'</span>} <span class="comment">% mulitpole component</span>
+0059             R=[R elname <span class="string">'.(''PolynomB'')(2)='</span> val <span class="string">'; \n'</span>];
+0060         <span class="keyword">case</span> {<span class="string">'K3L'</span>,<span class="string">'k3l'</span>} <span class="comment">% mulitpole component</span>
+0061             R=[R elname <span class="string">'.(''PolynomB'')(3)='</span> val <span class="string">'; \n'</span>];
+0062         <span class="keyword">case</span> {<span class="string">'K4L'</span>,<span class="string">'k4l'</span>} <span class="comment">% mulitpole component</span>
+0063             R=[R elname <span class="string">'.(''PolynomB'')(4)='</span> val <span class="string">'; \n'</span>];
+0064         <span class="keyword">case</span> {<span class="string">'K5L'</span>,<span class="string">'k5l'</span>} <span class="comment">% mulitpole component</span>
+0065             R=[R elname <span class="string">'.(''PolynomB'')(5)='</span> val <span class="string">'; \n'</span>];
+0066         <span class="keyword">case</span> {<span class="string">'K6L'</span>,<span class="string">'k6l'</span>} <span class="comment">% mulitpole component</span>
+0067             R=[R elname <span class="string">'.(''PolynomB'')(6)='</span> val <span class="string">'; \n'</span>];
+0068         <span class="keyword">case</span> {<span class="string">'K1SL'</span>,<span class="string">'k1sl'</span>} <span class="comment">% mulitpole component skew</span>
+0069             R=[R elname <span class="string">'.(''PolynomA'')(1)='</span> val <span class="string">'; \n'</span>];
+0070         <span class="keyword">case</span> {<span class="string">'K2SL'</span>,<span class="string">'k2sl'</span>} <span class="comment">% mulitpole component skew</span>
+0071             R=[R elname <span class="string">'.(''PolynomA'')(2)='</span> val <span class="string">'; \n'</span>];
+0072         <span class="keyword">case</span> {<span class="string">'K3SL'</span>,<span class="string">'k3sl'</span>} <span class="comment">% mulitpole component skew</span>
+0073             R=[R elname <span class="string">'.(''PolynomA'')(3)='</span> val <span class="string">'; \n'</span>];
+0074         <span class="keyword">case</span> {<span class="string">'K4SL'</span>,<span class="string">'k4sl'</span>} <span class="comment">% mulitpole component skew</span>
+0075             R=[R elname <span class="string">'.(''PolynomA'')(4)='</span> val <span class="string">'; \n'</span>];
+0076         <span class="keyword">case</span> {<span class="string">'K5SL'</span>,<span class="string">'k5sl'</span>} <span class="comment">% mulitpole component skew</span>
+0077             R=[R elname <span class="string">'.(''PolynomA'')(5)='</span> val <span class="string">'; \n'</span>];
+0078         <span class="keyword">case</span> {<span class="string">'K6SL'</span>,<span class="string">'k6sl'</span>} <span class="comment">% mulitpole component skew</span>
+0079             R=[R elname <span class="string">'.(''PolynomA'')(6)='</span> val <span class="string">'; \n'</span>];
+0080         <span class="keyword">case</span> {<span class="string">'KNL'</span>,<span class="string">'knl'</span>} <span class="comment">% mulitpole component skew</span>
+0081             R=[R elname <span class="string">'.(''PolynomB'')='</span> val0 <span class="string">'; \n'</span>];
+0082         <span class="keyword">case</span> {<span class="string">'KSL'</span>,<span class="string">'ksl'</span>} <span class="comment">% mulitpole component skew</span>
+0083             R=[R elname <span class="string">'.(''PolynomA'')='</span> val0 <span class="string">'; \n'</span>];
+0084         <span class="keyword">case</span> {<span class="string">'VOLT'</span>,<span class="string">'volt'</span>} <span class="comment">%</span>
+0085             R=[R elname <span class="string">'.(''Voltage'')=abs('</span> val <span class="string">')*1e6; %% convert to MV \n'</span>];
+0086         <span class="keyword">case</span> {<span class="string">'FREQ'</span>,<span class="string">'freq'</span>} <span class="comment">%</span>
+0087             R=[R elname <span class="string">'.(''Frequency'')='</span> val <span class="string">'*1e6; %% convert to MHz  \n'</span>];
+0088         <span class="keyword">case</span> {<span class="string">'HARMON'</span>,<span class="string">'harmon'</span>} <span class="comment">%</span>
+0089             R=[R elname <span class="string">'.(''HarmNumber'')='</span> val <span class="string">'; \n'</span>];
+0090             <span class="comment">%     case '' %</span>
+0091             <span class="comment">%          R=[R elname '.(''')=S8STRING;</span>
+0092             <span class="comment">%     case '' %</span>
+0093             <span class="comment">%          R=[R elname '.(''')=S8STRING;</span>
+0094         <span class="keyword">otherwise</span>
+0095             <span class="comment">% disp([newel ' : unrecognized element attribute']);</span>
+0096     <span class="keyword">end</span>
+0097 <span class="keyword">end</span>
+0098 
+0099 <span class="comment">%R=[R '\n'];</span>
+0100</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

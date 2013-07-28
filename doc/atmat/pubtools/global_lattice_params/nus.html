@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nus</title>
+  <meta name="keywords" content="nus">
+  <meta name="description" content="this function return the synchrotron tune">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">global_lattice_params</a> &gt; nus.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/global_lattice_params&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>nus
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>this function return the synchrotron tune</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function Nus = nus (VrfMV, alpha, U0MeV, E0MeV, h) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> this function return the synchrotron tune
+ input:
+ VrfMV is the RF voltage in MV
+ alpha is the momentum compaction factor
+ U0MeV is the energy lost per turn in MeV
+ E0MeV is the beam energy in MeV
+ h is the harmonic number</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="ringpara.html" class="code" title="function rp = ringpara(THERING,varargin)">ringpara</a>	rp = ringpara, use global THERING</li><li><a href="sigz_zero.html" class="code" title="function sigz = sigz_zero(Vrf,circ,h,U0,E0,alpha,sigdelta)">sigz_zero</a>	zero current bunch length</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Nus = nus (VrfMV, alpha, U0MeV, E0MeV, h)</a>
+0002 
+0003 <span class="comment">% this function return the synchrotron tune</span>
+0004 <span class="comment">% input:</span>
+0005 <span class="comment">% VrfMV is the RF voltage in MV</span>
+0006 <span class="comment">% alpha is the momentum compaction factor</span>
+0007 <span class="comment">% U0MeV is the energy lost per turn in MeV</span>
+0008 <span class="comment">% E0MeV is the beam energy in MeV</span>
+0009 <span class="comment">% h is the harmonic number</span>
+0010 
+0011 Phi=pi - asin(U0MeV./VrfMV);
+0012 
+0013 Nus= sqrt(-(VrfMV/E0MeV)*(h * alpha)/(2*pi) .* cos(Phi));</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

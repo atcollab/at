@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of calc_Touschek</title>
+  <meta name="keywords" content="calc_Touschek">
+  <meta name="description" content="tauT = calc_Touschek(THERING, Ib)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">pubtools</a> &gt; calc_Touschek.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>calc_Touschek
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>tauT = calc_Touschek(THERING, Ib)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function tauT = calc_Touschek(THERING,Ib,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">tauT = calc_Touschek(THERING, Ib)
+tauT = calc_Touschek(THERING, Ib,hori_acceptance)
+tauT = calc_Touschek(THERING, Ib,hori_acceptance,U0)
+tauT = calc_Touschek(THERING, Ib,hori_acceptance,U0,coupling)
+tauT = calc_Touschek(THERING, Ib,hori_acceptance,U0,coupling,sigE,emit_x)
+   hori_acceptance = Min(X/sqrt(beta)) around the ring
+        Ib, mA, single bunch current
+        Nb, number of bunches
+        U0, MeV, one-turn energy loss
+       emit_x, nm-rad
+ex: 
+tauT = calc_Touschek(THERING, 100/280, 0.015/sqrt(10.37),1.04,0.064e-2,0.001, 18)/3600</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function D=funcD(xi)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function tauT = calc_Touschek(THERING,Ib,varargin)</a>
+0002 <span class="comment">%tauT = calc_Touschek(THERING, Ib)</span>
+0003 <span class="comment">%tauT = calc_Touschek(THERING, Ib,hori_acceptance)</span>
+0004 <span class="comment">%tauT = calc_Touschek(THERING, Ib,hori_acceptance,U0)</span>
+0005 <span class="comment">%tauT = calc_Touschek(THERING, Ib,hori_acceptance,U0,coupling)</span>
+0006 <span class="comment">%tauT = calc_Touschek(THERING, Ib,hori_acceptance,U0,coupling,sigE,emit_x)</span>
+0007 <span class="comment">%   hori_acceptance = Min(X/sqrt(beta)) around the ring</span>
+0008 <span class="comment">%        Ib, mA, single bunch current</span>
+0009 <span class="comment">%        Nb, number of bunches</span>
+0010 <span class="comment">%        U0, MeV, one-turn energy loss</span>
+0011 <span class="comment">%       emit_x, nm-rad</span>
+0012 <span class="comment">%ex:</span>
+0013 <span class="comment">%tauT = calc_Touschek(THERING, 100/280, 0.015/sqrt(10.37),1.04,0.064e-2,0.001, 18)/3600</span>
+0014 <span class="comment">%</span>
+0015 alpha=1.7e-4;
+0016 
+0017 hori_acceptance = Inf;
+0018 <span class="keyword">if</span> nargin&gt;=3
+0019     hori_acceptance = varargin{1};
+0020 <span class="keyword">end</span>
+0021 
+0022 <span class="keyword">if</span> nargin&lt;7
+0023 <span class="comment">%   atsum = atsummary</span>
+0024     atsum = tlssummary
+0025 <span class="keyword">end</span>
+0026 
+0027 
+0028 <span class="keyword">if</span> nargin&gt;=4
+0029     U0 = varargin{2}*1e6; <span class="comment">%eV</span>
+0030 <span class="keyword">else</span>
+0031     U0 = atsum.radiation*1e9; <span class="comment">%eV</span>
+0032 <span class="comment">%U0 = 1.04e6; %eV</span>
+0033 <span class="keyword">end</span>
+0034 coupling = 0.05*1e-2; <span class="comment">%by default</span>
+0035 <span class="keyword">if</span> nargin&gt;=5
+0036     coupling = varargin{3};
+0037 <span class="keyword">end</span>
+0038 
+0039 <span class="keyword">if</span> nargin&gt;=7
+0040    sigE = varargin{4};
+0041    emit_x = varargin{5}*1e-9; <span class="comment">%m-rad</span>
+0042 <span class="keyword">else</span>
+0043     sigE = atsum.naturalEnergySpread  <span class="comment">%sigma_delta</span>
+0044     emit_x = atsum.naturalEmittance
+0045 
+0046 <span class="keyword">end</span>
+0047 
+0048 e0 = 1.6e-19; <span class="comment">%Coulomb</span>
+0049 cspeed = 299792458; 
+0050 r0 = 2.82e-15; <span class="comment">%m</span>
+0051 
+0052 
+0053 <span class="comment">%cavity related parameters</span>
+0054 cava = findcells(THERING,<span class="string">'PassMethod'</span>,<span class="string">'ThinCavityPass'</span>);
+0055 cavb = findcells(THERING,<span class="string">'PassMethod'</span>,<span class="string">'CavityPass'</span>);
+0056 CAVINDEX = sort([cava,cavb]); <span class="comment">%ati1.RF;</span>
+0057 <span class="keyword">if</span> isempty(CAVINDEX)
+0058     error(<span class="string">'cavity not defined'</span>)
+0059 <span class="keyword">end</span>
+0060 freq = THERING{CAVINDEX(1)}.Frequency;
+0061 harm = THERING{CAVINDEX(1)}.HarmNumber;
+0062 E0 = THERING{CAVINDEX(1)}.Energy;
+0063 gamma = THERING{CAVINDEX(1)}.Energy/0.511e6;
+0064 
+0065 Vrf = 0;
+0066 <span class="keyword">for</span> ii=1:length(CAVINDEX)
+0067     Vrf = Vrf + THERING{CAVINDEX(ii)}.Voltage;
+0068 <span class="keyword">end</span>
+0069 <span class="comment">%Vrf = 3.2e6;</span>
+0070 Vrf = 1.6e6;
+0071 <span class="comment">%[alpha,a2] = findmcf3(THERING);</span>
+0072 
+0073 <span class="comment">%bunch length</span>
+0074 phi_s = asin(U0/Vrf);
+0075 nus = sqrt(harm*Vrf*alpha*cos(phi_s)/2/pi/E0);
+0076 
+0077 sigZ = sigE/nus*harm*alpha/2/pi/freq*cspeed;
+0078 
+0079 <span class="comment">%rf bucket height</span>
+0080 delta_max_rf = sqrt(2*U0/pi/alpha/harm/E0)*sqrt( sqrt((Vrf/U0).^2-1) - acos(U0./Vrf));
+0081 <span class="comment">%---------------------------------</span>
+0082 
+0083 <span class="comment">%beam size around the ring</span>
+0084 [td, tune,chrom] = twissring(THERING,0,1:length(THERING)+1, <span class="string">'chrom'</span>, 1e-5);
+0085 Dx = cat(2, td.Dispersion)';
+0086 betxy = cat(1, td.beta);
+0087 alfxy = cat(1, td.alpha);
+0088 
+0089 spos = cat(1,td.SPos);
+0090 circ = spos(end);
+0091 
+0092 sigX = sqrt(betxy(:,1)*emit_x+Dx(:,1).^2*sigE^2);
+0093 
+0094 sigY = sqrt(betxy(:,2)*emit_x*coupling);
+0095 sigXp = sqrt(emit_x*(1+alfxy(:,1).^2)./betxy(:,1)+Dx(:,2).^2*sigE^2);
+0096 <span class="comment">%--------------------------------</span>
+0097 curH = (Dx(:,1).^2 + (betxy(:,1).*Dx(:,2)+alfxy(:,1).*Dx(:,1)).^2)./betxy(:,1);
+0098 
+0099 display(<span class="string">'delta_max_perp data:  '</span>);
+0100 delta_max_perp = hori_acceptance./sqrt(curH);
+0101 display(<span class="string">'delta_max data:  '</span>);
+0102 delta_max = min([delta_max_perp, ones(size(curH))*delta_max_rf]')';
+0103 display(<span class="string">'xi data:  '</span>);
+0104 xi = (delta_max/gamma.*betxy(:,1)./sigX).^2;
+0105 Dval = <a href="#_sub1" class="code" title="subfunction D=funcD(xi)">funcD</a>(xi);
+0106 
+0107 N0 = 0.001/(freq/harm)/e0; <span class="comment">%Number of particle per 1mA bunch.</span>
+0108 
+0109 ds = diff(spos);
+0110 n=1:length(THERING);
+0111 
+0112 avgfac = sum(Dval(n)./sigX(n)./sigY(n)/sigZ./delta_max(n).^3.*ds)/circ;
+0113 lossrate = Ib*N0*r0^2*cspeed/8/gamma^2/pi*avgfac;
+0114 
+0115 tauT = 1/lossrate;
+0116 
+0117 <span class="keyword">if</span> 0
+0118    figure
+0119    plot(spos, delta_max, spos, delta_max_rf*ones(size(spos))); 
+0120    <span class="comment">%set(gca,'fontsize', 16,'xlim',[0,240])</span>
+0121    set(gca,<span class="string">'fontsize'</span>, 16,<span class="string">'xlim'</span>,[0,120])
+0122    xlabel(<span class="string">'s (m)'</span>)
+0123    ylabel(<span class="string">'\delta_{max}'</span>)
+0124    grid
+0125    <span class="comment">%set(gca,'ylim',[0,0.04]);</span>
+0126    set(gca,<span class="string">'ylim'</span>,[0,0.15]);
+0127    
+0128 <span class="keyword">end</span>
+0129 
+0130 <a name="_sub1" href="#_subfunctions" class="code">function D=funcD(xi)</a>
+0131 <span class="comment">%a look-up table</span>
+0132 DfunTable = [
+0133 <span class="comment">%xi                Dfunc</span>
+0134 0.000500    0.123802    
+0135 0.001000    0.153464    
+0136 0.001500    0.172578    
+0137 0.002000    0.186757    
+0138 0.002500    0.198008    
+0139 0.003000    0.207298    
+0140 0.003500    0.215179    
+0141 0.004000    0.221992    
+0142 0.004500    0.227968    
+0143 0.005000    0.233269    
+0144 0.005500    0.238015    
+0145 0.006000    0.242294    
+0146 0.006500    0.246176    
+0147 0.007000    0.249717    
+0148 0.007500    0.252961    
+0149 0.008000    0.255944    
+0150 0.008500    0.258697    
+0151 0.009000    0.261244    
+0152 0.009500    0.263607    
+0153 0.010000    0.265805    
+0154 0.010500    0.267852    
+0155 0.011000    0.269763    
+0156 0.011500    0.271549    
+0157 0.012000    0.273221    
+0158 0.012500    0.274788    
+0159 0.013000    0.276259    
+0160 0.013500    0.277640    
+0161 0.014000    0.278938    
+0162 0.014500    0.280159    
+0163 0.015000    0.281308    
+0164 0.015500    0.282391    
+0165 0.016000    0.283411    
+0166 0.016500    0.284372    
+0167 0.017000    0.285278    
+0168 0.017500    0.286132    
+0169 0.018000    0.286938    
+0170 0.018500    0.287698    
+0171 0.019000    0.288415    
+0172 0.019500    0.289090    
+0173 0.020000    0.289727    
+0174 0.020500    0.290327    
+0175 0.021000    0.290893    
+0176 0.021500    0.291425    
+0177 0.022000    0.291926    
+0178 0.022500    0.292397    
+0179 0.023000    0.292840    
+0180 0.023500    0.293256    
+0181 0.024000    0.293646    
+0182 0.024500    0.294011    
+0183 0.025000    0.294352    ];
+0184 ximin = DfunTable(1,1);
+0185 ximax = DfunTable(<span class="keyword">end</span>,1);
+0186 xi(find(xi&lt;ximin)) = ximin;
+0187 xi(find(xi&gt;ximax)) = ximax;
+0188 D = interp1(DfunTable(:,1), DfunTable(:,2), xi,<span class="string">'linear'</span>);
+0189</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

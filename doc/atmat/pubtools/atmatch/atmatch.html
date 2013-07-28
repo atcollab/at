@@ -1,0 +1,283 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atmatch</title>
+  <meta name="keywords" content="atmatch">
+  <meta name="description" content="this functions modifies the Variables (parameters in THERING) to obtain">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">atmatch</a> &gt; atmatch.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/atmatch&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atmatch
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>this functions modifies the Variables (parameters in THERING) to obtain</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [NewRing,penalty,dmin]=atmatch(Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> this functions modifies the Variables (parameters in THERING) to obtain
+ a new THERING with the Constraints verified
+
+ Variables   : a cell array of structures of parameters to vary with step size.
+ Constraints : a cell array of structures
+
+
+
+ Variables  struct('Indx',{[indx],...
+                           @(ring,varval)fun(ring,varval,...),...
+                          },...
+                   'Parameter',{{'paramname',{M,N,...},...},...
+                                [initialvarval],...
+                               },...
+                   'LowLim',{[val],[val],...},...
+                   'HighLim',{[val],[val],...},...
+                   )
+
+
+ Constraints: structure array struct(...
+                     'Fun',@functname(ring,lindata,globaldata),
+                     'Min',min,
+                     'Max',max,
+                     'Weight',w,
+                     'RefPoints',refpts);
+
+ lindata is the output of atlinopt at the requested locations
+ globdata.fractune=tune fromk atlinopt
+ globdata.chromaticity=chrom from atlinopt
+
+ functname must return a row vector of values to be optimized
+
+ min, max and weight must have the same size as the return value of
+ functname
+
+ verbose to print out results.
+                               0 (no output)
+                               1 (initial values)
+                               2 (iterations)
+                               3 (result)
+
+ Variables are changed within the range min&lt;res&lt;max with a Tolerance Given
+ by Tolerance
+
+ using least square.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atApplyVariation.html" class="code" title="function ring=atApplyVariation(ring,Variables,NewValues)">atApplyVariation</a>	this functions applys a series of varaiation to variables as described in</li><li><a href="atDisplayConstraintsChange.html" class="code" title="function atDisplayConstraintsChange(Constraints,results)">atDisplayConstraintsChange</a>	This funciton evaluates the contraints defined in Constraints for lattice</li><li><a href="atDisplayVariableChange.html" class="code" title="function atDisplayVariableChange(ring1,ring2,Variables)">atDisplayVariableChange</a>	this functions retrives variable Values for two rings to compare</li><li><a href="atEvaluateConstraints.html" class="code" title="function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray)">atEvaluateConstraints</a>	This funciton evaluates the contraints defined in Constraints for lattice</li><li><a href="atGetPenalty.html" class="code" title="function penalty=atGetPenalty(ConstVal,Constraints)">atGetPenalty</a>	</li><li><a href="atGetVariableValue.html" class="code" title="function CurrentVal=atGetVariableValue(ring,Variables)">atGetVariableValue</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function Val=evalvector(R,v,c,d,e,posarray,indinposarray)</a></li><li><a href="#_sub2" class="code">function sVal=evalsum(R,v,c,d,e,posarray,indinposarray)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [NewRing,penalty,dmin]=atmatch(</a><span class="keyword">...</span>
+0002     Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer)
+0003 <span class="comment">% this functions modifies the Variables (parameters in THERING) to obtain</span>
+0004 <span class="comment">% a new THERING with the Constraints verified</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Variables   : a cell array of structures of parameters to vary with step size.</span>
+0007 <span class="comment">% Constraints : a cell array of structures</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% Variables  struct('Indx',{[indx],...</span>
+0012 <span class="comment">%                           @(ring,varval)fun(ring,varval,...),...</span>
+0013 <span class="comment">%                          },...</span>
+0014 <span class="comment">%                   'Parameter',{{'paramname',{M,N,...},...},...</span>
+0015 <span class="comment">%                                [initialvarval],...</span>
+0016 <span class="comment">%                               },...</span>
+0017 <span class="comment">%                   'LowLim',{[val],[val],...},...</span>
+0018 <span class="comment">%                   'HighLim',{[val],[val],...},...</span>
+0019 <span class="comment">%                   )</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% Constraints: structure array struct(...</span>
+0023 <span class="comment">%                     'Fun',@functname(ring,lindata,globaldata),</span>
+0024 <span class="comment">%                     'Min',min,</span>
+0025 <span class="comment">%                     'Max',max,</span>
+0026 <span class="comment">%                     'Weight',w,</span>
+0027 <span class="comment">%                     'RefPoints',refpts);</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">% lindata is the output of atlinopt at the requested locations</span>
+0030 <span class="comment">% globdata.fractune=tune fromk atlinopt</span>
+0031 <span class="comment">% globdata.chromaticity=chrom from atlinopt</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">% functname must return a row vector of values to be optimized</span>
+0034 <span class="comment">%</span>
+0035 <span class="comment">% min, max and weight must have the same size as the return value of</span>
+0036 <span class="comment">% functname</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">% verbose to print out results.</span>
+0039 <span class="comment">%                               0 (no output)</span>
+0040 <span class="comment">%                               1 (initial values)</span>
+0041 <span class="comment">%                               2 (iterations)</span>
+0042 <span class="comment">%                               3 (result)</span>
+0043 <span class="comment">%</span>
+0044 <span class="comment">% Variables are changed within the range min&lt;res&lt;max with a Tolerance Given</span>
+0045 <span class="comment">% by Tolerance</span>
+0046 <span class="comment">%</span>
+0047 <span class="comment">% using least square.</span>
+0048 <span class="comment">%</span>
+0049 <span class="comment">%</span>
+0050 
+0051 <span class="comment">% History of changes</span>
+0052 <span class="comment">% created : 27-8-2012</span>
+0053 <span class="comment">% updated : 28-8-2012 constraints 'Fun' may output vectors</span>
+0054 <span class="comment">% updated : 17-9-2012 output dmin</span>
+0055 <span class="comment">% updated : 6-11-2012 added simulated annealing (annealing)</span>
+0056 <span class="comment">%                     and simplex-simulated-annealing (simpsa)</span>
+0057 <span class="comment">%                     for global minimum search.</span>
+0058 <span class="comment">% updated : 21-02-2013 TipicalX included in</span>
+0059 <span class="comment">% updated : 11-03-2013  (major)</span>
+0060 <span class="comment">%                   function named 'atmatch'.</span>
+0061 <span class="comment">%                   anonimous functions constraints and variable</span>
+0062 <span class="comment">%                   Variable limits in variable.</span>
+0063 <span class="comment">% update : 23-03-2013</span>
+0064 <span class="comment">%                   atGetVaraiblesNumber added.</span>
+0065 <span class="comment">%                   fixed Low High lim bug.</span>
+0066 <span class="comment">%                   fixed function variables treat input values as</span>
+0067 <span class="comment">%                                  independent parameters to match.</span>
+0068 <span class="comment">%                   introduced verbose flag.</span>
+0069 <span class="comment">% updated 25-3-2013 varibles as absolute values and not variations.</span>
+0070 <span class="comment">%                   Indx and Parmaeter switched in case of function.</span>
+0071 <span class="comment">%                   setfield(...Parameter{:}) instead of Parameter{1} or{2}</span>
+0072 <span class="comment">%                   reshaped initialization of tipx for lsqnonlin</span>
+0073 <span class="comment">%                   atlinopt call optimized in the constraint evaluation call</span>
+0074 <span class="comment">%                   changed constraint structure</span>
+0075 
+0076 <span class="comment">%%</span>
+0077 <span class="keyword">if</span> nargin&lt;7, minimizer=@fminsearch; <span class="keyword">end</span>
+0078 options=optimset(minimizer);
+0079 
+0080 IniVals=<a href="atGetVariableValue.html" class="code" title="function CurrentVal=atGetVariableValue(ring,Variables)">atGetVariableValue</a>(Ring,Variables);
+0081 splitvar=@(varvec) reshape(mat2cell(varvec,cellfun(@length,IniVals),1),size(Variables));
+0082 
+0083 initval=cat(1,IniVals{:});
+0084 Blow=cat(1,Variables.LowLim);
+0085 Bhigh=cat(1,Variables.HighLim);
+0086 
+0087 <span class="comment">% tolfun is the precisin of the minimum value tolx the accuracy of the</span>
+0088 <span class="comment">% parameters (delta_0)</span>
+0089 <span class="comment">% tipicalx is the value of tipical change of a variable</span>
+0090 <span class="comment">% (useful if varibles have different ranges)</span>
+0091 tipx=ones(size(initval));
+0092 notzero=initval~=0;
+0093 tipx(notzero)=initval(notzero);
+0094 
+0095 [posarray,~,ic]=unique(cat(2,Constraints.RefPoints));
+0096 indinposarray=reshape(<span class="keyword">...</span>
+0097     mat2cell(ic(:),arrayfun(@(s) length(s.RefPoints), Constraints),1),<span class="keyword">...</span>
+0098     size(Constraints));
+0099 evalfunc={Constraints.Fun};
+0100 
+0101 options=optimset(options,<span class="keyword">...</span>
+0102     <span class="string">'MaxFunEvals'</span>,Calls*100,<span class="keyword">...</span>
+0103     <span class="string">'MaxIter'</span>,Calls,<span class="keyword">...</span>
+0104     <span class="string">'TypicalX'</span>,tipx,<span class="keyword">...</span>
+0105     <span class="string">'TolFun'</span>,Tolerance,<span class="keyword">...</span>
+0106     <span class="string">'TolX'</span>,Tolerance);
+0107 
+0108 <span class="keyword">if</span> verbose == 0
+0109     options = optimset(options,<span class="keyword">...</span>
+0110         <span class="string">'Display'</span>,<span class="string">'off'</span>);
+0111 <span class="keyword">end</span>
+0112 
+0113 <span class="keyword">if</span> verbose &gt; 1
+0114     options = optimset(options,<span class="keyword">...</span>
+0115         <span class="string">'Display'</span>,<span class="string">'iter'</span>);
+0116 <span class="keyword">end</span>
+0117 
+0118 <span class="keyword">switch</span> func2str(minimizer)
+0119     <span class="keyword">case</span> <span class="string">'lsqnonlin'</span>
+0120         
+0121         f = @(d) <a href="#_sub1" class="code" title="subfunction Val=evalvector(R,v,c,d,e,posarray,indinposarray)">evalvector</a>(Ring,Variables,Constraints,splitvar(d),<span class="keyword">...</span>
+0122             evalfunc,posarray,indinposarray); <span class="comment">% vector</span>
+0123         args={initval,Blow,Bhigh};
+0124     <span class="keyword">case</span> <span class="string">'fminsearch'</span>
+0125         
+0126         f = @(d)<a href="#_sub2" class="code" title="subfunction sVal=evalsum(R,v,c,d,e,posarray,indinposarray)">evalsum</a>(Ring,Variables,Constraints,<span class="keyword">...</span>
+0127             splitvar(d),evalfunc,posarray,indinposarray); <span class="comment">% scalar (sum of squares of f)</span>
+0128         args={initval};
+0129 <span class="keyword">end</span>
+0130 
+0131 cstr1=<a href="atEvaluateConstraints.html" class="code" title="function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray)">atEvaluateConstraints</a>(Ring,evalfunc,posarray,indinposarray);
+0132 penalty0=<a href="atGetPenalty.html" class="code" title="function penalty=atGetPenalty(ConstVal,Constraints)">atGetPenalty</a>(cstr1,Constraints);
+0133 
+0134 <span class="keyword">if</span> verbose&gt;0
+0135     
+0136     disp(<span class="string">'f2: '</span>);
+0137     disp(num2str(penalty0.^2));
+0138     disp(<span class="string">'Sum of f2: '</span>);
+0139     disp(num2str(sum(penalty0.^2)));
+0140     
+0141 <span class="keyword">end</span>
+0142 
+0143 <span class="comment">%% Least Squares</span>
+0144 <span class="keyword">if</span> sum(penalty0.*penalty0)&gt;Tolerance
+0145     dmin=minimizer(f,args{:},options); <span class="comment">% wants  a scalar</span>
+0146 <span class="keyword">else</span>
+0147     dmin=initval;
+0148 <span class="keyword">end</span>
+0149 <span class="comment">%%</span>
+0150 
+0151 NewRing=<a href="atApplyVariation.html" class="code" title="function ring=atApplyVariation(ring,Variables,NewValues)">atApplyVariation</a>(Ring,Variables,splitvar(dmin));
+0152 
+0153 cstr2=<a href="atEvaluateConstraints.html" class="code" title="function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray)">atEvaluateConstraints</a>(NewRing,evalfunc,posarray,indinposarray);
+0154 penalty=<a href="atGetPenalty.html" class="code" title="function penalty=atGetPenalty(ConstVal,Constraints)">atGetPenalty</a>(cstr2,Constraints);
+0155 
+0156 <span class="keyword">if</span> verbose&gt;1
+0157     
+0158     disp(<span class="string">'-----oooooo----oooooo----oooooo----'</span>)
+0159     disp(<span class="string">'   '</span>)
+0160     disp(<span class="string">'f2: '</span>);
+0161     disp(num2str(penalty.^2));
+0162     disp(<span class="string">'Sum of f2: '</span>);
+0163     disp(num2str(sum(penalty.^2)));
+0164     disp(<span class="string">'   '</span>)
+0165     disp(<span class="string">'-----oooooo----oooooo----oooooo----'</span>)
+0166     
+0167 <span class="keyword">end</span>
+0168 <span class="keyword">if</span> verbose&gt;2
+0169     splitpen=@(pen) reshape(mat2cell(pen,1,cellfun(@length,cstr1)),size(Constraints));
+0170     results=struct(<span class="keyword">...</span>
+0171         <span class="string">'val1'</span>,cstr1,<span class="keyword">...</span>
+0172         <span class="string">'val2'</span>,cstr2,<span class="keyword">...</span>
+0173         <span class="string">'penalty1'</span>,splitpen(penalty0),<span class="keyword">...</span>
+0174         <span class="string">'penalty2'</span>,splitpen(penalty));
+0175     <a href="atDisplayConstraintsChange.html" class="code" title="function atDisplayConstraintsChange(Constraints,results)">atDisplayConstraintsChange</a>(Constraints,results);
+0176     <a href="atDisplayVariableChange.html" class="code" title="function atDisplayVariableChange(ring1,ring2,Variables)">atDisplayVariableChange</a>(Ring,NewRing,Variables);
+0177 <span class="keyword">end</span>
+0178 
+0179     <a name="_sub1" href="#_subfunctions" class="code">function Val=evalvector(R,v,c,d,e,posarray,indinposarray)</a>
+0180         R=<a href="atApplyVariation.html" class="code" title="function ring=atApplyVariation(ring,Variables,NewValues)">atApplyVariation</a>(R,v,d);
+0181         cstr=<a href="atEvaluateConstraints.html" class="code" title="function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray)">atEvaluateConstraints</a>(R,e,posarray,indinposarray);
+0182         Val=<a href="atGetPenalty.html" class="code" title="function penalty=atGetPenalty(ConstVal,Constraints)">atGetPenalty</a>(cstr,c);
+0183     <span class="keyword">end</span>
+0184 
+0185     <a name="_sub2" href="#_subfunctions" class="code">function sVal=evalsum(R,v,c,d,e,posarray,indinposarray)</a>
+0186         Val=<a href="#_sub1" class="code" title="subfunction Val=evalvector(R,v,c,d,e,posarray,indinposarray)">evalvector</a>(R,v,c,d,e,posarray,indinposarray);
+0187         sVal=sum(Val.^2);
+0188     <span class="keyword">end</span>
+0189 
+0190 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

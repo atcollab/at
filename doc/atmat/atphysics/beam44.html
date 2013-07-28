@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of beam44</title>
+  <meta name="keywords" content="beam44">
+  <meta name="description" content="BEAM44 computes the coupled beam matrices">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; beam44.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>beam44
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>BEAM44 computes the coupled beam matrices</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [beam1,beam2,tune1,tune2] = beam44(A,B,C,gamma) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">BEAM44 computes the coupled beam matrices
+
+[BEAM1,BEAM2]=BEAM44(A,B,C,GAMMA)
+ A,B,C,gamma: Coupling parameters, see [1]
+ BEAM1,BEAM2: Eigen modes
+
+[BEAM1,BEAM2]=BEAM44(LINDATA)
+ LINDATA: structure with fields A,B,C,gamma
+
+[BEAM1,BEAM2,TUNE1,TUNE1]=BEAM44(...)
+ also returns the tunes
+
+[1] Sagan, Rubin, &quot;Linear Analysis of Coupled Lattices&quot;
+    Phys.Rev.Spec.Top. - Accelerators and Beams, vol2, 1999</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="beam22.html" class="code" title="function [s,tune] = beam22(t)">beam22</a>	BEAM22 computes the beam matrix from the 1-turn transfer matrix</li><li><a href="beam44.html" class="code" title="function [beam1,beam2,tune1,tune2] = beam44(A,B,C,gamma)">beam44</a>	BEAM44 computes the coupled beam matrices</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atx.html" class="code" title="function [lindt,pm]=atx(ring,varargin)">atx</a>	ATX				computes and displays global information</li><li><a href="beam44.html" class="code" title="function [beam1,beam2,tune1,tune2] = beam44(A,B,C,gamma)">beam44</a>	BEAM44 computes the coupled beam matrices</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [beam1,beam2,tune1,tune2] = beam44(A,B,C,gamma)</a>
+0002 <span class="comment">%BEAM44 computes the coupled beam matrices</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%[BEAM1,BEAM2]=BEAM44(A,B,C,GAMMA)</span>
+0005 <span class="comment">% A,B,C,gamma: Coupling parameters, see [1]</span>
+0006 <span class="comment">% BEAM1,BEAM2: Eigen modes</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%[BEAM1,BEAM2]=BEAM44(LINDATA)</span>
+0009 <span class="comment">% LINDATA: structure with fields A,B,C,gamma</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%[BEAM1,BEAM2,TUNE1,TUNE1]=BEAM44(...)</span>
+0012 <span class="comment">% also returns the tunes</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%[1] Sagan, Rubin, &quot;Linear Analysis of Coupled Lattices&quot;</span>
+0015 <span class="comment">%    Phys.Rev.Spec.Top. - Accelerators and Beams, vol2, 1999</span>
+0016 
+0017 <span class="keyword">if</span> isstruct(A)
+0018    [beam1,beam2,tune1,tune2]=<a href="beam44.html" class="code" title="function [beam1,beam2,tune1,tune2] = beam44(A,B,C,gamma)">beam44</a>(A.A,A.B,A.C,A.gamma);
+0019 <span class="keyword">else</span>
+0020    S2=[0 1;-1 0];
+0021    g=[gamma 0;0 gamma];
+0022    v=[g C;-S2*C'*S2' g];
+0023    [beama,tune1]=<a href="beam22.html" class="code" title="function [s,tune] = beam22(t)">beam22</a>(A);
+0024    [beamb,tune2]=<a href="beam22.html" class="code" title="function [s,tune] = beam22(t)">beam22</a>(B);
+0025    beam1=v*[beama zeros(2,2);zeros(2,4)]*v';
+0026    beam2=v*[zeros(2,4);zeros(2,2) beamb]*v';
+0027 <span class="keyword">end</span>
+0028 <span class="keyword">end</span>
+0029</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

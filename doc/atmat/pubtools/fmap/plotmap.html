@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of plotmap</title>
+  <meta name="keywords" content="plotmap">
+  <meta name="description" content="Uses the outputs rom the function &quot;nonlinmap&quot; to calculate the difusion of">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">fmap</a> &gt; plotmap.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/fmap&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>plotmap
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Uses the outputs rom the function &quot;nonlinmap&quot; to calculate the difusion of</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [nuh,nuv]=plotmap(X,Y,nuh,nuv) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">Uses the outputs rom the function &quot;nonlinmap&quot; to calculate the difusion of
+tunes and plot the map</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plotnonlinmap.html" class="code" title="function [nuh,nuv,X,Y,orh,orv]=plotnonlinmap(machine,X,Y,nbturn,type,DP,fname)">plotnonlinmap</a>	Computes and plots the frequency map for a given lattice</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [nuh,nuv]=plotmap(X,Y,nuh,nuv)</a>
+0002 <span class="comment">%Uses the outputs rom the function &quot;nonlinmap&quot; to calculate the difusion of</span>
+0003 <span class="comment">%tunes and plot the map</span>
+0004 
+0005 deltnu=log10(sqrt(nuh(:,3)+nuv(:,3)));
+0006 
+0007 matdeltnu=reshape(deltnu,numel(X),numel(Y));
+0008 matdeltnu=matdeltnu';
+0009 matmeanh=(reshape(nuh(:,4),numel(X),numel(Y)))';
+0010 matmeanv=(reshape(nuv(:,4),numel(X),numel(Y)))';
+0011 matmean=sqrt(matmeanh.^2+matmeanv.^2);
+0012 clf
+0013 matmaxh=(reshape(nuh(:,5),numel(X),numel(Y)))';
+0014 matmaxv=(reshape(nuv(:,5),numel(X),numel(Y)))';
+0015 matmax=sqrt(matmaxh.^2+matmaxv.^2);
+0016 <span class="comment">%tune difusion versus initial conditions</span>
+0017 subplot(2,3,1)
+0018 [ax,ay]=meshgrid(X,Y);
+0019 hold off
+0020 pl=pcolor(ax,ay,matdeltnu);
+0021 caxis([-10 0]);
+0022 Xlabel(<span class="string">'X'</span>);
+0023 Ylabel(<span class="string">'Y'</span>);
+0024 Title(<span class="string">'Tune diffusion'</span>);
+0025 
+0026 <span class="comment">%tune foot print</span>
+0027 subplot(2,3,2);
+0028 
+0029 mnuh=(reshape(nuh(:,1),numel(X),numel(Y)))';
+0030 mnuv=(reshape(nuv(:,1),numel(X),numel(Y)))';
+0031 
+0032 pl=pcolor(mnuh,mnuv,matdeltnu);
+0033 set(pl,<span class="string">'FaceColor'</span>, <span class="string">'none'</span>,<span class="string">'edgecolor'</span>,<span class="string">'none'</span>,<span class="string">'marker'</span>,<span class="string">'.'</span>,<span class="string">'markeredgecolor'</span>,<span class="string">'flat'</span>,<span class="string">'markerfacecolor'</span>,<span class="string">'flat'</span>);
+0034 caxis([-10 0]);
+0035 Xlabel(<span class="string">'Nux'</span>);
+0036 Ylabel(<span class="string">'Nuv'</span>);
+0037 
+0038 <span class="comment">%Tune shift versus Y amplitude (for X=0 and first X above 0)</span>
+0039 subplot(2,3,4);
+0040 
+0041 [Ic]=find((Y&gt;-1E-12)&amp;(Y&lt;1E-12));
+0042 [Il]=find((X&gt;-1E-12)&amp;(X&lt;1E-12));
+0043 
+0044 
+0045 <span class="comment">%pl=pcolor(X,Y,matmeanv);</span>
+0046 pl=plot(Y'.*Y',mnuv(:,Il)');
+0047 <span class="comment">%set(pl,'FaceColor', 'none','edgecolor','none','marker','.','markeredgecolor','flat','markerfacecolor','flat');</span>
+0048 <span class="comment">%caxis([-10 0]);</span>
+0049 
+0050 Xlabel(<span class="string">'Y^2 (m*m)'</span>);
+0051 Ylabel(<span class="string">'Nuz'</span>);
+0052 <span class="comment">%Tune shift versus X amplitude ( (for X=0 and first X above 0)</span>
+0053 subplot(2,3,3);
+0054 <span class="comment">%pl=pcolor(X,Y,matmeanh);</span>
+0055 pl=plot(X'.*X',mnuh(Ic,:));
+0056 Xlabel(<span class="string">'X^2 (m*m)'</span>);
+0057 Ylabel(<span class="string">'Nux'</span>);
+0058 <span class="comment">%set(pl,'FaceColor', 'none','edgecolor','none','marker','.','markeredgecolor','flat','markerfacecolor','flat');</span>
+0059 <span class="comment">%caxis([-10 0]);</span>
+0060 subplot(2,3,5);
+0061 <span class="comment">%pl=pcolor(X,Y,matmeanh);</span>
+0062 pl=plot(X'.*X',mnuv(Ic,:));
+0063 Xlabel(<span class="string">'X^2 (m*m)'</span>);
+0064 Ylabel(<span class="string">'Nuz'</span>);
+0065 subplot(2,3,6);
+0066 <span class="comment">%pl=pcolor(X,Y,matmeanh);</span>
+0067 pcolor(ax,ay,matmean)
+0068 Xlabel(<span class="string">'X'</span>);
+0069 Ylabel(<span class="string">'Y'</span>);
+0070 Title(<span class="string">'Mean Orbit'</span>)</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

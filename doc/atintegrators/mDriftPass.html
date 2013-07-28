@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mDriftPass</title>
+  <meta name="keywords" content="mDriftPass">
+  <meta name="description" content="MDRIFTPASS - example of pass method in matlab">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">atintegrators</a> &gt; mDriftPass.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atintegrators&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>mDriftPass
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>MDRIFTPASS - example of pass method in matlab</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [Out1, Out2]  = mdriftpass(DriftData,Rin); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> MDRIFTPASS - example of pass method in matlab
+  Same physics and calling syntax as DriftPass.c</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [Out1, Out2]  = mdriftpass(DriftData,Rin);</a>
+0002 <span class="comment">% MDRIFTPASS - example of pass method in matlab</span>
+0003 <span class="comment">%  Same physics and calling syntax as DriftPass.c</span>
+0004 
+0005 <span class="keyword">if</span> nargin
+0006     Out1 = Rin;
+0007     NormL = DriftData.Length./(1+Rin(5,:));
+0008     Out1(1,:) = Out1(1,:) + Rin(2,:).*NormL;
+0009     Out1(3,:) = Out1(3,:) + Rin(4,:).*NormL;
+0010     Out1(6,:) = Out1(6,:) + NormL.*(Rin(2,:).*Rin(2,:) + Rin(4,:).*Rin(4,:))./(1+Rin(5,:))/2;
+0011 <span class="keyword">else</span> <span class="comment">% If called with no input args - return lists of required and optional fields</span>
+0012     Out1 = {<span class="string">'Length'</span>};
+0013     Out2 = {};
+0014 
+0015 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

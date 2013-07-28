@@ -1,0 +1,276 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of sp3v81f</title>
+  <meta name="keywords" content="sp3v81f">
+  <meta name="description" content="All the dipole and quadrupole lengths are effective lengths">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atdemos</a> &gt; sp3v81f.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>sp3v81f
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>All the dipole and quadrupole lengths are effective lengths</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function sp3v81f </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> All the dipole and quadrupole lengths are effective lengths
+ Compiled from spear3 deck 'sp3v81newcor'
+ 06/02/02: include correctors and BPMs from engineering drawings
+ 03/03/03: correct BPM positions from engineering drawings
+ 03/15/03: focus strengths based on MY match of equivalent MAD deck
+ 04/04/03: include long kickers and septum marker based on engineering specs</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function sp3v81f</a>
+0002 <span class="comment">% All the dipole and quadrupole lengths are effective lengths</span>
+0003 <span class="comment">% Compiled from spear3 deck 'sp3v81newcor'</span>
+0004 <span class="comment">% 06/02/02: include correctors and BPMs from engineering drawings</span>
+0005 <span class="comment">% 03/03/03: correct BPM positions from engineering drawings</span>
+0006 <span class="comment">% 03/15/03: focus strengths based on MY match of equivalent MAD deck</span>
+0007 <span class="comment">% 04/04/03: include long kickers and septum marker based on engineering specs</span>
+0008 
+0009 <span class="keyword">global</span> FAMLIST THERING GLOBVAL
+0010 
+0011 GLOBVAL.E0 = 3e9;
+0012 GLOBVAL.LatticeFile = <span class="string">'sp3v81f'</span>;
+0013 FAMLIST = cell(0);
+0014 
+0015 disp([<span class="string">'** Loading SPEAR-III magnet lattice '</span>, mfilename]);
+0016 AP       =  aperture(<span class="string">'AP'</span>,  [-0.1, 0.1, -0.1, 0.1],<span class="string">'AperturePass'</span>);
+0017  
+0018 L0 = 2.341440122400003e+002;    <span class="comment">% design length [m]</span>
+0019 C0 =   299792458;                 <span class="comment">% speed of light [m/s]</span>
+0020 HarmNumber = 372;
+0021 CAV    = rfcavity(<span class="string">'RF'</span> , 0 , 3.2e+6 , HarmNumber*C0/L0, HarmNumber ,<span class="string">'ThinCavityPass'</span>);  
+0022 
+0023 COR =  corrector(<span class="string">'COR'</span>,0.15,[0 0],<span class="string">'CorrectorPass'</span>);
+0024 BPM  =  marker(<span class="string">'BPM'</span>,<span class="string">'IdentityPass'</span>);
+0025 
+0026 <span class="comment">%Standard Cell Drifts</span>
+0027 DC2     =    drift(<span class="string">'DC2'</span> ,0.097500,<span class="string">'DriftPass'</span>);
+0028 DC5     =    drift(<span class="string">'DC5'</span> ,0.200986,<span class="string">'DriftPass'</span>);
+0029 
+0030 <span class="comment">%Standard Cell Kicker Drifts</span>
+0031 K1     =     corrector(<span class="string">'KICKER'</span>,1.2,[0 0],<span class="string">'CorrectorPass'</span>);
+0032 K2     =     corrector(<span class="string">'KICKER'</span>,0.6,[0 0],<span class="string">'CorrectorPass'</span>);
+0033 K3     =     corrector(<span class="string">'KICKER'</span>,1.2,[0 0],<span class="string">'CorrectorPass'</span>);
+0034 
+0035 DI1    =     drift(<span class="string">'DI1'</span>  ,0.9235741,<span class="string">'DriftPass'</span>);   <span class="comment">%...see note kickers in sp3v81f.doc</span>
+0036 DI2    =     drift(<span class="string">'DI2'</span>  ,0.6882939,<span class="string">'DriftPass'</span>);
+0037 DI3    =     drift(<span class="string">'DI3'</span>  ,0.6834939,<span class="string">'DriftPass'</span>);
+0038 DI4    =     drift(<span class="string">'DI4'</span>  ,0.1224401,<span class="string">'DriftPass'</span>);
+0039 DI5    =     drift(<span class="string">'DI5'</span>  ,1.2401300,<span class="string">'DriftPass'</span>);
+0040 DI6    =     drift(<span class="string">'DI6'</span>  ,0.1658040,<span class="string">'DriftPass'</span>);
+0041 INJ    =     marker(<span class="string">'SEPTUM'</span>,<span class="string">'IdentityPass'</span>);        <span class="comment">%...end of septum</span>
+0042 
+0043 <span class="comment">%Standard Cell BPM Drifts</span>
+0044 DC1A    =    drift(<span class="string">'DC1A'</span>  ,1.40593400,<span class="string">'DriftPass'</span>);
+0045 DC1B    =    drift(<span class="string">'DC1B'</span>  ,0.12404125,<span class="string">'DriftPass'</span>);
+0046 DC3A    =    drift(<span class="string">'DC3A'</span>  ,0.05322065,<span class="string">'DriftPass'</span>);
+0047 DC3B    =    drift(<span class="string">'DC3B'</span>  ,0.16368247,<span class="string">'DriftPass'</span>);
+0048 DC4A    =    drift(<span class="string">'DC4A'</span>  ,0.15921467,<span class="string">'DriftPass'</span>);
+0049 DC4B    =    drift(<span class="string">'DC4B'</span>  ,0.04441800,<span class="string">'DriftPass'</span>);
+0050 DC6A    =    drift(<span class="string">'DC6A'</span>  ,0.11064600,<span class="string">'DriftPass'</span>);
+0051 DC6B    =    drift(<span class="string">'DC6B'</span>  ,0.06316585,<span class="string">'DriftPass'</span>);  <span class="comment">%0.069354 corrected to make path length consistent</span>
+0052 
+0053 <span class="comment">%Standard Cell Corrector Magnet Drifts</span>
+0054 DC2A    =    drift(<span class="string">'DC2A'</span>  ,0.11576525,<span class="string">'DriftPass'</span>);
+0055 DC2B    =    drift(<span class="string">'DC2B'</span>  ,0.11581045,<span class="string">'DriftPass'</span>);
+0056 DC2C    =    drift(<span class="string">'DC2C'</span>  ,0.10210045,<span class="string">'DriftPass'</span>);
+0057 DC2D    =    drift(<span class="string">'DC2D'</span>  ,0.12947525,<span class="string">'DriftPass'</span>);
+0058 DC5A    =    drift(<span class="string">'DC5A'</span>  ,0.09058000,<span class="string">'DriftPass'</span>);
+0059 DC5B    =    drift(<span class="string">'DC5B'</span>  ,0.36139000,<span class="string">'DriftPass'</span>);
+0060 DC5C    =    drift(<span class="string">'DC5C'</span>  ,0.09584000,<span class="string">'DriftPass'</span>);
+0061 DC5D    =    drift(<span class="string">'DC5D'</span>  ,0.35613000,<span class="string">'DriftPass'</span>);
+0062 
+0063 <span class="comment">%Standard Cell Dipoles</span>
+0064 BEND    =    rbend(<span class="string">'BEND'</span>  , 1.5048,  <span class="keyword">...</span>
+0065             0.18479957, 0.18479957/2, 0.18479957/2,<span class="keyword">...</span>
+0066            -0.31537858,<span class="string">'BendLinearPass'</span>);
+0067 
+0068 <span class="comment">%Standard Cell Quadrupoles</span>
+0069 QF        =    quadrupole(<span class="string">'QF'</span> , 0.3533895, 1.768672904054, <span class="string">'QuadLinearPass'</span>);
+0070 QD        =    quadrupole(<span class="string">'QD'</span> , 0.1634591,-1.542474230359, <span class="string">'QuadLinearPass'</span>);
+0071 QFC        =    quadrupole(<span class="string">'QFC'</span>, 0.5123803, 1.748640831069, <span class="string">'QuadLinearPass'</span>);
+0072 
+0073 <span class="comment">%Standard Cell Sextupoles</span>
+0074 SF        =    sextupole(<span class="string">'SF'</span> , 0.21, 32.0477093/2,<span class="string">'StrMPoleSymplectic4Pass'</span>);
+0075 SD        =    sextupole(<span class="string">'SD'</span> , 0.25,-38.80153/2,  <span class="string">'StrMPoleSymplectic4Pass'</span>);
+0076 
+0077 <span class="comment">%Standard Cell: (Note QFC not split)</span>
+0078 HCEL1 =    [DC1A BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0079 DC5A COR DC5B SF DC6A BPM DC6B QFC];
+0080 
+0081 HCEL2 =    [DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0082 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DC1A];
+0083 ACEL    =    [AP HCEL1 HCEL2];
+0084 
+0085 <span class="comment">%Cell 2: (K1 magnet, Note QFC not split)</span>
+0086 K1CEL2 =    [DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0087 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DI1];
+0088 CEL2    =    [AP HCEL1 K1CEL2];
+0089 
+0090 <span class="comment">%Cell 3: (K1 &amp; K2 magnets, Note QFC not split)</span>
+0091 K1CEL3 =    [K1 DI2 BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0092 DC5A COR DC5B SF DC6A BPM DC6B QFC];
+0093 
+0094 K2CEL3 =    [DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0095 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DI3 K2 DI4];
+0096 CEL3    =    [AP K1CEL3 K2CEL3];
+0097 
+0098 <span class="comment">%Cell 4: (Septum &amp; K3 magnets, Note QFC not split)</span>
+0099 SEPCEL4 =    [DI5 INJ DI6 BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0100 DC5A COR DC5B SF DC6A BPM DC6B QFC];
+0101 
+0102 K3CEL4 =    [DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0103 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DI2 K3];
+0104 
+0105 CEL4    =    [AP SEPCEL4 K3CEL4];
+0106 
+0107 <span class="comment">%Cell 5: (K5 magnets, Note QFC not split)</span>
+0108 K3CEL5 =    [DI1 BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0109 DC5A COR DC5B SF DC6A BPM DC6B QFC];
+0110 CEL5    =    [AP K3CEL5 HCEL2];
+0111 
+0112 <span class="comment">%Matching Cell Drifts without correctors or BPMs</span>
+0113 <span class="comment">%NOTE: BPMS and correctors are not symmetric in MCA, MCB</span>
+0114 DM1        =    drift(<span class="string">'DM1'</span> ,3.81000000,<span class="string">'DriftPass'</span>);
+0115 DM2        =    drift(<span class="string">'DM2'</span> ,0.09750000,<span class="string">'DriftPass'</span>);
+0116 DM3        =    drift(<span class="string">'DM3'</span> ,0.27500000,<span class="string">'DriftPass'</span>);
+0117 DM4        =    drift(<span class="string">'DM4'</span> ,0.21584572,<span class="string">'DriftPass'</span>);
+0118 DM5        =    drift(<span class="string">'DM5'</span> ,0.25000000,<span class="string">'DriftPass'</span>);
+0119 DM6        =    drift(<span class="string">'DM6'</span> ,0.49068463,<span class="string">'DriftPass'</span>);
+0120 DM7        =    drift(<span class="string">'DM7'</span> ,0.17380985,<span class="string">'DriftPass'</span>);
+0121 DM8     =    drift(<span class="string">'DM8'</span> ,0.50000000,<span class="string">'DriftPass'</span>);
+0122 DM9        =    drift(<span class="string">'DM9'</span> ,0.10500000,<span class="string">'DriftPass'</span>);
+0123 DM10    =    drift(<span class="string">'DM10'</span>,3.27657140,<span class="string">'DriftPass'</span>);
+0124 
+0125 <span class="comment">%Matching Cell A BPM Drifts</span>
+0126 DA1A    =    drift(<span class="string">'DA1A'</span> ,3.6792386,<span class="string">'DriftPass'</span>);
+0127 DA1B    =    drift(<span class="string">'DA1B'</span> ,0.12406665,<span class="string">'DriftPass'</span>);
+0128 
+0129 DA3A    =    drift(<span class="string">'DA3A'</span> ,0.20889925,<span class="string">'DriftPass'</span>);
+0130 DA3B    =    drift(<span class="string">'DA3B'</span> ,0.05414045,<span class="string">'DriftPass'</span>);
+0131 
+0132 DA5A    =    drift(<span class="string">'DA5A'</span> ,0.11397747,<span class="string">'DriftPass'</span>);
+0133 DA5B    =    drift(<span class="string">'DA5B'</span> ,0.108563 ,<span class="string">'DriftPass'</span>);
+0134 DA5C    =    drift(<span class="string">'DA5C'</span> ,0.051845 ,<span class="string">'DriftPass'</span>);   
+0135 DA5D    =    drift(<span class="string">'DA5D'</span> ,0.17069547,<span class="string">'DriftPass'</span>);   
+0136 
+0137 DA7A    =    drift(<span class="string">'DA7A'</span> ,0.1106966,<span class="string">'DriftPass'</span>);
+0138 DA7B    =    drift(<span class="string">'DA7B'</span> ,0.06311325,<span class="string">'DriftPass'</span>);
+0139 
+0140 DA8A    =    drift(<span class="string">'DA8A'</span> ,0.33735947,<span class="string">'DriftPass'</span>);
+0141 DA8B    =    drift(<span class="string">'DA8B'</span> ,0.12848625,<span class="string">'DriftPass'</span>);
+0142 
+0143 DA10A   =    drift(<span class="string">'DA10A'</span>,0.12393965,<span class="string">'DriftPass'</span>);
+0144 DA10B   =    drift(<span class="string">'DA10B'</span>,3.145937 ,<span class="string">'DriftPass'</span>);
+0145 
+0146 <span class="comment">%Matching Cell A Corrector Drifts</span>
+0147 DA2A    =    drift(<span class="string">'DA2A'</span> ,0.1153052500000,<span class="string">'DriftPass'</span>);
+0148 DA2B    =    drift(<span class="string">'DA2B'</span> ,0.1177344500000,<span class="string">'DriftPass'</span>);
+0149 DA6A    =    drift(<span class="string">'DA6A'</span> ,0.12660000000000,<span class="string">'DriftPass'</span>);
+0150 <span class="comment">%DA6B    =    drift('DA6B' ,0.90476852000000,'DriftPass');   %0.90477 corrected to make path length consistent</span>
+0151 DA6B    =    drift(<span class="string">'DA6B'</span> ,0.90476828000000,<span class="string">'DriftPass'</span>);   <span class="comment">%0.90477 corrected to make path length consistent with MAD (234.14401272)</span>
+0152 DA6C    =    drift(<span class="string">'DA6C'</span> ,0.09600000000000,<span class="string">'DriftPass'</span>);
+0153 DA6D    =    drift(<span class="string">'DA6D'</span> ,0.93537000000000,<span class="string">'DriftPass'</span>);
+0154 DA9A    =    drift(<span class="string">'DA9A'</span> ,0.109305250000000000,<span class="string">'DriftPass'</span>);
+0155 DA9B    =    drift(<span class="string">'DA9B'</span> ,0.13730525000000000,<span class="string">'DriftPass'</span>);
+0156 
+0157 <span class="comment">%Matching Cell B  BPM Drifts</span>
+0158 DB1A    =    drift(<span class="string">'DB1A'</span> ,3.747082 ,<span class="string">'DriftPass'</span>);
+0159 DB1B    =    drift(<span class="string">'DB1B'</span> ,0.05622325 ,<span class="string">'DriftPass'</span>);
+0160 DB3A    =    drift(<span class="string">'DB3A'</span> ,0.13222685,<span class="string">'DriftPass'</span>);
+0161 DB3B    =    drift(<span class="string">'DB3B'</span> ,0.13081285,<span class="string">'DriftPass'</span>);
+0162 DB5A    =    drift(<span class="string">'DB5A'</span> ,0.17069547,<span class="string">'DriftPass'</span>);
+0163 DB5B    =    drift(<span class="string">'DB5B'</span> ,0.051845 ,<span class="string">'DriftPass'</span>);
+0164 DB5C    =    drift(<span class="string">'DB5C'</span> ,0.1085632,<span class="string">'DriftPass'</span>);
+0165 DB5D    =    drift(<span class="string">'DB5D'</span> ,0.11397727,<span class="string">'DriftPass'</span>);
+0166 DB7A    =    drift(<span class="string">'DB7A'</span> ,0.06311305,<span class="string">'DriftPass'</span>);
+0167 DB7B    =    drift(<span class="string">'DB7B'</span> ,0.1106968,<span class="string">'DriftPass'</span>);
+0168 DB8A    =    drift(<span class="string">'DB8A'</span> ,0.32725027,<span class="string">'DriftPass'</span>);
+0169 DB8B    =    drift(<span class="string">'DB8B'</span> ,0.13859545,<span class="string">'DriftPass'</span>);
+0170 DB10A    =    drift(<span class="string">'DB10A'</span>,0.12404125 ,<span class="string">'DriftPass'</span>);
+0171 DB10B    =    drift(<span class="string">'DB10B'</span>,3.1458354,<span class="string">'DriftPass'</span>);
+0172 
+0173 <span class="comment">%Matching Cell B Corrector Drifts</span>
+0174 DB2A    =    drift(<span class="string">'DB2A'</span> ,0.1158052500,<span class="string">'DriftPass'</span>);
+0175 DB2B    =    drift(<span class="string">'DB2B'</span> ,0.1172344500,<span class="string">'DriftPass'</span>);
+0176 DB6A    =    drift(<span class="string">'DB6A'</span> ,0.937370,<span class="string">'DriftPass'</span>);
+0177 DB6B    =    drift(<span class="string">'DB6B'</span> ,0.09399852000000,<span class="string">'DriftPass'</span>);   <span class="comment">%0.094 corrected to make path length consistent</span>
+0178 DB6C    =    drift(<span class="string">'DB6C'</span> ,0.90437000000000,<span class="string">'DriftPass'</span>);
+0179 DB6D    =    drift(<span class="string">'DB6D'</span> ,0.12700000000000,<span class="string">'DriftPass'</span>);
+0180 DB9A    =    drift(<span class="string">'DB9A'</span> ,0.12330525000000,<span class="string">'DriftPass'</span>);
+0181 DB9B    =    drift(<span class="string">'DB9B'</span> ,0.12330525000000,<span class="string">'DriftPass'</span>);
+0182 
+0183 <span class="comment">%Matching Cell Dipoles</span>
+0184 BDM    =    rbend(<span class="string">'BDM'</span>  , 1.14329,  <span class="keyword">...</span>
+0185             0.138599675894, 0.138599675894/2, 0.138599675894/2,<span class="keyword">...</span>
+0186            -0.31537858,<span class="string">'BendLinearPass'</span>);
+0187 
+0188 <span class="comment">%Matching Cell Quadrupoles</span>
+0189 QDX     =    quadrupole(<span class="string">'QDX'</span> ,0.3533895,-1.386467245226 , <span class="string">'QuadLinearPass'</span>);
+0190 QFX     =    quadrupole(<span class="string">'QFX'</span> ,0.6105311,1.573196278394, <span class="string">'QuadLinearPass'</span>);
+0191 QDY     =    quadrupole(<span class="string">'QDY'</span> ,0.3533895,-0.460640930646 , <span class="string">'QuadLinearPass'</span>);
+0192 QFY     =    quadrupole(<span class="string">'QFY'</span> ,0.5123803,  1.481493709831 , <span class="string">'QuadLinearPass'</span>);
+0193 QDZ     =    quadrupole(<span class="string">'QDZ'</span> ,0.3533895,-0.878223937747 , <span class="string">'QuadLinearPass'</span>);
+0194 QFZ     =    quadrupole(<span class="string">'QFZ'</span> ,0.3533895, 1.427902006984 , <span class="string">'QuadLinearPass'</span>);
+0195 
+0196 <span class="comment">%Matching Cell Sextupoles</span>
+0197 SDM    =    sextupole(<span class="string">'SDM'</span>  , 0.21,-8.5,<span class="string">'StrMPoleSymplectic4Pass'</span>);
+0198 SFM    =    sextupole(<span class="string">'SFM'</span>  , 0.21, 7.5,<span class="string">'StrMPoleSymplectic4Pass'</span>);
+0199 <span class="comment">%SDM    =    sextupole('SDM'  , 0.21,-8.5,'DriftPass');</span>
+0200 <span class="comment">%SFM    =    sextupole('SFM'  , 0.21, 7.5,'DriftPass');</span>
+0201    
+0202 <span class="comment">%Matching Cell A (South East, North West)</span>
+0203 MCA=[DA1A BPM DA1B QDX DA2A COR DA2B <span class="keyword">...</span>
+0204 QFX DA3A BPM DA3B QDY DM4 BDM DA5A BPM DA5B SDM DA6A COR DA6B SFM DA7A BPM DA7B QFY <span class="keyword">...</span>
+0205 DM7 SFM DA6C COR DA6D SDM DA5C BPM DA5D BDM<span class="keyword">...</span>
+0206 DA8A BPM DA8B QDZ DA9A COR DA9B QFZ DA10A BPM DA10B];
+0207 
+0208 <span class="comment">%Matching Cell B (North East, South West)</span>
+0209 MCB=[DB1A BPM DB1B QDX DB2A COR DB2B <span class="keyword">...</span>
+0210 QFX DB3A BPM DB3B QDY DM4 BDM DB5A BPM DB5B SDM DB6A COR DB6B SFM DM7 QFY DB7A BPM<span class="keyword">...</span>
+0211 DB7B SFM DB6C COR DB6D SDM DB5C BPM DB5D BDM<span class="keyword">...</span>
+0212 DB8A BPM DB8B QDZ DB9A COR DB9B QFZ DB10A BPM DB10B];
+0213         
+0214 <span class="comment">% Begin Lattice</span>
+0215 NORTH    =    [CEL2 CEL3 CEL4 CEL5 ACEL ACEL ACEL];
+0216 SOUTH    =    [ACEL ACEL ACEL ACEL ACEL ACEL ACEL];
+0217 
+0218 ELIST    =    [CAV MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB) ]; 
+0219 buildlat(ELIST);
+0220 
+0221 <span class="comment">% evalin does not compile so it would be nice to remove this line (G. Portmann)</span>
+0222 evalin(<span class="string">'caller'</span>,<span class="string">'global THERING FAMLIST GLOBVAL'</span>);
+0223 
+0224 disp(<span class="string">'** Finished loading lattice in Accelerator Toolbox'</span>);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

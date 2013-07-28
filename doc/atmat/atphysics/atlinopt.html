@@ -1,0 +1,283 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atlinopt</title>
+  <meta name="keywords" content="atlinopt">
+  <meta name="description" content="ATLINOPT			performs linear analysis of the COUPLED lattices">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; atlinopt.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atlinopt
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATLINOPT			performs linear analysis of the COUPLED lattices</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [lindata, varargout] = atlinopt(RING,DP,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATLINOPT            performs linear analysis of the COUPLED lattices
+
+ LinData = ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields
+
+   ElemIndex   - ordinal position in the RING
+   SPos        - longitudinal position [m]
+   ClosedOrbit - closed orbit column vector with
+                 components x, px, y, py (momentums, NOT angles)
+   Dispersion  - dispersion orbit position vector with
+                 components eta_x, eta_prime_x, eta_y, eta_prime_y
+                 calculated with respect to the closed orbit with
+                 momentum deviation DP. Only if chromaticity is required.
+   M44         - 4x4 transfer matrix M from the beginning of RING
+                 to the entrance of the element for specified DP [2]
+   A           - 2x2 matrix A in [3]
+   B           - 2x2 matrix B in [3]
+   C           - 2x2 matrix C in [3]
+   gamma       - gamma parameter of the transformation to eigenmodes
+   mu          - [ mux, muy] horizontal and vertical betatron phase
+   beta        - [betax, betay] vector
+   alpha       - [alphax, alphay] vector
+
+   All values are specified at the entrance of each element specified in REFPTS.
+   REFPTS is an array of increasing indexes that  select elements
+   from the range 1 to length(LINE)+1.
+   See further explanation of REFPTS in the 'help' for FINDSPOS
+
+ [LinData,NU] = LINOPT() returns a vector of linear tunes
+   [nu_u , nu_v] for two normal modes of linear motion [1]
+
+ [LinData,NU, KSI] = LINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)
+   [ksi_u , ksi_v] - derivatives of [nu_u , nu_v]
+
+ LinData = LINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.
+        instead ORBITIN is used
+
+ Difference with linopt: Fractional tunes 0&lt;=tune&lt;1
+              Dispersion output (if chromaticity is required)
+              Alpha output
+              Phase advance output
+              Option to skip closed orbit search
+
+ See also ATREADBETA <a href="atx.html" class="code" title="function [lindt,pm]=atx(ring,varargin)">ATX</a> ATMODUL <a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">FINDSPOS</a> <a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin);">TWISSRING</a> <a href="tunechrom.html" class="code" title="function [tune, varargout] = tunechrom(RING,DP,varargin)">TUNECHROM</a>
+
+   [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+   [2] E.Courant, H.Snyder
+   [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atlinopt.html" class="code" title="function [lindata, varargout] = atlinopt(RING,DP,varargin)">atlinopt</a>	ATLINOPT			performs linear analysis of the COUPLED lattices</li><li><a href="findm44.html" class="code" title="function [M44, varargout]  = findm44(LATTICE,DP,varargin)">findm44</a>	FINDM44 numerically finds the 4x4 transfer matrix of an accelerator lattice</li><li><a href="findorbit4.html" class="code" title="function orbit = findorbit4(RING,dP,varargin);">findorbit4</a>	FINDORBIT4 finds closed orbit in the 4-d transverse phase</li><li><a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>	FINDSPOS returns longitudinal positions of accelerator lattice elements.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atlinopt.html" class="code" title="function [lindata, varargout] = atlinopt(RING,DP,varargin)">atlinopt</a>	ATLINOPT			performs linear analysis of the COUPLED lattices</li><li><a href="atx.html" class="code" title="function [lindt,pm]=atx(ring,varargin)">atx</a>	ATX				computes and displays global information</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [beta,alpha]=nufof(T)</a></li><li><a href="#_sub2" class="code">function UP = BetatronPhaseUnwrap(P)</a></li><li><a href="#_sub3" class="code">function [beta,alpha,phase]=lop(MS,A0)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [lindata, varargout] = atlinopt(RING,DP,varargin)</a>
+0002 <span class="comment">%ATLINOPT            performs linear analysis of the COUPLED lattices</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% LinData = ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   ElemIndex   - ordinal position in the RING</span>
+0007 <span class="comment">%   SPos        - longitudinal position [m]</span>
+0008 <span class="comment">%   ClosedOrbit - closed orbit column vector with</span>
+0009 <span class="comment">%                 components x, px, y, py (momentums, NOT angles)</span>
+0010 <span class="comment">%   Dispersion  - dispersion orbit position vector with</span>
+0011 <span class="comment">%                 components eta_x, eta_prime_x, eta_y, eta_prime_y</span>
+0012 <span class="comment">%                 calculated with respect to the closed orbit with</span>
+0013 <span class="comment">%                 momentum deviation DP. Only if chromaticity is required.</span>
+0014 <span class="comment">%   M44         - 4x4 transfer matrix M from the beginning of RING</span>
+0015 <span class="comment">%                 to the entrance of the element for specified DP [2]</span>
+0016 <span class="comment">%   A           - 2x2 matrix A in [3]</span>
+0017 <span class="comment">%   B           - 2x2 matrix B in [3]</span>
+0018 <span class="comment">%   C           - 2x2 matrix C in [3]</span>
+0019 <span class="comment">%   gamma       - gamma parameter of the transformation to eigenmodes</span>
+0020 <span class="comment">%   mu          - [ mux, muy] horizontal and vertical betatron phase</span>
+0021 <span class="comment">%   beta        - [betax, betay] vector</span>
+0022 <span class="comment">%   alpha       - [alphax, alphay] vector</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%   All values are specified at the entrance of each element specified in REFPTS.</span>
+0025 <span class="comment">%   REFPTS is an array of increasing indexes that  select elements</span>
+0026 <span class="comment">%   from the range 1 to length(LINE)+1.</span>
+0027 <span class="comment">%   See further explanation of REFPTS in the 'help' for FINDSPOS</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">% [LinData,NU] = LINOPT() returns a vector of linear tunes</span>
+0030 <span class="comment">%   [nu_u , nu_v] for two normal modes of linear motion [1]</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% [LinData,NU, KSI] = LINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)</span>
+0033 <span class="comment">%   [ksi_u , ksi_v] - derivatives of [nu_u , nu_v]</span>
+0034 <span class="comment">%</span>
+0035 <span class="comment">% LinData = LINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.</span>
+0036 <span class="comment">%        instead ORBITIN is used</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">% Difference with linopt: Fractional tunes 0&lt;=tune&lt;1</span>
+0039 <span class="comment">%              Dispersion output (if chromaticity is required)</span>
+0040 <span class="comment">%              Alpha output</span>
+0041 <span class="comment">%              Phase advance output</span>
+0042 <span class="comment">%              Option to skip closed orbit search</span>
+0043 <span class="comment">%</span>
+0044 <span class="comment">% See also ATREADBETA ATX ATMODUL FINDSPOS TWISSRING TUNECHROM</span>
+0045 <span class="comment">%</span>
+0046 <span class="comment">%   [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973</span>
+0047 <span class="comment">%   [2] E.Courant, H.Snyder</span>
+0048 <span class="comment">%   [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)</span>
+0049 
+0050 
+0051 <span class="keyword">global</span> NUMDIFPARAMS
+0052 
+0053 <span class="keyword">if</span> nargin &gt;= 3
+0054     REFPTS=varargin{1};
+0055 <span class="keyword">else</span>
+0056     REFPTS= 1;
+0057 <span class="keyword">end</span>
+0058 
+0059 NR=numel(REFPTS);
+0060 SZ=size(REFPTS);
+0061 
+0062 
+0063 spos = reshape(<a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>(RING,REFPTS),SZ);
+0064 [M44, MS, orb] = <a href="findm44.html" class="code" title="function [M44, varargout]  = findm44(LATTICE,DP,varargin)">findm44</a>(RING,DP,REFPTS,varargin{2:end});
+0065 
+0066 <span class="comment">% Calculate A,B,C, gamma at the first element</span>
+0067 M =M44(1:2,1:2);
+0068 N =M44(3:4,3:4);
+0069 m =M44(1:2,3:4);
+0070 n =M44(3:4,1:2);
+0071 
+0072 <span class="comment">% 2-by-2 symplectic matrix</span>
+0073 S = [0 1; -1 0];
+0074 H = m + S*n'*S';
+0075 t = trace(M-N);
+0076 
+0077 g = sqrt(1 + sqrt(t*t/(t*t+4*det(H))))/sqrt(2);
+0078 G = diag([g g]);
+0079 C = -H*sign(t)/(g*sqrt(t*t+4*det(H)));
+0080 A = G*G*M  -  G*(m*S*C'*S' + C*n) + C*N*S*C'*S';
+0081 B = G*G*N  +  G*(S*C'*S'*m + n*C) + S*C'*S'*M*C;
+0082 
+0083 MSA=zeros(2,2,NR);
+0084 MSB=zeros(2,2,NR);
+0085 gamma=cell(SZ);
+0086 AL=cell(SZ);
+0087 BL=cell(SZ);
+0088 CL=cell(SZ);
+0089 <span class="keyword">for</span> i=1:NR
+0090     M12 =MS(1:2,1:2,i);
+0091     N12 =MS(3:4,3:4,i);
+0092     m12 =MS(1:2,3:4,i);
+0093     n12 =MS(3:4,1:2,i);
+0094     
+0095     g2 = sqrt(det(n12*C+G*N12));
+0096     E12 = (G*M12-m12*S*C'*S')/g2;
+0097     F12 = (n12*C+G*N12)/g2;
+0098     
+0099     MSA(:,:,i)=E12;
+0100     MSB(:,:,i)=F12;
+0101     gamma{i}=g2;
+0102     CL{i}=(M12*C+G*m12)*S*F12'*S';
+0103     AL{i}=E12*A*S*E12'*S';
+0104     BL{i}=F12*B*S*F12'*S';
+0105 <span class="keyword">end</span>
+0106 
+0107 [BX,AX,MX]=<a href="#_sub3" class="code" title="subfunction [beta,alpha,phase]=lop(MS,A0)">lop</a>(MSA,A);
+0108 [BY,AY,MY]=<a href="#_sub3" class="code" title="subfunction [beta,alpha,phase]=lop(MS,A0)">lop</a>(MSB,B);
+0109 
+0110 <span class="comment">%tunes = [MX(end),MY(end)]/2/pi;</span>
+0111 
+0112 <span class="keyword">if</span> nargout &gt;= 2
+0113     cos_mu_x = trace(A)/2;
+0114     cos_mu_y = trace(B)/2;
+0115     tns = acos([cos_mu_x cos_mu_y])/2/pi;
+0116     <span class="keyword">if</span> A(1,2) &lt; 0, tns(1)=1-tns(1); <span class="keyword">end</span>
+0117     <span class="keyword">if</span> B(1,2) &lt; 0, tns(2)=1-tns(2); <span class="keyword">end</span>
+0118     varargout{1}=tns;
+0119 <span class="keyword">end</span>
+0120 
+0121 <span class="keyword">if</span> nargout &gt;= 3
+0122     <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'DPStep'</span>)
+0123         dDP = NUMDIFPARAMS.DPStep';
+0124     <span class="keyword">else</span>
+0125         dDP =  1e-6;
+0126     <span class="keyword">end</span>
+0127     <span class="comment">% Calculate tunes for DP+dDP</span>
+0128     <span class="keyword">if</span> ~isempty(REFPTS) &amp;&amp; REFPTS(1) == 1
+0129         orbP = <a href="findorbit4.html" class="code" title="function orbit = findorbit4(RING,dP,varargin);">findorbit4</a>(RING,DP+0.5*dDP,REFPTS);
+0130         orbM = <a href="findorbit4.html" class="code" title="function orbit = findorbit4(RING,dP,varargin);">findorbit4</a>(RING,DP-0.5*dDP,REFPTS);
+0131         DISPERSION = num2cell((orbP-orbM)/dDP,1);
+0132     <span class="keyword">else</span>
+0133         orbP = <a href="findorbit4.html" class="code" title="function orbit = findorbit4(RING,dP,varargin);">findorbit4</a>(RING,DP+0.5*dDP,[1;REFPTS(:)]);
+0134         orbM = <a href="findorbit4.html" class="code" title="function orbit = findorbit4(RING,dP,varargin);">findorbit4</a>(RING,DP-0.5*dDP,[1;REFPTS(:)]);
+0135         DISPERSION = num2cell((orbP(:,2:end)-orbM(:,2:end))/dDP,1);
+0136     <span class="keyword">end</span>
+0137     [LD, tunesP] = <a href="atlinopt.html" class="code" title="function [lindata, varargout] = atlinopt(RING,DP,varargin)">atlinopt</a>(RING,DP+0.5*dDP,[],[orbP(:,1);DP+0.5*dDP;0]); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0138     [LD, tunesM] = <a href="atlinopt.html" class="code" title="function [lindata, varargout] = atlinopt(RING,DP,varargin)">atlinopt</a>(RING,DP-0.5*dDP,[],[orbM(:,1);DP-0.5*dDP;0]); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0139     varargout{2} = (tunesP - tunesM)/dDP;
+0140     lindata = struct(<span class="string">'ElemIndex'</span>,num2cell(REFPTS),<span class="string">'SPos'</span>,num2cell(spos),<span class="keyword">...</span>
+0141         <span class="string">'ClosedOrbit'</span>,reshape(num2cell(orb,1),SZ),<span class="keyword">...</span>
+0142         <span class="string">'Dispersion'</span>,reshape(DISPERSION,SZ),<span class="keyword">...</span>
+0143         <span class="string">'M44'</span>,reshape(num2cell(MS,[1 2]),SZ),<span class="keyword">...</span>
+0144         <span class="string">'gamma'</span>,gamma,<span class="keyword">...</span>
+0145         <span class="string">'C'</span>,CL,<span class="keyword">...</span>
+0146         <span class="string">'A'</span>,AL,<span class="keyword">...</span>
+0147         <span class="string">'B'</span>,BL,<span class="keyword">...</span>
+0148         <span class="string">'beta'</span>, reshape(num2cell([BX,BY],2),SZ),<span class="keyword">...</span>
+0149         <span class="string">'alpha'</span>, reshape(num2cell([AX,AY],2),SZ),<span class="keyword">...</span>
+0150         <span class="string">'mu'</span>, reshape(num2cell([MX,MY],2),SZ));
+0151 <span class="keyword">else</span>
+0152     lindata = struct(<span class="string">'ElemIndex'</span>,num2cell(REFPTS),<span class="string">'SPos'</span>,num2cell(spos),<span class="keyword">...</span>
+0153         <span class="string">'ClosedOrbit'</span>,reshape(num2cell(orb,1),SZ),<span class="keyword">...</span>
+0154         <span class="string">'M44'</span>,reshape(num2cell(MS,[1 2]),SZ),<span class="keyword">...</span>
+0155         <span class="string">'gamma'</span>,gamma,<span class="keyword">...</span>
+0156         <span class="string">'C'</span>,CL,<span class="keyword">...</span>
+0157         <span class="string">'A'</span>,AL,<span class="keyword">...</span>
+0158         <span class="string">'B'</span>,BL,<span class="keyword">...</span>
+0159         <span class="string">'beta'</span>, reshape(num2cell([BX,BY],2),SZ),<span class="keyword">...</span>
+0160         <span class="string">'alpha'</span>, reshape(num2cell([AX,AY],2),SZ),<span class="keyword">...</span>
+0161         <span class="string">'mu'</span>, reshape(num2cell([MX,MY],2),SZ));
+0162 <span class="keyword">end</span>
+0163 
+0164 <a name="_sub1" href="#_subfunctions" class="code">function [beta,alpha]=nufof(T)</a>
+0165 <span class="comment">%cosmu = (T(1,1)+T(2,2))/2;</span>
+0166 sinmu = sign(T(1,2))*sqrt(-T(1,2)*T(2,1)-(T(1,1)-T(2,2))^2/4);
+0167 alpha = (T(1,1)-T(2,2))/2/sinmu;
+0168 beta = T(1,2)/sinmu;
+0169 
+0170 <a name="_sub2" href="#_subfunctions" class="code">function UP = BetatronPhaseUnwrap(P)</a>
+0171 <span class="comment">% unwrap negative jumps in betatron</span>
+0172 JUMPS = [0; diff(P)] &lt; -1.e-5;
+0173 UP = P+cumsum(JUMPS)*2*pi;
+0174 
+0175 <a name="_sub3" href="#_subfunctions" class="code">function [beta,alpha,phase]=lop(MS,A0)</a>
+0176 [bx,ax]=<a href="#_sub1" class="code" title="subfunction [beta,alpha]=nufof(T)">nufof</a>(A0);
+0177 bbb=squeeze(MS(1,2,:));
+0178 aaa=squeeze(MS(1,1,:))*bx-bbb*ax;
+0179 
+0180 beta = (aaa.^2 + bbb.^2)/bx;
+0181 alpha = -(aaa.*squeeze(MS(2,1,:)*bx-MS(2,2,:)*ax) + bbb.*squeeze(MS(2,2,:)))/bx;
+0182 <span class="keyword">try</span>
+0183     phase = atan2(bbb,aaa);
+0184     <span class="comment">%   phase = atan(bbb./aaa);</span>
+0185 <span class="keyword">catch</span> <span class="comment">%#ok&lt;CTCH&gt;</span>
+0186     phase=NaN(size(beta));
+0187 <span class="keyword">end</span>
+0188 phase = <a href="#_sub2" class="code" title="subfunction UP = BetatronPhaseUnwrap(P)">BetatronPhaseUnwrap</a>(phase);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

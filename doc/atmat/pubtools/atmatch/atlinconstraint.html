@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atlinconstraint</title>
+  <meta name="keywords" content="atlinconstraint">
+  <meta name="description" content="ATLINCONSTRAINT Generate a constraint on linear optics for atmatch">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">atmatch</a> &gt; atlinconstraint.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/atmatch&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atlinconstraint
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATLINCONSTRAINT Generate a constraint on linear optics for atmatch</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function constraint = atlinconstraint(refpts,params,vmin,vmax,weight) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATLINCONSTRAINT Generate a constraint on linear optics for atmatch
+
+CONSTRAINT=ATLINCONSTRAINT(REFPTS,PARAMS,VMIN,VMAX,WEIGHT)
+
+REFPTS Row vector of selected positions
+PARAMS Cell array describing the desired value at each position
+       The length of params must be 1 or length(REFPTS)
+       Each element of PARAMS is itself a cell array used to select a
+       field in the structure returned by atlinopt
+VMIN   Minimum value for the constraint
+VMAX   Maximum value for the constraint
+
+CONSTRAINT Row structure array to be used in atmatch
+
+ REFPTS, PARAMS, VMIN, VMAX, WEIGHT must have the same length,
+       or have length 1</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function val=expand(val,sz)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function constraint = atlinconstraint(refpts,params,vmin,vmax,weight)</a>
+0002 <span class="comment">%ATLINCONSTRAINT Generate a constraint on linear optics for atmatch</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%CONSTRAINT=ATLINCONSTRAINT(REFPTS,PARAMS,VMIN,VMAX,WEIGHT)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%REFPTS Row vector of selected positions</span>
+0007 <span class="comment">%PARAMS Cell array describing the desired value at each position</span>
+0008 <span class="comment">%       The length of params must be 1 or length(REFPTS)</span>
+0009 <span class="comment">%       Each element of PARAMS is itself a cell array used to select a</span>
+0010 <span class="comment">%       field in the structure returned by atlinopt</span>
+0011 <span class="comment">%VMIN   Minimum value for the constraint</span>
+0012 <span class="comment">%VMAX   Maximum value for the constraint</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%CONSTRAINT Row structure array to be used in atmatch</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% REFPTS, PARAMS, VMIN, VMAX, WEIGHT must have the same length,</span>
+0017 <span class="comment">%       or have length 1</span>
+0018 
+0019 ncst=max(length(refpts),length(params));
+0020 refp=<a href="#_sub1" class="code" title="subfunction val=expand(val,sz)">expand</a>(refpts,ncst);
+0021 pars=<a href="#_sub1" class="code" title="subfunction val=expand(val,sz)">expand</a>(params,ncst);
+0022 vmin=<a href="#_sub1" class="code" title="subfunction val=expand(val,sz)">expand</a>(vmin,ncst);
+0023 vmax=<a href="#_sub1" class="code" title="subfunction val=expand(val,sz)">expand</a>(vmax,ncst);
+0024 weight=<a href="#_sub1" class="code" title="subfunction val=expand(val,sz)">expand</a>(weight,ncst);
+0025 
+0026 paramnames=cellfun(@(c) c{1},pars,<span class="string">'UniformOutput'</span>,false);
+0027 tunes=strcmp(<span class="string">'tune'</span>,paramnames);
+0028 chrom=strcmp(<span class="string">'chromaticity'</span>,paramnames);
+0029 other=~(chrom|tunes);
+0030 
+0031 constraint=struct([]);
+0032 <span class="keyword">if</span> any(tunes)
+0033     constraint=[constraint,struct(<span class="keyword">...</span>
+0034         <span class="string">'Fun'</span>,@(~,~,gd) cellfun(@(p) gd.fractune(p{2}{:}),pars(tunes)),<span class="keyword">...</span>
+0035         <span class="string">'Min'</span>,vmin(tunes),<span class="keyword">...</span>
+0036         <span class="string">'Max'</span>,vmax(tunes),<span class="keyword">...</span>
+0037         <span class="string">'RefPoints'</span>,refp(tunes),<span class="keyword">...</span>
+0038         <span class="string">'Weight'</span>,weight(tunes))];
+0039 <span class="keyword">end</span>
+0040 <span class="keyword">if</span> any(chrom)
+0041     constraint=[constraint,struct(<span class="keyword">...</span>
+0042         <span class="string">'Fun'</span>,@(~,~,gd) cellfun(@(p) gd.chromaticity(p{2}{:}),pars(chrom)),<span class="keyword">...</span>
+0043         <span class="string">'Min'</span>,vmin(chrom),<span class="keyword">...</span>
+0044         <span class="string">'Max'</span>,vmax(chrom),<span class="keyword">...</span>
+0045         <span class="string">'RefPoints'</span>,refp(chrom),<span class="keyword">...</span>
+0046         <span class="string">'Weight'</span>,weight(chrom))];
+0047 <span class="keyword">end</span>
+0048 <span class="keyword">if</span> any(other)
+0049     constraint=[constraint,struct(<span class="keyword">...</span>
+0050         <span class="string">'Fun'</span>,@(~,ld,~) arrayfun(@(lindata,p) getfield(lindata,p{1}{:}),ld,pars(other)),<span class="keyword">...</span>
+0051         <span class="string">'Min'</span>,vmin(other),<span class="keyword">...</span>
+0052         <span class="string">'Max'</span>,vmax(other),<span class="keyword">...</span>
+0053         <span class="string">'RefPoints'</span>,refp(other),<span class="keyword">...</span>
+0054         <span class="string">'Weight'</span>,weight(other))];
+0055 <span class="keyword">end</span>
+0056 
+0057     <a name="_sub1" href="#_subfunctions" class="code">function val=expand(val,sz)</a>
+0058         <span class="keyword">if</span> length(val) == 1
+0059             val=val(ones(1,sz));
+0060         <span class="keyword">end</span>
+0061     <span class="keyword">end</span>
+0062 
+0063 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

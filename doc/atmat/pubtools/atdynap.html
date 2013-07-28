@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atdynap</title>
+  <meta name="keywords" content="atdynap">
+  <meta name="description" content="ATDYNAP		Compute the dynamic aperture">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">pubtools</a> &gt; atdynap.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atdynap
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATDYNAP		Compute the dynamic aperture</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [xx,zz]=atdynap(ring,nt,dpp,rfrac) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATDYNAP        Compute the dynamic aperture
+
+
+[XX,ZZ]=ATDYNAP(RING,NTURNS,DPP,RFRAC)
+
+XX,ZZ :    limit of the dynamic aperture (betatron amplitudes in m)
+RING :        Structure for tracking
+NTURNS:    Number of turns
+DPP :        Off-momentum value (default: 0)
+RFRAC :    Resolution of the grid for checking the stability
+            as a fraction of the maximum stable amplitude
+            (default: 0.02)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function rmax=ascan(ring,nt,clorb,theta,rlist)</a></li><li><a href="#_sub2" class="code">function [xmax,zmax]=bscan(ring,nt,clorb,xlist,zlist)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [xx,zz]=atdynap(ring,nt,dpp,rfrac)</a>
+0002 <span class="comment">%ATDYNAP        Compute the dynamic aperture</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%[XX,ZZ]=ATDYNAP(RING,NTURNS,DPP,RFRAC)</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%XX,ZZ :    limit of the dynamic aperture (betatron amplitudes in m)</span>
+0008 <span class="comment">%RING :        Structure for tracking</span>
+0009 <span class="comment">%NTURNS:    Number of turns</span>
+0010 <span class="comment">%DPP :        Off-momentum value (default: 0)</span>
+0011 <span class="comment">%RFRAC :    Resolution of the grid for checking the stability</span>
+0012 <span class="comment">%            as a fraction of the maximum stable amplitude</span>
+0013 <span class="comment">%            (default: 0.02)</span>
+0014 
+0015 np=5;
+0016 rlist=0:0.001:0.1;
+0017 <span class="keyword">if</span> nargin &lt; 4, rfrac=0.02; <span class="keyword">end</span>
+0018 <span class="keyword">if</span> nargin &lt; 3, dpp=0.0; <span class="keyword">end</span>
+0019 
+0020 <span class="keyword">if</span> isnumeric(dpp)
+0021 clorb=[findorbit4(ring(:),dpp);dpp;0];
+0022 <span class="keyword">else</span>
+0023    clorb=findorbit6(ring(:));
+0024 <span class="keyword">end</span>
+0025 
+0026 t1=linspace(0,pi,2*np+3);
+0027 xpmax=<a href="#_sub1" class="code" title="subfunction rmax=ascan(ring,nt,clorb,theta,rlist)">ascan</a>(ring,nt,clorb,0,rlist);
+0028 zmax=<a href="#_sub1" class="code" title="subfunction rmax=ascan(ring,nt,clorb,theta,rlist)">ascan</a>(ring,nt,clorb,0.5*pi,rlist);
+0029 xmmax=<a href="#_sub1" class="code" title="subfunction rmax=ascan(ring,nt,clorb,theta,rlist)">ascan</a>(ring,nt,clorb,pi,rlist);
+0030 <span class="comment">%</span>
+0031 <span class="comment">% x1=[xpmax*ones(1,np+2) xmmax*ones(1,np+1)];</span>
+0032 <span class="comment">% z1=zmax*ones(1,2*np+3);</span>
+0033 <span class="comment">% tlist=atan2(sin(t1).*z1,cos(t1).*x1)';</span>
+0034 <span class="comment">%</span>
+0035 <span class="comment">% rr=NaN(2*np+3,1);</span>
+0036 <span class="comment">% rr(1)=xpmax;</span>
+0037 <span class="comment">% rr(np+2)=zmax;</span>
+0038 <span class="comment">% rr(2*np+3)=xmmax;</span>
+0039 <span class="comment">% for i=[2:np+1 np+3:2*np+2]</span>
+0040 <span class="comment">%    rr(i)=ascan(ring,nt,clorb,tlist(i),rlist);</span>
+0041 <span class="comment">% end</span>
+0042 <span class="comment">% xx=rr.*cos(tlist);</span>
+0043 <span class="comment">% zz=rr.*sin(tlist);</span>
+0044 slist=0.5:rfrac:2;
+0045 xx=NaN(2*np+3,1);
+0046 zz=xx;
+0047 <span class="keyword">for</span> i=1:np+3
+0048    [xx(i),zz(i)]=<a href="#_sub2" class="code" title="subfunction [xmax,zmax]=bscan(ring,nt,clorb,xlist,zlist)">bscan</a>(ring,nt,clorb,<span class="keyword">...</span>
+0049       xpmax*cos(t1(i))*slist,zmax*sin(t1(i))*slist);
+0050 <span class="keyword">end</span>
+0051 <span class="keyword">for</span> i=np+4:2*np+3
+0052    [xx(i),zz(i)]=<a href="#_sub2" class="code" title="subfunction [xmax,zmax]=bscan(ring,nt,clorb,xlist,zlist)">bscan</a>(ring,nt,clorb,<span class="keyword">...</span>
+0053       xmmax*cos(t1(i))*slist,zmax*sin(t1(i))*slist);
+0054 <span class="keyword">end</span>
+0055 
+0056 <a name="_sub1" href="#_subfunctions" class="code">function rmax=ascan(ring,nt,clorb,theta,rlist)</a>
+0057 <span class="keyword">for</span> rr=rlist
+0058    rin=clorb+[rr*cos(theta);0;rr*sin(theta);0;0;0];
+0059    [dummy,lost]=ringpass(ring,rin,nt,<span class="string">'reuse'</span>); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0060    <span class="keyword">if</span> lost, <span class="keyword">break</span>; <span class="keyword">end</span>
+0061    rmax=rr;
+0062 <span class="keyword">end</span>
+0063 fprintf(<span class="string">'theta: %g, r: %g\n'</span>,theta,rmax);
+0064 
+0065 <a name="_sub2" href="#_subfunctions" class="code">function [xmax,zmax]=bscan(ring,nt,clorb,xlist,zlist)</a>
+0066 xmax = 0.0;
+0067 zmax = 0.0;
+0068 <span class="keyword">for</span> i=1:length(xlist)
+0069    rin=clorb+[xlist(i);0;zlist(i);0;0;0];
+0070    [dummy,lost]=ringpass(ring,rin,nt,<span class="string">'reuse'</span>); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0071    <span class="keyword">if</span> lost, <span class="keyword">break</span>; <span class="keyword">end</span>
+0072    xmax=xlist(i);
+0073    zmax=zlist(i);
+0074 <span class="keyword">end</span>
+0075 fprintf(<span class="string">'xm: %g, zm: %g\n'</span>,xmax,zmax);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

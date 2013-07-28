@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of wiggler</title>
+  <meta name="keywords" content="wiggler">
+  <meta name="description" content="wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">atintegrators</a> &gt; wiggler.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atintegrators&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>wiggler
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+
+ FamName    family name
+ Ltot        total length of the wiggle
+ Lw        total length of the wiggle
+ Bmax         peak wiggler field [Tesla]
+ Nstep        num of integration steps per period
+ Nmeth        symplectic integration method, 2nd or 4th order: 2 or 4
+ By        wiggler harmonics for horizontal wigglers
+ Bx        wiggler harmonics for vertical wigglers
+ method        name of the function to use for tracking
+
+ returns assigned address in the FAMLIST that is uniquely identifies
+ the family</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)</a>
+0002 <span class="comment">% wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% FamName    family name</span>
+0005 <span class="comment">% Ltot        total length of the wiggle</span>
+0006 <span class="comment">% Lw        total length of the wiggle</span>
+0007 <span class="comment">% Bmax         peak wiggler field [Tesla]</span>
+0008 <span class="comment">% Nstep        num of integration steps per period</span>
+0009 <span class="comment">% Nmeth        symplectic integration method, 2nd or 4th order: 2 or 4</span>
+0010 <span class="comment">% By        wiggler harmonics for horizontal wigglers</span>
+0011 <span class="comment">% Bx        wiggler harmonics for vertical wigglers</span>
+0012 <span class="comment">% method        name of the function to use for tracking</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% returns assigned address in the FAMLIST that is uniquely identifies</span>
+0015 <span class="comment">% the family</span>
+0016 
+0017 <span class="comment">%---------------------------------------------------------------------------</span>
+0018 <span class="comment">% Modification Log:</span>
+0019 <span class="comment">% -----------------</span>
+0020 <span class="comment">% .03  2003-06-19    YK Wu, Duke University, wu@fel.duke.edu</span>
+0021 <span class="comment">%                               Add checks for input arguments</span>
+0022 <span class="comment">% .02  2003-06-18    YK Wu, Duke University</span>
+0023 <span class="comment">%                Add checks for inputs, add comments</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% .01  2003-04-20    YK Wu, J. Li, Duke University</span>
+0026 <span class="comment">%                Define a wiggler element</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">%---------------------------------------------------------------------------</span>
+0029 <span class="comment">%  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu</span>
+0030 <span class="comment">%</span>
+0031 
+0032 <span class="keyword">global</span> MaxOrder;
+0033 <span class="keyword">global</span> NumIntSteps;
+0034 
+0035 GWIG_EPS = 1e-6;
+0036 dNw = abs(mod(Ltot/Lw, 1));
+0037 <span class="keyword">if</span> dNw &gt; GWIG_EPS
+0038   error(<span class="string">' Wiggler: Ltot/Lw is not an integter.'</span>);
+0039 <span class="keyword">end</span>
+0040 
+0041 ElemData.FamName        = fname;  <span class="comment">% add check for identical family names</span>
+0042 ElemData.Length        = Ltot;
+0043 ElemData.Lw             = Lw;
+0044 ElemData.Bmax           = Bmax;
+0045 ElemData.Nstep        = Nstep;
+0046 ElemData.Nmeth          = Nmeth;
+0047 <span class="keyword">if</span> ~isempty(By)
+0048   ElemData.NHharm       = length(By(1,:));
+0049   <span class="keyword">for</span> i=1:ElemData.NHharm
+0050     kx = By(3,i); ky = By(4,i); kz = By(5,i);
+0051     dk = sqrt(abs(ky*ky - kz*kz - kx*kx))/abs(kz);
+0052     <span class="keyword">if</span> ( dk &gt; GWIG_EPS ) then
+0053       error([<span class="string">' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = '</span>, num2str(i,3)]);
+0054     <span class="keyword">end</span>;
+0055   <span class="keyword">end</span>
+0056 <span class="keyword">else</span>
+0057   ElemData.NHharm         = 0;
+0058 <span class="keyword">end</span>
+0059 
+0060 <span class="keyword">if</span> ~isempty(Bx)
+0061   ElemData.NVharm         = length(Bx(1,:));
+0062   <span class="keyword">for</span> i=1:ElemData.NVharm
+0063     kx = Bx(3,i); ky = Bx(4,i); kz = Bx(5,i);
+0064     dk = sqrt(abs(kx*kx - kz*kz - ky*ky))/abs(kz);
+0065     <span class="keyword">if</span> ( dk &gt; GWIG_EPS ) then
+0066       error([<span class="string">' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = '</span>, num2str(i,3)]);
+0067     <span class="keyword">end</span>;
+0068   <span class="keyword">end</span>
+0069 <span class="keyword">else</span>
+0070   ElemData.NVharm         = 0;
+0071 <span class="keyword">end</span>
+0072 ElemData.By             = By;
+0073 ElemData.Bx             = Bx;
+0074 ElemData.R1             = diag(ones(6,1));
+0075 ElemData.R2             = diag(ones(6,1));
+0076 ElemData.T1             = zeros(1,6);
+0077 ElemData.T2             = zeros(1,6);
+0078 ElemData.PassMethod     = method;
+0079 
+0080 
+0081 <span class="keyword">global</span> FAMLIST
+0082 z = length(FAMLIST)+1; <span class="comment">% number of declare families including this one</span>
+0083 FAMLIST{z}.FamName = fname;
+0084 FAMLIST{z}.NumKids = 0;
+0085 FAMLIST{z}.KidsList= [];
+0086 FAMLIST{z}.ElemData= ElemData;</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

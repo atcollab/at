@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of addxrot</title>
+  <meta name="keywords" content="addxrot">
+  <meta name="description" content="ADDSROT increments the rotation obout the 's' axis (along the direction">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">misalignment</a> &gt; <a href="index.html">additional_AT_functions</a> &gt; addxrot.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/misalignment/additional_AT_functions&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>addxrot
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>ADDSROT increments the rotation obout the 's' axis (along the direction</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function addxrot(elemindex, theta) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> ADDSROT increments the rotation obout the 's' axis (along the direction
+ of particle motion) by an amount THETA in units of radians. ELEMINDEX is
+ the index/indices of elements in THERING that are affected by this
+ roataion. Clockwise rotation
+
+ See also <a href="addsrot.html" class="code" title="function addsrot(elemindex, theta)">ADDSROT</a>, <a href="addyrot.html" class="code" title="function addyrot(elemindex, theta)">ADDYROT</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function addxrot(elemindex, theta)</a>
+0002 <span class="comment">% ADDSROT increments the rotation obout the 's' axis (along the direction</span>
+0003 <span class="comment">% of particle motion) by an amount THETA in units of radians. ELEMINDEX is</span>
+0004 <span class="comment">% the index/indices of elements in THERING that are affected by this</span>
+0005 <span class="comment">% roataion. Clockwise rotation</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% See also ADDSROT, ADDYROT</span>
+0008 
+0009 <span class="keyword">global</span> THERING
+0010 
+0011 numelems = length(elemindex);
+0012 
+0013 <span class="keyword">if</span> numelems ~= length(theta)
+0014     error(<span class="string">'ELEMINDEX and THETA must have the same number of elements'</span>);
+0015 <span class="keyword">end</span>
+0016 
+0017 T = tan(theta);
+0018 
+0019 <span class="keyword">for</span> i = 1:numelems
+0020     elemlen = THERING{elemindex(i)}.Length;
+0021     <span class="comment">% Get current total translation from element</span>
+0022     curr_T1 = THERING{elemindex(i)}.T1;
+0023     curr_T2 = THERING{elemindex(i)}.T2;
+0024     <span class="comment">% Add y translation and kick to particle coordiante to simulate</span>
+0025     <span class="comment">% rotation of element about x-axis.</span>
+0026     THERING{elemindex(i)}.T1(3) = curr_T1(3) - elemlen*0.5*T(i);
+0027     THERING{elemindex(i)}.T1(4) = curr_T1(4) + theta(i);
+0028     THERING{elemindex(i)}.T2(3) = curr_T2(3) + elemlen*0.5*T(i);
+0029     THERING{elemindex(i)}.T2(4) = curr_T2(4) - theta(i);
+0030 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

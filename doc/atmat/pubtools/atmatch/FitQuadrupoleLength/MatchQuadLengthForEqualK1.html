@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of MatchQuadLengthForEqualK1</title>
+  <meta name="keywords" content="MatchQuadLengthForEqualK1">
+  <meta name="description" content="adjusts length of QFA6 QFA8 to have the same K1">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">atmatch</a> &gt; <a href="index.html">FitQuadrupoleLength</a> &gt; MatchQuadLengthForEqualK1.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/atmatch/FitQuadrupoleLength&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>MatchQuadLengthForEqualK1
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>adjusts length of QFA6 QFA8 to have the same K1</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function arc1=MatchQuadLengthForEqualK1(arc,d) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> adjusts length of QFA6 QFA8 to have the same K1</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="VaryMagLength.html" class="code" title="function r=VaryMagLength(r,DL,indP,indM)">VaryMagLength</a>	</li><li><a href="compK1.html" class="code" title="function dif=compK1(arc,indQ1,indQ2,varargin)">compK1</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="run_MatchQuadLengthForEqualK1.html" class="code" title="">run_MatchQuadLengthForEqualK1</a>	run the matching on S10 ESRF upgrade arc lattice</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function RING_matched=matchingDBA(RING,bxDb,byDb,DDb,Qx,</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function arc1=MatchQuadLengthForEqualK1(arc,d)</a>
+0002 <span class="comment">% adjusts length of QFA6 QFA8 to have the same K1</span>
+0003 indQF=findcells(arc,<span class="string">'FamName'</span>,<span class="string">'QF'</span>);
+0004 indQFM=findcells(arc,<span class="string">'FamName'</span>,<span class="string">'QFM'</span>);
+0005 indQD=findcells(arc,<span class="string">'FamName'</span>,<span class="string">'QD'</span>);
+0006 indQDM=findcells(arc,<span class="string">'FamName'</span>,<span class="string">'QDM'</span>);
+0007 
+0008 arc=<a href="#_sub1" class="code" title="subfunction RING_matched=matchingDBA(RING,bxDb,byDb,DDb,Qx,">matchingDBA</a>(arc,17.3,0.58,0.0,0.35,<span class="keyword">...</span>
+0009     indQF,indQD,indQFM,indQDM);
+0010 
+0011 Variab1=atVariableBuilder(arc,<span class="keyword">...</span>
+0012     {@(ar,dl)<a href="VaryMagLength.html" class="code" title="function r=VaryMagLength(r,DL,indP,indM)">VaryMagLength</a>(ar,dl,indQF,indQFM)},{0.01});
+0013 
+0014 <span class="comment">% empty varaible. Performs rematch at every iteration of the minimizer</span>
+0015 Variab2=atVariableBuilder(arc,<span class="keyword">...</span>
+0016     {@(r,~)<a href="#_sub1" class="code" title="subfunction RING_matched=matchingDBA(RING,bxDb,byDb,DDb,Qx,">matchingDBA</a>(r,17.3,0.58,0.0,0.35,<span class="keyword">...</span>
+0017     indQF,indQD,indQFM,indQDM)},{[]});
+0018 
+0019 Variab=[Variab1, Variab2];
+0020 
+0021 <span class="comment">%% constraints</span>
+0022 Constr=struct(<span class="keyword">...</span>
+0023     <span class="string">'Fun'</span>,@(arc,~,~)<a href="compK1.html" class="code" title="function dif=compK1(arc,indQ1,indQ2,varargin)">compK1</a>(arc,indQFM,indQF),<span class="keyword">...</span>
+0024     <span class="string">'Min'</span>,d,<span class="keyword">...</span>
+0025     <span class="string">'Max'</span>,d,<span class="keyword">...</span>
+0026     <span class="string">'RefPoints'</span>,[],<span class="keyword">...</span>
+0027     <span class="string">'Weight'</span>,1); <span class="comment">%</span>
+0028 
+0029 <span class="comment">%% matching</span>
+0030 
+0031 tol=1e-6;
+0032 [arc1,~,currentvalues]=atmatch(arc,Variab,Constr,tol,100,3,@lsqnonlin);<span class="comment">%'fminsearch',3);%</span>
+0033 
+0034 <span class="keyword">return</span>
+0035 
+0036 
+0037 
+0038 
+0039 
+0040 <a name="_sub1" href="#_subfunctions" class="code">function RING_matched=matchingDBA(RING,bxDb,byDb,DDb,Qx,</a><span class="keyword">...</span>
+0041     indQF,indQD,indQFM,indQDM)
+0042 
+0043 V=atVariableBuilder(RING,<span class="keyword">...</span>
+0044     {indQF,indQD,indQDM,indQFM},{{<span class="string">'PolynomB'</span>,{1,2}}});
+0045 
+0046 c1=atlinconstraint(indQFM(2),<span class="keyword">...</span>
+0047     {{<span class="string">'beta'</span>,{1}},{<span class="string">'beta'</span>,{2}}},<span class="keyword">...</span>
+0048     [bxDb,byDb],<span class="keyword">...</span>
+0049     [bxDb,byDb],<span class="keyword">...</span>
+0050     [1 1]);
+0051 
+0052 c2=atlinconstraint(1,<span class="keyword">...</span>
+0053     {{<span class="string">'Dispersion'</span>,{1}},{<span class="string">'tune'</span>,{1}}},<span class="keyword">...</span>
+0054     [DDb,Qx],<span class="keyword">...</span>
+0055     [DDb,Qx],<span class="keyword">...</span>
+0056     [1 1]);
+0057 
+0058 c=[c1,c2];
+0059 
+0060 RING_matched=atmatch(RING,V,c,10^-6,1000,0,@lsqnonlin);<span class="comment">%</span>
+0061 
+0062 
+0063 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

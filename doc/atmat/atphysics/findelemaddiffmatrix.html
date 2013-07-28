@@ -1,0 +1,609 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findelemaddiffmatrix</title>
+  <meta name="keywords" content="findelemaddiffmatrix">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; findelemaddiffmatrix.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>findelemaddiffmatrix
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 /* findmpoleraddifmatrix.c
+0002 
+0003    mex-<span class="keyword">function</span> to calculate radiation diffusion matrix B defined in [2] 
+0004    <span class="keyword">for</span> multipole elements in MATLAB Accelerator Toolbox
+0005    A.Terebilo 8/14/00
+0006 
+0007    References
+0008    [1] M.Sands <span class="string">'The Physics of Electron Storage Rings</span>
+0009    [2] Ohmi, Kirata, Oide <span class="string">'From the beam-envelope matrix to synchrotron</span>
+0010    radiation integrals', Phys.Rev.E  Vol.49 p.751 (1994)
+0011 */
+0012 
+0013 #include &quot;mex.h&quot;
+0014 #include &quot;atlalib.c&quot;
+0015 #include &lt;math.h&gt;
+0016 
+0017 
+0018 /* Fourth order-symplectic integrator constants */
+0019 
+0020 #define DRIFT1    0.6756035959798286638
+0021 #define DRIFT2   -0.1756035959798286639
+0022 #define KICK1     1.351207191959657328
+0023 #define KICK2    -1.702414383919314656
+0024 
+0025 /* Physical constants used in the calculations */
+0026 
+0027 #define TWOPI        6.28318530717959
+0028 #define CGAMMA     8.846056192e-05             /* [m]/[GeV^3] Ref[1] (4.1)      */
+0029 #define M0C2      5.10999060e5                /* Electron rest mass [eV]       */
+0030 #define LAMBDABAR 3.86159323e-13            /* Compton wavelength/2pi [m]    */
+0031 #define CER           2.81794092e-15            /* Classical electron radius [m] */
+0032 #define CU        1.323094366892892            /* 55/(24*sqrt(3)) factor        */
+0033 
+0034 
+0035 
+0036 #define SQR(X) ((X)*(X))
+0037 
+0038 
+0039 
+0040 void smpledge(double* r, double inv_rho, double angle)
+0041 {    double psi = inv_rho*tan(angle);
+0042     r[1]+=r[0]*psi;
+0043     r[3]-=r[2]*psi;
+0044 }
+0045 
+0046 
+0047 double B2perp(double bx, double by, double irho, 
+0048                             double x, double xpr, double y, double ypr)
+0049 /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity   */
+0050     
+0051 {    double v_norm2;
+0052     v_norm2 = 1/(SQR(1+x*irho)+ SQR(xpr) + SQR(ypr));
+0053 
+0054     /* components of the  velocity vector
+0055        double ex, ey, ez;
+0056        ex = xpr; 
+0057        ey = ypr; 
+0058        ez = (1+x*irho);
+0059     */
+0060       
+0061     <span class="keyword">return</span>((SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
+0062 
+0063 
+0064 
+0065 } 
+0066  
+0067 
+0068 void thinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+0069 
+0070 /***************************************************************************** 
+0071 Calculate and apply a multipole kick to a phase space vector *r in a multipole element.
+0072 The reference coordinate system  may have the curvature given by the inverse 
+0073 (design) radius irho. irho = 0 <span class="keyword">for</span> straight elements
+0074 
+0075 IMPORTANT !!!
+0076 The desighn magnetic field Byo that provides this curvature By0 = irho * E0 /(c*e)
+0077 MUST NOT be included in the dipole term PolynomB(1)(MATLAB notation)(B[0] C notation) 
+0078 of the By field expansion
+0079 HOWEVER!!! to calculate the effect of classical radiation the full field must be 
+0080 used in the square of the |v x B|.
+0081 When calling B2perp(Bx, By, <span class="keyword">...</span><span class="comment">), use the By = ReSum + irho, where ReSum is the </span>
+0082 normalized vertical field - sum of the polynomial terms in PolynomB.
+0083 
+0084 The kick is given by
+0085 
+0086            e L      L delta      L x
+0087 theta  = - --- B  + -------  -  -----  , 
+0088      x     p    y     rho           2
+0089             0                    rho
+0090 
+0091          e L
+0092 theta  = --- B
+0093      y    p   x
+0094            0
+0095 
+0096 Note: in the US convention the field is written as:
+0097 
+0098                         max_order+1
+0099                           ----
+0100                           \                       n-1
+0101        (B + iB  ) = B rho  &gt;   (ia  + b ) (x + iy)
+0102         y    x           /       n    n
+0103                           ----
+0104                           n=1
+0105 
+0106 Use different index notation 
+0107 
+0108                          max_order
+0109                            ----
+0110                            \                       n
+0111        (B + iB  )/ B rho  =  &gt;   (iA  + B ) (x + iy)
+0112         y    x             /       n    n
+0113                               ----
+0114                            n=0
+0115 
+0116 A,B: i=0 <span class="keyword">...</span><span class="comment"> i=max_order</span>
+0117 [0] - dipole, [1] - quadrupole, [2] - sextupole <span class="keyword">...</span>
+0118 units <span class="keyword">for</span> A,B[i] = 1/[m]^(i+1)
+0119 Coeficients are stored in the PolynomA, PolynomB field of the element
+0120 structure in MATLAB
+0121 
+0122 
+0123 ******************************************************************************/
+0124 {  int i;
+0125      double ImSum = A[max_order];
+0126     double ReSum = B[max_order];    
+0127     double x ,xpr, y, ypr, p_norm,dp_0, B2P;
+0128     double ReSumTemp;
+0129     double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);
+0130       
+0131     /* recursively calculate the local transvrese magnetic field
+0132        Bx = ReSum, By = ImSum
+0133     */
+0134     <span class="keyword">for</span>(i=max_order-1;i&gt;=0;i--)
+0135         {    ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
+0136             ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
+0137             ReSum = ReSumTemp;
+0138         }
+0139     
+0140 
+0141     /* calculate angles from momentas */    
+0142     p_norm = 1/(1+r[4]);
+0143     x   = r[0];
+0144     xpr = r[1]*p_norm;
+0145     y   = r[2];
+0146     ypr = r[3]*p_norm;
+0147 
+0148 
+0149     B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);
+0150     
+0151     dp_0 = r[4]; /* save a copy of the initial value of dp/p */
+0152 
+0153     r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
+0154 
+0155     /* recalculate momentums from angles after losing energy to radiation     */
+0156     p_norm = 1/(1+r[4]);
+0157     r[1] = xpr/p_norm;
+0158     r[3] = ypr/p_norm;
+0159 
+0160       
+0161     r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
+0162     r[3] +=  L*ImSum;
+0163     r[5] +=  L*irho*r[0]; /* pathlength */
+0164 
+0165 
+0166 }
+0167 
+0168 void thinkickM(double* orbit_in, double* A, double* B, double L, 
+0169                             double irho, int max_order, double *M66)
+0170 /* Calculate the symplectic (no radiation) transfer matrix of a 
+0171    thin multipole kick near the entrance point orbit_in
+0172    For elements with straight coordinate system irho = 0
+0173    For curved elements the B polynomial (PolynomB in MATLAB) 
+0174    MUST NOT include the guide field  By0 = irho * E0 /(c*e)
+0175 
+0176    M is a (*double) pointer to a preallocated 1-dimentional array 
+0177    of 36 elements of matrix M arranged column-by-column 
+0178 */
+0179 {  int m,n;
+0180    
+0181     double ReSumNTemp;
+0182    double ImSumN = max_order*A[max_order];
+0183    double ReSumN = max_order*B[max_order];    
+0184 
+0185    /* Recursively calculate the derivatives
+0186        ReSumN = (irho/B0)*Re(d(By + iBx)/dx)
+0187        ImSumN = (irho/B0)*Im(d(By + iBx)/dy)
+0188     */
+0189     <span class="keyword">for</span>(n=max_order-1;n&gt;0;n--)
+0190         {    ReSumNTemp = (ReSumN*orbit_in[0] - ImSumN*orbit_in[2]) + n*B[n];
+0191             ImSumN = ImSumN*orbit_in[0] +  ReSumN*orbit_in[2] + n*A[n];
+0192             ReSumN = ReSumNTemp;
+0193         }
+0194 
+0195     /* Initialize M66 to a 6-by-6 identity matrix */
+0196     <span class="keyword">for</span>(m=0;m&lt;36;m++)
+0197         M66[m]= 0;
+0198     /* Set diagonal elements to 1 */
+0199     <span class="keyword">for</span>(m=0;m&lt;6;m++)
+0200         M66[m*7] = 1;
+0201     
+0202     /* The relationship between indexes when a 6-by-6 matrix is 
+0203        represented in MATLAB as one-dimentional array containing
+0204        36 elements arranged column-by-column is
+0205        [i][j] &lt;---&gt; [i+6*j] 
+0206     */
+0207 
+0208     M66[1]   = -L*ReSumN;                /* [1][0] */
+0209     M66[13]  =  L*ImSumN;                /* [1][2] */
+0210     M66[3]   =  L*ImSumN;                /* [3][0] */
+0211     M66[15]  =  L*ReSumN;                /* [3][2] */
+0212     M66[25]  =  L*irho;                    /* [1][4] */
+0213     M66[1]  += -L*irho*irho;            /* [1][0] */
+0214     M66[5]   =  L*irho;                    /* [5][0] */
+0215 
+0216 }
+0217 
+0218 
+0219 
+0220 void thinkickB(double* orbit_in, double* A, double* B, double L, 
+0221                             double irho, int max_order, double E0, double *B66)
+0222 
+0223 /* Calculate Ohmi's diffusion matrix of a thin multipole  element 
+0224    For elements with straight coordinate system irho = 0
+0225    For curved elements the B polynomial (PolynomB in MATLAB) 
+0226    MUST NOT include the guide field  By0 = irho * E0 /(c*e)
+0227    The result is stored in a preallocated 1-dimentional array B66
+0228    of 36 elements of matrix B arranged column-by-column
+0229 */
+0230 
+0231 {    double BB,B2P,B3P;
+0232     int i;
+0233     double p_norm = 1/(1+orbit_in[4]);
+0234     double p_norm2 = SQR(p_norm);
+0235      double ImSum = A[max_order];
+0236     double ReSum = B[max_order];    
+0237     double ReSumTemp;
+0238     
+0239       /* recursively calculate the local transvrese magnetic field
+0240        ReSum = irho*By/B0
+0241        ImSum = irho*Bx/B0
+0242     */
+0243 
+0244     <span class="keyword">for</span>(i=max_order-1;i&gt;=0;i--)
+0245         {    ReSumTemp = ReSum*orbit_in[0] - ImSum*orbit_in[2] + B[i];
+0246             ImSum = ImSum*orbit_in[0] +  ReSum*orbit_in[2] + A[i];
+0247             ReSum = ReSumTemp;
+0248         }
+0249     
+0250     
+0251     /* calculate |B x n|^3 - the third power of the B field component 
+0252        orthogonal to the normalized velocity vector n
+0253     */
+0254     B2P = B2perp(ImSum, ReSum +irho, irho, orbit_in[0] , orbit_in[1]*p_norm , 
+0255                                 orbit_in[2] , orbit_in[3]*p_norm );
+0256     B3P = B2P*sqrt(B2P);
+0257 
+0258     BB = CU * CER * LAMBDABAR *  pow(E0/M0C2,5) * L * B3P * SQR(SQR(1+orbit_in[4]))*
+0259                 (1+orbit_in[0]*irho + (SQR(orbit_in[1])+SQR(orbit_in[3]))*p_norm2/2);
+0260 
+0261     
+0262     /* When a 6-by-6 matrix is represented in MATLAB as one-dimentional 
+0263        array containing 36 elements arranged column-by-column,
+0264        the relationship between indexes  is
+0265        [i][j] &lt;---&gt; [i+6*j] 
+0266 
+0267     */
+0268     
+0269     /* initialize B66 to 0 */
+0270     <span class="keyword">for</span>(i=0;i&lt;36;i++)
+0271         B66[i] = 0;
+0272     
+0273     /* Populate B66 */
+0274     B66[7]     = BB*SQR(orbit_in[1])*p_norm2;
+0275     B66[19]    = BB*orbit_in[1]*orbit_in[3]*p_norm2;
+0276     B66[9]     = BB*B66[19];
+0277     B66[21]    = BB*SQR(orbit_in[3])*p_norm2;
+0278     B66[10] = BB*orbit_in[1]*p_norm;
+0279     B66[25] = BB*B66[10];
+0280     B66[22] = BB*orbit_in[3]*p_norm;
+0281     B66[27] = BB* B66[22];
+0282     B66[28] = BB;
+0283 }
+0284 
+0285 
+0286 
+0287 
+0288 
+0289 void drift_propagateB(double *orb_in, double L,  double *B)
+0290 {    /* Propagate cumulative Ohmi's diffusion matrix B through a drift
+0291        B is a (*double) pointer to 1-dimentional array 
+0292        containing 36 elements of matrix elements arranged column-by-column
+0293        as in MATLAB representation 
+0294 
+0295        The relationship between indexes when a 6-by-6 matrix is 
+0296        represented in MATLAB as one-dimentional array containing
+0297        36 elements arranged column-by-column is
+0298        [i][j] &lt;---&gt; [i+6*j] 
+0299     */
+0300         
+0301     int m;
+0302         
+0303     double *DRIFTMAT = (double*)mxCalloc(36,sizeof(double));
+0304     <span class="keyword">for</span>(m=0;m&lt;36;m++)
+0305         DRIFTMAT[m] = 0;
+0306     /* Set diagonal elements to 1    */
+0307     <span class="keyword">for</span>(m=0;m&lt;6;m++)
+0308         DRIFTMAT[m*7] = 1;
+0309 
+0310     DRIFTMAT[6]  =  L/(1+orb_in[4]);
+0311     DRIFTMAT[20] =  DRIFTMAT[6];
+0312     DRIFTMAT[24] = -L*orb_in[1]/SQR(1+orb_in[4]);
+0313     DRIFTMAT[26] = -L*orb_in[3]/SQR(1+orb_in[4]);
+0314     DRIFTMAT[11] =  L*orb_in[1]/SQR(1+orb_in[4]);
+0315     DRIFTMAT[23] =  L*orb_in[3]/SQR(1+orb_in[4]);    
+0316     DRIFTMAT[29] = -L*(SQR(orb_in[1])+SQR(orb_in[3]))/((1+orb_in[4])*SQR(1+orb_in[4]));
+0317 
+0318     ATsandwichmmt(DRIFTMAT,B);
+0319     mxFree(DRIFTMAT);
+0320     
+0321 }
+0322 
+0323 
+0324 void edge_propagateB(double inv_rho, double angle, double *B)
+0325 
+0326 {    /* Propagate  Ohmi's diffusion matrix B
+0327        through a focusing edge  B -&gt; E*B*E'
+0328         where  E is a linear map of an edge 
+0329     */
+0330     int m;
+0331     double psi = inv_rho*tan(angle);
+0332     
+0333     <span class="keyword">for</span>(m=0;m&lt;6;m++)
+0334         {    B[1+6*m] += psi*B[6*m];
+0335             B[3+6*m] -= psi*B[2+6*m];
+0336         }
+0337     <span class="keyword">for</span>(m=0;m&lt;6;m++)
+0338         {    B[m+6*1] += psi*B[m+6*0];
+0339             B[m+6*3] -= psi*B[m+6*2];
+0340         }
+0341 }
+0342 
+0343 void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
+0344                     double *pt1, double* pt2,double *PR1, double *PR2,
+0345                     double entrance_angle,     double exit_angle,    
+0346                     int max_order, int num_int_steps,
+0347                     double E0, double *BDIFF)
+0348 
+0349 {    /* Find Ohmi's diffusion matrix BDIFF of a thick multipole
+0350        BDIFF - cumulative Ohmi's diffusion is initialized to 0
+0351        BDIFF is preallocated 1 dimensional array to store 6-by-6 matrix 
+0352        columnwise
+0353     */
+0354     
+0355     int m;    
+0356     double  *MKICK, *BKICK;
+0357 
+0358     /* 4-th order symplectic integrator constants */
+0359     double SL, L1, L2, K1, K2;
+0360     SL = le/num_int_steps;
+0361     L1 = SL*DRIFT1;
+0362     L2 = SL*DRIFT2;
+0363     K1 = SL*KICK1;
+0364     K2 = SL*KICK2;
+0365     
+0366     
+0367     /* Allocate memory <span class="keyword">for</span> thin kick matrix MKICK
+0368        and a diffusion matrix BKICK
+0369     */
+0370      MKICK = (double*)mxCalloc(36,sizeof(double));
+0371     BKICK = (double*)mxCalloc(36,sizeof(double));
+0372     <span class="keyword">for</span>(m=0; m &lt; 6; m++)
+0373         {    MKICK[m] = 0;
+0374             BKICK[m] = 0;
+0375         }
+0376     
+0377     /* Transform orbit to a local coordinate system of an element */
+0378     
+0379     ATaddvv(orbit_in,pt1);    
+0380     ATmultmv(orbit_in,PR1);    
+0381 
+0382     /* This coordinate transformation does not affect 
+0383        the cumulative diffusion matrix BDIFF
+0384        E*BDIFF*E' :   BDIFF stays zero    
+0385 
+0386     */    
+0387     smpledge(orbit_in, irho, entrance_angle);    /* change in the input orbit 
+0388                                                    from edge focusing
+0389                                                 */
+0390     
+0391     edge_propagateB(irho,entrance_angle,BDIFF);        /* propagate the initial 
+0392                                                        MRAD and BDIFF through 
+0393                                                        the entrance edge
+0394                                                     */
+0395 
+0396     /* Propagate orbit_in and BDIFF through a 4-th orderintegrator */
+0397 
+0398     <span class="keyword">for</span>(m=0; m &lt; num_int_steps; m++) /* Loop over slices    */            
+0399         {        drift_propagateB(orbit_in,L1, BDIFF);
+0400                 ATdrift6(orbit_in,L1);
+0401                 
+0402                 thinkickM(orbit_in, A,B, K1, irho, max_order, MKICK);
+0403                 thinkickB(orbit_in, A,B, K1, irho, max_order, E0, BKICK);
+0404                 ATsandwichmmt(MKICK,BDIFF);
+0405                 ATaddmm(BKICK,BDIFF);
+0406                 thinkickrad(orbit_in, A, B, K1, irho, E0, max_order);
+0407         
+0408                 drift_propagateB(orbit_in,L2, BDIFF);
+0409                 ATdrift6(orbit_in,L2);
+0410                 
+0411                 thinkickM(orbit_in, A,B, K2, irho, max_order, MKICK);
+0412                 thinkickB(orbit_in, A,B, K2, irho, max_order, E0, BKICK);
+0413                 ATsandwichmmt(MKICK,BDIFF);
+0414                 ATaddmm(BKICK,BDIFF);
+0415                 thinkickrad(orbit_in, A, B, K2, irho, E0, max_order);
+0416     
+0417                 drift_propagateB(orbit_in,L2, BDIFF);
+0418                 ATdrift6(orbit_in,L2);
+0419                 
+0420                 thinkickM(orbit_in, A,B, K1, irho, max_order, MKICK);
+0421                 thinkickB(orbit_in, A,B, K1, irho, max_order, E0, BKICK);
+0422                 ATsandwichmmt(MKICK,BDIFF);
+0423                 ATaddmm(BKICK,BDIFF);
+0424                 thinkickrad(orbit_in, A, B,  K1, irho, E0, max_order);
+0425 
+0426                 drift_propagateB(orbit_in,L1, BDIFF);
+0427                 ATdrift6(orbit_in,L1);
+0428         }  
+0429         smpledge(orbit_in, irho, exit_angle);
+0430         edge_propagateB(irho,exit_angle,BDIFF);
+0431                 
+0432         ATsandwichmmt(PR2,BDIFF);
+0433                                                 
+0434         mxFree(MKICK);
+0435         mxFree(BKICK);
+0436 }
+0437 
+0438 
+0439 void mexFunction(    int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+0440 /* The calling syntax of this mex-<span class="keyword">function</span> from MATLAB is
+0441    FindMPoleRadDiffMatrix(ELEMENT, ORBIT)
+0442    ELEMENT is the element structure with field names consistent with 
+0443            a multipole transverse field model.
+0444    ORBIT is a 6-by-1 vector of the closed orbit at the entrance (calculated elsewhere)
+0445 */
+0446 {    int m,n;
+0447     double le, ba, *A, *B;  
+0448     double irho;
+0449     const mxArray * globvalptr;
+0450     mxArray *E0ptr;
+0451     double E0;        /* Design energy [eV] to be obtained from MATLAB <span class="keyword">global</span> workspace */
+0452     int max_order, num_int_steps;
+0453     double entrance_angle, exit_angle ;
+0454     double *BDIFF;
+0455     mxArray  *mxtemp;
+0456 
+0457     double *orb, *orb0;
+0458     double *pt1, *pt2, *PR1, *PR2;
+0459 
+0460 
+0461     m = mxGetM(prhs[1]);
+0462     n = mxGetN(prhs[1]);
+0463     <span class="keyword">if</span>(!(m==6 &amp;&amp; n==1))
+0464         mexErrMsgTxt(&quot;Second argument must be a 6-by-1 column vector&quot;);
+0465     
+0466     /* ALLOCATE memory <span class="keyword">for</span> the output array */
+0467     plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
+0468     BDIFF = mxGetPr(plhs[0]);
+0469 
+0470 
+0471     /* If the ELEMENT sructure does not have fields PolynomA and PolynomB
+0472        <span class="keyword">return</span> zero matrix and  exit
+0473     */
+0474     <span class="keyword">if</span>(mxGetField(prhs[0],0,&quot;PolynomA&quot;) == NULL ||  mxGetField(prhs[0],0,&quot;PolynomB&quot;) == NULL)
+0475         <span class="keyword">return</span>;
+0476     
+0477 
+0478     /* retrieve the value of design Energy [GeV]
+0479        contained in MATLAB <span class="keyword">global</span> variable GLOBVAL.
+0480        GLOBVAL is a MATLAB structure
+0481        GLOBVAL.E0 contains the design energy of the ring [eV]
+0482     */
+0483 
+0484     globvalptr=mexGetArrayPtr(&quot;GLOBVAL&quot;,&quot;<span class="keyword">global</span>&quot;);
+0485     <span class="keyword">if</span>(globvalptr != NULL)
+0486         {    E0ptr = mxGetField(globvalptr,0,&quot;E0&quot;);
+0487             <span class="keyword">if</span>(E0ptr !=NULL)
+0488                 E0 = mxGetScalar(E0ptr);
+0489             <span class="keyword">else</span>
+0490                 mexErrMsgTxt(&quot;Global variable GLOBVAL does not have a field <span class="string">'E0'</span>&quot;);
+0491         }
+0492     <span class="keyword">else</span>
+0493         mexErrMsgTxt(&quot;Global variable GLOBVAL does not exist&quot;);
+0494 
+0495     orb0 = mxGetPr(prhs[1]);
+0496     /* make local copy of the input closed orbit vector */
+0497     orb = (double*)mxCalloc(6,sizeof(double));
+0498     <span class="keyword">for</span>(m=0;m&lt;6;m++)
+0499         orb[m] = orb0[m];
+0500     
+0501     /* Retrieve element information */
+0502     
+0503     le = mxGetScalar(mxGetField(prhs[0],0,&quot;Length&quot;));
+0504     
+0505     /* If ELEMENT has a zero length, <span class="keyword">return</span> zeros matrix end exit */
+0506     <span class="keyword">if</span>(le == 0)
+0507         <span class="keyword">return</span>;
+0508     
+0509     A = mxGetPr(mxGetField(prhs[0],0,&quot;PolynomA&quot;));
+0510     B = mxGetPr(mxGetField(prhs[0],0,&quot;PolynomB&quot;));
+0511 
+0512     
+0513 
+0514         
+0515     mxtemp = mxGetField(prhs[0],0,&quot;NumIntSteps&quot;);
+0516    <span class="keyword">if</span>(mxtemp != NULL)
+0517         num_int_steps = (int)mxGetScalar(mxtemp);
+0518     <span class="keyword">else</span>
+0519         mexErrMsgTxt(&quot;Field <span class="string">'NumIntSteps'</span> not found in the ELEMENT structure&quot;);
+0520 
+0521     mxtemp = mxGetField(prhs[0],0,&quot;MaxOrder&quot;);
+0522    <span class="keyword">if</span>(mxtemp != NULL)
+0523         max_order = (int)mxGetScalar(mxtemp);
+0524     <span class="keyword">else</span>
+0525         mexErrMsgTxt(&quot;Field <span class="string">'MaxOrder'</span> not found in the ELEMENT structure&quot;);
+0526 
+0527 
+0528     mxtemp = mxGetField(prhs[0],0,&quot;BendingAngle&quot;);
+0529    <span class="keyword">if</span>(mxtemp != NULL)
+0530         {    ba = mxGetScalar(mxtemp);
+0531             irho = ba/le;
+0532         }
+0533     <span class="keyword">else</span>
+0534         {    ba = 0;
+0535             irho = 0;
+0536         }
+0537         
+0538     mxtemp = mxGetField(prhs[0],0,&quot;EntranceAngle&quot;);
+0539     <span class="keyword">if</span>(mxtemp != NULL)
+0540         entrance_angle = mxGetScalar(mxtemp);
+0541     <span class="keyword">else</span>
+0542             entrance_angle =0;
+0543 
+0544     mxtemp = mxGetField(prhs[0],0,&quot;ExitAngle&quot;);
+0545     <span class="keyword">if</span>(mxtemp != NULL)
+0546         exit_angle = mxGetScalar(mxtemp);
+0547     <span class="keyword">else</span>
+0548             exit_angle =0;
+0549 
+0550     pt1 = mxGetPr(mxGetField(prhs[0],0,&quot;T1&quot;));
+0551     pt2 = mxGetPr(mxGetField(prhs[0],0,&quot;T2&quot;));
+0552     PR1 = mxGetPr(mxGetField(prhs[0],0,&quot;R1&quot;));
+0553     PR2 = mxGetPr(mxGetField(prhs[0],0,&quot;R2&quot;));
+0554     
+0555 
+0556     FindElemB(orb, le, irho, A, B, 
+0557                     pt1, pt2, PR1, PR2,
+0558                     entrance_angle,     exit_angle, 
+0559                     max_order, num_int_steps, E0, BDIFF);
+0560 }
+0561 
+0562</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of VacLifetimeResidualGass</title>
+  <meta name="keywords" content="VacLifetimeResidualGass">
+  <meta name="description" content="Coloumb scattering and residual gas Bremsstrahlung Cross sections are">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">VacuumLifetime</a> &gt; VacLifetimeResidualGass.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/VacuumLifetime&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>VacLifetimeResidualGass
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Coloumb scattering and residual gas Bremsstrahlung Cross sections are</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [tvac,sigmacoulomb,sigmabremsstrahlung]=VacLifetimeResidualGass(ring,DEE,Zperc,P,b) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Coloumb scattering and residual gas Bremsstrahlung Cross sections are
+ computed to evaluate the lifetime contribution of the vacuum system
+ specified by Zperc (vector of percentages, index=atomic Number),and P[nTor] the
+ pressure profile along the ring
+ b is the dimension of the vacuum chamber along the lattice (x,y).
+ DEE is the Energy acceptance of the ring (longitudinal aperture)
+
+ length(b)=length(DEE)=length(P)=length(ring)
+
+ Assumed temperature of 293 K and interacion with diatomic gas
+ 
+ tvac returned in hours
+ 
+ created 20-5-2013</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [tvac,sigmacoulomb,sigmabremsstrahlung]=</a><span class="keyword">...</span>
+0002     VacLifetimeResidualGass(ring,DEE,Zperc,P,b)
+0003 <span class="comment">% Coloumb scattering and residual gas Bremsstrahlung Cross sections are</span>
+0004 <span class="comment">% computed to evaluate the lifetime contribution of the vacuum system</span>
+0005 <span class="comment">% specified by Zperc (vector of percentages, index=atomic Number),and P[nTor] the</span>
+0006 <span class="comment">% pressure profile along the ring</span>
+0007 <span class="comment">% b is the dimension of the vacuum chamber along the lattice (x,y).</span>
+0008 <span class="comment">% DEE is the Energy acceptance of the ring (longitudinal aperture)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% length(b)=length(DEE)=length(P)=length(ring)</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Assumed temperature of 293 K and interacion with diatomic gas</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% tvac returned in hours</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% created 20-5-2013</span>
+0017 
+0018 r0=2.8179403267e-15;<span class="comment">%[m] classical electron radius</span>
+0019 c=299792458;<span class="comment">% m/s speed of ligth</span>
+0020 me=0.510998910e6;<span class="comment">% eV/c^2 electron mass</span>
+0021 alpha=1/137.035999084; <span class="comment">% fine structure constant</span>
+0022 kboltz=1.3806488e-23 ; <span class="comment">%m^2 kg s^-2 K^-1 Boltzman constant</span>
+0023 T=293;<span class="comment">%K</span>
+0024 
+0025 <span class="comment">% particle energy</span>
+0026 E0=ring{1}.Energy;<span class="comment">% eV/c electron beam energy</span>
+0027 
+0028 l=atlinopt(ring,0,1:length(ring));
+0029 betx=arrayfun(@(x)x.beta(1),l)';
+0030 bety=arrayfun(@(x)x.beta(2),l)';
+0031 
+0032 Z=1:length(Zperc);
+0033 
+0034 sgcv=max(bety).*bety./b(:,2).^2;
+0035 
+0036 sgch=max(betx).*betx./b(:,1).^2;
+0037 
+0038 <span class="comment">% test parameters, with this it should return 0.13 barn</span>
+0039 <span class="comment">% sgch=0;</span>
+0040 <span class="comment">% sgcv=30*15/0.03^2;</span>
+0041 <span class="comment">% E0=5e9;</span>
+0042 
+0043 sgc=sgch+sgcv; <span class="comment">% this is CORRECT ????</span>
+0044 
+0045 ZavC=sum(Z.^2.*Zperc);<span class="comment">% this is CORRECT ????</span>
+0046 
+0047 sigmacoulombLocal=2*pi.*r0.^2.*ZavC.*sgc.*(me/E0).^2;<span class="comment">% sum contribution for various atoms</span>
+0048 
+0049 sigmacoulomb=mean(sigmacoulombLocal);
+0050 
+0051 sigmacoulomb=sigmacoulomb*10^4*10^24;<span class="comment">% cross section from m^2 to barn, 1 barn=10^-24 cm^2</span>
+0052 
+0053 
+0054 <span class="comment">% DEE is along the lattice. average of sigma along the lattice</span>
+0055 Zav=sum(Z.*(Z+1).*log(183./Z.^(1/3)).*Zperc);
+0056 
+0057 sigmabremsstrahlungLocal=16*alpha*r0^2/3.*Zav.*(log(1./DEE)-5/8);
+0058 
+0059 sigmabremsstrahlung=mean(sigmabremsstrahlungLocal);
+0060 
+0061 sigmabremsstrahlung=sigmabremsstrahlung*10^4*10^24;<span class="comment">% cross section from m^2 to barn, 1 barn=10^-24 cm^2</span>
+0062 size(sigmabremsstrahlungLocal)
+0063 size(sigmacoulombLocal)
+0064 
+0065 sigma=sigmabremsstrahlungLocal*10^4*10^24+sigmacoulombLocal*10^4*10^24; <span class="comment">%in barn</span>
+0066 
+0067 <span class="comment">% n_mol=P./kboltz/T;%[m^-3] molar density of residual gas along the ring</span>
+0068 
+0069 invtvac=P.*sigma./(0.474*T);
+0070 
+0071 tvac=length(sigma)/sum(invtvac);<span class="comment">% h</span>
+0072 
+0073</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

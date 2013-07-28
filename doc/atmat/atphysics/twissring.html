@@ -1,0 +1,276 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of twissring</title>
+  <meta name="keywords" content="twissring">
+  <meta name="description" content="TWISSRING calculates linear optics functions for an UNCOUPLED ring">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; twissring.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>twissring
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>TWISSRING calculates linear optics functions for an UNCOUPLED ring</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [TD, varargout] = twissring(RING,DP,varargin); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">TWISSRING calculates linear optics functions for an UNCOUPLED ring
+ 
+ [TwissData, tune]  = TWISSRING(LATTICE,DP) calculates twiss parameters
+    and closed orbit coordinates at the RING entrance assuming
+    constant energy deviation DP.
+
+ [TwissData, tune]  = TWISSRING(LATTICE,DP,REFPTS) calculates Twiss parameters
+    and closed orbit coordinates at specified reference points REFPTS.
+
+    Note: REFPTS is an array of increasing indexes that  
+    select elements from range 1 to length(LATTICE)+1. 
+    See further explanation of REFPTS in the 'help' for FINDSPOS 
+
+ [TwissData, tune, chrom]  = TWISSRING(...,'chrom', DDP) also calculates
+    linear dispersion and chromaticity. Dispersion is returned as one 
+    of the fields in TwissData.
+    !!! Last argument DDP is a momentum deviation on top
+    of DP (the second argument) used to calculate and normalize
+    dispersion and chromaticity. If not supplied
+    the default value of 1e-8 is used.
+
+    Note: To resolve the integer part of the tune
+    and the uncertainty of acos(trace(M)/2) it is necessary to
+    supply sufficient number of REFPTS properly spaced in betatron phase.
+
+ TwisData is a 1-by-REFPTS (1-by-1) structure array with fields
+       (Some are the same as in the output of LINOPT)
+       ElemIndex   - integer (element number) in the RING 
+       SPos        - longitudinal position [m]
+       ClosedOrbit - closed orbit column vector with 
+                     components x, px, y, py (momentums, NOT angles)                        
+       Dispersion  - dispersion orbit position 4-by-1 vector with 
+                     components [eta_x, eta_prime_x, eta_y, eta_prime_y]'
+                     calculated with respect to the closed orbit with 
+                     momentum deviation DP
+       M44         - 4x4 transfer matrix M from the beginning of RING
+                     to the entrance of the element for specified DP [2]
+       beta        - [betax, betay] horizontal and vertical Twiss parameter beta
+       alpha       - [alphax, alphay] horizontal and vertical Twiss parameter alpha
+       mu          - [mux, muy] horizontal and vertical betatron phase
+                     !!! NOT 2*PI normalized
+ 
+ Use MATLAB function CAT to get the data from fields of TwissData into MATLAB arrays.
+     Example: 
+     &gt;&gt; TD = twissring(THERING,0,1:length(THERING));
+     &gt;&gt; BETA = cat(1,TD.beta);
+     &gt;&gt; S = cat(1,TD.SPos);
+     &gt;&gt; plot(S,BETA(:,1))
+  
+ See also <a href="twissline.html" class="code" title="function [TD, varargout] = twissline(LINE,DP,TWISSDATAIN,varargin);">TWISSLINE</a>, <a href="linopt.html" class="code" title="function [LinData, varargout] = linopt(RING,DP,varargin);">LINOPT</a>, <a href="tunechrom.html" class="code" title="function [tune, varargout] = tunechrom(RING,DP,varargin)">TUNECHROM</a>.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findm44.html" class="code" title="function [M44, varargout]  = findm44(LATTICE,DP,varargin)">findm44</a>	FINDM44 numerically finds the 4x4 transfer matrix of an accelerator lattice</li><li><a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>	FINDSPOS returns longitudinal positions of accelerator lattice elements.</li><li><a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin);">twissring</a>	TWISSRING calculates linear optics functions for an UNCOUPLED ring</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="plotbeta.html" class="code" title="function varargout = plotbeta(varargin)">plotbeta</a>	PLOTBETA plots UNCOUPLED! beta-functions</li><li><a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin);">twissring</a>	TWISSRING calculates linear optics functions for an UNCOUPLED ring</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function UP = BetatronPhaseUnwrap(P)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [TD, varargout] = twissring(RING,DP,varargin);</a>
+0002 <span class="comment">%TWISSRING calculates linear optics functions for an UNCOUPLED ring</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% [TwissData, tune]  = TWISSRING(LATTICE,DP) calculates twiss parameters</span>
+0005 <span class="comment">%    and closed orbit coordinates at the RING entrance assuming</span>
+0006 <span class="comment">%    constant energy deviation DP.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% [TwissData, tune]  = TWISSRING(LATTICE,DP,REFPTS) calculates Twiss parameters</span>
+0009 <span class="comment">%    and closed orbit coordinates at specified reference points REFPTS.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%    Note: REFPTS is an array of increasing indexes that</span>
+0012 <span class="comment">%    select elements from range 1 to length(LATTICE)+1.</span>
+0013 <span class="comment">%    See further explanation of REFPTS in the 'help' for FINDSPOS</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% [TwissData, tune, chrom]  = TWISSRING(...,'chrom', DDP) also calculates</span>
+0016 <span class="comment">%    linear dispersion and chromaticity. Dispersion is returned as one</span>
+0017 <span class="comment">%    of the fields in TwissData.</span>
+0018 <span class="comment">%    !!! Last argument DDP is a momentum deviation on top</span>
+0019 <span class="comment">%    of DP (the second argument) used to calculate and normalize</span>
+0020 <span class="comment">%    dispersion and chromaticity. If not supplied</span>
+0021 <span class="comment">%    the default value of 1e-8 is used.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">%    Note: To resolve the integer part of the tune</span>
+0024 <span class="comment">%    and the uncertainty of acos(trace(M)/2) it is necessary to</span>
+0025 <span class="comment">%    supply sufficient number of REFPTS properly spaced in betatron phase.</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">% TwisData is a 1-by-REFPTS (1-by-1) structure array with fields</span>
+0028 <span class="comment">%       (Some are the same as in the output of LINOPT)</span>
+0029 <span class="comment">%       ElemIndex   - integer (element number) in the RING</span>
+0030 <span class="comment">%       SPos        - longitudinal position [m]</span>
+0031 <span class="comment">%       ClosedOrbit - closed orbit column vector with</span>
+0032 <span class="comment">%                     components x, px, y, py (momentums, NOT angles)</span>
+0033 <span class="comment">%       Dispersion  - dispersion orbit position 4-by-1 vector with</span>
+0034 <span class="comment">%                     components [eta_x, eta_prime_x, eta_y, eta_prime_y]'</span>
+0035 <span class="comment">%                     calculated with respect to the closed orbit with</span>
+0036 <span class="comment">%                     momentum deviation DP</span>
+0037 <span class="comment">%       M44         - 4x4 transfer matrix M from the beginning of RING</span>
+0038 <span class="comment">%                     to the entrance of the element for specified DP [2]</span>
+0039 <span class="comment">%       beta        - [betax, betay] horizontal and vertical Twiss parameter beta</span>
+0040 <span class="comment">%       alpha       - [alphax, alphay] horizontal and vertical Twiss parameter alpha</span>
+0041 <span class="comment">%       mu          - [mux, muy] horizontal and vertical betatron phase</span>
+0042 <span class="comment">%                     !!! NOT 2*PI normalized</span>
+0043 <span class="comment">%</span>
+0044 <span class="comment">% Use MATLAB function CAT to get the data from fields of TwissData into MATLAB arrays.</span>
+0045 <span class="comment">%     Example:</span>
+0046 <span class="comment">%     &gt;&gt; TD = twissring(THERING,0,1:length(THERING));</span>
+0047 <span class="comment">%     &gt;&gt; BETA = cat(1,TD.beta);</span>
+0048 <span class="comment">%     &gt;&gt; S = cat(1,TD.SPos);</span>
+0049 <span class="comment">%     &gt;&gt; plot(S,BETA(:,1))</span>
+0050 <span class="comment">%</span>
+0051 <span class="comment">% See also TWISSLINE, LINOPT, TUNECHROM.</span>
+0052 
+0053 NE=length(RING);
+0054 DDP_default = 1e-8;
+0055 <span class="comment">% Process input arguments</span>
+0056 <span class="keyword">switch</span> nargin
+0057 <span class="keyword">case</span> 2
+0058     REFPTS=NE+1;
+0059     CHROMFLAG=0;
+0060 <span class="keyword">case</span> 3 
+0061     <span class="keyword">if</span> isnumeric(varargin{1})
+0062         REFPTS = varargin{1};
+0063         CHROMFLAG = 0;
+0064     <span class="keyword">elseif</span> ischar(varargin{1}) &amp; strncmp(lower(varargin{1}),<span class="string">'chrom'</span>,5)
+0065         CHROMFLAG = 1;
+0066         REFPTS = NE+1;
+0067         DDP = DDP_default;
+0068     <span class="keyword">else</span>
+0069         error(<span class="string">'Third argument must be a numeric array or string'</span>);
+0070     <span class="keyword">end</span>
+0071 <span class="keyword">case</span> 4
+0072     <span class="keyword">if</span> isnumeric(varargin{1})
+0073         REFPTS = varargin{1};
+0074         <span class="keyword">if</span> ischar(varargin{2}) &amp; strncmp(lower(varargin{2}),<span class="string">'chrom'</span>,5)
+0075             CHROMFLAG = 1;
+0076             DDP = DDP_default;
+0077         <span class="keyword">else</span>
+0078             error(<span class="string">'Fourth argument - wrong type'</span>);
+0079         <span class="keyword">end</span>
+0080     <span class="keyword">elseif</span> ischar(varargin{1}) &amp; strncmp(lower(varargin{1}),<span class="string">'chrom'</span>,5)
+0081         CHROMFLAG = 1;
+0082         REFPTS = NE+1;
+0083         <span class="keyword">if</span> isnumeric(varargin{2})
+0084             DDP = varargin{2};
+0085         <span class="keyword">else</span>
+0086             error(<span class="string">'Fourth argument - wrong type'</span>);
+0087         <span class="keyword">end</span>
+0088     <span class="keyword">end</span>
+0089 <span class="keyword">case</span> 5
+0090     <span class="keyword">if</span> isnumeric(varargin{1})
+0091         REFPTS = varargin{1};
+0092     <span class="keyword">else</span>
+0093         error(<span class="string">'Third argument - wrong type'</span>);
+0094     <span class="keyword">end</span>
+0095     <span class="keyword">if</span> ischar(varargin{2}) &amp; strncmp(lower(varargin{2}),<span class="string">'chrom'</span>,5)
+0096          CHROMFLAG = 1;
+0097     <span class="keyword">else</span>
+0098          error(<span class="string">'Fourth argument - wrong type'</span>);
+0099     <span class="keyword">end</span>
+0100     <span class="keyword">if</span> isnumeric(varargin{3})
+0101         DDP = varargin{3};
+0102     <span class="keyword">else</span>
+0103         error(<span class="string">'Fifth argument - wrong type'</span>);
+0104     <span class="keyword">end</span>
+0105 <span class="keyword">otherwise</span>
+0106     error(<span class="string">'Wrong number of arguments'</span>);
+0107 <span class="keyword">end</span>
+0108 
+0109 <span class="comment">% Include the endpoint if it is not already in REFPTS</span>
+0110 <span class="keyword">if</span> REFPTS(end)==NE+1
+0111     [M44, MS, orb] = <a href="findm44.html" class="code" title="function [M44, varargout]  = findm44(LATTICE,DP,varargin)">findm44</a>(RING,DP,REFPTS);
+0112 <span class="keyword">else</span>
+0113     [M44, MS, orb] = <a href="findm44.html" class="code" title="function [M44, varargout]  = findm44(LATTICE,DP,varargin)">findm44</a>(RING,DP,[REFPTS,NE+1]);
+0114 <span class="keyword">end</span>
+0115 
+0116 
+0117 
+0118 
+0119 cos_mu_x = (M44(1,1)+M44(2,2))/2;
+0120 cos_mu_y = (M44(3,3)+M44(4,4))/2;
+0121 
+0122 sin_mu_x = sign(M44(1,2))*sqrt(-M44(1,2)*M44(2,1)-(M44(1,1)-M44(2,2))^2/4);
+0123 sin_mu_y = sign(M44(3,4))*sqrt(-M44(3,4)*M44(4,3)-(M44(3,3)-M44(4,4))^2/4);
+0124 
+0125 
+0126 ax = (M44(1,1)-M44(2,2))/2/sin_mu_x;
+0127 ay = (M44(3,3)-M44(4,4))/2/sin_mu_y;
+0128 
+0129 bx = M44(1,2)/sin_mu_x;
+0130 by = M44(3,4)/sin_mu_y;
+0131 
+0132 BX = squeeze((MS(1,1,:)*bx-MS(1,2,:)*ax).^2 + MS(1,2,:).^2)/bx;
+0133 BY = squeeze((MS(3,3,:)*by-MS(3,4,:)*ay).^2 + MS(3,4,:).^2)/by;
+0134 
+0135 
+0136 AX = -squeeze((MS(1,1,:)*bx-MS(1,2,:)*ax).*(MS(2,1,:)*bx-MS(2,2,:)*ax) + MS(1,2,:).*MS(2,2,:))/bx;
+0137 AY = -squeeze((MS(3,3,:)*by-MS(3,4,:)*ay).*(MS(4,3,:)*by-MS(4,4,:)*ay) + MS(3,4,:).*MS(4,4,:))/by;
+0138 
+0139 MX = atan(squeeze( MS(1,2,:)./(MS(1,1,:)*bx-MS(1,2,:)*ax)));
+0140 MY = atan(squeeze(MS(3,4,:)./(MS(3,3,:)*by-MS(3,4,:)*ay)));
+0141 
+0142 MX = <a href="#_sub1" class="code" title="subfunction UP = BetatronPhaseUnwrap(P)">BetatronPhaseUnwrap</a>(MX);
+0143 MY = <a href="#_sub1" class="code" title="subfunction UP = BetatronPhaseUnwrap(P)">BetatronPhaseUnwrap</a>(MY);
+0144 
+0145 tune = [MX(end),MY(end)]/2/pi;
+0146 
+0147 NR = length(REFPTS);
+0148 <span class="comment">% Build TD only for points originally referenced in REFPTS</span>
+0149 TD = struct(<span class="string">'ElemIndex'</span>,num2cell(REFPTS),<span class="keyword">...</span>
+0150     <span class="string">'SPos'</span>,num2cell(<a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>(RING,REFPTS)),<span class="keyword">...</span>
+0151     <span class="string">'ClosedOrbit'</span>,num2cell(orb(:,1:NR),1),<span class="keyword">...</span>
+0152     <span class="string">'M44'</span>, squeeze(num2cell(MS(:,:,1:NR),[1 2]))',<span class="keyword">...</span>
+0153     <span class="string">'beta'</span>, num2cell([BX(1:NR),BY(1:NR)],2)',<span class="keyword">...</span>
+0154     <span class="string">'alpha'</span>, num2cell([AX(1:NR),AY(1:NR)],2)',<span class="keyword">...</span>
+0155     <span class="string">'mu'</span>, num2cell([MX(1:NR),MY(1:NR)],2)');
+0156 
+0157 
+0158 <span class="keyword">if</span> CHROMFLAG
+0159     [TD_DDP tune_DDP] = <a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin);">twissring</a>(RING,DP+DDP,REFPTS);
+0160     DORBIT = reshape(cat(1,TD_DDP.ClosedOrbit),4,[]);
+0161     DISPERSION = num2cell((DORBIT-orb(:,1:NR))/DDP,1);
+0162     [TD.Dispersion] = deal( DISPERSION{:});
+0163 <span class="keyword">end</span>
+0164     
+0165 <span class="keyword">if</span> nargout&gt;1
+0166     varargout{1}=tune;
+0167 <span class="keyword">end</span>
+0168 <span class="keyword">if</span> nargout==3 &amp; CHROMFLAG
+0169     varargout{2} = (tune_DDP-tune)/DDP;
+0170 <span class="keyword">end</span>
+0171 
+0172 <a name="_sub1" href="#_subfunctions" class="code">function UP = BetatronPhaseUnwrap(P)</a>
+0173 <span class="comment">% unwrap negative jumps in betatron</span>
+0174     DP = diff(P);
+0175     JUMPS = [0; diff(P)] &lt; 0;
+0176     UP = P+cumsum(JUMPS)*pi;
+0177 
+0178</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

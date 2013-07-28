@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of undofielderr</title>
+  <meta name="keywords" content="undofielderr">
+  <meta name="description" content="UNDOMISALIGN will 'zero' all field errors in THERING">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">misalignment</a> &gt; undofielderr.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/misalignment&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>undofielderr
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>UNDOMISALIGN will 'zero' all field errors in THERING</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = undofielderr(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> UNDOMISALIGN will 'zero' all field errors in THERING</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="testfielderrors.html" class="code" title="">testfielderrors</a>	</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = undofielderr(varargin)</a>
+0002 <span class="comment">% UNDOMISALIGN will 'zero' all field errors in THERING</span>
+0003 
+0004 <span class="keyword">global</span> THERING
+0005 
+0006 <span class="keyword">if</span> ~exist(<span class="string">'THERING'</span>,<span class="string">'var'</span>)
+0007     disp(<span class="string">'Please load the model first'</span>);
+0008     <span class="keyword">return</span>
+0009 <span class="keyword">end</span>
+0010 
+0011 [reg prop] = parseparams(varargin);
+0012 verbatim = 1;
+0013 <span class="keyword">for</span> i=1:length(prop)
+0014     <span class="keyword">if</span> strcmpi(prop,<span class="string">'quiet'</span>)
+0015         verbatim = 0;
+0016     <span class="keyword">end</span>
+0017 <span class="keyword">end</span>
+0018 
+0019 ferr = getappdata(0,<span class="string">'FielderrData'</span>);
+0020 
+0021 <span class="keyword">if</span> isempty(ferr)
+0022     disp(<span class="string">'No field error data found. See SETFIELDERR for more info'</span>);
+0023     <span class="keyword">return</span>
+0024 <span class="keyword">end</span>
+0025 
+0026 
+0027 <span class="keyword">if</span> isfield(ferr,<span class="string">'data'</span>) &amp; ferr.currseed &gt; 0
+0028     <span class="comment">% Indices of elements where misalignemnt data may need to be applied.</span>
+0029     indices = find(cell2mat({ferr.data.used}));
+0030     <span class="keyword">for</span> i=indices
+0031         THERING{i}.PolynomA = THERING{i}.PolynomA - ferr.data(i).valA(:,ferr.currseed)';
+0032         THERING{i}.PolynomB = THERING{i}.PolynomB - ferr.data(i).valB(:,ferr.currseed)';
+0033         <span class="keyword">if</span> isfield(THERING{i},<span class="string">'K'</span>)
+0034             THERING{i}.K = THERING{i}.PolynomB(2);
+0035         <span class="keyword">end</span>
+0036     <span class="keyword">end</span>
+0037 <span class="keyword">end</span>
+0038 
+0039 <span class="keyword">if</span> verbatim
+0040     disp(<span class="string">'Field errors have been reset. Please still check.'</span>);
+0041 <span class="keyword">end</span>
+0042</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

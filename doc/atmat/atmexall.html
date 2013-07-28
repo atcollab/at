@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atmexall</title>
+  <meta name="keywords" content="atmexall">
+  <meta name="description" content="ATMEXALL builds all AT platform deendent mex-files from C-sources">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">atmat</a> &gt; atmexall.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>atmexall
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>ATMEXALL builds all AT platform deendent mex-files from C-sources</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATMEXALL builds all AT platform deendent mex-files from C-sources
+ On UNIX platform, the GNU gcc compiler must be installed and
+ properly configured.
+ On Windows, Microsoft Visual C++ is required</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>	ATROOT returns Accelerator Toolbox root directory</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%ATMEXALL builds all AT platform deendent mex-files from C-sources</span>
+0002 <span class="comment">% On UNIX platform, the GNU gcc compiler must be installed and</span>
+0003 <span class="comment">% properly configured.</span>
+0004 <span class="comment">% On Windows, Microsoft Visual C++ is required</span>
+0005 
+0006 
+0007 PLATFORMOPTION = [<span class="string">'-D'</span>,computer,<span class="string">' '</span>];
+0008 LIBDL=<span class="string">''</span>;
+0009 <span class="keyword">switch</span> computer
+0010 <span class="keyword">case</span> <span class="string">'GLNX86'</span>
+0011     LIBDL=<span class="string">' -ldl'</span>;
+0012 <span class="keyword">case</span> <span class="string">'GLNXA64'</span>
+0013     LIBDL=<span class="string">' -ldl'</span>;
+0014 <span class="keyword">end</span>
+0015 
+0016 ATROOT = <a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>
+0017 <span class="comment">% Navigate to the directory that contains pass-methods</span>
+0018 cd(ATROOT)
+0019 cd ..
+0020 cd atintegrators
+0021 PASSMETHODDIR = pwd;
+0022 disp([<span class="string">'Current directory: '</span>,PASSMETHODDIR]);
+0023 mexpassmethod(<span class="string">'all'</span>,PLATFORMOPTION);
+0024 
+0025 <span class="comment">% Navigate to the directory that contains tracking functions</span>
+0026 cd(ATROOT)
+0027 cd attrack
+0028 
+0029 disp([<span class="string">'Current directory:'</span>, pwd]);
+0030 
+0031 MEXCOMMAND = [<span class="string">'mex '</span>,PLATFORMOPTION,<span class="string">'atpass.c'</span>,LIBDL];
+0032 disp(MEXCOMMAND);
+0033 eval(MEXCOMMAND);
+0034 
+0035 <span class="comment">% Navigate to the directory that contains some accelerator physics functions</span>
+0036 cd(ATROOT)
+0037 cd atphysics
+0038 disp([<span class="string">'Current directory:'</span>, pwd]);
+0039 
+0040 <span class="comment">% findmpoleraddiffmatrix.c</span>
+0041 MEXCOMMAND = [<span class="string">'mex '</span>,PLATFORMOPTION,<span class="string">'findmpoleraddiffmatrix.c -I'''</span>,PASSMETHODDIR,<span class="string">''''</span>];
+0042 disp(MEXCOMMAND);
+0043 eval(MEXCOMMAND);
+0044 
+0045 <span class="comment">% ADD 'MEXING' instructions for other C files</span>
+0046 disp(<span class="string">'ALL mex-files created successfully'</span>)
+0047 clear ATROOT PASSMETHODDIR WARNMSG PLATFORMOPTION MEXCOMMAND</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

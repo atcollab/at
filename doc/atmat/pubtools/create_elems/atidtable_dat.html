@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atidtable_dat</title>
+  <meta name="keywords" content="atidtable_dat">
+  <meta name="description" content="atidtable(fname, Nslice, filename, Energy, method)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">create_elems</a> &gt; atidtable_dat.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/create_elems&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atidtable_dat
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>atidtable(fname, Nslice, filename, Energy, method)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function Elem = atidtable_dat(fname, Nslice, filename, Energy, method) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> atidtable(fname, Nslice, filename, Energy, method)
+
+ FamName    family name
+ Nslice    number of slices (1 means the wiggler is represented by a
+           single kick in the center of the device).
+ filename    name of file with wiggler tracking tables.
+ Energy    Energy of the machine, needed for scaling
+ method    name of the function to use for tracking. Use 'WigTablePass'
+
+ The tracking table is described in
+ P. Elleaume, &quot;A new approach to the electron beam dynamics in undulators
+ and wigglers&quot;, EPAC92.
+
+ returns assigned structure</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Elem = atidtable_dat(fname, Nslice, filename, Energy, method)</a>
+0002 <span class="comment">% atidtable(fname, Nslice, filename, Energy, method)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% FamName    family name</span>
+0005 <span class="comment">% Nslice    number of slices (1 means the wiggler is represented by a</span>
+0006 <span class="comment">%           single kick in the center of the device).</span>
+0007 <span class="comment">% filename    name of file with wiggler tracking tables.</span>
+0008 <span class="comment">% Energy    Energy of the machine, needed for scaling</span>
+0009 <span class="comment">% method    name of the function to use for tracking. Use 'WigTablePass'</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% The tracking table is described in</span>
+0012 <span class="comment">% P. Elleaume, &quot;A new approach to the electron beam dynamics in undulators</span>
+0013 <span class="comment">% and wigglers&quot;, EPAC92.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% returns assigned structure</span>
+0016 
+0017 <span class="comment">%---------------------------------------------------------------------------</span>
+0018 <span class="comment">% Modification Log:</span>
+0019 <span class="comment">% -----------------</span>
+0020 <span class="comment">% 13-09-2007:  Created by M. Munoz, based in J. Safranek code.</span>
+0021 <span class="comment">% 17-11-2008:  Modificated by Z.Martí</span>
+0022 <span class="comment">%---------------------------------------------------------------------------</span>
+0023 
+0024 Elem.FamName        = fname;  <span class="comment">% add check for identical family names</span>
+0025 
+0026 Elem.Nslice        = Nslice;
+0027 Elem.MaxOrder            = 3;
+0028 Elem.NumIntSteps     = 10;
+0029 Elem.R1             = diag(ones(6,1));
+0030 Elem.R2             = diag(ones(6,1));
+0031 Elem.T1             = zeros(1,6);
+0032 Elem.T2             = zeros(1,6);
+0033 Elem.PassMethod     = method;
+0034 
+0035 
+0036 factor=1/((Energy/0.299792458)^2);
+0037 factor1=-1/((Energy/0.299792458));
+0038     
+0039 <span class="comment">% Read the file</span>
+0040 D=importdata(filename);
+0041 <span class="keyword">if</span> isfield(D,<span class="string">'Kick1x'</span>)
+0042     x=(D.x)';
+0043     y=(D.y)';
+0044     xkick1=factor1*D.Kick1x;
+0045     ykick1=factor1*D.Kick1y;
+0046     xkick=factor*D.Kick2x;
+0047     ykick=factor*D.Kick2y;
+0048     L=D.Len;
+0049     nn=size(xkick1);
+0050     Ny=nn(1);
+0051     Nx=nn(2);
+0052 <span class="comment">%     ElemData.MultiKick= 1;</span>
+0053 <span class="comment">%     ElemData.nkicks= nn(3);</span>
+0054 <span class="keyword">else</span>
+0055     [header_mat, data_mat]=mhdrload_bis(filename);
+0056     L=data_mat(:,:,1);
+0057     Nx=data_mat(:,:,2);
+0058     Ny=data_mat(:,:,3);
+0059     A = importdata(filename,<span class="string">' '</span>,10);
+0060     x=A.data;
+0061     x=x(1,1:Nx);
+0062     A = importdata(filename,<span class="string">' '</span>,11);
+0063     txkick=A.data;
+0064     y=txkick(1:Ny,1);
+0065     txkick=txkick(:,2:end);
+0066     A=importdata(filename,<span class="string">' '</span>,11+Ny+3);
+0067     tykick=A.data;
+0068     tykick=tykick(:,2:end);
+0069     A=importdata(filename,<span class="string">' '</span>,11+2*Ny+2*3);
+0070     <span class="keyword">if</span> isstruct(A)
+0071         txkick1=A.data;
+0072         txkick1=txkick1(:,2:end);
+0073     <span class="keyword">else</span>
+0074         txkick1=0*txkick;
+0075     <span class="keyword">end</span>
+0076     A=importdata(filename,<span class="string">' '</span>,11+3*Ny+3*3);
+0077     <span class="keyword">if</span> isstruct(A)
+0078         tykick1=A.data;
+0079         tykick1=tykick1(:,2:end);
+0080     <span class="keyword">else</span>
+0081         tykick1=0*tykick;
+0082     <span class="keyword">end</span>
+0083 
+0084     xkick=factor*txkick;
+0085     ykick=factor*tykick;
+0086     
+0087     xkick1=factor1*txkick1;
+0088     ykick1=factor1*tykick1;
+0089     
+0090     <span class="comment">% Sort arrays in ascending order (needed for &quot;IdTablePass.c&quot;)</span>
+0091     [y indy]=sort(y);
+0092     [x indx]=sort(x);
+0093     x=x';
+0094     xkick=xkick(indy,indx);
+0095     ykick=ykick(indy,indx);
+0096     
+0097 <span class="keyword">end</span>
+0098 
+0099 Elem.Length= L;
+0100 Elem.NumX = Ny;
+0101 Elem.NumY = Nx;
+0102 Elem.xtable = x;
+0103 Elem.ytable = y;
+0104 Elem.xkick = xkick;
+0105 Elem.ykick = ykick;
+0106 Elem.xkick1 = xkick1;
+0107 Elem.ykick1 = ykick1;
+0108 Elem.PolynomA= [0 0 0 0];     
+0109 Elem.PolynomB= [0 0 0 0];</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

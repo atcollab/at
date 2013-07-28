@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atreduce</title>
+  <meta name="keywords" content="atreduce">
+  <meta name="description" content="ATREDUCE Remove useless elements from an AT structure">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">lattice_tools</a> &gt; atreduce.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/lattice_tools&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atreduce
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATREDUCE Remove useless elements from an AT structure</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [newring,seq,newrefs] = atreduce(oldring,oldrefs) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATREDUCE Remove useless elements from an AT structure
+NEWRING=ATREDUCE(OLDRING)
+
+ Remove elements with PassMethod='IdentityPass' and merges adjacent drifts
+
+[NEWRING,KEPT]=ATREDUCE(OLDRING)
+
+ Returns the index of kept elements
+
+[NEWRING,KEPT,NEWREFPTS]=ATREDUCE(OLDRING,OLDREFPTS)
+
+ Returns in addition the updated list of reference points. Reference
+ points are kept intact.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [newring,seq,newrefs] = atreduce(oldring,oldrefs)</a>
+0002 <span class="comment">%ATREDUCE Remove useless elements from an AT structure</span>
+0003 <span class="comment">%NEWRING=ATREDUCE(OLDRING)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% Remove elements with PassMethod='IdentityPass' and merges adjacent drifts</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%[NEWRING,KEPT]=ATREDUCE(OLDRING)</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% Returns the index of kept elements</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%[NEWRING,KEPT,NEWREFPTS]=ATREDUCE(OLDRING,OLDREFPTS)</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% Returns in addition the updated list of reference points. Reference</span>
+0014 <span class="comment">% points are kept intact.</span>
+0015 <span class="comment">%</span>
+0016 
+0017 refs=false(1,length(oldring(:))+1);
+0018 seq=1:length(oldring(:));
+0019 <span class="keyword">if</span> nargin &gt;= 2, refs(oldrefs)=true; <span class="keyword">end</span>
+0020 newring=oldring(:);
+0021 <span class="comment">%                    Remove useless elements</span>
+0022 keep=true(1,length(newring));
+0023 keep(findcells(newring,<span class="string">'PassMethod'</span>,<span class="string">'IdentityPass'</span>))=false;
+0024 keep=keep | refs(1:end-1);
+0025 newring=newring(keep);
+0026 seq=seq(keep);
+0027 refs(~keep)=[];
+0028 <span class="comment">%                    Merge adjacent drifts</span>
+0029 drift=false(1,length(newring));
+0030 drift(findcells(newring,<span class="string">'PassMethod'</span>,<span class="string">'DriftPass'</span>))=true;
+0031 drift(refs(1:end-1))=false;
+0032 lg=zeros(size(drift));
+0033 lg(drift)=getcellstruct(newring,<span class="string">'Length'</span>,find(drift));
+0034 newdrift=drift;
+0035 <span class="keyword">while</span> true
+0036    del=[newdrift(2:end) false] &amp; newdrift &amp; ~[false newdrift(1:end-1)];
+0037    <span class="keyword">if</span> ~any(del), <span class="keyword">break</span>; <span class="keyword">end</span>
+0038    nex=[false del(1:end-1)];
+0039    lg(nex)=lg(nex)+lg(del);
+0040    lg(del)=0;
+0041    newdrift=newdrift &amp; ~del;
+0042 <span class="keyword">end</span>
+0043 keep=~drift | newdrift;
+0044 newring=setcellstruct(newring,<span class="string">'Length'</span>,find(drift),lg(drift));
+0045 newring=newring(keep);
+0046 seq=seq(keep);
+0047 refs(~keep)=[];
+0048 
+0049 <span class="keyword">if</span> nargout &gt;= 3, newrefs=find(refs); <span class="keyword">end</span>
+0050 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

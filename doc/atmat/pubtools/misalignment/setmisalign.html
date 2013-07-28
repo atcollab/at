@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of setmisalign</title>
+  <meta name="keywords" content="setmisalign">
+  <meta name="description" content="SETMISALIGN will add/generate a misalignment structure for THERING that">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">misalignment</a> &gt; setmisalign.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/misalignment&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>setmisalign
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>SETMISALIGN will add/generate a misalignment structure for THERING that</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = setmisalign(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> SETMISALIGN will add/generate a misalignment structure for THERING that
+ will later be used by CALCMISALIGN to generate the actual misalignment
+ and apply it to THERING. 
+
+ SETMISALIGN(FAMNAME, SIGMA, CUTOFF[, LATTICE]) where FAMNAME is the name 
+ of the family of elements, SIGMA is a 1x6 vector specifying [dx, thetax, 
+ dy, thetay, ds, thetas] which is the 1 sigma spread, and CUTOFF an integer
+ specifying how many sigmas before excluding the calculated misalignment.
+ If cutoff is 0, then all random numbers will be accepted.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="setmisalign.html" class="code" title="function varargout = setmisalign(varargin)">setmisalign</a>	SETMISALIGN will add/generate a misalignment structure for THERING that</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="closedorbit.html" class="code" title="">closedorbit</a>	</li><li><a href="setmisalign.html" class="code" title="function varargout = setmisalign(varargin)">setmisalign</a>	SETMISALIGN will add/generate a misalignment structure for THERING that</li><li><a href="testmisalignfunctions.html" class="code" title="">testmisalignfunctions</a>	% Test Misalignment Functions</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = setmisalign(varargin)</a>
+0002 <span class="comment">% SETMISALIGN will add/generate a misalignment structure for THERING that</span>
+0003 <span class="comment">% will later be used by CALCMISALIGN to generate the actual misalignment</span>
+0004 <span class="comment">% and apply it to THERING.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% SETMISALIGN(FAMNAME, SIGMA, CUTOFF[, LATTICE]) where FAMNAME is the name</span>
+0007 <span class="comment">% of the family of elements, SIGMA is a 1x6 vector specifying [dx, thetax,</span>
+0008 <span class="comment">% dy, thetay, ds, thetas] which is the 1 sigma spread, and CUTOFF an integer</span>
+0009 <span class="comment">% specifying how many sigmas before excluding the calculated misalignment.</span>
+0010 <span class="comment">% If cutoff is 0, then all random numbers will be accepted.</span>
+0011 
+0012 <span class="keyword">global</span> THERING
+0013 
+0014 <span class="keyword">if</span> ~exist(<span class="string">'THERING'</span>,<span class="string">'var'</span>)
+0015     disp(<span class="string">'Please load the model first'</span>);
+0016     <span class="keyword">return</span>
+0017 <span class="keyword">end</span>
+0018 
+0019 mis = getappdata(0,<span class="string">'MisalignData'</span>);
+0020 
+0021 <span class="keyword">if</span> isempty(mis)
+0022     disp(<span class="string">'Generating the first misalignemnt datastructure now'</span>);
+0023     mis.date = datestr(now,31);
+0024     mis.nind = 0;
+0025     mis.ngird = 0;
+0026 <span class="keyword">end</span>
+0027 
+0028 <span class="comment">% Parse input data</span>
+0029 n = 4;
+0030 <span class="keyword">if</span> nargin &gt;= n &amp; iscell(varargin{n})
+0031     LATTICE = varargin{n};
+0032 <span class="keyword">else</span>
+0033     disp(<span class="string">'Using THERING'</span>);
+0034     LATTICE = THERING;
+0035 <span class="keyword">end</span>
+0036 
+0037 n = n - 1;
+0038 <span class="keyword">if</span> nargin &gt;= n &amp; isnumeric(varargin{n})
+0039     cutoff = varargin{n};
+0040 <span class="keyword">else</span>
+0041     disp(<span class="string">'Defaulting cutoff to 3.'</span>);
+0042     cutoff = 3;
+0043 <span class="keyword">end</span>
+0044 
+0045 n = n - 1;
+0046 <span class="keyword">if</span> nargin &gt;= n &amp; isnumeric(varargin{n}) &amp; length(varargin{n}) == 6
+0047     sigma = varargin{n};
+0048 <span class="keyword">else</span>
+0049     error(<span class="string">'One sigma spread of the misalignment not specified properly!'</span>);
+0050 <span class="keyword">end</span>
+0051 
+0052 n = n - 1;
+0053 <span class="keyword">if</span> nargin &gt;= n
+0054     <span class="keyword">if</span> ischar(varargin{n})
+0055         indices = findcells(LATTICE, <span class="string">'FamName'</span>,varargin{n});
+0056         famname = varargin{n};
+0057     <span class="keyword">elseif</span> isnumeric(varargin{n})
+0058         <span class="comment">% Assumes that if indices are supplied that they are part of the</span>
+0059         <span class="comment">% same family of elements.</span>
+0060         indices = varargin{n};
+0061         famname = LATTICE{indices(1)}.FamName;
+0062     <span class="keyword">elseif</span> iscell(varargin{n})
+0063         <span class="keyword">for</span> i=1:length(varargin{n})
+0064             <a href="setmisalign.html" class="code" title="function varargout = setmisalign(varargin)">setmisalign</a>(varargin{n}{i},sigma,cutoff);
+0065         <span class="keyword">end</span>
+0066         <span class="keyword">return</span>
+0067     <span class="keyword">else</span>
+0068         error(<span class="string">'Family name or index into THERING not in correct format!'</span>);
+0069     <span class="keyword">end</span>
+0070 <span class="keyword">else</span>
+0071     error(<span class="string">'Family name or index into THERING not given!'</span>);
+0072 <span class="keyword">end</span>
+0073 
+0074 mis.nind = mis.nind + 1;
+0075 
+0076 mis.ind(mis.nind).name = famname;
+0077 mis.ind(mis.nind).ATindex = indices;
+0078 mis.ind(mis.nind).sigma = sigma;
+0079 mis.ind(mis.nind).cutoff = cutoff;
+0080 
+0081 setappdata(0,<span class="string">'MisalignData'</span>,mis);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

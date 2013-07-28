@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CurlyH</title>
+  <meta name="keywords" content="CurlyH">
+  <meta name="description" content="TD=twissring(RING,dp,ind);">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">plotfunctions</a> &gt; CurlyH.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/plotfunctions&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>CurlyH
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>TD=twissring(RING,dp,ind);</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [H,Hv]=CurlyH(RING,dp,ind) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">TD=twissring(RING,dp,ind);</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plEmitContrib.html" class="code" title="function plotdata=plEmitContrib(lindata,ring,dpp,varargin)">plEmitContrib</a>	plots H/rho³ at every dipole</li><li><a href="plotB0curlyh.html" class="code" title="function plotdata=plotB0curlyh(lindata,ring,dpp,varargin)">plotB0curlyh</a>	</li><li><a href="plotbetadispcurlyh.html" class="code" title="function plotdata=plotbetadispcurlyh(lindata,ring,dpp,varargin)">plotbetadispcurlyh</a>	</li><li><a href="plotsqrtbetadispcurlyh.html" class="code" title="function plotdata=plotsqrtbetadispcurlyh(lindata,ring,dpp,varargin)">plotsqrtbetadispcurlyh</a>	</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [H,Hv]=CurlyH(RING,dp,ind)</a>
+0002 
+0003 <span class="comment">%TD=twissring(RING,dp,ind);</span>
+0004 [TD,~,~]=atlinopt(RING,dp,ind);
+0005 
+0006  B = cat(1,TD.beta);
+0007  A = cat(1,TD.alpha);
+0008  <span class="comment">%[D,Dv] = getDispersion(RING,ind);</span>
+0009  <span class="comment">%[Dp,Dpv] = getDispersionAngle(RING,ind);</span>
+0010  DD = cat(2,TD.Dispersion);
+0011  D=DD(1,:);
+0012  Dv=DD(3,:);
+0013  Dp=DD(2,:);
+0014  Dpv=DD(4,:);
+0015  
+0016  G=(1+A(:,1).^2)./B(:,1);
+0017  Gv=(1+A(:,2).^2)./B(:,2);
+0018  
+0019  H=B(:,1).*Dp'.*Dp' + 2*A(:,1).*D'.* Dp' + G.*D'.* D'; 
+0020  Hv=B(:,2).*Dpv'.*Dpv' + 2*A(:,2).*Dv'.* Dpv' + Gv.*Dv'.* Dv';
+0021</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

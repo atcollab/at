@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of plotbeta</title>
+  <meta name="keywords" content="plotbeta">
+  <meta name="description" content="PLOTBETA plots UNCOUPLED! beta-functions">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; plotbeta.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>plotbeta
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>PLOTBETA plots UNCOUPLED! beta-functions</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function varargout = plotbeta(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">PLOTBETA plots UNCOUPLED! beta-functions
+ PLOTBETA(RING) calculates beta functions of the lattice RING
+ PLOTBETA with no argumnts uses THERING as the default lattice
+  Note: PLOTBETA uses FINDORBIT4 and LINOPT which assume a lattice
+  with NO accelerating cavities and NO radiation
+
+ See also <a href="plotcod.html" class="code" title="function varargout = plotcod(RING,DP)">PLOTCOD</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>	FINDSPOS returns longitudinal positions of accelerator lattice elements.</li><li><a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin);">twissring</a>	TWISSRING calculates linear optics functions for an UNCOUPLED ring</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = plotbeta(varargin)</a>
+0002 <span class="comment">%PLOTBETA plots UNCOUPLED! beta-functions</span>
+0003 <span class="comment">% PLOTBETA(RING) calculates beta functions of the lattice RING</span>
+0004 <span class="comment">% PLOTBETA with no argumnts uses THERING as the default lattice</span>
+0005 <span class="comment">%  Note: PLOTBETA uses FINDORBIT4 and LINOPT which assume a lattice</span>
+0006 <span class="comment">%  with NO accelerating cavities and NO radiation</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% See also PLOTCOD</span>
+0009 <span class="keyword">global</span> THERING
+0010 <span class="keyword">if</span> nargin == 0
+0011     RING = THERING;
+0012 <span class="keyword">else</span>
+0013     RING = varargin{1};
+0014 <span class="keyword">end</span>
+0015 
+0016 L = length(RING);
+0017 spos = <a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>(RING,1:L+1);
+0018 
+0019 [TD, tune] = <a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin);">twissring</a>(RING,0,1:(length(RING)+1));
+0020 BETA = cat(1,TD.beta);
+0021 S  = cat(1,TD.SPos);
+0022 
+0023 disp(tune)
+0024 
+0025 <span class="keyword">if</span> nargin &gt; 1 &amp; ishandle(varargin{2})
+0026     figure(varargin{2});
+0027 <span class="keyword">else</span>
+0028     figure
+0029 <span class="keyword">end</span>
+0030 <span class="comment">% plot betax and betay in two subplots</span>
+0031 
+0032 subplot(2,1,1)
+0033 plot(S,BETA(:,1),<span class="string">'.-b'</span>);
+0034 
+0035 A = axis;
+0036 A(1) = 0;
+0037 A(2) = S(end);
+0038 axis(A);
+0039 <span class="comment">%xlabel('s - position [m]');</span>
+0040 ylabel(<span class="string">'\beta_x [m]'</span>);
+0041 grid on
+0042 
+0043 
+0044 title(<span class="string">'\beta-functions'</span>);
+0045 
+0046 subplot(2,1,2)
+0047 plot(S,BETA(:,2),<span class="string">'.-r'</span>);
+0048 <span class="comment">% Set the same horizontal scale as beta x plot</span>
+0049 B = axis;
+0050 axis([A(1:2) B(3:4)]);
+0051 xlabel(<span class="string">'s - position [m]'</span>);
+0052 ylabel(<span class="string">'\beta_y [m]'</span>);
+0053 grid on</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

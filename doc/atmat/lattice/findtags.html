@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findtags</title>
+  <meta name="keywords" content="findtags">
+  <meta name="description" content="FINDTAGS looks for string matches in 'Tag' field of AT lattice elements">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; findtags.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>findtags
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>FINDTAGS looks for string matches in 'Tag' field of AT lattice elements</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function index = findtags(CELLARRAY, MATCHSTR) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDTAGS looks for string matches in 'Tag' field of AT lattice elements
+   
+ INDEX = FINDTAGS(CELLARRAY, MATCHSTR) 
+   returns indexes of elements that have a field 'Tag'
+   whose value is a string exactly matching MATCHSTR
+   or a cell array of strings with one element matching MATCHSTR
+
+ See also <a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">FINDCELLS</a>, <a href="settags.html" class="code" title="function LATTICE = settags(LATTICE,INDEX,tag,varargin)">SETTAGS</a>,</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">findcells</a>	FINDCELLS performs a search on MATLAB cell arrays of structures</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function index = findtags(CELLARRAY, MATCHSTR)</a>
+0002 <span class="comment">%FINDTAGS looks for string matches in 'Tag' field of AT lattice elements</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% INDEX = FINDTAGS(CELLARRAY, MATCHSTR)</span>
+0005 <span class="comment">%   returns indexes of elements that have a field 'Tag'</span>
+0006 <span class="comment">%   whose value is a string exactly matching MATCHSTR</span>
+0007 <span class="comment">%   or a cell array of strings with one element matching MATCHSTR</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% See also FINDCELLS, SETTAGS,</span>
+0010 
+0011 <span class="comment">% Check if the first argument is the cell arrray of tstructures</span>
+0012 <span class="keyword">if</span>(~iscell(CELLARRAY) | ~isstruct(CELLARRAY{1}) | isempty(CELLARRAY))
+0013    error(<span class="string">'The first argument must be a non-empty cell array of structures'</span>) 
+0014 <span class="keyword">end</span>
+0015 <span class="comment">% Chechk if the second argument is a string</span>
+0016 <span class="keyword">if</span>(~ischar(MATCHSTR))
+0017       error(<span class="string">'The second argument must be a character string'</span>)
+0018 <span class="keyword">end</span>
+0019 
+0020 
+0021 
+0022 
+0023 NE = length(CELLARRAY);
+0024 matchesfound = 0;
+0025 index = <a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">findcells</a>(CELLARRAY,<span class="string">'Tag'</span>);
+0026 
+0027 
+0028 index1 = index;
+0029 matchesfound = 0;
+0030 <span class="keyword">for</span> I = index
+0031     <span class="keyword">if</span> any(strcmp(CELLARRAY{I}.Tag,MATCHSTR));
+0032         matchesfound = matchesfound+1;
+0033         <span class="comment">% since 'matchesfound' counter is &lt;= loop number,</span>
+0034         <span class="comment">% it is save to modify elements of 'index' inside the loop</span>
+0035         index(matchesfound) = I;
+0036 
+0037     <span class="keyword">end</span>
+0038 <span class="keyword">end</span>
+0039 
+0040 index =  index(1:matchesfound);
+0041 
+0042</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

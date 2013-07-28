@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atradon</title>
+  <meta name="keywords" content="atradon">
+  <meta name="description" content="ATRADON			switches RF and radiation on">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; atradon.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atradon
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATRADON			switches RF and radiation on</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [ring2,radindex,cavindex]=atradon(ring,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATRADON            switches RF and radiation on
+
+RING2=ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)
+
+RING:        initial AT structure
+CAVIPASS:    pass method for cavities (default ThinCavityPass)
+BENDPASS:    pass method for cavities (default BndMPoleSymplectic4RadPass)
+QUADPASS:    pass method for cavities (default: nochange)
+
+[RING2,RADINDEX,CAVINDEX]=ATRADON(...) returns the index of radiative elements
+                     and cavities</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atx.html" class="code" title="function [lindt,pm]=atx(ring,varargin)">atx</a>	ATX				computes and displays global information</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [ring2,radindex,cavindex]=atradon(ring,varargin)</a>
+0002 <span class="comment">%ATRADON            switches RF and radiation on</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%RING2=ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%RING:        initial AT structure</span>
+0007 <span class="comment">%CAVIPASS:    pass method for cavities (default ThinCavityPass)</span>
+0008 <span class="comment">%BENDPASS:    pass method for cavities (default BndMPoleSymplectic4RadPass)</span>
+0009 <span class="comment">%QUADPASS:    pass method for cavities (default: nochange)</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%[RING2,RADINDEX,CAVINDEX]=ATRADON(...) returns the index of radiative elements</span>
+0012 <span class="comment">%                     and cavities</span>
+0013 
+0014 <span class="keyword">global</span> GLOBVAL
+0015 quadpass=<span class="string">''</span>;
+0016 bendpass=<span class="string">'BndMPoleSymplectic4RadPass'</span>;
+0017 cavipass=<span class="string">'CavityPass'</span>;
+0018 <span class="keyword">if</span> nargin &gt;= 4, quadpass=varargin{3}; <span class="keyword">end</span>
+0019 <span class="keyword">if</span> nargin &gt;= 3, bendpass=varargin{2}; <span class="keyword">end</span>
+0020 <span class="keyword">if</span> nargin &gt;= 2, cavipass=varargin{1}; <span class="keyword">end</span>
+0021 
+0022 <span class="keyword">if</span> ~isfield(GLOBVAL,<span class="string">'E0'</span>)
+0023     error(<span class="string">'Energy not defined in GLOBVAL'</span>);
+0024 <span class="keyword">end</span>
+0025 
+0026 <span class="keyword">if</span> ~isempty(cavipass)
+0027     cavities=atgetcells(ring,<span class="string">'Frequency'</span>);
+0028     cavindex=find(cavities)';
+0029     <span class="keyword">if</span> sum(cavities) &lt;= 0
+0030         warning(<span class="string">'AT:atradon:NoCavity'</span>, <span class="string">'No cavity found in the structure'</span>);
+0031     <span class="keyword">else</span>
+0032         disp([<span class="string">'Cavities located at position '</span> num2str(cavindex)]);
+0033     <span class="keyword">end</span>
+0034     ring2=atsetfieldvalues(ring,cavities,<span class="string">'PassMethod'</span>,cavipass);
+0035 <span class="keyword">else</span>
+0036     ring2=ring;
+0037 <span class="keyword">end</span>
+0038 
+0039 <span class="keyword">if</span> ~isempty(bendpass)
+0040     isdipole=@(elem,field) elem.(field)~=0;
+0041     dipoles=atgetcells(ring2,<span class="string">'BendingAngle'</span>,isdipole);
+0042     <span class="keyword">if</span> sum(dipoles) &lt;= 0
+0043         warning(<span class="string">'AT:atradon:NoBend'</span>, <span class="string">'No dipole in the structure'</span>);
+0044     <span class="keyword">end</span>
+0045     ring2=atsetfieldvalues(ring2,dipoles,<span class="string">'PassMethod'</span>,bendpass);
+0046 <span class="keyword">else</span>
+0047     dipoles=false(size(ring2));
+0048 <span class="keyword">end</span>
+0049 
+0050 <span class="keyword">if</span> ~isempty(quadpass)
+0051     isquadrupole=@(elem,field) length(elem.(field)) &gt;= 2 &amp;&amp; elem.(field)(2)~=0;
+0052     quadrupoles=atgetcells(ring2,<span class="string">'PolynomB'</span>,isquadrupole) &amp; ~dipoles;
+0053     <span class="keyword">if</span> sum(quadrupoles) &lt;= 0
+0054         warning(<span class="string">'AT:atradon:NoQuad'</span>, <span class="string">'No quadrupole in the structure'</span>);
+0055     <span class="keyword">end</span>
+0056     ring2=atsetfieldvalues(ring2,quadrupoles,<span class="string">'PassMethod'</span>,quadpass);
+0057 <span class="keyword">else</span>
+0058     quadrupoles=false(size(ring2));
+0059 <span class="keyword">end</span>
+0060 
+0061 radindex=find(dipoles | quadrupoles)';
+0062 disp([num2str(length(radindex)) <span class="string">' elements switched to include radiation'</span>]);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

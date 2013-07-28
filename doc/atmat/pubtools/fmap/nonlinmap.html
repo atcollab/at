@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nonlinmap</title>
+  <meta name="keywords" content="nonlinmap">
+  <meta name="description" content="Computes the frequency map on the bases of a FFT analysis on tracked">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">fmap</a> &gt; nonlinmap.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/fmap&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>nonlinmap
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Computes the frequency map on the bases of a FFT analysis on tracked</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [nuh,nuv,X,Y,orh,orv,NU,KSI]=nonlinmap(machine,X,Y,nbturn,type,DP) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">Computes the frequency map on the bases of a FFT analysis on tracked
+orbits using the AT routines for traking.
+INPUTS: MACHINE is the at structure representing the accelerator with no
+time dependent fields (no cavities
+X is a vector containing the initial conditions for the horizontal
+position
+Y is a vector containing the initial position for the vertical position
+the number of initial considions tested is size(X)*size(Y). for each X all
+different Y will be tested (ans vis-versa)
+(if type=1) or the momentum deviation (if type=2).
+NBTURN is the number of turns for the traking.Traking takes place for
+2*NBTURN and each half is processed separately.
+TYPE should be 1 for an XY map, 2 for a XDP map.
+DP relevant only if TYPE=1. Defines the momentum deviation for which the
+XY map is calculated.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plotnonlinmap.html" class="code" title="function [nuh,nuv,X,Y,orh,orv]=plotnonlinmap(machine,X,Y,nbturn,type,DP,fname)">plotnonlinmap</a>	Computes and plots the frequency map for a given lattice</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [nuh,nuv,X,Y,orh,orv,NU,KSI]=nonlinmap(machine,X,Y,nbturn,type,DP)</a>
+0002 <span class="comment">%Computes the frequency map on the bases of a FFT analysis on tracked</span>
+0003 <span class="comment">%orbits using the AT routines for traking.</span>
+0004 <span class="comment">%INPUTS: MACHINE is the at structure representing the accelerator with no</span>
+0005 <span class="comment">%time dependent fields (no cavities</span>
+0006 <span class="comment">%X is a vector containing the initial conditions for the horizontal</span>
+0007 <span class="comment">%position</span>
+0008 <span class="comment">%Y is a vector containing the initial position for the vertical position</span>
+0009 <span class="comment">%the number of initial considions tested is size(X)*size(Y). for each X all</span>
+0010 <span class="comment">%different Y will be tested (ans vis-versa)</span>
+0011 <span class="comment">%(if type=1) or the momentum deviation (if type=2).</span>
+0012 <span class="comment">%NBTURN is the number of turns for the traking.Traking takes place for</span>
+0013 <span class="comment">%2*NBTURN and each half is processed separately.</span>
+0014 <span class="comment">%TYPE should be 1 for an XY map, 2 for a XDP map.</span>
+0015 <span class="comment">%DP relevant only if TYPE=1. Defines the momentum deviation for which the</span>
+0016 <span class="comment">%XY map is calculated.</span>
+0017 
+0018 <span class="comment">%OUTPUTS:NUH and NUV are matrices of sizes: size(x)*size(Y) 4</span>
+0019 <span class="comment">% each lines corresponds to a given initial conditions.</span>
+0020 <span class="comment">% The initial conditions are aligned in the following way:(X1,Y1)</span>
+0021 <span class="comment">% (X2,Y1)...(Xn,Y1) (X1,Y2) (X2,Y2)...(Xn,Y2).....(X1,Yn)...(Xn,Yn).</span>
+0022 <span class="comment">%the first row is the tune computed on the first NBTURNS turns.</span>
+0023 <span class="comment">%the second row is te tune for the next NBTURN turns.</span>
+0024 <span class="comment">%the third row is the square of the difference of the first two rows</span>
+0025 <span class="comment">%the fourth row is the DC orbit.</span>
+0026 <span class="comment">%H refers to horizontal, V to vertical.</span>
+0027 <span class="comment">% The initial conditions are aligned in the following way:(X1,Y1)</span>
+0028 <span class="comment">% (X2,Y1)...(Xn,Y1) (X1,Y2) (X2,Y2)...(Xn,Y2).....(X1,Yn)...(Xn,Yn).</span>
+0029 
+0030 
+0031 mode=1;
+0032 nbturn=nbturn*2;
+0033 machine=atreduce(machine);
+0034 [LinData,NU, KSI] = LINOPT(machine,0,1);
+0035 tune=NU
+0036 chroma=KSI
+0037 chromanormaesrf=KSI./(NU+[36.44 13.39])
+0038 resp=0;
+0039 nbpart=numel(X)*numel(Y)  
+0040 
+0041 <span class="comment">%creates the bunch of initial particuls. Particules are having a given</span>
+0042 <span class="comment">%angle in order to avoid null orbits</span>
+0043 Rin=zeros(6,nbpart);
+0044 Rin([2 4],:)=1E-6*0.32E-17;
+0045 [y,x]=meshgrid(Y,X);
+0046 
+0047 <span class="comment">%Fills in the initial conditions in the particule bunch</span>
+0048 <span class="keyword">if</span> type==1
+0049     Rin(5,:)=DP;
+0050     Rin([1 3],:)=[x(:)';y(:)'];
+0051     <span class="keyword">end</span> 
+0052   
+0053     <span class="keyword">if</span> type==2
+0054     disp=findorbit4(machine,0.01)
+0055     Rin([1 5],:)=[x(:)';y(:)']; 
+0056     
+0057     
+0058     <span class="keyword">end</span>
+0059 <span class="comment">%puts a first test particule with perferct initial condition to avoit an AT</span>
+0060 <span class="comment">%behaviour that kills the bunch if the first particule is lost</span>
+0061     Rintest=zeros(6,1);
+0062 Rin=[Rintest Rin];        
+0063 nbpart=nbpart+1;        
+0064 
+0065 <span class="comment">%calculates and adds the chromatic orbit to the initial conditions</span>
+0066 disp=findorbit4(machine,0.01);    
+0067 Rchroma=(Rin(5,:)'*disp([1 3])'*100)';
+0068 Rin([1 3],:)=Rin([1 3],:)+Rchroma;
+0069 rc=Rchroma(:);
+0070 rc2=rc(:,ones(1,nbturn));   
+0071 Routcor=(reshape(rc2(:),2,[]));
+0072 
+0073 <span class="comment">%tracking routine</span>
+0074 <span class="keyword">for</span> k=1:nbturn         
+0075     [out,loss]=ringpass(machine,Rin,1);
+0076     out(6,:)=0;
+0077     Rfin(:,(k-1)*nbpart+1:(k)*nbpart)=out;
+0078     Rin=out;
+0079 <span class="keyword">end</span>
+0080 
+0081 <span class="comment">%substracts the chromatic orbit calculated</span>
+0082 Rfin([1 3],:)=Rfin([1 3],:)-Routcor;
+0083 <span class="comment">%extract the horizontal and vertical position and momentum from the output matrix</span>
+0084     orh=(reshape(Rfin(1,:),nbpart,nbturn))';
+0085     ph= (reshape(Rfin(2,:),nbpart,nbturn))';
+0086     orv=(reshape(Rfin(3,:),nbpart,nbturn))';
+0087     pv=(reshape(Rfin(4,:),nbpart,nbturn))';
+0088     <span class="comment">%kills the usless first particule</span>
+0089     orh(:,1)=[];
+0090     orv(:,1)=[];
+0091 ph(:,1)=[];
+0092 pv(:,1)=[];    
+0093     
+0094 loss(1)=[];
+0095 
+0096 
+0097 <span class="comment">%separates the orbits of the non lost particules in two halfs corresponding</span>
+0098 <span class="comment">%to the first ans second NBTURNS</span>
+0099 notloss=not(loss);
+0100 nbpart=nbpart-1;
+0101 orhred=reshape(orh(:,notloss),nbturn/2,[]);
+0102 orvred=reshape(orv(:,notloss),nbturn/2,[]);
+0103 phred=reshape(ph(:,notloss),nbturn/2,[]);
+0104 pvred=reshape(pv(:,notloss),nbturn/2,[]);
+0105 <span class="comment">%calculates the mean orbit</span>
+0106 meanh=(mean(orh(:,notloss),1))';
+0107 meanv=(mean(orv(:,notloss),1))';
+0108 maxh=(max(abs(orh(:,notloss)),[],1))';
+0109 maxv=(max(abs(orv(:,notloss)),[],1))';
+0110 <span class="comment">%finds the tunes in both planes for each orbit</span>
+0111 [resh,numdch]=findtunetom(orhred-i.*phred);
+0112 [resv,numdcv]=findtunetom(orvred-i.*pvred);
+0113 <span class="comment">%Fills in the matrices for Nuh and Nuv</span>
+0114 nuh(1:nbpart,1:5)=NaN;
+0115 nuv(1:nbpart,1:5)=NaN;
+0116 deltanu(1:nbpart)=NaN;
+0117 
+0118 
+0119 tuneh=resh';
+0120 tunev=resv';
+0121 
+0122 nuh(notloss,1)=(tuneh(1:2:numel(tuneh)));
+0123 nuh(notloss,2)=(tuneh(2:2:numel(tuneh)));
+0124 nuh(notloss,3)=(nuh(notloss,1)-nuh(notloss,2)).^2;
+0125 nuv(notloss,1)=(tunev(1:2:numel(tunev)));
+0126 nuv(notloss,2)=(tunev(2:2:numel(tunev)));
+0127 nuv(notloss,3)=(nuv(notloss,1)-nuv(notloss,2)).^2;
+0128 nuh(notloss,4)=meanh;
+0129 nuv(notloss,4)=meanv;
+0130 nuh(notloss,5)=maxh;
+0131 nuv(notloss,5)=maxv;
+0132 lostpart=sum(loss)</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

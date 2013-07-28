@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of find_etaoids</title>
+  <meta name="keywords" content="find_etaoids">
+  <meta name="description" content="Given the normalizing matrix A, we compute the etaoids">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">local_lattice_params</a> &gt; find_etaoids.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/local_lattice_params&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>find_etaoids
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Given the normalizing matrix A, we compute the etaoids</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [H1 H2 H3]=find_etaoids(A) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">Given the normalizing matrix A, we compute the etaoids
+(in Forest's terminology)
+ these can be related to the dispersion</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="get_dispersion_from_etaoids.html" class="code" title="function disp = get_dispersion_from_etaoids(ring,refpts)">get_dispersion_from_etaoids</a>	get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [H1 H2 H3]=find_etaoids(A)</a>
+0002 <span class="comment">%Given the normalizing matrix A, we compute the etaoids</span>
+0003 <span class="comment">%(in Forest's terminology)</span>
+0004 <span class="comment">% these can be related to the dispersion</span>
+0005 
+0006 I1 = <span class="keyword">...</span>
+0007 [1 0 0 0 0 0;<span class="keyword">...</span>
+0008  0 1 0 0 0 0;<span class="keyword">...</span>
+0009  0 0 0 0 0 0;<span class="keyword">...</span>
+0010  0 0 0 0 0 0;<span class="keyword">...</span>
+0011  0 0 0 0 0 0;<span class="keyword">...</span>
+0012  0 0 0 0 0 0];
+0013 
+0014 I2 = <span class="keyword">...</span>
+0015 [0 0 0 0 0 0;<span class="keyword">...</span>
+0016  0 0 0 0 0 0;<span class="keyword">...</span>
+0017  0 0 1 0 0 0;<span class="keyword">...</span>
+0018  0 0 0 1 0 0;<span class="keyword">...</span>
+0019  0 0 0 0 0 0;<span class="keyword">...</span>
+0020  0 0 0 0 0 0];
+0021 
+0022 I3 = <span class="keyword">...</span>
+0023 [0 0 0 0 0 0;<span class="keyword">...</span>
+0024  0 0 0 0 0 0;<span class="keyword">...</span>
+0025  0 0 0 0 0 0;<span class="keyword">...</span>
+0026  0 0 0 0 0 0;<span class="keyword">...</span>
+0027  0 0 0 0 1 0;<span class="keyword">...</span>
+0028  0 0 0 0 0 1];
+0029 
+0030 
+0031 H1 = A*I1*inv(A);
+0032 H2 = A*I2*inv(A);
+0033 H3 = A*I3*inv(A);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

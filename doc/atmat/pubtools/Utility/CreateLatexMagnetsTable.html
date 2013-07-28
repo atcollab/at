@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CreateLatexMagnetsTable</title>
+  <meta name="keywords" content="CreateLatexMagnetsTable">
+  <meta name="description" content="generate a latex input file for a table of magnet fields, names and length">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">Utility</a> &gt; CreateLatexMagnetsTable.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/Utility&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>CreateLatexMagnetsTable
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>generate a latex input file for a table of magnet fields, names and length</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function lmt=CreateLatexMagnetsTable(r,tabname) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> generate a latex input file for a table of magnet fields, names and length
+ lmt is a string containing the same information.
+
+ 
+ in latex the table may be inserted as
+ 
+ \input{tabname}</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function lmt=CreateLatexMagnetsTable(r,tabname)</a>
+0002 <span class="comment">% generate a latex input file for a table of magnet fields, names and length</span>
+0003 <span class="comment">% lmt is a string containing the same information.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% in latex the table may be inserted as</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% \input{tabname}</span>
+0009 <span class="comment">%</span>
+0010 
+0011 <span class="comment">%bety</span>
+0012 <span class="comment">%colori come in synoptic per i magneti.</span>
+0013 <span class="comment">%theta, R0, B0</span>
+0014 <span class="comment">%vuoto invece di zero</span>
+0015 <span class="comment">%solo first half cell</span>
+0016 
+0017 <span class="comment">% r=mergedoubles(r,'QF0');</span>
+0018 <span class="comment">% %r=mergedoubles(r,'BPI2');</span>
+0019 <span class="comment">% indx=findcells(r,'FamName','BPI2');</span>
+0020 <span class="comment">% r0=r;</span>
+0021 <span class="comment">% r=setcellstruct(r,'Length',indx,getcellstruct(r0,'Length',indx)*2); %empty</span>
+0022 <span class="comment">% r=setcellstruct(r,'BendingAngle',indx,getcellstruct(r0,'BendingAngle',indx)*2); %empty</span>
+0023 <span class="comment">% r(indx([2:2:end]))=[];</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% indx=findcells(r,'FamName','BPI3');</span>
+0026 <span class="comment">% r0=r;</span>
+0027 <span class="comment">% r=setcellstruct(r,'Length',indx,getcellstruct(r0,'Length',indx)*2); %empty</span>
+0028 <span class="comment">% r=setcellstruct(r,'BendingAngle',indx,getcellstruct(r0,'BendingAngle',indx)*2); %empty</span>
+0029 <span class="comment">% r(indx([2:2:end]))=[];</span>
+0030 <span class="comment">%</span>
+0031 <span class="comment">%r=mergedoubles(r,'BPI3');</span>
+0032 <span class="comment">%r=mergedoubles(r,'SF1A');</span>
+0033 <span class="comment">%r=mergedoubles(r,'SD1A');</span>
+0034 
+0035 [l,~,~]=atlinopt(r,0,1:length(r));
+0036 
+0037 
+0038 tabhead=[<span class="string">'\\begin{table}[!h]\n'</span><span class="keyword">...</span>
+0039     <span class="string">'\\caption{'</span> tabname <span class="string">'}\n'</span><span class="keyword">...</span>
+0040     <span class="string">'\\begin{center}\n'</span><span class="keyword">...</span>
+0041     <span class="string">'\\begin{tabular}{rccccccccc}\n'</span><span class="keyword">...</span>
+0042     <span class="string">'\\toprule\n'</span><span class="keyword">...</span>
+0043     <span class="string">'name &amp; L [m] &amp; $\\rho\\,[m]$ &amp; $\\theta\\,[rad]$&amp; $B_0\\,[T]$ &amp;$b_2\\,[T/m]$ &amp;$b_3\\,[T/m^2]$ &amp; $\\beta_x\\,[m]$&amp; $\\beta_y\\,[m]$ &amp;$\\eta_x\\,[m]$ \\\\\n'</span><span class="keyword">...</span>
+0044     <span class="string">'\\midrule\n'</span><span class="keyword">...</span>
+0045     ];
+0046 
+0047 tabtail=[<span class="keyword">...</span>
+0048     <span class="string">'\\bottomrule\n'</span><span class="keyword">...</span>
+0049     <span class="string">'\\end{tabular}\n'</span><span class="keyword">...</span><span class="comment">.</span>
+0050     <span class="string">'\\end{center}\n'</span><span class="keyword">...</span>
+0051     <span class="string">'\\label{refto_'</span> tabname <span class="string">'}\n'</span><span class="keyword">...</span>
+0052     <span class="string">'\\end{table}\n'</span><span class="keyword">...</span>
+0053     <span class="keyword">...</span>
+0054     ];
+0055 
+0056 <span class="comment">% get Brho</span>
+0057 <span class="comment">%E0=r{1}.Energy;</span>
+0058 
+0059 E0=6.0e9;
+0060 
+0061 Brho=3.3356*E0/1e9;
+0062 
+0063 <span class="keyword">if</span> isfield(r,<span class="string">'Class'</span>)
+0064     b=findcells(r,<span class="string">'Class'</span>,<span class="string">'Bend'</span>);
+0065     q=findcells(r,<span class="string">'Class'</span>,<span class="string">'Quadrupole'</span>);
+0066     s=findcells(r,<span class="string">'Class'</span>,<span class="string">'Sextupole'</span>);
+0067 <span class="keyword">else</span>
+0068     b=findcells(r,<span class="string">'BetaCode'</span>,<span class="string">'DI'</span>);
+0069     q=findcells(r,<span class="string">'BetaCode'</span>,<span class="string">'QP'</span>);
+0070     s=findcells(r,<span class="string">'BetaCode'</span>,<span class="string">'SX'</span>);
+0071 <span class="keyword">end</span>
+0072 
+0073 <span class="comment">% only half cell</span>
+0074 b=b(b&lt;ceil(length(r)/2+1));
+0075 q=q(q&lt;ceil(length(r)/2+1));
+0076 s=s(s&lt;ceil(length(r)/2+1));
+0077 
+0078 <span class="comment">% get magnets</span>
+0079 colors=[ repmat(<span class="string">'\\color{Blue!80!White} '</span>,length(b),1);<span class="keyword">...</span>
+0080          repmat(<span class="string">'\\color{Red!80!Black}  '</span>,length(q),1);<span class="keyword">...</span>
+0081          repmat(<span class="string">'\\color{Green!80!Black}'</span>,length(s),1)];
+0082 
+0083 [mag,magord]=sort([b,q,s]);
+0084 
+0085 colors=colors(magord,:);
+0086 
+0087 
+0088 <span class="comment">% get names, b1,b2,betax,etax</span>
+0089 <span class="comment">% names=cellfun(@(x)x.FamName,r(mag),'un',0);</span>
+0090 <span class="comment">% [~,i]=unique(names);</span>
+0091 <span class="comment">% [mag,im]=sort(mag(i));</span>
+0092 <span class="comment">% mag=mag(end:-1:1);</span>
+0093 <span class="comment">% colors=colors(im(end:-1:1),:);</span>
+0094 <span class="comment">%</span>
+0095 
+0096 dips=findcells(r(mag),<span class="string">'BendingAngle'</span>);
+0097 
+0098 L=cellfun(@(x)x.Length,r(mag));
+0099 
+0100 names=cellfun(@(x)x.FamName,r(mag),<span class="string">'un'</span>,0);
+0101 B0=cellfun(@(x)x.PolynomB(1),r(mag),<span class="string">'un'</span>,0);
+0102 B0(dips)=cellfun(@(x)x.BendingAngle/x.Length,r(mag(dips)),<span class="string">'un'</span>,0);
+0103 B1=cellfun(@(x)x.PolynomB(2),r(mag),<span class="string">'un'</span>,0);
+0104 B2=cellfun(@(x)x.PolynomB(3),r(mag),<span class="string">'un'</span>,0);
+0105 
+0106 betaX=arrayfun(@(x)x.beta(1),l(mag),<span class="string">'un'</span>,0)';
+0107 betaY=arrayfun(@(x)x.beta(2),l(mag),<span class="string">'un'</span>,0)';
+0108 disp=arrayfun(@(x)x.Dispersion(1),l(mag),<span class="string">'un'</span>,0)';
+0109 
+0110 <span class="comment">%names=cell2mat(names);</span>
+0111 <span class="comment">%L=cell2mat(L);</span>
+0112 
+0113 TH=cell2mat(B0);
+0114 B0=cell2mat(B0)*Brho;
+0115 B1=cell2mat(B1)*Brho;
+0116 B2=cell2mat(B2)*Brho;
+0117 betaX=cell2mat(betaX);
+0118 betaY=cell2mat(betaY);
+0119 disp=cell2mat(disp);
+0120 
+0121 RH=L./TH;
+0122 RH(isinf(RH))=0;
+0123 
+0124 <span class="comment">% print to string</span>
+0125 leftparstr=repmat(<span class="string">'{'</span>,size(B0));
+0126 rightparstr=repmat(<span class="string">'}'</span>,size(B0));
+0127 andstr=repmat(<span class="string">'&amp;'</span>,size(B0));
+0128 nlstr=repmat(<span class="string">'\\\\ \n'</span>,size(B0));
+0129 
+0130 
+0131 namesl=zeros(length(names),10);
+0132 <span class="keyword">for</span> i=1:length(names)
+0133     LN=length(names{i});
+0134     <span class="keyword">if</span> LN&lt;10
+0135         namesl(i,:)=[names{i} repmat(<span class="string">' '</span>,1,(10-LN))];
+0136     <span class="keyword">end</span>
+0137 <span class="keyword">end</span>
+0138 
+0139 lmt=[<span class="keyword">...</span>
+0140     leftparstr colors namesl rightparstr andstr <span class="keyword">...</span>
+0141     num2str(L,<span class="string">'%1.3f'</span>) andstr<span class="keyword">...</span>
+0142     leftparstr colors num2str(RH,<span class="string">'%1.3f'</span>) rightparstr andstr<span class="keyword">...</span>
+0143     leftparstr colors num2str(TH,<span class="string">'%1.3f'</span>) rightparstr andstr<span class="keyword">...</span>
+0144     leftparstr colors num2str(B0,<span class="string">'%1.3f'</span>) rightparstr andstr<span class="keyword">...</span>
+0145     leftparstr colors num2str(B1,<span class="string">'%2.1f'</span>) rightparstr andstr<span class="keyword">...</span>
+0146     leftparstr colors num2str(B2,<span class="string">'%3.1f'</span>) rightparstr andstr<span class="keyword">...</span>
+0147     num2str(betaX,<span class="string">'%2.2f'</span>) andstr<span class="keyword">...</span>
+0148     num2str(betaY,<span class="string">'%2.2f'</span>) andstr<span class="keyword">...</span>
+0149     num2str(disp,<span class="string">'%1.3f'</span>) nlstr];
+0150 
+0151 lmt=reshape(lmt',1,numel(lmt));
+0152 
+0153 lmt=strrep(lmt,<span class="string">'0.000}'</span>,<span class="string">'    }'</span>);
+0154 lmt=strrep(lmt,<span class="string">'0.00}'</span>,<span class="string">'    }'</span>);
+0155 lmt=strrep(lmt,<span class="string">'0.0}'</span>,<span class="string">'    }'</span>);
+0156 
+0157 <span class="comment">% print to file</span>
+0158 fff=fopen([tabname <span class="string">'.tex'</span>],<span class="string">'w+'</span>);
+0159 
+0160 fprintf(fff,tabhead);
+0161 fprintf(fff,lmt');
+0162 fprintf(fff,tabtail);
+0163 
+0164 fclose(<span class="string">'all'</span>)
+0165 
+0166 close all
+0167 clear all
+0168 
+0169 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

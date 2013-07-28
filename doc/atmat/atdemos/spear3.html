@@ -1,0 +1,323 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of spear3</title>
+  <meta name="keywords" content="spear3">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atdemos</a> &gt; spear3.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>spear3
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function varargout = spear3(varargin); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = spear3(varargin);</a>
+0002 
+0003 L0  = 2.341440122400003e+002;    <span class="comment">% design length [m]</span>
+0004 C0  = 299792458;                 <span class="comment">% speed of light [m/s]</span>
+0005 H   = 372;                      <span class="comment">% Cavity harmonic number</span>
+0006 
+0007 CAV    = struct(<span class="string">'FamName'</span>, <span class="string">'RF'</span> , <span class="string">'Energy'</span>, 3e9, <span class="keyword">...</span>
+0008         <span class="string">'Length'</span>, 0 , <span class="string">'Voltage'</span>, 3.2e+6 , <span class="string">'Frequency'</span>, H*C0/L0, <span class="keyword">...</span>
+0009         <span class="string">'HarmNumber'</span>, H , <span class="string">'PassMethod'</span>, <span class="string">'CavityPass'</span>); 
+0010 
+0011     
+0012 COR = struct(<span class="string">'FamName'</span>, <span class="string">'COR'</span> ,<span class="keyword">...</span>
+0013         <span class="string">'Length'</span>, 0.15, <span class="string">'KickAngle'</span>, [0 0], <span class="string">'PassMethod'</span>, <span class="string">'CorrectorPass'</span>); 
+0014     
+0015 BPM.FamName = <span class="string">'BPM'</span>;
+0016 BPM.Length = 0;
+0017 BPM.PassMethod = <span class="string">'IdentityPass'</span>;
+0018 
+0019 AP.FamName = <span class="string">'AP'</span>;
+0020 AP.Length = 0;
+0021 AP.Limits = [-0.1, 0.1, -0.1, 0.1];
+0022 AP.PassMethod = <span class="string">'AperturePass'</span>;
+0023 
+0024 <span class="comment">% ===================== Injection Kickers and Drifts ============================================</span>
+0025 
+0026 INJ.FamName = <span class="string">'SEPTUM'</span>;
+0027 INJ.MemberOf = <span class="string">'Injection'</span>;
+0028 INJ.Length = 0;
+0029 INJ.PassMethod = <span class="string">'IdentityPass'</span>; 
+0030 
+0031 K1 = struct(<span class="string">'FamName'</span>, <span class="string">'KICKER'</span> , <span class="string">'MemberOf'</span>, {{<span class="string">'Injection'</span>}}, <span class="string">'Tag'</span>, <span class="string">'K1'</span>, <span class="keyword">...</span>
+0032         <span class="string">'Length'</span>, 1.2 , <span class="string">'KickAngle'</span>, [0 0], <span class="string">'PassMethod'</span>, <span class="string">'CorrectorPass'</span>); 
+0033     
+0034 
+0035 K2 = K1; 
+0036 K2.Length = 0.6;
+0037 K2.Tag = <span class="string">'K2'</span>;
+0038 
+0039 
+0040 K3 = K1;
+0041 K3.Tag = <span class="string">'K3'</span>;
+0042 
+0043 
+0044 DI1 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DI1'</span>  ,<span class="string">'Length'</span>, 0.9235741);
+0045 DI2 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DI2'</span>  ,<span class="string">'Length'</span>, 0.6882939);
+0046 DI3 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DI3'</span>  ,<span class="string">'Length'</span>, 0.6834939);
+0047 DI4 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DI4'</span>  ,<span class="string">'Length'</span>, 0.1224401);
+0048 DI5 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DI5'</span>  ,<span class="string">'Length'</span>, 1.24013);
+0049 DI6 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DI6'</span>  ,<span class="string">'Length'</span>, 0.165804);
+0050 
+0051 
+0052 
+0053 <span class="comment">% ================  Standard Cell Drifts ===================================</span>
+0054 
+0055 DC2 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC2'</span>, <span class="string">'Length'</span>,  0.097500);
+0056 DC5 = atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC5'</span>, <span class="string">'Length'</span>,  0.200986);
+0057 
+0058 <span class="comment">% ================= Standard Cell BPM Drifts ===============================</span>
+0059 
+0060 DC1A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC1A'</span>, <span class="string">'Length'</span>, 1.405934);
+0061 DC1B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC1B'</span>, <span class="string">'Length'</span>, 0.12404125);
+0062 DC3A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC3A'</span>, <span class="string">'Length'</span>, 0.05322065);
+0063 DC3B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC3B'</span>, <span class="string">'Length'</span>, 0.16368247);
+0064 
+0065 DC4A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC4A'</span>, <span class="string">'Length'</span>, 0.15921467);
+0066 DC4B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC4B'</span>, <span class="string">'Length'</span>, 0.044418);
+0067 DC6A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC6A'</span>, <span class="string">'Length'</span>, 0.110646);
+0068 DC6B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC6B'</span>, <span class="string">'Length'</span>, 0.06316585);  <span class="comment">%0.069354 corrected to make path length consistent</span>
+0069 
+0070 <span class="comment">% ================= Standard Cell Corrector Magnet Drifts ==================</span>
+0071 DC2A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC2A'</span>, <span class="string">'Length'</span>, 0.11576525);
+0072 DC2B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC2B'</span>, <span class="string">'Length'</span>, 0.11581045);
+0073 DC2C    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC2C'</span>, <span class="string">'Length'</span>, 0.10210045);
+0074 DC2D    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC2D'</span>, <span class="string">'Length'</span>, 0.12947525);
+0075 
+0076 DC5A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC5A'</span>, <span class="string">'Length'</span>, 0.09058);
+0077 DC5B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC5B'</span>, <span class="string">'Length'</span>, 0.36139);
+0078 DC5C    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC5C'</span>, <span class="string">'Length'</span>, 0.09584);
+0079 DC5D    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>, <span class="string">'DC5D'</span>, <span class="string">'Length'</span>, 0.35613);
+0080 
+0081 
+0082 <span class="comment">% ================ Bending Magnets ======================================</span>
+0083 
+0084 BEND    =    atelem(<span class="string">'bend'</span>, <span class="string">'FamName'</span>, <span class="string">'BND'</span>,<span class="string">'Length'</span>, 1.5048,  <span class="keyword">...</span>
+0085             <span class="string">'BendingAngle'</span>, 0.18479957, <span class="string">'EntranceAngle'</span>, 0.18479957/2,<span class="keyword">...</span>
+0086             <span class="string">'ExitAngle'</span>, 0.18479957/2, <span class="string">'K'</span>, -0.31537858);
+0087  
+0088 BDM        =    atelem(<span class="string">'bend'</span>  , <span class="string">'FamName'</span>, <span class="string">'B34'</span>, <span class="string">'Length'</span>, 1.14329,  <span class="keyword">...</span>
+0089             <span class="string">'BendingAngle'</span>, 0.138599675894, <span class="string">'EntranceAngle'</span>, 0.138599675894/2, <span class="keyword">...</span>
+0090             <span class="string">'ExitAngle'</span>, 0.138599675894/2, <span class="string">'K'</span>, -0.31537858);
+0091         
+0092 <span class="comment">% ================ Standard Cell Quadrupoles  ===========================</span>
+0093 
+0094 QF        =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QF'</span>, <span class="string">'Length'</span>, 0.3533895,  <span class="string">'K'</span>, 1.768672904054 );
+0095 QD        =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QD'</span>, <span class="string">'Length'</span>, 0.1634591,  <span class="string">'K'</span>, -1.542474230359 );
+0096 QFC        =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QFC'</span>, <span class="string">'Length'</span>, 0.5123803, <span class="string">'K'</span>, 1.748640831069);
+0097 
+0098 <span class="comment">% ================ Matching Cell Quadrupoles  ===========================</span>
+0099 
+0100 QDX     =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QDX'</span>, <span class="string">'Length'</span>, 0.3533895,  <span class="string">'K'</span>, -1.386467245226 );
+0101 QDY     =   atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QDY'</span>, <span class="string">'Length'</span>, 0.3533895,  <span class="string">'K'</span>, -0.460640930646 );
+0102 QDZ     =   atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QDZ'</span>, <span class="string">'Length'</span>, 0.3533895,  <span class="string">'K'</span>, -0.878223937747 );
+0103 QFX     =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QFX'</span>, <span class="string">'Length'</span>, 0.6105311,  <span class="string">'K'</span>, 1.573196278394 );
+0104 QFY     =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QFY'</span>, <span class="string">'Length'</span>, 0.5123803,  <span class="string">'K'</span>, 1.481493709831 );
+0105 QFZ     =    atelem(<span class="string">'quadrupole'</span>, <span class="string">'FamName'</span>, <span class="string">'QFZ'</span>, <span class="string">'Length'</span>, 0.3533895,  <span class="string">'K'</span>, 1.427902006984 );
+0106 
+0107 
+0108 <span class="comment">% ================ Sextupoles ============================================</span>
+0109 
+0110 SF = atelem(<span class="string">'sextupole'</span>, <span class="string">'FamName'</span>, <span class="string">'SF'</span> , <span class="string">'Length'</span> , 0.21);
+0111 SF.PolynomB(3) = 32.0477093/2;
+0112 SF.MaxOrder = 2;
+0113 
+0114 SFM     =    SF; <span class="comment">% SFM is the same length as SF</span>
+0115 SFM.FamName = <span class="string">'SFM'</span>;
+0116 SFM.PolynomB(3) = 7.5;
+0117 
+0118 SDM    =    SF; <span class="comment">% SFM is the same length as SF, SFM</span>
+0119 SDM.FamName = <span class="string">'SDM'</span>;
+0120 SDM.PolynomB(3) = -8.5;
+0121 
+0122 SD = atelem(<span class="string">'sextupole'</span>, <span class="string">'FamName'</span>, <span class="string">'SD'</span> , <span class="string">'Length'</span> , 0.25);
+0123 SD.PolynomB(3) = -38.80153/2;
+0124 SD.MaxOrder = 2;
+0125 
+0126 <span class="comment">% ============== Matching Cell Drifts without correctors or BPMs</span>
+0127 <span class="comment">% NOTE: BPMS and correctors are not symmetric in MCA, MCB</span>
+0128 
+0129 DM1        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM1'</span> ,<span class="string">'Length'</span>, 3.81);
+0130 DM2        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM2'</span> ,<span class="string">'Length'</span>, 0.0975);
+0131 DM3        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM3'</span> ,<span class="string">'Length'</span>, 0.275);
+0132 DM4        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM4'</span> ,<span class="string">'Length'</span>, 0.21584572);
+0133 DM5        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM5'</span> ,<span class="string">'Length'</span>, 0.250);
+0134 DM6        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM6'</span> ,<span class="string">'Length'</span>, 0.49068463);
+0135 DM7        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM7'</span> ,<span class="string">'Length'</span>, 0.17380985);
+0136 DM8     =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM8'</span> ,<span class="string">'Length'</span>, 0.500);
+0137 DM9        =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM9'</span> ,<span class="string">'Length'</span>, 0.105);
+0138 DM10    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DM10'</span>,<span class="string">'Length'</span>, 3.2765714);
+0139 
+0140 <span class="comment">%Matching Cell A BPM Drifts</span>
+0141 DA1A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA1A'</span> , <span class="string">'Length'</span> ,3.6792386);
+0142 DA1B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA1B'</span> , <span class="string">'Length'</span> ,0.12406665);
+0143 
+0144 DA3A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA3A'</span> , <span class="string">'Length'</span> ,0.20889925);
+0145 DA3B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA3B'</span> , <span class="string">'Length'</span> ,0.05414045);
+0146 
+0147 DA5A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA5A'</span> , <span class="string">'Length'</span> ,0.11397747);
+0148 DA5B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA5B'</span> , <span class="string">'Length'</span> ,0.108563);
+0149 DA5C    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA5C'</span> , <span class="string">'Length'</span> ,0.051845);   
+0150 DA5D    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA5D'</span> , <span class="string">'Length'</span> ,0.17069547);   
+0151 
+0152 DA7A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA7A'</span> , <span class="string">'Length'</span> ,0.1106966);
+0153 DA7B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA7B'</span> , <span class="string">'Length'</span> ,0.06311325);
+0154 
+0155 DA8A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA8A'</span> , <span class="string">'Length'</span> ,0.33735947);
+0156 DA8B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA8B'</span> , <span class="string">'Length'</span> ,0.12848625);
+0157 
+0158 DA10A   =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA10A'</span>, <span class="string">'Length'</span> ,0.12393965);
+0159 DA10B   =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA10B'</span>, <span class="string">'Length'</span> ,3.145937 );
+0160 
+0161 <span class="comment">%Matching Cell A Corrector Drifts</span>
+0162 DA2A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA2A'</span> , <span class="string">'Length'</span> ,0.11530525);
+0163 DA2B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA2B'</span> , <span class="string">'Length'</span> ,0.11773445);
+0164 
+0165 DA6A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA6A'</span> , <span class="string">'Length'</span> ,0.1266);
+0166 <span class="comment">%DA6B    =    atelem('drift', 'FamName','DA6B' , 'Length' ,0.90476852);   %0.90477 corrected to make path length consistent</span>
+0167 DA6B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA6B'</span> , <span class="string">'Length'</span> ,0.90476828);   <span class="comment">%0.90477 corrected to make path length consistent with MAD (234.14401272)</span>
+0168 DA6C    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA6C'</span> , <span class="string">'Length'</span> ,0.0960);
+0169 DA6D    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA6D'</span> , <span class="string">'Length'</span> ,0.93537);
+0170 
+0171 DA9A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA9A'</span> , <span class="string">'Length'</span> ,0.10930525);
+0172 DA9B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DA9B'</span> , <span class="string">'Length'</span> ,0.13730525);
+0173 
+0174 <span class="comment">%Matching Cell B  BPM Drifts</span>
+0175 DB1A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB1A'</span> , <span class="string">'Length'</span> ,3.747082 );
+0176 DB1B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB1B'</span> , <span class="string">'Length'</span> ,0.05622325 );
+0177 
+0178 DB3A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB3A'</span> , <span class="string">'Length'</span> ,0.13222685);
+0179 DB3B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB3B'</span> , <span class="string">'Length'</span> ,0.13081285);
+0180 
+0181 DB5A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB5A'</span> , <span class="string">'Length'</span> ,0.17069547);
+0182 DB5B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB5B'</span> , <span class="string">'Length'</span> ,0.051845 );
+0183 DB5C    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB5C'</span> , <span class="string">'Length'</span> ,0.1085632);
+0184 DB5D    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB5D'</span> , <span class="string">'Length'</span> ,0.11397727);
+0185 
+0186 DB7A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB7A'</span> , <span class="string">'Length'</span> ,0.06311305);
+0187 DB7B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB7B'</span> , <span class="string">'Length'</span> ,0.1106968);
+0188 
+0189 DB8A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB8A'</span> , <span class="string">'Length'</span> ,0.32725027);
+0190 DB8B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB8B'</span> , <span class="string">'Length'</span> ,0.13859545);
+0191 
+0192 DB10A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB10A'</span>, <span class="string">'Length'</span> ,0.12404125 );
+0193 DB10B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB10B'</span>, <span class="string">'Length'</span> ,3.1458354);
+0194 
+0195 <span class="comment">%Matching Cell B Corrector Drifts</span>
+0196 DB2A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB2A'</span> , <span class="string">'Length'</span> ,0.115805250);
+0197 DB2B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB2B'</span> , <span class="string">'Length'</span> ,0.117234450);
+0198 
+0199 DB6A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB6A'</span> , <span class="string">'Length'</span> ,0.93737);
+0200 DB6B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB6B'</span> , <span class="string">'Length'</span> ,0.09399852);   <span class="comment">%0.094 corrected to make path length consistent</span>
+0201 DB6C    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB6C'</span> , <span class="string">'Length'</span> ,0.90437);
+0202 DB6D    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB6D'</span> , <span class="string">'Length'</span> ,0.1270);
+0203 
+0204 DB9A    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB9A'</span> , <span class="string">'Length'</span> ,0.12330525);
+0205 DB9B    =    atelem(<span class="string">'drift'</span>, <span class="string">'FamName'</span>,<span class="string">'DB9B'</span> , <span class="string">'Length'</span> ,0.12330525);
+0206 
+0207 <span class="comment">% -------------------------------------------------------------------------</span>
+0208 <span class="comment">% -------------------------------------------------------------------------</span>
+0209 
+0210 <span class="comment">%Standard Cell: (Note QFC not split)</span>
+0211 HCEL1 =    {DC1A BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0212 DC5A COR DC5B SF DC6A BPM DC6B QFC};
+0213 
+0214 HCEL2 =    {DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0215 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DC1A};
+0216 
+0217 ACEL    =    [{AP} HCEL1 HCEL2];
+0218 
+0219 <span class="comment">%Cell 2: (K1 magnet, Note QFC not split)</span>
+0220 K1CEL2 =    {DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0221 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DI1};
+0222 CEL2    =    [{AP} HCEL1 K1CEL2];
+0223 
+0224 <span class="comment">%Cell 3: (K1 &amp; K2 magnets, Note QFC not split)</span>
+0225 K1CEL3 =    {K1 DI2 BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0226 DC5A COR DC5B SF DC6A BPM DC6B QFC};
+0227 
+0228 K2CEL3 =    {DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0229 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DI3 K2 DI4};
+0230 
+0231 CEL3    =    [{AP} K1CEL3 K2CEL3];
+0232 
+0233 <span class="comment">%Cell 4: (Septum &amp; K3 magnets, Note QFC not split)</span>
+0234 SEPCEL4 =    {DI5 INJ DI6 BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0235 DC5A COR DC5B SF DC6A BPM DC6B QFC};
+0236 
+0237 K3CEL4 =    {DC6B DC6A SF DC5C COR DC5D<span class="keyword">...</span>
+0238 SD DC4B BPM DC4A BEND DC3B DC3A QD DC2C COR DC2D QF DC1B BPM DI2 K3};
+0239 
+0240 CEL4    =    [{AP} SEPCEL4 K3CEL4];
+0241 
+0242 <span class="comment">%Cell 5: (K5 magnets, Note QFC not split)</span>
+0243 K3CEL5 =    {DI1 BPM DC1B QF DC2A COR DC2B QD DC3A BPM DC3B BEND DC4A BPM DC4B SD<span class="keyword">...</span>
+0244 DC5A COR DC5B SF DC6A BPM DC6B QFC};
+0245 CEL5    =    [{AP} K3CEL5 HCEL2];
+0246 
+0247 <span class="comment">%Matching Cell A (South East, North West)</span>
+0248 MCA={DA1A BPM DA1B QDX DA2A COR DA2B <span class="keyword">...</span>
+0249 QFX DA3A BPM DA3B QDY DM4 BDM DA5A BPM DA5B SDM DA6A COR DA6B SFM DA7A BPM DA7B QFY <span class="keyword">...</span>
+0250 DM7 SFM DA6C COR DA6D SDM DA5C BPM DA5D BDM<span class="keyword">...</span>
+0251 DA8A BPM DA8B QDZ DA9A COR DA9B QFZ DA10A BPM DA10B};
+0252 
+0253 <span class="comment">%Matching Cell B (North East, South West)</span>
+0254 MCB={DB1A BPM DB1B QDX DB2A COR DB2B <span class="keyword">...</span>
+0255 QFX DB3A BPM DB3B QDY DM4 BDM DB5A BPM DB5B SDM DB6A COR DB6B SFM DM7 QFY DB7A BPM<span class="keyword">...</span>
+0256 DB7B SFM DB6C COR DB6D SDM DB5C BPM DB5D BDM<span class="keyword">...</span>
+0257 DB8A BPM DB8B QDZ DB9A COR DB9B QFZ DB10A BPM DB10B};
+0258 
+0259 <span class="comment">% Begin Lattice</span>
+0260 NORTH   =    [CEL2 CEL3 CEL4 CEL5 ACEL ACEL ACEL];
+0261 SOUTH    =    [ACEL ACEL ACEL ACEL ACEL ACEL ACEL];
+0262 RING    =   [{CAV} MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB)];
+0263 
+0264 
+0265 <span class="keyword">if</span> nargout
+0266     varargout{1} = RING;
+0267 <span class="keyword">else</span> <span class="comment">% If no output arguments - greate global variable THERING</span>
+0268     <span class="keyword">global</span> THERING
+0269     THERING = RING;
+0270     
+0271     <span class="keyword">if</span> evalin(<span class="string">'base'</span>,<span class="string">'exist(''THERING'')'</span>) &amp; evalin(<span class="string">'base'</span>,<span class="string">'isglobal(THERING)'</span>)
+0272         warning(<span class="string">'Global variable THERING was overridden'</span>);
+0273     <span class="keyword">else</span>
+0274         evalin(<span class="string">'caller'</span>,<span class="string">'global THERING'</span>);
+0275     <span class="keyword">end</span>
+0276 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

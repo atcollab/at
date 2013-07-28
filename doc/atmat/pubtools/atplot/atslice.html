@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atslice</title>
+  <meta name="keywords" content="atslice">
+  <meta name="description" content="ATSLICE Splits ring elements in short slices for plotting">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">atplot</a> &gt; atslice.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/atplot&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atslice
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATSLICE Splits ring elements in short slices for plotting</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function slicedring = atslice(ring,npts) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSLICE Splits ring elements in short slices for plotting</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atplot.html" class="code" title="function curve = atplot(varargin)">atplot</a>	ATPLOT Plots optical functions</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function newelems=splitdipole(elem,elmlength)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function slicedring = atslice(ring,npts)</a>
+0002 <span class="comment">%ATSLICE Splits ring elements in short slices for plotting</span>
+0003 
+0004 totlength=findspos(ring,length(ring)+1);
+0005 elmlength=totlength/npts;
+0006 slicedring={};
+0007 <span class="keyword">for</span> i=1:length(ring)
+0008     elem=ring{i};
+0009     <span class="keyword">if</span> isfield(elem,<span class="string">'BendingAngle'</span>)
+0010         newelems=<a href="#_sub1" class="code" title="subfunction newelems=splitdipole(elem,elmlength)">splitdipole</a>(elem,elmlength);
+0011     <span class="keyword">elseif</span> isfield(elem,<span class="string">'Length'</span>) &amp;&amp; elem.Length &gt; 0
+0012         nslices=ceil(elem.Length/elmlength);
+0013         elem.Length=elem.Length/nslices;
+0014         elt={elem};
+0015         newelems=elt(ones(nslices,1));
+0016     <span class="keyword">else</span>
+0017         newelems={elem};
+0018     <span class="keyword">end</span>
+0019     slicedring=[slicedring;newelems]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+0020 <span class="keyword">end</span>
+0021 
+0022 <span class="comment">%   Special treatment of dipoles</span>
+0023 
+0024     <a name="_sub1" href="#_subfunctions" class="code">function newelems=splitdipole(elem,elmlength)</a>
+0025         nsl=ceil(elem.Length/elmlength);
+0026         <span class="keyword">if</span> isfield(elem,<span class="string">'EntranceAngle'</span>)
+0027             ena=elem.EntranceAngle;
+0028             elem.EntranceAngle=0;
+0029         <span class="keyword">end</span>
+0030         <span class="keyword">if</span> isfield(elem,<span class="string">'ExitAngle'</span>)
+0031             exa=elem.ExitAngle;
+0032             elem.ExitAngle=0;
+0033         <span class="keyword">end</span>
+0034         elem.Length=elem.Length/nsl;
+0035         elem.BendingAngle=elem.BendingAngle/nsl;
+0036         el={elem};
+0037         newelems=el(ones(nsl,1));
+0038         <span class="keyword">if</span> exist(<span class="string">'ena'</span>,<span class="string">'var'</span>), newelems{1}.EntranceAngle=ena; <span class="keyword">end</span>
+0039         <span class="keyword">if</span> exist(<span class="string">'exa'</span>,<span class="string">'var'</span>), newelems{end}.ExitAngle=exa; <span class="keyword">end</span>
+0040     <span class="keyword">end</span>
+0041 <span class="keyword">end</span>
+0042</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

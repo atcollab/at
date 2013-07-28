@@ -1,0 +1,796 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of madx2g4bl</title>
+  <meta name="keywords" content="madx2g4bl">
+  <meta name="description" content="function [outtext]=madx2g4bl(P_0,particle,folder)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="#">Converters</a> &gt; <a href="index.html">MADX2G4BL</a> &gt; madx2g4bl.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/Converters/MADX2G4BL&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>madx2g4bl
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [outtext]=madx2g4bl(P_0,particle,folder)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function [outtext]=madx2g4bl(P_0,particle,folder)
+ tansform madx file into G4BL input file.
+
+ Simone Maria Liuzzo PhD@LNF 11-jul-2011</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% function [outtext]=madx2g4bl(P_0,particle,folder)</span>
+0002 <span class="comment">% tansform madx file into G4BL input file.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% Simone Maria Liuzzo PhD@LNF 11-jul-2011</span>
+0005 
+0006 format longe
+0007 
+0008 StepLength=10; <span class="comment">% [mm] default is 10mm</span>
+0009 
+0010 Nevents=1; <span class="comment">% e+ events and e- events.</span>
+0011 disp([<span class="string">'writing G4BL file to simulate: '</span> num2str(Nevents) <span class="string">' e+ and '</span> num2str(Nevents) <span class="string">' e-'</span>])
+0012 det=0;
+0013 SR=0;
+0014 
+0015 TotLength=1258358.149; <span class="comment">%[mm]</span>
+0016 
+0017 <span class="comment">%beamstart=TotLength/2;</span>
+0018 <span class="comment">%beamstart=581.981242*1000-140; % first QDI center</span>
+0019 
+0020 beamstart=0;
+0021 
+0022 <span class="comment">% beams shapes</span>
+0023 
+0024 <span class="comment">% diversi da zero muore!!! sestupoli??? KL? BRHO?</span>
+0025 sX=1*1e-3; <span class="comment">%[mm]</span>
+0026 sY=1*1e-3; <span class="comment">%[mm]</span>
+0027 sXp=1*1e-6; <span class="comment">%[rad]</span>
+0028 sYp=1*1e-6; <span class="comment">%[rad]</span>
+0029 
+0030 killval=1;
+0031 
+0032 Xang=0.06600162900000006; <span class="comment">% rad crossing angle</span>
+0033 
+0034 
+0035 <span class="comment">%%%% HER %%%%%</span>
+0036 <span class="comment">%%%%%%%%%%%%%%</span>
+0037 
+0038 folder=<span class="string">'SBHERV12DATA'</span>;
+0039 P_0=6.699999981; <span class="comment">% GeV/c</span>
+0040 particle=<span class="string">'e+'</span>;
+0041 
+0042 sxt=1;
+0043 quadH=1;  <span class="comment">% go around in the other direction.</span>
+0044 
+0045 Brho=3.3356409519815205*P_0; <span class="comment">% positron and opposite rotation</span>
+0046 
+0047 
+0048 bigmondo=[<span class="keyword">...</span>
+0049     <span class="keyword">...</span><span class="comment">'box mondo height=10000 width=3000000 length=3000000 material=Vacuum \n'...</span>
+0050     ];
+0051 
+0052 posbeam=[ <span class="string">' beam gaussian particle='</span> particle <span class="keyword">...</span>
+0053     <span class="string">' beamZ='</span> num2str(beamstart) <span class="keyword">...</span>
+0054     <span class="string">' beamX='</span> num2str(+1*1.532845188e-07,15) <span class="keyword">...</span>
+0055     <span class="string">' beamXp='</span> num2str(+1*1.683548689e-07,15) <span class="keyword">...</span>
+0056     <span class="string">' rotation=Y'</span> num2str(0*180)<span class="keyword">...</span><span class="comment"> rotate to head back</span>
+0057     <span class="string">'  nEvents='</span> num2str(Nevents) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> % nEvents=10</span>
+0058     <span class="string">'    sigmaX='</span> num2str(sX,15) <span class="keyword">...</span>
+0059     <span class="string">' sigmaY='</span> num2str(sY,15)<span class="keyword">...</span>
+0060     <span class="string">' sigmaXp='</span> num2str(sXp,15)<span class="keyword">...</span>
+0061     <span class="string">' sigmaYp='</span> num2str(sYp,15) <span class="string">' '</span><span class="keyword">...</span>
+0062     <span class="string">'    meanMomentum='</span> num2str(P_0*1000,15) <span class="string">' sigmaP=0'</span><span class="keyword">...</span>
+0063     <span class="string">' meanT=0 sigmaT=0 \n'</span><span class="keyword">...</span>
+0064     <span class="string">'trackcolor reference=1,1,1 \n'</span><span class="keyword">...</span>
+0065     ];
+0066 
+0067 head=[<span class="string">'physics QGSP synchrotronRadiation='</span> num2str(SR) <span class="string">'\n'</span><span class="keyword">...</span>
+0068     <span class="string">'start x=0 y=0 z='</span> num2str(beamstart) <span class="string">' radiusCut=0.001 ring=1\n'</span><span class="keyword">...</span>
+0069     <span class="string">'reference particle='</span> particle <span class="string">' referenceMomentum='</span> num2str(P_0*1000,15) <span class="string">' noEloss=1'</span><span class="keyword">...</span>
+0070     <span class="string">' beamXp=0 beamYp=0 '</span><span class="keyword">...</span>
+0071     <span class="string">' tuneMomentum='</span> num2str(P_0,15) <span class="string">'\n'</span><span class="keyword">...</span>
+0072     <span class="string">'box BeamVis width=200.0 height=200.0 length=0.1 material=Vacuum color=1,0,0 kill=1 \n'</span><span class="keyword">...</span>
+0073     <span class="string">'trace nTrace='</span> num2str(2*Nevents) <span class="string">' oneNTuple=1 format=ascii \n'</span><span class="keyword">...</span>
+0074     <span class="string">' param eventTimeLimit=60*8\n'</span><span class="keyword">...</span><span class="comment"> %  8 minutes maximum time for one simulation</span>
+0075     <span class="string">' trackcuts keep=e+,e-,gamma maxTime=1000000*40\n'</span> <span class="keyword">...</span><span class="comment"> %ns --&gt; 4micros</span>
+0076     ];
+0077 <span class="comment">% x damping time= 0.26700741E-01 =&gt; 15% =~ 40ms = 40*10^6 ns</span>
+0078 
+0079 <span class="comment">% get pos K and L for Quad, sext and bend</span>
+0080 Qfile=fopen([folder <span class="string">'/quad'</span>]);
+0081 Sfile=fopen([folder <span class="string">'/sext'</span>]);
+0082 Bfile=fopen([folder <span class="string">'/bend'</span>]);
+0083 <span class="comment">% get pos K and L for Quad, sext and bend -- sbend and not rbend.</span>
+0084 <span class="comment">%Qfile=fopen('DIAMDATA/quad');</span>
+0085 <span class="comment">%Sfile=fopen('DIAMDATA/sext');</span>
+0086 <span class="comment">%Bfile=fopen('DIAMDATA/bend');</span>
+0087 
+0088 <span class="comment">% name s K L</span>
+0089 Q=textscan(Qfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0090 B=textscan(Bfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0091 S=textscan(Sfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0092 
+0093 defQ= [<span class="string">'virtualdetector Det radius=10.0 length='</span> num2str(2*StepLength)<span class="keyword">...</span>
+0094     <span class="string">' color=0,.2,.0 referenceParticle=1 format=rootExtended\n'</span>];
+0095 defS=<span class="string">''</span>;
+0096 defB=<span class="string">''</span>;
+0097 ord=1;
+0098 plac={};
+0099 defined={};
+0100 d=1;
+0101 
+0102 <span class="keyword">for</span> i=1:length(Q{1})
+0103     name=(Q{1}(i));
+0104     name{1}(1)=<span class="string">''</span>;
+0105     name{1}(end)=<span class="string">''</span>;
+0106     Q{1}(i)=name;
+0107 <span class="keyword">end</span>
+0108 <span class="keyword">for</span> i=1:length(S{1})
+0109     name=S{1}(i);
+0110     name{1}(1)=<span class="string">''</span>;
+0111     name{1}(end)=<span class="string">''</span>;
+0112     S{1}(i)=name;
+0113 <span class="keyword">end</span>
+0114 <span class="keyword">for</span> i=1:length(B{1})
+0115     name=B{1}(i);
+0116     name{1}(1)=<span class="string">''</span>;
+0117     name{1}(end)=<span class="string">''</span>;
+0118     B{1}(i)=name;
+0119 <span class="keyword">end</span>
+0120 
+0121 <span class="comment">% small final focus quad</span>
+0122 ffQuad{1}=char(Q{1}(1));<span class="comment">%{'QD0AL'};</span>
+0123 ffQuad{2}=char(Q{1}(2));<span class="comment">%{'QD0BL'};</span>
+0124 ffQuad{3}=char(Q{1}(3));<span class="comment">%{'QD0AR'};</span>
+0125 ffQuad{4}=char(Q{1}(4));<span class="comment">%{'QD0AR'};</span>
+0126 ffQuad{5}=char(Q{1}(end));<span class="comment">%{'QD0BR'};</span>
+0127 ffQuad{6}=char(Q{1}(end-1));<span class="comment">%{'QDPMR'};</span>
+0128 ffQuad{7}=char(Q{1}(end-2));<span class="comment">%{'QDPML'};</span>
+0129 ffQuad{8}=char(Q{1}(end-3));<span class="comment">%{'QD0BR'};</span>
+0130 
+0131 
+0132 plac{ord}=[<span class="string">' cornerarc'</span> <span class="string">' z=0+'</span> num2str(0) <span class="string">'+0+'</span> num2str(0,15) <span class="keyword">...</span>
+0133     <span class="string">' angle='</span> num2str(-Xang/2*180/pi,15)  <span class="string">' centerRadius='</span>  num2str(1,15) <span class="string">'\n'</span><span class="keyword">...</span>
+0134     ];
+0135 ord=ord+1;
+0136 
+0137 <span class="keyword">for</span> i=1:length(Q{1})
+0138     <span class="comment">%genericquad QDpi fieldLength=280 apertureRadius=101.5 ironRadius=381 \</span>
+0139     <span class="comment">%    ironLength=250 ironColor=0.6,.0,.6 kill=' num2str(killval) ' gradient=$KQDpi</span>
+0140     <span class="comment">%</span>
+0141     <span class="keyword">if</span> sum(strcmp(char(Q{1}(i)),defined))==0;
+0142         inrad=60;
+0143         outrad=70;
+0144         
+0145         <span class="keyword">if</span> sum(strcmp(char(Q{1}(i)),ffQuad))~=0
+0146             inrad=12;
+0147             outrad=15;
+0148             tempSL=StepLength;
+0149             StepLength=0.01;
+0150             <span class="keyword">if</span> strcmp(char(Q{1}(i)),ffQuad{1}) || strcmp(char(Q{1}(i)),ffQuad{5}) <span class="comment">%% P.M.</span>
+0151                 inrad=8;
+0152                 outrad=10;
+0153                 
+0154             <span class="keyword">end</span>
+0155             
+0156         <span class="keyword">end</span>
+0157         defQ=[ defQ <span class="keyword">...</span>
+0158             <span class="string">' genericquad '</span> Q{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0159             <span class="string">' fieldLength='</span> num2str(Q{4}(i)*1000,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0160             <span class="string">' apertureRadius='</span> num2str(inrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0161             <span class="string">' ironRadius='</span> num2str(outrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0162             <span class="string">' ironLength='</span> num2str(Q{4}(i)*1000,15) <span class="string">' '</span><span class="keyword">...</span>
+0163             <span class="string">' ironColor=0/255,191/255,255/255 kill='</span> num2str(killval) <span class="string">' '</span><span class="keyword">...</span>
+0164             <span class="string">' fringe=0'</span><span class="keyword">...</span>
+0165             <span class="string">' gradient='</span> num2str(quadH*Q{3}(i)*Brho/Q{4}(i),15) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> K</span>
+0166             <span class="string">' maxStep='</span> num2str(StepLength/2)  <span class="keyword">...</span>
+0167             <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*AGROW&gt;</span>
+0168         
+0169         <span class="comment">% add to already defined</span>
+0170         defined{d}=char(Q{1}(i));
+0171         d=d+1;
+0172     <span class="keyword">end</span>
+0173     
+0174     StepLength=tempSL;
+0175     
+0176     <span class="comment">%defQ=[defQ 'virtualdetector Det radius=400.0 color=0,.1,.1'];</span>
+0177     
+0178     <span class="keyword">if</span> (ord/2-floor(ord/2))==(det-1) <span class="comment">% set 0 to place a detector in every quadrupole.</span>
+0179         plac{ord}=[<span class="string">'place '</span> Q{1}(i) <span class="string">' parent=  z='</span> num2str(Q{2}(i)*1000,15)<span class="keyword">...</span>
+0180             <span class="string">' coordinates=centerline'</span><span class="keyword">...</span>
+0181             <span class="string">'\n'</span><span class="keyword">...</span>
+0182             <span class="string">'place '</span> <span class="string">'Det'</span> <span class="keyword">...</span>
+0183             <span class="string">' rename=DET# '</span><span class="keyword">...</span>
+0184             <span class="string">' parent=  z='</span> num2str((Q{2}(i))*1000)<span class="keyword">...</span>
+0185             <span class="string">' coordinates=centerline '</span><span class="keyword">...</span>
+0186             <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0187     <span class="keyword">else</span>
+0188         plac{ord}=[<span class="string">'place '</span> Q{1}(i) <span class="string">' parent=  z='</span> num2str(Q{2}(i)*1000,15)<span class="keyword">...</span>
+0189             <span class="string">' coordinates=centerline'</span><span class="keyword">...</span>
+0190             <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0191     <span class="keyword">end</span>
+0192     <span class="comment">%      if sum(strcmp(Q{1}(i),{'&quot;QD0AL&quot;';'&quot;QD0BL&quot;';'&quot;QD0AR&quot;';'&quot;QD0BR&quot;'}))&gt;0</span>
+0193     <span class="comment">%</span>
+0194     <span class="comment">%      plac{ord}=['place ' Q{1}(i) ' parent=  z=' num2str(Q{2}(i)*1000,15)...</span>
+0195     <span class="comment">%      ' coordinates=centerline'...</span>
+0196     <span class="comment">%      ' rotation=Y' num2str(-0.066*180/pi,15) ' '...</span>
+0197     <span class="comment">%      '\n'];</span>
+0198     <span class="comment">%     end</span>
+0199     ord=ord+1;
+0200 <span class="keyword">end</span>
+0201 
+0202 <span class="keyword">for</span> i=1:length(S{1})
+0203     <span class="comment">%multipole SF1 fieldLength=150 apertureRadius=101.5 ironRadius=381 \</span>
+0204     <span class="comment">%    ironLength=140 ironColor=0,.6,.6 kill=' num2str(killval) ' sextupole=$KSF1</span>
+0205     
+0206     <span class="keyword">if</span> sum(strcmp(char(S{1}(i)),defined))==0;
+0207         inrad=80;
+0208         outrad=120;
+0209         
+0210         defS=[ defS <span class="keyword">...</span>
+0211             <span class="string">' multipole '</span> S{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0212             <span class="string">' fieldLength='</span> num2str(S{4}(i)*1000,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0213             <span class="string">' apertureRadius='</span> num2str(inrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0214             <span class="string">' ironRadius='</span> num2str(outrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0215             <span class="string">' ironLength='</span> num2str(S{4}(i)*1000,15) <span class="string">' '</span><span class="keyword">...</span>
+0216             <span class="string">' ironColor=173/255,255/255,47/255 kill='</span> num2str(killval) <span class="string">' '</span><span class="keyword">...</span>
+0217             <span class="string">' fringe=0'</span><span class="keyword">...</span>
+0218             <span class="string">' maxStep='</span> num2str(StepLength/2)  <span class="keyword">...</span>
+0219             <span class="string">' sextupole='</span> num2str(sxt*S{3}(i)*Brho/S{4}(i),15) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> K2</span>
+0220             <span class="string">'\n'</span>];
+0221         <span class="comment">% add to already defined</span>
+0222         defined{d}=char(S{1}(i));
+0223         d=d+1;
+0224     <span class="keyword">end</span>
+0225     
+0226     
+0227     plac{ord}=[<span class="string">'place '</span> S{1}(i) <span class="string">' parent=  z='</span> num2str(S{2}(i)*1000,15)<span class="keyword">...</span>
+0228         <span class="string">' coordinates=centerline '</span><span class="keyword">...</span>
+0229         <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0230     ord=ord+1;
+0231     
+0232 <span class="keyword">end</span>
+0233 
+0234 <span class="keyword">for</span> i=1:length(B{1})
+0235     
+0236     <span class="comment">%genericbend BHer fieldWidth=1660 fieldHeight=200 fieldLength=5400 \</span>
+0237     <span class="comment">%    ironColor=1,0,0 ironWidth=1828 ironHeight=1320 ironLength=5000 \</span>
+0238     <span class="comment">% kill=' num2str(killval) ' By=0.2778157677856496</span>
+0239     <span class="comment">%tune B1 z0=100 z1=3000 initial=-0.6500 step=0.01 expr=Px1/Pz1 \</span>
+0240     <span class="comment">%tolerance=0.000001</span>
+0241     <span class="comment">%genericbend B fieldWidth=500 fieldHeight=500 fieldLength=500 \</span>
+0242     <span class="comment">%ironWidth=800 ironHeight=800 ironLength=500 \</span>
+0243     <span class="comment">%fieldMaterial=Vacuum place B z=2000 rename=B1 rotation=Y15 By=B1</span>
+0244     
+0245     <span class="keyword">if</span> sum(strcmp(char(B{1}(i)),defined))==0 <span class="comment">% if not defined, define.</span>
+0246         Fw=240*1.0;
+0247         Fh=70;
+0248         Iw=10+Fw;
+0249         Ih=30+Fh;
+0250         
+0251         split=1; <span class="comment">%make 'split' parts of a single magnet</span>
+0252         defB=[ defB <span class="keyword">...</span>
+0253             <span class="string">'\n param B'</span> num2str(i) B{1}(i) <span class="string">'='</span> num2str(-Brho*B{3}(i)/B{4}(i),15) <span class="string">'\n'</span><span class="keyword">...</span>
+0254             ];
+0255         <span class="keyword">if</span> B{2}(i)&gt;140 &amp;&amp; B{2}(i)&lt;1140
+0256             
+0257             defB=[ defB <span class="keyword">...</span>
+0258                 <span class="comment">%  ' tune B' num2str(i) B{1}(i) ' z0=' num2str(B{2}(i)*1000-B{4}(i)*500) ' z1=' num2str(B{2}(i)*1000+B{4}(i)*500) ' '...</span>
+0259                 <span class="comment">%  ' initial=' num2str(Brho*B{3}(i)/B{4}(i),15) ' step=1e-13'...</span>
+0260                 <span class="comment">%  ' expr=(Px1/Pz1) tolerance=0.0000001 \n'...</span>
+0261                 ];
+0262         <span class="keyword">end</span>
+0263         defB=[ defB <span class="keyword">...</span>
+0264             <span class="string">'genericbend '</span> B{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0265             <span class="string">' fieldLength='</span> num2str(B{4}(i)*1000/split,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0266             <span class="string">' fieldWidth='</span> num2str(Fw,15) <span class="string">' '</span><span class="keyword">...</span>
+0267             <span class="string">' fieldHeight='</span> num2str(Fh,15) <span class="string">' '</span><span class="keyword">...</span>
+0268             <span class="string">' ironLength='</span> num2str(B{4}(i)*1000/split,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0269             <span class="string">' ironWidth='</span> num2str(Iw,15) <span class="string">' '</span><span class="keyword">...</span>
+0270             <span class="string">' ironHeight='</span> num2str(Ih,15) <span class="string">' '</span><span class="keyword">...</span>
+0271             <span class="string">' fringe=0'</span><span class="keyword">...</span>
+0272             <span class="string">' maxStep='</span> num2str(StepLength)  <span class="keyword">...</span>
+0273             <span class="keyword">...</span><span class="comment"> ' By=' num2str(Brho*B{3}(i)/B{4}(i),15)...' fieldColor=0.5,.1,.0 '...</span>
+0274             <span class="string">' By=$B'</span> num2str(i) B{1}(i) <span class="keyword">...</span>
+0275             <span class="string">' ironColor=1,.0,.0 kill='</span> num2str(killval) <span class="string">' '</span><span class="keyword">...</span>
+0276             <span class="string">'\n'</span><span class="keyword">...</span>
+0277             ];
+0278         <span class="comment">% add to already defined</span>
+0279         defined{d}=char(B{1}(i));
+0280         d=d+1;
+0281         
+0282     <span class="keyword">end</span>
+0283     
+0284     plac{ord}=[
+0285         <span class="string">'place '</span> B{1}(i) <span class="string">' parent=  z=0+'</span> num2str(0) <span class="string">'+0+'</span> num2str(B{2}(i)*1000,15) <span class="keyword">...</span>
+0286         <span class="string">' x='</span> num2str(B{4}(i)/2*tan(B{3}(i)/2)*1000) <span class="string">''</span><span class="keyword">...</span><span class="comment"> % move in by a sagitta amount</span>
+0287         <span class="string">' coordinates=centerline'</span><span class="keyword">...</span><span class="comment">' \n'...</span>
+0288         <span class="string">' rotation=Y'</span> num2str(B{3}(i)*180/pi/2,15)<span class="keyword">...</span><span class="comment">' rename=' B{1}(i) ' \n'...</span>
+0289         <span class="keyword">...</span><span class="comment">' By=B' num2str(i) B{1}(i) ...</span>
+0290         <span class="string">'\n'</span> <span class="keyword">...</span>
+0291         <span class="string">' cornerarc'</span> <span class="string">' z=0+'</span> num2str(0) <span class="string">'+0+'</span> num2str((B{2}(i)-B{4}(i)/2)*1000,15) <span class="keyword">...</span>
+0292         <span class="string">' angle='</span> num2str(B{3}(i)*180/pi,15)  <span class="string">' centerRadius='</span>  num2str((B{4}(i)/B{3}(i))*1000,15) <span class="string">'\n'</span><span class="keyword">...</span><span class="comment">'#corner' ' parent=  z=' num2str((B{2}(i)+B{4}(i)/2)*1000,15) ... ' rotation=Y' num2str(B{3}(i)*180/pi/2,15) ' \n'...</span>
+0293         <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0294     ord=ord+1;
+0295     
+0296 <span class="keyword">end</span>
+0297 
+0298 RF_on=0;
+0299 <span class="comment">% plac RFC</span>
+0300 <span class="comment">%length[m]        voltage[MV]                lag          freq[MHz]             harmon</span>
+0301 <span class="comment">%0.501777                0.6           0.424389        476.0054439               1998</span>
+0302 RF=[<span class="string">'pillbox RFC maxGradient='</span> num2str(RF_on*0.6/0.501777,15) <span class="keyword">...</span>
+0303     <span class="string">' color=0.5,0.5,0 frequency=0.4760054439 innerLength=501.777 '</span><span class="keyword">...</span>
+0304     <span class="string">' phaseAcc=0.424389 wallThick=100 innerRadius=1000\n'</span>];
+0305 RF1pos=577.1465514*1000;
+0306 RF2pos=579.1935514*1000;
+0307 plac{ord}=[<span class="string">'  # place RFC z='</span> num2str(RF1pos) <span class="string">'\n'</span>];
+0308 plac{ord+1}=[<span class="string">'  # place RFC z='</span> num2str(RF2pos) <span class="string">'\n'</span>];
+0309 
+0310 ippos=0;
+0311 Dumppos=beamstart-(+11+280);
+0312 
+0313 positions=[0;Q{2}; S{2}; B{2}; (RF1pos-TotLength)/1000; (RF2pos-TotLength)/1000 ;ippos;(beamstart-TotLength)/1000;(TotLength/2)/1000;TotLength*2];
+0314 posString=[];
+0315 <span class="keyword">for</span> i=1:length(positions)-1
+0316     posString=[posString num2str(positions(i)*1000) <span class="string">','</span>];
+0317 <span class="keyword">end</span>
+0318 posString=[posString num2str(positions(i)*1000)];
+0319 
+0320 twissH=[<span class="string">'profile '</span> <span class="keyword">...</span>
+0321     <span class="string">'zloop='</span> num2str(beamstart*0) <span class="string">':'</span> num2str(TotLength*3) <span class="string">':1000 '</span><span class="keyword">...</span>
+0322     <span class="keyword">...</span><span class="comment">' z=' posString ...</span>
+0323     <span class="string">' file=twissLER particle='</span> particle <span class="keyword">...</span>
+0324     <span class="string">' coordinates=centerline\n'</span>]; <span class="comment">%   ' coordinates=reference\n'];</span>
+0325 
+0326 <span class="comment">%twissH=['profile zloop=' num2str(beamstart*0) ':' num2str(beamstart+TotLength*2.5) ':1000 file=twissHER particle=' particle ...</span>
+0327 <span class="comment">%      ' coordinates=centerline\n']; %   ' coordinates=reference\n'];</span>
+0328 
+0329 
+0330 dump=[<span class="string">'tubs DUMP innerRadius=0.01 outerRadius=300 length=10 kill=1 material=Cu color=0.2,0.2,0\n '</span><span class="keyword">...</span>
+0331     ];
+0332 
+0333 <span class="comment">% some hidrogen for interactions</span>
+0334 ip=[<span class="string">'material ebunch a=0.005 z=1 density=0.01\n'</span><span class="keyword">...</span>
+0335     <span class="string">'tubs ip innerRadius=0 outerRadius=300 length=1 kill='</span> num2str(killval) <span class="string">' material=Vacuum color=1,.0,.1 \n '</span><span class="keyword">...</span>
+0336     ];
+0337 plac{ord+2}=[<span class="string">'# place ip parent=  z='</span> num2str(ippos,15) <span class="string">' \n'</span> ];
+0338 plac{ord+3}=[<span class="keyword">...</span>
+0339     posbeam <span class="string">'place BeamVis z='</span> num2str(beamstart,15) <span class="string">' y=101 \n'</span>
+0340     ];
+0341 plac{ord+4}=[<span class="string">'# place DUMP parent=  z='</span> num2str(Dumppos,15) <span class="string">' \n'</span>];
+0342 plac{ord+5}=[<span class="string">' cornerarc'</span> <span class="string">' z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(0,15) <span class="keyword">...</span>
+0343     <span class="string">' angle='</span> num2str(Xang/2*180/pi,15)  <span class="string">' centerRadius='</span>  num2str(1,15) <span class="string">'\n'</span><span class="keyword">...</span>
+0344     ];
+0345 
+0346 <span class="comment">%%%%%%                             RF1         RF2                   beam</span>
+0347 [s,ind]=sort([0;Q{2}; S{2}; B{2}; RF1pos/1000; RF2pos/1000 ;637.2728766;beamstart/1000;Dumppos/1000;TotLength/1000]); <span class="comment">% in m</span>
+0348 
+0349 
+0350 HER=[head defQ defS defB RF ip dump];
+0351 HERPlace=[plac{ind}];
+0352 
+0353 <span class="comment">%%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0354 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%       LER          %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0355 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0356 
+0357 
+0358 <span class="comment">%%% LER (solenoids to implement)</span>
+0359 folder=<span class="string">'SBLERV12DATA'</span>;
+0360 P_0=4.179999969; <span class="comment">% GeV/c</span>
+0361 particle=<span class="string">'e-'</span>;
+0362 
+0363 Brho=3.3356409519815205*P_0; <span class="comment">% electron</span>
+0364 
+0365 quadL=-1; <span class="comment">% swich off LER quad.</span>
+0366 
+0367 
+0368 killval=1;
+0369 
+0370 beamstart=575.4563172*1000-140; <span class="comment">% first QDI center</span>
+0371 
+0372 beamstart=0;
+0373 
+0374 <span class="comment">%beamstart=575.4563172*1000-140*3; % first QDI center</span>
+0375 beamstart=(beamstart+TotLength);
+0376 <span class="comment">%%%%%  %%%% %%%% both beams heading in the same direction!</span>
+0377 elebeam=[ <span class="string">'beam gaussian particle='</span> particle <span class="string">' beamZ='</span> num2str(beamstart) <span class="keyword">...</span>
+0378     <span class="keyword">...</span><span class="comment">' rotation=Y' num2str(1*Xang*180/pi) ... % if starting at IP.</span>
+0379     <span class="keyword">...</span><span class="comment">' rotation=Y' num2str(180) ... % if starting in straight.</span>
+0380     <span class="string">' beamX='</span> num2str(-1*5.634489178e-05,15) <span class="keyword">...</span>
+0381     <span class="string">' beamXp='</span> num2str(+1*5.584726107e-08,15) <span class="keyword">...</span>
+0382     <span class="string">'  nEvents='</span> num2str(Nevents) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> % nEvents=10</span>
+0383     <span class="string">' sigmaX='</span> num2str(sX,15) <span class="keyword">...</span>
+0384     <span class="string">' sigmaY='</span> num2str(sY,15)<span class="keyword">...</span>
+0385     <span class="string">' sigmaXp='</span> num2str(sXp,15)<span class="keyword">...</span>
+0386     <span class="string">' sigmaYp='</span> num2str(sYp,15) <span class="string">' '</span><span class="keyword">...</span>
+0387     <span class="string">'    meanMomentum='</span> num2str(P_0*1000,15) <span class="string">' sigmaP=0'</span><span class="keyword">...</span>
+0388     <span class="string">' meanT=0 sigmaT=0 \n'</span><span class="keyword">...</span>
+0389     <span class="string">'trackcolor reference=1,1,1 \n'</span><span class="keyword">...</span>
+0390     ];
+0391 
+0392 headL=[<span class="keyword">...</span>
+0393     <span class="string">'reference particle='</span> particle <span class="string">' referenceMomentum='</span> num2str(P_0*1000,15) <span class="string">' noEloss=1'</span><span class="keyword">...</span>
+0394     <span class="string">' beamXp=0 beamYp=0 '</span><span class="keyword">...</span>
+0395     <span class="string">' beamZ='</span> num2str(TotLength) <span class="string">'+0 '</span><span class="keyword">...</span>
+0396     <span class="string">' rotation=Y'</span> num2str(0) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> % elements in the opposite direction</span>
+0397     <span class="string">' tuneMomentum='</span> num2str(P_0,15) <span class="string">'\n'</span><span class="keyword">...</span>
+0398     ];
+0399 
+0400 
+0401 <span class="comment">%headL=[...</span>
+0402 <span class="comment">%];</span>
+0403 <span class="comment">% x damping time= 0.26700741E-01 =&gt; 15% =~ 40ms = 40*10^6 ns</span>
+0404 
+0405 <span class="comment">% get pos K and L for Quad, sext and bend</span>
+0406 Qfile=fopen([folder <span class="string">'/quad'</span>]);
+0407 Sfile=fopen([folder <span class="string">'/sext'</span>]);
+0408 Bfile=fopen([folder <span class="string">'/bend'</span>]);
+0409 SOLfile=fopen([folder <span class="string">'/sol'</span>]);
+0410 <span class="comment">% get pos K and L for Quad, sext and bend -- sbend and not rbend.</span>
+0411 <span class="comment">%Qfile=fopen('DIAMDATA/quad');</span>
+0412 <span class="comment">%Sfile=fopen('DIAMDATA/sext');</span>
+0413 <span class="comment">%Bfile=fopen('DIAMDATA/bend');</span>
+0414 
+0415 <span class="comment">% name s K L</span>
+0416 Q=textscan(Qfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0417 B=textscan(Bfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0418 S=textscan(Sfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0419 SOL=textscan(SOLfile,<span class="string">'%s %f %f %f'</span>,<span class="string">'Headerlines'</span>,47);
+0420 
+0421 defQ= [<span class="string">'virtualdetector Det radius=10.0 length='</span> num2str(2*StepLength)<span class="keyword">...</span>
+0422     <span class="string">' color=0,.2,.0 referenceParticle=1 format=rootExtended\n'</span>];
+0423 defS=<span class="string">''</span>;
+0424 defSOL=<span class="string">''</span>;
+0425 defB=<span class="string">''</span>;
+0426 ord=1;
+0427 placL={};
+0428 defined={};
+0429 d=1;
+0430 <span class="comment">% tilt reference by crossing angle.</span>
+0431 placL{ord}=[<span class="string">' cornerarc'</span> <span class="string">' z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(0,15) <span class="keyword">...</span>
+0432     <span class="string">' angle='</span> num2str(Xang/2*180/pi,15)  <span class="string">' centerRadius='</span>  num2str(1,15) <span class="string">'\n'</span><span class="keyword">...</span>
+0433     ];
+0434 ord=ord+1;
+0435 
+0436 <span class="keyword">for</span> i=1:length(Q{1})
+0437     name=(Q{1}(i));
+0438     name{1}(1)=<span class="string">' '</span>;
+0439     name{1}(end)=<span class="string">'p'</span>;
+0440     Q{1}(i)=name;
+0441 <span class="keyword">end</span>
+0442 <span class="keyword">for</span> i=1:length(S{1})
+0443     name=S{1}(i);
+0444     name{1}(1)=<span class="string">' '</span>;
+0445     name{1}(end)=<span class="string">'p'</span>;
+0446     S{1}(i)=name;
+0447 <span class="keyword">end</span>
+0448 <span class="keyword">for</span> i=1:length(B{1})
+0449     name=B{1}(i);
+0450     name{1}(1)=<span class="string">''</span>;
+0451     name{1}(end)=<span class="string">'p'</span>;
+0452     B{1}(i)=name;
+0453 <span class="keyword">end</span>
+0454 <span class="keyword">for</span> i=1:length(SOL{1})
+0455     name=SOL{1}(i);
+0456     name{1}(1)=<span class="string">''</span>;
+0457     name{1}(end)=<span class="string">'p'</span>;
+0458     SOL{1}(i)=name;
+0459 <span class="keyword">end</span>
+0460 
+0461 <span class="comment">% small FF quad</span>
+0462 ffQuad{1}=char(Q{1}(1));<span class="comment">%{'QD0AL'};</span>
+0463 ffQuad{2}=char(Q{1}(2));<span class="comment">%{'QD0BL'};</span>
+0464 ffQuad{3}=char(Q{1}(3));<span class="comment">%{'QD0AR'};</span>
+0465 ffQuad{4}=char(Q{1}(4));
+0466 ffQuad{5}=char(Q{1}(end));<span class="comment">%{'QD0BR'};</span>
+0467 ffQuad{6}=char(Q{1}(end-1));<span class="comment">%{'QDPMR'};</span>
+0468 ffQuad{7}=char(Q{1}(end-2));<span class="comment">%{'QDPML'};</span>
+0469 ffQuad{8}=char(Q{1}(end-3));
+0470 
+0471 
+0472 <span class="keyword">for</span> i=1:length(Q{1})
+0473     <span class="comment">%genericquad QDpi fieldLength=280 apertureRadius=101.5 ironRadius=381 \</span>
+0474     <span class="comment">%    ironLength=250 ironColor=0.6,.0,.6 kill=' num2str(killval) ' gradient=$KQDpi</span>
+0475     <span class="comment">%</span>
+0476     <span class="keyword">if</span> sum(strcmp(char(Q{1}(i)),defined))==0;
+0477         inrad=60;
+0478         outrad=70;
+0479         
+0480         <span class="keyword">if</span> sum(strcmp(char(Q{1}(i)),ffQuad))~=0
+0481             inrad=12;
+0482             outrad=15;
+0483             tempSL=StepLength;
+0484             StepLength=0.01;
+0485             <span class="keyword">if</span> strcmp(char(Q{1}(i)),ffQuad{1}) || strcmp(char(Q{1}(i)),ffQuad{5}) <span class="comment">%% P.M.</span>
+0486                 inrad=8;
+0487                 outrad=10;
+0488                 
+0489             <span class="keyword">end</span>
+0490         <span class="keyword">end</span>
+0491         
+0492         defQ=[ defQ <span class="keyword">...</span>
+0493             <span class="string">' genericquad '</span> Q{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0494             <span class="string">' fieldLength='</span> num2str(Q{4}(i)*1000,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0495             <span class="string">' apertureRadius='</span> num2str(inrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0496             <span class="string">' ironRadius='</span> num2str(outrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0497             <span class="string">' ironLength='</span> num2str(Q{4}(i)*1000,15) <span class="string">' '</span><span class="keyword">...</span>
+0498             <span class="string">' ironColor=0/255,255/255,191/255 kill='</span> num2str(killval) <span class="string">' '</span><span class="keyword">...</span>
+0499             <span class="string">' fringe=0'</span><span class="keyword">...</span>
+0500             <span class="string">' gradient='</span> num2str(quadL*Q{3}(i)*Brho/Q{4}(i),15) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> K</span>
+0501             <span class="string">' maxStep='</span> num2str(StepLength/2)  <span class="keyword">...</span>
+0502             <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*AGROW&gt;</span>
+0503         
+0504         <span class="comment">% add to already defined</span>
+0505         defined{d}=char(Q{1}(i));
+0506         d=d+1;
+0507     <span class="keyword">end</span>
+0508     
+0509     StepLength=tempSL;
+0510      
+0511     <span class="comment">%defQ=[defQ 'virtualdetector Det radius=400.0 color=0,.1,.1'];</span>
+0512     
+0513     <span class="keyword">if</span> (ord/2-floor(ord/2))==(det-1) <span class="comment">% set 0 to place a detector in every quadrupole.</span>
+0514         placL{ord}=[<span class="string">'place '</span> Q{1}(i) <span class="string">' parent=  z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(Q{2}(i)*1000,15)<span class="keyword">...</span>
+0515             <span class="string">' y=0'</span><span class="keyword">...</span>
+0516             <span class="string">' coordinates=centerline'</span><span class="keyword">...</span>
+0517             <span class="string">'\n'</span><span class="keyword">...</span>
+0518             <span class="string">'place '</span> <span class="string">'Det'</span> <span class="string">' parent=  z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str((Q{2}(i))*1000)<span class="keyword">...</span>
+0519             <span class="string">' rename=DETp# '</span><span class="keyword">...</span>
+0520             <span class="string">' y=0'</span><span class="keyword">...</span>
+0521             <span class="string">' coordinates=centerline '</span><span class="keyword">...</span>
+0522             <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0523     <span class="keyword">else</span>
+0524         placL{ord}=[<span class="string">'place '</span> Q{1}(i) <span class="string">' parent=  z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(Q{2}(i)*1000,15)<span class="keyword">...</span>
+0525             <span class="string">' y=0'</span><span class="keyword">...</span>
+0526             <span class="string">' coordinates=centerline'</span><span class="keyword">...</span>
+0527             <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0528     <span class="keyword">end</span>
+0529     <span class="comment">%      if sum(strcmp(Q{1}(i),{'&quot;QD0AL&quot;';'&quot;QD0BL&quot;';'&quot;QD0AR&quot;';'&quot;QD0BR&quot;'}))&gt;0</span>
+0530     <span class="comment">%</span>
+0531     <span class="comment">%      plac{ord}=['place ' Q{1}(i) ' parent=  z=' num2str(Q{2}(i)*1000,15)...</span>
+0532     <span class="comment">%      ' coordinates=centerline'...</span>
+0533     <span class="comment">%      ' rotation=Y' num2str(-0.066*180/pi,15) ' '...</span>
+0534     <span class="comment">%      '\n'];</span>
+0535     <span class="comment">%     end</span>
+0536     ord=ord+1;
+0537 <span class="keyword">end</span>
+0538 
+0539 <span class="keyword">for</span> i=1:length(S{1})
+0540     <span class="comment">%multipole SF1 fieldLength=150 apertureRadius=101.5 ironRadius=381 \</span>
+0541     <span class="comment">%    ironLength=140 ironColor=0,.6,.6 kill=' num2str(killval) ' sextupole=$KSF1</span>
+0542     
+0543     <span class="keyword">if</span> sum(strcmp(char(S{1}(i)),defined))==0;
+0544         inrad=80;
+0545         outrad=120;
+0546         
+0547         defS=[ defS <span class="keyword">...</span>
+0548             <span class="string">' multipole '</span> S{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0549             <span class="string">' fieldLength='</span> num2str(S{4}(i)*1000,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0550             <span class="string">' apertureRadius='</span> num2str(inrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0551             <span class="string">' ironRadius='</span> num2str(outrad,15) <span class="string">' '</span><span class="keyword">...</span>
+0552             <span class="string">' ironLength='</span> num2str(S{4}(i)*1000,15) <span class="string">' '</span><span class="keyword">...</span>
+0553             <span class="string">' ironColor=173/255,255/255,47/255 kill='</span> num2str(killval) <span class="string">' '</span><span class="keyword">...</span>
+0554             <span class="string">' fringe=0'</span><span class="keyword">...</span>
+0555             <span class="string">' maxStep='</span> num2str(StepLength/2)  <span class="keyword">...</span>
+0556             <span class="string">' sextupole='</span> num2str(sxt*S{3}(i)*Brho/S{4}(i),15) <span class="string">' '</span><span class="keyword">...</span><span class="comment"> K2</span>
+0557             <span class="string">'\n'</span>];
+0558         <span class="comment">% add to already defined</span>
+0559         defined{d}=char(S{1}(i));
+0560         d=d+1;
+0561     <span class="keyword">end</span>
+0562     
+0563     
+0564     placL{ord}=[<span class="string">'place '</span> S{1}(i) <span class="string">' parent=  z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(S{2}(i)*1000,15)<span class="keyword">...</span>
+0565         <span class="string">' y=0'</span><span class="keyword">...</span>
+0566         <span class="string">' coordinates=centerline '</span><span class="keyword">...</span>
+0567         <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0568     ord=ord+1;
+0569     
+0570 <span class="keyword">end</span>
+0571 
+0572 <span class="keyword">for</span> i=1:length(SOL{1})
+0573     <span class="comment">%multipole SF1 fieldLength=150 apertureRadius=101.5 ironRadius=381 \</span>
+0574     <span class="comment">%    ironLength=140 ironColor=0,.6,.6 kill=' num2str(killval) ' sextupole=$KSF1</span>
+0575     
+0576     <span class="keyword">if</span> sum(strcmp(char(SOL{1}(i)),defined))==0;
+0577         inrad=80;
+0578         outrad=120;
+0579         
+0580         defSOL=[ defSOL <span class="keyword">...</span>
+0581             <span class="string">' \ncoil C'</span> SOL{1}(i) <span class="keyword">...</span>
+0582             <span class="string">' innerRadius='</span> num2str(inrad) <span class="keyword">...</span>
+0583             <span class="string">' outerRadius='</span> num2str(outrad) <span class="keyword">...</span>
+0584             <span class="string">' length='</span> num2str(SOL{4}(i)) <span class="keyword">...</span>
+0585             <span class="string">' material=Cu'</span> <span class="keyword">...</span>
+0586             <span class="string">' maxR='</span> num2str(outrad) <span class="string">'\n\n'</span><span class="keyword">...</span>
+0587             <span class="string">' solenoid  '</span> SOL{1}(i) <span class="string">' coil=C'</span> SOL{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0588             <span class="string">' current='</span> num2str(0) <span class="keyword">...</span><span class="comment"> %%% fake!!!!! not ok!!!</span>
+0589             <span class="string">' color=0,1,1 kill='</span> num2str(killval) <span class="keyword">...</span>
+0590             <span class="string">'\n\n'</span>];
+0591         <span class="comment">% add to already defined</span>
+0592         defined{d}=char(SOL{1}(i));
+0593         d=d+1;
+0594     <span class="keyword">end</span>
+0595     
+0596     
+0597     placL{ord}=[<span class="string">'place '</span> SOL{1}(i) <span class="string">' parent=  z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(SOL{2}(i)*1000,15)<span class="keyword">...</span>
+0598         <span class="string">' y=0'</span><span class="keyword">...</span>
+0599         <span class="string">' coordinates=centerline '</span><span class="keyword">...</span>
+0600         <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0601     ord=ord+1;
+0602     
+0603 <span class="keyword">end</span>
+0604 
+0605 <span class="keyword">for</span> i=1:length(B{1})
+0606     
+0607     <span class="comment">%genericbend BHer fieldWidth=1660 fieldHeight=200 fieldLength=5400 \</span>
+0608     <span class="comment">%    ironColor=1,0,0 ironWidth=1828 ironHeight=1320 ironLength=5000 \</span>
+0609     <span class="comment">% kill=' num2str(killval) ' By=0.2778157677856496</span>
+0610     <span class="keyword">if</span> sum(strcmp(char(B{1}(i)),defined))==0 <span class="comment">% if not defined, define.</span>
+0611         
+0612         Fw=240;
+0613         Fh=70;
+0614         Iw=250;
+0615         Ih=100;
+0616         
+0617         defB=[ defB <span class="keyword">...</span>
+0618             <span class="string">'\n param Bp'</span> num2str(i) B{1}(i) <span class="string">'='</span> num2str(Brho*B{3}(i)/B{4}(i),15) <span class="string">'\n'</span><span class="keyword">...</span>
+0619             ];
+0620         <span class="keyword">if</span> B{2}(i)&lt;400 || B{2}(i)&gt;800
+0621             defB=[ defB <span class="keyword">...</span>
+0622                 <span class="comment">%  ' tune Bp' num2str(i) B{1}(i) ' z0=' num2str(B{2}(i)*1000-B{4}(i)*500) ' z1=' num2str(B{2}(i)*1000+B{4}(i)*500) ' '...</span>
+0623                 <span class="comment">%  ' initial=' num2str(Brho*B{3}(i)/B{4}(i),15) ' step=1e-13'...</span>
+0624                 <span class="comment">%  ' expr=(Px1/Pz1) tolerance=0.0000001 \n'...</span>
+0625                 ];
+0626         <span class="keyword">end</span>
+0627         defB=[ defB <span class="keyword">...</span>
+0628             <span class="string">' genericbend '</span> B{1}(i) <span class="string">' '</span><span class="keyword">...</span>
+0629             <span class="string">' fieldLength='</span> num2str(B{4}(i)*1000,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0630             <span class="string">' fieldWidth='</span> num2str(Fw,15) <span class="string">' '</span><span class="keyword">...</span>
+0631             <span class="string">' fieldHeight='</span> num2str(Fh,15) <span class="string">' '</span><span class="keyword">...</span>
+0632             <span class="string">' ironLength='</span> num2str(B{4}(i)*1000,15) <span class="keyword">...</span><span class="comment"> % mm</span>
+0633             <span class="string">' ironWidth='</span> num2str(Iw,15) <span class="string">' '</span><span class="keyword">...</span>
+0634             <span class="string">' ironHeight='</span> num2str(Ih,15) <span class="string">' '</span><span class="keyword">...</span>
+0635             <span class="string">' ironLength='</span> num2str(B{4}(i)*1000,15) <span class="string">' '</span><span class="keyword">...</span>
+0636             <span class="string">' fringe=0'</span><span class="keyword">...</span>
+0637             <span class="string">' maxStep='</span> num2str(StepLength)  <span class="keyword">...</span>
+0638             <span class="keyword">...</span><span class="comment">' By=' num2str(Brho*B{3}(i)/B{4}(i),15)...' fieldColor=0.5,.1,.0 '...</span>
+0639             <span class="string">' By=$Bp'</span> num2str(i) B{1}(i) <span class="keyword">...</span>
+0640             <span class="string">' ironColor=1,.0,.0 kill='</span> num2str(killval) <span class="string">' '</span><span class="keyword">...</span>
+0641             <span class="string">'\n'</span><span class="keyword">...</span>
+0642             ];
+0643         <span class="comment">% add to already defined</span>
+0644         defined{d}=char(B{1}(i));
+0645         d=d+1;
+0646         
+0647     <span class="keyword">end</span>
+0648     
+0649     
+0650     <span class="comment">%'# cornerarc' ' parent=  z=' num2str((B{2}(i))*1000,15) ...    ' angle=' num2str(B{3}(i)*180/pi) ' centerRadius='  num2str((B{4}(i)/B{3}(i))*1000,15) '\n'...'# cornerarc' ' parent=  z=' num2str((B{2}(i)-B{4}(i)/2)*1000,15) ...    ' angle=' num2str(B{3}(i)*180/pi/2,15) ' centerRadius='  num2str((B{4}(i)/B{3}(i))*1000,15) '\n'...'#corner' ' parent=  z=' num2str((B{2}(i)-B{4}(i)/2)*1000,15) ...' rotation=Y' num2str(B{3}(i)*180/pi/2,15) ' \n'...</span>
+0651     placL{ord}=[
+0652         <span class="string">'place '</span> B{1}(i) <span class="string">' parent=  z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str(B{2}(i)*1000,15) <span class="keyword">...</span>
+0653         <span class="string">' x='</span> num2str(B{4}(i)/2*tan(B{3}(i)/2)*1000) <span class="string">''</span><span class="keyword">...</span>
+0654         <span class="string">' coordinates=centerline'</span><span class="keyword">...</span><span class="comment">' \n'...</span>
+0655         <span class="string">' rotation=Y'</span> num2str(B{3}(i)*180/pi/2,15) <span class="keyword">...</span><span class="comment">' rename=' B{1}(i) ' \n'...</span>
+0656         <span class="string">'\n'</span> <span class="keyword">...</span>
+0657         <span class="string">' cornerarc'</span> <span class="string">' z=0+'</span> num2str(TotLength) <span class="string">'+0+'</span> num2str((B{2}(i)-B{4}(i)/2)*1000,15) <span class="keyword">...</span>
+0658         <span class="string">' angle='</span> num2str(B{3}(i)*180/pi,15)  <span class="string">' centerRadius='</span>  num2str((B{4}(i)/B{3}(i))*1000,15) <span class="string">'\n'</span><span class="keyword">...</span><span class="comment">'#corner' ' parent=  z=' num2str((B{2}(i)+B{4}(i)/2)*1000,15) ... ' rotation=Y' num2str(B{3}(i)*180/pi/2,15) ' \n'...</span>
+0659         <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*SAGROW&gt;</span>
+0660     ord=ord+1;
+0661     
+0662 <span class="keyword">end</span>
+0663 
+0664 RF_on=0;
+0665 
+0666 <span class="comment">% plac RFC</span>
+0667 <span class="comment">%length[m]        voltage[MV]                lag          freq[MHz]             harmon</span>
+0668 <span class="comment">%0.501777                0.6           0.424389        476.0054439               1998</span>
+0669 RFL=[<span class="string">'pillbox RFC maxGradient='</span> num2str(RF_on*0.6/0.501777,15) <span class="keyword">...</span>
+0670     <span class="string">' color=0.5,0.5,0 frequency=0.4760054439 innerLength=501.777 '</span><span class="keyword">...</span>
+0671     <span class="string">' phaseAcc=0.424389 wallThick=100 innerRadius=1000\n'</span>];
+0672 RF1pos=TotLength+577.1465514*1000;
+0673 RF2pos=TotLength+579.1935514*1000;
+0674 
+0675 placL{ord}=[<span class="string">'  # place RFC z='</span> num2str(RF1pos) <span class="string">'\n'</span>];
+0676 placL{ord+1}=[<span class="string">'  # place RFC z='</span> num2str(RF2pos) <span class="string">'\n'</span>];
+0677 
+0678 <span class="comment">%rfc, at = 11.2402595;</span>
+0679 <span class="comment">%rfc, at = 13.2872595;</span>
+0680 positions=[0;Q{2}; S{2}; SOL{2}; B{2}; (RF1pos-TotLength)/1000; (RF2pos-TotLength)/1000 ;ippos;(beamstart-TotLength)/1000;(TotLength/2)/1000;TotLength*2];
+0681 posString=[];
+0682 <span class="keyword">for</span> i=1:length(positions)-1
+0683     posString=[posString num2str(positions(i)*1000+TotLength) <span class="string">','</span>];
+0684 <span class="keyword">end</span>
+0685 posString=[posString num2str(positions(i)*1000+TotLength)];
+0686 
+0687 twissL=[<span class="string">'profile '</span> <span class="keyword">...</span>
+0688     <span class="string">'zloop='</span> num2str(beamstart*0) <span class="string">':'</span> num2str(TotLength*3) <span class="string">':1000 '</span><span class="keyword">...</span>
+0689     <span class="keyword">...</span><span class="comment">' z=' posString ...</span>
+0690     <span class="string">' file=twissLER particle='</span> particle <span class="keyword">...</span>
+0691     <span class="string">' coordinates=centerline\n'</span>]; <span class="comment">%   ' coordinates=reference\n'];</span>
+0692 
+0693 <span class="comment">% keep only part of sequence.</span>
+0694 <span class="comment">% ind=ind(end/4:end/4*2);</span>
+0695 
+0696 dumpL=[<span class="string">'tubs DUMP innerRadius=0 outerRadius=300 length=10 kill=1 material=Cu color=0.2,0.2,0\n '</span><span class="keyword">...</span>
+0697     ];
+0698 
+0699 <span class="comment">% some hidrogen for interactions</span>
+0700 ipL=[<span class="string">'material ebunch a=0.005 z=1 density=0.01\n'</span><span class="keyword">...</span>
+0701     <span class="string">'tubs ip innerRadius=0 outerRadius=300 length=1 kill='</span> num2str(killval) <span class="string">' material=Vacuum color=1,.0,.1 \n '</span><span class="keyword">...</span>
+0702     ];
+0703 ippos=0;
+0704 Dumppos=beamstart+(-11-280);
+0705 placL{ord+2}=[<span class="string">'# place ip parent=  z='</span> num2str(ippos,15) <span class="string">' \n'</span> ];
+0706 placL{ord+3}=[elebeam <span class="string">'place BeamVis z='</span> num2str(beamstart,15) <span class="string">' y=-101 \n'</span>];
+0707 placL{ord+4}=[<span class="string">'# place DUMP parent=  z='</span> num2str(Dumppos,15) <span class="string">' \n'</span>];
+0708 
+0709 placL{ord+5}=[<span class="string">' cornerarc'</span> <span class="string">' z=0+'</span> num2str(TotLength*2) <span class="string">'+0+'</span> num2str(0,15) <span class="keyword">...</span>
+0710     <span class="string">' angle='</span> num2str(-Xang/2*180/pi,15)  <span class="string">' centerRadius='</span>  num2str(1,15) <span class="string">'\n'</span><span class="keyword">...</span>
+0711     ];
+0712 
+0713 
+0714 <span class="comment">% first 0 is for cornerarc crossing angle rotation.</span>
+0715 [s,ind]=sort([0;Q{2}; S{2}; SOL{2}; B{2}; (RF1pos-TotLength)/1000; (RF2pos-TotLength)/1000 ;ippos;(beamstart-TotLength)/1000;(TotLength/2)/1000;TotLength*2]); <span class="comment">% in m</span>
+0716 
+0717 
+0718 
+0719 outtext=char(cell2mat([<span class="keyword">...</span>
+0720     bigmondo <span class="keyword">...</span>
+0721     <span class="keyword">...</span><span class="comment"> definitions</span>
+0722     HER <span class="keyword">...</span><span class="comment">  HER</span>
+0723     defQ defS defB defSOL <span class="keyword">...</span><span class="comment">  LER</span>
+0724     RF ip<span class="keyword">...</span>
+0725     HERPlace <span class="keyword">...</span><span class="comment">  Place HER magnets</span>
+0726     twissH <span class="keyword">...</span>
+0727     headL  dumpL<span class="keyword">...</span>
+0728     placL{ind} twissL<span class="keyword">...</span><span class="comment">  Place LER magnets</span>
+0729     <span class="string">' particlecolor e-=0,0,1 e+=1,0,0 \n'</span><span class="keyword">...</span><span class="comment">  electron is blue and positron is red.</span>
+0730     <span class="keyword">...</span><span class="comment">'g4ui when=4 ''/vis/open OGL''\n'...</span>
+0731     <span class="string">'g4ui when=4 ''/vis/viewer/set/viewpointThetaPhi 45 45''\n'</span><span class="keyword">...</span>
+0732     <span class="string">'g4ui when=4 ''/vis/viewer/set/style wireframe''\n'</span><span class="keyword">...</span>
+0733     <span class="string">'g4ui when=4 ''/run/beamOn '</span> num2str(Nevents*2) <span class="string">' ''\n'</span><span class="keyword">...</span>
+0734     <span class="keyword">...</span><span class="comment"> 'g4ui when=4 ''vis/ogl/printEPS''\n'...</span>
+0735     ]));
+0736 <span class="comment">% lattice 'g4ui when=4 ''/vis/viewer/set/style wireframe''\n'...    'g4ui ''/run/beamOn 20''\n'...</span>
+0737 out=fopen(<span class="string">'G4blseqconv'</span>,<span class="string">'w+'</span>);
+0738 fprintf(out,outtext);
+0739 
+0740 fclose(<span class="string">'all'</span>);
+0741 clear defQ
+0742 clear defS
+0743 clear defB
+0744 clear plac ind ord
+0745 clear defined
+0746 disp(<span class="string">'--- DONE ---'</span>)</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atplotsyn</title>
+  <meta name="keywords" content="atplotsyn">
+  <meta name="description" content="ATPLOTSYN Helper function for ATPLOT">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">atplot</a> &gt; atplotsyn.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/atplot&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atplotsyn
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATPLOTSYN Helper function for ATPLOT</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function pp = atplotsyn(ax,ring) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATPLOTSYN Helper function for ATPLOT
+
+PATCHES=ATPLOTSYN(AX,RING) Plots the magnetic elements found in RING</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atplot.html" class="code" title="function curve = atplot(varargin)">atplot</a>	ATPLOT Plots optical functions</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function pp = atplotsyn(ax,ring)</a>
+0002 <span class="comment">%ATPLOTSYN Helper function for ATPLOT</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%PATCHES=ATPLOTSYN(AX,RING) Plots the magnetic elements found in RING</span>
+0005 
+0006 ylim=get(ax,<span class="string">'YLim'</span>);
+0007 
+0008 magnets=atgetcells(ring(:,1),<span class="string">'PolynomB'</span>);
+0009 sl=findspos(ring,1:length(ring)+1);
+0010 ll=diff(sl);
+0011 b3=zeros(length(ring),1);
+0012 b3(magnets)=getcellstruct(ring(:,1),<span class="string">'PolynomB'</span>,magnets,3);
+0013 b2=zeros(length(ring),1);
+0014 b2(magnets)=getcellstruct(ring(:,1),<span class="string">'PolynomB'</span>,magnets,2);
+0015 
+0016 dipoles=atgetcells(ring(:,1),<span class="string">'BendingAngle'</span>,@(elem,field) elem.(field)~=0);
+0017 l=ll(dipoles);
+0018 s=sl(dipoles);
+0019 lplot=zeros(5,length(l));
+0020 lplot(3:4,:)=[l;l];
+0021 xplot=s(ones(5,1),:)+lplot;
+0022 yplot=zeros(5,length(l));
+0023 yplot(2:3,:)=0.05*ylim(2);
+0024 <span class="comment">%p1=patch(xplot,yplot,[0.5 0.5 1],'FaceAlpha',0.2);</span>
+0025 p1=patch(xplot,yplot,[0.5 0.5 1]);
+0026 
+0027 qpoles=(b2~=0) &amp; ~dipoles;
+0028 strength=b2(qpoles)';
+0029 l=ll(qpoles);
+0030 s=sl(qpoles);
+0031 lplot=zeros(6,length(l));
+0032 lplot(3:5,:)=[0.5*l;l;l];
+0033 xplot=s(ones(6,1),:)+lplot;
+0034 yplot=zeros(6,length(l));
+0035 yplot(2:4,:)=0.05*ylim(2);
+0036 yplot(3,:)=yplot(3,:)+0.02*ylim(2)*sign(strength);
+0037 p2=patch(xplot,yplot,[1 0.5 0.5]);
+0038 
+0039 spoles=(b3~=0) &amp; ~dipoles &amp; ~qpoles;
+0040 strength=b3(spoles)';
+0041 l=ll(spoles);
+0042 s=sl(spoles);
+0043 lplot=zeros(6,length(l));
+0044 lplot(3:5,:)=[0.5*l;l;l];
+0045 xplot=s(ones(6,1),:)+lplot;
+0046 yplot=zeros(6,length(l));
+0047 yplot(2:4,:)=0.03*ylim(2);
+0048 yplot(3,:)=yplot(3,:)+0.01*ylim(2)*sign(strength);
+0049 p3=patch(xplot,yplot,[0.5 1 0.5]);
+0050 pp=[p1;p2;p3];
+0051 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

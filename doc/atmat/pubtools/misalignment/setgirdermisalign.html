@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of setgirdermisalign</title>
+  <meta name="keywords" content="setgirdermisalign">
+  <meta name="description" content="SETGIRDERMISALIGN will add/generate a misalignment structure for THERING that">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">misalignment</a> &gt; setgirdermisalign.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/misalignment&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>setgirdermisalign
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>SETGIRDERMISALIGN will add/generate a misalignment structure for THERING that</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = setgirdermisalign(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> SETGIRDERMISALIGN will add/generate a misalignment structure for THERING that
+ will later be used by CALCMISALIGN to generate the actual misalignment
+ and apply it to THERING. 
+
+ SETGIRDERMISALIGN(FAMNAME1, FAMNAME2, SIGMA, CUTOFF) where FAMNAME1 is
+ the name of the element at the start of the girder. It is recommended
+ that unique elements be used to identify the girders. SIGMA is a 1x6
+ vector specifying [dx, thetax, dy, thetay, ds, thetas] which is the 1
+ sigma spread, and CUTOFF an integer specifying how many sigmas before
+ excluding the calculated misalignment. If cutoff is 0, then all random
+ numbers will be accepted.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="closedorbit.html" class="code" title="">closedorbit</a>	</li><li><a href="testmisalignfunctions.html" class="code" title="">testmisalignfunctions</a>	% Test Misalignment Functions</li><li><a href="testrun.html" class="code" title="">testrun</a>	</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = setgirdermisalign(varargin)</a>
+0002 <span class="comment">% SETGIRDERMISALIGN will add/generate a misalignment structure for THERING that</span>
+0003 <span class="comment">% will later be used by CALCMISALIGN to generate the actual misalignment</span>
+0004 <span class="comment">% and apply it to THERING.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% SETGIRDERMISALIGN(FAMNAME1, FAMNAME2, SIGMA, CUTOFF) where FAMNAME1 is</span>
+0007 <span class="comment">% the name of the element at the start of the girder. It is recommended</span>
+0008 <span class="comment">% that unique elements be used to identify the girders. SIGMA is a 1x6</span>
+0009 <span class="comment">% vector specifying [dx, thetax, dy, thetay, ds, thetas] which is the 1</span>
+0010 <span class="comment">% sigma spread, and CUTOFF an integer specifying how many sigmas before</span>
+0011 <span class="comment">% excluding the calculated misalignment. If cutoff is 0, then all random</span>
+0012 <span class="comment">% numbers will be accepted.</span>
+0013 
+0014 <span class="keyword">global</span> THERING
+0015 
+0016 <span class="keyword">if</span> ~exist(<span class="string">'THERING'</span>,<span class="string">'var'</span>)
+0017     disp(<span class="string">'Please load the model first'</span>);
+0018     <span class="keyword">return</span>
+0019 <span class="keyword">end</span>
+0020 
+0021 mis = getappdata(0,<span class="string">'MisalignData'</span>);
+0022 
+0023 <span class="keyword">if</span> isempty(mis)
+0024     disp(<span class="string">'Generating the first misalignemnt datastructure now'</span>);
+0025     mis.date = datestr(now,31);
+0026     mis.nind = 0;
+0027     mis.ngird = 0;
+0028 <span class="keyword">end</span>
+0029 
+0030 <span class="comment">% Parse input data</span>
+0031 n = 4;
+0032 <span class="keyword">if</span> nargin &gt;= n &amp; isnumeric(varargin{n})
+0033     cutoff = varargin{n};
+0034 <span class="keyword">else</span>
+0035     disp(<span class="string">'Defaulting cutoff to 3.'</span>);
+0036     cutoff = 3;
+0037 <span class="keyword">end</span>
+0038 
+0039 n = n - 1;
+0040 <span class="keyword">if</span> nargin &gt;= n &amp; isnumeric(varargin{n}) &amp; length(varargin{n}) == 6
+0041     sigma = varargin{n};
+0042 <span class="keyword">else</span>
+0043     error(<span class="string">'One sigma spread of the misalignment not specified properly!'</span>);
+0044 <span class="keyword">end</span>
+0045 
+0046 n = n - 1;
+0047 <span class="keyword">if</span> nargin &gt;= n
+0048     <span class="keyword">if</span> ischar(varargin{n})
+0049         indices2 = findcells(THERING, <span class="string">'FamName'</span>,varargin{n});
+0050         <span class="keyword">if</span> isempty(indices2)
+0051             disp([<span class="string">'Could not find element: '</span> varargin{n}]);
+0052             <span class="keyword">return</span>
+0053         <span class="keyword">else</span>
+0054             famname2 = varargin{n};
+0055         <span class="keyword">end</span>
+0056     <span class="keyword">elseif</span> isnumeric(varargin{n})
+0057         <span class="comment">% Assumes that if indices are supplied that they are part of the</span>
+0058         <span class="comment">% same family of elements.</span>
+0059         indices2 = varargin{n};
+0060         famname2 = THERING{indices2(1)}.FamName;
+0061     <span class="keyword">else</span>
+0062         error(<span class="string">'Family name or index into THERING not in correct format!'</span>);
+0063     <span class="keyword">end</span>
+0064 <span class="keyword">else</span>
+0065     error(<span class="string">'Family name or index into THERING not given!'</span>);
+0066 <span class="keyword">end</span>
+0067 
+0068 n = n - 1;
+0069 <span class="keyword">if</span> nargin &gt;= n
+0070     <span class="keyword">if</span> ischar(varargin{n})
+0071         indices1 = findcells(THERING, <span class="string">'FamName'</span>,varargin{n});
+0072         <span class="keyword">if</span> isempty(indices1)
+0073             disp([<span class="string">'Could not find element: '</span> varargin{n}]);
+0074             <span class="keyword">return</span>
+0075         <span class="keyword">else</span>
+0076             famname1 = varargin{n};
+0077         <span class="keyword">end</span>
+0078     <span class="keyword">elseif</span> isnumeric(varargin{n})
+0079         <span class="comment">% Assumes that if indices are supplied that they are part of the</span>
+0080         <span class="comment">% same family of elements.</span>
+0081         indices1 = varargin{n};
+0082         famname1 = THERING{indices1(1)}.FamName;
+0083     <span class="keyword">else</span>
+0084         error(<span class="string">'Family name or index into THERING not in correct format!'</span>);
+0085     <span class="keyword">end</span>
+0086 <span class="keyword">else</span>
+0087     error(<span class="string">'Family name or index into THERING not given!'</span>);
+0088 <span class="keyword">end</span>
+0089 
+0090 <span class="keyword">if</span> length(indices1) ~= length(indices2)
+0091     error(<span class="string">'Number of elements specifying the start of the girder does not match those at the end'</span>);
+0092 <span class="keyword">else</span>
+0093     <span class="keyword">for</span> i=1:length(indices1)
+0094         <span class="keyword">if</span> indices1(i) &gt; indices2(i)
+0095             disp(<span class="string">'Seems that the ''start'' of a girder comes AFTER the ''finishing'' element.'</span>);
+0096             disp([<span class="string">'   '</span> famname1 <span class="string">'('</span> num2str(indices1(i)) <span class="string">') -&gt; '</span> famname2 <span class="string">'('</span> num2str(indices2(i)) <span class="string">')'</span>]);
+0097             <span class="keyword">return</span>
+0098         <span class="keyword">else</span>
+0099             girderels{i} = [indices1(i):indices2(i)];
+0100         <span class="keyword">end</span>
+0101     <span class="keyword">end</span>
+0102 <span class="keyword">end</span>
+0103 
+0104 mis.ngird = mis.ngird + 1;
+0105 
+0106 mis.gird(mis.ngird).start = famname1;
+0107 mis.gird(mis.ngird).finish = famname2;
+0108 mis.gird(mis.ngird).ATindex_start = indices1;
+0109 mis.gird(mis.ngird).ATindex_finish = indices2;
+0110 mis.gird(mis.ngird).ATindex_girder = girderels;
+0111 mis.gird(mis.ngird).sigma = sigma;
+0112 mis.gird(mis.ngird).cutoff = cutoff;
+0113 
+0114 setappdata(0,<span class="string">'MisalignData'</span>,mis);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

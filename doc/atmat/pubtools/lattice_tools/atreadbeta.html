@@ -1,0 +1,300 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atreadbeta</title>
+  <meta name="keywords" content="atreadbeta">
+  <meta name="description" content="ATREADBETA				reads a BETA file">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">lattice_tools</a> &gt; atreadbeta.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/lattice_tools&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atreadbeta
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATREADBETA				reads a BETA file</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [superp,periods]=atreadbeta(filename,cavipass,bendpass,quadpass) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATREADBETA                reads a BETA file
+
+ring=ATREADBETA(fname,cavipass,bendpass,quadpass,multipass)
+
+FILENAME:    BETA file
+CAVIPASS:    pass method for cavities (default IdentityPass)
+BENDPASS:    pass method for dipoles (default BndMPoleSymplectic4E2Pass)
+QUADPASS:    pass method for quadrupoles (default QuadMPoleFringePass)
+MULTIPASS:    pass method for sextupoles (default StrMPoleSymplectic4Pass)
+
+[superp,periods]=ATREADBETA(fname,cavipass,bendpass,quadpass)
+        returns only one superperiod and the number of superperiods
+
+See also: ATX, ATLINOPT, ATMODUL</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="sext_sens_scan.html" class="code" title="">sext_sens_scan</a>	esrf(:)</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function cav=tunecavity(cav,V,clength,ncell,ntot)</a></li><li><a href="#_sub2" class="code">function newelem=readelem(fid,cavipass,bendpass,quadpass,multipass)</a></li><li><a href="#_sub3" class="code">function betadelim(fid,code)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [superp,periods]=atreadbeta(filename,cavipass,bendpass,quadpass)</a>
+0002 <span class="comment">%ATREADBETA                reads a BETA file</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%ring=ATREADBETA(fname,cavipass,bendpass,quadpass,multipass)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%FILENAME:    BETA file</span>
+0007 <span class="comment">%CAVIPASS:    pass method for cavities (default IdentityPass)</span>
+0008 <span class="comment">%BENDPASS:    pass method for dipoles (default BndMPoleSymplectic4E2Pass)</span>
+0009 <span class="comment">%QUADPASS:    pass method for quadrupoles (default QuadMPoleFringePass)</span>
+0010 <span class="comment">%MULTIPASS:    pass method for sextupoles (default StrMPoleSymplectic4Pass)</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%[superp,periods]=ATREADBETA(fname,cavipass,bendpass,quadpass)</span>
+0013 <span class="comment">%        returns only one superperiod and the number of superperiods</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%See also: ATX, ATLINOPT, ATMODUL</span>
+0016 
+0017 <span class="keyword">global</span> GLOBVAL
+0018 <span class="keyword">persistent</span> fpath
+0019 
+0020 <span class="keyword">if</span> isempty(fpath), fpath=getenv(<span class="string">'DBETA'</span>); <span class="keyword">end</span>
+0021 
+0022 <span class="keyword">if</span> nargin &lt; 5, multipass=<span class="string">'StrMPoleSymplectic4Pass'</span>; <span class="keyword">end</span>
+0023 <span class="keyword">if</span> nargin &lt; 4, quadpass=<span class="string">'QuadMPoleFringePass'</span>; <span class="keyword">end</span>
+0024 <span class="keyword">if</span> nargin &lt; 3, bendpass=<span class="string">'BndMPoleSymplectic4E2Pass'</span>; <span class="keyword">end</span>
+0025 <span class="keyword">if</span> nargin &lt; 2, cavipass=<span class="string">'IdentityPass'</span>; <span class="keyword">end</span>
+0026 <span class="keyword">if</span> nargin &lt; 1, filename=<span class="string">''</span>; <span class="keyword">end</span>
+0027 
+0028 <span class="keyword">if</span> isempty(filename)
+0029     [fname,fpath]=uigetfile(<span class="string">'*.str'</span>,<span class="string">'BETA structure'</span>,[fpath filesep]);
+0030     <span class="keyword">if</span> ~ischar(fname), error(<span class="string">'ReadBeta:NoFile'</span>,<span class="string">'No file selected'</span>); <span class="keyword">end</span>
+0031     filename=fullfile(fpath,fname);
+0032 <span class="keyword">end</span>
+0033 
+0034 fid=fopen(filename,<span class="string">'rt'</span>);
+0035 <span class="keyword">if</span> fid &lt; 0, error(<span class="string">'ReadBeta:NoFile'</span>,<span class="string">'Cannot open file %s'</span>,filename); <span class="keyword">end</span>
+0036 
+0037 <a href="#_sub3" class="code" title="subfunction betadelim(fid,code)">betadelim</a>(fid,<span class="string">'LIST OF ELEMENTS'</span>);
+0038 GLOBVAL.E0=1E9;
+0039 line=fgetl(fid);
+0040 nb_elems=sscanf(line,<span class="string">'%d'</span>);
+0041 elemtable=struct();
+0042 cavilist={};
+0043 <span class="keyword">for</span> el=1:nb_elems
+0044     nextelem=<a href="#_sub2" class="code" title="subfunction newelem=readelem(fid,cavipass,bendpass,quadpass,multipass)">readelem</a>(fid,cavipass,bendpass,quadpass,multipass);
+0045     <span class="keyword">try</span>
+0046         elemtable.(nextelem.FamName)=nextelem;
+0047     <span class="keyword">catch</span> <span class="comment">%#ok&lt;CTCH&gt;</span>
+0048         nextelem.FamName=[<span class="string">'x'</span> nextelem.FamName];
+0049         elemtable.(nextelem.FamName)=nextelem;
+0050     <span class="keyword">end</span>
+0051     <span class="keyword">if</span> isfield(nextelem,<span class="string">'Class'</span>) &amp;&amp; strcmp(nextelem.Class,<span class="string">'RFCavity'</span>)
+0052         cavilist{end+1}=nextelem; <span class="comment">%#ok&lt;AGROW&gt;</span>
+0053     <span class="keyword">end</span>
+0054 <span class="keyword">end</span>
+0055 <span class="keyword">if</span> isempty(cavilist)<span class="comment">% Prepare a default cavity</span>
+0056     cavilist{1}=atrfcavity(<span class="string">'RFCAV'</span>,0,0,0,1,GLOBVAL.E0,cavipass);
+0057 <span class="keyword">end</span>
+0058 eledict=fieldnames(elemtable);
+0059 disp([<span class="string">'Elements processed ('</span> num2str(nb_elems) <span class="string">' elements)'</span>]);
+0060 
+0061 <a href="#_sub3" class="code" title="subfunction betadelim(fid,code)">betadelim</a>(fid,<span class="string">'STRUCTURE'</span>);
+0062 line=fgetl(fid);
+0063 nb_stru=sscanf(line,<span class="string">'%d'</span>);
+0064 superp=cell(nb_stru,1);
+0065 
+0066 dipelem=[];         <span class="comment">% Pending dipole element (waiting for exit face)</span>
+0067 anglein=0;          <span class="comment">% Current dipole face angles</span>
+0068 angleout=0;
+0069 lff=0;              <span class="comment">% Current dipole fringe field extension</span>
+0070 displ=zeros(1,3);   <span class="comment">% Current misalignment vector</span>
+0071 srot=0;             <span class="comment">% Current element rotation</span>
+0072 
+0073 id_stru=0;
+0074 <span class="keyword">for</span> el=1:nb_stru
+0075     elcode=fscanf(fid,<span class="string">'%s'</span>,1);              <span class="comment">% Select element in the table</span>
+0076     <span class="keyword">try</span>
+0077         elnum=str2double(elcode);
+0078         <span class="keyword">if</span> isfinite(elnum)
+0079             elcode=eledict{elnum};
+0080         <span class="keyword">end</span>
+0081         nextelem=elemtable.(elcode);
+0082     <span class="keyword">catch</span> <span class="comment">%#ok&lt;CTCH&gt;</span>
+0083         error(<span class="string">'ReadBeta:BadElem'</span>,[<span class="string">'Cannot identify element '</span> elcode]);
+0084     <span class="keyword">end</span>
+0085     <span class="keyword">switch</span> nextelem.BetaCode                <span class="comment">% Process the element</span>
+0086         <span class="keyword">case</span> <span class="string">'CO'</span>
+0087             <span class="keyword">if</span> isempty(dipelem)             <span class="comment">% Entrance face</span>
+0088                 anglein=nextelem.Angle;
+0089                 lff=nextelem.Lff;
+0090             <span class="keyword">else</span>
+0091                 angleout=nextelem.Angle;    <span class="comment">% Exit face</span>
+0092                 id_stru=id_stru+1;          <span class="comment">% create immediately in case of 2 adjacent CO elems</span>
+0093                 superp{id_stru}=atelem(dipelem,<span class="string">'EntranceAngle'</span>,anglein,<span class="keyword">...</span>
+0094                     <span class="string">'ExitAngle'</span>,angleout,<span class="string">'FullGap'</span>,0,<span class="string">'FringeInt'</span>,lff);
+0095                 anglein=0;
+0096                 angleout=0;
+0097                 lff=0;
+0098                 dipelem=[];
+0099             <span class="keyword">end</span>
+0100         <span class="keyword">case</span> <span class="string">'RO'</span>
+0101             srot=srot+nextelem.Srot;
+0102         <span class="keyword">case</span> <span class="string">'DE'</span>
+0103             displ=displ+nextelem.Displacement;
+0104         <span class="keyword">otherwise</span>
+0105             <span class="keyword">if</span> ~isempty(dipelem)
+0106                 id_stru=id_stru+1;
+0107                 superp{id_stru}=atelem(dipelem,<span class="string">'EntranceAngle'</span>,anglein,<span class="keyword">...</span>
+0108                     <span class="string">'ExitAngle'</span>,angleout,<span class="string">'FullGap'</span>,0,<span class="string">'FringeInt'</span>,lff);
+0109                 anglein=0;
+0110                 angleout=0;
+0111                 lff=0;
+0112                 dipelem=[];
+0113             <span class="keyword">end</span>
+0114             <span class="keyword">if</span> srot ~= 0
+0115                 srollmat=mkSRotationMatrix(srot);
+0116                 nextelem.R1=srollmat;
+0117                 nextelem.R2=srollmat';
+0118             <span class="keyword">end</span>
+0119             <span class="keyword">if</span> max(abs(displ)) &gt; 0
+0120                 nextelem.T1([1 3 5])=displ;
+0121                 nextelem.T2([1 3 5])=-displ;
+0122             <span class="keyword">end</span>
+0123             <span class="keyword">if</span> strcmp(nextelem.BetaCode,<span class="string">'DI'</span>)
+0124                 dipelem=nextelem;
+0125             <span class="keyword">else</span>
+0126                 id_stru=id_stru+1;
+0127                 superp{id_stru}=nextelem;
+0128             <span class="keyword">end</span>
+0129     <span class="keyword">end</span>
+0130 <span class="keyword">end</span>
+0131 superp(id_stru+1:end)=[];
+0132 disp([<span class="string">'Structure processed ('</span> num2str(nb_stru) <span class="string">' elements)'</span>]);
+0133 
+0134 nper=fscanf(fid,<span class="string">'%d'</span>,1);
+0135 fclose(fid);
+0136 
+0137 cavities=findcells(superp,<span class="string">'Class'</span>,<span class="string">'RFCavity'</span>);
+0138 <span class="keyword">if</span> isempty(cavities)        <span class="comment">% add implicit cavity if necessary</span>
+0139     superp{end+1}=cavilist{1};
+0140     cavities=length(superp);
+0141 <span class="keyword">end</span>
+0142 superp=atsetfieldvalues(superp,true(size(superp)),<span class="string">'Energy'</span>,GLOBVAL.E0);
+0143 
+0144 <span class="keyword">if</span> nargout &gt;= 2
+0145     periods=nper;
+0146     <span class="keyword">for</span> i=cavities            <span class="comment">% set cavity frequency</span>
+0147         superp{i}=<a href="#_sub1" class="code" title="subfunction cav=tunecavity(cav,V,clength,ncell,ntot)">tunecavity</a>(superp{i},9E6/16/length(cavities),<span class="keyword">...</span>
+0148             findspos(superp,id_stru+1),1,nper);
+0149     <span class="keyword">end</span>
+0150 <span class="keyword">else</span>
+0151     <span class="keyword">for</span> i=cavities            <span class="comment">% set cavity frequency</span>
+0152         superp{i}=<a href="#_sub1" class="code" title="subfunction cav=tunecavity(cav,V,clength,ncell,ntot)">tunecavity</a>(superp{i},9E6/16/length(cavities),<span class="keyword">...</span>
+0153             findspos(superp,id_stru+1),nper,nper);
+0154     <span class="keyword">end</span>
+0155     <span class="keyword">if</span> nper &gt; 1
+0156         superp=repmat(superp,1,nper);
+0157     <span class="keyword">end</span>
+0158 <span class="keyword">end</span>
+0159 
+0160 
+0161 evalin(<span class="string">'base'</span>,<span class="string">'global GLOBVAL'</span>);
+0162 
+0163 <a name="_sub1" href="#_subfunctions" class="code">function cav=tunecavity(cav,V,clength,ncell,ntot)</a>
+0164 frev=2.99792458E8/clength;
+0165 <span class="keyword">if</span> cav.Voltage == 0, cav.Voltage=V; <span class="keyword">end</span>
+0166 <span class="keyword">if</span> cav.HarmNumber &gt; 1
+0167     harm=ceil(cav.HarmNumber/ntot);
+0168 <span class="keyword">else</span>
+0169     harm=round(1.66678*clength);
+0170 <span class="keyword">end</span>
+0171 cav.Frequency=frev*harm;
+0172 cav.HarmNumber=ncell*harm;
+0173 
+0174 <a name="_sub2" href="#_subfunctions" class="code">function newelem=readelem(fid,cavipass,bendpass,quadpass,multipass)</a>
+0175 
+0176 <span class="keyword">global</span> GLOBVAL
+0177 
+0178 line=fgetl(fid);
+0179 next=1;
+0180 [elname,count,errmess,nl]=sscanf(line(next:end),<span class="string">'%s'</span>,1); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0181 next=next+nl;
+0182 [code,count,errmess,nl]=sscanf(line(next:end),<span class="string">'%s'</span>,1); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0183 next=next+nl;
+0184 params=sscanf(line(next:end),<span class="string">'%f'</span>)';
+0185 params((length(params)+1):3)=0;
+0186 <span class="keyword">switch</span> (code)
+0187     <span class="keyword">case</span> <span class="string">'SD'</span>
+0188         newelem=atdrift(elname,params(1));
+0189     <span class="keyword">case</span> <span class="string">'QP'</span>
+0190         newelem=atquadrupole(elname,params(1),params(2),quadpass);
+0191     <span class="keyword">case</span> <span class="string">'DE'</span>
+0192         newelem=atelem(atmarker(elname),<span class="string">'Displacement'</span>,params(1:3));
+0193     <span class="keyword">case</span> <span class="string">'RO'</span>
+0194         newelem=atelem(atmarker(elname),<span class="string">'Srot'</span>,params(1));
+0195     <span class="keyword">case</span> <span class="string">'CO'</span>
+0196         newelem=atelem(atmarker(elname),<span class="string">'Angle'</span>,params(1),<span class="string">'Lff'</span>,params(3));
+0197     <span class="keyword">case</span> <span class="string">'DI'</span>
+0198         strength=-params(3)/params(2)/params(2);
+0199         newelem=atsbend(elname,params(1)*params(2),params(1),strength,bendpass);
+0200     <span class="keyword">case</span> <span class="string">'SX'</span>
+0201         <span class="keyword">if</span> params(1) &lt; 0.001
+0202             code=<span class="string">'LD3'</span>;
+0203             newelem=atthinmultipole(elname,[],[0 0 params(1)*params(2)]);
+0204         <span class="keyword">else</span>
+0205             newelem=atsextupole(elname,params(1),params(2),multipass);
+0206         <span class="keyword">end</span>
+0207     <span class="keyword">case</span> <span class="string">'LD'</span>
+0208         order=params(2)/2;
+0209         polb=[];
+0210         polb(1,order)=params(1);
+0211         code=[code int2str(order)];
+0212         newelem=atthinmultipole(elname,[],polb);
+0213     <span class="keyword">case</span> <span class="string">'LT'</span>
+0214         order=params(2)/2;
+0215         pola=[];
+0216         pola(1,order)=params(1);
+0217         code=[code int2str(order)];
+0218         newelem=atthinmultipole(elname,pola,[]);
+0219     <span class="keyword">case</span> <span class="string">'KI'</span>
+0220         <span class="keyword">if</span> params(3) &gt; 0, code=<span class="string">'CHV'</span>; <span class="keyword">end</span>
+0221         newelem=atcorrector(elname,0,[params(1) params(2)],<span class="string">'IdentityPass'</span>);
+0222     <span class="keyword">case</span> <span class="string">'CA'</span>
+0223         GLOBVAL.E0=params(3);
+0224         newelem=atrfcavity(elname,0,abs(params(1)),0,params(2),params(3),cavipass);
+0225     <span class="keyword">otherwise</span>
+0226         newelem=atmarker(elname);
+0227 <span class="keyword">end</span>
+0228 newelem.BetaCode=code;
+0229 
+0230 <a name="_sub3" href="#_subfunctions" class="code">function betadelim(fid,code)</a>
+0231 <span class="keyword">while</span> true
+0232     <span class="keyword">while</span> true
+0233         line=fgetl(fid);
+0234         <span class="keyword">if</span> ~ischar(line), error(<span class="string">'ReadBeta:EndOfFile'</span>,<span class="string">'Encountered unexpected end of file.'</span>); <span class="keyword">end</span>
+0235         <span class="keyword">if</span> ~isempty(strfind(line,<span class="string">'***'</span>)), <span class="keyword">break</span>; <span class="keyword">end</span>
+0236     <span class="keyword">end</span>
+0237     <span class="keyword">if</span> ~isempty(strfind(line,code)), <span class="keyword">break</span>; <span class="keyword">end</span>
+0238 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findorbit6</title>
+  <meta name="keywords" content="findorbit6">
+  <meta name="description" content="FINDORBIT6 finds closed orbit in the full 6-d phase space">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; findorbit6.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>findorbit6
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>FINDORBIT6 finds closed orbit in the full 6-d phase space</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function orbit = findorbit6(RING,varargin); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDORBIT6 finds closed orbit in the full 6-d phase space
+ by numerically solving  for a fixed point of the one turn 
+ map M calculated with RINGPASS
+ 
+ (X, PX, Y, PY, DP, CT2 ) = M (X, PX, Y, PY, DP, CT1)
+ 
+ with constraint % CT2 - CT1 = C*HarmNumber(1/Frf - 1/Frf0)
+ 
+ IMPORTANT!!! FINDORBIT6 is a realistic simulation
+ 1. The Frf frequency in the RF cavities (may be different from Frf0) 
+    imposes the synchronous condition 
+    CT2 - CT1 = C*HarmNumber(1/Frf - 1/Frf0)
+ 2. The algorithm numerically calculates   
+    6-by-6 Jacobian matrix J6. In order for (J-E) matrix 
+    to be non-singular it is NECESSARY to use a realistic 
+    PassMethod for cavities with non-zero momentum kick 
+    (such as ThinCavityPass).
+ 3. FINDORBIT6 can find orbits with radiation. 
+    In order for the solution to exist the cavity must supply
+    adequate energy compensation. 
+    In the simplest case of a single cavity, it must have 
+    'Voltage' field set so that Voltage &gt; Erad - energy loss per turn 
+ 4. FINDORBIT6 starts the search from [ 0 0 0 0 0 0 ]', unless
+    the third argument is specified: FINDORBIT6(RING,REFPTS,GUESS)
+    There exist a family of solutions that correspond to different RF buckets 
+    They differ in the 6-th coordinate by C*Nb/Frf. Nb = 1 .. HarmNum-1
+ 5. The value of the 6-th coordinate found at the cavity gives
+    the equilibrium RF phase. If there is no radiation the phase is 0;
+ 
+ FINDORBIT6(RING) is 6x1 vector - fixed point at the 
+        entrance of the 1-st element of the RING (x,px,y,py,dp,ct)
+
+ FINDORBIT6(RING,REFPTS) is 6-by-Length(REFPTS)
+     array of column vectors - fixed points (x,px,y,py,dp,ct)
+     at the entrance of each element indexed  REFPTS array. 
+     REFPTS is an array of increasing indexes that  select elements 
+     from the range 1 to length(RING)+1. 
+     See further explanation of REFPTS in the 'help' for FINDSPO
+
+ FINDORBIT6(RING,REFPTS,GUESS) - same as above but the search
+     for the fixed point starts at the initial condition GUESS
+     GUESS must be a 6-by-1 vector;
+
+ [ORBIT, FIXEDPOINT] = FINDORBIT6( ... )
+     The optional second return parameter is 
+     a 6-by-1 vector of initial conditions 
+     on the close orbit at the entrance to the RING.
+
+ See also <a href="findorbit.html" class="code" title="function [orbit, varargout]  = findorbit(RING,D, varargin);">FINDORBIT</a>, <a href="findorbit4.html" class="code" title="function orbit = findorbit4(RING,dP,varargin);">FINDORBIT4</a>, <a href="findsyncorbit.html" class="code" title="function [orbit, varargout] = findsyncorbit(RING,dCT,varargin);">FINDSYNCORBIT</a>.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>	FINDSPOS returns longitudinal positions of accelerator lattice elements.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findm66.html" class="code" title="function [M66, varargout] = findm66(RING, varargin);">findm66</a>	FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice</li><li><a href="findrespm.html" class="code" title="function C = findrespm(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespm</a>	FINDRESPM computes the change in the closed orbit due to parameter perturbations</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function orbit = findorbit6(RING,varargin);</a>
+0002 <span class="comment">%FINDORBIT6 finds closed orbit in the full 6-d phase space</span>
+0003 <span class="comment">% by numerically solving  for a fixed point of the one turn</span>
+0004 <span class="comment">% map M calculated with RINGPASS</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% (X, PX, Y, PY, DP, CT2 ) = M (X, PX, Y, PY, DP, CT1)</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% with constraint % CT2 - CT1 = C*HarmNumber(1/Frf - 1/Frf0)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% IMPORTANT!!! FINDORBIT6 is a realistic simulation</span>
+0011 <span class="comment">% 1. The Frf frequency in the RF cavities (may be different from Frf0)</span>
+0012 <span class="comment">%    imposes the synchronous condition</span>
+0013 <span class="comment">%    CT2 - CT1 = C*HarmNumber(1/Frf - 1/Frf0)</span>
+0014 <span class="comment">% 2. The algorithm numerically calculates</span>
+0015 <span class="comment">%    6-by-6 Jacobian matrix J6. In order for (J-E) matrix</span>
+0016 <span class="comment">%    to be non-singular it is NECESSARY to use a realistic</span>
+0017 <span class="comment">%    PassMethod for cavities with non-zero momentum kick</span>
+0018 <span class="comment">%    (such as ThinCavityPass).</span>
+0019 <span class="comment">% 3. FINDORBIT6 can find orbits with radiation.</span>
+0020 <span class="comment">%    In order for the solution to exist the cavity must supply</span>
+0021 <span class="comment">%    adequate energy compensation.</span>
+0022 <span class="comment">%    In the simplest case of a single cavity, it must have</span>
+0023 <span class="comment">%    'Voltage' field set so that Voltage &gt; Erad - energy loss per turn</span>
+0024 <span class="comment">% 4. FINDORBIT6 starts the search from [ 0 0 0 0 0 0 ]', unless</span>
+0025 <span class="comment">%    the third argument is specified: FINDORBIT6(RING,REFPTS,GUESS)</span>
+0026 <span class="comment">%    There exist a family of solutions that correspond to different RF buckets</span>
+0027 <span class="comment">%    They differ in the 6-th coordinate by C*Nb/Frf. Nb = 1 .. HarmNum-1</span>
+0028 <span class="comment">% 5. The value of the 6-th coordinate found at the cavity gives</span>
+0029 <span class="comment">%    the equilibrium RF phase. If there is no radiation the phase is 0;</span>
+0030 <span class="comment">%</span>
+0031 <span class="comment">% FINDORBIT6(RING) is 6x1 vector - fixed point at the</span>
+0032 <span class="comment">%        entrance of the 1-st element of the RING (x,px,y,py,dp,ct)</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">% FINDORBIT6(RING,REFPTS) is 6-by-Length(REFPTS)</span>
+0035 <span class="comment">%     array of column vectors - fixed points (x,px,y,py,dp,ct)</span>
+0036 <span class="comment">%     at the entrance of each element indexed  REFPTS array.</span>
+0037 <span class="comment">%     REFPTS is an array of increasing indexes that  select elements</span>
+0038 <span class="comment">%     from the range 1 to length(RING)+1.</span>
+0039 <span class="comment">%     See further explanation of REFPTS in the 'help' for FINDSPO</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">% FINDORBIT6(RING,REFPTS,GUESS) - same as above but the search</span>
+0042 <span class="comment">%     for the fixed point starts at the initial condition GUESS</span>
+0043 <span class="comment">%     GUESS must be a 6-by-1 vector;</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">% [ORBIT, FIXEDPOINT] = FINDORBIT6( ... )</span>
+0046 <span class="comment">%     The optional second return parameter is</span>
+0047 <span class="comment">%     a 6-by-1 vector of initial conditions</span>
+0048 <span class="comment">%     on the close orbit at the entrance to the RING.</span>
+0049 <span class="comment">%</span>
+0050 <span class="comment">% See also FINDORBIT, FINDORBIT4, FINDSYNCORBIT.</span>
+0051 
+0052 <span class="keyword">if</span> ~iscell(RING)
+0053    error(<span class="string">'First argument must be a cell array'</span>);
+0054 <span class="keyword">end</span> 
+0055 
+0056 
+0057 L0 =   <a href="findspos.html" class="code" title="function spos = findspos(LINE,REFPTS)">findspos</a>(RING,length(RING)+1); <span class="comment">% design length [m]</span>
+0058 C0 =   299792458; <span class="comment">% speed of light [m/s]</span>
+0059 T0 = L0/C0;
+0060 
+0061 CavityLocation = findcells(RING,<span class="string">'Frequency'</span>);
+0062 Frf = RING{CavityLocation(1)}.Frequency;
+0063 
+0064 <span class="keyword">if</span> ~isfield(RING{CavityLocation(1)},<span class="string">'HarmNumber'</span>)
+0065     error(<span class="string">'FINDORBIT6 needs the HarmNumber field to be defined in RF cavity elements'</span>);
+0066 <span class="keyword">end</span>
+0067 HarmNumber = RING{CavityLocation(1)}.HarmNumber;
+0068 theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
+0069 
+0070  
+0071 d = 1e-6;    <span class="comment">% step size for numerical differentiation</span>
+0072 max_iterations = 20;
+0073 
+0074 <span class="keyword">if</span> nargin==3
+0075     <span class="keyword">if</span> isnumeric(varargin{2}) &amp; all(eq(size(varargin{2}),[6,1]))
+0076        Ri=varargin{2};
+0077    <span class="keyword">else</span>
+0078        error(<span class="string">'The last argument GUESS must be a 6-by-1 vector'</span>);
+0079    <span class="keyword">end</span>
+0080 <span class="keyword">else</span>
+0081     Ri = zeros(6,1);
+0082 <span class="keyword">end</span>
+0083 D = d*eye(6);  
+0084 
+0085 RMATi= [Ri Ri Ri Ri Ri Ri Ri] + [D, zeros(6,1)];
+0086 RMATf = linepass(RING,RMATi);
+0087 J6 = (RMATf(:,1:6)-RMATf(:,7)*ones(1,6))/d;
+0088 Rf = RMATf(:,7);
+0089 <span class="comment">% Replace matrix inversion with \</span>
+0090 <span class="comment">% B = inv(eye(6)-J6);</span>
+0091 <span class="comment">% Ri_next = Ri + B*(Rf-Ri-theta);</span>
+0092 Ri_next = Ri + (eye(6)-J6)\(Rf-Ri-theta);
+0093 change = norm(Ri_next - Ri);
+0094 Ri = Ri_next;
+0095 
+0096 itercount = 1;
+0097 
+0098 
+0099 <span class="keyword">while</span> (change&gt;eps) &amp; (itercount &lt; max_iterations)
+0100    RMATi= [Ri Ri Ri Ri Ri Ri Ri] + [D, zeros(6,1)];
+0101    RMATf = linepass(RING,RMATi,<span class="string">'reuse'</span>);
+0102    J6 = (RMATf(:,1:6)-RMATf(:,7)*ones(1,6))/d;
+0103    Rf = RMATf(:,7);
+0104 <span class="comment">% Replace matrix inversion with \</span>
+0105 <span class="comment">%    B = inv(eye(6)-J6);</span>
+0106 <span class="comment">%    Ri_next = Ri + B*(Rf-Ri-theta);</span>
+0107     Ri_next = Ri + (eye(6)-J6)\(Rf-Ri-theta);
+0108    change = norm(Ri_next - Ri);
+0109    Ri = Ri_next;
+0110    itercount = itercount+1;
+0111 <span class="keyword">end</span>;
+0112 
+0113 <span class="keyword">if</span> itercount == max_iterations
+0114     warning(<span class="string">'Maximum number of itereations reached. Possible non-convergence'</span>)
+0115 <span class="keyword">end</span>
+0116 <span class="keyword">if</span>(nargin==1)|(varargin{1}==(length(RING)+1))
+0117    <span class="comment">% return only the fixed point at the entrance of RING{1}</span>
+0118    orbit=Ri;
+0119 <span class="keyword">else</span> <span class="comment">% 2-nd input argument - vector of reference points alog the Ring</span>
+0120                   <span class="comment">% is supplied - return orbit</span>
+0121     orbit = linepass(RING,Ri,varargin{1},<span class="string">'reuse'</span>); 
+0122 <span class="keyword">end</span>
+0123 
+0124 <span class="keyword">if</span> nargout==2
+0125     varargout{1}=Ri;
+0126 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

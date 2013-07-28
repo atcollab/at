@@ -1,0 +1,1534 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of fma_gui</title>
+  <meta name="keywords" content="fma_gui">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">fmagui</a> &gt; fma_gui.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/fmagui&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>fma_gui
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = fma_base_gui(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">
+   
+
+ FMA_BASE_GUI M-file for fma_base_gui.fig
+      FMA_BASE_GUI, by itself, creates a new FMA_BASE_GUI or raises the existing
+      singleton*.
+
+      H = FMA_BASE_GUI returns the handle to a new FMA_BASE_GUI or the handle to
+      the existing singleton*.
+
+      FMA_BASE_GUI('CALLBACK',hObject,eventData,handles,...) calls the local
+      function named CALLBACK in FMA_BASE_GUI.M with the given input arguments.
+
+      FMA_BASE_GUI('Property','Value',...) creates a new FMA_BASE_GUI or raises the
+      existing singleton*.  Starting from the left, property value pairs are
+      applied to the GUI before fma_base_gui_OpeningFunction gets called.  An
+      unrecognized property name or invalid value makes property application
+      stop.  All inputs are passed to fma_base_gui_OpeningFcn via varargin.
+
+      *See GUI Options on GUIDE's Tools menu.  Choose &quot;GUI allows only one
+      instance to run (singleton)&quot;.
+
+ See also: GUIDE, GUIDATA, GUIHANDLES</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="fma_lib.html" class="code" title="function varargout = fma_lib(varargin)">fma_lib</a>	This library contains functions needed by FMA_GUI which sets up the</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function fma_base_gui_OpeningFcn(hObject, eventdata, handles, varargin)</a></li><li><a href="#_sub2" class="code">function fma = getfmadefaults</a></li><li><a href="#_sub3" class="code">function varargout = fma_base_gui_OutputFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub4" class="code">function lattice_file_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub5" class="code">function lattice_file_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub6" class="code">function template_file_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub7" class="code">function template_file_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub8" class="code">function browse_lattice_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub9" class="code">function browse_template_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub10" class="code">function hor_pos_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub11" class="code">function hor_neg_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub12" class="code">function maxx_ph_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub13" class="code">function maxx_ph_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub14" class="code">function minx_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub15" class="code">function minx_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub16" class="code">function maxdx_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub17" class="code">function maxdx_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub18" class="code">function mindx_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub19" class="code">function mindx_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub20" class="code">function maxx_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub21" class="code">function maxx_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub22" class="code">function edit9_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub23" class="code">function edit9_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub24" class="code">function maxdx_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub25" class="code">function maxdx_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub26" class="code">function mindx_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub27" class="code">function mindx_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub28" class="code">function minx_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub29" class="code">function minx_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub30" class="code">function ver_pos_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub31" class="code">function ver_neg_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub32" class="code">function maxy_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub33" class="code">function maxy_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub34" class="code">function miny_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub35" class="code">function miny_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub36" class="code">function maxdy_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub37" class="code">function maxdy_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub38" class="code">function mindy_p_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub39" class="code">function mindy_p_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub40" class="code">function maxy_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub41" class="code">function maxy_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub42" class="code">function miny_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub43" class="code">function miny_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub44" class="code">function maxdy_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub45" class="code">function maxdy_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub46" class="code">function mindy_n_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub47" class="code">function mindy_n_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub48" class="code">function comments_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub49" class="code">function comments_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub50" class="code">function nturn1_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub51" class="code">function nturn1_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub52" class="code">function nturn2_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub53" class="code">function nturn2_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub54" class="code">function mesh_type_SelectionChangeFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub55" class="code">function refresh_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub56" class="code">function datadir_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub57" class="code">function datadir_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub58" class="code">function resultsfile_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub59" class="code">function resultsfile_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub60" class="code">function generate_input_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub61" class="code">function datadir_browse_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub62" class="code">function fma = getfma</a></li><li><a href="#_sub63" class="code">function setfma(fma)</a></li><li><a href="#_sub64" class="code">function val = latticefileOK(latticefile)</a></li><li><a href="#_sub65" class="code">function varargout = loadtemplate(templatefile)</a></li><li><a href="#_sub66" class="code">function generic_update_mesh_limits(hObject, handles)</a></li><li><a href="#_sub67" class="code">function refresh_gui(handles)</a></li><li><a href="#_sub68" class="code">function setmessage(handle,str)</a></li><li><a href="#_sub69" class="code">function writescript(pathstr, inputfilename)</a></li><li><a href="#_sub70" class="code">function Transverse_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub71" class="code">function Momentum_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub72" class="code">function nummeshpoints_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub73" class="code">function Aperture_SelectionChangeFcn(hObject, eventdata, handles)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = fma_base_gui(varargin)</a>
+0002 <span class="comment">%</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% FMA_BASE_GUI M-file for fma_base_gui.fig</span>
+0006 <span class="comment">%      FMA_BASE_GUI, by itself, creates a new FMA_BASE_GUI or raises the existing</span>
+0007 <span class="comment">%      singleton*.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%      H = FMA_BASE_GUI returns the handle to a new FMA_BASE_GUI or the handle to</span>
+0010 <span class="comment">%      the existing singleton*.</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%      FMA_BASE_GUI('CALLBACK',hObject,eventData,handles,...) calls the local</span>
+0013 <span class="comment">%      function named CALLBACK in FMA_BASE_GUI.M with the given input arguments.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%      FMA_BASE_GUI('Property','Value',...) creates a new FMA_BASE_GUI or raises the</span>
+0016 <span class="comment">%      existing singleton*.  Starting from the left, property value pairs are</span>
+0017 <span class="comment">%      applied to the GUI before fma_base_gui_OpeningFunction gets called.  An</span>
+0018 <span class="comment">%      unrecognized property name or invalid value makes property application</span>
+0019 <span class="comment">%      stop.  All inputs are passed to fma_base_gui_OpeningFcn via varargin.</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%      *See GUI Options on GUIDE's Tools menu.  Choose &quot;GUI allows only one</span>
+0022 <span class="comment">%      instance to run (singleton)&quot;.</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% See also: GUIDE, GUIDATA, GUIHANDLES</span>
+0025 
+0026 <span class="comment">% Copyright 2002-2003 The MathWorks, Inc.</span>
+0027 
+0028 <span class="comment">% Edit the above text to modify the response to help fma_base_gui</span>
+0029 
+0030 <span class="comment">% Last Modified by GUIDE v2.5 11-Oct-2005 17:07:57</span>
+0031 
+0032 <span class="comment">% Begin initialization code - DO NOT EDIT</span>
+0033 gui_Singleton = 1;
+0034 gui_State = struct(<span class="string">'gui_Name'</span>,       mfilename, <span class="keyword">...</span>
+0035                    <span class="string">'gui_Singleton'</span>,  gui_Singleton, <span class="keyword">...</span>
+0036                    <span class="string">'gui_OpeningFcn'</span>, @<a href="#_sub1" class="code" title="subfunction fma_base_gui_OpeningFcn(hObject, eventdata, handles, varargin)">fma_base_gui_OpeningFcn</a>, <span class="keyword">...</span>
+0037                    <span class="string">'gui_OutputFcn'</span>,  @<a href="#_sub3" class="code" title="subfunction varargout = fma_base_gui_OutputFcn(hObject, eventdata, handles)">fma_base_gui_OutputFcn</a>, <span class="keyword">...</span>
+0038                    <span class="string">'gui_LayoutFcn'</span>,  [] , <span class="keyword">...</span>
+0039                    <span class="string">'gui_Callback'</span>,   []);
+0040 <span class="keyword">if</span> nargin &amp;&amp; ischar(varargin{1})
+0041     gui_State.gui_Callback = str2func(varargin{1});
+0042 <span class="keyword">end</span>
+0043 
+0044 <span class="keyword">if</span> nargout
+0045     [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+0046 <span class="keyword">else</span>
+0047     gui_mainfcn(gui_State, varargin{:});
+0048 <span class="keyword">end</span>
+0049 <span class="comment">% End initialization code - DO NOT EDIT</span>
+0050 
+0051 
+0052 <span class="comment">% --- Executes just before fma_base_gui is made visible.</span>
+0053 <a name="_sub1" href="#_subfunctions" class="code">function fma_base_gui_OpeningFcn(hObject, eventdata, handles, varargin)</a>
+0054 <span class="comment">% This function has no output args, see OutputFcn.</span>
+0055 <span class="comment">% hObject    handle to figure</span>
+0056 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0057 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0058 <span class="comment">% varargin   command line arguments to fma_base_gui (see VARARGIN)</span>
+0059 
+0060 <span class="comment">% Choose default command line output for fma_base_gui</span>
+0061 handles.output = hObject;
+0062 
+0063 <span class="comment">% Update handles structure</span>
+0064 guidata(hObject, handles);
+0065 
+0066 <span class="comment">% UIWAIT makes fma_base_gui wait for user response (see UIRESUME)</span>
+0067 <span class="comment">% uiwait(handles.fma_base);</span>
+0068 
+0069 <span class="comment">% For mesh_type!!!</span>
+0070 set(handles.mesh_type,<span class="string">'SelectionChangeFcn'</span>,<span class="keyword">...</span>
+0071     <span class="string">'fma_gui(''mesh_type_SelectionChangeFcn'',gcbo,[],guidata(gcbo))'</span>);
+0072 
+0073 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(<a href="#_sub2" class="code" title="subfunction fma = getfmadefaults">getfmadefaults</a>);
+0074 
+0075 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0076 
+0077 
+0078 <a name="_sub2" href="#_subfunctions" class="code">function fma = getfmadefaults</a>
+0079 
+0080 <span class="comment">% Initialise parameters and variables. (Defaults)</span>
+0081 fma.version = <span class="string">'fma_gui v1.1'</span>;
+0082 
+0083 <span class="comment">%% Initialise the base parameters</span>
+0084 fma.latticefile = <span class="string">''</span>;
+0085 fma.resultsfile = <span class="string">''</span>;
+0086 fma.datadir = <span class="string">''</span>;     <span class="comment">% if datadir empty then use relative paths (default)</span>
+0087 fma.starttime = datestr(clock,31);
+0088 fma.endtime = <span class="string">''</span>;
+0089 fma.comments = <span class="string">''</span>;
+0090 fma.nturn1 = 100;
+0091 fma.nturn2 = 100;
+0092 fma.totaltime = 0; <span class="comment">% for computation in seconds</span>
+0093 
+0094 <span class="comment">%% What aspect to investigate: transverse or momentum</span>
+0095 fma.aperture = <span class="string">'Transverse'</span>;
+0096 
+0097 <span class="comment">%% Next: mesh</span>
+0098 <span class="comment">% Type: linear, inverse.</span>
+0099 fma.mesh.type = <span class="string">'Inverse'</span>;
+0100 
+0101 <span class="comment">% Horizontal - positive</span>
+0102 fma.mesh.hor_pos = 1;
+0103 fma.mesh.maxx_p  = 20;
+0104 fma.mesh.minx_p  =  1;
+0105 fma.mesh.maxdx_p =  2;
+0106 fma.mesh.mindx_p =  0.5;
+0107 <span class="comment">% Horizontal - negative</span>
+0108 fma.mesh.hor_neg = 0;
+0109 fma.mesh.maxx_n  = 20;
+0110 fma.mesh.minx_n  =  1;
+0111 fma.mesh.maxdx_n =  2;
+0112 fma.mesh.mindx_n =  0.5;
+0113 
+0114 <span class="comment">% Vertical - positive</span>
+0115 fma.mesh.ver_pos = 1;
+0116 fma.mesh.maxy_p  = 10;
+0117 fma.mesh.miny_p  =  1;
+0118 fma.mesh.maxdy_p =  2;
+0119 fma.mesh.mindy_p =  0.5;
+0120 <span class="comment">% Vertical - negative</span>
+0121 fma.mesh.ver_neg = 0;
+0122 fma.mesh.maxy_n  = 10;
+0123 fma.mesh.miny_n  =  1;
+0124 fma.mesh.maxdy_n =  2;
+0125 fma.mesh.mindy_n =  0.5;
+0126 
+0127 <span class="comment">% Mesh points</span>
+0128 fma.mesh.x = [];
+0129 fma.mesh.y = [];
+0130 
+0131 <span class="comment">%% Initialise DATA (assign size after definition of mesh, just before</span>
+0132 <span class="comment">%% running FMA_BASE calculations.</span>
+0133 fma.data.x = [];
+0134 fma.data.y = [];
+0135 fma.data.nux1 = [];
+0136 fma.data.nuy1 = [];
+0137 fma.data.nux2 = [];
+0138 fma.data.nuy2 = [];
+0139 fma.data.dindex = []; <span class="comment">% Diffusion index</span>
+0140 fma.data.curr = 0;    <span class="comment">% Current particle computing</span>
+0141 fma.data.max = 0;     <span class="comment">% Total num particles to compute</span>
+0142 
+0143 
+0144 
+0145 <span class="comment">% --- Outputs from this function are returned to the command line.</span>
+0146 <a name="_sub3" href="#_subfunctions" class="code">function varargout = fma_base_gui_OutputFcn(hObject, eventdata, handles) </a>
+0147 <span class="comment">% varargout  cell array for returning output args (see VARARGOUT);</span>
+0148 <span class="comment">% hObject    handle to figure</span>
+0149 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0150 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0151 
+0152 <span class="comment">% Get default command line output from handles structure</span>
+0153 varargout{1} = handles.output;
+0154 
+0155 
+0156 
+0157 <a name="_sub4" href="#_subfunctions" class="code">function lattice_file_Callback(hObject, eventdata, handles)</a>
+0158 <span class="comment">% hObject    handle to lattice_file (see GCBO)</span>
+0159 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0160 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0161 
+0162 <span class="comment">% Hints: get(hObject,'String') returns contents of lattice_file as text</span>
+0163 <span class="comment">%        str2double(get(hObject,'String')) returns contents of lattice_file as a double</span>
+0164 
+0165 latticefile = get(hObject,<span class="string">'String'</span>);
+0166 
+0167 <span class="comment">% Test lattice file</span>
+0168 <span class="keyword">if</span> <a href="#_sub64" class="code" title="subfunction val = latticefileOK(latticefile)">latticefileOK</a>(latticefile)
+0169     <span class="comment">% If pass all tests then save filename (todo)</span>
+0170     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>();
+0171     fma.latticefile = latticefile;
+0172     <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0173     
+0174     <span class="comment">% Decide if want to update datafie and resultsfile directory.</span>
+0175     [pathstr namestr ext] = fileparts(latticefile);
+0176     
+0177     <span class="keyword">if</span> isempty(get(handles.resultsfile,<span class="string">'String'</span>))
+0178         <span class="comment">% Only the resultsfile field if it hasn't been set before.</span>
+0179 <span class="comment">%         fma.resultsfile = [namestr '_fma.dat'];</span>
+0180         set(handles.resultsfile,<span class="string">'String'</span>,[namestr <span class="string">'_fma.dat'</span>]);
+0181         <a href="#_sub58" class="code" title="subfunction resultsfile_Callback(hObject, eventdata, handles)">resultsfile_Callback</a>(handles.resultsfile, eventdata, handles);
+0182     <span class="keyword">end</span>
+0183 <span class="keyword">end</span>
+0184 
+0185 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0186 <a name="_sub5" href="#_subfunctions" class="code">function lattice_file_CreateFcn(hObject, eventdata, handles)</a>
+0187 <span class="comment">% hObject    handle to lattice_file (see GCBO)</span>
+0188 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0189 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0190 
+0191 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0192 <span class="comment">%       See ISPC and COMPUTER.</span>
+0193 <span class="keyword">if</span> ispc
+0194     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0195 <span class="keyword">else</span>
+0196     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0197 <span class="keyword">end</span>
+0198 
+0199 
+0200 
+0201 <a name="_sub6" href="#_subfunctions" class="code">function template_file_Callback(hObject, eventdata, handles)</a>
+0202 <span class="comment">% hObject    handle to template_file (see GCBO)</span>
+0203 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0204 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0205 
+0206 <span class="comment">% Hints: get(hObject,'String') returns contents of template_file as text</span>
+0207 <span class="comment">%        str2double(get(hObject,'String')) returns contents of template_file as a double</span>
+0208 
+0209 <span class="comment">% Test if file exists</span>
+0210 templatefile = get(hObject,<span class="string">'String'</span>);
+0211 
+0212 <span class="keyword">if</span> isempty(templatefile)
+0213     <span class="comment">% Cancel resume status</span>
+0214     fma = <a href="#_sub2" class="code" title="subfunction fma = getfmadefaults">getfmadefaults</a>;
+0215     fma.latticefile = get(handles.lattice_file,<span class="string">'String'</span>);    
+0216     <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0217     
+0218     <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0219     <span class="comment">% Call this to update the datadir, reduce possiblity of directory</span>
+0220     <span class="comment">% confilct.</span>
+0221     <a href="#_sub4" class="code" title="subfunction lattice_file_Callback(hObject, eventdata, handles)">lattice_file_Callback</a>(hObject, eventdata, handles);
+0222     <span class="keyword">return</span>
+0223 <span class="keyword">else</span>
+0224     
+0225     <span class="comment">% Load and read the file</span>
+0226     <span class="keyword">if</span> <a href="#_sub65" class="code" title="subfunction varargout = loadtemplate(templatefile)">loadtemplate</a>(templatefile)
+0227         <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0228     <span class="keyword">else</span>
+0229         set(hObject,<span class="string">'String'</span>,<span class="string">''</span>);
+0230     <span class="keyword">end</span>
+0231 <span class="keyword">end</span>
+0232 
+0233 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0234 <a name="_sub7" href="#_subfunctions" class="code">function template_file_CreateFcn(hObject, eventdata, handles)</a>
+0235 <span class="comment">% hObject    handle to template_file (see GCBO)</span>
+0236 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0237 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0238 
+0239 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0240 <span class="comment">%       See ISPC and COMPUTER.</span>
+0241 <span class="keyword">if</span> ispc
+0242     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0243 <span class="keyword">else</span>
+0244     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0245 <span class="keyword">end</span>
+0246 
+0247 
+0248 <span class="comment">% --- Executes on button press in browse_lattice.</span>
+0249 <a name="_sub8" href="#_subfunctions" class="code">function browse_lattice_Callback(hObject, eventdata, handles)</a>
+0250 <span class="comment">% hObject    handle to browse_lattice (see GCBO)</span>
+0251 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0252 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0253 
+0254 [filename, pathname] = uigetfile({<span class="string">'*.m'</span>},<span class="string">'Select AT lattice file'</span>);
+0255 <span class="keyword">if</span> filename == 0
+0256     <span class="comment">% Cancel selected... do nothing</span>
+0257     <span class="keyword">return</span>
+0258 <span class="keyword">else</span>
+0259     latticefile = [pathname filename];
+0260 <span class="keyword">end</span>
+0261 
+0262 <span class="comment">% Update the text field to reflect selection</span>
+0263 set(handles.lattice_file,<span class="string">'String'</span>,latticefile);
+0264 
+0265 <a href="#_sub4" class="code" title="subfunction lattice_file_Callback(hObject, eventdata, handles)">lattice_file_Callback</a>(handles.lattice_file, eventdata, handles);
+0266 
+0267 
+0268 <span class="comment">% --- Executes on button press in browse_template.</span>
+0269 <a name="_sub9" href="#_subfunctions" class="code">function browse_template_Callback(hObject, eventdata, handles)</a>
+0270 <span class="comment">% hObject    handle to browse_template (see GCBO)</span>
+0271 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0272 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0273 
+0274 [filename, pathname] = uigetfile({<span class="string">'*.*'</span>},<span class="string">'Select resume file'</span>);
+0275 <span class="keyword">if</span> filename == 0
+0276     <span class="comment">% Cancel selected... do nothing</span>
+0277     <span class="keyword">return</span>
+0278 <span class="keyword">else</span>
+0279     templatefile = [pathname filename];
+0280 <span class="keyword">end</span>
+0281 
+0282 <span class="comment">% Update the text field to reflect selection</span>
+0283 set(handles.template_file,<span class="string">'String'</span>,templatefile);
+0284 
+0285 <a href="#_sub6" class="code" title="subfunction template_file_Callback(hObject, eventdata, handles)">template_file_Callback</a>(handles.template_file, eventdata, handles);
+0286 
+0287 
+0288 <span class="comment">% --- Executes on button press in hor_pos.</span>
+0289 <a name="_sub10" href="#_subfunctions" class="code">function hor_pos_Callback(hObject, eventdata, handles)</a>
+0290 <span class="comment">% hObject    handle to hor_pos (see GCBO)</span>
+0291 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0292 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0293 
+0294 <span class="comment">% Hint: get(hObject,'Value') returns toggle state of hor_pos</span>
+0295 
+0296 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0297 <span class="keyword">if</span> get(hObject,<span class="string">'Value'</span>) == get(hObject,<span class="string">'Max'</span>)
+0298     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 1;
+0299 <span class="keyword">else</span>
+0300     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 0;
+0301 <span class="keyword">end</span>
+0302 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0303 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0304 
+0305 <span class="comment">% --- Executes on button press in hor_neg.</span>
+0306 <a name="_sub11" href="#_subfunctions" class="code">function hor_neg_Callback(hObject, eventdata, handles)</a>
+0307 <span class="comment">% hObject    handle to hor_neg (see GCBO)</span>
+0308 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0309 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0310 
+0311 <span class="comment">% Hint: get(hObject,'Value') returns toggle state of hor_neg</span>
+0312 
+0313 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0314 <span class="keyword">if</span> get(hObject,<span class="string">'Value'</span>) == get(hObject,<span class="string">'Max'</span>)
+0315     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 1;
+0316 <span class="keyword">else</span>
+0317     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 0;
+0318 <span class="keyword">end</span>
+0319 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0320 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0321 
+0322 <a name="_sub12" href="#_subfunctions" class="code">function maxx_ph_Callback(hObject, eventdata, handles)</a>
+0323 <span class="comment">% hObject    handle to maxx_ph (see GCBO)</span>
+0324 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0325 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0326 
+0327 <span class="comment">% Hints: get(hObject,'String') returns contents of maxx_ph as text</span>
+0328 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxx_ph as a double</span>
+0329 
+0330 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0331 
+0332 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0333 <a name="_sub13" href="#_subfunctions" class="code">function maxx_ph_CreateFcn(hObject, eventdata, handles)</a>
+0334 <span class="comment">% hObject    handle to maxx_ph (see GCBO)</span>
+0335 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0336 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0337 
+0338 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0339 <span class="comment">%       See ISPC and COMPUTER.</span>
+0340 <span class="keyword">if</span> ispc
+0341     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0342 <span class="keyword">else</span>
+0343     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0344 <span class="keyword">end</span>
+0345 
+0346 
+0347 
+0348 <a name="_sub14" href="#_subfunctions" class="code">function minx_p_Callback(hObject, eventdata, handles)</a>
+0349 <span class="comment">% hObject    handle to minx_p (see GCBO)</span>
+0350 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0351 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0352 
+0353 <span class="comment">% Hints: get(hObject,'String') returns contents of minx_p as text</span>
+0354 <span class="comment">%        str2double(get(hObject,'String')) returns contents of minx_p as a double</span>
+0355 
+0356 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0357 
+0358 
+0359 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0360 <a name="_sub15" href="#_subfunctions" class="code">function minx_p_CreateFcn(hObject, eventdata, handles)</a>
+0361 <span class="comment">% hObject    handle to minx_p (see GCBO)</span>
+0362 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0363 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0364 
+0365 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0366 <span class="comment">%       See ISPC and COMPUTER.</span>
+0367 <span class="keyword">if</span> ispc
+0368     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0369 <span class="keyword">else</span>
+0370     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0371 <span class="keyword">end</span>
+0372 
+0373 
+0374 
+0375 <a name="_sub16" href="#_subfunctions" class="code">function maxdx_p_Callback(hObject, eventdata, handles)</a>
+0376 <span class="comment">% hObject    handle to maxdx_p (see GCBO)</span>
+0377 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0378 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0379 
+0380 <span class="comment">% Hints: get(hObject,'String') returns contents of maxdx_p as text</span>
+0381 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxdx_p as a double</span>
+0382 
+0383 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0384 
+0385 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0386 <a name="_sub17" href="#_subfunctions" class="code">function maxdx_p_CreateFcn(hObject, eventdata, handles)</a>
+0387 <span class="comment">% hObject    handle to maxdx_p (see GCBO)</span>
+0388 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0389 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0390 
+0391 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0392 <span class="comment">%       See ISPC and COMPUTER.</span>
+0393 <span class="keyword">if</span> ispc
+0394     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0395 <span class="keyword">else</span>
+0396     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0397 <span class="keyword">end</span>
+0398 
+0399 
+0400 
+0401 <a name="_sub18" href="#_subfunctions" class="code">function mindx_p_Callback(hObject, eventdata, handles)</a>
+0402 <span class="comment">% hObject    handle to mindx_p (see GCBO)</span>
+0403 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0404 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0405 
+0406 <span class="comment">% Hints: get(hObject,'String') returns contents of mindx_p as text</span>
+0407 <span class="comment">%        str2double(get(hObject,'String')) returns contents of mindx_p as a double</span>
+0408 
+0409 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0410 
+0411 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0412 <a name="_sub19" href="#_subfunctions" class="code">function mindx_p_CreateFcn(hObject, eventdata, handles)</a>
+0413 <span class="comment">% hObject    handle to mindx_p (see GCBO)</span>
+0414 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0415 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0416 
+0417 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0418 <span class="comment">%       See ISPC and COMPUTER.</span>
+0419 <span class="keyword">if</span> ispc
+0420     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0421 <span class="keyword">else</span>
+0422     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0423 <span class="keyword">end</span>
+0424 
+0425 
+0426 
+0427 <a name="_sub20" href="#_subfunctions" class="code">function maxx_n_Callback(hObject, eventdata, handles)</a>
+0428 <span class="comment">% hObject    handle to maxx_n (see GCBO)</span>
+0429 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0430 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0431 
+0432 <span class="comment">% Hints: get(hObject,'String') returns contents of maxx_n as text</span>
+0433 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxx_n as a double</span>
+0434 
+0435 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0436 
+0437 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0438 <a name="_sub21" href="#_subfunctions" class="code">function maxx_n_CreateFcn(hObject, eventdata, handles)</a>
+0439 <span class="comment">% hObject    handle to maxx_n (see GCBO)</span>
+0440 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0441 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0442 
+0443 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0444 <span class="comment">%       See ISPC and COMPUTER.</span>
+0445 <span class="keyword">if</span> ispc
+0446     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0447 <span class="keyword">else</span>
+0448     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0449 <span class="keyword">end</span>
+0450 
+0451 
+0452 
+0453 <a name="_sub22" href="#_subfunctions" class="code">function edit9_Callback(hObject, eventdata, handles)</a>
+0454 <span class="comment">% hObject    handle to edit9 (see GCBO)</span>
+0455 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0456 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0457 
+0458 <span class="comment">% Hints: get(hObject,'String') returns contents of edit9 as text</span>
+0459 <span class="comment">%        str2double(get(hObject,'String')) returns contents of edit9 as a double</span>
+0460 
+0461 
+0462 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0463 <a name="_sub23" href="#_subfunctions" class="code">function edit9_CreateFcn(hObject, eventdata, handles)</a>
+0464 <span class="comment">% hObject    handle to edit9 (see GCBO)</span>
+0465 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0466 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0467 
+0468 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0469 <span class="comment">%       See ISPC and COMPUTER.</span>
+0470 <span class="keyword">if</span> ispc
+0471     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0472 <span class="keyword">else</span>
+0473     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0474 <span class="keyword">end</span>
+0475 
+0476 
+0477 
+0478 <a name="_sub24" href="#_subfunctions" class="code">function maxdx_n_Callback(hObject, eventdata, handles)</a>
+0479 <span class="comment">% hObject    handle to maxdx_n (see GCBO)</span>
+0480 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0481 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0482 
+0483 <span class="comment">% Hints: get(hObject,'String') returns contents of maxdx_n as text</span>
+0484 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxdx_n as a double</span>
+0485 
+0486 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0487 
+0488 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0489 <a name="_sub25" href="#_subfunctions" class="code">function maxdx_n_CreateFcn(hObject, eventdata, handles)</a>
+0490 <span class="comment">% hObject    handle to maxdx_n (see GCBO)</span>
+0491 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0492 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0493 
+0494 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0495 <span class="comment">%       See ISPC and COMPUTER.</span>
+0496 <span class="keyword">if</span> ispc
+0497     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0498 <span class="keyword">else</span>
+0499     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0500 <span class="keyword">end</span>
+0501 
+0502 
+0503 
+0504 <a name="_sub26" href="#_subfunctions" class="code">function mindx_n_Callback(hObject, eventdata, handles)</a>
+0505 <span class="comment">% hObject    handle to mindx_n (see GCBO)</span>
+0506 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0507 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0508 
+0509 <span class="comment">% Hints: get(hObject,'String') returns contents of mindx_n as text</span>
+0510 <span class="comment">%        str2double(get(hObject,'String')) returns contents of mindx_n as a double</span>
+0511 
+0512 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0513 
+0514 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0515 <a name="_sub27" href="#_subfunctions" class="code">function mindx_n_CreateFcn(hObject, eventdata, handles)</a>
+0516 <span class="comment">% hObject    handle to mindx_n (see GCBO)</span>
+0517 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0518 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0519 
+0520 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0521 <span class="comment">%       See ISPC and COMPUTER.</span>
+0522 <span class="keyword">if</span> ispc
+0523     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0524 <span class="keyword">else</span>
+0525     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0526 <span class="keyword">end</span>
+0527 
+0528 
+0529 
+0530 <a name="_sub28" href="#_subfunctions" class="code">function minx_n_Callback(hObject, eventdata, handles)</a>
+0531 <span class="comment">% hObject    handle to minx_n (see GCBO)</span>
+0532 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0533 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0534 
+0535 <span class="comment">% Hints: get(hObject,'String') returns contents of minx_n as text</span>
+0536 <span class="comment">%        str2double(get(hObject,'String')) returns contents of minx_n as a double</span>
+0537 
+0538 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0539 
+0540 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0541 <a name="_sub29" href="#_subfunctions" class="code">function minx_n_CreateFcn(hObject, eventdata, handles)</a>
+0542 <span class="comment">% hObject    handle to minx_n (see GCBO)</span>
+0543 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0544 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0545 
+0546 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0547 <span class="comment">%       See ISPC and COMPUTER.</span>
+0548 <span class="keyword">if</span> ispc
+0549     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0550 <span class="keyword">else</span>
+0551     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0552 <span class="keyword">end</span>
+0553 
+0554 
+0555 <span class="comment">% --- Executes on button press in ver_pos.</span>
+0556 <a name="_sub30" href="#_subfunctions" class="code">function ver_pos_Callback(hObject, eventdata, handles)</a>
+0557 <span class="comment">% hObject    handle to ver_pos (see GCBO)</span>
+0558 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0559 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0560 
+0561 <span class="comment">% Hint: get(hObject,'Value') returns toggle state of ver_pos</span>
+0562 
+0563 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0564 <span class="keyword">if</span> get(hObject,<span class="string">'Value'</span>) == get(hObject,<span class="string">'Max'</span>)
+0565     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 1;
+0566 <span class="keyword">else</span>
+0567     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 0;
+0568 <span class="keyword">end</span>
+0569 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0570 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0571 
+0572 <span class="comment">% --- Executes on button press in ver_neg.</span>
+0573 <a name="_sub31" href="#_subfunctions" class="code">function ver_neg_Callback(hObject, eventdata, handles)</a>
+0574 <span class="comment">% hObject    handle to ver_neg (see GCBO)</span>
+0575 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0576 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0577 
+0578 <span class="comment">% Hint: get(hObject,'Value') returns toggle state of ver_neg</span>
+0579 
+0580 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0581 <span class="keyword">if</span> get(hObject,<span class="string">'Value'</span>) == get(hObject,<span class="string">'Max'</span>)
+0582     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 1;
+0583 <span class="keyword">else</span>
+0584     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = 0;
+0585 <span class="keyword">end</span>
+0586 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0587 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0588 
+0589 <a name="_sub32" href="#_subfunctions" class="code">function maxy_p_Callback(hObject, eventdata, handles)</a>
+0590 <span class="comment">% hObject    handle to maxy_p (see GCBO)</span>
+0591 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0592 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0593 
+0594 <span class="comment">% Hints: get(hObject,'String') returns contents of maxy_p as text</span>
+0595 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxy_p as a double</span>
+0596 
+0597 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0598 
+0599 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0600 <a name="_sub33" href="#_subfunctions" class="code">function maxy_p_CreateFcn(hObject, eventdata, handles)</a>
+0601 <span class="comment">% hObject    handle to maxy_p (see GCBO)</span>
+0602 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0603 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0604 
+0605 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0606 <span class="comment">%       See ISPC and COMPUTER.</span>
+0607 <span class="keyword">if</span> ispc
+0608     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0609 <span class="keyword">else</span>
+0610     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0611 <span class="keyword">end</span>
+0612 
+0613 
+0614 
+0615 <a name="_sub34" href="#_subfunctions" class="code">function miny_p_Callback(hObject, eventdata, handles)</a>
+0616 <span class="comment">% hObject    handle to miny_p (see GCBO)</span>
+0617 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0618 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0619 
+0620 <span class="comment">% Hints: get(hObject,'String') returns contents of miny_p as text</span>
+0621 <span class="comment">%        str2double(get(hObject,'String')) returns contents of miny_p as a double</span>
+0622 
+0623 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0624 
+0625 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0626 <a name="_sub35" href="#_subfunctions" class="code">function miny_p_CreateFcn(hObject, eventdata, handles)</a>
+0627 <span class="comment">% hObject    handle to miny_p (see GCBO)</span>
+0628 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0629 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0630 
+0631 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0632 <span class="comment">%       See ISPC and COMPUTER.</span>
+0633 <span class="keyword">if</span> ispc
+0634     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0635 <span class="keyword">else</span>
+0636     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0637 <span class="keyword">end</span>
+0638 
+0639 
+0640 
+0641 <a name="_sub36" href="#_subfunctions" class="code">function maxdy_p_Callback(hObject, eventdata, handles)</a>
+0642 <span class="comment">% hObject    handle to maxdy_p (see GCBO)</span>
+0643 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0644 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0645 
+0646 <span class="comment">% Hints: get(hObject,'String') returns contents of maxdy_p as text</span>
+0647 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxdy_p as a double</span>
+0648 
+0649 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0650 
+0651 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0652 <a name="_sub37" href="#_subfunctions" class="code">function maxdy_p_CreateFcn(hObject, eventdata, handles)</a>
+0653 <span class="comment">% hObject    handle to maxdy_p (see GCBO)</span>
+0654 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0655 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0656 
+0657 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0658 <span class="comment">%       See ISPC and COMPUTER.</span>
+0659 <span class="keyword">if</span> ispc
+0660     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0661 <span class="keyword">else</span>
+0662     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0663 <span class="keyword">end</span>
+0664 
+0665 
+0666 
+0667 <a name="_sub38" href="#_subfunctions" class="code">function mindy_p_Callback(hObject, eventdata, handles)</a>
+0668 <span class="comment">% hObject    handle to mindy_p (see GCBO)</span>
+0669 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0670 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0671 
+0672 <span class="comment">% Hints: get(hObject,'String') returns contents of mindy_p as text</span>
+0673 <span class="comment">%        str2double(get(hObject,'String')) returns contents of mindy_p as a double</span>
+0674 
+0675 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0676 
+0677 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0678 <a name="_sub39" href="#_subfunctions" class="code">function mindy_p_CreateFcn(hObject, eventdata, handles)</a>
+0679 <span class="comment">% hObject    handle to mindy_p (see GCBO)</span>
+0680 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0681 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0682 
+0683 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0684 <span class="comment">%       See ISPC and COMPUTER.</span>
+0685 <span class="keyword">if</span> ispc
+0686     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0687 <span class="keyword">else</span>
+0688     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0689 <span class="keyword">end</span>
+0690 
+0691 
+0692 
+0693 <a name="_sub40" href="#_subfunctions" class="code">function maxy_n_Callback(hObject, eventdata, handles)</a>
+0694 <span class="comment">% hObject    handle to maxy_n (see GCBO)</span>
+0695 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0696 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0697 
+0698 <span class="comment">% Hints: get(hObject,'String') returns contents of maxy_n as text</span>
+0699 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxy_n as a double</span>
+0700 
+0701 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0702 
+0703 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0704 <a name="_sub41" href="#_subfunctions" class="code">function maxy_n_CreateFcn(hObject, eventdata, handles)</a>
+0705 <span class="comment">% hObject    handle to maxy_n (see GCBO)</span>
+0706 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0707 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0708 
+0709 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0710 <span class="comment">%       See ISPC and COMPUTER.</span>
+0711 <span class="keyword">if</span> ispc
+0712     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0713 <span class="keyword">else</span>
+0714     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0715 <span class="keyword">end</span>
+0716 
+0717 
+0718 
+0719 <a name="_sub42" href="#_subfunctions" class="code">function miny_n_Callback(hObject, eventdata, handles)</a>
+0720 <span class="comment">% hObject    handle to miny_n (see GCBO)</span>
+0721 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0722 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0723 
+0724 <span class="comment">% Hints: get(hObject,'String') returns contents of miny_n as text</span>
+0725 <span class="comment">%        str2double(get(hObject,'String')) returns contents of miny_n as a double</span>
+0726 
+0727 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0728 
+0729 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0730 <a name="_sub43" href="#_subfunctions" class="code">function miny_n_CreateFcn(hObject, eventdata, handles)</a>
+0731 <span class="comment">% hObject    handle to miny_n (see GCBO)</span>
+0732 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0733 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0734 
+0735 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0736 <span class="comment">%       See ISPC and COMPUTER.</span>
+0737 <span class="keyword">if</span> ispc
+0738     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0739 <span class="keyword">else</span>
+0740     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0741 <span class="keyword">end</span>
+0742 
+0743 
+0744 
+0745 <a name="_sub44" href="#_subfunctions" class="code">function maxdy_n_Callback(hObject, eventdata, handles)</a>
+0746 <span class="comment">% hObject    handle to maxdy_n (see GCBO)</span>
+0747 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0748 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0749 
+0750 <span class="comment">% Hints: get(hObject,'String') returns contents of maxdy_n as text</span>
+0751 <span class="comment">%        str2double(get(hObject,'String')) returns contents of maxdy_n as a double</span>
+0752 
+0753 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0754 
+0755 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0756 <a name="_sub45" href="#_subfunctions" class="code">function maxdy_n_CreateFcn(hObject, eventdata, handles)</a>
+0757 <span class="comment">% hObject    handle to maxdy_n (see GCBO)</span>
+0758 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0759 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0760 
+0761 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0762 <span class="comment">%       See ISPC and COMPUTER.</span>
+0763 <span class="keyword">if</span> ispc
+0764     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0765 <span class="keyword">else</span>
+0766     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0767 <span class="keyword">end</span>
+0768 
+0769 
+0770 
+0771 <a name="_sub46" href="#_subfunctions" class="code">function mindy_n_Callback(hObject, eventdata, handles)</a>
+0772 <span class="comment">% hObject    handle to mindy_n (see GCBO)</span>
+0773 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0774 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0775 
+0776 <span class="comment">% Hints: get(hObject,'String') returns contents of mindy_n as text</span>
+0777 <span class="comment">%        str2double(get(hObject,'String')) returns contents of mindy_n as a double</span>
+0778 
+0779 <a href="#_sub66" class="code" title="subfunction generic_update_mesh_limits(hObject, handles)">generic_update_mesh_limits</a>(hObject, handles)
+0780 
+0781 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0782 <a name="_sub47" href="#_subfunctions" class="code">function mindy_n_CreateFcn(hObject, eventdata, handles)</a>
+0783 <span class="comment">% hObject    handle to mindy_n (see GCBO)</span>
+0784 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0785 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0786 
+0787 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0788 <span class="comment">%       See ISPC and COMPUTER.</span>
+0789 <span class="keyword">if</span> ispc
+0790     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0791 <span class="keyword">else</span>
+0792     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0793 <span class="keyword">end</span>
+0794 
+0795 
+0796 
+0797 <a name="_sub48" href="#_subfunctions" class="code">function comments_Callback(hObject, eventdata, handles)</a>
+0798 <span class="comment">% hObject    handle to comments (see GCBO)</span>
+0799 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0800 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0801 
+0802 <span class="comment">% Hints: get(hObject,'String') returns contents of comments as text</span>
+0803 <span class="comment">%        str2double(get(hObject,'String')) returns contents of comments as a double</span>
+0804 
+0805 comment = get(hObject,<span class="string">'String'</span>);
+0806 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0807 fma.comments = comment;
+0808 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0809 
+0810 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0811 <a name="_sub49" href="#_subfunctions" class="code">function comments_CreateFcn(hObject, eventdata, handles)</a>
+0812 <span class="comment">% hObject    handle to comments (see GCBO)</span>
+0813 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0814 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0815 
+0816 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0817 <span class="comment">%       See ISPC and COMPUTER.</span>
+0818 <span class="keyword">if</span> ispc
+0819     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0820 <span class="keyword">else</span>
+0821     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0822 <span class="keyword">end</span>
+0823 
+0824 
+0825 <a name="_sub50" href="#_subfunctions" class="code">function nturn1_Callback(hObject, eventdata, handles)</a>
+0826 <span class="comment">% hObject    handle to nturn1 (see GCBO)</span>
+0827 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0828 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0829 
+0830 <span class="comment">% Hints: get(hObject,'String') returns contents of nturn1 as text</span>
+0831 <span class="comment">%        str2double(get(hObject,'String')) returns contents of nturn1 as a double</span>
+0832 
+0833 val = str2double(get(hObject,<span class="string">'String'</span>));
+0834 <span class="keyword">if</span> isnan(val)
+0835     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'Invalid value for: '</span> get(hObject,<span class="string">'Tag'</span>)]);
+0836     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0837     set(hObject,<span class="string">'String'</span>,num2str(fma.(get(hObject,<span class="string">'Tag'</span>))));
+0838     <span class="keyword">return</span>;
+0839 <span class="keyword">else</span>
+0840     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0841     fma.(get(hObject,<span class="string">'Tag'</span>)) = val;
+0842     <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0843 <span class="keyword">end</span>
+0844 
+0845 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0846 <a name="_sub51" href="#_subfunctions" class="code">function nturn1_CreateFcn(hObject, eventdata, handles)</a>
+0847 <span class="comment">% hObject    handle to nturn1 (see GCBO)</span>
+0848 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0849 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0850 
+0851 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0852 <span class="comment">%       See ISPC and COMPUTER.</span>
+0853 <span class="keyword">if</span> ispc
+0854     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0855 <span class="keyword">else</span>
+0856     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0857 <span class="keyword">end</span>
+0858 
+0859 
+0860 
+0861 <a name="_sub52" href="#_subfunctions" class="code">function nturn2_Callback(hObject, eventdata, handles)</a>
+0862 <span class="comment">% hObject    handle to nturn2 (see GCBO)</span>
+0863 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0864 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0865 
+0866 <span class="comment">% Hints: get(hObject,'String') returns contents of nturn2 as text</span>
+0867 <span class="comment">%        str2double(get(hObject,'String')) returns contents of nturn2 as a double</span>
+0868 
+0869 val = str2double(get(hObject,<span class="string">'String'</span>));
+0870 <span class="keyword">if</span> isnan(val)
+0871     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'Invalid value for: '</span> get(hObject,<span class="string">'Tag'</span>)]);
+0872     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0873     set(hObject,<span class="string">'String'</span>,num2str(fma.(get(hObject,<span class="string">'Tag'</span>))));
+0874     <span class="keyword">return</span>;
+0875 <span class="keyword">else</span>
+0876     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0877     fma.(get(hObject,<span class="string">'Tag'</span>)) = val;
+0878     <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0879 <span class="keyword">end</span>
+0880 
+0881 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0882 <a name="_sub53" href="#_subfunctions" class="code">function nturn2_CreateFcn(hObject, eventdata, handles)</a>
+0883 <span class="comment">% hObject    handle to nturn2 (see GCBO)</span>
+0884 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0885 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0886 
+0887 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0888 <span class="comment">%       See ISPC and COMPUTER.</span>
+0889 <span class="keyword">if</span> ispc
+0890     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0891 <span class="keyword">else</span>
+0892     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0893 <span class="keyword">end</span>
+0894 
+0895 
+0896 <a name="_sub54" href="#_subfunctions" class="code">function mesh_type_SelectionChangeFcn(hObject, eventdata, handles)</a>
+0897 
+0898 <span class="comment">% disp('Selection Change')</span>
+0899 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0900 fma.mesh.type = get(get(handles.mesh_type,<span class="string">'SelectedObject'</span>),<span class="string">'String'</span>);
+0901 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0902 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0903 
+0904 <span class="comment">% --- Executes on button press in refresh.</span>
+0905 <a name="_sub55" href="#_subfunctions" class="code">function refresh_Callback(hObject, eventdata, handles)</a>
+0906 <span class="comment">% hObject    handle to refresh (see GCBO)</span>
+0907 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0908 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0909 
+0910 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0911 
+0912 
+0913 <a name="_sub56" href="#_subfunctions" class="code">function datadir_Callback(hObject, eventdata, handles)</a>
+0914 <span class="comment">% hObject    handle to datadir (see GCBO)</span>
+0915 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0916 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0917 
+0918 <span class="comment">% Hints: get(hObject,'String') returns contents of datadir as text</span>
+0919 <span class="comment">%        str2double(get(hObject,'String')) returns contents of datadir as a double</span>
+0920 
+0921 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0922 fma.datadir = get(hObject,<span class="string">'String'</span>);
+0923 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0924 
+0925 
+0926 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0927 <a name="_sub57" href="#_subfunctions" class="code">function datadir_CreateFcn(hObject, eventdata, handles)</a>
+0928 <span class="comment">% hObject    handle to datadir (see GCBO)</span>
+0929 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0930 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0931 
+0932 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0933 <span class="comment">%       See ISPC and COMPUTER.</span>
+0934 <span class="keyword">if</span> ispc
+0935     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0936 <span class="keyword">else</span>
+0937     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0938 <span class="keyword">end</span>
+0939 
+0940 
+0941 
+0942 
+0943 
+0944 
+0945 <a name="_sub58" href="#_subfunctions" class="code">function resultsfile_Callback(hObject, eventdata, handles)</a>
+0946 <span class="comment">% hObject    handle to resultsfile (see GCBO)</span>
+0947 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0948 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0949 
+0950 <span class="comment">% Hints: get(hObject,'String') returns contents of resultsfile as text</span>
+0951 <span class="comment">%        str2double(get(hObject,'String')) returns contents of resultsfile as a double</span>
+0952 
+0953 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0954 fma.resultsfile = get(hObject,<span class="string">'String'</span>);
+0955 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+0956 
+0957 
+0958 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+0959 <a name="_sub59" href="#_subfunctions" class="code">function resultsfile_CreateFcn(hObject, eventdata, handles)</a>
+0960 <span class="comment">% hObject    handle to resultsfile (see GCBO)</span>
+0961 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0962 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+0963 
+0964 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+0965 <span class="comment">%       See ISPC and COMPUTER.</span>
+0966 <span class="keyword">if</span> ispc
+0967     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0968 <span class="keyword">else</span>
+0969     set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0970 <span class="keyword">end</span>
+0971 
+0972 
+0973 
+0974 
+0975 
+0976 <span class="comment">% --- Executes on button press in generate_input.</span>
+0977 <a name="_sub60" href="#_subfunctions" class="code">function generate_input_Callback(hObject, eventdata, handles)</a>
+0978 <span class="comment">% hObject    handle to generate_input (see GCBO)</span>
+0979 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+0980 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+0981 
+0982 oldpwd = pwd;
+0983 <span class="comment">% Do a few checks before proceeding.</span>
+0984 <span class="comment">% Update everything so I see what I'm meant to see.</span>
+0985 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);
+0986 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+0987 
+0988 <span class="comment">% Has the lattice been selected?</span>
+0989 <span class="keyword">if</span> isempty(fma.latticefile)
+0990     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,<span class="string">'Need to select a lattice file!'</span>);
+0991     <span class="keyword">return</span>
+0992 <span class="keyword">end</span>
+0993 
+0994 <span class="comment">% Prep data</span>
+0995 <span class="comment">% Mesh values are in mm while the values in data must be in meters.</span>
+0996 [xx yy] = meshgrid(fma.mesh.x/1000,fma.mesh.y/1000);
+0997 fma.data.x = xx;
+0998 fma.data.y = yy;
+0999 fma.data.nux1 = zeros(fma.data.max,1); fma.data.nux1(:) = NaN;
+1000 fma.data.nuy1 = zeros(fma.data.max,1); fma.data.nuy1(:) = NaN;
+1001 fma.data.nux2 = zeros(fma.data.max,1); fma.data.nux2(:) = NaN;
+1002 fma.data.nuy2 = zeros(fma.data.max,1); fma.data.nuy2(:) = NaN;
+1003 fma.data.dindex = zeros(fma.data.max,1); fma.data.dindex(:) = NaN;
+1004 fma.data.curr = 1;    <span class="comment">% Current particle computing</span>
+1005 
+1006 <span class="comment">% Create and change current working directory to data dir or if empty ask</span>
+1007 <span class="comment">% the user where to put the files.</span>
+1008 <span class="keyword">if</span> isempty(fma.datadir)
+1009     fma.datadir = uigetdir(fileparts(fma.latticefile),<span class="string">'Pick a Directory'</span>);
+1010 <span class="keyword">else</span>
+1011     <span class="keyword">if</span> exist(fma.datadir,<span class="string">'dir'</span>) ~= 7
+1012         mkdir(fma.datadir);
+1013     <span class="keyword">end</span>
+1014 <span class="keyword">end</span>
+1015 cd(fma.datadir);
+1016     
+1017 <span class="comment">% Create a copy of the lattice file in the results/data directory so</span>
+1018 <span class="comment">% that it can be uniquely identified as being used for this run. Will not</span>
+1019 <span class="comment">% have path directory for the lattice file as it will always be in datadir.</span>
+1020 [pathstr namestr ext] = fileparts(fma.latticefile);
+1021 newlatticefile = [namestr <span class="string">'_'</span> strrep(datestr(now,13),<span class="string">':'</span>,<span class="string">'_'</span>) ext];
+1022 status = copyfile(fma.latticefile, [fma.datadir filesep newlatticefile]);
+1023 fma.latticefile = newlatticefile;
+1024 
+1025 <span class="keyword">if</span> status == 0
+1026     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,<span class="string">'Could not create copy of lattice file for input file!'</span>);
+1027     cd(oldpwd)
+1028     <span class="keyword">return</span>
+1029 <span class="keyword">end</span>
+1030 <span class="comment">% Write input file</span>
+1031 success = <a href="fma_lib.html" class="code" title="function varargout = fma_lib(varargin)">fma_lib</a>(<span class="string">'write'</span>,[fma.datadir filesep namestr <span class="string">'_fma_input.dat'</span>],fma);
+1032 <span class="keyword">if</span> success
+1033     <span class="comment">% write a batch file script for automated processing. Won't deal with</span>
+1034     <span class="comment">% multiple instances.</span>
+1035     <a href="#_sub69" class="code" title="subfunction writescript(pathstr, inputfilename)">writescript</a>(fma.datadir, [namestr <span class="string">'_fma_input.dat'</span>]);
+1036     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,<span class="string">'Input and batch script file written'</span>);
+1037 <span class="keyword">else</span>
+1038     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'Input file could not be written: '</span> lasterr]);
+1039 <span class="keyword">end</span>
+1040 
+1041 cd(oldpwd);
+1042 
+1043 
+1044 <span class="comment">% --- Executes on button press in datadir_browse.</span>
+1045 <a name="_sub61" href="#_subfunctions" class="code">function datadir_browse_Callback(hObject, eventdata, handles)</a>
+1046 <span class="comment">% hObject    handle to datadir_browse (see GCBO)</span>
+1047 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+1048 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+1049 
+1050 dirstr = uigetdir;
+1051 set(handles.datadir,<span class="string">'String'</span>,dirstr);
+1052 <a href="#_sub56" class="code" title="subfunction datadir_Callback(hObject, eventdata, handles)">datadir_Callback</a>(handles.datadir,eventdata,handles);
+1053 
+1054 
+1055 <span class="comment">% ######### User Defined Functions ###############</span>
+1056 <span class="comment">% Simplify getting the data structure where everything is stored.</span>
+1057 <a name="_sub62" href="#_subfunctions" class="code">function fma = getfma</a>
+1058 
+1059 handles = guihandles;
+1060 fma = getappdata(handles.fma_base,<span class="string">'fma'</span>);
+1061 
+1062 <a name="_sub63" href="#_subfunctions" class="code">function setfma(fma)</a>
+1063 
+1064 handles = guihandles;
+1065 setappdata(handles.fma_base,<span class="string">'fma'</span>,fma);
+1066 
+1067 <span class="comment">% Test if the lattice file selected is OK</span>
+1068 <a name="_sub64" href="#_subfunctions" class="code">function val = latticefileOK(latticefile)</a>
+1069 
+1070 val = 1;
+1071 handles = guihandles;
+1072 
+1073 <span class="comment">% Does it exist</span>
+1074 <span class="keyword">if</span> exist(latticefile,<span class="string">'file'</span>) == 0
+1075     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'AT Lattice File does not exist: '</span> latticefile]);
+1076     val = 0;
+1077     <span class="keyword">return</span>
+1078 <span class="keyword">end</span>  
+1079 <span class="comment">% Load and test file integrity (todo)</span>
+1080 disp(<span class="string">'Load and test integrity of lattice file (todo)'</span>);
+1081 
+1082 
+1083 
+1084 <span class="comment">% Read and load resume file</span>
+1085 <a name="_sub65" href="#_subfunctions" class="code">function varargout = loadtemplate(templatefile)</a>
+1086 
+1087 varargout{1} = 1;
+1088 handles = guihandles;
+1089 
+1090 <span class="comment">% Does it exist</span>
+1091 <span class="keyword">if</span> exist(templatefile,<span class="string">'file'</span>) == 0
+1092     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'Template File does not exist: '</span> templatefile]);
+1093     varargout{1} = 0;
+1094     <span class="keyword">return</span>
+1095 <span class="keyword">end</span>
+1096 
+1097 <span class="comment">% Get current fma data struct</span>
+1098 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+1099 
+1100 [fmatemplate success] = <a href="fma_lib.html" class="code" title="function varargout = fma_lib(varargin)">fma_lib</a>(<span class="string">'read'</span>,templatefile);
+1101 <span class="keyword">if</span> success == 0
+1102     varargout{1} = 0;
+1103     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'Error reading FMA data file for template: '</span> lasterr]);
+1104     <span class="keyword">return</span>
+1105 <span class="keyword">end</span>
+1106 <span class="comment">% Copy over the mesh and number of turns data.</span>
+1107 fma.mesh = fmatemplate.mesh;
+1108 fma.nturn1 = fmatemplate.nturn1;
+1109 fma.nturn2 = fmatemplate.nturn2;
+1110 fma.templatefile = templatefile;
+1111 
+1112 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+1113 
+1114 
+1115 <a name="_sub66" href="#_subfunctions" class="code">function generic_update_mesh_limits(hObject, handles)</a>
+1116 
+1117 val = str2double(get(hObject,<span class="string">'String'</span>));
+1118 <span class="keyword">if</span> isnan(val)
+1119     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,[<span class="string">'Invalid value for: '</span> get(hObject,<span class="string">'Tag'</span>)]);
+1120     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+1121     set(hObject,<span class="string">'String'</span>,num2str(fma.mesh.(get(hObject,<span class="string">'Tag'</span>))));
+1122     <span class="keyword">return</span>;
+1123 <span class="keyword">else</span>
+1124     fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+1125     fma.mesh.(get(hObject,<span class="string">'Tag'</span>)) = val;
+1126     <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+1127 <span class="keyword">end</span>
+1128 
+1129 
+1130 <span class="comment">% Function will update the plot from the data stored in fma. The variable</span>
+1131 <span class="comment">% fma should have been incrementally updated as new values are put into the</span>
+1132 <span class="comment">% text boxes. Will also update text boxes to values saved in fma.</span>
+1133 <a name="_sub67" href="#_subfunctions" class="code">function refresh_gui(handles)</a>
+1134 
+1135 disp(<span class="string">'Refreshing data'</span>)
+1136 
+1137 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+1138 <span class="comment">% Set general parameters</span>
+1139 set(handles.lattice_file,<span class="string">'String'</span>,fma.latticefile);
+1140 set(handles.datadir,<span class="string">'String'</span>,fma.datadir);
+1141 set(handles.resultsfile,<span class="string">'String'</span>,fma.resultsfile);
+1142 set(handles.comments,<span class="string">'String'</span>,fma.comments);
+1143 set(handles.nturn1,<span class="string">'String'</span>,num2str(fma.nturn1));
+1144 set(handles.nturn2,<span class="string">'String'</span>,num2str(fma.nturn2));
+1145 
+1146 <span class="comment">%% Next: mesh</span>
+1147 <span class="comment">% Update the type selected</span>
+1148 mtypehandles = get(handles.mesh_type,<span class="string">'Children'</span>);
+1149 <span class="keyword">for</span> i=1:length(mtypehandles)
+1150     <span class="keyword">if</span> strcmpi(get(mtypehandles(i),<span class="string">'String'</span>),fma.mesh.type) &gt; 0
+1151         set(handles.mesh_type,<span class="string">'SelectedObject'</span>,mtypehandles(i))    
+1152         <span class="keyword">break</span>
+1153     <span class="keyword">end</span>
+1154 <span class="keyword">end</span>
+1155 <span class="comment">% Update the 'directions' to create the mesh</span>
+1156 temp = {<span class="string">'hor_pos'</span> <span class="string">'hor_neg'</span> <span class="string">'ver_pos'</span> <span class="string">'ver_neg'</span>};
+1157 <span class="keyword">for</span> i=1:length(temp)
+1158     <span class="keyword">if</span> fma.mesh.(temp{i})
+1159         set(handles.(temp{i}),<span class="string">'Value'</span>,get(handles.(temp{i}),<span class="string">'Max'</span>));
+1160     <span class="keyword">else</span>
+1161         set(handles.(temp{i}),<span class="string">'Value'</span>,get(handles.(temp{i}),<span class="string">'Min'</span>));
+1162     <span class="keyword">end</span>
+1163 <span class="keyword">end</span>
+1164 <span class="comment">% Update the mesh parameters.</span>
+1165 tempnames = fieldnames(fma.mesh);
+1166 <span class="keyword">for</span> i=1:length(tempnames)
+1167     <span class="keyword">if</span> length(tempnames{i}) &lt; 3
+1168         <span class="keyword">continue</span>
+1169     <span class="keyword">end</span>
+1170     <span class="keyword">if</span> strcmpi(tempnames{i}(1:3),<span class="string">'max'</span>) &gt; 0 |<span class="keyword">...</span>
+1171             strcmpi(tempnames{i}(1:3),<span class="string">'min'</span>) &gt; 0
+1172         set(handles.(tempnames{i}),<span class="string">'String'</span>,num2str(fma.mesh.(tempnames{i})));
+1173     <span class="keyword">end</span>
+1174 <span class="keyword">end</span>
+1175 
+1176 <span class="comment">%% Start drawing the mesh here</span>
+1177 <span class="comment">% Check: if pos and neg for either hor or ver is unchecked then do not</span>
+1178 <span class="comment">% continue plotting.</span>
+1179 <span class="keyword">if</span> fma.mesh.hor_pos == 0 &amp; fma.mesh.hor_neg == 0
+1180     <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,<span class="keyword">...</span>
+1181         <span class="string">'Select either positive and/or negative direction in the horizontal'</span>);
+1182     <span class="keyword">return</span>;
+1183 <span class="keyword">elseif</span> fma.mesh.ver_pos == 0 &amp; fma.mesh.ver_neg == 0
+1184         <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,<span class="keyword">...</span>
+1185         <span class="string">'Select either positive and/or negative direction in the vertical'</span>);
+1186     <span class="keyword">return</span>;
+1187 <span class="keyword">end</span>
+1188 
+1189 <span class="comment">% Calculate the mesh positions</span>
+1190 <span class="keyword">switch</span> lower(fma.mesh.type)
+1191     <span class="keyword">case</span> <span class="string">'inverse'</span>
+1192         <span class="comment">% Temporary variables to store the mesh positions, for the positive and</span>
+1193         <span class="comment">% negative directions, in both planes</span>
+1194         temp_pos = [];
+1195         temp_neg = [];
+1196         <span class="keyword">if</span> fma.mesh.hor_pos
+1197             temp_pos(1) = fma.mesh.minx_p;
+1198             ax = (fma.mesh.maxdx_p - fma.mesh.mindx_p)*fma.mesh.maxx_p*fma.mesh.minx_p/(fma.mesh.maxx_p - fma.mesh.minx_p);
+1199             bx = fma.mesh.mindx_p - ax/fma.mesh.maxx_p;
+1200 
+1201             <span class="keyword">while</span> temp_pos(end) &lt; fma.mesh.maxx_p
+1202                 <span class="comment">% Here, the function dx_i</span>
+1203                 <span class="comment">% x_i = x_{i-1} + dx_{i-1}</span>
+1204                 temp_pos(end+1) = temp_pos(end) + ax/abs(temp_pos(end)) + bx;
+1205             <span class="keyword">end</span>
+1206         <span class="keyword">end</span>
+1207         <span class="keyword">if</span> fma.mesh.hor_neg
+1208             temp_neg(1) = fma.mesh.minx_n;
+1209             ax = (fma.mesh.maxdx_n - fma.mesh.mindx_n)*fma.mesh.maxx_n*fma.mesh.minx_n/(fma.mesh.maxx_n - fma.mesh.minx_n);
+1210             bx = fma.mesh.mindx_n - ax/fma.mesh.maxx_n;
+1211 
+1212             <span class="keyword">while</span> temp_neg(end) &lt; fma.mesh.maxx_n
+1213                 <span class="comment">% Here, the function dx_i</span>
+1214                 <span class="comment">% x_i = x_{i-1} + dx_{i-1}</span>
+1215                 temp_neg(end+1) = temp_neg(end) + ax/abs(temp_neg(end)) + bx;
+1216             <span class="keyword">end</span>
+1217         <span class="keyword">end</span>
+1218         fma.mesh.x = [-temp_neg temp_pos];
+1219 
+1220         temp_pos = [];
+1221         temp_neg = [];
+1222         <span class="keyword">if</span> fma.mesh.ver_pos
+1223             temp_pos(1) = fma.mesh.miny_p;
+1224             ay = (fma.mesh.maxdy_p - fma.mesh.mindy_p)*fma.mesh.maxy_p*fma.mesh.miny_p/(fma.mesh.maxy_p - fma.mesh.miny_p);
+1225             by = fma.mesh.mindy_p - ay/fma.mesh.maxy_p;
+1226 
+1227             <span class="keyword">while</span> temp_pos(end) &lt; fma.mesh.maxy_p
+1228                 <span class="comment">% Here, the function dy_i</span>
+1229                 <span class="comment">% y_i = y_{i-1} + dy_{i-1}</span>
+1230                 temp_pos(end+1) = temp_pos(end) + ay/abs(temp_pos(end)) + by;
+1231             <span class="keyword">end</span>
+1232         <span class="keyword">end</span>
+1233         <span class="keyword">if</span> fma.mesh.ver_neg
+1234             temp_neg(1) = fma.mesh.miny_n;
+1235             ay = (fma.mesh.maxdy_n - fma.mesh.mindy_n)*fma.mesh.maxy_n*fma.mesh.miny_n/(fma.mesh.maxy_n - fma.mesh.miny_n);
+1236             by = fma.mesh.mindy_n - ay/fma.mesh.maxy_n;
+1237 
+1238             <span class="keyword">while</span> temp_neg(end) &lt; fma.mesh.maxy_n
+1239                 <span class="comment">% Here, the function dy_i</span>
+1240                 <span class="comment">% y_i = y_{i-1} + dy_{i-1}</span>
+1241                 temp_neg(end+1) = temp_neg(end) + ay/abs(temp_neg(end)) + by;
+1242             <span class="keyword">end</span>
+1243         <span class="keyword">end</span>
+1244         fma.mesh.y = [-temp_neg temp_pos];
+1245     <span class="keyword">case</span> <span class="string">'linear'</span>
+1246         <span class="comment">% Create grids whose widths decrease linearly the further out it goes. The</span>
+1247         <span class="comment">% algorithm is as follows:</span>
+1248         <span class="comment">%   x_i = x_{i-1} + maxdx - (maxdx-mindx)/(maxx-minx)*x_{i-1}</span>
+1249         <span class="comment">% The convergence criteria is</span>
+1250         <span class="comment">%   asymptote val = maxdx*(maxx - minx)/(maxdx - mindx) &gt; maxx</span>
+1251         <span class="comment">% This can be derived by analysing x_i/x_{i-1}. As i -&gt; infinity this ratio</span>
+1252         <span class="comment">% has to equal 1 and the value of x_i will be the value of the asymptote.</span>
+1253         <span class="comment">% If the value of the asymptote is &lt; maxx this algorithm will loop forever.</span>
+1254         <span class="comment">% Temporary variables to store the mesh positions, for the positive and</span>
+1255         <span class="comment">% negative directions, in both planes</span>
+1256         temp_pos = [];
+1257         temp_neg = [];
+1258         <span class="keyword">if</span> fma.mesh.hor_pos
+1259             <span class="keyword">if</span> fma.mesh.maxdx_p*(fma.mesh.maxx_p - fma.mesh.minx_p)/(fma.mesh.maxdx_p - fma.mesh.mindx_p) &lt;= fma.mesh.maxx_p
+1260                 msgstr = <span class="string">'Reselect limit values for x. Increase (maxx - minx) or decrease (maxdx - mindx)'</span>;
+1261                 <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,msgstr);
+1262                 <span class="keyword">return</span>
+1263             <span class="keyword">end</span>
+1264 
+1265             temp_pos(1) = fma.mesh.minx_p;
+1266             <span class="keyword">while</span> temp_pos(end) &lt; fma.mesh.maxx_p
+1267                 <span class="comment">% Here, the function dx_i</span>
+1268                 <span class="comment">% x_i = x_{i-1} + dx_{i-1}</span>
+1269                 temp_pos(end+1) = temp_pos(end) + (fma.mesh.maxdx_p - (fma.mesh.maxdx_p-fma.mesh.mindx_p)/(fma.mesh.maxx_p-fma.mesh.minx_p)*temp_pos(end));
+1270             <span class="keyword">end</span>
+1271         <span class="keyword">end</span>
+1272         <span class="keyword">if</span> fma.mesh.hor_neg
+1273             <span class="keyword">if</span> fma.mesh.maxdx_n*(fma.mesh.maxx_n - fma.mesh.minx_n)/(fma.mesh.maxdx_n - fma.mesh.mindx_n) &lt;= fma.mesh.maxx_n
+1274                 msgstr = <span class="string">'Reselect limit values for x. Increase (maxx - minx) or decrease (maxdx - mindx)'</span>;
+1275                 <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,msgstr);
+1276                 <span class="keyword">return</span>
+1277             <span class="keyword">end</span>
+1278 
+1279             temp_neg(1) = fma.mesh.minx_n;
+1280             <span class="keyword">while</span> temp_neg(end) &lt; fma.mesh.maxx_n
+1281                 <span class="comment">% Here, the function dx_i</span>
+1282                 <span class="comment">% x_i = x_{i-1} + dx_{i-1}</span>
+1283                 temp_neg(end+1) = temp_neg(end) + (fma.mesh.maxdx_n - (fma.mesh.maxdx_n-fma.mesh.mindx_n)/(fma.mesh.maxx_n-fma.mesh.minx_n)*temp_neg(end));
+1284             <span class="keyword">end</span>
+1285         <span class="keyword">end</span>
+1286         fma.mesh.x = [-temp_neg temp_pos];
+1287 
+1288         temp_pos = [];
+1289         temp_neg = [];
+1290         <span class="keyword">if</span> fma.mesh.ver_pos
+1291             <span class="keyword">if</span> fma.mesh.maxdy_p*(fma.mesh.maxy_p - fma.mesh.miny_p)/(fma.mesh.maxdy_p - fma.mesh.mindy_p) &lt;= fma.mesh.maxy_p
+1292                 msgstr = <span class="string">'Reselect limit values for y. Increase (maxy - miny) or decrease (maxdy - mindy)'</span>;
+1293                 <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,msgstr);
+1294                 <span class="keyword">return</span>
+1295             <span class="keyword">end</span>
+1296 
+1297             temp_pos(1) = fma.mesh.miny_p;
+1298             <span class="keyword">while</span> temp_pos(end) &lt; fma.mesh.maxy_p
+1299                 <span class="comment">% Here, the function dy_i</span>
+1300                 <span class="comment">% y_i = y_{i-1} + dy_{i-1}</span>
+1301                 temp_pos(end+1) = temp_pos(end) + (fma.mesh.maxdy_p - (fma.mesh.maxdy_p-fma.mesh.mindy_p)/(fma.mesh.maxy_p-fma.mesh.miny_p)*temp_pos(end));
+1302             <span class="keyword">end</span>
+1303         <span class="keyword">end</span>
+1304         <span class="keyword">if</span> fma.mesh.ver_neg
+1305             <span class="keyword">if</span> fma.mesh.maxdy_n*(fma.mesh.maxy_n - fma.mesh.miny_n)/(fma.mesh.maxdy_n - fma.mesh.mindy_n) &lt;= fma.mesh.maxy_n
+1306                 msgstr = <span class="string">'Reselect limit values for y. Increase (maxy - miny) or decrease (maxdy - mindy)'</span>;
+1307                 <a href="#_sub68" class="code" title="subfunction setmessage(handle,str)">setmessage</a>(handles.messages,msgstr);
+1308                 <span class="keyword">return</span>
+1309             <span class="keyword">end</span>
+1310 
+1311             temp_neg(1) = fma.mesh.miny_n;
+1312             <span class="keyword">while</span> temp_neg(end) &lt; fma.mesh.maxy_n
+1313                 <span class="comment">% Here, the function dy_i</span>
+1314                 <span class="comment">% y_i = y_{i-1} + dy_{i-1}</span>
+1315                 temp_neg(end+1) = temp_neg(end) + (fma.mesh.maxdy_n - (fma.mesh.maxdy_n-fma.mesh.mindy_n)/(fma.mesh.maxy_n-fma.mesh.miny_n)*temp_neg(end));
+1316             <span class="keyword">end</span>
+1317         <span class="keyword">end</span>
+1318         fma.mesh.y = [-temp_neg temp_pos];
+1319 <span class="keyword">end</span>
+1320 
+1321 <span class="comment">% Make sure that the intervals mesh.x and mesh.y are sorted</span>
+1322 fma.mesh.x = sort(fma.mesh.x);
+1323 fma.mesh.y = sort(fma.mesh.y);
+1324 
+1325 <span class="comment">% Now draw mesh</span>
+1326 axes(handles.meshfig);
+1327 cla;
+1328 <span class="keyword">for</span> i=1:length(fma.mesh.x)
+1329     line([fma.mesh.x(i) fma.mesh.x(i)],[min(fma.mesh.y) max(fma.mesh.y)]);
+1330 <span class="keyword">end</span>
+1331 <span class="keyword">for</span> i=1:length(fma.mesh.y)
+1332     line([min(fma.mesh.x) max(fma.mesh.x)], [fma.mesh.y(i) fma.mesh.y(i)]);
+1333 <span class="keyword">end</span>
+1334 
+1335 <span class="comment">% Update total number of mesh points</span>
+1336 fma.data.max = length(fma.mesh.x)*length(fma.mesh.y);
+1337 set(handles.nummeshpoints,<span class="string">'String'</span>,num2str(fma.data.max));
+1338 
+1339 
+1340 <span class="keyword">if</span> get(handles.Transverse,<span class="string">'Value'</span>)
+1341     axis equal; axis tight;
+1342 <span class="keyword">elseif</span> get(handles.Momentum,<span class="string">'Value'</span>)
+1343     axis normal; axis tight;
+1344 <span class="keyword">end</span>
+1345 
+1346 <span class="comment">% Save all changes</span>
+1347 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+1348 
+1349 
+1350 <a name="_sub68" href="#_subfunctions" class="code">function setmessage(handle,str)</a>
+1351 
+1352 MAX = 7;
+1353 
+1354 currstr = get(handle,<span class="string">'String'</span>);
+1355 nmsg = get(handle,<span class="string">'UserData'</span>);
+1356 <span class="keyword">if</span> isempty(nmsg)
+1357     nmsg = 0;
+1358 <span class="keyword">end</span>
+1359 
+1360 nmsg = nmsg + 1;
+1361 <span class="keyword">if</span> length(currstr) &gt;= MAX
+1362     currstr = char(currstr);
+1363     currstr(1:MAX-1,:) = currstr(2:MAX,:);
+1364     currstr = cellstr(currstr);
+1365     currstr{MAX} = [num2str(nmsg) <span class="string">' &gt;&gt; '</span> str];
+1366 <span class="keyword">else</span>
+1367     currstr{end+1} = [num2str(nmsg) <span class="string">' &gt;&gt; '</span> str];
+1368 <span class="keyword">end</span>
+1369 
+1370 set(handle,<span class="string">'String'</span>,currstr);
+1371 set(handle,<span class="string">'UserData'</span>,nmsg);
+1372 
+1373 
+1374 <a name="_sub69" href="#_subfunctions" class="code">function writescript(pathstr, inputfilename)</a>
+1375 
+1376 oldpwd = pwd;
+1377 cd(pathstr);
+1378 
+1379 <span class="keyword">if</span> ~strcmpi(pathstr(end),filesep)
+1380     pathstr = [pathstr filesep];
+1381 <span class="keyword">end</span>
+1382 [dum name ext] = fileparts(inputfilename);
+1383 
+1384 <span class="keyword">switch</span> computer
+1385 <span class="keyword">case</span> <span class="string">'PCWIN'</span>
+1386     fid = fopen(<span class="string">'runscript.bat'</span>,<span class="string">'w'</span>);
+1387     
+1388     matlabstr = <span class="string">'matlab -nosplash -nodesktop -nojvm'</span>;
+1389     logfile = sprintf(<span class="string">'-logfile %s'</span>,[<span class="string">'%%CD%%'</span> name <span class="string">'_matlaberrors.log'</span>]);
+1390     <span class="comment">% Added by Eugene 24/03/05. Temporary while away.</span>
+1391     command = sprintf(<span class="string">'-r &quot;fma = fma_lib(''analysis'',''%s''); plot_emailresults(fma); exit;&quot;'</span>,[<span class="string">'%%CD%%'</span> inputfilename]);
+1392     
+1393     fprintf(fid,<span class="string">'@echo off\r\n'</span>);
+1394     fprintf(fid,<span class="string">'echo.\r\n'</span>);
+1395     fprintf(fid,<span class="string">'echo Starting MATLAB and running Frequency Map Analysis...\r\n'</span>);
+1396     fprintf(fid,<span class="string">'echo Input file : \r\n'</span>);
+1397     fprintf(fid,<span class="string">'echo        %s\r\n'</span>,[<span class="string">'%%CD%%'</span> inputfilename]);
+1398     fprintf(fid,<span class="string">'echo Matlab error logs saved to : \r\n'</span>);
+1399     fprintf(fid,<span class="string">'echo        %s\r\n'</span>,[<span class="string">'%%CD%%'</span> name <span class="string">'_matlaberrors.log'</span>]);
+1400     fprintf(fid,<span class="string">'echo.\r\n'</span>);
+1401     fprintf(fid,<span class="string">'%s %s %s\r\n'</span>,matlabstr,logfile,command);
+1402 
+1403     fclose(fid);
+1404 <span class="keyword">case</span> {<span class="string">'GLNX86'</span>, <span class="string">'ALPHA'</span>, <span class="string">'SOL2'</span>}
+1405     disp(<span class="string">'Never been used on Unix platforms.'</span>);
+1406     disp(<span class="string">'You''re more than welcome to modify this code... :D'</span>);
+1407 <span class="keyword">otherwise</span>
+1408     error(<span class="string">'Unsupported platform'</span>);
+1409 <span class="keyword">end</span>
+1410 
+1411 cd(oldpwd);
+1412 
+1413 
+1414 <span class="comment">% --- Executes on button press in Transverse.</span>
+1415 <a name="_sub70" href="#_subfunctions" class="code">function Transverse_Callback(hObject, eventdata, handles)</a>
+1416 <span class="comment">% hObject    handle to Transverse (see GCBO)</span>
+1417 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+1418 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+1419 
+1420 <span class="comment">% Hint: get(hObject,'Value') returns toggle state of Transverse</span>
+1421 
+1422 
+1423 <span class="comment">% --- Executes on button press in Momentum.</span>
+1424 <a name="_sub71" href="#_subfunctions" class="code">function Momentum_Callback(hObject, eventdata, handles)</a>
+1425 <span class="comment">% hObject    handle to Momentum (see GCBO)</span>
+1426 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+1427 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+1428 
+1429 <span class="comment">% Hint: get(hObject,'Value') returns toggle state of Momentum</span>
+1430 
+1431 
+1432 
+1433 
+1434 <span class="comment">% --- Executes during object creation, after setting all properties.</span>
+1435 <a name="_sub72" href="#_subfunctions" class="code">function nummeshpoints_CreateFcn(hObject, eventdata, handles)</a>
+1436 <span class="comment">% hObject    handle to nummeshpoints (see GCBO)</span>
+1437 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+1438 <span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+1439 
+1440 <span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+1441 <span class="comment">%       See ISPC and COMPUTER.</span>
+1442 <span class="keyword">if</span> ispc &amp;&amp; isequal(get(hObject,<span class="string">'BackgroundColor'</span>), get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>))
+1443     set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+1444 <span class="keyword">end</span>
+1445 
+1446 
+1447 <span class="comment">% --------------------------------------------------------------------</span>
+1448 <a name="_sub73" href="#_subfunctions" class="code">function Aperture_SelectionChangeFcn(hObject, eventdata, handles)</a>
+1449 <span class="comment">% hObject    handle to Aperture (see GCBO)</span>
+1450 <span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+1451 <span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+1452 fma = <a href="#_sub62" class="code" title="subfunction fma = getfma">getfma</a>;
+1453 <span class="keyword">if</span> get(handles.Transverse,<span class="string">'Value'</span>)
+1454     fma.aperture = <span class="string">'Transverse'</span>;
+1455     set(handles.HorizontalParameters,<span class="string">'Title'</span>,<span class="string">'Horizontal (x)'</span>);
+1456     set(handles.VerticalParameters,<span class="string">'Title'</span>,<span class="string">'Vertical (y)'</span>);
+1457 <span class="keyword">elseif</span> get(handles.Momentum,<span class="string">'Value'</span>)
+1458     fma.aperture = <span class="string">'Momentum'</span>;
+1459     set(handles.HorizontalParameters,<span class="string">'Title'</span>,<span class="string">'Horizontal (Delta)'</span>);
+1460     set(handles.VerticalParameters,<span class="string">'Title'</span>,<span class="string">'Vertical (x)'</span>);
+1461 <span class="keyword">end</span>
+1462 <a href="#_sub63" class="code" title="subfunction setfma(fma)">setfma</a>(fma);
+1463 <a href="#_sub67" class="code" title="subfunction refresh_gui(handles)">refresh_gui</a>(handles);</pre></div>
+<hr><address>Generated on Sun 28-Jul-2013 23:18:56 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
