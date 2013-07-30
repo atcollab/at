@@ -19,7 +19,7 @@ function AT_2_madX(AT_ring,linename)
 
 outfile=['' linename '_lattice.madx'];
 
-outfile='madXelemdef.elem';
+%outfile='madXelemdef.elem';
 elelat=['!!\n!!  madX lattice elements: ' linename '\n!!  Created: ' datestr(now) '\n!!\n!!\n\n'];
 
 %% get family names for definitions
