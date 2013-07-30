@@ -13,12 +13,12 @@ etaxp=eta(:,2);
 Hx=gammax.*etax.*etax+2*alphax.*etax.*etaxp+betax.*etaxp.*etaxp;
 
 %now compute beamenvelopes
-atxdata=atx(ring,dpp,1:length(ring)+1);
-sig=cat(3,atxdata.beam66);
-sigx=sig(1,1,:);
-sigx=squeeze(sigx);
-sigy=sig(3,3,:);
-sigy=squeeze(sigy);
+%atxdata=atx(ring,dpp,1:length(ring)+1);
+%sig=cat(3,atxdata.beam66);
+%sigx=sig(1,1,:);
+%sigx=squeeze(sigx);
+%sigy=sig(3,3,:);
+%sigy=squeeze(sigy);
 
 %momap_h = varargin(1);
 
