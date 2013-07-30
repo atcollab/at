@@ -58,9 +58,10 @@ V_ordered = Vn;
 V_ordered(:,[1,3,5])=V_ordered(:,orderp); %reorder positive modes
 V_ordered(:,[2,4,6])=V_ordered(:,ordern); %reorder negative modes
 
-v1 = V_ordered(:,1);
-v2 = V_ordered(:,3);
-v3 = V_ordered(:,5);
+
+v1=V_ordered(:,1);
+v2=V_ordered(:,3);
+v3=V_ordered(:,5);
 
 
 G1 = -(1/2)*jmat(3)*(conj(v1)*v1.'+v1*v1')*jmat(3);
