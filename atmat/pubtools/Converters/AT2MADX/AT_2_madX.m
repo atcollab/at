@@ -102,7 +102,8 @@ for i=1:length(families)
       
             elelat=[elelat rfc '\n'];
            
-              otherwise
+        otherwise
+                  warning(['Element: ' el.('FamName') ' was not converted, since it does not match any Class.'])
     end
   
 end

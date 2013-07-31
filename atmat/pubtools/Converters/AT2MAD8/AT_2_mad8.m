@@ -1,14 +1,21 @@
 function AT_2_mad8(AT_ring,linename)
+% function AT_2_mad8(AT_ring,linename)
 % this functions converts the AT lattice AT_ring in mad8 format.
+% 
+% a MAD8 LINE is generated.
+% 
+% file ['' linename '_lattice.mad8'] is generated contiaining the lattice
+% elements definitions and the LINE. no other comands introduced
+% 
+% 
 
+outfile=['' linename '_lattice.mad8'];
 
-outfile=['mad8elemdef_' linename '_def.mad8'];
 elelat=['!!\n!!  mad8 lattice: ' linename '\n!!  Created: ' datestr(now) '\n!!\n!!\n\n'...
     'assign,print="' linename 'sliced.print"\n'...
 'assign,echo="' linename 'sliced.echo"\n'...
 'option, -echo\n'...
 ];
-nkickperL=40; % kicks per meter
 
 %% get family names for definitions
 [families,ind_first_oc_ring]=...
@@ -24,8 +31,8 @@ for i=1:length(families)
    if isfield(el,'Class')
     switch el.('Class')
         case 'Bend' % dipole
-            Ang=el.('BendingAngle');
-            disp('all dipoles are considered rbend')
+            %Ang=el.('BendingAngle');
+            %disp('all dipoles are considered rbend')
             di=[el.('FamName')   ': &\n'...*sin(Ang/2)/Ang/2
                 ' SBEND,L=' num2str(el.('Length'),format) ', &\n'...
                 ' ANGLE = ' num2str(el.('BendingAngle'),format) ', &\n'...
@@ -97,12 +104,13 @@ for i=1:length(families)
             rfc=['RF_ON:=1 \n'...
                 ...
                 el.('FamName') ' : RFCavity, L=' num2str(el.('Length'),format)...
-                ',VOLT=0.6*RF_ON &\n'...
-                ', harm=1998, lag=0.424389' '; \n'];
+                ',VOLT=' num2str(el.Voltage,format) ' &\n'...
+                ', harm=' num2str(el.HarmNumber,format) ', lag=0.424389' '; \n'];
       
             elelat=[elelat rfc '\n'];
            
-              otherwise
+        otherwise
+            warning(['Element: ' el.('FamName') ' was not converted, since it does not match any Class.'])
     end
    end
 end
