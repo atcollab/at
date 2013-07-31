@@ -257,6 +257,7 @@ disp(corrcount)
 %% run madx sequence file to check tunes, length betas and dispersion.
 
 %% out madX sequence file
+[~,seqfilemad8]=fileparts(seqfilemad8);
 seqfilemadX=[seqfilemad8 'X'];
 sX=fopen(seqfilemadX,'w+');
 sXt=fopen(['test_' seqfilemadX ],'w+');
