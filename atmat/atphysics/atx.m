@@ -145,6 +145,18 @@ if ~isempty(cavindex)
 %        lindata(i).tilt=envelope(i).Tilt;
 	  end
    end
+else
+      blength=NaN;
+      espread=NaN;
+      modemittance=NaN(1,2);
+	  for i=1:length(lindata)
+%		 lindata(i).beam66=bm66;
+%		 lindata(i).beam44=bm44;
+		 lindata(i).modemit=NaN(2,1);
+		 lindata(i).emit44=NaN(2,1);
+%		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
+%        lindata(i).tilt=envelope(i).Tilt;
+	  end
 end
 linusr=lindata(keep);
 pm=struct('ll',circumference,'alpha',momcompact,...
