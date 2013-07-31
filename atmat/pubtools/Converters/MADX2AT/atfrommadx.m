@@ -1,4 +1,5 @@
 function atfrommadx(seqfilemadX,E0,outfilename)
+%function atfrommadx(seqfilemadX,E0,outfilename)
 % tansform madX sequence file (savesequence) file into AT lattice structure.
 %
 % This procedure reads a saved lattice (sequence in madx) in madX 
@@ -539,13 +540,7 @@ clear SXSTRING i j SXCELL elemcount ElementType elname
 
 %% run macro file and save workspace.
 
-%remove file extension
-dotplace=strfind(seqfilemadX,'.');
-if ~isempty(dotplace)
-    seqfilemadX=seqfilemadX(1:dotplace-1);
-end
-
-   
+[~,seqfilemadX]=fileparts(seqfilemadX);
 
 try % try to run the macro generated
     %%%!!!!! THIS COMAND MAY FAIL! CHECK THE ORDER OF THE DECLARATIONS IN MADX!
