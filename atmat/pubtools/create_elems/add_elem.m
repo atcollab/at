@@ -1,7 +1,8 @@
-function [ ring2 ] = add_elem( ring1, ElemData )
-%add_elem adds an element to the end of a ring and outputs the new one
-%   Detailed explanation goes here
+function [ ring2 ] = add_elem( ring, Elem, index )
+%[ ring2 ] = add_elem( ring, Elem, index )
+%add_elem adds an element to a ring at position index and outputs a new one
+ringpart1 = ring(1:index);
+ringpart2 = ring(index+1:end);
 
- ring2={ring1{:},ElemData};
-end
-
+% ring2={ringpart1{:}; Elem; ringpart2{:}};
+ ring2=[ringpart1;{Elem};ringpart2];
