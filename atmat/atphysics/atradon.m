@@ -23,6 +23,7 @@ if ~isfield(GLOBVAL,'E0')
     error('Energy not defined in GLOBVAL');
 end
 
+ring2=ring;
 if ~isempty(cavipass)
     cavities=atgetcells(ring,'Frequency');
     cavindex=find(cavities)';
@@ -31,7 +32,7 @@ if ~isempty(cavipass)
     else
         disp(['Cavities located at position ' num2str(cavindex)]);
     end
-    ring2=atsetfieldvalues(ring,cavities,'PassMethod',cavipass);
+    ring2(cavities)=atsetfieldvalues(ring(cavities),'PassMethod',cavipass);
 else
     ring2=ring;
 end
@@ -42,7 +43,7 @@ if ~isempty(bendpass)
     if sum(dipoles) <= 0
         warning('AT:atradon:NoBend', 'No dipole in the structure');
     end
-    ring2=atsetfieldvalues(ring2,dipoles,'PassMethod',bendpass);
+    ring2(dipoles)=atsetfieldvalues(ring2(dipoles),'PassMethod',bendpass);
 else
     dipoles=false(size(ring2));
 end
@@ -53,7 +54,7 @@ if ~isempty(quadpass)
     if sum(quadrupoles) <= 0
         warning('AT:atradon:NoQuad', 'No quadrupole in the structure');
     end
-    ring2=atsetfieldvalues(ring2,quadrupoles,'PassMethod',quadpass);
+    ring2(quadrupoles)=atsetfieldvalues(ring2(quadrupoles),'PassMethod',quadpass);
 else
     quadrupoles=false(size(ring2));
 end
