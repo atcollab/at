@@ -7,12 +7,12 @@ function [NewRing,penalty,dmin]=atmatch(...
 % a new THERING with the Constraints verified
 % 
 % Ring        : at lattice structure
-% Variables   : a cell array of structures of parameters to vary with step size.
-% Constraints : a cell array of structures
+% Variables   : a structure array of parameters to vary with step size.
+% Constraints : a structure array
 % Tolerance   : square sum of distance to wished constraints at which the minimizer stops  
 % Calls       : number of calls
 % verbose     : verbosity 0-3 (see later)
-% minimizer   : @fminsearch (default) or @lsnonlin 
+% minimizer   : @fminsearch (default) or @lsqnonlin 
 %
 %
 % Variables  struct('Indx',{[indx],...
@@ -34,8 +34,8 @@ function [NewRing,penalty,dmin]=atmatch(...
 %                     'RefPoints',refpts);
 %
 % lindata is the output of atlinopt at the requested locations
-% globdata.fractune=tune fromk atlinopt
-% globdata.chromaticity=chrom from atlinopt
+% globaldata.fractune=tune from atlinopt
+% globaldata.chromaticity=chrom from atlinopt
 %
 % functname must return a row vector of values to be optimized
 %
@@ -51,10 +51,13 @@ function [NewRing,penalty,dmin]=atmatch(...
 % Variables are changed within the range min<res<max with a Tolerance Given
 % by Tolerance
 %
+% See also ATLINCONSTRAINT ATVARIABLEBUILDER
+
+
+%
 % using least square.
 %
 %
-
 % History of changes
 % created : 27-8-2012
 % updated : 28-8-2012 constraints 'Fun' may output vectors
@@ -100,6 +103,9 @@ notzero=initval~=0;
 tipx(notzero)=initval(notzero);
 
 [posarray,~,ic]=unique(cat(2,Constraints.RefPoints));
+if posarray(1)<=0 || posarray(end) > length(Ring)+1
+    error('atmatch:WrongInput','RefPoint out of range');
+end
 indinposarray=reshape(...
     mat2cell(ic(:),arrayfun(@(s) length(s.RefPoints), Constraints),1),...
     size(Constraints));
