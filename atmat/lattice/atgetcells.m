@@ -23,7 +23,7 @@ function ok=atgetcells(cellarray, field, varargin)
 % See also ATGETFIELDVALUES, ATSETFIELDVALUES, FINDCELLS, REGEXPI
 
 % Check if the first argument is the cell array of structures
-if ~(iscell(cellarray) && (isempty(cellarray) || isstruct(cellarray{1})))
+if ~iscell(cellarray)
     error('The first argument must be a cell array of structures')
 end
 % Check if the second argument is a string
