@@ -11,20 +11,20 @@ function [lindt,pm]=atx(ring,varargin)
 %
 % From atlinopt:
 %
-%   ElemIndex   - ordinal position in the RING 
+%   ElemIndex   - ordinal position in the RING
 %   SPos        - longitudinal position [m]
-%   ClosedOrbit - closed orbit column vector with 
-%                 components x, px, y, py (momentums, NOT angles)						
-%   Dispersion  - dispersion orbit position vector with 
+%   ClosedOrbit - closed orbit column vector with
+%                 components x, px, y, py (momentums, NOT angles)
+%   Dispersion  - dispersion orbit position vector with
 %                 components eta_x, eta_prime_x, eta_y, eta_prime_y
-%                 calculated with respect to the closed orbit with 
+%                 calculated with respect to the closed orbit with
 %                 momentum deviation DP
 %   M44         - 4x4 transfer matrix M from the beginning of RING
 %                 to the entrance of the element for specified DP [2]
 %   A           - 2x2 matrix A in [3]
 %   B           - 2x2 matrix B in [3]
-%   C           - 2x2 matrix C in [3]			
-%   gamma       - gamma parameter of the transformation to eigenmodes 
+%   C           - 2x2 matrix C in [3]
+%   gamma       - gamma parameter of the transformation to eigenmodes
 %   mu          - [ mux, muy] horizontal and vertical betatron phase
 %   beta        - [betax, betay] vector
 %   alpha       - [alphax, alphay] vector
@@ -96,78 +96,7 @@ momcompact=mcf(ring);				% momentum compaction
 
 chromaticity=xsi./tuneper;				% chromaticity
 
-[ring2,radindex,cavindex]=atradon(ring);
-
-if ~isempty(cavindex)
-   try
-	  [envelope,espread,blength]=ohmienvelope(ring2,radindex,refpts);
-	  for i=1:length(lindata)
-		 [beamA,beamB]=beam44(lindata(i));  % betatron 4x4 coupled matrices
-		 %   beamA       - 2x2 beam matrix for mode A
-		 %   beamB       - 2x2 beam matrix for mode B
-		 bm66=envelope(i).R;    % bm66 is the 6x6 beam matrix
-		 %         coupled=true;
-		 if coupled             % bm44 in the intersection of beam66
-			siginv=inv(bm66);   % with dp/p==0  ( 4x4 betatron emittance)
-			bm44=inv(siginv(1:4,1:4));
-		 else
-			siginv=inv(bm66([1 2 5 6],[1 2 5 6]));
-			bm44=[inv(siginv(1:2,1:2)) zeros(2,2);zeros(2,4)];
-		 end
-		 lindata(i).beam66=bm66;
-		 lindata(i).beam44=bm44;
-         % Eigen emittances: Solve bm44 = modemit(1)*beamA + modemit(2)*beamB;
-		 lindata(i).modemit=([beamA(:) beamB(:)]\bm44(:))';
-         % Projected betatron emittances
-		 lindata(i).emit44=sqrt([det(bm44(1:2,1:2)) det(bm44(3:4,3:4))]);
-         % Projected full emittances (energy spread included)
-		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
-         lindata(i).tilt=envelope(i).Tilt;
-	  end
-      modemit=cat(1,lindata.modemit);
-      %emit6=cat(1,lindata.emit66);
-	  modemittance=mean(modemit);
-	  modcoupling=mean(modemit(:,2)./modemit(:,1));
-      projemit=cat(1,lindata.emit44);
-	  projemittance=projemit(1,:);
-	  projcoupling=mean(projemit(:,2)./projemit(:,1));
-   catch %#ok<CTCH>
-	  warning('atx:unstable','Emittance computation failed');
-      blength=NaN;
-      espread=NaN;
-      modemittance=NaN(1,2);
-	  for i=1:length(lindata)
-%		 lindata(i).beam66=bm66;
-%		 lindata(i).beam44=bm44;
-		 lindata(i).modemit=NaN(2,1);
-		 lindata(i).emit44=NaN(2,1);
-%		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
-%        lindata(i).tilt=envelope(i).Tilt;
-	  end
-   end
-else
-      blength=NaN;
-      espread=NaN;
-      modemittance=NaN(1,2);
-	  for i=1:length(lindata)
-%		 lindata(i).beam66=bm66;
-%		 lindata(i).beam44=bm44;
-		 lindata(i).modemit=NaN(2,1);
-		 lindata(i).emit44=NaN(2,1);
-%		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
-%        lindata(i).tilt=envelope(i).Tilt;
-	  end
-end
-linusr=lindata(keep);
-pm=struct('ll',circumference,'alpha',momcompact,...
-   'fractunes',fractunes,...
-   'fulltunes',tunes,...
-   'nuh',tunes(1),'nuv',tunes(2),...
-   'espread',espread,...
-   'blength',blength,...
-   'modemittance',modemittance);
-
-if (outargs==0)
+if outargs == 0
     display(coupled);
     display(fractunes);
     display(circumference);
@@ -180,11 +109,87 @@ if (outargs==0)
     display(tunes);
     display(momcompact);
     display(chromaticity);
-    display(modemittance);
-    display(modcoupling);
-    display(projemittance);
-    display(projcoupling);
+end
+
+[ring2,radindex,cavindex]=atradon(ring);
+
+if ~isempty(cavindex)
+    try
+        [envelope,espread,blength]=ohmienvelope(ring2,radindex,refpts);
+        for i=1:length(lindata)
+            [beamA,beamB]=beam44(lindata(i));  % betatron 4x4 coupled matrices
+            %   beamA       - 2x2 beam matrix for mode A
+            %   beamB       - 2x2 beam matrix for mode B
+            bm66=envelope(i).R;    % bm66 is the 6x6 beam matrix
+            %         coupled=true;
+            if coupled             % bm44 in the intersection of beam66
+                siginv=inv(bm66);   % with dp/p==0  ( 4x4 betatron emittance)
+                bm44=inv(siginv(1:4,1:4));
+            else
+                siginv=inv(bm66([1 2 5 6],[1 2 5 6]));
+                bm44=[inv(siginv(1:2,1:2)) zeros(2,2);zeros(2,4)];
+            end
+            lindata(i).beam66=bm66;
+            lindata(i).beam44=bm44;
+            % Eigen emittances: Solve bm44 = modemit(1)*beamA + modemit(2)*beamB;
+            lindata(i).modemit=([beamA(:) beamB(:)]\bm44(:))';
+            % Projected betatron emittances
+            lindata(i).emit44=sqrt([det(bm44(1:2,1:2)) det(bm44(3:4,3:4))]);
+            % Projected full emittances (energy spread included)
+            lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
+            lindata(i).tilt=envelope(i).Tilt;
+        end
+        modemit=cat(1,lindata.modemit);
+        %emit6=cat(1,lindata.emit66);
+        modemittance=mean(modemit);
+        modcoupling=mean(modemit(:,2)./modemit(:,1));
+        projemit=cat(1,lindata.emit44);
+        projemittance=projemit(1,:);
+        projcoupling=mean(projemit(:,2)./projemit(:,1));
+        if outargs==0
+            display(modemittance);
+            display(modcoupling);
+            display(projemittance);
+            display(projcoupling);
+        end
+    catch %#ok<CTCH>
+        warning('atx:unstable','Emittance computation failed');
+        blength=NaN;
+        espread=NaN;
+        modemittance=NaN(1,2);
+        for i=1:length(lindata)
+            %		 lindata(i).beam66=bm66;
+            %		 lindata(i).beam44=bm44;
+            lindata(i).modemit=NaN(2,1);
+            lindata(i).emit44=NaN(2,1);
+            %		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
+            %        lindata(i).tilt=envelope(i).Tilt;
+        end
+    end
+else
+    blength=NaN;
+    espread=NaN;
+    modemittance=NaN(1,2);
+    for i=1:length(lindata)
+        %		 lindata(i).beam66=bm66;
+        %		 lindata(i).beam44=bm44;
+        lindata(i).modemit=NaN(2,1);
+        lindata(i).emit44=NaN(2,1);
+        %		 lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) bm66(5,5)]);
+        %        lindata(i).tilt=envelope(i).Tilt;
+    end
+end
+linusr=lindata(keep);
+pm=struct('ll',circumference,'alpha',momcompact,...
+    'fractunes',fractunes,...
+    'fulltunes',tunes,...
+    'nuh',tunes(1),'nuv',tunes(2),...
+    'espread',espread,...
+    'blength',blength,...
+    'modemittance',modemittance);
+if outargs==0
     display(espread);
     display(blength);
 end
+
 
