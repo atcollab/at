@@ -6,100 +6,97 @@ function newring = atsetfieldvalues(ring,varargin)
 %   MATLAB does not modify variables that only appear on the right
 %   hand side as arguments.
 %
-%NEWRING=ATSETFIELDVALUES(RING,INDEX,....,VALUES)
+%NEWRING=ATSETFIELDVALUES(RING,'field',VALUES)
+%   In this mode, the function will set values on all the elements of RING
+%
+%NEWRING=ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
 %   In this mode, the function will set values on the elements of RING
 %   specified by INDEX, given as a list of indices or as a logical mask
 %
-%NEWRING=ATSETFIELDVALUES(RING,....,VALUESTRUCT)
+%NEWRING=ATSETFIELDVALUES(RING,'field',VALUESTRUCT)
 %   In this mode, the function will set values on the elements of RING
 %   whose family names are given by the field names of VALUESTRUCT
 %
 %NEWRING=ATSETFIELDVALUES(RING,RINGINDEX,....,VALUESTRUCT)
 %   As in the previous mode, the function will set values on the elements
 %   of RING whose family names are given by the field names of VALUESTRUCT.
-%   But RINGINDEX is provided to avoid multiple computation.
+%   But RINGINDEX=atindex(RING) is provided to avoid multiple computations.
 %
-% Numeric data
+% Field selection
 % ---------------------------------------------------------
-% NEWRING = ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
-%   For each I=INDEX, set RING{INDEX(I)}.FIELD=VALUES(:,:,I)
+% NEWRING = ATSETFIELD(RING,'field',VALUES)
+%   For each I=1:length(RING), set RING{I}.FIELD=value
 %
-% NEWRING = ATSETFIELDVALUES(RING,INDEX,'field',{M,N},VALUES)
-%   For each I=INDEX, set RING{INDEX(I)}.FIELD(M,N)=VALUES(I)
+% NEWRING = ATSETFIELD(RING,'field',{M,N},VALUES)
+%   For each I=1:length(RING), set RING{I}.FIELD(M,N)=value
 %
 % More generally,
-% NEWRING = ATSETFIELDVALUES(RING,INDEX,subs1,subs2,...,VALUES)
-%   For each I=INDEX, SETFIELD(RING{INDEX(I)},subs1,subs2,...,VALUES(...,I))
+% NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)
+%   For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)
 %
 % The last dimension of VALUES must be either length(INDEX) or 1 (the value
 % will be repeated for each element). For a vector to be repeated, enclose
 % it in a cell array.
 %
-% Character array
-% --------------------------------------------------------------------
-% NEWRING = ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
-%   For each I=INDEX, set RING{INDEX(I)}.FIELD=VALUES(I,:)
+% Value format
+% ---------------------------------------------------------
+% Cell array VALUES
+% -----------------
+% Mx1 cell array : one cell per element
+% 1x1 cell array : cell 1 is affected to all selected elements
 %
-% Each row of VALUES is affected to the specified field of each selected
-% element of RING. The number of rows on values must be either
-% length(INDEX) or 1 (the value will be repeated for each element).
+% Character array VALUES
+% ---------------------
+% 1xN char array (string) : the string as affected to all selected elements
+% MxN char array : one row per element
 %
-% Cell array
-% --------------------------------------------------------------------
-% NEWRING = ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
-%   For each I=INDEX, set RING{INDEX(I)}.FIELD=VALUES{I}
-%
-% Each cell of VALUES is affected to the specified field of each selected
-% element of RING.The length of VALUES must be either length(INDEX) or 1
-% (the value will be repeated for each element).
+% Numeric array VALUES
+% --------------------
+% 1x1 (scalar) : the value is affected to all selected elements
+% Mx1 (column) : one value per element
+% MxN (matrix) : one row affected per element. If M==1, the single row
+%                is affected to all selected elements
+% To assign column vectors to parameters, use a cell array VALUES, with one
+% column per cell
 %
 % See also ATGETFIELDVALUES ATGETCELLS SETCELLSTRUCT FINDCELLS
 
-if ~iscell(ring) || isempty(ring) || ~isstruct(ring{1})
-    error('The first argument must be a non-empty cell array of structures')
-end
-
-if islogical(varargin{1})
-    newring=doset(ring,find(varargin{1}),varargin{2:end});
-elseif isnumeric(varargin{1})
-    newring=doset(ring,varargin{:});
-elseif isstruct(varargin{end})
+if isstruct(varargin{end})
     if isstruct(varargin{1})
         ringidx=varargin{1};
-        ib=2;
+        args=varargin(2:end-1);
     else
         ringidx=atindex(ring);
-        ib=1;
+        args=varargin(1:end-1);
     end
     newring=ring;
     for fn=fieldnames(varargin{end})'
         fname=char(fn);
-        newring=doset(newring,ringidx.(fname),varargin{ib:end-1},varargin{end}.(fname));
+        newring(ringidx.(fname))=atsetfield(newring(ringidx.(fname)),...
+            args{:},varargin{end}.(fname));
     end
+elseif islogical(varargin{1}) || isnumeric(varargin{1})
+    newring=ring;
+    newring(varargin{1})=atsetfield(newring(varargin{1}),varargin{2:end});
+else
+    newring=atsetfield(ring,varargin{:});
 end
 
-    function ring=doset(ring,index,varargin)
-        if ischar(varargin{end})            % Character array
+    function newring = atsetfield(ring,varargin)        
+        nel=length(ring);
+        if ischar(varargin{end})
             values=cellstr(varargin{end});
-        elseif isnumeric(varargin{end})     % Numeric data
-            [r,c]=size(varargin{end}); %#ok<ASGLU>
-            if c==1
-                values=num2cell(varargin{end});
-            else
-                values=squeeze(num2cell(varargin{end},1:ndims(varargin{end})-1));
-            end
-        else                                % Cell array of strings
+        elseif isnumeric(varargin{end})
+            nv=size(varargin{end},1);
+            values=mat2cell(varargin{end},ones(1,nv));
+        else
             values=varargin{end};
         end
-        
-        nvals = numel(index);
-        if length(values)==1
-            values=values(ones(nvals,1));
+        if isscalar(values)
+            values=repmat(values,nel,1);
         end
-        for idv=1:nvals
-            idx=index(idv);
-            ring{idx}=setfield(ring{idx},varargin{1:end-1},values{idv}); %#ok<SFLD>
-        end
+        newring=cellfun(@(el,value) setfield(el,varargin{1:end-1},squeeze(value)),...
+            ring,values,'UniformOutput',false); %#ok<SFLD>
     end
 
 end
