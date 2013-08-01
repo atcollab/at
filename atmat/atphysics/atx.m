@@ -152,8 +152,8 @@ if ~isempty(cavindex)
             display(projemittance);
             display(projcoupling);
         end
-    catch %#ok<CTCH>
-        warning('atx:unstable','Emittance computation failed');
+    catch err
+        warning('atx:unstable','Emittance computation failed:\n%s',err.message);
         blength=NaN;
         espread=NaN;
         modemittance=NaN(1,2);
