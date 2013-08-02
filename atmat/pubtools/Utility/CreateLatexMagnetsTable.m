@@ -158,6 +158,7 @@ nlstr=repmat('\\\\ \n',size(B0));
 
 namesl=zeros(length(names),10);
 for i=1:length(names)
+    names{i}=strrep(names{i},'_','\\_');
     LN=length(names{i});
     if LN<10
         namesl(i,:)=[names{i} repmat(' ',1,(10-LN))];
