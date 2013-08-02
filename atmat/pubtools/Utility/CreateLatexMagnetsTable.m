@@ -125,10 +125,7 @@ B0=cellfun(@(x)x.PolynomB(1),r(mag),'un',0);
 B0(dips)=cellfun(@(x)x.BendingAngle/x.Length,r(mag(dips)),'un',0);
 B1=cellfun(@(x)x.PolynomB(2),r(mag),'un',0);
 B2=cellfun(@(x)x.PolynomB(3),r(mag),'un',0);
-
-oct=findcells(r(mag),'PolynomB',1,4);
-B3_=cellfun(@(x)x.PolynomB(4),r(mag(oct)),'un',0);
-
+B3_=cellfun(@(x)x.PolynomB(4),r(o),'un',0);
 
 betaX=arrayfun(@(x)x.beta(1),l(mag),'un',0)';
 betaY=arrayfun(@(x)x.beta(2),l(mag),'un',0)';
@@ -143,7 +140,7 @@ B1=cell2mat(B1)*Brho;
 B2=cell2mat(B2)*Brho;
 B3_=cell2mat(B3_)*Brho;
 B3=zeros(size(B2));
-B3(oct)=B3_;
+B3(mag==o)=B3_;
 
 betaX=cell2mat(betaX);
 betaY=cell2mat(betaY);
