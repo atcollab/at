@@ -8,7 +8,7 @@ function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
 % TouschekPiwinskiLifeTime(
 %  latticeATring,
 %  momentumaperturecolumnvector,  % column array (size of r or positions)
-%  current in mA,                 % scalar
+%  current per bunch in A,                 % scalar
 %  positions where to evaluate,  %(default all elements with length>0 )  column array
 %  emittancex, %(default atx modemittance(1))   scalar
 %  emittancey, %(default 10 pm)		       scalar
