@@ -24,51 +24,492 @@ On the other, in order to avoid redundancy in work, and facilitate working toget
 
 \section{Lattice Creation}
 The element creation functions are the following:
-\begin{itemize}
-\item atdrift \ \ Class: Drift
-\item atmonitor \ \ Class: Monitor
-\item atmultipole \ \ Class: Multipole
-\item atthinmultipole \ \ Class:  ThinMultipole
-\item atquadrupole  \ \ Class: Quadrupole
-\item atrbend  \ \ Class: Bend 
-\item atsbend \ \ Class: Bend
-\item atrfcavity \ \ Class: RFCavity
-\item atsolenoid \ \ Class: Solenoid
-\item atsextupole  \ \ Class: Sextupole
-\item atwiggler  \ \ Class: Wiggler
-\item idtable  \ \ Class:  KickMap
-\end{itemize}
+
+\subsection{atringparam} 
+ATRINGPARAM(rname,E0,per) creates a RingParameter Element which should go at the beginning of the ring\\
+ FNAME		Family name which may be used as name of Ring
+ Energy     Energy of electrons
+ PER        Periodicity of the ring (=1 if ring is already expanded)
+\subsection{atdrift}
+ATDRIFT(FAMNAME,LENGTH,PASSMETHOD) creates a drift space element with Class 'Drift'\\
+ FAMNAME		family name
+ LENGTH			length [m]
+ PASSMETHOD     tracking function, defaults to 'DriftPass'\subsection{atmonitor} 
+Class: Monitor
+\subsection{atmultipole} 
+  ATMULTIPOLE(FAMNAME,LENGTH,POLYNOMA,POLYNOMB,PASSMETHOD)
+ 	creates a multipole element
+  	FAMNAME			family name
+ 	LENGTH			length[m]
+ 	POLYNOMA        skew [dipole quad sext oct];	 
+ 	POLYNOMB        normal [dipole quad sext oct]; 
+ 	PASSMETHOD      tracking function. Defaults to 'StrMPoleSymplectic4Pass'
+\subsection{atthinmultipole} 
+ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD)
+ 	creates a thin multipole element with Class 'ThinMultipole'
+ 
+ 	FAMNAME			family name
+ 	POLYNOMA        skew [dipole quad sext oct];	 
+ 	POLYNOMB        normal [dipole quad sext oct]; 
+ 	PASSMETHOD      tracking function. Defaults to 'ThinMPolePass'\subsection{atquadrupole}  
+ Class: Quadrupole
+\subsection{atrbend} 
+ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
+ 	creates a rectangular bending magnet element with class 'Bend'
+ 		FAMNAME        	family name
+ 		LENGTH         	length of the arc for an on-energy particle [m]
+ 		BENDINGANGLE	total bending angle [rad]
+ 		K				focusing strength, defaults to 0
+ 		PASSMETHOD      tracking function, defaults to 'BendLinearPass'\subsection{atsbend} 
+\subsection{atrfcavity}
+ ATRFCAVITY(FAMNAME,LENGTH,VOLTAGE,FREQUENCY,HARMONICNUMBER,ENERGY,PASSMETHOD)
+ 	creates an rfcavity element with Class 'RFCavity'
+ 
+ 		FamName			family name
+ 		Length			length[m]
+ 		Voltage			peak voltage (V)
+ 		Frequency		RF frequency [Hz] 
+  		HarmNumber		Harmonic Number
+        Energy          Energy in eV          
+ 		PassMethod		name of the function on disk to use for tracking
+\subsection{atsolenoid}
+z=solenoid('FAMILYNAME',Length [m],KS,'METHOD')
+ 	creates a new solenoid element with Class 'Solenoid'
+    The structure with field
+ 	FamName			family name
+ 	Length			length[m]
+ 	KS              solenoid strength KS [rad/m]
+ 	PassMethod     name of the function to use for tracking
+ 
+    function returns assigned address in the FAMLIST that uniquely identifies
+    the family
+ 
+    Additional structures being set up (initialized to default values within this routine):   
+ 	NumIntSteps		Number of integration steps
+ 	MaxOrder
+ 	R1					6 x 6 rotation matrix at the entrance
+ 	R2           		6 x 6 rotation matrix at the entrance
+ 	T1					6 x 1 translation at entrance 
+ 	T2					6 x 1 translation at exit
+\subsection{atsextupole}  
+ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD)
+ 	creates a sextupole element with class 'Sextupole'
+ 
+ FAMNAME		family name
+ LENGTH			length [m]
+ S				strength [m-2]
+ PASSMETHOD     tracking function, defaults to 'StrMPoleSymplectic4Pass'
+ \subsection{atwiggler}
+ atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+ 
+  FamName	family name
+  Ltot		total length of the wiggle
+  Lw		total length of the wiggle
+  Bmax	 	peak wiggler field [Tesla]
+  Nstep		num of integration steps per period
+  Nmeth		symplectic integration method, 2nd or 4th order: 2 or 4
+  By		wiggler harmonics for horizontal wigglers
+  Bx		wiggler harmonics for vertical wigglers
+  method        name of the function to use for tracking
+ 
+  returns a wiggler structure with class 'Wiggler'
+\subsection{atidtable}  
+atidtable(FAMNAME,Nslice,filename,Energy,method)
+ 
+  FamName	family name
+  Nslice	number of slices (1 means the wiggler is represented by a
+            single kick in the center of the device).
+  filename	name of file with wiggler tracking tables.
+  Energy    Energy of the machine, needed for scaling
+  method    tracking function. Defaults to 'IdTablePass'
+ 
+  The tracking table is described in
+  P. Elleaume, "A new approach to the electron beam dynamics in undulators
+  and wigglers", EPAC92.
+ 
+  returns assigned structure with class 'KickMap'
 
 
 \section{Pass Methods}
+Each element needs a pass method which takes the phase space coordinate of the electron before the element and returns the phase space coordinate after.  In the absence of radiation, the result will be symplectic.  The pass methods are so-called {\it symplectic integrators}. 
 
-\begin{itemize}
-\item BndMPoleSymplectic4E2Pass
-\item BndMPoleSymplectic4E2RadPass
-\item BndMPoleSymplectic4Pass
-\item BndMPoleSymplectic4RadPass
-\item BendLinearPass
-\item CavityPass
-\item CorrectorPass
-\item DriftPass
-\item QuadLinearPass
-\item QuadMPoleFringePass
-\item StrMPoleSymplectic4Pass
-\item StrMPoleSymplectic4RadPass
-\item ThinMPolePass
-\item WiggLinearPass
-\item IDTablePass
-\end{itemize}
+A 4th order symplectic integrator assumes that the Hamiltonian can be written in the form $H = H_1 + H_2$ and that $H_1$ and $H_2$ can be independently solved. 
+
+The Hamiltonian may be written
+\begin{equation}
+H=1+\delta -(1+hx)\frac{A_s}{B\rho}-(1+hx)\sqrt{(1+\delta)^2-p_x^2-p_y^2}
+\end{equation}
+and this can be expanded and split.   Now, given a splitting, we define
+
+\begin{equation}
+d_1 = d_4 = \frac{1}{2-2^{1/3}} L
+\end{equation}
+
+\begin{equation}
+d_2 = d_3 = \frac{1-2^{1/3}}{2(2-2^{1/3})} L
+\end{equation}
+
+\begin{equation}
+k_1 =k_3 = \frac{1}{2-2^{1/3}} L
+\end{equation}
+
+\begin{equation}
+k_2 = -\frac{2^{1/3}}{2-2^{1/3}} L
+\end{equation}
+
+Now, suppose we can solve $H_1$ (drift) and $H_2$ (kick) independently, and we notate
+
+\begin{equation}
+e^{:H_1 d:} = D(d)
+\end{equation}
+
+\begin{equation}
+e^{:H_2:k} = K(k)
+\end{equation}
+Then the 4th order integrator is
+
+\begin{equation}
+D(d_1) K(k_1) D(d_2) K(k_2) D(d_2) K(k_1) D(d_1)
+\end{equation}
+
+\subsection{BndMPoleSymplectic4E2Pass}
+required arguments:  
+
+    'Length'
+    'BendingAngle'
+    'EntranceAngle'
+    'ExitAngle'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+
+
+optional arguments:
+
+    'FullGap'
+    'FringeInt1'
+    'FringeInt2'
+    'H1'
+    'H2'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+
+\subsection{BndMPoleSymplectic4E2RadPass}
+required arguments:
+   'Length'
+    'BendingAngle'
+    'EntranceAngle'
+    'ExitAngle'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+    'Energy'
+
+optional arguments:
+    'FullGap'
+    'FringeInt1'
+    'FringeInt2'
+    'H1'
+    'H2'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{BndMPoleSymplectic4Pass}
+required arguments:
+   'Length'
+    'BendingAngle'
+    'EntranceAngle'
+    'ExitAngle'
+    'PolynomA'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+
+optional arguments:
+    'FullGap'
+    'FringeInt1'
+    'FringeInt2'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{BndMPoleSymplectic4RadPass}
+required arguments:
+    'Length'
+    'BendingAngle'
+    'EntranceAngle'
+    'ExitAngle'
+    'PolynomA'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+    'Energy'
+
+optional arguments:
+    'FullGap'
+    'FringeInt1'
+    'FringeInt2'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{BendLinearPass}
+required arguments:
+    'Length'
+    'BendingAngle'
+    'EntranceAngle'
+    'ExitAngle'
+
+optional arguments:
+    'K'
+    'ByError'
+    'FullGap'
+    'FringeInt1'
+    'FringeInt2'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{CavityPass}
+required arguments:\\
+    'Length'
+    'Voltage'
+    'Energy'
+    'Frequency'
+optional arguments:\\
+    'TimeLag'
+\subsection{CorrectorPass}
+required arguments:\\
+    'Length'
+    'KickAngle'
+optional arguments:
+none
+\subsection{DriftPass}
+a = 
+
+    'Length'
+
+
+b = 
+
+     {}
+\subsection{QuadLinearPass}
+a = 
+
+    'Length'
+    'K'
+
+
+b = 
+
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{QuadMPoleFringePass}
+a = 
+
+    'Length'
+    'PolynomA'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+
+
+b = 
+
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{StrMPoleSymplectic4Pass}
+a = 
+
+    'Length'
+    'PolynomA'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+
+
+b = 
+
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{StrMPoleSymplectic4RadPass}
+a = 
+
+    'Length'
+    'PolynomA'
+    'PolynomB'
+    'MaxOrder'
+    'NumIntSteps'
+    'Energy'
+
+
+b = 
+
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{ThinMPolePass}
+required arguments:
+    'PolynomA'
+    'PolynomB'
+    'MaxOrder'
+
+optional arguments:
+    'BendingAngle'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{WiggLinearPass}
+required arguments:
+    'Length'
+    'InvRho'
+
+optional arguments:
+    'KxKz'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+\subsection{IDTablePass}
+
+required arguments:
+    'Length'
+    'xkick'
+    'ykick'
+    'xtable'
+    'ytable'
+    'Nslice'
+
+optional arguments:
+    'xkick1'
+    'ykick1'
+    'T1'
+    'T2'
+    'R1'
+    'R2'
+
+One possibility is  …(improve this…)
+\begin{equation}
+H_1 = (1+hx)\frac{p_x^2+p_y^2}{2(1+\delta)}
+\end{equation}
+\begin{equation}
+H_2 = -(1+hx)\frac{A_s}{B\rho}-(1+\delta)hx
+\end{equation}
+where $h=1/\rho$ with $\rho$ the bending radius of the magnet (for a given energy electron).
 
 
 
-\section{Lattice Manipulation}
+\section{Lattice Manipulation}\label{lattice_manip}
+There are two kinds of functions for working with lattices.  One type asks a question about certain kinds of elements and
+returns a set of indices to those elements.  The function {\it atgetcells} is an important example of this type which asks for field names in the lattice structure and looks for matches.  The output is a set of boolean values corresponding to whether or not each element matches the criterion.  One can also use the Matlab function {\it findcells} in the same way.  The output here is a list of element indices.
+(getcellstruct and setcellstruct?)
+
+\subsection{atgetfieldvalues}
+ ATGETFIELDVALUES retrieves the field values AT cell array of elements
+ 
+  VALUES = ATGETFIELDVALUES(RING,'field') extracts the values of
+  the field 'field' in all the elements of RING
+ 
+  VALUES = ATGETFIELDVALUES(RING,INDEX,'field') extracts the values of
+  the field 'field' in the elements of RING selected by INDEX
+ 
+  if RING{I}.FIELD is a numeric scalar
+     VALUES is a length(INDEX) x 1 array
+  otherwise
+     VALUES is a length(INDEX) x 1 cell array
+ 
+ 
+  More generally ATGETFIELDVALUES(RING,INDEX,subs1,subs2,...) will call
+   GETFIELD(RING{I},subs1,subs2,...) for I in INDEX
+ 
+  Examples:
+ 
+  V=ATGETFIELDVALUES(RING,1:10,'PolynomB') is a 10x1  cell array
+  such that V{I}=RING{I}.PolynomB for I=1:10
+ 
+  V=ATGETFIELDVALUES(RING(1:10),'PolynomB',{1,2}) is a 10x1 array
+  such that V(I)=RING{I},PolynomB(1,2)
+\subsection{atsetfieldvalues} 
+ ATSETFIELDVALUES sets the field values of MATLAB cell array of structures
+ 
+    Note that the calling syntax must be in the form of assignment:
+    RING = ATSETFIELDVALUES(RING,...)
+    MATLAB does not modify variables that only appear on the right
+    hand side as arguments.
+ 
+ NEWRING=ATSETFIELDVALUES(RING,'field',VALUES)
+    In this mode, the function will set values on all the elements of RING
+ 
+ NEWRING=ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
+    In this mode, the function will set values on the elements of RING
+    specified by INDEX, given as a list of indices or as a logical mask
+ 
+ NEWRING=ATSETFIELDVALUES(RING,'field',VALUESTRUCT)
+    In this mode, the function will set values on the elements of RING
+    whose family names are given by the field names of VALUESTRUCT
+ 
+ NEWRING=ATSETFIELDVALUES(RING,RINGINDEX,....,VALUESTRUCT)
+    As in the previous mode, the function will set values on the elements
+    of RING whose family names are given by the field names of VALUESTRUCT.
+    But RINGINDEX=atindex(RING) is provided to avoid multiple computations.
+ 
+  Field selection
+  ---------------------------------------------------------
+  NEWRING = ATSETFIELD(RING,'field',VALUES)
+    For each I=1:length(RING), set RING{I}.FIELD=value
+ 
+  NEWRING = ATSETFIELD(RING,'field',{M,N},VALUES)
+    For each I=1:length(RING), set RING{I}.FIELD(M,N)=value
+ 
+  More generally,
+  NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)
+    For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)
+ 
+  The last dimension of VALUES must be either length(INDEX) or 1 (the value
+  will be repeated for each element). For a vector to be repeated, enclose
+  it in a cell array.
+ 
+  Value format
+  ---------------------------------------------------------
+  Cell array VALUES
+  -----------------
+  Mx1 cell array : one cell per element
+  1x1 cell array : cell 1 is affected to all selected elements
+ 
+  Character array VALUES
+  ---------------------
+  1xN char array (string) : the string as affected to all selected elements
+  MxN char array : one row per element
+ 
+  Numeric array VALUES
+  --------------------
+  1x1 (scalar) : the value is affected to all selected elements
+  Mx1 (column) : one value per element
+  MxN (matrix) : one row affected per element. If M==1, the single row
+                 is affected to all selected elements
+  To assign column vectors to parameters, use a cell array VALUES, with one
+  column per cell
+ 
 A lattice manipulation function takes a lattice as an argument and produces a new lattice as a result.
 Here are some lattice manipulation functions:
+
+\subsection{Adding errors}
 \begin{itemize}
 \item atsetshift
 \item atsettilt
 \item atsetfieldvalues
+\item atsplitdrift
 \item ataddmpolecomppoly
 \item ataddmpoleerrors
 \item atloadfielderrs
@@ -82,29 +523,174 @@ The moment tracking and equilibrium finding occurs via the function OhmiEnvelope
 
 \section{Global parameters and Lattice Functions}
 Given the ability to track particles through the lattice, one can compute global beam dynamics parameters and properties that vary around the ring.  
-Here are some global parameters:
+Here are some global parameters.
+
+\subsection{tunes}
+\subsection{chromaticity}
+\subsection{momentum compaction factor}
+\subsection{tune shift with amplitude}
+
+Here are some quantities that vary around the ring and come from particle tracking of one turn:
+
+\subsection{Closed orbit}
+\subsection{One turn map matrix}
+\subsection{Transfer matrix from one position to another}
+\subsection{Twiss Parameters}
+\subsection{Dispersion function}
+
+
+From many turn tracking and determination of stability, one may compute at various points around the ring:
+
+\subsection{dynamic aperture: atdynap}
+\subsection{momentum aperture:  atmomentumaperture}
+
+
+From tracking the diffusion matrix and inclusion of radiation, one can compute:
+
+\subsection{Beam sizes}
+
+
+\section{Lattice change and optimization from beam parameters}
+In addition to the lattice building tools in Section \ref{lattice_manip}, there are also lattice changes one would like to do based on beam parameters.  For example, one would like to change the tunes, chromaticities or beta functions of the lattice.
 \begin{itemize}
-\item tunes
-\item chromaticity
-\item momentum compaction factor
-\item tune shift with amplitude
+\item atfittune
+\item atfitchrome
 \end{itemize}
 
-Here are some quantities that vary around the ring:
-\begin{itemize}
-\item Closed orbit
-\item One turn map matrix
-\item Transfer matrix from one position to another
-\item Beam sizes
-\item Twiss Parameters
-\item Dispersion function
-\end{itemize}
-
+For general optimization, one may use the atmatch routine.
+\subsection{atmatch}
+See documentation by S. Liuzzo.
 
 \section{Visualization}
 The lattice functions described in the previous section may be plotted, together with a synoptic representation of the lattice.  The function atplot is designed for this purpose.
+\begin{figure}[htb]
+\centering
+\includegraphics*[width=\columnwidth]{images/lat.pdf}
+\caption{ESRF lattice from atplot}
+\label{fig:esrflat}
+\end{figure}
+
+
 
 \section{AT within a larger context: Other Codes, Matlab Middle Layer}
+
+\section{Appendix:  List of all functions and their help}
+{\bf atlinopt.m}\\
+ ATLINOPT               performs linear analysis of the COUPLED lattices\\
+ 
+  LinData $=$ ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields\\
+ \\
+    ElemIndex   - ordinal position in the RING\\
+    SPos        - longitudinal position [m]\\
+    ClosedOrbit - closed orbit column vector with\\
+                  components x, px, y, py (momentums, NOT angles)\\
+    Dispersion  - dispersion orbit position vector with\\
+                  components eta\_x, eta\_prime\_x, eta\_y, eta\_prime\_y\\
+                  calculated with respect to the closed orbit with\\
+                  momentum deviation DP. Only if chromaticity is required.\\
+    M44         - 4x4 transfer matrix M from the beginning of RING\\
+                  to the entrance of the element for specified DP [2]\\
+    A           - 2x2 matrix A in [3]\\
+    B           - 2x2 matrix B in [3]\\
+    C           - 2x2 matrix C in [3]\\
+    gamma       - gamma parameter of the transformation to eigenmodes\\
+    mu          - [ mux, muy] horizontal and vertical betatron phase\\
+    beta        - [betax, betay] vector\\
+    alpha       - [alphax, alphay] vector\\
+ \\
+    All values are specified at the entrance of each element specified in REFPTS.\\
+    REFPTS is an array of increasing indexes that  select elements\\
+    from the range 1 to length(LINE)+1.\\
+    See further explanation of REFPTS in the ''help'' for FINDSPOS\\
+ 
+  [LinData,NU] $=$ LINOPT() returns a vector of linear tunes
+    [nu\_u , nu\_v] for two normal modes of linear motion [1]\\
+ 
+  [LinData,NU, KSI] $=$ LINOPT() returns a vector of chromaticities ksi $=$ d(nu)/(dP/P)\\
+    \[ksi u , ksi v\] - derivatives of \[nu u , nu v\]\\
+ 
+  LinData $=$ LINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.\\
+           instead ORBITIN is used\\
+ 
+  Difference with linopt: Fractional tunes 0<$=$tune<1\\
+                  Dispersion output (if chromaticity is required)\\
+                  Alpha output\\
+                  Phase advance output\\
+                  Option to skip closed orbit search\\
+ 
+  See also ATREADBETA ATX ATMODUL FINDSPOS TWISSRING TUNECHROM\\
+ 
+    \[1\] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973\\
+    \[2\] E.Courant, H.Snyder\\
+    \[3\] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)\\
+
+
+{\bf atradon.m}\\
+ ATRADON               switches RF and radiation on\\
+ \\
+ RING2$=$ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)\\
+ \\
+ RING:          initial AT structure\\
+ CAVIPASS:     pass method for cavities (default ThinCavityPass)\\
+ BENDPASS:     pass method for cavities (default BndMPoleSymplectic4RadPass)\\
+ QUADPASS:     pass method for cavities (default: nochange)\\
+ \\
+ \[RING2,RADINDEX,CAVINDEX\]$=$ATRADON(...) returns the index of radiative elements\\
+                           and cavities\\
+\\
+
+{\bf atx.m}\\
+ ATX                    computes and displays global information\\
+ \\
+ BEAMDATA$=$ATX(RING,DPP,REFPTS)\\
+ \\
+ RING:          AT structure\\
+ DPP:          relative energy deviation (default: 0)\\
+ REFPTS:    Index of elements (default: 1:length(ring))\\
+ \\
+ BEAMDATA is a MATLAB structure array with fields\\
+ \\
+  From atlinopt:\\
+ \\
+    ElemIndex   - ordinal position in the RING\\
+    SPos        - longitudinal position [m]\\
+    ClosedOrbit - closed orbit column vector with\\
+                  components x, px, y, py (momentums, NOT angles)\\
+    Dispersion  - dispersion orbit position vector with\\
+                  components eta\_x, eta\_prime\_x, eta\_y, eta\_prime\_y\\
+                  calculated with respect to the closed orbit with\\
+                  momentum deviation DP\\
+    M44         - 4x4 transfer matrix M from the beginning of RING\\
+                  to the entrance of the element for specified DP [2]\\
+    A           - 2x2 matrix A in [3]\\
+    B           - 2x2 matrix B in [3]\\
+    C           - 2x2 matrix C in [3]\\
+    gamma       - gamma parameter of the transformation to eigenmodes\\
+    mu          - [ mux, muy] horizontal and vertical betatron phase\\
+    beta        - [betax, betay] vector\\
+    alpha       - [alphax, alphay] vector\\
+ \\
+  From ohmienvelope:\\
+ \\
+    beam66      - 6x6 equilibrium beam matrix\\
+    emit66      - 6x6 emittance projections on x and y + energy spread\\
+    beam44      - intersection of beam66 for dpp$=$0\\
+    emit44      - emittances of the projections of beam44 on x and y\\
+    modemit     - [emitA emitB] emittance of modes A and B (should be constant)\\
+ \\
+ \[BEAMDATA,PARAMS\]$=$ATX(...)  Returns also a structure PM with fields\\
+    ll          - Circumference\\
+    alpha       - momentum compaction factor\\
+    nuh         - Tunes\\
+    nuv\\
+    fulltunes\\
+    fractunes\\
+    espread     - Energy spread\\
+    blength     - Bunch length\\
+    modemittance - Eigen emittances\\
+ \\
+  See also: ATREADBETA ATLINOPT OHMIENVELOPE ATMODUL\\
+\\
 
 \begin{thebibliography}{2}
 
