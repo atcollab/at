@@ -1,113 +1,88 @@
-function [ENVELOPE, RMSDP, RMSBL] = ohmienvelope(RING,RADELEMINDEX,varargin)
-%OHMIENVELOPE calculates equilibrium beam envelope in a 
+function [envelope, rmsdp, rmsbl, varargout] = ohmienvelope(ring,radindex,refpts)
+%OHMIENVELOPE calculates equilibrium beam envelope in a
 % circular accelerator using Ohmi's beam envelope formalism [1]
 % [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
-% 
+%
 % [ENVELOPE, RMSDP, RMSBL] = ONMIENVELOPE(RING,RADELEMINDEX,REFPTS)
-% 
+%
 % ENVELOPE is a structure with fields
-% Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along 
-%           the principal axis of a tilted ellips 
+% Sigma   - [SIGMA(1); SIGMA(2)] - RMS size [m] along
+%           the principal axis of a tilted ellips
 %           Assuming normal distribution exp(-(Z^2)/(2*SIGMA))
 % Tilt    - Tilt angle of the XY ellips [rad]
-%           Positive Tilt corresponds to Corkscrew (right) 
+%           Positive Tilt corresponds to Corkscrew (right)
 %           rotatiom of XY plane around s-axis
 % R       - 6-by-6 equilibrium envelope matrix R
 %
-% RMSDP   - RMS momentum spread 
+% RMSDP   - RMS momentum spread
 % RMSBL   - RMS bunch length[m]
+%
+% [ENVELOPE, RMSDP, RMSBL, M66, T, ORBIT] = OHMIENVELOPE(...)
+%   Returns in addition the 6x6 transfer matrices and the closed orbit
+%   from FINDM66
 
-NumElements = length(RING);
- 
-[MRING, MS, orbit] = findm66(RING,1:NumElements+1);
+NumElements = length(ring);
+if nargin<3, refpts=1; end
 
-B = cell(1,NumElements); % B{i} is the diffusion matrix of the i-th element
-BATEXIT = B;             % BATEXIT{i} is the cumulative diffusion matrix from 
-                         % element 0 to the end of the i-th element
-M = B;                   % 6-by-6 transfer matrix of the i-th element
+[mring, ms, orbit] = findm66(ring,1:NumElements+1);
+mt=squeeze(num2cell(ms,[1 2]));
+orb=num2cell(orbit,1)';
+
+zr={zeros(6,6)};
+B=zr(ones(NumElements,1));   % B{i} is the diffusion matrix of the i-th element
 
 % calculate Radiation-Diffusion matrix B for elements with radiation
-for i = RADELEMINDEX
-   B{i} = findmpoleraddiffmatrix(RING{i},orbit(:,i));
-end
+B(radindex)=cellfun(@findmpoleraddiffmatrix,...
+    ring(radindex),orb(radindex),'UniformOutput',false);
 
-% Calculate 6-by-6 linear transfer matrix in each element
-% near the equilibrium orbit 
-for i = 1:NumElements
-   ELEM = RING{i};
-   M{i} = findelemm66(ELEM,ELEM.PassMethod,orbit(:,i));
-   % Set Radiation-Diffusion matrix B to 0 in elements without radiation
-   if isempty(B{i})
-      B{i} = zeros(6,6);
-   end
-end
 % Calculate cumulative Radiation-Diffusion matrix for the ring
-BCUM = zeros(6,6); % Cumulative diffusion matrix of the entire ring
+BCUM = zeros(6,6);
+% Batbeg{i} is the cumulative diffusion matrix from
+% 0 to the beginning of the i-th element
+Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 
-for i = 1:NumElements
-   BCUM = M{i}*BCUM*M{i}' + B{i};
-   BATEXIT{i} = BCUM;
-end
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
 % We rewrite it in the form of Lyapunov equation to use MATLAB's LYAP function
-%            AA*R + R*BB = -CC  
-% where 
+%            AA*R + R*BB = -CC
+% where
 %				AA =  inv(MRING)
 %				BB = -MRING'
 %				CC = -inv(MRING)*BCUM
 % -----------------------------------------------------------------------
-AA =  inv(MRING);
-BB = -MRING';
-CC = -inv(MRING)*BCUM;
- 
-R = lyap(AA,BB,CC);     % Envelope matrix at the rinng entrance
+AA =  inv(mring);
+BB = -mring';
+CC = -inv(mring)*BCUM;
 
-RMSDP = sqrt(R(5,5));   % R.M.S. energy spread
-RMSBL = sqrt(R(6,6));   % R.M.S. bunch lenght
+R = lyap(AA,BB,CC);     % Envelope matrix at the ring entrance
 
-if nargin == 2 % no REFPTS
-    ENVELOPE.R = R;
-elseif nargin == 3
-    REFPTS = varargin{1};
-    
-    REFPTSX = REFPTS;
-    % complete REFPTS with 1 and NumElements+1 if necessary
-    if REFPTS(1)~=1
-        REFPTSX = [1 REFPTS];
-    end
-    if REFPTS(end)~= NumElements+1
-        REFPTSX = [REFPTSX NumElements+1];
-    end
-    % Now REFPTS has at least 2 ponts and the first one is the ring entrance
-    
-    NRX = length(REFPTSX);
-    ENVELOPE = struct('Sigma',num2cell(zeros(2,NRX),1),...
-        'Tilt',0,'R',zeros(6)); 
-    
-    ENVELOPE(1).R = R;
+rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
+rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
 
-    for i=2:NRX
-        ELEM = REFPTSX(i);
-        ENVELOPE(i).R = MS(:,:,ELEM)*R*MS(:,:,ELEM)'+BATEXIT{ELEM-1};
-    end
-    
-   
-    if REFPTS(1)~=1
-        ENVELOPE = ENVELOPE(2:end);
-    end
-    if REFPTS(end)~= NumElements+1
-        ENVELOPE = ENVELOPE(1:end-1);
+[rr,tt,ss]=cellfun(@propag,mt(refpts),Batbeg(refpts),'UniformOutput',false);
+envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
+
+nout=nargout-3;
+varargout=cell(1,nout);
+if nout>=3, varargout{3}=orbit(:,refpts); end
+if nout>=2, varargout{2}=ms(:,:,refpts); end
+if nout>=1, varargout{1}=mring; end
+
+    function btx=cumulb(elem,orbit,b)
+        % Calculate 6-by-6 linear transfer matrix in each element
+        % near the equilibrium orbit
+        m=findelemm66(elem,elem.PassMethod,orbit);
+        % Cumulative diffusion matrix of the entire ring
+        BCUM = m*BCUM*m' + b;
+        btx=BCUM;
     end
 
-else
-    error('Too many input arguments');
-end
+    function [r,tilt,sigma]=propag(m,cumb)
+        r=m*R*m'+cumb;
+        [u,dr] = eig(r([1 3],[1 3]));
+        tilt = asin((u(2,1)-u(1,2))/2);
+        sigma=sqrt([dr(1,1);dr(2,2)]);
+    end
 
-for i=1:length(ENVELOPE)
-    [U,DR] = eig(ENVELOPE(i).R([1 3],[1 3]));
-    ENVELOPE(i).Tilt = asin((U(2,1)-U(1,2))/2);
-    ENVELOPE(i).Sigma(1) = sqrt(DR(1,1));
-    ENVELOPE(i).Sigma(2) = sqrt(DR(2,2));
 end
