@@ -16,8 +16,8 @@ function newring=atfitchrom(ring,newchrom,famname1,famname2,varargin)
 deltaP = 1e-8;
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
-kl1=atgetfieldvalues(ring,idx1,'PolynomB',{3});
-kl2=atgetfieldvalues(ring,idx2,'PolynomB',{3});
+kl1=atgetfieldvalues(ring(idx1),'PolynomB',{3});
+kl2=atgetfieldvalues(ring(idx2),'PolynomB',{3});
 if true
     deltaS = 1e-5; % step size in Sextupole strngth
     
@@ -25,10 +25,8 @@ if true
     chrom=getchrom(ring,deltaP);
     
     % Take Derivative
-    newring=setsx(ring,idx1,kl1,deltaS);
-    chrom1 = getchrom(newring,deltaP);
-    newring=setsx(ring,idx2,kl2,deltaS);
-    chrom2 = getchrom(newring,deltaP);
+    chrom1 = getchrom(setsx(ring,idx1,kl1,deltaS),deltaP);
+    chrom2 = getchrom(setsx(ring,idx2,kl2,deltaS),deltaP);
     
     %Construct the Jacobian
     J = ([chrom1(:) chrom2(:)] - [chrom(:) chrom(:)])/deltaS;
@@ -42,8 +40,9 @@ newring=setsx(ring,idx1,kl1,dK(1));
 newring=setsx(newring,idx2,kl2,dK(2));
 
     function c=funchrom(dK)
-        ring2=setsx(ring,idx1,kl1,dK(1));
-        ring2=setsx(ring2,idx2,kl2,dK(2));
+        ring2=ring;
+        ring2(idx1)=atsetfieldvalues(ring2(idx1),'PolynomB',{3},kl1*(1+dK(1)));
+        ring2(idx2)=atsetfieldvalues(ring2(idx2),'PolynomB',{3},kl2*(1+dK(2)));
         chrom = getchrom(ring2,deltaP);
         dt=abs(newchrom(:)-chrom(:));
         c=sum(dt.*dt);

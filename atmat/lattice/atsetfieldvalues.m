@@ -83,17 +83,15 @@ else
 end
 
     function newring = atsetfield(ring,varargin)        
-        nel=length(ring);
         if ischar(varargin{end})
             values=cellstr(varargin{end});
         elseif isnumeric(varargin{end})
-            nv=size(varargin{end},1);
-            values=mat2cell(varargin{end},ones(1,nv));
+            values=num2cell(varargin{end},2);
         else
             values=varargin{end};
         end
         if isscalar(values)
-            values=repmat(values,nel,1);
+            values=values(ones(length(ring),1));
         end
         newring=cellfun(@(el,value) setfield(el,varargin{1:end-1},squeeze(value)),...
             ring,values,'UniformOutput',false); %#ok<SFLD>

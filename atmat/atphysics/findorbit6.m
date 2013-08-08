@@ -1,4 +1,4 @@
-function orbit = findorbit6(RING,varargin);
+function [orbit,fixedp] = findorbit6(RING,varargin)
 %FINDORBIT6 finds closed orbit in the full 6-d phase space
 % by numerically solving  for a fixed point of the one turn 
 % map M calculated with RINGPASS
@@ -72,7 +72,7 @@ d = 1e-6;	% step size for numerical differentiation
 max_iterations = 20;
 
 if nargin==3
-    if isnumeric(varargin{2}) & all(eq(size(varargin{2}),[6,1]))
+    if isnumeric(varargin{2}) && all(eq(size(varargin{2}),[6,1]))
        Ri=varargin{2};
    else
        error('The last argument GUESS must be a 6-by-1 vector');
@@ -96,7 +96,7 @@ Ri = Ri_next;
 itercount = 1;
 
 
-while (change>eps) & (itercount < max_iterations)
+while (change>eps) && (itercount < max_iterations)
    RMATi= [Ri Ri Ri Ri Ri Ri Ri] + [D, zeros(6,1)];
    RMATf = linepass(RING,RMATi,'reuse');
    J6 = (RMATf(:,1:6)-RMATf(:,7)*ones(1,6))/d;
@@ -113,7 +113,7 @@ end;
 if itercount == max_iterations
     warning('Maximum number of itereations reached. Possible non-convergence')
 end
-if(nargin==1)|(varargin{1}==(length(RING)+1))
+if nargin==1
    % return only the fixed point at the entrance of RING{1}
    orbit=Ri;
 else % 2-nd input argument - vector of reference points alog the Ring
@@ -122,5 +122,5 @@ else % 2-nd input argument - vector of reference points alog the Ring
 end
 
 if nargout==2
-    varargout{1}=Ri;
+    fixedp=Ri;
 end

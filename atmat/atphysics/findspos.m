@@ -1,7 +1,7 @@
-function spos = findspos(LINE,REFPTS)
+function spos = findspos(line,refpts)
 %FINDSPOS returns longitudinal positions of accelerator lattice elements.
-%  Return value is a vector of positions S at the entrance of each element
-%  specified by its number in REFPTS
+%  Return value is a row vector of positions S at the entrance of each
+%  element specified REFPTS (index list or logical mask)
 %
 % Note: REFPTS is an array of increasing indexes that
 %   select elements from range 1 to length(LATTICE)+1.
@@ -18,15 +18,6 @@ function spos = findspos(LINE,REFPTS)
 %   3. If line is a closed ring, exit of the last element
 %      is also the entrance to the first.
 
-NE=length(LINE);
-L=zeros(1,NE+1);
-
-for k=1:NE
-    if isfield(LINE{k},'Length')
-        ll=LINE{k}.Length;
-    else
-        ll=0;
-    end
-    L(k+1)=L(k)+ll;
-end;
-spos=L(REFPTS);
+L=[0;cumsum(cellfun(@(el) el.Length,line,'ErrorHandler',@(w,el) 0))];
+spos=L(refpts)';
+end

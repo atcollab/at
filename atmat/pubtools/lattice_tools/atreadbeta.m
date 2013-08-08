@@ -134,12 +134,12 @@ disp(['Structure processed (' num2str(nb_stru) ' elements)']);
 nper=fscanf(fid,'%d',1);
 fclose(fid);
 
-cavities=findcells(superp,'Class','RFCavity');
+cavities=find(atgetcells(superp,'Class','RFCavity'));
 if isempty(cavities)		% add implicit cavity if necessary
     superp{end+1}=cavilist{1};
     cavities=length(superp);
 end
-superp=atsetfieldvalues(superp,true(size(superp)),'Energy',GLOBVAL.E0);
+superp=atsetfieldvalues(superp,'Energy',GLOBVAL.E0);
 
 if nargout >= 2
     periods=nper;

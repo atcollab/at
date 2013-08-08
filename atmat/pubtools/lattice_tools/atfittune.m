@@ -17,8 +17,8 @@ idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
 newtunes=newtunes-floor(newtunes);
 
-kl1=atgetfieldvalues(ring,idx1,'PolynomB',{2});
-kl2=atgetfieldvalues(ring,idx2,'PolynomB',{2});
+kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
+kl2=atgetfieldvalues(ring(idx2),'PolynomB',{2});
 if true
     delta = 1e-6;
 
@@ -40,8 +40,11 @@ newring = setqp(ring,idx1,kl1,dK(1));
 newring = setqp(newring,idx2,kl2,dK(2));
 
     function c=funtune(dK)
-        ring2 = setqp(ring ,idx1,kl1,0.01*dK(1));
-        ring2 = setqp(ring2,idx2,kl2,0.01*dK(2));
+        ring2=ring;
+        km1=kl1*(1+0.01*dK(1));
+        ring2(idx1)=atsetfieldvalues(atsetfieldvalues(ring2(idx1),'K',km1),'PolynomB',{2},km1);
+        km2=kl2*(1+0.01*dK(2));
+        ring2(idx2)=atsetfieldvalues(atsetfieldvalues(ring2(idx2),'K',km2),'PolynomB',{2},km2);
         [lindata,tunes]=atlinopt(ring2,0); %#ok<SETNU>
         dt=abs(newtunes(:)-tunes(:));
         c=sum(dt.*dt);
@@ -49,8 +52,8 @@ newring = setqp(newring,idx2,kl2,dK(2));
 
     function ring2=setqp(ring,idx,k0,delta)
         k=k0*(1+delta);
-        ring2=atsetfieldvalues(ring,idx,'K',k);
-        ring2=atsetfieldvalues(ring2,idx,'PolynomB',{2},k);
+        ring2=ring;
+        ring2(idx)=atsetfieldvalues(atsetfieldvalues(ring2(idx),'K',k),'PolynomB',{2},k);
     end
 
     function res=varelem(ring,arg)
