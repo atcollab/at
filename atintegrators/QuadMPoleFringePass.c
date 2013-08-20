@@ -42,12 +42,21 @@ static void QuadFringePassP(double* r, const double b2)
    register double xz = r[0]*r[2];
    register double gx = u * (x2+3*z2) * r[0];
    register double gz = u * (z2+3*x2) * r[2];
-   
+   register double r1tmp=0;
+   register double r3tmp=0;
+          
+    
    r[0]+=gx;
-   r[1]+=3*u*(2*xz*r[3]-(x2+z2)*r[1]);
+   r1tmp=3*u*(2*xz*r[3]-(x2+z2)*r[1]);
+   
    r[2]-=gz;
-   r[3]-=3*u*(2*xz*r[1]-(x2+z2)*r[3]);
+   
+   r3tmp=3*u*(2*xz*r[1]-(x2+z2)*r[3]);
    r[5]-=(gz*r[3] - gx*r[1])/(1+r[4]);
+   
+   r[1]+=r1tmp;
+   r[3]-=r3tmp;
+   
 }
 
 static void QuadFringePassN(double* r, const double b2)
@@ -60,12 +69,20 @@ static void QuadFringePassN(double* r, const double b2)
    register double xz = r[0]*r[2];
    register double gx = u * (x2+3*z2) * r[0];
    register double gz = u * (z2+3*x2) * r[2];
-   
+   register double r1tmp=0;
+   register double r3tmp=0;
+    
    r[0]-=gx;
-   r[1]-=3*u*(2*xz*r[3]-(x2+z2)*r[1]);
+   r1tmp=3*u*(2*xz*r[3]-(x2+z2)*r[1]);
+   
    r[2]+=gz;
-   r[3]+=3*u*(2*xz*r[1]-(x2+z2)*r[3]);
+   
+   r3tmp=3*u*(2*xz*r[1]-(x2+z2)*r[3]);
    r[5]+=(gz*r[3] - gx*r[1])/(1+r[4]);
+   
+   r[1]-=r1tmp;
+   r[3]+=r3tmp;
+   
 }
 
 void QuadMPoleFringePass(double *r, double le, const double *A, const double *B,
@@ -87,31 +104,31 @@ void QuadMPoleFringePass(double *r, double le, const double *A, const double *B,
    double K2 = SL*KICK2;
    
    for(c = 0;c<num_particles;c++) {	/*Loop over particles  */
-      r6 = r+c*6;
-      if (!mxIsNaN(r6[0])) {
-	  /*  misalignment at entrance  */
-	 if (useT1) ATaddvv(r6, T1);
-	 if (useR1) ATmultmv(r6, R1);
-	 QuadFringePassP(r6,B[1]);
-	 /*  integrator  */
-	 for (m=0; m < num_int_steps; m++) { /*  Loop over slices */
-	    r6 = r+c*6;	
-	    norm = 1/(1+r6[4]);
-	    NormL1 = L1*norm;
-	    NormL2 = L2*norm;
-	    fastdrift(r6, NormL1);
-	    strthinkick(r6, A, B,  K1, max_order);
-	    fastdrift(r6, NormL2);
-	    strthinkick(r6, A, B, K2, max_order);
-	    fastdrift(r6, NormL2);
-	    strthinkick(r6, A, B,  K1, max_order);
-	    fastdrift(r6, NormL1);	
-	 }  
-	 QuadFringePassN(r6,B[1]);
-	 /* Misalignment at exit */
-	 if (useR2) ATmultmv(r6, R2);
-	 if (useT2) ATaddvv(r6, T2);
-      }
+       r6 = r+c*6;
+       if (!mxIsNaN(r6[0])) {
+           /*  misalignment at entrance  */
+           if (useT1) ATaddvv(r6, T1);
+           if (useR1) ATmultmv(r6, R1);
+           QuadFringePassP(r6,B[1]);
+           /*  integrator  */
+           r6 = r+c*6;
+           norm = 1/(1+r6[4]);
+           NormL1 = L1*norm;
+           NormL2 = L2*norm;
+           for (m=0; m < num_int_steps; m++) { /*  Loop over slices */
+               fastdrift(r6, NormL1);
+               strthinkick(r6, A, B,  K1, max_order);
+               fastdrift(r6, NormL2);
+               strthinkick(r6, A, B, K2, max_order);
+               fastdrift(r6, NormL2);
+               strthinkick(r6, A, B,  K1, max_order);
+               fastdrift(r6, NormL1);
+           }
+           QuadFringePassN(r6,B[1]);
+           /* Misalignment at exit */
+           if (useR2) ATmultmv(r6, R2);
+           if (useT2) ATaddvv(r6, T2);
+       }
    }
 }
 
