@@ -57,9 +57,9 @@ end
 
 function quads = findquadrupoles(ring)
 dipoles = finddipoles(ring);
-isquadrupole=@(elem,field) length(elem.(field)) >= 2 && elem.(field)(2)~=0;
+isquadrupole=@(elem,polyb) length(polyb) >= 2 && polyb(2)~=0;
 quads=atgetcells(ring,'PolynomB',isquadrupole) & ~dipoles;
 
 function dipoles = finddipoles(ring)
-isdipole=@(elem,field) elem.(field)~=0;
+isdipole=@(elem,bangle) bangle~=0;
 dipoles=atgetcells(ring,'BendingAngle',isdipole);

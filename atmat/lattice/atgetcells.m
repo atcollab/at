@@ -13,9 +13,7 @@ function ok=atgetcells(cellarray, field, varargin)
 % OK = ATGETCELLS(RING, 'field', @TESTFUNCTION, ARGS...)
 %   Uses the user-defined TESTFUNCTION to select array elements
 %   TESTFUNCTION must be of the form:
-%       OK=TESTFUNTION(ATELEM,FIELD,ARGS...)
-%           OK : field FIELD of element ATELEM matches the condition
-%               defined by ARGS
+%       OK=TESTFUNTION(ATELEM,FIELDVALUE,ARGS...)
 %
 % OK is a logical array with the same size as RING, refering to matching
 % elements in RING
@@ -42,22 +40,33 @@ else
     vals=varargin;
 end
 
-ok=cellfun(@(elem) isfield(elem,field) && tesfunc(elem,field,vals{:}), cellarray);
+ok=cellfun(@(elem) isfield(elem,field) && tesfunc(elem,elem.(field),vals{:}), cellarray);
 
-    function ok=defaultfunc(el,field,varargin)
+    function ok=defaultfunc(el,fieldval,varargin) %#ok<INUSL>
         ok=false;
-        for j=1:length(varargin)
-            if ischar(el.(field)) && ischar(varargin{j})
-                if ~isempty(regexpi(el.(field),['^' varargin{j} '$']))
+        if ischar(fieldval)
+            %ok=any(cellfun(@charcompare,varargin))
+            for j=1:length(varargin)
+                if ischar(varargin{j}) && ~isempty(regexpi(fieldval,['^' varargin{j} '$']))
                     ok=true;
                     break;
                 end
-            elseif  isnumeric(el.(field)) && isnumeric(varargin{j})
-                if el.(field) == varargin{j}
+            end
+        elseif isnumeric(fieldval)
+            %ok=any(cellfun(@numcompare,varargin))
+            for j=1:length(varargin)
+                if isnumeric(varargin{j}) && fieldval==varargin{j}
                     ok=true;
                     break;
                 end
             end
         end
+%         function ok=charcompare(val)
+%             ok=ischar(val) && ~isempty(regexpi(fieldval,['^' val '$']));
+%         end
+%         function ok=numcompare(val)
+%             ok=isnumeric(val) && fieldval==val;
+%         end
     end
+
 end
