@@ -5,22 +5,25 @@ function [ring2,radindex,cavindex]=atradon(ring,varargin)
 %
 %RING:		initial AT structure
 %CAVIPASS:	pass method for cavities (default ThinCavityPass)
-%BENDPASS:	pass method for cavities (default BndMPoleSymplectic4RadPass)
-%QUADPASS:	pass method for cavities (default: nochange)
+%BENDPASS:	pass method for bending magnets. Special values:
+%           '' makes no change,
+%           'auto' wille substitute 'Pass' with 'RadPass' in any method
+%           (default: 'auto')
+%QUADPASS:	pass method for quadrupoles
+%           '' makes no change,
+%           'auto' wille substitute 'Pass' with 'RadPass' in any method
+%           (default: '')
 %
 %[RING2,RADINDEX,CAVINDEX]=ATRADON(...) returns the index of radiative elements
 %					 and cavities
 
 global GLOBVAL
-quadpass='';
-bendpass='BndMPoleSymplectic4RadPass';
-cavipass='CavityPass';
-if nargin >= 4, quadpass=varargin{3}; end
-if nargin >= 3, bendpass=varargin{2}; end
-if nargin >= 2, cavipass=varargin{1}; end
+args={'CavityPass','auto',''};
+args(1:length(varargin))=varargin;
+[cavipass,bendpass,quadpass]=deal(args{:});
 
 if ~isfield(GLOBVAL,'E0')
-    error('Energy not defined in GLOBVAL');
+    error('AT:atradon:NoGLOBVAL','Energy not defined in GLOBVAL');
 end
 
 ring2=ring;
@@ -38,26 +41,35 @@ else
 end
 
 if ~isempty(bendpass)
-    isdipole=@(elem,field) elem.(field)~=0;
+    isdipole=@(elem,bangle) bangle~=0;
     dipoles=atgetcells(ring2,'BendingAngle',isdipole);
     if sum(dipoles) <= 0
         warning('AT:atradon:NoBend', 'No dipole in the structure');
     end
-    ring2(dipoles)=atsetfieldvalues(ring2(dipoles),'PassMethod',bendpass);
+    ring2(dipoles)=changepass(ring2(dipoles),bendpass);
 else
     dipoles=false(size(ring2));
 end
 
 if ~isempty(quadpass)
-    isquadrupole=@(elem,field) length(elem.(field)) >= 2 && elem.(field)(2)~=0;
+    isquadrupole=@(elem,polyb) length(polyb) >= 2 && polyb(2)~=0;
     quadrupoles=atgetcells(ring2,'PolynomB',isquadrupole) & ~dipoles;
     if sum(quadrupoles) <= 0
         warning('AT:atradon:NoQuad', 'No quadrupole in the structure');
     end
-    ring2(quadrupoles)=atsetfieldvalues(ring2(quadrupoles),'PassMethod',quadpass);
+    ring2(quadrupoles)=changepass(ring2(quadrupoles),quadpass);
 else
     quadrupoles=false(size(ring2));
 end
 
 radindex=find(dipoles | quadrupoles)';
 disp([num2str(length(radindex)) ' elements switched to include radiation']);
+
+    function newline=changepass(line,newpass)
+    if strcmp(newpass,'auto')
+        newpass=strrep(atgetfieldvalues(line,'PassMethod'),'Pass','RadPass');
+    end
+    newline=atsetfieldvalues(line,'PassMethod',newpass);
+    end
+
+end
