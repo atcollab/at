@@ -30,12 +30,12 @@ static double f0; /* revolution frequency for RF cav */
 typedef struct elistelement elistelement;
 typedef const struct elistelement *elist;
 typedef void (*ftrack)(double *r_in, int np, const double* args, elist elem);
-typedef long (*fstore)(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs);
+typedef long (*fstore)(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs);
 
-static long storeargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs);
-static long bendargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs);
-static long thinmpargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs);
-static long thickmpargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs);
+static long storeargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs);
+static long bendargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs);
+static long thinmpargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs);
+static long thickmpargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs);
 static void cleanargs(elistelement *elem);
 
 static void tdrift(double *r_in, int np, const double *args, elist elem);
@@ -70,8 +70,8 @@ typedef struct tracksel {
    ftrack track;
    fstore store;
    const char *passmethod;
-   int v5availargs;
-   int nargs;
+   long v5availargs;
+   long nargs;
 } tracksel;
 
 static tracksel sel[] = {
@@ -100,7 +100,7 @@ static tracksel sel[] = {
 
 static double threshold[6*NTRACKS];
 static elistelement *tbl[NTRACKS];
-static int n_elements[NTRACKS], mx_elements[NTRACKS];
+static long n_elements[NTRACKS], mx_elements[NTRACKS];
 
 static tracksel *trackmethod(const char *methstr)
 {
@@ -373,32 +373,32 @@ static void settilt(elistelement *elem, double tilt)
    elem->R1 = r1;
    elem->R2 = r2;
 }
-static void zeroargs(elistelement *elem, const double *args, int nargs)
+static void zeroargs(elistelement *elem, const double *args, long nargs)
 {
    elem->args = (nargs <= 0) ? NULL : (double*)calloc(nargs, sizeof(double));
    setshift(elem, 0.001*args[0], 0.001*args[1]);
    settilt(elem, 0.001*args[2]);
 }
-static long fillargs(const double *source, int availargs, double *dest, int nargs)
+static long fillargs(const double *source, long availargs, double *dest, long nargs)
 {
    if (availargs > nargs) availargs = nargs;
    memcpy(dest, source, availargs*sizeof(double));
    return 0;
 }
 
-static long storeargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs)
+static long storeargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs)
 {
    return fillargs(source, availargs, elem->args, nargs);
 }
 
-static int max_order(const double *args, int nargs)
+static long max_order(const double *args, long nargs)
 {
-	int ordermax = nargs-1;
+	long ordermax = nargs-1;
 	while ((args[ordermax] == 0) && (ordermax-- > 0)) ;
 	if (ordermax < 0) ordermax = 0;
 	return ordermax;
 }
-static long bendargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs)
+static long bendargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs)
 {
    long ret = 0;
    double *dest = elem->args;
@@ -417,7 +417,7 @@ static long bendargs(elistelement *elem, const double *source, int availargs, co
    dest[4] = max_order(B, nargs-5);
    return ret;
 }
-static long thinmpargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs)
+static long thinmpargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs)
 {
    long ret;
    double *dest = elem->args;
@@ -432,7 +432,7 @@ static long thinmpargs(elistelement *elem, const double *source, int availargs, 
    dest[0] = max_order(B, nargs-1);
    return ret;
 }
-static long thickmpargs(elistelement *elem, const double *source, int availargs, const char *xtype, int nargs)
+static long thickmpargs(elistelement *elem, const double *source, long availargs, const char *xtype, long nargs)
 {
    long ret;
    double *dest = elem->args;
@@ -456,7 +456,7 @@ static void cleanargs(elistelement *elem)
    free(elem->R2);
 }
 
-static long addelem(long tptr, const char *xtype, const tracksel* method, const double *args, int availargs, const double *defs)
+static long addelem(long tptr, const char *xtype, const tracksel* method, const double *args, long availargs, const double *defs)
 {
 /* tptr = 0;*/
    long ret = -1;
@@ -479,7 +479,7 @@ long STDCALL ataddtypeelem(long tptr, long nargs, const double *args, const char
 long STDCALL dbgatarg(long tptr, const char* passmethod, const double *args)
 {
    const tracksel* method = trackmethod(passmethod);
-   int availargs = method ? method->v5availargs : 0;
+   long availargs = method ? method->v5availargs : 0;
    return addelem(tptr, NULL, method, args, availargs, zerodef);
 }
 
@@ -504,14 +504,14 @@ const char* STDCALL atgetmethod(long tptr, long nel)
         return "?";
 }
 
-static long ptrack(elist firstel, int nel, const double *thresh, double *r_in, long np, long nturns)
+static long ptrack(elist firstel, long nel, const double *thresh, double *r_in, long np, long nturns)
 {
-	long turn;
-	int el,j;
+	long turn,el;
+	int j;
 	for (turn=0; turn<nturns; turn++) {
 		elist next=firstel;
 		for (el=0; el<nel; el++) {
-			if (next->track) next->track(r_in, np, next->args, next);
+			if (next->track) next->track(r_in, (int)np, next->args, next);
 			for (j=0; j<6; j++) {
 				if (isnan(r_in[j])) return -1;
 				if (!isfinite(r_in[j])) return -2;
@@ -546,20 +546,21 @@ long STDCALL atstable(long tptr, const double *xl_in, long nturns)
 
 long STDCALL atinitialize2(long tptr, long nelems, const double *thresh, const double *energy, const double *freq)
 {
-   static long cpt = 0;
-   if ((tptr >= 0) && (tptr < NTRACKS)) {
-	  int i, n;
-      double *threshptr = threshold + 6*tptr;
-	  elistelement *next=tbl[tptr];
-      for (n=0; n<n_elements[tptr]; n++) cleanargs(next++);
-      tbl[tptr]=realloc(tbl[tptr], nelems*sizeof(elistelement));
-      mx_elements[tptr] = nelems;
-      for (i=0; i<6; i++) *threshptr++ = *thresh++;
-      n_elements[tptr] = 0;
-   }
+    static long cpt = 0;
+    if ((tptr >= 0) && (tptr < NTRACKS)) {
+        int i;
+        long n;
+        double *threshptr = threshold + 6*tptr;
+        elistelement *next=tbl[tptr];
+        for (n=0; n<n_elements[tptr]; n++) cleanargs(next++);
+        tbl[tptr]=realloc(tbl[tptr], nelems*sizeof(elistelement));
+        mx_elements[tptr] = nelems;
+        for (i=0; i<6; i++) *threshptr++ = *thresh++;
+        n_elements[tptr] = 0;
+    }
 	E0= *energy;
 	f0= *freq;
-   return cpt++;
+    return cpt++;
 }
 
 
@@ -589,21 +590,21 @@ long STDCALL atsize(long tptr, long nelems, double thresh)
 long STDCALL xataddelem(long code, const double *args)
 {
    const tracksel* method = ((code >= 0) && (code < NB_METHODS)) ? sel+code : NULL;
-   int availargs = method ? method->v5availargs : 0;
+   long availargs = method ? method->v5availargs : 0;
    return addelem(0L, NULL, method, args, availargs, zerodef);
 }
 
 long STDCALL ataddcodeelem(long tptr, long code, const double *args)
 {
    const tracksel* method = ((code >= 0) && (code < NB_METHODS)) ? sel+code : NULL;
-   int availargs = method ? method->v5availargs : 0;
+   long availargs = method ? method->v5availargs : 0;
    return addelem(tptr, NULL, method, args,  availargs, zerodef);
 }
 
 long STDCALL ataddpasselem(long tptr, const char* passmethod, const double *args)
 {
    const tracksel* method = trackmethod(passmethod);
-   int availargs = method ? method->v5availargs : 0;
+   long availargs = method ? method->v5availargs : 0;
    return addelem(tptr, NULL, method, args, availargs, zerodef);
 }
 
