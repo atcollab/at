@@ -26,32 +26,26 @@ function line=atsplitelem(baseelem,varargin)
 %>> line=atsplitelem(qf,0,mk);   % Insert a marker before a quadrupole
 %
 %>> line=atsplitelem(qf,0.5,[]); % Split a quadrupole in two halves
+%
+% See also ATSLICE ATDIVELEM
 
 elems=varargin(2:2:end)';
 elfrac=cat(1,varargin{1:2:end});
 ellg=0.5*atgetfieldvalues(elems,'Length')./baseelem.Length;
 ellg(isnan(ellg))=0;
+drfrac=[elfrac-ellg;1]-[0;elfrac+ellg];
+long=drfrac~=0;
 
-drlg=baseelem.Length*([elfrac-ellg;1]-[0;elfrac+ellg]);
-drifts=atsetfieldvalues(repmat({baseelem},length(drlg),1),'Length',drlg);
-if isfield(baseelem,'BendingAngle')
-    drangle=baseelem.BendingAngle*([elfrac;1]-[0;elfrac]);
-    [drentrangle,drexitangle]=deal(zeros(size(drifts)));
-    drentrangle(1)=baseelem.EntranceAngle;
-    drexitangle(end)=baseelem.ExitAngle;
-    drifts=atsetfieldvalues(drifts,'BendingAngle',drangle);
-    drifts=atsetfieldvalues(drifts,'EntranceAngle',drentrangle);
-    drifts=atsetfieldvalues(drifts,'ExitAngle',drexitangle);
-end
+drifts=cell(size(drfrac));
+drifts(long)=atdivelem(baseelem,drfrac(long));
 
 list=cell(length(drifts)+length(elems),1);
 list(1:2:end)=drifts;
-whos
 list(2:2:end)=elems;
 
 keep=true(size(list));
-keep(1:2:end)=(drlg~=0);
-keep(2:2:end)=atgetcells(elems,'FamName');
+keep(1:2:end)=long;                         % remove useless elements
+keep(2:2:end)=atgetcells(elems,'FamName');  % remove dummy inserts
 
 line=list(keep);
 end
