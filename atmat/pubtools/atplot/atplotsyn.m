@@ -5,15 +5,12 @@ function pp = atplotsyn(ax,ring)
 
 ylim=get(ax,'YLim');
 
-magnets=atgetcells(ring(:,1),'PolynomB');
-sl=findspos(ring,1:length(ring)+1);
+sl=findspos(ring(:,1),1:size(ring,1)+1);
 ll=diff(sl);
-b3=zeros(length(ring),1);
-b3(magnets)=getcellstruct(ring(:,1),'PolynomB',magnets,3);
-b2=zeros(length(ring),1);
-b2(magnets)=getcellstruct(ring(:,1),'PolynomB',magnets,2);
+b3=atgetfieldvalues(ring(:,1),'PolynomB',{3});
+b2=atgetfieldvalues(ring(:,1),'PolynomB',{2});
 
-dipoles=atgetcells(ring(:,1),'BendingAngle',@(elem,field) elem.(field)~=0);
+dipoles=atgetcells(ring(:,1),'BendingAngle',@(elem,bangle) bangle~=0);
 l=ll(dipoles);
 s=sl(dipoles);
 lplot=zeros(5,length(l));
@@ -24,7 +21,7 @@ yplot(2:3,:)=0.05*ylim(2);
 %p1=patch(xplot,yplot,[0.5 0.5 1],'FaceAlpha',0.2);
 p1=patch(xplot,yplot,[0.5 0.5 1]);
 
-qpoles=(b2~=0) & ~dipoles;
+qpoles=isfinite(b2) & b2~=0 & ~dipoles;
 strength=b2(qpoles)';
 l=ll(qpoles);
 s=sl(qpoles);
@@ -36,7 +33,7 @@ yplot(2:4,:)=0.05*ylim(2);
 yplot(3,:)=yplot(3,:)+0.02*ylim(2)*sign(strength);
 p2=patch(xplot,yplot,[1 0.5 0.5]);
 
-spoles=(b3~=0) & ~dipoles & ~qpoles;
+spoles=isfinite(b3) & b3~=0 & ~dipoles & ~qpoles;
 strength=b3(spoles)';
 l=ll(spoles);
 s=sl(spoles);
