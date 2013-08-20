@@ -91,7 +91,7 @@ end
         
         transfer=lindata(end).M44;              % transfer matrix
         
-        % [beamA,beamB]=beam44(lindata(1));
+        [beamA,beamB]=beam44(lindata(1));       % beam matrices
         
         closedorbit=lindata(1).ClosedOrbit';	% closed orbit
         
@@ -109,8 +109,8 @@ end
             display(fractunes);
             display(circumference);
             display(transfer);
-            %     display(beamA);
-            %     display(beamB);
+            display(beamA);
+            display(beamB);
             display(closedorbit);
             display(dispersion);
             display(tuneper);
