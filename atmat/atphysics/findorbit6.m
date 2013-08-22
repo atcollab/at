@@ -69,6 +69,7 @@ theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
 
  
 d = 1e-6;	% step size for numerical differentiation
+dps = 1e-12;% convergence threshold
 max_iterations = 20;
 
 if nargin==3
@@ -96,7 +97,7 @@ Ri = Ri_next;
 itercount = 1;
 
 
-while (change>eps) && (itercount < max_iterations)
+while (change>dps) && (itercount < max_iterations)
    RMATi= [Ri Ri Ri Ri Ri Ri Ri] + [D, zeros(6,1)];
    RMATf = linepass(RING,RMATi,'reuse');
    J6 = (RMATf(:,1:6)-RMATf(:,7)*ones(1,6))/d;
