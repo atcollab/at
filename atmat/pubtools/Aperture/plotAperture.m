@@ -1,7 +1,11 @@
 function plotdata=plotAperture(lindata,ring,dpp,varargin) %#ok<INUSD>
-%DEFAULTPLOT    Default plotting function for ATPLOT
+%function plotdata=plotAperture(lindata,ring,dpp,varargin) %#ok<INUSD>
 %
-%Plots x and y aperture.
+% Plots x and y aperture.
+% 
+% use with atplot(atlattice,@plotAperture);
+%
+
 apind=findcells(ring,'Limits');
 
 xm=getcellstruct(ring,'Limits',apind,1);

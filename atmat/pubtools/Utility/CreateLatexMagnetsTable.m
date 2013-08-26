@@ -46,7 +46,7 @@ function lmt=CreateLatexMagnetsTable(r,tabname,E0)
 
 
 tabhead=['\\begin{table}[!h]\n'...
-    '\\caption{' tabname '}\n'...
+    '\\caption{' strrep(tabname,'_',' ') '}\n'...
     '\\begin{center}\n'...
     '\\begin{tabular}{rcccccccccc}\n'...
     '\\toprule\n'...
@@ -80,7 +80,7 @@ end
 Brho=3.3356*E0/1e9;
 
 if isfield(r{1},'Class')
-    b=findcells(r,'Class','Bend');
+    b=findcells(r,'Class','Bend','Dipole');
     q=findcells(r,'Class','Quadrupole');
     s=findcells(r,'Class','Sextupole');
     o=findcells(r,'Class','Octupole');
@@ -116,6 +116,14 @@ colors=colors(magord,:);
 % colors=colors(im(end:-1:1),:);
 % 
 
+%pad with 0 PolynomB of mag indexed elements to have at least 4 elements
+for i=1:length(mag)
+    LPB=length(r{mag(i)}.PolynomB);
+    if LPB<4
+        r{mag(i)}.PolynomB=[r{mag(i)}.PolynomB,zeros(1,4-LPB)];
+    end
+end
+
 dips=findcells(r(mag),'BendingAngle');
 
 L=cellfun(@(x)x.Length,r(mag));
@@ -125,7 +133,8 @@ B0=cellfun(@(x)x.PolynomB(1),r(mag),'un',0);
 B0(dips)=cellfun(@(x)x.BendingAngle/x.Length,r(mag(dips)),'un',0);
 B1=cellfun(@(x)x.PolynomB(2),r(mag),'un',0);
 B2=cellfun(@(x)x.PolynomB(3),r(mag),'un',0);
-B3_=cellfun(@(x)x.PolynomB(4),r(o),'un',0);
+B3=cellfun(@(x)x.PolynomB(4),r(mag),'un',0);
+%B3_=cellfun(@(x)x.PolynomB(4),r(o),'un',0);
 
 betaX=arrayfun(@(x)x.beta(1),l(mag),'un',0)';
 betaY=arrayfun(@(x)x.beta(2),l(mag),'un',0)';
@@ -138,9 +147,13 @@ TH=cell2mat(B0);
 B0=cell2mat(B0)*Brho;
 B1=cell2mat(B1)*Brho;
 B2=cell2mat(B2)*Brho;
-B3_=cell2mat(B3_)*Brho;
-B3=zeros(size(B2));
-B3(mag==o)=B3_;
+B3=cell2mat(B3)*Brho;
+%B3_=cell2mat(B3_)*Brho;
+%B3=zeros(size(B2));
+
+% if ~isempty(o)
+%     B3(mag==o)=B3_;
+% end
 
 betaX=cell2mat(betaX);
 betaY=cell2mat(betaY);
