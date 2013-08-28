@@ -1,4 +1,4 @@
-function Elem=atdrift(fname,L,method)
+function elem=atdrift(fname,varargin)
 %ATDRIFT(FAMNAME,LENGTH,PASSMETHOD)
 %	creates a drift space element with Class 'Drift'
 %
@@ -6,12 +6,12 @@ function Elem=atdrift(fname,L,method)
 %LENGTH			length [m]
 %PASSMETHOD     tracking function, defaults to 'DriftPass'
 %
+%ATDRIFT(FAMNAME,LENGTH,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%   Each pair {'FIELDNAME',VALUE} is added to the element
+%
 %See also: ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
-if nargin < 3, method='DriftPass'; end
-
-Elem.FamName=fname;  % add check for existing identical family names
-Elem.Length=L;
-Elem.PassMethod=method;
-Elem.Class = 'Drift';
+[rsrc,L,method]=decodeatargs({0,'DriftPass'},varargin);
+elem=atbaselem(fname,method,'Class','Drift','Length',L,rsrc{:});
+end

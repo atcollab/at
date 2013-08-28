@@ -1,4 +1,4 @@
-function Elem=atsextupole(fname,L,S,method)
+function elem=atsextupole(fname,varargin)
 %ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD)
 %	creates a sextupole element with class 'Sextupole'
 %
@@ -7,16 +7,15 @@ function Elem=atsextupole(fname,L,S,method)
 %S				strength [m-2]
 %PASSMETHOD     tracking function, defaults to 'StrMPoleSymplectic4Pass'
 %
+%ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%   Each pair {'FIELDNAME',VALUE} is added to the element
+%
 %See also: ATDRIFT, ATQUADRUPOLE, ATMULTIPOLE, ATSBEND, ATRBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
-if nargin < 4, method='StrMPoleSymplectic4Pass'; end
-
-Elem.FamName=fname;
-Elem.Length=L;
-Elem.PolynomA=[0 0 0 0];	 
-Elem.PolynomB=[0 0 S 0]; 
-Elem.MaxOrder=2;
-Elem.NumIntSteps=10;
-Elem.PassMethod=method;
-Elem.Class='Sextupole';
+[rsrc,L,S,method]=decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
+[rsrc,PolynomB]=getatarg(rsrc,[0 0 0],'PolynomB');
+if ~isempty(S), PolynomB(3)=S; end
+elem=atbaselem(fname,method,'Class','Sextupole','Length',L,...
+    'PolynomB',PolynomB,rsrc{:});
+end

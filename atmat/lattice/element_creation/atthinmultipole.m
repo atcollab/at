@@ -1,24 +1,22 @@
-function Elem=atthinmultipole(fname,PolynomA,PolynomB,method)
+function elem=atthinmultipole(fname,varargin)
 %ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD)
-%	creates a thin multipole element with Class 'ThinMultipole'
+%	creates a thin multipole element
 %
 %	FAMNAME			family name
 %	POLYNOMA        skew [dipole quad sext oct];	 
 %	POLYNOMB        normal [dipole quad sext oct]; 
 %	PASSMETHOD      tracking function. Defaults to 'ThinMPolePass'
 %
+%ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%   Each pair {'FIELDNAME',VALUE} is added to the element
+%
 %See also: ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
 %          ATMULTIPOLE, ATMARKER, ATCORRECTOR
 
-if nargin < 4, method='ThinMPolePass'; end
-la=length(PolynomA);
-lb=length(PolynomB);
-lg=max(la,lb);
-
-Elem.FamName=fname;
-Elem.Length=0;
-Elem.PolynomA=[PolynomA zeros(lg-la,1)];	 
-Elem.PolynomB=[PolynomB zeros(lg-lb,1)];
-Elem.MaxOrder=lg-1;
-Elem.PassMethod=method;
-Elem.Class = 'ThinMultipole';
+[rsrc,PolynomA,PolynomB,method]=decodeatargs({0,0,'ThinMPolePass'},varargin);
+[rsrc,PolynomA]=getatarg(rsrc,PolynomA,'PolynomA');
+[rsrc,PolynomB]=getatarg(rsrc,PolynomB,'PolynomB');
+elem=atbaselem(fname,method,'Class','ThinMultipole',...
+    'Length',0,...
+    'PolynomA',PolynomA,'PolynomB',PolynomB,rsrc{:});
+end

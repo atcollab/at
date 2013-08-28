@@ -1,4 +1,4 @@
-function Elem=atmultipole(fname,L,PolynomA,PolynomB,method)
+function elem=atmultipole(fname,L,varargin)
 %ATMULTIPOLE(FAMNAME,LENGTH,POLYNOMA,POLYNOMB,PASSMETHOD)
 %	creates a multipole element
 %
@@ -8,18 +8,15 @@ function Elem=atmultipole(fname,L,PolynomA,PolynomB,method)
 %	POLYNOMB        normal [dipole quad sext oct]; 
 %	PASSMETHOD      tracking function. Defaults to 'StrMPoleSymplectic4Pass'
 %
+%ATMULTIPOLE(FAMNAME,LENGTH,POLYNOMA,POLYNOMB,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%   Each pair {'FIELDNAME',VALUE} is added to the element
+%
 %See also: ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
 %          ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
-if nargin < 5, method='StrMPoleSymplectic4Pass'; end
-la=length(PolynomA);
-lb=length(PolynomB);
-lg=max(la,lb);
-
-Elem.FamName=fname;
-Elem.Length=L;
-Elem.PolynomA=[PolynomA zeros(lg-la,1)];	 
-Elem.PolynomB=[PolynomB zeros(lg-lb,1)];
-Elem.MaxOrder=lg-1;
-Elem.NumIntSteps=10;
-Elem.PassMethod=method;
+[rsrc,PolynomA,PolynomB,method]=decodeatargs({0,0,'StrMPoleSymplectic4Pass'},varargin);
+[rsrc,PolynomA]=getatarg(rsrc,PolynomA,'PolynomA');
+[rsrc,PolynomB]=getatarg(rsrc,PolynomB,'PolynomB');
+elem=atbaselem(fname,method,'Class','Multipole','Length',L,...
+    'PolynomA',PolynomA,'PolynomB',PolynomB,rsrc{:});
+end

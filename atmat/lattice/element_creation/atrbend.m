@@ -1,4 +1,4 @@
-function Elem=atrbend(fname,L,A,K,method)
+function elem=atrbend(fname,L,A,varargin)
 %ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
 %	creates a rectangular bending magnet element with class 'Bend'
 %		FAMNAME        	family name
@@ -7,21 +7,19 @@ function Elem=atrbend(fname,L,A,K,method)
 %		K				focusing strength, defaults to 0
 %		PASSMETHOD      tracking function, defaults to 'BendLinearPass'
 %
+%ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%   Each pair {'FIELDNAME',VALUE} is added to the element
+%
 %See also: ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
-if nargin < 5, method='BendLinearPass'; end
-if nargin < 4, K=0; end
-
-Elem.FamName=fname;
-Elem.Length=L;
-Elem.PolynomA=[0 0 0];	 
-Elem.PolynomB=[0 K 0]; 
-Elem.MaxOrder=1;
-Elem.NumIntSteps=10;
-Elem.BendingAngle=A;
-Elem.EntranceAngle=0.5*A;
-Elem.ExitAngle=0.5*A;
-Elem.K=K;
-Elem.PassMethod=method;
-Elem.Class='Bend';
+[rsrc,K,method]=decodeatargs({[],'BendLinearPass'},varargin);
+[rsrc,K]=getatarg(rsrc,K,'K');
+[rsrc,PolynomB]=getatarg(rsrc,[0 0],'PolynomB');
+if ~isempty(K), PolynomB(2)=K; end
+[rsrc,EntranceAngle]=getatarg(rsrc,0.5*A,'EntranceAngle');
+[rsrc,ExitAngle]=getatarg(rsrc,0.5*A,'ExitAngle');
+elem=atbaselem(fname,method,'Class','Bend','Length',L,...
+    'BendingAngle',A,'EntranceAngle',EntranceAngle,'ExitAngle',ExitAngle,...
+    'K',PolynomB(2),'PolynomB',PolynomB,rsrc{:});
+end

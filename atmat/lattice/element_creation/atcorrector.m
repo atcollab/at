@@ -1,4 +1,4 @@
-function Elem=atcorrector(fname,L,kick,method)
+function elem=atcorrector(fname,varargin)
 %ATCORRECTOR(FAMNAME,LENGTH,KICK,PASSMETHOD)
 %	creates a drift space element with class 'Corrector'
 %
@@ -7,13 +7,13 @@ function Elem=atcorrector(fname,L,kick,method)
 %KICK           [hor. kick vert. kick] [rad]
 %PASSMETHOD     tracking function, defaults to 'CorrectorPass'
 %
+%ATCORRECTOR(FAMNAME,LENGTH,KICK,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+%   Each pair {'FIELDNAME',VALUE} is added to the element
+%
 %See also: ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER
 
-if nargin < 4, method='CorrectorPass'; end
-
-Elem.FamName=fname;  % add check for existing identical family names
-Elem.Length=L;
-Elem.KickAngle=kick;
-Elem.PassMethod=method;
-Elem.Class='Corrector';
+[rsrc,L,kick,method]=decodeatargs({0,[0 0],'CorrectorPass'},varargin);
+elem=atbaselem(fname,method,'Class','Corrector','Length',L,...
+    'KickAngle',kick,rsrc{:});
+end

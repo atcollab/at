@@ -1,17 +1,18 @@
-function Elem=atringparam(fname,Energy,per)
-%ATRINGPARAM(rname,E0,per)
+function elem=atringparam(fname,varargin)
+%ATRINGPARAM(FAMNAME,E0,NBPERIODS)
 %	creates a RingParameter Element which should go at the beginning of the ring
 %
-%FNAME		Family name which may be used as name of Ring
-%Energy     Energy of electrons
-%PER        Periodicity of the ring (=1 if ring is already expanded)
+%FAMNAME	Family name which may be used as name of Ring
+%E0         Energy of electrons
+%NBPERIODS	Periodicity of the ring (1 if ring is already expanded)
 %
 %See also: ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE
 
-Elem.FamName=fname;
-Elem.Energy=Energy;
-Elem.Periodicity=per;
-Elem.Length=0;
-Elem.PassMethod='IdentityPass';
-Elem.Class='RingParam';
+[rsrc,energy,nbper]=decodeatargs({6E9,1},varargin);
+[rsrc,energy]=getatarg(rsrc,energy,'Energy');
+[rsrc,nbper]=getatarg(rsrc,nbper,'Periodicity');
+elem=atbaselem(fname,'IdentityPass','Class','RingParam',...
+    'Length',0,...
+    'Energy',energy,'Periodicity',nbper,rsrc{:});
+end
