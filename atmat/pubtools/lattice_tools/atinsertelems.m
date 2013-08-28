@@ -14,7 +14,7 @@ function newring=atinsertelems(ring,refpts,varargin)
 % if ELEM = [], nothing is inserted, only the splitting takes place
 
 
-if islogical(indef),refpts=find(refpts); end
+if islogical(refpts),refpts=find(refpts); end
 
 deb=1;
 slices=arrayfun(@insert,refpts,'UniformOutput',false);  %Split into sections
