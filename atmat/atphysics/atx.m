@@ -128,11 +128,13 @@ end
         end
         
         if length(varargin)<3
-            [ring2,radindex,cavindex]=atradon(ring);
+            [ring2,radindex,cavindex,energy]=atradon(ring);
         elseif isa(varargin{3},'function_handle')
             [ring2,radindex,cavindex]=varargin{3}(ring);
+            energy=atenergy(ring2);
         else
             [ring2,radindex,cavindex]=deal(varargin{3:5});
+            energy=atenergy(ring2);
         end
         
         if any(cavindex)
@@ -190,6 +192,7 @@ end
         projemittance=projemit(1,:);
         projcoupling=mean(projemit(:,2)./projemit(:,1));
         if nargout==0
+            display(energy);
             display(modemittance);
             display(modcoupling);
             display(projemittance);
@@ -207,7 +210,8 @@ end
                 'nuh',tunes(1),'nuv',tunes(2),...
                 'espread',espread,...
                 'blength',blength,...
-                'modemittance',modemittance);
+                'modemittance',modemittance,...
+                'energy',energy);
         end
     end
 end
