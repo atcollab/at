@@ -1,7 +1,13 @@
-function [ring2,radindex,cavindex]=atradon(ring,varargin)
+function [ring2,radelems,cavities,energy]=atradon(ring,varargin)
 %ATRADON			switches RF and radiation on
 %
 %RING2=ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)
+%   Changes passmethods to get RF cavity acceleration and radiation
+%   damping. ATRADON also sets the "Energy" field on the modified elements,
+%   looking for the machine energy in:
+%       1) 1st 'RingParam' element
+%       2) 1st 'RFCavity' element
+%       3) field "E0" of the global variable "GLOBVAL"
 %
 %RING:		initial AT structure
 %CAVIPASS:	pass method for cavities (default ThinCavityPass)
@@ -14,30 +20,31 @@ function [ring2,radindex,cavindex]=atradon(ring,varargin)
 %           'auto' wille substitute 'Pass' with 'RadPass' in any method
 %           (default: '')
 %
-%[RING2,RADINDEX,CAVINDEX]=ATRADON(...) returns the index of radiative elements
-%					 and cavities
+%[RING2,RADINDEX,CAVINDEX,ENERGY]=ATRADON(...)
+%           returns the index of radiative elements and cavities + energy
 
 global GLOBVAL
-args={'CavityPass','auto',''};
-args(1:length(varargin))=varargin;
-[cavipass,bendpass,quadpass]=deal(args{:});
+[cavipass,bendpass,quadpass]=decodeargs({'CavityPass','auto',''},varargin);
 
-if ~isfield(GLOBVAL,'E0')
-    error('AT:atradon:NoGLOBVAL','Energy not defined in GLOBVAL');
+params=atgetcells(ring,'Class','RingParam');
+cavities=atgetcells(ring,'Frequency');
+if any(params)
+    energy=ring{find(params,1)}.Energy;
+elseif any(cavities) && isfield(ring{find(cavities,1)},'Energy')
+    energy=ring{find(cavities,1)}.Energy;
+elseif isfield(GLOBVAL,'E0')
+    energy=GLOBVAL.E0;
+else
+    error('AT:atradon:NoGLOBVAL',...
+        'Energy not defined (searched in ''RingParam'',''RFCavity'',GLOBVAL.E0)');
 end
 
 ring2=ring;
 if ~isempty(cavipass)
-    cavities=atgetcells(ring,'Frequency');
-    cavindex=find(cavities)';
-    if sum(cavities) <= 0
+    if ~any(cavities)
         warning('AT:atradon:NoCavity', 'No cavity found in the structure');
-    else
-        disp(['Cavities located at position ' num2str(cavindex)]);
     end
-    ring2(cavities)=atsetfieldvalues(ring(cavities),'PassMethod',cavipass);
-else
-    ring2=ring;
+    ring2(cavities)=changepass(ring2(cavities),cavipass);
 end
 
 if ~isempty(bendpass)
@@ -62,14 +69,23 @@ else
     quadrupoles=false(size(ring2));
 end
 
-radindex=find(dipoles | quadrupoles)';
-disp([num2str(length(radindex)) ' elements switched to include radiation']);
+radelems=dipoles|quadrupoles;
+
+disp(['Cavities located at position ' num2str(find(cavities)')]);
+disp([num2str(sum(radelems)) ' elements switched to include radiation']);
 
     function newline=changepass(line,newpass)
     if strcmp(newpass,'auto')
-        newpass=strrep(atgetfieldvalues(line,'PassMethod'),'Pass','RadPass');
+        passlist=strrep(atgetfieldvalues(line,'PassMethod'),'Pass','RadPass');
+    else
+        passlist=repmat({newpass},size(line));
     end
-    newline=atsetfieldvalues(line,'PassMethod',newpass);
+    newline=cellfun(@newelem,line,passlist,'UniformOutput',false);
+
+        function elem=newelem(elem,newpass)
+            elem.PassMethod=newpass;
+            elem.Energy=energy;
+        end
     end
 
 end

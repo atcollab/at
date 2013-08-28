@@ -1,4 +1,4 @@
-function [lindt,pm]=atx(ring,varargin)
+function varargout=atx(ring,varargin)
 %ATX				computes and displays global information
 %
 %BEAMDATA=ATX(RING,DPP,REFPTS)
@@ -63,20 +63,28 @@ function [lindt,pm]=atx(ring,varargin)
 % See also: ATLINOPT ATRADON OHMIENVELOPE
 
 if isvector(ring)
-    [lindt,pm]=atx2(ring,nargout,1,varargin{:});
+    params=atgetcells(ring,'Class','RingParam');
+    if any(params)
+        periods=ring{find(params,1)}.Periodicity;
+    else
+        periods=1;
+    end
 else
     periods=size(ring,2);
-    ring1=ring(:,1);
-    cavindex=findcells(ring1,'HarmNumber');
-    ring2=setcellstruct(ring1,'HarmNumber',cavindex,getcellstruct(ring1,'HarmNumber',cavindex)/periods);
-    [lindt,pm]=atx2(ring2,nargout,periods,varargin{:});
-    lindt=repmat(lindt(:),1,periods);
+    %     ring1=ring(:,1);
+    %     cavindex=findcells(ring1,'HarmNumber');
+    %     ring2=setcellstruct(ring1,'HarmNumber',cavindex,getcellstruct(ring1,'HarmNumber',cavindex)/periods);
+    %     [varargout{:}]=atx2(ring2,periods,varargin{:});
+end
+varargout=cell(1,nargout);
+[varargout{:}]=atx2(ring(:,1),periods,varargin{:});
+if nargout >= 1 && periods > 1
+    varargout{1}=repmat(varargout{1}(:),1,periods);
 end
 
-    function [linusr,pm]=atx2(ring,outargs,periods,dpp,refusr,varargin)
+    function [linusr,pm]=atx2(ring,periods,varargin)
         
-        if nargin < 5, refusr=1:length(ring); end
-        if nargin < 4, dpp=0; end
+        [dpp,refusr]=decodeargs({0,1:length(ring)},varargin);
         
         [refpts,~,keep]=unique([1 refusr length(ring)+1]);	% Add 1st and last points
         keep=keep(2:end-1);
@@ -104,7 +112,7 @@ end
         
         chromaticity=xsi./tuneper;				% chromaticity
         
-        if outargs == 0
+        if nargout == 0
             display(coupled);
             display(fractunes);
             display(circumference);
@@ -119,15 +127,15 @@ end
             display(chromaticity);
         end
         
-        if length(varargin)<1
+        if length(varargin)<3
             [ring2,radindex,cavindex]=atradon(ring);
-        elseif isa(varargin{1},'function_handle')
-            [ring2,radindex,cavindex]=varargin{1}(ring);
+        elseif isa(varargin{3},'function_handle')
+            [ring2,radindex,cavindex]=varargin{3}(ring);
         else
-            [ring2,radindex,cavindex]=deal(varargin{1:3});
+            [ring2,radindex,cavindex]=deal(varargin{3:5});
         end
         
-        if ~isempty(cavindex)
+        if any(cavindex)
             try
                 [envelope,espread,blength,m,T]=ohmienvelope(ring2,radindex,refpts);
                 jmt=jmat(3);
@@ -181,7 +189,7 @@ end
         projemit=cat(1,lindata.emit44);
         projemittance=projemit(1,:);
         projcoupling=mean(projemit(:,2)./projemit(:,1));
-        if outargs==0
+        if nargout==0
             display(modemittance);
             display(modcoupling);
             display(projemittance);
@@ -189,14 +197,18 @@ end
             display(espread);
             display(blength);
         end
-        linusr=lindata(keep);
-        pm=struct('ll',circumference,'alpha',momcompact,...
-            'fractunes',fractunes,...
-            'fulltunes',tunes,...
-            'nuh',tunes(1),'nuv',tunes(2),...
-            'espread',espread,...
-            'blength',blength,...
-            'modemittance',modemittance);
+        if nargout>=1
+            linusr=lindata(keep);
+        end
+        if nargout>=2
+            pm=struct('ll',circumference,'alpha',momcompact,...
+                'fractunes',fractunes,...
+                'fulltunes',tunes,...
+                'nuh',tunes(1),'nuv',tunes(2),...
+                'espread',espread,...
+                'blength',blength,...
+                'modemittance',modemittance);
+        end
     end
 end
 
