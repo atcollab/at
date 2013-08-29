@@ -47,9 +47,11 @@ static void tthinmpoleS(double *r_in, int np, const double *args, elist elem);
 static void tthincavity(double *r_in, int np, const double *args, elist elem);
 static void tthincorrector(double *r_in, int np, const double *args, elist elem);
 static void tsymplecticbend(double *r_in, int np, const double *args, elist elem);
+static void tsymplecticRadbend(double *r_in, int np, const double *args, elist elem);
+static void tsymplecticFrgFbend(double *r_in, int np, const double *args, elist elem);
+static void tsymplecticFrgFRadbend(double *r_in, int np, const double *args, elist elem);
 static void tsymplecticE2bend(double *r_in, int np, const double *args, elist elem);
 static void tsymplecticE2Radbend(double *r_in, int np, const double *args, elist elem);
-static void tsymplecticRadbend(double *r_in, int np, const double *args, elist elem);
 static void tsymplecticstr(double *r_in, int np, const double *args, elist elem);
 static void tsymplecticQuadFringe(double *r_in, int np, const double *args, elist elem);
 static void twigglinear(double *r_in, int np, const double *args, elist elem);
@@ -86,8 +88,10 @@ static tracksel sel[] = {
 {tthinmpoleS,	storeargs,	"ThinSMPolePass",	4,	2,},
 {tthincorrector,storeargs,	"ThinCorrectorPass",    4,	2,},
 {tsymplecticbend, bendargs,	"BndMPoleSymplectic4Pass", 5,	 12,},
+{tsymplecticFrgFbend, bendargs,	"BndMPoleSymplectic4FrgFPass", 5,	 12,},
 {tsymplecticE2bend, bendargs,	"BndMPoleSymplectic4E2Pass", 5,	 12,},
 {tsymplecticRadbend, bendargs,	"BndMPoleSymplectic4RadPass", 5,	 12,},
+{tsymplecticFrgFRadbend, bendargs,	"BndMPoleSymplectic4FrgFRadPass", 5,	 12,},
 {tsymplecticE2Radbend, bendargs,	"BndMPoleSymplectic4E2RadPass", 5,	 12,},
 {tsymplecticstr, thickmpargs,	"StrMPoleSymplectic4Pass", 4,	 12,},
 {tsymplecticQuadFringe, thickmpargs,	"QuadMPoleFringePass", 4,	 12,},
@@ -214,6 +218,26 @@ static void tsymplecticbend(double *r_in, int np, const double *args, elist elem
    elem->R1, elem->R2,		/* rotation */
    np);				/* number of particles */
 }
+static void tsymplecticFrgFbend(double *r_in, int np, const double *args, elist elem)
+{
+    int order = (int) args[4];
+    const double *B = args+5;
+    BndMPoleSymplectic4FrgFPass(r_in,
+    args[0],			/* length */
+    args[1],			/* 1/rho */
+    A0,                 /* multipoles */
+    B,                  /* multipoles */
+    order,              /* max order */
+    10,                 /* number of slices */
+    args[2],			/* entrance pole angle */
+    args[3],			/* exit angle */
+    0.0,				/* Fint1 */
+    0.0,				/* Fint2 */
+    0.0,				/* Gap */
+    elem->T1, elem->T2,		/* displacement */
+    elem->R1, elem->R2,		/* rotation */
+    np);				/* number of particles */
+}
 static void tsymplecticE2bend(double *r_in, int np, const double *args, elist elem)
 {
    int order = (int) args[4];
@@ -258,7 +282,27 @@ static void tsymplecticRadbend(double *r_in, int np, const double *args, elist e
    1e9*E0,             /* energy  */
    np);				/* number of particles */
 }
-
+static void tsymplecticFrgFRadbend(double *r_in, int np, const double *args, elist elem)
+{
+    int order = (int) args[4];
+    const double *B = args+5;
+    BndMPoleSymplectic4FrgFRadPass(r_in,
+    args[0],			/* length */
+    args[1],			/* 1/rho */
+    A0,                 /* multipoles */
+    B,                  /* multipoles */
+    order,              /* max order */
+    10,                 /* number of slices */
+    args[2],			/* entrance pole angle */
+    args[3],			/* exit angle */
+    0.0,				/* Fint1 */
+    0.0,				/* Fint2 */
+    0.0,				/* Gap */
+    elem->T1, elem->T2,		/* displacement */
+    elem->R1, elem->R2,		/* rotation */
+    1e9*E0,             /* energy  */
+    np);				/* number of particles */
+}
 static void tsymplecticE2Radbend(double *r_in, int np, const double *args, elist elem)
 {
    int order = (int) args[4];

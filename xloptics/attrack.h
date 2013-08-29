@@ -44,6 +44,20 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, const double 
 	double *R1, double *R2,
 	double E0,
 	int num_particles);
+void BndMPoleSymplectic4FrgFPass(double *r, double le, double irho, const double *A, const double *B,
+    int max_order, int num_int_steps,
+    double entrance_angle, 	double exit_angle,
+    double fint1, double fint2, double gap,
+    double *T1, double *T2,	
+    double *R1, double *R2, int num_particles);
+void BndMPoleSymplectic4FrgFRadPass(double *r, double le, double irho, const double *A, const double *B,
+    int max_order, int num_int_steps,
+    double entrance_angle, 	double exit_angle,
+    double fint1, double fint2, double gap,
+    double *T1, double *T2,	
+    double *R1, double *R2,
+    double E0,
+    int num_particles);
 void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, const double *A, const double *B,
 	int max_order, int num_int_steps,
 	double entrance_angle, 	double exit_angle,
