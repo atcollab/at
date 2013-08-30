@@ -6,5 +6,5 @@ function [rsrc,varargout] = decodeatargs(default_values,args)
 nopass=@(arg) ischar(arg) && ~isempty(arg) && isempty(regexp(arg,'.*Pass$','once'));
 chararg=find(cellfun(nopass,[args {'x'}]),1);
 rsrc=args(chararg:end);
-varargout=decodeargs(default_values,args(1:chararg-1));
+varargout=parseargs(default_values,args(1:chararg-1));
 end

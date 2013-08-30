@@ -84,7 +84,7 @@ end
 
     function [linusr,pm]=atx2(ring,periods,varargin)
         
-        [dpp,refusr]=decodeargs({0,1:length(ring)},varargin);
+        [dpp,refusr]=parseargs({0,1:length(ring)},varargin);
         
         [refpts,~,keep]=unique([1 refusr length(ring)+1]);	% Add 1st and last points
         keep=keep(2:end-1);

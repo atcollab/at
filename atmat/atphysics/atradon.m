@@ -23,7 +23,7 @@ function [ring,radelems,cavities,energy]=atradon(ring1,varargin)
 %[RING2,RADINDEX,CAVINDEX,ENERGY]=ATRADON(...)
 %           returns the index of radiative elements and cavities + energy
 
-[cavipass,bendpass,quadpass]=decodeargs({'CavityPass','auto',''},varargin);
+[cavipass,bendpass,quadpass]=parseargs({'CavityPass','auto',''},varargin);
 
 ring=ring1;
 
