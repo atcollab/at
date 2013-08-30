@@ -14,9 +14,9 @@ function line = atdivelem(elem,frac)
 % Example:
 %
 %>> qf=atquadrupole('QF',0.1,0.5);
-%>> line=atsplitelem(qf,[0.5;0.5]); % Split a quadrupole in two halves
+%>> line=atdivelem(qf,[0.5;0.5]); % Split a quadrupole in two halves
 %
-% See also ATSLICE ATSPLITELEM
+% See also ATINSERTELEMS ATSLICE ATSPLITELEM
 
 line=atsetfieldvalues(repmat({elem},length(frac),1),'Length',elem.Length*frac(:));
 if isfield(elem,'BendingAngle')

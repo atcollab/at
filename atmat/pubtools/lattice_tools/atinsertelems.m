@@ -12,7 +12,8 @@ function newring=atinsertelems(ring,refpts,varargin)
 % if FRAC = 0, ELEM is inserted before LINE{REFPTS(i)} (no splitting)
 % if FRAC = 1, ELEM is inserted after LINE{REFPTS(i)} (no splitting)
 % if ELEM = [], nothing is inserted, only the splitting takes place
-
+%
+% See also ATSPLITELEM ATDIVELEM
 
 if islogical(refpts),refpts=find(refpts); end
 

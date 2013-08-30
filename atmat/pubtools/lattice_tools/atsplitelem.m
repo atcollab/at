@@ -27,7 +27,7 @@ function line=atsplitelem(baseelem,varargin)
 %
 %>> line=atsplitelem(qf,0.5,[]); % Split a quadrupole in two halves
 %
-% See also ATSLICE ATDIVELEM
+% See also ATINSERTELEMS ATSLICE ATDIVELEM
 
 elems=varargin(2:2:end)';
 elfrac=cat(1,varargin{1:2:end});
