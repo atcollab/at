@@ -1,7 +1,7 @@
-function varargout = decodeargs(default_values,args)
-%DECODEARGS Check and expands optional argument lists
-%ARGOUT=DECODEARGS(DEFAULT_VALUES,ARGIN)
-%[ARG1,ARG2,...]=DECODEARGS(DEFAULT_VALUES,ARSIN)
+function varargout = parseargs(default_values,args)
+%PARSEARGS Check and expands optional argument lists
+%ARGOUT=PARSEARGS(DEFAULT_VALUES,ARGIN)
+%[ARG1,ARG2,...]=PARSEARGS(DEFAULT_VALUES,ARSIN)
 
 na=min(length(default_values),length(args));
 ok=~cellfun(@isempty,args(1:na));
