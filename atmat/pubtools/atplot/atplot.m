@@ -57,18 +57,12 @@ else
 end
 % Select the lattice
 if narg<=length(varargin) && iscell(varargin{narg});
-    ring0=varargin{narg};
+    [elt0,nperiods,ring0]=get1cell(varargin{narg});
     narg=narg+1;
 else
-    ring0=THERING;
+    [elt0,nperiods,ring0]=get1cell(THERING);
 end
-% Keep only one superperiod and change the harmonic number
-[elt0,nperiods]=size(ring0);
-if nperiods > 1
-    ring1=ring0(:,1);
-    cavindex=atgetcells(ring1,'HarmNumber');
-    ring0=setcellstruct(ring1,'HarmNumber',cavindex,getcellstruct(ring1,'HarmNumber',cavindex)/nperiods);
-end
+
 % Select the momentum deviation
 if narg<=length(varargin) && isscalar(varargin{narg}) && isnumeric(varargin{narg});
     dpp=varargin{narg};
@@ -154,6 +148,15 @@ curve.comment=text(-0.14,1.12,{line1;line2},'Units','normalized',...
         for testax=axs'
             testax
             getappdata(testax)
+        end
+    end
+
+    function [cellsize,np,cell]=get1cell(ring)
+        [cellsize,np]=size(ring);
+        cell=ring(:,1);
+        params=atgetcells(cell,'Class','RingParam');
+        if any(params)
+            np=ring{find(params,1)}.Periodicity;
         end
     end
 end
