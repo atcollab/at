@@ -1,21 +1,13 @@
 function AT_2_OPA(AT_ring,linename)
-% function AT_2_madX(AT_ring,linename)
-% this functions converts the AT lattice AT_ring in madX format.
+% function AT_2_OPA(AT_ring,linename)
+% this functions converts the AT lattice AT_ring in OPA format.
 % 
-% a MADX LINE is generated.
 % 
-% file ['' linename '_lattice.madx'] is generated contiaining the lattice
+% file ['' linename '_lattice.opa'] is generated contiaining the lattice
 % elements definitions and the LINE. no other comands introduced
-%
-% to test in MADX run (replace linename with apropriate name)
-% madx < linename_lattice.madx 
 % 
-% to test with twiss and plot add following lines at the end of file:
-% beam;
-% use, period=linename;
-% twiss;
-% plot, haxis=s, vaxis1=betx,bety, vaxis2=dx;
-% 
+%  
+%  
 
 outfile=['' linename '_lattice.opa'];
 
