@@ -6,8 +6,9 @@ function AT_2_OPA(AT_ring,linename)
 % file ['' linename '_lattice.opa'] is generated contiaining the lattice
 % elements definitions and the LINE. no other comands introduced
 % 
-%  
-%  
+%
+% OPA may be found here: http://people.web.psi.ch/streun/opa/
+%
 
 outfile=['' linename '_lattice.opa'];
 
