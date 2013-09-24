@@ -13,16 +13,33 @@ function newring=atinsertelems(ring,refpts,varargin)
 % if FRAC = 1, ELEM is inserted after LINE{REFPTS(i)} (no splitting)
 % if ELEM = [], nothing is inserted, only the splitting takes place
 %
+% FRAC and ELEM must be scalars or array of the same size as REFPTS
+%
 % See also ATSPLITELEM ATDIVELEM
 
 if islogical(refpts),refpts=find(refpts); end
 
+vargs=cellfun(@unfold,varargin,'UniformOutput',false);
+
 deb=1;
-slices=arrayfun(@insert,refpts,'UniformOutput',false);  %Split into sections
+slices=cellfun(@insert,num2cell(refpts),vargs{:},'UniformOutput',false);  %Split into sections
 newring=cat(1,slices{:},ring(deb:end)); %Concatenate all sections
 
-    function slice=insert(idx)
+    function slice=insert(idx,varargin)
         slice=[ring(deb:idx-1);atsplitelem(ring{idx},varargin{:})];
         deb=idx+1;
+    end
+
+    function val=unfold(arg)
+        if isempty(arg)
+            val=cell(size(refpts));
+        elseif isscalar(arg)
+            val=arg(ones(size(refpts)));
+        else
+            val=reshape(arg,size(refpts));
+        end
+        if ~iscell(arg)
+            val=num2cell(val);
+        end
     end
 end
