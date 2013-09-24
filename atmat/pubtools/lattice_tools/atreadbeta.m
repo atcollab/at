@@ -216,6 +216,8 @@ switch (code)
         pola(1,order)=params(1);
         code=[code int2str(order)];
         newelem=atthinmultipole(elname,pola,[]);
+    case 'PU'
+        newelem=atmonitor(elname);
     case 'KI'
         if params(3) > 0, code='CHV'; end
         newelem=atcorrector(elname,0,[params(1) params(2)],'IdentityPass');
