@@ -18,6 +18,10 @@ function spos = findspos(line,refpts)
 %   3. If line is a closed ring, exit of the last element
 %      is also the entrance to the first.
 
-L=[0;cumsum(cellfun(@(el) el.Length,line,'ErrorHandler',@(w,el) 0))];
+if isvector(line)
+    L=[0;cumsum(cellfun(@(el) el.Length,line(:),'ErrorHandler',@(w,el) 0))];
+else
+    L=[0;cumsum(cellfun(@(el) el.Length,line(:,1),'ErrorHandler',@(w,el) 0))];
+end
 spos=L(refpts)';
 end
