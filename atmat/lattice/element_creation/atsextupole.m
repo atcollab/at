@@ -15,7 +15,8 @@ function elem=atsextupole(fname,varargin)
 
 [rsrc,L,S,method]=decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
 [rsrc,PolynomB]=getatarg(rsrc,[0 0 0],'PolynomB');
+[rsrc,maxorder]=getatarg(rsrc,2,'MaxOrder');
 if ~isempty(S), PolynomB(3)=S; end
 elem=atbaselem(fname,method,'Class','Sextupole','Length',L,...
-    'PolynomB',PolynomB,rsrc{:});
+    'PolynomB',PolynomB,'MaxOrder',maxorder,rsrc{:});
 end
