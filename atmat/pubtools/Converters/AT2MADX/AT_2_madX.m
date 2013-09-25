@@ -32,15 +32,15 @@ format='%8.10f';
 
 %% loop families for definitions
 for i=1:length(families)
-   el= AT_ring{ind_first_oc_ring(i)};
-   if isfield(el,'BetaCode')
-       type=el.BetaCode;
-   elseif isfield(el,'Class')
-       type=el.Class;
-   else
-       type='Marker';
-   end
-       
+    el= AT_ring{ind_first_oc_ring(i)};
+    if isfield(el,'BetaCode')
+        type=el.BetaCode;
+    elseif isfield(el,'Class')
+        type=el.Class;
+    else
+        type='Marker';
+    end
+    
     switch type
         case {'DI','Dipole','Bend'} % dipole
             di=[el.('FamName')   ': '...
@@ -49,8 +49,8 @@ for i=1:length(families)
                 ' K1 = ' num2str(el.('PolynomB')(2),format) ', '...
                 ' E1= ' num2str(el.('EntranceAngle'),format) ', '...
                 ' E2= ' num2str(el.('ExitAngle'),format) '; '...
-               ];
-           
+                ];
+            
             elelat=[elelat di '\n']; %#ok<*AGROW>
         case {'QP','Quadrupole'} % quadrupole
             if el.('MaxOrder')==3
@@ -72,9 +72,9 @@ for i=1:length(families)
                     polA(2)=0;
                     
                     qp=[qp ' ' el.('FamName')   '_oc: '...
-                        ' MULTIPOLE,  LRAD= 0*' num2str(el.('Length'),format)  ', '...
-                        'KNL:= {' num2str(polB.*(factorial(0:length(polB)-1))*el.('Length')/nslice,[format ', ']) ' 0.0} ,'...
-                        'KSL:= {' num2str(polA.*(factorial(0:length(polA)-1))*el.('Length')/nslice,[format ', ']) ' 0.0};'...
+                        ' MULTIPOLE,' ...  LRAD= ' num2str(el.('Length'),format)  ', '...
+                        'KNL:= {' num2str(polB.*(factorial(0:length(polB)-1))*el.('Length')/(nslice),[format ', ']) ' 0.0} ,'...
+                        'KSL:= {' num2str(polA.*(factorial(0:length(polA)-1))*el.('Length')/(nslice),[format ', ']) ' 0.0};'...
                         '\n'...
                         ];
                     
@@ -83,9 +83,6 @@ for i=1:length(families)
                         el.('FamName') '_oc,'...
                         el.('FamName') '_sl,'...
                         ],1,nslice)...
-                        ...el.('FamName') '_sl,'...
-                        ...el.('FamName') '_oc,'...
-                        ...el.('FamName') '_sl,'...
                         '\n'...
                         ];
                     qp(end-2:end)=[];
@@ -141,18 +138,21 @@ for i=1:length(families)
             elelat=[elelat ki '\n'];
         case {'DR','Drift'} % drift
             dr=[el.('FamName') ' : DRIFT, L= ' num2str(el.('Length'),format) ' ;'];
-            elelat=[elelat dr '\n']; 	
-         case {'CAV','RFCavity'} % drift
+            elelat=[elelat dr '\n'];
+        case {'CAV','RFCavity'} % drift
             rfc=[el.('FamName') ' : RFCavity, L=' num2str(el.('Length'),format)...
                 ',VOLT=RF_ON*'  num2str(el.('Voltage'),format) ' ;'...
                 ', freq=' num2str(el.('Frequency'),format) '' ' ;'];
-      
+            
             elelat=[elelat rfc '\n'];
-           
+            
         otherwise
             warning(['Element: ' el.('FamName') ' was not converted, since it does not match any Class.'])
+            mrk=[el.('FamName') ' :MARKER' ' ;'...
+                ];
+            elelat=[elelat mrk '\n'];
     end
-  
+    
 end
 
 

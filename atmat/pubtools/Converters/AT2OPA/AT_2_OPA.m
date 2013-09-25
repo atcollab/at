@@ -176,6 +176,9 @@ for i=1:length(families)
            
         otherwise
             warning(['Element: ' el.('FamName') ' was not converted, since it does not match any Class.'])
+            mrk=[' ' el.('FamName') ': marker' '; '...
+                ];
+            elelat=[elelat mrk '\n\n'];
     end
   
 end
