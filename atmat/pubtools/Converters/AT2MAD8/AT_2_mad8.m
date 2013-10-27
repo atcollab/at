@@ -70,6 +70,47 @@ for i=1:length(families)
                 %' N_KICKS= ' num2str(ceil(el.('Length')*nkickperL+1),'%d') ' \n'...
                 ];
             elelat=[elelat mp '\n'];
+        case 'ThinMultipole' % bpm
+            % el.('PolynomB')
+            ord=find(el.('PolynomB'));
+            if isempty(ord)
+                ord=length(el.('PolynomB'));
+            end
+                mp=[el.('FamName')   '_n: &\n'...
+                    ' Multipole, '.... L= ' num2str(el.('Length'),format)  ', &\n'...
+                    ...'ORDER= ' num2str(ord(1)-1) ', &\n' ... 
+                   ];
+               
+               if ord>9, ord=9; end; % mad8 limit
+               
+               for imult=1:ord
+                   mp=[mp 'K' num2str(imult-1) 'L= ' num2str(el.('PolynomB')(imult)*el.('Length')(imult)*factorial(imult-1),format) ', '...
+                   ];
+               end
+               
+               mp=[mp(1:end-2) '; \n'];
+               
+               % skew
+               mpa=[el.('FamName')   '_s: &\n'...
+                    ' Multipole, '.... L= ' num2str(el.('Length'),format)  ', &\n'...
+                    ...'ORDER= ' num2str(ord(1)-1) ', &\n' ... 
+                   ];
+               
+               if ord>9, ord=9; end; % mad8 limit
+               
+               for imult=1:ord
+                   mpa=[mpa 'K' num2str(imult-1) 'L= '...
+                       num2str(el.('PolynomB')(imult)*el.('Length')(imult)*factorial(imult-1),format) ', '...
+                       'T' num2str(imult-1) '= 3.142128/' num2str(2*imult+2) ', '...
+                   ];
+               end
+               
+               mpa=[mpa(1:end-2) '; \n'];
+
+               % multipole skew and normal to single multipole element
+               m=[el.('FamName')   ': LINE(' el.('FamName') '_n,' el.('FamName') '_s' ');\n'];
+               
+            elelat=[elelat mp mpa m '\n'];
         case 'Octupole' % bpm
             % el.('PolynomB')
             ord=find(el.('PolynomB'));

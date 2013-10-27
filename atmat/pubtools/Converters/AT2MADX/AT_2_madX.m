@@ -123,6 +123,13 @@ for i=1:length(families)
                 'KSL:= {' num2str(el.('PolynomA').*(factorial(0:length(el.('PolynomA'))-1)),[format ', ']) '0.0};'...
                 ];
             elelat=[elelat mp '\n'];
+        case {'ThinMultipole'} % multipole
+            mp=[el.('FamName')   ': '...
+                ' MULTIPOLE,  LRAD= ' num2str(el.('Length'),format)  ', '...
+                'KNL:= {' num2str(el.('Length')*el.('PolynomB').*(factorial(0:length(el.('PolynomB'))-1)),[format ', ']) '0.0} ,'...
+                'KSL:= {' num2str(el.('Length')*el.('PolynomA').*(factorial(0:length(el.('PolynomA'))-1)),[format ', ']) '0.0};'...
+                ];
+            elelat=[elelat mp '\n'];
         case {'PU','Monitor'} % bpm
             pu=[el.('FamName') ' :MONITOR' ' ;'...
                 ];
@@ -147,7 +154,9 @@ for i=1:length(families)
             elelat=[elelat rfc '\n'];
             
         otherwise
-            warning(['Element: ' el.('FamName') ' was not converted, since it does not match any Class.'])
+            warning(['Element: ' el.('FamName') ' was not converted (marker), since it does not match any Class.'])
+            elelat=[elelat el.('FamName') ' : marker; \n'];
+           
             mrk=[el.('FamName') ' :MARKER' ' ;'...
                 ];
             elelat=[elelat mrk '\n'];
