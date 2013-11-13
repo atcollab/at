@@ -93,9 +93,11 @@ for iarg=narg:nargin
         break
     end
 end
+                        % option arguments
+options=struct(varargin{firstarg:end});
 
 %ring=[ring0((1:el1-1)');atslice(ring0(el1:el2-1),250);ring0((el2:elt0)')];
-ring=[ring0(1:el1-1,1);atslice(ring0(el1:el2-1,1),250);ring0(el2:elt0,1)];
+ring=[ring0(1:el1-1,1);atslice(ring0(el1:el2-1,1),400);ring0(el2:elt0,1)];
 elt=length(ring);
 plrange=el1:el2+elt-elt0;
 [lindata,tuneper,chrom]=atlinopt(ring,dpp,1:elt+1); %#ok<NASGU,ASGLU>
@@ -104,27 +106,37 @@ s=cat(1,lindata.SPos);
 %axclean(ax);
 set(ax,'Position',[.13 .11 .775 .775],'FontSize',12);
 outp=plotfun(lindata,ring,dpp,varargin{firstarg:nargin});
-labels=[outp.labels];
 if numel(outp) >= 2
     [ax2,h1,h2]=plotyy(ax,s(plrange),outp(1).values(plrange,:),s(plrange),outp(2).values(plrange,:));
     set(ax2(2),'XTick',[],'FontSize',12);
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
-else
+elseif numel(outp) == 1
     h1=plot(ax,s(plrange),outp(1).values(plrange,:));
     h2=[];
     ax2=ax;
-    ylabel(ax,outp(1).axislabel);
+    ylabel(ax2(1),outp(1).axislabel);
+else
+    h1=[];
+    h2=[];
+    set(ax,'YLim',[0 1]);
+    ax2=ax;
 end
 curve.left=h1;
 curve.right=h2;
-curve.lattice=atplotsyn(ax2(1),ring0);  % Plot lattice elements
-lts=get(ax2(1),'Children');             % Put them in the background
-set(ax2(1),'Children',[lts(4:end);lts(1:3)]);
-set([h1;h2],'LineWidth',1);
+[curve.lattice,synlabels]=atplotsyn(ax2(1),ring0,options);  % Plot lattice elements
+lts=get(ax2(1),'Children');                 % Put them in the background
+nsy=length(curve.lattice);
+set(ax2(1),'Children',lts([nsy+1:end 1:nsy]));
 set(ax2,'XLim',srange);
-xlabel(ax2(1),'s [m]');                 % Add labels
-legend([h1;h2],labels{:});
+xlabel(ax2(1),'s [m]');                     % Add labels
+if ~isempty([h1;h2])
+    set([h1;h2],'LineWidth',1);
+    labels=[outp.labels];
+    legend([h1;h2],labels{:});
+    %labels=[outp.labels synlabels];
+    %legend([h1;h2;curve.lattice],labels{:});
+end
 grid on
 % axes(ax);
 tuneper=lindata(end).mu/2/pi;
