@@ -8,8 +8,8 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %        The allowed range is 1 to length(RING)+1
 %        Defaults to 1:length(RING)+1
 %
-%POSDATA:Structure array, same length as REFPTS, with 3 fields:
-%           x, y, angle
+%POSDATA:Structure array, same length as REFPTS, with 5 fields:
+%           x, y, angle, long, trans
 %
 %[POSDATA,RADIUS]=ATGEOMETRY(RING,REFPTS)
 %       Outputs the machine radius at the beginning of the lattice.
@@ -20,6 +20,7 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %       a scalar offset value is equivalent to [0 OFFSET]
 %POSDATA=ATGEOMETRY(RING,REFPTS,'centered')
 %       The offset is set as [0 RADIUS]
+%
 %
 %See also: ATGEOMETRY3
 
@@ -37,8 +38,10 @@ end
 xx=[0;xx]+offset(1);
 yy=[0;yy]+offset(2);
 txy=[0;txy];
+[lg,tr]=arrayfun(@srcpt,xx,yy,txy);
 posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
-    'angle',num2cell(txy(refpts)));
+    'angle',num2cell(txy(refpts)),'long',num2cell(lg(refpts)),...
+    'trans',num2cell(tr(refpts)));
 
     function varargout=incr(elem)
         if isfield(elem,'BendingAngle')
@@ -54,5 +57,10 @@ posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
             yc=yc+L*sin(thetac);
         end
         varargout={xc,yc,thetac};
+    end
+
+    function varargout=srcpt(x,y,angle)
+        c=cos(angle); s=sin(angle);
+        varargout=num2cell([x y]*[c -s;s c]);
     end
 end
