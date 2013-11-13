@@ -33,26 +33,22 @@ else
     values=atgetfield(ring,varargin{:});
 end
 
-    function values = atgetfield(line,varargin)        
-        [values,isnum,isscal,isok]=cellfun(@scan,line,'UniformOutput',false);
+    function values = atgetfield(line,varargin)
+        [values,isnumscal,isok]=cellfun(@scan,line(:),'UniformOutput',false);
         isok=cat(1,isok{:});
-        if all(cat(1,isscal{isok}))
-            if all(cat(1,isnum{isok}))
-                values(~isok)={NaN};
-                values=cat(1,values{:});
-            end
+        if all(cat(1,isnumscal{isok}))
+            values(~isok)={NaN};
+            values=cat(1,values{:});
         end
         
-        function [val,isnum,isscal,isok]=scan(el)
+        function [val,isnumscal,isok]=scan(el)
             try
                 val=getfield(el,varargin{:});
-                isnum=isnumeric(val);
-                isscal=isscalar(val);
+                isnumscal=isnumeric(val) && isscalar(val);
                 isok=true;
             catch
                 val=[];
-                isnum=false;
-                isscal=false;
+                isnumscal=false;
                 isok=false;
             end
         end
