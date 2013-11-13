@@ -5,11 +5,11 @@ function elstr=at2str(elem)
 %identical element.
 
 args={};
-if isfield(elem,'Class')
-    atclass=elem.Class;
-else
+% if isfield(elem,'Class')
+%     atclass=elem.Class;
+% else
     atclass=atguessclass(elem);
-end
+% end
 
 switch atclass
     case 'Drift'
@@ -56,11 +56,6 @@ switch atclass
         end
         elstr=mout(code,elem.FamName,elem.Length,elem.BendingAngle,...
             elem.PolynomB(2),elem.PassMethod,args{:});
-    case 'Monitor'
-        elstr=mout('atmonitor',elem.FamName,args{:});
-    case 'RFCavity'
-        elstr=mout('atrfcavity',elem.FamName,elem.Length,elem.Voltage,...
-            elem.Frequency,elem.HarmNumber,elem.Energy);
     case 'Corrector'
         elstr=mout('atcorrector',elem.FamName,elem.Length,elem.KickAngle,args{:});
     case 'Multipole'
@@ -68,16 +63,17 @@ switch atclass
             elem.PolynomA,elem.PolynomB);
     case 'ThinMultipole'
         elstr=mout('atmultipole',elem.FamName,elem.PolynomA,elem.PolynomB,args{:});
+    case 'RFCavity'
+        elstr=mout('atrfcavity',elem.FamName,elem.Length,elem.Voltage,...
+            elem.Frequency,elem.HarmNumber,elem.Energy);
     case 'RingParam'
         elstr=mout('atringparam',elem.FamName,elem.Energy,elem.Periodicity,args{:});
-    case 'Marker'
+    otherwise %'Marker'
         fnames=fieldnames(elem);
         fnames(strcmp('FamName',fnames))=[];
         fvals=cellfun(@(fn) elem.(fn),fnames,'UniformOutput',false);
         flds=[fnames';fvals'];
         elstr=mout('atmarker',elem.FamName,flds{:},args{:});
-    otherwise
-        elstr=at2str(setfield(elem,'Class',atguessclass(elem))); %#ok<SFLD>
 end
 
     function elstr=mout(fname,elname,varargin)
@@ -85,5 +81,4 @@ end
         strargs=cellfun(@mat2str,varargin,'UniformOutput',false);
         elstr=sprintf(fmt,fname,elname,strargs{:});
     end
-
 end
