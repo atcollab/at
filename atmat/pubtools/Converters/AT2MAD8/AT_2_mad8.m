@@ -71,6 +71,7 @@ for i=1:length(families)
                 ];
             elelat=[elelat mp '\n'];
         case 'ThinMultipole' % bpm
+            formatm='%10.5e';
             % el.('PolynomB')
             ord=find(el.('PolynomB'));
             if isempty(ord)
@@ -84,7 +85,7 @@ for i=1:length(families)
                if ord>9, ord=9; end; % mad8 limit
                
                for imult=1:ord
-                   mp=[mp 'K' num2str(imult-1) 'L= ' num2str(el.('PolynomB')(imult)*el.('Length')(imult)*factorial(imult-1),format) ', '...
+                   mp=[mp 'K' num2str(imult-1) 'L= ' num2str(el.('PolynomB')(imult)*factorial(imult-1),formatm) ', '...
                    ];
                end
                
@@ -100,7 +101,7 @@ for i=1:length(families)
                
                for imult=1:ord
                    mpa=[mpa 'K' num2str(imult-1) 'L= '...
-                       num2str(el.('PolynomB')(imult)*el.('Length')(imult)*factorial(imult-1),format) ', '...
+                       num2str(el.('PolynomB')(imult)*factorial(imult-1),formatm) ', '...
                        'T' num2str(imult-1) '= 3.142128/' num2str(2*imult+2) ', '...
                    ];
                end
