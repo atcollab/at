@@ -14,8 +14,8 @@ function z=rbend(fname,L,A,A1,A2,K,method)
 % the family
 
 ElemData=atrbend(fname,L,A,K,method);
-Elem.EntranceAngle=A1;  %for backwards compatibility
-Elem.ExitAngle=A2;
+ElemData.EntranceAngle=A1;  %for backwards compatibility
+ElemData.ExitAngle=A2;
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
