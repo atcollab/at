@@ -1,4 +1,4 @@
-function [newring,indx,newrefs,bring] = atreduce(oldring,oldrefs)
+function [newring,indx,newrefs] = atreduce(oldring,oldrefs)
 %ATREDUCE Remove useless elements from an AT structure
 %NEWRING=ATREDUCE(RING)
 %
