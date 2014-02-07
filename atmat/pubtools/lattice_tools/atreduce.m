@@ -1,18 +1,18 @@
-function [newring,seq,newrefs] = atreduce(oldring,oldrefs)
+function [newring,indx,newrefs,bring] = atreduce(oldring,oldrefs)
 %ATREDUCE Remove useless elements from an AT structure
-%NEWRING=ATREDUCE(OLDRING)
+%NEWRING=ATREDUCE(RING)
 %
 % Remove elements with PassMethod='IdentityPass' and merges adjacent
 % similar elements
 %
-%[NEWRING,KEPT]=ATREDUCE(OLDRING)
+%NEWRING=ATREDUCE(RING,REFPTS)
+%	When merging similar elements, keep REFPTS intact.
 %
-% Returns the index of kept elements
+%[NEWRING,KEPT]=ATREDUCE(...)
+%	Returns the index of kept elements so that NEWRING=OLDRING(KEPT)
 %
-%[NEWRING,KEPT,NEWREFPTS]=ATREDUCE(OLDRING,OLDREFPTS)
-%
-% Returns in addition the updated list of reference points. Reference
-% points are kept intact.
+%[NEWRING,KEPT,NEWREFPTS]=ATREDUCE(RING,REFPTS)
+%	Returns in addition the updated list of reference points.
 %
 
 lg=numel(oldring);
@@ -25,15 +25,14 @@ else
 end
 refend=refs(lg+1);
 refs=refs(1:lg);
-seq=1:lg;
 %					Remove useless elements
 keep=~atgetcells(oldring(:),'PassMethod','IdentityPass') | refs;
 newring=oldring(keep);
-seq=seq(keep);
-refs=refs(keep);
+indx=keep;
 %					Merge adjacent elements
-bring=cellfun(@(el) elstrip(el,{'PassMethod','PolynomA','PolynomB','K','MaxOrder','NumIntSteps'}),...
+bring=cellfun(@(el) elstrip(el,{'PassMethod','PolynomA','PolynomB','MaxOrder'}),...
     newring,'UniformOutput',false);
+bring(refs(indx))={NaN};
 bends=atgetcells(newring,'BendingAngle');
 keep=true(size(newring));
 ba=zeros(size(newring));
@@ -45,18 +44,17 @@ islikenext=cellfun(@isequal,[bring(2:end);{NaN}],bring) & abs(invrad([2:end 1])-
 islikeprev=islikenext([end 1:end-1]);
 arrayfun(@group,find(islikenext & ~islikeprev),find(~islikenext & islikeprev));
 newring=newring(keep);
-seq=seq(keep);
-refs=refs(keep);
+indx(indx)=keep;
 
 if nargout >= 3
     if nargin >= 2 && islogical(oldrefs)
         if length(oldrefs)==lg
-            newrefs=refs;
+            newrefs=refs(indx);
         else
-            newrefs=[refs;refend];
+            newrefs=[refs(indx);refend];
         end
     else
-        newrefs=find([refs;refend]);
+        newrefs=find([refs(indx);refend]);
     end
 end
 
