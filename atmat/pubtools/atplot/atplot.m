@@ -11,6 +11,9 @@ function curve = atplot(varargin)
 %
 %ATPLOT(...,[SMIN SMAX])  Zoom on the specified range
 %
+%ATPLOT(...,'OptionName',OptionValue,...) Available options:
+%           'labels',REFPTS     Display the selected element names
+%
 %ATPLOT(...,@PLOTFUNCTION,args...)
 %	Allows for a user supplied function providing the values to be plotted
 %   PLOTFUNCTION must be of form:
@@ -40,12 +43,14 @@ function curve = atplot(varargin)
 %CURVE=ATPLOT(...) Returns handles to some objects:
 %   CURVE.LEFT      Handles to the left axis plots
 %   CURVE.RIGHT     Handles to the right axis plots
-%   CURVE.LATTICE	Handles to the Element patches
+%   CURVE.LATTICE	Handles to the Element patches: structure with fields
+%          Dipole,Quadrupole,Sextupole,Multipole,BPM,Label
 %   CURVE.COMMENT	Handles to the Comment text
 %
 %See also: atplot>defaultplot
 global THERING
 
+npts=400;
 narg=1;
 plotfun=@defaultplot;
 % Select axes for the plot
@@ -75,7 +80,8 @@ srange=s0([1 end]);     %default plot range
 el1=1;
 el2=elt0+1;
 
-firstarg=nargin+1;
+plotarg=nargin+1;
+synarg=nargin+1;
 for iarg=narg:nargin
     % explicit plot range
     if isnumeric(varargin{iarg}) && (numel(varargin{iarg})==2)
@@ -86,26 +92,27 @@ for iarg=narg:nargin
         if ~isempty(els), el2=els; end
     elseif isa(varargin{iarg},'function_handle')
         plotfun=varargin{iarg};
-        firstarg=iarg+1;
+        plotarg=iarg+1;
         break
     else
-        firstarg=iarg;
+        synarg=iarg;
         break
     end
 end
-                        % option arguments
-options=struct(varargin{firstarg:end});
 
 %ring=[ring0((1:el1-1)');atslice(ring0(el1:el2-1),250);ring0((el2:elt0)')];
-ring=[ring0(1:el1-1,1);atslice(ring0(el1:el2-1,1),400);ring0(el2:elt0,1)];
+%ring=[ring0(1:el1-1,1);atslice(ring0(el1:el2-1,1),400);ring0(el2:elt0,1)];
+elmlength=findspos(ring0(el1:el2-1,1),el2-el1+1)/npts;
+ring=ring0(1:el1-1,1);
+cellfun(@splitel,ring0(el1:el2-1,1));
+ring=[ring;ring0(el2:elt0,1)];
 elt=length(ring);
 plrange=el1:el2+elt-elt0;
 [lindata,tuneper,chrom]=atlinopt(ring,dpp,1:elt+1); %#ok<NASGU,ASGLU>
 s=cat(1,lindata.SPos);
 
-%axclean(ax);
 set(ax,'Position',[.13 .11 .775 .775],'FontSize',12);
-outp=plotfun(lindata,ring,dpp,varargin{firstarg:nargin});
+outp=plotfun(lindata,ring,dpp,varargin{plotarg:nargin});
 if numel(outp) >= 2
     [ax2,h1,h2]=plotyy(ax,s(plrange),outp(1).values(plrange,:),s(plrange),outp(2).values(plrange,:));
     set(ax2(2),'XTick',[],'FontSize',12);
@@ -122,13 +129,13 @@ else
     set(ax,'YLim',[0 1]);
     ax2=ax;
 end
+set(ax2,'XLim',srange);
 curve.left=h1;
 curve.right=h2;
-[curve.lattice,synlabels]=atplotsyn(ax2(1),ring0,options);  % Plot lattice elements
+[curve.lattice]=atplotsyn(ax2(1),ring0,varargin{synarg:nargin});  % Plot lattice elements
 lts=get(ax2(1),'Children');                 % Put them in the background
 nsy=length(curve.lattice);
 set(ax2(1),'Children',lts([nsy+1:end 1:nsy]));
-set(ax2,'XLim',srange);
 xlabel(ax2(1),'s [m]');                     % Add labels
 if ~isempty([h1;h2])
     set([h1;h2],'LineWidth',1);
@@ -149,18 +156,14 @@ line2=sprintf('\\nu_z=%8.3f      %2i %s, C=%10.3f',tunes(2),nperiods,...
 curve.comment=text(-0.14,1.12,{line1;line2},'Units','normalized',...
     'VerticalAlignment','top','FontSize',12);
 
-    function axclean(ax)
-        cla(ax,'reset');
-        appd=fieldnames(getappdata(ax));
-        for as=appd'
-            rmappdata(ax,as{1});
+    function splitel(elem)
+        if isfield(elem,'Length') && elem.Length > 0
+            nslices=ceil(elem.Length/elmlength);
+            newelems=atdivelem(elem,ones(1,nslices)./nslices);
+        else
+            newelems={elem};
         end
-        fig=get(ax,'Parent');
-        axs=get(fig,'Children');
-        for testax=axs'
-            testax
-            getappdata(testax)
-        end
+        ring=[ring;newelems];
     end
 
     function [cellsize,np,cell]=get1cell(ring)
