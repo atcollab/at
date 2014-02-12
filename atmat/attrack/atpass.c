@@ -7,7 +7,7 @@
 
 
 #if defined(PCWIN)
-    #include <windows.h>
+    #include <Windows.h>
     #define MEXEXTENSIONSTRING ".dll"
     #define PASSMETHODSUBDIRSTRING "\\simulator\\element\\"
     #define LIBRARYHANDLETYPE HINSTANCE

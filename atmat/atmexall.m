@@ -7,10 +7,17 @@
 PLATFORMOPTION = ['-D',computer,' '];
 LIBDL='';
 switch computer
-case 'GLNX86'
+case'GLNX86'
     LIBDL=' -ldl';
 case 'GLNXA64'
     LIBDL=' -ldl';
+end
+
+try
+    if ~verLessThan('matlab','7.13')
+        PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
+    end
+catch
 end
 
 ATROOT = atroot
