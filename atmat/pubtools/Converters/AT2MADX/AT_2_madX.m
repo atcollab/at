@@ -1,11 +1,12 @@
-function AT_2_madX(AT_ring,linename)
-% function AT_2_madX(AT_ring,linename)
+function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)
+% function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)
 % this functions converts the AT lattice AT_ring in madX format.
 % 
 % a MADX LINE is generated.
 % 
 % file ['' linename '_lattice.madx'] is generated contiaining the lattice
-% elements definitions and the LINE. no other comands introduced
+% (elelat)  elements definitions (defs) and the LINE (lines). 
+% no other comands are introduced
 %
 % to test in MADX run (replace linename with apropriate name)
 % madx < linename_lattice.madx 
@@ -140,16 +141,23 @@ for i=1:length(families)
                 ];
             elelat=[elelat mrk '\n'];
         case {'KI','Corrector'} % kicker
-            ki=[el.('FamName') ' :KICKER' ' ;'...
+            ki=[el.('FamName') ' :KICKER, HKick:=' num2str(el.PolynomB(1))...
+                ', VKick:=' num2str(el.PolynomA(1)) ' ;'...
                 ];
             
             elelat=[elelat ki '\n'];
+        case {'SKW','SkewQuadrupole'} % kicker
+            skw=[el.('FamName') ' :Multipole, KSL:={0,' num2str(el.PolynomA(2))...
+                 '} ;'...
+                ];
+            
+            elelat=[elelat skw '\n'];
         case {'DR','Drift'} % drift
             dr=[el.('FamName') ' : DRIFT, L= ' num2str(el.('Length'),format) ' ;'];
             elelat=[elelat dr '\n'];
         case {'CAV','RFCavity'} % drift
             rfc=[el.('FamName') ' : RFCavity, L=' num2str(el.('Length'),format)...
-                ',VOLT=RF_ON*'  num2str(el.('Voltage'),format) ' ;'...
+                ',VOLT=RF_ON*'  num2str(el.('Voltage')/1e6,format) ' ;'...% MV
                 ', freq=' num2str(el.('Frequency'),format) '' ' ;'];
             
             elelat=[elelat rfc '\n'];
@@ -164,7 +172,9 @@ for i=1:length(families)
     end
     
 end
+defs=elelat;
 
+elelat=[];
 
 elelat=[elelat '! LINE \n\n'];
 
@@ -181,7 +191,9 @@ for i=1:length(AT_ring)
 end
 
 elelat=[elelat ') ;'];
+lines=elelat;
 
+elelat=[defs lines];
 
 %% print to file
 
