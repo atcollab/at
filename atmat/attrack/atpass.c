@@ -454,10 +454,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[1]=mxLoss;
     }
     else {
-        mxDestroyArray(mxCoord);
+        mxDestroyArray(mxLoss); /* Destroys also the structure members */
+        /*mxDestroyArray(mxCoord);
         mxDestroyArray(mxNturn);
-        mxDestroyArray(mxNelem);
-        mxDestroyArray(mxLoss);
+        mxDestroyArray(mxNelem);*/
     }
     mxDestroyArray(mxBuffer);
     mxDestroyArray(mxTurn);

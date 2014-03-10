@@ -62,20 +62,25 @@ end
 
 funcargs=cellfun(@(arg) isa(arg,'function_handle')||ischar(arg), varargin) & ~reuseargs;
 
-[Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,length(ring)+1,...
-    varargin{funcargs});
-
-if nargout>1;
-    varargout{1} = isfinite(lossinfo.turn);
-    if nargout>2
-        varargout{2} = lossinfo.turn;
+try
+    [Rout,lossinfo,c] = atpass(ring,Rin,newlattice,nturns,length(ring)+1,...
+        varargin{funcargs});
+    
+    if nargout>1;
+        varargout{1} = isfinite(lossinfo.turn);
+        if nargout>2
+            varargout{2} = lossinfo.turn;
+        end
+        if nargout>3
+            varargout{3}=lossinfo;
+        end
+    else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
+        evalin('base','clear LOSSFLAG');
+        evalin('base','global LOSSFLAG');
+        assignin('base','LOSSFLAG',isfinite(lossinfo.turn));
     end
-    if nargout>3
-        varargout{3}=lossinfo;
-    end
-else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
-    evalin('base','clear LOSSFLAG');
-    evalin('base','global LOSSFLAG');
-    assignin('base','LOSSFLAG',isfinite(lossinfo.turn));
+catch
+    error('Atpass:obsolete',['ringpass is now expecting 2 output arguments from atpass.\n',...
+        'You may need to call "atmexall" to install the new version']);
 end
 end
