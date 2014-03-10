@@ -63,7 +63,7 @@ end
 funcargs=cellfun(@(arg) isa(arg,'function_handle')||ischar(arg), varargin) & ~reuseargs;
 
 try
-    [Rout,lossinfo,c] = atpass(ring,Rin,newlattice,nturns,length(ring)+1,...
+    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,length(ring)+1,...
         varargin{funcargs});
     
     if nargout>1;
