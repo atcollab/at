@@ -1,34 +1,44 @@
 function [Rout,varargout] = linepass(line,Rin,varargin)
-%LINEPASS tracks particles through a sequence of elements 
-% in the cell array LINE. For each element it calls 
-% the pass-method specified in the 'PassMethod' field. 
-%		
-% Rout = LINEPASS(LINE,Rin) tracks particle(s) to the end 
-%     of the LINE. Rin and Rout are 6-by-1 
-%     column vectors or 6-by-N matrixes
-%     Each column represents a different initial condition or particle.
+%LINEPASS tracks particles through each element of the cell array LINE
+% calling the element-specific tracking function specified in the
+% LINE{i}.PassMethod field.
 %
-% Rout = LINEPASS(LINE,Rin,REFPTS) also returns intermediate results 
+% ROUT=LINEPASS(LINE,RIN) tracks particle(s) with initial
+%    condition(s) RIN for NTURNS turns to the end of the LINE
+%
+%   LINE        AT lattice
+%   RIN         6xN matrix: input coordinates of N particles
+%   ROUT        6xN matrix: output coordinates of N particles at
+%               the end of LINE
+%
+% ROUT=LINEPASS(LINE,RIN,REFPTS) also returns intermediate results
 %     at the entrance of each element specified in the REFPTS
 %
-%     REFPTS is an array of increasing indexes that  selects elements 
-%     between 1 and length(LINE)+1. 
+%    REFPTS is an array of increasing indexes that selects elements
+%     between 1 and length(LINE)+1.
 %     See further explanation of REFPTS in the 'help' for FINDSPOS
-%     
+%   ROUT        6x(N*length(REFPTS)) matrix: output coordinates of N particles at
+%               each reference point
+%
 %     NOTE:
-%     LINEPASS(LINE,Rin,length(LINE)+1) is the same as  LINEPASS(LINE,Rin)
+%     LINEPASS(LINE,RIN,length(LINE)+1) is the same as LINEPASS(LINE,RIN)
 %     since the reference point length(LINE)+1 is the exit of the last element
-%     LINEPASS(LINE,Rin,1) is a copy of Rin since the 
+%     LINEPASS(LINE,RIN,1) is a copy of RIN since the
 %     reference point 1 is the entrance of the first element
-%     
-%     OUTPUT FORMAT:
-%     Rout is 6-by-(number of columns in Rin)*length(REFPTS) matrix
-%     where blocks 6-by-(number of columns in Rin) corresponds 
-%     to different REFPTS
-%     FOR EXAMPLE:
-%     if Rin is 6-by-2 maid of two 6-by-1 column vectors [Rin1, Rin2]
-%     and REFPTS = [N1 N2 N3] so that N1<N2<N3
-%     the output is [Rout1(N1) Rout2(N1) Rout1(N2) Rout2(N2) Rout1(N3) Rout2(N3)]
+%
+% [ROUT, LOST]=LINEPASS(...)
+%  Return additionally an information on lost particles
+%    LOST	1xN logical vector, indicating lost particles
+%    If only one output is given, loss information is saved in
+%    global variable LOSSFLAG
+%
+% [ROUT, LOSS, LOSSINFO]=LINEPASS(...)
+%  Return additional information on lost particles
+%   LOSSINFO	1x1 structure with the following fields:
+%               turn        1xN vector, turn number where the particle is lost
+%               element     1xN vector, element number where the particle is lost
+%               coordinate  6xN matrix, coordinates when the particle was
+%                           marked as lost
 %
 % ROUT=LINEPASS(...,'reuse') with 'reuse' flag is more efficient because
 %    it reuses some of the data  and functions stored in the persistent
@@ -50,9 +60,12 @@ function [Rout,varargout] = linepass(line,Rin,varargin)
 %    PREFUNC and POSTFUNC are function handles, PREFUNC is called
 %    immediately before tracking each element, POSTFUNC is called
 %    immediately after each element. Functions are called as:
+%
 %       ROUT=FUNC(ELEMENT, RIN, NTURN, NELEMENT)
-%     
-% See also: RINGPASS FINDSPOS
+%
+%   and is allowed to modify the particle coordinates
+%
+% See also: RINGPASS
 
 % Check input arguments
 if size(Rin,1)~=6
@@ -60,32 +73,33 @@ if size(Rin,1)~=6
 end
 
 reuseargs = strcmpi(varargin,'reuse');
-if any(reuseargs)
-    newlattice = 0;
-else 
-    newlattice = 1;
-end
+newlattice = double(~any(reuseargs));
 
-numericargs = cellfun(@isnumeric,varargin);
+numericargs = cellfun(@(arg) isnumeric(arg)||islogical(arg),varargin);
 nt=find(numericargs,1);
 if isempty(nt)
     refpts = length(line)+1;
+elseif islogical(varargin(nt))
+    refpts = find(varargin{nt});
 else
     refpts = varargin{nt};
 end
 
 funcargs=cellfun(@(arg) isa(arg,'function_handle')||ischar(arg), varargin) & ~reuseargs;
 
-[Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,varargin{funcargs});
-
-if nargout>1;
-    varargout{1} = isfinite(lossinfo.turn);
-    if nargout>2
-        varargout{2}=lossinfo;
+try
+    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,varargin{funcargs});
+    
+    if nargout>1;
+        if nargout>2, varargout{2}=lossinfo; end
+        varargout{1} = isfinite(lossinfo.turn);
+    else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
+        evalin('base','clear LOSSFLAG');
+        evalin('base','global LOSSFLAG');
+        assignin('base','LOSSFLAG',isfinite(lossinfo.turn));
     end
-else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
-    evalin('base','clear LOSSFLAG');
-    evalin('base','global LOSSFLAG');
-    assignin('base','LOSSFLAG',isfinite(lossinfo.turn));
+catch
+    error('Atpass:obsolete',['linepass is now expecting 2 output arguments from atpass.\n',...
+        'You may need to call "atmexall" to install the new version']);
 end
 end

@@ -90,8 +90,8 @@ static void checkiflost(double *DblBuffer, int num_particles, double num_elem, d
     for (c=0; c<num_particles; c++) {/* Loop over particles */
         r6 = DblBuffer+c*6;
         if (!mxIsNaN(r6[0])) {   /* No change if already marked */
-            for (n=0;n<6;n++) {
-                if (abs(r6[n]) > LIMIT_AMPLITUDE) {
+           for (n=0;n<6;n++) {
+                if (mxIsInf(r6[n]) || (abs(r6[n])>LIMIT_AMPLITUDE)) {
                     xnturn[c] = num_turn;
                     xnelem[c] = num_elem;
                     memcpy(xcoord+c*6,r6,6*sizeof(double));
