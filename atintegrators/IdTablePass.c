@@ -65,13 +65,10 @@ static double Map1_y(double x,double y)
     return f;
 }
 
-
-static void markaslost(double *r6)
-{	int i;
-    r6[0] = mxGetInf();
-    for(i=1;i<6;i++) r6[i] =0;
+static void markaslost(double *r6,int idx)
+{
+    r6[idx] = mxGetInf();
 }
-
 
 /* Set T1, T2, R1, R2 to NULL pointers to ignore misalignmets*/
 void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, double *xkick, double *ykick, double *x, double *y,int n,int m, int Nslice, double *T1, double *T2, double *R1, double *R2, int num_particles)
@@ -121,9 +118,10 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, do
              * To protect against DOMAIN and OVERFLOW error, check if the
              * fifth component of the phase spacevector r6[4] is finite
              */
-            if (r6[0]<limitsptr[0] || r6[0]>limitsptr[1] || r6[2]<limitsptr[2] || r6[2]>limitsptr[3]) {
-                markaslost(r6);
-            }
+            if (r6[0]<limitsptr[0] || r6[0]>limitsptr[1])
+                markaslost(r6,0);
+            else if (r6[2]<limitsptr[2] || r6[2]>limitsptr[3])
+                markaslost(r6,2);
             else {
                 /* Misalignment at entrance */
                 if (useT1) ATaddvv(r6,T1);

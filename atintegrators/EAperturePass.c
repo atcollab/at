@@ -2,11 +2,9 @@
 #include <math.h>
 #include "elempass.h"
 
-static void markaslost(double *r6)
+static void markaslost(double *r6,int idx)
 {
-    int i;
-    r6[0] = mxGetInf();
-    for (i=1;i<6;i++) r6[i] = 0;
+    r6[idx] = mxGetInf();
 }
 
 void EAperturePass(double *r_in, double *axesptr, int num_particles)
@@ -21,7 +19,7 @@ void EAperturePass(double *r_in, double *axesptr, int num_particles)
         if (!mxIsNaN(r6[0])) { /*  check if this particle is already marked as lost */
             register double xnorm = r6[0]/axesptr[0];
             register double znorm = r6[2]/axesptr[1];
-            if ((xnorm*xnorm + znorm*znorm) >= 1) markaslost(r6);
+            if ((xnorm*xnorm + znorm*znorm) >= 1) markaslost(r6,0);
         }
     }
 }

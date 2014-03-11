@@ -2,11 +2,9 @@
 #include <math.h>
 #include "elempass.h"
 
-static void markaslost(double *r6)
+static void markaslost(double *r6,int idx)
 {
-    int i;
-    r6[0] = mxGetInf();
-    for (i=1;i<6;i++) r6[i] = 0;
+    r6[idx] = mxGetInf();
 }
 
 void AperturePass(double *r_in, double *limits, int num_particles)
@@ -21,8 +19,8 @@ void AperturePass(double *r_in, double *limits, int num_particles)
         r6 = r_in+c*6;
         if (!mxIsNaN(r6[0])) { /*  check if this particle is already marked as lost */
             /* check limits for X position */
-            if (r6[0]<limits[0] || r6[0]>limits[1] || r6[2]<limits[2] || r6[2]>limits[3])
-                markaslost(r6);
+            if (r6[0]<limits[0] || r6[0]>limits[1])      markaslost(r6,0);
+            else if (r6[2]<limits[2] || r6[2]>limits[3]) markaslost(r6,2);
         }
     }
 }
@@ -49,7 +47,7 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
             
             /* Fall through next section... */
             
-        case	USE_LOCAL_COPY:
+        case USE_LOCAL_COPY:
             /* Get fields from MATLAB using field numbers
              * The second argument pointer to the array of field
              * numbers is previously created with
