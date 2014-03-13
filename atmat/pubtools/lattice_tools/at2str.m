@@ -8,7 +8,7 @@ args={};
 % if isfield(elem,'Class')
 %     atclass=elem.Class;
 % else
-    atclass=atguessclass(elem);
+    atclass=atguessclass(elem, 'UseClass');
 % end
 
 switch atclass
