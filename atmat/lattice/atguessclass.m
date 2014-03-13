@@ -1,6 +1,15 @@
-function atclass = atguessclass(elem)
+function atclass = atguessclass(elem, varargin)
 %ATCLASS=ATGUESSCLASS(ATELEM) Tries to determine the class of an element
+%   ELEM    AT element
 %
+%ATCLASS=ATGUESSCLASS(ATELEM,'UseClass')
+%   By default, ATGUESSCLASS will default "useless" elements (PolynopmB==0)
+%   to 'Drift' or 'Marker', depending on 'Length'. When specifying
+%   'UseClass', it it will preserve the 'Class' field for those elements.
+%
+
+useclass=any(strcmpi(varargin,'UseClass'));
+
 if isfield(elem,'BendingAngle')
     atclass='Bend';
 elseif isfield(elem,'Frequency')
@@ -10,7 +19,13 @@ elseif isfield(elem,'KickAngle')
 elseif isfield(elem,'PolynomB')
     if isfield(elem,'Length') && elem.Length~=0
         loworder=find(abs(elem.PolynomB(2:end))~=0,1);
-        if loworder==1
+        if isempty(loworder)
+            if useclass && isfield(elem,'Class')
+                atclass=elem.Class;
+            else
+                atclass=defaultclass(elem);
+            end
+        elseif loworder==1
             atclass='Quadrupole';
         elseif loworder==2
             atclass='Sextupole';
@@ -23,10 +38,15 @@ elseif isfield(elem,'PolynomB')
 elseif isfield(elem,'Periodicity')
     atclass='RingParam';
 else
-    if isfield(elem,'Length') && elem.Length~=0
-        atclass='Drift';
-    else
-        atclass='Marker';
-    end
+    atclass=defaultclass(elem);
 end
+
+    function atc=defaultclass(elem)
+    if isfield(elem,'Length') && elem.Length~=0
+        atc='Drift';
+    else
+        atc='Marker';
+    end
+    end
+
 end
