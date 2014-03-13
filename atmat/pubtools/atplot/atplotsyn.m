@@ -54,15 +54,15 @@ p5=patch(xplot,yplot,[0 0 0]);
 if any(labs)
     slabs=sl(labs)+0.5*ll(labs);
     vlabs=cellfun(@(el) el.FamName,rok(labs),'UniformOutput',false);
-    p6=text(slabs,-0.03*tlim*ones(size(slabs)),vlabs,'Rotation',90,...
+    args={'Label',text(slabs,-0.03*tlim*ones(size(slabs)),vlabs,'Rotation',90,...
         'Interpreter','none','FontUnits','normalized','FontSize',0.025,...
-        'HorizontalAlignment','right');
+        'HorizontalAlignment','right')};
 else
-    p6=[];
+    args={};
 end
 
 pp=struct('Dipole',p1,'Quadrupole',p2,'Sextupole',p3,'Multipole',p4,...
-    'BPM',p5,'Label',p6);
+    'BPM',p5,args{:});
 
     function [xpl,ypl]=setxpl(s,l,xmotif,ymotif)
         nm=length(xmotif);
