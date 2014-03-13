@@ -44,7 +44,7 @@ posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
     'trans',num2cell(tr(refpts)));
 
     function varargout=incr(elem)
-        if isfield(elem,'BendingAngle')
+        if isfield(elem,'BendingAngle') && elem.BendingAngle ~= 0
             ang=0.5*elem.BendingAngle;
             thetac=thetac-ang;
             L=elem.Length/ang*sin(ang);
