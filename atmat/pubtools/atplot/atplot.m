@@ -134,7 +134,7 @@ curve.left=h1;
 curve.right=h2;
 [curve.lattice]=atplotsyn(ax2(1),ring0,varargin{synarg:nargin});  % Plot lattice elements
 lts=get(ax2(1),'Children');                 % Put them in the background
-nsy=length(curve.lattice);
+nsy=length(lts)-length(h1);
 set(ax2(1),'Children',lts([nsy+1:end 1:nsy]));
 xlabel(ax2(1),'s [m]');                     % Add labels
 if ~isempty([h1;h2])

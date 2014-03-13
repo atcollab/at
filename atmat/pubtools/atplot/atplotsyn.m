@@ -15,6 +15,7 @@ end
 xlim=get(ax,'XLim');
 slim=diff(xlim);
 tlim=diff(get(ax,'YLim'));
+%axes(ax);
 
 sl=findspos(ring(:,1),1:size(ring,1)+1);
 ll=diff(sl);
@@ -25,27 +26,27 @@ rok=ring(sok);
 labs=labs(sok);
 [dipoles,qpoles,spoles,mpoles,bpms]=cellfun(@eltype,rok);
 
-ampl=0.05*tlim;
+ampl=0.05*tlim;     % Dipoles
 [xplot,yplot]=setxpl(sl(dipoles),ll(dipoles),[0;0;1;1;0],[0;ampl;ampl;0;0]);
 p1=patch(xplot,yplot,[0.5 0.5 1]);
 
-ampl=0.05*tlim;
+ampl=0.05*tlim;     % Quadrupoles
 foc=reshape(0.02*tlim*sign(atgetfieldvalues(rok(qpoles),'PolynomB',{2})),1,[]);
 [xplot,yplot]=setxpl(sl(qpoles),ll(qpoles),[0;0;0.5;1;1;0],[0;ampl;ampl;ampl;0;0]);
 yplot(3,:)=yplot(3,:)+foc;
 p2=patch(xplot,yplot,[1 0.5 0.5]);
 
-ampl=0.04*tlim;
+ampl=0.04*tlim;     % Sextupoles
 foc=reshape(0.01*tlim*sign(atgetfieldvalues(rok(spoles),'PolynomB',{3})),1,[]);
 [xplot,yplot]=setxpl(sl(spoles),ll(spoles),[0;0;0.33;0.66;1;1;0],[0;ampl;ampl;ampl;ampl;0;0]);
 yplot(3:4,:)=yplot(3:4,:)+foc([1;1],:);
 p3=patch(xplot,yplot,[0.5 1 0.5]);
 
-ampl=0.03*tlim;
+ampl=0.03*tlim;     % Other multipoles
 [xplot,yplot]=setxpl(sl(mpoles),ll(mpoles),[0;0;1;1;0],[0;ampl;ampl;0;0]);
 p4=patch(xplot,yplot,[0 0.5 0]);
 
-ampl=0.015*tlim;
+ampl=0.015*tlim;    % BPMs
 amplx=0.005*slim;
 [xplot,yplot]=setxpl(sl(bpms),ones(1,sum(bpms)),[-amplx;amplx;0;-amplx],[0;0;ampl;0]);
 p5=patch(xplot,yplot,[0 0 0]);
