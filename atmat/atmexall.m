@@ -14,41 +14,32 @@ case 'GLNXA64'
 end
 
 try
-    if ~verLessThan('matlab','7.13')
+    if ~verLessThan('matlab','7.11')
         PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
     end
 catch
 end
 
-ATROOT = atroot
 % Navigate to the directory that contains pass-methods 
-cd(ATROOT)
-cd ..
-cd atintegrators
+cd(fullfile(atroot,'..','atintegrators',''));
 PASSMETHODDIR = pwd;
-disp(['Current directory: ',PASSMETHODDIR]);
+disp(['Current directory: ',pwd]);
 mexpassmethod('all',PLATFORMOPTION);
 
 % Navigate to the directory that contains tracking functions
-cd(ATROOT)
-cd attrack
-
+cd(fullfile(atroot,'attrack',''));
 disp(['Current directory:', pwd]);
-
 MEXCOMMAND = ['mex ',PLATFORMOPTION,'atpass.c',LIBDL];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
 % Navigate to the directory that contains some accelerator physics functions
-cd(ATROOT)
-cd atphysics
+cd(fullfile(atroot,'atphysics',''));
 disp(['Current directory:', pwd]);
-
-% findmpoleraddiffmatrix.c
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'findmpoleraddiffmatrix.c -I''',PASSMETHODDIR,''''];
+MEXCOMMAND = ['mex ',PLATFORMOPTION,' -I''',PASSMETHODDIR,''' findmpoleraddiffmatrix.c'];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
 % ADD 'MEXING' instructions for other C files
 disp('ALL mex-files created successfully')
-clear ATROOT PASSMETHODDIR WARNMSG PLATFORMOPTION MEXCOMMAND
+clear PASSMETHODDIR PLATFORMOPTION MEXCOMMAND
