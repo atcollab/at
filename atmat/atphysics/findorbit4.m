@@ -1,4 +1,4 @@
-function orbit = findorbit4(RING,dP,varargin);
+function [orbit,fixedpoint] = findorbit4(RING,dP,varargin)
 %FINDORBIT4 finds closed orbit in the 4-d transverse phase 
 % space by numerically solving  for a fixed point of the one turn 
 % map M calculated with LINEPASS 
@@ -49,14 +49,12 @@ end
 
 %d = sqrt(eps);	% step size for numerical differentiation
 d = 1e-8;
-D5 = d*eye(4);
 
 max_iterations = 20;
-J = zeros(4);
 
 % Check if guess argument wass supplied
 if nargin==4
-    if isnumeric(varargin{2}) & all(eq(size(varargin{2}),[6,1]))
+    if isnumeric(varargin{2}) && all(eq(size(varargin{2}),[6,1]))
        Ri=varargin{2};
     else
        error('The last argument GUESS must be a 6-by-1 vector');
@@ -75,7 +73,7 @@ end
 RMATf = linepass(RING,RMATi);
 Rf = RMATf(:,5);
 % compute the transverse part of the Jacobian 
-J4 =  [RMATf(1:4,1:4)-RMATf(1:4,5)*ones(1,4)]/d;
+J4 =  (RMATf(1:4,1:4)-RMATf(1:4,5)*ones(1,4))/d;
 % Replace matrix inversion with \
 % B4 = inv(eye(4) - J4);
 % Ri_next = Ri +  [B4*(Rf(1:4)-Ri(1:4)); 0; 0];
@@ -88,7 +86,7 @@ Ri = Ri_next;
 
 itercount = 1;
 
-while (change>eps) & (itercount < max_iterations)
+while (change>eps) && (itercount < max_iterations)
     RMATi=[Ri Ri Ri Ri Ri];
     for k = 1:4
         RMATi(k,k)=RMATi(k,k)+d;
@@ -97,7 +95,7 @@ while (change>eps) & (itercount < max_iterations)
     Rf = RMATf(:,5);
     
     % compute the transverse part of the Jacobian 
-    J4 =  [RMATf(1:4,1:4)-RMATf(1:4,5)*ones(1,4)]/d;
+    J4 =  (RMATf(1:4,1:4)-RMATf(1:4,5)*ones(1,4))/d;
 % Replace matrix inversion with \
 %     B4 = inv(eye(4) - J4);
 %     Ri_next = Ri +  [B4*(Rf(1:4)-Ri(1:4)); 0; 0];
@@ -108,7 +106,7 @@ while (change>eps) & (itercount < max_iterations)
     itercount = itercount+1;
 end;
 
-if(nargin<3) | (varargin{1}==(length(RING)+1))  
+if (nargin<3) || (varargin{1}==(length(RING)+1))  
     % return only the fixed point at the entrance of RING{1}
    orbit=Ri(1:4,1);
 else            % 3-rd input argument - vector of reference points along the RING
@@ -118,5 +116,5 @@ else            % 3-rd input argument - vector of reference points along the RIN
 end
 
 if nargout==2
-    varargout{1}=Ri;
+    fixedpoint=Ri;
 end
