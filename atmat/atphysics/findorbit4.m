@@ -106,7 +106,7 @@ while (change>eps) && (itercount < max_iterations)
     itercount = itercount+1;
 end;
 
-if (nargin<3) || (varargin{1}==(length(RING)+1))  
+if (nargin<3) || (isscalar(varargin{1}) && (varargin{1}==(length(RING)+1)))  
     % return only the fixed point at the entrance of RING{1}
    orbit=Ri(1:4,1);
 else            % 3-rd input argument - vector of reference points along the RING
