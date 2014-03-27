@@ -79,7 +79,7 @@ numericargs = cellfun(@(arg) isnumeric(arg)||islogical(arg),varargin);
 nt=find(numericargs,1);
 if isempty(nt)
     refpts = length(line)+1;
-elseif islogical(varargin(nt))
+elseif islogical(varargin{nt})
     refpts = find(varargin{nt});
 else
     refpts = varargin{nt};
@@ -92,11 +92,11 @@ try
     
     if nargout>1;
         if nargout>2, varargout{2}=lossinfo; end
-        varargout{1} = isfinite(lossinfo.turn);
+        varargout{1} = lossinfo.lost;
     else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
         evalin('base','clear LOSSFLAG');
         evalin('base','global LOSSFLAG');
-        assignin('base','LOSSFLAG',isfinite(lossinfo.turn));
+        assignin('base','LOSSFLAG',lossinfo.lost);
     end
 catch
     error('Atpass:obsolete',['linepass is now expecting 2 output arguments from atpass.\n',...

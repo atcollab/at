@@ -84,11 +84,11 @@ try
     if nargout>1;
         if nargout>3, varargout{3}=lossinfo; end
         if nargout>2, varargout{2} = lossinfo.turn; end
-        varargout{1} = isfinite(lossinfo.turn);
+        varargout{1} = lossinfo.lost;
     else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
         evalin('base','clear LOSSFLAG');
         evalin('base','global LOSSFLAG');
-        assignin('base','LOSSFLAG',isfinite(lossinfo.turn));
+        assignin('base','LOSSFLAG',lossinfo.lost);
     end
 catch
     error('Atpass:obsolete',['ringpass is now expecting 2 output arguments from atpass.\n',...

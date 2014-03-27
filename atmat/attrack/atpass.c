@@ -83,15 +83,15 @@ static void cleanup(void)
 }
 
 static void checkiflost(double *DblBuffer, int num_particles, double num_elem, double num_turn,
-        double *xnturn, double *xnelem, double *xcoord)
+        double *xnturn, double *xnelem, double *xcoord, mxLogical *xlost)
 {
     int n, c;
-    double *r6;
     for (c=0; c<num_particles; c++) {/* Loop over particles */
-        r6 = DblBuffer+c*6;
-        if (!mxIsNaN(r6[0])) {   /* No change if already marked */
+        if (!xlost[c]) {   /* No change if already marked */
+           double *r6 = DblBuffer+c*6;
            for (n=0;n<6;n++) {
-                if (mxIsInf(r6[n]) || (abs(r6[n])>LIMIT_AMPLITUDE)) {
+                if (!mxIsFinite(r6[n]) || (abs(r6[n])>LIMIT_AMPLITUDE)) {
+                    xlost[c] = 1;
                     xnturn[c] = num_turn;
                     xnelem[c] = num_elem;
                     memcpy(xcoord+c*6,r6,6*sizeof(double));
@@ -155,10 +155,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     int m,n,p, *refpts, num_refpts;
     int nextrefindex, nextref; /* index to the array of refpts */
-    mxArray *tempmxptr1, *tempmxptr2, *mxBuffer, *mxLoss;
+    mxArray *tempmxptr1, *tempmxptr2, *mxBuffer, *mxLoss, *mxLost;
     mxArray *mxNturn, *mxNelem, *mxCoord, *mxTurn, *mxElem;
     double *xnturn, *xnelem, *xcoord, *xturn, *xelem;
-    const char *lossinfo[] = {"turn","element","coordinates"};
+    mxLogical *xlost;
+    const char *lossinfo[] = {"lost","turn","element","coordinates"};
     mxArray *mxPassArg1[5], *mxPassArg2[2], *mxPre, *mxPost;
     
     double *DblPtrDataOut ,*DblPtrDataIn, *DblBuffer;
@@ -307,17 +308,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxCoord=mxCreateDoubleMatrix(6,num_particles,mxREAL);
     mxNturn=mxCreateDoubleMatrix(1,num_particles,mxREAL);
     mxNelem=mxCreateDoubleMatrix(1,num_particles,mxREAL);
+    mxLost=mxCreateLogicalMatrix(1,num_particles);
     mxTurn=mxCreateDoubleMatrix(1,1,mxREAL);
     mxElem=mxCreateDoubleMatrix(1,1,mxREAL);
-    mxLoss=mxCreateStructMatrix(1,1,3,lossinfo);
-    mxSetField(mxLoss, 0, lossinfo[0], mxNturn);
-    mxSetField(mxLoss, 0, lossinfo[1], mxNelem);
-    mxSetField(mxLoss, 0, lossinfo[2], mxCoord);
+    mxLoss=mxCreateStructMatrix(1,1,4,lossinfo);
+    mxSetField(mxLoss, 0, lossinfo[0], mxLost);
+    mxSetField(mxLoss, 0, lossinfo[1], mxNturn);
+    mxSetField(mxLoss, 0, lossinfo[2], mxNelem);
+    mxSetField(mxLoss, 0, lossinfo[3], mxCoord);
     xnturn=mxGetPr(mxNturn);
     xnelem=mxGetPr(mxNelem);
     xcoord=mxGetPr(mxCoord);
     xturn=mxGetPr(mxTurn);
     xelem=mxGetPr(mxElem);
+    xlost=mxGetLogicals(mxLost);
     for (n=0; n<num_particles; n++) {
         double val = mxGetNaN();
         xnturn[n]=val;
@@ -376,7 +380,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (mxPost) {                           /* Post-tracking optional function */
                 DblBuffer=passhook(mxPassArg1,mxPtrELEM[n], mxPost);
             }
-            checkiflost(DblBuffer, num_particles, *xelem, *xturn, xnturn, xnelem, xcoord);
+            checkiflost(DblBuffer, num_particles, *xelem, *xturn, xnturn, xnelem, xcoord, xlost);
         }
     }
     else {
@@ -402,7 +406,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (mxPost) {                           /* Post-tracking optional function */
                 DblBuffer=passhook(mxPassArg1,mxPtrELEM[n], mxPost);
             }
-            checkiflost(DblBuffer, num_particles, *xelem, *xturn, xnturn, xnelem, xcoord);
+            checkiflost(DblBuffer, num_particles, *xelem, *xturn, xnturn, xnelem, xcoord, xlost);
         }
     }
     if (num_elements == nextref) {
@@ -439,7 +443,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (mxPost) {                           /* Post-tracking optional function */
                 DblBuffer=passhook(mxPassArg1,mxPtrELEM[n], mxPost);
             }
-            checkiflost(DblBuffer, num_particles, *xelem, *xturn, xnturn, xnelem, xcoord);
+            checkiflost(DblBuffer, num_particles, *xelem, *xturn, xnturn, xnelem, xcoord, xlost);
         }
         if (num_elements == nextref) {
             memcpy(DblPtrDataOut, DblBuffer, np6*sizeof(double));
@@ -455,9 +459,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else {
         mxDestroyArray(mxLoss); /* Destroys also the structure members */
-        /*mxDestroyArray(mxCoord);
+      /*mxDestroyArray(mxLost);
         mxDestroyArray(mxNturn);
-        mxDestroyArray(mxNelem);*/
+        mxDestroyArray(mxNelem);
+        mxDestroyArray(mxCoord);*/
     }
     mxDestroyArray(mxBuffer);
     mxDestroyArray(mxTurn);
