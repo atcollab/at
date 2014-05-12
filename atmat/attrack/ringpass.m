@@ -90,8 +90,12 @@ try
         evalin('base','global LOSSFLAG');
         assignin('base','LOSSFLAG',lossinfo.lost);
     end
-catch
-    error('Atpass:obsolete',['ringpass is now expecting 2 output arguments from atpass.\n',...
+catch err
+    if strcmp(err.identifier,'MATLAB:unassignedOutputs')
+        error('Atpass:obsolete',['ringpass is now expecting 2 output arguments from atpass.\n',...
         'You may need to call "atmexall" to install the new version']);
+    else
+        rethrow(err)
+    end
 end
 end
