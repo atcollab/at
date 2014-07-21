@@ -68,7 +68,7 @@ end
         end
     end
 
-    function group(i1,i2)
+    function group(i1,i2)   % group consecutive elements
         newelem=newring{i1};
         newelem.Length=sum(ll(i1:i2));
         if bends(i1)
@@ -80,7 +80,7 @@ end
         keep(i1+1:i2)=false;
     end
 
-    function nm=gname(names)
+    function nm=gname(names)    % generate a group name
         lmin=min(cellfun(@length,names));
         nm=names{1};
         cellfun(@cmps,names);
@@ -88,7 +88,7 @@ end
         
         function cmps(name)
             lmin=find([name(1:lmin) 'a'] ~= [nm(1:lmin) 'b'],1)-1;
-            if nm(lmin) == '_' || nm(lmin) == '-', lmin=lmin-1; end
+            if (lmin>0) && (nm(lmin)=='_' || nm(lmin)=='-'), lmin=lmin-1; end
         end
     end
 end
