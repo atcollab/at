@@ -85,9 +85,13 @@ end
     function [linusr,pm]=atx2(ring,periods,varargin)
         
         [dpp,refusr]=parseargs({0,1:length(ring)},varargin);
-        
-        [refpts,~,keep]=unique([1 refusr length(ring)+1]);	% Add 1st and last points
-        keep=keep(2:end-1);
+        if islogical(refusr)
+            refusr(end+1,length(ring)+1)=false;
+        else
+            refusr=setelems(false(1,length(ring)+1),refusr);
+        end
+        refpts=setelems(refusr,[1 length(ring)+1]);
+        keep=refusr(refpts);
         
         [lindata,tunes,xsi]=atlinopt(ring,dpp,refpts);
         coupled=max(abs(1-cat(1,lindata.gamma))) > 1.e-5; %#ok<*NOPRT>
@@ -213,6 +217,10 @@ end
                 'modemittance',modemittance,...
                 'energy',energy);
         end
+    end
+
+    function mask=setelems(mask,idx)
+        mask(idx)=true;
     end
 end
 

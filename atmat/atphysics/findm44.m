@@ -32,7 +32,7 @@ function [M44, varargout]  = findm44(LATTICE,DP,varargin)
 %    it is also the entrance of the first element
 %    after 1 turn: T(:,:,end) = M
 %
-% [M44, T] = FINDM44(LATTICE,DP,REFPTS,ORBITIN) - Does not search for
+% [M44,T] = FINDM44(LATTICE,DP,REFPTS,ORBITIN) - Does not search for
 %   closed orbit. Instead the ORBITIN,a 1-by-6 vector of initial
 %   conditions is used: [x0, px0, y0, py0, DP, 0]' where
 %   the same DP as argument 2. The sixth component is ignored.
@@ -40,15 +40,15 @@ function [M44, varargout]  = findm44(LATTICE,DP,varargin)
 %   if LATTICE is not a ring or to avoid recomputting the
 %   closed orbit if is already known.
 %
-% [M44, T] = FINDM44(LATTICE,DP,REFPTS,ORBITIN,'full') - same as above except
+% [M44,T] = FINDM44(LATTICE,DP,REFPTS,ORBITIN,'full') - same as above except
 %    matrixes returned in T are full 1-turn matrixes at the entrance of each
 %    element indexed by REFPTS.
 %
-% [M44, T, orbit] = FINDM44(...) in addition returns
+% [M44,T,orbit] = FINDM44(...) in addition returns
 %    at REFPTS the closed orbit calculated along the
 %    way with findorbit4
 %
-% See also LINEPASS, FINDORBIT4 FINDSPOS
+% See also FINDM66, FINDORBIT4
 
 % *************************************************************************
 %   The numerical differentiation in FINDM44 uses symmetric form
@@ -69,92 +69,80 @@ end
 
 NE = length(LATTICE);
 
-
-switch nargin
-    case 5 % FINDM44(LATTICE,DP,REFPTS,ORBITIN,'full')
-        if strcmpi(varargin{3},'full')
-            FULLFLAG = 1;
-            REFPTS = varargin{1};
-            R0 = varargin{2};
-            R0(5) = DP;
-            R0(6)= 0;
-        else
-            error('Fifth argument - unknown option')
-        end
-    case 4 % FINDM44(LATTICE,DP,REFPTS,ORBITIN)
-        FULLFLAG = 0;
-        REFPTS = varargin{1};
-        R0 = varargin{2};
-        R0(5) = DP;
-        R0(6)= 0;
-    case 3 % FINDM44(LATTICE,DP,REFPTS)
-        FULLFLAG = 0;
-        REFPTS = varargin{1};
-        R0 = [findorbit4(LATTICE,DP);DP;0];
-    case 2 % FINDM44(LATTICE,DP)
-        REFPTS = NE+1;
-        FULLFLAG = 0;
-        R0 = [findorbit4(LATTICE,DP);DP;0];
-    otherwise
-        error('Incorrect number of input arguments');
+if nargin >= 5  % FINDM44(LATTICE,DP,REFPTS,ORBITIN,'full')
+    if strcmpi(varargin{3},'full')
+        FULLFLAG=1;
+    else
+        error('Fifth argument - unknown option');
+    end
+else
+    FULLFLAG=0;
 end
+if nargin >= 4 && ~isempty(varargin{2}) % FINDM44(LATTICE,DP,REFPTS,ORBITIN)
+    R0 = varargin{2};
+    R0(5) = DP;
+    R0(6) = 0;
+else
+    R0 = [findorbit4(LATTICE,DP);DP;0];
+end
+if nargin >= 3  % FINDM44(LATTICE,DP,REFPTS)
+    if islogical(varargin{1})
+        REFPTS=varargin{1};
+        REFPTS(end+1:NE+1)=false;
+    elseif isnumeric(varargin{1})
+        REFPTS=setelems(false(1,NE+1),varargin{1});
+    else
+        error('REFPTS must be numeric or logical');
+    end
+else
+    REFPTS=false(1,NE+1);
+end
+refs=setelems(REFPTS,NE+1);
+reqs=REFPTS(refs);
 
-NR = length(REFPTS);
 
-
-% Dteremine step size to use for numerical differentiation
+% Determine step size to use for numerical differentiation
 global NUMDIFPARAMS
-
+% Transverse
 if isfield(NUMDIFPARAMS,'XYStep')
-    d = NUMDIFPARAMS.XYStep';
+    dt = NUMDIFPARAMS.XYStep';
 else
     % optimal differentiation step - Numerical Recipes
-    d =  6.055454452393343e-006;
+    dt =  6.055454452393343e-006;
 end
 
-
-% Put together matrix of initial conditions
-
-D = d*eye(4);
-% First 8 columns for derivative
+% Build a diagonal matrix of initial conditions
+D4 = [0.5*dt*eye(4);zeros(2,4)];
+% Add to the orbit_in. First 8 columns for derivative
 % 9-th column is for closed orbit
-RM = [[R0 R0 R0 R0 R0 R0 R0 R0] + [D -D; zeros(2,8)],R0];
+RIN = R0(:,ones(1,9)) + [D4 -D4 zeros(6,1)];
+ROUT = linepass(LATTICE,RIN,refs);
+TMAT3 = reshape(ROUT(1:4,:),4,9,[]);
+M44 = (TMAT3(:,1:4,end)-TMAT3(:,5:8,end))./dt;
 
-if nargout < 2
-    % Calculate M44 at the first element only. Use linepass
-    TMAT = linepass(LATTICE,RM);
-    M44 = (TMAT(1:4,1:4)-TMAT(1:4,5:8))/(2*d);
-    return
-else
-    % Calculate matrixes at all REFPTS. Use linepass
-    % Need to include the exit of the LATTICE to REFPTS array
-    if NR==0 || REFPTS(NR)~=NE+1
-        NR1 = NR+1;
-        REFPTS(NR1)=NE+1;
-    else
-        NR1 = NR;
-    end
-    
-    TMAT = linepass(LATTICE,RM,REFPTS);
-    TMAT3 = reshape(TMAT(1:4,:),4,9,NR1);
-    M44 = (TMAT3(1:4,1:4,NR1)-TMAT3(1:4,5:8,NR1))/(2*d);
-    
-    MSTACK = (TMAT3(:,1:4,1:NR)-TMAT3(:,5:8,1:NR))/(2*d);
+if nargout >= 2 % Calculate matrixes at all REFPTS.
+    MSTACK = (TMAT3(:,1:4,reqs)-TMAT3(:,5:8,reqs))./dt;
     
     if FULLFLAG
         S2 = [0 1;-1 0];
         S4 = [S2, zeros(2);zeros(2),S2]; % symplectic identity matrix
-        for k =1:NR
-            T =  MSTACK(:,:,k);
-            varargout{1}(:,:,k) = T*M44*S4'*T'*S4;
-        end
+        v=cellfun(@rotate,num2cell(MSTACK,[1 2]),'UniformOutput',false);
+        varargout{1}=cat(3,v{:});
     else
         varargout{1}=MSTACK;
     end
     % return the closed orbit if requested
     if nargout == 3
-        varargout{2}=squeeze(TMAT3(:,9,1:NR));
+        varargout{2}=squeeze(TMAT3(:,9,reqs));
     end
     
 end
 
+    function mask=setelems(mask,idx)
+        mask(idx)=true;
+    end
+
+    function w=rotate(v)
+        w=v*M44*S4'*v'*S4;
+    end
+end

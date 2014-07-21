@@ -50,14 +50,24 @@ function [lindata, varargout] = atlinopt(RING,DP,varargin)
 
 global NUMDIFPARAMS
 
-if nargin >= 3
-    REFPTS=varargin{1};
-else
-    REFPTS= 1;
-end
+NE = length(RING);
 
-NR=numel(REFPTS);
-SZ=size(REFPTS);
+if nargin >= 3
+    if islogical(varargin{1})
+        REFPTS=varargin{1};
+        REFPTS(end+1:NE+1)=false;
+        elidx=find(REFPTS);
+    elseif isnumeric(varargin{1})
+        elidx=varargin{1};
+        REFPTS=setelems(false(1,NE+1),elidx);
+    else
+        error('REFPTS must be numeric or logical');
+    end
+else
+    elidx=1;
+    REFPTS=setelems(false(1,NE+1),elidx);
+end
+SZ=size(elidx);
 
 
 spos = reshape(findspos(RING,REFPTS),SZ);
@@ -79,33 +89,10 @@ G = diag([g g]);
 C = -H*sign(t)/(g*sqrt(t*t+4*det(H)));
 A = G*G*M  -  G*(m*S*C'*S' + C*n) + C*N*S*C'*S';
 B = G*G*N  +  G*(S*C'*S'*m + n*C) + S*C'*S'*M*C;
+[MSA,MSB,gamma,CL,AL,BL]=cellfun(@analyze,reshape(num2cell(MS,[1 2]),SZ),'UniformOutput',false);
 
-MSA=zeros(2,2,NR);
-MSB=zeros(2,2,NR);
-gamma=cell(SZ);
-AL=cell(SZ);
-BL=cell(SZ);
-CL=cell(SZ);
-for i=1:NR
-    M12 =MS(1:2,1:2,i);
-    N12 =MS(3:4,3:4,i);
-    m12 =MS(1:2,3:4,i);
-    n12 =MS(3:4,1:2,i);
-    
-    g2 = sqrt(det(n12*C+G*N12));
-    E12 = (G*M12-m12*S*C'*S')/g2;
-    F12 = (n12*C+G*N12)/g2;
-    
-    MSA(:,:,i)=E12;
-    MSB(:,:,i)=F12;
-    gamma{i}=g2;
-    CL{i}=(M12*C+G*m12)*S*F12'*S';
-    AL{i}=E12*A*S*E12'*S';
-    BL{i}=F12*B*S*F12'*S';
-end
-
-[BX,AX,MX]=lop(MSA,A);
-[BY,AY,MY]=lop(MSB,B);
+[BX,AX,MX]=lop(reshape(cat(3,MSA{:}),2,2,[]),A);
+[BY,AY,MY]=lop(reshape(cat(3,MSB{:}),2,2,[]),B);
 
 %tunes = [MX(end),MY(end)]/2/pi;
 
@@ -118,6 +105,7 @@ if nargout >= 2
     varargout{1}=tns;
 end
 
+dispargs={};
 if nargout >= 3
     if isfield(NUMDIFPARAMS,'DPStep')
         dDP = NUMDIFPARAMS.DPStep';
@@ -125,64 +113,71 @@ if nargout >= 3
         dDP =  1e-6;
     end
     % Calculate tunes for DP+dDP
-    if ~isempty(REFPTS) && REFPTS(1) == 1
-        orbP = findorbit4(RING,DP+0.5*dDP,REFPTS);
-        orbM = findorbit4(RING,DP-0.5*dDP,REFPTS);
-        DISPERSION = num2cell((orbP-orbM)/dDP,1);
-    else
-        orbP = findorbit4(RING,DP+0.5*dDP,[1;REFPTS(:)]);
-        orbM = findorbit4(RING,DP-0.5*dDP,[1;REFPTS(:)]);
-        DISPERSION = num2cell((orbP(:,2:end)-orbM(:,2:end))/dDP,1);
-    end
-    [LD, tunesP] = atlinopt(RING,DP+0.5*dDP,[],[orbP(:,1);DP+0.5*dDP;0]); %#ok<ASGLU>
-    [LD, tunesM] = atlinopt(RING,DP-0.5*dDP,[],[orbM(:,1);DP-0.5*dDP;0]); %#ok<ASGLU>
+    [orbP,o1P]=findorbit4(RING,DP+0.5*dDP,REFPTS);
+    [orbM,o1M]=findorbit4(RING,DP-0.5*dDP,REFPTS);
+    DISPERSION = reshape(num2cell((orbP-orbM)/dDP,1),SZ);
+    [LD, tunesP] = atlinopt(RING,DP+0.5*dDP,[],o1P); %#ok<ASGLU>
+    [LD, tunesM] = atlinopt(RING,DP-0.5*dDP,[],o1M); %#ok<ASGLU>
     varargout{2} = (tunesP - tunesM)/dDP;
-    lindata = struct('ElemIndex',num2cell(REFPTS),'SPos',num2cell(spos),...
-        'ClosedOrbit',reshape(num2cell(orb,1),SZ),...
-        'Dispersion',reshape(DISPERSION,SZ),...
-        'M44',reshape(num2cell(MS,[1 2]),SZ),...
-        'gamma',gamma,...
-        'C',CL,...
-        'A',AL,...
-        'B',BL,...
-        'beta', reshape(num2cell([BX,BY],2),SZ),...
-        'alpha', reshape(num2cell([AX,AY],2),SZ),...
-        'mu', reshape(num2cell([MX,MY],2),SZ));
-else
-    lindata = struct('ElemIndex',num2cell(REFPTS),'SPos',num2cell(spos),...
-        'ClosedOrbit',reshape(num2cell(orb,1),SZ),...
-        'M44',reshape(num2cell(MS,[1 2]),SZ),...
-        'gamma',gamma,...
-        'C',CL,...
-        'A',AL,...
-        'B',BL,...
-        'beta', reshape(num2cell([BX,BY],2),SZ),...
-        'alpha', reshape(num2cell([AX,AY],2),SZ),...
-        'mu', reshape(num2cell([MX,MY],2),SZ));
+    dispargs={'Dispersion',DISPERSION};
 end
+lindata = struct('ElemIndex',num2cell(elidx),'SPos',num2cell(spos),...
+    'ClosedOrbit',reshape(num2cell(orb,1),SZ),...
+    dispargs{:},...
+    'M44',reshape(num2cell(MS,[1 2]),SZ),...
+    'gamma',gamma,...
+    'C',CL,...
+    'A',AL,...
+    'B',BL,...
+    'beta', reshape(num2cell([BX,BY],2),SZ),...
+    'alpha', reshape(num2cell([AX,AY],2),SZ),...
+    'mu', reshape(num2cell([MX,MY],2),SZ));
 
-function [beta,alpha]=nufof(T)
-%cosmu = (T(1,1)+T(2,2))/2;
-sinmu = sign(T(1,2))*sqrt(-T(1,2)*T(2,1)-(T(1,1)-T(2,2))^2/4);
-alpha = (T(1,1)-T(2,2))/2/sinmu;
-beta = T(1,2)/sinmu;
+    function mask=setelems(mask,idx)
+        mask(idx)=true;
+    end
 
-function UP = BetatronPhaseUnwrap(P)
-% unwrap negative jumps in betatron
-JUMPS = [0; diff(P)] < -1.e-5;
-UP = P+cumsum(JUMPS)*2*pi;
+    function [beta,alpha]=nufof(T)
+        %cosmu = (T(1,1)+T(2,2))/2;
+        sinmu = sign(T(1,2))*sqrt(-T(1,2)*T(2,1)-(T(1,1)-T(2,2))^2/4);
+        alpha = (T(1,1)-T(2,2))/2/sinmu;
+        beta = T(1,2)/sinmu;
+    end
 
-function [beta,alpha,phase]=lop(MS,A0)
-[bx,ax]=nufof(A0);
-bbb=squeeze(MS(1,2,:));
-aaa=squeeze(MS(1,1,:))*bx-bbb*ax;
+    function UP = BetatronPhaseUnwrap(P)
+        % unwrap negative jumps in betatron
+        JUMPS = [0; diff(P)] < -1.e-5;
+        UP = P+cumsum(JUMPS)*2*pi;
+    end
 
-beta = (aaa.^2 + bbb.^2)/bx;
-alpha = -(aaa.*squeeze(MS(2,1,:)*bx-MS(2,2,:)*ax) + bbb.*squeeze(MS(2,2,:)))/bx;
-try
-    phase = atan2(bbb,aaa);
-    %   phase = atan(bbb./aaa);
-catch %#ok<CTCH>
-    phase=NaN(size(beta));
+    function [beta,alpha,phase]=lop(MS,A0)
+        [bx,ax]=nufof(A0);
+        bbb=squeeze(MS(1,2,:));
+        aaa=squeeze(MS(1,1,:))*bx-bbb*ax;
+        
+        beta = (aaa.^2 + bbb.^2)/bx;
+        alpha = -(aaa.*squeeze(MS(2,1,:)*bx-MS(2,2,:)*ax) + bbb.*squeeze(MS(2,2,:)))/bx;
+        try
+            phase = atan2(bbb,aaa);
+        catch %#ok<CTCH>
+            phase=NaN(size(beta));
+        end
+        phase = BetatronPhaseUnwrap(phase);
+    end
+
+    function [MSA,MSB,gamma,CL,AL,BL]=analyze(MS)
+        M12 =MS(1:2,1:2);
+        N12 =MS(3:4,3:4);
+        m12 =MS(1:2,3:4);
+        n12 =MS(3:4,1:2);
+        
+        gamma = sqrt(det(n12*C+G*N12));
+        MSA = (G*M12-m12*S*C'*S')/gamma;
+        MSB = (n12*C+G*N12)/gamma;
+        
+        CL=(M12*C+G*m12)*S*MSB'*S';
+        AL=MSA*A*S*MSA'*S';
+        BL=MSB*B*S*MSB'*S';
+    end
+
 end
-phase = BetatronPhaseUnwrap(phase);
