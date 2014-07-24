@@ -57,7 +57,6 @@ void QuantDiffPass(double *r_in, double* Lmatp , int num_particles)
             r6[3] += diffusion[3];
             r6[4] += diffusion[4];
             r6[5] += diffusion[5];
-            
         }
     }
 }
@@ -81,19 +80,15 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 #define NUM_FIELDS_2_REMEMBER 1
 {
 	double *Lmatp;
-    
 	switch(mode) {
 	    case MAKE_LOCAL_COPY: 	/* Find field numbers first
                                  Save a list of field number in an array
                                  and make returnptr point to that array
                                  */
             FieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-            
             /*  Populate */
-            
             FieldNumbers[0] = GetRequiredFieldNumber(ElemData, "Lmatp");
             /* Fall through next section... */
-            
 	    case USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
                                  The second argument ponter to the array of field
                                  numbers is previously created with
@@ -110,19 +105,21 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-/*	prinft("In mexFunction\n");*/
     if (nrhs == 2) {
-		/*printf("In mexFunction\n");*/
         double *r_in;
         double *Lmatp;
+        mxArray *tmpmxptr;
         int i;
         int num_particles = mxGetN(prhs[1]);
-        if (mxGetM(prhs[0]) != 6 && mxGetN(prhs[0]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","First argument must be a 6 x 6 matrix");
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
+        tmpmxptr = mxGetField(prhs[0],0,"Lmatp");
+	    if(tmpmxptr)
+	        Lmatp = mxGetPr(tmpmxptr);
+	    else
+	        mexErrMsgTxt("Required field 'Lmatp' was not found in the element data structure");         
         r_in = mxGetPr(plhs[0]);
-        Lmatp = mxGetPr(prhs[0]);
 		QuantDiffPass(r_in, Lmatp, num_particles);
     }
     else if (nrhs == 0) {
