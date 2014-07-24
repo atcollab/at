@@ -10,7 +10,7 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %   RIN         6xN matrix: input coordinates of N particles
 %   NTURNS      Number of turns to perform
 %   ROUT        6x(N*NTURNS) matrix: output coordinates of N particles at
-%               the exit of NTURNS turns
+%               the exit of each turn
 %
 % [ROUT, LOST]=RINGPASS(...)
 %  Return additionally an information on lost particles
@@ -46,6 +46,11 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %    calls. Otherwise, RINGPASS without 'reuse' must be called again.
 %    The values of elements fields such as 'Length' or 'K' are allowed to change
 %
+% ROUT=RINGPASS(...,'nodump') does not output the particle coordinates at
+%                             each turn
+%   ROUT        6xN matrix: output coordinates of N particles at
+%               the exit of NTURNS turns
+%
 % ROUT=RINGPASS(...,PREFUNC)
 % ROUT=RINGPASS(...,PREFUNC,POSTFUNC)
 % ROUT=RINGPASS(...,function_handle.empty,POSTFUNC)
@@ -64,22 +69,25 @@ if size(Rin,1)~=6
     error('Matrix of initial conditions, the second argument, must have 6 rows');
 end
 
-reuseargs = strcmpi(varargin,'reuse');
-newlattice = double(~any(reuseargs));
+newlattice = double(~any(strcmpi(varargin,'reuse')));
 
-numericargs = cellfun(@isnumeric,varargin);
-nt=find(numericargs,1);
+nt=find(cellfun(@isnumeric,varargin),1);
 if isempty(nt)
     nturns = 1;
 else
     nturns = varargin{nt};
 end
 
-funcargs=cellfun(@(arg) isa(arg,'function_handle')||ischar(arg), varargin) & ~reuseargs;
+funcargs=cellfun(@(arg) isa(arg,'function_handle'), varargin);
+
+if any(strcmpi(varargin,'silent'))
+    refpts=[];
+else
+    refpts=length(ring)+1;
+end
 
 try
-    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,length(ring)+1,...
-        varargin{funcargs});
+    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,varargin{funcargs});
     
     if nargout>1;
         if nargout>3, varargout{3}=lossinfo; end

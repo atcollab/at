@@ -168,6 +168,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *mxTurn, *mxElem;
     double *xturn, *xelem;
     mxArray *mxPassArg1[5], *mxPassArg2[2], *mxPre, *mxPost;
+    mwSize outsize;
     
     double *DblPtrDataOut ,*DblPtrDataIn, *DblBuffer;
     
@@ -299,14 +300,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *dblrefpts = mxGetPr(prhs[4]);
         refpts = mxCalloc(num_refpts,sizeof(int));
         for (n=0; n<num_refpts; n++) refpts[n] = ((int)dblrefpts[n])-1;
+        if (num_refpts == 0)
+            outsize=num_particles;
+        else
+            outsize=num_particles*num_refpts*num_turns;
     }
     else {              /* only end of the line */
         num_refpts = 1;
         refpts = mxCalloc(num_refpts,sizeof(int));
         refpts[0] = num_elements;
+        outsize=num_particles*num_turns;
     }
     
-    plhs[0] = mxCreateDoubleMatrix(6,num_particles*num_refpts*num_turns,mxREAL);
+    plhs[0] = mxCreateDoubleMatrix(6,outsize,mxREAL);
     
     mxLost=mxCreateLogicalMatrix(1,num_particles);
     mxNturn=mxCreateDoubleMatrix(1,num_particles,mxREAL);
@@ -453,6 +459,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             DblPtrDataOut += np6; /*  shift the location to write to in the output array */
             nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         }
+    }
+    if (num_refpts == 0) {
+        memcpy(DblPtrDataOut, DblBuffer, np6*sizeof(double));
+        DblPtrDataOut += np6; /*  shift the location to write to in the output array */
     }
     
     mxFree(refpts);
