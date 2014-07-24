@@ -13,7 +13,8 @@ function rp = ringpara(THERING,varargin)
 %Part of this code was modified from atsummary.m
 %
 %Modified by Peace Chang (check if theta(ii) ~= 0.0)
-%Modified by S.Liuzzo and B.Nash (Dipole gradient may be in PolynomB(2))
+%Modified by S.Liuzzo and B.Nash (Dipole gradient may be in PolynomB(2),
+%also coupled damping added) 7/24/2014
 
 if nargin==0
     global THERING;
@@ -110,11 +111,13 @@ rp.T0 = T0;
 rp.integrals = [I1,I2,I3,I4,I5];
 rp.dampingalpha = [alphax, alphay, alphaE];
 rp.dampingtime = 1./[alphax, alphay, alphaE];
-rp.dampingJ = [Jx,Jy,Je];
+
 
 %compute coupled damping times
 [nu,chi]=atTunesAndDampingRatesFromMat(findm66(atradon(THERING)));
 rp.coupleddampingtime=T0./chi;
+
+rp.dampingJ = [Jx,Jy,Je];
 
 %rp.tw = tw;
 %rp.tmptw = tmptw;
