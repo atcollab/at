@@ -112,6 +112,10 @@ rp.dampingalpha = [alphax, alphay, alphaE];
 rp.dampingtime = 1./[alphax, alphay, alphaE];
 rp.dampingJ = [Jx,Jy,Je];
 
+%compute coupled damping times
+[nu,chi]=atTunesAndDampingRatesFromMat(findm66(atradon(THERING)));
+rp.coupleddampingtime=T0./chi;
+
 %rp.tw = tw;
 %rp.tmptw = tmptw;
 rp.tunes = tune;
