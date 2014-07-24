@@ -13,6 +13,7 @@ function rp = ringpara(THERING,varargin)
 %Part of this code was modified from atsummary.m
 %
 %Modified by Peace Chang (check if theta(ii) ~= 0.0)
+%Modified by S.Liuzzo and B.Nash (Dipole gradient may be in PolynomB(2))
 
 if nargin==0
     global THERING;
@@ -49,11 +50,22 @@ I4 = 0;
 I5 = 0;
 for ii=1:length(dpindex)
   if theta(ii) ~= 0.0
-    if isfield(THERING{dpindex(ii)},'K')
-        K = THERING{dpindex(ii)}.K;
-    else
-        K = 0;
-    end
+      K = 0;
+      Kk = 0;
+      Kp = 0;
+      if isfield(THERING{dpindex(ii)},'K')
+          Kk = THERING{dpindex(ii)}.K;
+      end
+      if isfield(THERING{dpindex(ii)},'PolynomB')
+          Kp = THERING{dpindex(ii)}.PolynomB(2);
+      end
+      if Kk~=Kp && (Kk~=0 && Kp~=0)
+          warning('Values in K and PolynomB(2) are different. Using larger absolute value'); 
+      end
+      Ks=[Kk,Kp];
+      [~,i]=max(abs(Ks));
+      K=Ks(i);
+      
     th1 = THERING{dpindex(ii)}.EntranceAngle;
     th2 = THERING{dpindex(ii)}.ExitAngle;
     [dI1,dI2,dI3,dI4,dI5,curHavg1(ii)] = calcRadInt(rho(ii),theta(ii), ...
