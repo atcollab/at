@@ -1,4 +1,4 @@
-function [nu1,nu2,nu3,chi1,chi2,chi3]=atTunesAndDampingRatesFromMat(m66)
+function [nu,chi]=atTunesAndDampingRatesFromMat(m66)
 %find tunes and damping rates from one map matrix with radiation
 %note that in order to find the damping times, one needs the revolution
 %time T0, then
@@ -8,15 +8,32 @@ function [nu1,nu2,nu3,chi1,chi2,chi3]=atTunesAndDampingRatesFromMat(m66)
 %are positive.
 %B. Nash 24/07/2014
 
-ev=eigs(m66);
+aa=amat(m66);
 
-evlog123=log(ev([1,3,5]));
+Rmat=inv(aa)*m66*aa;
 
-nu1=abs(imag(evlog123(1))/(2*pi));
-chi1=abs(real(evlog123(1)));
+R1=Rmat([1 2],[1 2]);
+R2=Rmat([3 4],[3 4]);
+R3=Rmat([5 6],[5 6]);
 
-nu2=abs(imag(evlog123(2))/(2*pi));
-chi2=abs(real(evlog123(2)));
+%ev=eigs(m66);
 
-nu3=abs(imag(evlog123(3))/(2*pi));
-chi3=abs(real(evlog123(3)));
+ev1=eigs(R1);
+evlog1=log(ev1(1));
+
+ev2=eigs(R2);
+evlog2=log(ev2(1));
+
+ev3=eigs(R3);
+evlog3=log(ev3(1));
+
+%evlog123=log(ev([1,3,5]));
+
+nu(1)=abs(imag(evlog1)/(2*pi));
+chi(1)=abs(real(evlog1));
+
+nu(2)=abs(imag(evlog2)/(2*pi));
+chi(2)=abs(real(evlog2));
+
+nu(3)=abs(imag(evlog3)/(2*pi));
+chi(3)=abs(real(evlog3));
