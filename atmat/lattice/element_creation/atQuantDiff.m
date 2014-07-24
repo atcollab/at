@@ -4,7 +4,8 @@ function elem=atQuantDiff(fname,ring)
 %   ring is the at lattice without radiation
 %
 
-dmat=quantumDiff(ring);
+[ring2,radindex]=atradon(ring);
+dmat=quantumDiff(ring2,radindex);
 Lmatp=lmatp(dmat);
 %[ld,prm]=atx2(ring);
 %diff = prm.DiffCum;
@@ -24,36 +25,21 @@ function [ lmatp ] = lmatp( dmat )
 try
     lmat66 = chol(dmat);
 catch
-    dmat44=dmat([1 2 5 6],[1 2 5 6]);
-    lmat44=chol(dmat44);
-    lmat46=[lmat44([1 2],:);zeros(2,4);lmat44([3 4],:)];
-    lmat66=[lmat46(:,[1 2]),zeros(6,2),lmat46(:,[3,4])];
+    lm=[chol(dmat([1 2 5 6],[1 2 5 6])) zeros(4,2);zeros(2,6)];
+    lmat66=lm([1 2 5 6 3 4],[1 2 5 6 3 4]);
 end
 lmatp=lmat66';
 end
 
 
-function [ DiffMat ] = quantumDiff( ring )
+function [ DiffMat ] = quantumDiff( ring,radindex )
 %quantumDiff gives a random kick to simulate the
 %global (one turn) effect of quantum diffusion on the electron
 
-%refpts=1:length(ring);
-
-%[ring2,radindex,cavindex,energy]=atradon(ring);
-%[envelope,espread,blength,diff,m,T]=ohmienvelope2(ring2,radindex,refpts);
-
-%Lmat=chol(diff);
-
-[ring2,radindex,cavindex,energy]=atradon(ring);
-%ring2=atsetcavity(ring2,5e6,1,992);
-%ring=ring2;
-%ring2=atsetcavity(ring2,RFV,1,harm)
-
-%Compute the diffusion matrix
 NumElements=length(ring);
 
-[mring, ms, orbit] = findm66(ring,1:NumElements+1);
-mt=squeeze(num2cell(ms,[1 2]));
+%[mring, ms, orbit] = findm66(ring,1:NumElements+1);
+orbit=findorbit6(ring,1:NumElements+1);
 orb=num2cell(orbit,1)';
 
 zr={zeros(6,6)};
@@ -67,7 +53,7 @@ B(radindex)=cellfun(@findmpoleraddiffmatrix,...
 BCUM = zeros(6,6);
 % Batbeg{i} is the cumulative diffusion matrix from
 % 0 to the beginning of the i-th element
-Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
+Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)]; %#ok<NASGU>
 
 DiffCum = BCUM;
 
