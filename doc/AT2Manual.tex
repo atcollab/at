@@ -20,11 +20,142 @@ We give an overview for the AT 2.0 code and describe how the functions and repos
 \section{Introduction}
 AT is a toolbox of functions in Matlab for charged particle beam simulation.
 On the one hand, as a toolbox, one should be allowed to use the tools to do what one wants.
-On the other, in order to avoid redundancy in work, and facilitate working together via sharing of tools, 
-it is useful to implement some standards.  We describe the tools and some standards and guidelines in AT with the 
-hope that the overall package has some coherence and elegance (speed is also considered at some points where it is critical).
+On the other, in order to avoid redundancy in work, and facilitate working together via sharing of tools, it is useful to implement some standards.  We describe the tools and some standards and guidelines in AT with the hope that the overall package has some coherence and elegance (speed is also considered at some points where it is critical).
+
+\section{Coordinates}
+The 6-d phase space coordinates are as follows
+\begin{equation}
+\vec Z = \pmatrix{x\cr \frac{p_x}{P_0} \cr y \cr \frac{p_y}{P_0} \cr \delta \cr ct}
+\end{equation}
+The momenta are defined as
+\begin{equation}
+x' = \frac{p_x}{P_z} \ \ y' = \frac{p_y}{P_z}
+\end{equation}
+with $P_z = P_0 (1+\delta)$.
+
 
 \section{Lattice Creation}
+A lattice may be created in a number of ways.  The final result should be a cell array whose elements are the lattice elements.
+
+There are number of different element "classes".  These are
+\subsection{Drift}
+\begin{itemize}
+\item pass method:  DriftPass
+\item creation function: ATDRIFT(FAMNAME,LENGTH,PASSMETHOD) creates a drift space element with Class 'Drift'
+ FAMNAME		family name
+ LENGTH			length [m]
+ PASSMETHOD     tracking function, defaults to 'DriftPass'
+\end{itemize}
+
+\subsection{Bend}
+\begin{itemize}
+\item pass methods:  
+BndMPoleSymplectic4Pass, BndMPoleSymplectic4RadPass
+BndMPoleSymplectic4E2Pass, BndMPoleSymplectic4E2RadPass
+BndMPoleSymplectic4FrgFPass, BndMPoleSymplectic4FrgFRadPass
+BendLinearPass
+\item{element creation functions} 
+ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
+ 	creates a rectangular bending magnet element with class 'Bend'
+ 		FAMNAME        	family name
+ 		LENGTH         	length of the arc for an on-energy particle [m]
+ 		BENDINGANGLE	total bending angle [rad]
+ 		K				focusing strength, defaults to 0
+ 		PASSMETHOD      tracking function, defaults to 'BendLinearPass'
+ 
+ ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+    Each pair \{'FIELDNAME',VALUE\} is added to the element
+
+ ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
+ 	creates a rectangular bending magnet element with class 'Bend'
+ 		FAMNAME        	family name
+ 		LENGTH         	length of the arc for an on-energy particle [m]
+ 		BENDINGANGLE	total bending angle [rad]
+ 		K				focusing strength, defaults to 0
+ 		PASSMETHOD      tracking function, defaults to 'BendLinearPass'
+ 
+ ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+    Each pair \{'FIELDNAME',VALUE\} is added to the element
+\end{itemize}
+
+\subsection{Quadrupole}
+\begin{itemize}
+\item{pass methods} StrMPoleSymplectic4Pass, StrMPoleSymplectic4RadPass
+QuadLinearPass, QuadMPoleFringePass, QuadMPoleFringeRadPass
+ThinMPolePass
+\item{element creation function}
+ATQUADRUPOLE(FAMNAME,LENGTH,K,PASSMETHOD)
+ 	creates a quadrupole element with Class 'Quadrupole'
+ 
+ FAMNAME	family name
+ LENGTH     length [m]
+ K          strength [m-2]
+ PASSMETHOD	tracking function, defaults to 'QuadLinearPass'
+ 
+ ATQUADRUPOLE(FAMNAME,LENGTH,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+    Each pair {'FIELDNAME',VALUE} is added to the element
+ \end{itemize}
+
+\subsection{Sextupole}
+\begin{itemize}
+\item{element creation function}
+\item{pass methods}
+StrMPoleSymplectic4Pass, StrMPoleSymplectic4RadPass
+ThinMPolePass
+\subsection{Octupole}
+StrMPoleSymplectic4Pass, StrMPoleSymplectic4RadPass
+ThinMPolePass
+\subsection{Wiggler}
+\begin{itemize}
+\item{pass methods}
+GWigSymplecticPass
+\item{element creation function}
+atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+ 
+  FamName	family name
+  Ltot		total length of the wiggle
+  Lw		total length of the wiggle
+  Bmax	 	peak wiggler field [Tesla]
+  Nstep		num of integration steps per period
+  Nmeth		symplectic integration method, 2nd or 4th order: 2 or 4
+  By		wiggler harmonics for horizontal wigglers
+  Bx		wiggler harmonics for vertical wigglers
+  method        name of the function to use for tracking
+ 
+  returns a wiggler structure with class 'Wiggler'
+\end{itemize}
+
+\subsection{KickMap}
+\subsection{RFCavity}
+\begin{itemize}
+\item{pass methods}
+CavityPass
+\item{element creation function}
+ATRFCAVITY(FAMNAME,LENGTH,VOLTAGE,FREQUENCY,HARMONICNUMBER,ENERGY,PASSMETHOD)
+Also, use atsetcavity to set the cavity voltage with and without radiation.
+\end{itemize}
+\begin{verbatim}
+%atsetcavity(ring,rfv, radflag,HarmNumber)
+%sets the synchronous phase of the cavity assuming radiation is turned on
+%radflag says whether or not we want radiation on, which affects
+%synchronous phase.
+%also sets the rf voltage and Harmonic number
+%also sets the rf frequency.
+\end{verbatim}
+The synchronous phase with radiation should be
+\begin{equation}
+\phi_s = sin^{-1}\left(\frac{U_0}{e V_{RF}}\right)
+\end{equation}
+
+\subsection{QuantDiff}
+\subsection{Monitor}
+\subsection{Corrector}
+\subsection{Solenoid}
+\subsection{Matrix66}
+\subsection{RingParam}
+
+
+
 The element creation functions are the following:
 
 \subsection{atringparam} 
@@ -32,11 +163,8 @@ ATRINGPARAM(rname,E0,per) creates a RingParameter Element which should go at the
  FNAME		Family name which may be used as name of Ring
  Energy     Energy of electrons
  PER        Periodicity of the ring (=1 if ring is already expanded)
-\subsection{atdrift}
-ATDRIFT(FAMNAME,LENGTH,PASSMETHOD) creates a drift space element with Class 'Drift'\\
- FAMNAME		family name
- LENGTH			length [m]
- PASSMETHOD     tracking function, defaults to 'DriftPass'\subsection{atmonitor} 
+
+\subsection{atmonitor} 
 Class: Monitor
 \subsection{atmultipole} 
   ATMULTIPOLE(FAMNAME,LENGTH,POLYNOMA,POLYNOMB,PASSMETHOD)
@@ -56,13 +184,8 @@ ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD)
  	PASSMETHOD      tracking function. Defaults to 'ThinMPolePass'\subsection{atquadrupole}  
  Class: Quadrupole
 \subsection{atrbend} 
-ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
- 	creates a rectangular bending magnet element with class 'Bend'
- 		FAMNAME        	family name
- 		LENGTH         	length of the arc for an on-energy particle [m]
- 		BENDINGANGLE	total bending angle [rad]
- 		K				focusing strength, defaults to 0
- 		PASSMETHOD      tracking function, defaults to 'BendLinearPass'\subsection{atsbend} 
+
+\subsection{atsbend} 
 \subsection{atrfcavity}
  ATRFCAVITY(FAMNAME,LENGTH,VOLTAGE,FREQUENCY,HARMONICNUMBER,ENERGY,PASSMETHOD)
  	creates an rfcavity element with Class 'RFCavity'
@@ -115,6 +238,8 @@ ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD)
   method        name of the function to use for tracking
  
   returns a wiggler structure with class 'Wiggler'
+Example: wig = atwiggler('wig1', 1.6, 1.6, .67, 1, 1, [1;0;0;0;0],
+[1;0;0;0;0], 'GWigSymplecticPass') 
 \subsection{atidtable}  
 atidtable(FAMNAME,Nslice,filename,Energy,method)
  
@@ -553,8 +678,7 @@ From tracking the diffusion matrix and inclusion of radiation, one can compute:
 
 
 \section{Lattice change and optimization from beam parameters}
-In addition to the lattice building tools in Section \ref{lattice_manip}, there are also lattice changes one would like to do based 
-on beam parameters.  For example, one would like to change the tunes, chromaticities or beta functions of the lattice.
+In addition to the lattice building tools in Section \ref{lattice_manip}, there are also lattice changes one would like to do based on beam parameters.  For example, one would like to change the tunes, chromaticities or beta functions of the lattice.
 \begin{itemize}
 \item atfittune
 \item atfitchrome
