@@ -1,5 +1,5 @@
 function newring = atsetcavity(ring,rfv, radflag,HarmNumber)
-%setcavityphase(ring)
+%newring = atsetcavity(ring,rfv, radflag,HarmNumber)
 %sets the synchronous phase of the cavity assuming radiation is turned on
 %radflag says whether or not we want radiation on, which affects
 %synchronous phase.
@@ -17,8 +17,7 @@ E0=ring{indrfc(1)}.Energy;
 gamma0=E0/me_EV;
 beta0=sqrt(gamma0^2-1)/gamma0;
 
-aa=ringpara(ring);
-U0=aa.U0;
+U0=atgetU0(ring);
 
 %find circumference
 ncells=2*pi/sum(getcellstruct(ring,'BendingAngle',findcells(ring,'BendingAngle')));
