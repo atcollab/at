@@ -11,6 +11,7 @@ function [ring,radelems,cavities,energy]=atradon(ring1,varargin)
 %
 %RING:		initial AT structure
 %CAVIPASS:	pass method for cavities (default ThinCavityPass)
+%           '' makes no change,
 %BENDPASS:	pass method for bending magnets. Special values:
 %           '' makes no change,
 %           'auto' wille substitute 'Pass' with 'RadPass' in any method
@@ -67,7 +68,9 @@ disp([num2str(sum(radelems)) ' elements switched to include radiation']);
 
     function newline=changepass(line,newpass,nrj)
     if strcmp(newpass,'auto')
-        passlist=strrep(atgetfieldvalues(line,'PassMethod'),'Pass','RadPass');
+        passlist=atgetfieldvalues(line,'PassMethod');
+        ok=cellfun(@(psm) isempty(strfind(psm,'RadPass')),passlist);
+        passlist(ok)=strrep(passlist(ok),'Pass','RadPass');
     else
         passlist=repmat({newpass},size(line));
     end
