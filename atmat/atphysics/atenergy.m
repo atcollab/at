@@ -17,15 +17,27 @@ if any(params)
     parmelem=ring{find(params,1)};
     energy=parmelem.Energy;
     nbper=parmelem.Periodicity;
-elseif any(cavities) && isfield(ring{find(cavities,1)},'Energy')
-    energy=ring{find(cavities,1)}.Energy;
-    nbper=size(ring,2);
-elseif isfield(GLOBVAL,'E0')
-    energy=GLOBVAL.E0;
-    nbper=size(ring,2);
 else
-    error('AT:NoEnergy',...
+    if any(cavities) && isfield(ring{find(cavities,1)},'Energy')
+        energy=ring{find(cavities,1)}.Energy;
+    elseif isfield(GLOBVAL,'E0')
+        energy=GLOBVAL.E0;
+    else
+        error('AT:NoEnergy',...
         'Energy not defined (searched in ''RingParam'',''RFCavity'',GLOBVAL.E0)');
+    end
+    if size(ring,2) > 1
+        nbper=size(ring,2);
+    else
+        nbp=2*pi/sum(atgetfieldvalues(ring(atgetcells(ring,'BendingAngle')),'BendingAngle'));
+        nbper=round(nbp);
+        if ~isfinite(nbp)
+            warning('AT:WrongNumberOfCells','No bending in the cell, ncells set to 1');
+            nbper=1;
+        elseif abs(nbp-nbper) > 1.e-4
+            warning('AT:WrongNumberOfCells','non integer number of cells: ncells = %g -> %g',nbp,nbper);
+        end
+    end
 end
 
 if nargout >= 3
