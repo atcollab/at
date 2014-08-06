@@ -17,8 +17,8 @@ function elem=atrfcavity(fname,L,V,F,H,E,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,method,~]=decodeatargs({'CavityPass',''},varargin);
-[rsrc,phaselag]=getatarg(rsrc,0,'PhaseLag');
+[rsrc,timelag]=getatarg(rsrc,0,'TimeLag');
 elem=atbaselem(fname,method,'Class','RFCavity','Length',L,...
-    'Voltage',V,'Frequency',F,'HarmNumber',H,'PhaseLag',phaselag,...
+    'Voltage',V,'Frequency',F,'HarmNumber',H,'TimeLag',timelag,...
     'Energy',E,rsrc{:});
 end
