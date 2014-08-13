@@ -31,10 +31,9 @@ ring=ring1;
 energy=atenergy(ring);
 if ~isempty(cavipass)
     cavities=atgetcells(ring,'Frequency');
-    if ~any(cavities)
-        warning('AT:atradon:NoCavity', 'No cavity found in the structure');
+    if any(cavities)
+        ring(cavities)=changepass(ring(cavities),cavipass,energy);
     end
-    ring(cavities)=changepass(ring(cavities),cavipass,energy);
 else
     cavities=false(size(ring));
 end
@@ -42,10 +41,9 @@ end
 if ~isempty(bendpass)
     isdipole=@(elem,bangle) bangle~=0;
     dipoles=atgetcells(ring,'BendingAngle',isdipole);
-    if sum(dipoles) <= 0
-        warning('AT:atradon:NoBend', 'No dipole in the structure');
+    if any(dipoles) > 0
+        ring(dipoles)=changepass(ring(dipoles),bendpass,energy);
     end
-    ring(dipoles)=changepass(ring(dipoles),bendpass,energy);
 else
     dipoles=false(size(ring));
 end
@@ -53,17 +51,20 @@ end
 if ~isempty(quadpass)
     isquadrupole=@(elem,polyb) length(polyb) >= 2 && polyb(2)~=0;
     quadrupoles=atgetcells(ring,'PolynomB',isquadrupole) & ~dipoles;
-    if sum(quadrupoles) <= 0
-        warning('AT:atradon:NoQuad', 'No quadrupole in the structure');
+    if any(quadrupoles) > 0
+        ring(quadrupoles)=changepass(ring(quadrupoles),quadpass,energy);
     end
-    ring(quadrupoles)=changepass(ring(quadrupoles),quadpass,energy);
 else
     quadrupoles=false(size(ring));
 end
 
 radelems=dipoles|quadrupoles;
 
-disp(['Cavities located at position ' num2str(find(cavities)')]);
+if any(cavities)
+    disp(['Cavities located at position ' num2str(find(cavities)')]);
+else
+    disp('No cavity');
+end
 disp([num2str(sum(radelems)) ' elements switched to include radiation']);
 
     function newline=changepass(line,newpass,nrj)
