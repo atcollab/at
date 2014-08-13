@@ -20,18 +20,19 @@ beta0=sqrt(gamma0^2-1)/gamma0;
 U0=atgetU0(ring);
 
 %find circumference
-ncells=2*pi/sum(getcellstruct(ring,'BendingAngle',findcells(ring,'BendingAngle')));
-epstotalbend=1e-4;
-if ~( ((ncells-floor(ncells))<epstotalbend) || ((ceil(ncells)-ncells)<epstotalbend) )
-    str=['WARNING! noninteger number of cells: ncells = ' num2str(1e9*ncells) 'e-9'];
-    disp(str);
+nc=2*pi/sum(getcellstruct(ring,'BendingAngle',findcells(ring,'BendingAngle')));
+ncells=round(nc);
+if ~isfinite(nc)
+    warning('AT:WrongNumberOfCells','No bending in the cell, ncells set to 1');
+    ncells=1;
+elseif abs(nc-ncells) > 1.e-4
+    warning('AT:WrongNumberOfCells','non integer number of cells: ncells = %g',nc);
 end
-%now round ncells to nearest integer
-ncells=round(ncells);
-    
+
 L=findspos(ring,length(ring)+1);
 circ=L*ncells;
-freq=(beta0*clight/circ)*HarmNumber;
+%freq=(beta0*clight/circ)*HarmNumber;
+freq=(clight/circ)*HarmNumber;
 
 %now set cavity frequencies, Harmonic Number and RF Voltage
 for j=indrfc
@@ -48,4 +49,4 @@ else
 end
 
 newring=setcellstruct(newring,'TimeLag',indrfc,timelag);
-%newring=setcellstruct(ring,'PhaseLag',indrfc,phaselag);
+end
