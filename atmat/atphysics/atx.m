@@ -62,28 +62,15 @@ function varargout=atx(ring,varargin)
 %
 % See also: ATLINOPT ATRADON OHMIENVELOPE
 
-if isvector(ring)
-    params=atgetcells(ring,'Class','RingParam');
-    if any(params)
-        periods=ring{find(params,1)}.Periodicity;
-    else
-        periods=1;
-    end
-else
-    periods=size(ring,2);
-    %     ring1=ring(:,1);
-    %     cavindex=findcells(ring1,'HarmNumber');
-    %     ring2=setcellstruct(ring1,'HarmNumber',cavindex,getcellstruct(ring1,'HarmNumber',cavindex)/periods);
-    %     [varargout{:}]=atx2(ring2,periods,varargin{:});
-end
-varargout=cell(1,nargout);
-[varargout{:}]=atx2(ring(:,1),periods,varargin{:});
-if nargout >= 1 && periods > 1
-    varargout{1}=repmat(varargout{1}(:),1,periods);
+[energy,periods,voltage,~,eloss]=atenergy(ring);
+[varargout{1:nargout}]=atx2(ring(:,1),energy,periods,voltage,eloss,varargin{:});
+if nargout >= 1 && size(ring,2) > 1
+    varargout{1}=repmat(varargout{1}(:),1,size(ring,2));
 end
 
-    function [linusr,pm]=atx2(ring,periods,varargin)
+    function [linusr,pm]=atx2(ring,energy,periods,voltage,eloss,varargin)
         
+        c=2.9987924e8;
         [dpp,refusr]=parseargs({0,1:length(ring)},varargin);
         if islogical(refusr)
             refusr(end+1,length(ring)+1)=false;
@@ -100,6 +87,7 @@ end
         fractunes=ts-fix(ts);
         
         circumference=periods*lindata(end).SPos;% circumference
+        revperiod=lindata(end).SPos/c;
         
         transfer=lindata(end).M44;              % transfer matrix
         
@@ -116,6 +104,8 @@ end
         
         chromaticity=xsi./tuneper;				% chromaticity
         
+        synchrophase=asin(eloss/voltage);
+        
         if nargout == 0
             display(coupled);
             display(fractunes);
@@ -129,65 +119,44 @@ end
             display(tunes);
             display(momcompact);
             display(chromaticity);
+            display(eloss);
+            display(synchrophase);
         end
         
         if length(varargin)<3
-            [ring2,radindex,cavindex,energy]=atradon(ring);
+            [ring2,radindex,cavindex]=atradon(ring);
         elseif isa(varargin{3},'function_handle')
             [ring2,radindex,cavindex]=varargin{3}(ring);
-            energy=atenergy(ring2);
         else
             [ring2,radindex,cavindex]=deal(varargin{3:5});
-            energy=atenergy(ring2);
         end
         
         if any(cavindex)
             try
                 [envelope,espread,blength,m,T]=ohmienvelope(ring2,radindex,refpts);
-                jmt=jmat(3);
-                for i=1:length(lindata)
-                    bm66=envelope(i).R;    % bm66 is the 6x6 beam matrix
-                    if coupled             % bm44 in the intersection of beam66
-                        siginv=inv(bm66);   % with dp/p==0  ( 4x4 betatron emittance)
-                        bm44=inv(siginv(1:4,1:4));
-                    else
-                        siginv=inv(bm66([1 2 5 6],[1 2 5 6]));
-                        bm44=[inv(siginv(1:2,1:2)) zeros(2,2);zeros(2,4)];
-                    end
-                    % [beamA,beamB]=beam44(lindata(i));  % betatron 4x4 coupled matrices
-                    %   beamA       - 2x2 beam matrix for mode A
-                    %   beamB       - 2x2 beam matrix for mode B
-                    % Eigen emittances: Solve bm44 = modemit(1)*beamA + modemit(2)*beamB;
-                    % lindata(i).modemit=([beamA(:) beamB(:)]\bm44(:))';
-                    % aa=amat(T(:,:,i)*m*inv(T(:,:,i))); %#ok<MINV>
-                    aa=amat(T(:,:,i)*m*jmt'*T(:,:,i)'*jmt);
-                    nn=-aa'*jmt*bm66*jmt*aa;
-                    lindata(i).modemit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
-                    lindata(i).beam66=bm66;
-                    lindata(i).beam44=bm44;
-                    % Projected betatron emittances
-                    lindata(i).emit44=sqrt([det(bm44(1:2,1:2)) det(bm44(3:4,3:4))]);
-                    % Projected full emittances (energy spread included)
-                    lindata(i).emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) det(bm66(5:6,5:6))]);
-                    lindata(i).tilt=envelope(i).Tilt;
+                [chi,tns]=atdampingrates(m);
+                fs=abs(tns(3))/revperiod;
+                dampingtime=revperiod./chi;
+                if any(radindex)
+                    jmt=jmat(3);
+                    lindata=cellfun(@process,{envelope.R},reshape(num2cell(T,[1 2]),1,[]),num2cell(lindata));
+                else
+                    lindata=arrayfun(@deflt,lindata);
                 end
             catch err
                 warning('atx:unstable','Emittance computation failed:\n%s\n',...
                     err.message);
                 blength=NaN;
                 espread=NaN;
-                for i=1:length(lindata)
-                    lindata(i).modemit=NaN(1,3);
-                    lindata(i).emit44=NaN(1,2);
-                end
+                dampingtime=NaN(1,3);
+                lindata=arrayfun(@deflt,lindata);
             end
         else
             blength=NaN;
             espread=NaN;
-            for i=1:length(lindata)
-                lindata(i).modemit=NaN(1,3);
-                lindata(i).emit44=NaN(1,2);
-            end
+            fs=NaN;
+            dampingtime=NaN(1,3);
+            lindata=arrayfun(@deflt,lindata);
         end
         modemit=cat(1,lindata.modemit);
         modemittance=mean(modemit);
@@ -201,6 +170,8 @@ end
             display(modcoupling);
             display(projemittance);
             display(projcoupling);
+            display(dampingtime);
+            display(fs);
             display(espread);
             display(blength);
         end
@@ -212,15 +183,64 @@ end
                 'fractunes',fractunes,...
                 'fulltunes',tunes,...
                 'nuh',tunes(1),'nuv',tunes(2),...
+                'dampingtime',dampingtime,...
                 'espread',espread,...
                 'blength',blength,...
                 'modemittance',modemittance,...
-                'energy',energy);
+                'energy',energy,...
+                'fs',fs,...
+                'eloss',eloss,...
+                'synchrophase',synchrophase);
         end
-    end
-
-    function mask=setelems(mask,idx)
-        mask(idx)=true;
+        
+        function lind=process(bm66,T,lind)
+            if coupled             % bm44 in the intersection of beam66
+                siginv=inv(bm66);   % with dp/p==0  ( 4x4 betatron emittance)
+                bm44=inv(siginv(1:4,1:4));
+            else
+                siginv=inv(bm66([1 2 5 6],[1 2 5 6]));
+                bm44=[inv(siginv(1:2,1:2)) zeros(2,2);zeros(2,4)];
+            end
+            % [beamA,beamB]=beam44(lindata(i));  % betatron 4x4 coupled matrices
+            %   beamA       - 2x2 beam matrix for mode A
+            %   beamB       - 2x2 beam matrix for mode B
+            % Eigen emittances: Solve bm44 = modemit(1)*beamA + modemit(2)*beamB;
+            % lindata(i).modemit=([beamA(:) beamB(:)]\bm44(:))';
+            % aa=amat(T(:,:,i)*m*inv(T(:,:,i))); %#ok<MINV>
+            aa=amat(T*m*jmt'*T'*jmt);
+            nn=-aa'*jmt*bm66*jmt*aa;
+            lind.modemit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
+            lind.beam66=bm66;
+            lind.beam44=bm44;
+            % Projected betatron emittances
+            lind.emit44=sqrt([det(bm44(1:2,1:2)) det(bm44(3:4,3:4))]);
+            % Projected full emittances (energy spread included)
+            lind.emit66=sqrt([det(bm66(1:2,1:2)) det(bm66(3:4,3:4)) det(bm66(5:6,5:6))]);
+        end
+        
+        function lind=deflt(lind)
+            lind.modemit=NaN(1,3);
+            lind.emit44=NaN(1,2);
+        end
+        
+        function [chi,nu]=atdampingrates(m66)
+            %find tunes and damping rates from one map matrix with radiation
+            aa=amat(m66);
+            
+            Rmat=aa\m66*aa;
+            
+            [chi,nu]=cellfun(@decode,num2cell(reshape(1:size(m66,1),2,[]),1));
+            
+            function [chi,nu]=decode(range)
+                matr=Rmat(range,range);
+                nu=atan2(matr(1,2)-matr(2,1),matr(1,1)+matr(2,2))/2/pi;
+                chi=-log(sqrt(det(matr)));
+            end
+        end
+        
+        function mask=setelems(mask,idx)
+            mask(idx)=true;
+        end
     end
 end
 
