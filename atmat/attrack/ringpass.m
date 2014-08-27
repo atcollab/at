@@ -1,4 +1,4 @@
-function [Rout, varargout] = ringpass(ring, Rin, varargin)
+function [Rout, varargout] = ringpass(ring, Rin, nturns, varargin)
 %RINGPASS tracks particles through each element of the cell array RING
 % calling the element-specific tracking function specified in the
 % RING{i}.PassMethod field.
@@ -8,7 +8,8 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %
 %   RING        AT lattice
 %   RIN         6xN matrix: input coordinates of N particles
-%   NTURNS      Number of turns to perform
+%   NTURNS      Number of turns to perform (default: 1)
+%
 %   ROUT        6x(N*NTURNS) matrix: output coordinates of N particles at
 %               the exit of each turn
 %
@@ -22,15 +23,14 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %  Return additionally the number of turns performed by each particle
 %	NTURNS	1xN vector, number of turns performed
 %
-% [ROUT, LOSS, NTURNS, LOSSINFO]=RINGPASS(...)
+% [ROUT, LOSS, NTURNS, LOSSINFO]=RINGPASS(...,'nhist',NHIST,...)
 %  Return additional information on lost particles
+%   NHIST       number elements before the loss to be traced (default: 1)
 %   LOSSINFO	1x1 structure with the following fields:
 %               turn        1xN vector, turn number where the particle is lost
 %               element     1xN vector, element number where the particle is lost
-%               coordinate  6xN matrix, coordinates when the particle was
-%                           marked as lost
-%
-% ROUT=RINGPASS(RING,RIN) defaults NTURNS to 1
+%               coordinates 6xNxNHIST array, coordinates at the entrance of the
+%               LHIST elements before the loss
 %
 % ROUT=RINGPASS(...,'reuse') with 'reuse' flag is more efficient because
 %    it reuses some of the data  and functions stored in the persistent
@@ -47,9 +47,7 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %    The values of elements fields such as 'Length' or 'K' are allowed to change
 %
 % ROUT=RINGPASS(...,'nodump') does not output the particle coordinates at
-%                             each turn
-%   ROUT        6xN matrix: output coordinates of N particles at
-%               the exit of NTURNS turns
+%    each turn but only at the end of the tracking
 %
 % ROUT=RINGPASS(...,PREFUNC)
 % ROUT=RINGPASS(...,PREFUNC,POSTFUNC)
@@ -69,25 +67,27 @@ if size(Rin,1)~=6
     error('Matrix of initial conditions, the second argument, must have 6 rows');
 end
 
-newlattice = double(~any(strcmpi(varargin,'reuse')));
-
-nt=find(cellfun(@isnumeric,varargin),1);
-if isempty(nt)
-    nturns = 1;
-else
-    nturns = varargin{nt};
-end
-
+reuseargs=strcmpi(varargin,'reuse');
+silentargs=strcmpi(varargin,'silent');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), varargin);
+options=struct(varargin{~(reuseargs|silentargs|funcargs)});
+if ~isfield(options,'nhist'), options.nhist=1; end
 
-if any(strcmpi(varargin,'silent'))
+newlattice = double(~any(reuseargs));
+
+if nargin < 3, nturns = 1; end
+
+[prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
+    varargin(funcargs));
+
+if any(silentargs)
     refpts=[];
 else
     refpts=length(ring)+1;
 end
 
 try
-    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,varargin{funcargs});
+    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,prefunc,postfunc,options.nhist);
     
     if nargout>1;
         if nargout>3, varargout{3}=lossinfo; end

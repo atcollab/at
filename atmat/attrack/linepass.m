@@ -1,4 +1,4 @@
-function [Rout,varargout] = linepass(line,Rin,varargin)
+function [Rout,varargout] = linepass(line,Rin,refs,varargin)
 %LINEPASS tracks particles through each element of the cell array LINE
 % calling the element-specific tracking function specified in the
 % LINE{i}.PassMethod field.
@@ -8,6 +8,7 @@ function [Rout,varargout] = linepass(line,Rin,varargin)
 %
 %   LINE        AT lattice
 %   RIN         6xN matrix: input coordinates of N particles
+%
 %   ROUT        6xN matrix: output coordinates of N particles at
 %               the end of LINE
 %
@@ -32,13 +33,14 @@ function [Rout,varargout] = linepass(line,Rin,varargin)
 %    If only one output is given, loss information is saved in
 %    global variable LOSSFLAG
 %
-% [ROUT, LOSS, LOSSINFO]=LINEPASS(...)
+% [ROUT, LOSS, LOSSINFO]=LINEPASS(...,'nhist',NHIST,...)
 %  Return additional information on lost particles
+%   NHIST       number elements before the loss to be traced (default: 1)
 %   LOSSINFO	1x1 structure with the following fields:
 %               turn        1xN vector, turn number where the particle is lost
 %               element     1xN vector, element number where the particle is lost
-%               coordinate  6xN matrix, coordinates when the particle was
-%                           marked as lost
+%               coordinates 6xNxNHIST array, coordinates at the entrance of the
+%               LHIST elements before the loss
 %
 % ROUT=LINEPASS(...,'reuse') with 'reuse' flag is more efficient because
 %    it reuses some of the data  and functions stored in the persistent
@@ -73,22 +75,25 @@ if size(Rin,1)~=6
 end
 
 reuseargs = strcmpi(varargin,'reuse');
+funcargs=cellfun(@(arg) isa(arg,'function_handle'), varargin);
+options=struct(varargin{~(reuseargs|funcargs)});
+if ~isfield(options,'nhist'), options.nhist=1; end
+
 newlattice = double(~any(reuseargs));
 
-numericargs = cellfun(@(arg) isnumeric(arg)||islogical(arg),varargin);
-nt=find(numericargs,1);
-if isempty(nt)
+if nargin < 3
     refpts = length(line)+1;
-elseif islogical(varargin{nt})
-    refpts = find(varargin{nt});
+elseif islogical(refs)
+    refpts = find(refs);
 else
-    refpts = varargin{nt};
+    refpts = refs;
 end
 
-funcargs=cellfun(@(arg) isa(arg,'function_handle')||ischar(arg), varargin) & ~reuseargs;
+[prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
+    varargin(funcargs));
 
 try
-    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,varargin{funcargs});
+    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,options.nhist);
     
     if nargout>1;
         if nargout>2, varargout{2}=lossinfo; end
