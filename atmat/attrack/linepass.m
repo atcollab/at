@@ -1,4 +1,4 @@
-function [Rout,varargout] = linepass(line,Rin,refs,varargin)
+function [Rout,varargout] = linepass(line,Rin,varargin)
 %LINEPASS tracks particles through each element of the cell array LINE
 % calling the element-specific tracking function specified in the
 % LINE{i}.PassMethod field.
@@ -76,21 +76,27 @@ end
 
 reuseargs = strcmpi(varargin,'reuse');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), varargin);
-options=struct(varargin{~(reuseargs|funcargs)});
-if ~isfield(options,'nhist'), options.nhist=1; end
+optargs=~(reuseargs|funcargs);
+
+if (nargin < 3)
+    refpts = length(line)+1;
+elseif islogical(varargin{1})
+    optargs(1)=false;
+    refpts = find(varargin{1});
+elseif isnumeric(varargin{1})
+    optargs(1)=false;
+    refpts = varargin{1};
+else
+    refpts = length(line)+1;
+end
 
 newlattice = double(~any(reuseargs));
 
-if nargin < 3
-    refpts = length(line)+1;
-elseif islogical(refs)
-    refpts = find(refs);
-else
-    refpts = refs;
-end
-
 [prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
     varargin(funcargs));
+
+options=struct(varargin{optargs});
+if ~isfield(options,'nhist'), options.nhist=1; end
 
 try
     [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,options.nhist);
@@ -106,7 +112,7 @@ try
 catch err
     if strcmp(err.identifier,'MATLAB:unassignedOutputs')
         error('Atpass:obsolete',['linepass is now expecting 2 output arguments from atpass.\n',...
-        'You may need to call "atmexall" to install the new version']);
+            'You may need to call "atmexall" to install the new version']);
     else
         rethrow(err)
     end

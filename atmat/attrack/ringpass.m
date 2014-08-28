@@ -1,4 +1,4 @@
-function [Rout, varargout] = ringpass(ring, Rin, nturns, varargin)
+function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %RINGPASS tracks particles through each element of the cell array RING
 % calling the element-specific tracking function specified in the
 % RING{i}.PassMethod field.
@@ -70,21 +70,28 @@ end
 reuseargs=strcmpi(varargin,'reuse');
 silentargs=strcmpi(varargin,'silent');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), varargin);
-options=struct(varargin{~(reuseargs|silentargs|funcargs)});
-if ~isfield(options,'nhist'), options.nhist=1; end
+optargs=~(reuseargs|silentargs|funcargs);
+
+if nargin < 3 || ~isnumeric(varargin{1})
+    nturns = 1;
+else
+    optargs(1)=false;
+    nturns=varargin{1};
+end
 
 newlattice = double(~any(reuseargs));
-
-if nargin < 3, nturns = 1; end
-
-[prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
-    varargin(funcargs));
 
 if any(silentargs)
     refpts=[];
 else
     refpts=length(ring)+1;
 end
+
+[prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
+    varargin(funcargs));
+
+options=struct(varargin{optargs});
+if ~isfield(options,'nhist'), options.nhist=1; end
 
 try
     [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,prefunc,postfunc,options.nhist);
