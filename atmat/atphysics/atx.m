@@ -81,7 +81,7 @@ end
         keep=refusr(refpts);
         
         [lindata,tunes,xsi]=atlinopt(ring,dpp,refpts);
-        coupled=max(abs(1-cat(1,lindata.gamma))) > 1.e-5; %#ok<*NOPRT>
+        coupled=max(abs(1-cat(1,lindata.gamma))) > 1.e-3; %#ok<*NOPRT>
         
         ts=periods*tunes;                       % fractional tunes
         fractunes=ts-fix(ts);
