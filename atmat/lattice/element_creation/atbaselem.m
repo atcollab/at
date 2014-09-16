@@ -17,6 +17,8 @@ if any(ab)
     if la < elem.MaxOrder+1, elem.PolynomA=[elem.PolynomA zeros(1,elem.MaxOrder+1-la)]; end
     lb=length(elem.PolynomB);
     if lb < elem.MaxOrder+1, elem.PolynomB=[elem.PolynomB zeros(1,elem.MaxOrder+1-lb)]; end
-    if ~isfield(elem,'NumIntSteps'), elem.NumIntSteps=10; end
+    if isfield(elem,'Length') && elem.Length ~= 0 && ~isfield(elem,'NumIntSteps')
+        elem.NumIntSteps=10;
+    end
 end
 end
