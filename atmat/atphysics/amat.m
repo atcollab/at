@@ -44,11 +44,22 @@ n=n(order);
 Vn=V./repmat(sqrt(abs(n)),nv,1);
 
 %find the vecs that project most onto x,y,z, and reorder
+%nn will have structure
+% n1x n1y n1z
+% n2x n2y n2z
+% n3x n3y n3z
 nn=0.5*abs(sqrt(-1i*Vn'*jm{dms}*Vxyz{dms}));
 [~,ind]=max(nn(select,select));
 
+%sort ind for the case of repeated indices
+[~,indS]=sort(ind,2);
+%logic still not quite correct- should find best projector on x then y then
+%z.  Can the one vector project best on both x and y?  Is this projection
+%definition correct?
+
+
 %reorder pairs
-V_ordered=Vn(:,2*ind-1);
+V_ordered=Vn(:,2*indS-1);
 
 %build a matrix
 a=reshape([real(V_ordered);imag(V_ordered)],nv,nv);
