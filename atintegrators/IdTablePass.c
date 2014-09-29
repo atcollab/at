@@ -1,7 +1,7 @@
 /* IdTablePass.c
  * Accelerator Toolbox
  * Created: 13/11/08
- * Z.Martí zeus@cells.es
+ * Z.Mart?? zeus@cells.es
  *
  * Based in the matlab routine:
  * WigTablePass.m - The tracking table is described in
@@ -73,7 +73,7 @@ static void markaslost(double *r6,int idx)
 /* Set T1, T2, R1, R2 to NULL pointers to ignore misalignmets*/
 void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, double *xkick, double *ykick, double *x, double *y,int n,int m, int Nslice, double *T1, double *T2, double *R1, double *R2, int num_particles)
 {
-    double *r6,f,deltaxp,deltayp,deltaxp1,deltayp1,*limitsptr;
+    double *r6,deltaxp,deltayp,deltaxp1,deltayp1,*limitsptr;
     int c;
     bool usexkick1 = (xkick1 != NULL);
     bool useykick1 = (ykick1 != NULL);
@@ -226,10 +226,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nrhs == 2) {
         double *r_in;
         double *xkick1, *ykick1, *pr1, *pr2, *pt1, *pt2;
-        mxArray *tmpmxptr;
+        mxArray *tmpmxptr = GetRequiredField(prhs[0], "xkick");
         
         double le = mxGetScalar(GetRequiredField(prhs[0], "Length"));
-        tmpmxptr = GetRequiredField(prhs[0], "xkick");
         double *xkick =  mxGetPr(tmpmxptr);
         int n_map = mxGetN(tmpmxptr);
         int m_map = mxGetM(tmpmxptr);
