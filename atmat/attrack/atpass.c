@@ -313,8 +313,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */
-        num_refpts = (int)mxGetNumberOfElements(prhs[4]);
         double *dblrefpts = mxGetPr(prhs[4]);
+        num_refpts = (int)mxGetNumberOfElements(prhs[4]);
         refpts = mxCalloc(num_refpts,sizeof(int));
         for (n=0; n<num_refpts; n++) refpts[n] = ((int)dblrefpts[n])-1;
         if (num_refpts == 0)
