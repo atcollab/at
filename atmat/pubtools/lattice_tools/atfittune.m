@@ -1,8 +1,11 @@
-function newring=atfittune(ring,newtunes,famname1,famname2,varargin)
+function newring=atfittune(ring,varargin)
 %ATFITTUNE fits linear tunes by scaling 2 quadrupole families
 % NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
 %
+% NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+%
 %RING:          Cell array
+%DPP:           Optional momentum deviation (default 0)
 %NEWTUNES:      Desired tune values (fractional part only)
 %QUADFAMILY1:   1st quadrupole family
 %QUADFAMILY2:   2nd quadrupole family
@@ -13,6 +16,14 @@ function newring=atfittune(ring,newtunes,famname1,famname2,varargin)
 %   Numeric array: list of selected elements in RING
 %   Cell array: All elements selected by each cell
 
+if isscalar(varargin{1}) && isnumeric(varargin{1})
+    dpp=varargin{1};
+    [newtunes,famname1,famname2]=deal(varargin{2:end});
+else
+    dpp=0;
+    [newtunes,famname1,famname2]=deal(varargin{:});
+end
+ 
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
 newtunes=newtunes-floor(newtunes);
@@ -23,11 +34,11 @@ if true
     delta = 1e-6;
 
     % Compute initial tunes before fitting
-    [lindata, tunes] = atlinopt(ring,0);
+    [lindata, tunes] = atlinopt(ring,dpp); %#ok<ASGLU>
 
     % Take Derivative
-    [lindata, tunes1] = atlinopt(setqp(ring,idx1,kl1,delta),0);
-    [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),0);
+    [lindata, tunes1] = atlinopt(setqp(ring,idx1,kl1,delta),dpp); %#ok<ASGLU>
+    [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),dpp); %#ok<ASGLU>
 
     %Construct the Jacobian
     J = ([tunes1(:) tunes2(:)] - [tunes(:) tunes(:)])/delta;
@@ -39,16 +50,16 @@ end
 newring = setqp(ring,idx1,kl1,dK(1));
 newring = setqp(newring,idx2,kl2,dK(2));
 
-    function c=funtune(dK)
-        ring2=ring;
-        km1=kl1*(1+0.01*dK(1));
-        ring2(idx1)=atsetfieldvalues(atsetfieldvalues(ring2(idx1),'K',km1),'PolynomB',{2},km1);
-        km2=kl2*(1+0.01*dK(2));
-        ring2(idx2)=atsetfieldvalues(atsetfieldvalues(ring2(idx2),'K',km2),'PolynomB',{2},km2);
-        [lindata,tunes]=atlinopt(ring2,0); %#ok<SETNU>
-        dt=abs(newtunes(:)-tunes(:));
-        c=sum(dt.*dt);
-    end
+%     function c=funtune(dK)
+%         ring2=ring;
+%         km1=kl1*(1+0.01*dK(1));
+%         ring2(idx1)=atsetfieldvalues(atsetfieldvalues(ring2(idx1),'K',km1),'PolynomB',{2},km1);
+%         km2=kl2*(1+0.01*dK(2));
+%         ring2(idx2)=atsetfieldvalues(atsetfieldvalues(ring2(idx2),'K',km2),'PolynomB',{2},km2);
+%         [lindata,tunes]=atlinopt(ring2,dpp); %#ok<SETNU>
+%         dt=abs(newtunes(:)-tunes(:));
+%         c=sum(dt.*dt);
+%     end
 
     function ring2=setqp(ring,idx,k0,delta)
         k=k0*(1+delta);
