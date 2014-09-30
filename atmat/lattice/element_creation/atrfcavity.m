@@ -1,4 +1,4 @@
-function elem=atrfcavity(fname,L,V,F,H,E,varargin)
+function elem=atrfcavity(fname,varargin)
 %ATRFCAVITY(FAMNAME,LENGTH,VOLTAGE,FREQUENCY,HARMONICNUMBER,ENERGY,PASSMETHOD)
 %	creates an rfcavity element with Class 'RFCavity'
 %
@@ -16,7 +16,13 @@ function elem=atrfcavity(fname,L,V,F,H,E,varargin)
 %See also: ATDRIFT, ATSEXTUPOLE, ATSBEND, ATRBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
-[rsrc,method,~]=decodeatargs({'CavityPass',''},varargin);
+[rsrc,L,V,F,H,E,method]=decodeatargs({0,0,1,1,1.E9,'CavityPass'},varargin);
+[rsrc,L]=getatarg(rsrc,L,'Length');
+[rsrc,V]=getatarg(rsrc,V,'Voltage');
+[rsrc,F]=getatarg(rsrc,F,'Frequency');
+[rsrc,H]=getatarg(rsrc,H,'HarmNumber');
+[rsrc,E]=getatarg(rsrc,E,'Energy');
+[rsrc,method]=getatarg(rsrc,method,'PassMethod');
 [rsrc,timelag]=getatarg(rsrc,0,'TimeLag');
 elem=atbaselem(fname,method,'Class','RFCavity','Length',L,...
     'Voltage',V,'Frequency',F,'HarmNumber',H,'TimeLag',timelag,...

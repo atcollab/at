@@ -11,6 +11,7 @@ function elem=atmonitor(fname,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,method,~]=decodeatargs({'IdentityPass',''},varargin);
+[rsrc,method]=getatarg(rsrc,method,'PassMethod');
 [rsrc,cl]=getatarg(rsrc,'Monitor','Class');
 elem=atbaselem(fname,method,'Class',cl,'Length',0,rsrc{:});
 end

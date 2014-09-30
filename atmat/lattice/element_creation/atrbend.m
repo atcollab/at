@@ -1,4 +1,4 @@
-function elem=atrbend(fname,L,A,varargin)
+function elem=atrbend(fname,varargin)
 %ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
 %	creates a rectangular bending magnet element with class 'Bend'
 %		FAMNAME        	family name
@@ -13,8 +13,11 @@ function elem=atrbend(fname,L,A,varargin)
 %See also: ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
-[rsrc,K,method]=decodeatargs({[],'BendLinearPass'},varargin);
+[rsrc,L,A,K,method]=decodeatargs({0,0,[],'BendLinearPass'},varargin);
+[rsrc,L]=getatarg(rsrc,L,'Length');
+[rsrc,A]=getatarg(rsrc,A,'BendingAngle');
 [rsrc,K]=getatarg(rsrc,K,'K');
+[rsrc,method]=getatarg(rsrc,method,'PassMethod');
 [rsrc,PolynomB]=getatarg(rsrc,[0 0],'PolynomB');
 if ~isempty(K), PolynomB(2)=K; end
 [rsrc,EntranceAngle]=getatarg(rsrc,0.5*A,'EntranceAngle');

@@ -1,14 +1,25 @@
-function elem=atdampMatElem(fname,ring)
+function elem=atdampMatElem(fname,ring,varargin)
 %   atdampMatElem creates an element that applies the global damping matrix
-%   from the ring
-% ring should be without radiation passmethods in the bends
+%ELEM=ATDAMPMATELEM(FAMNAME,RING,CAVIPASS,BENDPASS,QUADPASS)
+%
+%FAMNAME:   family name
+%RING:		initial AT structure, without radiation passmethods
+%CAVIPASS:	pass method for cavities (default ThinCavityPass)
+%BENDPASS:	pass method for bending magnets. Special values:
+%           '' makes no change,
+%           'auto' wille substitute 'Pass' with 'RadPass' in any method
+%           (default: 'auto')
+%QUADPASS:	pass method for quadrupoles
+%           '' makes no change,
+%           'auto' wille substitute 'Pass' with 'RadPass' in any method
+%           (default: '')
+%
 
 
-[ringrad,radi,cavi,energy]=atradon(ring);
+ringrad=atradon(ring,varargin{:});
 
 m66_norad=findm66(ring);
 m66_rad=findm66(ringrad);
 
-m66damp=inv(m66_norad)*m66_rad;
-
-elem=atM66(fname,m66damp);
+elem=atM66(fname,m66_norad\m66_rad);
+end

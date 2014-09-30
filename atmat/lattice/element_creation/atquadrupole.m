@@ -14,7 +14,9 @@ function elem=atquadrupole(fname,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,L,K,method]=decodeatargs({0,[],'QuadLinearPass'},varargin);
+[rsrc,L]=getatarg(rsrc,L,'Length');
 [rsrc,K]=getatarg(rsrc,K,'K');
+[rsrc,method]=getatarg(rsrc,method,'PassMethod');
 [rsrc,PolynomB]=getatarg(rsrc,[0 0],'PolynomB');
 [rsrc,maxorder]=getatarg(rsrc,1,'MaxOrder');
 if ~isempty(K), PolynomB(2)=K; end
