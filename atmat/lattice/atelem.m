@@ -27,30 +27,22 @@ if isstruct(elem)
 elseif ischar(elem)
     switch lower(elem(1:4)) % Generic
         case 'drif'
-            E=atdrift('',0);
-            
+            elemstruct=atdrift('',varargin{:});
         case 'quad'
-            E=atquadrupole('',0,0);
-            
+            elemstruct=atquadrupole('',varargin{:});
         case 'sext'
-            E=atsextupole('',0,0);
-            
+            elemstruct=atsextupole('',varargin{:});
         case 'mark'
-            E=atmarker('');
-            
+            elemstruct=atmarker('',varargin{:});
         case {'bend','sben'}
-            E=atsbend('',0,0,0);
-            
+            elemstruct=atsbend('',varargin{:});
         case 'rben'
-            E=atrbend('',0,0,0);
-            
+            elemstruct=atrbend('',varargin{:});
         case 'corr'
-            E=atcorrector('',0,[0 0]);
-            
+            elemstruct=atcorrector('',varargin{:});
         otherwise % function that returns an at element structure
             error('AT:atelem:UnknownType',['Unknown element type: ' elem]);
     end
-    elemstruct = atelem(E,varargin{:});
 else
     error('First argument must be an AT element or a string keyword')
 end
