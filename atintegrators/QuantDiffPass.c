@@ -24,11 +24,16 @@ void QuantDiffPass(double *r_in, double* Lmatp , int num_particles)
 	static int initSeed = 1;	/* 	If this variable is 1, then I initialize the seed 
 								 * 	to the clock and I change the variable to 0
 								 */
-	if(initSeed)
-	{
+
+    if(initSeed)
+	{           
+        #if !(defined PCWIN || defined PCWIN32)
+        {
 		struct timeval time; 
 		gettimeofday(&time,NULL);
 		srand((time.tv_sec * 1000000) + (time.tv_usec));
+        }
+        #endif
 		initSeed = 0;
 	}
 	for (c = 0; c<num_particles; c++) 
