@@ -143,13 +143,13 @@ superp=atsetfieldvalues(superp,'Energy',GLOBVAL.E0);
 
 if nargout >= 2
     periods=nper;
-    for i=cavities			% set cavity frequency
-        superp{i}=tunecavity(superp{i},9E6/16/length(cavities),...
+    for i=cavities'			% set cavity frequency
+        superp{i}=tunecavity(superp{i},...
             findspos(superp,id_stru+1),1,nper);
     end
 else
-    for i=cavities			% set cavity frequency
-        superp{i}=tunecavity(superp{i},9E6/16/length(cavities),...
+    for i=cavities'			% set cavity frequency
+        superp{i}=tunecavity(superp{i},...
             findspos(superp,id_stru+1),nper,nper);
     end
     if nper > 1
@@ -160,9 +160,8 @@ end
 
 evalin('base','global GLOBVAL');
 
-function cav=tunecavity(cav,V,clength,ncell,ntot)
+function cav=tunecavity(cav,clength,ncell,ntot)
 frev=2.99792458E8/clength;
-if cav.Voltage == 0, cav.Voltage=V; end
 if cav.HarmNumber > 1
     harm=ceil(cav.HarmNumber/ntot);
 else
