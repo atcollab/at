@@ -56,7 +56,7 @@ end
 if ischar(PASSMETHODS) % one file name - convert to a cell array
     if strcmpi(PASSMETHODS,'all')
         % Find all files matching '*Pass.c' wildcard
-        D = dir('*Pass.c');
+        D = dir(fullfile(pdir,'*Pass.c'));
         PASSMETHODS = cell(size(D));
         for i = 1:length(D)
             PASSMETHODS{i} = strrep(D(i).name,'.c','');
@@ -67,12 +67,16 @@ if ischar(PASSMETHODS) % one file name - convert to a cell array
 end
 
 for i = 1:length(PASSMETHODS)
-    PM = PASSMETHODS{i};
-    evalin('base',['clear ',PM]);
-    if exist(fullfile(pwd,[PM '.c']),'file')
-        MEXSTRING = ['mex ',PLATFORMOPTION,PM,'.c'];
+    PM = fullfile(pdir,[PASSMETHODS{i} '.c']);
+    evalin('base',['clear ',PASSMETHODS{i}]);
+    if exist(PM,'file')
+        MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,' ',PM];
         disp(MEXSTRING);
+        try
         evalin('base',MEXSTRING);
+        catch err
+            disp(['Could not compile ' PM char(10) err.message]);
+        end
     else
         disp([PM,'.c',' - NOT FOUND! SKIP']);
     end
