@@ -1,10 +1,11 @@
+function atmexall(varargin)
 %ATMEXALL builds all AT platform deendent mex-files from C-sources
 % On UNIX platform, the GNU gcc compiler must be installed and
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
 
-PLATFORMOPTION = ['-D',computer,' '];
+PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
 LIBDL='';
 switch computer
 case'GLNX86'
@@ -21,25 +22,22 @@ catch
 end
 
 % Navigate to the directory that contains pass-methods 
-cd(fullfile(atroot,'..','atintegrators',''));
-PASSMETHODDIR = pwd;
-disp(['Current directory: ',pwd]);
+PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
 mexpassmethod('all',PLATFORMOPTION);
 
 % Navigate to the directory that contains tracking functions
-cd(fullfile(atroot,'attrack',''));
-disp(['Current directory:', pwd]);
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'atpass.c',LIBDL];
+cdir=fullfile(atroot,'attrack','');
+MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' ',fullfile(cdir,'atpass.c'),LIBDL];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
 % Navigate to the directory that contains some accelerator physics functions
-cd(fullfile(atroot,'atphysics',''));
-disp(['Current directory:', pwd]);
-MEXCOMMAND = ['mex ',PLATFORMOPTION,' -I''',PASSMETHODDIR,''' findmpoleraddiffmatrix.c'];
+cdir=fullfile(atroot,'atphysics','');
+MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' -I''',PASSMETHODDIR,''' ',...
+    fullfile(cdir,'findmpoleraddiffmatrix.c')];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
 % ADD 'MEXING' instructions for other C files
 disp('ALL mex-files created successfully')
-clear PASSMETHODDIR PLATFORMOPTION MEXCOMMAND
+end
