@@ -24,31 +24,33 @@ PLATFORMOPTION=[varargin{:}];
 
 %Additional platform-specific options for mex
 pdir=fileparts(mfilename('fullpath'));
-switch computer
-    case {'SOL2','SOL64'}
-        exportarg='-M';
-        map='mexFunctionSOL2.map';
-        ldflags=['-G -mt ',exportarg,' ' fullfile(pdir,map)];
-    case 'GLNX86'
-        exportarg='-Wl,--version-script,';
-        map='mexFunctionGLNX86.map';
-        ldflags=['-pthread -shared -m32 -Wl,--no-undefined ',exportarg,fullfile(pdir,map)];
-    case 'GLNXA64'
-        exportarg='-Wl,--version-script,';
-        map='mexFunctionGLNX86.map';
-        ldflags=['-pthread -shared -Wl,--no-undefined ',exportarg,fullfile(pdir,map)];
-    case {'MAC','MACI','MACI64'}
-        exportarg='-Wl,-exported_symbols_list,';
-        map='mexFunctionMAC.map';
-end
-
-if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST>
-    PLATFORMOPTION=[PLATFORMOPTION ' LDFLAGS=''',ldflags,''' '];
-elseif verLessThan('matlab','8.3')
-    ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,map)]);
-    PLATFORMOPTION=[PLATFORMOPTION,' LDFLAGS=''',strrep(ldf,'$','\$'),''' '];
-else
-    PLATFORMOPTION=[PLATFORMOPTION,' LINKEXPORT=''',exportarg,fullfile(pdir,map),''' '];
+if ~ispc()
+    switch computer
+        case {'SOL2','SOL64'}
+            exportarg='-M';
+            map='mexFunctionSOL2.map';
+            ldflags=['-G -mt ',exportarg,' ' fullfile(pdir,map)];
+        case 'GLNX86'
+            exportarg='-Wl,--version-script,';
+            map='mexFunctionGLNX86.map';
+            ldflags=['-pthread -shared -m32 -Wl,--no-undefined ',exportarg,fullfile(pdir,map)];
+        case 'GLNXA64'
+            exportarg='-Wl,--version-script,';
+            map='mexFunctionGLNX86.map';
+            ldflags=['-pthread -shared -Wl,--no-undefined ',exportarg,fullfile(pdir,map)];
+        case {'MAC','MACI','MACI64'}
+            exportarg='-Wl,-exported_symbols_list,';
+            map='mexFunctionMAC.map';
+    end
+    
+    if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST>
+        PLATFORMOPTION=[PLATFORMOPTION ' LDFLAGS=''',ldflags,''' '];
+    elseif verLessThan('matlab','8.3')
+        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,map)]);
+        PLATFORMOPTION=[PLATFORMOPTION,' LDFLAGS=''',strrep(ldf,'$','\$'),''' '];
+    else
+        PLATFORMOPTION=[PLATFORMOPTION,' LINKEXPORT=''',exportarg,fullfile(pdir,map),''' '];
+    end
 end
 
 if ischar(PASSMETHODS) % one file name - convert to a cell array
