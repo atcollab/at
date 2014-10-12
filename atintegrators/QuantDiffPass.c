@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#if !(defined PCWIN || defined PCWIN32)
 #include <sys/time.h>
+#endif
 #include "mex.h"
 #include "elempass.h"
 #ifndef M_PI
