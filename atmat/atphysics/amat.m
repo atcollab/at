@@ -51,12 +51,14 @@ Vn=V./repmat(sqrt(abs(n)),nv,1);
 nn=0.5*abs(sqrt(-1i*Vn'*jm{dms}*Vxyz{dms}));
 [~,ind]=max(nn(select,select));
 
+indS=ind;
 %sort ind for the case of repeated indices
-[~,indS]=sort(ind,2);
+%[~,indS]=sort(ind,2);
 %logic still not quite correct- should find best projector on x then y then
 %z.  Can the one vector project best on both x and y?  Is this projection
 %definition correct?
-
+%14 Oct, 2014- more testing needed before using this additional sort.
+%B. Nash
 
 %reorder pairs
 V_ordered=Vn(:,2*indS-1);
