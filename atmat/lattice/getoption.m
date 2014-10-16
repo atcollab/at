@@ -1,16 +1,24 @@
-function [opts,optval] = getoption(opts,optname,optval)
+function [optval,opts] = getoption(opts,optname,optval)
 %GETOPTION Extract one option from an option list ['Name',value,...]
 %
-%[NEWOPTLIST,OPTVAL]=GETOPTION(OPTLIST,OPTNAME,OPTDEFAULT)
+%OPTVAL=GETOPTION(OPTIONS,OPTNAME,OPTDEFAULT)
 %
-%OPTLIST:   Option list
+%OPTLIST:   Option list (cell array or structure)
 %OPTNAME:   Name of the desired option
-%OPTDEFAULT:Default value for the option (defaul: [])
+%OPTDEFAULT:Default value for the option (default: [])
 %
-ok=strcmpi(optname,opts(1:2:end));
-if any(ok)
-    optval=opts{2*find(ok,1,'last')};
-    opts(reshape([ok;ok],1,[]))=[];
+%[OPTVAL,NEWOPTIONS]=GETOPTION(...)
+%           Returns new options after removing the processed ones
+%
+if iscell(opts)
+    ok=strcmpi(optname,opts(1:2:end));
+    if any(ok)
+        optval=opts{2*find(ok,1,'last')};
+        opts(reshape([ok;ok],1,[]))=[];
+    end
+elseif isstruct(opts) && isfield(opts,optname)
+    optval=opts.(optname);
+    opts=rmfield(opts,optname);
 end
 end
 

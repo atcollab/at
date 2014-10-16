@@ -12,7 +12,9 @@ function curve = atplot(varargin)
 %ATPLOT(...,[SMIN SMAX])  Zoom on the specified range
 %
 %ATPLOT(...,'OptionName',OptionValue,...) Available options:
-%           'labels',REFPTS     Display the selected element names
+%	'labels',REFPTS             Display the selected element names
+%	'leftargs',{properties}     properties set on the left axis
+%	'rightargs',{properties}    properties set on the right axis
 %
 %ATPLOT(...,@PLOTFUNCTION,args...)
 %	Allows for a user supplied function providing the values to be plotted
@@ -100,6 +102,9 @@ for iarg=narg:nargin
     end
 end
 
+rsrc=(varargin(synarg:end));
+[leftargs,rsrc]=getoption(rsrc,'leftargs',{});
+[rightargs,rsrc]=getoption(rsrc,'rightargs',{});
 %ring=[ring0((1:el1-1)');atslice(ring0(el1:el2-1),250);ring0((el2:elt0)')];
 %ring=[ring0(1:el1-1,1);atslice(ring0(el1:el2-1,1),400);ring0(el2:elt0,1)];
 elmlength=findspos(ring0(el1:el2-1,1),el2-el1+1)/npts;
@@ -108,20 +113,22 @@ cellfun(@splitel,ring0(el1:el2-1,1));
 ring=[ring;ring0(el2:elt0,1)];
 elt=length(ring);
 plrange=el1:el2+elt-elt0;
-[lindata,tuneper,chrom]=atlinopt(ring,dpp,1:elt+1); %#ok<NASGU,ASGLU>
+[lindata,tuneper,chrom]=atlinopt(ring,dpp,1:elt+1); %#ok<ASGLU>
 s=cat(1,lindata.SPos);
 
 set(ax,'Position',[.13 .11 .775 .775],'FontSize',12);
 outp=plotfun(lindata,ring,dpp,varargin{plotarg:nargin});
 if numel(outp) >= 2
     [ax2,h1,h2]=plotyy(ax,s(plrange),outp(1).values(plrange,:),s(plrange),outp(2).values(plrange,:));
-    set(ax2(2),'XTick',[],'FontSize',12);
+    set(ax2(1),leftargs{:});
+    set(ax2(2),rightargs{:},'XTick',[],'FontSize',12);
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
 elseif numel(outp) == 1
     h1=plot(ax,s(plrange),outp(1).values(plrange,:));
     h2=[];
     ax2=ax;
+    set(ax2(1),leftargs{:});
     ylabel(ax2(1),outp(1).axislabel);
 else
     h1=[];
@@ -132,7 +139,7 @@ end
 set(ax2,'XLim',srange);
 curve.left=h1;
 curve.right=h2;
-[curve.lattice]=atplotsyn(ax2(1),ring0,varargin{synarg:nargin});  % Plot lattice elements
+[curve.lattice]=atplotsyn(ax2(1),ring0,rsrc{:});  % Plot lattice elements
 lts=get(ax2(1),'Children');                 % Put them in the background
 nsy=length(lts)-length(h1);
 set(ax2(1),'Children',lts([nsy+1:end 1:nsy]));
