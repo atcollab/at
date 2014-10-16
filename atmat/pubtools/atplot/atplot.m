@@ -116,11 +116,11 @@ plrange=el1:el2+elt-elt0;
 [lindata,tuneper,chrom]=atlinopt(ring,dpp,1:elt+1); %#ok<ASGLU>
 s=cat(1,lindata.SPos);
 
-set(ax,'Position',[.13 .11 .775 .775],'FontSize',12);
+set(ax,'Position',[.13 .11 .775 .775]);
 outp=plotfun(lindata,ring,dpp,varargin{plotarg:nargin});
 if numel(outp) >= 2
     [ax2,h1,h2]=plotyy(ax,s(plrange),outp(1).values(plrange,:),s(plrange),outp(2).values(plrange,:));
-    set(ax2(1),leftargs{:});
+    set(ax2(1),leftargs{:},'FontSize',12);
     set(ax2(2),rightargs{:},'XTick',[],'FontSize',12);
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
@@ -128,12 +128,12 @@ elseif numel(outp) == 1
     h1=plot(ax,s(plrange),outp(1).values(plrange,:));
     h2=[];
     ax2=ax;
-    set(ax2(1),leftargs{:});
+    set(ax2(1),leftargs{:},'FontSize',12);
     ylabel(ax2(1),outp(1).axislabel);
 else
     h1=[];
     h2=[];
-    set(ax,'YLim',[0 1]);
+    set(ax,leftargs{:},'YLim',[0 1]);
     ax2=ax;
 end
 set(ax2,'XLim',srange);
