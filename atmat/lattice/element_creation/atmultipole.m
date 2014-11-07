@@ -1,4 +1,4 @@
-function elem=atmultipole(fname,L,varargin)
+function elem=atmultipole(fname,varargin)
 %ATMULTIPOLE(FAMNAME,LENGTH,POLYNOMA,POLYNOMB,PASSMETHOD)
 %	creates a multipole element
 %
