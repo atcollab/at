@@ -24,7 +24,7 @@ qftilts = tilterr*randn(1,length(TILTI));
 % 2. rotate elements
 settilt(TILTI,qftilts);
 
-[ENV, DP, DL] = ohmienvelope(THERING,RADELEMINDEX, 1:length(THERING)+1);
+[ENV, DP, DL] = ohmienvelope(THERING(:),RADELEMINDEX, 1:length(THERING)+1);
 sigmas = cat(2,ENV.Sigma);
 tilt = cat(2,ENV.Tilt);
 spos = findspos(THERING,1:length(THERING)+1);
