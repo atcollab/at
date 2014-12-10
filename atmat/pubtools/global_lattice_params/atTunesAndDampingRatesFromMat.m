@@ -10,7 +10,7 @@ function [nu,chi]=atTunesAndDampingRatesFromMat(m66)
 
 aa=amat(m66);
 
-Rmat=inv(aa)*m66*aa;
+Rmat=aa\m66*aa;
 
 R1=Rmat([1 2],[1 2]);
 R2=Rmat([3 4],[3 4]);
