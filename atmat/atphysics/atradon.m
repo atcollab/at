@@ -61,11 +61,11 @@ end
 radelems=dipoles|quadrupoles;
 
 if any(cavities)
-    disp(['Cavities located at position ' num2str(find(cavities)')]);
+    atdisplay(1,['Cavities located at position ' num2str(find(cavities)')]);
 else
-    disp('No cavity');
+    atdisplay(1,'No cavity');
 end
-disp([num2str(sum(radelems)) ' elements switched to include radiation']);
+atdisplay(1,[num2str(sum(radelems)) ' elements switched to include radiation']);
 
     function newline=changepass(line,newpass,nrj)
     if strcmp(newpass,'auto')
