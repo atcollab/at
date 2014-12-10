@@ -33,7 +33,11 @@ elseif isfield(elem,'PolynomB')
             atclass='Multipole';
         end
     else
-        atclass='ThinMultipole';
+        if useclass && isfield(elem,'Class')
+            atclass=elem.Class;
+        else
+            atclass='ThinMultipole';
+        end
     end
 elseif isfield(elem,'Periodicity')
     atclass='RingParam';

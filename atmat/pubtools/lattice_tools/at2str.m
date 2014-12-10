@@ -62,7 +62,7 @@ switch atclass
         elstr=mout('atmultipole',elem.FamName,elem.Length,...
             elem.PolynomA,elem.PolynomB);
     case 'ThinMultipole'
-        elstr=mout('atmultipole',elem.FamName,elem.PolynomA,elem.PolynomB,args{:});
+        elstr=mout('atthinmultipole',elem.FamName,elem.PolynomA,elem.PolynomB,args{:});
     case 'RFCavity'
         elstr=mout('atrfcavity',elem.FamName,elem.Length,elem.Voltage,...
             elem.Frequency,elem.HarmNumber,elem.Energy);
