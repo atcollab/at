@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#if !(defined PCWIN || defined PCWIN32)
+#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64)
 #include <sys/time.h>
 #endif
 #include "mex.h"
@@ -30,7 +30,7 @@ void QuantDiffPass(double *r_in, double* Lmatp , int num_particles)
 
     if(initSeed)
 	{           
-        #if !(defined PCWIN || defined PCWIN32)
+        #if !(defined PCWIN || defined PCWIN32 || defined PCWIN64)
         {
 		struct timeval time; 
 		gettimeofday(&time,NULL);
