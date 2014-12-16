@@ -1,4 +1,4 @@
-function I=TLT_IntPiw_mod(u,um,B1,B2) 
+function I=TLT_IntPiw(u,um,B1,B2) 
 % integral in Piwinski Formula for the Lifetime
 
 

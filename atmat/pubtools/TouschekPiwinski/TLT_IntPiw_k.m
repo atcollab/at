@@ -1,4 +1,4 @@
-function I=TLT_IntPiw_k_mod(k,km,B1,B2) 
+function I=TLT_IntPiw_k(k,km,B1,B2) 
 % integral in Piwinski Formula for the Lifetime with u=tan^2(k)
 
 t=tan(k).^2;
