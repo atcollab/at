@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <math.h>
 #include <mex.h>
 
 #if defined(PCWIN) || defined(PCWIN64)
@@ -93,7 +94,7 @@ static void checkiflost(double *DblBuffer, int np,
         if (!xlost[c]) {  /* No change if already marked */
            double *r6 = DblBuffer+c*6;
            for (n=0; n<6; n++) {
-                if (!mxIsFinite(r6[n]) || (abs(r6[n])>LIMIT_AMPLITUDE)) {
+                if (!mxIsFinite(r6[n]) || (fabs(r6[n])>LIMIT_AMPLITUDE)) {
                     int h, k=ihist;
                     xlost[c] = 1;
                     xnturn[c] = num_turn;
