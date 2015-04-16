@@ -16,6 +16,8 @@ elseif isfield(elem,'Frequency')
     atclass='RFCavity';
 elseif isfield(elem,'KickAngle')
     atclass='Corrector';
+elseif isfield(elem,'Periodicity')
+    atclass='RingParam';
 elseif isfield(elem,'PolynomB')
     if isfield(elem,'Length') && elem.Length~=0
         loworder=find(abs(elem.PolynomB(2:end))~=0,1);
@@ -23,7 +25,7 @@ elseif isfield(elem,'PolynomB')
             if useclass && isfield(elem,'Class')
                 atclass=elem.Class;
             else
-                atclass=defaultclass(elem);
+                atclass='Drift';
             end
         elseif loworder==1
             atclass='Quadrupole';
@@ -39,18 +41,10 @@ elseif isfield(elem,'PolynomB')
             atclass='ThinMultipole';
         end
     end
-elseif isfield(elem,'Periodicity')
-    atclass='RingParam';
+elseif isfield(elem,'Length') && elem.Length~=0
+    atclass='Drift';
 else
-    atclass=defaultclass(elem);
+    atclass='Marker';
 end
-
-    function atc=defaultclass(elem)
-    if isfield(elem,'Length') && elem.Length~=0
-        atc='Drift';
-    else
-        atc='Marker';
-    end
-    end
 
 end
