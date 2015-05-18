@@ -7,6 +7,7 @@ function line=atsplitelem(baseelem,varargin)
 %
 % if FRAC = 0, the element is inserted before BASEELEM (no splitting)
 % if FRAC = 1, the element is inserted after BASEELEM (no splitting)
+%
 % if ELEMi = [], nothing is inserted, only the splitting takes place
 %
 % ATSPLITELEM will split BASEELEM in elements with negative lengths if
