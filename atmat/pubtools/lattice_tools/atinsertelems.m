@@ -11,6 +11,7 @@ function newring=atinsertelems(ring,refpts,varargin)
 %           0<=FRAC<=1
 % if FRAC = 0, ELEM is inserted before LINE{REFPTS(i)} (no splitting)
 % if FRAC = 1, ELEM is inserted after LINE{REFPTS(i)} (no splitting)
+% if FRAC = NaN, LINE{REFPTS(i)} is replaced by ELEM (no check for identical length)
 % if ELEM = [], nothing is inserted, only the splitting takes place
 %
 % FRAC and ELEM must be scalars or array of the same size as REFPTS
@@ -26,7 +27,15 @@ slices=cellfun(@insert,num2cell(refpts),vargs{:},'UniformOutput',false);  %Split
 newring=cat(1,slices{:},ring(deb:end)); %Concatenate all sections
 
     function slice=insert(idx,varargin)
-        slice=[ring(deb:idx-1);atsplitelem(ring{idx},varargin{:})];
+        if isnan(varargin{1})
+            if iscell(varargin{2})
+                slice=[ring(deb:idx-1);varargin{2}];
+            else
+                slice=[ring(deb:idx-1);varargin(2)];
+            end
+        else
+            slice=[ring(deb:idx-1);atsplitelem(ring{idx},varargin{:})];
+        end
         deb=idx+1;
     end
 
