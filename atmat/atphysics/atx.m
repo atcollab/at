@@ -102,7 +102,7 @@ end
         
         momcompact=mcf(ring);                   % momentum compaction
         
-        chromaticity=xsi./tuneper;				% chromaticity
+        chromaticity=[periods*xsi;xsi./tuneper];		% chromaticity
         
         synchrophase=asin(eloss/voltage);
         
