@@ -1,4 +1,4 @@
-function [Rout,varargout] = linepass(line,Rin,varargin)
+function [Rout,varargout] = linepass(line,Rin,refpts,varargin)
 %LINEPASS tracks particles through each element of the cell array LINE
 % calling the element-specific tracking function specified in the
 % LINE{i}.PassMethod field.
@@ -74,32 +74,24 @@ if size(Rin,1)~=6
     error('Matrix of initial conditions, the second argument, must have 6 rows');
 end
 
-reuseargs = strcmpi(varargin,'reuse');
-funcargs=cellfun(@(arg) isa(arg,'function_handle'), varargin);
-optargs=~(reuseargs|funcargs);
-
 if (nargin < 3)
     refpts = length(line)+1;
-elseif islogical(varargin{1})
-    optargs(1)=false;
-    refpts = find(varargin{1});
-elseif isnumeric(varargin{1})
-    optargs(1)=false;
-    refpts = varargin{1};
-else
+elseif islogical(refpts)
+    refpts = find(refpts);
+elseif ~isnumeric(refpts)
     refpts = length(line)+1;
 end
+[reuse,args]=getflag(varargin, 'reuse');
+funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
+nhist=getoption(struct(args{~funcargs}), 'nhist',1);
 
-newlattice = double(~any(reuseargs));
+newlattice = double(~reuse);
 
 [prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
-    varargin(funcargs));
-
-options=struct(varargin{optargs});
-if ~isfield(options,'nhist'), options.nhist=1; end
+    args(funcargs));
 
 try
-    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,options.nhist);
+    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,nhist);
     
     if nargout>1;
         if nargout>2, varargout{2}=lossinfo; end
