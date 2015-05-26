@@ -82,7 +82,7 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
             B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
             max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
             if (FieldNumbers[3] >= 0) {
-                mxArray *tmpmxptr = mxGetFieldByNumber(ElemData,0,3);
+                mxArray *tmpmxptr = mxGetFieldByNumber(ElemData,0,FieldNumbers[3]);
                 double *tmpdblptr = mxGetPr(tmpmxptr);
                 bax = tmpdblptr[0];
                 bay = (mxGetNumberOfElements(tmpmxptr)>1) ? tmpdblptr[1] : 0.0;
