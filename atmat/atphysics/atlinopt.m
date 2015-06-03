@@ -23,16 +23,16 @@ function [lindata, varargout] = atlinopt(RING,DP,varargin)
 %
 %   All values are specified at the entrance of each element specified in REFPTS.
 %   REFPTS is an array of increasing indexes that  select elements
-%   from the range 1 to length(LINE)+1.
+%   from the range 1 to length(LINE)+1. Defaults to 1 (initial point)
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
-% [LinData,NU] = LINOPT() returns a vector of linear tunes
+% [LinData,NU] = ATLINOPT() returns a vector of linear tunes
 %   [nu_u , nu_v] for two normal modes of linear motion [1]
 %
-% [LinData,NU, KSI] = LINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)
+% [LinData,NU, KSI] = ATLINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)
 %   [ksi_u , ksi_v] - derivatives of [nu_u , nu_v]
 %
-% LinData = LINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.
+% LinData = ATLINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.
 %		instead ORBITIN is used
 %
 % Difference with linopt: Fractional tunes 0<=tune<1
@@ -41,7 +41,7 @@ function [lindata, varargout] = atlinopt(RING,DP,varargin)
 %			  Phase advance output
 %			  Option to skip closed orbit search
 %
-% See also ATREADBETA ATX ATMODUL FINDSPOS TWISSRING TUNECHROM
+% See also ATX ATMODUL FINDSPOS TWISSRING TUNECHROM
 %
 %   [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
 %   [2] E.Courant, H.Snyder
