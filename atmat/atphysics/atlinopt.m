@@ -51,26 +51,25 @@ function [lindata, varargout] = atlinopt(RING,DP,varargin)
 global NUMDIFPARAMS
 
 NE = length(RING);
-
 if nargin >= 3
     if islogical(varargin{1})
         REFPTS=varargin{1};
         REFPTS(end+1:NE+1)=false;
-        elidx=find(REFPTS);
+        isel=1:sum(REFPTS);
     elseif isnumeric(varargin{1})
-        elidx=varargin{1};
-        REFPTS=setelems(false(1,NE+1),elidx);
+        isel=varargin{1};
+        [r2,ir2]=sort(isel(:));
+        REFPTS=setelems(false(1,NE+1),r2);
+        isel(ir2)=1:numel(isel);
     else
         error('REFPTS must be numeric or logical');
     end
 else
-    elidx=1;
-    REFPTS=setelems(false(1,NE+1),elidx);
+    REFPTS=setelems(false(1,NE+1),1);
+    isel=1;
 end
-SZ=size(elidx);
 
-
-spos = reshape(findspos(RING,REFPTS),SZ);
+spos = findspos(RING,REFPTS);
 [M44, MS, orb] = findm44(RING,DP,REFPTS,varargin{2:end});
 
 % Calculate A,B,C, gamma at the first element
@@ -89,7 +88,8 @@ G = diag([g g]);
 C = -H*sign(t)/(g*sqrt(t*t+4*det(H)));
 A = G*G*M  -  G*(m*S*C'*S' + C*n) + C*N*S*C'*S';
 B = G*G*N  +  G*(S*C'*S'*m + n*C) + S*C'*S'*M*C;
-[MSA,MSB,gamma,CL,AL,BL]=cellfun(@analyze,reshape(num2cell(MS,[1 2]),SZ),'UniformOutput',false);
+[MSA,MSB,gamma,CL,AL,BL]=cellfun(@analyze,num2cell(MS,[1 2]),'UniformOutput',false);
+
 
 [BX,AX,MX]=lop(reshape(cat(3,MSA{:}),2,2,[]),A);
 [BY,AY,MY]=lop(reshape(cat(3,MSB{:}),2,2,[]),B);
@@ -112,59 +112,30 @@ if nargout >= 3
     else
         dDP =  1e-6;
     end
+    refs=false(1,length(RING)+1);
     % Calculate tunes for DP+dDP
     [orbP,o1P]=findorbit4(RING,DP+0.5*dDP,REFPTS);
     [orbM,o1M]=findorbit4(RING,DP-0.5*dDP,REFPTS);
-    DISPERSION = reshape(num2cell((orbP-orbM)/dDP,1),SZ);
-    [LD, tunesP] = atlinopt(RING,DP+0.5*dDP,[],o1P); %#ok<ASGLU>
-    [LD, tunesM] = atlinopt(RING,DP-0.5*dDP,[],o1M); %#ok<ASGLU>
+    dispersion = (orbP-orbM)/dDP;
+    [LD, tunesP] = atlinopt(RING,DP+0.5*dDP,refs,o1P); %#ok<ASGLU>
+    [LD, tunesM] = atlinopt(RING,DP-0.5*dDP,refs,o1M); %#ok<ASGLU>
     varargout{2} = (tunesP - tunesM)/dDP;
-    dispargs={'Dispersion',DISPERSION};
+    dispargs={'Dispersion',num2cell(dispersion,1)'};
 end
-lindata = struct('ElemIndex',num2cell(elidx),'SPos',num2cell(spos),...
-    'ClosedOrbit',reshape(num2cell(orb,1),SZ),...
+ld = struct('ElemIndex',num2cell(find(REFPTS))',...
+    'SPos',num2cell(spos)',...
+    'ClosedOrbit',num2cell(orb,1)',...
     dispargs{:},...
-    'M44',reshape(num2cell(MS,[1 2]),SZ),...
-    'gamma',gamma,...
-    'C',CL,...
-    'A',AL,...
-    'B',BL,...
-    'beta', reshape(num2cell([BX,BY],2),SZ),...
-    'alpha', reshape(num2cell([AX,AY],2),SZ),...
-    'mu', reshape(num2cell([MX,MY],2),SZ));
+    'M44',squeeze(num2cell(MS,[1 2])),...
+    'gamma',gamma(:),...
+    'C',squeeze(CL),...
+    'A',squeeze(AL),...
+    'B',squeeze(BL),...
+    'beta',num2cell([BX,BY],2),...
+    'alpha',num2cell([AX,AY],2),...
+    'mu',num2cell([MX,MY],2));
 
-    function mask=setelems(mask,idx)
-        mask(idx)=true;
-    end
-
-    function [beta,alpha]=nufof(T)
-        %cosmu = (T(1,1)+T(2,2))/2;
-        sinmu = sign(T(1,2))*sqrt(-T(1,2)*T(2,1)-(T(1,1)-T(2,2))^2/4);
-        alpha = (T(1,1)-T(2,2))/2/sinmu;
-        beta = T(1,2)/sinmu;
-    end
-
-    function UP = BetatronPhaseUnwrap(P)
-        % unwrap negative jumps in betatron
-        %JUMPS = [0; diff(P)] < -1.e-5;
-        JUMPS = [0; diff(P)] < -1.e-3;
-        UP = P+cumsum(JUMPS)*2*pi;
-    end
-
-    function [beta,alpha,phase]=lop(MS,A0)
-        [bx,ax]=nufof(A0);
-        bbb=squeeze(MS(1,2,:));
-        aaa=squeeze(MS(1,1,:))*bx-bbb*ax;
-        
-        beta = (aaa.^2 + bbb.^2)/bx;
-        alpha = -(aaa.*squeeze(MS(2,1,:)*bx-MS(2,2,:)*ax) + bbb.*squeeze(MS(2,2,:)))/bx;
-        try
-            phase = atan2(bbb,aaa);
-        catch %#ok<CTCH>
-            phase=NaN(size(beta));
-        end
-        phase = BetatronPhaseUnwrap(phase);
-    end
+lindata=reshape(ld(isel),size(isel));
 
     function [MSA,MSB,gamma,CL,AL,BL]=analyze(MS)
         M12 =MS(1:2,1:2);
@@ -179,6 +150,34 @@ lindata = struct('ElemIndex',num2cell(elidx),'SPos',num2cell(spos),...
         CL=(M12*C+G*m12)*S*MSB'*S';
         AL=MSA*A*S*MSA'*S';
         BL=MSB*B*S*MSB'*S';
+    end
+
+    function mask=setelems(mask,idx)
+        mask(idx)=true;
+    end
+
+    function UP = BetatronPhaseUnwrap(P)
+        % unwrap negative jumps in betatron
+        %JUMPS = [0; diff(P)] < -1.e-5;
+        JUMPS = [0; diff(P)] < -1.e-3;
+        UP = P+cumsum(JUMPS)*2*pi;
+    end
+
+    function [beta,alpha,phase]=lop(MS,A0)
+        sinmu = sign(A0(1,2))*sqrt(-A0(1,2)*A0(2,1)-(A0(1,1)-A0(2,2))^2/4);
+        ax = (A0(1,1)-A0(2,2))/2/sinmu;
+        bx = A0(1,2)/sinmu;
+        bbb=squeeze(MS(1,2,:));
+        aaa=squeeze(MS(1,1,:))*bx-bbb*ax;
+        
+        beta = (aaa.^2 + bbb.^2)/bx;
+        alpha = -(aaa.*squeeze(MS(2,1,:)*bx-MS(2,2,:)*ax) + bbb.*squeeze(MS(2,2,:)))/bx;
+        try
+            phase = atan2(bbb,aaa);
+        catch %#ok<CTCH>
+            phase=NaN(size(beta));
+        end
+        phase = BetatronPhaseUnwrap(phase);
     end
 
 end

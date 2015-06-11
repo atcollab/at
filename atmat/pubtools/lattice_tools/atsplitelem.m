@@ -5,6 +5,9 @@ function line=atsplitelem(baseelem,varargin)
 %   Each inserted element is associated with a location given by 0<=FRAC<=1
 %   LINE is a cell array containing the sequence of resulting elements
 %
+% FRACi may be a scalar or a line vector of locations. ELEMi must be a
+% single element, or a cell array of elements with the same length as FRACi.
+%
 % if FRAC = 0, the element is inserted before BASEELEM (no splitting)
 % if FRAC = 1, the element is inserted after BASEELEM (no splitting)
 %
@@ -28,10 +31,19 @@ function line=atsplitelem(baseelem,varargin)
 %
 %>> line=atsplitelem(qf,0.5,[]); % Split a quadrupole in two halves
 %
-% See also ATINSERTELEMS ATSLICE ATDIVELEM
+% See also ATINSERTELEMS ATDIVELEM
 
-elems=varargin(2:2:end)';
-elfrac=cat(1,varargin{1:2:end});
+elfrac=varargin(1:2:end);
+elems=cell(size(elfrac));
+for i=1:length(elfrac)
+    ellist=varargin{2*i};
+    if ~iscell(ellist)
+        ellist={ellist};
+    end
+    elems{i}(1:length(elfrac{i}))=ellist(:);
+end
+elems=cat(2,elems{:})';
+elfrac=cat(2,elfrac{:})';
 ellg=0.5*atgetfieldvalues(elems,'Length')./baseelem.Length;
 ellg(isnan(ellg))=0;
 drfrac=[elfrac-ellg;1]-[0;elfrac+ellg];
