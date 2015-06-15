@@ -107,7 +107,6 @@ if (nargin<2) || (isscalar(varargin{1}) && (varargin{1}==(length(RING)+1)))
 else	% 2-nd input argument - vector of reference points alog the Ring
         % is supplied - return orbit
     orbit = linepass(RING,Ri,varargin{1},'reuse');
-
 end
 
 if nargout >= 2

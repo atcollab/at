@@ -177,9 +177,7 @@ lindata=reshape(ld(isel),size(isel));
         catch %#ok<CTCH>
             phase=NaN(size(beta));
         end
-        %figure; plot(phase)
         phase = BetatronPhaseUnwrap(phase);
-        %hold on;plot(phase,'r')
     end
 
 end
