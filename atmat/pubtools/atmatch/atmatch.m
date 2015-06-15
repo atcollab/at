@@ -1,7 +1,7 @@
 function [NewRing,penalty,dmin]=atmatch(...
-    Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer)
+    Ring,Variables,Constraints,Tolerance,Calls,verbose,varargin)
 %function [NewRing,penalty,dmin]=atmatch(...
-%    Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer)
+%    Ring,Variables,Constraints,Tolerance,Calls,verbose,minimizer,twissin)
 %
 % this functions modifies the Variables (parameters in THERING) to obtain
 % a new THERING with the Constraints verified
@@ -13,7 +13,7 @@ function [NewRing,penalty,dmin]=atmatch(...
 % Calls       : number of calls
 % verbose     : verbosity 0-3 (see later)
 % minimizer   : @fminsearch (default) or @lsqnonlin 
-%
+% twissin     : open line matching initial parameters
 %
 % Variables  struct('Indx',{[indx],...
 %                           @(ring,varval)fun(ring,varval,...),...
@@ -83,8 +83,23 @@ function [NewRing,penalty,dmin]=atmatch(...
 %                   atlinopt call optimized in the constraint evaluation call
 %                   changed constraint structure
 
-%%
-if nargin<7, minimizer=@fminsearch; end
+%% optional arguments
+minimizer=@fminsearch; 
+twissin=[];  
+
+if length(varargin)==1
+    if ~isstruct(varargin{1})
+        minimizer=varargin{1};
+        twissin=[];
+    else
+        twissin=varargin{1};
+        minimizer=@fminsearch;
+    end
+elseif length(varargin)==2
+    minimizer=varargin{1};
+    twissin=varargin{2};
+end
+
 options=optimset(minimizer);
 
 IniVals=atGetVariableValue(Ring,Variables);
@@ -132,16 +147,16 @@ switch func2str(minimizer)
     case 'lsqnonlin'
         
         f = @(d) evalvector(Ring,Variables,Constraints,splitvar(d),...
-            evalfunc,posarray,indinposarray); % vector
+            evalfunc,posarray,indinposarray,twissin); % vector
         args={initval,Blow,Bhigh};
     case 'fminsearch'
         
         f = @(d)evalsum(Ring,Variables,Constraints,...
-            splitvar(d),evalfunc,posarray,indinposarray); % scalar (sum of squares of f)
+            splitvar(d),evalfunc,posarray,indinposarray,twissin); % scalar (sum of squares of f)
         args={initval};
 end
 
-cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray);
+cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray,twissin);
 penalty0=atGetPenalty(cstr1,Constraints);
 
 if verbose>0
@@ -163,7 +178,7 @@ end
 
 NewRing=atApplyVariation(Ring,Variables,splitvar(dmin));
 
-cstr2=atEvaluateConstraints(NewRing,evalfunc,posarray,indinposarray);
+cstr2=atEvaluateConstraints(NewRing,evalfunc,posarray,indinposarray,twissin);
 penalty=atGetPenalty(cstr2,Constraints);
 
 if verbose>1
@@ -189,14 +204,14 @@ if verbose>2
     atDisplayVariableChange(Ring,NewRing,Variables);
 end
 
-    function Val=evalvector(R,v,c,d,e,posarray,indinposarray)
+    function Val=evalvector(R,v,c,d,e,posarray,indinposarray,twissin)
         R=atApplyVariation(R,v,d);
-        cstr=atEvaluateConstraints(R,e,posarray,indinposarray);
+        cstr=atEvaluateConstraints(R,e,posarray,indinposarray,twissin);
         Val=atGetPenalty(cstr,c);
     end
 
-    function sVal=evalsum(R,v,c,d,e,posarray,indinposarray)
-        Val=evalvector(R,v,c,d,e,posarray,indinposarray);
+    function sVal=evalsum(R,v,c,d,e,posarray,indinposarray,twissin)
+        Val=evalvector(R,v,c,d,e,posarray,indinposarray,twissin);
         sVal=sum(Val.^2);
     end
 

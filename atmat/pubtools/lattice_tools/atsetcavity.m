@@ -44,6 +44,10 @@ end
 %now set phaselags in cavities
 if radflag
     timelag= (circ/(2*pi*HarmNumber))*asin(U0/(rfv));
+    warning('DID YOU SET RADIATION?! atradon before this command is required!')
+    
+    % newring=atradon(newring);  % shold do nothing if rad is already on.
+    
 else
     timelag=0;
 end

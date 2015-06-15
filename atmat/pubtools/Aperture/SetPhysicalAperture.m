@@ -29,7 +29,8 @@ if length(apertureX)==length(ring) &&  length(apertureY)==length(ring)
     
     ap=mat2cell(ap,ones(size(ring)));
     
-    ringapert=reshape([ap';ring';ap'],length(ring)*3,1);
+    %ringapert=reshape([ap';ring';ap'],length(ring)*3,1);
+    ringapert=reshape([ap';ring'],length(ring)*2,1); % only one aperture restriction
 else
     error('size of ring and apertureX or apertureY are not the same')
 end

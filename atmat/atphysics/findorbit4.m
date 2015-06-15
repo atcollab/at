@@ -95,7 +95,10 @@ else	% 3-rd input argument - vector of reference points along the RING
     % is supplied - return orbit
     orb6 = linepass(RING,Ri,varargin{1},'reuse');
     orbit = orb6(1:4,:);
+
 end
+
+
 
 if nargout >= 2
     fixedpoint=Ri;

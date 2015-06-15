@@ -91,11 +91,11 @@ else
     o=findcells(r,'BetaCode','OC');
 end
 
-% only half cell
-b=b(b<ceil(length(r)/2+1));
-q=q(q<ceil(length(r)/2+1));
-s=s(s<ceil(length(r)/2+1));
-o=o(o<ceil(length(r)/2+1));
+% % only half cell
+% b=b(b<ceil(length(r)/2+1));
+% q=q(q<ceil(length(r)/2+1));
+% s=s(s<ceil(length(r)/2+1));
+% o=o(o<ceil(length(r)/2+1));
 
 % get magnets
 colors=[ repmat('\\color{blue!80!white}  ',length(b),1);...

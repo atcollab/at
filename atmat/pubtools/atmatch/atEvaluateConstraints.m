@@ -1,4 +1,4 @@
-function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray)
+function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray,twissin)
 % This funciton evaluates the contraints defined in Constraints for lattice
 % THERING
 %
@@ -32,13 +32,24 @@ function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray)
 %
 
 if ~isempty(posarray)
-    [lindata,t,c]=atlinopt(R,0.0,posarray);
-    globdata.fractune=t;
-    globdata.chromaticity=c;
+    if isempty(twissin) % recursive solution
+        [lindata,t,c]=atlinopt(R,0.0,posarray);
+        globdata.fractune=t;
+        globdata.chromaticity=c;
+    else % open line
+        [lindata]=twissline(R,0.0,twissin,posarray,'chrom');
+        dpp=0.0001;
+        [lindatadpp]=twissline(R,dpp,twissin,posarray,'chrom');
+        [lindatadpm]=twissline(R,-dpp,twissin,posarray,'chrom');
+        globdata.fractune=lindata(end).mu/2/pi;
+        globdata.chromaticity=(lindatadpp(end).mu/2/pi-lindatadpm(end).mu/2/pi)/2/dpp;
+        
+    end
 else
     lindata=[];
     globdata=[];
 end
+
 Val=cellfun(@(func,refpts) func(R,lindata(refpts),globdata),...
     evalfunc,indinposarray,'UniformOutput',false);
 end

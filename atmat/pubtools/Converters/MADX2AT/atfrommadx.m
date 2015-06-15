@@ -302,7 +302,9 @@ while i<length(SXSTRING)-2
                 elemcount=elemcount+1;
                 % MADX-->   ocf0: multipole,knl:={ 0, 0, 0,kocf0 };
                 while nwel~=':' % loops atributes of this element definition
-                    multipoles=[];
+                    
+                
+                multipoles=[];
                     if strcmp(SXSTRING{i+j+1}(1),'{') % if open paerntesis found 
                         multipoles=[multipoles '[' SXSTRING{i+j+1}(2:end)];
                         k=2;
@@ -314,11 +316,17 @@ while i<length(SXSTRING)-2
                         
                     end
                     
+                    if ~isempty(multipoles)
                     def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
                     SXSTRING{i+j},multipoles);
-                    
-                    j=j+1; %go to new atribute
+                
+                    else
+                    def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
+                    SXSTRING{i+j},SXSTRING{i+j+1});
+                    end
+                j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
+                    
                 end
                 def=[ def ...
                     SXSTRING{i}(1:end-1) '.(''Class'')=''Multipole''; \n'...% max order size polynomb -1
@@ -378,7 +386,7 @@ while i<length(SXSTRING)-2
                     SXSTRING{i}(1:end-1) '=atsolenoid('...
                     '''' SXSTRING{i}(1:end-1) ''''...
                     ',0,0,'...
-                    '''IdentityPass'');\n'...
+                    '''SolenoidLinearPass'');\n'...
                     ];
                 
                 
@@ -509,14 +517,15 @@ while i<length(SXSTRING)-2
         
         
         
-    else % variable declaSXSTRING{i}ration??
+    else % variable declaration??
         if SXSTRING{i}(1)~='!';
-           
+          
             % in mad8 declaring a variable before using it is not compulsary.
             % check that all definitions are at the begining.
-            if sum(ismember('ABCDFGHILMNOPQRSTUVZWYK',SXSTRING{i+2}))>0 
+            %if sum(ismember('ABCDFGHILMNOPQRSTUVZWYK',SXSTRING{i+2}))>0 
+            if sum(ismember('()/*+-',SXSTRING{i+1}))>0 
                 % if letters (but E for exponential) then it is a formula
-                formulas=[formulas SXSTRING{i} ' = ' SXSTRING{i+1} '; \n '];
+                formulas=[formulas SXSTRING{i} ' ' SXSTRING{i+1} '; \n '];
             else
                 var=[var SXSTRING{i} ' ' SXSTRING{i+1} '; \n '];
             end
@@ -556,8 +565,12 @@ try % try to run the macro generated
         save(outfilename);
     end
     
-    delete(filemacroname);
+    %delete(filemacroname);
+    fileoutname=[seqfilemadX '_AT_macro.m'];
     
+    movefile(filemacroname,fileoutname);
+   
+
 catch %#ok<CTCH>
     
     fileoutname=[seqfilemadX '_AT_macro.m'];

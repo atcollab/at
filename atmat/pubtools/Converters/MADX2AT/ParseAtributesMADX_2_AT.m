@@ -38,7 +38,7 @@ if ~isempty(val)
         case {'K3','k3'} % octupole
             R=[R elname '.(''PolynomB'')(4)=' val '; \n'];
         case {'KS','ks'} % solenoid
-            % R=[R elname '.(''')=[0 val];
+           R=[R elname '.(''K'')(1)=' val '; \n'];
         case {'E1','e1'} % entrance angle
             R=[R elname '.(''EntranceAngle'')=' val '; \n'];
         case {'E2','e2'} %exit angle
@@ -48,11 +48,11 @@ if ~isempty(val)
             % case 'APERTURE' % max aperture
             %R=[R elname '.('''')=' val '; \n'];
         case {'HGAP','hgap'} % bending magnet gap
-            R=[R elname '.(''FullGap'')=' val '; \n'];
-            % case 'FINT' %
-            % R=[R elname '.(''FringeInt'')=' val '; \n'];
-            % case 'FINTX' %
-            % R=[R elname '.(''FringeInt'')=' val '; \n'];
+            R=[R elname '.(''FullGap'')=2*' val '; \n'];
+        case {'fint','FINT'} % bending magnet entrance fringe
+            R=[R elname '.(''FringeInt1'')=' val '; \n'];
+        case {'fintx','FINTX'} % bending magnet exit fringe
+            R=[R elname '.(''FringeInt2'')=' val '; \n'];
         case {'K1L','k1l'} % mulitpole component
             R=[R elname '.(''PolynomB'')(1)=' val '; \n'];
         case {'K2L','k2l'} % mulitpole component
@@ -85,6 +85,10 @@ if ~isempty(val)
             R=[R elname '.(''Voltage'')=abs(' val ')*1e6; %% convert to MV \n'];
         case {'FREQ','freq'} %
             R=[R elname '.(''Frequency'')=' val '*1e6; %% convert to MHz  \n'];
+        case {'tilt','TILT','Tilt'} % mulitpole component skew
+            R=[R elname '.(''Tilt'')(1)=' val '; \n'];
+        case {'type','Type','TYPE'} % mulitpole component skew
+            R=[R elname '.(''Type'')=' val '; \n'];
         case {'HARMON','harmon'} %
             R=[R elname '.(''HarmNumber'')=' val '; \n'];
             %     case '' %

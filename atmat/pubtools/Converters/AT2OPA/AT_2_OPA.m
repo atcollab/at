@@ -117,7 +117,7 @@ for i=1:length(families)
             elelat=[elelat sx '\n\n'];
         case {'OC','Octupole'} % sextupole
             sx=[];
-            nslice=8;
+            nslice=2;
             sx=[sx ' ' el.('FamName')   '_dr: drift, L= ' num2str(el.('Length')/2/nslice,format)  ';' '\n'];
             sx=[sx ' ' el.('FamName')   '_sl:Multipole,'...
                 ' N= ' num2str(el.('MaxOrder')+1,format)  ','...

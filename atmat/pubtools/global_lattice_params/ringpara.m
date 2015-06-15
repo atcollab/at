@@ -41,6 +41,7 @@ Dyp = disper(4:4:end);
 [tmptw,tune,chrom] = twissring(THERING,0,1:length(THERING),'chrom',0.00001);
 
 lendp = getcellstruct(THERING,'Length',dpindex); %bending magnet length
+lendp(lendp==0)=1;
 theta = getcellstruct(THERING,'BendingAngle',dpindex); %bending angle
 rho = lendp./theta;%THERING{dpindex(1)}.Length/THERING{dpindex(1)}.BendingAngle;
 
@@ -94,6 +95,16 @@ Jy = 1.00;
 Je = 2+I4/I2;
 emittx = Cq*gamma^2*I5/(I2-I4);
 
+% minimum emittance due to radiation 1/gamma cone (Handbook, Chao, eq23, pag 211)
+spos=findspos(THERING,1:length(THERING)+1);
+[tmptw,tune,chrom] = twissring(THERING,0,1:length(THERING),'chrom');
+betaall = cat(1, tmptw.beta);
+meanbetayovers=sum(betaall(:,2)'.*diff(spos))/spos(end);%mean(betaall(:,2));%
+meaninvr2=mean((1./rho.^2));%sum((1./rhos.^2).*diff(spos)/spos(end));%
+meaninvr3=mean((1./abs(rho.^3)));%sum((1./abs(rhos.^3)).*diff(spos)/spos(end));%
+emitty_lim = Cq*meanbetayovers/2/Jy*meaninvr3/meaninvr2;
+
+
 cspeed = 2.99792458e8; %m/s
 T0 = 2*pi*R/cspeed;
 alpha0 = U0/1.0e6/2/T0/(gamma*.511);
@@ -107,6 +118,7 @@ rp.alphac = alphac;
 rp.U0 = U0; %eV
 rp.sigma_E = sigma_E;
 rp.emittx = emittx;
+rp.emitty_lim= emitty_lim;
 rp.T0 = T0;
 rp.integrals = [I1,I2,I3,I4,I5];
 rp.dampingalpha = [alphax, alphay, alphaE];
@@ -114,7 +126,15 @@ rp.dampingtime = 1./[alphax, alphay, alphaE];
 
 
 %compute coupled damping times
-[nu,chi]=atTunesAndDampingRatesFromMat(findm66(atradon(THERING)));
+%[nu,chi]=atTunesAndDampingRatesFromMat(findm66(atradon(THERING)));
+try
+    [nu,chi]=atTunesAndDampingRatesFromMat(findm66((THERING)));
+catch exc
+    warning('failed coupled damping times computation');
+    nu=[NaN,NaN,NaN];
+    chi=[NaN,NaN,NaN];
+end
+
 rp.coupleddampingtime=T0./chi;
 
 rp.dampingJ = [Jx,Jy,Je];
@@ -203,6 +223,7 @@ if nargout == 0
 %     fprintf('   Vertical Emittance:  %4.5f [nm]\n', rp.emitty*1e9);
 %     fprintf('   Emitty from Dy:  %4.5f [nm], from linear coupling: %4.5f\n', rp.emitty_d*1e9,rp.emitty_c*1e9);
     fprintf('   Emitty from Dy:  %4.5f [nm]\n', rp.emitty_d*1e9);
+    fprintf('   Emitty 1/gamma cone limit:  %4.5f [pm]\n', rp.emitty_lim*1e12);
 end
 
 

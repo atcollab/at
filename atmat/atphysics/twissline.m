@@ -1,4 +1,4 @@
-function [TD, varargout] = twissline(LINE,DP,TWISSDATAIN,varargin);
+function [TD, varargout] = twissline(LINE,DP,TWISSDATAIN,varargin)
 %TWISSLINE calculates linear optics functions for an UNCOUPLED transport line
 % 
 % TwissData  = TWISSLINE(LATTICE,DP,TWISSDATAIN) propagates twiss
@@ -172,7 +172,7 @@ end
 function UP = BetatronPhaseUnwrap(P)
 % unwrap negative jumps in betatron phase
     DP = diff(P);
-    JUMPS = [0; diff(P)] < 0;
+    JUMPS = [0; diff(P)] < -1e-3; % modified! was 0!
     UP = P+cumsum(JUMPS)*pi;
 
 
