@@ -153,6 +153,7 @@ if ~isempty([h1;h2])
 end
 grid on
 % axes(ax);
+linkaxes([ax2(1) ax2(2)],'x');% allows zoom on both right and left plots
 tuneper=lindata(end).mu/2/pi;
 tunes=nperiods*tuneper;
 circ=nperiods*s0(end);
