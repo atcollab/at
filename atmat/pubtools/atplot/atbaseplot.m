@@ -117,7 +117,7 @@ if numel(outp) >= 2
     linkaxes([ax2(1) ax2(2)],'x');% allows zoom on both right and left plots
 elseif numel(outp) == 1
     curve.left=plot(ax,s(plrange),outp(1).values(plrange,:));
-    curve.right2=[];
+    curve.right=[];
     ax2=ax;
     set(ax2(1),leftargs{:},'FontSize',12);
     ylabel(ax2(1),outp(1).axislabel);
