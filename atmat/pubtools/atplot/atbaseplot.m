@@ -110,8 +110,8 @@ if numel(outp) >= 2
     [ax2,curve.left,curve.right]=plotyy(ax,...
         s(plrange),outp(1).values(plrange,:),...
         s(plrange),outp(2).values(plrange,:));
-    set(ax2(1),leftargs{:},'FontSize',12);
-    set(ax2(2),rightargs{:},'XTick',[],'FontSize',12);
+    set(ax2(1),leftargs{:},'FontSize',10);
+    set(ax2(2),rightargs{:},'XTick',[],'FontSize',10);
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
     linkaxes([ax2(1) ax2(2)],'x');% allows zoom on both right and left plots
@@ -119,13 +119,13 @@ elseif numel(outp) == 1
     curve.left=plot(ax,s(plrange),outp(1).values(plrange,:));
     curve.right=[];
     ax2=ax;
-    set(ax2(1),leftargs{:},'FontSize',12);
+    set(ax2(1),leftargs{:},'FontSize',10);
     ylabel(ax2(1),outp(1).axislabel);
 else
     curve.left=[];
     curve.right=[];
     ax2=ax;
-    set(ax2(1),leftargs{:},'YLim',[0 1],'FontSize',12);
+    set(ax2(1),leftargs{:},'YLim',[0 1],'FontSize',10);
 end
 set(ax2,'XLim',srange);
 xlabel(ax2(1),'s [m]');
@@ -138,7 +138,7 @@ end
 lines=[curve.left;curve.right];
 if ~isempty(lines)
     set(lines,'LineWidth',1);
-    legend(lines,[outp.labels],'FontSize',12);
+    legend(lines,[outp.labels],'FontSize',10);
 end
 grid on
 
