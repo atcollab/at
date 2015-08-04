@@ -15,6 +15,7 @@ end
 xlim=get(ax,'XLim');
 slim=diff(xlim);
 tlim=diff(get(ax,'YLim'));
+nlines=length(get(ax,'Children'));
 %axes(ax);
 
 sl=findspos(ring(:,1),1:size(ring,1)+1);
@@ -60,6 +61,8 @@ if any(labs)
 else
     args={};
 end
+% Put patches in the background
+set(ax,'Children',circshift(get(ax,'Children'),nlines));
 
 pp=struct('Dipole',p1,'Quadrupole',p2,'Sextupole',p3,'Multipole',p4,...
     'BPM',p5,args{:});

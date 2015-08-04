@@ -94,53 +94,44 @@ if narg<=length(varargin) && isa(varargin{narg},'function_handle')
 else
     plotfun=@defaultplot;
 end
-
+% Get options
 rsrc=varargin(narg:end);
 [synopt,rsrc]=getoption(rsrc,'synopt',true);
 [leftargs,rsrc]=getoption(rsrc,'leftargs',{});
 [rightargs,rsrc]=getoption(rsrc,'rightargs',{});
+% Split the ring
 elmlength=findspos(ring0(el1:el2-1),el2-el1+1)/npts;
 r2=cellfun(@splitelem,ring0(el1:el2-1),'UniformOutput',false);
 ring=cat(1,ring0(1:el1-1),r2{:},ring0(el2:elt0));
-elt=length(ring);
-plrange=el1:el2+elt-elt0;
+plrange=el1:el2+length(ring)-elt0;
 
 [s,outp]=plotfun(ring,curve.dpp,plotargs{:});
 if numel(outp) >= 2
     [ax2,curve.left,curve.right]=plotyy(ax,...
         s(plrange),outp(1).values(plrange,:),...
         s(plrange),outp(2).values(plrange,:));
-    set(ax2(1),leftargs{:},'FontSize',10);
-    set(ax2(2),rightargs{:},'XTick',[],'FontSize',10);
+    set(ax2(2),'XTick',[],rightargs{:});
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
     linkaxes([ax2(1) ax2(2)],'x');% allows zoom on both right and left plots
 elseif numel(outp) == 1
     curve.left=plot(ax,s(plrange),outp(1).values(plrange,:));
     curve.right=[];
-    ax2=ax;
-    set(ax2(1),leftargs{:},'FontSize',10);
-    ylabel(ax2(1),outp(1).axislabel);
+    ylabel(ax,outp(1).axislabel);
 else
     curve.left=[];
     curve.right=[];
-    ax2=ax;
-    set(ax2(1),leftargs{:},'YLim',[0 1],'FontSize',10);
+    set(ax,'YLim',[0 1]);
 end
-set(ax2,'XLim',srange);
-xlabel(ax2(1),'s [m]');
+set(ax,'XLim',srange,'XGrid','on','YGrid','on',leftargs{:});
+xlabel(ax,'s [m]');
 if synopt
-    [curve.lattice]=atplotsyn(ax2(1),ring0,rsrc{:});  % Plot lattice elements
-    lts=get(ax2(1),'Children');                 % Put them in the background
-    nsy=length(lts)-length(curve.left);
-    set(ax2(1),'Children',lts([nsy+1:end 1:nsy]));
+    curve.lattice=atplotsyn(ax,ring0,rsrc{:});  % Plot lattice elements
 end
 lines=[curve.left;curve.right];
 if ~isempty(lines)
-    set(lines,'LineWidth',1);
-    legend(lines,[outp.labels],'FontSize',10);
+    legend(lines,[outp.labels],'FontSize',11);
 end
-grid on
 
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0
