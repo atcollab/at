@@ -70,6 +70,8 @@ else
     curve.dpp=0;
 end
 % Select the plotting range
+el1=1;
+el2=elt0+1;
 if narg<=length(varargin) && isnumeric(varargin{narg}) && (numel(varargin{narg})==2)
     srange=varargin{narg};
     els=find(srange(1)>s0,1,'last');
@@ -79,8 +81,6 @@ if narg<=length(varargin) && isnumeric(varargin{narg}) && (numel(varargin{narg})
     narg=narg+1;
 else
     srange=[0 curve.length];
-    el1=1;
-    el2=elt0+1;
 end
 % select the plotting function
 plotargs={};
@@ -110,7 +110,7 @@ if numel(outp) >= 2
     [ax2,curve.left,curve.right]=plotyy(ax,...
         s(plrange),outp(1).values(plrange,:),...
         s(plrange),outp(2).values(plrange,:));
-    set(ax2(2),'XTick',[],rightargs{:});
+    set(ax2(2),'XTick',[],'YColor',get(ax2(1),'YColor'),rightargs{:});
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
     linkaxes([ax2(1) ax2(2)],'x');% allows zoom on both right and left plots
