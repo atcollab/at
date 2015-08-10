@@ -4,7 +4,7 @@ function buildlat(ELIST)
 % to be use in Accelerator Toolbox lattice definition files
 
 global FAMLIST THERING
-THERING=cell(size(ELIST));
+THERING=cell(size(ELIST(:)));
 for i=1:length(THERING)
    THERING{i} = FAMLIST{ELIST(i)}.ElemData;
    FAMLIST{ELIST(i)}.NumKids=FAMLIST{ELIST(i)}.NumKids+1;

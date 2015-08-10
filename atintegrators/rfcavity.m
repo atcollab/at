@@ -10,7 +10,7 @@ function z = rfcavity(fname,L,V,F,H,method)
 % returns assigned address in the FAMLIST that uniquely identifies
 % the family
 
-ElemData = atrfcavity(fname,L,V,F,H,method);
+ElemData = atrfcavity(fname,L,V,F,H,[],method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
