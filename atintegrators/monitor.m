@@ -1,4 +1,4 @@
-function z = monitor(fname,method)
+function z = monitor(fname,varargin)
 % monitor('FAMILYNAME','METHOD')
 %       creates a new family in the FAMLIST - a structure with fields
 %               FamName                 family name
@@ -10,11 +10,8 @@ function z = monitor(fname,method)
 % the family
 % declare bpms in the lattice file  as BPM = monitor('BPM','IdentityPass');
 
-
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Name='BPM';
-ElemData.Length=0;
-ElemData.PassMethod=method;
+% The field "Name" was explicitly set in the original function. Why ??
+ElemData=atmonitor(fname,varargin{:},'Name','BPM');
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
