@@ -40,13 +40,20 @@ function varargout=atx(ring,varargin)
 %[BEAMDATA,PARAMS]=ATX(...)  Returns also a structure PM with fields
 %   ll          - Circumference
 %   alpha       - momentum compaction factor
+%   fractunes
+%   fulltunes
 %   nuh         - Tunes
 %   nuv
-%   fulltunes
-%   fractunes
+%   chromaticity
+%   dampingtime
 %   espread     - Energy spread
 %   blength     - Bunch length
-%   modemittance - Eigen emittances
+%   energy
+%   fs          - synchrotron frequency
+%   eloss       - energy loss/turn
+%   synchrophase- synchronous phase
+%   modemittance- Eigen emittances
+%   momcompact  - momentum compaction factor
 %
 %BEAMDATA=ATX(RING,DPP,REFPTS,RADRING,RADINDEX,CAVINDEX)
 % Radiation must be turned on for emittance computation. This is done by
@@ -183,6 +190,7 @@ end
                 'fractunes',fractunes,...
                 'fulltunes',tunes,...
                 'nuh',tunes(1),'nuv',tunes(2),...
+                'chromaticity',chromaticity(1,:),...
                 'dampingtime',dampingtime,...
                 'espread',espread,...
                 'blength',blength,...
@@ -190,7 +198,8 @@ end
                 'energy',energy,...
                 'fs',fs,...
                 'eloss',eloss,...
-                'synchrophase',synchrophase);
+                'synchrophase',synchrophase,...
+                'momcompact',momcompact);
         end
         
         function lind=process(bm66,T,lind)
