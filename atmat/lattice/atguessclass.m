@@ -18,6 +18,8 @@ elseif isfield(elem,'KickAngle')
     atclass='Corrector';
 elseif isfield(elem,'Periodicity')
     atclass='RingParam';
+elseif isfield(elem,'Limits')
+    atclass='Aperture';
 elseif isfield(elem,'PolynomB')
     if isfield(elem,'Length') && elem.Length~=0
         loworder=find(abs(elem.PolynomB(2:end))~=0,1);

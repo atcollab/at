@@ -1,4 +1,4 @@
-function ap=ataperture(fam,lim)
+function elem=ataperture(fname,varargin)
 % define physical aperture element (collimator)
 % lim=[-x,+x,-y,+y];
 % 
@@ -8,7 +8,7 @@ function ap=ataperture(fam,lim)
 %See also: SETPHYSICALAPERTURE
 % 
 
-ap=struct('FamName',fam,...
-    'Class','Aperture',...
-    'PassMethod','AperturePass',...
-    'Limits',lim,'Length',0);
+[rsrc,limits,method,~]=decodeatargs({[0 0],'AperturePass',''},varargin);
+[rsrc,limits]=getatarg(rsrc,limits,'Limits');
+elem=atbaselem(fname,method,'Limits',limits,'Class','Aperture',rsrc{:});
+end

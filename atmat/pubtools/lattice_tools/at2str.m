@@ -68,9 +68,12 @@ switch atclass
             elem.Frequency,elem.HarmNumber,elem.Energy);
     case 'RingParam'
         elstr=mout('atringparam',elem.FamName,elem.Energy,elem.Periodicity,args{:});
+    case 'Aperture'
+        elstr=mout('ataperture',elem.FamName,elem.Limits,elem.PassMethod,args{:});
     otherwise %'Marker'
         fnames=fieldnames(elem);
-        fnames(strcmp('FamName',fnames))=[];
+        remove=strcmp('FamName',fnames) | strcmp('Energy',fnames);
+        fnames(remove)=[];
         fvals=cellfun(@(fn) elem.(fn),fnames,'UniformOutput',false);
         flds=[fnames';fvals'];
         elstr=mout('atmarker',elem.FamName,flds{:},args{:});

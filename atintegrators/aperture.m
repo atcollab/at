@@ -1,4 +1,4 @@
-function z = aperture(fname,limitvector,method)
+function z = aperture(fname,varargin)
 %APERTURE('FAMILYNAME',limits, method)
 %	creates a new family in the FAMLIST - a structure with fields
 %		FamName			family name
@@ -7,11 +7,7 @@ function z = aperture(fname,limitvector,method)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Limits = limitvector;  
-ElemData.PassMethod=method;
-ElemData.Length=0;
-
+ElemData=ataperture(fname,varargin{:});
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
