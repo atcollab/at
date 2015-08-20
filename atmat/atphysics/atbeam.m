@@ -5,6 +5,8 @@ function x = atbeam(np,sigma,orbit)
 %SIGMA: beam matrix (2x2, 4x4, 6x6)
 %
 %PARTICLES=ATBEAM(NP,SIGMA,ORBIT) adds a center of mass to the distribution
+%
+%See also: ATPLOTBEAM
 
 % ampl=sqrt(-2*log(rand(3,np)));
 % phase=2*pi()*rand(3,np);
