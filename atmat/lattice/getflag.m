@@ -8,6 +8,8 @@ function [flag,opts] = getflag(opts,optname)
 %
 %[OPTION,NEWARGS]=GETFLAG(ARGS,OPTNAME)
 %           Returns the argument list after removing the processed flag
+%
+%Dee also GETOPTION
 
 ok=strcmpi(optname,opts);
 flag=any(ok);

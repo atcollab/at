@@ -1,6 +1,8 @@
 function [rsrc,resval]=getatarg(rsrc,resval,resname)
 %GETATARG extracts a resource from a resource list
 %[RSRCLIST,RSRCVAL]=GETATARG(RSRCLIST,DEFAULTVAL,RSRCNAME)
+%
+% replaced by getoption
 
 ok=strcmp(resname,rsrc(1:2:end-1));
 if any(ok)
@@ -8,4 +10,3 @@ if any(ok)
     rsrc(reshape([ok;ok],1,[]))=[];
 end
 end
-

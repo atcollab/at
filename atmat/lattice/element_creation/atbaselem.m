@@ -3,9 +3,10 @@ function elem = atbaselem(famname,method,varargin)
 %   Create an AT element structure and check the consistence of
 %   PolynomA, PolynomB, MaxOrder and NumIntSteps
 
-[rsrc,famname]=getatarg(varargin,famname,'FamName');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-elem=struct('FamName',famname,'PassMethod',method,rsrc{:});
+[famname,rsrc]=getoption(varargin,'FamName',famname);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[length,rsrc]=getoption(rsrc,'Length',0);
+elem=struct('FamName',famname,'PassMethod',method,'Length',length,rsrc{:});
 ab=isfield(elem,{'PolynomA','PolynomB'});
 if any(ab)
     if ~ab(1), elem.PolynomA=[]; end
@@ -17,7 +18,7 @@ if any(ab)
     if la < elem.MaxOrder+1, elem.PolynomA=[elem.PolynomA zeros(1,elem.MaxOrder+1-la)]; end
     lb=length(elem.PolynomB);
     if lb < elem.MaxOrder+1, elem.PolynomB=[elem.PolynomB zeros(1,elem.MaxOrder+1-lb)]; end
-    if isfield(elem,'Length') && elem.Length ~= 0 && ~isfield(elem,'NumIntSteps')
+    if elem.Length ~= 0 && ~isfield(elem,'NumIntSteps')
         elem.NumIntSteps=10;
     end
 end

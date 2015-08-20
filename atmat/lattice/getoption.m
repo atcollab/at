@@ -10,6 +10,8 @@ function [optval,opts] = getoption(opts,optname,optval)
 %[OPTVAL,NEWOPTIONS]=GETOPTION(...)
 %           Returns new options after removing the processed ones
 %
+%See also GETFLAG
+
 if iscell(opts)
     ok=strcmpi(optname,opts(1:2:end));
     if any(ok)
