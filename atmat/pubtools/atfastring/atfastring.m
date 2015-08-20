@@ -99,7 +99,7 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
         diff_elem=atQuantDiff(['Diffusion_' cc],quantumDiff(slicerad,radindex,o6b));
         m66rad=findm66(slicerad(i1:end),[],o6b);
         lin_elemrad=atM66(['Linear_' cc],m66rad,'T1',-o6b,'T2',o6e,'Length',s,'I2',I2);
-        rgrad=[slicerad(1:i1-1);diff_elem;lin_elemrad];
+        rgrad=[slicerad(1:i1-1);lin_elemrad;diff_elem];
     end
     function r=detuning(ring,gamma,xm,zm,orbit)
         x2=linspace(0,xm.*xm,10);
