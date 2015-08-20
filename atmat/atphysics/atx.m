@@ -155,6 +155,7 @@ end
                     err.message);
                 blength=NaN;
                 espread=NaN;
+                fs=NaN;
                 dampingtime=NaN(1,3);
                 lindata=arrayfun(@deflt,lindata);
             end
