@@ -59,8 +59,8 @@ if nargout >= 3
 end
 if nargout >= 5
     lendp=atgetfieldvalues(ring(dipoles),'Length');
-    rho = lendp./theta;
-    I2=nbper*sum(abs(theta./rho));
+    losses=atgetfieldvalues(ring(atgetcells(ring,'I2')),'I2');
+    I2=nbper*(sum(abs(theta.*theta./lendp))+sum(losses));
     U0=14.085*(energy*1.e-9)^4*I2*1000.; %eV
 end
 end
