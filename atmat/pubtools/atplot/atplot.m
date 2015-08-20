@@ -1,4 +1,4 @@
-function curve = atplot(varargin) %#ok<FNDEF>
+function curve = atplot(varargin)
 %ATPLOT Plots optical functions
 %
 %ATPLOT                 Plots THERING in the current axes
