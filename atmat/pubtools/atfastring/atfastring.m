@@ -9,16 +9,16 @@ function [newring,newringrad] = atfastring(ring0,split)
 %   [FASTRING,FASTRINGRAD]=ATFASTRING(RING)
 %
 %RING:          original AT structure, with no RF and no radiation.
-%               Cavities are assumed to be at the beginning of the lattice
 %
-%FASTRING:      Structure containing a cavity, a linear 6x6 matrix and a
-%               non-linear element simulating linear chromaticities and
-%               tune shift with amplitudes
-%
-%FASTRINGRAD:   Strucuture containing a cavity, a diffusion element,
-%               a linear 6x6 transfer matrix and a non-linear element
+%FASTRING:      Structure containing unchanged cavities moved to the
+%               beginning, a linear 6x6 matrix and a  non-linear element
 %               simulating linear chromaticities and tune shift with
 %               amplitudes
+%
+%FASTRINGRAD:   Structure containing unchanged cavities moved to the
+%               beginning, a diffusion element, a linear 6x6 transfer
+%               matrix and a non-linear element simulating linear
+%               chromaticities and tune shift with amplitudes
 %
 %   [FASTRING,FASTRINGRAD]=ATFASTRING(RING,REFPTS)
 %
