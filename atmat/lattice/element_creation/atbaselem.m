@@ -5,8 +5,8 @@ function elem = atbaselem(famname,method,varargin)
 
 [famname,rsrc]=getoption(varargin,'FamName',famname);
 [method,rsrc]=getoption(rsrc,'PassMethod',method);
-[length,rsrc]=getoption(rsrc,'Length',0);
-elem=struct('FamName',famname,'PassMethod',method,'Length',length,rsrc{:});
+[lg,rsrc]=getoption(rsrc,'Length',0);
+elem=struct('FamName',famname,'PassMethod',method,'Length',lg,rsrc{:});
 ab=isfield(elem,{'PolynomA','PolynomB'});
 if any(ab)
     if ~ab(1), elem.PolynomA=[]; end
