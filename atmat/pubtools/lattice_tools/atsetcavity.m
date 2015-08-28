@@ -47,7 +47,7 @@ if radflag
     newring=atradon(newring);  % set radiation on. nothing if radiation is already on
     
 else
-    newring=atradoff(newring);  % set radiation off. nothing if radiation is already off
+    newring=atradoff(newring,'CavityPass');  % set radiation off. nothing if radiation is already off
     timelag=0;
 end
 
