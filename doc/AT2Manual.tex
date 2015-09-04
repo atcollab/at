@@ -22,7 +22,8 @@ AT is a toolbox of functions in Matlab for charged particle beam simulation.
 On the one hand, as a toolbox, one should be allowed to use the tools to do what one wants.
 On the other, in order to avoid redundancy in work, and facilitate working together via sharing of tools, it is useful to implement some standards.  We describe the tools and some standards and guidelines in AT with the hope that the overall package has some coherence and elegance (speed is also considered at some points where it is critical).
 
-\section{Coordinates}
+\section{Physics}
+\subsection{Coordinates}
 The 6-d phase space coordinates are as follows
 \begin{equation}
 \vec Z = \pmatrix{x\cr \frac{p_x}{P_0} \cr y \cr \frac{p_y}{P_0} \cr \delta \cr ct}
@@ -37,7 +38,396 @@ with $P_z = P_0 (1+\delta)$.
 \section{Lattice Creation}
 A lattice may be created in a number of ways.  The final result should be a cell array whose elements are the lattice elements.
 
-There are number of different element "classes".  These are
+There are number of different element "classes".  These are Drift, Bend, Quadrupole, Sextupole, Octupole, Multipole, ThinMultipole, 
+Wiggler, KickMap, RFCavity, QuantDiff, Monitor, Corrector, Solenoid, Matrix66, RingParam.
+
+
+
+\section{Pass Methods}
+Each element needs a pass method which takes the phase space coordinate of the electron before the element and returns the phase 
+space coordinate after.   In the absence of radiation, the result will be symplectic.  The pass methods are so-called 
+{\it symplectic integrators}.   The integrators  available in AT are BndMPoleSymplectic4E2Pass, BndMPoleSymplectic4E2RadPass, 
+BndMPoleSymplectic4Pass, BndMPoleSymplectic4RadPass, BendLinearPass, CavityPass, QuadLinearPass, QuadMPoleFringePass,
+StrMPoleSymplectic4Pass, StrMPoleSymplectic4RadPass, StrMPoleSymplectic4RadPass, WiggLinearPass, IDTablePass, 
+
+A 4th order symplectic integrator assumes that the Hamiltonian can be written in the form $H = H_1 + H_2$ and that $H_1$ and $H_2$ can be independently solved. 
+
+The Hamiltonian may be written
+\begin{equation}
+H=1+\delta -(1+hx)\frac{A_s}{B\rho}-(1+hx)\sqrt{(1+\delta)^2-p_x^2-p_y^2}
+\end{equation}
+and this can be expanded and split.   Now, given a splitting, we define
+
+\begin{equation}
+d_1 = d_4 = \frac{1}{2-2^{1/3}} L
+\end{equation}
+
+\begin{equation}
+d_2 = d_3 = \frac{1-2^{1/3}}{2(2-2^{1/3})} L
+\end{equation}
+
+\begin{equation}
+k_1 =k_3 = \frac{1}{2-2^{1/3}} L
+\end{equation}
+
+\begin{equation}
+k_2 = -\frac{2^{1/3}}{2-2^{1/3}} L
+\end{equation}
+
+Now, suppose we can solve $H_1$ (drift) and $H_2$ (kick) independently, and we notate
+
+\begin{equation}
+e^{:H_1 d:} = D(d)
+\end{equation}
+
+\begin{equation}
+e^{:H_2:k} = K(k)
+\end{equation}
+Then the 4th order integrator is
+
+\begin{equation}
+D(d_1) K(k_1) D(d_2) K(k_2) D(d_2) K(k_1) D(d_1)
+\end{equation}
+
+
+One possibility is  …(improve this…)
+\begin{equation}
+H_1 = (1+hx)\frac{p_x^2+p_y^2}{2(1+\delta)}
+\end{equation}
+\begin{equation}
+H_2 = -(1+hx)\frac{A_s}{B\rho}-(1+\delta)hx
+\end{equation}
+where $h=1/\rho$ with $\rho$ the bending radius of the magnet (for a given energy electron).
+
+
+
+\section{Working with Lattices}\label{lattice_manip}
+There are two kinds of functions for working with lattices.  One type asks a question about certain kinds of elements and
+returns a set of indices to those elements.  The function {\it atgetcells} is an important example of this type which asks for field names in the lattice structure and looks for matches.  The output is a set of boolean values corresponding to whether or not each element matches the criterion.  One can also use the Matlab function {\it findcells} in the same way.  The output here is a list of element indices.
+(getcellstruct and setcellstruct?)
+
+\subsection{atgetfieldvalues}
+ ATGETFIELDVALUES retrieves the field values AT cell array of elements
+ 
+  VALUES = ATGETFIELDVALUES(RING,'field') extracts the values of
+  the field 'field' in all the elements of RING
+ 
+  VALUES = ATGETFIELDVALUES(RING,INDEX,'field') extracts the values of
+  the field 'field' in the elements of RING selected by INDEX
+ 
+  if RING{I}.FIELD is a numeric scalar
+     VALUES is a length(INDEX) x 1 array
+  otherwise
+     VALUES is a length(INDEX) x 1 cell array
+ 
+ 
+  More generally ATGETFIELDVALUES(RING,INDEX,subs1,subs2,...) will call
+   GETFIELD(RING{I},subs1,subs2,...) for I in INDEX
+ 
+  Examples:
+ 
+  V=ATGETFIELDVALUES(RING,1:10,'PolynomB') is a 10x1  cell array
+  such that V{I}=RING{I}.PolynomB for I=1:10
+ 
+  V=ATGETFIELDVALUES(RING(1:10),'PolynomB',{1,2}) is a 10x1 array
+  such that V(I)=RING{I},PolynomB(1,2)
+\subsection{atsetfieldvalues} 
+ ATSETFIELDVALUES sets the field values of MATLAB cell array of structures
+ 
+    Note that the calling syntax must be in the form of assignment:
+    RING = ATSETFIELDVALUES(RING,...)
+    MATLAB does not modify variables that only appear on the right
+    hand side as arguments.
+ 
+ NEWRING=ATSETFIELDVALUES(RING,'field',VALUES)
+    In this mode, the function will set values on all the elements of RING
+ 
+ NEWRING=ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
+    In this mode, the function will set values on the elements of RING
+    specified by INDEX, given as a list of indices or as a logical mask
+ 
+ NEWRING=ATSETFIELDVALUES(RING,'field',VALUESTRUCT)
+    In this mode, the function will set values on the elements of RING
+    whose family names are given by the field names of VALUESTRUCT
+ 
+ NEWRING=ATSETFIELDVALUES(RING,RINGINDEX,....,VALUESTRUCT)
+    As in the previous mode, the function will set values on the elements
+    of RING whose family names are given by the field names of VALUESTRUCT.
+    But RINGINDEX=atindex(RING) is provided to avoid multiple computations.
+ 
+  Field selection
+  ---------------------------------------------------------
+  NEWRING = ATSETFIELD(RING,'field',VALUES)
+    For each I=1:length(RING), set RING{I}.FIELD=value
+ 
+  NEWRING = ATSETFIELD(RING,'field',{M,N},VALUES)
+    For each I=1:length(RING), set RING{I}.FIELD(M,N)=value
+ 
+  More generally,
+  NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)
+    For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)
+ 
+  The last dimension of VALUES must be either length(INDEX) or 1 (the value
+  will be repeated for each element). For a vector to be repeated, enclose
+  it in a cell array.
+ 
+  Value format
+  ---------------------------------------------------------
+  Cell array VALUES
+  -----------------
+  Mx1 cell array : one cell per element
+  1x1 cell array : cell 1 is affected to all selected elements
+ 
+  Character array VALUES
+  ---------------------
+  1xN char array (string) : the string as affected to all selected elements
+  MxN char array : one row per element
+ 
+  Numeric array VALUES
+  --------------------
+  1x1 (scalar) : the value is affected to all selected elements
+  Mx1 (column) : one value per element
+  MxN (matrix) : one row affected per element. If M==1, the single row
+                 is affected to all selected elements
+  To assign column vectors to parameters, use a cell array VALUES, with one
+  column per cell
+ 
+A lattice manipulation function takes a lattice as an argument and produces a new lattice as a result.
+Here are some lattice manipulation functions:
+
+\subsection{Adding errors}
+\begin{itemize}
+\item atsetshift
+\item atsettilt
+\item atsetfieldvalues
+\item atsplitdrift
+\item ataddmpolecomppoly
+\item ataddmpoleerrors
+\item atloadfielderrs
+\end{itemize}
+
+
+\section{Programming guide}
+
+The tracking engine in AT is a Matlab interface to C code.  The integrator (or pass method) is written in C, and is called by Matlab via the 
+Mex interface.
+
+Consider the following C code for tracking through an empty space (drift)
+\begin{verbatim}
+void DriftPass(double *r_in, double le, int num_particles)
+/* le - physical length
+   r_in - 6-by-N matrix of initial conditions reshaped into 
+   1-d array of 6*N elements 
+*/
+{
+    double *r6;
+    int c;
+	double p_norm, NormL;
+    
+	for (c = 0; c<num_particles; c++) { /*Loop over particles  */
+        r6 = r_in+c*6;
+        if(!mxIsNaN(r6[0])) {
+            p_norm = 1/(1+r6[4]);
+            NormL = le*p_norm;
+            r6[0] += NormL*r6[1];
+            r6[2] += NormL*r6[3];
+            r6[5] += NormL*p_norm*(r6[1]*r6[1]+r6[3]*r6[3])/2;
+        }
+    }
+}
+\end{verbatim}
+
+This C function takes a set of input phase space vectors, a double indicating the length of the drift and an integer representing the number of 
+particles.  Note the use of the mxIsNaN function that comes from the mex.h header file.
+
+
+The other requirements for a pass method are a MexFunction and a passFunction.
+The passFunction is defined as
+\begin{verbatim}
+ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
+                             double *r_in, int num_particles, int mode)
+\end{verbatim}
+and the MexFunction as
+\begin{verbatim}
+void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+\end{verbatim}
+
+The pass methods have two different calling methods.  They may be called directly via the Mex interface (through the MexFunction entry point in the C function), or they may be called indirectly through the function RingPass (through the passFunction entry).  The pass methods should be defined so that calling them with no arguments gives a list of required and optional parameters.
+
+The moment tracking and equilibrium finding occurs via the function OhmiEnvelope().  For this to work requires pass methods that include radiation (this gives a deterministic effect which results in damping and non-symplecticity.  Further, the function findmpoleraddiffmatrix is required to compute the diffusion matrix.
+
+\section{Local and Global parameters}
+Given the ability to track particles through the lattice, one can compute global beam dynamics parameters and properties that vary around the ring.  
+Here are some global parameters.
+
+\subsection{tunes}
+\subsection{chromaticity}
+\subsection{momentum compaction factor}
+\subsection{tune shift with amplitude}
+
+Here are some quantities that vary around the ring and come from particle tracking of one turn:
+
+\subsection{Closed orbit}
+\subsection{One turn map matrix}
+\subsection{Transfer matrix from one position to another}
+\subsection{Twiss Parameters}
+\subsection{Dispersion function}
+
+
+From many turn tracking and determination of stability, one may compute at various points around the ring:
+
+\subsection{dynamic aperture: atdynap}
+\subsection{momentum aperture:  atmomentumaperture}
+
+
+From tracking the diffusion matrix and inclusion of radiation, one can compute:
+
+\subsection{Beam sizes}
+
+
+\section{Lattice change and optimization from beam parameters}
+In addition to the lattice building tools in Section \ref{lattice_manip}, there are also lattice changes one would like to do based on beam parameters.  For example, one would like to change the tunes, chromaticities or beta functions of the lattice.
+\begin{itemize}
+\item atfittune
+\item atfitchrome
+\end{itemize}
+
+For general optimization, one may use the atmatch routine.
+\subsection{atmatch}
+See documentation by S. Liuzzo.
+
+\section{Visualization}
+The lattice functions described in the previous section may be plotted, together with a synoptic representation of the lattice.  The function atplot is designed for this purpose.
+\begin{figure}[htb]
+\centering
+\includegraphics*[width=\columnwidth]{images/lat.pdf}
+\caption{ESRF lattice from atplot}
+\label{fig:esrflat}
+\end{figure}
+
+
+
+\section{AT within a larger context: Other Codes, Matlab Middle Layer}
+
+\section{Appendix:  List of all functions and their help}
+{\bf atlinopt.m}\\
+ ATLINOPT               performs linear analysis of the COUPLED lattices\\
+ 
+  LinData $=$ ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields\\
+ \\
+    ElemIndex   - ordinal position in the RING\\
+    SPos        - longitudinal position [m]\\
+    ClosedOrbit - closed orbit column vector with\\
+                  components x, px, y, py (momentums, NOT angles)\\
+    Dispersion  - dispersion orbit position vector with\\
+                  components eta\_x, eta\_prime\_x, eta\_y, eta\_prime\_y\\
+                  calculated with respect to the closed orbit with\\
+                  momentum deviation DP. Only if chromaticity is required.\\
+    M44         - 4x4 transfer matrix M from the beginning of RING\\
+                  to the entrance of the element for specified DP [2]\\
+    A           - 2x2 matrix A in [3]\\
+    B           - 2x2 matrix B in [3]\\
+    C           - 2x2 matrix C in [3]\\
+    gamma       - gamma parameter of the transformation to eigenmodes\\
+    mu          - [ mux, muy] horizontal and vertical betatron phase\\
+    beta        - [betax, betay] vector\\
+    alpha       - [alphax, alphay] vector\\
+ \\
+    All values are specified at the entrance of each element specified in REFPTS.\\
+    REFPTS is an array of increasing indexes that  select elements\\
+    from the range 1 to length(LINE)+1.\\
+    See further explanation of REFPTS in the ''help'' for FINDSPOS\\
+ 
+  [LinData,NU] $=$ LINOPT() returns a vector of linear tunes
+    [nu\_u , nu\_v] for two normal modes of linear motion [1]\\
+ 
+  [LinData,NU, KSI] $=$ LINOPT() returns a vector of chromaticities ksi $=$ d(nu)/(dP/P)\\
+    \[ksi u , ksi v\] - derivatives of \[nu u , nu v\]\\
+ 
+  LinData $=$ LINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.\\
+           instead ORBITIN is used\\
+ 
+  Difference with linopt: Fractional tunes 0<$=$tune<1\\
+                  Dispersion output (if chromaticity is required)\\
+                  Alpha output\\
+                  Phase advance output\\
+                  Option to skip closed orbit search\\
+ 
+  See also ATREADBETA ATX ATMODUL FINDSPOS TWISSRING TUNECHROM\\
+ 
+    \[1\] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973\\
+    \[2\] E.Courant, H.Snyder\\
+    \[3\] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)\\
+
+
+{\bf atradon.m}\\
+ ATRADON               switches RF and radiation on\\
+ \\
+ RING2$=$ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)\\
+ \\
+ RING:          initial AT structure\\
+ CAVIPASS:     pass method for cavities (default ThinCavityPass)\\
+ BENDPASS:     pass method for cavities (default BndMPoleSymplectic4RadPass)\\
+ QUADPASS:     pass method for cavities (default: nochange)\\
+ \\
+ \[RING2,RADINDEX,CAVINDEX\]$=$ATRADON(...) returns the index of radiative elements\\
+                           and cavities\\
+\\
+
+{\bf atx.m}\\
+ ATX                    computes and displays global information\\
+ \\
+ BEAMDATA$=$ATX(RING,DPP,REFPTS)\\
+ \\
+ RING:          AT structure\\
+ DPP:          relative energy deviation (default: 0)\\
+ REFPTS:    Index of elements (default: 1:length(ring))\\
+ \\
+ BEAMDATA is a MATLAB structure array with fields\\
+ \\
+  From atlinopt:\\
+ \\
+    ElemIndex   - ordinal position in the RING\\
+    SPos        - longitudinal position [m]\\
+    ClosedOrbit - closed orbit column vector with\\
+                  components x, px, y, py (momentums, NOT angles)\\
+    Dispersion  - dispersion orbit position vector with\\
+                  components eta\_x, eta\_prime\_x, eta\_y, eta\_prime\_y\\
+                  calculated with respect to the closed orbit with\\
+                  momentum deviation DP\\
+    M44         - 4x4 transfer matrix M from the beginning of RING\\
+                  to the entrance of the element for specified DP [2]\\
+    A           - 2x2 matrix A in [3]\\
+    B           - 2x2 matrix B in [3]\\
+    C           - 2x2 matrix C in [3]\\
+    gamma       - gamma parameter of the transformation to eigenmodes\\
+    mu          - [ mux, muy] horizontal and vertical betatron phase\\
+    beta        - [betax, betay] vector\\
+    alpha       - [alphax, alphay] vector\\
+ \\
+  From ohmienvelope:\\
+ \\
+    beam66      - 6x6 equilibrium beam matrix\\
+    emit66      - 6x6 emittance projections on x and y + energy spread\\
+    beam44      - intersection of beam66 for dpp$=$0\\
+    emit44      - emittances of the projections of beam44 on x and y\\
+    modemit     - [emitA emitB] emittance of modes A and B (should be constant)\\
+ \\
+ \[BEAMDATA,PARAMS\]$=$ATX(...)  Returns also a structure PM with fields\\
+    ll          - Circumference\\
+    alpha       - momentum compaction factor\\
+    nuh         - Tunes\\
+    nuv\\
+    fulltunes\\
+    fractunes\\
+    espread     - Energy spread\\
+    blength     - Bunch length\\
+    modemittance - Eigen emittances\\
+ \\
+  See also: ATREADBETA ATLINOPT OHMIENVELOPE ATMODUL\\
+\\
+
+\section{Appendix}
 \subsection{Drift}
 \begin{itemize}
 \item pass method:  DriftPass
@@ -274,49 +664,7 @@ ATRINGPARAM(rname,E0,per) creates a RingParameter Element which should go at the
  Energy     Energy of electrons
  PER        Periodicity of the ring (=1 if ring is already expanded)
 
-
-\section{Pass Methods}
-Each element needs a pass method which takes the phase space coordinate of the electron before the element and returns the phase space coordinate after.  In the absence of radiation, the result will be symplectic.  The pass methods are so-called {\it symplectic integrators}. 
-
-A 4th order symplectic integrator assumes that the Hamiltonian can be written in the form $H = H_1 + H_2$ and that $H_1$ and $H_2$ can be independently solved. 
-
-The Hamiltonian may be written
-\begin{equation}
-H=1+\delta -(1+hx)\frac{A_s}{B\rho}-(1+hx)\sqrt{(1+\delta)^2-p_x^2-p_y^2}
-\end{equation}
-and this can be expanded and split.   Now, given a splitting, we define
-
-\begin{equation}
-d_1 = d_4 = \frac{1}{2-2^{1/3}} L
-\end{equation}
-
-\begin{equation}
-d_2 = d_3 = \frac{1-2^{1/3}}{2(2-2^{1/3})} L
-\end{equation}
-
-\begin{equation}
-k_1 =k_3 = \frac{1}{2-2^{1/3}} L
-\end{equation}
-
-\begin{equation}
-k_2 = -\frac{2^{1/3}}{2-2^{1/3}} L
-\end{equation}
-
-Now, suppose we can solve $H_1$ (drift) and $H_2$ (kick) independently, and we notate
-
-\begin{equation}
-e^{:H_1 d:} = D(d)
-\end{equation}
-
-\begin{equation}
-e^{:H_2:k} = K(k)
-\end{equation}
-Then the 4th order integrator is
-
-\begin{equation}
-D(d_1) K(k_1) D(d_2) K(k_2) D(d_2) K(k_1) D(d_1)
-\end{equation}
-
+\subsection{Integrator arguments}
 \subsection{BndMPoleSymplectic4E2Pass}
 required arguments:  
 
@@ -544,298 +892,7 @@ optional arguments:
     'R1'
     'R2'
 
-One possibility is  …(improve this…)
-\begin{equation}
-H_1 = (1+hx)\frac{p_x^2+p_y^2}{2(1+\delta)}
-\end{equation}
-\begin{equation}
-H_2 = -(1+hx)\frac{A_s}{B\rho}-(1+\delta)hx
-\end{equation}
-where $h=1/\rho$ with $\rho$ the bending radius of the magnet (for a given energy electron).
 
-
-
-\section{Lattice Manipulation}\label{lattice_manip}
-There are two kinds of functions for working with lattices.  One type asks a question about certain kinds of elements and
-returns a set of indices to those elements.  The function {\it atgetcells} is an important example of this type which asks for field names in the lattice structure and looks for matches.  The output is a set of boolean values corresponding to whether or not each element matches the criterion.  One can also use the Matlab function {\it findcells} in the same way.  The output here is a list of element indices.
-(getcellstruct and setcellstruct?)
-
-\subsection{atgetfieldvalues}
- ATGETFIELDVALUES retrieves the field values AT cell array of elements
- 
-  VALUES = ATGETFIELDVALUES(RING,'field') extracts the values of
-  the field 'field' in all the elements of RING
- 
-  VALUES = ATGETFIELDVALUES(RING,INDEX,'field') extracts the values of
-  the field 'field' in the elements of RING selected by INDEX
- 
-  if RING{I}.FIELD is a numeric scalar
-     VALUES is a length(INDEX) x 1 array
-  otherwise
-     VALUES is a length(INDEX) x 1 cell array
- 
- 
-  More generally ATGETFIELDVALUES(RING,INDEX,subs1,subs2,...) will call
-   GETFIELD(RING{I},subs1,subs2,...) for I in INDEX
- 
-  Examples:
- 
-  V=ATGETFIELDVALUES(RING,1:10,'PolynomB') is a 10x1  cell array
-  such that V{I}=RING{I}.PolynomB for I=1:10
- 
-  V=ATGETFIELDVALUES(RING(1:10),'PolynomB',{1,2}) is a 10x1 array
-  such that V(I)=RING{I},PolynomB(1,2)
-\subsection{atsetfieldvalues} 
- ATSETFIELDVALUES sets the field values of MATLAB cell array of structures
- 
-    Note that the calling syntax must be in the form of assignment:
-    RING = ATSETFIELDVALUES(RING,...)
-    MATLAB does not modify variables that only appear on the right
-    hand side as arguments.
- 
- NEWRING=ATSETFIELDVALUES(RING,'field',VALUES)
-    In this mode, the function will set values on all the elements of RING
- 
- NEWRING=ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
-    In this mode, the function will set values on the elements of RING
-    specified by INDEX, given as a list of indices or as a logical mask
- 
- NEWRING=ATSETFIELDVALUES(RING,'field',VALUESTRUCT)
-    In this mode, the function will set values on the elements of RING
-    whose family names are given by the field names of VALUESTRUCT
- 
- NEWRING=ATSETFIELDVALUES(RING,RINGINDEX,....,VALUESTRUCT)
-    As in the previous mode, the function will set values on the elements
-    of RING whose family names are given by the field names of VALUESTRUCT.
-    But RINGINDEX=atindex(RING) is provided to avoid multiple computations.
- 
-  Field selection
-  ---------------------------------------------------------
-  NEWRING = ATSETFIELD(RING,'field',VALUES)
-    For each I=1:length(RING), set RING{I}.FIELD=value
- 
-  NEWRING = ATSETFIELD(RING,'field',{M,N},VALUES)
-    For each I=1:length(RING), set RING{I}.FIELD(M,N)=value
- 
-  More generally,
-  NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)
-    For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)
- 
-  The last dimension of VALUES must be either length(INDEX) or 1 (the value
-  will be repeated for each element). For a vector to be repeated, enclose
-  it in a cell array.
- 
-  Value format
-  ---------------------------------------------------------
-  Cell array VALUES
-  -----------------
-  Mx1 cell array : one cell per element
-  1x1 cell array : cell 1 is affected to all selected elements
- 
-  Character array VALUES
-  ---------------------
-  1xN char array (string) : the string as affected to all selected elements
-  MxN char array : one row per element
- 
-  Numeric array VALUES
-  --------------------
-  1x1 (scalar) : the value is affected to all selected elements
-  Mx1 (column) : one value per element
-  MxN (matrix) : one row affected per element. If M==1, the single row
-                 is affected to all selected elements
-  To assign column vectors to parameters, use a cell array VALUES, with one
-  column per cell
- 
-A lattice manipulation function takes a lattice as an argument and produces a new lattice as a result.
-Here are some lattice manipulation functions:
-
-\subsection{Adding errors}
-\begin{itemize}
-\item atsetshift
-\item atsettilt
-\item atsetfieldvalues
-\item atsplitdrift
-\item ataddmpolecomppoly
-\item ataddmpoleerrors
-\item atloadfielderrs
-\end{itemize}
-
-
-\section{Tracking Particles plus Moments}
-The pass methods have two different calling methods.  They may be called directly via the Mex interface (through the MexFunction entry point in the C function), or they may be called indirectly through the function RingPass (through the passFunction entry).  The pass methods should be defined so that calling them with no arguments gives a list of required and optional parameters.
-
-The moment tracking and equilibrium finding occurs via the function OhmiEnvelope().  For this to work requires pass methods that include radiation (this gives a deterministic effect which results in damping and non-symplecticity.  Further, the function findmpoleraddiffmatrix is required to compute the diffusion matrix.
-
-\section{Global parameters and Lattice Functions}
-Given the ability to track particles through the lattice, one can compute global beam dynamics parameters and properties that vary around the ring.  
-Here are some global parameters.
-
-\subsection{tunes}
-\subsection{chromaticity}
-\subsection{momentum compaction factor}
-\subsection{tune shift with amplitude}
-
-Here are some quantities that vary around the ring and come from particle tracking of one turn:
-
-\subsection{Closed orbit}
-\subsection{One turn map matrix}
-\subsection{Transfer matrix from one position to another}
-\subsection{Twiss Parameters}
-\subsection{Dispersion function}
-
-
-From many turn tracking and determination of stability, one may compute at various points around the ring:
-
-\subsection{dynamic aperture: atdynap}
-\subsection{momentum aperture:  atmomentumaperture}
-
-
-From tracking the diffusion matrix and inclusion of radiation, one can compute:
-
-\subsection{Beam sizes}
-
-
-\section{Lattice change and optimization from beam parameters}
-In addition to the lattice building tools in Section \ref{lattice_manip}, there are also lattice changes one would like to do based on beam parameters.  For example, one would like to change the tunes, chromaticities or beta functions of the lattice.
-\begin{itemize}
-\item atfittune
-\item atfitchrome
-\end{itemize}
-
-For general optimization, one may use the atmatch routine.
-\subsection{atmatch}
-See documentation by S. Liuzzo.
-
-\section{Visualization}
-The lattice functions described in the previous section may be plotted, together with a synoptic representation of the lattice.  The function atplot is designed for this purpose.
-\begin{figure}[htb]
-\centering
-\includegraphics*[width=\columnwidth]{images/lat.pdf}
-\caption{ESRF lattice from atplot}
-\label{fig:esrflat}
-\end{figure}
-
-
-
-\section{AT within a larger context: Other Codes, Matlab Middle Layer}
-
-\section{Appendix:  List of all functions and their help}
-{\bf atlinopt.m}\\
- ATLINOPT               performs linear analysis of the COUPLED lattices\\
- 
-  LinData $=$ ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields\\
- \\
-    ElemIndex   - ordinal position in the RING\\
-    SPos        - longitudinal position [m]\\
-    ClosedOrbit - closed orbit column vector with\\
-                  components x, px, y, py (momentums, NOT angles)\\
-    Dispersion  - dispersion orbit position vector with\\
-                  components eta\_x, eta\_prime\_x, eta\_y, eta\_prime\_y\\
-                  calculated with respect to the closed orbit with\\
-                  momentum deviation DP. Only if chromaticity is required.\\
-    M44         - 4x4 transfer matrix M from the beginning of RING\\
-                  to the entrance of the element for specified DP [2]\\
-    A           - 2x2 matrix A in [3]\\
-    B           - 2x2 matrix B in [3]\\
-    C           - 2x2 matrix C in [3]\\
-    gamma       - gamma parameter of the transformation to eigenmodes\\
-    mu          - [ mux, muy] horizontal and vertical betatron phase\\
-    beta        - [betax, betay] vector\\
-    alpha       - [alphax, alphay] vector\\
- \\
-    All values are specified at the entrance of each element specified in REFPTS.\\
-    REFPTS is an array of increasing indexes that  select elements\\
-    from the range 1 to length(LINE)+1.\\
-    See further explanation of REFPTS in the ''help'' for FINDSPOS\\
- 
-  [LinData,NU] $=$ LINOPT() returns a vector of linear tunes
-    [nu\_u , nu\_v] for two normal modes of linear motion [1]\\
- 
-  [LinData,NU, KSI] $=$ LINOPT() returns a vector of chromaticities ksi $=$ d(nu)/(dP/P)\\
-    \[ksi u , ksi v\] - derivatives of \[nu u , nu v\]\\
- 
-  LinData $=$ LINOPT(RING,DP,REFPTS,ORBITIN) does not search for closed orbit.\\
-           instead ORBITIN is used\\
- 
-  Difference with linopt: Fractional tunes 0<$=$tune<1\\
-                  Dispersion output (if chromaticity is required)\\
-                  Alpha output\\
-                  Phase advance output\\
-                  Option to skip closed orbit search\\
- 
-  See also ATREADBETA ATX ATMODUL FINDSPOS TWISSRING TUNECHROM\\
- 
-    \[1\] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973\\
-    \[2\] E.Courant, H.Snyder\\
-    \[3\] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)\\
-
-
-{\bf atradon.m}\\
- ATRADON               switches RF and radiation on\\
- \\
- RING2$=$ATRADON(RING,CAVIPASS,BENDPASS,QUADPASS)\\
- \\
- RING:          initial AT structure\\
- CAVIPASS:     pass method for cavities (default ThinCavityPass)\\
- BENDPASS:     pass method for cavities (default BndMPoleSymplectic4RadPass)\\
- QUADPASS:     pass method for cavities (default: nochange)\\
- \\
- \[RING2,RADINDEX,CAVINDEX\]$=$ATRADON(...) returns the index of radiative elements\\
-                           and cavities\\
-\\
-
-{\bf atx.m}\\
- ATX                    computes and displays global information\\
- \\
- BEAMDATA$=$ATX(RING,DPP,REFPTS)\\
- \\
- RING:          AT structure\\
- DPP:          relative energy deviation (default: 0)\\
- REFPTS:    Index of elements (default: 1:length(ring))\\
- \\
- BEAMDATA is a MATLAB structure array with fields\\
- \\
-  From atlinopt:\\
- \\
-    ElemIndex   - ordinal position in the RING\\
-    SPos        - longitudinal position [m]\\
-    ClosedOrbit - closed orbit column vector with\\
-                  components x, px, y, py (momentums, NOT angles)\\
-    Dispersion  - dispersion orbit position vector with\\
-                  components eta\_x, eta\_prime\_x, eta\_y, eta\_prime\_y\\
-                  calculated with respect to the closed orbit with\\
-                  momentum deviation DP\\
-    M44         - 4x4 transfer matrix M from the beginning of RING\\
-                  to the entrance of the element for specified DP [2]\\
-    A           - 2x2 matrix A in [3]\\
-    B           - 2x2 matrix B in [3]\\
-    C           - 2x2 matrix C in [3]\\
-    gamma       - gamma parameter of the transformation to eigenmodes\\
-    mu          - [ mux, muy] horizontal and vertical betatron phase\\
-    beta        - [betax, betay] vector\\
-    alpha       - [alphax, alphay] vector\\
- \\
-  From ohmienvelope:\\
- \\
-    beam66      - 6x6 equilibrium beam matrix\\
-    emit66      - 6x6 emittance projections on x and y + energy spread\\
-    beam44      - intersection of beam66 for dpp$=$0\\
-    emit44      - emittances of the projections of beam44 on x and y\\
-    modemit     - [emitA emitB] emittance of modes A and B (should be constant)\\
- \\
- \[BEAMDATA,PARAMS\]$=$ATX(...)  Returns also a structure PM with fields\\
-    ll          - Circumference\\
-    alpha       - momentum compaction factor\\
-    nuh         - Tunes\\
-    nuv\\
-    fulltunes\\
-    fractunes\\
-    espread     - Energy spread\\
-    blength     - Bunch length\\
-    modemittance - Eigen emittances\\
- \\
-  See also: ATREADBETA ATLINOPT OHMIENVELOPE ATMODUL\\
-\\
 
 \begin{thebibliography}{2}
 
