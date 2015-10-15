@@ -1,4 +1,4 @@
-function h=plotContours(ring,indices)
+function h=plotContours(ring,indices,colorplotstr)
 %h=plotdriftcontours(ring)
 %load S25ERRseed1.mat
 
@@ -14,5 +14,5 @@ sigyy=squeeze(sig(3,3,:));
 hold on
 for j=indices
     [x,y]=atmakeXYProjectionEllipse(sigxx(j),sigyy(j),sigxy(j));
-    plot(x,y)
+    plot(x,y,colorplotstr)
 end
