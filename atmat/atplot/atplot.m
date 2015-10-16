@@ -12,6 +12,9 @@ function curve = atplot(varargin)
 %ATPLOT(...,[SMIN SMAX])  Zoom on the specified range
 %
 %ATPLOT(...,'OptionName',OptionValue,...) Available options:
+%   'inputtwiss',structure of optics   transferline optics 
+%               (ex: [optics_struct,~,~]=atlinopt(ring,0,1);
+%              atplot(ring,[0 10],@plBeamSize,'inputtwiss',optics_struct);)
 %   'comment',true|false        Prints lattice information (default:true)
 %   'synopt',true|false         Plots the lattice elements
 %   'labels',REFPTS             Display the names of selected element names
@@ -70,11 +73,18 @@ if isempty(resarg)
 end
 options=varargin(resarg:funcarg-1);
 [comment,options]=getoption(options,'comment',true);
+[intwi,options]=getoption(options,'inputtwiss',[]);
+%openline=find(strcmp(options(cellfun(@ischar,options)),'inputtwiss'));
 
 lindata=[];
 
-curve=atbaseplot(varargin{1:resarg-1},@ringplot,varargin(funcarg:end),...
-    options{:});
+if isempty(intwi)	% closed ring, DEFAULT
+    curve=atbaseplot(varargin{1:resarg-1},...
+        @ringplot,varargin(funcarg:end),options{:});
+else                % openline plot
+    curve=atbaseplot(varargin{1:resarg-1},...
+        @lineplot,[{intwi} varargin(funcarg:end)],options{:});
+end
 
 if (comment)
     set(get(curve.left(1),'Parent'),'Position',[.13 .11 .775 .775]);
@@ -89,6 +99,7 @@ if (comment)
         'VerticalAlignment','top');
 end
 
+    % RING
     function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
         [lindata,tune,chrom]=atlinopt(ring,dpp,1:length(ring)+1); %#ok<ASGLU>
         s=cat(1,lindata.SPos);
@@ -98,6 +109,19 @@ end
             plotdata=plotfun(lindata,ring,dpp,varargin{:});
         end
     end
+
+    % OPEN LINE
+    function [s,plotdata]=lineplot(ring,dpp,inputtwiss,plotfun,varargin)
+        lindata=twissline(ring,dpp,inputtwiss,1:length(ring)+1,'chrom'); 
+        s=cat(1,lindata.SPos);
+        if nargin < 4
+            plotdata=defaultplot(lindata,ring,dpp);
+        else
+            plotdata=plotfun(lindata,ring,dpp,varargin{:});
+        end
+    end
+
+
 end
 
 function plotdata=defaultplot(lindata,ring,dpp,varargin) %#ok<INUSD>
