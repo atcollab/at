@@ -19,8 +19,18 @@ function line = atdivelem(elem,frac)
 % See also ATINSERTELEMS ATSLICE ATSPLITELEM
 
 line=atsetfieldvalues(repmat({elem},length(frac),1),'Length',elem.Length*frac(:));
-line(2:end)=cellfun(@(elem) rmfield(elem,{'T1','R1'}),line(2:end),'UniformOutput',false);
-line(1:end-1)=cellfun(@(elem) rmfield(elem,{'T2','R2'}),line(1:end-1),'UniformOutput',false);
+if isfield(elem,'T1')
+    line(2:end)=cellfun(@(elem) rmfield(elem,'T1'),line(2:end),'UniformOutput',false);
+end
+if isfield(elem,'R1')
+    line(2:end)=cellfun(@(elem) rmfield(elem,'R1'),line(2:end),'UniformOutput',false);
+end
+if isfield(elem,'T2')
+    line(1:end-1)=cellfun(@(elem) rmfield(elem,'T2'),line(1:end-1),'UniformOutput',false);
+end
+if isfield(elem,'R2')
+    line(1:end-1)=cellfun(@(elem) rmfield(elem,'R2'),line(1:end-1),'UniformOutput',false);
+end
 if isfield(elem,'BendingAngle')
     line=atsetfieldvalues(line,'BendingAngle',elem.BendingAngle*frac(:)/sum(frac));
 end
