@@ -14,9 +14,9 @@ function elem=atcorrector(fname,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER
 
 [rsrc,L,kick,method]=decodeatargs({0,[0 0],'CorrectorPass'},varargin);
-[rsrc,L]=getatarg(rsrc,L,'Length');
-[rsrc,kick]=getatarg(rsrc,kick,'KickAngle');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-elem=atbaselem(fname,method,'Class','Corrector','Length',L,...
-    'KickAngle',kick,rsrc{:});
+[L,rsrc]=getoption(rsrc,'Length',L);
+[kick,rsrc]=getoption(rsrc,'KickAngle',kick);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','Corrector');
+elem=atbaselem(fname,method,'Class',cl,'Length',L,'KickAngle',kick,rsrc{:});
 end

@@ -14,9 +14,10 @@ function elem=atthinmultipole(fname,varargin)
 %          ATMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,PolynomA,PolynomB,method]=decodeatargs({0,0,'ThinMPolePass'},varargin);
-[rsrc,PolynomA]=getatarg(rsrc,PolynomA,'PolynomA');
-[rsrc,PolynomB]=getatarg(rsrc,PolynomB,'PolynomB');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-elem=atbaselem(fname,method,'Class','ThinMultipole','Length',0,...
+[PolynomA,rsrc]=getoption(rsrc,'PolynomA',PolynomA);
+[PolynomB,rsrc]=getoption(rsrc,'PolynomB',PolynomB);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','ThinMultipole');
+elem=atbaselem(fname,method,'Class',cl,'Length',0,...
     'PolynomA',PolynomA,'PolynomB',PolynomB,rsrc{:});
 end

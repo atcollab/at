@@ -13,7 +13,8 @@ function elem=atdrift(fname,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,L,method]=decodeatargs({0,'DriftPass'},varargin);
-[rsrc,L]=getatarg(rsrc,L,'Length');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-elem=atbaselem(fname,method,'Class','Drift','Length',L,rsrc{:});
+[L,rsrc]=getoption(rsrc,'Length',L);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','Drift');
+elem=atbaselem(fname,method,'Class',cl,'Length',L,rsrc{:});
 end

@@ -15,10 +15,11 @@ function elem=atmultipole(fname,varargin)
 %          ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,L,PolynomA,PolynomB,method]=decodeatargs({0,0,0,'StrMPoleSymplectic4Pass'},varargin);
-[rsrc,L]=getatarg(rsrc,L,'Length');
-[rsrc,PolynomA]=getatarg(rsrc,PolynomA,'PolynomA');
-[rsrc,PolynomB]=getatarg(rsrc,PolynomB,'PolynomB');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-elem=atbaselem(fname,method,'Class','Multipole','Length',L,...
+[L,rsrc]=getoption(rsrc,'Length',L);
+[PolynomA,rsrc]=getoption(rsrc,'PolynomA',PolynomA);
+[PolynomB,rsrc]=getoption(rsrc,'PolynomB',PolynomB);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','Multipole');
+elem=atbaselem(fname,method,'Class',cl,'Length',L,...
     'PolynomA',PolynomA,'PolynomB',PolynomB,rsrc{:});
 end

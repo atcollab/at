@@ -1,4 +1,4 @@
-function elem=atQuantDiff(fname,arg)
+function elem=atQuantDiff(fname,varargin)
 %atQuantDiff creates a quantum diffusion element
 %
 %ELEM=ATQUANTDIFF(FAMNAME,DIFFMAT) uses the given diffusion matrix
@@ -11,14 +11,16 @@ function elem=atQuantDiff(fname,arg)
 %
 %See also quantumDiff
 
+[rsrc,arg,method]=decodeatargs({[],'QuantDiffPass'},varargin);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','QuantDiff');
 if iscell(arg)
     [ring2,radindex]=atradon(arg);
     dmat=quantumDiff(ring2,radindex);
 else
     dmat=arg;
 end
-
-elem=atbaselem(fname, 'QuantDiffPass', 'Class', 'QuantDiff', 'Lmatp' , lmatp(dmat));
+elem=atbaselem(fname,method,'Class',cl,'Lmatp',lmatp(dmat),rsrc{:});
 
     function lmatp = lmatp(dmat)
         %lmat does Cholesky decomp of dmat unless diffusion is 0 in
@@ -33,5 +35,3 @@ elem=atbaselem(fname, 'QuantDiffPass', 'Class', 'QuantDiff', 'Lmatp' , lmatp(dma
         lmatp=lmat66';
     end
 end
-
-

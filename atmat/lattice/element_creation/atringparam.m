@@ -10,8 +10,9 @@ function elem=atringparam(fname,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE
 
 [rsrc,energy,nbper]=decodeatargs({6E9,1},varargin);
-[rsrc,energy]=getatarg(rsrc,energy,'Energy');
-[rsrc,nbper]=getatarg(rsrc,nbper,'Periodicity');
-elem=atbaselem(fname,'IdentityPass','Class','RingParam','Length',0,...
+[energy,rsrc]=getoption(rsrc,'Energy',energy);
+[nbper,rsrc]=getoption(rsrc,'Periodicity',nbper);
+[cl,rsrc]=getoption(rsrc,'Class','RingParam');
+elem=atbaselem(fname,'IdentityPass','Class',cl,...
     'Energy',energy,'Periodicity',nbper,rsrc{:});
 end

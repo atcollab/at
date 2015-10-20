@@ -13,8 +13,9 @@ function elem=atM66Tijk(fname,varargin)
 %ATSTRUCT   AT structure
 
 [rsrc,m66,tijk,method]=decodeatargs({eye(6),zeros(6,6,6),'MatrixTijkPass'},varargin);
-[rsrc,L]=getatarg(rsrc,0.0,'Length');
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','MatrixTijkPass');
 if isstruct(m66)
     m66=findm66(m66);
 end
-elem=atbaselem(fname,method,'M66',m66,'Tijk',tijk,'Class','MatrixTijk','Length',L,rsrc{:});
+elem=atbaselem(fname,method,'Class',cl,'M66',m66,'Tijk',reshape(tijk,6,6,6),rsrc{:});

@@ -12,8 +12,9 @@ function elem=atM66(fname,varargin)
 %ATSTRUCT   AT structure
 
 [rsrc,m66,method]=decodeatargs({eye(6),'Matrix66Pass'},varargin);
-[rsrc,L]=getatarg(rsrc,0.0,'Length');
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','Matrix66');
 if isstruct(m66)
     m66=findm66(m66);
 end
-elem=atbaselem(fname,method,'M66',m66,'Class','Matrix66','Length',L,rsrc{:});
+elem=atbaselem(fname,method,'Class',cl,'M66',m66,rsrc{:});

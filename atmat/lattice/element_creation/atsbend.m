@@ -14,15 +14,16 @@ function elem=atsbend(fname,varargin)
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 [rsrc,L,A,K,method]=decodeatargs({0,0,[],'BendLinearPass'},varargin);
-[rsrc,L]=getatarg(rsrc,L,'Length');
-[rsrc,A]=getatarg(rsrc,A,'BendingAngle');
-[rsrc,K]=getatarg(rsrc,K,'K');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-[rsrc,PolynomB]=getatarg(rsrc,[0 0],'PolynomB');
+[L,rsrc]=getoption(rsrc,'Length',L);
+[A,rsrc]=getoption(rsrc,'BendingAngle',A);
+[K,rsrc]=getoption(rsrc,'K',K);
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[PolynomB,rsrc]=getoption(rsrc,'PolynomB',[0 0]);
+[cl,rsrc]=getoption(rsrc,'Class','Bend');
 if ~isempty(K), PolynomB(2)=K; end
-[rsrc,EntranceAngle]=getatarg(rsrc,0,'EntranceAngle');
-[rsrc,ExitAngle]=getatarg(rsrc,0,'ExitAngle');
-elem=atbaselem(fname,method,'Class','Bend','Length',L,...
+[EntranceAngle,rsrc]=getoption(rsrc,'EntranceAngle',0);
+[ExitAngle,rsrc]=getoption(rsrc,'ExitAngle',0);
+elem=atbaselem(fname,method,'Class',cl,'Length',L,...
     'BendingAngle',A,'EntranceAngle',EntranceAngle,'ExitAngle',ExitAngle,...
     'K',PolynomB(2),'PolynomB',PolynomB,rsrc{:});
 end

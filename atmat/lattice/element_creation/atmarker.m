@@ -13,8 +13,7 @@ function elem=atmarker(fname,varargin)
 
 
 [rsrc,method,~]=decodeatargs({'IdentityPass',''},varargin);
-[rsrc,L]=getatarg(rsrc,0,'Length');
-[rsrc,method]=getatarg(rsrc,method,'PassMethod');
-[rsrc,cl]=getatarg(rsrc,'Marker','Class');
-elem=atbaselem(fname,method,'Class',cl,'Length',L,rsrc{:});
+[method,rsrc]=getoption(rsrc,'PassMethod',method);
+[cl,rsrc]=getoption(rsrc,'Class','Marker');
+elem=atbaselem(fname,method,'Class',cl,rsrc{:});
 end
