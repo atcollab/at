@@ -4,84 +4,118 @@ function elstr=at2str(elem)
 %AT2STR Creates a string such that EVAL(AT2STR(ELEM)) recreates an
 %identical element.
 
-args={};
-% if isfield(elem,'Class')
-%     atclass=elem.Class;
-% else
-    atclass=atguessclass(elem, 'UseClass');
-% end
+atclass=atguessclass(elem, 'UseClass');
 
 switch atclass
     case 'Drift'
-        elstr=mout('atdrift',elem.FamName,elem.Length);
+        create=@atdrift;
+        [options,args]=doptions(elem,create,{'Length'});
     case 'Quadrupole'
-        if any(abs(elem.PolynomA)>0)
-            args=[{'PolynomA',elem.PolynomA} args];
+        create=@atquadrupole;
+        args={elem.Length,elem.PolynomB(2)};
+        [options,args]=doptions(elem,create,{'Length','K'},{'PolynomB','PolynomA'},args);
+        if ~any(abs(elem.PolynomA)>0)
+            options=rmfield(options,'PolynomA');
         end
         anom=abs(elem.PolynomB)~=0;
         anom(2)=false;
-        if any(anom)
-            args=[{'PolynomB',elem.PolynomB} args];
+        if ~any(anom)
+            options=rmfield(options,'PolynomB');
         end
-        elstr=mout('atquadrupole',elem.FamName,elem.Length,...
-            elem.PolynomB(2),elem.PassMethod,args{:});
     case 'Sextupole'
-        if any(abs(elem.PolynomA)>0)
-            args=[{'PolynomA',elem.PolynomA} args];
+        create=@atsextupole;
+        args={elem.Length,elem.PolynomB(3)};
+        [options,args]=doptions(elem,create,{'Length'},{'PolynomB','PolynomA'},args);
+        if ~any(abs(elem.PolynomA)>0)
+            options=rmfield(options,'PolynomA');
         end
         anom=abs(elem.PolynomB)~=0;
         anom(3)=false;
-        if any(anom)
-            args=[{'PolynomB',elem.PolynomB} args];
+        if ~any(anom)
+            options=rmfield(options,'PolynomB');
         end
-        elstr=mout('atsextupole',elem.FamName,elem.Length,...
-            elem.PolynomB(3),args{:});
     case 'Bend'
-        if any(abs(elem.PolynomA)>0)
-            args=[{'PolynomA',elem.PolynomA} args];
+        args={elem.Length,elem.BendingAngle,elem.PolynomB(2)};
+        [options,args]=doptions(elem,@atsbend,{'Length','BendingAngle','K'},...
+            {'EntranceAngle','ExitAngle','PolynomB','PolynomA'},args);
+        if all([elem.EntranceAngle elem.ExitAngle] == 0)
+            create=@atsbend;
+            options=rmfield(options,{'EntranceAngle','ExitAngle'});
+        else
+            create=@atrbend;
+            if elem.EntranceAngle == 0.5*elem.BendingAngle
+                options=rmfield(options,'EntranceAngle');
+            end
+            if elem.ExitAngle == 0.5*elem.BendingAngle
+                options=rmfield(options,'ExitAngle');
+            end
+        end
+        if ~any(abs(elem.PolynomA)>0)
+            options=rmfield(options,'PolynomA');
         end
         anom=abs(elem.PolynomB)~=0;
         anom(2)=false;
-        if any(anom)
-            args=[{'PolynomB',elem.PolynomB} args];
+        if ~any(anom)
+            options=rmfield(options,'PolynomB');
         end
-        angles=[elem.EntranceAngle elem.ExitAngle];
-        if all(angles == 0)
-            code='atsbend';
-        elseif all(angles == 0.5*elem.BendingAngle)
-            code='atrbend';
-        else
-            args=[{'EntranceAngle',elem.EntranceAngle,'ExitAngle',elem.ExitAngle} args];
-            code='atrbend';
-        end
-        elstr=mout(code,elem.FamName,elem.Length,elem.BendingAngle,...
-            elem.PolynomB(2),elem.PassMethod,args{:});
     case 'Corrector'
-        elstr=mout('atcorrector',elem.FamName,elem.Length,elem.KickAngle,args{:});
+        create=@atcorrector;
+        [options,args]=doptions(elem,create,{'Length','KickAngle'});
     case 'Multipole'
-        elstr=mout('atmultipole',elem.FamName,elem.Length,...
-            elem.PolynomA,elem.PolynomB);
+        create=@atmultipole;
+        [options,args]=doptions(elem,create,{'Length','PolynomB','PolynomA'});
     case 'ThinMultipole'
-        elstr=mout('atthinmultipole',elem.FamName,elem.PolynomA,elem.PolynomB,args{:});
+        create=@atthinmultipole;
+        [options,args]=doptions(elem,create,{'PolynomB','PolynomA'});
     case 'RFCavity'
-        elstr=mout('atrfcavity',elem.FamName,elem.Length,elem.Voltage,...
-            elem.Frequency,elem.HarmNumber,elem.Energy);
+        create=@atrfcavity;
+        [options,args]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber','Energy'});
     case 'RingParam'
-        elstr=mout('atringparam',elem.FamName,elem.Energy,elem.Periodicity,args{:});
+        create=@atringparam;
+        [options,args]=doptions(elem,create,{'Energy','Periodicity'});
     case 'Aperture'
-        elstr=mout('ataperture',elem.FamName,elem.Limits,elem.PassMethod,args{:});
+        create=@ataperture;
+        [options,args]=doptions(elem,create,{'Limits'});
+    case 'QuantDiff'
+        create=@atQuantDiff;
+        [options,args]=doptions(elem,create,{'Lmatp'});
+    case 'Matrix66'
+        create=@atM66;
+        [options,args]=doptions(elem,create,{'M66'});
+    case 'MatrixTijkPass'
+        create=@atM66Tijk;
+        [options,args]=doptions(elem,create,{'M66','Tijk'});
+    case 'Monitor'
+        create=@atmonitor;
+        [options,args]=doptions(elem,create);
     otherwise %'Marker'
-        fnames=fieldnames(elem);
-        remove=strcmp('FamName',fnames) | strcmp('Energy',fnames);
-        fnames(remove)=[];
-        fvals=cellfun(@(fn) elem.(fn),fnames,'UniformOutput',false);
-        flds=[fnames';fvals'];
-        elstr=mout('atmarker',elem.FamName,flds{:},args{:});
+        create=@atmarker;
+        [options,args]=doptions(elem,create);
+        if isfield(options,'Energy')
+            options=rmfield(options,'Energy');
+        end
 end
+varg=[args,reshape(cat(2,fieldnames(options),struct2cell(options))',1,[])];
+fmt=['%15s(%s' repmat(',%s',1,length(varg)-1) ')'];
+%strargs=cellfun(@mat2str,varg,'UniformOutput',false);
+strargs=cellfun(@(arg) mat2str(reshape(arg,[],size(arg,2))),varg,'UniformOutput',false);
+elstr=sprintf(fmt,func2str(create),strargs{:});
 
-    function elstr=mout(fname,elname,varargin)
-        fmt=['%15s(''%s''' repmat(',%s',1,length(varargin)) ')'];
-        strargs=cellfun(@mat2str,varargin,'UniformOutput',false);
-        elstr=sprintf(fmt,fname,elname,strargs{:});
+    function [opts,args]=doptions(elem,create,argn,dontcheck,args)
+        if nargin<4, dontcheck={}; end
+        if nargin<3, argn={}; end
+        if nargin<5, args=cellfun(@(field) elem.(field),argn,'UniformOutput',false); end
+        args=[{elem.FamName},args];
+        defelem=create(args{:});                        % Build sample element
+        if ~strcmp(elem.PassMethod,defelem.PassMethod)
+            args=[args,{elem.PassMethod}];
+        end
+        argnames=[{'FamName'},argn,{'PassMethod'}];
+        defel=rmfield(defelem,[argnames,dontcheck]);    % Keep only optional fields
+        fnames=fieldnames(defel)';
+        fvalues=struct2cell(defel)';
+        ok=isfield(elem,fnames);                        % Check for default values
+        ok(ok)=cellfun(@(fname,fval) isequal(elem.(fname),fval),fnames(ok),fvalues(ok));
+        opts=rmfield(elem,[argnames,fnames(ok)]);       % Keep only non-default values
     end
 end

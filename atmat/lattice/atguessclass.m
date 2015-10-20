@@ -43,10 +43,22 @@ elseif isfield(elem,'PolynomB')
             atclass='ThinMultipole';
         end
     end
+elseif isfield(elem,'Lmatp')
+    atclass='QuantDiff';
+elseif isfield(elem,'M66')
+    if isfield(elem,'Tijk')
+        atclass='MatrixTijkPass';
+    else
+        atclass='Matrix66';
+    end
 elseif isfield(elem,'Length') && elem.Length~=0
     atclass='Drift';
 else
-    atclass='Marker';
+    if useclass && isfield(elem,'Class')
+        atclass=elem.Class;
+    else
+        atclass='Marker';
+    end
 end
 
 end

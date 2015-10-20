@@ -20,16 +20,15 @@ function  posdata = atgeometry3(ring,varargin)
 
 [refpts,offset]=parseargs({1:length(ring)+1,[0 0 0]},varargin);
 conv=eye(3);
-invconv=eye(3);
 xyzc=[0;0;0];
-[ss,xx,zz]=cellfun(@incr,ring);
+[xx,yy,zz]=cellfun(@incr,ring);
 if isscalar(offset)
     offset=[0 offset 0];
 end
-ss=[0;ss]+offset(1);
-xx=[0;xx]+offset(2);
+xx=[0;xx]+offset(1);
+yy=[0;yy]+offset(2);
 zz=[0;zz]+offset(3);
-posdata=struct('x',num2cell(ss(refpts)),'y',num2cell(xx(refpts)),...
+posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
     'z',num2cell(zz(refpts)));
 
     function varargout=incr(elem)
@@ -39,12 +38,12 @@ posdata=struct('x',num2cell(ss(refpts)),'y',num2cell(xx(refpts)),...
         if isfield(elem,'BendingAngle')
             ang=0.5*elem.BendingAngle;
             L=elem.Length/ang*sin(ang);
-            hkick(ang);
-            xyzc=conv*(invconv*xyzc+[L;0;0]);
-            hkick(ang);
+            hkick(-ang);
+            xyzc=xyzc+conv*[L;0;0];
+            hkick(-ang);
         elseif isfield(elem,'Length')
             L=elem.Length;
-            xyzc=conv*(invconv*xyzc+[L;0;0]);
+            xyzc=xyzc+conv*[L;0;0];
         end
         if isfield(elem,'R2')
             rots(elem.R2);
@@ -55,13 +54,11 @@ posdata=struct('x',num2cell(ss(refpts)),'y',num2cell(xx(refpts)),...
         cns=R(1,1);
         sns=R(1,3);
         conv=conv*[1 0 0;0 cns -sns;0 sns cns];
-        invconv=[1 0 0;0 cns sns;0 -sns cns]*invconv;
     end
     function hkick(ang)
         cns=cos(ang);
         sns=sin(ang);
         conv=conv*[cns -sns 0;sns cns 0;0 0 1];
-        invconv=[cns sns 0;-sns cns 0;0 0 1]*invconv;
     end
 end
 
