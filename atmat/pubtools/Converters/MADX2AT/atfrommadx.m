@@ -2,25 +2,25 @@ function atfrommadx(seqfilemadX,E0,outfilename)
 %function atfrommadx(seqfilemadX,E0,outfilename)
 % tansform madX sequence file (savesequence) file into AT lattice structure.
 %
-% This procedure reads a saved lattice (sequence in madx) in madX 
+% This procedure reads a saved lattice (sequence in madx) in madX
 % and converts it to an AT lattice
 %
-% (madx comands to save the sequences : 
-% 
+% (madx comands to save the sequences :
+%
 %  _______ MADX code _________
-%  use,period=sequencename1; 
-%  use,period=sequencename2; 
-%  use,period=sequencename2; 
+%  use,period=sequencename1;
+%  use,period=sequencename2;
+%  use,period=sequencename2;
 %  SAVE,FILE='seqfilemadX.seq';
 %  ___________________________
 %
-%  seqfilemadX.seq will contain sequencename1 sequencename2 sequencename3 
+%  seqfilemadX.seq will contain sequencename1 sequencename2 sequencename3
 %  in the correct format in a single file
-% 
+%
 % )
-% 
+%
 % The routine outputs a Matlab macro with all the AT defitions and variables as
-% in the madX file  
+% in the madX file
 %
 % The order of the declarations is the same in the two files.
 % declarations that contain other variables are moved to the end. (this may not be enough)
@@ -33,7 +33,7 @@ function atfrommadx(seqfilemadX,E0,outfilename)
 %    - seqfilemadX=name of the mad8 lattice file
 %    - E0  = design energy
 %    - outfilename (default: seqfilemadX_AT_LATTICE.mat)
-%    
+%
 % default pass methods:
 %          quadrupoles : StrMPoleSymplectic4Pass
 %          dipole : BndMPoleSymplectic4Pass
@@ -54,14 +54,14 @@ function atfrommadx(seqfilemadX,E0,outfilename)
 % updated 14-sep-2012 multipoles (1/n!) factor from madx to AT
 % updated 21-dec-2012 rbend-sbend length conversion corrected
 % updated 05-mar-2013 lattice output no fringes and with fringes (_FF).
-%                     
+%
 % updated 20-mar-2013 removed output no fringes and with fringes (_FF).
 %                     removed output reduced (_red).
 %                     use atconstructors.
 %                     call macro directly
 %                     try-catch macro running
 %                     tempname file and fulfile.
-                  
+
 
 %% initial warnings
 disp('important notice about conversion:')
@@ -86,31 +86,68 @@ sX=fopen(seqfilemadX,'r');
 % between two : all the parameter of an elemetn or a line ar found.
 
 %% get madX file in a cell array with a new elment at every space comma or new line.
-SXCELL=textscan(sX,'%s','delimiter',';');
+%SXCELL=textscan(sX,'%s','delimiter',';');
+SXCELL=textscan(sX,'%s','CollectOutput',0,'delimiter','\n');
 
-SXSTRING=SXCELL{1}; % still a cell array but every space or new line now is stored as a new cell.
+A=SXCELL{1};
+B={};
+
+iia=1;
+iib=1;
+
+B{1}=[];
+
+while iia~=length(A)
+    
+    
+    if ~strcmp(A{iia}(end),';')
+        
+        B{iib}=[B{iib} A{iia}]; % catenate until ; is found
+        
+    else
+        
+        B{iib}=[B{iib} A{iia}(1:end-1)]; % remove ;
+        
+        iib=iib+1;
+        B{iib}=[];
+    end
+    
+    iia=iia+1;
+    
+end
+
+SXSTRING=B'; % still a cell array but every space or new line now is stored as a new cell.
 
 % scroll and reshape to divide atributes
 tmp={};
 
-for i=1:length(SXSTRING)
-    SXSTRING{i}=strrep(SXSTRING{i},' ',''); % no spaces
-    SXSTRING{i}=strrep(SXSTRING{i},':=','=');
-    SXSTRING{i}=strrep(SXSTRING{i},';','');
-    
-    c=[1 sort([strfind(SXSTRING{i},',') strfind(SXSTRING{i},':')...
-                     strfind(SXSTRING{i},'=')]) length(SXSTRING{i})];
-    
-    for jc=1:length(c)-1
-        if jc==1
-            tmp=[tmp SXSTRING{i}(c(jc):c(jc+1))];
-        else
-            tmp=[tmp SXSTRING{i}(c(jc)+1:c(jc+1))];
-        end
-    end
-    
-end
-SXSTRING=tmp;
+% for i=1:length(SXSTRING)
+%
+%     waitbar(i/length(SXSTRING));
+%
+%     SXSTRING{i}=strrep(SXSTRING{i},' ',''); % no spaces
+%     SXSTRING{i}=strrep(SXSTRING{i},':=','=');
+%     SXSTRING{i}=strrep(SXSTRING{i},';','');
+%
+%     c=[1 sort([strfind(SXSTRING{i},',') strfind(SXSTRING{i},':')...
+%                      strfind(SXSTRING{i},'=')]) length(SXSTRING{i})];
+%
+%     % split sub strings
+%     for jc=1:length(c)-1
+%         if jc==1
+%             tmp=[tmp SXSTRING{i}(c(jc):c(jc+1))];
+%         else
+%             tmp=[tmp SXSTRING{i}(c(jc)+1:c(jc+1))];
+%         end
+%     end
+%
+% end
+% SXSTRING=tmp;
+
+
+tmp=cellfun(@(a)formatTextMADX(a),SXSTRING,'un',0);
+
+SXSTRING=[tmp{:}];
 
 
 %% open .m file to output matlab translated code
@@ -119,9 +156,9 @@ filemacroname=[tempname '.m'];
 
 mafileout=fopen(filemacroname,'w+');
 mst=['%% this is a macro that converts to AT the madX lattice: '...
-                     seqfilemadX '\n%%\n%% Created: ' datestr(now)...
-                     '\n%%\n%%\n\nglobal GLOBVAL;\nGLOBVAL.E0=' num2str(E0)...
-                     ';\n\n\n'];
+    seqfilemadX '\n%%\n%% Created: ' datestr(now)...
+    '\n%%\n%%\n\nglobal GLOBVAL;\nGLOBVAL.E0=' num2str(E0)...
+    ';\n\n\n'];
 def=['\n\n%%%% DEFINITIONS \n\n']; %#ok<*NBRAK>
 lines=['\n\n%%%% LINES \n\n'];
 var=['%%%% VARIABLES \n\n sxt_on=1;'];
@@ -129,10 +166,12 @@ formulas=['\n\n%%%% RELATIONS \n\n'];
 
 %% convert to a matlab macro
 j=1; % used in line block counter (element atributes counter)
+h=waitbar(0,'Converting: ');
 
 elemcount=0;
 i=1; % skip header in mad8 file   (element counter)
 while i<length(SXSTRING)-2
+    
     
     if SXSTRING{i}(end)==':' % new element or line
         def=[ def ...
@@ -147,10 +186,15 @@ while i<length(SXSTRING)-2
         SXSTRING{i+j}=strrep(SXSTRING{i+j},'MONITOR,,','MONITOR,');
         
         ElementType=SXSTRING{i+j}(1:end-1);
+        
+        
+        % display status of conversion
+        waitbar(i/(length(SXSTRING)-2),h,['Converting: ' ElementType]);
+        
         %  THERING=[THERING ' ' SXSTRING{i+1}];
         %j=2;
         nwel=SXSTRING{i+j}(end);
-      
+        
         switch ElementType
             case {'quadrupole','QUADRUPOLE', 'QUADRUPO'}
                 def=[def '\n'];
@@ -165,7 +209,7 @@ while i<length(SXSTRING)-2
                 elemcount=elemcount+1;
                 while nwel~=':' % loops atributes of this element definition
                     def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),SXSTRING{i+j},SXSTRING{i+j+1});
-                   
+                    
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
                 end
@@ -190,12 +234,12 @@ while i<length(SXSTRING)-2
                 end
                 def=[ def ...
                     SXSTRING{i}(1:end-1) '.(''PolynomB'')=' SXSTRING{i}(1:end-1) '.(''PolynomB'')*1/2' ';\n' ...
-                ];
+                    ];
                 
             case {'rbend','RBEND'}
                 
                 def=[def '\n'];
-               
+                
                 def=[ def ...
                     SXSTRING{i}(1:end-1)...
                     '=atrbend('''...
@@ -214,14 +258,14 @@ while i<length(SXSTRING)-2
                 end
                 % bendings are  sector by default. change to rectangular
                 def=[ def ...
-                 SXSTRING{i}(1:end-1) '.(''EntranceAngle'')=' SXSTRING{i}(1:end-1) '.(''EntranceAngle'')+' SXSTRING{i}(1:end-1) '.(''BendingAngle'')/2; \n'...
-                 SXSTRING{i}(1:end-1) '.(''ExitAngle'')=' SXSTRING{i}(1:end-1) '.(''ExitAngle'')+' SXSTRING{i}(1:end-1) '.(''BendingAngle'')/2; \n'...
-                   SXSTRING{i}(1:end-1) '.(''Length'')=' SXSTRING{i}(1:end-1)...
-                     '.(''Length'')*(' SXSTRING{i}(1:end-1)...
-                     '.(''BendingAngle'')/2)/sin(' SXSTRING{i}(1:end-1)...
-                     '.(''BendingAngle'')/2); \n'...
-                  SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
-              
+                    SXSTRING{i}(1:end-1) '.(''EntranceAngle'')=' SXSTRING{i}(1:end-1) '.(''EntranceAngle'')+' SXSTRING{i}(1:end-1) '.(''BendingAngle'')/2; \n'...
+                    SXSTRING{i}(1:end-1) '.(''ExitAngle'')=' SXSTRING{i}(1:end-1) '.(''ExitAngle'')+' SXSTRING{i}(1:end-1) '.(''BendingAngle'')/2; \n'...
+                    SXSTRING{i}(1:end-1) '.(''Length'')=' SXSTRING{i}(1:end-1)...
+                    '.(''Length'')*(' SXSTRING{i}(1:end-1)...
+                    '.(''BendingAngle'')/2)/sin(' SXSTRING{i}(1:end-1)...
+                    '.(''BendingAngle'')/2); \n'...
+                    SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
+                
             case {'sbend','SBEND'}
                 def=[def '\n'];
                 
@@ -236,14 +280,14 @@ while i<length(SXSTRING)-2
                 
                 while nwel~=':' % loops atributes of this element definition
                     def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
-                    SXSTRING{i+j},SXSTRING{i+j+1});
+                        SXSTRING{i+j},SXSTRING{i+j+1});
                     
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
                 end
                 
-           def=[ def SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
-              
+                def=[ def SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
+                
             case {'DRIFT','drift'}
                 def=[def '\n'];
                 
@@ -259,7 +303,7 @@ while i<length(SXSTRING)-2
                 
                 while nwel~=':' % loops atributes of this element definition
                     def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
-                    SXSTRING{i+j},SXSTRING{i+j+1});
+                        SXSTRING{i+j},SXSTRING{i+j+1});
                     
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
@@ -279,7 +323,7 @@ while i<length(SXSTRING)-2
                 
                 while nwel~=':' % loops atributes of this element definition
                     def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
-                    SXSTRING{i+j},SXSTRING{i+j+1});
+                        SXSTRING{i+j},SXSTRING{i+j+1});
                     
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
@@ -295,7 +339,7 @@ while i<length(SXSTRING)-2
                     '''' SXSTRING{i}(1:end-1) ''''...
                     ',[0 0 0 0],[0 0 0 0],'...
                     '''ThinMPolePass'');\n'...
-                     SXSTRING{i}(1:end-1) '.(''Length'')=0; \n'...
+                    SXSTRING{i}(1:end-1) '.(''Length'')=0; \n'...
                     ];
                 
                 
@@ -303,9 +347,9 @@ while i<length(SXSTRING)-2
                 % MADX-->   ocf0: multipole,knl:={ 0, 0, 0,kocf0 };
                 while nwel~=':' % loops atributes of this element definition
                     
-                
-                multipoles=[];
-                    if strcmp(SXSTRING{i+j+1}(1),'{') % if open paerntesis found 
+                    
+                    multipoles=[];
+                    if strcmp(SXSTRING{i+j+1}(1),'{') % if open paerntesis found
                         multipoles=[multipoles '[' SXSTRING{i+j+1}(2:end)];
                         k=2;
                         while ~strcmp(SXSTRING{i+j+k}(end),'}') && k<10 % look for closed parentesis
@@ -317,14 +361,14 @@ while i<length(SXSTRING)-2
                     end
                     
                     if ~isempty(multipoles)
-                    def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
-                    SXSTRING{i+j},multipoles);
-                
+                        def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
+                            SXSTRING{i+j},multipoles);
+                        
                     else
-                    def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
-                    SXSTRING{i+j},SXSTRING{i+j+1});
+                        def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
+                            SXSTRING{i+j},SXSTRING{i+j+1});
                     end
-                j=j+1; %go to new atribute
+                    j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
                     
                 end
@@ -358,7 +402,7 @@ while i<length(SXSTRING)-2
                 
                 while nwel~=':' % loops atributes of this element definition
                     def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
-                    SXSTRING{i+j},SXSTRING{i+j+1});
+                        SXSTRING{i+j},SXSTRING{i+j+1});
                     
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
@@ -382,7 +426,7 @@ while i<length(SXSTRING)-2
             case {'SOLENOID','solenoid'}
                 def=[def '\n'];
                 
-                 def=[ def ...
+                def=[ def ...
                     SXSTRING{i}(1:end-1) '=atsolenoid('...
                     '''' SXSTRING{i}(1:end-1) ''''...
                     ',0,0,'...
@@ -405,8 +449,48 @@ while i<length(SXSTRING)-2
                 def=[ def ...
                     SXSTRING{i}(1:end-1) '=atmarker('...
                     '''' SXSTRING{i}(1:end-1) ''');\n'...
-                     SXSTRING{i}(1:end-1) '.(''Length'')=0; \n'...
-                     SXSTRING{i}(1:end-1) '.(''Class'')=''Marker''; \n'...
+                    SXSTRING{i}(1:end-1) '.(''Length'')=0; \n'...
+                    SXSTRING{i}(1:end-1) '.(''Class'')=''Marker''; \n'...
+                    ];
+                
+                elemcount=elemcount+1;
+                
+                while nwel~=':' % loops atributes of this element definition
+                    def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
+                        SXSTRING{i+j},SXSTRING{i+j+1});
+                    
+                    j=j+1; %go to new atribute
+                    nwel=SXSTRING{i+j}(end);
+                end
+            case {'MATRIX','matrix','Matrix'}
+                def=[def '\n'];
+                
+                def=[ def ...
+                    SXSTRING{i}(1:end-1) '=atM66Tijk('...
+                    '''' SXSTRING{i}(1:end-1) ''');\n'...
+                    SXSTRING{i}(1:end-1) '.(''Length'')=0; \n'...
+                    SXSTRING{i}(1:end-1) '.(''Tijk'')=zeros(6,6,6); \n'...
+                    SXSTRING{i}(1:end-1) '.(''M66'')=eye(6,6); \n'...
+                    SXSTRING{i}(1:end-1) '.(''Class'')=''MatrixTijk''; \n'...
+                    ];
+                
+                elemcount=elemcount+1;
+                
+                while nwel~=':' % loops atributes of this element definition
+                    def=ParseAtributesMADX_2_AT(def,SXSTRING{i}(1:end-1),...
+                        SXSTRING{i+j},SXSTRING{i+j+1});
+                    
+                    j=j+1; %go to new atribute
+                    nwel=SXSTRING{i+j}(end);
+                end
+            case {'Collimator','collimator','COLLIMATOR'}
+                def=[def '\n'];
+                
+                def=[ def ...
+                    SXSTRING{i}(1:end-1) '=atmarker('...
+                    '''' SXSTRING{i}(1:end-1) ''');\n'...
+                    SXSTRING{i}(1:end-1) '.(''Length'')=0; \n'...
+                    SXSTRING{i}(1:end-1) '.(''Class'')=''Marker''; \n'...
                     ];
                 
                 elemcount=elemcount+1;
@@ -473,10 +557,13 @@ while i<length(SXSTRING)-2
                 
                 j=j+3;
             case {'sequence'}
+                
                 % next element is the length
                 seqname=SXSTRING{i}(1:end-1);
                 l=SXSTRING{i+j+2};
                 j=j+2+1;
+                
+                waitbar(i/(length(SXSTRING)-2),h,['Convert sequence: ' seqname ' ']);
                 
                 elname=SXSTRING{i+j};
                 at=SXSTRING{i+j+1};
@@ -487,14 +574,20 @@ while i<length(SXSTRING)-2
                 while strcmp(at,'at=') && ~strcmp(elname,'endsequence')
                     
                     elname=SXSTRING{i+j};
-                    if ~strcmp(elname,'endsequence')
+                    % WARNING if fails here add RETURN after madx
+                    % ...
+                    % endsequence;
+                    % RETURN
+                    % -----eof------
+                    
+                    if ~strcmp(elname,'endsequence')&& ~isempty(elname)
                         elname=strrep(elname,',','');
                         at=SXSTRING{i+j+1};
                         spos=SXSTRING{i+j+2};
-                    
+                        
                         lines=[lines upper(elname) ';...\n'];
                         sposstring=[sposstring ',...\n ' num2str(spos)];
-            
+                        
                         j=j+3;
                     else
                         j=j+1;
@@ -507,8 +600,8 @@ while i<length(SXSTRING)-2
                 % and total length of sequence
                 lines=[lines sposstring '\n %% BUILD LATTICE \n'...
                     seqname '=buildATLattice(' seqname ',spos,' l ');\n'...
-                   ... seqname '_red=atreduce(' seqname ');\n'...
-                   ... seqname '_FF=FringeSwitch(' seqname ',1);\n'...
+                    ... seqname '_red=atreduce(' seqname ');\n'...
+                    ... seqname '_FF=FringeSwitch(' seqname ',1);\n'...
                     ];
                 
             otherwise
@@ -519,11 +612,11 @@ while i<length(SXSTRING)-2
         
     else % variable declaration??
         if SXSTRING{i}(1)~='!';
-          
+            
             % in mad8 declaring a variable before using it is not compulsary.
             % check that all definitions are at the begining.
-            %if sum(ismember('ABCDFGHILMNOPQRSTUVZWYK',SXSTRING{i+2}))>0 
-            if sum(ismember('()/*+-',SXSTRING{i+1}))>0 
+            %if sum(ismember('ABCDFGHILMNOPQRSTUVZWYK',SXSTRING{i+2}))>0
+            if sum(ismember('()/*+-',SXSTRING{i+1}))>0
                 % if letters (but E for exponential) then it is a formula
                 formulas=[formulas SXSTRING{i} ' ' SXSTRING{i+1} '; \n '];
             else
@@ -548,7 +641,7 @@ fprintf(mafileout,macroconvertmadXAT);
 fclose('all');
 
 %% clean workspace
-clear macroconvertmadXAT formulas def lines var mst 
+clear macroconvertmadXAT formulas def lines var mst
 clear SXSTRING i j SXCELL elemcount ElementType elname
 
 %% run macro file and save workspace.
@@ -558,7 +651,7 @@ clear SXSTRING i j SXCELL elemcount ElementType elname
 try % try to run the macro generated
     %%%!!!!! THIS COMAND MAY FAIL! CHECK THE ORDER OF THE DECLARATIONS IN MADX!
     run(filemacroname)
-
+    
     if nargin<3
         save([seqfilemadX '_AT_LATTICE']);
     else
@@ -569,8 +662,8 @@ try % try to run the macro generated
     fileoutname=[seqfilemadX '_AT_macro.m'];
     
     movefile(filemacroname,fileoutname);
-   
-
+    
+    
 catch %#ok<CTCH>
     
     fileoutname=[seqfilemadX '_AT_macro.m'];
@@ -585,5 +678,30 @@ catch %#ok<CTCH>
 end
 
 fclose('all');
+close(h);
+
+
+return
+
+
+function tmp=formatTextMADX(str)
+
+tmp={};
+
+str=strrep(str,' ',''); % no spaces
+str=strrep(str,':=','=');
+str=strrep(str,';','');
+
+c=[1 sort([strfind(str,',') strfind(str,':')...
+    strfind(str,'=')]) length(str)];
+
+% split in substrings
+for jc=1:length(c)-1
+    if jc==1
+        tmp{jc}=str(c(jc):c(jc+1));
+    else
+        tmp{jc}=str(c(jc)+1:c(jc+1));
+    end
+end
 
 return
