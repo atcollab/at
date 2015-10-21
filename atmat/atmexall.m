@@ -15,8 +15,11 @@ case 'GLNXA64'
 end
 
 try
-    if ~verLessThan('matlab','7.11')
+    if ~verLessThan('matlab','7.11') %R2010b
         PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
+    end
+    if ~verLessThan('matlab','8.3') %R2014a
+        PLATFORMOPTION = [PLATFORMOPTION '-silent '];
     end
 catch
 end
@@ -27,7 +30,7 @@ mexpassmethod('all',PLATFORMOPTION);
 
 % Navigate to the directory that contains tracking functions
 cdir=fullfile(atroot,'attrack','');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' ',fullfile(cdir,'atpass.c'),LIBDL];
+MEXCOMMAND = ['mex ',PLATFORMOPTION,' -I''',PASSMETHODDIR,''' -outdir ',cdir,' ',fullfile(cdir,'atpass.c'),LIBDL];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
