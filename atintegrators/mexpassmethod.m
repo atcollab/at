@@ -24,32 +24,36 @@ PLATFORMOPTION=[varargin{:}];
 
 %Additional platform-specific options for mex
 pdir=fileparts(mfilename('fullpath'));
-if ~ispc()
+if ispc()
+    EXPORT='%s';
+    map1='';
+else
     switch computer
         case {'SOL2','SOL64'}
             exportarg='-M';
-            map='mexFunctionSOL2.map';
-            ldflags=['-G -mt ',exportarg,' ' fullfile(pdir,map)];
+            map1='mexFunctionSOL2.map';
+            ldflags=['-G -mt ',exportarg,' '];
         case 'GLNX86'
             exportarg='-Wl,--version-script,';
-            map='mexFunctionGLNX86.map';
-            ldflags=['-pthread -shared -m32 -Wl,--no-undefined ',exportarg,fullfile(pdir,map)];
+            map1='mexFunctionGLNX86.map';
+            ldflags=['-pthread -shared -m32 -Wl,--no-undefined ',exportarg];
         case 'GLNXA64'
             exportarg='-Wl,--version-script,';
-            map='mexFunctionGLNX86.map';
-            ldflags=['-pthread -shared -Wl,--no-undefined ',exportarg,fullfile(pdir,map)];
+            map1='mexFunctionGLNX86.map';
+            ldflags=['-pthread -shared -Wl,--no-undefined ',exportarg];
         case {'MAC','MACI','MACI64'}
             exportarg='-Wl,-exported_symbols_list,';
-            map='mexFunctionMAC.map';
+            map1='mexFunctionMAC.map';
+            map2='mexFunctionMAC2.map';
     end
     
-    if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST>
-        PLATFORMOPTION=[PLATFORMOPTION ' LDFLAGS=''',ldflags,''' '];
-    elseif verLessThan('matlab','8.3')
-        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,map)]);
-        PLATFORMOPTION=[PLATFORMOPTION,' LDFLAGS=''',strrep(ldf,'$','\$'),''' '];
+    if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> R2008a
+        EXPORT=[' LDFLAGS=''',ldflags,fullfile(pdir,'%s'),''' '];
+    elseif verLessThan('matlab','8.3')                      % R2014a
+        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,'%s')]);
+        EXPORT=[' LDFLAGS=''',strrep(ldf,'$','\\$'),''' '];
     else
-        PLATFORMOPTION=[PLATFORMOPTION,' LINKEXPORT=''',exportarg,fullfile(pdir,map),''' '];
+        EXPORT=[' LINKEXPORT=''',exportarg,fullfile(pdir,'%s'),''' '];
     end
 end
 
@@ -70,10 +74,22 @@ for i = 1:length(PASSMETHODS)
     PM = fullfile(pdir,[PASSMETHODS{i} '.c']);
     evalin('base',['clear ',PASSMETHODS{i}]);
     if exist(PM,'file')
-        MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,' ',PM];
-        disp(MEXSTRING);
         try
-            evalin('base',MEXSTRING);
+            if exist('map2','var')
+                try
+                    MEXSTRING = ['mex ',PLATFORMOPTION,sprintf(EXPORT,map1),'-outdir ',pdir,' ',PM];
+                    disp(MEXSTRING);
+                    evalin('base',MEXSTRING);
+                catch
+                    MEXSTRING = ['mex ',PLATFORMOPTION,sprintf(EXPORT,map2),'-outdir ',pdir,' ',PM];
+                    disp(MEXSTRING);
+                    evalin('base',MEXSTRING);
+                end
+            else
+                MEXSTRING = ['mex ',PLATFORMOPTION,sprintf(EXPORT,map1),'-outdir ',pdir,' ',PM];
+                disp(MEXSTRING);
+                evalin('base',MEXSTRING);
+            end
         catch err
             disp(['Could not compile ' PM char(10) err.message]);
         end

@@ -8,6 +8,7 @@
 	global:
          mexFunction;
          passFunction;
-         mexVersion;
+         trackFunction;
+#        mexVersion;
       local: *;
 };
