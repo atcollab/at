@@ -1,10 +1,12 @@
 /*  Tracking engine ATPASS for Accelerator Toolbox 1.3    */
 
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include <math.h>
 #include <mex.h>
+#include "elempass.h"
 
 #if defined(PCWIN) || defined(PCWIN64)
 #include <windows.h>
@@ -12,6 +14,7 @@
 #define FREELIBFCN(libfilename) FreeLibrary((libfilename))
 #define LOADLIBFCN(libfilename) LoadLibrary((libfilename))
 #define GETPASSFCN(libfilename) GetProcAddress((libfilename),"passFunction")
+#define GETPASSFCN2(libfilename) GetProcAddress((libfilename),"trackFunction")
 
 #else
 #include <dlfcn.h>
@@ -19,8 +22,11 @@
 #define FREELIBFCN(libfilename) dlclose(libfilename)
 #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)
 #define GETPASSFCN(libfilename) dlsym((libfilename),"passFunction")
+#define GETPASSFCN2(libfilename) dlsym((libfilename),"trackFunction")
 
 #endif
+
+
 
 #define LATTICE prhs[0]
 #define INITCONDITIONS prhs[1]
@@ -29,13 +35,17 @@
 #define MAKE_LOCAL_COPY 	1
 #define USE_LOCAL_COPY		2
 
-#define LIMIT_AMPLITUDE		1 /* if any of the phase space variables exceedes this limit it is marked as lost */
+#define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
+									exceedes this limit it is marked as lost */
+
 
 typedef int*(*MYPROC)(mxArray*,int*, double*, int, int);
+typedef int*(*MYPROC2)(mxArray*,int*, double*, int, struct parameters*);
 
 static int **field_numbers_ptr = NULL;
 static mxArray **mxPtrELEM = NULL;
 static MYPROC *methods_table = NULL;
+static MYPROC2 *methods_table2 = NULL;
 static char **method_names = NULL;
 static int num_elements = 0;
 static struct LibraryListElement {
@@ -43,6 +53,7 @@ static struct LibraryListElement {
     char *MethodName;
     LIBRARYHANDLETYPE LibraryHandle;
     MYPROC FunctionHandle;
+    MYPROC2 FunctionHandle2;
     struct LibraryListElement *Next;
 } *LibraryList = NULL;
 
@@ -70,6 +81,7 @@ static void cleanup(void)
     }
     mxFree(field_numbers_ptr);
     mxFree(methods_table);
+    mxFree(methods_table2);
     mxFree(method_names);
     mxFree(mxPtrELEM);
     
@@ -93,7 +105,7 @@ static void checkiflost(double *DblBuffer, int np,
     for (c=0; c<np; c++) {/* Loop over particles */
         if (!xlost[c]) {  /* No change if already marked */
            double *r6 = DblBuffer+c*6;
-           for (n=0; n<6; n++) {
+           for (n=0; n<5; n++) {	/* I remove the check on the sixth coordinate N.C. */
                 if (!mxIsFinite(r6[n]) || (fabs(r6[n])>LIMIT_AMPLITUDE)) {
                     int h, k=ihist;
                     xlost[c] = 1;
@@ -172,7 +184,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mwSize CoordDims[3] = {6,0,0};
     mxLogical *xlost;
     double *xnturn, *xnelem, *xcoord;
-    mxArray *mxTurn, *mxElem;
+    mxArray *mxTurn, *mxElem, *elem;
     double *xturn, *xelem;
     mxArray *mxPassArg1[5], *mxPassArg2[2], *mxPre, *mxPost;
     mwSize outsize;
@@ -195,7 +207,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int np6 = num_particles*6;
     int ihist, lhist;
     double *histbuf = NULL;
-    
+	double RingLength=0;
+	int fieldnumbLength;
+    struct parameters paramStruct;
+	
     if (nlhs >= 2) {
         lhist = (nrhs >= 8) ? (int)mxGetScalar(prhs[7]) : 1;
         if (lhist < 0) {
@@ -210,7 +225,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     mexAtExit(cleanup);
-    
+
     if (NewLatticeFlag) FirstCallFlag=true;
     
     if (FirstCallFlag) {
@@ -238,8 +253,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexMakeMemoryPersistent(mxPtrELEM);
         
         /* pointer to library function used for tracking */
-        methods_table = (MYPROC*)mxRealloc(methods_table, num_elements*sizeof(MYPROC));
+		methods_table = (MYPROC*)mxRealloc(methods_table, num_elements*sizeof(MYPROC));
+		methods_table2 = (MYPROC2*)mxRealloc(methods_table2, num_elements*sizeof(MYPROC2));
+		
         mexMakeMemoryPersistent(methods_table);
+        mexMakeMemoryPersistent(methods_table2);
         
         for (n=0;n<num_elements;n++) {
             mxArray *mxElem = mxGetCell(LATTICE,n);
@@ -262,7 +280,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             LibraryListPtr = SearchLibraryList(LibraryList,method_names[n]);
             
             if (LibraryListPtr)
+				{
                 methods_table[n] = LibraryListPtr->FunctionHandle;
+                methods_table2[n] = LibraryListPtr->FunctionHandle2;
+				}
             else {
                 int tempint;
                 mexCallMATLAB(1,&tempmxptr2,1,&tempmxptr1,"exist");
@@ -278,8 +299,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         LibraryListPtr->MethodName = mxArrayToString(tempmxptr1);
                         LibraryListPtr->LibraryFileName = NULL;
                         LibraryListPtr->FunctionHandle = NULL;
-                        
+                        LibraryListPtr->FunctionHandle2 = NULL;
+
                         methods_table[n] = NULL;
+                        methods_table2[n] = NULL;
                         break;
                     case 3: /* mex-file on the search path */
                         LibraryListPtr = (struct LibraryListElement*)mxMalloc(sizeof(struct LibraryListElement));
@@ -291,10 +314,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         LibraryListPtr->MethodName = mxArrayToString(tempmxptr1);
                         LibraryListPtr->LibraryFileName=mxArrayToString(tempmxptr2);
                         mxDestroyArray(tempmxptr2);
-                        
+                        LibraryListPtr->FunctionHandle = NULL;
+                        LibraryListPtr->FunctionHandle2 = NULL;
                         LibraryListPtr->LibraryHandle = LOADLIBFCN(LibraryListPtr->LibraryFileName);
                         LibraryListPtr->FunctionHandle = (MYPROC)GETPASSFCN(LibraryListPtr->LibraryHandle);
-                        if (LibraryListPtr->FunctionHandle == NULL) {
+                        LibraryListPtr->FunctionHandle2 = (MYPROC2)GETPASSFCN2(LibraryListPtr->LibraryHandle);
+						
+                        if ((LibraryListPtr->FunctionHandle == NULL) && (LibraryListPtr->FunctionHandle2 == NULL) ) {
                             FREELIBFCN(LibraryListPtr->LibraryHandle);
                             mexErrMsgIdAndTxt("Atpass:UnknownLibrary",
                                     "Element # %d: Library file: %s, Function: %s: could not be loaded",
@@ -302,6 +328,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                         }
                         
                         methods_table[n] = LibraryListPtr->FunctionHandle;
+                        methods_table2[n] = LibraryListPtr->FunctionHandle2;
                         break;
                     default:
                         mexErrMsgIdAndTxt("Atpass:UnknownPassMethod",
@@ -313,6 +340,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
     }
     
+	for (n=0; n<num_elements; n++) 
+	{
+		elem=mxGetCell(LATTICE,n);
+		fieldnumbLength=mxGetFieldNumber(elem, "Length");
+		if(fieldnumbLength>=0)
+			RingLength+=mxGetScalar(mxGetFieldByNumber(elem,0,fieldnumbLength));
+	}
+	paramStruct.RingLength=RingLength;
+	paramStruct.T0=RingLength/299792458;
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */
         double *dblrefpts = mxGetPr(prhs[4]);
         num_refpts = (int)mxGetNumberOfElements(prhs[4]);
@@ -353,6 +389,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxElem=mxCreateDoubleMatrix(1,1,mxREAL);    /* Current element number */
     xturn=mxGetPr(mxTurn);                      /* Current turn number */
     xelem=mxGetPr(mxElem);                      /* Current element number */
+
     for (n=0; n<num_particles; n++) {
         double val = mxGetNaN();
         xnturn[n]=val;
@@ -381,11 +418,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
     *xturn = (double)1;
     ihist = 0;
+	paramStruct.nturn=0;
+
     if (FirstCallFlag) {
         /* If FirstCallFlag go through all elements
          * push particles ans built persistemt data structures (field_numbers_ptr)
          * along the way
          */
+		paramStruct.mode=MAKE_LOCAL_COPY;
         for (n=0; n<num_elements; n++) {
             *xelem = (double)(n+1);
             if (n == nextref) {
@@ -403,6 +443,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 field_numbers_ptr[n] = (*methods_table[n])(mxPtrELEM[n],field_numbers_ptr[n],DblBuffer,num_particles,MAKE_LOCAL_COPY);
                 mexMakeMemoryPersistent(field_numbers_ptr[n]);
             }
+			else if (methods_table2[n]) {			/* pointer to a trackFunction */
+				field_numbers_ptr[n] = (*methods_table2[n])(mxPtrELEM[n],field_numbers_ptr[n],DblBuffer,num_particles,&paramStruct);
+                mexMakeMemoryPersistent(field_numbers_ptr[n]);
+			}
             else if (mxIsStruct(mxPtrELEM[n])) {    /* M-File */
                 DblBuffer=passmfile(mxPassArg1+1, mxPtrELEM[n], method_names[n]);
             }
@@ -418,6 +462,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         FirstCallFlag=false;
     }
     else {
+		paramStruct.mode=USE_LOCAL_COPY;
         for (n=0; n<num_elements; n++) {
             *xelem = (double)(n+1);
             if (n == nextref) {
@@ -434,6 +479,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (methods_table[n]) {                 /* Pointer to a loaded library function */
                 dummy = (*methods_table[n])(mxPtrELEM[n],field_numbers_ptr[n],DblBuffer,num_particles,USE_LOCAL_COPY);
             }
+			else if (methods_table2[n]) {			/* pointer to a trackFunction */
+				field_numbers_ptr[n] = (*methods_table2[n])(mxPtrELEM[n],field_numbers_ptr[n],DblBuffer,num_particles,&paramStruct);
+                mexMakeMemoryPersistent(field_numbers_ptr[n]);
+			}
             else if (mxIsStruct(mxPtrELEM[n])) {	/* M-File */
                 DblBuffer=passmfile(mxPassArg1+1, mxPtrELEM[n], method_names[n]);
             }
@@ -454,8 +503,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     
     /* Subsequent turns */
-    
+    paramStruct.mode=USE_LOCAL_COPY;
     for (m=1; m<num_turns; m++) {
+		paramStruct.nturn=m;
         nextrefindex = 0;
         nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         *xturn = (double)(m+1);
@@ -475,6 +525,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (methods_table[n]) {                 /* Pointer to a loaded library function */
                 dummy = (*methods_table[n])(mxPtrELEM[n],field_numbers_ptr[n],DblBuffer,num_particles,USE_LOCAL_COPY);
             }
+			else if (methods_table2[n]) {			/* pointer to a trackFunction */
+				field_numbers_ptr[n] = (*methods_table2[n])(mxPtrELEM[n],field_numbers_ptr[n],DblBuffer,num_particles,&paramStruct);
+                mexMakeMemoryPersistent(field_numbers_ptr[n]);
+			}
             else if (mxIsStruct(mxPtrELEM[n])) {    /* M-File */
                 DblBuffer=passmfile(mxPassArg1+1, mxPtrELEM[n], method_names[n]);
             }

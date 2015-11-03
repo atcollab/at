@@ -25,10 +25,18 @@
 #define ExportMode __declspec(dllexport)
 #endif
 
+struct parameters
+{
+	int mode;
+	int nturn;
+	double RingLength;
+	double T0;
+};
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 				double *r_in, int num_particles, int mode);
-
+ExportMode int* trackFunction(const mxArray *ElemData, int *FieldNumbers,
+				double *r_in, int num_particles, struct parameters *Param);
 
 #define NO_LOCAL_COPY 		0	/* function retieves element data from MATLAB workspace
 								   each time it is called and reterns NULL pointer
@@ -43,3 +51,5 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 #define USE_LOCAL_COPY		2  /*  Uses the previously stored local copy of the element data */
 
 #endif
+
+
