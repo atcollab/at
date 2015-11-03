@@ -1,5 +1,5 @@
 function ring=atsetshift(varargin)
-%ATSETTILT sets the misalignment vectors
+%ATSETSHIFT sets the misalignment vectors
 %
 % RING=ATSETSHIFT(RING, ELEMINDEX, DX, DY) sets the entrance and exit misalignment vectors
 %  of one element or a group of elements in the globally defined lattice THERING.
