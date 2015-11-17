@@ -153,3 +153,23 @@ static void ATaddmm(const double *M2 , double *M1)
 			M1[i+6*j] += M2[i+6*j];
 
 }
+
+static void markaslost(double *r6,int idx)
+{
+    r6[idx] = mxGetInf();
+}
+
+void checkiflostRectangularAp(double *r6, const double *limits)
+{
+	/* check limits for X position */
+    if (r6[0]<limits[0] || r6[0]>limits[1])      markaslost(r6,0);
+    else if (r6[2]<limits[2] || r6[2]>limits[3]) markaslost(r6,2);
+}
+
+void checkiflostEllipticalAp(double *r6, const double *axesptr)
+{
+	register double xnorm = r6[0]/axesptr[0];
+	register double znorm = r6[2]/axesptr[1];
+	if ((xnorm*xnorm + znorm*znorm) >= 1) markaslost(r6,0);
+}
+
