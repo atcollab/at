@@ -64,12 +64,12 @@ static double Map1_y(double x,double y)
     linint(GLOBAL_y,GLOBAL_x,GLOBAL_ykick1,GLOBAL_m,GLOBAL_n,y,x,&f);
     return f;
 }
-
+/*
 static void markaslost(double *r6,int idx)
 {
     r6[idx] = mxGetInf();
 }
-
+*/
 /* Set T1, T2, R1, R2 to NULL pointers to ignore misalignmets*/
 void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, double *xkick, double *ykick, double *x, double *y,int n,int m, int Nslice, double *T1, double *T2, double *R1, double *R2, int num_particles)
 {
