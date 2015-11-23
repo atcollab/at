@@ -1,22 +1,48 @@
-function variable=atVariableBuilder(r,familyname,fieldtochange,LowLim,HighLim)
-% 
-% defines a simple variable structure for use with atmatch
-% 
-% set limits if not given and formats structure correctly.
-% 
-% familyname={'QD','SF','Dipole1',...}
-% fieldtochange={{'PolynomB',{1,2}},{'PolynomB',{1,3}},{'BendingAngle',{1}},...}
-% 
-% if fieldtochange is a a cell array of one element, the same fieldtochange
-% will be applied to all familynames.
-% 
-% familyname={@(r,v)function(r,v,...),'SF','Dipole1',...}
-% fieldtochange={init_v_values,{'PolynomB',{1,3}},{'BendingAngle',{1}},...}
-% 
-% 
-% use to create standard variables that change AT lattice structure fields.
-% 
-% to create more sophisticated variables, please use directly the variable
+function variable=atVariableBuilder(varargin)
+%atVarBuilder   create a simple variable structure for use with atmatch
+%
+% Single variable : it corresponds to a scalar numeric value to be varied in
+% the optimization process. It may be applied to several elements.It is
+% represented as a scalar structure.
+%
+%   var=atVariableBuilder(refpts,parameter,highlim,lowlim)
+%       refpts:     indices of the variable elements or logical mask
+%       parameter:	cell array defining the field name and indices of the
+%                   variable parameter
+%       lowlim:     minimum parameter value (default: no limit)
+%       highlim:    maximum parameter value (default: no limit)
+%
+%       Example:	qf=atgetcells(ring,'FamName','QF');
+%                   var=atVariableBuilder(qf,{'PolynomB',{2}});
+%
+%   var=atVariableBuilder(@func,inival,highlim,lowlim)
+%       func:       function building a new ring for the given variable value
+%                   called as new_ring=func(base_ring,variable)
+%       inival:     initial value of the variable
+%       lowlim:     minimum parameter value (default: no limit)
+%       highlim:    maximum parameter value (default: no limit)
+%
+%       Example: var=atVariableBuilder(@(r,v) some_function(r,v,...), 0.0);
+%
+%   var=atVariableBuilder(ring,location,...)
+%       In this syntax, the location may be specified as the family name of the
+%       variable elements
+%
+%       Example: var=atVariableBuilder(ring,'QF',{'PolynomB',{2}});
+%
+% Multiple variables: if location,parameter,lowlim and highlim are cell arrays
+% with the same length or with length 1, atVariableBuilder will build a
+% structure array of variables. Examples:
+%
+%   vars=atVariableBuilder(ring,{'QD','SF'},{{'PolynomB',{1,2}},{'PolynomB',{1,3}}});
+%
+%   qf=atgetcells(ring,'FamName','QF');
+%   qd=atgetcells(ring,'FamName','QD');
+%   vars=atVariableBuilder({qf,qd},{{'PolynomB',{1,2}}});
+%
+%   vars=atVariableBuilder({qf,@buildring},{{'PolynomB',{1,2}},0.0})
+%
+% More sophisticated variables, can be defined using directly the variable
 % structure. The general variable definition is:
 %
 % ex: Variab=struct('Indx',{findcells(RING,'FamName','QFM'),...
@@ -27,52 +53,47 @@ function variable=atVariableBuilder(r,familyname,fieldtochange,LowLim,HighLim)
 %                                {'FUN',...
 %                           @(RING,K1Val)VaryQuadFam(RING,K1Val,'QDM')}}...
 %                  );
-% 
-% if running a matching routine many times, 
-% please consider again the definition of variables above. 
-% Providing the Indx as an input rether than recalculating it, is faster.
-% see example on matching.
-% 
-% ex : v=atVariableBuilder(r,{'quad','sext','dip'},{{'PolynomB',{1,2}},{'PolynomB',{1,3}},{'BendingAngle'}})
-% ex : v=atVariableBuilder(r,{'Q1','Q2','Q3'},{{'PolynomB',{1,2}}})
-% ex : v=atVariableBuilder(r,familyname,fieldtochange,LowLim,HighLim)
-% ex : v=atVariableBuilder(r,{@(r,~)matchchrom(r,fam1,fam2)},{[]})
-%                                 
+%
 
 % history of changes
 % created 21-03-2013
 % update 29-03-2013 create many variables with the same parameter field.
 % update 30-03-2013 create function variables.
+% update 13-11-2015 reorganize function and help
 
-
-variable=[];
-if length(fieldtochange)==1
-    fieldtochange=repmat(fieldtochange,1,length(familyname));
-end
-    
-for nstru=1:length(familyname)
-    if nargin<4
-        LowLim=[];
-        HighLim=[];
-    end
-    
-    if isa(familyname{nstru},'function_handle') || isa(familyname{nstru},'numeric')
-        var=struct('Indx',familyname{nstru},...
-            'Parameter',{fieldtochange{nstru}},...
-            'LowLim',LowLim,...
-            'HighLim',HighLim...
-            );
-    else
-        var=struct('Indx',findcells(r,'FamName',familyname{nstru}),...
-            'Parameter',{fieldtochange{nstru}},...
-            'LowLim',LowLim,...
-            'HighLim',HighLim...
-            );
-        
-    end
-
-    variable=[variable, var]; %#ok<*AGROW>
+if iscell(varargin{1}) && isfield(varargin{1}{1},'PassMethod')
+    variable=atVariableBuilder(getid(varargin{1},varargin{2}),varargin{3:end});
+elseif iscell(varargin{1})
+    vals={{[]},{{}},{[]},{[]}};
+    vals(1:nargin)=varargin;
+    expand=1:max(cellfun(@length,varargin));
+    location(expand)=cellfun(@tonum,vals{1},'UniformOutput',false);
+    parameters(expand)=vals{2};
+    lowl(expand)=vals{3};
+    highl(expand)=vals{4};
+    variable=struct('Indx',location,...
+        'Parameter',parameters,...
+        'LowLim',lowl,...
+        'HighLim',highl...
+        );
+else
+    vals=cellfun(@(i) {i}, varargin, 'UniformOutput',false);
+    variable=atVariableBuilder(vals{:});
 end
 
+    function id=getid(ring,name)
+        if iscell(name)
+            id=cellfun(@(nm) getid(ring,nm), name, 'UniformOutput',false);
+        elseif ischar(name)
+            id=atgetcells(ring,'FamName',name);
+        else
+            id=name;
+        end
+    end
+    function vnum=tonum(vnum)
+        if islogical(vnum)
+            vnum=find(vnum);
+        end
+    end
 
-return
+end

@@ -16,12 +16,13 @@ function constraint = atlinconstraint(refpts,params,vmin,vmax,weight)
 % REFPTS, PARAMS, VMIN, VMAX, WEIGHT must have the same length,
 %       or have length 1
 
-ncst=max(length(refpts),length(params));
-refp=expand(refpts,ncst);
-pars=expand(params,ncst);
-vmin=expand(vmin,ncst);
-vmax=expand(vmax,ncst);
-weight=expand(weight,ncst);
+if islogical(refpts), refpts=find(refpts); end
+exp=1:max(length(refpts),length(params));
+refp(1,exp)=refpts;
+pars(1,exp)=params;
+vmin(1,exp)=vmin;
+vmax(1,exp)=vmax;
+weight(1,exp)=weight;
 
 paramnames=cellfun(@(c) c{1},pars,'UniformOutput',false);
 tunes=strcmp('tune',paramnames);
@@ -53,11 +54,4 @@ if any(other)
         'RefPoints',refp(other),...
         'Weight',weight(other))];
 end
-
-    function val=expand(val,sz)
-        if length(val) == 1
-            val=val(ones(1,sz));
-        end
-    end
-
 end
