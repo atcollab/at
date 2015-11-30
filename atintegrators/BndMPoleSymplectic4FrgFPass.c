@@ -12,11 +12,12 @@
 #define KICK2    -1.702414383919314656
 
 void BndMPoleSymplectic4FrgFPass(double *r, double le, double irho, double *A, double *B,
-                                 int max_order, int num_int_steps,
-                                 double entrance_angle, 	double exit_angle,
-                                 double fint1, double fint2, double gap,
-                                 double *T1, double *T2,
-                                 double *R1, double *R2, int num_particles)
+        int max_order, int num_int_steps,
+        double entrance_angle, 	double exit_angle,
+        double fint1, double fint2, double gap,
+        double *T1, double *T2,
+        double *R1, double *R2,
+        double *RApertures, double *EApertures, int num_particles)
 {
     double *r6;
     int c, m;
@@ -39,6 +40,9 @@ void BndMPoleSymplectic4FrgFPass(double *r, double le, double irho, double *A, d
             /*  misalignment at entrance  */
             if(useT1) ATaddvv(r6,T1);
             if(useR1) ATmultmv(r6,R1);
+            /* Check physical apertures at the entrance of the magnet */
+            if (RApertures) checkiflostRectangularAp(r6,RApertures);
+            if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* edge focus */
             if(useFringe1)
                 edge_fringe(r6, irho, entrance_angle,fint1,gap);
@@ -66,6 +70,9 @@ void BndMPoleSymplectic4FrgFPass(double *r, double le, double irho, double *A, d
                 edge_fringe(r6, irho, exit_angle,fint2,gap);
             else
                 edge(r6, irho, exit_angle);
+            /* Check physical apertures at the exit of the magnet */
+            if (RApertures) checkiflostRectangularAp(r6,RApertures);
+            if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
             if(useR2) ATmultmv(r6,R2);
             if(useT2) ATaddvv(r6,T2);
@@ -79,13 +86,12 @@ void BndMPoleSymplectic4FrgFPass(double *r, double le, double irho, double *A, d
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
-                             double *r_in, int num_particles, int mode)
-
-#define NUM_FIELDS_2_REMEMBER 15
-
-
+        double *r_in, int num_particles, int mode)
+        
+#define NUM_FIELDS_2_REMEMBER 17
+        
 {	double *A , *B;
-    double *pr1, *pr2, *pt1, *pt2, fint1, fint2, gap;
+    double *pr1, *pr2, *pt1, *pt2, *RApertures, *EApertures, fint1, fint2, gap;
     double entrance_angle, exit_angle;
     
     int max_order, num_int_steps;
@@ -93,9 +99,9 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
     
     switch(mode) {
         case MAKE_LOCAL_COPY: 	/* Find field numbers first
-                                 * Save a list of field number in an array
-                                 * and make returnptr point to that array
-                                 */
+         * Save a list of field number in an array
+         * and make returnptr point to that array
+         */
             /* Allocate memory for integer array of
              * field numbers for faster future reference
              */
@@ -120,13 +126,15 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
             FieldNumbers[12] = mxGetFieldNumber(ElemData,"R2");
             FieldNumbers[13] = mxGetFieldNumber(ElemData,"T1");
             FieldNumbers[14] = mxGetFieldNumber(ElemData,"T2");
+            FieldNumbers[15] = mxGetFieldNumber(ElemData,"RApertures");
+            FieldNumbers[16] = mxGetFieldNumber(ElemData,"EApertures");
             /* Fall through next section... */
             
         case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-                                 * The second argument ponter to the array of field
-                                 * numbers is previously created with
-                                 * QuadLinPass( ..., MAKE_LOCAL_COPY)
-                                 */
+         * The second argument ponter to the array of field
+         * numbers is previously created with
+         * QuadLinPass( ..., MAKE_LOCAL_COPY)
+         */
             A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
             B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
             max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
@@ -145,7 +153,9 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
             pr2 = (FieldNumbers[12] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[12])) : NULL;
             pt1 = (FieldNumbers[13] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[13])) : NULL;
             pt2 = (FieldNumbers[14] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[14])) : NULL;
-        	break;
+            RApertures = (FieldNumbers[15] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[15])) : NULL;
+            EApertures = (FieldNumbers[16] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[16])) : NULL;
+            break;
         default:
             mexErrMsgTxt("No match for calling mode in function BndMPoleSymplectic4FrgFPass\n");
     }
@@ -153,7 +163,7 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
     irho = ba/le;
     
     BndMPoleSymplectic4FrgFPass(r_in, le, irho, A, B, max_order, num_int_steps,
-                                entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, num_particles);
+            entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, RApertures, EApertures, num_particles);
     
     return FieldNumbers;
 }
@@ -163,7 +173,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2 ) {
         double *r_in;
-        double *pr1, *pr2, *pt1, *pt2;
+        double *pr1, *pr2, *pt1, *pt2, *RApertures, *EApertures;
         double fint1, fint2, gap, irho;
         mxArray *tmpmxptr;
         
@@ -200,13 +210,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         tmpmxptr = mxGetField(prhs[0],0,"T2");
         pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
+        tmpmxptr = mxGetField(prhs[0],0,"RApertures");
+        RApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"EApertures");
+        EApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
         irho = ba/le;
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
         BndMPoleSymplectic4FrgFPass(r_in, le, irho, A, B, max_order, num_int_steps,
-                                    entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, num_particles);
+                entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, RApertures, EApertures, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -222,7 +238,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(7,1);
+            plhs[1] = mxCreateCellMatrix(9,1);
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
             mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
@@ -230,6 +246,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],4,mxCreateString("T2"));
             mxSetCell(plhs[1],5,mxCreateString("R1"));
             mxSetCell(plhs[1],6,mxCreateString("R2"));
+            mxSetCell(plhs[1],7,mxCreateString("RApertures"));
+            mxSetCell(plhs[1],8,mxCreateString("EApertures"));
         }
     }
     else {

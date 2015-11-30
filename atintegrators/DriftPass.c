@@ -5,7 +5,7 @@
 void DriftPass(double *r_in, double le,
         const double *T1, const double *T2,	
         const double *R1, const double *R2,
-        const double *limits, const double *axesptr,
+        double *RApertures, double *EApertures,
         int num_particles)
 /* le - physical length
    r_in - 6-by-N matrix of initial conditions reshaped into 
@@ -22,13 +22,13 @@ void DriftPass(double *r_in, double le,
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6, T1);
             if (R1) ATmultmv(r6, R1);
-			/* Check physical apertures at the entrance of the magnet */
-			if (limits) checkiflostRectangularAp(r6,limits);
-			if (axesptr) checkiflostEllipticalAp(r6,axesptr);
+            /* Check physical apertures at the entrance of the magnet */
+			if (RApertures) checkiflostRectangularAp(r6,RApertures);
+			if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             ATdrift6(r6, le);
 			/* Check physical apertures at the exit of the magnet */
-			if (limits) checkiflostRectangularAp(r6,limits);
-			if (axesptr) checkiflostEllipticalAp(r6,axesptr);
+			if (RApertures) checkiflostRectangularAp(r6,RApertures);
+			if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
             if (R2) ATmultmv(r6, R2);
             if (T2) ATaddvv(r6, T2);
@@ -46,7 +46,7 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 {
 	double le;
     double  *pr1, *pr2, *pt1, *pt2;
-    double *limits, *axesptr;
+    double *RApertures, *EApertures;
 
 	switch(mode) {
 	    case MAKE_LOCAL_COPY: 	/* Find field numbers first
@@ -79,13 +79,13 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
             pr2 = (FieldNumbers[2] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[2])) : NULL;
             pt1 = (FieldNumbers[3] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[3])) : NULL;
             pt2 = (FieldNumbers[4] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[4])) : NULL;
-            limits = (FieldNumbers[5] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[5])) : NULL;
-			axesptr = (FieldNumbers[6] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[6])) : NULL;
+            RApertures = (FieldNumbers[5] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[5])) : NULL;
+			EApertures = (FieldNumbers[6] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[6])) : NULL;
             break;
 	    default:
             mexErrMsgTxt("No match for calling mode in function QuadMPoleFringePass\n");
 	}
-	DriftPass(r_in, le, pt1, pt2, pr1, pr2, limits, axesptr, num_particles);
+	DriftPass(r_in, le, pt1, pt2, pr1, pr2, RApertures, EApertures, num_particles);
 	return FieldNumbers;
 }
 
@@ -94,7 +94,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     if (nrhs == 2) {
         double *r_in;
         double *pr1, *pr2, *pt1, *pt2;
-        double *limits, *axesptr;
+        double *RApertures, *EApertures;
         mxArray *tmpmxptr;
 
         double le = mxGetScalar(GetRequiredField(prhs[0], "Length"));
@@ -115,15 +115,15 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
 		tmpmxptr = mxGetField(prhs[0],0,"RApertures");
-        limits = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        RApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
         tmpmxptr = mxGetField(prhs[0],0,"EApertures");
-        axesptr = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        EApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
-        DriftPass(r_in, le, pt1, pt2, pr1, pr2, limits, axesptr, num_particles);
+        DriftPass(r_in, le, pt1, pt2, pr1, pr2, RApertures, EApertures, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */

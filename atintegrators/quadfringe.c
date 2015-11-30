@@ -1,3 +1,4 @@
+#include <math.h>
 
 static void QuadFringePassP(double* r, const double b2)
 {
@@ -49,3 +50,50 @@ static void QuadFringePassN(double* r, const double b2)
    r[3]+=r3tmp;
 }
 
+typedef struct Mat66
+{
+	double R[6][6];
+} VMATRIX;
+
+/* from elegant code */
+static void quadPartialFringeMatrix(VMATRIX *M, double K1, double inFringe, double *fringeInt, int part)
+{
+  double J1x, J2x, J3x, J1y, J2y, J3y;
+  double K1sqr, expJ1x, expJ1y;
+
+  M->R[4][4] = M->R[5][5] = 1;
+  
+  K1sqr = K1*K1;
+
+  if (part==1) {
+    J1x = inFringe*(K1*fringeInt[1] - 2*K1sqr*fringeInt[3]/3.);
+    J2x = inFringe*(K1*fringeInt[2]);
+    J3x = inFringe*(K1sqr*(fringeInt[2] + fringeInt[4]));
+
+    K1 = -K1;
+    J1y = inFringe*(K1*fringeInt[1] - 2*K1sqr*fringeInt[3]/3.);
+    J2y = -J2x;
+    J3y = J3x;
+  } else {
+    J1x = inFringe*(K1*fringeInt[1] + K1sqr*fringeInt[0]*fringeInt[2]/2);
+    J2x = inFringe*(K1*fringeInt[2]);
+    J3x = inFringe*(K1sqr*(fringeInt[4]-fringeInt[0]*fringeInt[1]));
+
+    K1 = -K1;
+    J1y = inFringe*(K1*fringeInt[1] + K1sqr*fringeInt[0]*fringeInt[2]);
+    J2y = -J2x;
+    J3y = J3x;
+  }
+
+  expJ1x = M->R[0][0] = exp(J1x);
+  M->R[0][1] = J2x/expJ1x;
+  M->R[1][0] = expJ1x*J3x;
+  M->R[1][1] = (1 + J2x*J3x)/expJ1x;
+  
+  expJ1y = M->R[2][2] = exp(J1y);
+  M->R[2][3] = J2y/expJ1y;
+  M->R[3][2] = expJ1y*J3y;
+  M->R[3][3] = (1 + J2y*J3y)/expJ1y;
+
+  return;
+}

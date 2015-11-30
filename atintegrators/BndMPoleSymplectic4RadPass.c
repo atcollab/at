@@ -151,9 +151,8 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 					double fint1, double fint2, double gap,
 					double *T1, double *T2,	
 					double *R1, double *R2,
-					double E0,
-					int num_particles)
-
+					double *RApertures, double *EApertures,
+                    double E0, int num_particles)
 
 {	int c,m;	
 	double *r6;   
@@ -207,7 +206,9 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 			            ATaddvv(r6,T1);
 			        if (useR1)
 			            ATmultmv(r6,R1);
-					
+					/* Check physical apertures at the entrance of the magnet */
+                    if (RApertures) checkiflostRectangularAp(r6,RApertures);
+                    if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 					/* edge focus */				
 				 	if (useFringe1)
 			            edge_fringe(r6, irho, entrance_angle,fint1,gap);
@@ -234,7 +235,10 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 			        else
 			            edge(r6, irho, exit_angle);	
 					/* edge focus */
-
+                    
+                    /* Check physical apertures at the exit of the magnet */
+                    if (RApertures) checkiflostRectangularAp(r6,RApertures);
+                    if (EApertures) checkiflostEllipticalAp(r6,EApertures);
 
 					 /* Misalignment at exit */	
 			        if (useR2)
@@ -250,7 +254,9 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 
 
 #ifndef NOMEX
-					
+
+#include "mxutils.c"
+				
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 
@@ -258,7 +264,7 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 
 
 {	double *A , *B;
-	double  *pr1, *pr2, *pt1, *pt2, fint1, fint2, gap;   
+	double  *pr1, *pr2, *pt1, *pt2, *RApertures, *EApertures, fint1, fint2, gap;   
 	double entrance_angle, exit_angle;
 	double E0;		/* Design energy [eV] */
 	int max_order, num_int_steps;
@@ -267,390 +273,172 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 	int *NewFieldNumbers, fnum;
 	
 
-	
-	switch(mode)
-		{	case MAKE_LOCAL_COPY: 	/* Find field numbers first
-										Save a list of field number in an array
-										and make returnptr point to that array
-									*/
-				{	
-					/* Allocate memory for integer array of 
-					    field numbers for faster future reference
-					*/
-		
-					NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-
-					/* Populate */
-					
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"PolynomA");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'PolynomA' was not found in the element data structure"); 
-					NewFieldNumbers[0] = fnum;
-					A = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"PolynomB");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'PolynomB' was not found in the element data structure"); 
-					NewFieldNumbers[1] = fnum;
-					B = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"MaxOrder");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'MaxOrder' was not found in the element data structure"); 
-					NewFieldNumbers[2] = fnum;
-					max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					fnum = mxGetFieldNumber(ElemData,"NumIntSteps");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'NumIntSteps' was not found in the element data structure"); 
-					NewFieldNumbers[3] = fnum;
-					num_int_steps = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"Length");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-					NewFieldNumbers[4] = fnum;
-					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"Energy");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'Energy' was not found in the element data structure"); 
-					NewFieldNumbers[5] = fnum;
-					E0 = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"BendingAngle");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'BendingAngle' was not found in the element data structure"); 
-					NewFieldNumbers[6] = fnum;
-					ba = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					
-					
-					
-	                fnum = mxGetFieldNumber(ElemData,"EntranceAngle");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'EntranceAngle' was not found in the element data structure"); 
-					NewFieldNumbers[7] = fnum;
-					entrance_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-	                
-	                fnum = mxGetFieldNumber(ElemData,"ExitAngle");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'ExitAngle' was not found in the element data structure"); 
-					NewFieldNumbers[8] = fnum;
-					exit_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-					
-					
-					
-					fnum = mxGetFieldNumber(ElemData,"FringeInt1");/* Optional field FringeInt */
-                    NewFieldNumbers[9] = fnum;
-					if(fnum<0) 
-					    fint1 = 0;
-					else
-					    fint1 = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					    
-					    
-					fnum = mxGetFieldNumber(ElemData,"FringeInt2");/* Optional field FringeInt */
-                    NewFieldNumbers[10] = fnum;
-					if(fnum<0) 
-					    fint2 = 0;
-					else
-					    fint2 = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					fnum = mxGetFieldNumber(ElemData,"FullGap");
-					NewFieldNumbers[11] = fnum;
-					if(fnum<0) 
-					    gap = 0;
-					else
-					    gap = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-					
-				
-                    fnum = mxGetFieldNumber(ElemData,"R1");
-					NewFieldNumbers[12] = fnum;
-					if(fnum<0)
-					    pr1 = NULL;
-					else
-					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-
-					fnum = mxGetFieldNumber(ElemData,"R2");
-					NewFieldNumbers[13] = fnum;
-					if(fnum<0)
-					    pr2 = NULL;
-					else
-					    pr2 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-                    fnum = mxGetFieldNumber(ElemData,"T1");
-	                NewFieldNumbers[14] = fnum;
-					if(fnum<0)
-					    pt1 = NULL;
-					else
-					    pt1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-	                
-	                fnum = mxGetFieldNumber(ElemData,"T2");
-	                NewFieldNumbers[15] = fnum;
-					if(fnum<0)
-					    pt2 = NULL;
-					else
-					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-				
-					returnptr = NewFieldNumbers;
-					
-				}	break;
-
-
-			case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-										The second argument ponter to the array of field 
-										numbers is previously created with 
-										QuadLinPass( ..., MAKE_LOCAL_COPY)
-									*/
-											
-				{	A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-					B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-					max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-					num_int_steps = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-					E0 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-					ba = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-					entrance_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
-					exit_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[8]));
-					
-					/* Optional fields */
-					
-					if(FieldNumbers[9]<0) 
-					    fint1 = 0;
-					else
-					    fint1 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[9]));
-					
-					    
-					if(FieldNumbers[10]<0) 
-					    fint2 = 0;
-					else
-					    fint2 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[10]));
-					    
-					if(FieldNumbers[11]<0) 
-					    gap = 0;
-					else
-					gap = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[11]));
-					
-					/* Optional fields */
-					if(FieldNumbers[12]<0)
-					    pr1 = NULL;
-					else
-					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[12]));
-					
-					if(FieldNumbers[13]<0)
-					    pr2 = NULL;
-					else
-					    pr2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[13]));
-					
-					    
-					if(FieldNumbers[14]<0)
-					    pt1 = NULL;
-					else    
-					    pt1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[14]));
-					    
-					if(FieldNumbers[15]<0)
-					    pt2 = NULL;
-					else 
-					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[15]));
-					
-			
-					
-					returnptr = FieldNumbers;
-				}	break;
-			default:
-				{	mexErrMsgTxt("No match for calling mode in function BndMPoleSymplectic4RadPass\n");
-				}
-		}
-
-
-	
-
-
-	irho = ba/le;
-
-	
-	BndMPoleSymplectic4RadPass(r_in, le, irho, A, B, max_order, num_int_steps, 
-								entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, E0, num_particles);
-	
-
-	
-	return(returnptr);
-
+	switch(mode) {
+        case MAKE_LOCAL_COPY: 	/* Find field numbers first
+         * Save a list of field number in an array
+         * and make returnptr point to that array
+         */
+            /* Allocate memory for integer array of
+             * field numbers for faster future reference
+             */
+            
+            FieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
+            
+            /* Populate */
+            
+            FieldNumbers[0] = GetRequiredFieldNumber(ElemData, "PolynomA");
+            FieldNumbers[1] = GetRequiredFieldNumber(ElemData, "PolynomB");
+            FieldNumbers[2] = GetRequiredFieldNumber(ElemData, "MaxOrder");
+            FieldNumbers[3] = GetRequiredFieldNumber(ElemData, "NumIntSteps");
+            FieldNumbers[4] = GetRequiredFieldNumber(ElemData, "Length");
+            FieldNumbers[5] = GetRequiredFieldNumber(ElemData, "BendingAngle");
+            FieldNumbers[6] = GetRequiredFieldNumber(ElemData, "EntranceAngle");
+            FieldNumbers[7] = GetRequiredFieldNumber(ElemData, "ExitAngle");
+            
+            FieldNumbers[8] = mxGetFieldNumber(ElemData,"FringeInt1");
+            FieldNumbers[9] = mxGetFieldNumber(ElemData,"FringeInt2");
+            FieldNumbers[10] = mxGetFieldNumber(ElemData,"FullGap");
+            FieldNumbers[11] = mxGetFieldNumber(ElemData,"R1");
+            FieldNumbers[12] = mxGetFieldNumber(ElemData,"R2");
+            FieldNumbers[13] = mxGetFieldNumber(ElemData,"T1");
+            FieldNumbers[14] = mxGetFieldNumber(ElemData,"T2");
+            FieldNumbers[15] = mxGetFieldNumber(ElemData,"RApertures");
+            FieldNumbers[16] = mxGetFieldNumber(ElemData,"EApertures");
+            /* Fall through next section... */
+    
+    case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
+         * The second argument ponter to the array of field
+         * numbers is previously created with
+         * QuadLinPass( ..., MAKE_LOCAL_COPY)
+         */
+            A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
+            B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
+            max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
+            num_int_steps = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
+            le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
+            ba = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
+            entrance_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
+            exit_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
+            
+            /* Optional fields */
+            
+            fint1=(FieldNumbers[8] >= 0) ? mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[8])) : 0;
+            fint2=(FieldNumbers[9] >= 0) ? mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[9])) : 0;
+            gap = (FieldNumbers[10] >= 0) ? mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[10])) : 0;
+            pr1 = (FieldNumbers[11] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[11])) : NULL;
+            pr2 = (FieldNumbers[12] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[12])) : NULL;
+            pt1 = (FieldNumbers[13] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[13])) : NULL;
+            pt2 = (FieldNumbers[14] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[14])) : NULL;
+            RApertures = (FieldNumbers[15] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[15])) : NULL;
+            EApertures = (FieldNumbers[16] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[16])) : NULL;
+            break;
+        default:
+            mexErrMsgTxt("No match for calling mode in function BndMPoleSymplectic4FrgFPass\n");
+    }
+    
+    irho = ba/le;
+    
+    BndMPoleSymplectic4RadPass(r_in, le, irho, A, B, max_order, num_int_steps,
+            entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, RApertures, EApertures, E0, num_particles);
+    
+    return FieldNumbers;
 }
+
 
 
 
 
 
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{	int m,n;
+{	
+    if (nrhs == 2 ) {
+    int m,n;
 	double *r_in;
-	double le, ba, *A, *B;  
+	
 	mxArray *tmpmxptr;
-	double E0;		/* Design energy [eV] */
-	double  *pr1, *pr2, *pt1, *pt2, fint1, fint2, gap;  
+	double  *pr1, *pr2, *pt1, *pt2, *RApertures, *EApertures, fint1, fint2, gap;  
 	double irho;
-	int max_order, num_int_steps;
-	double entrance_angle, exit_angle ;
-
-    if(nrhs)
-    {
-    /* ALLOCATE memory for the output array of the same size as the input */
-	m = mxGetM(prhs[1]);
-	n = mxGetN(prhs[1]);
-	if(m!=6) 
-		mexErrMsgTxt("Second argument must be a 6 x N matrix");
-	
-
-	
-	tmpmxptr =mxGetField(prhs[0],0,"PolynomA");
-	if(tmpmxptr)
-		A = mxGetPr(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'PolynomA' was not found in the element data structure"); 
-				    
-	tmpmxptr =mxGetField(prhs[0],0,"PolynomB");
-	if(tmpmxptr)   
-		B = mxGetPr(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'PolynomB' was not found in the element data structure");
-					    
-	tmpmxptr = mxGetField(prhs[0],0,"MaxOrder");
-	if(tmpmxptr)
-		max_order = (int)mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'MaxOrder' was not found in the element data structure");
-				        
-	tmpmxptr = mxGetField(prhs[0],0,"NumIntSteps");
-	if(tmpmxptr)   
-		num_int_steps = (int)mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'NumIntSteps' was not found in the element data structure");    
-				    
-	tmpmxptr = mxGetField(prhs[0],0,"Length");
-	if(tmpmxptr)
-	    le = mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'Length' was not found in the element data structure");
-		
-	tmpmxptr = mxGetField(prhs[0],0,"Energy");
-	if(tmpmxptr)
-	    E0 = mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'Energy' was not found in the element data structure");   	
-					    
-	tmpmxptr = mxGetField(prhs[0],0,"BendingAngle");
-	if(tmpmxptr)
-		ba = mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'BendingAngle' was not found in the element data structure"); 
-				
-				
-	tmpmxptr = mxGetField(prhs[0],0,"EntranceAngle");
-	if(tmpmxptr)
-	    entrance_angle = mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'EntranceAngle' was not found in the element data structure"); 
-				
-				
-	tmpmxptr = mxGetField(prhs[0],0,"ExitAngle");
-	if(tmpmxptr)
-		exit_angle = mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'ExitAngle' was not found in the element data structure");	
-
-	tmpmxptr = mxGetField(prhs[0],0,"FringeInt1");
-	    if(tmpmxptr)
-	        fint1 = mxGetScalar(tmpmxptr);
-	    else
-	        fint1 = 0;
-	
-    tmpmxptr = mxGetField(prhs[0],0,"FringeInt2");
-	    if(tmpmxptr)
-	        fint2 = mxGetScalar(tmpmxptr);
-	    else
-	        fint2 = 0;	        
-	    
-	    tmpmxptr = mxGetField(prhs[0],0,"FullGap");
-	    if(tmpmxptr)
-	        gap = mxGetScalar(tmpmxptr);
-	    else
-	        gap = 0;
-	    
-	    tmpmxptr = mxGetField(prhs[0],0,"R1");
-	    if(tmpmxptr)
-	        pr1 = mxGetPr(tmpmxptr);
-	    else
-	        pr1=NULL; 
-	    
-	    tmpmxptr = mxGetField(prhs[0],0,"R2");
-	    if(tmpmxptr)
-	        pr2 = mxGetPr(tmpmxptr);
-	    else
-	        pr2=NULL; 
-	    
-	    
-	    tmpmxptr = mxGetField(prhs[0],0,"T1");
-	    
-	    
-	    if(tmpmxptr)
-	        pt1=mxGetPr(tmpmxptr);
-	    else
-	        pt1=NULL;
-	    
-	    tmpmxptr = mxGetField(prhs[0],0,"T2");
-	    if(tmpmxptr)
-	        pt2=mxGetPr(tmpmxptr);
-	    else
-	        pt2=NULL;
-
-    irho = ba/le;
-    
-    plhs[0] = mxDuplicateArray(prhs[1]);
-	r_in = mxGetPr(plhs[0]);
-	BndMPoleSymplectic4RadPass(r_in, le, irho, A, B, max_order, num_int_steps, 
-								entrance_angle, exit_angle, 
-								fint1, fint2, gap, pt1, pt2, pr1, pr2, E0, n);
-	}
-	else
-	{   /* return list of required fields */
-	    plhs[0] = mxCreateCellMatrix(9,1);
-	    
-	    mxSetCell(plhs[0],0,mxCreateString("Length"));
-	    mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
-	    mxSetCell(plhs[0],2,mxCreateString("EntranceAngle"));
-	    mxSetCell(plhs[0],3,mxCreateString("ExitAngle"));
+    double *A = mxGetPr(GetRequiredField(prhs[0], "PolynomA"));
+        double *B = mxGetPr(GetRequiredField(prhs[0], "PolynomB"));
+        int max_order = (int) mxGetScalar(GetRequiredField(prhs[0], "MaxOrder"));
+        int num_int_steps = (int) mxGetScalar(GetRequiredField(prhs[0], "NumIntSteps"));
+        double le = mxGetScalar(GetRequiredField(prhs[0], "Length"));
+        double ba = mxGetScalar(GetRequiredField(prhs[0], "BendingAngle"));
+        double E0 = mxGetScalar(GetRequiredField(prhs[0], "Energy"));
+        double entrance_angle = mxGetScalar(GetRequiredField(prhs[0], "EntranceAngle"));
+        double exit_angle = mxGetScalar(GetRequiredField(prhs[0], "ExitAngle"));
+        int num_particles = mxGetN(prhs[1]);
+        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+        
+        
+        /* Optional arguments */
+        tmpmxptr = mxGetField(prhs[0],0,"FringeInt1");
+        fint1 = tmpmxptr ? mxGetScalar(tmpmxptr) : 0;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"FringeInt2");
+        fint2 = tmpmxptr ? mxGetScalar(tmpmxptr) : 0;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"FullGap");
+        gap = tmpmxptr ? mxGetScalar(tmpmxptr) : 0;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"R1");
+        pr1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"R2");
+        pr2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"T1");
+        pt1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"T2");
+        pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"RApertures");
+        RApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        tmpmxptr = mxGetField(prhs[0],0,"EApertures");
+        EApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        
+        irho = ba/le;
+        
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetPr(plhs[0]);
+        BndMPoleSymplectic4RadPass(r_in, le, irho, A, B, max_order, num_int_steps,
+                entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, RApertures, EApertures, E0, num_particles);
+    }
+    else if (nrhs == 0) {
+        /* list of required fields */
+        plhs[0] = mxCreateCellMatrix(8,1);
+        mxSetCell(plhs[0],0,mxCreateString("Length"));
+        mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
+        mxSetCell(plhs[0],2,mxCreateString("EntranceAngle"));
+        mxSetCell(plhs[0],3,mxCreateString("ExitAngle"));
         mxSetCell(plhs[0],4,mxCreateString("PolynomA"));
-	    mxSetCell(plhs[0],5,mxCreateString("PolynomB"));
-	    mxSetCell(plhs[0],6,mxCreateString("MaxOrder"));
-	    mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
-	    mxSetCell(plhs[0],8,mxCreateString("Energy"));
-	    
-	    if(nlhs>1) /* Required and optional fields */ 
-	    {   plhs[1] = mxCreateCellMatrix(7,1);
-	        mxSetCell(plhs[1],0,mxCreateString("FullGap"));
-	        mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
-	        mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
-	        mxSetCell(plhs[1],3,mxCreateString("T1"));
-	        mxSetCell(plhs[1],4,mxCreateString("T2"));
-	        mxSetCell(plhs[1],5,mxCreateString("R1"));
-	        mxSetCell(plhs[1],6,mxCreateString("R2"));
-	    }
-	}
+        mxSetCell(plhs[0],5,mxCreateString("PolynomB"));
+        mxSetCell(plhs[0],6,mxCreateString("MaxOrder"));
+        mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
+        
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(9,1);
+            mxSetCell(plhs[1],0,mxCreateString("FullGap"));
+            mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
+            mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
+            mxSetCell(plhs[1],3,mxCreateString("T1"));
+            mxSetCell(plhs[1],4,mxCreateString("T2"));
+            mxSetCell(plhs[1],5,mxCreateString("R1"));
+            mxSetCell(plhs[1],6,mxCreateString("R2"));
+            mxSetCell(plhs[1],7,mxCreateString("RApertures"));
+            mxSetCell(plhs[1],8,mxCreateString("EApertures"));
+        }
+    }
+    else {
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
+    }
 }
 
 #endif
+
+    
+    
