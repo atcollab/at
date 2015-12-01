@@ -119,16 +119,20 @@ static tracksel *trackmethod(const char *methstr)
 
 static void tdrift(double *r_in, int np, const double *args, elist elem)
 {
-   DriftPass(r_in, args[0], np);
+   DriftPass(r_in, args[0],
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   NULL, NULL,          /* apertures */
+   np);
 }
 static void tqpole(double *r_in, int np, const double *args, elist elem)
 {
    QuadLinearPass(r_in,
-   args[0],			/* length */
-   args[1],			/* strength */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
-   np);				/* number of particles */
+   args[0],             /* length */
+   args[1],             /* strength */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   np);                 /* number of particles */
 }
 static void tdpole(double *r_in, int np, const double *args, elist elem)
 {
@@ -142,8 +146,8 @@ static void tdpole(double *r_in, int np, const double *args, elist elem)
    0.0,				/* Fint1 */
    0.0,				/* Fint2 */
    0.0,				/* Gap */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
    np);				/* number of particles */
 }
 static void tthinmag(double *r_in, int np, const double *args, elist elem)
@@ -214,8 +218,9 @@ static void tsymplecticbend(double *r_in, int np, const double *args, elist elem
    0.0,				/* Fint1 */
    0.0,				/* Fint2 */
    0.0,				/* Gap */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   NULL, NULL,      /* apertures */
    np);				/* number of particles */
 }
 static void tsymplecticFrgFbend(double *r_in, int np, const double *args, elist elem)
@@ -234,8 +239,9 @@ static void tsymplecticFrgFbend(double *r_in, int np, const double *args, elist 
     0.0,				/* Fint1 */
     0.0,				/* Fint2 */
     0.0,				/* Gap */
-    elem->T1, elem->T2,		/* displacement */
-    elem->R1, elem->R2,		/* rotation */
+    elem->T1, elem->T2, /* displacement */
+    elem->R1, elem->R2, /* rotation */
+    NULL, NULL,         /* apertures */
     np);				/* number of particles */
 }
 static void tsymplecticE2bend(double *r_in, int np, const double *args, elist elem)
@@ -256,8 +262,8 @@ static void tsymplecticE2bend(double *r_in, int np, const double *args, elist el
    0.0,				/* Gap */
    0.0,				/* h1 */
    0.0,				/* h2 */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
    np);				/* number of particles */
 }
 
@@ -277,9 +283,10 @@ static void tsymplecticRadbend(double *r_in, int np, const double *args, elist e
    0.0,				/* Fint1 */
    0.0,				/* Fint2 */
    0.0,				/* Gap */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
-   1e9*E0,             /* energy  */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   NULL, NULL,      /* apertures */
+   1e9*E0,          /* energy  */
    np);				/* number of particles */
 }
 static void tsymplecticFrgFRadbend(double *r_in, int np, const double *args, elist elem)
@@ -298,8 +305,9 @@ static void tsymplecticFrgFRadbend(double *r_in, int np, const double *args, eli
     0.0,				/* Fint1 */
     0.0,				/* Fint2 */
     0.0,				/* Gap */
-    elem->T1, elem->T2,		/* displacement */
-    elem->R1, elem->R2,		/* rotation */
+    elem->T1, elem->T2,	/* displacement */
+    elem->R1, elem->R2,	/* rotation */
+    NULL, NULL,         /* apertures */
     1e9*E0,             /* energy  */
     np);				/* number of particles */
 }
@@ -321,9 +329,9 @@ static void tsymplecticE2Radbend(double *r_in, int np, const double *args, elist
    0.0,				/* Gap */
    0.0,				/* h1 */
    0.0,				/* h2 */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
-   1e9*E0,             /* energy  */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   1e9*E0,          /* energy  */
    np);				/* number of particles */
 }
 
@@ -337,8 +345,9 @@ static void tsymplecticstr(double *r_in, int np, const double *args, elist elem)
    B,				/* multipoles */
    order,			/* max order */
    10,				/* number of slices */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   NULL, NULL,      /* apertures */
    np);				/* number of particles */
 }
 
@@ -352,20 +361,22 @@ static void tsymplecticQuadFringe(double *r_in, int np, const double *args, elis
    B,				/* multipoles */
    order,			/* max order */
    10,				/* number of slices */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   NULL, NULL,      /* fringe field integrals */
+   NULL, NULL,      /* apertures */
    np);				/* number of particles */
 }
 
 static void twigglinear(double *r_in, int np, const double *args, elist elem)
 {
    WiggLinearPass(r_in,
-   args[0],			/* length */
-   args[1],			/* 1/rho */
+   args[0],             /* length */
+   args[1],             /* 1/rho */
    0.0,			        /* kxkz */
-   elem->T1, elem->T2,		/* displacement */
-   elem->R1, elem->R2,		/* rotation */
-   np);				/* number of particles */
+   elem->T1, elem->T2,  /* displacement */
+   elem->R1, elem->R2,  /* rotation */
+   np);                 /* number of particles */
 }
 
 static void taperture(double *r_in, int np, const double *args, elist elem)
