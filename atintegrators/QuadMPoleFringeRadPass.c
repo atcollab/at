@@ -16,7 +16,7 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
         const double *R1, const double *R2,
         double *fringeIntM0,  /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
         double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
-        double *limits, double *axesptr,int num_particles)
+        double *RApertures, double *EApertures,int num_particles)
 {
     double *r6;
     int c, m;
@@ -44,8 +44,8 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
             if (useT1) ATaddvv(r6, T1);
             if (useR1) ATmultmv(r6, R1);
             /* Check physical apertures at the entrance of the magnet */
-            if (limits) checkiflostRectangularAp(r6,limits);
-            if (axesptr) checkiflostEllipticalAp(r6,axesptr);
+            if (RApertures) checkiflostRectangularAp(r6,RApertures);
+            if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             if (useLinFrEle) /*Linear fringe fields from elegant*/
             {
                 double R[6][6];
@@ -124,8 +124,8 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
                 /* nonlinear fringe field */
                 QuadFringePassN(r6,B[1]);   /*This is original AT code*/
             /* Check physical apertures at the exit of the magnet */
-            if (limits) checkiflostRectangularAp(r6,limits);
-            if (axesptr) checkiflostEllipticalAp(r6,axesptr);
+            if (RApertures) checkiflostRectangularAp(r6,RApertures);
+            if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             
             /* Misalignment at exit */
             if (useR2) ATmultmv(r6, R2);
@@ -140,10 +140,10 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
         double *r_in, int num_particles, int mode)
-#define NUM_FIELDS_2_REMEMBER 13
+#define NUM_FIELDS_2_REMEMBER 14
 {
     double *A , *B;
-    double  *pr1, *pr2, *pt1, *pt2, *limits, *axesptr, *fringeIntM0, *fringeIntP0;
+    double  *pr1, *pr2, *pt1, *pt2, *RApertures, *EApertures, *fringeIntM0, *fringeIntP0;
     int max_order, num_int_steps;
     double le, E0;
     
@@ -170,10 +170,10 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
             FieldNumbers[7] = mxGetFieldNumber(ElemData,"R2");
             FieldNumbers[8] = mxGetFieldNumber(ElemData,"T1");
             FieldNumbers[9] = mxGetFieldNumber(ElemData,"T2");
-            FieldNumbers[9] = mxGetFieldNumber(ElemData,"RApertures");
-            FieldNumbers[10] = mxGetFieldNumber(ElemData,"EApertures");
-            FieldNumbers[11] = mxGetFieldNumber(ElemData,"fringeIntM0");
-            FieldNumbers[12] = mxGetFieldNumber(ElemData,"fringeIntP0");
+            FieldNumbers[10] = mxGetFieldNumber(ElemData,"RApertures");
+            FieldNumbers[11] = mxGetFieldNumber(ElemData,"EApertures");
+            FieldNumbers[12] = mxGetFieldNumber(ElemData,"fringeIntM0");
+            FieldNumbers[13] = mxGetFieldNumber(ElemData,"fringeIntP0");
             
             /* Fall through next section... */
             
@@ -194,10 +194,10 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
             pr2 = (FieldNumbers[7] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[7])) : NULL;
             pt1 = (FieldNumbers[8] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[8])) : NULL;
             pt2 = (FieldNumbers[9] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[9])) : NULL;
-            limits = (FieldNumbers[9] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[9])) : NULL;
-            axesptr = (FieldNumbers[10] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[10])) : NULL;
-            fringeIntM0 = (FieldNumbers[11] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[11])) : NULL;
-            fringeIntP0 = (FieldNumbers[12] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[12])) : NULL;
+            RApertures = (FieldNumbers[10] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[10])) : NULL;
+            EApertures = (FieldNumbers[11] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[11])) : NULL;
+            fringeIntM0 = (FieldNumbers[12] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[12])) : NULL;
+            fringeIntP0 = (FieldNumbers[13] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[13])) : NULL;
             break;
             
         default:
@@ -206,21 +206,15 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
     }
     
     QuadMPoleFringeRadPass(r_in, le, A, B, E0, max_order, num_int_steps,
-            pt1, pt2, pr1, pr2, fringeIntM0, fringeIntP0, limits, axesptr, num_particles);
+            pt1, pt2, pr1, pr2, fringeIntM0, fringeIntP0, RApertures, EApertures, num_particles);
     return FieldNumbers;
 }
 
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    int m,n;
-    double *r_in;
-    double E0, le, *A, *B, *pr1, *pr2, *pt1, *pt2, *limits, *axesptr, *fringeIntM0, *fringeIntP0;
-    int max_order, num_int_steps;
-    mxArray *tmpmxptr;
-    
     if (nrhs==2) {
         double *r_in;
-        double *pr1, *pr2, *pt1, *pt2;
+        double *pr1, *pr2, *pt1, *pt2, *RApertures, *EApertures, *fringeIntM0, *fringeIntP0;
         mxArray *tmpmxptr;
         
         double *A = mxGetPr(GetRequiredField(prhs[0], "PolynomA"));
@@ -247,10 +241,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
         tmpmxptr = mxGetField(prhs[0],0,"RApertures");
-        limits = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        RApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
         tmpmxptr = mxGetField(prhs[0],0,"EApertures");
-        axesptr = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
+        EApertures = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
         
         tmpmxptr = mxGetField(prhs[0],0,"fringeIntM0");
         fringeIntM0 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
@@ -262,7 +256,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
         QuadMPoleFringeRadPass(r_in, le, A, B, E0, max_order, num_int_steps,
-                pt1, pt2, pr1, pr2, fringeIntM0, fringeIntP0, limits, axesptr, n);
+                pt1, pt2, pr1, pr2, fringeIntM0, fringeIntP0, RApertures, EApertures, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
