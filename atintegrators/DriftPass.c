@@ -14,7 +14,6 @@ void DriftPass(double *r_in, double le,
 {
     double *r6;
     int c;
-	double p_norm, NormL;
     
 	for (c = 0; c<num_particles; c++) { /*Loop over particles  */
         r6 = r_in+c*6;
