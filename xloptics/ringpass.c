@@ -3,13 +3,7 @@
 #include <string.h>
 #include <math.h>
 
-#ifdef WIN32
-#ifndef __MWERKS__
-#include <float.h>
-#define isfinite _finite
-#define isnan _isnan
-#endif
-#elif defined __SUNPRO_C
+#if defined __SUNPRO_C
 #include <ieeefp.h>
 #define isfinite finite
 #endif
