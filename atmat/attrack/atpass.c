@@ -228,22 +228,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /* Pointer to Element data in MATLAB */
     numel  = mxGetNumberOfElements(LATTICE);
     mxPtrELEM = (mxArray**)mxMalloc(numel*sizeof(mxArray*));
-	for (n=0; n<numel; n++) {
-        mxArray *mxElem = mxGetCell(LATTICE,n);
-        if (!mxIsStruct(mxElem)) {
-            mxArray *mxObj = mxElem;
-            mxElem = mxGetProperty(mxObj,0,"AtStruct");
-        }
-        mxArray *mxLength = mxGetField(mxElem, 0, "Length");
-        if (mxLength != NULL) RingLength+=mxGetScalar(mxLength);
-        mxPtrELEM[n] = mxElem;
-	}
+    for (n=0; n<numel; n++) {
+       mxArray *mxLength, *mxElem = mxGetCell(LATTICE,n);
+       if (!mxIsStruct(mxElem)) {
+           mxArray *mxObj = mxElem;
+           mxElem = mxGetProperty(mxObj,0,"AtStruct");
+       }
+       mxLength = mxGetField(mxElem, 0, "Length");
+       if (mxLength != NULL) RingLength+=mxGetScalar(mxLength);
+       mxPtrELEM[n] = mxElem;
+    }
 
     if (NewLatticeFlag) FirstCallFlag=true;
     
     if (FirstCallFlag) {
         
-        for (n=0;n<num_elements;n++) { /* free memory from previously used lattice */
+        for (n=0; n<num_elements; n++) { /* free memory from previously used lattice */
             mxFree(field_numbers_ptr[n]);
             mxFree(method_names[n]);
         }
