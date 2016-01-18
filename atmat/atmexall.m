@@ -40,6 +40,9 @@ MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' -I''',PASSMETHODDIR,''' '
     fullfile(cdir,'findmpoleraddiffmatrix.c')];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
+MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' ',fullfile(cdir,'RDTelegantAT.cpp')];
+disp(MEXCOMMAND);
+eval(MEXCOMMAND);
 
 % ADD 'MEXING' instructions for other C files
 disp('ALL mex-files created successfully')
