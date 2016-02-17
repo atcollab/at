@@ -63,10 +63,10 @@ switch atclass
         [options,args]=doptions(elem,create,{'Length','KickAngle'});
     case 'Multipole'
         create=@atmultipole;
-        [options,args]=doptions(elem,create,{'Length','PolynomB','PolynomA'});
+        [options,args]=doptions(elem,create,{'Length','PolynomA','PolynomB'});
     case 'ThinMultipole'
         create=@atthinmultipole;
-        [options,args]=doptions(elem,create,{'PolynomB','PolynomA'});
+        [options,args]=doptions(elem,create,{'PolynomA','PolynomB'});
     case 'RFCavity'
         create=@atrfcavity;
         [options,args]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber','Energy'});
