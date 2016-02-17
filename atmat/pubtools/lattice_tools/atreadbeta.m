@@ -21,7 +21,7 @@ if isempty(fpath), fpath=getenv('DBETA'); end
 
 if nargin < 5, multipass='StrMPoleSymplectic4Pass'; end
 if nargin < 4, quadpass='QuadMPoleFringePass'; end
-if nargin < 3, bendpass='BndMPoleSymplectic4E2Pass'; end
+if nargin < 3, bendpass='BndMPoleSymplectic4Pass'; end
 if nargin < 2, cavipass='IdentityPass'; end
 if nargin < 1, filename=''; end
 
