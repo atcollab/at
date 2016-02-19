@@ -30,7 +30,7 @@ keep=~atgetcells(oldring(:),'PassMethod','IdentityPass') | refs;
 newring=oldring(keep);
 indx=keep;
 %					Merge adjacent elements
-bring=cellfun(@(el) elstrip(el,{'PassMethod','PolynomA','PolynomB','MaxOrder'}),...
+bring=cellfun(@(el) elstrip(el,{'PassMethod','PolynomA','PolynomB','MaxOrder','Raperture','Eaperture'}),...
     newring,'UniformOutput',false);
 bring(refs(indx))={NaN};
 bends=atgetcells(newring,'BendingAngle');
