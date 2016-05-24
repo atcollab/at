@@ -80,7 +80,7 @@ end
         keep(i1+1:i2)=false;
     end
 
-    function nm=gname(names)    % generate a group name
+    function nm=gname(names)    % generate a group name as the longest common part
         lmin=min(cellfun(@length,names));
         nm=names{1};
         cellfun(@cmps,names);
