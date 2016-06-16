@@ -9,6 +9,10 @@ function elem=atQuantDiff(fname,varargin)
 %   FAMNAME:   family name
 %   RING:      lattice without radiation
 %
+%  The optional field Seed can be added. In that case, the seed of the
+%  random number generator is set at the first turn.
+%  ELEM=ATQUANTDIFF(FAMNANE,RING,'Seed',4)
+%
 %See also quantumDiff
 
 [rsrc,arg,method]=decodeatargs({[],'QuantDiffPass'},varargin);
