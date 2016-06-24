@@ -53,19 +53,19 @@ global NUMDIFPARAMS
 NE = length(RING);
 if nargin >= 3
     if islogical(varargin{1})
-        REFPTS=varargin{1};
+        REFPTS=varargin{1}(:);
         REFPTS(end+1:NE+1)=false;
         isel=1:sum(REFPTS);
     elseif isnumeric(varargin{1})
         isel=varargin{1};
         [r2,ir2]=sort(isel(:));
-        REFPTS=setelems(false(1,NE+1),r2);
+        REFPTS=setelems(false(NE+1,1),r2);
         isel(ir2)=1:numel(isel);
     else
         error('REFPTS must be numeric or logical');
     end
 else
-    REFPTS=setelems(false(1,NE+1),1);
+    REFPTS=setelems(false(NE+1,1),1);
     isel=1;
 end
 
@@ -122,7 +122,7 @@ if nargout >= 3
     varargout{2} = (tunesP - tunesM)/dDP;
     dispargs={'Dispersion',num2cell(dispersion,1)'};
 end
-ld = struct('ElemIndex',num2cell(find(REFPTS))',...
+ld = struct('ElemIndex',num2cell(find(REFPTS)),...
     'SPos',num2cell(spos)',...
     'ClosedOrbit',num2cell(orb,1)',...
     dispargs{:},...
