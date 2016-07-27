@@ -13,14 +13,14 @@ function [optval,opts] = getoption(opts,optname,optval)
 %See also GETFLAG
 
 if iscell(opts)
-    ok=strcmpi(optname,opts(1:2:end));
+    ok=[strcmpi(optname,opts(1:end-1)) false];
     if any(ok)
-        optval=opts{2*find(ok,1,'last')};
-        opts(reshape([ok;ok],1,[]))=[];
+        okval=circshift(ok,[0,1]);
+        optval=opts{find(okval,1,'last')};
+        opts(ok|okval)=[];
     end
 elseif isstruct(opts) && isfield(opts,optname)
     optval=opts.(optname);
     opts=rmfield(opts,optname);
 end
 end
-
