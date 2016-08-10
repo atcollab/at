@@ -12,6 +12,7 @@ function [optval,opts] = getoption(opts,optname,optval)
 %
 %See also GETFLAG
 
+if nargin < 3, optval=[]; end
 if iscell(opts)
     ok=[strcmpi(optname,opts(1:end-1)) false];
     if any(ok)
