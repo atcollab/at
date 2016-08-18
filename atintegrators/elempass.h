@@ -1,6 +1,7 @@
 /* Header file for the element pass-functions */
 
 #ifndef NOMEX
+#include <mex.h>
 #if defined(PCWIN)
 #define ExportMode __declspec(dllexport)
 #include <float.h>

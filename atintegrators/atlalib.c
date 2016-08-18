@@ -15,6 +15,7 @@
 4. All vectors  are 1-by-6 or 6-by-1
 */
 
+#include "at.h"
 
 static void ATmultmv(double *r, const double* A)
 /*	multiplies 6-component column vector r by 6x6 matrix R: as in A*r 

@@ -1,5 +1,4 @@
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 
 void DriftPass(double *r_in, double le,
@@ -35,8 +34,26 @@ void DriftPass(double *r_in, double le,
     }
 }
 
-#ifndef NOMEX
+#ifdef PYAT
+#include <Python.h>
+#include <numpy/ndarrayobject.h>
 
+int atpyPass(double *rin, int num_particles, PyObject *at_element, PyObject *global_data)
+{
+	double length = PyFloat_AsDouble(PyObject_GetAttrString(at_element, "length"));
+    /* extract all necessary fields */
+    /* check existence of optional fields T1, T2,.. */
+	DriftPass(rin, length, NULL, NULL, NULL, NULL, NULL, NULL, num_particles);
+	return 0;
+}
+
+#endif /*PYAT*/
+
+
+#ifdef MATLAB_MEX_FILE
+
+#include <mex.h>
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
