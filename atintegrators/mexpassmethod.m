@@ -61,10 +61,8 @@ if ischar(PASSMETHODS) % one file name - convert to a cell array
     if strcmpi(PASSMETHODS,'all')
         % Find all files matching '*Pass.c' wildcard
         D = dir(fullfile(pdir,'*Pass.c'));
-        PASSMETHODS = cell(size(D));
-        for i = 1:length(D)
-            PASSMETHODS{i} = strrep(D(i).name,'.c','');
-        end
+        ok=cellfun(@(nm) nm(1)~='.',{D.name});  % Eliminate invisible files
+        PASSMETHODS=cellfun(@(nm) strrep(nm,'.c',''),{D(ok).name},'UniformOutput',false);
     else % Mex a single specifie pass-method
         PASSMETHODS={PASSMETHODS};
     end
