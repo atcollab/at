@@ -593,7 +593,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	outMatrix[11] = d->h10020[2];
 	outMatrix[12] = d->h10200[0];
 	outMatrix[13] = d->h10200[1];
-	outMatrix[14] = d->h10200[2];
+	outMatrix[14] = d->h10200[2];*/
 
 /*	outMatrix[15] = d->h11001[0];
 	outMatrix[16] = d->h11001[1];
@@ -609,14 +609,14 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	outMatrix[26] = d->h00201[2];
 	outMatrix[27] = d->h10002[0];
 	outMatrix[28] = d->h10002[1];
-	outMatrix[29] = d->h10002[2];
+	outMatrix[29] = d->h10002[2];*/
 
 /*	outMatrix[30] = d->h10010[0];
 	outMatrix[31] = d->h10010[1];
 	outMatrix[32] = d->h10010[2];
 	outMatrix[33] = d->h10100[0];
 	outMatrix[34] = d->h10100[1];
-	outMatrix[35] = d->h10100[2];
+	outMatrix[35] = d->h10100[2];*/
 	
 /*	outMatrix[36] = d->h22000[0];
 	outMatrix[37] = d->h22000[1];
@@ -650,7 +650,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	outMatrix[65] = d->h00310[2];
     outMatrix[66] = d->h00400[0];
 	outMatrix[67] = d->h00400[1];
-	outMatrix[68] = d->h00400[2];	
+	outMatrix[68] = d->h00400[2];*/
 	
 	
 	/* tune shifts with amplitude */
