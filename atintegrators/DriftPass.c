@@ -2,36 +2,36 @@
 #include "atlalib.c"
 
 void DriftPass(double *r_in, double le,
-        const double *T1, const double *T2,	
-        const double *R1, const double *R2,
-        double *RApertures, double *EApertures,
-        int num_particles)
+	       const double *T1, const double *T2,
+	       const double *R1, const double *R2,
+	       double *RApertures, double *EApertures,
+	       int num_particles)
 /* le - physical length
    r_in - 6-by-N matrix of initial conditions reshaped into 
    1-d array of 6*N elements 
 */
 {
-    double *r6;
-    int c;
-    
-	for (c = 0; c<num_particles; c++) { /*Loop over particles  */
-        r6 = r_in+c*6;
-        if(!mxIsNaN(r6[0])) {
-            /*  misalignment at entrance  */
-            if (T1) ATaddvv(r6, T1);
-            if (R1) ATmultmv(r6, R1);
-            /* Check physical apertures at the entrance of the magnet */
-			if (RApertures) checkiflostRectangularAp(r6,RApertures);
-			if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            ATdrift6(r6, le);
-			/* Check physical apertures at the exit of the magnet */
-			if (RApertures) checkiflostRectangularAp(r6,RApertures);
-			if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            /* Misalignment at exit */
-            if (R2) ATmultmv(r6, R2);
-            if (T2) ATaddvv(r6, T2);
-        }
+  double *r6;
+  int c;
+
+  for (c = 0; c<num_particles; c++) { /*Loop over particles  */
+    r6 = r_in+c*6;
+    if(!mxIsNaN(r6[0])) {
+      /*  misalignment at entrance  */
+      if (T1) ATaddvv(r6, T1);
+      if (R1) ATmultmv(r6, R1);
+      /* Check physical apertures at the entrance of the magnet */
+      if (RApertures) checkiflostRectangularAp(r6,RApertures);
+      if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+      ATdrift6(r6, le);
+      /* Check physical apertures at the exit of the magnet */
+      if (RApertures) checkiflostRectangularAp(r6,RApertures);
+      if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+      /* Misalignment at exit */
+      if (R2) ATmultmv(r6, R2);
+      if (T2) ATaddvv(r6, T2);
     }
+  }
 }
 
 #ifdef PYAT
