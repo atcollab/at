@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <math.h>
 #include <mex.h>
+#include "at.h"
 #include "elempass.h"
 
 #if defined(PCWIN) || defined(PCWIN64)
