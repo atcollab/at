@@ -38,7 +38,7 @@ void DriftPass(double *r_in, double le,
 #include <Python.h>
 #include <numpy/ndarrayobject.h>
 
-int atpyPass(double *rin, int num_particles, PyObject *at_element, PyObject *global_data)
+int atpyPass(double *rin, int num_particles, PyObject *at_element, ,struct parameters *Param)
 {
 	double length = PyFloat_AsDouble(PyObject_GetAttrString(at_element, "length"));
     /* extract all necessary fields */
