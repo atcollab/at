@@ -36,8 +36,6 @@ static const double pinf = 1.0 / 0.0;
 
 #endif /*MATLAB_MEX_FILE*/
 
-#endif /*AT_H*/
-
 struct parameters
 {
   int mode;
@@ -45,3 +43,7 @@ struct parameters
   double RingLength;
   double T0;
 };
+
+#endif /*AT_H*/
+
+
