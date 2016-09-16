@@ -3,10 +3,8 @@
    Revision 3/10/04
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
+#include "at.h"
 
-#include "mex.h"
-#include "elempass.h"
-#include <math.h>
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8 
 
@@ -53,7 +51,9 @@ void CavityPass(double *r_in, double le, double nv, double freq, double lag, int
 }
 
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
+
+#include "elempass.h"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 				double *r_in, int num_particles, int mode)

@@ -3,12 +3,14 @@
 
 #ifdef MATLAB_MEX_FILE
 
+#include "mex.h"
 #include <matrix.h>
 
 #else
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #ifndef NAN
 static const double dnan = 0.0 / 0.0;
@@ -24,6 +26,7 @@ static const double pinf = 1.0 / 0.0;
 #define mxGetNaN() (NAN)
 #define mxGetInf() (INFINITY)
 #define mxMalloc malloc
+#define mxCalloc calloc
 #define mxFree free
 
 #if defined __SUNPRO_C

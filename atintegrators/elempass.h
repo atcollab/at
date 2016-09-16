@@ -1,6 +1,6 @@
 /* Header file for the element pass-functions */
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 #include <mex.h>
 #if defined(PCWIN)
 #define ExportMode __declspec(dllexport)

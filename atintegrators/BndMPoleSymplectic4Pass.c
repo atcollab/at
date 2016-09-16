@@ -1,6 +1,4 @@
-#include "mex.h"
 #include<math.h>
-#include "elempass.h"
 #include "atlalib.c"
 #include "atphyslib.c"
 
@@ -204,8 +202,9 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
 
 
     	
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,

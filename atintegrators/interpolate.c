@@ -10,8 +10,10 @@
  
 */
 
-/*x1a is the direction of the colums: y and x1a the direction of the rows:x*/
+#include "at.h"
+#include <math.h>
 
+/*x1a is the direction of the colums: y and x1a the direction of the rows:x*/
 
 /****************************************************************************/
 /****************************Bilinear interpolation*****************************/
@@ -22,22 +24,19 @@ void linint(double *x1a, double *x2a, double *ya, int m, int n, double x1, doubl
     int klo,khi,k,ilo,ihi,i;
     double u,t,y1,y2,y3,y4,f;
 
-    if((x1<=x1a[m-1])&&(x1>=x1a[0])&&(x2<=x2a[n-1])&&(x2>=x2a[0]))
-    {
+    if ((x1<=x1a[m-1])&&(x1>=x1a[0])&&(x2<=x2a[n-1])&&(x2>=x2a[0])) {
         ilo=0;
         ihi=m-1;	
         klo=0;
         khi=n-1;
 	
-        while (ihi-ilo > 1) 
-        {
+        while (ihi-ilo > 1) {
             i=(ihi+ilo) >> 1;
             if (x1a[i] > x1) ihi=i;
             else ilo=i;
         }
 	
-        while (khi-klo > 1) 
-        {
+        while (khi-klo > 1) {
             k=(khi+klo) >> 1;
             if (x2a[k] > x2) khi=k;
             else klo=k;
@@ -48,21 +47,13 @@ void linint(double *x1a, double *x2a, double *ya, int m, int n, double x1, doubl
         y4=ya[ihi+klo*m];
         
         if (x1a[ihi]==x1a[ilo]||x2a[khi]==x2a[klo])
-        {
             mexErrMsgTxt("Bad xa input to routine linint");
-        }
-    
-        else
-    
-        {
-            u=(x1-x1a[ilo])/(x1a[ihi]-x1a[ilo]);
-            t=(x2-x2a[klo])/(x2a[khi]-x2a[klo]);
-        }
+
+        u=(x1-x1a[ilo])/(x1a[ihi]-x1a[ilo]);
+        t=(x2-x2a[klo])/(x2a[khi]-x2a[klo]);
         f=(1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
-        
     }
-    else
-    {/*This is redundant...The limits have been taking as apertures previously*/
+    else {  /*This is redundant...The limits have been taking as apertures previously*/
         /*mexPrintf("Out of Id data range\n");*/
         f=sqrt(-1);
     }

@@ -33,7 +33,7 @@ static void edge_fringe2A(double* r, double inv_rho, double edge_angle, double f
     double fy = inv_rho*tan(psi_bar);
     double h = inv_rho;
     double tpsi=tan(edge_angle), tpsib=tan(psi_bar);
-    double spsi=1.0/cos(edge_angle), spsib=1.0/cos(psi_bar);
+    double spsi=1.0/cos(edge_angle); /* spsib=1.0/cos(psi_bar) */
     double T111,T234,T414,   T212,T313,  T133,T423,T211,T233,T413;
 
 	double r0=r[0],r2=r[2],r1=r[1];
@@ -63,7 +63,7 @@ static void edge_fringe2B(double* r, double inv_rho, double edge_angle, double f
     double fy = inv_rho*tan(psi_bar);
     double h = inv_rho;
     double tpsi=tan(edge_angle), tpsib=tan(psi_bar);
-    double spsi=1.0/cos(edge_angle), spsib=1.0/cos(psi_bar);
+    double spsi=1.0/cos(edge_angle); /* spsib=1.0/cos(psi_bar) */
     double T111,T234,T414,   T212,T313,  T133,T423,T211,T233,T413;
 	
 	double r0=r[0],r2=r[2],r1=r[1];

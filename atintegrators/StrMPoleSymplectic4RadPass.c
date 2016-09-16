@@ -1,7 +1,5 @@
-#include "mex.h"
-#include<math.h>
+#include "at.h"
 #include "atlalib.c"
-#include "elempass.h"
 
 #define DRIFT1    0.6756035959798286638
 #define DRIFT2   -0.1756035959798286639
@@ -207,7 +205,9 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
     }
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
+
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,

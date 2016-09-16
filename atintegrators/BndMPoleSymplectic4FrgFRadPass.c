@@ -1,6 +1,4 @@
-#include "mex.h"
 #include <math.h>
-#include "elempass.h"
 #include "atlalib.c"
 #include "atphyslib.c"		/* edge, edge_fringe */
 #include "driftkickrad.c"	/* drift6.c, bndthinkickrad.c */
@@ -76,8 +74,8 @@ void BndMPoleSymplectic4FrgFRadPass(double *r, double le, double irho, double *A
 }
 
 
-#ifndef NOMEX
-
+#ifdef MATLAB_MEX_FILE
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,

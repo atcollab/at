@@ -6,12 +6,8 @@
 */
 
 
-#include <stdlib.h>
-#include <math.h>
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
-
 
 /******************************************************************************/
 /* PHYSICS SECTION ************************************************************/
@@ -134,8 +130,7 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 {	int c;
 	double *r6;
 	bool useT1, useT2, useR1, useR2;
-	char strWarning[256];
-	
+
 	if(T1==NULL)
 	    useT1=false;
 	else 
@@ -155,14 +150,10 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 	    useR2=false;
 	else 
 	    useR2=true;
-	
-	/*sprintf(strWarning, "%f\t%f\t%f\t%f\n",le,kv,I1a,I1b);    
-  mexWarnMsgTxt(strWarning);
-  */
 
 	for(c = 0;c<num_particles;c++)
 		{	r6 = r+c*6;
-		    if(!mxIsNaN(r6[0]) & mxIsFinite(r6[4]))
+		    if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4]))
 		    /* 
 		       function quad6 internally calculates the square root
 			   of the energy deviation of the particle 
@@ -202,6 +193,9 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 
 /********** WINDOWS DLL GATEWAY SECTION ***************************************/
 
+#ifdef MATLAB_MEX_FILE
+
+#include "elempass.h"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
@@ -436,3 +430,5 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    }
 	}
 }
+
+#endif /*MATLAB_MEX_FILE*/

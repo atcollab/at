@@ -3,8 +3,7 @@
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
 
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 #include "driftkick.c"
 
@@ -32,8 +31,9 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
     }
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,

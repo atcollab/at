@@ -1,6 +1,4 @@
-#include "mex.h"
-#include<math.h>
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 #include "atphyslib.c"
 /*
@@ -184,14 +182,10 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 
 {	int c,m;	
 	double *r6;   
-	double SL, L1, L2, K1, K2;
+	double SL;
 	bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
 	SL = le/num_int_steps;
-	L1 = SL*DRIFT1;
-	L2 = SL*DRIFT2;
-	K1 = SL*KICK1;
-	K2 = SL*KICK2;
-		
+
 	if (T1==NULL)
 	    useT1=false;
 	else 
@@ -245,15 +239,6 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 					/* integrator  */
 					for(m=0; m < num_int_steps; m++) /* Loop over slices */		
 						{		r6 = r+c*6;	
-								
-						/*		ATdrift6(r6,L1);
-           					bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
-								ATdrift6(r6,L2);
-           					bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
-								ATdrift6(r6,L2);
-		     					bndthinkickrad(r6, A, B,  K1, irho, E0, max_order);
-								ATdrift6(r6,L1);	
-								*/
 								ATdrift6(r6,0.5*SL);
            					bndthinkickrad(r6, A, B, SL, irho, E0, max_order);
 								ATdrift6(r6,0.5*SL);
@@ -278,11 +263,14 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 			}
 }
 
+#ifdef MATLAB_MEX_FILE
+#define NUM_FIELDS_2_REMEMBER 16
+
+#include "elempass.h"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 
-#define NUM_FIELDS_2_REMEMBER 16
 
 
 {	double *A , *B;
@@ -682,4 +670,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 }
 
 
-
+#endif

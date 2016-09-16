@@ -5,10 +5,7 @@
 */
 
 
-#include <stdlib.h>
-#include <math.h>
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 
 
@@ -102,7 +99,7 @@ void QuadLinearPass(double *r, double le, double kv, double *T1, double *T2, dou
 
 	for(c = 0;c<num_particles;c++)
 		{	r6 = r+c*6;
-		    if(!mxIsNaN(r6[0]) & mxIsFinite(r6[4]))
+		    if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4]))
 		    /* 
 		       function quad6 internally calculates the square root
 			   of the energy deviation of the particle 
@@ -129,10 +126,35 @@ void QuadLinearPass(double *r, double le, double kv, double *T1, double *T2, dou
 		}		
 }
 
+#ifdef PYAT
+
+#include "pyutils.c"
+
+int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
+{
+    PyErr_Clear();
+    double *t1 = numpy_get_double_array(element, "T1");     /* Optional arguments */
+    double *t2 = numpy_get_double_array(element, "T2");
+    double *r1 = numpy_get_double_array(element, "R1");
+    double *r2 = numpy_get_double_array(element, "R2");
+    double length = py_get_double(element, "Length");       /* Mandatory arguments */
+    double *polyB = numpy_get_double_array(element, "PolynomB");
+    if (PyErr_Occurred())
+        return -1;
+    else {
+        QuadLinearPass(rin, length, polyB[1], t1, t2, r1, r2, num_particles);
+        return 0;
+    }
+}
+
+#endif /*PYAT*/
+
 /********** END PHYSICS SECTION ***********************************************/
 /******************************************************************************/
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 /********** WINDOWS DLL GATEWAY SECTION ***************************************/
+#include "mex.h"
+#include "elempass.h"
 
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
@@ -329,4 +351,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    }
 	}
 }
-#endif
+#endif /*MATLAB_MEX_FILE*/

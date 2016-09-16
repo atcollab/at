@@ -4,12 +4,9 @@
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
 
-#include <math.h>
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 #include "atphyslib.c"
-#include "matrix.h"
 
 
 #define SQR(X) X*X
@@ -144,7 +141,7 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 						
 {  double *r6;   
 	int c;
-    bool useT1, useT2, useR1, useR2, useFringe1, useFringe2, useByError;
+    bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
 	
 	if(T1==NULL)
 	    useT1=false;
@@ -176,11 +173,6 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 	    useFringe2 = false;
 	else 
 	    useFringe2=true;  
-	    
-	if(bye==0) 
-	    useByError = false;
-	else 
-	    useByError=true;  
 
 	    
 	
@@ -188,7 +180,7 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 		{	
 		    r6 = r+c*6;
 
-			if(!mxIsNaN(r6[0]) & mxIsFinite(r6[4]))
+			if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4]))
 			/* 
 		       function bend6 internally calculates the square root
 			   of the energy deviation of the particle 
@@ -222,7 +214,9 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 		}	
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
+#include "mex.h"
+#include "elempass.h"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
@@ -570,4 +564,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
  }
- #endif
+ #endif /*MATLAB_MEX_FILE*/

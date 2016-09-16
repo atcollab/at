@@ -4,8 +4,7 @@
    A.Terebilo terebilo@slac.stanford.edu
 */
 
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 
 
@@ -34,8 +33,32 @@ void IdentityPass(double *r_in,
     }
 }
 
-#ifndef NOMEX
+#ifdef PYAT
 
+#include "pyutils.c"
+
+int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
+{
+    PyErr_Clear();
+    double *t1 = numpy_get_double_array(element, "T1");     /* Optional arguments */
+    double *t2 = numpy_get_double_array(element, "T2");
+    double *r1 = numpy_get_double_array(element, "R1");
+    double *r2 = numpy_get_double_array(element, "R2");
+    double *RApertures = numpy_get_double_array(element, "RApertures");
+    double *EApertures = numpy_get_double_array(element, "EApertures");
+    if (PyErr_Occurred())
+        return -1;
+    else {
+        IdentityPass(rin, t1, t2, r1, r2, RApertures, EApertures, num_particles);
+    return 0;
+    }
+}
+
+#endif /*PYAT*/
+
+#ifdef MATLAB_MEX_FILE
+
+#include "elempass.h"
 #include "mxutils.c"
 #define NUM_FIELDS_2_REMEMBER 6
 

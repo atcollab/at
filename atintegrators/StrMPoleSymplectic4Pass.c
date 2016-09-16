@@ -1,5 +1,4 @@
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 
 
@@ -155,7 +154,39 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
     }
 }
 
-#ifndef NOMEX
+#ifdef PYAT
+
+#include "pyutils.c"
+
+int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
+{
+    PyErr_Clear();
+    double *t1 = numpy_get_double_array(element, "T1");     /* Optional arguments */
+    double *t2 = numpy_get_double_array(element, "T2");
+    double *r1 = numpy_get_double_array(element, "R1");
+    double *r2 = numpy_get_double_array(element, "R2");
+    double *RApertures = numpy_get_double_array(element, "RApertures");
+    double *EApertures = numpy_get_double_array(element, "EApertures");
+    double length = py_get_double(element, "Length");       /* Mandatory arguments */
+    long max_order = py_get_long(element, "MaxOrder");
+    long num_int_steps = py_get_long(element, "NumIntSteps");
+    double *polyA = numpy_get_double_array(element, "PolynomA");
+    double *polyB = numpy_get_double_array(element, "PolynomB");
+    if (PyErr_Occurred())
+        return -1;
+    else {
+        StrMPoleSymplectic4Pass(rin, length, polyA, polyB, (int)max_order, (int)num_int_steps, t1, t2, r1, r2,
+            RApertures, EApertures, num_particles);
+        return 0;
+    }
+}
+
+#endif /*PYAT*/
+
+#ifdef MATLAB_MEX_FILE
+
+#include "mex.h"
+#include "elempass.h"
 
 #include "mxutils.c"
 
@@ -295,4 +326,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif
+#endif /*MATLAB_MEX_FILE*/

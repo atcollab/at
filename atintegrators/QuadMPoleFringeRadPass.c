@@ -1,5 +1,4 @@
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 #include "driftkickrad.c"	/* drift6.c, strthinkickrad.c */
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
@@ -35,8 +34,7 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
     double inFringe; 	/*  for linear fringe field, from elegant.
      * The argument inFringe is a flag:
      * -1 for going into the magnet and +1 for going out. */
-    int i, j;
-    
+
     for (c = 0;c<num_particles;c++) {	/*Loop over particles  */
         r6 = r+c*6;
         if (!mxIsNaN(r6[0])) {
@@ -134,8 +132,9 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
     }
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,

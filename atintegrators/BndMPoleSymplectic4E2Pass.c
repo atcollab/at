@@ -1,6 +1,4 @@
-#include "mex.h"
-#include <math.h>
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 #include "atphyslib.c"
 
@@ -102,42 +100,34 @@ Note: in the US convention the transverse multipole field is written as:
 
 }
 
-static void bndthinkick(double* r, double* A, double* B, double L, double irho, int max_order)
+static void bndthinkick(double* r, double* A, double* B, double L, double h, int max_order)
 /*****************************************************************************
 (1) PolynomA is neglected.
 (2) The vector potential is expanded up to 4th order of x and y. 
 (3) Coefficients in PolynomB higher than 4th order is treated as if they are on straight geometry.
 (4) The Hamiltonian is H2 = - h x delta - (1+h x)As/Brho-B0 x/Brho      
 */
-{ int i;
+{
+    int i;
 	double ReSum = 0; /*B[max_order];*/
  	double ImSum = 0; /*A[max_order];*/
 
 	double ReSumTemp;
-	double K1,K2,K3,h;
+	double K1,K2;
  
-	K1 = B[1]; 
-	if (max_order>=2)
-	 K2=B[2]; 
-	else
-	 K2=0;
-	 
-	if (max_order>=3)
-	 K3=B[3];
-	else
-	 K3=0;
-	 h=irho;
+	K1 = B[1];
+	K2 = (max_order>=2) ? B[2] : 0;
 
-  ReSum = B[max_order];
-	for(i=max_order-1;i>=0;i--)
-		{	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
-			ImSum = ImSum*r[0] +  ReSum*r[2] ;
-			ReSum = ReSumTemp;
-		}
-	
-	r[1] -=  L*(-h*r[4] + ReSum + h*(h*r[0]+K1*(r[0]*r[0]-0.5*r[2]*r[2])+K2*(r[0]*r[0]*r[0]-4.0/3.0*r[0]*r[2]*r[2]))    ); 
-	r[3] +=  L*(ImSum+h*(K1*r[0]*r[2]+4.0/3.0*K2*r[0]*r[0]*r[2]+(h/6.0*K1-K2/3.0)*r[2]*r[2]*r[2])) ;
-	r[5] +=  L*h*r[0]; /* pathlength */
+    ReSum = B[max_order];
+    for(i=max_order-1;i>=0;i--) {
+        ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
+        ImSum = ImSum*r[0] +  ReSum*r[2] ;
+        ReSum = ReSumTemp;
+    }
+
+    r[1] -=  L*(-h*r[4] + ReSum + h*(h*r[0]+K1*(r[0]*r[0]-0.5*r[2]*r[2])+K2*(r[0]*r[0]*r[0]-4.0/3.0*r[0]*r[2]*r[2]))    );
+    r[3] +=  L*(ImSum+h*(K1*r[0]*r[2]+4.0/3.0*K2*r[0]*r[0]*r[2]+(h/6.0*K1-K2/3.0)*r[2]*r[2]*r[2])) ;
+    r[5] +=  L*h*r[0]; /* pathlength */
 
 }
 
@@ -148,7 +138,7 @@ static void ATbendhxdrift6(double* r, double L,double h)
 {
 	double hs = h*L;
 	double i1pd = 1.0/(1+r[4]);
-	double x=r[0],px=r[1],y=r[2],py=r[3];
+	double x=r[0],px=r[1],py=r[3];
 
 	r[0] += (1+h*x)*px*i1pd*L+1/4.*hs*L*(px*px-py*py)*i1pd*i1pd; /* (1.0/h+x)*((1.0+hs*px*i1pd/2.)*(1.0+hs*px*i1pd/2.)-(hs*py*i1pd/2.)*(hs*py*i1pd/2.))-1./h;*/
 	r[1] -= hs*(px*px+py*py)*i1pd/2.0;
@@ -277,10 +267,37 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
 			}
 }
 
+#ifdef PYAT
 
-    	
+#include "pyutils.c"
 
-#ifndef NOMEX
+int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
+{
+	double length = py_get_double(element, "length");
+	double bending_angle = py_get_double(element, "bending_angle");
+	double entrance_angle = py_get_double(element, "entrance_angle");
+	double exit_angle = py_get_double(element, "exit_angle");
+	double fint1 = py_get_double(element, "fringe_int_1");
+	double fint2 = py_get_double(element, "fringe_int_2");
+	double gap = py_get_double(element, "gap");
+	double irho = bending_angle / length;
+	long max_order = py_get_long(element, "max_order");
+	long num_int_steps = py_get_long(element, "num_int_steps");
+	double *t1 = numpy_get_double_array(element, "t1");
+	double *t2 = numpy_get_double_array(element, "t2");
+	double *r1 = numpy_get_double_array(element, "r1");
+	double *r2 = numpy_get_double_array(element, "r2");
+	double *polyA = numpy_get_double_array(element, "polynom_a");
+	double *polyB = numpy_get_double_array(element, "polynom_b");
+	BndMPoleSymplectic4E2Pass(rin, length, irho, polyA, polyB, max_order, num_int_steps, entrance_angle, exit_angle, fint1, fint2, gap, 0, 0, t1, t2, r1, r2, num_particles);
+	return 0;
+}
+
+#endif /*PYAT*/
+
+#ifdef MATLAB_MEX_FILE
+
+#include "elempass.h"
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
@@ -707,4 +724,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 }
-#endif
+#endif /*MATLAB_MEX_FILE*/

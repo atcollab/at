@@ -1,7 +1,5 @@
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
-#include <math.h>
 
 #define TWOPI		6.28318530717959
 
@@ -67,7 +65,7 @@ void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
             r_in[i*6] = r11x*x+r12x*xp;
             r_in[i*6+1] = (r21x*x+r22x*xp)*(1+dpp);
             r_in[i*6+2] = r11y*y+r12y*yp;
-            r_in[i*6+3] = (r21y*y+r22x*yp)*(1+dpp);
+            r_in[i*6+3] = (r21y*y+r22y*yp)*(1+dpp);
             /* Misalignment at exit */
             if (useR2) ATmultmv(rtmp, R2);
             if (useT2) ATaddvv(rtmp, T2);
@@ -75,8 +73,9 @@ void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
     }
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,

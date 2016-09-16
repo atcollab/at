@@ -10,12 +10,9 @@
  *
  */
 
-#include <math.h>
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 #include "interpolate.c"
-#include "matrix.h"
 
 double *GLOBAL_x,*GLOBAL_y,*GLOBAL_xkick1,*GLOBAL_ykick1,*GLOBAL_xkick,*GLOBAL_ykick,*GLOBAL_xkick2,*GLOBAL_ykick2;
 int GLOBAL_m,GLOBAL_n;
@@ -111,7 +108,7 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, do
     for (c=0; c<num_particles; c++) {
         r6 = r+c*6;
         
-        if(!mxIsNaN(r6[0]) & mxIsFinite(r6[4])) {
+        if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4])) {
             /*
              * function bend6 internally calculates the square root
              * of the energy deviation of the particle
@@ -150,8 +147,9 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, do
     }
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,

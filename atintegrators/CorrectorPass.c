@@ -7,9 +7,8 @@
 */
 
 
+#include "at.h"
 
-#include "mex.h"
-#include "elempass.h"
 
 
 void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int num_particles)
@@ -45,7 +44,9 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
 		}	
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
+
+#include "elempass.h"
 #define NUM_FIELDS_2_REMEMBER 2
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,

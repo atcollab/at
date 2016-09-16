@@ -4,8 +4,7 @@
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
 
-#include "mex.h"
-#include "elempass.h"
+#include "at.h"
 #include "atlalib.c"
 
 void Matrix66Pass(double *r, const double *M,
@@ -28,8 +27,9 @@ void Matrix66Pass(double *r, const double *M,
 	}
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,

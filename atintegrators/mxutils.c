@@ -1,4 +1,7 @@
+#ifdef MATLAB_MEX_FILE
+
 #include <string.h>
+#include "mex.h"
 
 static char* ElemName(const mxArray *ElemData)
 {
@@ -32,3 +35,4 @@ static mxArray *GetRequiredField(const mxArray *ElemData, const char *fieldname)
     return tmpmxptr;
 }
 
+#endif /*MATLAB_MEX_FILE*/

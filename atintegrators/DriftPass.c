@@ -35,16 +35,25 @@ void DriftPass(double *r_in, double le,
 }
 
 #ifdef PYAT
-#include <Python.h>
-#include <numpy/ndarrayobject.h>
 
-int atpyPass(double *rin, int num_particles, PyObject *at_element, ,struct parameters *Param)
+#include "pyutils.c"
+
+int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
 {
-	double length = PyFloat_AsDouble(PyObject_GetAttrString(at_element, "length"));
-    /* extract all necessary fields */
-    /* check existence of optional fields T1, T2,.. */
-	DriftPass(rin, length, NULL, NULL, NULL, NULL, NULL, NULL, num_particles);
-	return 0;
+    PyErr_Clear();
+    double *t1 = numpy_get_double_array(element, "T1");     /* Optional arguments */
+    double *t2 = numpy_get_double_array(element, "T2");
+    double *r1 = numpy_get_double_array(element, "R1");
+    double *r2 = numpy_get_double_array(element, "R2");
+    double *RApertures = numpy_get_double_array(element, "RApertures");
+    double *EApertures = numpy_get_double_array(element, "EApertures");
+    double length = py_get_double(element, "Length");       /* Mandatory arguments */
+    if (PyErr_Occurred())
+        return -1;
+    else {
+        DriftPass(rin, length, t1, t2, r1, r2, RApertures, EApertures, num_particles);
+        return 0;
+    }
 }
 
 #endif /*PYAT*/

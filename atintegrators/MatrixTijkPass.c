@@ -2,8 +2,7 @@
    Accelerator Toolbox 
 */
 
-#include "mex.h"
-#include "elempass.h"
+
 #include "atlalib.c"
 
 static void ATmultTijk(double *r, const double* T)
@@ -48,8 +47,9 @@ void MatrixTijkPass(double *r, const double *M, const double *Tijk,
 	}
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,

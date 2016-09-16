@@ -1,6 +1,4 @@
-#include "mex.h"
-#include <math.h>
-#include "elempass.h"
+#include "at.h"
 
 static void markaslost(double *r6,int idx)
 {
@@ -24,8 +22,9 @@ void EAperturePass(double *r_in, double *axesptr, int num_particles)
     }
 }
 
-#ifndef NOMEX
+#ifdef MATLAB_MEX_FILE
 
+#include "elempass.h"
 #include "mxutils.c"
 
 ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
@@ -89,4 +88,4 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif /*NOMEX*/
+#endif /*MATLAB_MEX_FILE*/

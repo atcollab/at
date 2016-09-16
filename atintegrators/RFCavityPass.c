@@ -6,8 +6,6 @@
  */
 
 #include "at.h"
-#include <math.h>
-
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8 
 
