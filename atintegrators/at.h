@@ -1,6 +1,8 @@
 #ifndef AT_H
 #define AT_H
 
+#include <math.h>
+
 #ifdef MATLAB_MEX_FILE
 
 #include "mex.h"
@@ -8,7 +10,6 @@
 
 #else
 
-#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
