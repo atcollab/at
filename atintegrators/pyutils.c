@@ -5,16 +5,21 @@
 static int array_imported = 0;
 
 #if PY_MAJOR_VERSION >= 3
-int
+#define NUMPY_IMPORT_ARRAY_RETVAL NULL
+#define NUMPY_IMPORT_ARRAY_TYPE void *
 #else
-void
+#define NUMPY_IMPORT_ARRAY_RETVAL
+#define NUMPY_IMPORT_ARRAY_TYPE void
+#define PyLong_AsLong PyInt_AsLong
 #endif
-init_numpy(void) {
+
+static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void) {
     import_array();
+    return NUMPY_IMPORT_ARRAY_RETVAL;
 }
 
 static long py_get_long(PyObject *element, char *name) {
-    return PyInt_AsLong(PyObject_GetAttrString(element, name));
+    return PyLong_AsLong(PyObject_GetAttrString(element, name));
 }
 
 static double py_get_double(PyObject *element, char *name) {
