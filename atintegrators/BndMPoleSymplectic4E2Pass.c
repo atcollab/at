@@ -273,24 +273,28 @@ void BndMPoleSymplectic4E2Pass(double *r, double le, double irho, double *A, dou
 
 int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
 {
-	double length = py_get_double(element, "length");
-	double bending_angle = py_get_double(element, "bending_angle");
-	double entrance_angle = py_get_double(element, "entrance_angle");
-	double exit_angle = py_get_double(element, "exit_angle");
-	double fint1 = py_get_double(element, "fringe_int_1");
-	double fint2 = py_get_double(element, "fringe_int_2");
-	double gap = py_get_double(element, "gap");
-	double irho = bending_angle / length;
-	long max_order = py_get_long(element, "max_order");
-	long num_int_steps = py_get_long(element, "num_int_steps");
-	double *t1 = numpy_get_double_array(element, "t1");
-	double *t2 = numpy_get_double_array(element, "t2");
-	double *r1 = numpy_get_double_array(element, "r1");
-	double *r2 = numpy_get_double_array(element, "r2");
-	double *polyA = numpy_get_double_array(element, "polynom_a");
-	double *polyB = numpy_get_double_array(element, "polynom_b");
-	BndMPoleSymplectic4E2Pass(rin, length, irho, polyA, polyB, max_order, num_int_steps, entrance_angle, exit_angle, fint1, fint2, gap, 0, 0, t1, t2, r1, r2, num_particles);
-	return 0;
+    double length = py_get_double(element, "Length", false);
+    double bending_angle = py_get_double(element, "BendingAngle", false);
+    double entrance_angle = py_get_double(element, "EntranceAngle", false);
+    double exit_angle = py_get_double(element, "ExitAngle", false);
+    double gap = py_get_double(element, "FullGap", true);
+    double fint1 = py_get_double(element, "FringeInt1", true);
+    double fint2 = py_get_double(element, "FringeInt2", true);
+    long max_order = py_get_long(element, "MaxOrder", true);
+    long num_int_steps = py_get_long(element, "NumIntSteps", true);
+    double *t1 = numpy_get_double_array(element, "T1", true);
+    double *t2 = numpy_get_double_array(element, "T2", true);
+    double *r1 = numpy_get_double_array(element, "R1", true);
+    double *r2 = numpy_get_double_array(element, "R2", true);
+    double *polyA = numpy_get_double_array(element, "PolynomA", true);
+    double *polyB = numpy_get_double_array(element, "PolynomB", true);
+    double irho = bending_angle / length;
+    if (PyErr_Occurred()) {
+        return -1;
+    } else {
+        BndMPoleSymplectic4E2Pass(rin, length, irho, polyA, polyB, max_order, num_int_steps, entrance_angle, exit_angle, fint1, fint2, gap, 0, 0, t1, t2, r1, r2, num_particles);
+    return 0;
+    }
 }
 
 #endif /*PYAT*/

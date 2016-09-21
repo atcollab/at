@@ -39,18 +39,17 @@ void IdentityPass(double *r_in,
 
 int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
 {
-    PyErr_Clear();
-    double *t1 = numpy_get_double_array(element, "T1");     /* Optional arguments */
-    double *t2 = numpy_get_double_array(element, "T2");
-    double *r1 = numpy_get_double_array(element, "R1");
-    double *r2 = numpy_get_double_array(element, "R2");
-    double *RApertures = numpy_get_double_array(element, "RApertures");
-    double *EApertures = numpy_get_double_array(element, "EApertures");
-    if (PyErr_Occurred())
+    double *t1 = numpy_get_double_array(element, "T1", true);     /* Optional arguments */
+    double *t2 = numpy_get_double_array(element, "T2", true);
+    double *r1 = numpy_get_double_array(element, "R1", true);
+    double *r2 = numpy_get_double_array(element, "R2", true);
+    double *RApertures = numpy_get_double_array(element, "RApertures", true);
+    double *EApertures = numpy_get_double_array(element, "EApertures", true);
+    if (PyErr_Occurred()) {
         return -1;
-    else {
+    } else {
         IdentityPass(rin, t1, t2, r1, r2, RApertures, EApertures, num_particles);
-    return 0;
+        return 0;
     }
 }
 

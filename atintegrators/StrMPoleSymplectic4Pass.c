@@ -160,18 +160,17 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
 
 int atpyPass(double *rin, int num_particles, PyObject *element, struct parameters *param)
 {
-    PyErr_Clear();
-    double *t1 = numpy_get_double_array(element, "T1");     /* Optional arguments */
-    double *t2 = numpy_get_double_array(element, "T2");
-    double *r1 = numpy_get_double_array(element, "R1");
-    double *r2 = numpy_get_double_array(element, "R2");
-    double *RApertures = numpy_get_double_array(element, "RApertures");
-    double *EApertures = numpy_get_double_array(element, "EApertures");
-    double length = py_get_double(element, "Length");       /* Mandatory arguments */
-    long max_order = py_get_long(element, "MaxOrder");
-    long num_int_steps = py_get_long(element, "NumIntSteps");
-    double *polyA = numpy_get_double_array(element, "PolynomA");
-    double *polyB = numpy_get_double_array(element, "PolynomB");
+    double *t1 = numpy_get_double_array(element, "T1", true);     /* Optional arguments */
+    double *t2 = numpy_get_double_array(element, "T2", true);
+    double *r1 = numpy_get_double_array(element, "R1", true);
+    double *r2 = numpy_get_double_array(element, "R2", true);
+    double *RApertures = numpy_get_double_array(element, "RApertures", true);
+    double *EApertures = numpy_get_double_array(element, "EApertures", true);
+    double length = py_get_double(element, "Length", false);       /* Mandatory arguments */
+    long max_order = py_get_long(element, "MaxOrder", false);
+    long num_int_steps = py_get_long(element, "NumIntSteps", false);
+    double *polyA = numpy_get_double_array(element, "PolynomA", false);
+    double *polyB = numpy_get_double_array(element, "PolynomB", false);
     if (PyErr_Occurred())
         return -1;
     else {
