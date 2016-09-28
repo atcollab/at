@@ -63,7 +63,7 @@ def test_missing_length_raises_attribute_error(rin):
 
 def test_dipole(rin):
     print(elements.__file__)
-    b = elements.Dipole('dipole', 1.0, 0.1, 0.05, 0.05)
+    b = elements.Dipole('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
     l = [b]
     rin[0,0] = 1e-6
     rin_orig = numpy.copy(rin)
