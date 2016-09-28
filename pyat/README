@@ -1,0 +1,33 @@
+pyAT
+====
+
+
+pyAT is a Python interface to the pass methods defined in AT.
+
+
+Installation (Linux only)
+-------------------------
+
+This is subject to change as we aim for a cross-platform build mechanism.
+
+First, build shared object (.so) files for the pass methods in the
+atintegrators directory using the Makefile.
+
+Then, build the Python extension.  It is easiest to do this using a virtualenv:
+
+* virtualenv --no-site-packages venv
+* source venv/bin/activate
+* pip install numpy
+* pip install pytest
+* python setup.py build
+* python setup.py install --prefix=prefix
+
+This should build the extension into the subdirectory prefix.
+
+Now you need to set up the PYTHONPATH:
+
+* export PYTHONPATH=./prefix/lib/python2.7/site-packages:.
+
+Finally, you should be able to run the tests:
+
+* py.test test
