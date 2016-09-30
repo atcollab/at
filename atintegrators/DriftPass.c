@@ -51,13 +51,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
 /*  if (ElemData) {*/
         if (!Elem) {
-            double Length=atGetDouble(ElemData,"Length");check_error();
-            double *R1=atGetOptionalDoubleArray(ElemData,"R1");check_error();
-            double *R2=atGetOptionalDoubleArray(ElemData,"R2");check_error();
-            double *T1=atGetOptionalDoubleArray(ElemData,"T1");check_error();
-            double *T2=atGetOptionalDoubleArray(ElemData,"T2");check_error();
-            double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures");check_error();
-            double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures");check_error();
+            double Length=atGetDouble(ElemData,"Length"); check_error();
+            double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+            double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+            double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+            double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+            double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+            double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
             Elem = (struct elem*)atMalloc(sizeof(struct elem));
             Elem->Length=Length;
             Elem->R1=R1;
@@ -82,22 +82,20 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length=atGetDouble(ElemData,"Length");check_error();
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1");check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2");check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1");check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2");check_error();
-        double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures");check_error();
-        double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures");check_error();
+        double Length=atGetDouble(ElemData,"Length"); check_error();
+        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
-
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
@@ -122,5 +120,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-
 #endif /*defined(MATLAB_MEX_FILE)*/

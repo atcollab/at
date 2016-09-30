@@ -68,18 +68,15 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {
-    double le, volt, freq, T0, h, energy, lag;
-    int nturn;
-    nturn=Param->nturn;
-    T0=Param->T0;
+    int nturn=Param->nturn;
+    double T0=Param->T0;
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length");
-        double Voltage=atGetDouble(ElemData,"Voltage");
-        double Energy=atGetDouble(ElemData,"Energy");
-        double Frequency=atGetDouble(ElemData,"Frequency");
-        double HarmNumber=atGetDouble(ElemData,"HarmNumber");
-        double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
-        check_error();
+        double Length=atGetDouble(ElemData,"Length"); check_error();
+        double Voltage=atGetDouble(ElemData,"Voltage"); check_error();
+        double Energy=atGetDouble(ElemData,"Energy"); check_error();
+        double Frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        double HarmNumber=atGetDouble(ElemData,"HarmNumber"); check_error();
+        double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;

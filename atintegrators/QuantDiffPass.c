@@ -11,6 +11,7 @@
 struct elem 
 {
   double* Lmatp;
+  /* optional */
   int Seed;
 };
 
@@ -95,14 +96,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     int nturn=Param->nturn;
     if (!Elem) {
-        double *Lmatp=atGetDoubleArray(ElemData,"Lmatp");
-        int Seed=atGetOptionalLong(ElemData,"Seed",0);
-        check_error();
+        double *Lmatp=atGetDoubleArray(ElemData,"Lmatp"); check_error();
+        int Seed=atGetOptionalLong(ElemData,"Seed",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Lmatp=Lmatp;
-        Elem->Seed=Seed;
-        QuantDiffPass(r_in, Lmatp, Seed, nturn, num_particles);
+        Elem->Seed=Seed;   
     }
+    QuantDiffPass(r_in, Elem->Lmatp, Elem->Seed, nturn, num_particles);
     return Elem;
 }
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
