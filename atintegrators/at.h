@@ -42,7 +42,6 @@ static const double pinf = 1.0 / 0.0;
 
 struct parameters
 {
-  int mode;
   int nturn;
   double RingLength;
   double T0;
