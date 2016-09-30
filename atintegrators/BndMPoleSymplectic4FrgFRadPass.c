@@ -1,4 +1,4 @@
-#include <math.h>
+#include "at.h"
 #include "atlalib.c"
 #include "atphyslib.c"		/* edge, edge_fringe */
 #include "driftkickrad.c"	/* drift6.c, bndthinkickrad.c */

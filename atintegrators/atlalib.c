@@ -15,8 +15,6 @@
 4. All vectors  are 1-by-6 or 6-by-1
 */
 
-#include "at.h"
-
 static void ATmultmv(double *r, const double* A)
 /*	multiplies 6-component column vector r by 6x6 matrix R: as in A*r 
   The result is store in the memory area of r !!!
@@ -155,9 +153,13 @@ static void ATaddmm(const double *M2 , double *M1)
 
 }
 
+#ifndef atGetInf
+#define atGetInf mxGetInf
+#endif
+
 static void markaslost(double *r6,int idx)
 {
-    r6[idx] = mxGetInf();
+    r6[idx] = atGetInf();
 }
 
 static void checkiflostRectangularAp(double *r6, const double *limits)
