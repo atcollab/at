@@ -36,7 +36,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
     {
       for(c = 0;c<num_particles;c++)
 	{	c6 = c*6;
-	  if(!mxIsNaN(r_in[c6]))
+	  if(!atIsNaN(r_in[c6]))
 	    r_in[c6+4] += -nv*sin(TWOPI*freq*((r_in[c6+5]-lag)/C0 - (h/freq-T0)*nturn ));
 	}
     }
@@ -44,7 +44,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
     {	halflength = le/2;
       for(c = 0;c<num_particles;c++)
 	{	c6 = c*6;
-	  if(!mxIsNaN(r_in[c6])) 
+	  if(!atIsNaN(r_in[c6])) 
 	    {   p_norm = 1/(1+r_in[c6+4]); 				
 	      NormL  = halflength*p_norm;
 	      /* Propagate through a drift equal to half cavity length */

@@ -67,7 +67,7 @@ void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_pa
               diffusion[i]+=randnorm[j]*Lmatp[i+6*j];
           }
       }
-      if(!mxIsNaN(r6[0]))
+      if(!atIsNaN(r6[0]))
       {
           r6[0] += diffusion[0];
           r6[1] += diffusion[1];
