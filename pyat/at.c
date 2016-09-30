@@ -27,14 +27,16 @@
   #define PyUnicode_AsUTF8 PyString_AsString
 #endif
 
-#define MAX_ORDER 3
-#define MAX_INT_STEPS 5
 #ifndef INTEGRATOR_PATH
 #define INTEGRATOR_PATH "../atintegrators"
 #endif /*INTEGRATOR_PATH*/
-#define ATPY_PASS "atpyPass"
+#define ATPY_PASS "trackFunction"
 
-typedef int (*pass_function)(double *rin, int num_particles, PyObject *element, struct parameters *param);
+static int nb_allocated_elements = 0;
+static struct elem **ElemStruct_ptr = NULL;
+
+typedef struct elem *(*pass_function)(const PyObject *element, struct elem *elemptr,
+        double *r_in, int num_particles, struct parameters *param);
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
@@ -43,6 +45,12 @@ static struct LibraryListElement {
     void *FunctionHandle;
     struct LibraryListElement *Next;
 } *LibraryList = NULL;
+
+static PyObject *print_error(int elem_number)
+{
+    printf("Error in tracking element %d\n", elem_number);
+    return NULL;
+}
 
 struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, const char *method_name)
 {
@@ -84,19 +92,6 @@ static pass_function pass_method(char *fn_name) {
     }
     return fn_handle;
 }
-
-
-static int pass_element(double *rin, int num_particles, PyObject *element, struct parameters *param) {
-    pass_function fn_handle = NULL;
-    PyObject *fn_name_object = PyObject_GetAttrString(element, "PassMethod");
-    if (fn_name_object && (fn_handle = pass_method(PyUnicode_AsUTF8(fn_name_object)))) {
-        return fn_handle(rin, num_particles, element, param);
-    }
-    else {
-        return -1;
-    }
-}
-
 
 /*
  * Arguments:
@@ -140,22 +135,32 @@ static PyObject *at_atpass(PyObject *self, PyObject *args) {
     printf("There are %ld elements in the list\n", num_elements);
     printf("There are %d particles\n", num_parts);
     printf("Going for %d turns\n", num_turns);
+
+    if (1) {
+        int n;
+        for (n=0; n<nb_allocated_elements; n++) {
+            free(ElemStruct_ptr[n]);
+        }
+        free(ElemStruct_ptr);
+        ElemStruct_ptr = (struct elem **)calloc(num_elements, sizeof(struct elem *));
+        nb_allocated_elements = num_elements;
+    }
+
     for (i = 0; i < num_turns; i++) {
+        struct elem **elemptr = ElemStruct_ptr;
         param.nturn = i;
         for (j = 0; j < num_elements; j++) {
+            pass_function fn_handle;
+            struct elem *result;
             PyObject *element = PyList_GET_ITEM(element_list, j);
-            if (pass_element(drin, num_parts, element, &param) != 0) {
-                char *pass_error_template = "Error occurred during pass method for element %d";
-                if (!PyErr_Occurred()) {
-                    char pass_error[50];
-                    snprintf(pass_error, sizeof(pass_error), pass_error_template, j);
-                    PyErr_SetString(PyExc_RuntimeError, pass_error);
-                } else {
-                    printf(pass_error_template, j);
-                    printf(".\n");
-                }
-                return NULL;
-            }
+            PyObject *fn_name_object = PyObject_GetAttrString(element, "PassMethod");
+            if (!fn_name_object) return print_error(j);     /* No PassMethod */
+            fn_handle = pass_method(PyUnicode_AsUTF8(fn_name_object));
+            if (!fn_handle) return print_error(j);          /* No trackFunction for the given PassMethod */
+            result = fn_handle(element, *elemptr, drin, num_parts, &param);
+            if (!result) return print_error(j);             /* trackFunction failed */
+            *elemptr = result;
+            elemptr++;
         }
     }
     return Py_BuildValue("i", 1);

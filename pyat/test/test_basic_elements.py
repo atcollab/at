@@ -61,9 +61,10 @@ def test_missing_length_raises_attribute_error(rin):
         at.atpass(l, rin, 1)
 
 
-def test_dipole(rin):
+@pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
+def test_dipole(rin, dipole_class):
     print(elements.__file__)
-    b = elements.Dipole('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
+    b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
     l = [b]
     rin[0,0] = 1e-6
     rin_orig = numpy.copy(rin)

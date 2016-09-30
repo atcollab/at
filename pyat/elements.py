@@ -61,12 +61,12 @@ class ThinMultipole(Element):
         """
         poly_a = numpy.array(kwargs.pop('PolynomA', poly_a), dtype=numpy.float64)
         poly_b = numpy.array(kwargs.pop('PolynomB', poly_b), dtype=numpy.float64)
-        sz = max(kwargs.get('MaxOrder', 0) + 1, len(poly_a), len(poly_b))
-        kwargs['PolynomA'] = numpy.concatenate((poly_a, numpy.zeros(sz - len(poly_a))))
-        kwargs['PolynomB'] = numpy.concatenate((poly_b, numpy.zeros(sz - len(poly_b))))
-        kwargs['MaxOrder'] = int(kwargs.pop('MaxOrder', sz - 1))
-        lg = kwargs.pop('Length', 0.0)
-        super(ThinMultipole, self).__init__(family_name, lg, **kwargs)
+        poly_size = max(kwargs.get('MaxOrder', 0) + 1, len(poly_a), len(poly_b))
+        kwargs['PolynomA'] = numpy.concatenate((poly_a, numpy.zeros(poly_size - len(poly_a))))
+        kwargs['PolynomB'] = numpy.concatenate((poly_b, numpy.zeros(poly_size - len(poly_b))))
+        kwargs['MaxOrder'] = int(kwargs.pop('MaxOrder', poly_size - 1))
+        length = kwargs.pop('Length', 0.0)
+        super(ThinMultipole, self).__init__(family_name, length, **kwargs)
 
 
 class Multipole(ThinMultipole):
@@ -92,7 +92,7 @@ class Dipole(Multipole):
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length',
                                                          'BendingAngle']
 
-    def __init__(self, family_name, length, bending_angle, K=0.0, **kwargs):
+    def __init__(self, family_name, length, bending_angle, k=0.0, **kwargs):
         """Dipole(FamName, Length, BendingAngle, Strength=0, **keywords)
 
         Available keywords:
@@ -103,22 +103,22 @@ class Dipole(Multipole):
         'MaxOrder'      Number of desired multipoles
         'NumIntSteps'   Number of integration steps (default: 10)
         """
-        poly_b = kwargs.pop('PolynomB', [0, K])
+        poly_b = kwargs.pop('PolynomB', [0, k])
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4E2Pass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, BendingAngle=bending_angle, **kwargs)
 
 
-class Bend(Dipole):
-    pass
+# Bend is a synonym of Dipole.
+Bend = Dipole
 
 
 class Quadrupole(Multipole):
     """pyAT quadrupole element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']
 
-    def __init__(self, family_name, length, K=0.0, **kwargs):
+    def __init__(self, family_name, length, k=0.0, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
         Available keywords:
@@ -127,7 +127,7 @@ class Quadrupole(Multipole):
         'MaxOrder'      Number of desired multipoles
         'NumIntSteps'   Number of integration steps (default: 10)
         """
-        poly_b = kwargs.pop('PolynomB', [0, K])
+        poly_b = kwargs.pop('PolynomB', [0, k])
         kwargs.setdefault('PassMethod', 'QuadLinearPass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
@@ -136,7 +136,7 @@ class Sextupole(Multipole):
     """pyAT sextupole element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']
 
-    def __init__(self, family_name, length, H=0.0, **kwargs):
+    def __init__(self, family_name, length, h=0.0, **kwargs):
         """Sextupole(FamName, Length, Strength=0, **keywords)
 
         Available keywords:
@@ -145,7 +145,7 @@ class Sextupole(Multipole):
         'MaxOrder'  Number of desired multipoles
         'NumIntSteps'   Number of integration steps (default: 10)
         """
-        poly_b = kwargs.pop('PolynomB', [0, 0, H])
+        poly_b = kwargs.pop('PolynomB', [0, 0, h])
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Sextupole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
