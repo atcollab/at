@@ -65,7 +65,7 @@ class ThinMultipole(Element):
         kwargs['PolynomA'] = numpy.concatenate((poly_a, numpy.zeros(poly_size - len(poly_a))))
         kwargs['PolynomB'] = numpy.concatenate((poly_b, numpy.zeros(poly_size - len(poly_b))))
         kwargs['MaxOrder'] = int(kwargs.pop('MaxOrder', poly_size - 1))
-        kwargs.setdefault('PassMethod','ThinMPolePass')
+        kwargs.setdefault('PassMethod', 'ThinMPolePass')
         length = kwargs.pop('Length', 0.0)
         super(ThinMultipole, self).__init__(family_name, length, **kwargs)
 
@@ -85,7 +85,7 @@ class Multipole(ThinMultipole):
         """
         kwargs['NumIntSteps'] = int(kwargs.pop('NumIntSteps', 10))
         kwargs['Length'] = length
-        kwargs.setdefault('PassMethod','StrMPoleSymplectic4Pass')
+        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Multipole, self).__init__(family_name, poly_a, poly_b, **kwargs)
 
 

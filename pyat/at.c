@@ -47,7 +47,7 @@
 typedef struct elem *(*pass_function)(const PyObject *element, struct elem *elemptr,
         double *r_in, int num_particles, struct parameters *param);
 
-static int nb_allocated_elements = 0;
+static npy_uint32 num_elements = 0;
 static struct elem **elemdata_list = NULL;
 static PyObject **element_list = NULL;
 static pass_function *integrator_list = NULL;
@@ -128,12 +128,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     double *drin, *drout;
     int num_turns;
     npy_uint32 num_particles, np6;
-    npy_uint32 num_elements;
+    npy_uint32 numel;
     npy_uint32 *refpts = NULL;
     npy_uint32 nextref;
     unsigned int nextrefindex;
     unsigned int num_refpts;
-    unsigned int reuse;
+    unsigned int reuse=0;
     npy_intp outdims[2];
     int turn, nelem;
     struct parameters param;
@@ -156,8 +156,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         return NULL;
     }
 
-    printf("reuse: %s\n", reuse ? "keep data" : "initialize");
-    num_elements = PyList_Size(lattice);
+    numel = PyList_Size(lattice);
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
     drin = PyArray_DATA(rin);
@@ -187,21 +186,18 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     rout = PyArray_SimpleNew(2, outdims, NPY_DOUBLE);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
-    printf("There are %u elements in the list\n", num_elements);
-    printf("There are %u particles\n", num_particles);
-    printf("Going for %u turns\n", num_turns);
-
     if (!reuse) new_lattice = 1;
     if (new_lattice) {
         int n;
-        for (n=0; n<nb_allocated_elements; n++) {
+        for (n=0; n<num_elements; n++) {
             free(elemdata_list[n]);
+            Py_DECREF(element_list[n]);             /* Release the stored elements */
         }
+        num_elements = numel;
         free(elemdata_list);
         elemdata_list = (struct elem **)calloc(num_elements, sizeof(struct elem *));
         element_list = (PyObject **)realloc(element_list, num_elements*sizeof(PyObject *));
         integrator_list = (pass_function *)realloc(integrator_list, num_elements*sizeof(pass_function));
-        nb_allocated_elements = num_elements;
         lattice_length = 0.0;
         PyObject **element = element_list;
         pass_function *integrator = integrator_list;
@@ -220,11 +216,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             }
             *integrator++ = fn_handle;
             *element++ = el;
+            Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
         }
         new_lattice = 0;
     }
 
-    printf("Length: %g\n", lattice_length);
+    printf("There are %u elements in the list\n", num_elements);
+    printf("There are %u particles\n", num_particles);
+    printf("Going for %u turns\n", num_turns);
 
     param.RingLength = lattice_length;
     param.T0 = 0;
