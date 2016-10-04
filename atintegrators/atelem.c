@@ -1,3 +1,8 @@
+#ifndef ATELEM_C
+#define ATELEM_C
+
+#include "attypes.h"
+
 #if defined(PCWIN)
 #define ExportMode __declspec(dllexport)
 #else
@@ -117,11 +122,25 @@ static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void) {
     import_array();
     return NUMPY_IMPORT_ARRAY_RETVAL;
 }
-
+/*
 #define atGetLong(elem,fname) PyLong_AsLong(PyObject_GetAttrString((PyObject *)elem, fname))
 #define atGetDouble(elem, fname) PyFloat_AsDouble(PyObject_GetAttrString((PyObject *)elem, fname))
+*/
+static long atGetLong(const PyObject *element, const char *name)
+{
+    const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
+    if (!attr) return 0L;
+    return PyLong_AsLong((PyObject *)attr);
+}
 
-static long atGetOptionalLong(const PyObject *element, char *name, long default_value) {
+static double atGetDouble(const PyObject *element, const char *name)
+{
+    const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
+    if (!attr) return 0.0;
+    return PyFloat_AsDouble((PyObject *)attr);
+}
+
+static long atGetOptionalLong(const PyObject *element, const char *name, long default_value) {
     long l = PyLong_AsLong(PyObject_GetAttrString((PyObject *)element, name));
     if (PyErr_Occurred()) {
         PyErr_Clear();
@@ -130,7 +149,7 @@ static long atGetOptionalLong(const PyObject *element, char *name, long default_
     return l;
 }
 
-static double atGetOptionalDouble(const PyObject *element, char *name, double default_value) {
+static double atGetOptionalDouble(const PyObject *element, const char *name, double default_value) {
     double d = PyFloat_AsDouble(PyObject_GetAttrString((PyObject *)element, name));
     if (PyErr_Occurred()) {
         PyErr_Clear();
@@ -225,14 +244,7 @@ static const double pinf = 1.0 / 0.0;
 
 #endif
 
-struct elem;
-
-struct parameters
-{
-  int nturn;
-  double RingLength;
-  double T0;
-};
-
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param);
+
+#endif /*ATELEM_C*/

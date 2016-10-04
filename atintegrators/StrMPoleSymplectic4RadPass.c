@@ -158,50 +158,24 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
 {	int c,m;
     double *r6;
     double SL, L1, L2, K1, K2;
-    bool useT1, useT2, useR1, useR2;
     SL = le/num_int_steps;
     L1 = SL*DRIFT1;
     L2 = SL*DRIFT2;
     K1 = SL*KICK1;
     K2 = SL*KICK2;
     
-    
-    if(T1==NULL)
-        useT1=false;
-    else
-        useT1=true;
-    
-    if(T2==NULL)
-        useT2=false;
-    else
-        useT2=true;
-    
-    if(R1==NULL)
-        useR1=false;
-    else
-        useR1=true;
-    
-    if(R2==NULL)
-        useR2=false;
-    else
-        useR2=true;
-    for(c = 0;c<num_particles;c++)	/* Loop over particles  */
-    {   r6 = r+c*6;
-        if(!mxIsNaN(r6[0]))
-        {
-            
+    for (c = 0;c<num_particles;c++)	{   /* Loop over particles  */
+        r6 = r+c*6;
+        if(!atIsNaN(r6[0])) {
             /*  misalignment at entrance  */
-            if(useT1)
-                ATaddvv(r6,T1);
-            if(useR1)
-                ATmultmv(r6,R1);
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* integrator */
-            for(m=0; m < num_int_steps; m++) /* Loop over slices */
-            {		r6 = r+c*6;
-                    
+            for (m=0; m < num_int_steps; m++) { /* Loop over slices */
+             		r6 = r+c*6;
                     ATdrift6(r6,L1);
                     strthinkickrad(r6, A, B, K1, E0, max_order);
                     ATdrift6(r6,L2);
@@ -214,10 +188,8 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
-            if(useR2)
-                ATmultmv(r6,R2);
-            if(useT2)
-                ATaddvv(r6,T2);
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
 }

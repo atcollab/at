@@ -37,10 +37,6 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
 {
     double *r6;
     int c, m;
-    bool useT1 = (T1 != NULL);
-    bool useT2 = (T2 != NULL);
-    bool useR1 = (R1 != NULL);
-    bool useR2 = (R2 != NULL);
     bool useLinFrEle = (fringeIntM0 != NULL && fringeIntP0 != NULL);
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
@@ -55,10 +51,10 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
 
     for (c = 0;c<num_particles;c++) {	/*Loop over particles  */
         r6 = r+c*6;
-        if (!mxIsNaN(r6[0])) {
+        if (!atIsNaN(r6[0])) {
             /*  misalignment at entrance  */
-            if (useT1) ATaddvv(r6, T1);
-            if (useR1) ATmultmv(r6, R1);
+            if (T1) ATaddvv(r6, T1);
+            if (R1) ATmultmv(r6, R1);
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
@@ -144,8 +140,8 @@ void QuadMPoleFringeRadPass(double *r, double le, const double *A, const double 
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             
             /* Misalignment at exit */
-            if (useR2) ATmultmv(r6, R2);
-            if (useT2) ATaddvv(r6, T2);
+            if (R2) ATmultmv(r6, R2);
+            if (T2) ATaddvv(r6, T2);
         }
     }
 }
