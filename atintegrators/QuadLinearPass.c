@@ -9,8 +9,7 @@
 #include "atlalib.c"
 #include <math.h>
 
-struct elem 
-{
+struct elem {
     double Length;
     double K;
     /* Optional fields */
@@ -85,53 +84,24 @@ void quad6 (double *r, double L, double K)
 void QuadLinearPass(double *r, double le, double kv, double *T1, double *T2, double *R1, double *R2, int num_particles)
 {	int c;
     double *r6;
-    bool useT1, useT2, useR1, useR2;
-    
-	if(T1==NULL)
-        useT1=false;
-    else
-        useT1=true;
-    
-    if(T2==NULL)
-        useT2=false;
-    else
-        useT2=true;
-    
-    if(R1==NULL)
-        useR1=false;
-    else
-        useR1=true;
-    
-    if(R2==NULL)
-        useR2=false;
-    else
-        useR2=true;
-    
-    
-    for(c = 0;c<num_particles;c++)
-    {	r6 = r+c*6;
-        if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4]))
+
+    for (c = 0;c<num_particles;c++) {	r6 = r+c*6;
+        if (!atIsNaN(r6[0]) && atIsFinite(r6[4])) {
             /*
 		       function quad6 internally calculates the square root
 			   of the energy deviation of the particle 
 			   To protect against DOMAIN and OVERFLOW error, check if the
 			   fifth component of the phase spacevector r6[4] is finite
              */
-        {
-            /* Misalignment at entrance */
-            if(useT1)
-                ATaddvv(r6,T1);
-            if(useR1)
-                ATmultmv(r6,R1);
-            
-            
+             /* Misalignment at entrance */
+            if(T1) ATaddvv(r6,T1);
+            if(R1) ATmultmv(r6,R1);
+
             quad6(r6,le,kv);
 			
 			/* Misalignment at exit */	
-            if(useR2)
-                ATmultmv(r6,R2);
-            if(useT2)
-                ATaddvv(r6,T2);
+            if(R2) ATmultmv(r6,R2);
+            if(T2) ATaddvv(r6,T2);
         }
     }
 }

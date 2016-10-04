@@ -157,28 +157,9 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 						
 {  double *r6;   
 	int c;
-    bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
+    bool useFringe1, useFringe2;
 	
-	if(T1==NULL)
-	    useT1=false;
-	else 
-	    useT1=true;  
-	    
-    if(T2==NULL)
-	    useT2=false; 
-	else 
-	    useT2=true;  
-	
-	if(R1==NULL)
-	    useR1=false; 
-	else 
-	    useR1=true;  
-	    
-    if(R2==NULL)
-	    useR2=false;
-	else 
-	    useR2=true;
-	    
+
 	/* if either is 0 - do not calculate fringe effects */    
     if( fint1==0 || gap==0) 
 	    useFringe1 = false;
@@ -190,13 +171,10 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 	else 
 	    useFringe2=true;  
 
-	    
-	
-	for(c = 0;c<num_particles;c++)
-		{	
+	for (c = 0;c<num_particles;c++) {
 		    r6 = r+c*6;
 
-			if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4]))
+			if(!atIsNaN(r6[0]) && atIsFinite(r6[4]))
 			/* 
 		       function bend6 internally calculates the square root
 			   of the energy deviation of the particle 
@@ -204,10 +182,8 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 			   fifth component of the phase spacevector r6[4] is finite
 			*/
 			{	/* Misalignment at entrance */
-	            if(useT1)
-			        ATaddvv(r6,T1);
-			    if(useR1)
-			        ATmultmv(r6,R1);
+	            if (T1) ATaddvv(r6,T1);
+			    if (R1) ATmultmv(r6,R1);
 			    
 			    if(useFringe1)
 			        edge_fringe(r6, ba/le, entrance_angle, fint1, gap);
@@ -222,10 +198,8 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 			        edge(r6, ba/le, exit_angle);
     
 			    /* Misalignment at exit */	
-			    if(useR2)
-			        ATmultmv(r6,R2);
-		        if(useT2)   
-			        ATaddvv(r6,T2);
+			    if (R2) ATmultmv(r6,R2);
+		        if (T2) ATaddvv(r6,T2);
 	        }
 		}	
 }
@@ -234,7 +208,7 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {
-    if (!Elem) {	
+    if (!Elem) {
         double Length=atGetDouble(ElemData,"Length"); check_error();
         double BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
@@ -250,6 +224,19 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=Length;
+        Elem->BendingAngle=BendingAngle;
+        Elem->EntranceAngle=EntranceAngle;
+        Elem->ExitAngle=ExitAngle;
+        Elem->K=K;
+        Elem->ByError=ByError;
+        Elem->FringeInt1=FringeInt1;
+        Elem->FringeInt2=FringeInt2;
+        Elem->FullGap=FullGap;
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
     }
     BendLinearPass(r_in, Elem->Length,Elem->K,Elem->BendingAngle,Elem->ByError,
             Elem->EntranceAngle,Elem->ExitAngle,Elem->FringeInt1,Elem->FringeInt2,
