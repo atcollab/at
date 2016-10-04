@@ -11,7 +11,7 @@ import at
 
 
 SCALAR_FIELDS = ['Length', 'K', 'BendingAngle', 'EntranceAngle', 'ExitAngle',
-                 'MaxOrder', 'NumIntSteps']
+                 'MaxOrder', 'NumIntSteps','Voltage','Frequency','HarmNumber','TimeLag','Energy']
 
 
 def extract_scalars(kwargs):
