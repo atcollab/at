@@ -108,7 +108,7 @@ class Dipole(Multipole):
         poly_b = kwargs.pop('PolynomB', [0, k])
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
-        kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4E2Pass')
+        kwargs.setdefault('PassMethod', 'BendLinearPass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, BendingAngle=bending_angle, **kwargs)
 
 

@@ -67,7 +67,7 @@ static PyObject *print_error(int elem_number, PyObject *rout)
     return NULL;
 }
 
-struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, const char *method_name)
+static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, const char *method_name)
 {
     /* recusively search the list to check if the library containing method_name is
      * already loaded. If it is - return the pointer to the list element. If not -
@@ -87,21 +87,23 @@ static pass_function pass_method(char *fn_name) {
         fn_handle = LibraryListPtr->FunctionHandle;
     }
     else {
-        char lib_file[300];
+        char lib_file[300], buffer[100];
         snprintf(lib_file, sizeof(lib_file), "%s/%s.so", INTEGRATOR_PATH, fn_name);
         LIBRARYHANDLETYPE dl_handle = LOADLIBFCN(lib_file);
         if (dl_handle == NULL) {
-            PyErr_SetString(PyExc_RuntimeError, dlerror());
+            snprintf(buffer, sizeof(buffer), "Cannot load %s.so", fn_name);
+            PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
         }
         fn_handle = GETTRACKFCN(dl_handle);
         if (fn_handle == NULL) {
+            snprintf(buffer, sizeof(buffer), "No trackFunction in %s.so", fn_name);
             FREELIBFCN(dl_handle);
-            PyErr_SetString(PyExc_RuntimeError, dlerror());
+            PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
         }
         LibraryListPtr = (struct LibraryListElement *)malloc(sizeof(struct LibraryListElement));
-        LibraryListPtr->MethodName = fn_name;
+        LibraryListPtr->MethodName = strcpy(malloc(strlen(fn_name)+1), fn_name);
         LibraryListPtr->LibraryHandle = dl_handle;
         LibraryListPtr->FunctionHandle = fn_handle;
         LibraryListPtr->Next = LibraryList;
@@ -188,32 +190,36 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (!reuse) new_lattice = 1;
     if (new_lattice) {
-        int n;
-        for (n=0; n<num_elements; n++) {
-            free(elemdata_list[n]);
-            Py_DECREF(element_list[n]);             /* Release the stored elements */
-        }
+        int nelem;
+        for (nelem=0; nelem<num_elements; nelem++) {
+            free(elemdata_list[nelem]);
+            Py_XDECREF(element_list[nelem]);        /* Release the stored elements, may be NULL if */
+        }                                           /* a previous call was interrupted by an error */
         num_elements = numel;
+
+        /* Pointer to Element structures used by the tracking function */
         free(elemdata_list);
         elemdata_list = (struct elem **)calloc(num_elements, sizeof(struct elem *));
-        element_list = (PyObject **)realloc(element_list, num_elements*sizeof(PyObject *));
+
+        /* Pointer to Element list, make sure all pointers are initially NULL */
+        free(element_list);
+        element_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
+
+        /* pointer to the list of integrators */
         integrator_list = (pass_function *)realloc(integrator_list, num_elements*sizeof(pass_function));
+
         lattice_length = 0.0;
         PyObject **element = element_list;
         pass_function *integrator = integrator_list;
         for (nelem = 0; nelem < num_elements; nelem++) {
             PyObject *el = PyList_GET_ITEM(lattice, nelem);
-            PyObject *fn_name_object = PyObject_GetAttrString(el, "PassMethod");
-            if (!fn_name_object) return print_error(nelem, rout);   /* No PassMethod */
-            pass_function fn_handle = pass_method(PyUnicode_AsUTF8(fn_name_object));
+            PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
+            if (!PyPassMethod) return print_error(nelem, rout);     /* No PassMethod */
+            pass_function fn_handle = pass_method(PyUnicode_AsUTF8(PyPassMethod));
             if (!fn_handle) return print_error(nelem, rout);        /* No trackFunction for the given PassMethod */
             double length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
-            if (PyErr_Occurred()) {
-                PyErr_Clear();
-            }
-            else {
-                lattice_length += length;
-            }
+            if (PyErr_Occurred()) PyErr_Clear();
+            else lattice_length += length;
             *integrator++ = fn_handle;
             *element++ = el;
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
@@ -226,7 +232,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     printf("Going for %u turns\n", num_turns);
 
     param.RingLength = lattice_length;
-    param.T0 = 0;
+    param.T0 = lattice_length/299792458.0;
     for (turn = 0; turn < num_turns; turn++) {
         PyObject **element = element_list;
         pass_function *integrator = integrator_list;
@@ -248,7 +254,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             memcpy(drout, drin, np6*sizeof(double));
             drout += np6; /*  shift the location to write to in the output array */
         }
-   }
+    }
     if (num_refpts == 0) {
         memcpy(drout, drin, np6*sizeof(double));
         drout += np6; /*  shift the location to write to in the output array */
