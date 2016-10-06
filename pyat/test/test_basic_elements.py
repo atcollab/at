@@ -61,6 +61,28 @@ def test_missing_length_raises_attribute_error(rin):
         at.atpass(l, rin, 1)
 
 
+@pytest.mark.parametrize("reuse", (True, False))
+def test_reuse_attributes(rin, reuse):
+    m = elements.Drift('drift', 1.0)
+    l = [m]
+    rin[0,0] = 1e-6
+    rin[0,1] = 1e-6
+    rin_copy = numpy.copy(rin)
+    # two turns with original lattice
+    at.atpass(l, rin, 2)
+    # one turn with original lattice
+    at.atpass(l, rin_copy, 1)
+    # change an attribute
+    m.Length = 2
+    # one turn with altered lattice
+    at.atpass(l, rin_copy, 1, reuse=reuse)
+    if reuse:
+        numpy.testing.assert_equal(rin, rin_copy)
+    else:
+        with pytest.raises(AssertionError):
+            numpy.testing.assert_equal(rin, rin_copy)
+
+
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
 def test_dipole(rin, dipole_class):
     print(elements.__file__)
