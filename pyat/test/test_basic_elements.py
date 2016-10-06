@@ -167,3 +167,26 @@ def test_drift_two_particles(rin):
     p2_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(1,6)
     two_rin_expected = numpy.concatenate((p1_expected, p2_expected), axis=0)
     numpy.testing.assert_equal(two_rin, two_rin_expected)
+
+
+def test_quad(rin):
+    q = elements.Quadrupole('quad', 0.4, k=1)
+    lattice = [q]
+    rin[0, 0] = 1e-6
+    at.atpass(lattice, rin, 1)
+    print(rin)
+    expected = numpy.array([0.921060994002885,
+                            -0.389418342308651,
+                            0,
+                            0,
+                            0,
+                            0.000000010330489]).reshape(1, 6) * 1e-6
+    numpy.testing.assert_allclose(rin, expected)
+
+
+def test_quad_incorrect_array(rin):
+    q = elements.Quadrupole('quad', 0.4, k=1)
+    q.PolynomB = 'a'
+    lattice = [q]
+    with pytest.raises(RuntimeError):
+        at.atpass(lattice, rin, 1)

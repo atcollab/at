@@ -274,15 +274,15 @@ MOD_INIT(at)
 {
 #if PY_MAJOR_VERSION >= 3
     static struct PyModuleDef moduledef = {
-	PyModuleDef_HEAD_INIT,
-	"at",			/* m_name */
-	PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
-	-1,             /* m_size */
-	AtMethods,		/* m_methods */
-	NULL,			/* m_reload */
-	NULL,			/* m_traverse */
-	NULL,			/* m_clear */
-	NULL,			/* m_free */
+    PyModuleDef_HEAD_INIT,
+    "at",         /* m_name */
+    PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
+    -1,           /* m_size */
+    AtMethods,    /* m_methods */
+    NULL,         /* m_reload */
+    NULL,         /* m_traverse */
+    NULL,         /* m_clear */
+    NULL,         /* m_free */
     };
     PyObject *m = PyModule_Create(&moduledef);
 #else
