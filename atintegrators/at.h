@@ -2,6 +2,7 @@
 #define AT_H
 
 #include <math.h>
+#include "attypes.h"
 
 #ifdef MATLAB_MEX_FILE
 
@@ -39,13 +40,6 @@ static const double pinf = 1.0 / 0.0;
 #endif
 
 #endif /*MATLAB_MEX_FILE*/
-
-struct parameters
-{
-  int nturn;
-  double RingLength;
-  double T0;
-};
 
 #endif /*AT_H*/
 

@@ -118,14 +118,12 @@ typedef PyObject atElem;
 
 static int array_imported = 0;
 
-static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void) {
+static NUMPY_IMPORT_ARRAY_TYPE init_numpy(void)
+{
     import_array();
     return NUMPY_IMPORT_ARRAY_RETVAL;
 }
-/*
-#define atGetLong(elem,fname) PyLong_AsLong(PyObject_GetAttrString((PyObject *)elem, fname))
-#define atGetDouble(elem, fname) PyFloat_AsDouble(PyObject_GetAttrString((PyObject *)elem, fname))
-*/
+
 static long atGetLong(const PyObject *element, const char *name)
 {
     const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
@@ -140,8 +138,9 @@ static double atGetDouble(const PyObject *element, const char *name)
     return PyFloat_AsDouble((PyObject *)attr);
 }
 
-static long atGetOptionalLong(const PyObject *element, const char *name, long default_value) {
-    long l = PyLong_AsLong(PyObject_GetAttrString((PyObject *)element, name));
+static long atGetOptionalLong(const PyObject *element, const char *name, long default_value)
+{
+    long l = atGetLong(element, name);
     if (PyErr_Occurred()) {
         PyErr_Clear();
         l = default_value;
@@ -149,8 +148,9 @@ static long atGetOptionalLong(const PyObject *element, const char *name, long de
     return l;
 }
 
-static double atGetOptionalDouble(const PyObject *element, const char *name, double default_value) {
-    double d = PyFloat_AsDouble(PyObject_GetAttrString((PyObject *)element, name));
+static double atGetOptionalDouble(const PyObject *element, const char *name, double default_value)
+{
+    double d = atGetDouble(element, name);
     if (PyErr_Occurred()) {
         PyErr_Clear();
         d = default_value;
@@ -158,7 +158,8 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-static double *atGetDoubleArray(const PyObject *element, char *name) {
+static double *atGetDoubleArray(const PyObject *element, char *name)
+{
     char errmessage[60];
     if (!array_imported) {
         init_numpy();
@@ -186,33 +187,14 @@ static double *atGetDoubleArray(const PyObject *element, char *name) {
     return PyArray_DATA(array);
 }
 
-static double *atGetOptionalDoubleArray(const PyObject *element, char *name) {
-    char errmessage[60];
-    if (!array_imported) {
-        init_numpy();
-        array_imported = 1;
-    }
-    PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
-    if (array == NULL) {
+static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
+{
+    PyObject *obj = PyObject_GetAttrString((PyObject *)element, name);
+    if (obj == NULL) {
         PyErr_Clear();
         return NULL;
     }
-    if (!PyArray_Check(array)) {
-        snprintf(errmessage, 60, "The attribute %s is not an array.", name);
-        PyErr_SetString(PyExc_RuntimeError, errmessage);
-        return NULL;
-    }
-    if (PyArray_TYPE(array) != NPY_DOUBLE) {
-        snprintf(errmessage, 60, "The attribute %s is not a double array.", name);
-        PyErr_SetString(PyExc_RuntimeError, errmessage);
-        return NULL;
-    }
-    if ((PyArray_FLAGS(array) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
-        snprintf(errmessage, 60, "The attribute %s is not C-aligned.", name);
-        PyErr_SetString(PyExc_RuntimeError, errmessage);
-        return NULL;
-    }
-    return PyArray_DATA(array);
+    return atGetDoubleArray(element, name);
 }
 
 #else
@@ -244,7 +226,7 @@ static const double pinf = 1.0 / 0.0;
 
 #endif
 
-ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
-			      double *r_in, int num_particles, struct parameters *Param);
+ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem, double *r_in,
+                                      int num_particles, struct parameters *Param);
 
 #endif /*ATELEM_C*/
