@@ -307,11 +307,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mexErrMsgIdAndTxt("Atpass:WrongPassMethod","Element # %d: 'PassMethod' field must be a string", nelem);            
             if (mxLength) lattice_length+=mxGetScalar(mxLength);
             LibraryListPtr = pass_method(mxPassMethod, nelem);
+            mexPrintf("el %d, integrate1: %p, integrate2: %p\n", nelem, LibraryListPtr->FunctionHandle, LibraryListPtr->FunctionHandle2);
             *integrate1++ = LibraryListPtr->FunctionHandle;
             *integrate2++ = LibraryListPtr->FunctionHandle2;
             *element++=mxElem;
         }
+        pass_mode = MAKE_LOCAL_COPY;
         new_lattice = false;
+    }
+    else {
+        pass_mode = USE_LOCAL_COPY;
     }
 	paramStruct.RingLength = lattice_length;
 	paramStruct.T0 = lattice_length/299792458;
@@ -379,7 +384,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     /* start tracking */
     ihist = 0;
-    pass_mode = new_lattice ? MAKE_LOCAL_COPY : USE_LOCAL_COPY;
     for (turn=0; turn<num_turns; turn++) {
         nextrefindex = 0;
         nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
@@ -407,7 +411,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				*elemdata = (*integrate2)(*element,*elemdata,DblBuffer,num_particles,&paramStruct);
 			}
             else if (*integrate1) {                 /* Pointer to a passFunction */
+                mexPrintf("element %d, fnptr: %p, integptr: %p\n", nelem, *field_numbers, *integrate1);
                 *field_numbers = (*integrate1)(*element,*field_numbers,DblBuffer,num_particles,pass_mode);
+                mexPrintf("element %d, fnptr: %p\n", nelem, *field_numbers);
             }
             else {                                  /* M-File */
                 DblBuffer=passmfile(mxPassArg1+1, *element);
