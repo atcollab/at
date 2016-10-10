@@ -86,8 +86,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    if(nrhs == 2)
-    {
+    if (nrhs == 2) {
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
@@ -95,7 +94,6 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Voltage=atGetDouble(ElemData,"Voltage");
         double Energy=atGetDouble(ElemData,"Energy");
         double Frequency=atGetDouble(ElemData,"Frequency");
-        double HarmNumber=atGetDouble(ElemData,"HarmNumber");
         double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
@@ -103,18 +101,20 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         r_in = mxGetPr(plhs[0]);
         CavityPass(r_in,Length,Voltage/Energy,Frequency,TimeLag,num_particles);
     }
-    else if (nrhs == 0)
-    {   /* return list of required fields */
+    else if (nrhs == 0) {   /* return list of required fields */
         plhs[0] = mxCreateCellMatrix(4,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
         mxSetCell(plhs[0],1,mxCreateString("Voltage"));
         mxSetCell(plhs[0],2,mxCreateString("Energy"));
         mxSetCell(plhs[0],3,mxCreateString("Frequency"));
-        if(nlhs>1) /* optional fields */
-        {   plhs[1] = mxCreateCellMatrix(1,1);
+        if (nlhs>1) /* optional fields */
+        {   plhs[1] = mxCreateCellMatrix(2,1);
+            mxSetCell(plhs[1],0,mxCreateString("HarmNumber"));
             mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
         }
     }
-    
+	else {
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
+	}
 }
 #endif /* MATLAB_MEX_FILE */

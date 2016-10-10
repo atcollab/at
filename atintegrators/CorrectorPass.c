@@ -59,7 +59,7 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 	int *returnptr;
 	int *NewFieldNumbers, fnum;
     mxArray *tmpmxptr;
-    
+    mexPrintf("Entering CorrectorPass: mode %d\n", mode);
 	switch(mode)
 		{	case NO_LOCAL_COPY:	/* Obsolete in AT 1.3  */
 				{	returnptr = NULL;
@@ -70,7 +70,8 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 										and make returnptr point to that array
 									*/
 				{	
-					NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
+					mexPrintf("Entering make copy\n", mode);
+                    NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
 					
 					fnum = mxGetFieldNumber(ElemData,"KickAngle");
 					if(fnum<0) 
@@ -87,8 +88,8 @@ ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
 					
 					kickptr = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[0]));
 					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[1]));
-					
 					returnptr = NewFieldNumbers;
+					mexPrintf("length: %g, kick: %g, ptr: %p\n", le, kickptr[0], returnptr);
 				}	break;
 
 			case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
