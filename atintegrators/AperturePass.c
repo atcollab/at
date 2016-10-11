@@ -1,3 +1,4 @@
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 
@@ -35,6 +36,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     AperturePass(r_in, Elem->limits, num_particles);
     return Elem;
 }
+
+void initAperturePass(void) {};
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

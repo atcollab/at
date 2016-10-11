@@ -48,6 +48,8 @@ void MatrixTijkPass(double *r, const double *M, const double *Tijk,
 	}
 }
 
+void initMatrixTijkPass(void) {};
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"

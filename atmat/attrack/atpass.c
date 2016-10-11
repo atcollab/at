@@ -307,7 +307,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mexErrMsgIdAndTxt("Atpass:WrongPassMethod","Element # %d: 'PassMethod' field must be a string", nelem);            
             if (mxLength) lattice_length+=mxGetScalar(mxLength);
             LibraryListPtr = pass_method(mxPassMethod, nelem);
-            mexPrintf("el %d, integrate1: %p, integrate2: %p\n", nelem, LibraryListPtr->FunctionHandle, LibraryListPtr->FunctionHandle2);
             *integrate1++ = LibraryListPtr->FunctionHandle;
             *integrate2++ = LibraryListPtr->FunctionHandle2;
             *element++=mxElem;
@@ -411,9 +410,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 				*elemdata = (*integrate2)(*element,*elemdata,DblBuffer,num_particles,&paramStruct);
 			}
             else if (*integrate1) {                 /* Pointer to a passFunction */
-                mexPrintf("element %d, fnptr: %p, integptr: %p\n", nelem, *field_numbers, *integrate1);
                 *field_numbers = (*integrate1)(*element,*field_numbers,DblBuffer,num_particles,pass_mode);
-                mexPrintf("element %d, fnptr: %p\n", nelem, *field_numbers);
             }
             else {                                  /* M-File */
                 DblBuffer=passmfile(mxPassArg1+1, *element);

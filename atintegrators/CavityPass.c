@@ -3,7 +3,8 @@
  * Revision 3/10/04
  * A.Terebilo terebilo@ssrl.slac.stanford.edu
  */
-#include "atelem.c"
+#include "at.h"
+ #include "atelem.c"
 #include <math.h>
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8
@@ -64,11 +65,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double Voltage=atGetDouble(ElemData,"Voltage"); check_error();
-        double Energy=atGetDouble(ElemData,"Energy"); check_error();
-        double Frequency=atGetDouble(ElemData,"Frequency"); check_error();
-        double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        double Length, Voltage, Energy, Frequency, TimeLag;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        Voltage=atGetDouble(ElemData,"Voltage"); check_error();
+        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        Frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
@@ -80,6 +82,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->TimeLag,num_particles);
     return Elem;
 }
+
+void initCavityPass(void) {};
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

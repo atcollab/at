@@ -31,6 +31,8 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
     }
 }
 
+void initThinMPolePass(void) {};
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"

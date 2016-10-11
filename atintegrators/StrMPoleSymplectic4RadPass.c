@@ -1,3 +1,4 @@
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 
@@ -199,19 +200,22 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
-        int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        double Energy=atGetDouble(ElemData,"Energy"); check_error();
+        double Length, Energy;
+        int MaxOrder, NumIntSteps;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
+        Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
-        double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -232,6 +236,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
     return Elem;
 }
+
+void initStrMPoleSymplectic4RadPass(void) {};
+
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

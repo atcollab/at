@@ -4,6 +4,7 @@
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
 
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include "atphyslib.c"
@@ -206,23 +207,25 @@ void BendLinearPass(double *r, double le, double grd ,double ba, double bye,
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
-			      double *r_in, int num_particles, struct parameters *Param)
+                double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
-        double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
-        double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
+        double Length, BendingAngle, EntranceAngle, ExitAngle, K, ByError, FringeInt1, FringeInt2, FullGap;
+        double *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
+        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
+        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
-        double K=atGetOptionalDouble(ElemData,"K",0); check_error();
-        double ByError=atGetOptionalDouble(ElemData,"ByError",0); check_error();
-        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
-        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
-        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        K=atGetOptionalDouble(ElemData,"K",0); check_error();
+        ByError=atGetOptionalDouble(ElemData,"ByError",0); check_error();
+        FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
+        FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
+        FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->BendingAngle=BendingAngle;
@@ -241,8 +244,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     BendLinearPass(r_in, Elem->Length,Elem->K,Elem->BendingAngle,Elem->ByError,
             Elem->EntranceAngle,Elem->ExitAngle,Elem->FringeInt1,Elem->FringeInt2,
             Elem->FullGap,Elem->T1,Elem->T2,Elem->R1,Elem->R2,num_particles);
-		return(Elem);
+        return(Elem);
 }
+
+void initBendLinearPass(void) {};
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

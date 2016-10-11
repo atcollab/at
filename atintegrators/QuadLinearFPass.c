@@ -7,6 +7,7 @@
 
 
 #include "at.h"
+#include "atelem.c"
 #include "atlalib.c"
 
 /******************************************************************************/
@@ -153,7 +154,7 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 
 	for(c = 0;c<num_particles;c++)
 		{	r6 = r+c*6;
-		    if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4]))
+		    if(!atIsNaN(r6[0]) && atIsFinite(r6[4]))
 		    /* 
 		       function quad6 internally calculates the square root
 			   of the energy deviation of the particle 
@@ -187,6 +188,8 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 			
 		}		
 }
+
+void initQuadLinearFPass(void) {};
 
 /********** END PHYSICS SECTION ***********************************************/
 /******************************************************************************/

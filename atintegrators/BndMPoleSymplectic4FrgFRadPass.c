@@ -1,6 +1,7 @@
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "atphyslib.c"		/* edge, edge_fringe */
+#include "atphyslib.c"
 #include "driftkickrad.c"	/* drift6.c, bndthinkickrad.c */
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
@@ -100,26 +101,30 @@ void BndMPoleSymplectic4FrgFRadPass(double *r, double le, double irho, double *A
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {
+    double irho;
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
-        int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-        double BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
-        double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
-        double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
-        double Energy=atGetDouble(ElemData,"Energy"); check_error();
+        double Length, BendingAngle, EntranceAngle, ExitAngle, FullGap, FringeInt1, FringeInt2, Energy;
+        int MaxOrder, NumIntSteps;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
+        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
+        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
+        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
+        Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
-        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
-        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
-        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
-        double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
+        FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
+        FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -141,13 +146,15 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
     }
-    double irho = Elem->BendingAngle/Elem->Length;
+    irho = Elem->BendingAngle/Elem->Length;
     BndMPoleSymplectic4FrgFRadPass(r_in,Elem->Length,irho,Elem->PolynomA,Elem->PolynomB,
             Elem->MaxOrder,Elem->NumIntSteps,Elem->EntranceAngle,Elem->ExitAngle,
             Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,Elem->T1,Elem->T2,
             Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
     return Elem;
 }
+
+void initBndMPoleSymplectic4FrgFRadPass(void) {};
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

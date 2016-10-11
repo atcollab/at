@@ -4,7 +4,7 @@
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
 
-
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 #include <math.h>
@@ -111,14 +111,16 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length"); check_error();
+        double Length, K;
+        double *PolynomB, *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
         /*optional fields*/
-        double *PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        double K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
+        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->K=K;
@@ -132,6 +134,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->R1,Elem->R2,num_particles);
     return(Elem);
 }
+
+void initQuadLinearPass(void) {};
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 

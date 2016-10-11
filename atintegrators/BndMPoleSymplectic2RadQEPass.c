@@ -263,10 +263,15 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 			}
 }
 
+
+void initBndMPoleSymplectic2RadQEPass(void) {};
+
 #ifdef MATLAB_MEX_FILE
-#define NUM_FIELDS_2_REMEMBER 16
 
 #include "elempass.h"
+#include "mxutils.c"
+
+#define NUM_FIELDS_2_REMEMBER 16
 
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)

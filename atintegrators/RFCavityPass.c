@@ -6,6 +6,7 @@
  */
 
 #include <math.h>
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 #define TWOPI  6.28318530717959
@@ -71,12 +72,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     int nturn=Param->nturn;
     double T0=Param->T0;
     if (!Elem) {
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double Voltage=atGetDouble(ElemData,"Voltage"); check_error();
-        double Energy=atGetDouble(ElemData,"Energy"); check_error();
-        double Frequency=atGetDouble(ElemData,"Frequency"); check_error();
-        double HarmNumber=atGetDouble(ElemData,"HarmNumber"); check_error();
-        double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        double Length, Voltage, Energy, Frequency, HarmNumber, TimeLag;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        Voltage=atGetDouble(ElemData,"Voltage"); check_error();
+        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        Frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        HarmNumber=atGetDouble(ElemData,"HarmNumber"); check_error();
+        TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
@@ -88,6 +90,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag, nturn, T0, num_particles);
     return Elem;
 }
+
+void initRFCavityPass(void) {};
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

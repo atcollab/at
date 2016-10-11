@@ -1,3 +1,4 @@
+#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 
@@ -47,17 +48,19 @@ void DriftPass(double *r_in, double le,
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
-			      double *r_in, int num_particles, struct parameters *Param)
+                double *r_in, int num_particles, struct parameters *Param)
 {
 /*  if (ElemData) {*/
         if (!Elem) {
-            double Length=atGetDouble(ElemData,"Length"); check_error();
-            double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-            double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-            double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-            double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-            double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
-            double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+            double Length;
+            double *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+            Length=atGetDouble(ElemData,"Length"); check_error();
+            R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+            R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+            T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+            T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+            EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+            RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
             Elem = (struct elem*)atMalloc(sizeof(struct elem));
             Elem->Length=Length;
             Elem->R1=R1;
@@ -79,6 +82,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
      }*/
     return Elem;
 }
+
+void initDriftPass(void) {};
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

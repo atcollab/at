@@ -73,6 +73,8 @@ void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
     }
 }
 
+void initDeltaQPass(void) {};
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"
