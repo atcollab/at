@@ -96,8 +96,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     int nturn=Param->nturn;
     if (!Elem) {
-        double *Lmatp=atGetDoubleArray(ElemData,"Lmatp"); check_error();
-        int Seed=atGetOptionalLong(ElemData,"Seed",0); check_error();
+        int Seed;
+        double *Lmatp;
+        Lmatp=atGetDoubleArray(ElemData,"Lmatp"); check_error();
+        Seed=atGetOptionalLong(ElemData,"Seed",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Lmatp=Lmatp;
         Elem->Seed=Seed;   
@@ -115,13 +117,15 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double *Lmatp=atGetDoubleArray(ElemData,"Lmatp");
-        int Seed=atGetOptionalLong(ElemData,"Seed",0);
+        int Seed;
+        double *Lmatp;
+        Lmatp=atGetDoubleArray(ElemData,"Lmatp"); check_error();
+        Seed=atGetOptionalLong(ElemData,"Seed",0); check_error();
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
-      /* ALLOCATE memory for the output array of the same size as the input  */
-      plhs[0] = mxDuplicateArray(prhs[1]);
-      r_in = mxGetPr(plhs[0]);
-      QuantDiffPass(r_in, Lmatp, Seed, 0, num_particles);
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetPr(plhs[0]);
+        QuantDiffPass(r_in, Lmatp, Seed, 0, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */

@@ -193,18 +193,21 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double *PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        double *PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
-        int MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        int NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
+        double Length;
+        int MaxOrder, NumIntSteps;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         /*optional fields*/
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        double *EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
-        double *RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
+        RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);

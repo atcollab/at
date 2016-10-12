@@ -146,14 +146,16 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length=atGetDouble(ElemData,"Length"); check_error();
+        double Length, K;
+        double *PolynomB, *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
         /*optional fields*/
-        double *PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        double K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
+        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);

@@ -254,23 +254,25 @@ void initBendLinearPass(void) {};
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {	
     if (nrhs == 2 ) {
+        double Length, BendingAngle, EntranceAngle, ExitAngle, K, ByError, FringeInt1, FringeInt2, FullGap;
+        double *R1, *R2, *T1, *T2;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length=atGetDouble(ElemData,"Length"); check_error();
-        double BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
-        double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
-        double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
+        EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
+        ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
-        double K=atGetOptionalDouble(ElemData,"K",0); check_error();
-        double ByError=atGetOptionalDouble(ElemData,"ByError",0); check_error();
-        double FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
-        double FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
-        double FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
-        double *R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-        double *R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-        double *T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-        double *T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        K=atGetOptionalDouble(ElemData,"K",0); check_error();
+        ByError=atGetOptionalDouble(ElemData,"ByError",0); check_error();
+        FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
+        FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
+        FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);

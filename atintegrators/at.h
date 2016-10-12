@@ -4,6 +4,14 @@
 #include <math.h>
 #include "attypes.h"
 
+
+#ifdef MATLAB_MEX_FILE
+
+#include "mex.h"
+#include <matrix.h>
+
+#else
+
 #if defined(_WIN32)  /*Windows*/
 #include <Windows.h>
 #define isnan(x) _isnan(x)
@@ -17,7 +25,7 @@ DECLSPEC_SELECTANY extern const float FLOAT_POSITIVE_INFINITY = ((float)(1e308 *
 typedef int bool;
 #define false 0
 #define true 1
-#elif !defined(MATLAB_MEX_FILE) /*Linux*/
+#else               /*Linux*/
 #include <stdbool.h>
 #ifndef INFINITY
 static const double pinf = 1.0 / 0.0;
@@ -28,13 +36,6 @@ static const double dnan = 0.0 / 0.0;
 #define NAN dnan
 #endif
 #endif /* defined(_WIN32) */
-
-#ifdef MATLAB_MEX_FILE
-
-#include "mex.h"
-#include <matrix.h>
-
-#else
 
 #include <stdlib.h>
 #define mxIsFinite isfinite
