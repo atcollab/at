@@ -1,4 +1,4 @@
-#include "at.h"
+#include "atelem.c"
 #include "atlalib.c"
 
 #define TWOPI		6.28318530717959
@@ -32,7 +32,7 @@ void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
     
     for(i=0; i<num_particles; i++) {
         rtmp = r_in+i*6;
-        if(!mxIsNaN(rtmp[0])) {
+        if(!atIsNaN(rtmp[0])) {
             /*  misalignment at entrance  */
             if (useT1) ATaddvv(rtmp, T1);
             if (useR1) ATmultmv(rtmp, R1);

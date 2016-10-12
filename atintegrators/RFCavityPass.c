@@ -5,10 +5,9 @@
  *  Nicola Carmignani
  */
 
-#include <math.h>
-#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
+
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8 
 

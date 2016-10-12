@@ -4,9 +4,8 @@
    A.Terebilo terebilo@slac.stanford.edu
 */
 
-#include "at.h"
+#include "atelem.c"
 #include "atlalib.c"
-
 
 void SolenoidLinearPass(double *r_in, double le, double ks, double *T1, double *T2, double *R1, double *R2, int num_particles)
 /* Constant field hard edge model is assumed

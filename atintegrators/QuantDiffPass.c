@@ -1,7 +1,6 @@
 #include "atelem.c"
 #include <time.h>
-#include <math.h>
-#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64)
+#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64 || defined _WIN32)
 #include <sys/time.h>
 #endif
 #ifndef M_PI
@@ -42,7 +41,7 @@ void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_pa
   }
   else if(initSeed)
   {
-#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64)
+#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64 || defined _WIN32)
       {
       struct timeval time;
       gettimeofday(&time,NULL);
@@ -96,8 +95,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     int nturn=Param->nturn;
     if (!Elem) {
-        int Seed;
         double *Lmatp;
+        int Seed;
         Lmatp=atGetDoubleArray(ElemData,"Lmatp"); check_error();
         Seed=atGetOptionalLong(ElemData,"Seed",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -107,6 +106,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     QuantDiffPass(r_in, Elem->Lmatp, Elem->Seed, nturn, num_particles);
     return Elem;
 }
+
+void initQuantDiffPass(void) {};
+
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

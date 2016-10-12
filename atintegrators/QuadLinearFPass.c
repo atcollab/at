@@ -4,9 +4,6 @@
    Created 3/11/2011
    this is modified from Terebilo's QuadLinearPass to include the quadrupole fringe field effects.
 */
-
-
-#include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
 
