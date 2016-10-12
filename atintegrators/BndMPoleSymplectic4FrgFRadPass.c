@@ -1,7 +1,7 @@
 #include "at.h"
 #include "atelem.c"
 #include "atlalib.c"
-#include "atphyslib.c"
+#include "atphyslib.c"		/* edge, edge_fringe */
 #include "driftkickrad.c"	/* drift6.c, bndthinkickrad.c */
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
