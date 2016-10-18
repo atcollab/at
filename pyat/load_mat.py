@@ -5,13 +5,13 @@ This is working from a specific file and may not be general.
 """
 
 import scipy.io
-import elements
+import pyat
+from pyat import elements
 import numpy
-import at
 
 
 SCALAR_FIELDS = ['Length', 'K', 'BendingAngle', 'EntranceAngle', 'ExitAngle',
-                 'MaxOrder', 'NumIntSteps','Voltage','Frequency','HarmNumber','TimeLag','Energy']
+                 'MaxOrder', 'NumIntSteps', 'Voltage', 'Frequency', 'HarmNumber', 'TimeLag', 'Energy']
 
 
 def extract_scalars(kwargs):
@@ -28,7 +28,7 @@ def load_element(element_array):
     data = element_array[0]
     kwargs = {}
     for item in element_array[0][0][0].dtype.fields:
-        kwargs[item] = data[item][0,0][0]
+        kwargs[item] = data[item][0, 0][0]
 
     kwargs = extract_scalars(kwargs)
     class_name = kwargs.pop('Class')
@@ -50,7 +50,7 @@ def load(filename):
 
 if __name__ == '__main__':
     m = load('../atmat/atmatch/ExampleATMATCH/dba.mat')
-    rin = numpy.array((1e-6,0,0,0,0,0))
+    rin = numpy.array((1e-6, 0, 0, 0, 0, 0))
     print(rin)
-    at.atpass(m, rin, 1)
+    pyat.atpass(m, rin, 1)
     print(rin)

@@ -1,6 +1,6 @@
 import pytest
 import numpy
-import at
+from pyat import at
 import elements
 
 

@@ -1,15 +1,16 @@
+/*
+ * The file to be included by 'new-style' integrators that support both
+ * Matlab and Python.
+ */
 #ifndef ATELEM_C
 #define ATELEM_C
 
-#include <stdlib.h>
-#include <math.h>
-#include "attypes.h"
+#ifdef PYAT
+/* Python.h must be included first. */
+#include <Python.h>
+#endif /*PYAT*/
 
-#if defined(PCWIN) || defined(_WIN32)
-#define ExportMode __declspec(dllexport)
-#else
-#define ExportMode
-#endif
+#include "atcommon.h"
 
 /*----------------------------------------------------*/
 /*            For the integrator code                 */
@@ -17,8 +18,6 @@
 
 #if defined(MATLAB_MEX_FILE)
 
-#include <mex.h>
-#include <matrix.h>
 #define atIsFinite mxIsFinite
 #define atIsNaN mxIsNaN
 #define atGetNaN mxGetNaN
@@ -40,39 +39,6 @@ static void *atCalloc(size_t count, size_t size)
 }
 
 #else /* !defined(MATLAB_MEX_FILE) */
-
-#if defined(_WIN32)
-
-#include <Windows.h>
-#define isnan(x) _isnan(x)
-#define isinf(x) (!_finite(x))
-#define isfinite(x) _finite(x)
-/* See https://blogs.msdn.microsoft.com/oldnewthing/20100305-00/?p=14713 */
-DECLSPEC_SELECTANY extern const float FLOAT_NaN = ((float)((1e308 * 10)*0.));
-#define NAN FLOAT_NaN
-DECLSPEC_SELECTANY extern const float FLOAT_POSITIVE_INFINITY = ((float)(1e308 * 10));
-#define INFINITY FLOAT_POSITIVE_INFINITY
-typedef int bool;
-#define false 0
-#define true 1
-
-#else /* !defined(_WIN32) */
-
-#if defined __SUNPRO_C
-#include <ieeefp.h>
-#define isfinite finite
-#endif
-#ifndef NAN
-static const double dnan = 0.0 / 0.0;
-#define NAN dnan
-#endif
-#ifndef INFINITY
-static const double pinf = 1.0 / 0.0;
-#define INFINITY pinf
-#endif
-#include <stdbool.h>
-
-#endif /* defined(_WIN32) */
 
 #define atIsFinite isfinite
 #define atIsNaN isnan
@@ -140,7 +106,6 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
 
 #if defined(PYAT)
 
-#include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
 
@@ -239,8 +204,8 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 }
 
 #endif /* defined(PYAT) */
-
+/*
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem, double *r_in,
                                       int num_particles, struct parameters *Param);
-
+*/
 #endif /*ATELEM_C*/

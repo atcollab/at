@@ -7,13 +7,21 @@
  */
 
 #include <Python.h>
+#include "attypes.h"
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <attypes.h>
 
+#if PY_MAJOR_VERSION >= 3
+#define NUMPY_IMPORT_ARRAY_RETVAL NULL
+#define NUMPY_IMPORT_ARRAY_TYPE void *
+#else
+#define NUMPY_IMPORT_ARRAY_RETVAL
+#define NUMPY_IMPORT_ARRAY_TYPE void
+#define PyLong_AsLong PyInt_AsLong
+#endif
 
+typedef PyObject atElem;
 
 #define ATPY_PASS "trackFunction"
 
@@ -23,14 +31,12 @@
 #define FREELIBFCN(libfilename) FreeLibrary((libfilename))
 #define LOADLIBFCN(libfilename) LoadLibrary((libfilename))
 #define GETTRACKFCN(libfilename) GetProcAddress((libfilename),ATPY_PASS)
-#define PYLIBEXT "pyd"
 #else
 #include <dlfcn.h>
 #define LIBRARYHANDLETYPE void *
 #define FREELIBFCN(libfilename) dlclose(libfilename)
 #define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)
 #define GETTRACKFCN(libfilename) dlsym((libfilename),ATPY_PASS)
-#define PYLIBEXT "so"
 #endif
 
 #if PY_MAJOR_VERSION >= 3
@@ -47,7 +53,7 @@
 #define xstr(s) str(s)
 #define str(s) #s
 #ifndef INTEGRATOR_PATH
-#define INTEGRATOR_PATH ../atintegrators
+#define INTEGRATOR_PATH ../atintegrators/%s.so
 #endif /*INTEGRATOR_PATH*/
 
 typedef struct elem *(*pass_function)(const PyObject *element, struct elem *elemptr,
@@ -93,18 +99,18 @@ static pass_function pass_method(char *fn_name) {
         fn_handle = LibraryListPtr->FunctionHandle;
     }
     else {
-        char lib_file[300], buffer[100];
+        char lib_file[300], buffer[200];
         LIBRARYHANDLETYPE dl_handle;
-        snprintf(lib_file, sizeof(lib_file), "%s/%s.%s", xstr(INTEGRATOR_PATH), fn_name, PYLIBEXT);
+        snprintf(lib_file, sizeof(lib_file), xstr(INTEGRATOR_PATH), fn_name);
         dl_handle = LOADLIBFCN(lib_file);
         if (dl_handle == NULL) {
-            snprintf(buffer, sizeof(buffer), "Cannot load %s.%s", fn_name, PYLIBEXT);
+            snprintf(buffer, sizeof(buffer), "Cannot load %s", lib_file);
             PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
         }
         fn_handle = GETTRACKFCN(dl_handle);
         if (fn_handle == NULL) {
-            snprintf(buffer, sizeof(buffer), "No trackFunction in %s.%s", fn_name, PYLIBEXT);
+            snprintf(buffer, sizeof(buffer), "No trackFunction in %s", lib_file);
             FREELIBFCN(dl_handle);
             PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
