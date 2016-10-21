@@ -1,7 +1,7 @@
 import pytest
 import numpy
-from pyat import at
-import elements
+from at import atpass
+from at import elements
 
 
 @pytest.fixture
@@ -12,37 +12,37 @@ def rin():
 
 def test_correct_dimensions_does_not_raise_error(rin):
     l = []
-    at.atpass(l, rin, 1)
+    atpass(l, rin, 1)
     rin = numpy.zeros((6,))
-    at.atpass(l, rin, 1)
+    atpass(l, rin, 1)
     rin = numpy.zeros((2,6))
 
 
 def test_incorrect_types_raises_value_error(rin):
     l = []
     with pytest.raises(ValueError):
-        at.atpass(1, rin, 1)
+        atpass(1, rin, 1)
     with pytest.raises(ValueError):
-        at.atpass(l, 1, 1)
+        atpass(l, 1, 1)
     with pytest.raises(ValueError):
-        at.atpass(l, rin, 'a')
+        atpass(l, rin, 'a')
 
 
 def test_incorrect_dimensions_raises_value_error():
     l = []
     rin = numpy.array(numpy.zeros((1,7)))
     with pytest.raises(ValueError):
-        at.atpass(l, rin, 1)
+        atpass(l, rin, 1)
     rin = numpy.array(numpy.zeros((6,1)))
     with pytest.raises(ValueError):
-        at.atpass(l, rin, 1)
+        atpass(l, rin, 1)
 
 
 def test_fortran_aligned_array_raises_value_error():
     rin = numpy.asfortranarray(numpy.zeros((2,6)))
     l = []
     with pytest.raises(ValueError):
-        at.atpass(l, rin, 1)
+        atpass(l, rin, 1)
 
 
 def test_missing_pass_method_raises_attribute_error(rin):
@@ -50,7 +50,7 @@ def test_missing_pass_method_raises_attribute_error(rin):
     l = [m]
     del m.PassMethod
     with pytest.raises(AttributeError):
-        at.atpass(l, rin, 1)
+        atpass(l, rin, 1)
 
 
 def test_missing_length_raises_attribute_error(rin):
@@ -58,7 +58,7 @@ def test_missing_length_raises_attribute_error(rin):
     l = [m]
     del m.Length
     with pytest.raises(AttributeError):
-        at.atpass(l, rin, 1)
+        atpass(l, rin, 1)
 
 
 @pytest.mark.parametrize("reuse", (True, False))
@@ -69,13 +69,13 @@ def test_reuse_attributes(rin, reuse):
     rin[0,1] = 1e-6
     rin_copy = numpy.copy(rin)
     # two turns with original lattice
-    at.atpass(l, rin, 2)
+    atpass(l, rin, 2)
     # one turn with original lattice
-    at.atpass(l, rin_copy, 1)
+    atpass(l, rin_copy, 1)
     # change an attribute
     m.Length = 2
     # one turn with altered lattice
-    at.atpass(l, rin_copy, 1, reuse=reuse)
+    atpass(l, rin_copy, 1, reuse=reuse)
     if reuse:
         numpy.testing.assert_equal(rin, rin_copy)
     else:
@@ -90,7 +90,7 @@ def test_dipole(rin, dipole_class):
     l = [b]
     rin[0,0] = 1e-6
     rin_orig = numpy.copy(rin)
-    at.atpass(l, rin, 1)
+    atpass(l, rin, 1)
     rin_expected = numpy.array([1e-6, 0, 0, 0, 0, 1e-7]).reshape((1,6))
     numpy.testing.assert_almost_equal(rin_orig, rin_expected)
 
@@ -101,7 +101,7 @@ def test_marker(rin):
     lattice = [m]
     rin = numpy.random.rand(*rin.shape)
     rin_orig = numpy.array(rin, copy=True)
-    at.atpass(lattice, rin, 1)
+    atpass(lattice, rin, 1)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
@@ -112,7 +112,7 @@ def test_aperture_inside_limits(rin):
     rin[0][0] = 1e-5
     rin[0][2] = -1e-5
     rin_orig = numpy.array(rin, copy=True)
-    at.atpass(lattice, rin, 1)
+    atpass(lattice, rin, 1)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
@@ -122,7 +122,7 @@ def test_aperture_outside_limits(rin):
     lattice = [a]
     rin[0][0] = 1e-2
     rin[0][2] = -1e-2
-    at.atpass(lattice, rin, 1)
+    atpass(lattice, rin, 1)
     assert numpy.isinf(rin[0][0])
     assert rin[0][2] == -1e-2  # Only the first coordinate is marked as infinity
 
@@ -133,7 +133,7 @@ def test_drift_offset(rin):
     rin[0][0] = 1e-6
     rin[0][2] = 2e-6
     rin_orig = numpy.array(rin, copy=True)
-    at.atpass(lattice, rin, 1)
+    atpass(lattice, rin, 1)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
@@ -143,7 +143,7 @@ def test_drift_divergence(rin):
     lattice = [d]
     rin[0][1] = 1e-6
     rin[0][3] = -2e-6
-    at.atpass(lattice, rin, 1)
+    atpass(lattice, rin, 1)
     # results from Matlab
     rin_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(1,6)
     numpy.testing.assert_equal(rin, rin_expected)
@@ -161,7 +161,7 @@ def test_drift_two_particles(rin):
     two_rin[1][1] = 1e-6
     two_rin[1][3] = -2e-6
     two_rin_orig = numpy.array(two_rin, copy=True)
-    at.atpass(lattice, two_rin, 1)
+    atpass(lattice, two_rin, 1)
     # results from Matlab
     p1_expected = numpy.array(two_rin_orig[0,:]).reshape(1,6)
     p2_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(1,6)
@@ -173,7 +173,7 @@ def test_quad(rin):
     q = elements.Quadrupole('quad', 0.4, k=1)
     lattice = [q]
     rin[0, 0] = 1e-6
-    at.atpass(lattice, rin, 1)
+    atpass(lattice, rin, 1)
     print(rin)
     expected = numpy.array([0.921060994002885,
                             -0.389418342308651,
@@ -189,4 +189,4 @@ def test_quad_incorrect_array(rin):
     q.PolynomB = 'a'
     lattice = [q]
     with pytest.raises(RuntimeError):
-        at.atpass(lattice, rin, 1)
+        atpass(lattice, rin, 1)

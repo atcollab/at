@@ -1,4 +1,4 @@
-#include "AlphaDll.h"
+#include "visibility.h"
 
 EXP long STDCALL atinitialize2(long tptr, long nelems, const double *thresh,const double *energy, const double *freq);
 EXP long STDCALL ataddtypeelem(long tptr, long nargs, const double *args, const char* passmethod, const char *xtype);

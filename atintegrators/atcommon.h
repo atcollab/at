@@ -4,7 +4,6 @@
 /* All builds */
 #include <stdlib.h>
 #include <math.h>
-#include "attypes.h"
 
 /* All Windows builds */
 #if defined(PCWIN) || defined(_WIN32)

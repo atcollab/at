@@ -204,8 +204,12 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 }
 
 #endif /* defined(PYAT) */
-/*
+
+#if defined(PYAT) || defined(MATLAB_MEX_FILE)
+#include "attypes.h"
+
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem, double *r_in,
                                       int num_particles, struct parameters *Param);
-*/
+
+#endif /* defined(PYAT) || defined(MATLAB_MEX_FILE) */
 #endif /*ATELEM_C*/

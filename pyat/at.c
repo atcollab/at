@@ -50,10 +50,8 @@ typedef PyObject atElem;
   #define PyUnicode_AsUTF8 PyString_AsString
 #endif
 
-#define xstr(s) str(s)
-#define str(s) #s
 #ifndef INTEGRATOR_PATH
-#define INTEGRATOR_PATH ../atintegrators/%s.so
+#define INTEGRATOR_PATH "../atintegrators/%s.so"
 #endif /*INTEGRATOR_PATH*/
 
 typedef struct elem *(*pass_function)(const PyObject *element, struct elem *elemptr,
@@ -101,7 +99,7 @@ static pass_function pass_method(char *fn_name) {
     else {
         char lib_file[300], buffer[200];
         LIBRARYHANDLETYPE dl_handle;
-        snprintf(lib_file, sizeof(lib_file), xstr(INTEGRATOR_PATH), fn_name);
+        snprintf(lib_file, sizeof(lib_file), INTEGRATOR_PATH, fn_name);
         dl_handle = LOADLIBFCN(lib_file);
         if (dl_handle == NULL) {
             snprintf(buffer, sizeof(buffer), "Cannot load %s", lib_file);
@@ -287,7 +285,7 @@ static PyMethodDef AtMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-MOD_INIT(at)
+MOD_INIT(atpass)
 {
 #if PY_MAJOR_VERSION >= 3
     static struct PyModuleDef moduledef = {
@@ -303,7 +301,7 @@ MOD_INIT(at)
     };
     PyObject *m = PyModule_Create(&moduledef);
 #else
-    PyObject *m = Py_InitModule3("at", AtMethods,
+    PyObject *m = Py_InitModule3("atpass", AtMethods,
         "Clone of atpass in Accelerator Toolbox");
 #endif
     if (m == NULL)
@@ -321,7 +319,7 @@ int main(int argc, char *argv[]) {
     Py_Initialize();
 
     /* Add a static module */
-    initat();
+    initatpass();
     return 0;
 }
 #endif
