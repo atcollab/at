@@ -41,7 +41,7 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
 		}	
 }
 
-void initCorrectorPass(void) {};
+MODULE_DEF(CorrectorPass)        /* Dummy module initialisation */
 
 #ifdef MATLAB_MEX_FILE
 

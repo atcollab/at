@@ -48,7 +48,7 @@ void MatrixTijkPass(double *r, const double *M, const double *Tijk,
 	}
 }
 
-void initMatrixTijkPass(void) {};
+MODULE_DEF(MatrixTijkPass)        /* Dummy module initialisation */
 
 #ifdef MATLAB_MEX_FILE
 

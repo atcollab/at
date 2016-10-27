@@ -200,8 +200,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
 			}
 }
 
-void initBndMPoleSymplectic4Pass(void) {};
-    	
+MODULE_DEF(BndMPoleSymplectic4Pass)        /* Dummy module initialisation */
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"

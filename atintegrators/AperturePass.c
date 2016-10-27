@@ -37,7 +37,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-void initAperturePass(void) {};
+MODULE_DEF(AperturePass)        /* Dummy module initialisation */
+
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #if defined(MATLAB_MEX_FILE)

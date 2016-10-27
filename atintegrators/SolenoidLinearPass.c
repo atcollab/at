@@ -86,7 +86,7 @@ void SolenoidLinearPass(double *r_in, double le, double ks, double *T1, double *
 		}
 }
 
-void initSolenoidLinearPass(void) {};
+MODULE_DEF(SolenoidLinearPass)        /* Dummy module initialisation */
 
 #ifdef MATLAB_MEX_FILE
 

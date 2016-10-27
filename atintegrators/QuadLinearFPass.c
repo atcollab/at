@@ -186,7 +186,8 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 		}		
 }
 
-void initQuadLinearFPass(void) {};
+MODULE_DEF(QuadLinearFPass)        /* Dummy module initialisation */
+
 
 /********** END PHYSICS SECTION ***********************************************/
 /******************************************************************************/

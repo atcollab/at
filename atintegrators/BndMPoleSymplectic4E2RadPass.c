@@ -340,7 +340,7 @@ void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, 
 			}
 }
 
-void initBndMPoleSymplectic4E2RadPass(void) {};
+MODULE_DEF(BndMPoleSymplectic4E2RadPass)        /* Dummy module initialisation */
 
 #ifdef MATLAB_MEX_FILE
 

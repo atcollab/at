@@ -5,8 +5,8 @@ This is working from a specific file and may not be general.
 """
 
 import scipy.io
-import pyat
-from pyat import elements
+import at
+from at import elements
 import numpy
 
 
@@ -40,6 +40,8 @@ def load_element(element_array):
 
 
 def load(filename):
+    """Load a matlab at structure into a Python at list
+    """
     m = scipy.io.loadmat(filename)
     mat_ring = m['RING']
     py_ring = []
@@ -52,5 +54,5 @@ if __name__ == '__main__':
     m = load('../atmat/atmatch/ExampleATMATCH/dba.mat')
     rin = numpy.array((1e-6, 0, 0, 0, 0, 0))
     print(rin)
-    pyat.atpass(m, rin, 1)
+    at.atpass(m, rin, 1)
     print(rin)

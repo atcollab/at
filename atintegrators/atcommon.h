@@ -1,6 +1,34 @@
 #ifndef ATCOMMON_H
 #define ATCOMMON_H
 
+#ifdef PYAT
+/* Python.h must be included first. */
+#include <Python.h>
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarrayobject.h>
+
+#if PY_MAJOR_VERSION >= 3
+#define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+#define MOD_ERROR_VAL NULL
+#define NUMPY_IMPORT_ARRAY_RETVAL NULL
+#define NUMPY_IMPORT_ARRAY_TYPE void *
+#else
+#define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
+#define MOD_ERROR_VAL
+#define NUMPY_IMPORT_ARRAY_RETVAL
+#define NUMPY_IMPORT_ARRAY_TYPE void
+#define PyLong_AsLong PyInt_AsLong
+#endif
+#if defined(_WIN32)    /* Create a dummy module initialisation function for Windows */
+#define MODULE_DEF(name) MOD_INIT(name) {return MOD_ERROR_VAL;}
+#endif /* _WIN32 */
+#endif /* PYAT */
+
+#ifndef MODULE_DEF
+#define MODULE_DEF(name)
+#endif
+
 /* All builds */
 #include <stdlib.h>
 #include <math.h>
@@ -23,6 +51,7 @@
 #if defined(_WIN32) && (_MSC_VER < 1800)
 /* Python Windows builds */
 #include <Windows.h>
+#include <float.h>
 #define isnan(x) _isnan(x)
 #define isinf(x) (!_finite(x))
 #define isfinite(x) _finite(x)

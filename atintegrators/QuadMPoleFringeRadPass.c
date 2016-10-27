@@ -193,7 +193,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-void initQuadMPoleFringeRadPass(void) {};
+MODULE_DEF(QuadMPoleFringeRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 

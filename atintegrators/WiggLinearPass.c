@@ -79,7 +79,7 @@ void WiggLinearPass(double *r, double le, double invrho, double kxkz, double *T1
    }
 }
 
-void initWiggLinearPass(void) {};
+MODULE_DEF(WiggLinearPass)        /* Dummy module initialisation */
 
 /********** END PHYSICS SECTION ***********************************************/
 /******************************************************************************/
