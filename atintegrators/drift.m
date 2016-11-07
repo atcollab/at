@@ -7,9 +7,7 @@ function z = drift(fname,L,method)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Length = L;
-ElemData.PassMethod=method;
+ElemData = atdrift(fname,L,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
