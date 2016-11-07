@@ -147,6 +147,8 @@ void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, do
     }
 }
 
+MODULE_DEF(IdTablePass)        /* Dummy module initialisation */
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"

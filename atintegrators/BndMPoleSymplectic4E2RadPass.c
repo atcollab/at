@@ -340,8 +340,13 @@ void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, 
 			}
 }
 
+MODULE_DEF(BndMPoleSymplectic4E2RadPass)        /* Dummy module initialisation */
+
 #ifdef MATLAB_MEX_FILE
+
 #include "elempass.h"
+#include "mxutils.c"
+
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 

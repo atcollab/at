@@ -45,10 +45,10 @@ void linint(double *x1a, double *x2a, double *ya, int m, int n, double x1, doubl
         y2=ya[ilo+khi*m];
         y3=ya[ihi+khi*m];
         y4=ya[ihi+klo*m];
-        
+/*      Result will be NaN...
         if (x1a[ihi]==x1a[ilo]||x2a[khi]==x2a[klo])
             mexErrMsgTxt("Bad xa input to routine linint");
-
+*/
         u=(x1-x1a[ilo])/(x1a[ihi]-x1a[ilo]);
         t=(x2-x2a[klo])/(x2a[khi]-x2a[klo]);
         f=(1-t)*(1-u)*y1+t*(1-u)*y2+t*u*y3+(1-t)*u*y4;
@@ -185,7 +185,7 @@ void splint(double xa[], double ya[], double y2a[], int n, double x, double *y)
 		else klo=k;
 	}
 	h=xa[khi]-xa[klo];
-	if (h == 0.0) mexErrMsgTxt("Bad xa input to routine splint");
+/*	if (h == 0.0) mexErrMsgTxt("Bad xa input to routine splint");*/ /* Result will bw NaN... */
 	a=(xa[khi]-x)/h;
 	b=(x-xa[klo])/h;
 	*y=a*ya[klo]+b*ya[khi]+((a*a*a-a)*y2a[klo]+(b*b*b-b)*y2a[khi])*(h*h)/6.0;

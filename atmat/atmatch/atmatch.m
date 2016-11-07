@@ -121,9 +121,7 @@ tipx(notzero)=initval(notzero);
 if posarray(1)<=0 || posarray(end) > length(Ring)+1
     error('atmatch:WrongInput','RefPoint out of range');
 end
-indinposarray=reshape(...
-    mat2cell(ic(:),arrayfun(@(s) length(s.RefPoints), Constraints),1),...
-    size(Constraints));
+indinposarray=mat2cell(ic(:)',1,arrayfun(@(s) length(s.RefPoints), Constraints));
 evalfunc={Constraints.Fun};
 
 options=optimset(options,...
@@ -154,6 +152,11 @@ switch func2str(minimizer)
         f = @(d)evalsum(Ring,Variables,Constraints,...
             splitvar(d),evalfunc,posarray,indinposarray,twissin); % scalar (sum of squares of f)
         args={initval};
+    case 'fmincon'
+        
+        f = @(d)evalsum(Ring,Variables,Constraints,...
+            splitvar(d),evalfunc,posarray,indinposarray,twissin); % scalar (sum of squares of f)
+        args={initval,[],[],[],[],Blow,Bhigh,[]};
 end
 
 cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray,twissin);

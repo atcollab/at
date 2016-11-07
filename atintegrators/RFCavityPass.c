@@ -5,9 +5,21 @@
  *  Nicola Carmignani
  */
 
-#include "at.h"
+#include "atelem.c"
+#include "atlalib.c"
+
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8 
+
+struct elem 
+{
+  double Length;
+  double Voltage;
+  double Energy;
+  double Frequency;
+  double HarmNumber;
+  double TimeLag;
+};
 
 void RFCavityPass(double *r_in, double le, double nv, double freq, double h, double lag, int nturn, double T0, int num_particles)
 /* le - physical length
@@ -24,7 +36,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
     {
       for(c = 0;c<num_particles;c++)
 	{	c6 = c*6;
-	  if(!mxIsNaN(r_in[c6]))
+	  if(!atIsNaN(r_in[c6]))
 	    r_in[c6+4] += -nv*sin(TWOPI*freq*((r_in[c6+5]-lag)/C0 - (h/freq-T0)*nturn ));
 	}
     }
@@ -32,7 +44,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
     {	halflength = le/2;
       for(c = 0;c<num_particles;c++)
 	{	c6 = c*6;
-	  if(!mxIsNaN(r_in[c6])) 
+	  if(!atIsNaN(r_in[c6])) 
 	    {   p_norm = 1/(1+r_in[c6+4]); 				
 	      NormL  = halflength*p_norm;
 	      /* Propagate through a drift equal to half cavity length */
@@ -52,108 +64,77 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
     }
 } 
 
-#ifdef MATLAB_MEX_FILE
-
-#include "elempass.h"
-#include "mxutils.c"
-
-ExportMode int* trackFunction(const mxArray *ElemData,int *FieldNumbers,
-			      double *r_in, int num_particles,struct parameters *Param)
-#define NUM_FIELDS_2_REMEMBER 6
-{	double le, volt, freq, T0, h, energy, lag;
-  int nturn;
-  nturn=Param->nturn;
-  T0=Param->T0;
-  /*printf("turn=%d\nT0=%f\nRingLength=%f\n~~~~~\n",Param->nturn,Param->T0,Param->RingLength);*/
-  switch(Param->mode)
-    {	
-    case NO_LOCAL_COPY:	/* Obsolete in AT1.3 */
-      {	
-      }	break;	
-    case MAKE_LOCAL_COPY:	/* Find field numbers first
-				   Save a list of field number in an array
-				   and make returnptr point to that array
-				*/
-      /* Allocate memory for integer array of
-	 field numbers for faster futurereference
-      */
-      FieldNumbers = (int *) mxCalloc(NUM_FIELDS_2_REMEMBER, sizeof(int));
-      /*  Populate */
-      FieldNumbers[0] = GetRequiredFieldNumber(ElemData, "Length");
-      FieldNumbers[1] = GetRequiredFieldNumber(ElemData, "Voltage");
-      FieldNumbers[2] = GetRequiredFieldNumber(ElemData, "Energy");
-      FieldNumbers[3] = GetRequiredFieldNumber(ElemData, "Frequency");
-      FieldNumbers[4] = GetRequiredFieldNumber(ElemData, "HarmNumber");
-      FieldNumbers[5] = mxGetFieldNumber(ElemData,"TimeLag");
-      
-      /* Fall through next section... */
-    case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-				   The second argument pointer to the array of field
-				   numbers is previously created with
-				   RFCavityPass(..., MAKE_LOCAL_COPY)
-				*/
-      le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-      volt = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-      energy = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-      freq = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-      h = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-      /* Optional field TimeLag */
-      if(FieldNumbers[5]<0) 
-	lag = 0;
-      else
-	lag = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-      break;
-      
-    default:
-      mexErrMsgTxt("No match found for calling mode in function RFCavityPass\n");
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+			      double *r_in, int num_particles, struct parameters *Param)
+{
+    int nturn=Param->nturn;
+    double T0=Param->T0;
+    if (!Elem) {
+        double Length, Voltage, Energy, Frequency, HarmNumber, TimeLag;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        Voltage=atGetDouble(ElemData,"Voltage"); check_error();
+        Energy=atGetDouble(ElemData,"Energy"); check_error();
+        Frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        HarmNumber=atGetDouble(ElemData,"HarmNumber"); check_error();
+        TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=Length;
+        Elem->Voltage=Voltage;
+        Elem->Energy=Energy;
+        Elem->Frequency=Frequency;
+        Elem->HarmNumber=HarmNumber;
+        Elem->TimeLag=TimeLag;
     }
-  RFCavityPass(r_in, le, volt/energy, freq, h, lag, nturn, T0, num_particles);
-  return FieldNumbers;
+    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag, nturn, T0, num_particles);
+    return Elem;
 }
+
+MODULE_DEF(RFCavityPass)        /* Dummy module initialisation */
+
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
+#if defined(MATLAB_MEX_FILE)
 
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 { 	
   if(nrhs == 2)
     {
       double *r_in;
-      mxArray *tmpmxptr;
-      double T0;
-      double le = mxGetScalar(GetRequiredField(prhs[0], "Length"));	
+      const mxArray *ElemData = prhs[0];
       int num_particles = mxGetN(prhs[1]);
-      double volt = mxGetScalar(GetRequiredField(prhs[0], "Voltage"));	
-      double energy = mxGetScalar(GetRequiredField(prhs[0], "Energy"));	
-      double freq = mxGetScalar(GetRequiredField(prhs[0], "Frequency"));	
-      double h = mxGetScalar(GetRequiredField(prhs[0], "HarmNumber"));	
-      /* Optional arguments */
-      double lag;
-      tmpmxptr=mxGetField(prhs[0],0,"TimeLag");
-      if(tmpmxptr)
-	lag = mxGetScalar(tmpmxptr);
-      else
-	lag = 0;
+      double Length=atGetDouble(ElemData,"Length");
+      double Voltage=atGetDouble(ElemData,"Voltage");
+      double Energy=atGetDouble(ElemData,"Energy");
+      double Frequency=atGetDouble(ElemData,"Frequency");
+      double HarmNumber=atGetDouble(ElemData,"HarmNumber");
+      double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
+      double T0=HarmNumber/Frequency;
+      if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+      /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetPr(plhs[0]);
-      T0=h/freq;
-      RFCavityPass(r_in, le, volt/energy, freq, h, lag,0, T0, num_particles);
+      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, 0, T0, num_particles);
+
     }
-  else if (nrhs == 0) 
-    {   /* return list of required fields */
+  else if (nrhs == 0)
+  {   /* return list of required fields */
       plhs[0] = mxCreateCellMatrix(5,1);
       mxSetCell(plhs[0],0,mxCreateString("Length"));
       mxSetCell(plhs[0],1,mxCreateString("Voltage"));
       mxSetCell(plhs[0],2,mxCreateString("Energy"));
       mxSetCell(plhs[0],3,mxCreateString("Frequency"));
       mxSetCell(plhs[0],4,mxCreateString("HarmNumber"));
-      if(nlhs>1) /* optional fields */ 
-	{   
-	  plhs[1] = mxCreateCellMatrix(1,1); 
-	  mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
-	}
-    }
-  else 
-    {
+      if(nlhs>1) /* optional fields */
+      {
+          plhs[1] = mxCreateCellMatrix(1,1);
+          mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
+      }
+  }
+  else
+  {
       mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
-    }
+  }
   
 }
 #endif /* MATLAB_MEX_FILE */

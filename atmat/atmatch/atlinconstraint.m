@@ -6,8 +6,9 @@ function constraint = atlinconstraint(refpts,params,vmin,vmax,weight)
 %REFPTS Row vector of selected positions
 %PARAMS Cell array describing the desired value at each position
 %       The length of params must be 1 or length(REFPTS)
-%       Each element of PARAMS is itself a cell array used to select a
-%       field in the structure returned by atlinopt
+%       Each element of PARAMS is itself a cell array defining the field
+%       name and indices in the structure returned by atlinopt. Additional
+%       field names are: 'tune' and 'chromaticity'.
 %VMIN   Minimum value for the constraint
 %VMAX   Maximum value for the constraint
 %
@@ -15,6 +16,11 @@ function constraint = atlinconstraint(refpts,params,vmin,vmax,weight)
 %
 % REFPTS, PARAMS, VMIN, VMAX, WEIGHT must have the same length,
 %       or have length 1
+%
+% Example:
+%>> c1=atlinconstraint(1,{{'ClosedOrbit',{3}},{'ClosedOrbit',{4}}},[0 0],[0 0],[1/6 6]);
+%
+% See also: atmatch, AtVariableBuilder
 
 if islogical(refpts), refpts=find(refpts); end
 exp=1:max(length(refpts),length(params));

@@ -22,6 +22,8 @@ void EAperturePass(double *r_in, double *axesptr, int num_particles)
     }
 }
 
+MODULE_DEF(EAperturePass)        /* Dummy module initialisation */
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"

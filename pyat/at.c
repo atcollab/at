@@ -7,14 +7,41 @@
  */
 
 #include <Python.h>
+#include "attypes.h"
+
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "at.h"
 
-// Linux only
+#if PY_MAJOR_VERSION >= 3
+#define NUMPY_IMPORT_ARRAY_RETVAL NULL
+#define NUMPY_IMPORT_ARRAY_TYPE void *
+#else
+#define NUMPY_IMPORT_ARRAY_RETVAL
+#define NUMPY_IMPORT_ARRAY_TYPE void
+#define PyLong_AsLong PyInt_AsLong
+#endif
+
+typedef PyObject atElem;
+
+#define ATPY_PASS "trackFunction"
+
+#if defined(PCWIN) || defined(PCWIN64) || defined(_WIN32)
+#include <windows.h>
+#define LIBRARYHANDLETYPE HINSTANCE
+#define FREELIBFCN(libfilename) FreeLibrary((libfilename))
+#define LOADLIBFCN(libfilename) LoadLibrary((libfilename))
+#define GETTRACKFCN(libfilename) GetProcAddress((libfilename),ATPY_PASS)
+#define SEPARATOR "\\"
+#define OBJECTEXT ".pyd"
+#else
 #include <dlfcn.h>
+#define LIBRARYHANDLETYPE void *
+#define FREELIBFCN(libfilename) dlclose(libfilename)
+#define LOADLIBFCN(libfilename) dlopen((libfilename),RTLD_LAZY)
+#define GETTRACKFCN(libfilename) dlsym((libfilename),ATPY_PASS)
+#define SEPARATOR "/"
+#define OBJECTEXT ".so"
+#endif
 
 #if PY_MAJOR_VERSION >= 3
   #define MOD_ERROR_VAL NULL
@@ -27,32 +54,31 @@
   #define PyUnicode_AsUTF8 PyString_AsString
 #endif
 
-#ifndef INTEGRATOR_PATH
-#define INTEGRATOR_PATH "../atintegrators"
-#endif /*INTEGRATOR_PATH*/
-#define ATPY_PASS "trackFunction"
-
-static int nb_allocated_elements = 0;
-static struct elem **ElemStruct_ptr = NULL;
-
 typedef struct elem *(*pass_function)(const PyObject *element, struct elem *elemptr,
         double *r_in, int num_particles, struct parameters *param);
 
+static npy_uint32 num_elements = 0;
+static struct elem **elemdata_list = NULL;
+static PyObject **element_list = NULL;
+static pass_function *integrator_list = NULL;
+static char integrator_path[300];
+
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
-    char *LibraryFileName;
-    char *MethodName;
-    void *FunctionHandle;
+    const char *MethodName;
+    LIBRARYHANDLETYPE LibraryHandle;
+    pass_function FunctionHandle;
     struct LibraryListElement *Next;
 } *LibraryList = NULL;
 
-static PyObject *print_error(int elem_number)
+static PyObject *print_error(int elem_number, PyObject *rout)
 {
     printf("Error in tracking element %d\n", elem_number);
+    Py_XDECREF(rout);
     return NULL;
 }
 
-struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, const char *method_name)
+static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, const char *method_name)
 {
     /* recusively search the list to check if the library containing method_name is
      * already loaded. If it is - return the pointer to the list element. If not -
@@ -64,6 +90,39 @@ struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, co
         return NULL;
 }
 
+static PyObject *get_integrators(void) {
+    PyObject *at_module, *os_module, *fileobj, *dirname_function, *dirobj;
+    at_module = PyImport_ImportModule("at.integrators");
+    if (at_module == NULL) return NULL;
+    fileobj = PyObject_GetAttrString(at_module, "__file__");
+    Py_DECREF(at_module);
+    if (fileobj == NULL) return NULL;
+    os_module = PyImport_ImportModule("os.path");
+    if (os_module == NULL) return NULL;
+    dirname_function = PyObject_GetAttrString(os_module, "dirname");
+    Py_DECREF(os_module);
+    if (dirname_function == NULL) return NULL;
+    dirobj = PyObject_CallFunctionObjArgs(dirname_function, fileobj, NULL);
+    Py_DECREF(fileobj);
+    Py_DECREF(dirname_function);
+    return dirobj;
+}
+
+/* Query Python for the full extension given to shared objects.
+ * If none is defined, return NULL.
+ */
+static PyObject *get_ext_suffix(void) {
+    PyObject *sysconfig_module, *get_config_var_fn, *ext_suffix;
+    sysconfig_module = PyImport_ImportModule("distutils.sysconfig");
+    if (sysconfig_module == NULL) return NULL;
+    get_config_var_fn = PyObject_GetAttrString(sysconfig_module, "get_config_var");
+    Py_DECREF(sysconfig_module);
+    if (get_config_var_fn == NULL) return NULL;
+    ext_suffix = PyObject_CallFunction(get_config_var_fn, "s", "EXT_SUFFIX");
+    Py_DECREF(get_config_var_fn);
+    return ext_suffix;
+}
+
 static pass_function pass_method(char *fn_name) {
     pass_function fn_handle = NULL;
     struct LibraryListElement *LibraryListPtr = SearchLibraryList(LibraryList, fn_name);
@@ -72,22 +131,28 @@ static pass_function pass_method(char *fn_name) {
         fn_handle = LibraryListPtr->FunctionHandle;
     }
     else {
-        char lib_file[300];
-        snprintf(lib_file, sizeof(lib_file), "%s/%s.so", INTEGRATOR_PATH, fn_name);
-        void *dl_handle = dlopen(lib_file, RTLD_LAZY);
+        LIBRARYHANDLETYPE dl_handle;
+        char lib_file[300], buffer[200];
+
+        snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
+        dl_handle = LOADLIBFCN(lib_file);
         if (dl_handle == NULL) {
-            PyErr_SetString(PyExc_RuntimeError, dlerror());
+            snprintf(buffer, sizeof(buffer), "Cannot load %s", lib_file);
+            PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
         }
-        fn_handle = dlsym(dl_handle, ATPY_PASS);
+        fn_handle = GETTRACKFCN(dl_handle);
         if (fn_handle == NULL) {
-            PyErr_SetString(PyExc_RuntimeError, dlerror());
+            snprintf(buffer, sizeof(buffer), "No trackFunction in %s", lib_file);
+            FREELIBFCN(dl_handle);
+            PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
         }
         LibraryListPtr = (struct LibraryListElement *)malloc(sizeof(struct LibraryListElement));
-        LibraryListPtr->Next = LibraryList;
-        LibraryListPtr->MethodName = fn_name;
+        LibraryListPtr->MethodName = strcpy(malloc(strlen(fn_name)+1), fn_name);
+        LibraryListPtr->LibraryHandle = dl_handle;
         LibraryListPtr->FunctionHandle = fn_handle;
+        LibraryListPtr->Next = LibraryList;
         LibraryList = LibraryListPtr;
     }
     return fn_handle;
@@ -99,20 +164,30 @@ static pass_function pass_method(char *fn_name) {
  *  - rin: numpy 6-vector of initial conditions
  *  - num_turns: int number of turns to simulate
  */
-static PyObject *at_atpass(PyObject *self, PyObject *args) {
-    PyObject *element_list;
-    PyArrayObject *rin;
-    double *drin;
-    int num_turns;
-    int num_parts;
-    int i, j;
-    struct parameters param;
-    param.nturn = 0;
-    param.mode = 0;
-    param.T0 = 0;
-    param.RingLength = 0;
+static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
+    static char *kwlist[] = {"line","rin","nturns","refpts","reuse", NULL};
+    static int new_lattice = 1;
+    static double lattice_length = 0.0;
 
-    if (!PyArg_ParseTuple(args, "O!O!i", &PyList_Type, &element_list, &PyArray_Type, &rin, &num_turns)) {
+    PyObject *lattice;
+    PyArrayObject *rin;
+    PyArrayObject *refs = NULL;
+    PyObject *rout;
+    double *drin, *drout;
+    int num_turns;
+    npy_uint32 num_particles, np6;
+    npy_uint32 numel;
+    npy_uint32 *refpts = NULL;
+    npy_uint32 nextref;
+    unsigned int nextrefindex;
+    unsigned int num_refpts;
+    unsigned int reuse=0;
+    npy_intp outdims[2];
+    int turn, nelem;
+    struct parameters param;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!I", kwlist, &PyList_Type, &lattice,
+        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse)) {
         PyErr_SetString(PyExc_ValueError, "Failed to parse arguments to atpass");
         return NULL;
     }
@@ -128,74 +203,158 @@ static PyObject *at_atpass(PyObject *self, PyObject *args) {
         PyErr_SetString(PyExc_ValueError, "rin is not C aligned");
         return NULL;
     }
-    num_parts = (int)(PyArray_SIZE(rin)/6);
+
+    numel = PyList_Size(lattice);
+    num_particles = (PyArray_SIZE(rin)/6);
+    np6 = num_particles*6;
     drin = PyArray_DATA(rin);
 
-    long num_elements = PyList_Size(element_list);
-    printf("There are %ld elements in the list\n", num_elements);
-    printf("There are %d particles\n", num_parts);
-    printf("Going for %d turns\n", num_turns);
-
-    if (1) {
-        int n;
-        for (n=0; n<nb_allocated_elements; n++) {
-            free(ElemStruct_ptr[n]);
+    if (refs) {
+        if (PyArray_TYPE(refs) != NPY_UINT32) {
+            PyErr_SetString(PyExc_ValueError, "refpts is not a double array");
+            return NULL;
         }
-        free(ElemStruct_ptr);
-        ElemStruct_ptr = (struct elem **)calloc(num_elements, sizeof(struct elem *));
-        nb_allocated_elements = num_elements;
+        if ((PyArray_FLAGS(refs) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
+            PyErr_SetString(PyExc_ValueError, "refpts is not C aligned");
+            return NULL;
+        }
+        refpts = PyArray_DATA(refs);
+        num_refpts = PyArray_SIZE(refs);
+        if (num_refpts == 0)
+            outdims[0] = num_particles;
+        else
+            outdims[0] = num_turns*num_refpts*num_particles;
+    }
+    else {              /* only end of the line */
+        refpts = &num_elements;
+        num_refpts = 1;
+        outdims[0] = num_turns*num_particles;
+    }
+    outdims[1] = 6;
+    rout = PyArray_SimpleNew(2, outdims, NPY_DOUBLE);
+    drout = PyArray_DATA((PyArrayObject *)rout);
+
+    if (!reuse) new_lattice = 1;
+    if (new_lattice) {
+		PyObject **element;
+		pass_function *integrator;
+        int nelem;
+        for (nelem=0; nelem<num_elements; nelem++) {
+            free(elemdata_list[nelem]);
+            Py_XDECREF(element_list[nelem]);        /* Release the stored elements, may be NULL if */
+        }                                           /* a previous call was interrupted by an error */
+        num_elements = numel;
+
+        /* Pointer to Element structures used by the tracking function */
+        free(elemdata_list);
+        elemdata_list = (struct elem **)calloc(num_elements, sizeof(struct elem *));
+
+        /* Pointer to Element list, make sure all pointers are initially NULL */
+        free(element_list);
+        element_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
+
+        /* pointer to the list of integrators */
+        integrator_list = (pass_function *)realloc(integrator_list, num_elements*sizeof(pass_function));
+
+        lattice_length = 0.0;
+        element = element_list;
+        integrator = integrator_list;
+        for (nelem = 0; nelem < num_elements; nelem++) {
+            PyObject *el = PyList_GET_ITEM(lattice, nelem);
+            PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
+			pass_function fn_handle;
+			double length;
+            if (!PyPassMethod) return print_error(nelem, rout);     /* No PassMethod */
+            fn_handle = pass_method(PyUnicode_AsUTF8(PyPassMethod));
+            if (!fn_handle) return print_error(nelem, rout);        /* No trackFunction for the given PassMethod */
+            length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
+            if (PyErr_Occurred()) PyErr_Clear();
+            else lattice_length += length;
+            *integrator++ = fn_handle;
+            *element++ = el;
+            Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
+        }
+        new_lattice = 0;
     }
 
-    for (i = 0; i < num_turns; i++) {
-        struct elem **elemptr = ElemStruct_ptr;
-        param.nturn = i;
-        for (j = 0; j < num_elements; j++) {
-            pass_function fn_handle;
-            struct elem *result;
-            PyObject *element = PyList_GET_ITEM(element_list, j);
-            PyObject *fn_name_object = PyObject_GetAttrString(element, "PassMethod");
-            if (!fn_name_object) return print_error(j);     /* No PassMethod */
-            fn_handle = pass_method(PyUnicode_AsUTF8(fn_name_object));
-            if (!fn_handle) return print_error(j);          /* No trackFunction for the given PassMethod */
-            result = fn_handle(element, *elemptr, drin, num_parts, &param);
-            if (!result) return print_error(j);             /* trackFunction failed */
-            *elemptr = result;
-            elemptr++;
+    printf("There are %u elements in the list\n", num_elements);
+    printf("There are %u particles\n", num_particles);
+    printf("Going for %u turns\n", num_turns);
+
+    param.RingLength = lattice_length;
+    param.T0 = lattice_length/299792458.0;
+    for (turn = 0; turn < num_turns; turn++) {
+        PyObject **element = element_list;
+        pass_function *integrator = integrator_list;
+        struct elem **elemdata = elemdata_list;
+        param.nturn = turn;
+        nextrefindex = 0;
+        nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
+        for (nelem = 0; nelem < num_elements; nelem++) {
+            if (nelem == nextref) {
+                memcpy(drout, drin, np6*sizeof(double));
+                drout += np6; /*  shift the location to write to in the output array */
+                nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
+            }
+            *elemdata = (*integrator++)(*element++, *elemdata, drin, num_particles, &param);
+            if (!*elemdata) return print_error(nelem, rout);       /* trackFunction failed */
+            elemdata++;
+        }
+        if (num_elements == nextref) {
+            memcpy(drout, drin, np6*sizeof(double));
+            drout += np6; /*  shift the location to write to in the output array */
         }
     }
-    return Py_BuildValue("i", 1);
+    if (num_refpts == 0) {
+        memcpy(drout, drin, np6*sizeof(double));
+        drout += np6; /*  shift the location to write to in the output array */
+    }
+    return rout;
 }
 
 /* Boilerplate to register methods. */
 
 static PyMethodDef AtMethods[] = {
-    {"atpass",  at_atpass, METH_VARARGS,
+    {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("atpass(line,rin,nturns)\n\nTrack rin along line for nturns turns")},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-MOD_INIT(at)
+MOD_INIT(atpass)
 {
+    PyObject *integ_path_obj, *ext_suffix_obj;
+    char *ext_suffix, *integ_path;
+
 #if PY_MAJOR_VERSION >= 3
     static struct PyModuleDef moduledef = {
-	PyModuleDef_HEAD_INIT,
-	"at",			/* m_name */
-	PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
-	-1,             /* m_size */
-	AtMethods,		/* m_methods */
-	NULL,			/* m_reload */
-	NULL,			/* m_traverse */
-	NULL,			/* m_clear */
-	NULL,			/* m_free */
+    PyModuleDef_HEAD_INIT,
+    "at",         /* m_name */
+    PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
+    -1,           /* m_size */
+    AtMethods,    /* m_methods */
+    NULL,         /* m_reload */
+    NULL,         /* m_traverse */
+    NULL,         /* m_clear */
+    NULL,         /* m_free */
     };
     PyObject *m = PyModule_Create(&moduledef);
 #else
-    PyObject *m = Py_InitModule3("at", AtMethods,
+    PyObject *m = Py_InitModule3("atpass", AtMethods,
         "Clone of atpass in Accelerator Toolbox");
 #endif
-    if (m == NULL)
-       return MOD_ERROR_VAL;
+    if (m == NULL) return MOD_ERROR_VAL;
     import_array();
+
+    integ_path_obj = get_integrators();
+    if (integ_path_obj == NULL) return MOD_ERROR_VAL;
+    ext_suffix_obj = get_ext_suffix();
+    if (ext_suffix_obj == NULL) return MOD_ERROR_VAL;
+    ext_suffix = (ext_suffix_obj == Py_None) ? OBJECTEXT : PyUnicode_AsUTF8(ext_suffix_obj);
+    integ_path = PyUnicode_AsUTF8(integ_path_obj);
+    snprintf(integrator_path, sizeof(integrator_path), "%s%s%%s%s", integ_path, SEPARATOR, ext_suffix);
+    Py_DECREF(integ_path_obj);
+    Py_DECREF(ext_suffix_obj);
+
     return MOD_SUCCESS_VAL(m);
 }
 
@@ -208,7 +367,7 @@ int main(int argc, char *argv[]) {
     Py_Initialize();
 
     /* Add a static module */
-    initat();
+    initatpass();
     return 0;
 }
 #endif

@@ -1,7 +1,6 @@
-#include "at.h"
+#include "atelem.c"
 #include "atlalib.c"
 #include "atphyslib.c"
-
 
 #define DRIFT1    0.6756035959798286638
 #define DRIFT2   -0.1756035959798286639
@@ -196,7 +195,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 	
 	for(c = 0;c<num_particles;c++)	/* Loop over particles */
 			{   r6 = r+c*6;	
-			    if(!mxIsNaN(r6[0]))
+			    if(!atIsNaN(r6[0]))
 			    {
 					
 					/*  misalignment at entrance  */
@@ -249,7 +248,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 			}
 }
 
-
+MODULE_DEF(BndMPoleSymplectic4RadPass)        /* Dummy module initialisation */
 
 #ifdef MATLAB_MEX_FILE
 

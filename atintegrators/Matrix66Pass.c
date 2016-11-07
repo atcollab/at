@@ -27,6 +27,8 @@ void Matrix66Pass(double *r, const double *M,
 	}
 }
 
+MODULE_DEF(Matrix66Pass)        /* Dummy module initialisation */
+
 #ifdef MATLAB_MEX_FILE
 
 #include "elempass.h"

@@ -1,27 +1,14 @@
+/*
+ * The header file used when defining an 'old-style' Matlab integrator.
+ * 'New-style' integrators should support both Matlab and Python and
+ * should include "atelem.c".
+ */
 #ifndef AT_H
 #define AT_H
 
-#include <math.h>
+#include "atcommon.h"
 
-#ifdef MATLAB_MEX_FILE
-
-#include "mex.h"
-#include <matrix.h>
-
-#else
-
-#include <stdlib.h>
-#include <stdbool.h>
-
-#ifndef NAN
-static const double dnan = 0.0 / 0.0;
-#define NAN dnan
-#endif
-#ifndef INFINITY
-static const double pinf = 1.0 / 0.0;
-#define INFINITY pinf
-#endif
-
+#ifndef MATLAB_MEX_FILE
 #define mxIsFinite isfinite
 #define mxIsNaN isnan
 #define mxGetNaN() (NAN)
@@ -29,25 +16,6 @@ static const double pinf = 1.0 / 0.0;
 #define mxMalloc malloc
 #define mxCalloc calloc
 #define mxFree free
-
-#if defined __SUNPRO_C
-#include <ieeefp.h>
-#define isfinite finite
 #endif
-
-#ifdef __MWERKS__
-#endif
-
-#endif /*MATLAB_MEX_FILE*/
-
-struct parameters
-{
-  int mode;
-  int nturn;
-  double RingLength;
-  double T0;
-};
 
 #endif /*AT_H*/
-
-

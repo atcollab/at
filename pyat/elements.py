@@ -1,4 +1,5 @@
 import numpy
+import itertools
 
 
 class Element(object):
@@ -10,6 +11,22 @@ class Element(object):
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
         for k in kwargs:
             setattr(self, k, kwargs[k])
+
+    def __str__(self):
+        keywords = ('{0:>16} : {1!r}'.format(k, v) for k, v in self.__dict__.items())
+        return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
+
+    def __repr__(self):
+        def differ(v1, v2):
+            if isinstance(v1, numpy.ndarray):
+                return not numpy.array_equal(v1, v2)
+            else:
+                return v1 != v2
+
+        defelem = self.__class__(*(getattr(self, k) for k in self.REQUIRED_ATTRIBUTES))
+        arguments = ('{0!r}'.format(getattr(self, k)) for k in self.REQUIRED_ATTRIBUTES)
+        keywords = ('{0}={1!r}'.format(k, v) for k, v in self.__dict__.items() if differ(v, getattr(defelem, k, None)))
+        return '{0}({1})'.format(self.__class__.__name__, ','.join(itertools.chain(arguments, keywords)))
 
 
 class Marker(Element):
@@ -65,6 +82,7 @@ class ThinMultipole(Element):
         kwargs['PolynomA'] = numpy.concatenate((poly_a, numpy.zeros(poly_size - len(poly_a))))
         kwargs['PolynomB'] = numpy.concatenate((poly_b, numpy.zeros(poly_size - len(poly_b))))
         kwargs['MaxOrder'] = int(kwargs.pop('MaxOrder', poly_size - 1))
+        kwargs.setdefault('PassMethod', 'ThinMPolePass')
         length = kwargs.pop('Length', 0.0)
         super(ThinMultipole, self).__init__(family_name, length, **kwargs)
 
@@ -84,6 +102,7 @@ class Multipole(ThinMultipole):
         """
         kwargs['NumIntSteps'] = int(kwargs.pop('NumIntSteps', 10))
         kwargs['Length'] = length
+        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Multipole, self).__init__(family_name, poly_a, poly_b, **kwargs)
 
 
@@ -106,7 +125,7 @@ class Dipole(Multipole):
         poly_b = kwargs.pop('PolynomB', [0, k])
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
-        kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4E2Pass')
+        kwargs.setdefault('PassMethod', 'BendLinearPass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, BendingAngle=bending_angle, **kwargs)
 
 
@@ -152,11 +171,11 @@ class Sextupole(Multipole):
 
 class RFCavity(Element):
     """pyAT RF cavity element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Voltage',
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length',
+                                                         'Voltage',
                                                          'Frequency',
                                                          'HarmNumber',
-                                                         'Energy',
-                                                         'TimeLag']
+                                                         'Energy']
 
     def __init__(self, family_name, length, voltage, frequency, harmonic_number, energy, **kwargs):
         """
