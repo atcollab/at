@@ -39,7 +39,7 @@ if isfield(elem,'EntranceAngle')
     drentrangle(1)=elem.EntranceAngle;
     line=atsetfieldvalues(line,'EntranceAngle',drentrangle);
 end
-if isfield(elem,'BendingAngle')
+if isfield(elem,'ExitAngle')
     drexitangle=zeros(size(line));
     drexitangle(end)=elem.ExitAngle;
     line=atsetfieldvalues(line,'ExitAngle',drexitangle);
@@ -52,7 +52,23 @@ end
 if isfield(elem,'FringeInt2')
     fringe2=zeros(size(line));
     fringe2(end)=elem.FringeInt2;
-    line=atsetfieldvalues(line,'FringeInt1',fringe2);
+    line=atsetfieldvalues(line,'FringeInt2',fringe2);
+end
+
+if isfield(elem,'FullGap')
+    fringe2=zeros(size(line));
+    fringe2([1,end])=elem.FullGap;
+    line=atsetfieldvalues(line,'FullGap',fringe2);
+end
+if isfield(elem,'EdgeEffect1')
+    fringe2=zeros(size(line));
+    fringe2(1)=elem.EdgeEffect1;
+    line=atsetfieldvalues(line,'EdgeEffect1',fringe2);
+end
+if isfield(elem,'EdgeEffect2')
+    fringe2=zeros(size(line));
+    fringe2(end)=elem.EdgeEffect2;
+    line=atsetfieldvalues(line,'EdgeEffect2',fringe2);
 end
 
 end
