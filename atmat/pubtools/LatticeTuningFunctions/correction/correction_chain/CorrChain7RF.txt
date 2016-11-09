@@ -1,0 +1,618 @@
+>>>>>  Correction sequence started  <<<<<
+     # BPM  : 224
+     # V cor: 96
+     # H cor: 96
+     # S cor: 64
+     # Q cor: 32
+>>>>>  --------------------------  <<<<<
+ --- - - - - - - - - - - - - - - - - - - ---
+ ---                                     ---
+ --- FAST MODE: MODEL RM ARE BEING USED! ---
+ ---                                     ---
+ --- - - - - - - - - - - - - - - - - - - ---
+>>>>>      Correction STRATEGY :       <<<<<
+.
+          open trajectory (steerers)
+          orbit (steerers) 
+          tune (quadrupoles, 2 families)
+          chromaticity (sextupoles, 2 families)
+          RDT + dispersion (quadrupoles) 
+          RDT + dispersion (quadrupoles) 
+          RF cavity
+.
+>>>>>  --------------------------  <<<<<
+Correction Step: 1/7
+Open Trajectory Correction started. 5mm escursion accepted
+correcting trajectory with model rm
+Search closed orbit
+Trajectory correction: nbpms= 156 ncor: 66, 66,
+computing ORM for available trajectory
+H PLANE
+correcting available V trajectory
+V PLANE
+correcting available V trajectory
+X: 3445.940 -> 1348.822 um
+Y: 2646.561 -> 717.968 um
+Search closed orbit
+Trajectory correction: nbpms= 223 ncor: 96, 96,
+computing ORM for available trajectory
+H PLANE
+correcting available V trajectory
+V PLANE
+correcting available V trajectory
+X: 1591.820 -> 546.715 um
+Y: 1412.962 -> 465.034 um
+Search closed orbit
+Trajectory correction: nbpms= 224 ncor: 96, 96,
+computing ORM for available trajectory
+H PLANE
+correcting available V trajectory
+V PLANE
+correcting available V trajectory
+X: 548.585 -> 185.645 um
+Y: 466.369 -> 154.410 um
+Search closed orbit
+Trajectory closure with last 2 correctors
+Found closed orbit
+X: 206.690 -> 206.690 um
+Y: 160.264 -> 160.264 um
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 0.00e+00 -> 6.07e-05
+       VK (96) [1/m]: 0.00e+00 -> 6.39e-05
+       SK (64) [1/m2]: 0.00e+00 -> 0.00e+00
+       QK (32) [1/m2]: 0.00e+00 -> 0.00e+00
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 3.03e-03 -> 2.47e-04
+       OV (1636) [m]: 3.25e-03 -> 1.74e-04
+       DH (1636) [m]: 3.74e-02 -> 5.00e-03
+       DV (1636) [m]:9.85e-02 -> 8.40e-03
+       BBH (1636) %: 69.1 -> 4.3
+       BBV (1636) %: 16.3 -> 10.6
+       PhH (1636) : 2.97e-01 -> 2.83e-02
+       PhV (1636) : 9.37e-02 -> 5.84e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.450 -> 36.439
+       Qy [13.390]: 13.371 -> 13.384
+       Cx [7.225]: 7.837 -> 7.227
+       Cy [12.609]: 12.356 -> 12.723
+       EX [4042.523 pm]: 6554.936 -> 4016.281
+       EY [0.000pm]: 2084.046 -> 43.456
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 1/7
+Elapsed time is 16.632720 seconds.
+Correction Step: 2/7
+Steerers to fix orbit H  using 200 eig
+Steerers to fix orbit V  using 200 eig
+ --- reference orbit = 0
+Orbit correction iter 1,n-eig: 1, 1,
+Orbit correction iter 2,n-eig: 23, 23,
+Orbit correction iter 3,n-eig: 45, 45,
+Orbit correction iter 4,n-eig: 67, 67,
+Orbit correction iter 5,n-eig: 89, 89,
+Orbit correction iter 6,n-eig: 111, 111,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+Orbit correction iter 7,n-eig: 133, 133,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+Orbit correction iter 8,n-eig: 155, 155,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+Orbit correction iter 9,n-eig: 177, 177,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+Orbit correction iter 10,n-eig: 200, 200,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+Orbit correction iter 11,n-eig: 200, 200,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+Orbit correction iter 12,n-eig: 200, 200,
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 197)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',197,0)">line 197</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 96] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atcorrectorbit', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m', 198)" style="font-weight:bold">atcorrectorbit</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/orbit/atcorrectorbit.m',198,0)">line 198</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 276)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',276,0)">line 276</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+      before    -->    after
+oX: 258.741 -> 9.593um
+oY: 160.521 -> 12.032um
+    min    mean    max
+hs:-0.08  -0.00   0.07 mrad
+vs:-0.08   0.00   0.08 mrad
+dpp: 0.00022752
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 6.07e-05 -> 7.57e-05
+       VK (96) [1/m]: 6.39e-05 -> 7.73e-05
+       SK (64) [1/m2]: 0.00e+00 -> 0.00e+00
+       QK (32) [1/m2]: 0.00e+00 -> 0.00e+00
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 2.47e-04 -> 2.78e-05
+       OV (1636) [m]: 1.74e-04 -> 2.85e-05
+       DH (1636) [m]: 5.00e-03 -> 1.04e-02
+       DV (1636) [m]:8.40e-03 -> 1.03e-02
+       BBH (1636) %: 4.3 -> 13.2
+       BBV (1636) %: 10.6 -> 5.9
+       PhH (1636) : 2.83e-02 -> 6.92e-02
+       PhV (1636) : 5.84e-02 -> 3.55e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.439 -> 36.445
+       Qy [13.390]: 13.384 -> 13.388
+       Cx [7.225]: 7.227 -> 7.453
+       Cy [12.609]: 12.723 -> 12.651
+       EX [4042.523 pm]: 4016.281 -> 4121.608
+       EY [0.000pm]: 43.456 -> 43.383
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 2/7
+Elapsed time is 14.790374 seconds.
+Correction Step: 3/7
+Tune Matching
+Nominal tune: 36.44000, 13.39000,
+Initial tune: 36.44499, 13.38798,
+Going to tune: 36.44000, 13.39000,
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atfittune', '/users/liuzzo/ATcode/atcollab-code-0/atmat/lattice/atfittune.m', 45)" style="font-weight:bold">atfittune</a> (<a href="matlab: opentoline('/users/liuzzo/ATcode/atcollab-code-0/atmat/lattice/atfittune.m',45,0)">line 45</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('fittunedelta2fam', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/tune/fittunedelta2fam.m', 43)" style="font-weight:bold">fittunedelta2fam</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/tune/fittunedelta2fam.m',43,0)">line 43</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 303)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',303,0)">line 303</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: Matrix is singular to working precision.] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atfittune', '/users/liuzzo/ATcode/atcollab-code-0/atmat/lattice/atfittune.m', 45)" style="font-weight:bold">atfittune</a> (<a href="matlab: opentoline('/users/liuzzo/ATcode/atcollab-code-0/atmat/lattice/atfittune.m',45,0)">line 45</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('fittunedelta2fam', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/tune/fittunedelta2fam.m', 44)" style="font-weight:bold">fittunedelta2fam</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/tune/fittunedelta2fam.m',44,0)">line 44</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 303)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',303,0)">line 303</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: Matrix is singular to working precision.] 
+Final tune: 36.44499, 13.38798,
+f2: 
+2.4964e-05  4.0809e-06
+Sum of f2: 
+2.9045e-05
+ 
+ Iteration   Func-count     min f(x)         Procedure
+     0            1      2.90452e-05         
+     1            3      2.90452e-05         initial simplex
+ 
+Optimization terminated:
+ the current x satisfies the termination criteria using OPTIONS.TolX of 1.000000e-08 
+ and F(X) satisfies the convergence criteria using OPTIONS.TolFun of 1.000000e-08 
+
+-----oooooo----oooooo----oooooo----
+   
+f2: 
+2.4964e-05  4.0809e-06
+Sum of f2: 
+2.9045e-05
+   
+-----oooooo----oooooo----oooooo----
+   
+Final constraints values:
+   
+Name          lat_indx      before         after           low            high       min dif before    min dif after  
+@(~,ld,~)mux(ld)      1  3.644e+01	3.644e+01	3.644e+01	3.644e+01	4.996e-03	4.996e-03
+@(~,ld,~)muy(ld)      1  1.339e+01	1.339e+01	1.339e+01	1.339e+01	2.020e-03	2.020e-03
+   
+-----oooooo----oooooo----oooooo----
+    
+Final variable values:
+   
+Name       field          before    after   variation
+@(r,DKquad)setcellst       1e-08           0           0
+@(r,DKquad)setcellst       1e-08           0           0
+   
+-----oooooo----oooooo----oooooo----
+   
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 7.57e-05 -> 7.57e-05
+       VK (96) [1/m]: 7.73e-05 -> 7.73e-05
+       SK (64) [1/m2]: 0.00e+00 -> 0.00e+00
+       QK (32) [1/m2]: 0.00e+00 -> 0.00e+00
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 2.78e-05 -> 2.78e-05
+       OV (1636) [m]: 2.85e-05 -> 2.85e-05
+       DH (1636) [m]: 1.04e-02 -> 1.04e-02
+       DV (1636) [m]:1.03e-02 -> 1.03e-02
+       BBH (1636) %: 13.2 -> 13.2
+       BBV (1636) %: 5.9 -> 5.9
+       PhH (1636) : 6.92e-02 -> 6.92e-02
+       PhV (1636) : 3.55e-02 -> 3.55e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.445 -> 36.445
+       Qy [13.390]: 13.388 -> 13.388
+       Cx [7.225]: 7.453 -> 7.453
+       Cy [12.609]: 12.651 -> 12.651
+       EX [4042.523 pm]: 4121.608 -> 4121.608
+       EY [0.000pm]: 43.383 -> 43.383
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 3/7
+Elapsed time is 13.460708 seconds.
+Correction Step: 4/7
+ - - - -  chromaticty correction - - - - - 
+All SF and All SD moved by a constant value
+Nominal chrom: 7.225, 12.609,
+Initial chrom: 7.453, 12.651,
+match chromaticity
+Final chrom: 7.225, 12.609,
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 7.57e-05 -> 7.57e-05
+       VK (96) [1/m]: 7.73e-05 -> 7.73e-05
+       SK (64) [1/m2]: 0.00e+00 -> 0.00e+00
+       QK (32) [1/m2]: 0.00e+00 -> 0.00e+00
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 2.78e-05 -> 2.78e-05
+       OV (1636) [m]: 2.85e-05 -> 2.85e-05
+       DH (1636) [m]: 1.04e-02 -> 1.04e-02
+       DV (1636) [m]:1.03e-02 -> 1.03e-02
+       BBH (1636) %: 13.2 -> 13.1
+       BBV (1636) %: 5.9 -> 5.9
+       PhH (1636) : 6.92e-02 -> 6.91e-02
+       PhV (1636) : 3.55e-02 -> 3.55e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.445 -> 36.445
+       Qy [13.390]: 13.388 -> 13.388
+       Cx [7.225]: 7.453 -> 7.225
+       Cy [12.609]: 12.651 -> 12.609
+       EX [4042.523 pm]: 4121.608 -> 4121.934
+       EY [0.000pm]: 43.383 -> 43.335
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 4/7
+Elapsed time is 21.277685 seconds.
+Correction Step: 5/7
+Quadrupoles to fix RDT, tune and dispersion H  using 250 eig
+Steerers to fix RDT and dispersion V  using 200 eig
+RDT Disp. Tune Steering iter 1, n-eig: 1, 1, alpha: 0.80 0.10 0.80
+RDT Disp. Tune Steering iter 2, n-eig: 63, 50, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 3, n-eig: 125, 100, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 4, n-eig: 187, 150, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 5, n-eig: 250, 200, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 6, n-eig: 250, 200, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 7, n-eig: 250, 200, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+        before    -->    after
+rq: 12.983 -> 2.492
+rs: 20.817 -> 0.952
+dX: 11.061 -> 0.652mm
+dY: 9.512 -> 0.276mm
+tX: 0.005 -> 0.002
+tY: -0.002 -> -0.004
+    min    mean    max
+qs:-0.00   0.00   0.01 1/m2
+ss:-0.00  -0.00   0.00 1/m2
+dpp: 0
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 7.57e-05 -> 7.57e-05
+       VK (96) [1/m]: 7.73e-05 -> 7.73e-05
+       SK (64) [1/m2]: 0.00e+00 -> 1.15e-03
+       QK (32) [1/m2]: 0.00e+00 -> 2.72e-03
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 2.78e-05 -> 2.78e-05
+       OV (1636) [m]: 2.85e-05 -> 2.86e-05
+       DH (1636) [m]: 1.04e-02 -> 6.51e-04
+       DV (1636) [m]:1.03e-02 -> 2.90e-04
+       BBH (1636) %: 13.1 -> 2.5
+       BBV (1636) %: 5.9 -> 2.3
+       PhH (1636) : 6.91e-02 -> 2.54e-02
+       PhV (1636) : 3.55e-02 -> 1.69e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.445 -> 36.442
+       Qy [13.390]: 13.388 -> 13.386
+       Cx [7.225]: 7.225 -> 6.926
+       Cy [12.609]: 12.609 -> 12.544
+       EX [4042.523 pm]: 4121.934 -> 4042.682
+       EY [0.000pm]: 43.335 -> 0.889
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 5/7
+Elapsed time is 23.675991 seconds.
+Correction Step: 6/7
+Quadrupoles to fix RDT, tune and dispersion H  using 250 eig
+Steerers to fix RDT and dispersion V  using 200 eig
+RDT Disp. Tune Steering iter 1, n-eig: 1, 1, alpha: 0.80 0.10 0.80
+RDT Disp. Tune Steering iter 2, n-eig: 63, 50, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 3, n-eig: 125, 100, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 4, n-eig: 187, 150, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 5, n-eig: 250, 200, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 6, n-eig: 250, 200, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+RDT Disp. Tune Steering iter 7, n-eig: 250, 200, alpha: 0.80 0.10 0.80
+[Warning: number of vectors limited to 32] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 342)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',342,0)">line 342</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+[Warning: number of vectors limited to 64] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('qemsvd_mod', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m', 17)" style="font-weight:bold">qemsvd_mod</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/qemsvd_mod.m',17,0)">line 17</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('atRDTdispersioncorrection', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m', 343)" style="font-weight:bold">atRDTdispersioncorrection</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/RDT/atRDTdispersioncorrection.m',343,0)">line 343</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('CorrectionChain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m', 421)" style="font-weight:bold">CorrectionChain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/CorrectionChain.m',421,0)">line 421</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('testcorrectionchain', '/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m', 85)" style="font-weight:bold">testcorrectionchain</a> (<a href="matlab: opentoline('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/correction_chain/testcorrectionchain.m',85,0)">line 85</a>)] 
+        before    -->    after
+rq: 2.534 -> 2.457
+rs: 0.997 -> 0.966
+dX: 0.652 -> 0.644mm
+dY: 0.276 -> 0.277mm
+tX: 0.002 -> 0.003
+tY: -0.004 -> -0.005
+    min    mean    max
+qs:-0.00   0.00   0.00 1/m2
+ss:-0.00   0.00   0.00 1/m2
+dpp: 0
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 7.57e-05 -> 7.57e-05
+       VK (96) [1/m]: 7.73e-05 -> 7.73e-05
+       SK (64) [1/m2]: 1.15e-03 -> 1.15e-03
+       QK (32) [1/m2]: 2.72e-03 -> 2.68e-03
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 2.78e-05 -> 2.78e-05
+       OV (1636) [m]: 2.86e-05 -> 2.86e-05
+       DH (1636) [m]: 6.51e-04 -> 6.44e-04
+       DV (1636) [m]:2.90e-04 -> 2.92e-04
+       BBH (1636) %: 2.5 -> 2.6
+       BBV (1636) %: 2.3 -> 2.1
+       PhH (1636) : 2.54e-02 -> 2.66e-02
+       PhV (1636) : 1.69e-02 -> 1.57e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.442 -> 36.443
+       Qy [13.390]: 13.386 -> 13.385
+       Cx [7.225]: 6.926 -> 6.913
+       Cy [12.609]: 12.544 -> 12.531
+       EX [4042.523 pm]: 4042.682 -> 4043.240
+       EY [0.000pm]: 0.889 -> 0.833
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 6/7
+Elapsed time is 23.798351 seconds.
+Correction Step: 7/7
+Set RF cavity. 8 MV, 992 buckets, 0 radiation 
+Cavities located at position 52   155   972  1075
+416 elements with radiation switched off
+DeltaFreq not provided. Setting DeltaFreq to cancel energy variation after one turn
+DeltaFreq: 0.74194 Hz
+ --- reference orbit = 0
+RF correction iter 1,n-eig: 1, 1, 1, 1, 1,
+Delta RF : 0.076945 Hz
+Delta TimeLag : 1.2735      1.0244      -2.269    -0.02888 um
+      before    -->    after
+oX: 9.604 -> 9.641um
+freq: 352199664.818 -> 352199664.741 Hz  -0.077 Hz 
+tlag: 0.000,  0.000, -0.000,  0.000, -> 0.000,  0.000, -0.000,  0.000, m 0.000 0.000-0.000-0.000
+dpp: 1.2198e-06
+ --- model lattice data --- 
+ --- errors lattice data --- 
+ --- corrected lattice data --- 
+--------------------------------------------------
+------ total std corrector values applyed --------
+------                                    --------
+       HK (96) [1/m]: 7.57e-05 -> 7.57e-05
+       VK (96) [1/m]: 7.73e-05 -> 7.73e-05
+       SK (64) [1/m2]: 1.15e-03 -> 1.15e-03
+       QK (32) [1/m2]: 2.68e-03 -> 2.68e-03
+------                                    --------
+------    residual orbit and dispersion   --------
+------                                    --------
+       OH (1636) [m]: 2.78e-05 -> 2.77e-05
+       OV (1636) [m]: 2.86e-05 -> 2.86e-05
+       DH (1636) [m]: 6.44e-04 -> 6.42e-04
+       DV (1636) [m]:2.92e-04 -> 2.92e-04
+       BBH (1636) %: 2.6 -> 2.6
+       BBV (1636) %: 2.1 -> 2.1
+       PhH (1636) : 2.66e-02 -> 2.66e-02
+       PhV (1636) : 1.57e-02 -> 1.57e-02
+------                                    --------
+------        tune and emittance          --------
+------                                    --------
+       Qx [36.440]: 36.443 -> 36.443
+       Qy [13.390]: 13.385 -> 13.385
+       Cx [7.225]: 6.913 -> 6.913
+       Cy [12.609]: 12.531 -> 12.531
+       EX [4042.523 pm]: 4043.240 -> 4043.230
+       EY [0.000pm]: 0.833 -> 0.831
+------                                    --------
+--------------------------------------------------
+Finished: Correction Step: 7/7
+Elapsed time is 12.113484 seconds.
+Time for correction chain: 0 minutes

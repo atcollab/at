@@ -1,0 +1,26 @@
+\select@language {english}
+\select@language {english}
+\contentsline {section}{\numberline {1}Errors}{1}
+\contentsline {subsection}{\numberline {1.1}Nomenclature and conventions}{1}
+\contentsline {subsection}{\numberline {1.2}Alignment errors}{2}
+\contentsline {subsection}{\numberline {1.3}BPM errors}{10}
+\contentsline {subsection}{\numberline {1.4}Several errors in the lattice}{13}
+\contentsline {subsection}{\numberline {1.5}Girder errors}{15}
+\contentsline {subsection}{\numberline {1.6}Survey errors}{17}
+\contentsline {subsection}{\numberline {1.7}Errors in frequency domain}{17}
+\contentsline {subsection}{\numberline {1.8}Main field errors}{19}
+\contentsline {subsection}{\numberline {1.9}Multipole errors}{20}
+\contentsline {subsection}{\numberline {1.10}Retrieving and displaying the errors values in AT}{22}
+\contentsline {section}{\numberline {2}Corrections}{23}
+\contentsline {subsection}{\numberline {2.1}Response matrices}{24}
+\contentsline {subsection}{\numberline {2.2}Tune}{25}
+\contentsline {subsection}{\numberline {2.3}Chromaticity}{26}
+\contentsline {subsection}{\numberline {2.4}RF cavity}{27}
+\contentsline {subsection}{\numberline {2.5}Orbit}{28}
+\contentsline {subsubsection}{\numberline {2.5.1}Closed orbit bumps}{30}
+\contentsline {subsection}{\numberline {2.6}Dispersion}{31}
+\contentsline {subsection}{\numberline {2.7}Dispersion free steering}{33}
+\contentsline {subsection}{\numberline {2.8}Correction of RDT}{34}
+\contentsline {subsection}{\numberline {2.9}Coupling free steering}{35}
+\contentsline {subsection}{\numberline {2.10}Open trajectory correction}{36}
+\contentsline {subsection}{\numberline {2.11}Commissioning like correction sequence}{36}
