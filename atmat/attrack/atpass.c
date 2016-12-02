@@ -116,6 +116,9 @@ static struct LibraryListElement* pass_method(mxArray *mxPassMethod, int nelem)
         LibraryListPtr->Next = LibraryList;
         LibraryList = LibraryListPtr;
     }
+    else {
+        mxFree((void *)fn_name);
+    }
     return LibraryListPtr;
 }
 
