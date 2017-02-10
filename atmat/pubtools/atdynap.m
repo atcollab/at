@@ -18,9 +18,9 @@ if nargin < 4, rfrac=0.02; end
 if nargin < 3, dpp=0.0; end
 
 if isnumeric(dpp)
-clorb=[findorbit4(ring(:),dpp);dpp;0];
+clorb=[findorbit4(ring,dpp);dpp;0];
 else
-   clorb=findorbit6(ring(:));
+   clorb=findorbit6(ring);
 end
 
 t1=linspace(0,pi,2*np+3);
