@@ -21,14 +21,12 @@ elseif isfield(elem,'Periodicity')
 elseif isfield(elem,'Limits')
     atclass='Aperture';
 elseif isfield(elem,'PolynomB')
-    if isfield(elem,'Length') && elem.Length~=0
+    if useclass && isfield(elem,'Class')
+        atclass=elem.Class;
+    elseif isfield(elem,'Length') && elem.Length~=0
         loworder=find(abs(elem.PolynomB(2:end))~=0,1);
         if isempty(loworder)
-            if useclass && isfield(elem,'Class')
-                atclass=elem.Class;
-            else
-                atclass='Drift';
-            end
+            atclass='Drift';
         elseif loworder==1
             atclass='Quadrupole';
         elseif loworder==2
@@ -37,11 +35,7 @@ elseif isfield(elem,'PolynomB')
             atclass='Multipole';
         end
     else
-        if useclass && isfield(elem,'Class')
-            atclass=elem.Class;
-        else
-            atclass='ThinMultipole';
-        end
+        atclass='ThinMultipole';
     end
 elseif isfield(elem,'Lmatp')
     atclass='QuantDiff';
