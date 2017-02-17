@@ -32,7 +32,9 @@ if isempty(filename)
 end
 
 fid=fopen(filename,'rt');
-if fid < 0, error('ReadBeta:NoFile','Cannot open file %s',filename); end
+if fid < 0
+    error('ReadBeta:couldNotReadFile','Unable to read file ''%s''. No such file',filename);
+end
 
 betadelim(fid,'LIST OF ELEMENTS');
 GLOBVAL.E0=1E9;
