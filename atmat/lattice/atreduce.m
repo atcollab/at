@@ -75,6 +75,8 @@ end
             newelem.BendingAngle=sum(ba(i1:i2));
             newelem.ExitAngle=newring{i2}.ExitAngle;
         end
+        if isfield(newring{i2},'T2'), newelem.T2=newring{i2}.T2; end
+        if isfield(newring{i2},'R2'), newelem.R2=newring{i2}.R2; end
         newelem.FamName=gname(atgetfieldvalues(newring(i1:i2),'FamName'));
         newring{i1}=newelem;
         keep(i1+1:i2)=false;
