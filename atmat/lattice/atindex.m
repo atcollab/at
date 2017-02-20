@@ -13,8 +13,9 @@ function indexstruct = atindex(lattice)
 %ATI=ATINDEX() Uses the global variable THERING
 %
 % See also ATGETCELLS
+global THERING
 
-if nargin < 1
+if nargin < 1    
     indexstruct=ati(THERING);
 else
     indexstruct=ati(lattice);
