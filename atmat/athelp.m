@@ -1,11 +1,12 @@
 %ATHELP generates the list of Accelerator Toolbox functions
 ATROOT = getenv('ATROOT');
+
 disp('Physics Tools');
 disp('');
-help([ATROOT,'\atphysics'])
+help(fullfile(ATROOT,'atphysics'))
 disp('Lattice Tools');
 disp('');
-help([ATROOT,'\lattice'])
+help(fullfile(ATROOT, 'lattice'))
 disp('AT Demos');
 disp('');
-help([ATROOT,'\atdemos'])
+help(fullfile(ATROOT,'atdemos'))
