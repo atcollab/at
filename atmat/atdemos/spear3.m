@@ -268,7 +268,7 @@ else % If no output arguments - greate global variable THERING
     global THERING
     THERING = RING;
     
-    if evalin('base','exist(''THERING'')') & evalin('base','isglobal(THERING)')
+    if evalin('base','exist(''THERING'')') & evalin('base','isempty(whos(''global'',''THERING''))')
         warning('Global variable THERING was overridden');
     else
         evalin('caller','global THERING');
