@@ -1,4 +1,4 @@
-function z=quadrupole(fname,L,K,method)
+function z=quadrupole(fname,L,K,method,varargin)
 %QUADRUPOLE('FAMILYNAME',Length [m],K,'METHOD')
 %	creates a new family in the FAMLIST - a structure with fields%		FamName    
 %	FamName			family name
@@ -14,7 +14,7 @@ function z=quadrupole(fname,L,K,method)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 
-ElemData = atquadrupole(fname,L,K,method);
+ElemData = atquadrupole(fname,L,K,method,varargin{:});
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
