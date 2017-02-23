@@ -20,7 +20,9 @@ beta0=sqrt(gamma0^2-1)/gamma0;
 U0=atgetU0(ring);
 
 %find circumference
-nc=2*pi/sum(getcellstruct(ring,'BendingAngle',findcells(ring,'BendingAngle')));
+nc=2*pi/sum(cellfun(@(a)a.BendingAngle,ring(atgetcells(ring,'BendingAngle'))));
+
+%nc=2*pi/sum(getcellstruct(ring,'BendingAngle',findcells(ring,'BendingAngle')));
 ncells=round(nc);
 if ~isfinite(nc)
     warning('AT:WrongNumberOfCells','No bending in the cell, ncells set to 1');
