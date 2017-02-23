@@ -87,7 +87,8 @@ else                % openline plot
 end
 
 if (comment)
-    set(get(curve.left(1),'Parent'),'Position',[.13 .11 .775 .775]);
+    ax=get(curve.left(1),'Parent');
+    set(ax,'Position',[.13 .11 .775 .775]);
     tuneper=lindata(end).mu/2/pi;
     tunes=curve.periodicity*tuneper;
     circumference=curve.periodicity*curve.length;
@@ -95,7 +96,7 @@ if (comment)
     line1=sprintf('\\nu_x=%8.3f      \\deltap/p=%.3f%i %s',tunes(1),curve.dpp);
     line2=sprintf('\\nu_z=%8.3f      %2i %s, C=%10.3f',tunes(2),...
         curve.periodicity,['period' plural],circumference);
-    curve.comment=text(-0.14,1.12,{line1;line2},'Units','normalized',...
+    curve.comment=text(ax,-0.14,1.12,{line1;line2},'Units','normalized',...
         'VerticalAlignment','top');
 end
 
