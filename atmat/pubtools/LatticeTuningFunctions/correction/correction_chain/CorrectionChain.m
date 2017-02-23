@@ -234,7 +234,7 @@ for cor=corrorder
 
         case 0
             %% OPEN TRAJECTORY
-            excursion=5e-3;
+            excursion=1e-3;
             disp(['Open Trajectory Correction started. '....
                 num2str(excursion*1e3) 'mm escursion accepted']);
             
@@ -446,7 +446,6 @@ for cor=corrorder
        
         case 7
             %% RDT+DISPERSION CORRECTION from lattice error model
-            try
                 % fit lattice errors model
                 [rfit]=FitResponseMatrixAndDispersion(...
                     rerr,...
@@ -496,7 +495,7 @@ for cor=corrorder
             rerr=atsetfieldvalues(rerr,indSkewQuadCor,'PolynomA',{1,2},cs);
             
             
-                
+            try     
             catch exc
                 
                 getReport(exc);
@@ -541,6 +540,6 @@ if ~verbose
 end
 rcor=rerr;
 
-tend=toc;
+tend=toc(t0);
 disp(['Time for correction chain: ' num2str((tend-t0)/60) ' minutes'])
 return

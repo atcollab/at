@@ -232,7 +232,8 @@ for iter=1:Niter
         end
     end
     
-    [l,t,c]=atlinopt(rtest,0,1);
+    %[~,t,~]=atlinopt(rtest,0,1);
+    t=tunechrom(rtest,0);
     if not(isnan(t(1)) || isnan(t(2)))
         % apply correction in lattice
         rcor = rtest;
