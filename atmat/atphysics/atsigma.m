@@ -1,5 +1,5 @@
 function sigma = atsigma(varargin)
-%ATSIGMA Construct a abeam sigma matrix
+%ATSIGMA Constructs a beam sigma matrix 2x2 4x4 or 6x6
 %
 %   SIGMA=ATSIGMA(BETA,ALPHA,EMIT)
 %       builds a 2x2 sigma matrix for a transverse plane
@@ -15,6 +15,8 @@ function sigma = atsigma(varargin)
 %
 %   SIGMA=ATSIGMA(ATSTRUCT)
 %       builds a 6x6 sigma matrix
+%
+%  See also atx
 
 if iscell(varargin{1})
     beamdata=atx(varargin{1},0,1);
@@ -35,4 +37,5 @@ else
         zeros(2,2) atsigma(bz,az,epsz) zeros(2,2);...
         zeros(2,4) atsigma(espread,blength)];
 end
+
 end
