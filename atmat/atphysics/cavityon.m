@@ -8,16 +8,18 @@ function varargout = cavityon(varargin)
 %    to energy - design energy [eV]
 %    If GLOBVAL does not exist CAVITYON creates it
 %
-% See also CAVITYOFF, RADIATIONON, RADIATIONOFF
+% See also CAVITYOFF, RADIATIONON, RADIATIONOFF, SETCAVITY
 
-if ~evalin('base','exist(''THERING'')') | ~evalin('base','isglobal(THERING)');
+if  ~evalin('base','~isempty(whos(''global'',''THERING''))')
    error('Global variable THERING could not be found');
 end
 
-global THERING
+if ~exist('THERING')
+    global THERING
+end
 
 global GLOBVAL
-if ~evalin('base','exist(''GLOBVAL'')') | ~evalin('base','isglobal(GLOBVAL)');
+if ~exist('GLOBVAL') || ~evalin('base','~isempty(whos(''global'',''GLOBVAL''))')
     if nargin==0
         error('global variable GLOBVAL does not exist. To create it, use CAVITYON(ENERGY)')
     else

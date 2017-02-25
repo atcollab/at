@@ -1,15 +1,20 @@
 %RADIATIONON turns classical radiation  ON
-% Switch all magnets currently set to use pass-methods
-% 'BndMPoleSymplectic4Pass' and  'StrMPoleSymplectic4Pass'
-% to their equivalents with classical radiation
-% 'BndMPoleSymplectic4RadPass' and  'StrMPoleSymplectic4RadPass'
+%
+%  Switch all magnets currently set to use pass-methods
+%  'BndMPoleSymplectic4Pass' and  'StrMPoleSymplectic4Pass'
+%  to their equivalents with classical radiation
+%  'BndMPoleSymplectic4RadPass' and  'StrMPoleSymplectic4RadPass'
+%
+%  NOTES:
+%    1. Deprecated function, use atradon instead
 %	
-%   See also RADIATIONOFF, CAVITYON, CAVITYOFF
+%   See also RADIATIONOFF, CAVITYON, CAVITYOFF, ATRADON, ATRADOFF
 
 
-if ~isglobal(THERING)
+if ~evalin('base','exist(''THERING'')') || ~evalin('base','~isempty(whos(''global'',''THERING''))')
    error('Global variable THERING could not be found');
 end
+
 localindex = findcells(THERING,'PassMethod','StrMPoleSymplectic4Pass');
 THERING = setcellstruct(THERING,'PassMethod',localindex, 'StrMPoleSymplectic4RadPass');
 totalswitched = length(localindex);

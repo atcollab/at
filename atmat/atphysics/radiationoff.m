@@ -4,10 +4,13 @@
 %  to their equivalents without radiation
 %  'BndMPoleSymplectic4Pass' and  'StrMPoleSymplectic4Pass'
 %	
-%   See also RADIATIONON, CAVITYON, CAVITYOFF
+%  NOTES:
+%    1. Deprecated function, use atradoff instead
+%
+%   See also RADIATIONON, CAVITYON, CAVITYOFF, ATRADON, ATRADOFF
 
 
-if ~isglobal(THERING)
+if ~evalin('base','exist(''THERING'')') || ~evalin('base','~isempty(whos(''global'',''THERING''))')
    error('Global variable THERING could not be found');
 end
 localindex = findcells(THERING,'PassMethod','StrMPoleSymplectic4RadPass');

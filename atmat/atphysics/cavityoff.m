@@ -1,12 +1,17 @@
-%CAVITYOFF turns Cavities OFF
-% Sets PassMethod to DriftPass or IdentityPass depending
-% on the value of 'Length' field
+%CAVITYOFF turns cavities OFF
+%  Sets PassMethod to DriftPass or IdentityPass depending
+%  on the value of 'Length' field
 %
-% See also CAVITYON, RADIATIONON, RADIATIONOFF
+%  See also CAVITYON, RADIATIONON, RADIATIONOFF, SETCAVITY
 
-if ~isglobal(THERING)
+if  ~evalin('base','~isempty(whos(''global'',''THERING''))')
    error('Global variable THERING could not be found');
 end
+
+if ~evalin('base','exist(''THERING'')')
+    global THERING
+end
+
 localcavindex = findcells(THERING,'Frequency');
 
 if isempty(localcavindex)
