@@ -16,7 +16,7 @@ xlim=get(ax,'XLim');
 slim=diff(xlim);
 tlim=diff(get(ax,'YLim'));
 nlines=length(get(ax,'Children'));
-axes(ax);  % Compatibility with old matlab versions
+%axes(ax);  % Compatibility with old matlab versions
 
 sl=findspos(ring(:,1),1:size(ring,1)+1);
 ll=diff(sl);
