@@ -88,9 +88,6 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         useFringe2 = false;
     else
         useFringe2=true;
-    /*printf("usefringe1 = %d \n", useFringe1);
-    printf("usefringe2 = %d \n", useFringe2);
-    printf("true = %d \n", true);*/
     for(c = 0;c<num_particles;c++)	/* Loop over particles  */
     {
         r6 = r+c*6;
@@ -113,17 +110,14 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                     edge_fringe_Version2(r6, irho, entrance_angle,fint1,gap);
                 else
                     edge_fringe_Version3Entrance(r6, irho, entrance_angle,fint1,gap);
-                /*printf("useFringe1\n");*/
             }
             else
             {
-                /*printf("not usefringe1 \n");*/
                 edge(r6, irho, entrance_angle);
             }
             /* quadrupole gradient fringe */
             if (FringeQuadEntrance)
                 QuadFringePassP(r6,B[1]);
-            printf("FringeQuadEntrance in PassM. = %d \n", FringeQuadEntrance);
             /* integrator */
             p_norm = 1/(1+r6[4]);
             NormL1 = L1*p_norm;
@@ -221,7 +215,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
     }
-    printf("FringeQuadEntrance in trackF. = %d \n", Elem->FringeQuadEntrance);
     irho = Elem->BendingAngle/Elem->Length;
     BndMPoleSymplectic4Pass(r_in,Elem->Length,irho,Elem->PolynomA,Elem->PolynomB,
             Elem->MaxOrder,Elem->NumIntSteps,Elem->EntranceAngle,Elem->ExitAngle,
