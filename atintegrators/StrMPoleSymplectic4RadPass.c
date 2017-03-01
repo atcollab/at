@@ -1,6 +1,7 @@
-
 #include "atelem.c"
 #include "atlalib.c"
+#include "driftkickrad.c"	/* drift6.c, strthinkickrad.c */
+#include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 
 #define DRIFT1    0.6756035959798286638
 #define DRIFT2   -0.1756035959798286639
@@ -18,6 +19,10 @@ struct elem
     int NumIntSteps;
     double Energy;
     /* Optional fields */
+    int FringeQuadEntrance;
+    int FringeQuadExit;
+    double *fringeIntM0;
+    double *fringeIntP0;
     double *R1;
     double *R2;
     double *T1;
@@ -26,139 +31,23 @@ struct elem
     double *EApertures;
 };
 
-double StrB2perp(double bx, double by, 
-                            double x, double xpr, double y, double ypr)
-/* Calculates sqr(|B x e|) , where e is a unit vector in the direction of velocity  */
-
-{	double v_norm2;
-	v_norm2 = 1/(1 + SQR(xpr) + SQR(ypr));
-
-	/* components of the normalized velocity vector
-	   double ex, ey, ez;
-	   ex = xpr; 
-	   ey = ypr; 
-	   ez = 1;
-	*/
-  	
-	return((SQR(by) + SQR(bx) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
-
-} 
- 
-
-
-
-void strthinkickrad(double* r, double* A, double* B, double L, double E0, int max_order)
-
-/***************************************************************************** 
-Calculate and apply 
-(a) multipole kick 
-(b) momentum kick due to classical radiation
-to a 6-dimentional phase space vector in a straight element ( quadrupole)
-
-IMPORTANT !!!
-The reference coordinate system is straight but the field expansion may still
-contain dipole terms: PolynomA(1), PolynomB(1) - in MATLAB notation,
-A[0], B[0] - C,C++ notation
-
-
-   Note: According to US convention the transverse multipole field is written as:
-
-                         max_order+1
-                           ----
-                           \                       n-1
-	   (B + iB  )/ B rho  =  >   (ia  + b ) (x + iy)
-         y    x            /       n    n
-	                       ----
-                          n=1
-	is a polynomial in (x,y) with the highest order = MaxOrder
-	
-
-	Using different index notation 
-   
-                         max_order
-                           ----
-                           \                       n
-	   (B + iB  )/ B rho  =  >   (iA  + B ) (x + iy)
-         y    x            /       n    n
-	                       ----
-                          n=0
-
-	A,B: i=0 ... max_order
-   [0] - dipole, [1] - quadrupole, [2] - sextupole ...
-   units for A,B[i] = 1/[m]^(i+1)
-	Coeficients are stroed in the PolynomA, PolynomB field of the element
-	structure in MATLAB
-
-	A[i] (C++,C) =  PolynomA(i+1) (MATLAB) 
-	B[i] (C++,C) =  PolynomB(i+1) (MATLAB) 
-	i = 0 .. MaxOrder
-
-******************************************************************************/
-{  int i;
-	double ReSumTemp;
-	double ReSum = B[max_order];
- 	double ImSum = A[max_order];
-	double x ,xpr, y, ypr, p_norm, B2P;
-
-	#define TWOPI		6.28318530717959
-	#define CGAMMA 	8.846056192e-05 
-	
-
-	double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1)  */
-
-
-
-	
-  	/* recursively calculate the local transvrese magnetic field
-	   Bx = ImSum, By = ReSum
-	*/
-	for(i=max_order-1;i>=0;i--)
-		{	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
-			ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
-			ReSum = ReSumTemp;
-		}
-	
-
-	/* calculate angles from momentums 	*/
-	p_norm = 1/(1+r[4]);
-	x   = r[0];
-	xpr = r[1]*p_norm;
-	y   = r[2];
-	ypr = r[3]*p_norm;
-
-	/* For instantaneous rate of energy loss due to classical radiation 
-	   need to calculate |n x B|^2, n unit vector in the direction of velocity
-	*/
-	B2P = StrB2perp(ImSum, ReSum , x , xpr, y ,ypr);
-
-
-	r[4] = r[4] - CRAD*(1+r[4])*(1+r[4])*B2P*(1 + (SQR(xpr)+SQR(ypr))/2 )*L;
-	
-	/* recalculate momentums from angles after losing energy for radiation 	 */
-	p_norm = 1/(1+r[4]);
-	r[1] = xpr/p_norm;
-	r[3] = ypr/p_norm;
-	
-  	
-	r[1] -=  L*ReSum;
-	r[3] +=  L*ImSum;
-
-}
-
-
-
 void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
         int max_order, int num_int_steps,
+        int FringeQuadEntrance, int FringeQuadExit, /* 0 (no fringe), 1 (lee-whiting) or 2 (lee-whiting+elegant-like) */
+        double *fringeIntM0,  /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
+        double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
         double E0,
         int num_particles)
-        
-        
 {	int c,m;
     double *r6;
     double SL, L1, L2, K1, K2;
+    bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
+    bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
+    double *fringeIntM, *fringeIntP;  /*  for linear fringe field, from elegant. */
+    double delta, inFringe; 	/*  for linear fringe field, from elegant. */
     SL = le/num_int_steps;
     L1 = SL*DRIFT1;
     L2 = SL*DRIFT2;
@@ -174,6 +63,34 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
+            if (FringeQuadEntrance && B[1]!=0)
+                if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
+                {
+                    double R[6][6];
+                    /* quadrupole linear fringe field, from elegant code */
+                    inFringe=-1.0;
+                    fringeIntM = fringeIntP0;
+                    fringeIntP = fringeIntM0;
+                    delta = r6[4];
+                    /* determine first linear matrix for this delta */
+                    quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntM, 1);
+                    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+                    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+                    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+                    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
+                    /* nonlinear fringe field */
+                    QuadFringePassP(r6,B[1]);   /*This is original AT code*/
+                    /*Linear fringe fields from elegant*/
+                    inFringe=-1.0;
+                    /* determine and apply second linear matrix, from elegant code */
+                    quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntP, 2);
+                    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+                    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+                    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+                    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
+                }	/* end of elegant code*/
+                else
+                    QuadFringePassP(r6,B[1]);
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
              		r6 = r+c*6;
@@ -185,12 +102,40 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
                     strthinkickrad(r6, A, B,  K1, E0, max_order);
                     ATdrift6(r6,L1);
             }
+            if (FringeQuadExit && B[1]!=0)
+                if (useLinFrEleExit) /*Linear fringe fields from elegant*/
+                {
+                double R[6][6];
+                /* quadrupole linear fringe field, from elegant code */
+                inFringe=1.0;
+                fringeIntM = fringeIntM0;
+                fringeIntP = fringeIntP0;
+                delta = r6[4];
+                /* determine first linear matrix for this delta */
+                quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntM, 1);
+                r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+                r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+                r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+                r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
+                /* nonlinear fringe field */
+                QuadFringePassN(r6,B[1]);   /*This is original AT code*/
+                /*Linear fringe fields from elegant*/
+                inFringe=1.0;
+                /* determine and apply second linear matrix, from elegant code */
+                quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntP, 2);
+                r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
+                r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
+                r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
+                r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
+                }	/* end of elegant code*/
+                else
+                    QuadFringePassN(r6,B[1]);
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
             if (R2) ATmultmv(r6,R2);
-            if (T2) ATaddvv(r6,T2);
+            if (T2) ATaddvv(r6,T2); 
         }
     }
 }
@@ -201,8 +146,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double Length, Energy;
-        int MaxOrder, NumIntSteps;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -210,6 +155,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
+        FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0);
+        FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0);
+        fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
+        fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -224,6 +173,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->NumIntSteps=NumIntSteps;
         Elem->Energy=Energy;
         /*optional fields*/
+        Elem->FringeQuadEntrance=FringeQuadEntrance;
+        Elem->FringeQuadExit=FringeQuadExit;
+        Elem->fringeIntM0=fringeIntM0;
+        Elem->fringeIntP0=fringeIntP0;
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -232,7 +185,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->RApertures=RApertures;
     }
     StrMPoleSymplectic4RadPass(r_in,Elem->Length,Elem->PolynomA,Elem->PolynomB,
-            Elem->MaxOrder,Elem->NumIntSteps,Elem->T1,Elem->T2,Elem->R1,Elem->R2,
+            Elem->MaxOrder,Elem->NumIntSteps,Elem->FringeQuadEntrance,
+            Elem->FringeQuadExit,Elem->fringeIntM0,Elem->fringeIntP0,
+            Elem->T1,Elem->T2,Elem->R1,Elem->R2,
             Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
     return Elem;
 }
@@ -249,8 +204,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
         double Length, Energy;
-        int MaxOrder, NumIntSteps;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -258,6 +213,10 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         /*optional fields*/
+        FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
+        FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
+        fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
+        fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -268,6 +227,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
         StrMPoleSymplectic4RadPass(r_in,Length,PolynomA,PolynomB,MaxOrder,NumIntSteps,
+                FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
                 T1,T2,R1,R2,RApertures,EApertures,Energy,num_particles);
     }
     else if (nrhs == 0) {
@@ -281,13 +241,17 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],5,mxCreateString("Energy"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(6,1);
-            mxSetCell(plhs[1],0,mxCreateString("T1"));
-            mxSetCell(plhs[1],1,mxCreateString("T2"));
-            mxSetCell(plhs[1],2,mxCreateString("R1"));
-            mxSetCell(plhs[1],3,mxCreateString("R2"));
-            mxSetCell(plhs[1],4,mxCreateString("RApertures"));
-            mxSetCell(plhs[1],5,mxCreateString("EApertures"));
+            plhs[1] = mxCreateCellMatrix(10,1);
+            mxSetCell(plhs[1],0,mxCreateString("FringeQuadEntrance"));
+            mxSetCell(plhs[1],1,mxCreateString("FringeQuadExit"));  
+            mxSetCell(plhs[1],2,mxCreateString("fringeIntM0"));
+            mxSetCell(plhs[1],3,mxCreateString("fringeIntP0"));
+            mxSetCell(plhs[1],4,mxCreateString("T1"));
+            mxSetCell(plhs[1],5,mxCreateString("T2"));
+            mxSetCell(plhs[1],6,mxCreateString("R1"));
+            mxSetCell(plhs[1],7,mxCreateString("R2"));
+            mxSetCell(plhs[1],8,mxCreateString("RApertures"));
+            mxSetCell(plhs[1],9,mxCreateString("EApertures"));
         }
     }
     else {

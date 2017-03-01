@@ -2,7 +2,12 @@
      Common physics functions for Accelerator Toolbox
      A.Terebilo   10/28/04
 
-	 functions edge_fringe2A and edge_fringe2B were added by Xiaobiao Huang, August 2009
+     functions edge_fringe2A and edge_fringe2B were added by Xiaobiao Huang, August 2009
+     
+     Two additional versions of bending magnet fringe fields added, February 2017
+       Version 1 legacy version Brown First Order
+       Version 2 SOLEIL close to second order of Brown
+       Version 3 THOMX
 */
 	
 #include <math.h>
@@ -15,7 +20,6 @@ static void edge(double* r, double inv_rho, double edge_angle)
 	r[3]-=r[2]*psi;
 }
 
-
 static void edge_fringe(double* r, double inv_rho, double edge_angle, double fint, double gap)
 {   /* Edge focusing in dipoles with fringe field */
     double fx = inv_rho*tan(edge_angle);
@@ -23,6 +27,32 @@ static void edge_fringe(double* r, double inv_rho, double edge_angle, double fin
     double fy = inv_rho*tan(psi_bar);
     r[1]+=r[0]*fx;
     r[3]-=r[2]*fy;    
+}
+
+static void edge_fringe_Version2(double* r, double inv_rho, double edge_angle, double fint, double gap)
+{   /* Edge focusing in dipoles with fringe field */
+    double fx = inv_rho*tan(edge_angle);
+    double psi_bar = edge_angle-inv_rho*gap*fint*(1+sin(edge_angle)*sin(edge_angle))/cos(edge_angle)/(1+r[4]);
+    double fy = inv_rho*tan(psi_bar);
+    r[1]+=r[0]*fx;
+    r[3]-=r[2]*fy/(1+r[4]);
+}
+
+static void edge_fringe_Version3Entrance(double* r, double inv_rho, double edge_angle, double fint, double gap)
+{   /* Edge focusing in dipoles with fringe field */
+    double fx = inv_rho*tan(edge_angle);
+    double psi_bar = edge_angle-inv_rho*gap*fint*(1+sin(edge_angle)*sin(edge_angle))/cos(edge_angle);
+    double fy = inv_rho*tan(psi_bar + r[1]/(1+r[4]));
+    r[1]+=r[0]*fx;
+    r[3]-=r[2]*fy;
+}
+static void edge_fringe_Version3Exit(double* r, double inv_rho, double edge_angle, double fint, double gap)
+{   /* Edge focusing in dipoles with fringe field */
+    double fx = inv_rho*tan(edge_angle);
+    double psi_bar = edge_angle-inv_rho*gap*fint*(1+sin(edge_angle)*sin(edge_angle))/cos(edge_angle);
+    double fy = inv_rho*tan(psi_bar - r[1]/(1+r[4]));
+    r[1]+=r[0]*fx;
+    r[3]-=r[2]*fy;
 }
 
 static void edge_fringe2A(double* r, double inv_rho, double edge_angle, double fint, double gap,double h1,double K1)

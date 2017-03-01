@@ -6,7 +6,7 @@
                        \                       n-1
   (B + iB  )/ B rho  =  >   (ia  + b ) (x + iy)
     y    x             /       n    n
-    		       ----
+                       ----
                        n=1
  is a polynomial in (x,y) with the highest order = MaxOrder
  
@@ -14,7 +14,7 @@
  Using different index notation 
  
                       max_order
-		      ----
+                      ----
                       \                       n
  (B + iB  )/ B rho  =  >   (iA  + B ) (x + iy)
    y    x             /       n    n
@@ -51,6 +51,25 @@ static void drift6(double* r, double L)
 
 #define SQR(X) ((X)*(X))
 
+double StrB2perp(double bx, double by, 
+                            double x, double xpr, double y, double ypr)
+/* Calculates sqr(|B x e|) , where e is a unit vector in the direction of velocity  */
+
+{	double v_norm2;
+	v_norm2 = 1/(1 + SQR(xpr) + SQR(ypr));
+
+	/* components of the normalized velocity vector
+	   double ex, ey, ez;
+	   ex = xpr; 
+	   ey = ypr; 
+	   ez = 1;
+	*/
+  	
+	return((SQR(by) + SQR(bx) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
+
+} 
+
+
 static double B2perp(double bx, double by, double irho,
         double x, double xpr, double y, double ypr)
         /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
@@ -86,13 +105,13 @@ the polynomial terms in PolynomB.
  
              e L      L delta      L x
   theta  = - --- B  + -------  -  -----  ,
-       x      p   y     rho         2
- 0                    rho
+       x      p   y     rho           2
+               0                   rho
  
            e L
   theta  = --- B
        y    p   x
-  0
+             0
  
  ******************************************************************************/
 {
@@ -167,7 +186,8 @@ static void strthinkickrad(double* r, const double* A, const double* B, double L
    y   = r[2];
    ypr = r[3]*p_norm;
    
-   B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);
+   /*B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);*/
+   B2P = StrB2perp(ImSum, ReSum , x , xpr, y ,ypr);
    
    dp_0 = r[4];
    r[4] = r[4] - CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
