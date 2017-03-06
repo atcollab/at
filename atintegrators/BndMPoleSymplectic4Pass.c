@@ -30,6 +30,8 @@ struct elem
     double FullGap;
     int FringeQuadEntrance;
     int FringeQuadExit;
+    double *fringeIntM0;
+    double *fringeIntP0;
     double *R1;
     double *R2;
     double *T1;
@@ -44,6 +46,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         int FringeBendEntrance, int FringeBendExit,
         double fint1, double fint2, double gap,
         int FringeQuadEntrance, int FringeQuadExit,
+        double *fringeIntM0,  /* I0m/K1, I1m/K1, I2m/K1, I3m/K1, Lambda2m/K1 */
+        double *fringeIntP0,  /* I0p/K1, I1p/K1, I2p/K1, I3p/K1, Lambda2p/K1 */        
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,int num_particles)
@@ -52,8 +56,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     double *r6;
     double SL, L1, L2, K1, K2, p_norm, NormL1, NormL2;
     bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
-    
-    
+    bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
+    bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     SL = le/num_int_steps;
     L1 = SL*DRIFT1;
     L2 = SL*DRIFT2;
@@ -115,9 +119,12 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             {
                 edge(r6, irho, entrance_angle);
             }
-            /* quadrupole gradient fringe */
-            if (FringeQuadEntrance)
-                QuadFringePassP(r6,B[1]);
+            /* quadrupole gradient fringe entrance*/
+            if (FringeQuadEntrance && B[1]!=0)
+                if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
+                    linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
+                else
+                    QuadFringePassP(r6,B[1]);
             /* integrator */
             p_norm = 1/(1+r6[4]);
             NormL1 = L1*p_norm;
@@ -133,8 +140,11 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                 fastdrift(r6, NormL1);
             }
             /* quadrupole gradient fringe */
-            if (FringeQuadExit)
-                QuadFringePassN(r6,B[1]);
+            if (FringeQuadExit && B[1]!=0)
+                if (useLinFrEleExit) /*Linear fringe fields from elegant*/
+                    linearQuadFringeElegantExit(r6, B[1], fringeIntM0, fringeIntP0);
+                else
+                    QuadFringePassN(r6,B[1]);
             /* edge focus */
             if(useFringe2)
                 if (FringeBendExit==1)
@@ -168,7 +178,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                 FringeInt1, FringeInt2;
         int MaxOrder, NumIntSteps,  FringeBendEntrance, FringeBendExit,
                 FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -185,6 +195,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
+        fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
+        fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -208,6 +220,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->FringeBendExit=FringeBendExit;
         Elem->FringeQuadEntrance=FringeQuadEntrance;
         Elem->FringeQuadExit=FringeQuadExit;
+        Elem->fringeIntM0=fringeIntM0;
+        Elem->fringeIntP0=fringeIntP0;
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -220,7 +234,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->MaxOrder,Elem->NumIntSteps,Elem->EntranceAngle,Elem->ExitAngle,
             Elem->FringeBendEntrance,Elem->FringeBendExit,
             Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,
-            Elem->FringeQuadEntrance,Elem->FringeQuadExit,Elem->T1,Elem->T2,
+            Elem->FringeQuadEntrance,Elem->FringeQuadExit,
+            Elem->fringeIntM0,Elem->fringeIntP0,Elem->T1,Elem->T2,
             Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,num_particles);
     return Elem;
 }
@@ -237,7 +252,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 FringeInt1, FringeInt2;
         int MaxOrder, NumIntSteps, FringeBendEntrance, FringeBendExit,
                 FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
         double irho;
         double *r_in;
         const mxArray *ElemData = prhs[0];
@@ -258,6 +273,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
+        fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
+        fringeIntP0=atGetOptionalDoubleArray(ElemData,"fringeIntP0"); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -271,7 +288,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         BndMPoleSymplectic4Pass(r_in, Length, irho, PolynomA, PolynomB,
                 MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
                 FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
-                FullGap,FringeQuadEntrance,FringeQuadExit,
+                FullGap,FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
                 T1,T2,R1,R2,RApertures,EApertures,num_particles);
     }
     else if (nrhs == 0) {
@@ -288,7 +305,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(13,1);
+            plhs[1] = mxCreateCellMatrix(15,1);
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
             mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
@@ -296,12 +313,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],4,mxCreateString("FringeBendExit"));
             mxSetCell(plhs[1],5,mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1],6,mxCreateString("FringeQuadExit"));
-            mxSetCell(plhs[1],7,mxCreateString("T1"));
-            mxSetCell(plhs[1],8,mxCreateString("T2"));
-            mxSetCell(plhs[1],9,mxCreateString("R1"));
-            mxSetCell(plhs[1],10,mxCreateString("R2"));
-            mxSetCell(plhs[1],11,mxCreateString("RApertures"));
-            mxSetCell(plhs[1],12,mxCreateString("EApertures"));
+            mxSetCell(plhs[1],7,mxCreateString("fringeIntM0"));
+            mxSetCell(plhs[1],8,mxCreateString("fringeIntP0"));
+            mxSetCell(plhs[1],9,mxCreateString("T1"));
+            mxSetCell(plhs[1],10,mxCreateString("T2"));
+            mxSetCell(plhs[1],11,mxCreateString("R1"));
+            mxSetCell(plhs[1],12,mxCreateString("R2"));
+            mxSetCell(plhs[1],13,mxCreateString("RApertures"));
+            mxSetCell(plhs[1],14,mxCreateString("EApertures"));
         }
     }
     else {
