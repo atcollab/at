@@ -42,8 +42,6 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
     double SL, L1, L2, K1, K2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
-    double *fringeIntM, *fringeIntP;  /*  for linear fringe field, from elegant. */
-    double delta, inFringe; 	/*  for linear fringe field, from elegant. */
     SL = le/num_int_steps;
     L1 = SL*DRIFT1;
     L2 = SL*DRIFT2;
@@ -60,31 +58,8 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             if (FringeQuadEntrance && B[1]!=0)
-                if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
-                {
-                    double R[6][6];
-                    /* quadrupole linear fringe field, from elegant code */
-                    inFringe=-1.0;
-                    fringeIntM = fringeIntP0;
-                    fringeIntP = fringeIntM0;
-                    delta = r6[4];
-                    /* determine first linear matrix for this delta */
-                    quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntM, 1);
-                    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
-                    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
-                    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
-                    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
-                    /* nonlinear fringe field */
-                    QuadFringePassP(r6,B[1]);   /*This is original AT code*/
-                    /*Linear fringe fields from elegant*/
-                    inFringe=-1.0;
-                    /* determine and apply second linear matrix, from elegant code */
-                    quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntP, 2);
-                    r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
-                    r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
-                    r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
-                    r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
-                }	/* end of elegant code*/
+                if (useLinFrEleEntrance) /*Linear fringe fields from elegant */
+                    linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
                 else
                     QuadFringePassP(r6,B[1]);
             /*  integrator  */
@@ -103,30 +78,7 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
             }
             if (FringeQuadExit && B[1]!=0)
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
-                {
-                double R[6][6];
-                /* quadrupole linear fringe field, from elegant code */
-                inFringe=1.0;
-                fringeIntM = fringeIntM0;
-                fringeIntP = fringeIntP0;
-                delta = r6[4];
-                /* determine first linear matrix for this delta */
-                quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntM, 1);
-                r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
-                r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
-                r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
-                r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
-                /* nonlinear fringe field */
-                QuadFringePassN(r6,B[1]);   /*This is original AT code*/
-                /*Linear fringe fields from elegant*/
-                inFringe=1.0;
-                /* determine and apply second linear matrix, from elegant code */
-                quadPartialFringeMatrix(R, B[1]/(1+delta), inFringe, fringeIntP, 2);
-                r6[0] = R[0][0]*r6[0] + R[0][1]*r6[1];
-                r6[1] = R[1][0]*r6[0] + R[1][1]*r6[1];
-                r6[2] = R[2][2]*r6[2] + R[2][3]*r6[3];
-                r6[3] = R[3][2]*r6[2] + R[3][3]*r6[3];
-                }	/* end of elegant code*/
+                    linearQuadFringeElegantExit(r6, B[1], fringeIntM0, fringeIntP0);
                 else
                     QuadFringePassN(r6,B[1]);
             /* Check physical apertures at the exit of the magnet */
