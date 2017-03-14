@@ -61,7 +61,7 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant */
                     linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
                 else
-                    QuadFringePassP(r6,B[1]);
+                    QuadFringePassP(r6, B[1]);
             /*  integrator  */
             for (m=0; m < num_int_steps; m++) {  /*  Loop over slices */
              	r6 = r+c*6;
@@ -80,7 +80,7 @@ void StrMPoleSymplectic4Pass(double *r, double le, double *A, double *B,
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantExit(r6, B[1], fringeIntM0, fringeIntP0);
                 else
-                    QuadFringePassN(r6,B[1]);
+                    QuadFringePassN(r6, B[1]);
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
