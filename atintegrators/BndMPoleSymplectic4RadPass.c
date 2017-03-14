@@ -57,7 +57,8 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 {	int c,m;
     double *r6;
     double SL, L1, L2, K1, K2;
-    bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
+    bool useFringe1 = (fint1!=0.0 && gap!=0.0 && FringeBendEntrance!=0);
+    bool useFringe2 = (fint2!=0.0 && gap!=0.0 && FringeBendExit!=0);
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     SL = le/num_int_steps;
@@ -65,33 +66,6 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
     L2 = SL*DRIFT2;
     K1 = SL*KICK1;
     K2 = SL*KICK2;
-    if (T1==NULL)
-        useT1=false;
-    else
-        useT1=true;
-    if (T2==NULL)
-        useT2=false;
-    else
-        useT2=true;
-    if (R1==NULL)
-        useR1=false;
-    else
-        useR1=true;
-    if (R2==NULL)
-        useR2=false;
-    else
-        useR2=true;
-    
-    /* calculate entrance fringe field if fint, gap and FringeBendEntrance are not 0 */
-    if( fint1==0 || gap==0 || FringeBendEntrance==0)
-        useFringe1 = false;
-    else
-        useFringe1=true;
-    /* calculate exit fringe field if fint, gap and FringeBendExit are not 0 */
-    if( fint2==0 || gap==0 || FringeBendExit==0)
-        useFringe2 = false;
-    else
-        useFringe2=true;
     
     for(c = 0;c<num_particles;c++)	/* Loop over particles */
     {   
@@ -99,10 +73,8 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
         if(!atIsNaN(r6[0]))
         {
             /*  misalignment at entrance  */
-            if (useT1)
-                ATaddvv(r6,T1);
-            if (useR1)
-                ATmultmv(r6,R1);
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
@@ -117,11 +89,12 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
             else
                 edge(r6, irho, entrance_angle);
             /* quadrupole gradient fringe */
-            if (FringeQuadEntrance && B[1]!=0)
+            if (FringeQuadEntrance && B[1]!=0) {
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
                 else
-                    QuadFringePassP(r6,B[1]);
+                    QuadFringePassP(r6, B[1]);
+            }
             /* integrator  */
             for(m=0; m < num_int_steps; m++) /* Loop over slices */
             {
@@ -134,29 +107,28 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
                 drift6(r6,L1);
             }
             /* quadrupole gradient fringe */
-            if (FringeQuadExit && B[1]!=0)
+            if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantExit(r6, B[1], fringeIntM0, fringeIntP0);
                 else
-                    QuadFringePassN(r6,B[1]);
-             /* edge focus */
-           if(useFringe2)
+                    QuadFringePassN(r6, B[1]);
+            }
+            /* edge focus */
+            if (useFringe2)
                 if (FringeBendExit==1)
-                    edge_fringe(r6, irho, entrance_angle,fint1,gap);
+                    edge_fringe(r6, irho, exit_angle,fint2, gap);
                 else if (FringeBendExit==2)
-                    edge_fringe_Version2(r6, irho, entrance_angle,fint1,gap);
+                    edge_fringe_Version2(r6, irho, exit_angle, fint2, gap);
                 else
-                    edge_fringe_Version3Exit(r6, irho, entrance_angle,fint1,gap);
+                    edge_fringe_Version3Exit(r6, irho, exit_angle, fint2, gap);
             else
                 edge(r6, irho, exit_angle);
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
-            if (useR2)
-                ATmultmv(r6,R2);
-            if (useT2)
-                ATaddvv(r6,T2);
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         } 
     }
 }

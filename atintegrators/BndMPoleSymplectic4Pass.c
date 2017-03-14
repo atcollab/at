@@ -91,11 +91,12 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                 edge(r6, irho, entrance_angle);
             }
             /* quadrupole gradient fringe entrance*/
-            if (FringeQuadEntrance && B[1]!=0)
+            if (FringeQuadEntrance && B[1]!=0) {
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
                 else
                     QuadFringePassP(r6, B[1]);
+            }    
             /* integrator */
             p_norm = 1/(1+r6[4]);
             NormL1 = L1*p_norm;
@@ -111,11 +112,12 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                 fastdrift(r6, NormL1);
             }
             /* quadrupole gradient fringe */
-            if (FringeQuadExit && B[1]!=0)
+            if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantExit(r6, B[1], fringeIntM0, fringeIntP0);
                 else
                     QuadFringePassN(r6, B[1]);
+            }
             /* edge focus */
             if (useFringe2)
                 if (FringeBendExit==1)

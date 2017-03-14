@@ -61,11 +61,12 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
-            if (FringeQuadEntrance && B[1]!=0)
+            if (FringeQuadEntrance && B[1]!=0) {
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantEntrance(r6, B[1], fringeIntM0, fringeIntP0);
                 else
-                    QuadFringePassP(r6,B[1]);
+                    QuadFringePassP(r6, B[1]);
+            }
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
              		r6 = r+c*6;
@@ -77,11 +78,12 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
                     strthinkickrad(r6, A, B,  K1, E0, max_order);
                     ATdrift6(r6,L1);
             }
-            if (FringeQuadExit && B[1]!=0)
+            if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
                     linearQuadFringeElegantExit(r6, B[1], fringeIntM0, fringeIntP0);
                 else
-                    QuadFringePassN(r6,B[1]);
+                    QuadFringePassN(r6, B[1]);
+            }
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
