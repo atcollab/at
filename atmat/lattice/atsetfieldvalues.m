@@ -34,7 +34,7 @@ function newring = atsetfieldvalues(ring,varargin)
 % NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)
 %   For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)
 %
-% The last dimension of VALUES must be either length(INDEX) or 1 (the value
+% The first dimension of VALUES must be either length(INDEX) or 1 (the value
 % will be repeated for each element). For a vector to be repeated, enclose
 % it in a cell array.
 %
@@ -42,7 +42,7 @@ function newring = atsetfieldvalues(ring,varargin)
 % ---------------------------------------------------------
 % Cell array VALUES
 % -----------------
-% Mx1 cell array : one cell per element
+% Mx1 or 1xM cell array : one cell per element
 % 1x1 cell array : cell 1 is affected to all selected elements
 %
 % Character array VALUES
@@ -94,7 +94,7 @@ end
             values=values(ones(length(ring),1));
         end
         newring=cellfun(@(el,value) setfield(el,varargin{1:end-1},squeeze(value)),...
-            ring,values,'UniformOutput',false); %#ok<SFLD>
+            ring,values(:),'UniformOutput',false); %#ok<SFLD>
     end
 
 end
