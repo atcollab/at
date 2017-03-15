@@ -152,7 +152,7 @@ if isnumeric(PERTURB)   % syntax option 1
         oldvalue = getfield(RING{PERTURB(i)},varargin{1},mn);
         RING{PERTURB(i)} = setfield(RING{PERTURB(i)},varargin{1},mn,oldvalue+PVALUE(i));
         ORBITPLUS  = feval(orbit_function_handle,RING,orbit_function_args{:});
-        RING{PERTURB(i)} = setfield(RING{PERTURB(i)},varargin{1},mn,oldvalue-2*PVALUE(i));
+        RING{PERTURB(i)} = setfield(RING{PERTURB(i)},varargin{1},mn,oldvalue-PVALUE(i));
         ORBITMINUS  = feval(orbit_function_handle,RING,orbit_function_args{:});
         RING{PERTURB(i)} = setfield(RING{PERTURB(i)},varargin{1},mn,oldvalue);
         DORBIT = (ORBITPLUS - ORBITMINUS)/2;
