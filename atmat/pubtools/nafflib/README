@@ -1,0 +1,37 @@
+26/08/03 L. Nadolski, SOLEIL
+2017-02-25 Updated with prerelease of AT 2.0
+
+For compiling NAFF package
+In Matlab workspace: use naff_cc command
+
+calcnaff.f has been modified by introducing two macros: min et max
+
+06/04/07 Laurent S. Nadolski
+Names have changes
+mexfile is now nafflib.c
+naffcall.m calls nafflib
+This file is provided with a small online help
+amplitude, phase have been added and additional Flags
+
+Example using AT 1.3:
+
+[nux nuz diffu]=fmap_soleilnu(10,10,20,5);
+
+radiationoff
+cavityoff
+X0=[0.001 0 0.001 0 0 0]';
+NT = 1026;
+T = ringpass(THERING,X0,NT);
+calcnaff(T(1,1:512),T(3,1:512),1)/(2*pi)
+
+
+Example using AT 1.3:
+
+[nux nuz diffu]=fmap_soleilnu(10,10,20,5);
+
+atradoff(THERING)
+
+X0=[0.001 0 0.001 0 0 0]';
+NT = 1026;
+T = ringpass(THERING,X0,NT);
+calcnaff(T(1,1:512),T(3,1:512),1)/(2*pi)
