@@ -16,29 +16,34 @@ function  [posdata,radius] = atgeometry(ring,varargin)
 %       Meaningful if RING is a cell of a periodic lattice.
 %
 %POSDATA=ATGEOMETRY(RING,REFPTS,OFFSET)
-%       Adds OFFSET(1) to the x position and OFFSET(2) to the y position
+%       Start at x=offset(1), y=offset(2)
 %       a scalar offset value is equivalent to [0 OFFSET]
-%POSDATA=ATGEOMETRY(RING,REFPTS,'centered')
-%       The offset is set as [0 RADIUS]
+%
+%POSDATA=ATGEOMETRY(...,'centered')
+%       The offset is set as [0 RADIUS 0]
+%
+%POSDATA=ATGEOMETRY(...,'Hangle',h_angle)
+%       Set the initial trajectory angle
 %
 %
 %See also: ATGEOMETRY3
 
-[refpts,offset]=parseargs({1:length(ring)+1,[0 0]},varargin);
+[thetac,args]=getoption(varargin,'Hangle',0);
+centered=getflag(args,'centered');
+[refpts,offset]=parseargs({1:length(ring)+1,[0 0]},args);
 xc=0;
 yc=0;
-thetac=0;
-[xx,yy,txy]=cellfun(@incr,ring);
-radius=-(yc+xc/tan(thetac));
-if ischar(offset) && strcmp(offset,'centered')
-    offset=[0 radius];
-elseif isscalar(offset)
-    offset=[0 offset];
+if isscalar(offset)
+    yc=offset;
+else
+    xc=offset(1);
+    yc=offset(2);
 end
-xx=[0;xx]+offset(1);
-yy=[0;yy]+offset(2);
-txy=[0;txy];
-[lg,tr]=arrayfun(@srcpt,xx,yy,txy);
+[xx,yy,txy,lg,tr]=cellfun(@incr,[{struct()};ring]);    % Add a dummy element to get the origin
+radius=-(yc+xc/tan(thetac));
+if centered
+    yy=yy+radius;
+end
 posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
     'angle',num2cell(txy(refpts)),'long',num2cell(lg(refpts)),...
     'trans',num2cell(tr(refpts)));
@@ -56,11 +61,8 @@ posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
             xc=xc+L*cos(thetac);
             yc=yc+L*sin(thetac);
         end
-        varargout={xc,yc,thetac};
-    end
-
-    function varargout=srcpt(x,y,angle)
-        c=cos(angle); s=sin(angle);
-        varargout=num2cell([x y]*[c -s;s c]);
+        c=cos(thetac); s=sin(thetac);
+        lgtr=[xc yc]*[c -s;s c];
+        varargout={xc,yc,thetac,lgtr(1),lgtr(2)};
     end
 end
