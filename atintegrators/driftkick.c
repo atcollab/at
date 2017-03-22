@@ -75,7 +75,7 @@ theta  = --- B
    double ReSum = B[max_order];
    double ImSum = A[max_order];
    double ReSumTemp;
-   /* recursively calculate the local transvrese magnetic field
+   /* recursively calculate the local transverse magnetic field
     * Bx = ReSum, By = ImSum
     */
    for (i=max_order-1; i>=0; i--) {
@@ -92,7 +92,7 @@ theta  = --- B
 static void strthinkick(double* r, const double* A, const double* B, double L, int max_order)
 /***************************************************************************** 
  Calculate and apply a multipole kick to a 6-dimentional
- phase space vector in a straight element ( quadrupole)
+ phase space vector in a straight element (quadrupole)
  
  IMPORTANT !!!
  The reference coordinate system is straight but the field expansion may still
