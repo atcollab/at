@@ -12,22 +12,30 @@ function  posdata = atgeometry3(ring,varargin)
 %           x, y, z
 %
 %POSDATA=ATGEOMETRY3(RING,REFPTS,OFFSET)
-%       Adds OFFSET(1) to the x position.
-%       OFFSET(2) to the y position, OFFSET(3) to the z position
+%       Start at x=offset(1), y=offset(2), z=offset(3)
 %       a scalar offset value is equivalent to [0 OFFSET 0]
+%
+%POSDATA=ATGEOMETRY3(...,'Hangle',h_angle)
+%       Set the initial horizontal trajectory angle
+%
+%POSDATA=ATGEOMETRY3(...,'Vangle',h_angle)
+%       Set the initial vertical trajectory angle
 %
 %See also: ATGEOMETRY
 
-[refpts,offset]=parseargs({1:length(ring)+1,[0 0 0]},varargin);
+[hangle,args]=getoption(varargin,'Hangle',0);
+[vangle,args]=getoption(args,'Vangle',0);
+[refpts,offset]=parseargs({1:length(ring)+1,[0 0 0]},args);
 conv=eye(3);
+hkick(hangle);
+vkick(vangle);
 xyzc=[0;0;0];
-[xx,yy,zz]=cellfun(@incr,ring);
 if isscalar(offset)
-    offset=[0 offset 0];
+    xyzc(2)=offset;
+else
+    xyzc(1:length(offset))=offset';
 end
-xx=[0;xx]+offset(1);
-yy=[0;yy]+offset(2);
-zz=[0;zz]+offset(3);
+[xx,yy,zz]=cellfun(@incr,[{struct()};ring]);    % Add a dummy element to get the origin
 posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
     'z',num2cell(zz(refpts)));
 
@@ -59,6 +67,11 @@ posdata=struct('x',num2cell(xx(refpts)),'y',num2cell(yy(refpts)),...
         cns=cos(ang);
         sns=sin(ang);
         conv=conv*[cns -sns 0;sns cns 0;0 0 1];
+    end
+    function vkick(ang)
+        cns=cos(ang);
+        sns=sin(ang);
+        conv=conv*[cns 0 -sns;0 1 0;sns 0 cns];
     end
 end
 
