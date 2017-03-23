@@ -24,17 +24,20 @@ try
 catch
 end
 
-% Navigate to the directory that contains pass-methods 
-PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
-mexpassmethod('all',PLATFORMOPTION);
-
 % Navigate to the directory that contains tracking functions
+lastwarn('');
+PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
 cdir=fullfile(atroot,'attrack','');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,' -I''',PASSMETHODDIR,''' -outdir ',cdir,' ',fullfile(cdir,'atpass.c'),LIBDL];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
+[warnmess,warnid]=lastwarn;
+if strcmp(warnid,'MATLAB:mex:GccVersion_link')
+    warning('Disabling the compiler warning');
+end
 
 % Navigate to the directory that contains some accelerator physics functions
+oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
 cdir=fullfile(atroot,'atphysics','');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' -I''',PASSMETHODDIR,''' ',...
     fullfile(cdir,'findmpoleraddiffmatrix.c')];
@@ -44,6 +47,10 @@ MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' ',fullfile(cdir,'RDTelega
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
 
+% Navigate to the directory that contains pass-methods 
+mexpassmethod('all',PLATFORMOPTION);
+warning(oldwarns.state,oldwarns.identifier);
+
 % ADD 'MEXING' instructions for other C files
-disp('ALL mex-files created successfully')
+%disp('ALL mex-files created successfully')
 end
