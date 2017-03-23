@@ -55,8 +55,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     int c, m;
     double *r6;
     double SL, L1, L2, K1, K2, p_norm, NormL1, NormL2;
-    bool useFringe1 = (fint1!=0.0 && gap!=0.0 && FringeBendEntrance!=0);
-    bool useFringe2 = (fint2!=0.0 && gap!=0.0 && FringeBendExit!=0);
+    /*bool useFringe1 = (fint1!=0.0 && gap!=0.0 && FringeBendEntrance!=0);
+    bool useFringe2 = (fint2!=0.0 && gap!=0.0 && FringeBendExit!=0);*/
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     SL = le/num_int_steps;
@@ -77,19 +77,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* edge focus */
-            if (useFringe1)
-            {
-                if (FringeBendEntrance==1)
-                    edge_fringe(r6, irho, entrance_angle, fint1, gap);
-                else if (FringeBendEntrance==2)
-                    edge_fringe_Version2(r6, irho, entrance_angle, fint1, gap);
-                else
-                    edge_fringe_Version3Entrance(r6, irho, entrance_angle, fint1, gap);
-            }
-            else
-            {
-                edge(r6, irho, entrance_angle);
-            }
+            edge_fringe_entrance(r6, irho, entrance_angle, fint1, gap, FringeBendEntrance);
             /* quadrupole gradient fringe entrance*/
             if (FringeQuadEntrance && B[1]!=0) {
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
@@ -119,15 +107,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                     QuadFringePassN(r6, B[1]);
             }
             /* edge focus */
-            if (useFringe2)
-                if (FringeBendExit==1)
-                    edge_fringe(r6, irho, exit_angle, fint2, gap);
-                else if (FringeBendExit==2)
-                    edge_fringe_Version2(r6, irho, exit_angle, fint2, gap);
-                else
-                    edge_fringe_Version3Exit(r6, irho, exit_angle, fint2, gap);
-            else
-                edge(r6, irho, exit_angle);
+            edge_fringe_exit(r6, irho, exit_angle, fint2, gap, FringeBendExit);
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
@@ -159,11 +139,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
+        FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
+        FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
         FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
-        FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
-        FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
         fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
@@ -184,11 +164,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->EntranceAngle=EntranceAngle;
         Elem->ExitAngle=ExitAngle;
         /*optional fields*/
+        Elem->FringeBendEntrance=FringeBendEntrance;
+        Elem->FringeBendExit=FringeBendExit;
         Elem->FullGap=FullGap;
         Elem->FringeInt1=FringeInt1;
         Elem->FringeInt2=FringeInt2;
-        Elem->FringeBendEntrance=FringeBendEntrance;
-        Elem->FringeBendExit=FringeBendExit;
         Elem->FringeQuadEntrance=FringeQuadEntrance;
         Elem->FringeQuadExit=FringeQuadExit;
         Elem->fringeIntM0=fringeIntM0;
@@ -237,11 +217,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
+        FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
+        FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
         FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
-        FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
-        FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
         FringeQuadExit=atGetOptionalLong(ElemData,"FringeQuadExit",0); check_error();
         fringeIntM0=atGetOptionalDoubleArray(ElemData,"fringeIntM0"); check_error();
