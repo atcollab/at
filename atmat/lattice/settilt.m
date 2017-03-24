@@ -13,6 +13,9 @@ function settilt(ELEMINDEX, PSI)
 %   R1 = [  cos(PSI) sin(PSI); -sin(PSI) cos(PSI) ]
 %   R2 = R1'
 %
+%  NOTES
+%  1. This function is deprecated. Use atsettilt instead
+%
 % See also SETSHIFT MKSROLLMAT
 
 global THERING
