@@ -5,22 +5,22 @@ function [ring2,radelemIndex,cavitiesIndex]=atradoff(ring1,varargin)
 %    Changes passmethods to turn off radiation damping. 
 %
 %  INPUTS
-%    1. RING      initial AT structure
-%    2. CAVIPASS  pass method for cavities (default IdentityPass)
-%                 '' makes no change,
-%    3. BENDPASS  pass method for bending magnets. Special values:
-%                 '' makes no change,
-%                 'auto' wille substitute 'RadPass' with 'Pass' in any method
-%                 (default: 'auto')
-%    4. QUADPASS  pass method for quadrupoles
-%                 '' makes no change,
-%                 'auto' wille substitute 'RadPass' with 'Pass' in any method
-%                 (default: '')
+%  1. RING      initial AT structure
+%  2. CAVIPASS  pass method for cavities (default IdentityPass)
+%               '' makes no change,
+%  3. BENDPASS  pass method for bending magnets. Special values:
+%               '' makes no change,
+%               'auto' wille substitute 'RadPass' with 'Pass' in any method
+%               (default: 'auto')
+%  4. QUADPASS  pass method for quadrupoles
+%               '' makes no change,
+%               'auto' wille substitute 'RadPass' with 'Pass' in any method
+%               (default: '')
 %
 %   OUPUTS
-%     1. RING2     Output ring
-%     2. RADINDEX  Indices of elements with radiation
-%     3. CAVINDEX  Indices of cavities
+%   1. RING2     Output ring
+%   2. RADINDEX  Indices of elements with radiation
+%   3. CAVINDEX  Indices of cavities
 %
 %  See also ATRADON, ATCAVITYON, ATCAVITYOFF
 

@@ -6,16 +6,16 @@ function elem=atrbend(fname,varargin)
 %  INPUTS
 %	 1. fname        	family name 
 %	 2. LENGTH         	length of the arc for an on-energy particle
-%                     		[m], default to 0
-%	 3. BENDINGANGLE	    total bending angle [rad], defaults to 0 
+%                     	[m], default to 0
+%	 3. BENDINGANGLE	total bending angle [rad], defaults to 0 
 %	 4. K				focusing strength, defaults to 0
-%	 5. PASSMETHOD       tracking function, defaults to 'BendLinearPass'
+%	 5. PASSMETHOD      tracking function, defaults to 'BendLinearPass'
 %
 %  ATRBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
 %  Each pair {'FIELDNAME',VALUE} is added to the element
 %
 %  OUTPUTS
-%      1. elem - Strucuture with the AT element
+%      1. elem - Structure with the AT element
 %
 %  NOTES
 %      1. Fieldname can be called by calling the passmethod

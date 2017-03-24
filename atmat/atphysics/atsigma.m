@@ -1,5 +1,5 @@
 function sigma = atsigma(varargin)
-%ATSIGMA Constructs a beam sigma matrix 2x2 4x4 or 6x6
+%ATSIGMA constructs a beam sigma matrix 2x2 4x4 or 6x6
 %
 %   SIGMA=ATSIGMA(BETA,ALPHA,EMIT)
 %       builds a 2x2 sigma matrix for a transverse plane

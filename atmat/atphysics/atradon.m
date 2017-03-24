@@ -8,23 +8,24 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring1,varargin)
 %       1) 1st 'RingParam' element
 %       2) 1st 'RFCavity' element
 %       3) field "E0" of the global variable "GLOBVAL"
-%  INPUTS
-%    1. RING	   initial AT structure
-%    2. CAVIPASS   pass method for cavities (default ThinCavityPass)
-%                  '' makes no change,
-%    3. BENDPASS   pass method for bending magnets. Special values:
-%                  '' makes no change,
-%                  'auto' will substitute 'Pass' with 'RadPass' in any method
-%                  (default: 'auto')
-%    4. QUADPASS   pass method for quadrupoles
-%                  '' makes no change,
-%                  'auto' will substitute 'Pass' with 'RadPass' in any method
-%                  (default: '')
 %
-%   OUPUTS
-%     1. RING2     Output ring
-%     2. RADINDEX  Indices of elements with radiation
-%     3. CAVINDEX  Indices of cavities
+%  INPUTS
+%  1. RING	     initial AT structure
+%  2. CAVIPASS   pass method for cavities (default ThinCavityPass)
+%                '' makes no change,
+%  3. BENDPASS   pass method for bending magnets. Special values:
+%                '' makes no change,
+%                'auto' will substitute 'Pass' with 'RadPass' in any method
+%                (default: 'auto')
+%  4. QUADPASS   pass method for quadrupoles
+%                '' makes no change,
+%                'auto' will substitute 'Pass' with 'RadPass' in any method
+%                (default: '')
+%
+%  OUPUTS
+%  1. RING2     Output ring
+%  2. RADINDEX  Indices of elements with radiation
+%  3. CAVINDEX  Indices of cavities
 %
 %  See also ATRADOFF, ATCAVITYON, ATCAVITYOFF
 
