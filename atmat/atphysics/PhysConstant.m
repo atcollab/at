@@ -1,18 +1,15 @@
-%%
-%             Fundamental Physical Constants --- Complete Listing
-%
-%
+%PhysConstant fundamental Physical Constants --- Complete Listing
+%             
 %  From:  http://physics.nist.gov/constants
+
 %%
 % Automatically transfered to matlab syntax using c and awk by:
 % Jarek Luberek / 2009
-%
-% modified by A.Bence for convert in classdef and changing name
-%%
 
+%
+%% modified by A. Bence (SOLEIL) for convert in classdef and changing name
 
 classdef PhysConstant
-
     properties (Constant= true)
         
         x220_lattice_spacing_of_silicon = struct('value',192.0155762e-12, 'uncert', 0.0000050e-12, 'unit', 'm');
@@ -341,6 +338,5 @@ classdef PhysConstant
         weak_mixing_angle= struct('value',0.22255, 'uncert', 0.00056, 'unit', '');
         Wien_frequency_displacement_law_constant= struct('value',5.878933e10, 'uncert', 0.000010e10, 'unit', 'HzK^-1');
         Wien_wavelength_displacement_law_constant= struct('value',2.8977685e-3, 'uncert', 0.0000051e-3, 'unit', 'mK');
-
     end
 end
