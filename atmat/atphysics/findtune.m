@@ -1,5 +1,5 @@
 function [tune,spectrum]=findtune(pos,method)
-%FINDTUNE   get the tune value from turn by tun positions
+%FINDTUNE   get the tune value from turn by turn positions
 %
 %TUNE=FINDTUNE(POS,METHOD)
 %
