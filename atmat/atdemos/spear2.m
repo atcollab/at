@@ -40,8 +40,8 @@ Q1     =    quadrupole('Q1'  , 0.51834,-0.2595850,'QuadLinearPass');
 QFA    =    quadrupole('QFA' , 0.51834, 0.7931150,'QuadLinearPass');
 QDA    =    quadrupole('QDA' , 0.51834,-0.6546270,'QuadLinearPass');
 QFB    =    quadrupole('QFB' , 0.51834, 0.5169680,'QuadLinearPass');
-QF     =    quadrupole('QF'  , 0.51834,  0.4498960277 ,'QuadLinearPass');
-QD     =    quadrupole('QD' , 0.51834,-0.669244391,'QuadLinearPass');
+QF     =    quadrupole('QF'  , 0.51834, 0.4498960,'QuadLinearPass');
+QD     =    quadrupole('QD'  , 0.51834,-0.6692443,'QuadLinearPass');
 
 % Fitted values to produce normalized chromaticities 0,0 
 SF     =    sextupole('SF'  , 0.23335, 1.6768688886,'StrMPoleSymplectic4Pass');
@@ -113,6 +113,8 @@ ELIST =  [SWSE NENW AP];
 ELIST = reverse(ELIST);
 
 buildlat(ELIST);
+THERING = setcellstruct(THERING,'Energy',1:length(THERING),GLOBVAL.E0);
+
 
 evalin('caller','global THERING FAMLIST GLOBVAL');
 disp('** Done **');
