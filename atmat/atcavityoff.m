@@ -6,13 +6,13 @@ function [ring_output,cavitiesIndex]=atcavityoff(ring_input,varargin)
 %   damping.
 %
 %  INPUTS:
-%    1. RING      initial AT structure
-%    2. CAVIPASS  pass method for cavities (default IdentityPass)
+%  1. RING      initial AT structure
+%  2. CAVIPASS  pass method for cavities (default IdentityPass)
 %                 '' makes no change,
 %
 %  OUPUTS
-%    1. RING2          output ring with cavities off
-%    2. CAVITIESINDEX  indices of radiative elements and cavities
+%  1. RING2          output ring with cavities off
+%  2. CAVITIESINDEX  indices of radiative elements and cavities
 %
 %  See also ATCAVITYON, ATRADON, ATRADOFF
 

@@ -10,13 +10,14 @@ function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
 %       3) field "E0" of the global variable "GLOBVAL"
 %
 %  INPUTS
-%    1. RING		initial AT structure
-%    2. CAVIPASS	pass method for cavities (default ThinCavityPass)
-%                   '' makes no change
-%    3. ENERGY      Energy
+%  1. RING		initial AT structure
+%  2. CAVIPASS	pass method for cavities (default ThinCavityPass)
+%               '' makes no change
 %
-%  [RING2,CAVINDEX,ENERGY]=ATCAVITYON(...)
-%           returns the index of radiative elements and cavities + energy
+%  OUPUTS
+%  1. RING2          output ring with cavities off
+%  2. CAVITIESINDEX  indices of radiative elements and cavities
+%  3. ENERGY         energy
 %
 %  See also ATRADOFF, ATRADON, ATCAVITYOFF
 
