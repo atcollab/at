@@ -4,7 +4,7 @@ function [Bcum, Mcum, r] = findthickmpoleraddifm(rin, PolynomA, PolynomB,L, irho
 % Fourth order-symplectic integrator constants
 persistent DRIFT1 DRIFT2 KICK1 KICK2
 if isempty(DRIFT1)
-    DRIFT1   = 0.6756035959798286638;
+    DRIFT1   =  0.6756035959798286638;
     DRIFT2   = -0.1756035959798286639;
     KICK1    =  1.351207191959657328;
     KICK2    = -1.702414383919314656;
