@@ -1,4 +1,4 @@
-function [TD, varargout] = twissring(RING,DP,varargin);
+function [TD, varargout] = twissring(RING,DP,varargin)
 %TWISSRING calculates linear optics functions for an UNCOUPLED ring
 % 
 % [TwissData, tune]  = TWISSRING(LATTICE,DP) calculates twiss parameters
