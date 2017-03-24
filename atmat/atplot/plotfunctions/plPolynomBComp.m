@@ -1,7 +1,7 @@
 function plotdata=plPolynomBComp(lindata,ring,dpp,varargin) %#ok<INUSD>
-%DEFAULTPLOT    Default plotting function for ATPLOT
+% PLPOLYNOMBCOMP default plotting function for ATPLOT
 %
-%Plots polynomB for ring and ring1
+% Plots polynomB for ring and ring1
 
 CoD=cat(2,lindata.ClosedOrbit);
 PolyBVal=zeros(size(CoD(1,:)));
