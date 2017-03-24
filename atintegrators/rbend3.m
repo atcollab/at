@@ -19,8 +19,27 @@ function Elem=rbend3(fname,L,A,A1,A2,K, gap, FF1, FF2, method)
 %
 %   NOTES
 %     1. Deprecated function, use atrbend instead
+%     2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
+%            fields
 %
-%   See also rbend, rbend3, atrbend, atsbend
+%       FringeBendEntrance/FringeBendExit = 0,1,2,3
+%       Version 0 no dipole fringe fields
+%       Version 1 legacy version Brown First Order (K. Brown. A First and Second Order 
+%                  Matrix Theory for the Design of Beam Transport Systems and Charged 
+%                  Particle Spectrometers. Internal report, SLAC-75, 1982)
+%       Version 2 SOLEIL close to second order of Brown (J. Bengtsson and M. Meddahi. 
+%                 Modeling of Beam Dynamics and Comparison with Measurements for 
+%                 the Advanced Light Source. London, UK, 1994.)
+%       Version 3 THOMX (Dipole Fringe Field Effects in the ThomX Ring, J. Zhang and 
+%                 A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
+%
+%       FringeQuadEntrance/FringeQuadExit = 0,1,2
+%       Version 0 no qudrupole fringe fields
+%       Version 1 Lee-Whiting Formula
+%       Version 2 Linear quadrupole fringe field using the 5 integrant a la
+%                 Elegant          
+%
+%   See also rbend, rbend2, atrbend, atsbend
 
 % 
 % Added by Laurent S. Nadolski, SOLEIL, 03/04
@@ -31,6 +50,11 @@ ElemData.ExitAngle      = A2;
 ElemData.FullGap   		= gap;
 ElemData.FringeInt1	    = 0.5*FF1; % same convention as in Tracy II
 ElemData.FringeInt2	    = 0.5*FF2; % same convention as in Tracy II
+
+ElemData.FringeBendEntrance	= 2;
+ElemData.FringeBendExit 	= 2;
+ElemData.FringeQuadEntrance = 0;
+ElemData.FringeQuadExit     = 0; 
 
 global FAMLIST
 Elem = length(FAMLIST)+1; % number of declare families including this one
