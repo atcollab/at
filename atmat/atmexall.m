@@ -1,17 +1,17 @@
 function atmexall(varargin)
-%ATMEXALL builds all AT platform deendent mex-files from C-sources
+%ATMEXALL builds all AT platform dependent mex-files from C-sources
+%
 % On UNIX platform, the GNU gcc compiler must be installed and
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
-
 PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
 LIBDL='';
 switch computer
-case'GLNX86'
-    LIBDL=' -ldl';
-case 'GLNXA64'
-    LIBDL=' -ldl';
+    case'GLNX86'
+        LIBDL=' -ldl';
+    case 'GLNXA64'
+        LIBDL=' -ldl';
 end
 
 try
@@ -26,6 +26,7 @@ end
 
 % Navigate to the directory that contains tracking functions
 lastwarn('');
+
 PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
 cdir=fullfile(atroot,'attrack','');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,' -I''',PASSMETHODDIR,''' -outdir ',cdir,' ',fullfile(cdir,'atpass.c'),LIBDL];
