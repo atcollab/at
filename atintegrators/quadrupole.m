@@ -6,10 +6,10 @@ function z=quadrupole(fname,L,K,method,varargin)
 %	K				K-value of the quadrupole
 %	NumIntSteps		Number of integration steps
 %	MaxOrder
-%	R1					6 x 6 rotation matrix at the entrance
+%	R1				6 x 6 rotation matrix at the entrance
 %	R2        		6 x 6 rotation matrix at the entrance
-%	T1					6 x 1 translation at entrance 
-%	T2					6 x 1 translation at exit
+%	T1				6 x 1 translation at entrance 
+%	T2				6 x 1 translation at exit
 %	PassMethod     name of the function to use for tracking
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
