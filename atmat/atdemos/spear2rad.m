@@ -1,6 +1,5 @@
 function spear2rad
-%SPEAR2RAD example lattice definition file
-% with CAVITY and CLASSICAL radiation
+%SPEAR2RAD example lattice definition file with CAVITY and CLASSICAL radiation
 % Created 11/21/99 
 % Simplified SPEAR-II lattice
 % no BPMs, no correctors
@@ -142,6 +141,7 @@ for i=1:length(THERING)
    FAMLIST{ELIST(i)}.KidsList = [FAMLIST{ELIST(i)}.KidsList i];
 end
 
+THERING = setcellstruct(THERING,'Energy',1:length(THERING),GLOBVAL.E0);
 
 evalin('caller','global THERING FAMLIST GLOBVAL' );
 disp('** Done **');
