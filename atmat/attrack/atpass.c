@@ -36,7 +36,7 @@
 #define USE_LOCAL_COPY		2
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
-									exceedes this limit it is marked as lost */
+									exceeds this limit it is marked as lost */
 
 
 typedef int*(*MYPROC)(mxArray*, int*, double*, int, int);
