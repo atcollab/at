@@ -36,6 +36,7 @@ eval(['mex ', PLATFORMOPTION, '-O -c modnaff.c ']);
 disp('Compiling: example.c');
 %mex LDFLAGS='-pthread -shared -m64' -I/usr/local/matlab/extern/include -O -c complexe.c
 eval(['mex ', PLATFORMOPTION, '-O -c modnaff.c ']);
+eval(['mex ', PLATFORMOPTION, '-O -c complexe.c ']);
 
 disp('Compiling: nafflib.c');
 
