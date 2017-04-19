@@ -1,15 +1,19 @@
 %give some initial coordinates.  Track through sample lattices.
 %Store results for tracking tests.
-xextent = 0.001;
-yextent = 0.001;
+xextent = 0.003;
+yextent = 0.003;
+deltaextent = 0.02;
 n = 10;
 Z0=[];
 for j=-n:n
     for k=-n:n
+        for l=-n:n
         x0=j*xextent/n;
-        y0=j*yextent/n;
-        PS0=[x0;0;y0;0;0;0];
+        y0=k*yextent/n;
+        delta0=l*deltaextent/n;
+        PS0=[x0;0;y0;0;deltaextent;0];
         Z0=[Z0,PS0];
+        end
     end
 end
 %Now, load each lattice and track
