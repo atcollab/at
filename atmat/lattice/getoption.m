@@ -1,27 +1,38 @@
-function [optval,opts] = getoption(opts,optname,optval)
+function [optval,opts] = getoption(opts,optname,defval)
 %GETOPTION Extract one option from an option list ['Name',value,...]
 %
-%OPTVAL=GETOPTION(OPTIONS,OPTNAME,OPTDEFAULT)
+%OPTVAL=GETOPTION(ARGS,OPTNAME)
+%	Return the value of the desired option from the argument list and
+%	send an exception if it is absent.
+% OPTLIST:      Option list (cell array or structure)
+% OPTNAME:      Name of the desired option
 %
-%OPTLIST:   Option list (cell array or structure)
-%OPTNAME:   Name of the desired option
-%OPTDEFAULT:Default value for the option (default: [])
 %
-%[OPTVAL,NEWOPTIONS]=GETOPTION(...)
-%           Returns new options after removing the processed ones
+%OPTVAL=GETOPTION(ARGS,OPTNAME,OPTDEFAULT)
+%	Return a default value if the option is absent
+% OPTDEFAULT:   Default value for the option
+%
+%[OPTVAL,NEWARGS]=GETOPTION(...)
+%  Returns remaining options after removing the processed ones
 %
 %See also GETFLAG
 
-if nargin < 3, optval=[]; end
 if iscell(opts)
-    ok=[strcmpi(optname,opts(1:end-1)) false];
+    ok=[strcmpi(optname,opts(1:end-1)) false];  %option name cannot be the last argument
     if any(ok)
         okval=circshift(ok,[0,1]);
-        optval=opts{find(okval,1,'last')};
+        defval=opts{find(okval,1,'last')};
         opts(ok|okval)=[];
     end
-elseif isstruct(opts) && isfield(opts,optname)
-    optval=opts.(optname);
-    opts=rmfield(opts,optname);
+elseif isstruct(opts)
+    if isfield(opts,optname)
+        defval=opts.(optname);
+        opts=rmfield(opts,optname);
+    end
+end
+try
+    optval=defval;
+catch
+    error('getoption:missing','Option "%s" is missing',optname);
 end
 end
