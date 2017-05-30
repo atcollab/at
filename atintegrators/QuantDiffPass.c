@@ -15,8 +15,8 @@ struct elem
 };
 
 double drand(void);   /* uniform distribution, (0..1] */
-
 double random_normal(void);  /* normal distribution, centered on 0, std dev 1 */
+double generateGaussian(double mean,double stdDev);
 
 void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_particles)
 /* Lmatp 6x6 matrix
@@ -29,8 +29,7 @@ void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_pa
   double randnorm[6];
   double diffusion[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
   static int initSeed = 1;	/* 	If this variable is 1, then I initialize the seed
-				 * 	to the clock and I change the variable to 0
-				 */
+				 * 	to the clock and I change the variable to 0*/
   
   if(Seed)
   {
@@ -56,7 +55,8 @@ void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_pa
       for (i=0;i<6;i++)
       {
           diffusion[i]=0.0;
-          randnorm[i]=random_normal();
+          /*randnorm[i]=random_normal();*/
+          randnorm[i]= generateGaussian(0.0,1.0);
       }
       
       for (i=0;i<6;i++)
@@ -86,6 +86,32 @@ double drand(void)   /* uniform distribution, (0..1] */
 double random_normal(void)  /* normal distribution, centered on 0, std dev 1 */
 {
     return sqrt(-2*log(drand())) * cos(2*M_PI*drand());
+}
+
+double generateGaussian(double mean,double stdDev)
+{
+	static bool hasSpare = false;
+	static double spare;
+
+	if(hasSpare)
+
+	{
+		hasSpare = false;
+		return mean + stdDev * spare;
+	}
+
+	hasSpare = true;
+	static double u, v, s;
+	do
+	{
+		u = (rand() / ((double) RAND_MAX)) * 2.0 - 1.0;
+		v = (rand() / ((double) RAND_MAX)) * 2.0 - 1.0;
+		s = u * u + v * v;
+	}
+	while( (s >= 1.0) || (s == 0.0) );
+	s = sqrt(-2.0 * log(s) / s);
+	spare = v * s;
+	return mean + stdDev * u * s;
 }
 
 
