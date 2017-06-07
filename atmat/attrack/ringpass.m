@@ -27,10 +27,14 @@ function [Rout, varargout] = ringpass(ring, Rin, nturns, varargin)
 %  Return additional information on lost particles
 %   NHIST       number elements before the loss to be traced (default: 1)
 %   LOSSINFO	1x1 structure with the following fields:
-%               turn        1xN vector, turn number where the particle is lost
-%               element     1xN vector, element number where the particle is lost
-%               coordinates 6xNxNHIST array, coordinates at the entrance of the
-%               LHIST elements before the loss
+%               lost                 1xN logical vector, indicating lost particles
+%               turn                 1xN vector, turn number where the particle is lost
+%               element              1xN vector, element number where the particle is lost
+%               coordinates_at_loss  6xN array, coordinates at the exit of
+%                                    the element where the particle is lost
+%                                    (sixth coordinate is inf if particle is lost in a physical aperture)
+%               coordinates          6xNxNHIST array, coordinates at the entrance of the
+%                                    LHIST elements before the loss
 %
 % ROUT=RINGPASS(...,'reuse') with 'reuse' flag is more efficient because
 %    it reuses some of the data  and functions stored in the persistent
