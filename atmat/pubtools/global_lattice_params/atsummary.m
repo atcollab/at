@@ -17,7 +17,8 @@ function sum = atsummary
 global THERING
 
 % Structure to store info
-sum.e0 = getenergy('Model');
+%sum.e0 = getenergy('Model');
+sum.e0 = atenergy(THERING);
 sum.circumference = findspos(THERING, length(THERING)+1);
 sum.revTime = sum.circumference / 2.99792458e8;
 sum.revFreq = 2.99792458e8 / sum.circumference;
