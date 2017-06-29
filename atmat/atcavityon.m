@@ -11,7 +11,7 @@ function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
 %
 %  INPUTS
 %  1. RING		initial AT structure
-%  2. CAVIPASS	pass method for cavities (default ThinCavityPass)
+%  2. CAVIPASS	pass method for cavities (default CavityPass)
 %               '' makes no change
 %
 %  OUPUTS

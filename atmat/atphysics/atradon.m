@@ -11,7 +11,7 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring1,varargin)
 %
 %  INPUTS
 %  1. RING	     initial AT structure
-%  2. CAVIPASS   pass method for cavities (default ThinCavityPass)
+%  2. CAVIPASS   pass method for cavities (default CavityPass)
 %                '' makes no change,
 %  3. BENDPASS   pass method for bending magnets. Special values:
 %                '' makes no change,
