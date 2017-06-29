@@ -79,13 +79,13 @@ end
 D = [d*eye(6) zeros(6,1)];
 %D = [0.5*d*eye(6) -0.5*d*eye(6) zeros(6,1)];
 
-reuse={};
+args={};
 change=Inf;
 itercount = 0;
 while (change > dps) && (itercount < max_iterations)
     RMATi= Ri(:,ones(1,7)) + D;
     %RMATi= Ri(:,ones(1,13)) + D;
-    RMATf = linepass(RING,RMATi,reuse{:});
+    RMATf = linepass(RING,RMATi,args{:});
     % compute the transverse part of the Jacobian 
     J6 = (RMATf(:,1:6)-RMATf(:,7*ones(1,6)))/d;
     %J6 = (RMATf(:,1:6)-RMATf(:,7:12))/d;
@@ -94,7 +94,7 @@ while (change > dps) && (itercount < max_iterations)
     change = norm(Ri_next - Ri);
     Ri = Ri_next;
     itercount = itercount+1;
-    reuse={'reuse'};
+    args={'KeepLattice'};
 end
 
 if itercount == max_iterations
@@ -106,7 +106,7 @@ if (nargin<2) || (isscalar(varargin{1}) && (varargin{1}==(length(RING)+1)))
     orbit=Ri;
 else	% 2-nd input argument - vector of reference points alog the Ring
         % is supplied - return orbit
-    orbit = linepass(RING,Ri,varargin{1},'reuse');
+    orbit = linepass(RING,Ri,varargin{1},'KeepLattice');
 end
 
 if nargout >= 2

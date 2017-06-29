@@ -46,19 +46,17 @@ function [Rout,varargout] = linepass(line,Rin,refpts,varargin)
 %               coordinates          6xNxNHIST array, coordinates at the entrance of the
 %                                    LHIST elements before the loss
 %
-% ROUT=LINEPASS(...,'reuse') with 'reuse' flag is more efficient because
-%    it reuses some of the data  and functions stored in the persistent
-%    memory from previous calls to RINGPASS.
+% ROUT=LINEPASS(...,'KeepLattice') Tracking with the 'KeepLattice' flag is
+%   more efficient because it reuses persistent data structures stored in
+%   memory in previous calls to LINEPASS.
 %
-%    !!! In order to use this option, RINGPASS or LINEPASS must first be
-%    called without the reuse flag. This will create persistent data structures
-%    and keep pointers to pass-method functions.
+%	!!! In order to use this option, LINEPASS must first be called
+%	without the 'KeepLattice' flag. It then assumes that the elements in LINE
+% 	DO NOT CHANGE between calls. Otherwise, LINEPASS must be called again
+%   without 'KeepLattice'.
 %
-%    !!! LINEPASS(...'reuse') assumes that the number of
-%    elements in LINE and pass methods specified in the
-%    PassMethod field of each element DO NOT CHANGE between
-%    calls. Otherwise, LINEPASS without 'reuse' must be called again.
-%    The values of elements fields such as 'Length' or 'K' are allowed to change
+% ROUT=LINEPASS(...,'reuse') is kept for compatibilty with previous
+% versions. It has no effect.
 %
 % Rfin=LINEPASS(...,PREFUNC)
 % Rfin=LINEPASS(...,PREFUNC,POSTFUNC)
@@ -85,11 +83,12 @@ elseif islogical(refpts)
 elseif ~isnumeric(refpts)
     refpts = length(line)+1;
 end
-[reuse,args]=getflag(varargin, 'reuse');
+[keeplattice,args]=getflag(varargin, 'KeepLattice');
+[dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
 nhist=getoption(struct(args{~funcargs}), 'nhist',1);
 
-newlattice = double(~reuse);
+newlattice = double(~keeplattice);
 
 [prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
     args(funcargs));
@@ -97,7 +96,7 @@ newlattice = double(~reuse);
 try
     [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,nhist);
     
-    if nargout>1;
+    if nargout>1
         if nargout>2, varargout{2}=lossinfo; end
         varargout{1} = lossinfo.lost;
     else % if no output arguments - create LOSSFLAG, for backward compatibility with AT 1.2
