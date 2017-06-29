@@ -1,7 +1,9 @@
 function [flag,opts] = getflag(opts,optname)
-%GETFLAG Check the presence of an option in an argument list
+%GETFLAG Check the presence of a flag in an argument list
 %
 %OPTION=GETFLAG(ARGS,OPTNAME)
+%   Return a logical value indicating the presence of the flag name in the
+%   argument list. Flag names are case insensitive.
 %
 %ARGS:      Argument list (cell array)
 %OPTNAME:	Name of the desired option (string)
