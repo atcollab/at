@@ -19,12 +19,12 @@ function rp = ringpara(THERING,varargin)
 if nargin==0
     global THERING;
 end
-Cq = 3.83E-13; 
+Cq = 3.8319E-13; 
 a = findcells(THERING,'Energy');
 if isempty(a);
-   gamma = 3000/.511;
+   gamma = 3000/.510998;
 else
-   gamma = THERING{a(1)}.Energy/.511E6; 
+   gamma = THERING{a(1)}.Energy/.510998E6; 
 end
 
 dpindex = findcells(THERING,'BendingAngle');
@@ -84,7 +84,7 @@ end
 % emittx =  Cq*gamma^2*curHavg/Jx*1e9; %nm-rad
 R = findspos(THERING, length(THERING)+1)/2/pi;
 alphac = I1/2/pi/R;
-U0 = 14.085*(gamma*.511/1000)^4*I2*1000.; %eV
+U0 = 14.085*(gamma*.510998/1000)^4*I2*1000.; %eV
 if nargin>=2
     fprintf('dipole radiation loss:  %4.5f keV\n', U0/1000.);
     U0 = varargin{1}*1e6; %convert MeV to eV 
@@ -107,12 +107,12 @@ emitty_lim = Cq*meanbetayovers/2/Jy*meaninvr3/meaninvr2;
 
 cspeed = 2.99792458e8; %m/s
 T0 = 2*pi*R/cspeed;
-alpha0 = U0/1.0e6/2/T0/(gamma*.511);
+alpha0 = U0/1.0e6/2/T0/(gamma*.510998);
 alphax = Jx*alpha0;  %horizontal damping rate, 1/s
 alphay = Jy*alpha0;
 alphaE = Je*alpha0;
 
-rp.E0 = gamma*0.511E6;
+rp.E0 = gamma*0.510998E6;
 rp.R = R;
 rp.alphac = alphac;
 rp.U0 = U0; %eV
