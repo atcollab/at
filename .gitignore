@@ -1,0 +1,31 @@
+
+# Shared objects
+*.so
+*.mexa64
+
+# Compiled python
+*.pyc
+
+# pytest cache
+.cache
+
+# Virtual environment
+venv
+venv3
+
+# pyat build stuff
+pyat/build
+pyat/dist
+pyat/at.egg-info
+pyat/prefix
+pyat/integrator-src
+*.egg-info
+
+# cmake
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+
+# Vim
+*.swp
+*.swo
