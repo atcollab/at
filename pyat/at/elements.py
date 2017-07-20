@@ -1,14 +1,26 @@
+"""
+Module to define common elements used in AT.
+
+Each element has a default PassMethod attribute for which it should have the
+appropriate attributes.  If a different PassMethod is set, it is the caller's
+responsibility to ensure that the appropriate attributes are present.
+"""
 import numpy
 import itertools
 
 
 class Element(object):
     REQUIRED_ATTRIBUTES = ['FamName']
+    FLOAT_ARRAYS = ['R1', 'R2', 'T1', 'T2']
 
     def __init__(self, family_name, length=0.0, **kwargs):
         self.FamName = family_name
         self.Length = length
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
+        for field in Element.FLOAT_ARRAYS:
+            if field in kwargs:
+                kwargs[field] = numpy.ascontiguousarray(kwargs[field],
+                                                        dtype=numpy.float64)
         for k in kwargs:
             setattr(self, k, kwargs[k])
 
@@ -167,6 +179,11 @@ class Sextupole(Multipole):
         poly_b = kwargs.pop('PolynomB', [0, 0, h])
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Sextupole, self).__init__(family_name, length, [], poly_b, **kwargs)
+
+
+class Octupole(Multipole):
+    """pyAT octupole element, with no changes from multipole at present"""
+    pass
 
 
 class RFCavity(Element):

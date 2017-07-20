@@ -1,6 +1,11 @@
-from setuptools import setup, Extension
-import numpy
 import sys
+try:
+    import numpy
+except ImportError:
+    print('\npyAT requires numpy. '
+          'Please install numpy: "pip install numpy"\n')
+    sys.exit()
+from setuptools import setup, Extension
 import os
 import glob
 import shutil
@@ -43,13 +48,12 @@ at = Extension('at.atpass',
                include_dirs=[numpy.get_include(), integrator_src],
                extra_compile_args=cflags)
 
-setup(name='at',
+setup(name='at-python',
       version='0.0.1',
       description='Accelerator Toolbox',
       author='The AT collaboration',
       author_email='atcollab-general@lists.sourceforge.net',
-      install_requires=['numpy'],
-      package_dir={'at': ''},
+      install_requires=['numpy>=1.10'],
       packages=['at', 'at.integrators'],
       ext_modules=[at] + [integrator_extension(pm) for pm in pass_methods],
       zip_safe=False)

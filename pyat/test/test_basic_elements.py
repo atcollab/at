@@ -4,12 +4,6 @@ from at import atpass
 from at import elements
 
 
-@pytest.fixture
-def rin():
-    rin = numpy.array(numpy.zeros((1,6)))
-    return rin
-
-
 def test_correct_dimensions_does_not_raise_error(rin):
     l = []
     atpass(l, rin, 1)
@@ -18,74 +12,8 @@ def test_correct_dimensions_does_not_raise_error(rin):
     rin = numpy.zeros((2,6))
 
 
-def test_incorrect_types_raises_value_error(rin):
-    l = []
-    with pytest.raises(ValueError):
-        atpass(1, rin, 1)
-    with pytest.raises(ValueError):
-        atpass(l, 1, 1)
-    with pytest.raises(ValueError):
-        atpass(l, rin, 'a')
-
-
-def test_incorrect_dimensions_raises_value_error():
-    l = []
-    rin = numpy.array(numpy.zeros((1,7)))
-    with pytest.raises(ValueError):
-        atpass(l, rin, 1)
-    rin = numpy.array(numpy.zeros((6,1)))
-    with pytest.raises(ValueError):
-        atpass(l, rin, 1)
-
-
-def test_fortran_aligned_array_raises_value_error():
-    rin = numpy.asfortranarray(numpy.zeros((2,6)))
-    l = []
-    with pytest.raises(ValueError):
-        atpass(l, rin, 1)
-
-
-def test_missing_pass_method_raises_attribute_error(rin):
-    m = elements.Marker('marker')
-    l = [m]
-    del m.PassMethod
-    with pytest.raises(AttributeError):
-        atpass(l, rin, 1)
-
-
-def test_missing_length_raises_attribute_error(rin):
-    m = elements.Drift('drift', 1.0)
-    l = [m]
-    del m.Length
-    with pytest.raises(AttributeError):
-        atpass(l, rin, 1)
-
-
-@pytest.mark.parametrize("reuse", (True, False))
-def test_reuse_attributes(rin, reuse):
-    m = elements.Drift('drift', 1.0)
-    l = [m]
-    rin[0,0] = 1e-6
-    rin[0,1] = 1e-6
-    rin_copy = numpy.copy(rin)
-    # two turns with original lattice
-    atpass(l, rin, 2)
-    # one turn with original lattice
-    atpass(l, rin_copy, 1)
-    # change an attribute
-    m.Length = 2
-    # one turn with altered lattice
-    atpass(l, rin_copy, 1, reuse=reuse)
-    if reuse:
-        numpy.testing.assert_equal(rin, rin_copy)
-    else:
-        with pytest.raises(AssertionError):
-            numpy.testing.assert_equal(rin, rin_copy)
-
-
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
 def test_dipole(rin, dipole_class):
-    print(elements.__file__)
     b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
     l = [b]
     rin[0,0] = 1e-6
@@ -174,7 +102,6 @@ def test_quad(rin):
     lattice = [q]
     rin[0, 0] = 1e-6
     atpass(lattice, rin, 1)
-    print(rin)
     expected = numpy.array([0.921060994002885,
                             -0.389418342308651,
                             0,
