@@ -1,0 +1,44 @@
+
+language: python
+
+matrix:
+  include:
+    - os: linux
+      python: "2.7"
+    - os: linux
+      python: "3.3"
+    - os: linux
+      python: "3.4"
+    - os: linux
+      python: "3.5"
+
+    - os: osx
+      sudo: required
+      language: generic
+    - os: osx
+      sudo: required
+      language: generic
+      env: PYTHON=3
+
+install: |
+  if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+    if [[ $PYTHON == '3' ]]; then
+      brew update
+      brew install python3
+      python3 -m venv venv
+      source venv/bin/activate
+    fi
+    cd pyat
+    pip$PYTHON install --upgrade pip setuptools wheel
+    pip$PYTHON install --only-binary=numpy,scipy -r requirements.txt
+    python$PYTHON setup.py install
+  else
+    cd pyat
+    pip install --upgrade pip setuptools wheel
+    pip install --only-binary=numpy,scipy -r requirements.txt
+    python setup.py install
+  fi
+
+script:
+ - py.test test
+
