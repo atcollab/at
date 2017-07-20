@@ -280,7 +280,7 @@ void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
     for(c = 0;c<num_particles;c++)	/* Loop over particles */
     {   r6 = r+c*6;
-        if(!mxIsNaN(r6[0]))
+        if(!atIsNaN(r6[0]))
         {
             /*  misalignment at entrance  */
             if (useT1)
