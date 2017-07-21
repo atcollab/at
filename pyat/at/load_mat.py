@@ -31,7 +31,7 @@ def load_element(element_array):
         kwargs[item] = data
 
     try:
-        class_name = kwargs.pop('Class').title()
+        class_name = kwargs.pop('Class')
         class_name = CLASS_MAPPING.get(class_name, class_name)
     except KeyError:
         class_name = FAMILY_MAPPING.get(kwargs['FamName'], 'Drift')
