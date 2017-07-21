@@ -9,10 +9,10 @@ LATTICE_FILE = '../atmat/atmatch/ExampleATMATCH/dba.mat'
 
 
 DP = 1e-5
-M44_MATLAB = numpy.array([[-0.6638, 2.2341, 0, 0],
-                          [-0.2504, -0.6638, 0, 0],
-                          [0, 0, -0.9992, 0.2622],
-                          [0, 0, -0.0059495, -0.9992]])
+M44_MATLAB = numpy.array([[-0.66380202, 2.23414498, 0, 0],
+                          [-0.25037182, -0.66380182, 0, 0],
+                          [0, 0, -0.99921978, 0.262170798],
+                          [0, 0, -0.0059496965, -0.99921979]])
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def test_find_orbit4_with_two_refpts(ring):
 def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
     m44, mstack = physics.find_m44(ring, dp=DP, refpts=refpts)
 
-    numpy.testing.assert_allclose(m44, M44_MATLAB.T, rtol=1e-3, atol=1e-7)
+    numpy.testing.assert_allclose(m44[:4], M44_MATLAB.T[:4], rtol=1e-5, atol=1e-7)
     stack_size = 0 if refpts is None else len(refpts)
     assert mstack.shape == (stack_size, 4, 4)
 
@@ -62,7 +62,7 @@ def test_get_twiss(ring, refpts):
     twiss = physics.get_twiss(ring, DP, refpts, get_chrom=True)
     numpy.testing.assert_allclose(twiss.s_pos[-1], 56.209377216)
     numpy.testing.assert_allclose(twiss.closed_orbit[-1], [1.0916359e-7, 0, 0, 0], atol=1e-12)
-    numpy.testing.assert_allclose(twiss.m44, M44_MATLAB.T, rtol=1e-3, atol=1e-7)
+    numpy.testing.assert_allclose(twiss.m44, M44_MATLAB.T, rtol=1e-5, atol=1e-7)
     numpy.testing.assert_almost_equal(twiss.beta[:, -1], (2.9872, 6.6381), decimal=4)
     # Why is the tune different for these two cases?
     if refpts is None:
