@@ -6,7 +6,7 @@ esrf=[cav;esrf];
 
 esrf=atsetcavity(esrf,8e6,0,992);
 
-[fastring,fastringrad]=atfastring2(esrf);
+[fastring,fastringrad]=atfastring(esrf);
 fastringLin=fastring;
 fastringLin(3)=[];
 m66=fastringLin{2}.M66;
