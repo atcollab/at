@@ -32,12 +32,12 @@ whos SOMEDRIFT
 % Now use function DRIFTPASS to track through SOMEDRIFT
 pause % Press any key to continue 
 clc
-driftpass(SOMEDRIFT,R)
+DriftPass(SOMEDRIFT,R)
 %
 % DRIFTPASS and other tracking functions in accelerator Toolbox 
 % accept matrix input to simultaneously track many particles
 % 
-driftpass(SOMEDRIFT,RRR)  
+DriftPass(SOMEDRIFT,RRR)  
 % Obviously in a drift space particle momentums don't change
 %
 % Try this
