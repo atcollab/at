@@ -30,6 +30,7 @@ Ym(rapind)=ym;
 Eh(eapind)=eh;
 Ev(eapind)=ev;
 
+
 Xp=fixgaps(Xp);
 Xm=fixgaps(Xm);
 Yp=fixgaps(Yp);
@@ -37,8 +38,8 @@ Ym=fixgaps(Ym);
 Eh=fixgaps(Eh);
 Ev=fixgaps(Ev);
 
-plotdata(1).values=[Xp Xm Yp Ym]*1e2;%
-plotdata(1).labels={'x ','-x','y','-y'};
+plotdata(1).values=[Xp -Xm Yp -Ym]*1e2;%
+plotdata(1).labels={'x ','x','y','y'};
 plotdata(1).axislabel='rectangular aperture [cm]';
 % 
 plotdata(2).values=[Eh Ev]*1e2;%
@@ -56,15 +57,18 @@ function y=fixgaps(x)
 %
 
 % R. Pawlowicz 6/Nov/99
-
 y=x;
+
 
 bd=isnan(x);
 gd=find(~bd);
+
+if length(gd)>2 % modify for plot in AT
 
 bd([1:(min(gd)-1) (max(gd)+1):end])=0;
 
 
 y(bd)=interp1(gd,x(gd),find(bd)); 
+end
 
 end
