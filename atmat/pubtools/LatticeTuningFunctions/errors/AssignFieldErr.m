@@ -31,7 +31,7 @@ Pa=getcellstruct(r,'PolynomA',refpos,1,N);
 
 if N==1 && P(1)==0
     % is a dipole.
-    P=getcellstruct(r,'BendingAngle',refpos);
+    P=getcellstruct(r,'BendingAngle',refpos);% ./getcellstruct(r,'Length',refpos);
 end
 
 if length(rho)==1
