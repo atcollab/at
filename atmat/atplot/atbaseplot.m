@@ -26,6 +26,7 @@ function curve = atbaseplot(varargin)
 %ATBASEPLOT(...,'OptionName',OptionValue,...) Available options:
 %   'synopt',true|false         Plots the lattice elements
 %   'labels',REFPTS             Display the names of selected element names
+%   'index',REFPTS             Display the index of selected element names
 %   'leftargs',{properties}     properties set on the left axis
 %   'rightargs',{properties}    properties set on the right axis
 %
