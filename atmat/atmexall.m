@@ -29,10 +29,10 @@ lastwarn('');
 
 PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
 cdir=fullfile(atroot,'attrack','');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,' -I''',PASSMETHODDIR,''' -outdir ',cdir,' ',fullfile(cdir,'atpass.c'),LIBDL];
+MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'atpass.c'),LIBDL];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
-[warnmess,warnid]=lastwarn;
+[warnmess,warnid]=lastwarn; %#ok<ASGLU>
 if strcmp(warnid,'MATLAB:mex:GccVersion_link')
     warning('Disabling the compiler warning');
 end
@@ -40,13 +40,22 @@ end
 % Navigate to the directory that contains some accelerator physics functions
 oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
 cdir=fullfile(atroot,'atphysics','');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' -I''',PASSMETHODDIR,''' ',...
-    fullfile(cdir,'findmpoleraddiffmatrix.c')];
+MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'findmpoleraddiffmatrix.c')];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
-MEXCOMMAND = ['mex ',PLATFORMOPTION,' -outdir ',cdir,' ',fullfile(cdir,'RDTelegantAT.cpp')];
+MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'RDTelegantAT.cpp')];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
+
+% NAFF
+cdir=fullfile(atroot,'atphysics','nafflib');
+MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'nafflib.c'),' ',...
+    fullfile(cdir,'modnaff.c'),' ',...
+    fullfile(cdir,'complexe.c'),' ',...
+    ];
+disp(MEXCOMMAND);
+eval(MEXCOMMAND);
+
 
 % Navigate to the directory that contains pass-methods 
 mexpassmethod('all',PLATFORMOPTION);
