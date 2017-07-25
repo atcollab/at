@@ -78,7 +78,7 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
     
     size_t sz = 9*nslice*sizeof(double) + (nslice+num_particles)*sizeof(int);
     double *rtmp;
-    int i,ii, index;
+    int i,ii;
 
     double *weight;
     double *xpos;
@@ -208,7 +208,7 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
                 register double wi = weight[ii];
                 register double dx = xpos[ii];
                 register double dy = ypos[ii];
-                index = binarySearch(waketableT,-ds,nelem,0,0);              
+                int index = binarySearch(waketableT,-ds,nelem,0,0);              
                 double fieldx = getWake(waketableDX,waketableT,-ds,index);
                 double fieldy = getWake(waketableDY,waketableT,-ds,index);
                 double fieldx2 = getWake(waketableQX,waketableT,-ds,index);
