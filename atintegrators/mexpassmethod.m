@@ -25,7 +25,7 @@ PLATFORMOPTION=[varargin{:}];
 %Additional platform-specific options for mex
 pdir=fileparts(mfilename('fullpath'));
 if ispc()
-    EXPORT='%s';
+    EXPORT=' %s';
     map1='';
 else
     switch computer
@@ -63,6 +63,11 @@ if ischar(PASSMETHODS) % one file name - convert to a cell array
         D = dir(fullfile(pdir,'*Pass.c'));
         ok=cellfun(@(nm) nm(1)~='.',{D.name});  % Eliminate invisible files
         PASSMETHODS=cellfun(@(nm) strrep(nm,'.c',''),{D(ok).name},'UniformOutput',false);
+        try
+            generate_passlist(PASSMETHODS);
+        catch err
+            fprintf(2,'\nCannot generate the list of passmethods: %s\n\n', err.message);
+        end
     else % Mex a single specifie pass-method
         PASSMETHODS={PASSMETHODS};
     end
@@ -75,24 +80,38 @@ for i = 1:length(PASSMETHODS)
         try
             if exist('map2','var')
                 try
-                    MEXSTRING = ['mex ',PLATFORMOPTION,sprintf(EXPORT,map1),'-outdir ',pdir,' ',PM];
+                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(EXPORT,map1),PM];
                     disp(MEXSTRING);
                     evalin('base',MEXSTRING);
                 catch
-                    MEXSTRING = ['mex ',PLATFORMOPTION,sprintf(EXPORT,map2),'-outdir ',pdir,' ',PM];
+                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(EXPORT,map2),PM];
                     disp(MEXSTRING);
                     evalin('base',MEXSTRING);
                 end
             else
-                MEXSTRING = ['mex ',PLATFORMOPTION,sprintf(EXPORT,map1),'-outdir ',pdir,' ',PM];
+                MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(EXPORT,map1),PM];
                 disp(MEXSTRING);
                 evalin('base',MEXSTRING);
             end
         catch err
-            disp(['Could not compile ' PM char(10) err.message]);
+            fprintf(2,'Could not compile %s: %s\n',PM,err.message);
         end
     else
-        disp([PM,'.c',' - NOT FOUND! SKIP']);
+        fprintf(2,'%s not found, skip to next\n',PM);
     end
 end
+
+    function generate_passlist(passmethods)
+        [fid,msg]=fopen(fullfile(pdir,'passmethodlist.m'),'wt');
+        if ~isempty(msg)
+            error(msg);
+        end
+        fprintf(fid,'function passmethodlist\n');
+        fprintf(fid,'%%PASSMETHODLIST\tUtility function for MATLAB Compiler\n%%\n');
+        fprintf(fid,'%%Since passmethods are loaded at run time, the compiler will not include them\n');
+        fprintf(fid,'%%unless this function is included in the list of functions to be compiled.\n\n');
+        nbytes=cellfun(@(pass) fprintf(fid,'%s\n',pass),passmethods); %#ok<NASGU>
+        fprintf(fid,'\nend\n');
+        fclose(fid);
+    end
 end

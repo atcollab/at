@@ -1,4 +1,4 @@
 # _mexVersion no more provided in Matlab R2011b
 _mexFunction
 #_mexVersion
-_passFunction
+_trackFunction
