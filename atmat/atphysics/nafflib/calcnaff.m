@@ -1,4 +1,4 @@
-function [frequency amplitude phase] = calcnaff(Y, Yp, varargin)
+function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 % [nu amp phase] = calcnaff(Y, Yp, Win)
 %
 %  INPUTS
@@ -45,53 +45,18 @@ function [frequency amplitude phase] = calcnaff(Y, Yp, varargin)
 % Modification September 2009: 
 %  test if constant data or nan data
 
-% Default flags
-DebugFlag  = 0;  % 0/1 dubugging flag in NAFF
-WindowType = 1;  % Window type
-nfreq = 10;      % number of frequency
-DisplayFlag = 0; % Display Figure
-
 % BUG in nafflib: returns nan even if valid data. Number of try
 nitermax = 10;
 
 % Flag factory
-for ik = length(varargin):-1:1
-    if strcmpi(varargin{ik},'Debug')
-        DebugFlag = 1;
-        varargin(ik) = [];
-    elseif strcmpi(varargin{ik},'NoDebug')
-        DebugFlag = 0;
-        varargin(ik) = [];
-    elseif strcmpi(varargin{ik},'Display')
-        DisplayFlag = 1;
-        varargin(ik) = [];
-    elseif strcmpi(varargin{ik},'NoDisplay')
-        DisplayFlag = 0;
-        varargin(ik) = [];
-    elseif strcmpi(varargin{ik},'Hanning')
-        WindowType = 1;
-        varargin(ik) = [];
-    elseif strcmpi(varargin{ik},'NoWindow') || strcmpi(varargin{ik},'Raw')
-        WindowType = 1;
-        varargin(ik) = [];
-    end
-end
+[wraw1,args]=getflag(varargin,'Raw'); %#ok<ASGLU>
+[wraw2,args]=getflag(args,'NoWindow'); %#ok<ASGLU>
+[whann,args]=getflag(args,'Hanning');
+[dbg,args]=getflag(args,'Debug');
+[DisplayFlag,args]=getflag(args,'Display');
+[WindowType,nfreq,DebugFlag]=getargs(args,{0,10,double(dbg)});
+if whann, WindowType=1; end
 
-if length(varargin) >= 1
-    WindowType = varargin{1};
-end
-
-if length(varargin) >= 2
-    nfreq = varargin{2};
-end
-
-if length(varargin) >= 3
-    DebugFlag = varargin{3};
-end
-
-if length(varargin) >= 4 
-    error('Too many arguments');
-end
 
 % Test wether nan or constant data
 if any(isnan(Y(1,:)))
@@ -104,14 +69,14 @@ elseif (mean(Y) == Y(1) && mean(Yp) == Yp(1))
     fprintf('Warning data are constant\n');
     frequency = 0; amplitude = 0;  phase = 0;
 else % Frequency map analysis
-    [frequency amplitude phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);
+    [frequency,amplitude,phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);
     %It seems there is a bug in nafflib, something returns nan even for valid data 
     niter = 0;
     while any(isnan(frequency)) && (niter < nitermax)
         pause(2);
         fprintf('Warning Nan returned by NAFF (x%d)\n', niter);
         niter = niter +1;
-        [frequency amplitude phase] = nafflib(Y, Yp, WindowType,nfreq,1); % add debugging
+        [frequency,amplitude,phase] = nafflib(Y, Yp, WindowType,nfreq,1); % add debugging
     end
         
     if DisplayFlag
@@ -122,4 +87,3 @@ else % Frequency map analysis
         end
     end
 end
-

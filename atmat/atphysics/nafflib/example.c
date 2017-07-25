@@ -9,14 +9,13 @@
 
 #include "modnaff.h"
 #include "complexe.h"
-double pi=M_PI; /* ajout Laurent sinon pi non trouve */
 
 int main(void)
 {
     int i, iCpt;
     const int ndata=9996; /* multiple of 6 */
     
- g_NAFVariable.DTOUR=2*pi;   /* size of a "cadran" */
+ g_NAFVariable.DTOUR=2*M_PI; /* size of a "cadran" */
  g_NAFVariable.XH=1;         /* step */
  g_NAFVariable.T0=0;         /* time t0 */
  g_NAFVariable.NTERM=10;     /* max term to find */
@@ -49,8 +48,8 @@ int main(void)
     /*remplit les donnees initiales*/
     for(i=0;i<ndata;i++)
     {
-     g_NAFVariable.ZTABS[i].reel=2.E0+0.1*cos(pi*i)+0.00125*cos(pi/3*i);
-     g_NAFVariable.ZTABS[i].imag=2.E0+0.1*sin(pi*i)+0.00125*sin(pi/3*i);
+     g_NAFVariable.ZTABS[i].reel=2.E0+0.1*cos(M_PI*i)+0.00125*cos(M_PI/3*i);
+     g_NAFVariable.ZTABS[i].imag=2.E0+0.1*sin(M_PI*i)+0.00125*sin(M_PI/3*i);
      fprintf(stdout,"%2d = % .15f % .15f\n",i,g_NAFVariable.ZTABS[i].reel
      ,g_NAFVariable.ZTABS[i].imag);
     }

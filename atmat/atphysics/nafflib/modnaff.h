@@ -1,8 +1,8 @@
+#include <stdlib.h>
 #include <stdio.h>
-/*#include <malloc.h>*/
+#define _USE_MATH_DEFINES	/* For Visual Studio */
 #include <math.h>
 #include <float.h>
-#include <stdlib.h>
 
 /*--------*/
 /* define */

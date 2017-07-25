@@ -273,7 +273,7 @@ void naf_initnaf()
 /*!----------------- PREMIERES INITIALISATIONS*/
       g_NAFVariable.EPSM = DBL_EPSILON;
       /*PI = ATAN2(1.D0,0.D0)*2*/
-      g_NAFVariable.UNIANG = g_NAFVariable.DTOUR/(2*pi) ;
+      g_NAFVariable.UNIANG = g_NAFVariable.DTOUR/(2*M_PI) ;
       g_NAFVariable.FREFON = g_NAFVariable.DTOUR/(g_NAFVariable.KTABS*g_NAFVariable.XH)	;      
       SYSCHECKMALLOCSIZE(g_NAFVariable.TFS, double, g_NAFVariable.NTERM+1);/*allocate(TFS(1:NTERM),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(g_NAFVariable.ZAMP, t_complexe, g_NAFVariable.NTERM+1); /*allocate(ZAMP(1:NTERM),stat = NERROR)*/
@@ -312,7 +312,7 @@ void naf_initnaf_notab()
 {  
 /*!----------------- PREMIERES INITIALISATIONS*/
       g_NAFVariable.EPSM = DBL_EPSILON;
-      g_NAFVariable.UNIANG = g_NAFVariable.DTOUR/(2*pi) ;
+      g_NAFVariable.UNIANG = g_NAFVariable.DTOUR/(2*M_PI) ;
       g_NAFVariable.FREFON = g_NAFVariable.DTOUR/(g_NAFVariable.KTABS*g_NAFVariable.XH)	;      
       DIM2(g_NAFVariable.ZALP, (g_NAFVariable.NTERM+1), (g_NAFVariable.NTERM+1), t_complexe,"ZALP"); /*allocate(ZALP(1:NTERM,1:NTERM),stat = NERROR)*/
       SYSCHECKMALLOCSIZE(TWIN, double, g_NAFVariable.KTABS+1); /*allocate(TWIN(0:KTABS),stat = NERROR)*/
@@ -1749,7 +1749,7 @@ void naf_prosca(double F1, double F2, t_complexe* ZP)
 /* v0.96 M. GASTINEAU 01/12/98 : fin optimisation */
 /*!
 !      PI=2.D0*ATAN2(1.D0,0.D0)*/
-      PICARRE=pi*pi;
+      PICARRE=M_PI*M_PI;
       T=(T2-T1)/2.E0;
       XT=(FR1-FR2)*T;
       DIV=XT*XT-PICARRE;
@@ -2663,7 +2663,7 @@ void naf_iniwin(double *p_pardTWIN)
       T1=g_NAFVariable.T0;
       T2=g_NAFVariable.T0+g_NAFVariable.KTABS*g_NAFVariable.XH;
       TM=(T2-T1)/2;
-      PIST=pi/TM;
+      PIST=M_PI/TM;
       if (g_NAFVariable.IW==0)
       {
          for(IT=0;IT<=g_NAFVariable.KTABS;IT++)
@@ -3041,7 +3041,7 @@ void naf_correction(double *FREQ)
       
       TL=g_NAFVariable.KTABS*g_NAFVariable.XH*0.5E0;
       TM2=1.E0/(TL*TL);
-      PICARRE=pi*pi;
+      PICARRE=M_PI*M_PI;
 /*!  g_NAFVariable.IW >= 1*/
       TM=g_NAFVariable.T0+TL;
       i_compl_cmplx(&ZI,0.E0,1.E0);
