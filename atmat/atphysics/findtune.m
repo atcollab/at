@@ -12,6 +12,7 @@ function [tune,spectrum]=findtune(pos,method)
 %[TUNE,SPECTRUM]=FINDTUNE(...) Also returns the fft
 
 
+
 if nargin < 2, method=3; end
 
 nturns=size(pos,1);
@@ -58,18 +59,18 @@ v1=abs(spectrum(k1));
 v2=abs(spectrum(k2));
 tune=(rmax-back-1 +((2*v2-v1)./(v1+v2)))/nturns;
 %tune2=(rmax-back-1)/nturns + asin(phi(v1,v2,cos(2*pi/nturns))*sin(2*pi/nturns))/2/pi;
-%disp(['method 4 tune: ' num2str(mean2(tune2')) ' (rms: ' num2str(std2(tune2')) ')']);
+%disp(['method 4 tune: ' num2str(mean2(tune2')) ' (rms: ' num2str(std(tune2')) ')']);
 
 end
 tune(wrong)=NaN;
-errmax=2.5*std2(tune');
-keep=(abs(tune-mean2(tune'))<=errmax);
+errmax=2.5*std(tune');
+keep=(abs(tune-mean(tune'))<=errmax);
 reject=find(~(keep | wrong));
 for bpm=reject
     [bname,kdx]=sr.bpmname(bpm);
     disp(['reject ' bname ' (' num2str(kdx) ')']);
 end
-fprintf('%20s tune:%g (rms:%g)\n',methname, mean2(tune(keep)'),std2(tune(keep)'));
+fprintf('%20s tune:%g (rms:%g)\n',methname, mean(tune(keep)'),std(tune(keep)'));
 
 function vv=phi(a,b,c) %#ok<DEFNU>
 d1=c*(a+b);
