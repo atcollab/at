@@ -9,7 +9,7 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %
 %[ENERGY,PERIODS,VOLTAGE,HARMNUMBER]=ATENERGY(RING) also outputs the harmonic number
 %
-%[ENERGY,PERIODS,VOLTAGE,HARMNUMBER,U0]=ATENERGY(RING) also outputs total losses
+%[ENERGY,PERIODS,VOLTAGE,HARMNUMBER,U0]=ATENERGY(RING) also outputs total losses in eV
 
 global GLOBVAL
 
@@ -60,9 +60,12 @@ if nargout >= 3
     end
 end
 if nargout >= 5
+    % Losses = Cgamma/2/pi*EGeV^4*I2
+    cgamma=4e9*pi*PhysConstant.classical_electron_radius.value/3/...
+        PhysConstant.electron_mass_energy_equivalent_in_MeV.value^3; % [m/GeV^3]
     lendp=atgetfieldvalues(ring(dipoles),'Length');
     losses=atgetfieldvalues(ring(atgetcells(ring,'I2')),'I2');
-    I2=nbper*(sum(abs(theta.*theta./lendp))+sum(losses));
-    U0=14.085*(energy*1.e-9)^4*I2*1000.; %eV
+    I2=nbper*(sum(abs(theta.*theta./lendp))+sum(losses));            % [m-1]
+    U0=cgamma/2/pi*(energy*1.e-9)^4*I2*1e9;                          % [eV]
 end
 end
