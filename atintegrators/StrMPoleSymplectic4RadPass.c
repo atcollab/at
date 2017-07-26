@@ -29,6 +29,7 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
+    double *KickAngle;
 };
 
 void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
@@ -39,7 +40,7 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double E0,
+        double *KickAngle, double E0,
         int num_particles)
 {	int c,m;
     double *r6;
@@ -52,6 +53,10 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
     K1 = SL*KICK1;
     K2 = SL*KICK2;
     
+    if (KickAngle) {  /* Convert corrector component to polynomial coefficients */
+        B[0] -= sin(KickAngle[0])/le;
+        A[0] += sin(KickAngle[1])/le;
+    }
     for (c = 0;c<num_particles;c++)	{   /* Loop over particles  */
         r6 = r+c*6;
         if(!atIsNaN(r6[0])) {
@@ -75,7 +80,7 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
                     ATdrift6(r6,L2);
                     strthinkickrad(r6, A, B, K2, E0, max_order);
                     ATdrift6(r6,L2);
-                    strthinkickrad(r6, A, B,  K1, E0, max_order);
+                    strthinkickrad(r6, A, B, K1, E0, max_order);
                     ATdrift6(r6,L1);
             }
             if (FringeQuadExit && B[1]!=0) {
@@ -92,6 +97,10 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
             if (T2) ATaddvv(r6,T2); 
         }
     }
+    if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
+        B[0] += sin(KickAngle[0])/le; 
+        A[0] -= sin(KickAngle[1])/le;
+    }
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -101,7 +110,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         double Length, Energy;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -119,6 +128,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -137,12 +148,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
+        Elem->KickAngle=KickAngle;
     }
     StrMPoleSymplectic4RadPass(r_in,Elem->Length,Elem->PolynomA,Elem->PolynomB,
             Elem->MaxOrder,Elem->NumIntSteps,Elem->FringeQuadEntrance,
             Elem->FringeQuadExit,Elem->fringeIntM0,Elem->fringeIntP0,
             Elem->T1,Elem->T2,Elem->R1,Elem->R2,
-            Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
+            Elem->RApertures,Elem->EApertures,Elem->KickAngle,Elem->Energy,num_particles);
     return Elem;
 }
 
@@ -159,7 +171,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         int num_particles = mxGetN(prhs[1]);
         double Length, Energy;
         int MaxOrder, NumIntSteps, FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -177,12 +189,14 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
         StrMPoleSymplectic4RadPass(r_in,Length,PolynomA,PolynomB,MaxOrder,NumIntSteps,
                 FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,Energy,num_particles);
+                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Energy,num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -195,17 +209,18 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],5,mxCreateString("Energy"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(10,1);
-            mxSetCell(plhs[1],0,mxCreateString("FringeQuadEntrance"));
-            mxSetCell(plhs[1],1,mxCreateString("FringeQuadExit"));  
-            mxSetCell(plhs[1],2,mxCreateString("fringeIntM0"));
-            mxSetCell(plhs[1],3,mxCreateString("fringeIntP0"));
-            mxSetCell(plhs[1],4,mxCreateString("T1"));
-            mxSetCell(plhs[1],5,mxCreateString("T2"));
-            mxSetCell(plhs[1],6,mxCreateString("R1"));
-            mxSetCell(plhs[1],7,mxCreateString("R2"));
-            mxSetCell(plhs[1],8,mxCreateString("RApertures"));
-            mxSetCell(plhs[1],9,mxCreateString("EApertures"));
+            plhs[1] = mxCreateCellMatrix(11,1);
+            mxSetCell(plhs[1], 0,mxCreateString("FringeQuadEntrance"));
+            mxSetCell(plhs[1], 1,mxCreateString("FringeQuadExit"));  
+            mxSetCell(plhs[1], 2,mxCreateString("fringeIntM0"));
+            mxSetCell(plhs[1], 3,mxCreateString("fringeIntP0"));
+            mxSetCell(plhs[1], 4,mxCreateString("T1"));
+            mxSetCell(plhs[1], 5,mxCreateString("T2"));
+            mxSetCell(plhs[1], 6,mxCreateString("R1"));
+            mxSetCell(plhs[1], 7,mxCreateString("R2"));
+            mxSetCell(plhs[1], 8,mxCreateString("RApertures"));
+            mxSetCell(plhs[1], 9,mxCreateString("EApertures"));
+            mxSetCell(plhs[1],10,mxCreateString("KickAngle"));
         }
     }
     else {
