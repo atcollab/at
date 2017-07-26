@@ -1,4 +1,4 @@
-function [newring,newringrad] = atfastring(ring0,split)
+function [newring,newringrad] = atfastring(ring0,varargin)
 %ATFASTRING Generate simplified AT structures
 %
 % The given ring structure is modified so that cavities are moved to the
@@ -24,10 +24,13 @@ function [newring,newringrad] = atfastring(ring0,split)
 %
 % The ring is split at the specified locations, and each section is
 % transformed in the same way as previously described
-
+%
+%[FASTRING,FASTRINGRAD]=ATFASTRING(RING,'Plot') plots the tune shifts with amplitude
 
 global GLOBVAL
 
+[doplot,varargin]=getflag(varargin,'Plot');
+split=getargs(varargin,{[]});
 if nargin < 2
     split=[];
 end
@@ -82,8 +85,8 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
     function [rg,rgrad]=rebuild(slice,o4b,o6b,o4e,o6e)
         counter=counter+1;
         cc=num2str(counter);
-%         m1=atmarker(['xbeg' cc]);
-%         m2=atmarker(['xend' cc]);
+%       m1=atmarker(['xbeg' cc]);
+%       m2=atmarker(['xend' cc]);
         i1=find(atgetcells(slice,'FamName','xbeg'),1);
         dipoles=atgetcells(slice,'BendingAngle');
         theta=atgetfieldvalues(slice(dipoles),'BendingAngle');
@@ -106,11 +109,13 @@ newringrad=cat(1,rvrad{:},nonlin_elemrad);
         z2=linspace(0,zm.*zm,10);
         [nuxx,nuzx]=atnuampl(ring,sqrt(x2),1,orbit);
         [nuxz,nuzz]=atnuampl(ring,sqrt(z2),3,orbit);
-        tune0=floor([nuxx(1);nuzz(1)]);
-        subplot(2,1,1);
-        plot(x2,[nuxx;nuzx]-tune0(:,ones(1,10)));
-        subplot(2,1,2);
-        plot(z2,[nuxz;nuzz]-tune0(:,ones(1,10)));
+        if doplot
+            tune0=floor([nuxx(1);nuzz(1)]);
+            subplot(2,1,1);
+            plot(x2,[nuxx;nuzx]-tune0(:,ones(1,10)));
+            subplot(2,1,2);
+            plot(z2,[nuxz;nuzz]-tune0(:,ones(1,10)));
+        end
         rx=([nuxx-nuxx(1);nuzx-nuzx(1)]*x2')./(x2([1 1],:)*x2')/gamma(1);
         rz=([nuxz-nuxz(1);nuzz-nuzz(1)]*z2')./(z2([1 1],:)*z2')/gamma(2);
         r=2*[rx;rz];
