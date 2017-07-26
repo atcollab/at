@@ -8,6 +8,8 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %[ENERGY,PERIODS]=ATENERGY(RING) also outputs the number of periods
 %
 %[ENERGY,PERIODS,VOLTAGE,HARMNUMBER]=ATENERGY(RING) also outputs the harmonic number
+%
+%[ENERGY,PERIODS,VOLTAGE,HARMNUMBER,U0]=ATENERGY(RING) also outputs total losses
 
 global GLOBVAL
 
