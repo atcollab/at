@@ -1,4 +1,8 @@
 function [G1 G2 G3]=find_inv_G(m66)
+%This function computes the invariants of a one turn map matrix.
+%The resulting invariant matrices G1,G2,G3 satisfy
+% M^T G_a M = G_a for a=1,2,3
+% Algorithm from PhD thesis of B. Nash
 
 [V,d]=eigs(m66);
 v1=V(:,1);

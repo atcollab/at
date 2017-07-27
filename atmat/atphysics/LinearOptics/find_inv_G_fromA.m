@@ -1,4 +1,8 @@
 function [G1 G2 G3]=find_inv_G_fromA(A)
+%This function computes the invariant matrices G1,G2,G3
+%starting from the A matrix computed via the function amat().
+%The resulting invariant matrices G1,G2,G3 satisfy
+% M^T G_a M = G_a for a=1,2,3
 
 I1 = ...
 [1 0 0 0 0 0;...

@@ -1,6 +1,6 @@
 function [H1 H2 H3]=find_etaoids(A)
 %Given the normalizing matrix A, we compute the etaoids
-%(in Forest's terminology)
+%(in terminology of E. Forest)
 % these can be related to the dispersion
 
 I1 = ...
