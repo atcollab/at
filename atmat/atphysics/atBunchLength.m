@@ -9,18 +9,14 @@ function BL = atBunchLength (ring,Ib,Zn)
 % ring is the at ring without radiation
 % BL is the bunch length in metres 
 %
-%   see also: BunchLength, blgrowth, ringpara
+%   see also: BunchLength
 
 rp=ringpara(ring);
-U0=rp.U0;
-E0=rp.E0;
+[E0,~,Vrf,h,U0]=atenergy(ring);
 alpha=rp.alphac;
-h=rp.harm;
-maskcav=atgetcells(ring,'Class','RFCavity');
-Voltage=atgetfieldvalues(ring,maskcav,'Voltage');
-Vrf=sum(Voltage);
 sigdelta=rp.sigma_E;
 circ=findspos(ring,length(ring)+1);
 
-BL =  BunchLength (Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta,circ);
+BL = BunchLength(Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta,circ);
 
+end
