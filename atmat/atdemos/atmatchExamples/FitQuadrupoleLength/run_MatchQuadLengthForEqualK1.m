@@ -3,21 +3,25 @@
 load('dba.mat','RING');
 addpath(fullfile(pwd,'..'))
 %arc=[RING(1:18);RING(128:end)];
-arc=RING;
+arc0=RING;
 
-% proceed in steps
-arc1=MatchQuadLengthForEqualK1(arc,0.7);
-arc2=MatchQuadLengthForEqualK1(arc1,0.5);
-arc3=MatchQuadLengthForEqualK1(arc2,0.3);
-arc4=MatchQuadLengthForEqualK1(arc3,0.15);
-arc1=MatchQuadLengthForEqualK1(arc4,0);
+DK1_b=compK1(arc0,indQFM,indQF);
+LQ6_b=getcellstruct(arc0,'Length',indQF)*length(indQF);
+LQ8_b=getcellstruct(arc0,'Length',indQFM)*length(indQFM);
 
-indQF=findcells(arc,'FamName','QF') ;
-indQFM=findcells(arc,'FamName','QFM') ;
+% slowly reduce gradient gap, changing length of 2 quadrupoles.
+% during the optimization the cell optics are kept constant retuing all
+% quadrupoles. 
+arc1=arc0;
+warning off;
+for deltaKQ=[(DK1_b-0.1):-0.2:0.0 0.0]
+arc1=MatchQuadLengthForEqualK1(arc1,deltaKQ);
+end
+warning on;
 
-DK1_b=compK1(arc,indQF,indQFM);
-LQ6_b=getcellstruct(arc,'Length',indQF)*length(indQF);
-LQ8_b=getcellstruct(arc,'Length',indQFM)*length(indQFM);
+indQF=findcells(arc1,'FamName','QF') ;
+indQFM=findcells(arc1,'FamName','QFM') ;
+
 
 DK1_a=compK1(arc1,indQF,indQFM);
 LQ6_a=getcellstruct(arc1,'Length',indQF)*length(indQF);
