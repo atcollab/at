@@ -52,8 +52,10 @@ else
     elseif verLessThan('matlab','8.3')                      % R2014a
         ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,'%s')]);
         EXPORT=[' LDFLAGS=''',strrep(ldf,'$','\\$'),''' '];
-    else
+    elseif verLessThan('matlab','9.1')                      % R2016b
         EXPORT=[' LINKEXPORT=''',exportarg,fullfile(pdir,'%s'),''' '];
+    else
+        EXPORT=[' LINKEXPORTVER=''',exportarg,fullfile(pdir,'%s'),''' '];
     end
 end
 
