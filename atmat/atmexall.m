@@ -39,10 +39,11 @@ end
 
 % Navigate to the directory that contains some accelerator physics functions
 oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
-cdir=fullfile(atroot,'atphysics','');
+cdir=fullfile(atroot,'atphysics','Radiation');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'findmpoleraddiffmatrix.c')];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
+cdir=fullfile(atroot,'atphysics','NonLinearDynamics');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'RDTelegantAT.cpp')];
 disp(MEXCOMMAND);
 eval(MEXCOMMAND);
