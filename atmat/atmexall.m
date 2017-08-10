@@ -19,7 +19,7 @@ try
         PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
     end
     if ~verLessThan('matlab','8.3') %R2014a
-        PLATFORMOPTION = [PLATFORMOPTION '-silent '];
+        PLATFORMOPTION = [PLATFORMOPTION ' -silent '];
     end
 catch
 end

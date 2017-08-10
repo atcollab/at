@@ -20,6 +20,15 @@ function mexpassmethod(PASSMETHODS, varargin)
 %
 % See also: file:elempass.h
 
+% Optional flag to turn on multi-threading feature (openmp) in some of the
+% pass methods to decrease the tracking time for multi-particle
+% simulations. The if the number of particle is less than
+% OMP_PARTICLE_THRESHOLD (defined in atcommon.h) then only a single thread
+% is used. The number of threads used can be manually set using the
+% environment variable OMP_NUM_THREADS.
+% Originally intriduced by Xiabiao Huang (7/12/2010).
+opt_parallel = false;
+
 PLATFORMOPTION=[varargin{:}];
 
 %Additional platform-specific options for mex
@@ -47,6 +56,11 @@ else
             map2='mexFunctionMAC2.map';
     end
     
+    if opt_parallel
+        % Add library flags to enable openmp
+        exportarg = [' -fopenmp ', exportarg];
+    end
+    
     if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> R2008a
         EXPORT=[' LDFLAGS=''',ldflags,fullfile(pdir,'%s'),''' '];
     elseif verLessThan('matlab','8.3')                      % R2014a
@@ -58,6 +72,25 @@ else
         EXPORT=[' LINKEXPORTVER=''',exportarg,fullfile(pdir,'%s'),''' '];
     end
 end
+
+if opt_parallel
+    % Add compiler flags to enable openmp
+    if ispc()
+        warning('OpenMP available with MSVC or V Studio compilers.');
+        EXPORT = [' COMPFLAGS=''$COMPFLAGS /openmp'' ', EXPORT];
+    else
+        switch computer
+            case {'SOL2','SOL64'}
+                EXPORT = [' CFLAGS=''$CFLAGS -xopenmp'' ', EXPORT];
+            case {'MAC','MACI','MACI64'}
+                warning('OpenMP may not be supportded on MAC. *Untested*');
+                EXPORT = [' CFLAGS=''$CFLAGS -fopenmp'' ', EXPORT];
+            otherwise
+                EXPORT = [' CFLAGS=''$CFLAGS -fopenmp'' ', EXPORT];
+        end
+    end
+end
+    
 
 if ischar(PASSMETHODS) % one file name - convert to a cell array
     if strcmpi(PASSMETHODS,'all')

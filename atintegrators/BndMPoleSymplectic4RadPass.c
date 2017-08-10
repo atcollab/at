@@ -66,6 +66,8 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
     L2 = SL*DRIFT2;
     K1 = SL*KICK1;
     K2 = SL*KICK2;
+    
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
     for(c = 0;c<num_particles;c++)	/* Loop over particles */
     {   
         r6 = r+c*6;

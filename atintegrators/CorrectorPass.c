@@ -24,6 +24,7 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
    		    }
 		}	
 	else
+        #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,c6)
         for(c = 0;c<num_particles;c++) {
             c6 = c*6;
 		    if(!mxIsNaN(r_in[c6])) {

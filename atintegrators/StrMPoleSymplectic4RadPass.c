@@ -57,6 +57,7 @@ void StrMPoleSymplectic4RadPass(double *r, double le, double *A, double *B,
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
     for (c = 0;c<num_particles;c++)	{   /* Loop over particles  */
         r6 = r+c*6;
         if(!atIsNaN(r6[0])) {

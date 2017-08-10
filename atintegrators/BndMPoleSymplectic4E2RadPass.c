@@ -277,6 +277,7 @@ void BndMPoleSymplectic4E2RadPass(double *r, double le, double irho, double *A, 
     else
         useFringe2=true;
     
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
     for(c = 0;c<num_particles;c++)	/* Loop over particles */
     {   r6 = r+c*6;
         if(!mxIsNaN(r6[0]))

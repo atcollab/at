@@ -25,7 +25,8 @@ void DriftPass(double *r_in, double le,
 {
   double *r6;
   int c;
-
+  
+  #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,r6)
   for (c = 0; c<num_particles; c++) { /*Loop over particles  */
     r6 = r_in+c*6;
     if(!atIsNaN(r6[0])) {
