@@ -37,6 +37,14 @@ if ispc()
     EXPORT=' %s';
     map1='';
 else
+    % Starting from R2016b, Matlab introduced a new entry point in MEX-files
+    % The "*.mapext" files define this new entry point
+    if ~exist('verLessThan') || verLessThan('matlab','9.1') %#ok<EXIST>
+        mapformat=fullfile(pdir,'%s');
+    else
+        mapformat=fullfile(pdir,'%sext');
+    end
+    
     switch computer
         case {'SOL2','SOL64'}
             exportarg='-M';
@@ -52,8 +60,8 @@ else
             ldflags=['-pthread -shared -Wl,--no-undefined ',exportarg];
         case {'MAC','MACI','MACI64'}
             exportarg='-Wl,-exported_symbols_list,';
-            map1='mexFunctionMAC.map';
-            map2='mexFunctionMAC2.map';
+            map1='trackFunctionMAC.map';
+            map2='passFunctionMAC.map';
     end
     
     if opt_parallel
@@ -62,14 +70,20 @@ else
     end
     
     if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> R2008a
-        EXPORT=[' LDFLAGS=''',ldflags,fullfile(pdir,'%s'),''' '];
+        EXPORT=[' LDFLAGS=''',ldflags,mapformat,''' '];
     elseif verLessThan('matlab','8.3')                      % R2014a
-        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,'%s')]);
+        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',mapformat]);
         EXPORT=[' LDFLAGS=''',strrep(ldf,'$','\\$'),''' '];
     elseif verLessThan('matlab','9.1')                      % R2016b
-        EXPORT=[' LINKEXPORT=''',exportarg,fullfile(pdir,'%s'),''' '];
+        EXPORT=[' LINKEXPORT=''',exportarg,mapformat,''' '];
     else
-        EXPORT=[' LINKEXPORTVER=''',exportarg,fullfile(pdir,'%s'),''' '];
+        if ismac()  % Correct a bug in Mac setup which uses both LINKEXPORT and LINKEXPORTVER
+            PLATFORMOPTION=[PLATFORMOPTION ...
+                'LDFLAGS=''-Wl,-twolevel_namespace -undefined error -arch x86_64 -mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET -Wl,-syslibroot,$ISYSROOT'' ' ...
+                'CMDLINE200=''$LD $LDFLAGS $LDBUNDLE $LINKOPTIM $LINKEXPORTVER $OBJS $CLIBS $LINKLIBS -o $EXE'' '...
+                ];
+        end
+        EXPORT=[' LINKEXPORTVER=''',exportarg,mapformat,''' '];
     end
 end
 
@@ -99,7 +113,7 @@ if ischar(PASSMETHODS) % one file name - convert to a cell array
         ok=cellfun(@(nm) nm(1)~='.',{D.name});  % Eliminate invisible files
         PASSMETHODS=cellfun(@(nm) strrep(nm,'.c',''),{D(ok).name},'UniformOutput',false);
         try
-            generate_passlist(PASSMETHODS);
+            generate_passlist(pdir,PASSMETHODS);
         catch err
             fprintf(2,'\nCannot generate the list of passmethods: %s\n\n', err.message);
         end
@@ -136,7 +150,7 @@ for i = 1:length(PASSMETHODS)
     end
 end
 
-    function generate_passlist(passmethods)
+    function generate_passlist(pdir,passmethods)
         [fid,msg]=fopen(fullfile(pdir,'passmethodlist.m'),'wt');
         if ~isempty(msg)
             error(msg);

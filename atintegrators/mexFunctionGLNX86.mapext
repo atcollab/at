@@ -10,6 +10,7 @@ MEX {
 		mexFunction;
         passFunction;
 		trackFunction;
+        mexfilerequiredapiversion;
 	local:
 		*;
 };
