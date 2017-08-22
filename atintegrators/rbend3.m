@@ -34,7 +34,7 @@ function Elem=rbend3(fname,L,A,A1,A2,K, gap, FF1, FF2, method)
 %                 A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
 %
 %       FringeQuadEntrance/FringeQuadExit = 0,1,2
-%       Version 0 no qudrupole fringe fields
+%       Version 0 no quadrupole fringe fields
 %       Version 1 Lee-Whiting Formula
 %       Version 2 Linear quadrupole fringe field using the 5 integrant a la
 %                 Elegant          
