@@ -1,2 +1,2 @@
 % Accelerator Toolbox
-% Version 1.3 SSRL internal 04-Apr-2004
+% Version 1.4 SSRL-ESRF-SOLEIL
