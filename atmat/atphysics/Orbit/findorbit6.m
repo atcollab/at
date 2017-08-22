@@ -53,16 +53,24 @@ if ~iscell(RING)
     error('First argument must be a cell array');
 end
 
-L0 =   findspos(RING,length(RING)+1); % design length [m]
-C0 =   299792458; % speed of light [m/s]
+L0 = findspos(RING,length(RING)+1); % design length [m]
+C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
+
 T0 = L0/C0;
 
+CavityIndex = find(atgetcells(RING,'Frequency'),1);
+
+if isempty(CavityIndex)
+    error('findorbit6: The lattice does not have Cavity element')
+end
+
 cavity1=RING{find(atgetcells(RING,'Frequency'),1)};
+
 Frf = cavity1.Frequency;
 HarmNumber = cavity1.HarmNumber;
 theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
 
-d = 1e-6;       % step size for numerical differentiation
+d   = 1e-6;     % step size for numerical differentiation
 dps = 1e-12;    % convergence threshold
 %dps=eps;       % convergence threshold
 max_iterations = 20;
@@ -104,7 +112,7 @@ end
 if (nargin<2) || (isscalar(varargin{1}) && (varargin{1}==(length(RING)+1)))
     % return only the fixed point at the entrance of RING{1}
     orbit=Ri;
-else	% 2-nd input argument - vector of reference points alog the Ring
+else	% 2-nd input argument - vector of reference points along the Ring
         % is supplied - return orbit
     orbit = linepass(RING,Ri,varargin{1},'KeepLattice');
 end
