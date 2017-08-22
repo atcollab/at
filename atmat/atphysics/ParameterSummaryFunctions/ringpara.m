@@ -17,14 +17,14 @@ function rp = ringpara(THERING,varargin)
 %also coupled damping added) 7/24/2014
 
 if nargin==0
-    global THERING;
+    global THERING; %#ok<TLEV>
 end
 Cq = 3.8319E-13; 
 a = findcells(THERING,'Energy');
-if isempty(a);
-   gamma = 3000/.510998;
+if isempty(a)
+   gamma = 3000/PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
 else
-   gamma = THERING{a(1)}.Energy/.510998E6; 
+   gamma = THERING{a(1)}.Energy/(PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6); 
 end
 
 dpindex = findcells(THERING,'BendingAngle');
@@ -50,7 +50,9 @@ I2 = 0;
 I3 = 0;
 I4 = 0;
 I5 = 0;
-for ii=1:length(dpindex)
+len = length(dpindex);
+curHavg1 = 1:len;
+for ii=1:len
   if theta(ii) ~= 0.0
       K = 0;
       Kk = 0;
@@ -84,7 +86,7 @@ end
 % emittx =  Cq*gamma^2*curHavg/Jx*1e9; %nm-rad
 R = findspos(THERING, length(THERING)+1)/2/pi;
 alphac = I1/2/pi/R;
-U0 = 14.085*(gamma*.510998/1000)^4*I2*1000.; %eV
+U0 = 14.085*(gamma*PhysConstant.electron_mass_energy_equivalent_in_MeV.value/1000)^4*I2*1000.; %eV
 if nargin>=2
     fprintf('dipole radiation loss:  %4.5f keV\n', U0/1000.);
     U0 = varargin{1}*1e6; %convert MeV to eV 
@@ -105,14 +107,14 @@ meaninvr3=mean((1./abs(rho.^3)));%sum((1./abs(rhos.^3)).*diff(spos)/spos(end));%
 emitty_lim = Cq*meanbetayovers/2/Jy*meaninvr3/meaninvr2;
 
 
-cspeed = 2.99792458e8; %m/s
+cspeed = PhysConstant.speed_of_light_in_vacuum.value; %m/s
 T0 = 2*pi*R/cspeed;
-alpha0 = U0/1.0e6/2/T0/(gamma*.510998);
+alpha0 = U0/1.0e6/2/T0/(gamma*PhysConstant.electron_mass_energy_equivalent_in_MeV.value);
 alphax = Jx*alpha0;  %horizontal damping rate, 1/s
 alphay = Jy*alpha0;
 alphaE = Je*alpha0;
 
-rp.E0 = gamma*0.510998E6;
+rp.E0 = gamma*PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1E6;
 rp.R = R;
 rp.alphac = alphac;
 rp.U0 = U0; %eV
@@ -253,7 +255,9 @@ a0 = -M21*b0+a0;
 
 N = 100;
 th = (0:N)/N*theta;
-for ii=1:length(th)
+len = length(th);
+Dx = zeros(len,1); Dxp = zeros(len,1); curHavg1 = zeros(len,1);
+for ii=1:len
        [Dx(ii), Dxp(ii)] = calcdisp(rho, th(ii), D0, D0p, K1);
        [ax, bx] = calctwiss(rho, th(ii), a0, b0, K1);
        curHavg1(ii) = (Dx(ii)^2+(ax*Dx(ii)+bx*Dxp(ii))^2)/bx;
@@ -269,7 +273,7 @@ dI5 = curHavg*abs(theta/rho^2);
 function [Dx, Dxp] = calcdisp(rho, theta, D0, D0p, K1)
 %calcualte dispersion function inside a combined-function dipole
 s = rho*theta;
-if K1>-1/rho^2; %horizontal focusing
+if K1>-1/rho^2 %horizontal focusing
     sqK = sqrt(1/rho^2+K1);
     Dx =  D0*cos(sqK*s) + D0p/sqK*sin(sqK*s)+(1-cos(sqK*s))/rho/sqK^2;
     Dxp = -D0*sqK*sin(sqK*s)+D0p*cos(sqK*s)+sin(sqK*s)/rho/sqK;
@@ -292,7 +296,7 @@ bx = twx2(1);
 
 function Mx = calcMx(rho,K1,theta)
 s = rho*theta;
-if K1>-1/rho^2; %horizontal focusing
+if K1>-1/rho^2 %horizontal focusing
     sqK = sqrt(1/rho^2+K1);
     Mx = [cos(sqK*s), sin(sqK*s)/sqK; -sqK*sin(sqK*s), cos(sqK*s)];
 else %horizontal defocusing
