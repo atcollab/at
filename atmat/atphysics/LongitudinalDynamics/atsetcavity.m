@@ -6,7 +6,7 @@ function newring = atsetcavity(ring,rfv,radflag,HarmNumber)
 %also sets the rf voltage and Harmonic number
 %also sets the rf frequency.
 
-clight=2.99792458e8 ;
+clight=PhysConstant.speed_of_light_in_vacuum.value;
 % me_EV=510998.928;
 
 newring = ring;
