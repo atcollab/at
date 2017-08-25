@@ -92,18 +92,15 @@ double generateGaussian(double mean,double stdDev)
 {
 	static bool hasSpare = false;
 	static double spare;
+	static double u, v, s;
 
-	if(hasSpare)
-
-	{
+	if (hasSpare) {
 		hasSpare = false;
 		return mean + stdDev * spare;
 	}
 
 	hasSpare = true;
-	static double u, v, s;
-	do
-	{
+	do {
 		u = (rand() / ((double) RAND_MAX)) * 2.0 - 1.0;
 		v = (rand() / ((double) RAND_MAX)) * 2.0 - 1.0;
 		s = u * u + v * v;

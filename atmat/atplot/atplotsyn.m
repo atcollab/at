@@ -12,6 +12,14 @@ if isfield(options,'labels')
         labs(options.labels)=true;
     end
 end
+indx=false(size(ring(:)));
+if isfield(options,'index')
+    if islogical(options.index)
+        indx=options.index(:);
+    elseif isnumeric(options.index)
+        indx(options.index)=true;
+    end
+end
 xlim=get(ax,'XLim');
 slim=diff(xlim);
 tlim=diff(get(ax,'YLim'));
@@ -25,6 +33,7 @@ sl=sl(sok);
 ll=ll(sok);
 rok=ring(sok);
 labs=labs(sok);
+indx=indx(sok);
 [dipoles,qpoles,spoles,mpoles,bpms]=cellfun(@eltype,rok);
 
 ampl=0.05*tlim;     % Dipoles
@@ -72,6 +81,17 @@ if any(labs)
 else
     args={};
 end
+if any(indx)
+    sindex=sl(indx)+0.5*ll(indx);
+    iiok=1:length(rok);
+    vlabs=cellfun(@(el) el,num2cell(iiok(indx)),'UniformOutput',false);
+    args={'Label',text(sindex,-0.05*tlim*ones(size(sindex)),vlabs,'Rotation',90,...
+        'Interpreter','none','FontUnits','normalized','FontSize',0.02,...
+        'HorizontalAlignment','right')};
+else
+    args={};
+end
+
 % Put patches in the background
 set(ax,'Children',circshift(get(ax,'Children'),nlines));
 

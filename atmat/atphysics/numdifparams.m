@@ -10,7 +10,7 @@
 % Example: 
 %
 % >> global NUMDIFPARAMS
-% >> NUMDIFPARAMS.XYStep = 1e -8;
+% >> NUMDIFPARAMS.XYStep = 1e-8;
 % >> NUMDIFPARAMS.DPStep = 1e-6;
 %
 % Functions that use NUMDIFPARAMS are:

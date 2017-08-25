@@ -54,6 +54,26 @@ if isfield(elem,'FringeInt2')
     fringe2(end)=elem.FringeInt2;
     line=atsetfieldvalues(line,'FringeInt2',fringe2);
 end
+if isfield(elem,'FringeBendEntrance')
+    fringe1=zeros(size(line));
+    fringe1(1)=elem.FringeBendEntrance;
+    line=atsetfieldvalues(line,'FringeBendEntrance',fringe1);
+end
+if isfield(elem,'FringeBendExit')
+    fringe2=zeros(size(line));
+    fringe2(end)=elem.FringeBendExit;
+    line=atsetfieldvalues(line,'FringeBendExit',fringe2);
+end
+if isfield(elem,'FringeQuadEntrance')
+    fringe1=zeros(size(line));
+    fringe1(1)=elem.FringeQuadEntrance;
+    line=atsetfieldvalues(line,'FringeQuadEntrance',fringe1);
+end
+if isfield(elem,'FringeQuadExit')
+    fringe2=zeros(size(line));
+    fringe2(end)=elem.FringeQuadExit;
+    line=atsetfieldvalues(line,'FringeQuadExit',fringe2);
+end
 
 if isfield(elem,'FullGap')
     fringe2=zeros(size(line));

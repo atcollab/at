@@ -36,7 +36,7 @@
 #define USE_LOCAL_COPY		2
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
-									exceedes this limit it is marked as lost */
+									exceeds this limit it is marked as lost */
 
 
 typedef int*(*MYPROC)(mxArray*, int*, double*, int, int);
@@ -148,14 +148,14 @@ static void cleanup(void)
 
 static void checkiflost(double *DblBuffer, int np,
         double num_elem, double num_turn, double *xnturn, double *xnelem,
-        double *xcoord, mxLogical *xlost, double *histbuf, int ihist, int lhist)
+        double *xcoord, double *xlostcoord, mxLogical *xlost, double *histbuf, int ihist, int lhist)
 {
     int n, c;
     for (c=0; c<np; c++) {/* Loop over particles */
         if (!xlost[c]) {  /* No change if already marked */
            double *r6 = DblBuffer+c*6;
-           for (n=0; n<5; n++) {	/* I remove the check on the sixth coordinate N.C. */
-                if (!mxIsFinite(r6[n]) || (fabs(r6[n])>LIMIT_AMPLITUDE)) {
+           for (n=0; n<6; n++) {	/* I remove the check on the sixth coordinate N.C. */
+                if (!mxIsFinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
                     int h, k=ihist;
                     xlost[c] = 1;
                     xnturn[c] = num_turn;
@@ -164,6 +164,7 @@ static void checkiflost(double *DblBuffer, int np,
                         if (++k >= lhist) k=0;
                         memcpy(xcoord+6*(np*h+c),histbuf+6*(np*k+c),6*sizeof(double));
                     }
+                    memcpy(xlostcoord+6*c,r6,6*sizeof(double));
                     r6[0] = mxGetNaN();
                     r6[1] = 0;
                     r6[2] = 0;
@@ -218,11 +219,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int turn, nelem, npart, *refpts, num_refpts;
     int nextrefindex, nextref; /* index to the array of refpts */
     mxArray *mxBuffer;
-    const char *lossinfo[] = {"lost", "turn", "element", "coordinates"};
-    mxArray *mxLost, *mxNturn, *mxNelem, *mxCoord, *mxLoss;
+    const char *lossinfo[] = {"lost", "turn", "element", "coordinates_at_loss", "coordinates"};
+    mxArray *mxLost, *mxNturn, *mxNelem, *mxCoord, *mxLostCoord, *mxLoss;
     mwSize CoordDims[3] = {6,0,0};
+    mwSize LostCoordDims[2] = {6,0};
     mxLogical *xlost;
-    double *xnturn, *xnelem, *xcoord;
+    double *xnturn, *xnelem, *xcoord, *xlostcoord;
     mxArray *mxTurn, *mxElmn;
     double *xturn, *xelmn;
     mxArray *mxPassArg1[5], *mxPassArg2[2], *mxPre, *mxPost;
@@ -350,16 +352,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxNelem=mxCreateDoubleMatrix(1,num_particles,mxREAL);   /* element number when lost */
     CoordDims[1] = num_particles;
     CoordDims[2] = lhist;
-    mxCoord=mxCreateNumericArray(3,CoordDims,mxDOUBLE_CLASS,mxREAL);   /* Coordinates when lost */
+    LostCoordDims[1] = num_particles;
+    mxLostCoord=mxCreateNumericArray(2,LostCoordDims,mxDOUBLE_CLASS,mxREAL);   /* Coordinates when particle is lost */
+    mxCoord=mxCreateNumericArray(3,CoordDims,mxDOUBLE_CLASS,mxREAL);   /* Coordinates before particle is lost */
     xlost=mxGetLogicals(mxLost);	/* lost particle flag */
     xnturn=mxGetPr(mxNturn);        /* turn number when lost */
     xnelem=mxGetPr(mxNelem);        /* element number when lost */
-    xcoord=mxGetPr(mxCoord);        /* Coordinates when lost */
-    mxLoss=mxCreateStructMatrix(1,1,4,lossinfo);
+    xlostcoord=mxGetPr(mxLostCoord);/* Coordinates when lost */
+    xcoord=mxGetPr(mxCoord);        /* Coordinates before particle is lost */
+    if (lhist>=1)
+        mxLoss=mxCreateStructMatrix(1,1,5,lossinfo);
+    else
+        mxLoss=mxCreateStructMatrix(1,1,4,lossinfo);
     mxSetField(mxLoss, 0, lossinfo[0], mxLost);
     mxSetField(mxLoss, 0, lossinfo[1], mxNturn);
     mxSetField(mxLoss, 0, lossinfo[2], mxNelem);
-    mxSetField(mxLoss, 0, lossinfo[3], mxCoord);
+    mxSetField(mxLoss, 0, lossinfo[3], mxLostCoord);
+    if (lhist>=1)
+        mxSetField(mxLoss, 0, lossinfo[4], mxCoord);
     mxTurn=mxCreateDoubleMatrix(1,1,mxREAL);    /* Current turn number */
     mxElmn=mxCreateDoubleMatrix(1,1,mxREAL);    /* Current element number */
     xturn=mxGetPr(mxTurn);                      /* Current turn number */
@@ -372,7 +382,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (npart=0; npart<lhist*np6; npart++) {
         xcoord[npart] = mxGetNaN();
     }
-    
+    for (npart=0; npart<np6; npart++) {
+        xlostcoord[npart] = mxGetNaN();
+    }
+        
     DblPtrDataIn  = mxGetPr(INITCONDITIONS);
     DblPtrDataOut = mxGetPr(plhs[0]);
     
@@ -425,7 +438,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             if (mxPost) {                           /* Post-tracking optional function */
                 DblBuffer=passhook(mxPassArg1, *element, mxPost);
             }
-            checkiflost(DblBuffer,num_particles,*xelmn,*xturn,xnturn,xnelem,xcoord,xlost,histbuf,ihist,lhist);
+            checkiflost(DblBuffer,num_particles,*xelmn,*xturn,xnturn,xnelem,xcoord,xlostcoord,xlost,histbuf,ihist,lhist);
             if (++ihist >= lhist) ihist = 0;
             integrate1++;
             integrate2++;

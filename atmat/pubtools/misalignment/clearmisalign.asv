@@ -1,4 +1,0 @@
-function varargout = clearmisalign(varargin)
-% CLEARMISALIGN will negate the misalignment applied and delete the
-% misalignment datastructure.
-

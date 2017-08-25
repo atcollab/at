@@ -1,2 +1,0 @@
-This directory has tpsa tools for use with matlab at, and possibly other tpsa tools for other interfaces to code, such as direct c, or maybe python.
-Some normal form and map optimization tools should also be written.

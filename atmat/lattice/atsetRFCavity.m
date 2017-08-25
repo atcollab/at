@@ -1,10 +1,10 @@
 function newring = atsetRFCavity( ring, rfv, radflag, HarmNumber, DeltaFreq )
-%  ATSETRFCAVITY sets the RF Cavity with the passmethod RFCavityPass. 
-%  RFCavityPass allows to change the energy of the beam changing the 
+%  ATSETRFCAVITY sets the RF Cavity with the passmethod RFCavityPass.
+%  RFCavityPass allows to change the energy of the beam changing the
 %  frequency of the cavity.
 %
 %   newring = atSetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq)
-%   sets the synchronous phase of the cavity, the voltage, the harmonic 
+%   sets the synchronous phase of the cavity, the voltage, the harmonic
 %   number and the PassMethod. All the N cavities will have a voltage rfv/N
 %   radflag says whether or not we want radiation on, which affects
 %   synchronous phase. If radflag is 0, the function calls atradoff, if it
@@ -22,15 +22,19 @@ function newring = atsetRFCavity( ring, rfv, radflag, HarmNumber, DeltaFreq )
 %   see also: atsetcavity
 
 clight=299792458 ;
+
 newring = ring;
 indrfc=findcells(ring,'Class','RFCavity');
 beta0=1;
-U0=atgetU0(ring);
+U0=atgetU0(ring); %% not ok if misaligned elem!
+
 circ=findspos(ring,length(ring)+1);
 
 newring=setcellstruct(newring,'PassMethod',indrfc,'RFCavityPass');
 
-freq=(clight*beta0/circ)*HarmNumber+DeltaFreq;
+freq0=(clight*beta0/circ)*HarmNumber;
+
+freq=freq0+DeltaFreq;
 
 %now set cavity frequencies, Harmonic Number and RF Voltage
 for j=indrfc
@@ -42,10 +46,10 @@ end
 %now set phaselags in cavities
 if radflag
     timelag= (circ/(2*pi*HarmNumber))*asin(U0/(rfv));
-    newring=atradon(newring);  % set radiation on. nothing if radiation is already on
+    newring=atradon(newring,'RFCavityPass','auto','auto');  % set radiation on. nothing if radiation is already on
     newring=setcellstruct(newring,'PassMethod',indrfc,'RFCavityPass');
 else
-    newring=atradoff(newring);  % set radiation off. nothing if radiation is already off
+    newring=atradoff(newring,'RFCavityPass','auto','auto');  % set radiation off. nothing if radiation is already off
     newring=setcellstruct(newring,'PassMethod',indrfc,'RFCavityPass');
     timelag=0;
 end

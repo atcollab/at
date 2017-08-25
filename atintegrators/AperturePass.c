@@ -16,10 +16,10 @@ void AperturePass(double *r_in, double *limits, int num_particles)
     double *r6;
     for (c=0; c<num_particles; c++) {
         r6 = r_in+c*6;
-        if (!atIsNaN(r6[0])) { /*  check if this particle is already marked as lost */
-            /* check limits for X position */
-            if (r6[0]<limits[0] || r6[0]>limits[1])      markaslost(r6,0);
-            else if (r6[2]<limits[2] || r6[2]>limits[3]) markaslost(r6,2);
+        if (!atIsNaN(r6[0])) 
+        {
+            /*  check if this particle is already marked as lost */
+            checkiflostRectangularAp(r6, limits);
         }
     }
 }

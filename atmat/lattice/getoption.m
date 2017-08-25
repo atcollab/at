@@ -3,7 +3,7 @@ function [optval,opts] = getoption(opts,optname,defval)
 %
 %OPTVAL=GETOPTION(ARGS,OPTNAME)
 %	Return the value of the desired option from the argument list and
-%	send an exception if it is absent.
+%	send an exception if it is absent. Option names are case insensitive
 % OPTLIST:      Option list (cell array or structure)
 % OPTNAME:      Name of the desired option
 %

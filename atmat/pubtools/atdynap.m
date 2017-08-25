@@ -56,7 +56,7 @@ end
 function rmax=ascan(ring,nt,clorb,theta,rlist)
 for rr=rlist
    rin=clorb+[rr*cos(theta);0;rr*sin(theta);0;0;0];
-   [dummy,lost]=ringpass(ring,rin,nt,'reuse'); %#ok<ASGLU>
+   [dummy,lost]=ringpass(ring,rin,nt,'KeepLattice'); %#ok<ASGLU>
    if lost, break; end
    rmax=rr;
 end
@@ -67,7 +67,7 @@ xmax = 0.0;
 zmax = 0.0;
 for i=1:length(xlist)
    rin=clorb+[xlist(i);0;zlist(i);0;0;0];
-   [dummy,lost]=ringpass(ring,rin,nt,'reuse'); %#ok<ASGLU>
+   [dummy,lost]=ringpass(ring,rin,nt,'KeepLattice'); %#ok<ASGLU>
    if lost, break; end
    xmax=xlist(i);
    zmax=zlist(i);

@@ -149,6 +149,7 @@ void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,dou
 	else 
 	    useR2=true;
 
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6)
 	for(c = 0;c<num_particles;c++)
 		{	r6 = r+c*6;
 		    if(!atIsNaN(r6[0]) && atIsFinite(r6[4]))

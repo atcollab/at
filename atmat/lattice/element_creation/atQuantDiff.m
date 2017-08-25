@@ -9,6 +9,11 @@ function elem=atQuantDiff(fname,varargin)
 %   FAMNAME:   family name
 %   RING:      lattice without radiation
 %
+%ELEM=ATQUANTDIFF(FAMNANE,RING,'orbit0',orbit) computes the diffusion 
+%                 matrix of the ring without computing the closed orbit
+%   orbit:     closed orbit at beginning of the ring 
+%              (this option is useful for the islands)
+%
 %  The optional field Seed can be added. In that case, the seed of the
 %  random number generator is set at the first turn.
 %  ELEM=ATQUANTDIFF(FAMNANE,RING,'Seed',4)
@@ -18,9 +23,14 @@ function elem=atQuantDiff(fname,varargin)
 [rsrc,arg,method]=decodeatargs({[],'QuantDiffPass'},varargin);
 [method,rsrc]=getoption(rsrc,'PassMethod',method);
 [cl,rsrc]=getoption(rsrc,'Class','QuantDiff');
+[orb,rsrc]=getoption(rsrc,'orbit0',[]);
 if iscell(arg)
     [ring2,radindex]=atradon(arg);
-    dmat=quantumDiff(ring2,radindex);
+    if ~isempty(orb)
+        dmat=quantumDiff(ring2,radindex,orb);
+    else
+        dmat=quantumDiff(ring2,radindex);
+    end
 else
     dmat=arg;
 end
