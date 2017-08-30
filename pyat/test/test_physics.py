@@ -5,7 +5,7 @@ from at import load_mat
 from at import atpass
 
 
-LATTICE_FILE = '../atmat/atmatch/ExampleATMATCH/dba.mat'
+LATTICE_FILE = '../atmat/atdemos/atmatchExamples/ExampleATMATCH/dba.mat'
 
 
 DP = 1e-5
