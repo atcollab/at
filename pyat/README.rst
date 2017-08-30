@@ -1,8 +1,8 @@
 pyAT
 ====
 
-pyAT is a Python interface to the pass methods defined in AT, implemented by compiling
-the C code used in the AT 'integrators' plus a Python extension.
+pyAT is a Python interface to the pass methods defined in Accelerator Toolbox,
+implemented by compiling the C code used in the AT 'integrators' plus a Python extension.
 
 It supports Python 2.7 and 3.3 to 3.6.
 
