@@ -15,7 +15,7 @@ void EAperturePass(double *r_in, double *axesptr, int num_particles)
     double *r6;
     for (c=0;c<num_particles;c++) {
         r6 = r_in+c*6;
-        if (!mxIsNaN(r6[0])) 
+        if (!atIsNaN(r6[0])) 
         { 
             /*  check if this particle is already marked as lost */
             checkiflostEllipticalAp(r6,axesptr);

@@ -1,9 +1,6 @@
 /*
- * 1. Register single function atpass
- * 2. Interpret list of objects
- * 3. Go round ring
- * 4. Call functions
- * 5. Return numpy array.
+ * This file contains the Python interface to AT, compatible with Python
+ * 2 and 3. It provides a module 'atpass' containing one method 'atpass'.
  */
 
 #include <Python.h>
@@ -54,35 +51,41 @@ typedef PyObject atElem;
   #define PyUnicode_AsUTF8 PyString_AsString
 #endif
 
-typedef struct elem *(*pass_function)(const PyObject *element, struct elem *elemptr,
-        double *r_in, int num_particles, struct parameters *param);
+/* define the general signature of a pass function */
+typedef struct elem *(*track_function)(const PyObject *element,
+                                      struct elem *elemptr,
+                                      double *r_in,
+                                      int num_particles,
+                                      struct parameters *param);
 
 static npy_uint32 num_elements = 0;
 static struct elem **elemdata_list = NULL;
 static PyObject **element_list = NULL;
-static pass_function *integrator_list = NULL;
+static track_function *integrator_list = NULL;
 static char integrator_path[300];
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
     const char *MethodName;
     LIBRARYHANDLETYPE LibraryHandle;
-    pass_function FunctionHandle;
+    track_function FunctionHandle;
     struct LibraryListElement *Next;
 } *LibraryList = NULL;
 
 static PyObject *print_error(int elem_number, PyObject *rout)
 {
-    printf("Error in tracking element %d\n", elem_number);
+    printf("Error in tracking element %d.\n", elem_number);
     Py_XDECREF(rout);
     return NULL;
 }
 
+/*
+ * Recursively search the list to check if the library containing
+ * method_name is already loaded. If it is - return the pointer to the
+ * list element. If not, return NULL.
+ */
 static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *head, const char *method_name)
 {
-    /* recusively search the list to check if the library containing method_name is
-     * already loaded. If it is - return the pointer to the list element. If not -
-     * return NULL */
     if (head)
         return (strcmp(head->MethodName, method_name)==0) ? head :
             SearchLibraryList(head->Next, method_name);
@@ -90,6 +93,10 @@ static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *h
         return NULL;
 }
 
+/*
+ * Use Python calls to establish the location of the at integrators
+ * package.
+ */
 static PyObject *get_integrators(void) {
     PyObject *at_module, *os_module, *fileobj, *dirname_function, *dirobj;
     at_module = PyImport_ImportModule("at.integrators");
@@ -108,7 +115,9 @@ static PyObject *get_integrators(void) {
     return dirobj;
 }
 
-/* Query Python for the full extension given to shared objects.
+/*
+ * Query Python for the full extension given to shared objects.
+ * This is useful for Python 3, where the extension may not be trivial.
  * If none is defined, return NULL.
  */
 static PyObject *get_ext_suffix(void) {
@@ -123,8 +132,11 @@ static PyObject *get_ext_suffix(void) {
     return ext_suffix;
 }
 
-static pass_function pass_method(char *fn_name) {
-    pass_function fn_handle = NULL;
+/*
+ * Find the correct track function by name.
+ */
+static track_function get_track_function(char *fn_name) {
+    track_function fn_handle = NULL;
     struct LibraryListElement *LibraryListPtr = SearchLibraryList(LibraryList, fn_name);
 
     if (LibraryListPtr) {
@@ -141,7 +153,7 @@ static pass_function pass_method(char *fn_name) {
             PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
         }
-        fn_handle = GETTRACKFCN(dl_handle);
+        fn_handle = (track_function) GETTRACKFCN(dl_handle);
         if (fn_handle == NULL) {
             snprintf(buffer, sizeof(buffer), "No trackFunction in %s", lib_file);
             FREELIBFCN(dl_handle);
@@ -159,10 +171,13 @@ static pass_function pass_method(char *fn_name) {
 }
 
 /*
+ * Parse the arguments to atpass, set things up, and execute.
  * Arguments:
- *  - the_ring: sequence of elements
+ *  - line: sequence of elements
  *  - rin: numpy 6-vector of initial conditions
- *  - num_turns: int number of turns to simulate
+ *  - nturns: int number of turns to simulate
+ *  - refpts: numpy uint32 array denoting elements at which to return state
+ *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","reuse", NULL};
@@ -211,7 +226,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (refs) {
         if (PyArray_TYPE(refs) != NPY_UINT32) {
-            PyErr_SetString(PyExc_ValueError, "refpts is not a double array");
+            PyErr_SetString(PyExc_ValueError, "refpts is not a uint32 array");
             return NULL;
         }
         if ((PyArray_FLAGS(refs) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
@@ -219,13 +234,15 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             return NULL;
         }
         refpts = PyArray_DATA(refs);
+        /* empty array for refpts means only get tracking at the last turn */
         num_refpts = PyArray_SIZE(refs);
         if (num_refpts == 0)
             outdims[0] = num_particles;
         else
             outdims[0] = num_turns*num_refpts*num_particles;
     }
-    else {              /* only end of the line */
+    else {
+        /* no argument provided for refpts means get tracking at the end of each turn */
         refpts = &num_elements;
         num_refpts = 1;
         outdims[0] = num_turns*num_particles;
@@ -236,8 +253,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (!reuse) new_lattice = 1;
     if (new_lattice) {
-		PyObject **element;
-		pass_function *integrator;
+        PyObject **element;
+        track_function *integrator;
         int nelem;
         for (nelem=0; nelem<num_elements; nelem++) {
             free(elemdata_list[nelem]);
@@ -254,7 +271,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         element_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
 
         /* pointer to the list of integrators */
-        integrator_list = (pass_function *)realloc(integrator_list, num_elements*sizeof(pass_function));
+        integrator_list = (track_function *)realloc(integrator_list, num_elements*sizeof(track_function));
 
         lattice_length = 0.0;
         element = element_list;
@@ -262,10 +279,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         for (nelem = 0; nelem < num_elements; nelem++) {
             PyObject *el = PyList_GET_ITEM(lattice, nelem);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
-			pass_function fn_handle;
-			double length;
+            track_function fn_handle;
+            double length;
             if (!PyPassMethod) return print_error(nelem, rout);     /* No PassMethod */
-            fn_handle = pass_method(PyUnicode_AsUTF8(PyPassMethod));
+            fn_handle = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
             if (!fn_handle) return print_error(nelem, rout);        /* No trackFunction for the given PassMethod */
             length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
             if (PyErr_Occurred()) PyErr_Clear();
@@ -276,16 +293,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         }
         new_lattice = 0;
     }
-
-    printf("There are %u elements in the list\n", num_elements);
-    printf("There are %u particles\n", num_particles);
-    printf("Going for %u turns\n", num_turns);
+    printf("Simulating %u particles for %u turns through %u elements.\n", num_particles, num_turns, num_elements);
 
     param.RingLength = lattice_length;
     param.T0 = lattice_length/299792458.0;
     for (turn = 0; turn < num_turns; turn++) {
         PyObject **element = element_list;
-        pass_function *integrator = integrator_list;
+        track_function *integrator = integrator_list;
         struct elem **elemdata = elemdata_list;
         param.nturn = turn;
         nextrefindex = 0;
@@ -296,15 +310,18 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 drout += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
+            /* the actual integrator call */
             *elemdata = (*integrator++)(*element++, *elemdata, drin, num_particles, &param);
             if (!*elemdata) return print_error(nelem, rout);       /* trackFunction failed */
             elemdata++;
         }
+        /* the last element in the ring */
         if (num_elements == nextref) {
             memcpy(drout, drin, np6*sizeof(double));
             drout += np6; /*  shift the location to write to in the output array */
         }
     }
+    /* only the last turn requested */
     if (num_refpts == 0) {
         memcpy(drout, drin, np6*sizeof(double));
         drout += np6; /*  shift the location to write to in the output array */
@@ -316,7 +333,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("atpass(line,rin,nturns)\n\nTrack rin along line for nturns turns")},
+    PyDoc_STR("atpass(line, rin, nturns, refpts=None, reuse=False)\n\n"
+              "Track input particles rin along line for nturns turns.\n"
+              "Record 6D phase space at elements corresponding to refpts for each turn.\n"
+              "If reuse, use previously cached details for the lattice.\n"
+              )},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

@@ -293,7 +293,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-MODULE_DEF(impedance_tablePass)        /* Dummy module initialisation */
+MODULE_DEF(ImpedanceTablePass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 

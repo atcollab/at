@@ -10,28 +10,32 @@ from at import elements
 import numpy
 
 
-SCALAR_FIELDS = ['Length', 'K', 'BendingAngle', 'EntranceAngle', 'ExitAngle',
-                 'MaxOrder', 'NumIntSteps', 'Voltage', 'Frequency', 'HarmNumber', 'TimeLag', 'Energy']
+CLASS_MAPPING = {'Quad': 'Quadrupole',
+                 'Sext': 'Sextupole'}
 
-
-def extract_scalars(kwargs):
-    for item in kwargs:
-        if item in SCALAR_FIELDS:
-            kwargs[item] = kwargs[item][0]
-    return kwargs
+FAMILY_MAPPING = {'AP': 'Aperture'}
 
 
 def load_element(element_array):
     """
     Load what scipy produces into a pyat element object.
     """
-    data = element_array[0]
+    raw_data = element_array[0]
     kwargs = {}
     for item in element_array[0][0][0].dtype.fields:
-        kwargs[item] = data[item][0, 0][0]
+        # Remove any surplus dimensions in arrays.
+        data = numpy.squeeze(raw_data[item][0, 0])
+        # Convert strings in arrays back to strings.
+        if data.dtype.type is numpy.unicode_:
+            data = str(data)
+        kwargs[item] = data
 
-    kwargs = extract_scalars(kwargs)
-    class_name = kwargs.pop('Class')
+    try:
+        class_name = kwargs.pop('Class')
+        class_name = CLASS_MAPPING.get(class_name, class_name)
+    except KeyError:
+        class_name = FAMILY_MAPPING.get(kwargs['FamName'], 'Drift')
+
     cl = getattr(elements, class_name)
     # Remove mandatory attributes from the keyword arguments.
     args = [kwargs.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
@@ -39,11 +43,11 @@ def load_element(element_array):
     return element
 
 
-def load(filename):
+def load(filename, key='RING'):
     """Load a matlab at structure into a Python at list
     """
     m = scipy.io.loadmat(filename)
-    mat_ring = m['RING']
+    mat_ring = m[key]
     py_ring = []
     for item in mat_ring:
         py_ring.append(load_element(item))

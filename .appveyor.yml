@@ -1,0 +1,18 @@
+
+environment:
+  matrix:
+   - CONDA_DIR: "C:\\Miniconda-x64"
+   - CONDA_DIR: "C:\\Miniconda3-x64"
+   - CONDA_DIR: "C:\\Miniconda35-x64"
+   - CONDA_DIR: "C:\\Miniconda36-x64"
+
+install:
+  - set "PATH=%CONDA_DIR%\\Scripts;%PATH%"
+  - conda create -y --name conda-env pip numpy scipy
+  - activate conda-env
+  - pip install pytest
+  - cd pyat
+  - python setup.py install
+
+build_script:
+  - py.test test
