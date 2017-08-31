@@ -206,7 +206,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         PyErr_SetString(PyExc_ValueError, "Failed to parse arguments to atpass");
         return NULL;
     }
-    if (PyArray_DIM(rin,PyArray_NDIM(rin)-1) != 6) {
+    if (PyArray_DIM(rin,0) != 6) {
         PyErr_SetString(PyExc_ValueError, "Numpy array is not 6D");
         return NULL;
     }
@@ -214,8 +214,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         PyErr_SetString(PyExc_ValueError, "rin is not a double array");
         return NULL;
     }
-    if ((PyArray_FLAGS(rin) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
-        PyErr_SetString(PyExc_ValueError, "rin is not C aligned");
+    if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        PyErr_SetString(PyExc_ValueError, "rin is not Fortran-aligned");
         return NULL;
     }
 
@@ -237,18 +237,18 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         /* empty array for refpts means only get tracking at the last turn */
         num_refpts = PyArray_SIZE(refs);
         if (num_refpts == 0)
-            outdims[0] = num_particles;
+            outdims[1] = num_particles;
         else
-            outdims[0] = num_turns*num_refpts*num_particles;
+            outdims[1] = num_turns*num_refpts*num_particles;
     }
     else {
         /* no argument provided for refpts means get tracking at the end of each turn */
         refpts = &num_elements;
         num_refpts = 1;
-        outdims[0] = num_turns*num_particles;
+        outdims[1] = num_turns*num_particles;
     }
-    outdims[1] = 6;
-    rout = PyArray_SimpleNew(2, outdims, NPY_DOUBLE);
+    outdims[0] = 6;
+    rout = PyArray_EMPTY(2, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
     if (!reuse) new_lattice = 1;
