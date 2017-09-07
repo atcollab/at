@@ -1,96 +1,132 @@
+from __future__ import print_function
 import numpy
 import at
 from at import lattice
 import math
-import collections
-
 
 EPS = 1e-10
-DP = 1e-8
+XYDEFSTEP = 6.055454452393343e-006  # Optimal delta?
 DDP = 1e-8
 
+_dtype = [('idx', numpy.uint32), ('s_pos', numpy.float64),
+          ('closed_orbit', numpy.float64, (4,)), ('dispersion', numpy.float64, (4,)),
+          ('alpha', numpy.float64, (2,)), ('beta', numpy.float64, (2,)), ('mu', numpy.float64, (2,)),
+          ('m44', numpy.float64, (4, 4))]
 
-Twiss = collections.namedtuple('Twiss', ('refpts', 's_pos', 'closed_orbit',
-                                         'm44', 'alpha', 'beta', 'mu', 'tune',
-                                         'dispersion', 'chrom'))
 
+# noinspection PyPep8Naming
+def find_orbit4(ring, dp=0.0, refpts=None):
+    """findorbit4 finds the closed orbit in the 4-d transverse phase
+    space by numerically solving for a fixed point of the one turn
+    map M calculated with LINEPASS
 
-def find_orbit4(ring, dp=DP, refpts=None):
+        (X, PX, Y, PY, dP2, CT2 ) = M (X, PX, Y, PY, dP1, CT1)
+
+    under the CONSTANT MOMENTUM constraint, dP2 = dP1 = dP and
+    there is NO constraint on the 6-th coordinate CT
+
+    IMPORTANT!!! findorbit4 imposes a constraint on dP and relaxes
+    the constraint on the revolution frequency. A physical storage
+    ring does exactly the opposite: the momentum deviation of a
+    particle on the closed orbit settles at the value
+    such that the revolution is synchronous with the RF cavity
+
+                HarmNumber*Frev = Frf
+
+    To impose this artificial constraint in findorbit4, PassMethod
+    used for any elemen SHOULD NOT
+    1. change the longitudinal momentum dP (cavities , magnets with radiation)
+    2. have any time dependence (localized impedance, fast kickers etc)
+
+    findorbit4(RING, dP) is 4x1 vector - fixed point at the
+    entrance of the 1-st element of the RING (x,px,y,py)
+
+    findorbit4(RING, dP, REFPTS) is 4-by-Length(REFPTS)
+    array of column vectors - fixed points (x,px,y,py)
+    at the entrance of each element indexed REFPTS array.
+    REFPTS is an array of increasing indexes that select elements
+    from the range 0 to length(RING).
+    See further explanation of REFPTS in the 'help' for FINDSPOS
+
+    findorbit4(RING ,dP, REFPTS, GUESS) - same as above but the search
+    for the fixed point starts at the initial condition GUESS
+    Otherwise the search starts from [0,0,0,0,0,0].
+    GUESS must be a 6-by-1 vector;
     """
-    Determine the closed orbit assuming constant momentum deviation.
-
-    The closed orbit does not change in a pass of the ring with the
-    specified momentum difference.  We seek
-     - f(x) = x
-     - g(x) = f(x) - x = 0
-     - g'(x) = f'(x) - 1
-    Use a Newton-Raphson-type algorithm:
-     - r_n+1 = r_n - g(r_n) / g'(r_n)
-     - r_n+1 = r_n - (f(r_n) - r_n) / (f'(r_n) - 1)
-
-    (f(r_n) - r_n) / (f'(r_n) - 1) can be seen as x = b/a where we use least
-        squares fitting to determine x when ax = b
-    f(r_n) - r_n is denoted b
-    f'(r_n) is the 4x4 jacobian, denoted j4
-    """
+    # We seek
+    #  - f(x) = x
+    #  - g(x) = f(x) - x = 0
+    #  - g'(x) = f'(x) - 1
+    # Use a Newton-Raphson-type algorithm:
+    #  - r_n+1 = r_n - g(r_n) / g'(r_n)
+    #  - r_n+1 = r_n - (f(r_n) - r_n) / (f'(r_n) - 1)
+    #
+    # (f(r_n) - r_n) / (f'(r_n) - 1) can be seen as x = b/a where we use least
+    #     squares fitting to determine x when ax = b
+    # f(r_n) - r_n is denoted b
+    # f'(r_n) is the 4x4 jacobian, denoted j4
     STEP_SIZE = 1e-6
     MAX_ITERATIONS = 20
     CONVERGENCE = 1e-12
-    refpts = lattice.get_refpts(refpts, len(ring))
-    r_in = numpy.zeros((1, 6))
-    r_in[0, 4] = dp
-    delta_matrix = numpy.zeros((5, 6))
+    r_in = numpy.zeros((6,), order='F')
+    r_in[4] = dp
+    delta_matrix = numpy.zeros((6, 5), order='F')
     for i in range(4):
         delta_matrix[i, i] += STEP_SIZE
     change = 1
     itercount = 0
+    keeplattice = False
     while (change > CONVERGENCE) and itercount < MAX_ITERATIONS:
-        in_mat = r_in + delta_matrix
-        out_mat = at.atpass(ring, in_mat, 1)
+        in_mat = r_in.reshape((6, 1)) + delta_matrix
+        out_mat = at.linepass(ring, in_mat, KeepLattice=keeplattice)
         # the reference particle after one turn
-        ref_out = out_mat[4, :4]
+        ref_out = out_mat[:4, 4]
         # 4x4 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j4 = (out_mat[:4, :4] - ref_out) / STEP_SIZE
+        j4 = (out_mat[:4, :4] - ref_out.reshape((4, 1))) / STEP_SIZE
         a = j4 - numpy.identity(4)  # f'(r_n) - 1
-        b = ref_out - r_in[:, :4]
-        # transpose the arrays to (4,4) (4,1)
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a.T, b.T)
-        r_out = r_in - numpy.append(b_over_a, numpy.zeros((1, 2)))
+        b = ref_out - r_in[:4]
+        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b)
+        r_next = r_in - numpy.append(b_over_a, numpy.zeros((2,)))
         # determine if we are close enough
-        change = numpy.linalg.norm(r_out - r_in)
+        change = numpy.linalg.norm(r_next - r_in)
         itercount += 1
-        r_in = r_out
+        r_in = r_next
+        keeplattice = True
 
-    all_points = at.atpass(ring, r_in, 1, refpts)
-    return all_points[:, :4]
+    all_points = at.linepass(ring, r_in, refpts, KeepLattice=keeplattice)
+    return r_in[:4], all_points[:4, :]
 
 
-def find_m44(ring, dp=DP, refpts=None):
+# noinspection PyPep8Naming
+def find_m44(ring, dp=0.0, refpts=None, orbit4=None, XYStep=XYDEFSTEP):
     """
     Determine the transfer matrix for ring, by first finding the closed orbit.
     """
-    last_included = False if refpts is None else len(ring) in refpts
-    refpts = lattice.get_refpts(refpts, len(ring), append_last=True)
-    # Optimal delta?
-    d = 6.055454452393343e-006
-    orbit4 = find_orbit4(ring, dp)
+    refpts = lattice.uint32_refpts(refpts, len(ring))
+    nrefs = refpts.size
+    if refpts[-1] != len(ring):
+        refpts = numpy.append(refpts, [len(ring)])
+    keeplattice = False
+    if orbit4 is None:
+        orbit4, _ = find_orbit4(ring, dp)
+        keeplattice = True
     # Append zeros to closed 4-orbit.
-    bottom = numpy.array([dp, 0]).reshape(1, 2)
-    orbit6 = numpy.append(orbit4, bottom, axis=1)
+    orbit6 = numpy.append(orbit4, (dp, 0.0)).reshape(6, 1)
     # Construct matrix of plus and minus deltas
-    dmat = numpy.append(numpy.identity(4)*d, -numpy.identity(4)*d, axis=0)
-    dmat = numpy.append(dmat, numpy.zeros((8, 2)), axis=1)
+    dmat = numpy.zeros((6, 8), order='F')
+    for i in range(4):
+        dmat[i, i] = 0.5 * XYStep
+        dmat[i, i + 4] = -0.5 * XYStep
     # Add the deltas to multiple copies of the closed orbit
-    in_mat = (numpy.zeros((8, 6)) + orbit6) + dmat
+    in_mat = orbit6 + dmat
 
-    out_mat = at.atpass(ring, in_mat, 1, refpts)
-    out_mat = out_mat[:, :4].reshape(-1, 8, 4)
-    # (x + d) - (x - d) / 2*d
-    m44 = (out_mat[-1, :4, :4] - out_mat[-1, 4:8, :4]) / (2 * d)
-    out_mat = out_mat if last_included else out_mat[:-1, :, :]
-    mstack = (out_mat[:, :4, :4] - out_mat[:, 4:8, :4]) / (2 * d)
-    return m44, mstack
+    out_mat = at.linepass(ring, in_mat, refpts, KeepLattice=keeplattice)
+    tmat3 = numpy.reshape(out_mat[:4, :], (4, 8, -1), order='F')
+    # (x + d) - (x - d) / d
+    mstack = (tmat3[:, :4, :] - tmat3[:, 4:8, :]) / XYStep
+    m44 = mstack[:, :, -1]
+    return m44, mstack[:, :, :nrefs]
 
 
 def betatron_phase_unwrap(m):
@@ -102,7 +138,7 @@ def betatron_phase_unwrap(m):
     return m + numpy.cumsum(jumps) * numpy.pi
 
 
-def get_twiss(ring, dp=DP, refpts=None, get_chrom=False, ddp=DDP):
+def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, ddp=DDP):
     """
     Determine Twiss parameters by first finding the transfer matrix.
     """
@@ -112,47 +148,51 @@ def get_twiss(ring, dp=DP, refpts=None, get_chrom=False, ddp=DDP):
         Calculate Twiss parameters from the standard 2x2 transfer matrix
         (i.e. x or y).
         """
-        sin_mu_end = (numpy.sign(mat[1, 0]) *
-                      math.sqrt(-mat[1, 0] * mat[0, 1] -
+        sin_mu_end = (numpy.sign(mat[0, 1]) *
+                      math.sqrt(-mat[0, 1] * mat[1, 0] -
                                 (mat[0, 0] - mat[1, 1]) ** 2 / 4))
-        alpha_end = (mat[0, 0] - mat[1, 1]) / 2 / sin_mu_end
-        beta_end = mat[1, 0] / sin_mu_end
-        beta = ((ms[:, 0, 0] * beta_end - ms[:, 1, 0] * alpha_end) **
-                2 + ms[:, 1, 0] ** 2) / beta_end
-        alpha = -((ms[:, 0, 0] * beta_end - ms[:, 1, 0] * alpha_end) *
-                  (ms[:, 0, 1] * beta_end - ms[:, 1, 1] * alpha_end) +
-                   ms[:, 1, 0] * ms[:, 1, 1]) / beta_end
-        mu = numpy.arctan(ms[:, 1, 0] /
-                          (ms[:, 0, 0] * beta_end - ms[:, 1, 0] * alpha_end))
+        alpha0 = (mat[0, 0] - mat[1, 1]) / 2.0 / sin_mu_end
+        beta0 = mat[0, 1] / sin_mu_end
+        beta = ((ms[0, 0, :] * beta0 - ms[0, 1, :] * alpha0) **
+                2 + ms[0, 1, :] ** 2) / beta0
+        alpha = -((ms[0, 0, :] * beta0 - ms[0, 1, :] * alpha0) *
+                  (ms[1, 0, :] * beta0 - ms[1, 1, :] * alpha0) +
+                  ms[0, 1, :] * ms[1, 1, :]) / beta0
+        mu = numpy.arctan(ms[0, 1, :] / (ms[0, 0, :] * beta0 - ms[0, 1, :] * alpha0))
         mu = betatron_phase_unwrap(mu)
         return alpha, beta, mu
 
     chrom = None
-    dispersion = None
 
-    refpts = lattice.get_refpts(refpts, len(ring))
-    # We're calling find_orbit4 twice here.  We should do better.
-    orbit = find_orbit4(ring, dp, refpts)
-    m44, mstack = find_m44(ring, dp, refpts)
-    s_pos = lattice.get_s_pos(ring, refpts)
+    refpts = lattice.uint32_refpts(refpts, len(ring))
+    nrefs = refpts.size
+    if refpts[-1] != len(ring):
+        refpts = numpy.append(refpts, [len(ring)])
 
-    ax, bx, mx = twiss22(m44[:2, :2], mstack[:, :2, :2])
-    ay, by, my = twiss22(m44[2:, 2:], mstack[:, 2:, 2:])
+    orbit4, orbit = find_orbit4(ring, dp, refpts)
+    m44, mstack = find_m44(ring, dp, refpts, orbit4=orbit4)
+
+    ax, bx, mx = twiss22(m44[:2, :2], mstack[:2, :2, :])
+    ay, by, my = twiss22(m44[2:, 2:], mstack[2:, 2:, :])
 
     tune = numpy.array((mx[-1], my[-1])) / (2 * numpy.pi)
-    beta = numpy.append(bx, by).reshape(2, -1)
-    alpha = numpy.append(ax, ay).reshape(2, -1)
-    mu = numpy.append(mx, my).reshape(2, -1)
+    twiss = numpy.zeros(nrefs, dtype=_dtype)
+    twiss['idx'] = refpts[:nrefs]
+    twiss['s_pos'] = lattice.get_s_pos(ring, refpts[:nrefs])
+    twiss['closed_orbit'] = numpy.rollaxis(orbit, -1)[:nrefs]
+    twiss['m44'] = numpy.rollaxis(mstack, -1)[:nrefs]
+    twiss['alpha'] = numpy.rollaxis(numpy.vstack((ax, ay)), -1)[:nrefs]
+    twiss['beta'] = numpy.rollaxis(numpy.vstack((bx, by)), -1)[:nrefs]
+    twiss['mu'] = numpy.rollaxis(numpy.vstack((mx, my)), -1)[:nrefs]
+    twiss['dispersion'] = numpy.NaN
     # Calculate chromaticity by calling this function again at a slightly
     # different momentum.
     if get_chrom:
-        dtwiss = get_twiss(ring, dp + ddp, refpts)
-        dispersion = (dtwiss.closed_orbit - orbit) / ddp
-        chrom = (dtwiss.tune - tune) / ddp
+        twissb, tuneb, _ = get_twiss(ring, dp + ddp, refpts[:nrefs])
+        chrom = (tuneb - tune) / ddp
+        twiss['dispersion'] = (twissb['closed_orbit'] - twiss['closed_orbit']) / ddp
 
-    twiss = Twiss(refpts, s_pos, orbit, m44, alpha,
-                  beta, mu, tune, dispersion, chrom)
-    return twiss
+    return twiss, tune, chrom
 
 
 def m66(ring):
