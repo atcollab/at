@@ -1,6 +1,11 @@
 """Python port of the Accelerator Toolbox"""
-from at.atpass import atpass
-from at.patpass import patpass
+
+# Make all functions visible in the at nammspace:
+# noinspection PyUnresolvedReferences
+from .atpass import atpass
+from .patpass import patpass
+from .track import *
+from .physics import *
 
 from . import elements
 from . import lattice
