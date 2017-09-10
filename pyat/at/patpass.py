@@ -4,7 +4,6 @@ Simple parallelisation of atpass() using multiprocessing.
 import multiprocessing
 from at import atpass
 import numpy
-import time
 
 
 def _atpass_one(args):
@@ -14,13 +13,13 @@ def _atpass_one(args):
 
 
 def _patpass(ring, rin, nturns, pool_size):
-    rout = numpy.zeros((rin.shape[0] * nturns, rin.shape[1]))
+    rout = numpy.zeros((rin.shape[0], rin.shape[1] * nturns))
     pool = multiprocessing.Pool(pool_size)
-    args = [(ring, rin[i, :], nturns) for i in range(rin.shape[0])]
+    args = [(ring, rin[:, i], nturns) for i in range(rin.shape[1])]
     results = pool.map(_atpass_one, args)
     for i, res in enumerate(results):
         # Fold the results back into the same shape as atpass.
-        rout[i::rin.shape[0], :] = res
+        rout[:, i::rin.shape[1]] = res
     return rout
 
 
