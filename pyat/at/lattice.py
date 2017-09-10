@@ -9,6 +9,10 @@ import collections
 
 
 def uint32_refpts(refpts, n_elements):
+    """
+    Return a uint32 numpy array with contents as the indices of the selected
+    elements.
+    """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         urefpts = numpy.array(numpy.flatnonzero(refpts), dtype=numpy.uint32)
     else:
@@ -21,6 +25,10 @@ def uint32_refpts(refpts, n_elements):
 
 
 def bool_refpts(refpts, n_elements):
+    """
+    Return a boolean numpy array of length n_elements where True elements are
+    selected.
+    """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         return refpts
     else:
@@ -29,10 +37,13 @@ def bool_refpts(refpts, n_elements):
         return brefpts
 
 
-def get_s_pos(ring, refpts):
+def get_s_pos(ring, refpts=None):
     """
     Return a numpy array corresponding to the s position of the specified
     elements.
     """
-    s_pos = numpy.concatenate(([0.0], numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])))
-    return s_pos[refpts]
+    # Positions at the end of each element.
+    s_pos = numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])
+    # Prepend position at the start of the first element.
+    s_pos = numpy.concatenate(([0.0], s_pos))
+    return numpy.squeeze(s_pos[refpts])
