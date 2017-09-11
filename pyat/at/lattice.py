@@ -3,6 +3,10 @@ Helper functions for working with AT lattices.
 
 A lattice as understood by pyAT is any sequence of elements.  These functions
 are useful for working with these sequences.
+
+The refpts functions allow selecting a number of points in a lattice.
+Indexing runs from zero (the start of the first element) to n_elements + 1
+(the end of the last element).
 """
 import numpy
 import collections
@@ -11,14 +15,16 @@ import collections
 def uint32_refpts(refpts, n_elements):
     """
     Return a uint32 numpy array with contents as the indices of the selected
-    elements.
+    elements.  This is used for indexing a lattice using explicit indices.
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         urefpts = numpy.array(numpy.flatnonzero(refpts), dtype=numpy.uint32)
     else:
         if not isinstance(refpts, (collections.Sequence, numpy.ndarray)):
             refpts = [refpts]
-        if numpy.any(numpy.diff(numpy.array(refpts)) < 0) or (refpts[-1] > n_elements):
+        if (numpy.any(numpy.diff(numpy.array(refpts)) < 0)
+                or (refpts[-1] > n_elements)
+                or numpy.any(numpy.array(refpts) < 0)):
             raise ValueError('refpts must be ascending and less or equal to {}'.format(n_elements))
         urefpts = numpy.asarray(refpts, dtype=numpy.uint32)
     return urefpts
@@ -26,13 +32,13 @@ def uint32_refpts(refpts, n_elements):
 
 def bool_refpts(refpts, n_elements):
     """
-    Return a boolean numpy array of length n_elements where True elements are
-    selected.
+    Return a boolean numpy array of length n_elements + 1 where True elements are
+    selected. This is used for indexing a lattice using True or False values.
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         return refpts
     else:
-        brefpts = numpy.zeros(n_elements+1, dtype=bool)
+        brefpts = numpy.zeros(n_elements + 1, dtype=bool)
         brefpts[refpts] = True
         return brefpts
 

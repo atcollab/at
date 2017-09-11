@@ -3,40 +3,20 @@ from at import lattice, elements
 import pytest
 
 
-def test_get_refpts_returns_num_elements_if_argument_is_none():
-    expected = numpy.array([0], dtype=numpy.uint32)
-    numpy.testing.assert_equal(lattice.get_refpts(None, 0), expected)
-    expected[0] = 1
-    numpy.testing.assert_equal(lattice.get_refpts(None, 1), expected)
-
-
-def test_get_refpts_does_not_append_num_elements_if_not_requested():
-    expected = numpy.array([1, 2, 3], dtype=numpy.uint32)
-    numpy.testing.assert_equal(lattice.get_refpts([1, 2, 3], 5),
-                               expected)
-
-
-def test_get_refpts_does_not_append_num_elements_if_requested():
-    expected = numpy.array([1, 2, 3, 5], dtype=numpy.uint32)
-    numpy.testing.assert_equal(lattice.get_refpts([1, 2, 3], 5, True),
-                               expected)
-
-
-
-def test_get_refpts_handles_array_as_input():
+def test_uint32_refpts_handles_array_as_input():
     expected = numpy.array([1, 2, 3], dtype=numpy.uint32)
     requested = numpy.array([1, 2, 3], dtype=numpy.uint32)
-    numpy.testing.assert_equal(lattice.get_refpts(requested, 5),
+    numpy.testing.assert_equal(lattice.uint32_refpts(requested, 5),
                                expected)
     requested = numpy.array([1, 2, 3], dtype=numpy.float64)
-    numpy.testing.assert_equal(lattice.get_refpts(requested, 5),
+    numpy.testing.assert_equal(lattice.uint32_refpts(requested, 5),
                                expected)
 
 
 @pytest.mark.parametrize('input', ([-1], [3], [3, 2, 1]))
-def test_get_refpts_throws_ValueError_if_input_invalid(input):
+def test_uint32_refpts_throws_ValueError_if_input_invalid(input):
     with pytest.raises(ValueError):
-        lattice.get_refpts(input, 2)
+        r = lattice.uint32_refpts(input, 2)
 
 
 def test_get_s_pos_returns_zero_for_empty_lattice():
