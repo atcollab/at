@@ -28,8 +28,8 @@ def test_marker(rin):
     m = elements.Marker('marker')
     assert m.Length == 0
     lattice = [m]
-    rin = numpy.random.rand(*rin.shape)
-    rin_orig = numpy.array(rin, copy=True)
+    rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
+    rin_orig = numpy.array(rin, copy=True, order='F')
     atpass(lattice, rin, 1)
     numpy.testing.assert_equal(rin, rin_orig)
 
