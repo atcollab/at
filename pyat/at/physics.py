@@ -8,10 +8,16 @@ EPS = 1e-10
 XYDEFSTEP = 6.055454452393343e-006  # Optimal delta?
 DDP = 1e-8
 
-_dtype = [('idx', numpy.uint32), ('s_pos', numpy.float64),
-          ('closed_orbit', numpy.float64, (4,)), ('dispersion', numpy.float64, (4,)),
-          ('alpha', numpy.float64, (2,)), ('beta', numpy.float64, (2,)), ('mu', numpy.float64, (2,)),
-          ('m44', numpy.float64, (4, 4))]
+
+# dtype for structured array containing Twiss parameters
+TWISS_DTYPE = [('idx', numpy.uint32),
+               ('s_pos', numpy.float64),
+               ('closed_orbit', numpy.float64, (4,)),
+               ('dispersion', numpy.float64, (4,)),
+               ('alpha', numpy.float64, (2,)),
+               ('beta', numpy.float64, (2,)),
+               ('mu', numpy.float64, (2,)),
+               ('m44', numpy.float64, (4, 4))]
 
 
 # noinspection PyPep8Naming
@@ -176,7 +182,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, ddp=DDP):
     ay, by, my = twiss22(m44[2:, 2:], mstack[2:, 2:, :])
 
     tune = numpy.array((mx[-1], my[-1])) / (2 * numpy.pi)
-    twiss = numpy.zeros(nrefs, dtype=_dtype)
+    twiss = numpy.zeros(nrefs, dtype=TWISS_DTYPE)
     twiss['idx'] = refpts[:nrefs]
     twiss['s_pos'] = lattice.get_s_pos(ring, refpts[:nrefs])
     twiss['closed_orbit'] = numpy.rollaxis(orbit, -1)[:nrefs]
