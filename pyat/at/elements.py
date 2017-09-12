@@ -15,7 +15,7 @@ class Element(object):
 
     def __init__(self, family_name, length=0.0, **kwargs):
         self.FamName = family_name
-        self.Length = length
+        self.Length = float(length)
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
         for field in Element.FLOAT_ARRAYS:
             if field in kwargs:
@@ -45,14 +45,14 @@ class Marker(Element):
     """pyAT marker element"""
 
     def __init__(self, family_name, **kwargs):
-        super(Marker, self).__init__(family_name, 0.0, **kwargs)
+        super(Marker, self).__init__(family_name, kwargs.pop('Length', 0.0), **kwargs)
 
 
 class Monitor(Element):
     """pyAT monitor element"""
 
     def __init__(self, family_name, **kwargs):
-        super(Monitor, self).__init__(family_name, 0.0, **kwargs)
+        super(Monitor, self).__init__(family_name, kwargs.pop('Length', 0.0), **kwargs)
 
 
 class Aperture(Element):
@@ -63,7 +63,7 @@ class Aperture(Element):
         assert len(limits) == 4
         kwargs['Limits'] = numpy.array(limits, dtype=numpy.float64)
         kwargs.setdefault('PassMethod', 'AperturePass')
-        super(Aperture, self).__init__(family_name, 0.0, **kwargs)
+        super(Aperture, self).__init__(family_name, kwargs.pop('Length', 0.0), **kwargs)
 
 
 class Drift(Element):
@@ -95,8 +95,7 @@ class ThinMultipole(Element):
         kwargs['PolynomB'] = numpy.concatenate((poly_b, numpy.zeros(poly_size - len(poly_b))))
         kwargs['MaxOrder'] = int(kwargs.pop('MaxOrder', poly_size - 1))
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
-        length = kwargs.pop('Length', 0.0)
-        super(ThinMultipole, self).__init__(family_name, length, **kwargs)
+        super(ThinMultipole, self).__init__(family_name, kwargs.pop('Length', 0.0), **kwargs)
 
 
 class Multipole(ThinMultipole):
@@ -134,11 +133,12 @@ class Dipole(Multipole):
         'MaxOrder'      Number of desired multipoles
         'NumIntSteps'   Number of integration steps (default: 10)
         """
-        poly_b = kwargs.pop('PolynomB', [0, k])
-        kwargs.setdefault('EntranceAngle', 0.0)
-        kwargs.setdefault('ExitAngle', 0.0)
+        poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
+        kwargs['BendingAngle'] = float(bending_angle)
+        kwargs['EntranceAngle'] = float(kwargs.pop('EntranceAngle', 0.0))
+        kwargs['ExitAngle'] = float(kwargs.pop('ExitAngle', 0.0))
         kwargs.setdefault('PassMethod', 'BendLinearPass')
-        super(Dipole, self).__init__(family_name, length, [], poly_b, BendingAngle=bending_angle, **kwargs)
+        super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
 
 # Bend is a synonym of Dipole.
@@ -158,7 +158,7 @@ class Quadrupole(Multipole):
         'MaxOrder'      Number of desired multipoles
         'NumIntSteps'   Number of integration steps (default: 10)
         """
-        poly_b = kwargs.pop('PolynomB', [0, k])
+        poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         kwargs.setdefault('PassMethod', 'QuadLinearPass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
@@ -199,10 +199,10 @@ class RFCavity(Element):
         Available keywords:
         'TimeLag'   time lag with respect to the reference particle
         """
-        kwargs.setdefault('Voltage', voltage)
-        kwargs.setdefault('Frequency', frequency)
-        kwargs.setdefault('HarmNumber', harmonic_number)
-        kwargs.setdefault('Energy', energy)
+        kwargs.setdefault('Voltage', float(voltage))
+        kwargs.setdefault('Frequency', float(frequency))
+        kwargs.setdefault('HarmNumber', int(harmonic_number))
+        kwargs.setdefault('Energy', float(energy))
         kwargs.setdefault('TimeLag', 0.0)
         kwargs.setdefault('PassMethod', 'CavityPass')
         super(RFCavity, self).__init__(family_name, length, **kwargs)
@@ -214,7 +214,7 @@ class RingParam(Element):
                                                          'Periodicity']
 
     def __init__(self, family_name, energy, nb_periods, **kwargs):
-        kwargs.setdefault('Energy', energy)
-        kwargs.setdefault('Periodicity', nb_periods)
+        kwargs.setdefault('Energy', float(energy))
+        kwargs.setdefault('Periodicity', int(nb_periods))
         kwargs.setdefault('PassMethod', 'IdentityPass')
-        super(RingParam, self).__init__(family_name, 0.0, **kwargs)
+        super(RingParam, self).__init__(family_name, kwargs.pop('Length', 0.0), **kwargs)

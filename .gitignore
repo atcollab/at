@@ -21,6 +21,9 @@ pyat/prefix
 pyat/integrator-src
 *.egg-info
 
+# dynamic integrator list
+atintegrators/passmethodlist.m
+
 # cmake
 CMakeCache.txt
 CMakeFiles
