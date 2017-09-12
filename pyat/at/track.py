@@ -49,7 +49,7 @@ def linepass(line, r_in, refpts=None, KeepLattice=False):
     if refpts is None:
         refpts = len(line)
     refs = uint32_refpts(refpts, len(line))
-    r_in = numpy.asfortranarray(r_in).reshape((6, -1))
+    r_in = numpy.asfortranarray(r_in.reshape((6, -1)))
     return atpass(line, r_in, 1, refs, int(KeepLattice))
 
 
@@ -80,5 +80,5 @@ def ringpass(ring, r_in, nturns=1, KeepLattice=False):
     since the last call. Otherwise, RINGPASS with KeepLattice=False must be
     called again.
 """
-    r_in = numpy.asfortranarray(r_in).reshape((6, -1))
+    r_in = numpy.asfortranarray(r_in.reshape((6, -1)))
     return atpass(ring, r_in, nturns, reuse=int(KeepLattice))
