@@ -1,6 +1,6 @@
 """Python port of the Accelerator Toolbox"""
 
-# Make all functions visible in the at nammspace:
+# Make all functions visible in the at namespace:
 # noinspection PyUnresolvedReferences
 from .atpass import atpass
 from .patpass import patpass

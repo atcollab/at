@@ -20,11 +20,10 @@ TWISS_DTYPE = [('idx', numpy.uint32),
                ('m44', numpy.float64, (4, 4))]
 
 
-# noinspection PyPep8Naming
 def find_orbit4(ring, dp=0.0, refpts=None):
     """findorbit4 finds the closed orbit in the 4-d transverse phase
     space by numerically solving for a fixed point of the one turn
-    map M calculated with LINEPASS
+    map M calculated with linepass
 
         (X, PX, Y, PY, dP2, CT2 ) = M (X, PX, Y, PY, dP1, CT1)
 
@@ -40,24 +39,20 @@ def find_orbit4(ring, dp=0.0, refpts=None):
                 HarmNumber*Frev = Frf
 
     To impose this artificial constraint in findorbit4, PassMethod
-    used for any elemen SHOULD NOT
+    used for any element SHOULD NOT
     1. change the longitudinal momentum dP (cavities , magnets with radiation)
     2. have any time dependence (localized impedance, fast kickers etc)
 
     findorbit4(RING, dP) is 4x1 vector - fixed point at the
     entrance of the 1-st element of the RING (x,px,y,py)
 
-    findorbit4(RING, dP, REFPTS) is 4-by-Length(REFPTS)
+    findorbit4(RING, dP, refpts) is 4-by-Length(refpts)
     array of column vectors - fixed points (x,px,y,py)
-    at the entrance of each element indexed REFPTS array.
-    REFPTS is an array of increasing indexes that select elements
+    at the entrance of each element indexed refpts array.
+    refpts is an array of increasing indexes that select elements
     from the range 0 to length(RING).
-    See further explanation of REFPTS in the 'help' for FINDSPOS
+    See further explanation of refpts in the 'help' for FINDSPOS
 
-    findorbit4(RING ,dP, REFPTS, GUESS) - same as above but the search
-    for the fixed point starts at the initial condition GUESS
-    Otherwise the search starts from [0,0,0,0,0,0].
-    GUESS must be a 6-by-1 vector;
     """
     # We seek
     #  - f(x) = x
@@ -84,7 +79,7 @@ def find_orbit4(ring, dp=0.0, refpts=None):
     keeplattice = False
     while (change > CONVERGENCE) and itercount < MAX_ITERATIONS:
         in_mat = r_in.reshape((6, 1)) + delta_matrix
-        out_mat = at.linepass(ring, in_mat, KeepLattice=keeplattice)
+        out_mat = at.linepass(ring, in_mat, keep_lattice=keeplattice)
         # the reference particle after one turn
         ref_out = out_mat[:4, 4]
         # 4x4 jacobian matrix from numerical differentiation:
@@ -100,11 +95,10 @@ def find_orbit4(ring, dp=0.0, refpts=None):
         r_in = r_next
         keeplattice = True
 
-    all_points = at.linepass(ring, r_in, refpts, KeepLattice=keeplattice)
+    all_points = at.linepass(ring, r_in, refpts, keep_lattice=keeplattice)
     return r_in[:4], all_points[:4, :]
 
 
-# noinspection PyPep8Naming
 def find_m44(ring, dp=0.0, refpts=None, orbit4=None, XYStep=XYDEFSTEP):
     """
     Determine the transfer matrix for ring, by first finding the closed orbit.
@@ -127,7 +121,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit4=None, XYStep=XYDEFSTEP):
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit6 + dmat
 
-    out_mat = at.linepass(ring, in_mat, refpts, KeepLattice=keeplattice)
+    out_mat = at.linepass(ring, in_mat, refpts, keep_lattice=keeplattice)
     tmat3 = numpy.reshape(out_mat[:4, :], (4, 8, -1), order='F')
     # (x + d) - (x - d) / d
     mstack = (tmat3[:, :4, :] - tmat3[:, 4:8, :]) / XYStep
