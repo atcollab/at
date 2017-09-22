@@ -1,13 +1,31 @@
 function varargout = getargs(args,default_values)
-%GETARGS Check and expands optional argument lists
-%ARGOUT=GETARGS(ARGIN,DEFAULT_VALUES)
-%[ARG1,ARG2,...]=GETARGS(ARGIN,DEFAULT_VALUES)
+%GETARGS Process positional arguments from the input arguments
+%
+%ARGOUT=GETARGS(ARGIN,DEFAULT_VALUES) processes input arguments (typically
+% from VARARGIN), by replacing DEFAULT_VALUES by valid ARGS items
+% (items different from [], the empty numeric array)
+%
+%ARGOUT: all the arguments in a cell array, possibly longer than DEFAULT_VALUES:
+%	length(ARGOUT)=max(length(ARGIN), length(DEFAULT_VALUES))
+%
+%[ARG1,ARG2,...]=GETARGS(ARGIN,DEFAULT_VALUES) returns arguments in
+%	as many separate variables as element in DEFAULT_VALUES
+%
+%Example:
+%
+%function testfunc(varargin)
+%
+%[optflag,args]=getflag(varargin,'option');     % Extract an optional flag
+%[range,args]=getoption(args,'Range', 1:10);	% Extract a keyword argument
+%[dname,dvalue]=getargs(args,{'abcd',297});     % Extract positional arguments
+%
+%See also GETFLAG, GETOPTION
 
-na=min(length(default_values),length(args));
-valid=~cellfun(@(arg) isempty(arg)&&isnumeric(arg),args(1:na));
+na=length(default_values);
+valid=~cellfun(@(arg) isempty(arg)&&isnumeric(arg),args);
 default_values(valid)=args(valid);
-if nargout==length(default_values)
-    varargout=default_values;
+if nargout==na
+    varargout=default_values(1:na);
 else
     varargout{1}=default_values;
 end
