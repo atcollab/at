@@ -30,8 +30,8 @@ keep=~atgetcells(oldring(:),'PassMethod','IdentityPass') | refs;
 newring=oldring(keep);
 indx=keep;
 %					Merge adjacent elements
-bring=cellfun(@(el) elstrip(el,{'PassMethod','PolynomA','PolynomB',...
-    'MaxOrder','RApertures','EApertures'}),newring,'UniformOutput',false);
+tobecompared={'PassMethod','PolynomA','PolynomB','MaxOrder','RApertures','EApertures'};
+bring=cellfun(@elstrip,newring,'UniformOutput',false);
 bring(refs(indx))={NaN};
 bends=atgetcells(newring,'BendingAngle');
 keep=true(size(newring));
@@ -41,7 +41,7 @@ ll=atgetfieldvalues(newring,'Length');
 ba(bends)=atgetfieldvalues(newring(bends),'BendingAngle');
 invrad(bends)=ba(bends)./ll(bends);
 islikenext=cellfun(@isequal,[bring(2:end);{NaN}],bring) & abs(invrad([2:end 1])-invrad)<5*eps(invrad);
-islikeprev=islikenext([end 1:end-1]);
+islikeprev=circshift(islikenext,1);
 arrayfun(@group,find(islikenext & ~islikeprev),find(~islikenext & islikeprev));
 newring=newring(keep);
 indx(indx)=keep;
@@ -58,11 +58,9 @@ if nargout >= 3
     end
 end
 
-    function el2=elstrip(el,fname)
+    function el2=elstrip(el)
         if isfield(el,'Length') && el.Length>0
-            fnms=fieldnames(el);
-            dd=~cellfun(@(ff) any(strcmp(ff,fname)),fnms);
-            el2=rmfield(el,fnms(dd));
+            el2=mvfield(struct(),el,tobecompared);
         else
             el2=NaN;
         end
@@ -73,12 +71,9 @@ end
         newelem.Length=sum(ll(i1:i2));
         if bends(i1)
             newelem.BendingAngle=sum(ba(i1:i2));
-            newelem.ExitAngle=newring{i2}.ExitAngle;
         end
-        if isfield(newring{i2},'T2'), newelem.T2=newring{i2}.T2; end
-        if isfield(newring{i2},'R2'), newelem.R2=newring{i2}.R2; end
         newelem.FamName=gname(atgetfieldvalues(newring(i1:i2),'FamName'));
-        newring{i1}=newelem;
+        newring{i1}=mvfield(newelem,newring{i2},exitfields());
         keep(i1+1:i2)=false;
     end
 
