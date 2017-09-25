@@ -171,7 +171,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(6,1);
+        plhs[0] = mxCreateCellMatrix(9,1);
         mxSetCell(plhs[0],0,mxCreateString("Alphax"));
         mxSetCell(plhs[0],1,mxCreateString("Alphay"));
         mxSetCell(plhs[0],2,mxCreateString("Betax"));
