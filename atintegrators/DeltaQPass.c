@@ -3,6 +3,24 @@
 
 #define TWOPI		6.28318530717959
 
+struct elem 
+{
+  double Alphax;
+  double Alphay;
+  double Betax;
+  double Betay;
+  double Qpx;
+  double Qpy;
+  double A1;
+  double A2;
+  double A3;  
+  /* optional fields */
+  double *R1;
+  double *R2;
+  double *T1;
+  double *T2;
+};
+
 void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
         double betax, double betay, double qpx, double qpy,
         double a1,double a2, double a3,
@@ -73,128 +91,87 @@ void DeltaQPass(double *r_in, int num_particles, double alphax, double alphay,
     }
 }
 
-MODULE_DEF(DeltaQPass)        /* Dummy module initialisation */
-
-#ifdef MATLAB_MEX_FILE
-
-#include "elempass.h"
-#include "mxutils.c"
-
-ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
-                             double *r_in, int num_particles, int mode)
-#define NUM_FIELDS_2_REMEMBER 13
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+                double *r_in, int num_particles, struct parameters *Param)
 {
-	double alphax;
-    double alphay;
-    double betax;
-    double betay;
-    double qpx;
-    double qpy;
-    double a1;
-    double a2;
-    double a3;
-    double  *pr1, *pr2, *pt1, *pt2;
-
-    
-	switch(mode) {
-	    case MAKE_LOCAL_COPY: 	/* Find field numbers first
-                                 Save a list of field number in an array
-                                 and make returnptr point to that array
-                                 */
-            FieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-            
-            /*  Populate*/
-            
-            FieldNumbers[0] = GetRequiredFieldNumber(ElemData, "Alphax");
-            FieldNumbers[1] = GetRequiredFieldNumber(ElemData, "Alphay");
-            FieldNumbers[2] = GetRequiredFieldNumber(ElemData, "Betax");
-            FieldNumbers[3] = GetRequiredFieldNumber(ElemData, "Betay");
-            FieldNumbers[4] = GetRequiredFieldNumber(ElemData, "Qpx");
-            FieldNumbers[5] = GetRequiredFieldNumber(ElemData, "Qpy");
-            FieldNumbers[6] = GetRequiredFieldNumber(ElemData, "A1");
-            FieldNumbers[7] = GetRequiredFieldNumber(ElemData, "A2");
-            FieldNumbers[8] = GetRequiredFieldNumber(ElemData, "A3");
-            
-            FieldNumbers[9] = mxGetFieldNumber(ElemData,"R1");
-            FieldNumbers[10] = mxGetFieldNumber(ElemData,"R2");
-            FieldNumbers[11] = mxGetFieldNumber(ElemData,"T1");
-            FieldNumbers[12] = mxGetFieldNumber(ElemData,"T2");
-            /* Fall through next section... */
-            
-	    case USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-                                 The second argument ponter to the array of field
-                                 numbers is previously created with
-                                 QuadLinPass( ..., MAKE_LOCAL_COPY)
-                                 */
-            alphax = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-            alphay = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-            betax = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-            betay = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-            qpx = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-            qpy = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-            a1 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-            a2 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
-            a3 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[8]));
-            
-            /* Optional fields */
-            pr1 = (FieldNumbers[9] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[9])) : NULL;
-            pr2 = (FieldNumbers[10] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[10])) : NULL;
-            pt1 = (FieldNumbers[11] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[11])) : NULL;
-            pt2 = (FieldNumbers[12] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData, 0, FieldNumbers[12])) : NULL;
-            break;
-            
-	    default:
-            mexErrMsgTxt("No match for calling mode in function DeltaQPass\n");
-	}
-       
-	DeltaQPass(r_in, num_particles, alphax, alphay, betax, betay, qpx, qpy,
-            a1, a2, a3, pt1, pt2, pr1, pr2);
-	return FieldNumbers;
+    if (!Elem) {
+        double alphax, alphay, betax, betay, qpx, qpy, a1, a2, a3;
+        double  *R1, *R2, *T1, *T2;
+        alphax=atGetDouble(ElemData,"Alphax"); check_error();
+        alphay=atGetDouble(ElemData,"Alphay"); check_error();
+        betax=atGetDouble(ElemData,"Betax"); check_error();
+        betay=atGetDouble(ElemData,"Betay"); check_error();
+        qpx=atGetDouble(ElemData,"Qpx"); check_error();
+        qpy=atGetDouble(ElemData,"Qpy"); check_error();
+        a1=atGetDouble(ElemData,"A1"); check_error();
+        a2=atGetDouble(ElemData,"A2"); check_error();
+        a3=atGetDouble(ElemData,"A3"); check_error();
+        /*optional fields*/
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Alphax=alphax;
+        Elem->Alphay=alphay;
+        Elem->Betax=betax;
+        Elem->Betay=betay;
+        Elem->Qpx=qpx;
+        Elem->Qpy=qpy;
+        Elem->A1=a1;
+        Elem->A2=a2;
+        Elem->A3=a3;
+        /*optional fields*/
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+    }
+    DeltaQPass(r_in, num_particles, Elem->Alphax, Elem->Alphay, 
+            Elem->Betax, Elem->Betay, Elem->Qpx, Elem->Qpy,
+            Elem->A1, Elem->A2, Elem->A3, Elem->T1, Elem->T2, Elem->R1, Elem->R2);
+    return Elem;
 }
 
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+MODULE_DEF(DeltaQPass)        /* Dummy module initialisation */
+
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
+#if defined(MATLAB_MEX_FILE)
+void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
-        
         double *r_in;
-        double  *pr1, *pr2, *pt1, *pt2;
-        mxArray *tmpmxptr;
-
-        double alphax = mxGetScalar(GetRequiredField(prhs[0], "Alphax"));
-        double alphay = mxGetScalar(GetRequiredField(prhs[0], "Alphay"));
-        double betax = mxGetScalar(GetRequiredField(prhs[0], "Betax"));
-        double betay = mxGetScalar(GetRequiredField(prhs[0], "Betay"));
-        double qpx = mxGetScalar(GetRequiredField(prhs[0], "Qpx"));
-        double qpy = mxGetScalar(GetRequiredField(prhs[0], "Qpy"));
-        double a1 = mxGetScalar(GetRequiredField(prhs[0], "A1"));
-        double a2 = mxGetScalar(GetRequiredField(prhs[0], "A2"));
-        double a3 = mxGetScalar(GetRequiredField(prhs[0], "A3"));
-        
+        const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
-        
-        /* Optional arguments */
-        tmpmxptr = mxGetField(prhs[0],0,"R1");
-        pr1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"R2");
-        pr2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"T1");
-        pt1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"T2");
-        pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
+        double alphax, alphay, betax, betay, qpx, qpy, a1, a2, a3;
+        double  *R1, *R2, *T1, *T2;
+        alphax=atGetDouble(ElemData,"Alphax"); check_error();
+        alphay=atGetDouble(ElemData,"Alphay"); check_error();
+        betax=atGetDouble(ElemData,"Betax"); check_error();
+        betay=atGetDouble(ElemData,"Betay"); check_error();
+        qpx=atGetDouble(ElemData,"Qpx"); check_error();
+        qpy=atGetDouble(ElemData,"Qpy"); check_error();
+        a1=atGetDouble(ElemData,"A1"); check_error();
+        a2=atGetDouble(ElemData,"A2"); check_error();
+        a3=atGetDouble(ElemData,"A3"); check_error();
+        /*optional fields*/
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
-        DeltaQPass(r_in, num_particles, alphax, alphay, betax, betay, qpx, qpy,
-                a1, a2, a3, pt1, pt2, pr1, pr2);
+        DeltaQPass(r_in, num_particles, alphax, alphay, 
+            betax, betay, qpx, qpy,
+            a1, a2, a3, T1, T2, R1, R2);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(9,1);
+        plhs[0] = mxCreateCellMatrix(6,1);
         mxSetCell(plhs[0],0,mxCreateString("Alphax"));
         mxSetCell(plhs[0],1,mxCreateString("Alphay"));
         mxSetCell(plhs[0],2,mxCreateString("Betax"));
@@ -217,4 +194,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif
+#endif /*MATLAB_MEX_FILE*/
+
