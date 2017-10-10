@@ -1,11 +1,25 @@
-from at import track
+from at import elements, track
 import numpy
 import pytest
 
 
-@pytest.mark.parametrize('input_dim', [(0,), (5,), (7,), (1,1), (6,1,1)])
+@pytest.mark.parametrize('input_dim', [(0,), (5,), (7,), (1, 1), (6, 1, 1)])
 def test_lattice_pass_raises_AssertionError_if_rin_incorrect_shape(input_dim):
-    r_in = numpy.zeros(input_dim)
+    rin = numpy.zeros(input_dim)
     lattice = []
     with pytest.raises(AssertionError):
-        track.lattice_pass(lattice, r_in)
+        track.lattice_pass(lattice, rin)
+
+
+def test_multiple_particles_lattice_pass():
+    lattice = [elements.Drift('Drift', 1.0)]
+    rin = numpy.zeros((6, 2))
+    rin[0, 0] = 1e-6  # particle one offset in x
+    rin[2, 1] = 1e-6  # particle two offset in y
+    r_original = numpy.copy(rin)
+    r_out = track.lattice_pass(lattice, rin, nturns=2)
+    # particle position is not changed passing through the drift
+    numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 0])
+    numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 1])
+    numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 0])
+    numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 1])
