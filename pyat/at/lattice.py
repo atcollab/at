@@ -22,18 +22,20 @@ def uint32_refpts(refpts, n_elements):
     else:
         if not isinstance(refpts, (collections.Sequence, numpy.ndarray)):
             refpts = [refpts]
-        if (numpy.any(numpy.diff(numpy.array(refpts)) < 0)
-                or (refpts[-1] > n_elements)
-                or numpy.any(numpy.array(refpts) < 0)):
-            raise ValueError('refpts must be ascending and less or equal to {}'.format(n_elements))
+        if (numpy.any(numpy.diff(numpy.array(refpts)) < 0) or
+                (refpts[-1] > n_elements) or
+                numpy.any(numpy.array(refpts) < 0)):
+            error_msg = 'refpts must be ascending and less than or equal to {}'
+            raise ValueError(error_msg.format(n_elements))
         urefpts = numpy.asarray(refpts, dtype=numpy.uint32)
     return urefpts
 
 
 def bool_refpts(refpts, n_elements):
     """
-    Return a boolean numpy array of length n_elements + 1 where True elements are
-    selected. This is used for indexing a lattice using True or False values.
+    Return a boolean numpy array of length n_elements + 1 where True elements
+    are selected. This is used for indexing a lattice using True or False
+    values.
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         return refpts
