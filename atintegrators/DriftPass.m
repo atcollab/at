@@ -1,6 +1,24 @@
 % DriftPass.m Help file for DriftPass.c
 %  DriftPass.c - Integrator for Drift spaces
 % 
+%  The transformation performed is:
+% 
+%  x1  = L/(1+d0) * x0' + x0 
+%  x1' = x0'
+%  y1  = L/(1+d0) * y0' + y0 
+%  y1' = y0'
+%  d1  = d0
+%  ct1 = L/(1+d0)^2 * (x0'^2 + y0'^2)/2 + ct0
+%  
+%  The list of actions performed is:
+%  - translate coordinate system
+%  - rotate coordinate system
+%  - test aperture (rectangular, then elliptical)
+%  - apply drift transformation
+%  - test aperture (rectangular, then elliptical)
+%  - rotate coordinate system
+%  - translate coordinate system
+%  
 %  The calling syntax is:
 % 
 % 		OUTPUT_COORD = DriftPass(ELEMENT, INPUT_COORD)
