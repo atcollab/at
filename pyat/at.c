@@ -191,14 +191,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     double *drin, *drout;
     int num_turns;
     npy_uint32 num_particles, np6;
-    npy_uint32 numel;
+    npy_uint32 elem_index;
     npy_uint32 *refpts = NULL;
     npy_uint32 nextref;
     unsigned int nextrefindex;
     unsigned int num_refpts;
     unsigned int reuse=0;
     npy_intp outdims[2];
-    int turn, nelem;
+    int turn;
     struct parameters param;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!I", kwlist, &PyList_Type, &lattice,
@@ -219,7 +219,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         return NULL;
     }
 
-    numel = PyList_Size(lattice);
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
     drin = PyArray_DATA(rin);
@@ -255,12 +254,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     if (new_lattice) {
         PyObject **element;
         track_function *integrator;
-        int nelem;
-        for (nelem=0; nelem<num_elements; nelem++) {
-            free(elemdata_list[nelem]);
-            Py_XDECREF(element_list[nelem]);        /* Release the stored elements, may be NULL if */
+        for (elem_index=0; elem_index < num_elements; elem_index++) {
+            free(elemdata_list[elem_index]);
+            Py_XDECREF(element_list[elem_index]);        /* Release the stored elements, may be NULL if */
         }                                           /* a previous call was interrupted by an error */
-        num_elements = numel;
+        num_elements = PyList_Size(lattice);
 
         /* Pointer to Element structures used by the tracking function */
         free(elemdata_list);
@@ -276,14 +274,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         lattice_length = 0.0;
         element = element_list;
         integrator = integrator_list;
-        for (nelem = 0; nelem < num_elements; nelem++) {
-            PyObject *el = PyList_GET_ITEM(lattice, nelem);
+        for (elem_index = 0; elem_index < num_elements; elem_index++) {
+            PyObject *el = PyList_GET_ITEM(lattice, elem_index);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
             track_function fn_handle;
             double length;
-            if (!PyPassMethod) return print_error(nelem, rout);     /* No PassMethod */
+            if (!PyPassMethod) return print_error(elem_index, rout);     /* No PassMethod */
             fn_handle = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
-            if (!fn_handle) return print_error(nelem, rout);        /* No trackFunction for the given PassMethod */
+            if (!fn_handle) return print_error(elem_index, rout);        /* No trackFunction for the given PassMethod */
             length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
             if (PyErr_Occurred()) PyErr_Clear();
             else lattice_length += length;
@@ -304,15 +302,15 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         param.nturn = turn;
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
-        for (nelem = 0; nelem < num_elements; nelem++) {
-            if (nelem == nextref) {
+        for (elem_index = 0; elem_index < num_elements; elem_index++) {
+            if (elem_index == nextref) {
                 memcpy(drout, drin, np6*sizeof(double));
                 drout += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
             /* the actual integrator call */
             *elemdata = (*integrator++)(*element++, *elemdata, drin, num_particles, &param);
-            if (!*elemdata) return print_error(nelem, rout);       /* trackFunction failed */
+            if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             elemdata++;
         }
         /* the last element in the ring */

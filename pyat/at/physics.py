@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy
 import at
 from at import lattice
@@ -23,7 +22,7 @@ TWISS_DTYPE = [('idx', numpy.uint32),
 def find_orbit4(ring, dp=0.0, refpts=None):
     """findorbit4 finds the closed orbit in the 4-d transverse phase
     space by numerically solving for a fixed point of the one turn
-    map M calculated with linepass
+    map M calculated with lattice_pass.
 
         (X, PX, Y, PY, dP2, CT2 ) = M (X, PX, Y, PY, dP1, CT1)
 
@@ -79,7 +78,9 @@ def find_orbit4(ring, dp=0.0, refpts=None):
     keeplattice = False
     while (change > CONVERGENCE) and itercount < MAX_ITERATIONS:
         in_mat = r_in.reshape((6, 1)) + delta_matrix
-        out_mat = at.linepass(ring, in_mat, keep_lattice=keeplattice)
+        out_mat = at.lattice_pass(ring, in_mat, keep_lattice=keeplattice)
+        # out_mat: 5 particles at one refpt and one turn
+        out_mat = out_mat[:, :, 0, 0]
         # the reference particle after one turn
         ref_out = out_mat[:4, 4]
         # 4x4 jacobian matrix from numerical differentiation:
@@ -95,8 +96,10 @@ def find_orbit4(ring, dp=0.0, refpts=None):
         r_in = r_next
         keeplattice = True
 
-    all_points = at.linepass(ring, r_in, refpts, keep_lattice=keeplattice)
-    return r_in[:4], all_points[:4, :]
+    all_points = at.lattice_pass(ring, r_in, refpts=refpts,
+                                 keep_lattice=keeplattice)
+    # all_points: one particle at n refpts for one turn
+    return r_in[:4], all_points[:4, 0, :, 0]
 
 
 def find_m44(ring, dp=0.0, refpts=None, orbit4=None, XYStep=XYDEFSTEP):
@@ -121,8 +124,10 @@ def find_m44(ring, dp=0.0, refpts=None, orbit4=None, XYStep=XYDEFSTEP):
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit6 + dmat
 
-    out_mat = at.linepass(ring, in_mat, refpts, keep_lattice=keeplattice)
-    tmat3 = numpy.reshape(out_mat[:4, :], (4, 8, -1), order='F')
+    out_mat = at.lattice_pass(ring, in_mat, refpts=refpts,
+                              keep_lattice=keeplattice)
+    # out_mat: 8 particles at n refpts for one turn
+    tmat3 = out_mat[:4, :, :, 0]
     # (x + d) - (x - d) / d
     mstack = (tmat3[:, :4, :] - tmat3[:, 4:8, :]) / XYStep
     m44 = mstack[:, :, -1]
