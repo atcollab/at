@@ -19,17 +19,11 @@ function line = atdivelem(elem,frac,varargin)
 % Optional arguments:
 % 'KeepAxis', if present, rotations translations are kept at all slices 
 %
-% See also ATINSERTELEMS ATSLICE ATSPLITELEM
+% See also ATINSERTELEMS ATSLICE ATSPLITELEM ENTRANCEFIELDS EXITFIELDS
 
-rottrasl=getflag(varargin,'KeepAxis');
-
-entfield=entrancefields();
-exfield=exitfields();
-
-if rottrasl
-    entfield([1,2])=[]; % remove R1 T1 from list of field at entrance
-    exfield([1,2])=[]; % remove R2 T2 from list of field at entrance
-end
+% get fields names to keep at entrance and exit only
+entfield=entrancefields(varargin{:});
+exfield=exitfields(varargin{:});
 
 [entrancef,el]=mvfield(struct(),elem,entfield); % Extract entrance fields
 [exitf,el]=mvfield(struct(),el,exfield);           % extract exit fields
