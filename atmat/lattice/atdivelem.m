@@ -17,20 +17,11 @@ function line = atdivelem(elem,frac,varargin)
 %>> line=atdivelem(qf,[0.5;0.5]); % Split a quadrupole in two halves
 %
 % Optional arguments:
-%
-% rotations_translations_at_all_slices,  true/false(default) 
+% 'KeepAxis', if present, rotations translations are kept at all slices 
 %
 % See also ATINSERTELEMS ATSLICE ATSPLITELEM
 
-p=inputParser;
-
-addRequired(p,'elem');
-addRequired(p,'frac');
-addOptional(p,'rotations_translations_at_all_slices',false,@islogical);
-
-parse(p,elem,frac,varargin{:});
-
-rottrasl=p.Results.rotations_translations_at_all_slices;
+rottrasl=getflag(varargin,'KeepAxis');
 
 entfield=entrancefields();
 exfield=exitfields();

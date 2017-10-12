@@ -137,8 +137,7 @@ end
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0
             nslices=ceil(elem.Length/elmlength);
-            newelems=atdivelem(elem,ones(1,nslices)./nslices,...
-                'rotations_translations_at_all_slices',true);
+            newelems=atdivelem(elem,ones(1,nslices)./nslices,'KeepAxis');
         else
             newelems={elem};
         end
