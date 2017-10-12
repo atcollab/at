@@ -1,4 +1,4 @@
-function line = atdivelem(elem,frac)
+function line = atdivelem(elem,frac,varargin)
 %LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces
 %
 %ELEM:  Element to be divided
@@ -16,10 +16,32 @@ function line = atdivelem(elem,frac)
 %>> qf=atquadrupole('QF',0.1,0.5);
 %>> line=atdivelem(qf,[0.5;0.5]); % Split a quadrupole in two halves
 %
+% Optional arguments:
+%
+% rotations_traslations_at_all_slices,  true/false(default), 
+%
 % See also ATINSERTELEMS ATSLICE ATSPLITELEM
 
-[entrancef,el]=mvfield(struct(),elem,entrancefields()); % Extract entrance fields
-[exitf,el]=mvfield(struct(),el,exitfields());           % extract exit fields
+p=inputParser;
+
+addRequired(p,'elem');
+addRequired(p,'frac');
+addOptional(p,'rotations_traslations_at_all_slices',false,@islogical);
+
+parse(p,elem,frac,varargin{:});
+
+rottrasl=p.Results.rotations_traslations_at_all_slices;
+
+entfield=entrancefields();
+exfield=exitfields();
+
+if rottrasl
+    entfield([1,2])=[]; % remove R1 T1 from list of field at entrance
+    exfield([1,2])=[]; % remove R2 T2 from list of field at entrance
+end
+
+[entrancef,el]=mvfield(struct(),elem,entfield); % Extract entrance fields
+[exitf,el]=mvfield(struct(),el,exfield);           % extract exit fields
                                         % split the bare element
 line=atsetfieldvalues(repmat({el},length(frac),1),'Length',el.Length*frac(:));
 if isfield(elem,'BendingAngle')
