@@ -138,7 +138,7 @@ end
         if isfield(elem,'Length') && elem.Length > 0
             nslices=ceil(elem.Length/elmlength);
             newelems=atdivelem(elem,ones(1,nslices)./nslices,...
-                'rotations_traslations_at_all_slices',true);
+                'rotations_translations_at_all_slices',true);
         else
             newelems={elem};
         end

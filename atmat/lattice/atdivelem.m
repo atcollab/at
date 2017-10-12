@@ -18,7 +18,7 @@ function line = atdivelem(elem,frac,varargin)
 %
 % Optional arguments:
 %
-% rotations_traslations_at_all_slices,  true/false(default), 
+% rotations_translations_at_all_slices,  true/false(default) 
 %
 % See also ATINSERTELEMS ATSLICE ATSPLITELEM
 
@@ -26,11 +26,11 @@ p=inputParser;
 
 addRequired(p,'elem');
 addRequired(p,'frac');
-addOptional(p,'rotations_traslations_at_all_slices',false,@islogical);
+addOptional(p,'rotations_translations_at_all_slices',false,@islogical);
 
 parse(p,elem,frac,varargin{:});
 
-rottrasl=p.Results.rotations_traslations_at_all_slices;
+rottrasl=p.Results.rotations_translations_at_all_slices;
 
 entfield=entrancefields();
 exfield=exitfields();
