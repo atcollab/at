@@ -5,9 +5,9 @@ Accelerator Toolbox (AT) is a collection of tools to model storage rings and bea
 
 With AT it is possible to:
 
- - **create and manipulate accelerator lattice elements**, which are stored in Matlab structures
- - **track particles through the lattice**, selecting the appropriate integrator to represent the physics
- - **compute accelerator parameters and beam properties**, generating new scripts or taking advantage of the existing ones
+- **create and manipulate accelerator lattice elements**, which are stored in Matlab structures
+- **track particles through the lattice**, selecting the appropriate integrator to represent the physics
+- **compute accelerator parameters and beam properties**, generating new scripts or taking advantage of the existing ones
 
 Examples of things AT enables are: create a lattice structure that links to the integrators, and then to track through the lattice including non-linear elements, analyze the non-linear motion, change settings to affect parameters, compute equilibrium beam sizes with radiation, and so on.
 
