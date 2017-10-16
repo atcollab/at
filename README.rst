@@ -14,6 +14,6 @@ Examples of things AT enables are: create a lattice structure that links to the 
 History
 -------
 
-The core of AT was developed at SLAC by Andrei Terebilo and a webpage is hosted `here <http://www.slac.stanford.edu/grp/ssrl/spear/at/>`.
+The core of AT was developed at SLAC by Andrei Terebilo and a webpage is hosted `here <http://www.slac.stanford.edu/grp/ssrl/spear/at/>`_.
 
-The AT code in this repository has evolved out of version 1.3 of the original and is now maintained by the atcollab collaboration, involving people from different research institutes. The latest release can be found `here <https://github.com/atcollab/at/releases>`.
+The AT code in this repository has evolved out of version 1.3 of the original and is now maintained by the atcollab collaboration, involving people from different research institutes. The latest release can be found `here <https://github.com/atcollab/at/releases>`_.
