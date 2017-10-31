@@ -1,4 +1,3 @@
-#include "mex.h"
 #include <math.h>
 #include "atelem.c"
 #include "atlalib.c"
