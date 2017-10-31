@@ -1,5 +1,8 @@
 #include <math.h>
 #include <time.h>
+#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64 || defined _WIN32)
+#include <sys/time.h>
+#endif
 
 /*this is quite ugly....but avoids reading form file*/
 
@@ -358,15 +361,17 @@ static int initSeed = 1;
 
 static double drand(){
     
-    
-	if(initSeed)
-	{        
-		struct timeval time; 
-		gettimeofday(&time,NULL);
-		srand((time.tv_sec * 1000000) + (time.tv_usec));
-		initSeed = 0;
-	}
-        
+    if(initSeed)
+    {
+#if !(defined PCWIN || defined PCWIN32 || defined PCWIN64 || defined _WIN32)
+        {
+        struct timeval time;
+        gettimeofday(&time,NULL);
+        srand((time.tv_sec * 1000000) + (time.tv_usec));
+        }
+#endif
+        initSeed = 0;
+    }
     return (rand()+1.0)/(RAND_MAX+1.0);
 };
 
