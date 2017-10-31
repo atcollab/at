@@ -50,13 +50,6 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
     double s0, ds, rho, dxp, dyp, xp0, yp0;
     int c,m,i;
     int nph;
-    bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
-    bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
-    SL = le/num_int_steps;
-    L1 = SL*DRIFT1;
-    L2 = SL*DRIFT2;
-    K1 = SL*KICK1;
-    K2 = SL*KICK2;
     double  qe = 1.60217733e-19;
     double  epsilon0 = 8.854187817e-12;
     double  clight = 2.99792458e8;
@@ -64,6 +57,13 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
     double  hbar = 1.054571726e-34;
     double  pi = 3.14159265358979;
     double  alpha0 = qe*qe/(4*pi*epsilon0*hbar*clight);
+    bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
+    bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
+    SL = le/num_int_steps;
+    L1 = SL*DRIFT1;
+    L2 = SL*DRIFT2;
+    K1 = SL*KICK1;
+    K2 = SL*KICK2;
     
     if (KickAngle) {  /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le;
