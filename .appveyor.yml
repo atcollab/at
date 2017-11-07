@@ -1,8 +1,8 @@
-
+# This file configures Appveyor to run builds on Windows machines for each pull request.
+# See https://www.appveyor.com/docs/build-environment/
 environment:
   matrix:
    - CONDA_DIR: "C:\\Miniconda-x64"
-   - CONDA_DIR: "C:\\Miniconda3-x64"
    - CONDA_DIR: "C:\\Miniconda35-x64"
    - CONDA_DIR: "C:\\Miniconda36-x64"
 
