@@ -3,7 +3,6 @@
 environment:
   matrix:
    - CONDA_DIR: "C:\\Miniconda-x64"
-   - CONDA_DIR: "C:\\Miniconda3-x64"
    - CONDA_DIR: "C:\\Miniconda35-x64"
    - CONDA_DIR: "C:\\Miniconda36-x64"
 
