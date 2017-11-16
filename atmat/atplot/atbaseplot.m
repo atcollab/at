@@ -137,7 +137,7 @@ end
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0
             nslices=ceil(elem.Length/elmlength);
-            newelems=atdivelem(elem,ones(1,nslices)./nslices,'KeepAxis');
+            newelems=atdivelem(elem,ones(1,nslices)./nslices);
         else
             newelems={elem};
         end
