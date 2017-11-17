@@ -29,6 +29,8 @@ function curve = atbaseplot(varargin)
 %   'index',REFPTS             Display the index of selected element names
 %   'leftargs',{properties}     properties set on the left axis
 %   'rightargs',{properties}    properties set on the right axis
+%   'KeepAxis'                  flag to keep R1,R2,T1,T2 at each slice in
+%                               detailed plots (mandatory with vert. bend).
 %
 %ATBASEPLOT(AX,...)     Plots in the axes specified by AX. AX can precede
 %                       any previous argument combination
@@ -100,6 +102,7 @@ rsrc=varargin(narg:end);
 [synopt,rsrc]=getoption(rsrc,'synopt',true);
 [leftargs,rsrc]=getoption(rsrc,'leftargs',{});
 [rightargs,rsrc]=getoption(rsrc,'rightargs',{});
+[KeepAxis,rsrc]=getflag(rsrc,'KeepAxis');
 % Split the ring
 elmlength=findspos(ring0(el1:el2-1),el2-el1+1)/npts;
 r2=cellfun(@splitelem,ring0(el1:el2-1),'UniformOutput',false);
@@ -137,7 +140,11 @@ end
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0
             nslices=ceil(elem.Length/elmlength);
-            newelems=atdivelem(elem,ones(1,nslices)./nslices);
+            if ~KeepAxis
+                newelems=atdivelem(elem,ones(1,nslices)./nslices);
+            else
+                newelems=atdivelem(elem,ones(1,nslices)./nslices,'KeepAxis');
+            end
         else
             newelems={elem};
         end
