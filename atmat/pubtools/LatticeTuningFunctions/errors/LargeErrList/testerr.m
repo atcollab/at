@@ -1,19 +1,18 @@
 clear all
 close all
 
-addpath('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors')
-addpath('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors/random')
-addpath('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors/errordisplayfunctions');
-
+addpath('../../errors')
+addpath('../../errors/random')
+addpath('../../errors/errordisplayfunctions');
+addpath('../../../../../machine_data')
 % load lattice
-load ../../ESRFLattice.mat
 
-r0=ring;
+r0=esrf;
 
 % define errors to set
 ie=1;
 % sextupoles
-inds=findcells(r0,'Class','Sextupole');
+inds=findcells(r0,'FamName','S[0-9][0-9]\w*');
 errstruct(ie).indx=inds;
 errstruct(ie).type='psi'; % roll
 errstruct(ie).sigma=200*1e-6;
@@ -22,11 +21,11 @@ ie=ie+1;
 indqm=[findcells(r0,'Class','Quadrupole')];
 errstruct(ie).indx=indqm;
 errstruct(ie).type='x';
-errstruct(ie).sigma=150*1e-6;
+errstruct(ie).sigma=50*1e-6;
 ie=ie+1;
 errstruct(ie).indx=indqm;
 errstruct(ie).type='y';
-errstruct(ie).sigma=170*1e-6;
+errstruct(ie).sigma=150*1e-6;
 ie=ie+1;
 
 %% set errors
@@ -44,8 +43,11 @@ rerr=atsetrandomerrors(...
     type);
 
 
-figure('units','normalized','position',[0.1 0.4 0.65 0.35])
+figure('units','normalized','position',[0.1 0.4 0.65 0.45])
 atplot(rerr,[0,200],'comment',[],@pltmisalignments);
-saveas(gca,'LargeList.fig')
-export_fig('LargeList.jpg','-r300')
+
+figure('units','normalized','position',[0.1 0.4 0.65 0.45])
+atplot(rerr,[0,200],'comment',[],@plClosedOrbit);
+%saveas(gca,'LargeList.fig')
+%export_fig('LargeList.jpg','-r300')
 
