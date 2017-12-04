@@ -22,7 +22,7 @@ else
 end
 
 % errors set
-kl_err=TruncatedGaussian(sigmaperc,Nsigma*sigmaperc,length(indx))'.*kl_0(:);% compute error starting from model values
+kl_err=TruncatedGaussian(sigmaperc,Nsigma*sigmaperc,[length(indx),1]).*kl_0(:);% compute error starting from model values
 
 % previous set
 try
