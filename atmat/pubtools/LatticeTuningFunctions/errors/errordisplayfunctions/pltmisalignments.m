@@ -4,7 +4,7 @@ function plotdata=pltmisalignments(lindata,ring,dpp,varargin) %#ok<INUSD>
 %Plots orbits, misalignments and tilts.
 
 CoD=cat(2,lindata.ClosedOrbit);
-[X,Y,Tilt]=GetMisalignments(ring);
+[X,Y,Tilt]=GetExistingErrors(ring);
 % T=T-pi/2;
 % T(T==pi/2)=0;
 % T(T==-pi/2)=0;
