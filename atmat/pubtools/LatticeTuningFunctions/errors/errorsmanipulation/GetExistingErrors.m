@@ -20,8 +20,8 @@ if nargout>=2
     Y=zeros(size(indxerrors));
     t1=findcells(THERING(indxerrors),'T1');
     if ~isempty(t1)
-        X(t1)=-getcellstruct(THERING(indxerrors),'T1',t1,1);
-        Y(t1)=-getcellstruct(THERING(indxerrors),'T1',t1,3);
+        X(t1)=-atgetfieldvalues(THERING,indxerrors(t1),'T1',{1,1});
+        Y(t1)=-atgetfieldvalues(THERING,indxerrors(t1),'T1',{3,1});
     end
 end
 if nargout>=3
@@ -29,7 +29,7 @@ if nargout>=3
     S=zeros(size(indxerrors));
     s1=findcells(THERING(indxerrors),'DeltaS');
     if ~isempty(s1)
-        S(s1)=-getcellstruct(THERING(indxerrors),'DeltaS',s1,1);
+        S(s1)=-atgetfieldvalues(THERING,indxerrors(s1),'DeltaS',{1,1});
     end
 end
 if nargout>=4
@@ -37,7 +37,7 @@ if nargout>=4
     T=zeros(size(indxerrors));
     tiltedelem=findcells(THERING(indxerrors),'RotAboutS');
     if ~isempty(tiltedelem)
-        T(tiltedelem)=getcellstruct(THERING(indxerrors),'RotAboutS',tiltedelem);
+        T(tiltedelem)=atgetfieldvalues(THERING,indxerrors(tiltedelem),'RotAboutS');
         T(T<1e-7 & T>-1e-7)=0;
     end
 end
@@ -46,7 +46,7 @@ if nargout>=5
     R=zeros(size(indxerrors));
     tiltedelem=findcells(THERING(indxerrors),'RotAboutX');
     if ~isempty(tiltedelem)
-        R(tiltedelem)=getcellstruct(THERING(indxerrors),'RotAboutX',tiltedelem);
+        R(tiltedelem)=atgetfieldvalues(THERING,indxerrors(tiltedelem),'RotAboutX');
         R(R<1e-7 & R>-1e-7)=0;
     end
 end
@@ -55,7 +55,7 @@ if nargout>=6
     P=zeros(size(indxerrors));
     tiltedelem=findcells(THERING(indxerrors),'RotAboutY');
     if ~isempty(tiltedelem)
-        P(tiltedelem)=getcellstruct(THERING(indxerrors),'RotAboutY',tiltedelem);
+        P(tiltedelem)=atgetfieldvalues(THERING,indxerrors(tiltedelem),'RotAboutY');
         P(P<1e-7 & P>-1e-7)=0;
     end
 end
