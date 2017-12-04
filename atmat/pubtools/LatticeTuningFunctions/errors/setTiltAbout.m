@@ -54,16 +54,16 @@ switch coord
     case 'y'
         for i = 1:length(pos)
             if additive
-                r{pos(i)}.T1(1,2) =  r{pos(i)}.T1(2)  -PSI(i);
-                r{pos(i)}.T2(1,2) = r{pos(i)}.T2(2)   +PSI(i);
+                r{pos(i)}.T1(2,1) =  r{pos(i)}.T1(2)  -PSI(i);
+                r{pos(i)}.T2(2,1) = r{pos(i)}.T2(2)   +PSI(i);
                 r{pos(i)}.T1(1,1) =  r{pos(i)}.T1(1)  +r{pos(i)}.Length/2*sin(PSI(i));
                 r{pos(i)}.T2(1,1) =   r{pos(i)}.T2(1) +r{pos(i)}.Length/2*sin(PSI(i));
                 r{pos(i)}.RotAboutY = r{pos(i)}.RotAboutY +  PSI(i);
            %     r{pos(i)}.Pitch = r{pos(i)}.Pitch +  PSI(i);
                 %DS =+L/2(1-cos(psi) both in and out, ignored. (if including, do not change sign!)
             else
-                r{pos(i)}.T1(1,2) =   -PSI(i);
-                r{pos(i)}.T2(1,2) =   +PSI(i);
+                r{pos(i)}.T1(2,1) =   -PSI(i);
+                r{pos(i)}.T2(2,1) =   +PSI(i);
                 r{pos(i)}.T1(1,1) =   +r{pos(i)}.Length/2*tan(PSI(i));
                 r{pos(i)}.T2(1,1) =   +r{pos(i)}.Length/2*tan(PSI(i));
                 r{pos(i)}.RotAboutY =   PSI(i);
@@ -90,18 +90,18 @@ switch coord
     case 'x'
         for i = 1:length(pos)
             if additive
-                r{pos(i)}.T1(1,4) = r{pos(i)}.T1(4)  -PSI(i);
-                r{pos(i)}.T2(1,4) = r{pos(i)}.T2(4)  +PSI(i);
-                r{pos(i)}.T1(1,3) = r{pos(i)}.T1(3)  +r{pos(i)}.Length/2*sin(PSI(i));
-                r{pos(i)}.T2(1,3) = r{pos(i)}.T2(3)  +r{pos(i)}.Length/2*sin(PSI(i));
+                r{pos(i)}.T1(4,1) = r{pos(i)}.T1(4)  -PSI(i);
+                r{pos(i)}.T2(4,1) = r{pos(i)}.T2(4)  +PSI(i);
+                r{pos(i)}.T1(3,1) = r{pos(i)}.T1(3)  +r{pos(i)}.Length/2*sin(PSI(i));
+                r{pos(i)}.T2(3,1) = r{pos(i)}.T2(3)  +r{pos(i)}.Length/2*sin(PSI(i));
                 r{pos(i)}.RotAboutX = r{pos(i)}.RotAboutX+  PSI(i);
           %      r{pos(i)}.Yaw = r{pos(i)}.Yaw+  PSI(i);
                 %DS =+L/2(1-cos(psi) both in and out, ignored. (if including, do not change sign!)
             else
-                r{pos(i)}.T1(1,4) =  -PSI(i);
-                r{pos(i)}.T2(1,4) =  +PSI(i);
-                r{pos(i)}.T1(1,3) =  +r{pos(i)}.Length/2*sin(PSI(i));
-                r{pos(i)}.T2(1,3) =  +r{pos(i)}.Length/2*sin(PSI(i));
+                r{pos(i)}.T1(4,1) =  -PSI(i);
+                r{pos(i)}.T2(4,1) =  +PSI(i);
+                r{pos(i)}.T1(3,1) =  +r{pos(i)}.Length/2*sin(PSI(i));
+                r{pos(i)}.T2(3,1) =  +r{pos(i)}.Length/2*sin(PSI(i));
                 r{pos(i)}.RotAboutX =   PSI(i);
          %       r{pos(i)}.Yaw =   PSI(i);
                 %DS =+L/2(1-cos(psi) both in and out, ignored. (if including, do not change sign!)
