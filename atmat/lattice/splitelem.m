@@ -73,6 +73,7 @@ if isempty(OPTIONSET)
     OPTIONSET.removeinner = {};
     OPTIONSET.removefirst = {};
     OPTIONSET.removelast  = {};
+end
 % Check if lenghts and positions are consistent
 nelemins = length(ELEMS2INSERT);
 nelemnew = 1+2*ELEMS2INSERT;
@@ -80,6 +81,3 @@ nelemnew = 1+2*ELEMS2INSERT;
 L0 = ELEM.Length;
 
 sp(1) = 0
-
-for k = 1:nelemins
-sposition( = 
