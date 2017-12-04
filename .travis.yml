@@ -15,6 +15,7 @@ matrix:
     - os: osx
       sudo: required
       language: generic
+      env: PYTHON=2
     - os: osx
       sudo: required
       language: generic
@@ -23,12 +24,11 @@ matrix:
 install: |
   python -c "import numpy; print(numpy.__version__)"
   if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-    if [[ $PYTHON == '3' ]]; then
-      brew update
-      brew install python3
-      python3 -m venv venv
-      source venv/bin/activate
-    fi
+    brew update
+    brew install python$PYTHON
+    python$PYTHON -m pip install virtualenv
+    python$PYTHON -m venv venv
+    source venv/bin/activate
     cd pyat
     pip$PYTHON install --upgrade pip setuptools wheel
     pip$PYTHON install --only-binary=numpy,scipy -r requirements.txt
