@@ -71,7 +71,7 @@ else
     [X0,Y0,S0,T0,R0,P0,bpm0]=GetExistingErrors(rerr,magindex);
     
     if isnan(Y0)
-    disp('NAN Y0!')
+    disp('NAN Y0! There are NaN in the previous set of errors!')
     end
     
     % initialize errors if not inizialized
