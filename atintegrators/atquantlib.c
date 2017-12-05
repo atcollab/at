@@ -465,13 +465,13 @@ static double getEnergy(double ec){
     double e;
     
     
-    ub = 0.999;
-    lb = 0.21;
+    ub = 0.99999;
+    lb = 0.02;
     cst0=1.23159;
     ran = drand();
     mini = 0.0;
-    maxi = 100000.0;
-    eps = 1.0e-15;
+    maxi = 1.0e2;
+    eps = maxi*1.0e-4;
     
     if(ran<=lb){
         e=pow((ran/cst0),3)*ec;
