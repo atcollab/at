@@ -10,3 +10,4 @@ try
     plotbeta;
 catch
     disp('elegant 2 at conversion unsuccessful. Check if files are in the right folder');
+end
