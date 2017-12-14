@@ -114,8 +114,8 @@ if nargout >= 3
     end
     refs=false(1,length(RING)+1);
     % Calculate tunes for DP+dDP
-    [orbP,o1P]=findorbit4(RING,DP+0.5*dDP,REFPTS);
-    [orbM,o1M]=findorbit4(RING,DP-0.5*dDP,REFPTS);
+    [orbP,o1P]=findorbit4(RING,DP+0.5*dDP,REFPTS,varargin{2:end});
+    [orbM,o1M]=findorbit4(RING,DP-0.5*dDP,REFPTS,varargin{2:end});
     dispersion = (orbP-orbM)/dDP;
     [LD, tunesP] = atlinopt(RING,DP+0.5*dDP,refs,o1P); %#ok<ASGLU>
     [LD, tunesM] = atlinopt(RING,DP-0.5*dDP,refs,o1M); %#ok<ASGLU>
