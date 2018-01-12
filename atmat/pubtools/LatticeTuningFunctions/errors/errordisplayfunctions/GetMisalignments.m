@@ -12,18 +12,18 @@ X=zeros(size(indxerrors));
 Y=zeros(size(indxerrors));
 t1=findcells(THERING(indxerrors),'T1');
 if ~isempty(t1)
-    X(t1)=-getcellstruct(THERING(indxerrors),'T1',t1,1);
-    Y(t1)=-getcellstruct(THERING(indxerrors),'T1',t1,3);
+    X(t1)=-atgetfieldvalues(THERING,indxerrors(t1),'T1',{1,1});
+    Y(t1)=-atgetfieldvalues(THERING,indxerrors(t1),'T1',{3,1});
 end
 
 T=zeros(size(indxerrors));
 %r1=findcells(THERING(indxerrors),'R1');
-tiltedelem=[findcells(THERING(indxerrors),'Tilt')];
-rotelem=[findcells(THERING(indxerrors),'RotAboutS')];
+tiltedelem=find(atgetcells(THERING,indxerrors,'Tilt'))';
+rotelem=find(atgetcells(THERING,indxerrors,'RotAboutS'))';
 
-if ~isempty(tiltedelem) || ~isempty(rotelem)
+if ~isempty(tiltedelem) %|| ~isempty(rotelem)
   
-    T(tiltedelem)=getcellstruct(THERING(indxerrors),'Tilt',tiltedelem);
-    T(rotelem)=getcellstruct(THERING(indxerrors),'RotAboutS',rotelem);
+    T(tiltedelem)=atgetfieldvalues(THERING,indxerrors(tiltedelem),'Tilt');
+    T(rotelem)=atgetfieldvalues(THERING,indxerrors(rotelem),'RotAboutS');
     T(T<1e-7 & T>-1e-7)=0;
 end
