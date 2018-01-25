@@ -12,14 +12,6 @@ function elem=atrfcavity(fname,varargin)
 %   6. ENERGY       Energy [eV]
 %   7. PASSMETHOD	Tracking function, defaults to 'CavityPass'
 %
-%  OPTIONS (order does not matter)
-%    R1				6 x 6 rotation matrix at the entrance
-%	 R2        		6 x 6 rotation matrix at the entrance
-%	 T1				6 x 1 translation at entrance 
-%	 T2				6 x 1 translation at exit
-%	 NumIntSteps    Number of integration steps
-%	 MaxOrder       Max Order for multipole (1 up to quadrupole)
-%
 %  OUTPUTS
 %      1. ELEM - Structure with the AT element
 %
@@ -27,7 +19,12 @@ function elem=atrfcavity(fname,varargin)
 %    ATRFCAVITY(FAMNAME,...,PASSMETHOD,'FIELDNAME1',VALUE1,...)
 %    Each pair {'FIELDNAME',VALUE} is added to the element
 %
-%See also  ATDRIFT, ATSEXTUPOLE, ATSBEND, ATRBEND, ATSKEWQUAD
+%  NOTES
+%      1. Fieldname can be called by calling the passmethod
+%         [req opt] = atrfcavity
+%                     where req are mandatory field and opt are optional
+%                     fields
+%%See also  ATDRIFT, ATSEXTUPOLE, ATSBEND, ATRBEND, ATSKEWQUAD
 %          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
 
 % Input parser for option

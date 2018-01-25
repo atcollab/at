@@ -22,6 +22,12 @@ function elem=atmarker(fname,varargin)
 %    ATMARKER(FAMNAME,PASSMETHOD,'FIELDNAME1',VALUE1,...)
 %    Each pair {'FIELDNAME',VALUE} is added to the element
 %
+%  NOTES
+%      1. Fieldname can be called by calling the passmethod
+%         [req opt] = IdentityPass
+%                     where req are mandatory field and opt are optional
+%                     fields
+%
 %See also  ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND ATSKEWQUAD,
 %          ATTHINMULTIPOLE, ATCORRECTOR
 
