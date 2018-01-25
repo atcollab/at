@@ -15,5 +15,10 @@ function values = getcellstruct(CELLARRAY,field,index,varargin)
 %
 % See also ATGETFIELDVALUES SETCELLSTRUCT FINDCELLS
 
-values=atgetfieldvalues(CELLARRAY(index),field,varargin);
+if isempty(varargin)
+    values=atgetfieldvalues(CELLARRAY(index),field);
+elseif length(varargin)==1
+    values=atgetfieldvalues(CELLARRAY(index),field,varargin{1});
+else
+    values=atgetfieldvalues(CELLARRAY(index),field,{varargin{1},varargin{2}});
 end
