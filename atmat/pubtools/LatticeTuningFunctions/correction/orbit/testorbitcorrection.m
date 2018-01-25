@@ -7,6 +7,7 @@ addpath('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/');
 addpath('/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors/');
 
 load ESRFLattice.mat
+load /mntdirect/_users/liuzzo/ATcode/at/atmat/pubtools/LatticeTuningFunctions/ESRFLattice.mat
 
 %% get RM
 speclab='OrbitESRF';
@@ -112,6 +113,7 @@ saveas(gca,'OrbitCor.fig');
 figure;
 subplot(2,1,1);bar(hs);ylabel('hor.')
 subplot(2,1,2);bar(vs);ylabel('ver.')
+saveas(gca,'OrbitCorSteerers.fig');
 
 inCOD(5)
 
