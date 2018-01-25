@@ -1,8 +1,16 @@
 function elstr=at2str(elem)
-%ELSTR=AT2STR(ELEM) String representation of an AT element
+%AT2STR - String representation of an AT element
 %
 %AT2STR Creates a string such that EVAL(AT2STR(ELEM)) recreates an
 %identical element.
+%
+%  INPUTS
+%  1. ELEM - Elem to write
+%
+%  OUTPUTS
+%  1. ELSSTR - String given the AT constructor of the element
+%
+%  See Also atwritem, atwritepy
 
 atclass=atguessclass(elem, 'UseClass');
 
