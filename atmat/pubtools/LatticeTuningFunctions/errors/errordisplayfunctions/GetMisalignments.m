@@ -18,8 +18,8 @@ end
 
 T=zeros(size(indxerrors));
 %r1=findcells(THERING(indxerrors),'R1');
-tiltedelem=find(atgetcells(THERING,indxerrors,'Tilt'))';
-rotelem=find(atgetcells(THERING,indxerrors,'RotAboutS'))';
+tiltedelem=find(atgetcells(THERING(indxerrors),'Tilt'))';
+rotelem=find(atgetcells(THERING(indxerrors),'RotAboutS'))';
 
 if ~isempty(tiltedelem) %|| ~isempty(rotelem)
   
