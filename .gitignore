@@ -10,6 +10,9 @@
 # pytest cache
 .cache
 
+#Temporary files
+*.m~
+
 # Virtual environment
 venv
 venv3
