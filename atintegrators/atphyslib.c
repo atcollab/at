@@ -35,7 +35,7 @@ static void edge_fringe_entrance(double* r, double inv_rho, double edge_angle,
         fy = inv_rho*tan(edge_angle-fringecorr/(1+r[4]));
     else if (method==2)
         fy = inv_rho*tan(edge_angle-fringecorr/(1+r[4]))/(1+r[4]);
-    else
+    else if (method==3)
         fy = inv_rho*tan(edge_angle-fringecorr+r[1]/(1+r[4]));
     
     r[1]+=r[0]*fx;
@@ -65,7 +65,7 @@ static void edge_fringe_exit(double* r, double inv_rho, double edge_angle,
         fy = inv_rho*tan(edge_angle-fringecorr/(1+r[4]));
     else if (method==2)
         fy = inv_rho*tan(edge_angle-fringecorr/(1+r[4]))/(1+r[4]);
-    else
+    else if (method==3)
         fy = inv_rho*tan(edge_angle-fringecorr-r[1]/(1+r[4]));
     
     r[1]+=r[0]*fx;
