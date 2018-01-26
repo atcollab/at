@@ -1,9 +1,9 @@
 function pyring=atwritepy(ring,filename)
-%ATWRITEM Creates a .m file to store an AT structure
+%ATWRITEPY Creates a .m file to store an AT structure
 %
-%ATWRITEM(RING)
+%ATWRITEPY(RING)
 %   Prints the result in the command window
-%ATWRITEM(RING,FILENAME)
+%ATWRITEPY(RING,FILENAME)
 %   Prints the result in a file
 
 if nargin>=2
@@ -12,7 +12,6 @@ if nargin>=2
         error('AT:FileErr','Cannot Create file %s\n%s',fn,mess);
     end
 end
-
 
 pyring=py.list(reshape(cellfun(@(elem) at2py(elem), ring, 'UniformOutput', false),1,[]));
 

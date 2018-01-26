@@ -1,27 +1,25 @@
 function elem=atcorrector(fname,varargin)
 %ATCORRECTOR - creates a drift space element with class 'Corrector'
 %
-%  ATCORRECTOR(FAMNAME,LENGTH,KICK,PASSMETHOD)
+%  atcorrector(FAMNAME,LENGTH,KICK,PASSMETHOD)
 %	
 %  INPUTS
 %    1. FAMNAME		family name
-%    2. LENGTH			length [m]
-%    3. KICK           [hor. kick vert. kick] [rad]
-%    4. PASSMETHOD     tracking function, defaults to 'CorrectorPass'
-%
-%  OPTIONS (order does not matter)
-%    R1				6 x 6 rotation matrix at the entrance
-%	 R2        		6 x 6 rotation matrix at the entrance
-%	 T1				6 x 1 translation at entrance 
-%	 T2				6 x 1 translation at exit
-%	 NumIntSteps    Number of integration steps
-%	 MaxOrder       Max Order for multipole (1 up to quadrupole)
+%    2. LENGTH		length [m]
+%    3. KICK        [hor. kick, vert. kick] [rad]
+%    4. PASSMETHOD  tracking function, defaults to 'CorrectorPass'
 %
 %  OUTPUTS
 %      1. ELEM - Structure with the AT element
 %
 %  EXAMPLES
 %   Each pair {'FIELDNAME',VALUE} is added to the element
+%
+%  NOTES
+%      1. Fieldname can be called by calling the passmethod
+%         [req opt] = CorrectorPass
+%                     where req are mandatory field and opt are optional
+%                     fields
 %
 %  See also ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
 %           ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER
