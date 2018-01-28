@@ -51,8 +51,8 @@ p0=repmat(0.00003*[1;0;1;0;0;0], 1,nampl); % 30 microns minimum amplitude
 p0(xz,:)=max(p0(xz,:),ampl(:)');
 p0=p0+orbit(:,ones(1,nampl));
 p1=ringpass(ring,p0,nturns)-orbit(:,ones(1,nampl*nturns));
-tunetrack=[findtune(reshape(p1(1,:),nampl,nturns)',method);...
-    findtune(reshape(p1(3,:),nampl,nturns)',method)]';
+tunetrack=[findtune(reshape(p1(1,:),nampl,nturns)',method,reshape(p1(2,:),nampl,nturns)');...
+    findtune(reshape(p1(3,:),nampl,nturns)',method,reshape(p1(4,:),nampl,nturns)')]';
 [~,k]=min([fractune0-tunetrack(1,:); 1-fractune0-tunetrack(1,:)]);
 np=offs(k);
 offset=round(tune0-np.*tunetrack(1,:));
