@@ -441,7 +441,7 @@ while isempty(rclosed)
             RespV=ModelRM.TrajVCor{3};
             RespVd=ModelRM.TrajVDPP;
         elseif traj==0
-            RespV=RMV(usebpm,usecorH);
+            RespV=RMV(usebpm,usecorV);
             if correctflags(1) % dpp correction
                 RespVd=RMVd(usebpm);
             end
