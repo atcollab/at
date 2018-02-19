@@ -165,7 +165,7 @@ else
             %uniform errors in sliced magnets
             rerr=UniformMagGroupsErrors(rerr);
             
-        case 'phi' % about x
+        case 'phi' % about x (Pitch)
             
             disp('phi error');
             
@@ -174,7 +174,7 @@ else
             %uniform errors in sliced magnets
             rerr=UniformMagGroupsErrors(rerr);
             
-        case 'theta' % about y
+        case 'theta' % about y (yaw)
             
             disp('theta error');
             
