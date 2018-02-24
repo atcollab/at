@@ -1,14 +1,25 @@
 function rp = ringpara(THERING,varargin)
-%rp = ringpara, use global THERING
-%rp = ringpara(THERING)
-%rp = ringpara(THERING,U0), supply total radiation loss in MeV
-%calculate various ring parameters
+%RINGPARA - Calculates various ring parameters
 %(1) The calculation of emittance, mcf, momentum spread, bunch length, damping time, etc 
 %is more accurate than atsummary.m because detailed
 %calculation of dispersion function and curly H function inside dipoles is performed. 
 %(2) calculate contribution of dispersion to vertical emittance.
 %
-%Author: Xiaobiao Huang
+% rp = ringpara, use global THERING
+% rp = ringpara(THERING)
+% rp = ringpara(THERING,U0), supply total radiation loss in MeV
+%
+%  INPUTS
+%  1. THERING - AT structure
+%  2. DP - Energy offset
+%
+%  OUPUTS
+%  1. RP - Structure with ring parameters
+%
+%  See also atx atsummary
+
+%
+%%Written by Xiaobiao Huang
 %created on 12/17/2007
 %Part of this code was modified from atsummary.m
 %
@@ -50,6 +61,7 @@ I2 = 0;
 I3 = 0;
 I4 = 0;
 I5 = 0;
+
 len = length(dpindex);
 curHavg1 = 1:len;
 for ii=1:len
