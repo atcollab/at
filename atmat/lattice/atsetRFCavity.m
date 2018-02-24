@@ -12,7 +12,7 @@ function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq )
 %    2. rfv        RF-voltage in volts
 %    3. radflag    0/1: activat/desactivate radiation (atradon/atradoff)
 %    4. HarmNumber Harmonic number
-%    5. DeltaFreq  FRequency shift in Hz
+%    5. DeltaFreq  Frequency shift in Hz
 %
 %  OUTPUTS
 %    1. newring - update ring structure with nw RF parameters
@@ -26,7 +26,7 @@ function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq )
 %    4. Normally DeltaFreq should be 0, it's different from 0 when you want to
 %   simulate a change of energy changing the RF frequency. DeltaFreq is in
 %   Hz.
-%    5. Does not work well for misaligne cavity 
+%    5. Does not work well for misaligned cavity 
 %
 %  EXAMPLES
 %
