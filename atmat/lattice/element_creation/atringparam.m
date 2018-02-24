@@ -1,18 +1,18 @@
 function elem=atringparam(fname,varargin)
 %ATRINGPARAM - creates a RingParameter Element which should go at the beginning of the ring
 %
-%  ATRINGPARAM(FAMNAME,E0,NBPERIODS)
+%  atringparam(FAMNAME,E0,NBPERIODS)
 %	
 %  INPUTS
-%    1. FAMNAME	  Family name which may be used as name of Ring
-%    2. E0        Energy of electrons
-%    3. NBPERIODS Periodicity of the ring (1 if ring is already expanded)
+%  1. FAMNAME	- Family name which may be used as name of Ring
+%  2. E0        - Energy of electrons
+%  3. NBPERIODS - Periodicity of the ring (1 if ring is already expanded)
 %
-%  OUTPUS
-%    1. elem - RingParam class elem
+%  OUTPUTS
+%  1. elem - RingParam class elem
 %
-%  See also ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
-%          ATMULTIPOLE, ATTHINMULTIPOLE
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend
+%          atmultipole, atthinmultipole
 
 [rsrc,energy,nbper]=decodeatargs({6E9,1},varargin);
 [energy,rsrc]=getoption(rsrc,'Energy',energy);
