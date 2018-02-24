@@ -1,10 +1,17 @@
-function U0=atgetU0(ring)
+function U0 = atgetU0(ring)
+%ATGETU0 - computes Energy loss per turn in eV .
 %
-% computes Energy loss per turn in eV .
+%  INPUTS 
+%    1. ring ring structure
 %
-%see also: ringpara atsetcavity atenergy
+%  OUTPUTS
+%    1. U0 energy loss per turn in eV
+%
+%
+% See also  ringpara atsetcavity atenergy
 
-%S.Liuzzo modified to use atenergy.m
+%
+%% S.Liuzzo modified to use atenergy.m
 
 [~,~,~,~,U0]=atenergy(ring);
 
