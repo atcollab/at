@@ -25,7 +25,7 @@ function elem=atquadrupole(fname,varargin)
 %       Each pair {'FIELDNAME',VALUE} is added to the element
 %
 %  See also ATDRIFT, ATSEXTUPOLE, ATSBEND, ATRBEND, ATSKEWQUAD,
-%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR, ATRINGPARAM
 
 [rsrc,L,K,method] = decodeatargs({0,[],'QuadLinearPass'},varargin);
 [L,rsrc]          = getoption(rsrc,'Length',L);
