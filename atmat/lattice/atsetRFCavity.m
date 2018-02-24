@@ -8,25 +8,25 @@ function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq )
 %   number and the PassMethod. 
 %
 %  INPUTS
-%    1. ring       Ring structure
-%    2. rfv        RF-voltage in volts
-%    3. radflag    0/1: activat/desactivate radiation (atradon/atradoff)
-%    4. HarmNumber Harmonic number
-%    5. DeltaFreq  Frequency shift in Hz
+%  1. ring       - Ring structure
+%  2. rfv        - RF-voltage in volts
+%  3. radflag    - 0/1: activat/desactivate radiation (atradon/atradoff)
+%  4. HarmNumber - Harmonic number
+%  5. DeltaFreq  - Frequency shift in Hz
 %
 %  OUTPUTS
-%    1. newring - update ring structure with nw RF parameters
+%  1. newring - update ring structure with nw RF parameters
 %
 %  NOTES
-%    1. All the N cavities will have a voltage rfv/N
-%    2. radflag says whether or not we want radiation on, which affects
-%       synchronous phase. If radflag is 0, the function calls atradoff, 
-%       if it is 1, it calls atradon.
-%    3. Cavities in the ring must have the Class RFCavity.
-%    4. Normally DeltaFreq should be 0, it's different from 0 when you want to
-%   simulate a change of energy changing the RF frequency. DeltaFreq is in
-%   Hz.
-%    5. Does not work well for misaligned cavity 
+%  1. All the N cavities will have a voltage rfv/N
+%  2. radflag says whether or not we want radiation on, which affects
+%     synchronous phase. If radflag is 0, the function calls atradoff, 
+%     if it is 1, it calls atradon.
+%  3. Cavities in the ring must have the Class RFCavity.
+%  4. Normally DeltaFreq should be 0, it's different from 0 when you want to
+%     simulate a change of energy changing the RF frequency. DeltaFreq is in
+%      Hz.
+%  5. Does not work well for misaligned cavity 
 %
 %  EXAMPLES
 %
