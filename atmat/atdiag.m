@@ -1,5 +1,5 @@
 function atdiag
-%ATDIAG - test AT intallation
+%ATDIAG Tests AT intallation
 try
     disp('>> spear3;')
     spear3;

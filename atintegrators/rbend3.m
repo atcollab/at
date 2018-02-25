@@ -1,25 +1,26 @@
 function Elem=rbend3(fname,L,A,A1,A2,K, gap, FF1, FF2, method)
-%RBEND3 creates a new family in the FAMLIST - a structure with fields
+%RBEND3 Creates a rectangular bend with different fringe fields at entrance 
+%and exit in old AT versions (Obsolete)
 %
 %  INPUTS
-%    1. fname   - family name
-%	 2. L       - Length of the arc for an on-energy particle [m]
-%	 3. A		- Total bending angle [rad]
-%	 4. A1	    - Entrance angle in [rad] (A/2 - for rectangular bends)
-%	 5. A2		- Exit angle in[rad] (A/2 - for rectangular bends)
-%	 6. K		- Quadrupole K-value for combined funtion bends
-%    7. FF1     - Entrance fringe field
-%    7. FF2     - Exit fringe field
-%	 8. gap     - Dipole fringe field
-%	 9. method  - Name of the function to use for tracking
+%  1. fname   - family name
+%  2. L       - Length of the arc for an on-energy particle [m]
+%  3. A		- Total bending angle [rad]
+%  4. A1	    - Entrance angle in [rad] (A/2 - for rectangular bends)
+%  5. A2		- Exit angle in[rad] (A/2 - for rectangular bends)
+%  6. K		- Quadrupole K-value for combined funtion bends
+%  7. FF1     - Entrance fringe field
+%  8. FF2     - Exit fringe field
+%  9. gap     - Dipole fringe field
+%  10. method  - Name of the function to use for tracking
 % 
-%   OUTPUTS
-%     1. Elem - Returns assigned address in the FAMLIST that is uniquely identifies
+%  OUTPUTS
+%  1. Elem - Returns assigned address in the FAMLIST that is uniquely identifies
 %        the family
 %
-%   NOTES
-%     1. Deprecated function, use atrbend instead
-%     2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
+%  NOTES
+%  1. Deprecated function, use atrbend instead
+%  2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
 %            fields
 %
 %       FringeBendEntrance/FringeBendExit = 0,1,2,3
@@ -39,7 +40,7 @@ function Elem=rbend3(fname,L,A,A1,A2,K, gap, FF1, FF2, method)
 %       Version 2 Linear quadrupole fringe field using the 5 integrant a la
 %                 Elegant          
 %
-%   See also rbend, rbend2, atrbend, atsbend
+%  See also rbend, rbend2, atrbend, atsbend
 
 % 
 % Added by Laurent S. Nadolski, SOLEIL, 03/04

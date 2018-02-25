@@ -1,17 +1,17 @@
 function orbit = findorbit4Err(RING, dP, indbpm, varargin)
-%findorbit4Err - 4x4 closed orbit with BPM errors
+%findorbit4Err Gets 4x4 closed orbit with BPM errors
 %
 %  INPUTS
-%    1. RING Ring structure
-%    2. dP   Energy offset
-%    3. indbpm Indices of BPMs (Extended BPM any point to monitor)
+%  1. RING Ring structure
+%  2. dP   Energy offset
+%  3. indbpm Indices of BPMs (Extended BPM any point to monitor)
 %
 %  OUTPUTS
-%    1. orbit 4x4 orbit in meters
+%  1. orbit 4x4 orbit in meters
 %  
 %  NOTES 
-%   1. Alignment errors (T1,T2) are considered here and the BPM reading is
-%      modified accordingly.
+%  1. Alignment errors (T1,T2) are considered here and the BPM reading is
+%     modified accordingly.
 % 
 %  See also findorbit4 ApplyBPMErr bpm_matrices
 

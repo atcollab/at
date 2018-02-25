@@ -1,5 +1,5 @@
 function elem=atringparam(fname,varargin)
-%ATRINGPARAM - creates a RingParameter Element which should go at the beginning of the ring
+%ATRINGPARAM Creates a RingParameter Element which should go at the beginning of the ring
 %
 %  atringparam(FAMNAME,E0,NBPERIODS)
 %	

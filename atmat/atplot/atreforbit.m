@@ -1,16 +1,16 @@
 function  [xref,zref] = atreforbit(ring)
-%ATREFORBIT - computes the coordinates of the local referential
+%ATREFORBIT Computes the coordinates of the local referential
 %           It allows plotting functions (trajectory/orbit) to plot through
 %           displaced elements
 %  INPUTS
-%    1. ring Ring structure
+%  1. ring Ring structure
 %
 %  OUTPUTS
-%    1. xref Horizontal reference orbit
-%    2. zref Vertical reference orbit
+%  1. xref Horizontal reference orbit
+%  2. zref Vertical reference orbit
 %
 %  EXAMPLE
-%    1. [XREF,ZREF]=ATREFORBIT(RING)
+%  1. [XREF,ZREF]=ATREFORBIT(RING)
 %
 %  See also atplot
 

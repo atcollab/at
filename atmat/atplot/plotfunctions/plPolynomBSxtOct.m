@@ -1,20 +1,21 @@
-function plotdata=plPolynomBSxtOct(lindata,ring,dpp,varargin) %#ok<INUSD>
+function plotdata=plPolynomBSxtOct(lindata,ring,~,varargin)
+%PLPOLYNOMBSXTOCT Plots Bn for sextupole and octupole magnets
 %DEFAULTPLOT    Default plotting function for ATPLOT
 %
 %Plots polynomB for ring and ring1
 
 CoD=cat(2,lindata.ClosedOrbit);
-PolyBVal=zeros(size(CoD(1,:)));
-PolyBVal1=zeros(size(CoD(1,:)));
+% PolyBVal=zeros(size(CoD(1,:)));
+% PolyBVal1=zeros(size(CoD(1,:)));
 
-PolynomBVal1=zeros(size(CoD(1,:)));
-PolynomBVal2=zeros(size(CoD(1,:)));
+% PolynomBVal1=zeros(size(CoD(1,:)));
+% PolynomBVal2=zeros(size(CoD(1,:)));
 PolynomBVal3=zeros(size(CoD(1,:)));
 PolynomBVal4=zeros(size(CoD(1,:)));
 ind=findcells(ring,'PolynomB');
 
-PolynomBVal1(ind)=getcellstruct(ring,'PolynomB',ind,1,1);
-PolynomBVal2(ind)=getcellstruct(ring,'PolynomB',ind,1,2);
+% PolynomBVal1(ind)=getcellstruct(ring,'PolynomB',ind,1,1);
+% PolynomBVal2(ind)=getcellstruct(ring,'PolynomB',ind,1,2);
 PolynomBVal3(ind)=getcellstruct(ring,'PolynomB',ind,1,3);
 PolynomBVal4(ind)=getcellstruct(ring,'PolynomB',ind,1,4);
 

@@ -1,5 +1,5 @@
 function maggroups=getMagGroupsFromGirderIndex(r)
-%
+%GETMAGGROUPSFROMGIRDERINDEX Gets magnets on a girder
 % output maggroups in r with indexes between GS and GE markers.
 %
 % maggroups is a cell array of magnet indexes describing a single magnet in

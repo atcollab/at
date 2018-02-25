@@ -1,6 +1,5 @@
 function rerr=atset_s_shift(r,pos,DS)
-%
-% implements DS longitudinal position drift
+%ATSET_S_SHIFT Implements DS longitudinal position drift
 % by changing drifts at the sides of the
 % elements defined by pos in r
 %
@@ -11,7 +10,7 @@ function rerr=atset_s_shift(r,pos,DS)
 %
 % pos and DS must be the same size
 %
-%see also: atsetshift atsettilt atsettiltdipole
+%  See also atsetshift atsettilt atsettiltdipole
 
 if length(pos)~=length(DS)
     error('pos and DS must be the same size');
@@ -127,12 +126,12 @@ end
 return
 
 
-function a=getmagnumdipole(r,ind)
-
-try
-    a=r{ind}.MagNum;
-catch
-    a=NaN;
-end
-
-return
+% function a=getmagnumdipole(r,ind)
+% 
+% try
+%     a=r{ind}.MagNum;
+% catch
+%     a=NaN;
+% end
+% 
+% return

@@ -1,4 +1,5 @@
 function z = corrector(fname,L,kickangle, method)
+%CORRECTOR Creates a corrector element in old a AT version (Obsolete)
 %CORRECTOR('FAMILYNAME',LENGTH,ANGLE,'METHOD')
 %	creates a new family in the FAMLIST - a structure with fields
 %		FamName			family name
@@ -8,6 +9,12 @@ function z = corrector(fname,L,kickangle, method)
 %
 % returns assigned index in the FAMLIST that is uniquely identifies
 % the family
+%
+%  NOTES
+%  1. Obsolete: use atcorrector instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 ElemData.FamName = fname;  % add check for identical family names
 ElemData.Length = L;

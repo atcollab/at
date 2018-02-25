@@ -1,16 +1,16 @@
 function elem=atsbend(fname,varargin)
-%ATSBEND - creates a rectangular bending magnet element with class 'Bend'
+%ATSBEND Creates a sector bending magnet element with class 'Bend'
 %
 %  Two calling methods (that can be combined)
 %  ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
 %
 %  INPUTS
-%	 1. FNAME        	family name 
-%	 2. LENGTH         	length of the arc for an on-energy particle
+%  1. FNAME        	Family name 
+%  2. LENGTH        Length of the arc for an on-energy particle
 %                     	[m], default to 0
-%	 3. BENDINGANGLE	total bending angle [rad], defaults to 0 
-%	 4. K				focusing strength, defaults to 0
-%	 5. PASSMETHOD      tracking function, defaults to 'BendLinearPass'
+%  3. BENDINGANGLE	Total bending angle [rad], defaults to 0 
+%  4. K				Focusing strength, defaults to 0
+%  5. PASSMETHOD    Tracking function, defaults to 'BendLinearPass'
 %
 %  OPTIONS (order does not matter)
 %    R1				6 x 6 rotation matrix at the entrance
@@ -21,19 +21,19 @@ function elem=atsbend(fname,varargin)
 %	 MaxOrder       Max Order for multipole (1 up to quadrupole)
 %
 %  OUTPUTS
-%      1. ELEM - Structure with the AT element
+%  1. ELEM - Structure with the AT element
 %
 %  ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
 %  Each pair {'FIELDNAME',VALUE} is added to the element
 %
 %  NOTES
-%      1. Fieldname can be called by calling the passmethod
+%  1. Fieldname can be called by calling the passmethod
 %         [req opt] = BndMPoleSymplectic4Pass
 %                     where req are mandatory field and opt are optional
 %                     fields
 %
-%  See also: ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATRBEND
-%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%  See also atdrift, atquadrupole, atsextupole, atrbend
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
 [rsrc,L,A,K,method]  = decodeatargs({0,0,[],'BendLinearPass'},varargin);

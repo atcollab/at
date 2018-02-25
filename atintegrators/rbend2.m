@@ -1,26 +1,26 @@
 function Elem=rbend2(fname,L,A,A1,A2,K,gap, method)
-%RBEND2 creates a new family in the FAMLIST - a structure with fields
+%RBEND2 Creates rectangular bend with dipole fringe field  in old AT versions (Obsolete)
 %
 %  RBEND2('FAMILYNAME',  Length[m], BendingAngle[rad], EntranceAngle[rad],
 %       ExitAngle[rad], K, 'METHOD')
 %
 %  INPUTS
-%    1. fname   - family name
-%	 2. L       - Length of the arc for an on-energy particle [m]
-%	 3. A		- Total bending angle [rad]
-%	 4. A1	    - Entrance angle in [rad] (A/2 - for rectangular bends)
-%	 5. A2		- Exit angle in[rad] (A/2 - for rectangular bends)
-%	 6. K		- Quadrupole K-value for combined funtion bends
-%	 7. gap     - Dipole fringe field
-%	 8. method  - Name of the function to use for tracking
+%  1. fname   - family name
+%  2. L       - Length of the arc for an on-energy particle [m]
+%  3. A		  - Total bending angle [rad]
+%  4. A1	  - Entrance angle in [rad] (A/2 - for rectangular bends)
+%  5. A2	  - Exit angle in[rad] (A/2 - for rectangular bends)
+%  6. K		  - Quadrupole K-value for combined funtion bends
+%  7. gap     - Dipole fringe field
+%  8. method  - Name of the function to use for tracking
 % 
-%   OUTPUTS
-%     1. Elem - Returns assigned address in the FAMLIST that is uniquely identifies
+%  OUTPUTS
+%  1. Elem - Returns assigned address in the FAMLIST that is uniquely identifies
 %        the family
 %
-%   NOTES
-%     1. Deprecated function, use atrbend instead
-%     2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
+%  NOTES
+%  1. Deprecated function, use atrbend instead
+%  2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
 %            fields
 %
 %       FringeBendEntrance/FringeBendExit = 0,1,2,3
@@ -35,12 +35,12 @@ function Elem=rbend2(fname,L,A,A1,A2,K,gap, method)
 %                 A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
 %
 %       FringeQuadEntrance/FringeQuadExit = 0,1,2
-%       Version 0 no qudrupole fringe fields
+%       Version 0 no quadrupole fringe fields
 %       Version 1 Lee-Whiting Formula
 %       Version 2 Linear quadrupole fringe field using the 5 integrant a la
 %                 Elegant          
 %
-%   See also rbend3, rbend, atrbend, atsbend
+%  See also rbend3, rbend, atrbend, atsbend
 
 % 
 % Added by Laurent S. Nadolski, SOLEIL, 03/04

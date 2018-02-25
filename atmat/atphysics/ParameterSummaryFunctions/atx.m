@@ -1,5 +1,5 @@
 function varargout=atx(ring,varargin)
-%ATX - Computes and displays global information
+%ATX Computes and displays global information
 %
 %  BEAMDATA=ATX(RING,DPP,REFPTS)
 %

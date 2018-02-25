@@ -1,5 +1,5 @@
 function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
-%ATENERGY - Gets the lattice energy
+%ATENERGY Gets the lattice energy
 %
 %  ENERGY=ATENERGY(RING) Gets the RING energy
 %   ATENERGY looks for the machine energy in:

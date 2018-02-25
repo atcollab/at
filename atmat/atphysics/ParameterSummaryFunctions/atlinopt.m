@@ -1,5 +1,5 @@
 function [lindata, varargout] = atlinopt(RING,DP,varargin)
-%ATLINOPT - performs linear analysis of the COUPLED lattices
+%ATLINOPT Performs linear analysis of the COUPLED lattices
 %
 % LinData = ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields
 %

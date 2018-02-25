@@ -1,4 +1,4 @@
-%NUMDIFPARAMS (all caps) is a global variable in AT
+%NUMDIFPARAMS Global variable in AT (all caps)
 % Fields in this structure are step sizes for numerical differentiation 
 % used by AT functions. Functions that use numerical differentiation
 % (such as FINDM44, FINDM66) first check if the global 

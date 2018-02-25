@@ -1,5 +1,5 @@
 function U0 = atgetU0(ring)
-%ATGETU0 - Computes Energy loss per turn in eV .
+%ATGETU0 Computes Energy loss per turn in eV .
 %
 %  INPUTS 
 %    1. ring ring structure

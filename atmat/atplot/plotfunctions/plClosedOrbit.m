@@ -1,5 +1,5 @@
 function varargout=plClosedOrbit(varargin)
-%PLCLOSEDORBIT - Plot H and V 4x4 closed orbits
+%PLCLOSEDORBIT Plots H and V 4x4 closed orbit
 %
 %Helper function for atplot: plot
 %- H and V closed orbits on left axis

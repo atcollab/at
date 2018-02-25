@@ -1,10 +1,11 @@
 function delta_max_rf = atRFacc(ring)
-%   delta_max_rf = atRFacc(ring)
+%ATRFACC Computes RF acceptance of the ring
+% delta_max_rf = atRFacc(ring)
 %   The functions computes the RF acceptance of the ring
 %   ring is tha at lattice without radiation
 %   delta_max_rf is the RF acceptance
 %   
-%   see also: RFacc
+%  See also RFacc
 
 U0=atgetU0(ring);
 E0=atenergy(ring);

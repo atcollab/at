@@ -1,5 +1,5 @@
 function mat=jmat(dim)
-% JMAT - Computes antisymmetric Matrix [O 1; -1 0]
+% JMAT Compute antisymmetric Matrix [O 1; -1 0]
 % 
 %  INPUTS
 %    1. dim - 1,2,3 Dimension of the sqare matrix

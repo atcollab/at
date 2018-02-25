@@ -1,11 +1,11 @@
 function elem=atmarker(fname,varargin)
-%ATMARKER - creates a marker space element
+%ATMARKER Creates a marker space element
 %
 %  ATMARKER(FAMNAME,PASSMETHOD)
 %	
 %  INPUTS  
-%    1. FAMNAME		family name
-%    2. PASSMETHOD     tracking function, defaults to 'IdentityPass'
+%  1. FAMNAME	 - Family name
+%  2. PASSMETHOD - Tracking function, defaults to 'IdentityPass'
 %
 %  OPTIONS (order does not matter)
 %    R1				6 x 6 rotation matrix at the entrance
@@ -16,20 +16,19 @@ function elem=atmarker(fname,varargin)
 %	 MaxOrder       Max Order for multipole (1 up to quadrupole)
 %
 %  OUTPUTS
-%      1. ELEM - Structure with the AT element
+%  1. ELEM - Structure with the AT element
 %
 %  EXAMPLES
-%    ATMARKER(FAMNAME,PASSMETHOD,'FIELDNAME1',VALUE1,...)
-%    Each pair {'FIELDNAME',VALUE} is added to the element
+%  1. atmarker(famname,passmethod,'fieldname1',value1,...)
+%    each pair {'fieldname',value} is added to the element
 %
 %  NOTES
-%      1. Fieldname can be called by calling the passmethod
-%         [req opt] = IdentityPass
-%                     where req are mandatory field and opt are optional
-%                     fields
+%  1. Fieldname can be called by calling the passmethod
+%     [req opt] = IdentityPass
+%                 where req are mandatory field and opt are optional fields
 %
-%See also  ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND ATSKEWQUAD,
-%          ATTHINMULTIPOLE, ATCORRECTOR
+%See also  atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,
+%          atthinmultipole, atcorrector
 
 % Input parser for option
 [rsrc,method,~] = decodeatargs({'IdentityPass',''},varargin);

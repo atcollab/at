@@ -1,11 +1,10 @@
-function plotdata=plPolynomBComp(lindata,ring,dpp,varargin) %#ok<INUSD>
+function plotdata=plPolynomBComp(lindata,ring,~,varargin) 
+%PLPOLYNOMBCOMP PlotBn coefficient with normalization
 % PLPOLYNOMBCOMP default plotting function for ATPLOT
 %
 % Plots polynomB for ring and ring1
 
 CoD=cat(2,lindata.ClosedOrbit);
-PolyBVal=zeros(size(CoD(1,:)));
-PolyBVal1=zeros(size(CoD(1,:)));
 
 PolynomBVal1=zeros(size(CoD(1,:)));
 PolynomBVal2=zeros(size(CoD(1,:)));

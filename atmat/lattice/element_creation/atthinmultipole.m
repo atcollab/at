@@ -1,5 +1,5 @@
 function elem=atthinmultipole(fname,varargin)
-% ATTHINMULTIPOLE  - creates a thin multipole element
+%ATTHINMULTIPOLE Creates a thin multipole element
 %
 % ATTHINMULTIPOLE(FAMNAME,POLYNOMA,POLYNOMB,PASSMETHOD)
 %	

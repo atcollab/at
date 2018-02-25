@@ -1,9 +1,8 @@
 function dispersion=finddispersion6Err(RING, indbpm,indrfc,alpha,delta,inCOD)
-% finddispersion6Err 
-% 
-% get 6D dispersion with bpm reading errors
+%FINDDISPERSION6ERR Gets 6D dispersion with bpm reading errors
 %
-%see also: findorbit6Err
+%  See also findorbit6Err
+
 f0=RING{indrfc(1)}.Frequency;
 
 % plus delta

@@ -1,5 +1,5 @@
-function [Out1, Out2]  = mdriftpass(DriftData,Rin);
-% MDRIFTPASS - example of pass method in matlab
+function [Out1, Out2]  = mDriftPass(DriftData,Rin)
+%MDRIFTPASS Example of pass method in matlab
 %  Same physics and calling syntax as DriftPass.c
 
 if nargin

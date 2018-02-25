@@ -1,5 +1,5 @@
 function [x,y] =atmakeXYProjectionEllipse( sigxx,sigyy,sigxy )
-%atmakeXYProjectionEllipse( sigxx,sigyy,sigxy ) gives points to plot the contour ellipses
+%ATMAKEXYPROJECTIONELLIPSE Gives points to plot the contour ellipses
 %given the second spatial moments <x^2>, <y^2>, and <xy> 
 
 %we solve for effective Twiss parameters and emittance.

@@ -1,5 +1,5 @@
 function newring = atsetcavity(ring,rfv,radflag,HarmNumber)
-%ATSECAVITY - sets the synchronous phase of the cavity assuming radiation
+%ATSECAVITY Sets the synchronous phase of the cavity assuming radiation
 %
 %  newring = atsetcavity(ring,rfv, radflag,HarmNumber)
 %
