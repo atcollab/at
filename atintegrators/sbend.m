@@ -1,4 +1,5 @@
 function z=sbend(fname,L,A,A1,A2,K,method)
+%SBEND Creates a sector bend element in old AT versions (Obsolete)
 %BEND('FAMILYNAME',  Length[m], BendingAngle[rad], EntranceAngle[rad],
 %	ExitAngle[rad], K, 'METHOD')
 %	creates a new family in the FAMLIST - a structure with fields
@@ -12,6 +13,12 @@ function z=sbend(fname,L,A,A1,A2,K,method)
 %		PassMethod        name of the function to use for tracking
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
+%
+%  NOTES
+%  1. Obsolete: use atsbend instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 ElemData=atsbend(fname,L,A,K,method);
 ElemData.EntranceAngle=A1;  %for backwards compatibility

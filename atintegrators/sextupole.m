@@ -1,5 +1,5 @@
 function z=sextupole(fname,L,S,method)
-
+%SEXTUPOLE Creates a sextupole element in old AT versions (Obsolete)
 %SEXTUPOLE('FAMILYNAME',Length [m],S,'METHOD')
 %	creates a new family in the FAMLIST - a structure with fields%		FamName    
 %	FamName			family name
@@ -16,6 +16,12 @@ function z=sextupole(fname,L,S,method)
 %	PassMethod     name of the function to use for tracking
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
+%
+%  NOTES
+%  1. Obsolete: use atsextupole instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 
 ElemData=atsextupole(fname,L,S,method);

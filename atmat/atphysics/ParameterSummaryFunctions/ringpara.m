@@ -1,5 +1,5 @@
 function rp = ringpara(THERING,varargin)
-%RINGPARA - Calculates various ring parameters
+%RINGPARA Calculates various ring parameters
 %(1) The calculation of emittance, mcf, momentum spread, bunch length, damping time, etc 
 %is more accurate than atsummary.m because detailed
 %calculation of dispersion function and curly H function inside dipoles is performed. 
