@@ -31,6 +31,25 @@ function elem=atsbend(fname,varargin)
 %         [req opt] = BndMPoleSymplectic4Pass
 %                     where req are mandatory field and opt are optional
 %                     fields
+%  2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
+%            fields
+%
+%       FringeBendEntrance/FringeBendExit = 0,1,2,3
+%       Version 0 no dipole fringe fields
+%       Version 1 legacy version Brown First Order (K. Brown. A First and Second Order 
+%                  Matrix Theory for the Design of Beam Transport Systems and Charged 
+%                  Particle Spectrometers. Internal report, SLAC-75, 1982)
+%       Version 2 SOLEIL close to second order of Brown (J. Bengtsson and M. Meddahi. 
+%                 Modeling of Beam Dynamics and Comparison with Measurements for 
+%                 the Advanced Light Source. London, UK, 1994.)
+%       Version 3 THOMX (Dipole Fringe Field Effects in the ThomX Ring, J. Zhang and 
+%                 A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
+%
+%       FringeQuadEntrance/FringeQuadExit = 0,1,2
+%       Version 0 no quadrupole fringe fields
+%       Version 1 Lee-Whiting Formula
+%       Version 2 Linear quadrupole fringe field using the 5 integrant a la
+%                 Elegant          
 %
 %  See also atdrift, atquadrupole, atsextupole, atrbend
 %          atmultipole, atthinmultipole, atmarker, atcorrector
