@@ -1,10 +1,12 @@
 function atpath(varargin)
-%ATPATH adds the AT directories to the MATLAB search path
+%ATPATH Adds the AT directories to the MATLAB search path
     
 ATROOT = fileparts(mfilename('fullpath'));
 ATINTEGRATORS = fullfile(fileparts(ATROOT),'atintegrators');
+MACHINEDATA = fullfile(fileparts(ATROOT),'machine_data');
 disp(ATROOT)
-disp(ATINTEGRATORS)
 addpath(genpath(ATROOT));
+disp(ATINTEGRATORS)
 addpath(genpath(ATINTEGRATORS));
-
+disp(MACHINEDATA)
+addpath(genpath(MACHINEDATA));
