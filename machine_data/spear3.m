@@ -264,7 +264,7 @@ RING    =   [{CAV} MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB)];
 
 
 if nargout
-    varargout{1} = RING;
+    varargout{1} = RING';
 else % If no output arguments - greate global variable THERING
     global THERING
     THERING = RING;
