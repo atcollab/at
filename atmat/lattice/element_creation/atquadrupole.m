@@ -21,9 +21,19 @@ function elem=atquadrupole(fname,varargin)
 %  1. ELEM - Structure with the AT element
 %
 %  EXAMPLES
-%  1. atquadrupole(famname,length,k,passmethod,'fieldname1',value1,...)
+%  1. Fieldname can be called by calling the passmethod
+%     [req opt] = StrMPoleSymplectic4Pass
+%                 where req are mandatory field and opt are optional fields
+%  2. atquadrupole(famname,length,k,passmethod,'fieldname1',value1,...)
 %       each pair {'fieldname',value} is added to the element
 %
+%  3. Quadrupole fringe field can be activated at element entrance or exit
+%     with option FringeQuadEntrance/FringeQuadExit=0,1,2
+%     Version 0: no fringe field
+%     Version 1: Lee-Whiting formula
+%     Version 2: Lee-Whiting Elegant-like formula where 5 integral need to
+%     be provided
+%     
 %  See also atdrift, atsextupole, atsbend, atrbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector, atringparam
 

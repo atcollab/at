@@ -17,9 +17,9 @@ function tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)
 %        tauT = calc_TouschekPM(td,dppPM,a1,100/280,1.04,0.064e-2, 0.001, 18)/3600; %hrs
 %        disp(tauT)
 
-e0 = 1.6e-19; %Coulomb
-cspeed = 299792458; 
-r0 = 2.82e-15; %m
+e0 = PhysConstant.elementary_charge.value; %Coulomb
+cspeed = PhysConstant.speed_of_light_in_vacuum.value; 
+r0 = PhysConstant.classical_electron_radius.value; %m
 
 U0=U0*1e6;
 emit_x = emit_x*1.0e-9; %convert nm-rad to m-rad
@@ -41,7 +41,7 @@ else
     circ = 844.39;
     
 end
-gamma = E0/0.511e6;
+gamma = E0/PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;
 N0 = 0.001/(freq/harm)/e0; %Number of particle per 1mA bunch. 
 
 

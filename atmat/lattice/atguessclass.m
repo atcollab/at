@@ -1,12 +1,18 @@
 function atclass = atguessclass(elem, varargin)
+%ATGUESSCLASS Tries to determine the class of an element
 %ATCLASS=ATGUESSCLASS(ATELEM) Tries to determine the class of an element
-%   ELEM    AT element
 %
-%ATCLASS=ATGUESSCLASS(ATELEM,'UseClass')
-%   By default, ATGUESSCLASS will default "useless" elements (PolynopmB==0)
-%   to 'Drift' or 'Marker', depending on 'Length'. When specifying
-%   'UseClass', it it will preserve the 'Class' field for those elements.
+%  INPUTS
+%  1. elem - AT element
 %
+%
+%  NOTES
+%  1. atclass=atguessclass(atelem,'useclass')
+%  By default, ATGUESSCLASS will default "useless" elements (PolynopmB==0)
+%  to 'Drift' or 'Marker', depending on 'Length'. When specifying
+%  'UseClass', it it will preserve the 'Class' field for those elements.
+%
+%  See also atwritem
 
 useclass=any(strcmpi(varargin,'UseClass'));
 
