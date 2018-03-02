@@ -180,7 +180,7 @@ while isempty(rclosed)
     % check for closed orbit,
     % if found, end loop,
     % if not found but all bpm, close with last 2 H/V steerers
-    if (nbpmu==length(indBPM))
+    if (nbpmu==length(indBPM) || nbpmu==length(indBPM)-1)
         if printouttext
             disp(['Trajectory closure with last 2 correctors']);
         end
@@ -347,7 +347,7 @@ while isempty(rclosed)
         VK=indVCor(usecorV);
         
         neigSteerer=floor(length(HK)/fraceig);
-        fracapply=1;
+        fracapply=1/3;
         
         % ----- CORRECTION ----- %
         

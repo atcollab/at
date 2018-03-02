@@ -19,7 +19,7 @@ v1=atVariableBuilder(ring,indVCor(end-1),{'PolynomA',{1,1}});
 v2=atVariableBuilder(ring,indVCor(end),{'PolynomA',{1,1}});
 Variab=[h1 h2 v1 v2];
 
-bpmmatchind=1;
+bpmmatchind=2;
 
 Constr=struct(...
     'Fun',@(r,~,~)transpose(findtrajectory6Err([r;r],length(r)+indBPM(bpmmatchind),inCOD)),... % bpmmatchind BPM of second turn
@@ -33,7 +33,9 @@ Constr=struct(...
 intwi.ClosedOrbit=inCOD(1:4);
 
 [rmatch]=atmatch(...
-     ring,Variab,Constr,1e-12,100,0,@lsqnonlin,intwi);
+     ring,Variab,Constr,1e-10,50,3,@fminsearch,intwi);
+ [rmatch]=atmatch(...
+     rmatch,Variab,Constr,1e-10,50,3,@lsqnonlin,intwi);
  
  [tm]=findtrajectory6Err(rmatch,indBPM,inCOD);
 %figure('name','rotated matched'); plot(tm');ylim([-3e-3 3e-3]);
