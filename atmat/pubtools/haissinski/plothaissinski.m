@@ -47,7 +47,7 @@ if DEBUG
 %     phis = 2.83964;
 end
 
-c = 2.998e8;
+c = PhysConstant.speed_of_light_in_vacuum.value;
 dz = sigma0/50;
 z = [-sigma0*6:dz:sigma0*6];
 

@@ -1,4 +1,5 @@
-function plotdata=pltouschek(lindata,ring,dpp) %#ok<INUSD>
+function plotdata=pltouschek(lindata,~,~) 
+%PLTOUSCHEK Plots Touschek lifetime contribution
 %plotdata=pltouschek(lindata,ring,dpp)
 % plots curly H function and also 1/(sigx sigy) to understand local scattering rate
 beta=cat(1,lindata.beta);

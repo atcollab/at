@@ -1,11 +1,11 @@
 function elem=atdrift(fname,varargin)
-%ATDRIFT - creates a drift space element with Class 'Drift'
+%ATDRIFT Creates a drift space element with Class 'Drift'
 %ATDRIFT(FAMNAME,LENGTH,PASSMETHOD)
 %
 %  INPUTS
-%    1. FAMNAME		family name
-%    2. LENGTH			length [m]
-%    3. PASSMETHOD     tracking function, defaults to 'DriftPass'
+%  1. FAMNAME	   - Family name
+%  2. LENGTH	   - Length [m]
+%  3. PASSMETHOD - Tracking function, defaults to 'DriftPass'
 %
 %  OPTIONS (order does not matter)
 %    R1				6 x 6 rotation matrix at the entrance
@@ -16,15 +16,15 @@ function elem=atdrift(fname,varargin)
 %	 MaxOrder       Max Order for multipole (1 up to quadrupole)
 %
 %  OUTPUTS
-%      1. ELEM - Structure with the AT element
+%  1. ELEM - Structure with the AT element
 %
 %  EXAMPLES
-%    ATDRIFT(FAMNAME,LENGTH,PASSMETHOD,'FIELDNAME1',VALUE1,...)
-%    Each pair {'FIELDNAME',VALUE} is added to the element
+%  1. atdrift(famname,length,passmethod,'fieldname1',value1,...)
+%    each pair {'fieldname',value} is added to the element
 %
 
-%See also  ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND
-%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%See also  atquadrupole, atsextupole, atsbend, atrbend
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 [rsrc,L,method]=decodeatargs({0,'DriftPass'},varargin);
 [L,rsrc]=getoption(rsrc,'Length',L);

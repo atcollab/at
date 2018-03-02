@@ -1,4 +1,5 @@
 function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+%WIGGLER Creates a wiggler element in old AT versions (Obsolete)
 % wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % FamName	family name
@@ -13,6 +14,11 @@ function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
+%  NOTES
+%  1. Obsolete: use atwiggler instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 %---------------------------------------------------------------------------
 % Modification Log:
@@ -28,9 +34,6 @@ function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %---------------------------------------------------------------------------
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
-
-global MaxOrder;
-global NumIntSteps;
 
 GWIG_EPS = 1e-6;
 dNw = abs(mod(Ltot/Lw, 1));
@@ -49,9 +52,9 @@ if ~isempty(By)
   for i=1:ElemData.NHharm
     kx = By(3,i); ky = By(4,i); kz = By(5,i);
     dk = sqrt(abs(ky*ky - kz*kz - kx*kx))/abs(kz);
-    if ( dk > GWIG_EPS ) then
+    if ( dk > GWIG_EPS ) 
       error([' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = ', num2str(i,3)]);
-    end;
+    end
   end
 else
   ElemData.NHharm         = 0;
@@ -62,9 +65,9 @@ if ~isempty(Bx)
   for i=1:ElemData.NVharm
     kx = Bx(3,i); ky = Bx(4,i); kz = Bx(5,i);
     dk = sqrt(abs(kx*kx - kz*kz - ky*ky))/abs(kz);
-    if ( dk > GWIG_EPS ) then
+    if ( dk > GWIG_EPS )
       error([' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = ', num2str(i,3)]);
-    end;
+    end
   end
 else
   ElemData.NVharm         = 0;

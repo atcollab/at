@@ -1,7 +1,6 @@
-function plotdata=plotAperture(lindata,ring,dpp,varargin) %#ok<INUSD>
+function plotdata=plotAperture(~,ring,~,varargin) 
+%PLOTAPERTURE Plots x and y aperture.
 %function plotdata=plotAperture(lindata,ring,dpp,varargin) %#ok<INUSD>
-%
-% Plots x and y aperture.
 % 
 % use with atplot(atlattice,@plotAperture);
 %

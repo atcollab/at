@@ -1,4 +1,5 @@
 function plotdata=pltmisalignments(lindata,ring,dpp,varargin) %#ok<INUSD>
+%PLTMISALIGNMENTS - Plots misalignement errors
 %DEFAULTPLOT    Default plotting function for ATPLOT
 %
 %Plots orbits, misalignments and tilts.

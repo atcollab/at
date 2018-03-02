@@ -1,9 +1,19 @@
 function [rel,tel,trand] = bpm_matrices(bpms)
 %BPM_MATRICES Computes the transformation matrices for the given BPMs
 %
-%   [R,T,TRAND]=BPM_MATRICES(BPMS)
+%  INPUTS
+%  1. bpms BPM indices
 %
-% by L.F. Jun 2016, ESRF,  K:\machine\matlab\atlf
+%  OUTPUTS
+%  1. rel
+%  2. tel
+%  3. trand
+%
+%  EXAMPLES
+%  1. [R,T,TRAND]=BPM_MATRICES(BPMS)
+
+%
+%% by L.F. Jun 2016, ESRF,  K:\machine\matlab\atlf
 
 
 [rel,tel,trand]=cellfun(@extract,bpms','UniformOutput',false);

@@ -1,5 +1,5 @@
 function [header_mat, data_mat] = mhdrload_bis(file)
-%MHDRLOAD Load data from an ASCII file containing multiple text
+%MHDRLOAD_BIS Loads data from an ASCII file containing multiple text
 % headers throughout the file.
 % [header, data] = MHDRLOAD('filename.ext') reads a data file
 % called 'filename.ext', which contains a text header.  There

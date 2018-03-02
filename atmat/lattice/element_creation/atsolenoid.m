@@ -1,5 +1,5 @@
 function Elem=atsolenoid(fname,varargin)
-%ATSOLENOID - creates a new solenoid element with Class 'Solenoid'
+%ATSOLENOID Creates a new solenoid element with Class 'Solenoid'
 %
 %   Elem =solenoid('FAMILYNAME',Length [m],KS,'METHOD')
 %	
@@ -19,16 +19,16 @@ function Elem=atsolenoid(fname,varargin)
 %	 MaxOrder       Max Order for multipole (1 up to quadrupole)
 %
 %  OUTPUTS
-%      1. ELEM - Structure with the AT element
+%  1. ELEM - Structure with the AT element
 %
 %  NOTES
-%      1. Fieldname can be called by calling the passmethod
-%         [req opt] = BndMPoleSymplectic4Pass
-%                     where req are mandatory field and opt are optional
-%                     fields
+%  1. Fieldname can be called by calling the passmethod
+%     [req opt] = BndMPoleSymplectic4Pass
+%                 where req are mandatory field and opt are optional
+%                 fields
 %
-%  See Also ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND ATSKEWQUAD,
-%          ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,
+%          atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
 [rsrc,L,KS,method]  = decodeatargs({0,0,'SolenoidLinearPass'},varargin);

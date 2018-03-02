@@ -1,4 +1,5 @@
 function z = hmonitor(fname,method)
+%HMONITOR Creates a horizontal monitor element in old AT version (Obsolete)
 % hmonitor('FAMILYNAME','METHOD')
 %       creates a new family in the FAMLIST - a structure with fields
 %               FamName                 family name
@@ -9,6 +10,12 @@ function z = hmonitor(fname,method)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 % declare bpms in the lattice file  as BPM = hmonitor('BPM','IdentityPass');
+%
+%  NOTES
+%  1. Obsolete: use atmonitor instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 
 ElemData.FamName = fname;  % add check for identical family names

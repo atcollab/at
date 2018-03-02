@@ -1,4 +1,5 @@
-function varargout = spear3(varargin);
+function varargout = spear3(varargin)
+%SPEAR3 Load the SPEAR3 lattice structure
 
 L0  = 2.341440122400003e+002;	% design length [m] 
 C0  = 299792458; 				% speed of light [m/s]
@@ -263,7 +264,7 @@ RING    =   [{CAV} MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB)];
 
 
 if nargout
-    varargout{1} = RING;
+    varargout{1} = RING';
 else % If no output arguments - greate global variable THERING
     global THERING
     THERING = RING;

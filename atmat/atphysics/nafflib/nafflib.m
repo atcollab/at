@@ -1,4 +1,4 @@
-% NAFFLIB - MATLAB to NAFF library
+% NAFFLIB MATLAB to NAFF library
 %
 %  INPUTS
 %  1. Real part

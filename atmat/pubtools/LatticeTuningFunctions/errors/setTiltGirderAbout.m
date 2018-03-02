@@ -1,5 +1,5 @@
 function re=setTiltGirderAbout(r,mag_gr,coord,PSI)
-%
+%SETTILTGIRDERABOUT Set Tilt error on a magnet
 %
 % See also: atsettilt atsettiltdipole atsetshift
 

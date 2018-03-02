@@ -47,17 +47,17 @@ function curve = atbaseplot(varargin)
 
 global THERING
 
-npts=400;
+npts=400; % number of point
 narg=1;
 % Select axes for the plot
-if narg<=length(varargin) && isscalar(varargin{narg}) && ishandle(varargin{narg});
+if narg<=length(varargin) && isscalar(varargin{narg}) && ishandle(varargin{narg})
     ax=varargin{narg};
     narg=narg+1;
 else
     ax=gca;
 end
 % Select the lattice
-if narg<=length(varargin) && iscell(varargin{narg});
+if narg<=length(varargin) && iscell(varargin{narg})
     [elt0,curve.periodicity,ring0]=get1cell(varargin{narg});
     narg=narg+1;
 else
@@ -66,7 +66,7 @@ end
 s0=findspos(ring0,1:elt0+1);
 curve.length=s0(end);
 % Select the momentum deviation
-if narg<=length(varargin) && isscalar(varargin{narg}) && isnumeric(varargin{narg});
+if narg<=length(varargin) && isscalar(varargin{narg}) && isnumeric(varargin{narg})
     curve.dpp=varargin{narg};
     narg=narg+1;
 else

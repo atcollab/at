@@ -1,4 +1,5 @@
 function Nus = nus (VrfMV, alpha, U0MeV, E0MeV, h)
+%NUS Computes synchrotron tune from RF parameters
 % Nus = nus (VrfMV, alpha, U0MeV, E0MeV, h)
 % this function return the synchrotron tune
 % input:

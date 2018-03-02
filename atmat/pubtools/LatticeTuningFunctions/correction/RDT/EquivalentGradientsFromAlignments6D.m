@@ -1,4 +1,5 @@
 function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)
+%EQUIVALENTGRADIENTSFROMALIGNMENTS6D Estimated normal quad gradients from sext offsets
 %[kn,    1) estimated normal quad gradients from sext offsets, quad
 %           errors in quadrupoles and sextupoles.
 % ks,    2) estimated skew quad gradients from sext offsets, quad
@@ -18,7 +19,7 @@ function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)
 % gradients at the given indexes (ind) ( not integrated, PolynomB)
 % 
 % 
-%see also:  
+%  See also
 
 % quadrupole and skew quadrupole errors are introduced via COD in
 % sextupoles

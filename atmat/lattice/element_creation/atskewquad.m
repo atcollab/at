@@ -1,11 +1,11 @@
 function elem = atskewquad(fname,varargin)
-%ATSKEWQUAD -creates a skew quadrupole element with Class 'Multipole'
-%ATSKEWQUAD(FAMNAME,LENGTH,Qs,PASSMETHOD)
+%ATSKEWQUAD Creates a skew quadrupole element with Class 'Multipole'
+%atskewquad(famname,length,qs,passmethod)
 %
 %  INPUTS
-%    1.	FAMNAME        family name
-%    2. LENGTH         length
-%    3. Qs             skew quad strength
+%  1. FAMNAME - Family name
+%  2. LENGTH  - Length [m]
+%  3. Qs      - Skew quad strength [m-2]
 %
 %  OPTIONS (order does not matter)
 %    R1				6 x 6 rotation matrix at the entrance
@@ -16,13 +16,13 @@ function elem = atskewquad(fname,varargin)
 %	 MaxOrder       Max Order for multipole (1 up to quadrupole)
 %
 %  OUTPUTS
-%      1. ELEM - Structure with the AT element
+%  1. ELEM - Structure with the AT element
 %
 %  EXAMPLES 
-%    atskewquad(Fname, L, Qs, method)
+%  1.  atskewquad(Fname, L, Qs, method)
 %
-%  See also ATDRIFT, ATQUADRUPOLE, ATSEXTUPOLE, ATSBEND, ATRBEND,
-%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
 [rsrc,L,Qs,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);

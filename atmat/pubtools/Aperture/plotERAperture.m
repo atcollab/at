@@ -1,7 +1,8 @@
-function plotdata=plotERAperture(lindata,ring,dpp,varargin) %#ok<INUSD>
+function plotdata=plotERAperture(~,ring,~,varargin)
+%PLOTERAPERTURE Plots RApertures EApertures aperture.
 %function plotdata=plotERAperture(lindata,ring,dpp,varargin) %#ok<INUSD>
 %
-% Plots RApertures EApertures aperture.
+% 
 % 
 % use with atplot(atlattice,@plotAperture);
 %

@@ -1,8 +1,7 @@
 function re=setANYshift(r,pos,coord,D)
-%
-% adds to the existing shift errors additional D
+%SETANYSHIFT Adds to the existing shift errors additional D
 % 
-% See also SETSHIFT
+%  See also SETSHIFT
 
 numelems = length(pos);
 

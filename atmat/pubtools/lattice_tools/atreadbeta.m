@@ -163,7 +163,7 @@ end
 evalin('base','global GLOBVAL');
 
 function cav=tunecavity(cav,clength,ncell,ntot)
-frev=2.99792458E8/clength;
+frev=PhysConstant.speed_of_light_in_vacuum.value/clength;
 if cav.HarmNumber > 1
     harm=ceil(cav.HarmNumber/ntot);
 else

@@ -1,5 +1,5 @@
 function tune = intfft(X,varargin);
-%INTFFT - calculate the tune from interpolated FFT of the trajectory.
+%INTFFT Calculates the tune from interpolated FFT of the trajectory.
 % INTFFT(X) X must be a column vector.
 %  If X is a matrix - each column is treated as
 %  a separate trajectory

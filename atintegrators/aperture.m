@@ -1,4 +1,5 @@
 function z = aperture(fname,varargin)
+%APERTURE Creates a aperture element in old a AT version (Obsolete)
 %APERTURE('FAMILYNAME',limits, method)
 %	creates a new family in the FAMLIST - a structure with fields
 %		FamName			family name
@@ -6,6 +7,13 @@ function z = aperture(fname,varargin)
 %		PassMethod		name of the function on disk to use for tracking
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
+%
+%  NOTES
+%  1. Obsolete: use ataperture instead
+%  2. There is a better way to define aperture in each element
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 ElemData=ataperture(fname,varargin{:});
 

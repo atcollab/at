@@ -1,5 +1,5 @@
 function naff_cc
-%NAFF_CC - Compile nafflibrary for Matlab
+%NAFF_CC Compile nafflibrary for Matlab
 %
 
 % Modified by Laurent S. Nadolski

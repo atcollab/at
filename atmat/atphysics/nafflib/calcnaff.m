@@ -1,4 +1,5 @@
 function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
+%CALCNAFF Computes NAFF decomposition for a phase space trajectory
 % [nu amp phase] = calcnaff(Y, Yp, Win)
 %
 %  INPUTS

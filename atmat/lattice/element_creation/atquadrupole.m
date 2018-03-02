@@ -1,31 +1,41 @@
 function elem=atquadrupole(fname,varargin)
-%ATQUADRUPOLE - creates a quadrupole element with Class 'Quadrupole'
+%ATQUADRUPOLE Creates a quadrupole element with Class 'Quadrupole'
 %
 %ATQUADRUPOLE(FAMNAME,LENGTH,K,PASSMETHOD)	
 %
 %  INPUTS
-%    1. FAMNAME	    family name
-%    2. LENGTH      length [m]
-%    3. K           strength [m-2]
-%    4. PASSMETHOD  tracking function, defaults to 'QuadLinearPass'
+%  1. FAMNAME    - Family name
+%  2. LENGTH     - Length [m]
+%  3. K          - Strength [m-2]
+%  4. PASSMETHOD - Tracking function, defaults to 'QuadLinearPass'
 %
 %  OPTIONS (order does not matter)
-%    R1				6 x 6 rotation matrix at the entrance
-%	 R2        		6 x 6 rotation matrix at the entrance
-%	 T1				6 x 1 translation at entrance 
-%	 T2				6 x 1 translation at exit
-%	 NumIntSteps    Number of integration steps
-%	 MaxOrder       Max Order for multipole (1 up to quadrupole)
+%    R1			 -	6 x 6 rotation matrix at the entrance
+%	 R2        	 -	6 x 6 rotation matrix at the entrance
+%	 T1			 -	6 x 1 translation at entrance 
+%	 T2			 -	6 x 1 translation at exit
+%	 NumIntSteps -   Number of integration steps
+%	 MaxOrder    -   Max Order for multipole (1 up to quadrupole)
 %
 %  OUTPUTS
-%      1. ELEM - Structure with the AT element
+%  1. ELEM - Structure with the AT element
 %
 %  EXAMPLES
-%    1. ATQUADRUPOLE(FAMNAME,LENGTH,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
-%       Each pair {'FIELDNAME',VALUE} is added to the element
+%  1. Fieldname can be called by calling the passmethod
+%     [req opt] = StrMPoleSymplectic4Pass
+%                 where req are mandatory field and opt are optional fields
+%  2. atquadrupole(famname,length,k,passmethod,'fieldname1',value1,...)
+%       each pair {'fieldname',value} is added to the element
 %
-%  See also ATDRIFT, ATSEXTUPOLE, ATSBEND, ATRBEND, ATSKEWQUAD,
-%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%  3. Quadrupole fringe field can be activated at element entrance or exit
+%     with option FringeQuadEntrance/FringeQuadExit=0,1,2
+%     Version 0: no fringe field
+%     Version 1: Lee-Whiting formula
+%     Version 2: Lee-Whiting Elegant-like formula where 5 integral need to
+%     be provided
+%     
+%  See also atdrift, atsextupole, atsbend, atrbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector, atringparam
 
 [rsrc,L,K,method] = decodeatargs({0,[],'QuadLinearPass'},varargin);
 [L,rsrc]          = getoption(rsrc,'Length',L);

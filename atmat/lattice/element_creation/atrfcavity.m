@@ -1,5 +1,5 @@
 function elem=atrfcavity(fname,varargin)
-%ATRFCAVITY - creates an rfcavity element with Class 'RFCavity'
+%ATRFCAVITY Creates an rfcavity element with Class 'RFCavity'
 %
 %  ATRFCAVITY(FAMNAME,LENGTH,VOLTAGE,FREQUENCY,HARMONICNUMBER,ENERGY,PASSMETHOD)
 %	
@@ -24,8 +24,8 @@ function elem=atrfcavity(fname,varargin)
 %         [req opt] = atrfcavity
 %                     where req are mandatory field and opt are optional
 %                     fields
-%%See also  ATDRIFT, ATSEXTUPOLE, ATSBEND, ATRBEND, ATSKEWQUAD
-%          ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, ATCORRECTOR
+%%See also  atdrift, atsextupole, atsbend, atrbend, atskewquad
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
 [rsrc,L,V,F,H,E,method] = decodeatargs({0,0,1,1,1.E9,'CavityPass'},varargin);

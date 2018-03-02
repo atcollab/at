@@ -1,5 +1,5 @@
 function elem=atsextupole(fname,varargin)
-%ATSEXTUPOLE - creates a sextupole element with class 'Sextupole'
+%ATSEXTUPOLE Creates a sextupole element with class 'Sextupole'
 %
 %  ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD)
 %	
@@ -24,9 +24,9 @@ function elem=atsextupole(fname,varargin)
 %    ATSEXTUPOLE(FAMNAME,LENGTH,S,PASSMETHOD,'FIELDNAME1',VALUE1,...)
 %    Each pair {'FIELDNAME',VALUE} is added to the element
 %
-%  See also: ATDRIFT, ATQUADRUPOLE, ATMULTIPOLE, ATSBEND,
-%            ATRBEND,ATSKEWQUAD, ATMULTIPOLE, ATTHINMULTIPOLE, ATMARKER, 
-%            ATCORRECTOR
+%  See also: atdrift, atquadrupole, atmultipole, atsbend,
+%            atrbend,atskewquad, atmultipole, atthinmultipole, atmarker, 
+%            atcorrector
 
 % Input parser for option
 [rsrc,L,S,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);

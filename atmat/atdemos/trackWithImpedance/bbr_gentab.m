@@ -6,7 +6,7 @@ function [ s,bbrx,bbry,bbrz ] = bbr_gentab(xr,npoints,freqx,freqy,freqz,qx,qy,qz
 
 %Based on equations 2.84 and 2.88 in Chao's 'Physics of Collective Instabilities'
 
-clight = 2.99792458e8;
+clight = PhysConstant.speed_of_light_in_vacuum.value;
 if mod(npoints,2) == 0
     npoints=npoints+1;
 end

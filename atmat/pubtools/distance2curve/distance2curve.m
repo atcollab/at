@@ -1,5 +1,5 @@
 function [xy,distance,t_a] = distance2curve(curvexy,mapxy,interpmethod)
-% distance2curve: minimum distance from a point to a general curvilinear n-dimensional arc
+%DISTANCE2CURVE Gets the minimum distance from a point to a general curvilinear n-dimensional arc
 % usage: [xy,distance,t] = distance2curve(curvexy,mapxy) % uses linear curve segments
 % usage: [xy,distance,t] = distance2curve(curvexy,mapxy,interpmethod)
 %

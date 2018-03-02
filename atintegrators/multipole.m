@@ -1,5 +1,5 @@
 function z=multipole(fname,L,PolynomA,PolynomB,method)
-
+%MULTIPOLE Creates a thick multipole element in old AT versions (Obsolete)
 % MULTIPOLE('FAMILYNAME',Length [m],PolynomA,PolynomB,'METHOD')
 %	creates a new family in the FAMLIST - a structure with fields
 %	FamName			family name
@@ -19,6 +19,12 @@ function z=multipole(fname,L,PolynomA,PolynomB,method)
 %
 % returns assigned address in the FAMLIST that uniquely identifies
 % the family
+%
+%  NOTES
+%  1. Obsolete: use atmultipole or atthinmultipole instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 
 ElemData.FamName = fname;  % add check for identical family names
