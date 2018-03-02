@@ -58,8 +58,8 @@ ConstrV6D=struct(...
 rbump=ring0;
 
 try
-    rbump=atmatch(rbump,VariabH,ConstrH6D,10^-16,10,3,@lsqnonlin);%,'fminsearch');%
     rbump=atmatch(rbump,VariabV,ConstrV6D,10^-16,10,3,@lsqnonlin);%,'fminsearch');%
+    rbump=atmatch(rbump,VariabH,ConstrH6D,10^-16,100,3,@fminsearch);%,'fminsearch');%
 catch
     rbump=atmatch(rbump,VariabH,ConstrH6D,10^-10,40,3);%,'fminsearch');%
     rbump=atmatch(rbump,VariabV,ConstrV6D,10^-10,40,3);%,'fminsearch');%
