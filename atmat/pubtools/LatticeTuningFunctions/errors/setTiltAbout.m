@@ -55,7 +55,7 @@ switch coord
         for i = 1:length(pos)
             if additive
                 r{pos(i)}.T1(2,1) =  r{pos(i)}.T1(2)  -PSI(i);
-                r{pos(i)}.T2(2,1) = r{pos(i)}.T2(2)   +PSI(i);
+                r{pos(i)}.T2(2,1) =  r{pos(i)}.T2(2)  +PSI(i);
                 r{pos(i)}.T1(1,1) =  r{pos(i)}.T1(1)  +r{pos(i)}.Length/2*sin(PSI(i));
                 r{pos(i)}.T2(1,1) =   r{pos(i)}.T2(1) +r{pos(i)}.Length/2*sin(PSI(i));
                 r{pos(i)}.RotAboutY = r{pos(i)}.RotAboutY +  PSI(i);
