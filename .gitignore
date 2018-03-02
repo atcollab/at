@@ -2,12 +2,16 @@
 # Shared objects
 *.so
 *.mexa64
+*.mexmaci64
 
 # Compiled python
 *.pyc
 
 # pytest cache
 .cache
+
+#Temporary files
+*.m~
 
 # Virtual environment
 venv
@@ -28,6 +32,9 @@ atintegrators/passmethodlist.m
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
+
+#Contents files
+Contents.m
 
 # Vim
 *.swp

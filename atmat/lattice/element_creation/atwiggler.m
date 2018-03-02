@@ -1,4 +1,5 @@
 function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+%ATWIGGLER Create a WIGGLER element 
 % atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % FamName	family name

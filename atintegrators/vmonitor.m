@@ -1,4 +1,5 @@
 function z = vmonitor(fname,method)
+%VMONITOR Creates a vertical monitor element in old AT version (Obsolete)
 % vmonitor('FAMILYNAME','METHOD')
 %       creates a new family in the FAMLIST - a structure with fields
 %               FamName                 family name
@@ -9,6 +10,12 @@ function z = vmonitor(fname,method)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 % declare bpms in the lattice file  as BPM = vmonitor('BPM','IdentityPass');
+%
+%  NOTES
+%  1. Obsolete: use at monitor instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 
 ElemData.FamName = fname;  % add check for identical family names

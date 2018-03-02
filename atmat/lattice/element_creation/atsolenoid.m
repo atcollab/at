@@ -1,32 +1,43 @@
-function Elem=atsolenoid(fname,L,KS,method)
-
-% z=solenoid('FAMILYNAME',Length [m],KS,'METHOD')
-%	creates a new solenoid element with Class 'Solenoid'
-%   The structure with field
-%	FamName			family name
-%	Length			length[m]
-%	KS              solenoid strength KS [rad/m]
-%	PassMethod     name of the function to use for tracking
+function Elem=atsolenoid(fname,varargin)
+%ATSOLENOID Creates a new solenoid element with Class 'Solenoid'
 %
-%   function returns assigned address in the FAMLIST that uniquely identifies
-%   the family
+%   Elem =solenoid('FAMILYNAME',Length [m],KS,'METHOD')
+%	
+%  INPUTS
+%	1. FamName		  family name
+%	2. Length	      length[m]
+%	3. KS             solenoid strength KS [rad/m]
+%	4. PassMethod     name of the function to use for tracking
 %
-%   Additional structures being set up (initialized to default values within this routine):   
-%	NumIntSteps		Number of integration steps
-%	MaxOrder
-%	R1					6 x 6 rotation matrix at the entrance
-%	R2           		6 x 6 rotation matrix at the entrance
-%	T1					6 x 1 translation at entrance 
-%	T2					6 x 1 translation at exit
+%
+%  OPTIONS (order does not matter)
+%    R1				6 x 6 rotation matrix at the entrance
+%	 R2        		6 x 6 rotation matrix at the entrance
+%	 T1				6 x 1 translation at entrance 
+%	 T2				6 x 1 translation at exit
+%	 NumIntSteps    Number of integration steps
+%	 MaxOrder       Max Order for multipole (1 up to quadrupole)
+%
+%  OUTPUTS
+%  1. ELEM - Structure with the AT element
+%
+%  NOTES
+%  1. Fieldname can be called by calling the passmethod
+%     [req opt] = BndMPoleSymplectic4Pass
+%                 where req are mandatory field and opt are optional
+%                 fields
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,
+%          atthinmultipole, atmarker, atcorrector
 
-Elem.FamName = fname;  % add check for existing identical family names
-Elem.Length = L;
-Elem.K         = KS;
-Elem.MaxOrder = 3;
-Elem.NumIntSteps = 10;
-Elem.R1 = diag(ones(6,1));
-Elem.R2 = diag(ones(6,1));
-Elem.T1 = zeros(1,6);
-Elem.T2 = zeros(1,6);
-Elem.PassMethod=method;
-Elem.Class = 'Solenoid';
+% Input parser for option
+[rsrc,L,KS,method]  = decodeatargs({0,0,'SolenoidLinearPass'},varargin);
+[L,rsrc]            = getoption(rsrc,'Length',L);
+[KS,rsrc]           = getoption(rsrc,'KS',KS);
+[method,rsrc]       = getoption(rsrc,'PassMethod',method);
+[cl,rsrc]           = getoption(rsrc,'Class','Solenoid');
+
+% Gradient setting if not specified explicitly
+Elem=atbaselem(fname,method,'Class',cl,'Length',L,...
+    'KS',KS,rsrc{:});
+end

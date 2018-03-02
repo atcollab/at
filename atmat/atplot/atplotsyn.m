@@ -69,7 +69,7 @@ p4=patch(xplot,yplot,[0 0.5 0]);
 ampl=0.015*tlim;    % BPMs
 amplx=0.005*slim;
 [xplot,yplot]=setxpl(sl(bpms),ones(1,sum(bpms)),[-amplx;0;amplx;0;-amplx],[0;-ampl;0;ampl;0]);
-p5=patch(xplot,yplot,[0 0 0],'clipping','off');
+p5=patch(xplot,yplot,[0 0 0],'DisplayName','BPM');
 %p5=patch(ax,xplot,yplot,[0 0 0],'clipping','off');
 
 if any(labs)

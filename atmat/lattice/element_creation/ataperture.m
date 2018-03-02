@@ -1,12 +1,13 @@
 function elem=ataperture(fname,varargin)
-%ATAPERTURE(FAMNAME,LIMITS,PASSMETHOD
+%ATAPERTURE Creates a aperture element
+% ATAPERTURE(FAMNAME,LIMITS,PASSMETHOD
 % define physical aperture element (collimator)
 % lim=[-x,+x,-y,+y];
 % 
 % lim={[-x,+x,-y,+y],[-x,+x,-y,+y],[-x,+x,-y,+y],...};
 % will generate various aperture elements (one for every set of errors)
 % 
-%See also: SETPHYSICALAPERTURE
+%  See also setphysicalaperture
 % 
 
 [rsrc,limits,method,~]=decodeatargs({[0 0],'AperturePass',''},varargin);

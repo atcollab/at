@@ -1,13 +1,15 @@
 function varargout=atx(ring,varargin)
-%ATX				computes and displays global information
+%ATX Computes and displays global information
 %
-%BEAMDATA=ATX(RING,DPP,REFPTS)
+%  BEAMDATA=ATX(RING,DPP,REFPTS)
 %
-%RING:		AT structure
-%DPP:		relative energy deviation (default: 0)
-%REFPTS:    Index of elements (default: 1:length(ring))
+%  INPUTS
+%  1. RING - AT structure
+%  2. DPP  - Rrelative energy deviation (default: 0)
+%  3. REFPTS - Index of elements (default: 1:length(ring))
 %
-%BEAMDATA is a MATLAB structure array with fields
+%  OUTPUT
+%  2. BEAMDATA is a MATLAB structure array with fields
 %
 % From atlinopt:
 %
@@ -55,7 +57,7 @@ function varargout=atx(ring,varargin)
 %   modemittance- Eigen emittances
 %   momcompact  - momentum compaction factor
 %
-%BEAMDATA=ATX(RING,DPP,REFPTS,RADRING,RADINDEX,CAVINDEX)
+% BEAMDATA=ATX(RING,DPP,REFPTS,RADRING,RADINDEX,CAVINDEX)
 % Radiation must be turned on for emittance computation. This is done by
 % default using the ATRADON function with default arguments. If this is not
 % desired, this syntax allows to explicitly enter the radiative lattice
@@ -67,17 +69,18 @@ function varargout=atx(ring,varargin)
 % and indices, in the form:
 %        [RADRING,RADINDEX,CAVINDEX]=RADFUNCTION(RING)
 %
-% See also: ATLINOPT ATRADON OHMIENVELOPE
+% See also atlinopt atradon ohmienvelope ringpara atsummary
 
 [energy,periods,voltage,~,eloss]=atenergy(ring);
 [varargout{1:nargout}]=atx2(ring(:,1),energy,periods,voltage,eloss,varargin{:});
+
 if nargout >= 1 && size(ring,2) > 1
     varargout{1}=repmat(varargout{1}(:),1,size(ring,2));
 end
 
     function [linusr,pm]=atx2(ring,energy,periods,voltage,eloss,varargin)
         
-        c=2.9987924e8;
+        c = PhysConstant.speed_of_light_in_vacuum.value;
         [dpp,refusr]=parseargs({0,1:length(ring)},varargin);
         if islogical(refusr)
             refusr(end+1,length(ring)+1)=false;
@@ -253,5 +256,3 @@ end
         end
     end
 end
-
-

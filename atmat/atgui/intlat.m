@@ -1,5 +1,5 @@
 function intlat(varargin)
-%INTLAT - interactive AT lattice editor
+%INTLAT Interactive AT lattice editor
 % INTLAT(DIRECTION)
 %  Direction is the initial angle[rad] of the orbit with respect
 %  to the plot axis

@@ -1,4 +1,5 @@
 function h=plotContours(ring,indices,colorplotstr)
+%PLOTCONTOURS Plots contours
 %h=plotdriftcontours(ring)
 %load S25ERRseed1.mat
 

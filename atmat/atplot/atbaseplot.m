@@ -29,6 +29,8 @@ function curve = atbaseplot(varargin)
 %   'index',REFPTS             Display the index of selected element names
 %   'leftargs',{properties}     properties set on the left axis
 %   'rightargs',{properties}    properties set on the right axis
+%   'KeepAxis'                  flag to keep R1,R2,T1,T2 at each slice in
+%                               detailed plots (mandatory with vert. bend).
 %
 %ATBASEPLOT(AX,...)     Plots in the axes specified by AX. AX can precede
 %                       any previous argument combination
@@ -45,17 +47,17 @@ function curve = atbaseplot(varargin)
 
 global THERING
 
-npts=400;
+npts=400; % number of point
 narg=1;
 % Select axes for the plot
-if narg<=length(varargin) && isscalar(varargin{narg}) && ishandle(varargin{narg});
+if narg<=length(varargin) && isscalar(varargin{narg}) && ishandle(varargin{narg})
     ax=varargin{narg};
     narg=narg+1;
 else
     ax=gca;
 end
 % Select the lattice
-if narg<=length(varargin) && iscell(varargin{narg});
+if narg<=length(varargin) && iscell(varargin{narg})
     [elt0,curve.periodicity,ring0]=get1cell(varargin{narg});
     narg=narg+1;
 else
@@ -64,7 +66,7 @@ end
 s0=findspos(ring0,1:elt0+1);
 curve.length=s0(end);
 % Select the momentum deviation
-if narg<=length(varargin) && isscalar(varargin{narg}) && isnumeric(varargin{narg});
+if narg<=length(varargin) && isscalar(varargin{narg}) && isnumeric(varargin{narg})
     curve.dpp=varargin{narg};
     narg=narg+1;
 else
@@ -100,6 +102,7 @@ rsrc=varargin(narg:end);
 [synopt,rsrc]=getoption(rsrc,'synopt',true);
 [leftargs,rsrc]=getoption(rsrc,'leftargs',{});
 [rightargs,rsrc]=getoption(rsrc,'rightargs',{});
+[KeepAxis,rsrc]=getflag(rsrc,'KeepAxis');
 % Split the ring
 elmlength=findspos(ring0(el1:el2-1),el2-el1+1)/npts;
 r2=cellfun(@splitelem,ring0(el1:el2-1),'UniformOutput',false);
@@ -137,7 +140,11 @@ end
     function newelems=splitelem(elem)
         if isfield(elem,'Length') && elem.Length > 0
             nslices=ceil(elem.Length/elmlength);
-            newelems=atdivelem(elem,ones(1,nslices)./nslices,'KeepAxis');
+            if ~KeepAxis
+                newelems=atdivelem(elem,ones(1,nslices)./nslices);
+            else
+                newelems=atdivelem(elem,ones(1,nslices)./nslices,'KeepAxis');
+            end
         else
             newelems={elem};
         end

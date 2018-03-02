@@ -1,4 +1,5 @@
 function z = marker(fname,method)
+%MARKER Creates a marker element in old AT version (Obsolete)
 %MARKER('FAMILYNAME','METHOD')
 %	creates a new family in the FAMLIST - a structure with fields
 %		FamName			family name
@@ -9,6 +10,12 @@ function z = marker(fname,method)
 %
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
+%
+%  NOTES
+%  1. Obsolete: use atmarker instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 ElemData.FamName = fname;  % add check for identical family names
 ElemData.Length=0;

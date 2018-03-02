@@ -20,8 +20,7 @@ if nargin>=3
 end
 
 if nargin<7
-%   atsum = atsummary
-    atsum = tlssummary
+   atsum = atsummary;
 end
 
 
@@ -40,14 +39,14 @@ if nargin>=7
    sigE = varargin{4};
    emit_x = varargin{5}*1e-9; %m-rad
 else
-    sigE = atsum.naturalEnergySpread  %sigma_delta
-    emit_x = atsum.naturalEmittance
+    sigE = atsum.naturalEnergySpread;  %sigma_delta
+    emit_x = atsum.naturalEmittance;
 
 end
 
-e0 = 1.6e-19; %Coulomb
-cspeed = 299792458; 
-r0 = 2.82e-15; %m
+e0 = PhysConstant.elementary_charge.value; %Coulomb
+cspeed = PhysConstant.speed_of_light_in_vacuum.value; 
+r0 = PhysConstant.classical_electron_radius.value; %m
 
 
 %cavity related parameters
@@ -60,7 +59,7 @@ end
 freq = THERING{CAVINDEX(1)}.Frequency;
 harm = THERING{CAVINDEX(1)}.HarmNumber;
 E0 = THERING{CAVINDEX(1)}.Energy;
-gamma = THERING{CAVINDEX(1)}.Energy/0.511e6;
+gamma = THERING{CAVINDEX(1)}.Energy/PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;
 
 Vrf = 0;
 for ii=1:length(CAVINDEX)
@@ -81,7 +80,7 @@ delta_max_rf = sqrt(2*U0/pi/alpha/harm/E0)*sqrt( sqrt((Vrf/U0).^2-1) - acos(U0./
 %---------------------------------
 
 %beam size around the ring
-[td, tune,chrom] = twissring(THERING,0,1:length(THERING)+1, 'chrom', 1e-5);
+[td, ~,~] = twissring(THERING,0,1:length(THERING)+1, 'chrom', 1e-5);
 Dx = cat(2, td.Dispersion)';
 betxy = cat(1, td.beta);
 alfxy = cat(1, td.alpha);
@@ -92,15 +91,15 @@ circ = spos(end);
 sigX = sqrt(betxy(:,1)*emit_x+Dx(:,1).^2*sigE^2);
 
 sigY = sqrt(betxy(:,2)*emit_x*coupling);
-sigXp = sqrt(emit_x*(1+alfxy(:,1).^2)./betxy(:,1)+Dx(:,2).^2*sigE^2);
+%sigXp = sqrt(emit_x*(1+alfxy(:,1).^2)./betxy(:,1)+Dx(:,2).^2*sigE^2);
 %--------------------------------
 curH = (Dx(:,1).^2 + (betxy(:,1).*Dx(:,2)+alfxy(:,1).*Dx(:,1)).^2)./betxy(:,1);
 
-display('delta_max_perp data:  ');
+disp('delta_max_perp data:  ');
 delta_max_perp = hori_acceptance./sqrt(curH);
-display('delta_max data:  ');
+disp('delta_max data:  ');
 delta_max = min([delta_max_perp, ones(size(curH))*delta_max_rf]')';
-display('xi data:  ');
+disp('xi data:  ');
 xi = (delta_max/gamma.*betxy(:,1)./sigX).^2;
 Dval = funcD(xi);
 
@@ -114,18 +113,18 @@ lossrate = Ib*N0*r0^2*cspeed/8/gamma^2/pi*avgfac;
 
 tauT = 1/lossrate;
 
-if 0
-   figure
-   plot(spos, delta_max, spos, delta_max_rf*ones(size(spos))); 
-   %set(gca,'fontsize', 16,'xlim',[0,240])
-   set(gca,'fontsize', 16,'xlim',[0,120])
-   xlabel('s (m)')
-   ylabel('\delta_{max}')
-   grid
-   %set(gca,'ylim',[0,0.04]);
-   set(gca,'ylim',[0,0.15]);
-   
-end
+% if 0
+%    figure
+%    plot(spos, delta_max, spos, delta_max_rf*ones(size(spos))); 
+%    %set(gca,'fontsize', 16,'xlim',[0,240])
+%    set(gca,'fontsize', 16,'xlim',[0,120])
+%    xlabel('s (m)')
+%    ylabel('\delta_{max}')
+%    grid
+%    %set(gca,'ylim',[0,0.04]);
+%    set(gca,'ylim',[0,0.15]);
+%    
+% end
 
 function D=funcD(xi)
 %a look-up table
