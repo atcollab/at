@@ -40,8 +40,8 @@ ConstrQY=struct(...
 
  tol=1e-8;
  arctune0=arc;
+ arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,10,3,@lsqnonlin); %);%
  arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,50,3); %);%
-% arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,50,3,@lsqnonlin); %);%
 
 return
 
