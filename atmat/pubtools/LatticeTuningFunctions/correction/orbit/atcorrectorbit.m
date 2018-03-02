@@ -26,7 +26,7 @@ function [rcor,inCOD,hs,vs]=atcorrectorbit(...
 %     inCOD,...         5) 6x1 initial COD guess
 %     neigSteerer,...   6) 2xNiter eigenvectors for correction H and V at
 %                          each iteration (default: [Nh/2 Nv/2])
-%     correctflags,...  7) correct [dpp mean0](default: [true true])
+%     correctflags,...  7) correct [dpp mean0 (1/m or rad)](default: [true true true(1/m)])
 %     scalefactor,...   8) scale factor to correction (default: 1.0)
 %     ModelRM,...       9) ModelRM.Orb(H/V)Cor = 4x1 cell of orbit response matrix
 %                          ModelRM.Orb(H/V)DPP = 6x1 array of orbit
@@ -85,7 +85,7 @@ if nargin<6
 end
 
 if nargin<7
-    correctflags=[true true];
+    correctflags=[true true true];
 end
 
 if nargin<8
@@ -95,7 +95,7 @@ if nargin<8
 end
 
 if nargin<9
-    if printouttext, disp(' --- computing orbit Response matrix'); end;
+    if printouttext, disp(' --- computing orbit Response matrix '); end;
     ModelRM=[];
 end
 
@@ -108,6 +108,10 @@ if scalefactor<0 || scalefactor>1
     if printouttext
         disp(' --- scale factor out of range. Set to 1.0'); end;
     scalefactor=1.0;
+end
+
+if length(correctflags)==2
+    correctflags=[correctflags, true];
 end
 
 if correctflags(1) % dpp correction
@@ -131,8 +135,8 @@ if isempty(ModelRM)
         [],...     %6 quad cor indexes
         [],...     %7 sext cor indexes
         inCOD,...       %8 initial coordinates
-        rmsel...      %9 specifiy rm to be computed
-        );
+        rmsel,...      %9 specifiy rm to be computed
+        ~correctflags(3)); % 10 use 1/m(false) or rad(true)
     
     
     if ~correctflags(1) % dpp correction
@@ -165,8 +169,13 @@ for iter=1:Niter
     end
     
     % initial corrector strengths
-    corh0=atgetfieldvalues(rerr,indHCor,'PolynomB',{1,1});
-    corv0=atgetfieldvalues(rerr,indVCor,'PolynomA',{1,1});
+    if correctflags(3) % 1/m
+        corh0=atgetfieldvalues(rerr,indHCor,'PolynomB',{1,1});
+        corv0=atgetfieldvalues(rerr,indVCor,'PolynomA',{1,1});
+    elseif ~correctflags(3) % rad
+        corh0=atgetfieldvalues(rerr,indHCor,'KickAngle',{1,1});
+        corv0=atgetfieldvalues(rerr,indVCor,'KickAngle',{1,2});
+    end
     
     % get current orbit
     o=findorbit6Err(rerr,indBPM,inCOD);
@@ -219,9 +228,13 @@ for iter=1:Niter
         vs(abs(vs)>steererlimit(2))=steererlimit(2);
     end
     
-    rtest=atsetfieldvalues(rerr,indHCor,'PolynomB',{1,1},hs);
-    rtest=atsetfieldvalues(rtest,indVCor,'PolynomA',{1,1},vs);
-    
+    if correctflags(3) % 1/m
+        rtest=atsetfieldvalues(rerr,indHCor,'PolynomB',{1,1},hs);
+        rtest=atsetfieldvalues(rtest,indVCor,'PolynomA',{1,1},vs);
+    elseif ~correctflags(3) % rad
+        rtest=atsetfieldvalues(rerr,indHCor,'KickAngle',{1,1},hs);
+        rtest=atsetfieldvalues(rtest,indVCor,'KickAngle',{1,2},vs);
+    end
    
     if correctflags(1)
         
@@ -264,7 +277,12 @@ if printouttext
     disp(['oX: ' num2str(std(ox0-reforbit(1,:))*1e6,'%3.3f') ' -> ' num2str(std(oxc-reforbit(1,:))*1e6,'%3.3f') 'um']);
     disp(['oY: ' num2str(std(oy0-reforbit(2,:))*1e6,'%3.3f') ' -> ' num2str(std(oyc-reforbit(2,:))*1e6,'%3.3f') 'um']);
     disp(['    ' 'min' '    ' 'mean' '    ' 'max'])
-    disp(['hs:'  num2str([min(hsL) mean(hsL) max(hsL)]*1e3,' %2.2f ') ' mrad'])
-    disp(['vs:'  num2str([min(vsL) mean(vsL) max(vsL)]*1e3,' %2.2f ') ' mrad'])
+    if correctflags(3) % 1/m
+        disp(['hs:'  num2str([min(hsL) mean(hsL) max(hsL)]*1e3,' %2.2f ') ' mrad'])
+        disp(['vs:'  num2str([min(vsL) mean(vsL) max(vsL)]*1e3,' %2.2f ') ' mrad'])
+    else  % rad
+        disp(['hs:'  num2str([min(hs) mean(hs) max(hs)]*1e3,' %2.2f ') ' mrad'])
+        disp(['vs:'  num2str([min(vs) mean(vs) max(vs)]*1e3,' %2.2f ') ' mrad'])
+    end
     disp(['dpp: ' num2str(inCOD(5))])
 end
