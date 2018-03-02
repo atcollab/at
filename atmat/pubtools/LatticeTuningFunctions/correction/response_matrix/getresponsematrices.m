@@ -7,9 +7,9 @@ function ModelRM...
     indSkewCor,...  %5 skew cor indexes
     indQuadCor,...  %6 quad cor indexes
     indSextCor,...  %7 sext cor indexes
-    inCOD,...       %7 initial coordinates
-    rmsel...        %8 specifiy rm to be computed
-    )
+    inCOD,...       %8 initial coordinates
+    rmsel,...       %9 specifiy rm to be computed
+    radflag)        %10 use radiants instead of 1/m for orbit RM
 % function ModelRM...
 %     =getorbitbetaphasedispersionresponse(...
 %     r0,...          %1 AT lattice
@@ -19,9 +19,10 @@ function ModelRM...
 %     indSkewCor,...  %5 skew cor indexes
 %     indQuadCor,...  %6 quad cor indexes
 %     indSextCor,...  %7 sext cor indexes
-%     inCOD,...)      %7 [0 0 0 0 0 0]' inCOD
-%     rmsel)          %8 [1 2 ... 12] rm to compute (default: all)
-%
+%     inCOD,...)      %8 [0 0 0 0 0 0]' inCOD
+%     rmsel,          %9 [1 2 ... 12] rm to compute (default: all)
+%     radflag)        %10 use radiants instead of 1/m for orbit RM
+% 
 % computes lattice Response Matrix for :
 %
 % rmsel                                   output structure is:
@@ -52,6 +53,10 @@ function ModelRM...
 kval=1e-4;
 delta=1e-3;
 
+if nargin<10
+    radflag=false;
+end
+
 if nargin<9
     rmsel=1:12;
 end
@@ -68,18 +73,28 @@ f0=r0{indrfc(1)}.Frequency;
 for ir=1:length(rmsel)
     switch rmsel(ir)
         case 1
-            % orbit RM
-            ormH=findrespmat(r0,indBPM,indHorCor,kval,'PolynomB',1,1,'findorbit6Err',inCOD);
+            if ~radflag
+                % orbit RM
+                ormH=findrespmat(r0,indBPM,indHorCor,kval,'PolynomB',1,1,'findorbit6Err',inCOD);
+            else
+                ormH=findrespmat(r0,indBPM,indHorCor,kval,'KickAngle',1,1,'findorbit6Err',inCOD);
+            end
             ormH{1}=ormH{1}./kval;
             ormH{2}=ormH{2}./kval;
             ormH{3}=ormH{3}./kval;
             ormH{4}=ormH{4}./kval;
+                
             disp(' --- computed H orbit RM from model --- ');
             % store data
             ModelRM.OrbHCor=ormH;
         case 2
             
-            ormV=findrespmat(r0,indBPM,indVerCor,kval,'PolynomA',1,1,'findorbit6Err',inCOD);
+            if ~radflag
+                % orbit RM
+                ormV=findrespmat(r0,indBPM,indVerCor,kval,'PolynomA',1,1,'findorbit6Err',inCOD);
+            else
+                ormV=findrespmat(r0,indBPM,indVerCor,kval,'KickAngle',1,2,'findorbit6Err',inCOD);
+            end
             ormV{1}=ormV{1}./kval;
             ormV{2}=ormV{2}./kval;
             ormV{3}=ormV{3}./kval;
