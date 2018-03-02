@@ -71,7 +71,7 @@ else
     [X0,Y0,S0,T0,R0,P0,bpm0]=GetExistingErrors(rerr,magindex);
     
     if isnan(Y0)
-    disp('NAN Y0! There are NaN in the previous set of errors!')
+        disp('NAN Y0! There are NaN in the previous set of errors!')
     end
     
     % initialize errors if not inizialized
@@ -167,21 +167,21 @@ else
             
         case 'phi' % about x (Pitch)
             
-            disp('phi error');
+            disp('phi error (SKIP)');
             
-            errfun=@(r,po,er)setTiltAbout(r,po,'x',er); % sets Y errors
-            rerr=seterrorrand(rerr,magindex,errfun,seed,sigma,nsig,R0);
-            %uniform errors in sliced magnets
-            rerr=UniformMagGroupsErrors(rerr);
+%             errfun=@(r,po,er)setTiltAbout(r,po,'x',er); % sets Y errors
+%             rerr=seterrorrand(rerr,magindex,errfun,seed,sigma,nsig,R0);
+%             %uniform errors in sliced magnets
+%             rerr=UniformMagGroupsErrors(rerr);
             
         case 'theta' % about y (yaw)
             
-            disp('theta error');
+            disp('theta error (SKIP)');
             
-            errfun=@(r,po,er)setTiltAbout(r,po,'y',er); % sets Y errors
-            rerr=seterrorrand(rerr,magindex,errfun,seed,sigma,nsig,P0);
-            %uniform errors in sliced magnets
-            rerr=UniformMagGroupsErrors(rerr);
+%             errfun=@(r,po,er)setTiltAbout(r,po,'y',er); % sets Y errors
+%             rerr=seterrorrand(rerr,magindex,errfun,seed,sigma,nsig,P0);
+%             %uniform errors in sliced magnets
+%             rerr=UniformMagGroupsErrors(rerr);
             
         case 'psi' % about s
             
