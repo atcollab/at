@@ -28,3 +28,8 @@ From version 2.0:
 Laurent Farvacque (ESRF), Simone Liuzzo (ESRF), Nicola Carminani (ESRF), Boaz Nash (ESRF), 
 G. Campogiani (LNF),Laurent S. Nadolski (SOLEIL), Aurelien Bence (SOLEIL), Peace Chang (TLS), 
 M. Munoz (ALBA), Z. Marti ALBA), Will Rogers (Diamond)
+
+Online documentation
+--------------------
+- Check the [Web site](https://atcollab.github.io/at/) 
+- Check the [WIKI](https://github.com/atcollab/at/wiki)
