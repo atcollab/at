@@ -1,4 +1,4 @@
-## ![Image](https://github.com/atcollab/atdoc/blob/master/art/atcollab.png) Welcome to AT WEB Pages ![Image](https://github.com/atcollab/atdoc/blob/master/art/atcollab.png)
+## ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png) Welcome to AT WEB Pages ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png)
 
 Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
 
