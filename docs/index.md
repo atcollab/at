@@ -1,4 +1,9 @@
-## Welcome to AT web Pages
+## Welcome to AT WEB Pages
+
+Automatic HTML documentation is generated from mfile using the [m2html package] (https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
+
+[Online documentation of all functions] (https://cdn.rawgit.com/atcollab/atdoc/40b8230c/doc_html/index.html)
+
 
 ## Welcome to GitHub Pages
 
