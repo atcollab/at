@@ -1,46 +1,37 @@
+Accelerator Toolbox
+===================
+
+Accelerator Toolbox (AT) is a collection of tools to model storage rings and beam transport lines in Matlab.
+
+With AT it is possible to:
+
+- **create and manipulate accelerator lattice elements**, which are stored in Matlab structures
+- **track particles through the lattice**, selecting the appropriate integrator to represent the physics
+- **compute accelerator parameters and beam properties**, generating new scripts or taking advantage of the existing ones
+
+Examples of things AT enables are: create a lattice structure that links to the integrators, and then to track through the lattice 
+including non-linear elements, analyze the non-linear motion, change settings to affect parameters, compute equilibrium beam sizes 
+with radiation, and so on.
+
+History
+-------
+
+The core of AT was developed at SLAC by Andrei Terebilo and a webpage is hosted `here <http://www.slac.stanford.edu/grp/ssrl/spear/at/>`.
+
+The AT code in this repository evolved from version 1.3 of the original code and is now maintained by the 'atcollab' collaboration, 
+involving people from different research institutes. The latest release can be found `here <https://github.com/atcollab/at/releases>`_.
+
+Other main developpers and maintainers: 
+Gregory Portmann, Laurent S. Nadolski, Eugene Tan, Xiabio Huang, C. Steier (ALS)
+
+From version 2.0: 
+Laurent Farvacque (ESRF), Simone Liuzzo (ESRF), Nicola Carminani (ESRF), Boaz Nash (ESRF), 
+G. Campogiani (LNF),Laurent S. Nadolski (SOLEIL), Aurelien Bence (SOLEIL), Peace Chang (TLS), 
+M. Munoz (ALBA), Z. Marti ALBA), Will Rogers (Diamond)
+
+
 ## ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png) Welcome to AT WEB Pages ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png)
 
 Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
 
-**[Online documentation of all functions](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/doc_html/index.html)**
-
-
-## Welcome to GitHub Pages
-
-You can use the [editor on GitHub](https://github.com/lnadolski/gittest/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/lnadolski/gittest/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
-
-{{ page.date }}
+**[Online documentation of all functions](https://cdn.rawgit.com/atcollab/atdoc/aa9b9f58/doc_html/index.html)**
