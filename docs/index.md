@@ -1,5 +1,12 @@
-Accelerator Toolbox
-===================
+# ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png) Welcome to the Accelerator Toolbox WEB Pages ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png)
+
+Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
+
+**[Online documentation of all functions](https://cdn.rawgit.com/atcollab/atdoc/aa9b9f58/doc_html/index.html)**
+
+
+Introduction
+============
 
 Accelerator Toolbox (AT) is a collection of tools to model storage rings and beam transport lines in Matlab.
 
@@ -30,8 +37,3 @@ G. Campogiani (LNF),Laurent S. Nadolski (SOLEIL), Aurelien Bence (SOLEIL), Peace
 M. Munoz (ALBA), Z. Marti ALBA), Will Rogers (Diamond)
 
 
-## ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png) Welcome to AT WEB Pages ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png)
-
-Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
-
-**[Online documentation of all functions](https://cdn.rawgit.com/atcollab/atdoc/aa9b9f58/doc_html/index.html)**
