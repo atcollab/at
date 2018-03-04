@@ -1,4 +1,4 @@
-# ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png) Accelerator Toolbox WEB Pages ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png)
+# ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png) [Accelerator Toolbox WEB Pages](https://atcollab.github.io/at/) ![Image](https://cdn.rawgit.com/atcollab/atdoc/40b8230c/art/atcollab.png)
 
 Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
 
@@ -29,7 +29,7 @@ The AT code in this repository evolved from version 1.3 of the original code and
 involving people from different research institutes. The latest release can be found `here <https://github.com/atcollab/at/releases>`_.
 
 Other main developpers and maintainers: 
-Gregory Portmann, Laurent S. Nadolski, Eugene Tan, Xiabio Huang, C. Steier (ALS)
+Gregory Portmann (ALS), Laurent S. Nadolski (SOLEIL), Eugene Tan (AS), Xiabio Huang (SLAC), C. Steier (ALS)
 
 From version 2.0: 
 Laurent Farvacque (ESRF), Simone Liuzzo (ESRF), Nicola Carminani (ESRF), Boaz Nash (ESRF), 
