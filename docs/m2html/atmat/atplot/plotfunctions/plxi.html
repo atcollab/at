@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of plxi</title>
+  <meta name="keywords" content="plxi">
+  <meta name="description" content="plotdata=plxi(lindata,ring,dpp)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atplot</a> &gt; <a href="index.html">plotfunctions</a> &gt; plxi.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atplot/plotfunctions&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>plxi
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>plotdata=plxi(lindata,ring,dpp)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function plotdata=plxi(lindata,ring,dpp) %#ok<INUSD> </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">plotdata=plxi(lindata,ring,dpp)
+xi function in Touschek formula gives trans. velocity in beam frame</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function plotdata=plxi(lindata,ring,dpp) </a><span class="comment">%#ok&lt;INUSD&gt;</span>
+0002 <span class="comment">%plotdata=plxi(lindata,ring,dpp)</span>
+0003 <span class="comment">%xi function in Touschek formula gives trans. velocity in beam frame</span>
+0004 beta=cat(1,lindata.beta);
+0005 alpha=cat(1,lindata.alpha);
+0006 betax=beta(:,1);
+0007 betaz=beta(:,2);
+0008 
+0009 delta=.03;
+0010 
+0011 gamma=1.1820e+04;
+0012 epsx = 4e-9;
+0013 
+0014 xi=delta^2/(gamma^2*epsx)*betax;
+0015 
+0016 plotdata(1).values=xi;
+0017 plotdata(1).labels={<span class="string">'xi'</span>};
+0018 plotdata(1).axislabel=<span class="string">'xi'</span>;
+0019 
+0020 
+0021 
+0022 plotdata(2).values=1./betax./betaz;
+0023 plotdata(2).labels={<span class="string">'1/(betax*betay)'</span>};
+0024 plotdata(2).axislabel={<span class="string">'1/m^2'</span>};
+0025 
+0026 <span class="comment">%plotdata(2).values=1./sigx./sigy;</span>
+0027 <span class="comment">%plotdata(2).labels={'1/(sigmax*sigmay)'};</span>
+0028 <span class="comment">%plotdata(2).axislabel={'1/m^2'};</span>
+0029 
+0030 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

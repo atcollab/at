@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atgeometry3</title>
+  <meta name="keywords" content="atgeometry3">
+  <meta name="description" content="ATGEOMETRY3 Computes the 3-D position of all elements">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">lattice</a> &gt; <a href="index.html">survey</a> &gt; atgeometry3.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/survey&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atgeometry3
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATGEOMETRY3 Computes the 3-D position of all elements</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function  posdata = atgeometry3(ring,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATGEOMETRY3 Computes the 3-D position of all elements
+
+POSDATA=ATGEOMETRY3(RING,REFPTS)
+
+RING:     AT structure
+REFPTS: observation points (array of indexes or logical mask)
+        The allowed range is 1 to length(RING)+1
+        Defaults to 1:length(RING)+1
+
+POSDATA:Structure array, same length as REFPTS, with 3 fields:
+           x, y, z
+
+POSDATA=ATGEOMETRY3(RING,REFPTS,OFFSET)
+       Start at x=offset(1), y=offset(2), z=offset(3)
+       a scalar offset value is equivalent to [0 OFFSET 0]
+
+POSDATA=ATGEOMETRY3(...,'Hangle',h_angle)
+       Set the initial horizontal trajectory angle
+
+POSDATA=ATGEOMETRY3(...,'Vangle',h_angle)
+       Set the initial vertical trajectory angle
+
+See also: <a href="atgeometry.html" class="code" title="function  [posdata,radius] = atgeometry(ring,varargin)">ATGEOMETRY</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function varargout=incr(elem)</a></li><li><a href="#_sub2" class="code">function rots(R)</a></li><li><a href="#_sub3" class="code">function hkick(ang)</a></li><li><a href="#_sub4" class="code">function vkick(ang)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function  posdata = atgeometry3(ring,varargin)</a>
+0002 <span class="comment">%ATGEOMETRY3 Computes the 3-D position of all elements</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%POSDATA=ATGEOMETRY3(RING,REFPTS)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%RING:     AT structure</span>
+0007 <span class="comment">%REFPTS: observation points (array of indexes or logical mask)</span>
+0008 <span class="comment">%        The allowed range is 1 to length(RING)+1</span>
+0009 <span class="comment">%        Defaults to 1:length(RING)+1</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%POSDATA:Structure array, same length as REFPTS, with 3 fields:</span>
+0012 <span class="comment">%           x, y, z</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%POSDATA=ATGEOMETRY3(RING,REFPTS,OFFSET)</span>
+0015 <span class="comment">%       Start at x=offset(1), y=offset(2), z=offset(3)</span>
+0016 <span class="comment">%       a scalar offset value is equivalent to [0 OFFSET 0]</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%POSDATA=ATGEOMETRY3(...,'Hangle',h_angle)</span>
+0019 <span class="comment">%       Set the initial horizontal trajectory angle</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%POSDATA=ATGEOMETRY3(...,'Vangle',h_angle)</span>
+0022 <span class="comment">%       Set the initial vertical trajectory angle</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%See also: ATGEOMETRY</span>
+0025 
+0026 [hangle,args]=getoption(varargin,<span class="string">'Hangle'</span>,0);
+0027 [vangle,args]=getoption(args,<span class="string">'Vangle'</span>,0);
+0028 [refpts,offset]=parseargs({1:length(ring)+1,[0 0 0]},args);
+0029 conv=eye(3);
+0030 <a href="#_sub3" class="code" title="subfunction hkick(ang)">hkick</a>(hangle);
+0031 <a href="#_sub4" class="code" title="subfunction vkick(ang)">vkick</a>(vangle);
+0032 xyzc=[0;0;0];
+0033 <span class="keyword">if</span> isscalar(offset)
+0034     xyzc(2)=offset;
+0035 <span class="keyword">else</span>
+0036     xyzc(1:length(offset))=offset';
+0037 <span class="keyword">end</span>
+0038 [xx,yy,zz]=cellfun(@<a href="#_sub1" class="code" title="subfunction varargout=incr(elem)">incr</a>,[{struct()};ring]);    <span class="comment">% Add a dummy element to get the origin</span>
+0039 posdata=struct(<span class="string">'x'</span>,num2cell(xx(refpts)),<span class="string">'y'</span>,num2cell(yy(refpts)),<span class="keyword">...</span>
+0040     <span class="string">'z'</span>,num2cell(zz(refpts)));
+0041 
+0042     <a name="_sub1" href="#_subfunctions" class="code">function varargout=incr(elem)</a>
+0043         <span class="keyword">if</span> isfield(elem,<span class="string">'R1'</span>)
+0044             <a href="#_sub2" class="code" title="subfunction rots(R)">rots</a>(elem.R1);
+0045         <span class="keyword">end</span>
+0046         <span class="keyword">if</span> isfield(elem,<span class="string">'BendingAngle'</span>)
+0047             ang=0.5*elem.BendingAngle;
+0048             L=elem.Length/ang*sin(ang);
+0049             <a href="#_sub3" class="code" title="subfunction hkick(ang)">hkick</a>(-ang);
+0050             xyzc=xyzc+conv*[L;0;0];
+0051             <a href="#_sub3" class="code" title="subfunction hkick(ang)">hkick</a>(-ang);
+0052         <span class="keyword">elseif</span> isfield(elem,<span class="string">'Length'</span>)
+0053             L=elem.Length;
+0054             xyzc=xyzc+conv*[L;0;0];
+0055         <span class="keyword">end</span>
+0056         <span class="keyword">if</span> isfield(elem,<span class="string">'R2'</span>)
+0057             <a href="#_sub2" class="code" title="subfunction rots(R)">rots</a>(elem.R2);
+0058         <span class="keyword">end</span>
+0059         varargout=num2cell(xyzc');
+0060     <span class="keyword">end</span>
+0061     <a name="_sub2" href="#_subfunctions" class="code">function rots(R)</a>
+0062         cns=R(1,1);
+0063         sns=R(1,3);
+0064         conv=conv*[1 0 0;0 cns -sns;0 sns cns];
+0065     <span class="keyword">end</span>
+0066     <a name="_sub3" href="#_subfunctions" class="code">function hkick(ang)</a>
+0067         cns=cos(ang);
+0068         sns=sin(ang);
+0069         conv=conv*[cns -sns 0;sns cns 0;0 0 1];
+0070     <span class="keyword">end</span>
+0071     <a name="_sub4" href="#_subfunctions" class="code">function vkick(ang)</a>
+0072         cns=cos(ang);
+0073         sns=sin(ang);
+0074         conv=conv*[cns 0 -sns;0 1 0;sns 0 cns];
+0075     <span class="keyword">end</span>
+0076 <span class="keyword">end</span>
+0077</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

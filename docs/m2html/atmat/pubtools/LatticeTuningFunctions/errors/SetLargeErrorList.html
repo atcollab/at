@@ -1,0 +1,368 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of SetLargeErrorList</title>
+  <meta name="keywords" content="SetLargeErrorList">
+  <meta name="description" content="SETLARGEERRORLIST Sets given error list">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">LatticeTuningFunctions</a> &gt; <a href="index.html">errors</a> &gt; SetLargeErrorList.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>SetLargeErrorList
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>SETLARGEERRORLIST Sets given error list</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function rerr=SetLargeErrorList(r0,seed,Nsig,factorerr,errnumber) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SETLARGEERRORLIST Sets given error list
+
+  See also ApplyErrorsRand ApplyErrorsWave SetESRFAlgeAlignmentError</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function rerr=SetLargeErrorList(r0,seed,Nsig,factorerr,errnumber)</a>
+0002 <span class="comment">%SETLARGEERRORLIST Sets given error list</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%  See also ApplyErrorsRand ApplyErrorsWave SetESRFAlgeAlignmentError</span>
+0005 
+0006 <span class="keyword">if</span> nargin==4
+0007     errnumber=1:8; <span class="comment">%errors to apply from the list</span>
+0008 <span class="keyword">end</span>
+0009 
+0010 <span class="keyword">if</span> nargin==3
+0011     factorerr=1; <span class="comment">%multiply errors by this amount</span>
+0012     errnumber=[2:7,9]; <span class="comment">%multiply errors by this amount</span>
+0013     
+0014     disp(<span class="string">'100% TDS list errors + current positions ALGE NO bpm err'</span>)
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="keyword">if</span> factorerr==0
+0018     factorerr=1e-12; <span class="comment">% errors not sharp zero</span>
+0019 <span class="keyword">end</span>
+0020 
+0021 <span class="keyword">if</span> seed~=0
+0022     disp([<span class="string">'Setting Random Stream to seed: '</span> num2str(seed)]);
+0023     <span class="comment">% set seed</span>
+0024     s = RandStream(<span class="string">'mcg16807'</span>,<span class="string">'Seed'</span>,seed);
+0025     RandStream.setGlobalStream(s);
+0026 <span class="keyword">else</span>
+0027     disp(<span class="string">'Using previously set random stream'</span>)
+0028 <span class="keyword">end</span>
+0029 
+0030 rerr=r0;
+0031 
+0032 <span class="comment">%% apply error wave</span>
+0033 
+0034 <span class="keyword">if</span> find(errnumber==1)
+0035     
+0036     ie=1;
+0037     
+0038     wltouse=1:0.5:3;
+0039     amplx=factorerr*0.6e-3;
+0040     amplY=factorerr*0.6e-3;
+0041     amplpsi=0*factorerr*0.6e-3;
+0042     
+0043     W=findspos(r0,length(r0)+1)./wltouse;
+0044     
+0045     A=amplx/length(W)*randn(size(W));
+0046     errwavestruct(ie).indx=1:length(r0);<span class="comment">%findcells(r0,'Class','Quadrupole');</span>
+0047     errwavestruct(ie).type=<span class="string">'x'</span>;
+0048     errwavestruct(ie).A=A(end:-1:1);
+0049     errwavestruct(ie).W=W;
+0050     ie=ie+1;
+0051     
+0052     A=amplY/length(W)*randn(size(W));
+0053     errwavestruct(ie).indx=1:length(r0);<span class="comment">%findcells(r0,'Class','Quadrupole');</span>
+0054     errwavestruct(ie).type=<span class="string">'y'</span>;
+0055     errwavestruct(ie).A=A(end:-1:1);
+0056     errwavestruct(ie).W=W;
+0057     ie=ie+1;
+0058     
+0059     A=amplpsi/length(W)*randn(size(W));
+0060     errwavestruct(ie).indx=1:length(r0);<span class="comment">%findcells(r0,'Class','Quadrupole');</span>
+0061     errwavestruct(ie).type=<span class="string">'psi'</span>;
+0062     errwavestruct(ie).A=A(end:-1:1);
+0063     errwavestruct(ie).W=W;
+0064     ie=ie+1;
+0065     
+0066     magindex=arrayfun(@(a)a.indx,errwavestruct,<span class="string">'un'</span>,0);
+0067     type=arrayfun(@(a)a.type,errwavestruct,<span class="string">'un'</span>,0);
+0068     A=arrayfun(@(a)a.A,errwavestruct,<span class="string">'un'</span>,0);
+0069     W=arrayfun(@(a)a.W,errwavestruct,<span class="string">'un'</span>,0);
+0070     
+0071     rerr=ApplyErrorWave(<span class="keyword">...</span>
+0072         rerr,<span class="keyword">...</span>
+0073         magindex,<span class="keyword">...</span>
+0074         findcells(r0,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>),<span class="keyword">...</span>
+0075         W,<span class="keyword">...</span>
+0076         A,<span class="keyword">...</span>
+0077         type);
+0078     
+0079 <span class="keyword">end</span>
+0080 
+0081 <span class="comment">%% define random errors structure</span>
+0082 ie=1;
+0083 errstruct=[];
+0084 
+0085 <span class="comment">% %% GIRDERS (APPLY ALWAYS FIRST!)</span>
+0086 <span class="comment">% indg=findcells(r0,'FamName','GS');</span>
+0087 <span class="comment">% errstruct(ie).indx=indg;</span>
+0088 <span class="comment">% errstruct(ie).type='gx.gy';</span>
+0089 <span class="comment">% errstruct(ie).sigma=100*1e-6;</span>
+0090 <span class="comment">% ie=ie+1;</span>
+0091 <span class="comment">% errstruct(ie).indx=indg;</span>
+0092 <span class="comment">% errstruct(ie).type='gpsi';</span>
+0093 <span class="comment">% errstruct(ie).sigma=200*1e-6;</span>
+0094 <span class="comment">% ie=ie+1;</span>
+0095 
+0096 <span class="comment">%% DIPOLES</span>
+0097 
+0098 <span class="keyword">if</span> find(errnumber==2)
+0099     
+0100     <span class="comment">% % DL</span>
+0101     indqm=find(atgetcells(r0,<span class="string">'FamName'</span>,<span class="string">'DL\w*'</span>));
+0102     errstruct(ie).indx=indqm;
+0103     errstruct(ie).type=<span class="string">'x'</span>;
+0104     errstruct(ie).sigma=100*1e-6;
+0105     ie=ie+1;
+0106     errstruct(ie).indx=indqm;
+0107     errstruct(ie).type=<span class="string">'y'</span>;
+0108     errstruct(ie).sigma=100*1e-6;
+0109     ie=ie+1;
+0110     errstruct(ie).indx=indqm;
+0111     errstruct(ie).type=<span class="string">'psi'</span>;
+0112     errstruct(ie).sigma=200*1e-6;<span class="comment">%500*1e-6;</span>
+0113     ie=ie+1;
+0114 <span class="comment">%     errstruct(ie).indx=indqm;</span>
+0115 <span class="comment">%     errstruct(ie).type='s';</span>
+0116 <span class="comment">%     errstruct(ie).sigma=1000*1e-6;</span>
+0117 <span class="comment">%     ie=ie+1;</span>
+0118     errstruct(ie).indx=indqm;
+0119     errstruct(ie).type=<span class="string">'dpb1'</span>;
+0120     errstruct(ie).sigma=10*1e-4;
+0121     ie=ie+1;
+0122     
+0123 <span class="keyword">end</span>
+0124 
+0125 <span class="keyword">if</span> find(errnumber==3)
+0126     
+0127     <span class="comment">% DQ</span>
+0128     indqm=find(atgetcells(r0,<span class="string">'FamName'</span>,<span class="string">'DQ\w*'</span>));
+0129     errstruct(ie).indx=indqm;
+0130     errstruct(ie).type=<span class="string">'x'</span>;
+0131     errstruct(ie).sigma=70*1e-6;<span class="comment">%70*1e-6;</span>
+0132     ie=ie+1;
+0133     errstruct(ie).indx=indqm;
+0134     errstruct(ie).type=<span class="string">'y'</span>;
+0135     errstruct(ie).sigma=50*1e-6;
+0136     ie=ie+1;
+0137     errstruct(ie).indx=indqm;
+0138     errstruct(ie).type=<span class="string">'psi'</span>;
+0139     errstruct(ie).sigma=150*1e-6;<span class="comment">%200*1e-6;</span>
+0140     ie=ie+1;
+0141 <span class="comment">%     errstruct(ie).indx=indqm;</span>
+0142 <span class="comment">%     errstruct(ie).type='s';</span>
+0143 <span class="comment">%     errstruct(ie).sigma=500*1e-6;</span>
+0144 <span class="comment">%     ie=ie+1;</span>
+0145     
+0146     errstruct(ie).indx=indqm;
+0147     errstruct(ie).type=<span class="string">'dpb1'</span>;
+0148     errstruct(ie).sigma=10*1e-4;
+0149     ie=ie+1;
+0150     
+0151     errstruct(ie).indx=indqm;
+0152     errstruct(ie).type=<span class="string">'dpb2'</span>;
+0153     errstruct(ie).sigma=5*1e-4;
+0154     ie=ie+1;
+0155     
+0156 <span class="keyword">end</span>
+0157 
+0158 <span class="comment">%% QUADRUPOLES</span>
+0159 
+0160 <span class="keyword">if</span> find(errnumber==4)
+0161     
+0162     <span class="comment">% moderate gradient quadrupoles</span>
+0163     indqm=find(atgetcells(r0,<span class="string">'FamName'</span>,<span class="string">'Q[F-D][1-5]\w*'</span>));
+0164     errstruct(ie).indx=indqm;
+0165     errstruct(ie).type=<span class="string">'x'</span>;
+0166     errstruct(ie).sigma=100*1e-6;<span class="comment">%100*1e-6;</span>
+0167     ie=ie+1;
+0168     errstruct(ie).indx=indqm;
+0169     errstruct(ie).type=<span class="string">'y'</span>;
+0170     errstruct(ie).sigma=85*1e-6;
+0171     ie=ie+1;
+0172 <span class="comment">%     errstruct(ie).indx=indqm;</span>
+0173 <span class="comment">%     errstruct(ie).type='s';</span>
+0174 <span class="comment">%     errstruct(ie).sigma=500*1e-6;</span>
+0175 <span class="comment">%     ie=ie+1;</span>
+0176     errstruct(ie).indx=indqm;
+0177     errstruct(ie).type=<span class="string">'psi'</span>;
+0178     errstruct(ie).sigma=150*1e-6;<span class="comment">%200*1e-6;</span>
+0179     ie=ie+1;
+0180     errstruct(ie).indx=indqm;
+0181     errstruct(ie).type=<span class="string">'dpb2'</span>;
+0182     errstruct(ie).sigma=5*1e-4;
+0183     ie=ie+1;
+0184 <span class="keyword">end</span>
+0185 
+0186 <span class="keyword">if</span> find(errnumber==5)
+0187     
+0188     <span class="comment">%high gradeint quadrupoles</span>
+0189     indqm=[find(atgetcells(r0,<span class="string">'FamName'</span>,<span class="string">'Q[F-D][6-8]\w*'</span>))];
+0190     errstruct(ie).indx=indqm;
+0191     errstruct(ie).type=<span class="string">'x'</span>;
+0192     errstruct(ie).sigma=50*1e-6;
+0193     ie=ie+1;
+0194     errstruct(ie).indx=indqm;
+0195     errstruct(ie).type=<span class="string">'y'</span>;
+0196     errstruct(ie).sigma=70*1e-6;<span class="comment">%70*1e-6;</span>
+0197     ie=ie+1;
+0198 <span class="comment">%     errstruct(ie).indx=indqm;</span>
+0199 <span class="comment">%     errstruct(ie).type='s';</span>
+0200 <span class="comment">%     errstruct(ie).sigma=500*1e-6;</span>
+0201 <span class="comment">%     ie=ie+1;</span>
+0202     errstruct(ie).indx=indqm;
+0203     errstruct(ie).type=<span class="string">'psi'</span>;
+0204     errstruct(ie).sigma=150*1e-6;<span class="comment">%200*1e-6;</span>
+0205     ie=ie+1;
+0206     errstruct(ie).indx=indqm;
+0207     errstruct(ie).type=<span class="string">'dpb2'</span>;
+0208     errstruct(ie).sigma=5*1e-4;
+0209     ie=ie+1;
+0210 <span class="keyword">end</span>
+0211 
+0212 <span class="comment">%% SEXTUPOLES</span>
+0213 
+0214 <span class="keyword">if</span> find(errnumber==6)
+0215     
+0216     inds=find(atgetcells(r0,<span class="string">'Class'</span>,<span class="string">'Sextupole'</span>));
+0217     errstruct(ie).indx=inds;
+0218     errstruct(ie).type=<span class="string">'x'</span>;
+0219     errstruct(ie).sigma=70*1e-6;<span class="comment">%70*1e-6;</span>
+0220     ie=ie+1;
+0221     errstruct(ie).indx=inds;
+0222     errstruct(ie).type=<span class="string">'y'</span>;
+0223     errstruct(ie).sigma=50*1e-6;
+0224     ie=ie+1;
+0225 <span class="comment">%     errstruct(ie).indx=inds;</span>
+0226 <span class="comment">%     errstruct(ie).type='s';</span>
+0227 <span class="comment">%     errstruct(ie).sigma=1000*1e-6;</span>
+0228 <span class="comment">%     ie=ie+1;</span>
+0229     errstruct(ie).indx=inds;
+0230     errstruct(ie).type=<span class="string">'psi'</span>;
+0231     errstruct(ie).sigma=200*1e-6;<span class="comment">%500*1e-6;</span>
+0232     ie=ie+1;
+0233     errstruct(ie).indx=inds;
+0234     errstruct(ie).type=<span class="string">'dpb3'</span>;
+0235     errstruct(ie).sigma=35*1e-4;
+0236     ie=ie+1;
+0237     
+0238 <span class="keyword">end</span>
+0239 
+0240 <span class="comment">%% OCTUPOLES</span>
+0241 
+0242 <span class="keyword">if</span> find(errnumber==7)
+0243     
+0244     indo=find(atgetcells(r0,<span class="string">'FamName'</span>,<span class="string">'O[JF]\w*'</span>));
+0245     errstruct(ie).indx=indo;
+0246     errstruct(ie).type=<span class="string">'x.y'</span>;
+0247     errstruct(ie).sigma=100*1e-6;
+0248     ie=ie+1;
+0249 <span class="comment">%     errstruct(ie).indx=indo;</span>
+0250 <span class="comment">%     errstruct(ie).type='s';</span>
+0251 <span class="comment">%     errstruct(ie).sigma=1000*1e-6;</span>
+0252 <span class="comment">%     ie=ie+1;</span>
+0253     errstruct(ie).indx=indo;
+0254     errstruct(ie).type=<span class="string">'psi'</span>;
+0255     errstruct(ie).sigma=200*1e-6;<span class="comment">%500*1e-6;</span>
+0256     ie=ie+1;
+0257     errstruct(ie).indx=indo;
+0258     errstruct(ie).type=<span class="string">'dpb4'</span>;
+0259     errstruct(ie).sigma=50*1e-4;
+0260     ie=ie+1;
+0261     
+0262 <span class="keyword">end</span>
+0263 
+0264 <span class="keyword">if</span> find(errnumber==8)
+0265     indm=find(atgetcells(r0,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>));
+0266     errstruct(ie).indx=indm;
+0267     errstruct(ie).type=<span class="string">'bpm'</span>;
+0268     errstruct(ie).sigma=50*1e-6;
+0269     ie=ie+1;
+0270 <span class="keyword">end</span>
+0271 
+0272 <span class="keyword">if</span> find(errnumber==9)
+0273   algedir=<span class="string">'/mntdirect/_users/liuzzo/Matlab_Work/ATWORK/routines/esrfupgrade-gitrepo'</span>;
+0274   algeactfile=fullfile(algedir,<span class="string">'Actual_Position_Simu.xlsx'</span>);
+0275   rerr=SetESRFAlgeAlignmentError(rerr,algeactfile,<span class="string">''</span>,seed);
+0276 <span class="keyword">end</span>
+0277 
+0278 <span class="keyword">if</span> find(errnumber==10)
+0279   algedir=<span class="string">'/mntdirect/_users/liuzzo/Matlab_Work/ATWORK/routines/esrfupgrade-gitrepo'</span>;
+0280   algeactfile=fullfile(algedir,<span class="string">'Nominal_Position_Simu.xlsx'</span>);
+0281   rerr=SetESRFAlgeAlignmentError(rerr,algeactfile,<span class="string">''</span>,seed);
+0282 <span class="keyword">end</span>
+0283 
+0284 
+0285 <span class="keyword">if</span> ~isempty(errstruct)
+0286     
+0287     <span class="comment">%% set errors</span>
+0288     magindex=arrayfun(@(a)a.indx,errstruct,<span class="string">'un'</span>,0);
+0289     type=arrayfun(@(a)a.type,errstruct,<span class="string">'un'</span>,0);
+0290     sigma=arrayfun(@(a)a.sigma.*factorerr,errstruct,<span class="string">'un'</span>,0);
+0291     
+0292     rerr=ApplyErrorRand(<span class="keyword">...</span>
+0293         rerr,<span class="keyword">...</span>
+0294         magindex,<span class="keyword">...</span>
+0295         findcells(r0,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>),<span class="keyword">...</span>
+0296         seed,<span class="keyword">...</span>
+0297         sigma,<span class="keyword">...</span>
+0298         Nsig,<span class="keyword">...</span>
+0299         type);
+0300     
+0301 <span class="keyword">end</span>
+0302 
+0303 
+0304 
+0305 
+0306 <span class="comment">% figure;%('visible','off');</span>
+0307 <span class="comment">% atplot(rerr,@pltmisalignments);</span>
+0308 <span class="comment">%</span>
+0309 <span class="comment">% labfig=['_seed' num2str(seed) '_Nsig' num2str(Nsig) '_scal' num2str(factorerr)];</span>
+0310 <span class="comment">%</span>
+0311 <span class="comment">% saveas(gca,['Errors' labfig '.fig']);</span>
+0312 <span class="comment">%</span>
+0313 <span class="comment">% try</span>
+0314 <span class="comment">%     export_fig(['Errors' labfig '.png'],'-transparent');</span>
+0315 <span class="comment">% catch</span>
+0316 <span class="comment">%     saveas(gca,['Errors' labfig '.png']);</span>
+0317 <span class="comment">% end</span>
+0318 
+0319 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

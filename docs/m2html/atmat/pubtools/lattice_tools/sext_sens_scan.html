@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of sext_sens_scan</title>
+  <meta name="keywords" content="sext_sens_scan">
+  <meta name="description" content="esrf(:)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">lattice_tools</a> &gt; sext_sens_scan.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/lattice_tools&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>sext_sens_scan
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>esrf(:)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">esrf(:)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atreadbeta.html" class="code" title="function [superp,periods]=atreadbeta(filename,cavipass,bendpass,quadpass)">atreadbeta</a>	ATREADBETA				reads a BETA file</li><li><a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>	newring=scalesext(ring,sextfam,scale)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%esrf(:)</span>
+0002 xi0=[0.3644 0.33475];
+0003 <span class="comment">%esrf=atreadbeta('/Users/boaznash/work/current_projects/AT/esrfdata/s13s20thick.str');</span>
+0004 <span class="comment">%esrf=atreadbeta('s13s20thick.str');</span>
+0005 esrf=<a href="atreadbeta.html" class="code" title="function [superp,periods]=atreadbeta(filename,cavipass,bendpass,quadpass)">atreadbeta</a>(<span class="string">'/Users/boaznash/MyDocs/work_career/current_projects/AT/esrfdata/s13s20thick.str'</span>,<span class="string">'CavityPass'</span>);
+0006 esrf0=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0007 esrf0=atfitchrom(esrf0,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0008 
+0009 esrf=esrf0;
+0010 nlchromplot(esrf,-.04,.04,30,16,1,0);
+0011 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S4'</span>,.95);
+0012 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0013 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0014 nlchromplot(esrf,-.04,.04,30,16,1,1);
+0015 title(<span class="string">'S4'</span>)
+0016 
+0017 esrf=esrf0;
+0018 nlchromplot(esrf,-.04,.04,30,16,2,0);
+0019 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S6'</span>,.95);
+0020 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0021 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0022 nlchromplot(esrf,-.04,.04,30,16,2,1);
+0023 title(<span class="string">'S6'</span>)
+0024 
+0025 esrf=esrf0;
+0026 nlchromplot(esrf,-.04,.04,30,16,3,0);
+0027 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S13'</span>,.95);
+0028 <span class="comment">%esrf=atfitchrom(esrf,[0.3642 0.3346],'S13','S19');</span>
+0029 nlchromplot(esrf,-.04,.04,30,16,3,1);
+0030 title(<span class="string">'S13 (no xi retune)'</span>)
+0031 
+0032 esrf=esrf0;
+0033 nlchromplot(esrf,-.04,.04,30,16,4,0);
+0034 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S19'</span>,.95);
+0035 <span class="comment">%esrf=atfitchrom(esrf,[0.3642 0.3346],'S13','S19');</span>
+0036 nlchromplot(esrf,-.04,.04,30,16,4,1);
+0037 title(<span class="string">'S19 (no xi retune)'</span>)
+0038 
+0039 esrf=esrf0;
+0040 nlchromplot(esrf,-.04,.04,30,16,5,0);
+0041 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S20'</span>,.95);
+0042 <span class="comment">%esrf=atfitchrom(esrf,[0.3642 0.3346],'S13','S19');</span>
+0043 nlchromplot(esrf,-.04,.04,30,16,5,1);
+0044 title(<span class="string">'S20 (no xi retune)'</span>)
+0045 
+0046 esrf=esrf0;
+0047 nlchromplot(esrf,-.04,.04,30,16,6,0);
+0048 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S22'</span>,.95);
+0049 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0050 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0051 nlchromplot(esrf,-.04,.04,30,16,6,1);
+0052 title(<span class="string">'S22'</span>)
+0053 
+0054 esrf=esrf0;
+0055 nlchromplot(esrf,-.04,.04,30,16,7,0);
+0056 esrf=<a href="scalesext.html" class="code" title="function newring=scalesext(ring,sextfam,scale)">scalesext</a>(esrf,<span class="string">'S24'</span>,.95);
+0057 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0058 esrf=atfitchrom(esrf,xi0,{<span class="string">'S13'</span>,<span class="string">'S20'</span>},<span class="string">'S19'</span>);
+0059 nlchromplot(esrf,-.04,.04,30,16,7,1);
+0060 title(<span class="string">'S24'</span>)</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

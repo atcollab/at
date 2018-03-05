@@ -1,0 +1,449 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of ParseAtributesMADX_2_AT</title>
+  <meta name="keywords" content="ParseAtributesMADX_2_AT">
+  <meta name="description" content="determines atribute and sets field in sxs{i} structure AT">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">lattice</a> &gt; <a href="../index.html">Converters</a> &gt; <a href="index.html">MADX2AT</a> &gt; ParseAtributesMADX_2_AT.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/Converters/MADX2AT&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>ParseAtributesMADX_2_AT
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>determines atribute and sets field in sxs{i} structure AT</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function R=ParseAtributesMADX_2_AT(R,elname,var,val) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> determines atribute and sets field in sxs{i} structure AT
+
+ created 6-sept-2012</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="atfrommadx.html" class="code" title="function atfrommadx(seqfilemadX,E0,outfilename)">atfrommadx</a>	function atfrommadx(seqfilemadX,E0,outfilename)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function R=ParseAtributesMADX_2_AT(R,elname,var,val)</a>
+0002 <span class="comment">% determines atribute and sets field in sxs{i} structure AT</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% created 6-sept-2012</span>
+0005 
+0006 <span class="comment">%disp(['checking atribute: ' S8STRING((strfind(S8STRING,'=')+1):end-1)]);</span>
+0007 
+0008 <span class="comment">%val=S8STRING((strfind(S8STRING,'=')+1):end);</span>
+0009 
+0010 val0=val;
+0011 <span class="comment">%S8STRING(1:end)</span>
+0012 <span class="keyword">if</span> ~isempty(val)
+0013     
+0014     val=strrep(val,<span class="string">'='</span>,<span class="string">''</span>);
+0015     val=strrep(val,<span class="string">','</span>,<span class="string">''</span>);
+0016     val=strrep(val,<span class="string">' '</span>,<span class="string">''</span>);
+0017     
+0018     var=strrep(var,<span class="string">'='</span>,<span class="string">''</span>);
+0019     var=strrep(var,<span class="string">','</span>,<span class="string">''</span>);
+0020     var=strrep(var,<span class="string">' '</span>,<span class="string">''</span>);
+0021     
+0022     val=strrep(val,<span class="string">'&amp;'</span>,<span class="string">'0'</span>);
+0023 <span class="comment">%    val=strrep(val,'E','e');</span>
+0024  <span class="comment">%  disp([var '= ' val])</span>
+0025  
+0026 <span class="comment">%  inde=1:6;</span>
+0027 <span class="comment">%  [a,b]=meshgrid(inde,inde);</span>
+0028 <span class="comment">%  mstr=arrayfun(@(i,j)['rm' num2str(i) num2str(j)],a(:),b(:),'un',0);</span>
+0029 <span class="comment">%  [a,b,c]=meshgrid(inde,inde,inde);</span>
+0030 <span class="comment">%  tmstr=arrayfun(@(i,j,k)['tm' num2str(i) num2str(k) num2str(j)],a(:),b(:),c(:),'un',0);</span>
+0031   
+0032  mstr={<span class="string">'rm11'</span>
+0033     <span class="string">'rm12'</span>
+0034     <span class="string">'rm13'</span>
+0035     <span class="string">'rm14'</span>
+0036     <span class="string">'rm15'</span>
+0037     <span class="string">'rm16'</span>
+0038     <span class="string">'rm21'</span>
+0039     <span class="string">'rm22'</span>
+0040     <span class="string">'rm23'</span>
+0041     <span class="string">'rm24'</span>
+0042     <span class="string">'rm25'</span>
+0043     <span class="string">'rm26'</span>
+0044     <span class="string">'rm31'</span>
+0045     <span class="string">'rm32'</span>
+0046     <span class="string">'rm33'</span>
+0047     <span class="string">'rm34'</span>
+0048     <span class="string">'rm35'</span>
+0049     <span class="string">'rm36'</span>
+0050     <span class="string">'rm41'</span>
+0051     <span class="string">'rm42'</span>
+0052     <span class="string">'rm43'</span>
+0053     <span class="string">'rm44'</span>
+0054     <span class="string">'rm45'</span>
+0055     <span class="string">'rm46'</span>
+0056     <span class="string">'rm51'</span>
+0057     <span class="string">'rm52'</span>
+0058     <span class="string">'rm53'</span>
+0059     <span class="string">'rm54'</span>
+0060     <span class="string">'rm55'</span>
+0061     <span class="string">'rm56'</span>
+0062     <span class="string">'rm61'</span>
+0063     <span class="string">'rm62'</span>
+0064     <span class="string">'rm63'</span>
+0065     <span class="string">'rm64'</span>
+0066     <span class="string">'rm65'</span>
+0067     <span class="string">'rm66'</span>};
+0068 
+0069 tmstr = {<span class="string">'tm111'</span>
+0070     <span class="string">'tm112'</span>
+0071     <span class="string">'tm113'</span>
+0072     <span class="string">'tm114'</span>
+0073     <span class="string">'tm115'</span>
+0074     <span class="string">'tm116'</span>
+0075     <span class="string">'tm211'</span>
+0076     <span class="string">'tm212'</span>
+0077     <span class="string">'tm213'</span>
+0078     <span class="string">'tm214'</span>
+0079     <span class="string">'tm215'</span>
+0080     <span class="string">'tm216'</span>
+0081     <span class="string">'tm311'</span>
+0082     <span class="string">'tm312'</span>
+0083     <span class="string">'tm313'</span>
+0084     <span class="string">'tm314'</span>
+0085     <span class="string">'tm315'</span>
+0086     <span class="string">'tm316'</span>
+0087     <span class="string">'tm411'</span>
+0088     <span class="string">'tm412'</span>
+0089     <span class="string">'tm413'</span>
+0090     <span class="string">'tm414'</span>
+0091     <span class="string">'tm415'</span>
+0092     <span class="string">'tm416'</span>
+0093     <span class="string">'tm511'</span>
+0094     <span class="string">'tm512'</span>
+0095     <span class="string">'tm513'</span>
+0096     <span class="string">'tm514'</span>
+0097     <span class="string">'tm515'</span>
+0098     <span class="string">'tm516'</span>
+0099     <span class="string">'tm611'</span>
+0100     <span class="string">'tm612'</span>
+0101     <span class="string">'tm613'</span>
+0102     <span class="string">'tm614'</span>
+0103     <span class="string">'tm615'</span>
+0104     <span class="string">'tm616'</span>
+0105     <span class="string">'tm121'</span>
+0106     <span class="string">'tm122'</span>
+0107     <span class="string">'tm123'</span>
+0108     <span class="string">'tm124'</span>
+0109     <span class="string">'tm125'</span>
+0110     <span class="string">'tm126'</span>
+0111     <span class="string">'tm221'</span>
+0112     <span class="string">'tm222'</span>
+0113     <span class="string">'tm223'</span>
+0114     <span class="string">'tm224'</span>
+0115     <span class="string">'tm225'</span>
+0116     <span class="string">'tm226'</span>
+0117     <span class="string">'tm321'</span>
+0118     <span class="string">'tm322'</span>
+0119     <span class="string">'tm323'</span>
+0120     <span class="string">'tm324'</span>
+0121     <span class="string">'tm325'</span>
+0122     <span class="string">'tm326'</span>
+0123     <span class="string">'tm421'</span>
+0124     <span class="string">'tm422'</span>
+0125     <span class="string">'tm423'</span>
+0126     <span class="string">'tm424'</span>
+0127     <span class="string">'tm425'</span>
+0128     <span class="string">'tm426'</span>
+0129     <span class="string">'tm521'</span>
+0130     <span class="string">'tm522'</span>
+0131     <span class="string">'tm523'</span>
+0132     <span class="string">'tm524'</span>
+0133     <span class="string">'tm525'</span>
+0134     <span class="string">'tm526'</span>
+0135     <span class="string">'tm621'</span>
+0136     <span class="string">'tm622'</span>
+0137     <span class="string">'tm623'</span>
+0138     <span class="string">'tm624'</span>
+0139     <span class="string">'tm625'</span>
+0140     <span class="string">'tm626'</span>
+0141     <span class="string">'tm131'</span>
+0142     <span class="string">'tm132'</span>
+0143     <span class="string">'tm133'</span>
+0144     <span class="string">'tm134'</span>
+0145     <span class="string">'tm135'</span>
+0146     <span class="string">'tm136'</span>
+0147     <span class="string">'tm231'</span>
+0148     <span class="string">'tm232'</span>
+0149     <span class="string">'tm233'</span>
+0150     <span class="string">'tm234'</span>
+0151     <span class="string">'tm235'</span>
+0152     <span class="string">'tm236'</span>
+0153     <span class="string">'tm331'</span>
+0154     <span class="string">'tm332'</span>
+0155     <span class="string">'tm333'</span>
+0156     <span class="string">'tm334'</span>
+0157     <span class="string">'tm335'</span>
+0158     <span class="string">'tm336'</span>
+0159     <span class="string">'tm431'</span>
+0160     <span class="string">'tm432'</span>
+0161     <span class="string">'tm433'</span>
+0162     <span class="string">'tm434'</span>
+0163     <span class="string">'tm435'</span>
+0164     <span class="string">'tm436'</span>
+0165     <span class="string">'tm531'</span>
+0166     <span class="string">'tm532'</span>
+0167     <span class="string">'tm533'</span>
+0168     <span class="string">'tm534'</span>
+0169     <span class="string">'tm535'</span>
+0170     <span class="string">'tm536'</span>
+0171     <span class="string">'tm631'</span>
+0172     <span class="string">'tm632'</span>
+0173     <span class="string">'tm633'</span>
+0174     <span class="string">'tm634'</span>
+0175     <span class="string">'tm635'</span>
+0176     <span class="string">'tm636'</span>
+0177     <span class="string">'tm141'</span>
+0178     <span class="string">'tm142'</span>
+0179     <span class="string">'tm143'</span>
+0180     <span class="string">'tm144'</span>
+0181     <span class="string">'tm145'</span>
+0182     <span class="string">'tm146'</span>
+0183     <span class="string">'tm241'</span>
+0184     <span class="string">'tm242'</span>
+0185     <span class="string">'tm243'</span>
+0186     <span class="string">'tm244'</span>
+0187     <span class="string">'tm245'</span>
+0188     <span class="string">'tm246'</span>
+0189     <span class="string">'tm341'</span>
+0190     <span class="string">'tm342'</span>
+0191     <span class="string">'tm343'</span>
+0192     <span class="string">'tm344'</span>
+0193     <span class="string">'tm345'</span>
+0194     <span class="string">'tm346'</span>
+0195     <span class="string">'tm441'</span>
+0196     <span class="string">'tm442'</span>
+0197     <span class="string">'tm443'</span>
+0198     <span class="string">'tm444'</span>
+0199     <span class="string">'tm445'</span>
+0200     <span class="string">'tm446'</span>
+0201     <span class="string">'tm541'</span>
+0202     <span class="string">'tm542'</span>
+0203     <span class="string">'tm543'</span>
+0204     <span class="string">'tm544'</span>
+0205     <span class="string">'tm545'</span>
+0206     <span class="string">'tm546'</span>
+0207     <span class="string">'tm641'</span>
+0208     <span class="string">'tm642'</span>
+0209     <span class="string">'tm643'</span>
+0210     <span class="string">'tm644'</span>
+0211     <span class="string">'tm645'</span>
+0212     <span class="string">'tm646'</span>
+0213     <span class="string">'tm151'</span>
+0214     <span class="string">'tm152'</span>
+0215     <span class="string">'tm153'</span>
+0216     <span class="string">'tm154'</span>
+0217     <span class="string">'tm155'</span>
+0218     <span class="string">'tm156'</span>
+0219     <span class="string">'tm251'</span>
+0220     <span class="string">'tm252'</span>
+0221     <span class="string">'tm253'</span>
+0222     <span class="string">'tm254'</span>
+0223     <span class="string">'tm255'</span>
+0224     <span class="string">'tm256'</span>
+0225     <span class="string">'tm351'</span>
+0226     <span class="string">'tm352'</span>
+0227     <span class="string">'tm353'</span>
+0228     <span class="string">'tm354'</span>
+0229     <span class="string">'tm355'</span>
+0230     <span class="string">'tm356'</span>
+0231     <span class="string">'tm451'</span>
+0232     <span class="string">'tm452'</span>
+0233     <span class="string">'tm453'</span>
+0234     <span class="string">'tm454'</span>
+0235     <span class="string">'tm455'</span>
+0236     <span class="string">'tm456'</span>
+0237     <span class="string">'tm551'</span>
+0238     <span class="string">'tm552'</span>
+0239     <span class="string">'tm553'</span>
+0240     <span class="string">'tm554'</span>
+0241     <span class="string">'tm555'</span>
+0242     <span class="string">'tm556'</span>
+0243     <span class="string">'tm651'</span>
+0244     <span class="string">'tm652'</span>
+0245     <span class="string">'tm653'</span>
+0246     <span class="string">'tm654'</span>
+0247     <span class="string">'tm655'</span>
+0248     <span class="string">'tm656'</span>
+0249     <span class="string">'tm161'</span>
+0250     <span class="string">'tm162'</span>
+0251     <span class="string">'tm163'</span>
+0252     <span class="string">'tm164'</span>
+0253     <span class="string">'tm165'</span>
+0254     <span class="string">'tm166'</span>
+0255     <span class="string">'tm261'</span>
+0256     <span class="string">'tm262'</span>
+0257     <span class="string">'tm263'</span>
+0258     <span class="string">'tm264'</span>
+0259     <span class="string">'tm265'</span>
+0260     <span class="string">'tm266'</span>
+0261     <span class="string">'tm361'</span>
+0262     <span class="string">'tm362'</span>
+0263     <span class="string">'tm363'</span>
+0264     <span class="string">'tm364'</span>
+0265     <span class="string">'tm365'</span>
+0266     <span class="string">'tm366'</span>
+0267     <span class="string">'tm461'</span>
+0268     <span class="string">'tm462'</span>
+0269     <span class="string">'tm463'</span>
+0270     <span class="string">'tm464'</span>
+0271     <span class="string">'tm465'</span>
+0272     <span class="string">'tm466'</span>
+0273     <span class="string">'tm561'</span>
+0274     <span class="string">'tm562'</span>
+0275     <span class="string">'tm563'</span>
+0276     <span class="string">'tm564'</span>
+0277     <span class="string">'tm565'</span>
+0278     <span class="string">'tm566'</span>
+0279     <span class="string">'tm661'</span>
+0280     <span class="string">'tm662'</span>
+0281     <span class="string">'tm663'</span>
+0282     <span class="string">'tm664'</span>
+0283     <span class="string">'tm665'</span>
+0284     <span class="string">'tm666'</span>};
+0285     
+0286     <span class="keyword">switch</span> var
+0287         <span class="keyword">case</span> {<span class="string">'l'</span>,<span class="string">'L'</span>}
+0288             R=[R elname <span class="string">'.(''Length'')='</span> val <span class="string">'; \n'</span>];
+0289         <span class="comment">%disp([var '= ' val])</span>
+0290         <span class="keyword">case</span> {<span class="string">'angle'</span>,<span class="string">'ANGLE'</span>}
+0291             R=[R elname <span class="string">'.(''BendingAngle'')='</span> val <span class="string">'; \n'</span>];
+0292         <span class="keyword">case</span> {<span class="string">'K1'</span>,<span class="string">'k1'</span>} <span class="comment">% quadrupole</span>
+0293             R=[R elname <span class="string">'.(''PolynomB'')(2)='</span> val <span class="string">'; \n'</span>];
+0294         <span class="keyword">case</span> {<span class="string">'K1S'</span>,<span class="string">''</span>} <span class="comment">% skew quadrupole</span>
+0295             R=[R elname <span class="string">'.(''PolynomA'')(2)='</span> val <span class="string">'; \n'</span>];
+0296         <span class="keyword">case</span> {<span class="string">'K2'</span>,<span class="string">'k2'</span>} <span class="comment">% sextupole</span>
+0297             R=[R elname <span class="string">'.(''PolynomB'')(3)='</span> val <span class="string">'; \n'</span>];
+0298         <span class="keyword">case</span> {<span class="string">'K3'</span>,<span class="string">'k3'</span>} <span class="comment">% octupole</span>
+0299             R=[R elname <span class="string">'.(''PolynomB'')(4)='</span> val <span class="string">'; \n'</span>];
+0300         <span class="keyword">case</span> {<span class="string">'KS'</span>,<span class="string">'ks'</span>} <span class="comment">% solenoid</span>
+0301            R=[R elname <span class="string">'.(''K'')(1)='</span> val <span class="string">'; \n'</span>];
+0302         <span class="keyword">case</span> {<span class="string">'E1'</span>,<span class="string">'e1'</span>} <span class="comment">% entrance angle</span>
+0303             R=[R elname <span class="string">'.(''EntranceAngle'')='</span> val <span class="string">'; \n'</span>];
+0304         <span class="keyword">case</span> {<span class="string">'E2'</span>,<span class="string">'e2'</span>} <span class="comment">%exit angle</span>
+0305             R=[R elname <span class="string">'.(''ExitAngle'')='</span> val <span class="string">'; \n'</span>];
+0306             <span class="comment">% case 'TILT' % tilt</span>
+0307             <span class="comment">%R=[R elname '.(''R1'')=' val '; \n'];</span>
+0308             <span class="comment">% case 'APERTURE' % max aperture</span>
+0309             <span class="comment">%R=[R elname '.('''')=' val '; \n'];</span>
+0310         <span class="keyword">case</span> {<span class="string">'HGAP'</span>,<span class="string">'hgap'</span>} <span class="comment">% bending magnet gap</span>
+0311             R=[R elname <span class="string">'.(''FullGap'')=2*'</span> val <span class="string">'; \n'</span>];
+0312         <span class="keyword">case</span> {<span class="string">'fint'</span>,<span class="string">'FINT'</span>} <span class="comment">% bending magnet entrance fringe</span>
+0313             R=[R elname <span class="string">'.(''FringeInt1'')='</span> val <span class="string">'; \n'</span>];
+0314         <span class="keyword">case</span> {<span class="string">'fintx'</span>,<span class="string">'FINTX'</span>} <span class="comment">% bending magnet exit fringe</span>
+0315             R=[R elname <span class="string">'.(''FringeInt2'')='</span> val <span class="string">'; \n'</span>];
+0316         <span class="keyword">case</span> {<span class="string">'K1L'</span>,<span class="string">'k1l'</span>} <span class="comment">% mulitpole component</span>
+0317             R=[R elname <span class="string">'.(''PolynomB'')(1)='</span> val <span class="string">'; \n'</span>];
+0318         <span class="keyword">case</span> {<span class="string">'K2L'</span>,<span class="string">'k2l'</span>} <span class="comment">% mulitpole component</span>
+0319             R=[R elname <span class="string">'.(''PolynomB'')(2)='</span> val <span class="string">'; \n'</span>];
+0320         <span class="keyword">case</span> {<span class="string">'K3L'</span>,<span class="string">'k3l'</span>} <span class="comment">% mulitpole component</span>
+0321             R=[R elname <span class="string">'.(''PolynomB'')(3)='</span> val <span class="string">'; \n'</span>];
+0322         <span class="keyword">case</span> {<span class="string">'K4L'</span>,<span class="string">'k4l'</span>} <span class="comment">% mulitpole component</span>
+0323             R=[R elname <span class="string">'.(''PolynomB'')(4)='</span> val <span class="string">'; \n'</span>];
+0324         <span class="keyword">case</span> {<span class="string">'K5L'</span>,<span class="string">'k5l'</span>} <span class="comment">% mulitpole component</span>
+0325             R=[R elname <span class="string">'.(''PolynomB'')(5)='</span> val <span class="string">'; \n'</span>];
+0326         <span class="keyword">case</span> {<span class="string">'K6L'</span>,<span class="string">'k6l'</span>} <span class="comment">% mulitpole component</span>
+0327             R=[R elname <span class="string">'.(''PolynomB'')(6)='</span> val <span class="string">'; \n'</span>];
+0328         <span class="keyword">case</span> {<span class="string">'K1SL'</span>,<span class="string">'k1sl'</span>} <span class="comment">% mulitpole component skew</span>
+0329             R=[R elname <span class="string">'.(''PolynomA'')(1)='</span> val <span class="string">'; \n'</span>];
+0330         <span class="keyword">case</span> {<span class="string">'K2SL'</span>,<span class="string">'k2sl'</span>} <span class="comment">% mulitpole component skew</span>
+0331             R=[R elname <span class="string">'.(''PolynomA'')(2)='</span> val <span class="string">'; \n'</span>];
+0332         <span class="keyword">case</span> {<span class="string">'K3SL'</span>,<span class="string">'k3sl'</span>} <span class="comment">% mulitpole component skew</span>
+0333             R=[R elname <span class="string">'.(''PolynomA'')(3)='</span> val <span class="string">'; \n'</span>];
+0334         <span class="keyword">case</span> {<span class="string">'K4SL'</span>,<span class="string">'k4sl'</span>} <span class="comment">% mulitpole component skew</span>
+0335             R=[R elname <span class="string">'.(''PolynomA'')(4)='</span> val <span class="string">'; \n'</span>];
+0336         <span class="keyword">case</span> {<span class="string">'K5SL'</span>,<span class="string">'k5sl'</span>} <span class="comment">% mulitpole component skew</span>
+0337             R=[R elname <span class="string">'.(''PolynomA'')(5)='</span> val <span class="string">'; \n'</span>];
+0338         <span class="keyword">case</span> {<span class="string">'K6SL'</span>,<span class="string">'k6sl'</span>} <span class="comment">% mulitpole component skew</span>
+0339             R=[R elname <span class="string">'.(''PolynomA'')(6)='</span> val <span class="string">'; \n'</span>];
+0340         <span class="keyword">case</span> {<span class="string">'KNL'</span>,<span class="string">'knl'</span>} <span class="comment">% mulitpole component skew</span>
+0341             R=[R elname <span class="string">'.(''PolynomB'')='</span> val0 <span class="string">'; \n'</span>];
+0342         <span class="keyword">case</span> {<span class="string">'KSL'</span>,<span class="string">'ksl'</span>} <span class="comment">% mulitpole component skew</span>
+0343             R=[R elname <span class="string">'.(''PolynomA'')='</span> val0 <span class="string">'; \n'</span>];
+0344         <span class="keyword">case</span> tmstr <span class="comment">% Tijk elements</span>
+0345             <span class="keyword">if</span> strcmp(var(3),<span class="string">'5'</span>)
+0346                 var(3)=<span class="string">'6'</span>;
+0347             <span class="keyword">elseif</span> strcmp(var(3),<span class="string">'6'</span>)
+0348                 var(3)=<span class="string">'5'</span>;
+0349             <span class="keyword">end</span>
+0350             <span class="keyword">if</span> strcmp(var(4),<span class="string">'5'</span>)
+0351                 var(4)=<span class="string">'6'</span>;
+0352             <span class="keyword">elseif</span> strcmp(var(4),<span class="string">'6'</span>)
+0353                 var(4)=<span class="string">'5'</span>;
+0354             <span class="keyword">end</span>
+0355             <span class="keyword">if</span> strcmp(var(5),<span class="string">'5'</span>)
+0356                 var(5)=<span class="string">'6'</span>;
+0357             <span class="keyword">elseif</span> strcmp(var(5),<span class="string">'6'</span>)
+0358                 var(5)=<span class="string">'5'</span>;
+0359             <span class="keyword">end</span>
+0360             R=[R elname <span class="string">'.Tijk('</span> var(3) <span class="string">','</span> var(4) <span class="string">','</span> var(5) <span class="string">')='</span> strrep(val0,<span class="string">','</span>,<span class="string">''</span>) <span class="string">'; \n'</span>]; <span class="comment">%#ok&lt;*ST2NM&gt;</span>
+0361         <span class="keyword">case</span> mstr <span class="comment">% Mij elements</span>
+0362             <span class="keyword">if</span> strcmp(var(3),<span class="string">'5'</span>)
+0363                 var(3)=<span class="string">'6'</span>;
+0364             <span class="keyword">elseif</span> strcmp(var(3),<span class="string">'6'</span>)
+0365                 var(3)=<span class="string">'5'</span>;
+0366             <span class="keyword">end</span>
+0367             <span class="keyword">if</span> strcmp(var(4),<span class="string">'5'</span>)
+0368                 var(4)=<span class="string">'6'</span>;
+0369             <span class="keyword">elseif</span> strcmp(var(4),<span class="string">'6'</span>)
+0370                 var(4)=<span class="string">'5'</span>;
+0371             <span class="keyword">end</span>
+0372             
+0373 <span class="comment">%             % /(1+delta) for MADX to AT coordinates</span>
+0374 <span class="comment">%             overdelt=1;</span>
+0375 <span class="comment">%             if strcmp(var(4),'2') || strcmp(var(4),'4')</span>
+0376 <span class="comment">%             overdelt=</span>
+0377 <span class="comment">%             end</span>
+0378             
+0379             R=[R elname <span class="string">'.M66('</span> var(3) <span class="string">','</span> var(4) <span class="string">')='</span> strrep(val0,<span class="string">','</span>,<span class="string">''</span>) <span class="string">'; \n'</span>];
+0380         <span class="keyword">case</span> {<span class="string">'VOLT'</span>,<span class="string">'volt'</span>} <span class="comment">%</span>
+0381             R=[R elname <span class="string">'.(''Voltage'')=abs('</span> val <span class="string">')*1e6; %% convert to MV \n'</span>];
+0382         <span class="keyword">case</span> {<span class="string">'FREQ'</span>,<span class="string">'freq'</span>} <span class="comment">%</span>
+0383             R=[R elname <span class="string">'.(''Frequency'')='</span> val <span class="string">'*1e6; %% convert to MHz  \n'</span>];
+0384         <span class="keyword">case</span> {<span class="string">'tilt'</span>,<span class="string">'TILT'</span>,<span class="string">'Tilt'</span>} <span class="comment">% mulitpole component skew</span>
+0385             R=[R elname <span class="string">'.(''Tilt'')(1)='</span> val <span class="string">'; \n'</span>];
+0386         <span class="keyword">case</span> {<span class="string">'type'</span>,<span class="string">'Type'</span>,<span class="string">'TYPE'</span>} <span class="comment">% mulitpole component skew</span>
+0387             R=[R elname <span class="string">'.(''Type'')='</span> val <span class="string">'; \n'</span>];
+0388         <span class="keyword">case</span> {<span class="string">'HARMON'</span>,<span class="string">'harmon'</span>} <span class="comment">%</span>
+0389             R=[R elname <span class="string">'.(''HarmNumber'')='</span> val <span class="string">'; \n'</span>];
+0390             <span class="comment">%     case '' %</span>
+0391             <span class="comment">%          R=[R elname '.(''')=S8STRING;</span>
+0392             <span class="comment">%     case '' %</span>
+0393             <span class="comment">%          R=[R elname '.(''')=S8STRING;</span>
+0394         <span class="keyword">otherwise</span>
+0395             <span class="comment">% disp([newel ' : unrecognized element attribute']);</span>
+0396     <span class="keyword">end</span>
+0397 <span class="keyword">end</span>
+0398 
+0399 <span class="comment">%R=[R '\n'];</span>
+0400</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of add_ID</title>
+  <meta name="keywords" content="add_ID">
+  <meta name="description" content="add_ID adds IDelem at the beginning and subtracts the length from">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atdemos</a> &gt; <a href="index.html">IDModeling</a> &gt; add_ID.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos/IDModeling&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>add_ID
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>add_ID adds IDelem at the beginning and subtracts the length from</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [ ringID ] = add_ID( ring, IDelem ) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">add_ID adds IDelem at the beginning and subtracts the length from
+   the surrounding straights</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="trackWithU35KickMap.html" class="code" title="">trackWithU35KickMap</a>	read in ESRF lattice</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [ ringID ] = add_ID( ring, IDelem )</a>
+0002 <span class="comment">%add_ID adds IDelem at the beginning and subtracts the length from</span>
+0003 <span class="comment">%   the surrounding straights</span>
+0004  
+0005 ringID={IDelem,ring{:}};
+0006 IDlen=IDelem.Length;
+0007 
+0008 driftInd=findcells(ringID,<span class="string">'FamName'</span>,<span class="string">'SDHI'</span>);
+0009 ringID{driftInd(1)}.Length=ringID{driftInd(1)}.Length-IDlen/2;
+0010 ringID{driftInd(end)}.Length=ringID{driftInd(end)}.Length-IDlen/2;
+0011 
+0012 <span class="keyword">end</span>
+0013</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

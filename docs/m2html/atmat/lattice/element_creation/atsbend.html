@@ -1,0 +1,174 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsbend</title>
+  <meta name="keywords" content="atsbend">
+  <meta name="description" content="ATSBEND Creates a sector bending magnet element with class 'Bend'">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">lattice</a> &gt; <a href="index.html">element_creation</a> &gt; atsbend.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/element_creation&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atsbend
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATSBEND Creates a sector bending magnet element with class 'Bend'</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function elem=atsbend(fname,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSBEND Creates a sector bending magnet element with class 'Bend'
+
+  Two calling methods (that can be combined)
+  ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)
+
+  INPUTS
+  1. FNAME            Family name 
+  2. LENGTH        Length of the arc for an on-energy particle
+                         [m], default to 0
+  3. BENDINGANGLE    Total bending angle [rad], defaults to 0 
+  4. K                Focusing strength, defaults to 0
+  5. PASSMETHOD    Tracking function, defaults to 'BendLinearPass'
+
+  OPTIONS (order does not matter)
+    R1                6 x 6 rotation matrix at the entrance
+     R2                6 x 6 rotation matrix at the entrance
+     T1                6 x 1 translation at entrance 
+     T2                6 x 1 translation at exit
+     NumIntSteps    Number of integration steps
+     MaxOrder       Max Order for multipole (1 up to quadrupole)
+
+  OUTPUTS
+  1. ELEM - Structure with the AT element
+
+  ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)
+  Each pair {'FIELDNAME',VALUE} is added to the element
+
+  NOTES
+  1. Fieldname can be called by calling the passmethod
+         [req opt] = BndMPoleSymplectic4Pass
+                     where req are mandatory field and opt are optional
+                     fields
+  2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra
+            fields
+
+       FringeBendEntrance/FringeBendExit = 0,1,2,3
+       Version 0 no dipole fringe fields
+       Version 1 legacy version Brown First Order (K. Brown. A First and Second Order 
+                  Matrix Theory for the Design of Beam Transport Systems and Charged 
+                  Particle Spectrometers. Internal report, SLAC-75, 1982)
+       Version 2 SOLEIL close to second order of Brown (J. Bengtsson and M. Meddahi. 
+                 Modeling of Beam Dynamics and Comparison with Measurements for 
+                 the Advanced Light Source. London, UK, 1994.)
+       Version 3 THOMX (Dipole Fringe Field Effects in the ThomX Ring, J. Zhang and 
+                 A. Loulergue, Proceedings of IPAC2013, Shanghai, China)
+
+       FringeQuadEntrance/FringeQuadExit = 0,1,2
+       Version 0 no quadrupole fringe fields
+       Version 1 Lee-Whiting Formula
+       Version 2 Linear quadrupole fringe field using the 5 integrant a la
+                 Elegant          
+
+  See also <a href="atdrift.html" class="code" title="function elem=atdrift(fname,varargin)">atdrift</a>, <a href="atquadrupole.html" class="code" title="function elem=atquadrupole(fname,varargin)">atquadrupole</a>, <a href="atsextupole.html" class="code" title="function elem=atsextupole(fname,varargin)">atsextupole</a>, <a href="atrbend.html" class="code" title="function elem=atrbend(fname,varargin)">atrbend</a>
+          <a href="atmultipole.html" class="code" title="function elem=atmultipole(fname,varargin)">atmultipole</a>, <a href="atthinmultipole.html" class="code" title="function elem=atthinmultipole(fname,varargin)">atthinmultipole</a>, <a href="atmarker.html" class="code" title="function elem=atmarker(fname,varargin)">atmarker</a>, <a href="atcorrector.html" class="code" title="function elem=atcorrector(fname,varargin)">atcorrector</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atbaselem.html" class="code" title="function elem = atbaselem(famname,method,varargin)">atbaselem</a>	ATBASELEM  Create an AT element structure + various checks</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function elem=atsbend(fname,varargin)</a>
+0002 <span class="comment">%ATSBEND Creates a sector bending magnet element with class 'Bend'</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%  Two calling methods (that can be combined)</span>
+0005 <span class="comment">%  ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD)</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%  INPUTS</span>
+0008 <span class="comment">%  1. FNAME            Family name</span>
+0009 <span class="comment">%  2. LENGTH        Length of the arc for an on-energy particle</span>
+0010 <span class="comment">%                         [m], default to 0</span>
+0011 <span class="comment">%  3. BENDINGANGLE    Total bending angle [rad], defaults to 0</span>
+0012 <span class="comment">%  4. K                Focusing strength, defaults to 0</span>
+0013 <span class="comment">%  5. PASSMETHOD    Tracking function, defaults to 'BendLinearPass'</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%  OPTIONS (order does not matter)</span>
+0016 <span class="comment">%    R1                6 x 6 rotation matrix at the entrance</span>
+0017 <span class="comment">%     R2                6 x 6 rotation matrix at the entrance</span>
+0018 <span class="comment">%     T1                6 x 1 translation at entrance</span>
+0019 <span class="comment">%     T2                6 x 1 translation at exit</span>
+0020 <span class="comment">%     NumIntSteps    Number of integration steps</span>
+0021 <span class="comment">%     MaxOrder       Max Order for multipole (1 up to quadrupole)</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">%  OUTPUTS</span>
+0024 <span class="comment">%  1. ELEM - Structure with the AT element</span>
+0025 <span class="comment">%</span>
+0026 <span class="comment">%  ATSBEND(FAMNAME,LENGTH,BENDINGANGLE,K,PASSMETHOD,'FIELDNAME1',VALUE1,...)</span>
+0027 <span class="comment">%  Each pair {'FIELDNAME',VALUE} is added to the element</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">%  NOTES</span>
+0030 <span class="comment">%  1. Fieldname can be called by calling the passmethod</span>
+0031 <span class="comment">%         [req opt] = BndMPoleSymplectic4Pass</span>
+0032 <span class="comment">%                     where req are mandatory field and opt are optional</span>
+0033 <span class="comment">%                     fields</span>
+0034 <span class="comment">%  2. Model for BndMPoleSymplectic4Pass (Rad) can be selected with extra</span>
+0035 <span class="comment">%            fields</span>
+0036 <span class="comment">%</span>
+0037 <span class="comment">%       FringeBendEntrance/FringeBendExit = 0,1,2,3</span>
+0038 <span class="comment">%       Version 0 no dipole fringe fields</span>
+0039 <span class="comment">%       Version 1 legacy version Brown First Order (K. Brown. A First and Second Order</span>
+0040 <span class="comment">%                  Matrix Theory for the Design of Beam Transport Systems and Charged</span>
+0041 <span class="comment">%                  Particle Spectrometers. Internal report, SLAC-75, 1982)</span>
+0042 <span class="comment">%       Version 2 SOLEIL close to second order of Brown (J. Bengtsson and M. Meddahi.</span>
+0043 <span class="comment">%                 Modeling of Beam Dynamics and Comparison with Measurements for</span>
+0044 <span class="comment">%                 the Advanced Light Source. London, UK, 1994.)</span>
+0045 <span class="comment">%       Version 3 THOMX (Dipole Fringe Field Effects in the ThomX Ring, J. Zhang and</span>
+0046 <span class="comment">%                 A. Loulergue, Proceedings of IPAC2013, Shanghai, China)</span>
+0047 <span class="comment">%</span>
+0048 <span class="comment">%       FringeQuadEntrance/FringeQuadExit = 0,1,2</span>
+0049 <span class="comment">%       Version 0 no quadrupole fringe fields</span>
+0050 <span class="comment">%       Version 1 Lee-Whiting Formula</span>
+0051 <span class="comment">%       Version 2 Linear quadrupole fringe field using the 5 integrant a la</span>
+0052 <span class="comment">%                 Elegant</span>
+0053 <span class="comment">%</span>
+0054 <span class="comment">%  See also atdrift, atquadrupole, atsextupole, atrbend</span>
+0055 <span class="comment">%          atmultipole, atthinmultipole, atmarker, atcorrector</span>
+0056 
+0057 <span class="comment">% Input parser for option</span>
+0058 [rsrc,L,A,K,method]  = decodeatargs({0,0,[],<span class="string">'BendLinearPass'</span>},varargin);
+0059 [L,rsrc]             = getoption(rsrc,<span class="string">'Length'</span>,L);
+0060 [A,rsrc]             = getoption(rsrc,<span class="string">'BendingAngle'</span>,A);
+0061 [K,rsrc]             = getoption(rsrc,<span class="string">'K'</span>,K);
+0062 [method,rsrc]        = getoption(rsrc,<span class="string">'PassMethod'</span>,method);
+0063 [PolynomB,rsrc]      = getoption(rsrc,<span class="string">'PolynomB'</span>,[0 0]);
+0064 [cl,rsrc]            = getoption(rsrc,<span class="string">'Class'</span>,<span class="string">'Bend'</span>);
+0065 [EntranceAngle,rsrc] = getoption(rsrc,<span class="string">'EntranceAngle'</span>,0);
+0066 [ExitAngle,rsrc]     = getoption(rsrc,<span class="string">'ExitAngle'</span>,0);
+0067 
+0068 <span class="comment">% Gradient setting if not specified explicitly</span>
+0069 <span class="keyword">if</span> ~isempty(K), PolynomB(2)=K; <span class="keyword">end</span>
+0070 
+0071 elem=<a href="atbaselem.html" class="code" title="function elem = atbaselem(famname,method,varargin)">atbaselem</a>(fname,method,<span class="string">'Class'</span>,cl,<span class="string">'Length'</span>,L,<span class="keyword">...</span>
+0072     <span class="string">'BendingAngle'</span>,A,<span class="string">'EntranceAngle'</span>,EntranceAngle,<span class="string">'ExitAngle'</span>,ExitAngle,<span class="keyword">...</span>
+0073     <span class="string">'K'</span>,PolynomB(2),<span class="string">'PolynomB'</span>,PolynomB,rsrc{:});
+0074 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

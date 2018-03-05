@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of latticedemo</title>
+  <meta name="keywords" content="latticedemo">
+  <meta name="description" content="LATTICEDEMO self-running tutorial">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atdemos</a> &gt; <a href="index.html">opticsAndBeamSizes</a> &gt; latticedemo.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos/opticsAndBeamSizes&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>latticedemo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>LATTICEDEMO self-running tutorial</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">LATTICEDEMO self-running tutorial
+ demonstrates 
+ 1. ELEMENT, family of ELEMENTS, sequence of ELEMENTS 
+ 2. Lattice representation
+ 3. Creating a lattice 
+ 4. Creating and editing lattice files</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%LATTICEDEMO self-running tutorial</span>
+0002 <span class="comment">% demonstrates</span>
+0003 <span class="comment">% 1. ELEMENT, family of ELEMENTS, sequence of ELEMENTS</span>
+0004 <span class="comment">% 2. Lattice representation</span>
+0005 <span class="comment">% 3. Creating a lattice</span>
+0006 <span class="comment">% 4. Creating and editing lattice files</span>
+0007 clear all
+0008 clc
+0009 echo on
+0010 <span class="comment">% An element in Accelerator Toolbox is a 1-by-1 MATLAB STRUCTURE</span>
+0011 <span class="comment">% The folowing code creates a structure D1 for a drift space</span>
+0012 <span class="comment">% and a structure QF for a quadrupole.</span>
+0013 
+0014 D1.FamName = <span class="string">'DR01'</span>;
+0015 D1.Length  = 3;
+0016 D1.PassMethod = <span class="string">'DriftPass'</span>;
+0017 
+0018 QF.FamName = <span class="string">'QF'</span>;
+0019 QF.Length = 1;
+0020 QF.K = 0.2;
+0021 QF.MaxOrder = 3;
+0022 QF.NumIntSteps = 1;
+0023 QF.PolynomA= [0 0 0];
+0024 QF.PolynomB= [0 0.2 0];
+0025 QF.R1= eye(6);
+0026 QF.R2= eye(6);
+0027 QF.T1= [0 0 0 0 0 0];
+0028 QF.T2= [0 0 0 0 0 0];
+0029 QF.PassMethod= <span class="string">'QuadLinearPass'</span>;
+0030 
+0031 pause <span class="comment">% Press any key to continue</span>
+0032 clc
+0033 <span class="comment">% Use WHOS, DISP or just type variable's name without closing semicolon</span>
+0034 <span class="comment">% to print the element's info:</span>
+0035 
+0036 whos D1 QF                   
+0037 disp(D1)                      
+0038 QF                            
+0039 
+0040 pause <span class="comment">% Press any key to continue</span>
+0041 clc
+0042 <span class="comment">% The next few lines will create another drift structure D2 from the exiting D1</span>
+0043 <span class="comment">% and modify the values of fields 'FamName' and 'Length'</span>
+0044 
+0045 D2 = D1;
+0046 
+0047 D2.FamName = <span class="string">'DR02'</span>;
+0048 D2.Length = 2;
+0049 
+0050 disp(D2)
+0051 pause <span class="comment">% Press any key to continue</span>
+0052 clc
+0053 <span class="comment">% Create another quadrupole element structure QD from QF and modify</span>
+0054 <span class="comment">% the values of fields 'K' and 'PolynomB' to make it defocusing</span>
+0055 QD = QF;
+0056 QD.FamName = <span class="string">'QD'</span>;
+0057 QD.K = -0.4;
+0058 <span class="comment">% Field 'PolynomB is a vector with polynomial field expansion coefficients.</span>
+0059 <span class="comment">% The second element (quadrupole coefficient) must be consistent with field 'K'</span>
+0060 QD.PolynomB(2) = QD.K;
+0061 
+0062 disp(QD)
+0063 pause <span class="comment">% Press any key to continue</span>
+0064 clc
+0065 <span class="comment">% We have declared four elements:</span>
+0066 whos
+0067 
+0068 <span class="comment">% They are now independent from each other</span>
+0069 
+0070 <span class="comment">% We are ultimately interested in sequences of elements</span>
+0071 <span class="comment">% to model storage ring lattices or single-pass beam transport lines.</span>
+0072 <span class="comment">% The next section will illustrate building of such sequences</span>
+0073 
+0074 
+0075 
+0076 pause <span class="comment">% Press any key to continue</span>
+0077 clc
+0078 <span class="comment">% Accelerator Toolbox represents sequences of elements as MATLAB cell arrays</span>
+0079 <span class="comment">% where individual cells are 1-by-1 structures containing element data</span>
+0080 <span class="comment">% The following commad creates a simple FODO cell by copying previously</span>
+0081 <span class="comment">% created element structures for drifts and quadrupole magnets to a cell array FODOCELL:</span>
+0082 
+0083 FODOCELL = {QF D1 QD D2 QF};
+0084 
+0085 whos FODOCELL
+0086 <span class="comment">% LENGTH is useful to find the number of elements in a sequence</span>
+0087 
+0088 L = length(FODOCELL) 
+0089 pause <span class="comment">% Press any key to continue;</span>
+0090 clc
+0091 <span class="comment">% Use {:} cell array syntax to print some or all elements</span>
+0092 FODOCELL{1}
+0093 pause <span class="comment">% FODOCELL{:} will print a long list of all elements. Press any key to continue</span>
+0094 clc
+0095 FODOCELL{:}
+0096 pause <span class="comment">% Press any key to continue;</span>
+0097 clc
+0098 <span class="comment">% Let's build a cell array THERING that represents a closed ring</span>
+0099 <span class="comment">% with 10 periods of FODOCELL the same way we would build</span>
+0100 <span class="comment">% any other array in MATLAB from the comman dline</span>
+0101 
+0102 THERING = [FODOCELL FODOCELL FODOCELL FODOCELL FODOCELL<span class="keyword">...</span>
+0103            FODOCELL FODOCELL FODOCELL FODOCELL FODOCELL]; 
+0104         
+0105 whos THERING
+0106 pause <span class="comment">% Press any key to continue;</span>
+0107 clc
+0108 <span class="comment">% The first element in THERING is</span>
+0109 THERING{1}
+0110 
+0111 <span class="comment">% To inspect or change the value of a specific field we can use MATLAB syntax</span>
+0112 <span class="comment">% for accessing cells in cell arrays and field in structures</span>
+0113 oldK = THERING{1}.K
+0114 
+0115 THERING{1}.K = 0.25;
+0116 
+0117 newK = THERING{1}.K
+0118 
+0119 pause <span class="comment">% Press any key to continue;</span>
+0120 clc
+0121 <span class="comment">% Lattice THERING is a variable in MATLAB workspace.</span>
+0122 <span class="comment">% We can use it in accelerator physics functions and scripts</span>
+0123 <span class="comment">%</span>
+0124 <span class="comment">% For example: function FindM44 finds 4-by-4 transverse transfer matrix</span>
+0125 M = findm44(THERING,0)
+0126 pause <span class="comment">% Press any key to continue;</span>
+0127 clc
+0128 <span class="comment">% -----------------------------------------------------------------------</span>
+0129 <span class="comment">% SUMMARY</span>
+0130 <span class="comment">% 1. Individual elements are represented by 1-by-1  MATLAB structures</span>
+0131 
+0132 <span class="comment">% 2. Element sequences (lattices) are represented by 1-dimensional</span>
+0133 <span class="comment">%    MATLAB cell arrays of stuctures</span>
+0134 
+0135 <span class="comment">% 3. MATLAB syntax for hanling structures and cell arrays applies.</span>
+0136 <span class="comment">%    No special language is required to define a lattice.</span>
+0137 
+0138 <span class="comment">% --------------------------------------------------------------------------</span>
+0139 
+0140 pause <span class="comment">% Press any key to continue;</span>
+0141 echo off
+0142 clc</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

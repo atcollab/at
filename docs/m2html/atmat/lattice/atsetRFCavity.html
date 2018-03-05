@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsetRFCavity</title>
+  <meta name="keywords" content="atsetRFCavity">
+  <meta name="description" content="ATSETRFCAVITY - sets the RF Cavity with the passmethod RFCavityPass.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atsetRFCavity.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atsetRFCavity
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATSETRFCAVITY - sets the RF Cavity with the passmethod RFCavityPass.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq ) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">  ATSETRFCAVITY - sets the RF Cavity with the passmethod RFCavityPass.
+  RFCavityPass allows to change the energy of the beam changing the
+  frequency of the cavity.
+
+   newring = atSetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq)
+   sets the synchronous phase of the cavity, the voltage, the harmonic
+   number and the PassMethod. 
+
+  INPUTS
+  1. ring       - Ring structure
+  2. rfv        - RF-voltage in volts
+  3. radflag    - 0/1: activat/desactivate radiation (atradon/atradoff)
+  4. HarmNumber - Harmonic number
+  5. DeltaFreq  - Frequency shift in Hz
+
+  OUTPUTS
+  1. newring - update ring structure with nw RF parameters
+
+  NOTES
+  1. All the N cavities will have a voltage rfv/N
+  2. radflag says whether or not we want radiation on, which affects
+     synchronous phase. If radflag is 0, the function calls atradoff, 
+     if it is 1, it calls atradon.
+  3. Cavities in the ring must have the Class RFCavity.
+  4. Normally DeltaFreq should be 0, it's different from 0 when you want to
+     simulate a change of energy changing the RF frequency. DeltaFreq is in
+      Hz.
+  5. Does not work well for misaligned cavity 
+
+  EXAMPLES
+
+   1. normal use:
+   newring = atsetRFCavity( ring, 6e6, 1, 992, 0 )
+
+   2. for off-energy simulations:
+   newring = atsetRFCavity( ring, 6e6, 1, 992, 100 )
+
+  See also atsetcavity, atradon, atradoff, atgetU0</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">findcells</a>	FINDCELLS performs a search on MATLAB cell arrays of structures</li><li><a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">setcellstruct</a>	SETCELLSTRUCT sets the field values of MATLAB cell array of structures</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq )</a>
+0002 <span class="comment">%  ATSETRFCAVITY - sets the RF Cavity with the passmethod RFCavityPass.</span>
+0003 <span class="comment">%  RFCavityPass allows to change the energy of the beam changing the</span>
+0004 <span class="comment">%  frequency of the cavity.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   newring = atSetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq)</span>
+0007 <span class="comment">%   sets the synchronous phase of the cavity, the voltage, the harmonic</span>
+0008 <span class="comment">%   number and the PassMethod.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%  INPUTS</span>
+0011 <span class="comment">%  1. ring       - Ring structure</span>
+0012 <span class="comment">%  2. rfv        - RF-voltage in volts</span>
+0013 <span class="comment">%  3. radflag    - 0/1: activat/desactivate radiation (atradon/atradoff)</span>
+0014 <span class="comment">%  4. HarmNumber - Harmonic number</span>
+0015 <span class="comment">%  5. DeltaFreq  - Frequency shift in Hz</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">%  OUTPUTS</span>
+0018 <span class="comment">%  1. newring - update ring structure with nw RF parameters</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">%  NOTES</span>
+0021 <span class="comment">%  1. All the N cavities will have a voltage rfv/N</span>
+0022 <span class="comment">%  2. radflag says whether or not we want radiation on, which affects</span>
+0023 <span class="comment">%     synchronous phase. If radflag is 0, the function calls atradoff,</span>
+0024 <span class="comment">%     if it is 1, it calls atradon.</span>
+0025 <span class="comment">%  3. Cavities in the ring must have the Class RFCavity.</span>
+0026 <span class="comment">%  4. Normally DeltaFreq should be 0, it's different from 0 when you want to</span>
+0027 <span class="comment">%     simulate a change of energy changing the RF frequency. DeltaFreq is in</span>
+0028 <span class="comment">%      Hz.</span>
+0029 <span class="comment">%  5. Does not work well for misaligned cavity</span>
+0030 <span class="comment">%</span>
+0031 <span class="comment">%  EXAMPLES</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">%   1. normal use:</span>
+0034 <span class="comment">%   newring = atsetRFCavity( ring, 6e6, 1, 992, 0 )</span>
+0035 <span class="comment">%</span>
+0036 <span class="comment">%   2. for off-energy simulations:</span>
+0037 <span class="comment">%   newring = atsetRFCavity( ring, 6e6, 1, 992, 100 )</span>
+0038 <span class="comment">%</span>
+0039 <span class="comment">%  See also atsetcavity, atradon, atradoff, atgetU0</span>
+0040 
+0041 <span class="comment">% Speed of light</span>
+0042 CLIGHT = PhysConstant.speed_of_light_in_vacuum.value ;
+0043 
+0044 newring = ring;
+0045 
+0046 <span class="comment">% Indices of all cavity</span>
+0047 indrfc = <a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">findcells</a>(ring,<span class="string">'Class'</span>,<span class="string">'RFCavity'</span>);
+0048 beta0  = 1;
+0049 <span class="comment">% get enegery losss per turn</span>
+0050 U0     = atgetU0(ring); <span class="comment">%% not ok if misaligned elem!</span>
+0051 
+0052 <span class="comment">% Compute circumference</span>
+0053 circ = findspos(ring,length(ring)+1);
+0054 
+0055 <span class="comment">% Set cavity pass</span>
+0056 newring = <a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">setcellstruct</a>(newring,<span class="string">'PassMethod'</span>,indrfc,<span class="string">'RFCavityPass'</span>);
+0057 
+0058 <span class="comment">% Set main frequency</span>
+0059 freq0 = (CLIGHT*beta0/circ)*HarmNumber;
+0060 <span class="comment">% Add offset</span>
+0061 freq = freq0+DeltaFreq;
+0062 
+0063 <span class="comment">%now set cavity frequencies, Harmonic Number and RF Voltage</span>
+0064 <span class="keyword">for</span> j=indrfc
+0065     newring{j}.Frequency=freq;
+0066     newring{j}.HarmNumber=HarmNumber;
+0067     newring{j}.Voltage=rfv/length(indrfc);
+0068 <span class="keyword">end</span>
+0069 
+0070 <span class="comment">%now set phaselags in cavities</span>
+0071 <span class="keyword">if</span> radflag
+0072     timelag= (circ/(2*pi*HarmNumber))*asin(U0/(rfv));
+0073     newring=atradon(newring,<span class="string">'RFCavityPass'</span>,<span class="string">'auto'</span>,<span class="string">'auto'</span>);  <span class="comment">% set radiation on. nothing if radiation is already on</span>
+0074     newring=<a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">setcellstruct</a>(newring,<span class="string">'PassMethod'</span>,indrfc,<span class="string">'RFCavityPass'</span>);
+0075 <span class="keyword">else</span>
+0076     newring=atradoff(newring,<span class="string">'RFCavityPass'</span>,<span class="string">'auto'</span>,<span class="string">'auto'</span>);  <span class="comment">% set radiation off. nothing if radiation is already off</span>
+0077     newring=<a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">setcellstruct</a>(newring,<span class="string">'PassMethod'</span>,indrfc,<span class="string">'RFCavityPass'</span>);
+0078     timelag=0;
+0079 <span class="keyword">end</span>
+0080 
+0081 newring = <a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">setcellstruct</a>(newring,<span class="string">'TimeLag'</span>,indrfc,timelag);
+0082 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

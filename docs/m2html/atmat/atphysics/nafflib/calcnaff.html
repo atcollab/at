@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of calcnaff</title>
+  <meta name="keywords" content="calcnaff">
+  <meta name="description" content="CALCNAFF Computes NAFF decomposition for a phase space trajectory">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">nafflib</a> &gt; calcnaff.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/nafflib&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>calcnaff
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>CALCNAFF Computes NAFF decomposition for a phase space trajectory</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CALCNAFF Computes NAFF decomposition for a phase space trajectory
+ [nu amp phase] = calcnaff(Y, Yp, Win)
+
+  INPUTS
+  1. Y  - position vector
+  2. Yp -
+  3. WindowType  - Window type - 0 {Default} no windowing
+                                 1 Window of Hann
+                                 2 etc
+  4. nfreq - Maximum number of fundamental frequencies to search for
+             10 {Default}
+  5. debug - 1 means debug flag turned on
+             0 {Default}
+
+  Optional Flags
+  'Debug' - turn on deubbing flag
+  'Display' - print ou results
+  'Hanning' - select Window of Hann, WindowType = 1
+  'Raw' or 'NoWindow' - select Window of Hann, WindowType = 0
+
+  OUTPUTS
+  1. frequency - frequency vector with sorted amplitudes
+                 by default the algorithm try to compute the 10 first fundamental
+                 frequencies of the system.
+  2. amplitude - amplitudes associated with fundamental frequencies
+  3. phase - phases associated with fundamental frequencies
+
+  NOTES
+  1. Mimimum number of turns is 64 (66)
+  2. Number of turn has to be a multiple of 6 for internal optimization
+  reason and just above a power of 2. Example 1026 is divived by 6 and
+  above 1024 = pow2(10)
+
+  Examples
+  NT = 9996; % divided by 6
+  simple quasiperiodic (even period) motion 
+  y =2+0.1*cos(pi*(0:NT-1))+0.00125*cos(pi/3*(0:NT-1));
+  yp=2+0.1*sin(pi*(0:NT-1))+0.00125*sin(pi/3*(0:NT-1));
+ 
+  [nu ampl phase] = calcnaff(y,yp,1); % with windowing</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="nafflib.html" class="code" title="">nafflib</a>	NAFFLIB MATLAB to NAFF library</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="naff_example.html" class="code" title="function naff_example">naff_example</a>	Example to test naff within matlab</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)</a>
+0002 <span class="comment">%CALCNAFF Computes NAFF decomposition for a phase space trajectory</span>
+0003 <span class="comment">% [nu amp phase] = calcnaff(Y, Yp, Win)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%  INPUTS</span>
+0006 <span class="comment">%  1. Y  - position vector</span>
+0007 <span class="comment">%  2. Yp -</span>
+0008 <span class="comment">%  3. WindowType  - Window type - 0 {Default} no windowing</span>
+0009 <span class="comment">%                                 1 Window of Hann</span>
+0010 <span class="comment">%                                 2 etc</span>
+0011 <span class="comment">%  4. nfreq - Maximum number of fundamental frequencies to search for</span>
+0012 <span class="comment">%             10 {Default}</span>
+0013 <span class="comment">%  5. debug - 1 means debug flag turned on</span>
+0014 <span class="comment">%             0 {Default}</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">%  Optional Flags</span>
+0017 <span class="comment">%  'Debug' - turn on deubbing flag</span>
+0018 <span class="comment">%  'Display' - print ou results</span>
+0019 <span class="comment">%  'Hanning' - select Window of Hann, WindowType = 1</span>
+0020 <span class="comment">%  'Raw' or 'NoWindow' - select Window of Hann, WindowType = 0</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">%  OUTPUTS</span>
+0023 <span class="comment">%  1. frequency - frequency vector with sorted amplitudes</span>
+0024 <span class="comment">%                 by default the algorithm try to compute the 10 first fundamental</span>
+0025 <span class="comment">%                 frequencies of the system.</span>
+0026 <span class="comment">%  2. amplitude - amplitudes associated with fundamental frequencies</span>
+0027 <span class="comment">%  3. phase - phases associated with fundamental frequencies</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">%  NOTES</span>
+0030 <span class="comment">%  1. Mimimum number of turns is 64 (66)</span>
+0031 <span class="comment">%  2. Number of turn has to be a multiple of 6 for internal optimization</span>
+0032 <span class="comment">%  reason and just above a power of 2. Example 1026 is divived by 6 and</span>
+0033 <span class="comment">%  above 1024 = pow2(10)</span>
+0034 <span class="comment">%</span>
+0035 <span class="comment">%  Examples</span>
+0036 <span class="comment">%  NT = 9996; % divided by 6</span>
+0037 <span class="comment">%  simple quasiperiodic (even period) motion</span>
+0038 <span class="comment">%  y =2+0.1*cos(pi*(0:NT-1))+0.00125*cos(pi/3*(0:NT-1));</span>
+0039 <span class="comment">%  yp=2+0.1*sin(pi*(0:NT-1))+0.00125*sin(pi/3*(0:NT-1));</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">%  [nu ampl phase] = calcnaff(y,yp,1); % with windowing</span>
+0042 
+0043 
+0044 <span class="comment">% Written by Laurent S. Nadolski</span>
+0045 <span class="comment">% April 6th, 2007</span>
+0046 <span class="comment">% Modification September 2009:</span>
+0047 <span class="comment">%  test if constant data or nan data</span>
+0048 
+0049 <span class="comment">% BUG in nafflib: returns nan even if valid data. Number of try</span>
+0050 nitermax = 10;
+0051 
+0052 <span class="comment">% Flag factory</span>
+0053 [wraw1,args]=getflag(varargin,<span class="string">'Raw'</span>); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0054 [wraw2,args]=getflag(args,<span class="string">'NoWindow'</span>); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0055 [whann,args]=getflag(args,<span class="string">'Hanning'</span>);
+0056 [dbg,args]=getflag(args,<span class="string">'Debug'</span>);
+0057 [DisplayFlag,args]=getflag(args,<span class="string">'Display'</span>);
+0058 [WindowType,nfreq,DebugFlag]=getargs(args,{0,10,double(dbg)});
+0059 <span class="keyword">if</span> whann, WindowType=1; <span class="keyword">end</span>
+0060 
+0061 
+0062 <span class="comment">% Test wether nan or constant data</span>
+0063 <span class="keyword">if</span> any(isnan(Y(1,:)))
+0064     fprintf(<span class="string">'Warning Y contains NaNs\n'</span>);
+0065     frequency =NaN; amplitude = NaN;  phase = NaN;
+0066 <span class="keyword">elseif</span> any(isnan(Y(1,:)))
+0067     fprintf(<span class="string">'Warning Yp contains NaNs\n'</span>);
+0068     frequency =NaN; amplitude = NaN;  phase = NaN;
+0069 <span class="keyword">elseif</span> (mean(Y) == Y(1) &amp;&amp; mean(Yp) == Yp(1))
+0070     fprintf(<span class="string">'Warning data are constant\n'</span>);
+0071     frequency = 0; amplitude = 0;  phase = 0;
+0072 <span class="keyword">else</span> <span class="comment">% Frequency map analysis</span>
+0073     [frequency,amplitude,phase] = <a href="nafflib.html" class="code" title="">nafflib</a>(Y, Yp, WindowType,nfreq,DebugFlag);
+0074     <span class="comment">%It seems there is a bug in nafflib, something returns nan even for valid data</span>
+0075     niter = 0;
+0076     <span class="keyword">while</span> any(isnan(frequency)) &amp;&amp; (niter &lt; nitermax)
+0077         pause(2);
+0078         fprintf(<span class="string">'Warning Nan returned by NAFF (x%d)\n'</span>, niter);
+0079         niter = niter +1;
+0080         [frequency,amplitude,phase] = <a href="nafflib.html" class="code" title="">nafflib</a>(Y, Yp, WindowType,nfreq,1); <span class="comment">% add debugging</span>
+0081     <span class="keyword">end</span>
+0082         
+0083     <span class="keyword">if</span> DisplayFlag
+0084         fprintf(<span class="string">'*** Naff run on %s\n'</span>, datestr(clock))
+0085         <span class="keyword">for</span> k = 1:length(frequency)
+0086             fprintf(<span class="string">'nu(%d) =% .15f amplitude = % .15f phase = % .15f \n'</span>, <span class="keyword">...</span>
+0087                 k,frequency(k), amplitude(k),phase(k));
+0088         <span class="keyword">end</span>
+0089     <span class="keyword">end</span>
+0090 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

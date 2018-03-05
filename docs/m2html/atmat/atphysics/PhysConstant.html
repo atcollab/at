@@ -1,0 +1,391 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of PhysConstant</title>
+  <meta name="keywords" content="PhysConstant">
+  <meta name="description" content="PhysConstant fundamental Physical Constants --- Complete Listing">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; PhysConstant.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>PhysConstant
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>PhysConstant fundamental Physical Constants --- Complete Listing</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">PhysConstant fundamental Physical Constants --- Complete Listing
+             
+  From:  http://physics.nist.gov/constants</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="PhysConstant.html" class="code" title="">PhysConstant</a>	PhysConstant fundamental Physical Constants --- Complete Listing</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="PhysConstant.html" class="code" title="">PhysConstant</a>	PhysConstant fundamental Physical Constants --- Complete Listing</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%PhysConstant fundamental Physical Constants --- Complete Listing</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">%  From:  http://physics.nist.gov/constants</span>
+0004 
+0005 <span class="comment">%%</span>
+0006 <span class="comment">% Automatically transfered to matlab syntax using c and awk by:</span>
+0007 <span class="comment">% Jarek Luberek / 2009</span>
+0008 
+0009 <span class="comment">%</span>
+0010 <span class="comment">%% modified by A. Bence (SOLEIL) for convert in classdef and changing name</span>
+0011 
+0012 classdef <a href="PhysConstant.html" class="code" title="">PhysConstant</a>
+0013     properties (Constant= true)
+0014         
+0015         x220_lattice_spacing_of_silicon = struct(<span class="string">'value'</span>,192.0155762e-12, <span class="string">'uncert'</span>, 0.0000050e-12, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0016         alpha_particle_electron_mass_ratio= struct(<span class="string">'value'</span>,7294.2995365, <span class="string">'uncert'</span>, 0.0000031, <span class="string">'unit'</span>, <span class="string">''</span>);
+0017         alpha_particle_mass= struct(<span class="string">'value'</span>,6.64465620e-27, <span class="string">'uncert'</span>, 0.00000033e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0018         alpha_particle_mass_energy_equivalent= struct(<span class="string">'value'</span>,5.97191917e-10, <span class="string">'uncert'</span>, 0.00000030e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0019         alpha_particle_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,3727.379109, <span class="string">'uncert'</span>, 0.000093, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0020         alpha_particle_mass_in_u= struct(<span class="string">'value'</span>,4.001506179127, <span class="string">'uncert'</span>, 0.000000000062, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0021         alpha_particle_molar_mass= struct(<span class="string">'value'</span>,4.001506179127e-3, <span class="string">'uncert'</span>, 0.000000000062e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0022         alpha_particle_proton_mass_ratio= struct(<span class="string">'value'</span>,3.97259968951, <span class="string">'uncert'</span>, 0.00000000041, <span class="string">'unit'</span>, <span class="string">''</span>);
+0023         Angstrom_star= struct(<span class="string">'value'</span>,1.00001498e-10, <span class="string">'uncert'</span>, 0.00000090e-10, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0024         atomic_mass_constant= struct(<span class="string">'value'</span>,1.660538782e-27, <span class="string">'uncert'</span>, 0.000000083e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0025         atomic_mass_constant_energy_equivalent= struct(<span class="string">'value'</span>,1.492417830e-10, <span class="string">'uncert'</span>, 0.000000074e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0026         atomic_mass_constant_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,931.494028, <span class="string">'uncert'</span>, 0.000023, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0027         atomic_mass_unit_electron_volt_relationship= struct(<span class="string">'value'</span>,931.494028e6, <span class="string">'uncert'</span>, 0.000023e6, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0028         atomic_mass_unit_hartree_relationship= struct(<span class="string">'value'</span>,3.4231777149e7, <span class="string">'uncert'</span>, 0.0000000049e7, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0029         atomic_mass_unit_hertz_relationship= struct(<span class="string">'value'</span>,2.2523427369e23, <span class="string">'uncert'</span>, 0.0000000032e23, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0030         atomic_mass_unit_inverse_meter_relationship= struct(<span class="string">'value'</span>,7.513006671e14, <span class="string">'uncert'</span>, 0.000000011e14, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0031         atomic_mass_unit_joule_relationship= struct(<span class="string">'value'</span>,1.492417830e-10, <span class="string">'uncert'</span>, 0.000000074e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0032         atomic_mass_unit_kelvin_relationship= struct(<span class="string">'value'</span>,1.0809527e13, <span class="string">'uncert'</span>, 0.0000019e13, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0033         atomic_mass_unit_kilogram_relationship= struct(<span class="string">'value'</span>,1.660538782e-27, <span class="string">'uncert'</span>, 0.000000083e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0034         atomic_unit_of1st_hyperpolarizablity= struct(<span class="string">'value'</span>,3.206361533e-53, <span class="string">'uncert'</span>, 0.000000081e-53, <span class="string">'unit'</span>, <span class="string">'C^3m^3J^-2'</span>);
+0035         atomic_unit_of2nd_hyperpolarizablity= struct(<span class="string">'value'</span>,6.23538095e-65, <span class="string">'uncert'</span>, 0.00000031e-65, <span class="string">'unit'</span>, <span class="string">'C^4m^4J^-3'</span>);
+0036         atomic_unit_of_action= struct(<span class="string">'value'</span>,1.054571628e-34, <span class="string">'uncert'</span>, 0.000000053e-34, <span class="string">'unit'</span>, <span class="string">'Js'</span>);
+0037         atomic_unit_of_charge= struct(<span class="string">'value'</span>,1.602176487e-19, <span class="string">'uncert'</span>, 0.000000040e-19, <span class="string">'unit'</span>, <span class="string">'C'</span>);
+0038         atomic_unit_of_charge_density= struct(<span class="string">'value'</span>,1.081202300e12, <span class="string">'uncert'</span>, 0.000000027e12, <span class="string">'unit'</span>, <span class="string">'Cm^-3'</span>);
+0039         atomic_unit_of_current= struct(<span class="string">'value'</span>,6.62361763e-3, <span class="string">'uncert'</span>, 0.00000017e-3, <span class="string">'unit'</span>, <span class="string">'A'</span>);
+0040         atomic_unit_of_electric_dipole_mom= struct(<span class="string">'value'</span>,8.47835281e-30, <span class="string">'uncert'</span>, 0.00000021e-30, <span class="string">'unit'</span>, <span class="string">'Cm'</span>);
+0041         atomic_unit_of_electric_field= struct(<span class="string">'value'</span>,5.14220632e11, <span class="string">'uncert'</span>, 0.00000013e11, <span class="string">'unit'</span>, <span class="string">'Vm^-1'</span>);
+0042         atomic_unit_of_electric_field_gradient= struct(<span class="string">'value'</span>,9.71736166e21, <span class="string">'uncert'</span>, 0.00000024e21, <span class="string">'unit'</span>, <span class="string">'Vm^-2'</span>);
+0043         atomic_unit_of_electric_polarizablity= struct(<span class="string">'value'</span>,1.6487772536e-41, <span class="string">'uncert'</span>, 0.0000000034e-41, <span class="string">'unit'</span>, <span class="string">'C^2m^2J^-1'</span>);
+0044         atomic_unit_of_electric_potential= struct(<span class="string">'value'</span>,27.21138386, <span class="string">'uncert'</span>, 0.00000068, <span class="string">'unit'</span>, <span class="string">'V'</span>);
+0045         atomic_unit_of_electric_quadrupole_mom= struct(<span class="string">'value'</span>,4.48655107e-40, <span class="string">'uncert'</span>, 0.00000011e-40, <span class="string">'unit'</span>, <span class="string">'Cm^2'</span>);
+0046         atomic_unit_of_energy= struct(<span class="string">'value'</span>,4.35974394e-18, <span class="string">'uncert'</span>, 0.00000022e-18, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0047         atomic_unit_of_force= struct(<span class="string">'value'</span>,8.23872206e-8, <span class="string">'uncert'</span>, 0.00000041e-8, <span class="string">'unit'</span>, <span class="string">'N'</span>);
+0048         atomic_unit_of_length= struct(<span class="string">'value'</span>,0.52917720859e-10, <span class="string">'uncert'</span>, 0.00000000036e-10, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0049         atomic_unit_of_mag_dipole_mom= struct(<span class="string">'value'</span>,1.854801830e-23, <span class="string">'uncert'</span>, 0.000000046e-23, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0050         atomic_unit_of_mag_flux_density= struct(<span class="string">'value'</span>,2.350517382e5, <span class="string">'uncert'</span>, 0.000000059e5, <span class="string">'unit'</span>, <span class="string">'T'</span>);
+0051         atomic_unit_of_magnetizability= struct(<span class="string">'value'</span>,7.891036433e-29, <span class="string">'uncert'</span>, 0.000000027e-29, <span class="string">'unit'</span>, <span class="string">'JT^-2'</span>);
+0052         atomic_unit_of_mass= struct(<span class="string">'value'</span>,9.10938215e-31, <span class="string">'uncert'</span>, 0.00000045e-31, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0053         atomic_unit_of_momentum= struct(<span class="string">'value'</span>,1.992851565e-24, <span class="string">'uncert'</span>, 0.000000099e-24, <span class="string">'unit'</span>, <span class="string">'kgms^-1'</span>);
+0054         atomic_unit_of_permittivity= struct(<span class="string">'value'</span>,1.112650056e-10, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'Fm^-1'</span>);
+0055         atomic_unit_of_time= struct(<span class="string">'value'</span>,2.418884326505e-17, <span class="string">'uncert'</span>, 0.000000000016e-17, <span class="string">'unit'</span>, <span class="string">'s'</span>);
+0056         atomic_unit_of_velocity= struct(<span class="string">'value'</span>,2.1876912541e6, <span class="string">'uncert'</span>, 0.0000000015e6, <span class="string">'unit'</span>, <span class="string">'ms^-1'</span>);
+0057         Avogadro_constant= struct(<span class="string">'value'</span>,6.02214179e23, <span class="string">'uncert'</span>, 0.00000030e23, <span class="string">'unit'</span>, <span class="string">'mol^-1'</span>);
+0058         Bohr_magneton= struct(<span class="string">'value'</span>,927.400915e-26, <span class="string">'uncert'</span>, 0.000023e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0059         Bohr_magneton_in_eV_over_T= struct(<span class="string">'value'</span>,5.7883817555e-5, <span class="string">'uncert'</span>, 0.0000000079e-5, <span class="string">'unit'</span>, <span class="string">'eVT^-1'</span>);
+0060         Bohr_magneton_in_Hz_over_T= struct(<span class="string">'value'</span>,13.99624604e9, <span class="string">'uncert'</span>, 0.00000035e9, <span class="string">'unit'</span>, <span class="string">'HzT^-1'</span>);
+0061         Bohr_magneton_in_inverse_meters_per_tesla= struct(<span class="string">'value'</span>,46.6864515, <span class="string">'uncert'</span>, 0.0000012, <span class="string">'unit'</span>, <span class="string">'m^-1T^-1'</span>);
+0062         Bohr_magneton_in_K_over_T= struct(<span class="string">'value'</span>,0.6717131, <span class="string">'uncert'</span>, 0.0000012, <span class="string">'unit'</span>, <span class="string">'KT^-1'</span>);
+0063         Bohr_radius= struct(<span class="string">'value'</span>,0.52917720859e-10, <span class="string">'uncert'</span>, 0.00000000036e-10, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0064         Boltzmann_constant= struct(<span class="string">'value'</span>,1.3806504e-23, <span class="string">'uncert'</span>, 0.0000024e-23, <span class="string">'unit'</span>, <span class="string">'JK^-1'</span>);
+0065         Boltzmann_constant_in_eV_over_K= struct(<span class="string">'value'</span>,8.617343e-5, <span class="string">'uncert'</span>, 0.000015e-5, <span class="string">'unit'</span>, <span class="string">'eVK^-1'</span>);
+0066         Boltzmann_constant_in_Hz_over_K= struct(<span class="string">'value'</span>,2.0836644e10, <span class="string">'uncert'</span>, 0.0000036e10, <span class="string">'unit'</span>, <span class="string">'HzK^-1'</span>);
+0067         Boltzmann_constant_in_inverse_meters_per_kelvin= struct(<span class="string">'value'</span>,69.50356, <span class="string">'uncert'</span>, 0.00012, <span class="string">'unit'</span>, <span class="string">'m^-1K^-1'</span>);
+0068         characteristic_impedance_of_vacuum= struct(<span class="string">'value'</span>,376.730313461, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'ohm'</span>);
+0069         classical_electron_radius= struct(<span class="string">'value'</span>,2.8179402894e-15, <span class="string">'uncert'</span>, 0.0000000058e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0070         Compton_wavelength= struct(<span class="string">'value'</span>,2.4263102175e-12, <span class="string">'uncert'</span>, 0.0000000033e-12, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0071         Compton_wavelength_over2pi= struct(<span class="string">'value'</span>,386.15926459e-15, <span class="string">'uncert'</span>, 0.00000053e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0072         conductance_quantum= struct(<span class="string">'value'</span>,7.7480917004e-5, <span class="string">'uncert'</span>, 0.0000000053e-5, <span class="string">'unit'</span>, <span class="string">'S'</span>);
+0073         conventional_value_of_Josephson_constant= struct(<span class="string">'value'</span>,483597.9e9, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'HzV^-1'</span>);
+0074         conventional_value_of_von_Klitzing_constant= struct(<span class="string">'value'</span>,25812.807, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'ohm'</span>);
+0075         Cu_x_unit= struct(<span class="string">'value'</span>,1.00207699e-13, <span class="string">'uncert'</span>, 0.00000028e-13, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0076         deuteron_electron_mag_mom_ratio= struct(<span class="string">'value'</span>,-4.664345537e-4, <span class="string">'uncert'</span>, 0.000000039e-4, <span class="string">'unit'</span>, <span class="string">''</span>);
+0077         deuteron_electron_mass_ratio= struct(<span class="string">'value'</span>,3670.4829654, <span class="string">'uncert'</span>, 0.0000016, <span class="string">'unit'</span>, <span class="string">''</span>);
+0078         deuteron_g_factor= struct(<span class="string">'value'</span>,0.8574382308, <span class="string">'uncert'</span>, 0.0000000072, <span class="string">'unit'</span>, <span class="string">''</span>);
+0079         deuteron_mag_mom= struct(<span class="string">'value'</span>,0.433073465e-26, <span class="string">'uncert'</span>, 0.000000011e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0080         deuteron_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,0.4669754556e-3, <span class="string">'uncert'</span>, 0.0000000039e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0081         deuteron_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,0.8574382308, <span class="string">'uncert'</span>, 0.0000000072, <span class="string">'unit'</span>, <span class="string">''</span>);
+0082         deuteron_mass= struct(<span class="string">'value'</span>,3.34358320e-27, <span class="string">'uncert'</span>, 0.00000017e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0083         deuteron_mass_energy_equivalent= struct(<span class="string">'value'</span>,3.00506272e-10, <span class="string">'uncert'</span>, 0.00000015e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0084         deuteron_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,1875.612793, <span class="string">'uncert'</span>, 0.000047, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0085         deuteron_mass_in_u= struct(<span class="string">'value'</span>,2.013553212724, <span class="string">'uncert'</span>, 0.000000000078, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0086         deuteron_molar_mass= struct(<span class="string">'value'</span>,2.013553212724e-3, <span class="string">'uncert'</span>, 0.000000000078e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0087         deuteron_neutron_mag_mom_ratio= struct(<span class="string">'value'</span>,-0.44820652, <span class="string">'uncert'</span>, 0.00000011, <span class="string">'unit'</span>, <span class="string">''</span>);
+0088         deuteron_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,0.3070122070, <span class="string">'uncert'</span>, 0.0000000024, <span class="string">'unit'</span>, <span class="string">''</span>);
+0089         deuteron_proton_mass_ratio= struct(<span class="string">'value'</span>,1.99900750108, <span class="string">'uncert'</span>, 0.00000000022, <span class="string">'unit'</span>, <span class="string">''</span>);
+0090         deuteron_rms_charge_radius= struct(<span class="string">'value'</span>,2.1402e-15, <span class="string">'uncert'</span>, 0.0028e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0091         electric_constant= struct(<span class="string">'value'</span>,8.854187817e-12, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'Fm^-1'</span>);
+0092         electron_charge_to_mass_quotient= struct(<span class="string">'value'</span>,-1.758820150e11, <span class="string">'uncert'</span>, 0.000000044e11, <span class="string">'unit'</span>, <span class="string">'Ckg^-1'</span>);
+0093         electron_deuteron_mag_mom_ratio= struct(<span class="string">'value'</span>,-2143.923498, <span class="string">'uncert'</span>, 0.000018, <span class="string">'unit'</span>, <span class="string">''</span>);
+0094         electron_deuteron_mass_ratio= struct(<span class="string">'value'</span>,2.7244371093e-4, <span class="string">'uncert'</span>, 0.0000000012e-4, <span class="string">'unit'</span>, <span class="string">''</span>);
+0095         electron_g_factor= struct(<span class="string">'value'</span>,-2.0023193043622, <span class="string">'uncert'</span>, 0.0000000000015, <span class="string">'unit'</span>, <span class="string">''</span>);
+0096         electron_gyromag_ratio= struct(<span class="string">'value'</span>,1.760859770e11, <span class="string">'uncert'</span>, 0.000000044e11, <span class="string">'unit'</span>, <span class="string">'s^-1T^-1'</span>);
+0097         electron_gyromag_ratio_over2pi= struct(<span class="string">'value'</span>,28024.95364, <span class="string">'uncert'</span>, 0.00070, <span class="string">'unit'</span>, <span class="string">'MHzT^-1'</span>);
+0098         electron_mag_mom= struct(<span class="string">'value'</span>,-928.476377e-26, <span class="string">'uncert'</span>, 0.000023e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0099         electron_mag_mom_anomaly= struct(<span class="string">'value'</span>,1.15965218111e-3, <span class="string">'uncert'</span>, 0.00000000074e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0100         electron_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,-1.00115965218111, <span class="string">'uncert'</span>, 0.00000000000074, <span class="string">'unit'</span>, <span class="string">''</span>);
+0101         electron_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,-1838.28197092, <span class="string">'uncert'</span>, 0.00000080, <span class="string">'unit'</span>, <span class="string">''</span>);
+0102         electron_mass= struct(<span class="string">'value'</span>,9.10938215e-31, <span class="string">'uncert'</span>, 0.00000045e-31, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0103         electron_mass_energy_equivalent= struct(<span class="string">'value'</span>,8.18710438e-14, <span class="string">'uncert'</span>, 0.00000041e-14, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0104         electron_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,0.510998910, <span class="string">'uncert'</span>, 0.000000013, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0105         electron_mass_in_u= struct(<span class="string">'value'</span>,5.4857990943e-4, <span class="string">'uncert'</span>, 0.0000000023e-4, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0106         electron_molar_mass= struct(<span class="string">'value'</span>,5.4857990943e-7, <span class="string">'uncert'</span>, 0.0000000023e-7, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0107         electron_muon_mag_mom_ratio= struct(<span class="string">'value'</span>,206.7669877, <span class="string">'uncert'</span>, 0.0000052, <span class="string">'unit'</span>, <span class="string">''</span>);
+0108         electron_muon_mass_ratio= struct(<span class="string">'value'</span>,4.83633171e-3, <span class="string">'uncert'</span>, 0.00000012e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0109         electron_neutron_mag_mom_ratio= struct(<span class="string">'value'</span>,960.92050, <span class="string">'uncert'</span>, 0.00023, <span class="string">'unit'</span>, <span class="string">''</span>);
+0110         electron_neutron_mass_ratio= struct(<span class="string">'value'</span>,5.4386734459e-4, <span class="string">'uncert'</span>, 0.0000000033e-4, <span class="string">'unit'</span>, <span class="string">''</span>);
+0111         electron_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-658.2106848, <span class="string">'uncert'</span>, 0.0000054, <span class="string">'unit'</span>, <span class="string">''</span>);
+0112         electron_proton_mass_ratio= struct(<span class="string">'value'</span>,5.4461702177e-4, <span class="string">'uncert'</span>, 0.0000000024e-4, <span class="string">'unit'</span>, <span class="string">''</span>);
+0113         electron_tau_mass_ratio= struct(<span class="string">'value'</span>,2.87564e-4, <span class="string">'uncert'</span>, 0.00047e-4, <span class="string">'unit'</span>, <span class="string">''</span>);
+0114         electron_to_alpha_particle_mass_ratio= struct(<span class="string">'value'</span>,1.37093355570e-4, <span class="string">'uncert'</span>, 0.00000000058e-4, <span class="string">'unit'</span>, <span class="string">''</span>);
+0115         electron_to_shielded_helion_mag_mom_ratio= struct(<span class="string">'value'</span>,864.058257, <span class="string">'uncert'</span>, 0.000010, <span class="string">'unit'</span>, <span class="string">''</span>);
+0116         electron_to_shielded_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-658.2275971, <span class="string">'uncert'</span>, 0.0000072, <span class="string">'unit'</span>, <span class="string">''</span>);
+0117         electron_volt= struct(<span class="string">'value'</span>,1.602176487e-19, <span class="string">'uncert'</span>, 0.000000040e-19, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0118         electron_volt_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,1.073544188e-9, <span class="string">'uncert'</span>, 0.000000027e-9, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0119         electron_volt_hartree_relationship= struct(<span class="string">'value'</span>,3.674932540e-2, <span class="string">'uncert'</span>, 0.000000092e-2, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0120         electron_volt_hertz_relationship= struct(<span class="string">'value'</span>,2.417989454e14, <span class="string">'uncert'</span>, 0.000000060e14, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0121         electron_volt_inverse_meter_relationship= struct(<span class="string">'value'</span>,8.06554465e5, <span class="string">'uncert'</span>, 0.00000020e5, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0122         electron_volt_joule_relationship= struct(<span class="string">'value'</span>,1.602176487e-19, <span class="string">'uncert'</span>, 0.000000040e-19, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0123         electron_volt_kelvin_relationship= struct(<span class="string">'value'</span>,1.1604505e4, <span class="string">'uncert'</span>, 0.0000020e4, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0124         electron_volt_kilogram_relationship= struct(<span class="string">'value'</span>,1.782661758e-36, <span class="string">'uncert'</span>, 0.000000044e-36, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0125         elementary_charge= struct(<span class="string">'value'</span>,1.602176487e-19, <span class="string">'uncert'</span>, 0.000000040e-19, <span class="string">'unit'</span>, <span class="string">'C'</span>);
+0126         elementary_charge_over_h= struct(<span class="string">'value'</span>,2.417989454e14, <span class="string">'uncert'</span>, 0.000000060e14, <span class="string">'unit'</span>, <span class="string">'AJ^-1'</span>);
+0127         Faraday_constant= struct(<span class="string">'value'</span>,96485.3399, <span class="string">'uncert'</span>, 0.0024, <span class="string">'unit'</span>, <span class="string">'Cmol^-1'</span>);
+0128         Faraday_constant_for_conventional_electric_current= struct(<span class="string">'value'</span>,96485.3401, <span class="string">'uncert'</span>, 0.0048, <span class="string">'unit'</span>, <span class="string">'C_90mol^-1'</span>);
+0129         Fermi_coupling_constant= struct(<span class="string">'value'</span>,1.16637e-5, <span class="string">'uncert'</span>, 0.00001e-5, <span class="string">'unit'</span>, <span class="string">'GeV^-2'</span>);
+0130         fine_structure_constant= struct(<span class="string">'value'</span>,7.2973525376e-3, <span class="string">'uncert'</span>, 0.0000000050e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0131         first_radiation_constant= struct(<span class="string">'value'</span>,3.74177118e-16, <span class="string">'uncert'</span>, 0.00000019e-16, <span class="string">'unit'</span>, <span class="string">'Wm^2'</span>);
+0132         first_radiation_constant_for_spectral_radiance= struct(<span class="string">'value'</span>,1.191042759e-16, <span class="string">'uncert'</span>, 0.000000059e-16, <span class="string">'unit'</span>, <span class="string">'Wm^2sr^-1'</span>);
+0133         hartree_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,2.9212622986e-8, <span class="string">'uncert'</span>, 0.0000000042e-8, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0134         hartree_electron_volt_relationship= struct(<span class="string">'value'</span>,27.21138386, <span class="string">'uncert'</span>, 0.00000068, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0135         Hartree_energy= struct(<span class="string">'value'</span>,4.35974394e-18, <span class="string">'uncert'</span>, 0.00000022e-18, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0136         Hartree_energy_in_eV= struct(<span class="string">'value'</span>,27.21138386, <span class="string">'uncert'</span>, 0.00000068, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0137         hartree_hertz_relationship= struct(<span class="string">'value'</span>,6.579683920722e15, <span class="string">'uncert'</span>, 0.000000000044e15, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0138         hartree_inverse_meter_relationship= struct(<span class="string">'value'</span>,2.194746313705e7, <span class="string">'uncert'</span>, 0.000000000015e7, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0139         hartree_joule_relationship= struct(<span class="string">'value'</span>,4.35974394e-18, <span class="string">'uncert'</span>, 0.00000022e-18, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0140         hartree_kelvin_relationship= struct(<span class="string">'value'</span>,3.1577465e5, <span class="string">'uncert'</span>, 0.0000055e5, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0141         hartree_kilogram_relationship= struct(<span class="string">'value'</span>,4.85086934e-35, <span class="string">'uncert'</span>, 0.00000024e-35, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0142         helion_electron_mass_ratio= struct(<span class="string">'value'</span>,5495.8852765, <span class="string">'uncert'</span>, 0.0000052, <span class="string">'unit'</span>, <span class="string">''</span>);
+0143         helion_mass= struct(<span class="string">'value'</span>,5.00641192e-27, <span class="string">'uncert'</span>, 0.00000025e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0144         helion_mass_energy_equivalent= struct(<span class="string">'value'</span>,4.49953864e-10, <span class="string">'uncert'</span>, 0.00000022e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0145         helion_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,2808.391383, <span class="string">'uncert'</span>, 0.000070, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0146         helion_mass_in_u= struct(<span class="string">'value'</span>,3.0149322473, <span class="string">'uncert'</span>, 0.0000000026, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0147         helion_molar_mass= struct(<span class="string">'value'</span>,3.0149322473e-3, <span class="string">'uncert'</span>, 0.0000000026e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0148         helion_proton_mass_ratio= struct(<span class="string">'value'</span>,2.9931526713, <span class="string">'uncert'</span>, 0.0000000026, <span class="string">'unit'</span>, <span class="string">''</span>);
+0149         hertz_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,4.4398216294e-24, <span class="string">'uncert'</span>, 0.0000000064e-24, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0150         hertz_electron_volt_relationship= struct(<span class="string">'value'</span>,4.13566733e-15, <span class="string">'uncert'</span>, 0.00000010e-15, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0151         hertz_hartree_relationship= struct(<span class="string">'value'</span>,1.519829846006e-16, <span class="string">'uncert'</span>, 0.000000000010e-16, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0152         hertz_inverse_meter_relationship= struct(<span class="string">'value'</span>,3.335640951e-9, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0153         hertz_joule_relationship= struct(<span class="string">'value'</span>,6.62606896e-34, <span class="string">'uncert'</span>, 0.00000033e-34, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0154         hertz_kelvin_relationship= struct(<span class="string">'value'</span>,4.7992374e-11, <span class="string">'uncert'</span>, 0.0000084e-11, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0155         hertz_kilogram_relationship= struct(<span class="string">'value'</span>,7.37249600e-51, <span class="string">'uncert'</span>, 0.00000037e-51, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0156         inverse_fine_structure_constant= struct(<span class="string">'value'</span>,137.035999679, <span class="string">'uncert'</span>, 0.000000094, <span class="string">'unit'</span>, <span class="string">''</span>);
+0157         inverse_meter_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,1.3310250394e-15, <span class="string">'uncert'</span>, 0.0000000019e-15, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0158         inverse_meter_electron_volt_relationship= struct(<span class="string">'value'</span>,1.239841875e-6, <span class="string">'uncert'</span>, 0.000000031e-6, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0159         inverse_meter_hartree_relationship= struct(<span class="string">'value'</span>,4.556335252760e-8, <span class="string">'uncert'</span>, 0.000000000030e-8, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0160         inverse_meter_hertz_relationship= struct(<span class="string">'value'</span>,299792458, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0161         inverse_meter_joule_relationship= struct(<span class="string">'value'</span>,1.986445501e-25, <span class="string">'uncert'</span>, 0.000000099e-25, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0162         inverse_meter_kelvin_relationship= struct(<span class="string">'value'</span>,1.4387752e-2, <span class="string">'uncert'</span>, 0.0000025e-2, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0163         inverse_meter_kilogram_relationship= struct(<span class="string">'value'</span>,2.21021870e-42, <span class="string">'uncert'</span>, 0.00000011e-42, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0164         inverse_of_conductance_quantum= struct(<span class="string">'value'</span>,12906.4037787, <span class="string">'uncert'</span>, 0.0000088, <span class="string">'unit'</span>, <span class="string">'ohm'</span>);
+0165         Josephson_constant= struct(<span class="string">'value'</span>,483597.891e9, <span class="string">'uncert'</span>, 0.012e9, <span class="string">'unit'</span>, <span class="string">'HzV^-1'</span>);
+0166         joule_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,6.70053641e9, <span class="string">'uncert'</span>, 0.00000033e9, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0167         joule_electron_volt_relationship= struct(<span class="string">'value'</span>,6.24150965e18, <span class="string">'uncert'</span>, 0.00000016e18, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0168         joule_hartree_relationship= struct(<span class="string">'value'</span>,2.29371269e17, <span class="string">'uncert'</span>, 0.00000011e17, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0169         joule_hertz_relationship= struct(<span class="string">'value'</span>,1.509190450e33, <span class="string">'uncert'</span>, 0.000000075e33, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0170         joule_inverse_meter_relationship= struct(<span class="string">'value'</span>,5.03411747e24, <span class="string">'uncert'</span>, 0.00000025e24, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0171         joule_kelvin_relationship= struct(<span class="string">'value'</span>,7.242963e22, <span class="string">'uncert'</span>, 0.000013e22, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0172         joule_kilogram_relationship= struct(<span class="string">'value'</span>,1.112650056e-17, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0173         kelvin_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,9.251098e-14, <span class="string">'uncert'</span>, 0.000016e-14, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0174         kelvin_electron_volt_relationship= struct(<span class="string">'value'</span>,8.617343e-5, <span class="string">'uncert'</span>, 0.000015e-5, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0175         kelvin_hartree_relationship= struct(<span class="string">'value'</span>,3.1668153e-6, <span class="string">'uncert'</span>, 0.0000055e-6, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0176         kelvin_hertz_relationship= struct(<span class="string">'value'</span>,2.0836644e10, <span class="string">'uncert'</span>, 0.0000036e10, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0177         kelvin_inverse_meter_relationship= struct(<span class="string">'value'</span>,69.50356, <span class="string">'uncert'</span>, 0.00012, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0178         kelvin_joule_relationship= struct(<span class="string">'value'</span>,1.3806504e-23, <span class="string">'uncert'</span>, 0.0000024e-23, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0179         kelvin_kilogram_relationship= struct(<span class="string">'value'</span>,1.5361807e-40, <span class="string">'uncert'</span>, 0.0000027e-40, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0180         kilogram_atomic_mass_unit_relationship= struct(<span class="string">'value'</span>,6.02214179e26, <span class="string">'uncert'</span>, 0.00000030e26, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0181         kilogram_electron_volt_relationship= struct(<span class="string">'value'</span>,5.60958912e35, <span class="string">'uncert'</span>, 0.00000014e35, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0182         kilogram_hartree_relationship= struct(<span class="string">'value'</span>,2.06148616e34, <span class="string">'uncert'</span>, 0.00000010e34, <span class="string">'unit'</span>, <span class="string">'E_h'</span>);
+0183         kilogram_hertz_relationship= struct(<span class="string">'value'</span>,1.356392733e50, <span class="string">'uncert'</span>, 0.000000068e50, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0184         kilogram_inverse_meter_relationship= struct(<span class="string">'value'</span>,4.52443915e41, <span class="string">'uncert'</span>, 0.00000023e41, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0185         kilogram_joule_relationship= struct(<span class="string">'value'</span>,8.987551787e16, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0186         kilogram_kelvin_relationship= struct(<span class="string">'value'</span>,6.509651e39, <span class="string">'uncert'</span>, 0.000011e39, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0187         lattice_parameter_of_silicon= struct(<span class="string">'value'</span>,543.102064e-12, <span class="string">'uncert'</span>, 0.000014e-12, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0188         Loschmidt_constant_273_15K_101_325kPa= struct(<span class="string">'value'</span>,2.6867774e25, <span class="string">'uncert'</span>, 0.0000047e25, <span class="string">'unit'</span>, <span class="string">'m^-3'</span>);
+0189         mag_constant= struct(<span class="string">'value'</span>,12.566370614e-7, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'NA^-2'</span>);
+0190         mag_flux_quantum= struct(<span class="string">'value'</span>,2.067833667e-15, <span class="string">'uncert'</span>, 0.000000052e-15, <span class="string">'unit'</span>, <span class="string">'Wb'</span>);
+0191         molar_gas_constant= struct(<span class="string">'value'</span>,8.314472, <span class="string">'uncert'</span>, 0.000015, <span class="string">'unit'</span>, <span class="string">'Jmol^-1K^-1'</span>);
+0192         molar_mass_constant= struct(<span class="string">'value'</span>,1e-3, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0193         molar_mass_of_carbon_12= struct(<span class="string">'value'</span>,12e-3, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0194         molar_Planck_constant= struct(<span class="string">'value'</span>,3.9903126821e-10, <span class="string">'uncert'</span>, 0.0000000057e-10, <span class="string">'unit'</span>, <span class="string">'Jsmol^-1'</span>);
+0195         molar_Planck_constant_times_c= struct(<span class="string">'value'</span>,0.11962656472, <span class="string">'uncert'</span>, 0.00000000017, <span class="string">'unit'</span>, <span class="string">'Jmmol^-1'</span>);
+0196         molar_volume_of_ideal_gas_273_15K_100kPa= struct(<span class="string">'value'</span>,22.710981e-3, <span class="string">'uncert'</span>, 0.000040e-3, <span class="string">'unit'</span>, <span class="string">'m^3mol^-1'</span>);
+0197         molar_volume_of_ideal_gas_273_15K_101_325kPa= struct(<span class="string">'value'</span>,22.413996e-3, <span class="string">'uncert'</span>, 0.000039e-3, <span class="string">'unit'</span>, <span class="string">'m^3mol^-1'</span>);
+0198         molar_volume_of_silicon= struct(<span class="string">'value'</span>,12.0588349e-6, <span class="string">'uncert'</span>, 0.0000011e-6, <span class="string">'unit'</span>, <span class="string">'m^3mol^-1'</span>);
+0199         Mo_x_unit= struct(<span class="string">'value'</span>,1.00209955e-13, <span class="string">'uncert'</span>, 0.00000053e-13, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0200         muon_Compton_wavelength= struct(<span class="string">'value'</span>,11.73444104e-15, <span class="string">'uncert'</span>, 0.00000030e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0201         muon_Compton_wavelength_over2pi= struct(<span class="string">'value'</span>,1.867594295e-15, <span class="string">'uncert'</span>, 0.000000047e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0202         muon_electron_mass_ratio= struct(<span class="string">'value'</span>,206.7682823, <span class="string">'uncert'</span>, 0.0000052, <span class="string">'unit'</span>, <span class="string">''</span>);
+0203         muon_g_factor= struct(<span class="string">'value'</span>,-2.0023318414, <span class="string">'uncert'</span>, 0.0000000012, <span class="string">'unit'</span>, <span class="string">''</span>);
+0204         muon_mag_mom= struct(<span class="string">'value'</span>,-4.49044786e-26, <span class="string">'uncert'</span>, 0.00000016e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0205         muon_mag_mom_anomaly= struct(<span class="string">'value'</span>,1.16592069e-3, <span class="string">'uncert'</span>, 0.00000060e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0206         muon_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,-4.84197049e-3, <span class="string">'uncert'</span>, 0.00000012e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0207         muon_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,-8.89059705, <span class="string">'uncert'</span>, 0.00000023, <span class="string">'unit'</span>, <span class="string">''</span>);
+0208         muon_mass= struct(<span class="string">'value'</span>,1.88353130e-28, <span class="string">'uncert'</span>, 0.00000011e-28, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0209         muon_mass_energy_equivalent= struct(<span class="string">'value'</span>,1.692833510e-11, <span class="string">'uncert'</span>, 0.000000095e-11, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0210         muon_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,105.6583668, <span class="string">'uncert'</span>, 0.0000038, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0211         muon_mass_in_u= struct(<span class="string">'value'</span>,0.1134289256, <span class="string">'uncert'</span>, 0.0000000029, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0212         muon_molar_mass= struct(<span class="string">'value'</span>,0.1134289256e-3, <span class="string">'uncert'</span>, 0.0000000029e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0213         muon_neutron_mass_ratio= struct(<span class="string">'value'</span>,0.1124545167, <span class="string">'uncert'</span>, 0.0000000029, <span class="string">'unit'</span>, <span class="string">''</span>);
+0214         muon_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-3.183345137, <span class="string">'uncert'</span>, 0.000000085, <span class="string">'unit'</span>, <span class="string">''</span>);
+0215         muon_proton_mass_ratio= struct(<span class="string">'value'</span>,0.1126095261, <span class="string">'uncert'</span>, 0.0000000029, <span class="string">'unit'</span>, <span class="string">''</span>);
+0216         muon_tau_mass_ratio= struct(<span class="string">'value'</span>,5.94592e-2, <span class="string">'uncert'</span>, 0.00097e-2, <span class="string">'unit'</span>, <span class="string">''</span>);
+0217         natural_unit_of_action= struct(<span class="string">'value'</span>,1.054571628e-34, <span class="string">'uncert'</span>, 0.000000053e-34, <span class="string">'unit'</span>, <span class="string">'Js'</span>);
+0218         natural_unit_of_action_in_eV_s= struct(<span class="string">'value'</span>,6.58211899e-16, <span class="string">'uncert'</span>, 0.00000016e-16, <span class="string">'unit'</span>, <span class="string">'eVs'</span>);
+0219         natural_unit_of_energy= struct(<span class="string">'value'</span>,8.18710438e-14, <span class="string">'uncert'</span>, 0.00000041e-14, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0220         natural_unit_of_energy_in_MeV= struct(<span class="string">'value'</span>,0.510998910, <span class="string">'uncert'</span>, 0.000000013, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0221         natural_unit_of_length= struct(<span class="string">'value'</span>,386.15926459e-15, <span class="string">'uncert'</span>, 0.00000053e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0222         natural_unit_of_mass= struct(<span class="string">'value'</span>,9.10938215e-31, <span class="string">'uncert'</span>, 0.00000045e-31, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0223         natural_unit_of_momentum= struct(<span class="string">'value'</span>,2.73092406e-22, <span class="string">'uncert'</span>, 0.00000014e-22, <span class="string">'unit'</span>, <span class="string">'kgms^-1'</span>);
+0224         natural_unit_of_momentum_in_MeV_over_c= struct(<span class="string">'value'</span>,0.510998910, <span class="string">'uncert'</span>, 0.000000013, <span class="string">'unit'</span>, <span class="string">'MeV/c'</span>);
+0225         natural_unit_of_time= struct(<span class="string">'value'</span>,1.2880886570e-21, <span class="string">'uncert'</span>, 0.0000000018e-21, <span class="string">'unit'</span>, <span class="string">'s'</span>);
+0226         natural_unit_of_velocity= struct(<span class="string">'value'</span>,299792458, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'ms^-1'</span>);
+0227         neutron_Compton_wavelength= struct(<span class="string">'value'</span>,1.3195908951e-15, <span class="string">'uncert'</span>, 0.0000000020e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0228         neutron_Compton_wavelength_over2pi= struct(<span class="string">'value'</span>,0.21001941382e-15, <span class="string">'uncert'</span>, 0.00000000031e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0229         neutron_electron_mag_mom_ratio= struct(<span class="string">'value'</span>,1.04066882e-3, <span class="string">'uncert'</span>, 0.00000025e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0230         neutron_electron_mass_ratio= struct(<span class="string">'value'</span>,1838.6836605, <span class="string">'uncert'</span>, 0.0000011, <span class="string">'unit'</span>, <span class="string">''</span>);
+0231         neutron_g_factor= struct(<span class="string">'value'</span>,-3.82608545, <span class="string">'uncert'</span>, 0.00000090, <span class="string">'unit'</span>, <span class="string">''</span>);
+0232         neutron_gyromag_ratio= struct(<span class="string">'value'</span>,1.83247185e8, <span class="string">'uncert'</span>, 0.00000043e8, <span class="string">'unit'</span>, <span class="string">'s^-1T^-1'</span>);
+0233         neutron_gyromag_ratio_over2pi= struct(<span class="string">'value'</span>,29.1646954, <span class="string">'uncert'</span>, 0.0000069, <span class="string">'unit'</span>, <span class="string">'MHzT^-1'</span>);
+0234         neutron_mag_mom= struct(<span class="string">'value'</span>,-0.96623641e-26, <span class="string">'uncert'</span>, 0.00000023e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0235         neutron_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,-1.04187563e-3, <span class="string">'uncert'</span>, 0.00000025e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0236         neutron_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,-1.91304273, <span class="string">'uncert'</span>, 0.00000045, <span class="string">'unit'</span>, <span class="string">''</span>);
+0237         neutron_mass= struct(<span class="string">'value'</span>,1.674927211e-27, <span class="string">'uncert'</span>, 0.000000084e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0238         neutron_mass_energy_equivalent= struct(<span class="string">'value'</span>,1.505349505e-10, <span class="string">'uncert'</span>, 0.000000075e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0239         neutron_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,939.565346, <span class="string">'uncert'</span>, 0.000023, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0240         neutron_mass_in_u= struct(<span class="string">'value'</span>,1.00866491597, <span class="string">'uncert'</span>, 0.00000000043, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0241         neutron_molar_mass= struct(<span class="string">'value'</span>,1.00866491597e-3, <span class="string">'uncert'</span>, 0.00000000043e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0242         neutron_muon_mass_ratio= struct(<span class="string">'value'</span>,8.89248409, <span class="string">'uncert'</span>, 0.00000023, <span class="string">'unit'</span>, <span class="string">''</span>);
+0243         neutron_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-0.68497934, <span class="string">'uncert'</span>, 0.00000016, <span class="string">'unit'</span>, <span class="string">''</span>);
+0244         neutron_proton_mass_ratio= struct(<span class="string">'value'</span>,1.00137841918, <span class="string">'uncert'</span>, 0.00000000046, <span class="string">'unit'</span>, <span class="string">''</span>);
+0245         neutron_tau_mass_ratio= struct(<span class="string">'value'</span>,0.528740, <span class="string">'uncert'</span>, 0.000086, <span class="string">'unit'</span>, <span class="string">''</span>);
+0246         neutron_to_shielded_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-0.68499694, <span class="string">'uncert'</span>, 0.00000016, <span class="string">'unit'</span>, <span class="string">''</span>);
+0247         Newtonian_constant_of_gravitation= struct(<span class="string">'value'</span>,6.67428e-11, <span class="string">'uncert'</span>, 0.00067e-11, <span class="string">'unit'</span>, <span class="string">'m^3kg^-1s^-2'</span>);
+0248         Newtonian_constant_of_gravitation_over_h_bar_c= struct(<span class="string">'value'</span>,6.70881e-39, <span class="string">'uncert'</span>, 0.00067e-39, <span class="string">'unit'</span>, <span class="string">'(GeV/c^2)^-2'</span>);
+0249         nuclear_magneton= struct(<span class="string">'value'</span>,5.05078324e-27, <span class="string">'uncert'</span>, 0.00000013e-27, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0250         nuclear_magneton_in_eV_over_T= struct(<span class="string">'value'</span>,3.1524512326e-8, <span class="string">'uncert'</span>, 0.0000000045e-8, <span class="string">'unit'</span>, <span class="string">'eVT^-1'</span>);
+0251         nuclear_magneton_in_inverse_meters_per_tesla= struct(<span class="string">'value'</span>,2.542623616e-2, <span class="string">'uncert'</span>, 0.000000064e-2, <span class="string">'unit'</span>, <span class="string">'m^-1T^-1'</span>);
+0252         nuclear_magneton_in_K_over_T= struct(<span class="string">'value'</span>,3.6582637e-4, <span class="string">'uncert'</span>, 0.0000064e-4, <span class="string">'unit'</span>, <span class="string">'KT^-1'</span>);
+0253         nuclear_magneton_in_MHz_over_T= struct(<span class="string">'value'</span>,7.62259384, <span class="string">'uncert'</span>, 0.00000019, <span class="string">'unit'</span>, <span class="string">'MHzT^-1'</span>);
+0254         Planck_constant= struct(<span class="string">'value'</span>,6.62606896e-34, <span class="string">'uncert'</span>, 0.00000033e-34, <span class="string">'unit'</span>, <span class="string">'Js'</span>);
+0255         Planck_constant_in_eV_s= struct(<span class="string">'value'</span>,4.13566733e-15, <span class="string">'uncert'</span>, 0.00000010e-15, <span class="string">'unit'</span>, <span class="string">'eVs'</span>);
+0256         Planck_constant_over2pi= struct(<span class="string">'value'</span>,1.054571628e-34, <span class="string">'uncert'</span>, 0.000000053e-34, <span class="string">'unit'</span>, <span class="string">'Js'</span>);
+0257         Planck_constant_over2pi_in_eV_s= struct(<span class="string">'value'</span>,6.58211899e-16, <span class="string">'uncert'</span>, 0.00000016e-16, <span class="string">'unit'</span>, <span class="string">'eVs'</span>);
+0258         Planck_constant_over2pi_times_c_in_MeV_fm= struct(<span class="string">'value'</span>,197.3269631, <span class="string">'uncert'</span>, 0.0000049, <span class="string">'unit'</span>, <span class="string">'MeVfm'</span>);
+0259         Planck_length= struct(<span class="string">'value'</span>,1.616252e-35, <span class="string">'uncert'</span>, 0.000081e-35, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0260         Planck_mass= struct(<span class="string">'value'</span>,2.17644e-8, <span class="string">'uncert'</span>, 0.00011e-8, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0261         Planck_mass_energy_equivalent_in_GeV= struct(<span class="string">'value'</span>,1.220892e19, <span class="string">'uncert'</span>, 0.000061e19, <span class="string">'unit'</span>, <span class="string">'GeV'</span>);
+0262         Planck_temperature= struct(<span class="string">'value'</span>,1.416785e32, <span class="string">'uncert'</span>, 0.000071e32, <span class="string">'unit'</span>, <span class="string">'K'</span>);
+0263         Planck_time= struct(<span class="string">'value'</span>,5.39124e-44, <span class="string">'uncert'</span>, 0.00027e-44, <span class="string">'unit'</span>, <span class="string">'s'</span>);
+0264         proton_charge_to_mass_quotient= struct(<span class="string">'value'</span>,9.57883392e7, <span class="string">'uncert'</span>, 0.00000024e7, <span class="string">'unit'</span>, <span class="string">'Ckg^-1'</span>);
+0265         proton_Compton_wavelength= struct(<span class="string">'value'</span>,1.3214098446e-15, <span class="string">'uncert'</span>, 0.0000000019e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0266         proton_Compton_wavelength_over2pi= struct(<span class="string">'value'</span>,0.21030890861e-15, <span class="string">'uncert'</span>, 0.00000000030e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0267         proton_electron_mass_ratio= struct(<span class="string">'value'</span>,1836.15267247, <span class="string">'uncert'</span>, 0.00000080, <span class="string">'unit'</span>, <span class="string">''</span>);
+0268         proton_g_factor= struct(<span class="string">'value'</span>,5.585694713, <span class="string">'uncert'</span>, 0.000000046, <span class="string">'unit'</span>, <span class="string">''</span>);
+0269         proton_gyromag_ratio= struct(<span class="string">'value'</span>,2.675222099e8, <span class="string">'uncert'</span>, 0.000000070e8, <span class="string">'unit'</span>, <span class="string">'s^-1T^-1'</span>);
+0270         proton_gyromag_ratio_over2pi= struct(<span class="string">'value'</span>,42.5774821, <span class="string">'uncert'</span>, 0.0000011, <span class="string">'unit'</span>, <span class="string">'MHzT^-1'</span>);
+0271         proton_mag_mom= struct(<span class="string">'value'</span>,1.410606662e-26, <span class="string">'uncert'</span>, 0.000000037e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0272         proton_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,1.521032209e-3, <span class="string">'uncert'</span>, 0.000000012e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0273         proton_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,2.792847356, <span class="string">'uncert'</span>, 0.000000023, <span class="string">'unit'</span>, <span class="string">''</span>);
+0274         proton_mag_shielding_correction= struct(<span class="string">'value'</span>,25.694e-6, <span class="string">'uncert'</span>, 0.014e-6, <span class="string">'unit'</span>, <span class="string">''</span>);
+0275         proton_mass= struct(<span class="string">'value'</span>,1.672621637e-27, <span class="string">'uncert'</span>, 0.000000083e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0276         proton_mass_energy_equivalent= struct(<span class="string">'value'</span>,1.503277359e-10, <span class="string">'uncert'</span>, 0.000000075e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0277         proton_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,938.272013, <span class="string">'uncert'</span>, 0.000023, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0278         proton_mass_in_u= struct(<span class="string">'value'</span>,1.00727646677, <span class="string">'uncert'</span>, 0.00000000010, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0279         proton_molar_mass= struct(<span class="string">'value'</span>,1.00727646677e-3, <span class="string">'uncert'</span>, 0.00000000010e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0280         proton_muon_mass_ratio= struct(<span class="string">'value'</span>,8.88024339, <span class="string">'uncert'</span>, 0.00000023, <span class="string">'unit'</span>, <span class="string">''</span>);
+0281         proton_neutron_mag_mom_ratio= struct(<span class="string">'value'</span>,-1.45989806, <span class="string">'uncert'</span>, 0.00000034, <span class="string">'unit'</span>, <span class="string">''</span>);
+0282         proton_neutron_mass_ratio= struct(<span class="string">'value'</span>,0.99862347824, <span class="string">'uncert'</span>, 0.00000000046, <span class="string">'unit'</span>, <span class="string">''</span>);
+0283         proton_rms_charge_radius= struct(<span class="string">'value'</span>,0.8768e-15, <span class="string">'uncert'</span>, 0.0069e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0284         proton_tau_mass_ratio= struct(<span class="string">'value'</span>,0.528012, <span class="string">'uncert'</span>, 0.000086, <span class="string">'unit'</span>, <span class="string">''</span>);
+0285         quantum_of_circulation= struct(<span class="string">'value'</span>,3.6369475199e-4, <span class="string">'uncert'</span>, 0.0000000050e-4, <span class="string">'unit'</span>, <span class="string">'m^2s^-1'</span>);
+0286         quantum_of_circulation_times2= struct(<span class="string">'value'</span>,7.273895040e-4, <span class="string">'uncert'</span>, 0.000000010e-4, <span class="string">'unit'</span>, <span class="string">'m^2s^-1'</span>);
+0287         Rydberg_constant= struct(<span class="string">'value'</span>,10973731.568527, <span class="string">'uncert'</span>, 0.000073, <span class="string">'unit'</span>, <span class="string">'m^-1'</span>);
+0288         Rydberg_constant_times_c_in_Hz= struct(<span class="string">'value'</span>,3.289841960361e15, <span class="string">'uncert'</span>, 0.000000000022e15, <span class="string">'unit'</span>, <span class="string">'Hz'</span>);
+0289         Rydberg_constant_times_hc_in_eV= struct(<span class="string">'value'</span>,13.60569193, <span class="string">'uncert'</span>, 0.00000034, <span class="string">'unit'</span>, <span class="string">'eV'</span>);
+0290         Rydberg_constant_times_hc_in_J= struct(<span class="string">'value'</span>,2.17987197e-18, <span class="string">'uncert'</span>, 0.00000011e-18, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0291         Sackur_Tetrode_constant_1K_100kPa= struct(<span class="string">'value'</span>,-1.1517047, <span class="string">'uncert'</span>, 0.0000044, <span class="string">'unit'</span>, <span class="string">''</span>);
+0292         Sackur_Tetrode_constant_1K_101325kPa= struct(<span class="string">'value'</span>,-1.1648677, <span class="string">'uncert'</span>, 0.0000044, <span class="string">'unit'</span>, <span class="string">''</span>);
+0293         second_radiation_constant= struct(<span class="string">'value'</span>,1.4387752e-2, <span class="string">'uncert'</span>, 0.0000025e-2, <span class="string">'unit'</span>, <span class="string">'mK'</span>);
+0294         shielded_helion_gyromag_ratio= struct(<span class="string">'value'</span>,2.037894730e8, <span class="string">'uncert'</span>, 0.000000056e8, <span class="string">'unit'</span>, <span class="string">'s^-1T^-1'</span>);
+0295         shielded_helion_gyromag_ratio_over2pi= struct(<span class="string">'value'</span>,32.43410198, <span class="string">'uncert'</span>, 0.00000090, <span class="string">'unit'</span>, <span class="string">'MHzT^-1'</span>);
+0296         shielded_helion_mag_mom= struct(<span class="string">'value'</span>,-1.074552982e-26, <span class="string">'uncert'</span>, 0.000000030e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0297         shielded_helion_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,-1.158671471e-3, <span class="string">'uncert'</span>, 0.000000014e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0298         shielded_helion_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,-2.127497718, <span class="string">'uncert'</span>, 0.000000025, <span class="string">'unit'</span>, <span class="string">''</span>);
+0299         shielded_helion_to_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-0.761766558, <span class="string">'uncert'</span>, 0.000000011, <span class="string">'unit'</span>, <span class="string">''</span>);
+0300         shielded_helion_to_shielded_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,-0.7617861313, <span class="string">'uncert'</span>, 0.0000000033, <span class="string">'unit'</span>, <span class="string">''</span>);
+0301         shielded_proton_gyromag_ratio= struct(<span class="string">'value'</span>,2.675153362e8, <span class="string">'uncert'</span>, 0.000000073e8, <span class="string">'unit'</span>, <span class="string">'s^-1T^-1'</span>);
+0302         shielded_proton_gyromag_ratio_over2pi= struct(<span class="string">'value'</span>,42.5763881, <span class="string">'uncert'</span>, 0.0000012, <span class="string">'unit'</span>, <span class="string">'MHzT^-1'</span>);
+0303         shielded_proton_mag_mom= struct(<span class="string">'value'</span>,1.410570419e-26, <span class="string">'uncert'</span>, 0.000000038e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0304         shielded_proton_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,1.520993128e-3, <span class="string">'uncert'</span>, 0.000000017e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0305         shielded_proton_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,2.792775598, <span class="string">'uncert'</span>, 0.000000030, <span class="string">'unit'</span>, <span class="string">''</span>);
+0306         speed_of_light_in_vacuum= struct(<span class="string">'value'</span>,299792458, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'ms^-1'</span>);
+0307         standard_acceleration_of_gravity= struct(<span class="string">'value'</span>,9.80665, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'ms^-2'</span>);
+0308         standard_atmosphere= struct(<span class="string">'value'</span>,101325, <span class="string">'uncert'</span>, 0, <span class="string">'unit'</span>, <span class="string">'Pa'</span>);
+0309         Stefan_Boltzmann_constant= struct(<span class="string">'value'</span>,5.670400e-8, <span class="string">'uncert'</span>, 0.000040e-8, <span class="string">'unit'</span>, <span class="string">'Wm^-2K^-4'</span>);
+0310         tau_Compton_wavelength= struct(<span class="string">'value'</span>,0.69772e-15, <span class="string">'uncert'</span>, 0.00011e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0311         tau_Compton_wavelength_over2pi= struct(<span class="string">'value'</span>,0.111046e-15, <span class="string">'uncert'</span>, 0.000018e-15, <span class="string">'unit'</span>, <span class="string">'m'</span>);
+0312         tau_electron_mass_ratio= struct(<span class="string">'value'</span>,3477.48, <span class="string">'uncert'</span>, 0.57, <span class="string">'unit'</span>, <span class="string">''</span>);
+0313         tau_mass= struct(<span class="string">'value'</span>,3.16777e-27, <span class="string">'uncert'</span>, 0.00052e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0314         tau_mass_energy_equivalent= struct(<span class="string">'value'</span>,2.84705e-10, <span class="string">'uncert'</span>, 0.00046e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0315         tau_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,1776.99, <span class="string">'uncert'</span>, 0.29, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0316         tau_mass_in_u= struct(<span class="string">'value'</span>,1.90768, <span class="string">'uncert'</span>, 0.00031, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0317         tau_molar_mass= struct(<span class="string">'value'</span>,1.90768e-3, <span class="string">'uncert'</span>, 0.00031e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0318         tau_muon_mass_ratio= struct(<span class="string">'value'</span>,16.8183, <span class="string">'uncert'</span>, 0.0027, <span class="string">'unit'</span>, <span class="string">''</span>);
+0319         tau_neutron_mass_ratio= struct(<span class="string">'value'</span>,1.89129, <span class="string">'uncert'</span>, 0.00031, <span class="string">'unit'</span>, <span class="string">''</span>);
+0320         tau_proton_mass_ratio= struct(<span class="string">'value'</span>,1.89390, <span class="string">'uncert'</span>, 0.00031, <span class="string">'unit'</span>, <span class="string">''</span>);
+0321         Thomson_cross_section= struct(<span class="string">'value'</span>,0.6652458558e-28, <span class="string">'uncert'</span>, 0.0000000027e-28, <span class="string">'unit'</span>, <span class="string">'m^2'</span>);
+0322         triton_electron_mag_mom_ratio= struct(<span class="string">'value'</span>,-1.620514423e-3, <span class="string">'uncert'</span>, 0.000000021e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0323         triton_electron_mass_ratio= struct(<span class="string">'value'</span>,5496.9215269, <span class="string">'uncert'</span>, 0.0000051, <span class="string">'unit'</span>, <span class="string">''</span>);
+0324         triton_g_factor= struct(<span class="string">'value'</span>,5.957924896, <span class="string">'uncert'</span>, 0.000000076, <span class="string">'unit'</span>, <span class="string">''</span>);
+0325         triton_mag_mom= struct(<span class="string">'value'</span>,1.504609361e-26, <span class="string">'uncert'</span>, 0.000000042e-26, <span class="string">'unit'</span>, <span class="string">'JT^-1'</span>);
+0326         triton_mag_mom_to_Bohr_magneton_ratio= struct(<span class="string">'value'</span>,1.622393657e-3, <span class="string">'uncert'</span>, 0.000000021e-3, <span class="string">'unit'</span>, <span class="string">''</span>);
+0327         triton_mag_mom_to_nuclear_magneton_ratio= struct(<span class="string">'value'</span>,2.978962448, <span class="string">'uncert'</span>, 0.000000038, <span class="string">'unit'</span>, <span class="string">''</span>);
+0328         triton_mass= struct(<span class="string">'value'</span>,5.00735588e-27, <span class="string">'uncert'</span>, 0.00000025e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0329         triton_mass_energy_equivalent= struct(<span class="string">'value'</span>,4.50038703e-10, <span class="string">'uncert'</span>, 0.00000022e-10, <span class="string">'unit'</span>, <span class="string">'J'</span>);
+0330         triton_mass_energy_equivalent_in_MeV= struct(<span class="string">'value'</span>,2808.920906, <span class="string">'uncert'</span>, 0.000070, <span class="string">'unit'</span>, <span class="string">'MeV'</span>);
+0331         triton_mass_in_u= struct(<span class="string">'value'</span>,3.0155007134, <span class="string">'uncert'</span>, 0.0000000025, <span class="string">'unit'</span>, <span class="string">'u'</span>);
+0332         triton_molar_mass= struct(<span class="string">'value'</span>,3.0155007134e-3, <span class="string">'uncert'</span>, 0.0000000025e-3, <span class="string">'unit'</span>, <span class="string">'kgmol^-1'</span>);
+0333         triton_neutron_mag_mom_ratio= struct(<span class="string">'value'</span>,-1.55718553, <span class="string">'uncert'</span>, 0.00000037, <span class="string">'unit'</span>, <span class="string">''</span>);
+0334         triton_proton_mag_mom_ratio= struct(<span class="string">'value'</span>,1.066639908, <span class="string">'uncert'</span>, 0.000000010, <span class="string">'unit'</span>, <span class="string">''</span>);
+0335         triton_proton_mass_ratio= struct(<span class="string">'value'</span>,2.9937170309, <span class="string">'uncert'</span>, 0.0000000025, <span class="string">'unit'</span>, <span class="string">''</span>);
+0336         unified_atomic_mass_unit= struct(<span class="string">'value'</span>,1.660538782e-27, <span class="string">'uncert'</span>, 0.000000083e-27, <span class="string">'unit'</span>, <span class="string">'kg'</span>);
+0337         von_Klitzing_constant= struct(<span class="string">'value'</span>,25812.807557, <span class="string">'uncert'</span>, 0.000018, <span class="string">'unit'</span>, <span class="string">'ohm'</span>);
+0338         weak_mixing_angle= struct(<span class="string">'value'</span>,0.22255, <span class="string">'uncert'</span>, 0.00056, <span class="string">'unit'</span>, <span class="string">''</span>);
+0339         Wien_frequency_displacement_law_constant= struct(<span class="string">'value'</span>,5.878933e10, <span class="string">'uncert'</span>, 0.000010e10, <span class="string">'unit'</span>, <span class="string">'HzK^-1'</span>);
+0340         Wien_wavelength_displacement_law_constant= struct(<span class="string">'value'</span>,2.8977685e-3, <span class="string">'uncert'</span>, 0.0000051e-3, <span class="string">'unit'</span>, <span class="string">'mK'</span>);
+0341     <span class="keyword">end</span>
+0342 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

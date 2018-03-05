@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of fittunedelta2fam</title>
+  <meta name="keywords" content="fittunedelta2fam">
+  <meta name="description" content="rerr=fittunedelta2fam(rerr,r0)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">tune</a> &gt; fittunedelta2fam.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/tune&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>fittunedelta2fam
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>rerr=fittunedelta2fam(rerr,r0)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function rerr=fittunedelta2fam(rerr,r0) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> rerr=fittunedelta2fam(rerr,r0)
+ 
+ matches the tune of rerr to that of r0. 
+
+ the 2 quadrupoles families used to correct the tune are marked by field:
+ qfidx=findcells(rerr,'ForTuneF');
+ qdidx=findcells(rerr,'ForTuneD');
+ 
+ if atfittune fails a second attempt is made using atmatchtunedelta
+
+see also: atfittune <a href="atmatchtunedelta.html" class="code" title="function arctune0=atmatchtunedelta(arc,tune,quadfams)">atmatchtunedelta</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atmatchtunedelta.html" class="code" title="function arctune0=atmatchtunedelta(arc,tune,quadfams)">atmatchtunedelta</a>	function arcchrom0=atmatchtunedelta(arc,c,quadfams)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="testfittunedelta2fam.html" class="code" title="">testfittunedelta2fam</a>	test errors and correction functions</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function rerr=fittunedelta2fam(rerr,r0)</a>
+0002 <span class="comment">% rerr=fittunedelta2fam(rerr,r0)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% matches the tune of rerr to that of r0.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% the 2 quadrupoles families used to correct the tune are marked by field:</span>
+0007 <span class="comment">% qfidx=findcells(rerr,'ForTuneF');</span>
+0008 <span class="comment">% qdidx=findcells(rerr,'ForTuneD');</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% if atfittune fails a second attempt is made using atmatchtunedelta</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%see also: atfittune atmatchtunedelta</span>
+0013 
+0014 disp(<span class="string">'Tune Matching'</span>)
+0015 [b]=atlinopt(r0,0,1:length(r0)+1);
+0016 t0=b(end).mu/2/pi;
+0017 disp([<span class="string">'Nominal tune: '</span> num2str(t0,<span class="string">'%2.5f, '</span>)]);
+0018 WPtune=t0;
+0019 
+0020 qfidx=findcells(rerr,<span class="string">'ForTuneF'</span>);
+0021 qdidx=findcells(rerr,<span class="string">'ForTuneD'</span>);
+0022 
+0023 rerr0=rerr;<span class="comment">% inital tune lattice</span>
+0024 
+0025 [b]=atlinopt(rerr,0,1:length(rerr)+1);
+0026 te=b(end).mu/2/pi;
+0027 disp([<span class="string">'Initial tune: '</span> num2str(te,<span class="string">'%2.5f, '</span>)]);
+0028 
+0029 <span class="comment">% % match also integer part of the tune</span>
+0030 <span class="comment">% disp(['Going to tune: ' num2str(t0+(te-WPtune)*0.5,'%2.5f, ')]);</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% rerr=atmatchtunedelta(rerr,t0+(te-WPtune)*0.5,{qfidx, qdidx});</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">% [b]=atlinopt(rerr,0,1:length(rerr)+1);</span>
+0035 <span class="comment">% ti=b(end).mu/2/pi;</span>
+0036 <span class="comment">% disp(['Intermediate tune: ' num2str(ti,'%2.5f, ')]);</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">% rerr=atmatchtunedelta(rerr,WPtune,{qfidx, qdidx});</span>
+0039 <span class="comment">%</span>
+0040 
+0041 
+0042 disp([<span class="string">'Going to tune: '</span> num2str(t0,<span class="string">'%2.5f, '</span>)]);
+0043 rerr = atfittune(rerr,WPtune,qfidx,qdidx);
+0044 rerr = atfittune(rerr,WPtune,qfidx,qdidx);
+0045 
+0046 [b]=atlinopt(rerr,0,1:length(rerr)+1);
+0047 tf=b(end).mu/2/pi;
+0048 disp([<span class="string">'Final tune: '</span> num2str(tf,<span class="string">'%2.5f, '</span>)]);
+0049 
+0050 <span class="comment">%if ~isempty(find((tf-t0)&gt;=0.1,1)) || isnan(tf)</span>
+0051 <span class="comment">%    disp('Corrected tune is &gt;0.1 far from nominal')</span>
+0052     rerr=<a href="atmatchtunedelta.html" class="code" title="function arctune0=atmatchtunedelta(arc,tune,quadfams)">atmatchtunedelta</a>(rerr,WPtune,{qfidx, qdidx});
+0053 <span class="comment">%end</span>
+0054 
+0055 <span class="comment">%</span>
+0056 <span class="keyword">if</span> ~isempty(find(isnan(tf)==1,1))
+0057     disp(<span class="string">'Corrected tune is NaN'</span>)
+0058     rerr=rerr0;
+0059     error(<span class="string">'Corrected tune is NaN'</span>)
+0060 <span class="keyword">end</span>
+0061 
+0062 <span class="keyword">if</span> ~isempty(find(imag(tf)~=0,1))
+0063     disp(<span class="string">'Corrected tune is not real'</span>)
+0064     rerr=rerr0;
+0065     error(<span class="string">'Corrected tune is not real'</span>)
+0066 <span class="keyword">end</span>
+0067 
+0068 <span class="keyword">if</span> ~isempty(find((tf-t0)&gt;=0.1,1))
+0069     disp(<span class="string">'Corrected tune is &gt;0.1 far from nominal'</span>)
+0070     rerr=rerr0;
+0071     error(<span class="string">'Corrected tune is &gt;0.1 far from nominal'</span>)
+0072 <span class="keyword">end</span>
+0073 
+0074 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

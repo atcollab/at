@@ -1,0 +1,210 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of tunechrom</title>
+  <meta name="keywords" content="tunechrom">
+  <meta name="description" content="TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">TuneAndChromaticity</a> &gt; tunechrom.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/TuneAndChromaticity&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>tunechrom
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [tune, varargout] = tunechrom(RING,DP,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice
+
+ TUNE = TUNECHROM(RING,DP) - quick calculation of fractional part of the tune 
+    from numerically computed transfer matrix, assuming NO X-Y coupling.
+    If the tune is above half-integer TUNECHROM finds 1/2 - nu 
+
+ TUNE = TUNECHROM(RING,DP,TUNEGUESS) - resolves the integer and half-integer 
+    uncertainty using the TUNEGUESS value. TUNEGUESS = [NUX,NUY]
+   
+ [TUNE, CHROM] = TUNECHROM(RINGD,DP,TUNEGUESS,'chrom',DDP) - optionally computes
+    chromaticity by numerical differentiation from the difference between tune
+    values at momentums DP+DDP and DP
+ 
+ [TUNE, CHROM] = TUNECHROM(RINGD,DP,TUNEGUESS,'chrom') same as above, only uses
+    for DDP the value set in global structure NUMDIFPARAMS.
+    If NUMDIFPARAMS is not defined, TUNECHROM uses the internal default value for DDP (1e-8). 
+
+ TUNECHROM(..., 'coupling') - when 'coupling' switch is added to any of the above 
+    syntax options, the tunes and chromaticities are calculated assuming
+    COUPLED lattice for two transverse eigenmodes.
+
+ Note: TUNECHROM computes tunes and chromaticities from the 4-by-4
+   transfer matrix. The transfer matrix is found in FINDM44 using
+   numerical differentiation. The error of numerical differentiation 
+   is sensitive to the step size. (Reference: Numerical Recipes)
+   Calculation of tunes in TUNECHROM involves one numerical differentiation
+   to find the 4-by-4 transfer matrix.
+   Calculation of chromaticity in TUNECHROM involves TWO!!! numerical differentiations.
+   The error in calculated chromaticity from may be substantial (~ 1e-5).
+   Use the DDP argument to control the step size in chromaticity calculations
+   Another  way to control the step size is NUMDIFPARAMS structure
+   
+   
+ See also LINOPT, TWISSRING, TWISSLINE, NUMDIFPARAMS</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="tunechrom.html" class="code" title="function [tune, varargout] = tunechrom(RING,DP,varargin)">tunechrom</a>	TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="tunechrom.html" class="code" title="function [tune, varargout] = tunechrom(RING,DP,varargin)">tunechrom</a>	TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [tune, varargout] = tunechrom(RING,DP,varargin)</a>
+0002 <span class="comment">%TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% TUNE = TUNECHROM(RING,DP) - quick calculation of fractional part of the tune</span>
+0005 <span class="comment">%    from numerically computed transfer matrix, assuming NO X-Y coupling.</span>
+0006 <span class="comment">%    If the tune is above half-integer TUNECHROM finds 1/2 - nu</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% TUNE = TUNECHROM(RING,DP,TUNEGUESS) - resolves the integer and half-integer</span>
+0009 <span class="comment">%    uncertainty using the TUNEGUESS value. TUNEGUESS = [NUX,NUY]</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% [TUNE, CHROM] = TUNECHROM(RINGD,DP,TUNEGUESS,'chrom',DDP) - optionally computes</span>
+0012 <span class="comment">%    chromaticity by numerical differentiation from the difference between tune</span>
+0013 <span class="comment">%    values at momentums DP+DDP and DP</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% [TUNE, CHROM] = TUNECHROM(RINGD,DP,TUNEGUESS,'chrom') same as above, only uses</span>
+0016 <span class="comment">%    for DDP the value set in global structure NUMDIFPARAMS.</span>
+0017 <span class="comment">%    If NUMDIFPARAMS is not defined, TUNECHROM uses the internal default value for DDP (1e-8).</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% TUNECHROM(..., 'coupling') - when 'coupling' switch is added to any of the above</span>
+0020 <span class="comment">%    syntax options, the tunes and chromaticities are calculated assuming</span>
+0021 <span class="comment">%    COUPLED lattice for two transverse eigenmodes.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">% Note: TUNECHROM computes tunes and chromaticities from the 4-by-4</span>
+0024 <span class="comment">%   transfer matrix. The transfer matrix is found in FINDM44 using</span>
+0025 <span class="comment">%   numerical differentiation. The error of numerical differentiation</span>
+0026 <span class="comment">%   is sensitive to the step size. (Reference: Numerical Recipes)</span>
+0027 <span class="comment">%   Calculation of tunes in TUNECHROM involves one numerical differentiation</span>
+0028 <span class="comment">%   to find the 4-by-4 transfer matrix.</span>
+0029 <span class="comment">%   Calculation of chromaticity in TUNECHROM involves TWO!!! numerical differentiations.</span>
+0030 <span class="comment">%   The error in calculated chromaticity from may be substantial (~ 1e-5).</span>
+0031 <span class="comment">%   Use the DDP argument to control the step size in chromaticity calculations</span>
+0032 <span class="comment">%   Another  way to control the step size is NUMDIFPARAMS structure</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">%</span>
+0035 <span class="comment">% See also LINOPT, TWISSRING, TWISSLINE, NUMDIFPARAMS</span>
+0036 
+0037 DDP_default = 1e-8;
+0038 
+0039 <span class="comment">% Process input arguments</span>
+0040 <span class="keyword">if</span> nargin&gt;2
+0041     <span class="comment">% See if 'coupling' switch is thrown as the last argument</span>
+0042     <span class="keyword">if</span> ischar(varargin{end}) &amp; strncmp(lower(varargin{end}),<span class="string">'coupl'</span>,5)
+0043         COUPLINGFLAG  = 1;
+0044     <span class="keyword">else</span>
+0045         COUPLINGFLAG  = 0;
+0046     <span class="keyword">end</span>
+0047     <span class="comment">% See if TUNEGUESS is specified as the third argument</span>
+0048     <span class="keyword">if</span> isnumeric(varargin{1}) &amp; length(varargin{1})==2
+0049         TUNEGUESSFLAG = 1;
+0050         TUNEGUESS = varargin{1};
+0051     <span class="keyword">else</span>
+0052         TUNEGUESSFLAG = 0;
+0053         TUNEGUESS = [0.25, 0.25]; <span class="comment">% if no TUNEGUESS is specified</span>
+0054     <span class="keyword">end</span>
+0055     <span class="comment">% See if any of the argument is 'chrom' ,then chech if the argument after 'chrom' is DDP</span>
+0056     CHROMFLAG = 0;
+0057     <span class="keyword">for</span> i = 1:nargin-2
+0058        <span class="keyword">if</span> strcmp(lower(varargin{i}),<span class="string">'chrom'</span>)
+0059             CHROMFLAG = 1;
+0060             <span class="keyword">if</span> i&lt;nargin-2 &amp; isnumeric(varargin{i+1})
+0061                 DDP = varargin{i+1};
+0062             <span class="keyword">else</span>
+0063                 <span class="comment">% Check if NUMDIFPARAMS is defined globally</span>
+0064                 <span class="keyword">global</span> NUMDIFPARAMS
+0065                 <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'DPStep'</span>)
+0066                     DDP = NUMDIFPARAMS.DPStep;
+0067                 <span class="keyword">else</span> <span class="comment">% use default DDP</span>
+0068                     DDP =  DDP_default; 
+0069                 <span class="keyword">end</span>           
+0070             <span class="keyword">end</span>
+0071             <span class="keyword">break</span>
+0072         <span class="keyword">end</span>
+0073     <span class="keyword">end</span>
+0074             
+0075     
+0076 <span class="keyword">else</span>
+0077     COUPLINGFLAG = 0;
+0078     CHROMFLAG = 0;
+0079     TUNEGUESSFLAG = 0;
+0080     TUNEGUESS = [0.25, 0.25]; <span class="comment">% if no TUNEGUESS is specified</span>
+0081 <span class="keyword">end</span>
+0082 
+0083 M44 = findm44(RING,DP);
+0084 
+0085 <span class="keyword">if</span> COUPLINGFLAG
+0086     M =M44(1:2,1:2);
+0087     N =M44(3:4,3:4);
+0088     m =M44(1:2,3:4);
+0089     n =M44(3:4,1:2);
+0090 
+0091     <span class="comment">% 2-by-2 symplectic matrix</span>
+0092     S = [0 1; -1 0];
+0093     H = m + S*n'*S';
+0094     t = trace(M-N);
+0095 
+0096     g = sqrt(1 + sqrt(t*t/(t*t+4*det(H))))/sqrt(2);
+0097     G = diag([g g]);
+0098     C = -H*sign(t)/(g*sqrt(t*t+4*det(H)));
+0099     A = G*G*M  -  G*(m*S*C'*S' + C*n) + C*N*S*C'*S';
+0100     B = G*G*N  +  G*(S*C'*S'*m + n*C) + S*C'*S'*M*C;
+0101     
+0102     cos_mu_x = trace(A)/2;
+0103     cos_mu_y = trace(B)/2;
+0104     
+0105     sin_mu_x = sign(A(1,2))*sqrt(-A(1,2)*A(2,1)-(A(1,1)-A(2,2))^2/4);
+0106     sin_mu_y = sign(B(1,2))*sqrt(-B(1,2)*B(2,1)-(B(1,1)-B(2,2))^2/4);
+0107     
+0108 <span class="keyword">else</span>
+0109     cos_mu_x = (M44(1,1)+M44(2,2))/2;
+0110     cos_mu_y = (M44(3,3)+M44(4,4))/2;    
+0111 <span class="keyword">end</span>
+0112 TUNE = acos([cos_mu_x,cos_mu_y])/2/pi;
+0113 
+0114 
+0115 <span class="keyword">if</span> TUNEGUESSFLAG
+0116     <span class="comment">% Check if the TUNE is in the same quadrant as TUNEGUESS</span>
+0117     guess_quadrant = (TUNEGUESS-floor(TUNEGUESS))&gt; 1/2;
+0118     tune = floor(TUNEGUESS) +  guess_quadrant + TUNE.*(sign(1/2 - guess_quadrant));
+0119 <span class="keyword">else</span>
+0120     tune = TUNE;
+0121 <span class="keyword">end</span>
+0122 
+0123 <span class="keyword">if</span> CHROMFLAG &amp; nargout &gt; 1  
+0124     <span class="keyword">if</span> COUPLINGFLAG
+0125         tune_DDP = <a href="tunechrom.html" class="code" title="function [tune, varargout] = tunechrom(RING,DP,varargin)">tunechrom</a>(RING,DP+DDP,TUNEGUESS,<span class="string">'coupling'</span>);
+0126     <span class="keyword">else</span>
+0127         tune_DDP = <a href="tunechrom.html" class="code" title="function [tune, varargout] = tunechrom(RING,DP,varargin)">tunechrom</a>(RING,DP+DDP,TUNEGUESS);
+0128     <span class="keyword">end</span>
+0129     varargout{1} = (tune_DDP - tune)/DDP;
+0130 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of splitdrift</title>
+  <meta name="keywords" content="splitdrift">
+  <meta name="description" content="SPLITDRIFT inserts an element into a drift space">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; splitdrift.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>splitdrift
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>SPLITDRIFT inserts an element into a drift space</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function splitdrift(DRIFTPOS, SPLIT, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SPLITDRIFT inserts an element into a drift space
+
+ SPLITDRIFT(DRIFTPOS, SPLIT) inserts a marker (zero-length) element
+   at distance SPLIT ( 0 &lt; SPLIT &lt; 1) into a drift space 
+   located at DRIFTPOS in THERING
+ 
+ SPLITDRIFT(DRIFTPOS, SPLIT, ELEMSTRUCCTURE) inserts a marker (zero-length) element
+   at distance SPLIT ( 0 &lt; SPLIT &lt; 1) into a drift space 
+   located at DRIFTPOS in THERING
+ 
+ Number of elements in the RING is thus increased by 2
+ SPLIT (controls the position of the split 
+ L1 = L0*SPLIT
+ L2 = L0(1-SPLIT)
+  where L0 is the length of the original DRIFT
+   
+ See also: <a href="mergedrift.html" class="code" title="function mergedrift(SPLITPOS)">MERGEDRIFT</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="reverse.html" class="code" title="function z = reverse(A)">reverse</a>	REVERSE reverses the order of elements in a one-dimensional MATLAB ARRAY</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function splitdrift(DRIFTPOS, SPLIT, varargin) </a>
+0002 <span class="comment">%SPLITDRIFT inserts an element into a drift space</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% SPLITDRIFT(DRIFTPOS, SPLIT) inserts a marker (zero-length) element</span>
+0005 <span class="comment">%   at distance SPLIT ( 0 &lt; SPLIT &lt; 1) into a drift space</span>
+0006 <span class="comment">%   located at DRIFTPOS in THERING</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% SPLITDRIFT(DRIFTPOS, SPLIT, ELEMSTRUCCTURE) inserts a marker (zero-length) element</span>
+0009 <span class="comment">%   at distance SPLIT ( 0 &lt; SPLIT &lt; 1) into a drift space</span>
+0010 <span class="comment">%   located at DRIFTPOS in THERING</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Number of elements in the RING is thus increased by 2</span>
+0013 <span class="comment">% SPLIT (controls the position of the split</span>
+0014 <span class="comment">% L1 = L0*SPLIT</span>
+0015 <span class="comment">% L2 = L0(1-SPLIT)</span>
+0016 <span class="comment">%  where L0 is the length of the original DRIFT</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% See also: MERGEDRIFT</span>
+0019  
+0020 <span class="keyword">global</span> THERING
+0021 
+0022 N0 = length(THERING); <span class="comment">% number of elements in THERING before split</span>
+0023 
+0024 L0 = THERING{DRIFTPOS}.Length;
+0025 <span class="keyword">if</span> (SPLIT &lt; 0 | SPLIT &gt;1)
+0026     error(<span class="string">'Second argument must be (0..1)'</span>);
+0027 <span class="keyword">else</span>    
+0028     <span class="keyword">if</span> nargin == 2
+0029         <span class="keyword">for</span> i = <a href="reverse.html" class="code" title="function z = reverse(A)">reverse</a>(DRIFTPOS:N0)
+0030             THERING{i+2} = THERING{i};
+0031         <span class="keyword">end</span>
+0032         THERING{DRIFTPOS}.Length = L0*SPLIT;
+0033         THERING{DRIFTPOS+2}.Length = L0*(1-SPLIT);
+0034         THERING{DRIFTPOS+1} = struct(<span class="string">'FamName'</span>,<span class="string">'TEMPSPLIT'</span>, <span class="string">'Length'</span>, 0, <span class="string">'PassMethod'</span>,<span class="string">'IdentityPass'</span>);
+0035     <span class="keyword">elseif</span> isstruct(varargin{1})
+0036          <span class="comment">% Check if a new element will fit</span>
+0037         <span class="keyword">if</span> L0*(1-SPLIT) &gt;= varargin{1}.Length
+0038             <span class="keyword">for</span> i = <a href="reverse.html" class="code" title="function z = reverse(A)">reverse</a>(DRIFTPOS:N0)
+0039                 THERING{i+2} = THERING{i};
+0040             <span class="keyword">end</span>
+0041             THERING{DRIFTPOS}.Length = L0*SPLIT;
+0042             THERING{DRIFTPOS+2}.Length = L0*(1-SPLIT)-varargin{1}.Length;
+0043             THERING{DRIFTPOS+1} = varargin{1};
+0044         <span class="keyword">else</span>
+0045             error(<span class="string">'The inserted element is too long'</span>);
+0046         <span class="keyword">end</span>
+0047     <span class="keyword">end</span>
+0048 
+0049 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsummary</title>
+  <meta name="keywords" content="atsummary">
+  <meta name="description" content="ATSUMMARY - Prints out the paramters of the current AT lattice">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">ParameterSummaryFunctions</a> &gt; atsummary.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/ParameterSummaryFunctions&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atsummary
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATSUMMARY - Prints out the paramters of the current AT lattice</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = atsummary(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSUMMARY - Prints out the paramters of the current AT lattice
+  The parameters that come after the Synchrotron Integrals are
+  parameters that depend on the Integrals themselves. The equations to
+  calculate them were taken from [1].
+
+  [1] Alexander Wu Chao and Maury Tigner, Handbook of Accelerator Physics
+  and Engineering (World Scientific, Singapore, 1998), pp. 183-187. (or
+  187-190 in ed. 2)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atlinopt.html" class="code" title="function [lindata, varargout] = atlinopt(RING,DP,varargin)">atlinopt</a>	ATLINOPT Performs linear analysis of the COUPLED lattices</li><li><a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin)">twissring</a>	TWISSRING calculates linear optics functions for an UNCOUPLED ring</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [dI1,dI2,dI3,dI4,dI5,curHavg, Dxavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)</a></li><li><a href="#_sub2" class="code">function [Dx, Dxp] = calcdisp(rho, theta, D0, D0p, K1)</a></li><li><a href="#_sub3" class="code">function [ax, bx] = calctwiss(rho, theta, a0, b0, K1)</a></li><li><a href="#_sub4" class="code">function Mx = calcMx(rho,K1,theta)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = atsummary(varargin)</a>
+0002 <span class="comment">%ATSUMMARY - Prints out the paramters of the current AT lattice</span>
+0003 <span class="comment">%  The parameters that come after the Synchrotron Integrals are</span>
+0004 <span class="comment">%  parameters that depend on the Integrals themselves. The equations to</span>
+0005 <span class="comment">%  calculate them were taken from [1].</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%  [1] Alexander Wu Chao and Maury Tigner, Handbook of Accelerator Physics</span>
+0008 <span class="comment">%  and Engineering (World Scientific, Singapore, 1998), pp. 183-187. (or</span>
+0009 <span class="comment">%  187-190 in ed. 2)</span>
+0010 
+0011 <span class="comment">%</span>
+0012 <span class="comment">%  Written by Eugene Tan</span>
+0013 <span class="comment">%  Revised by Laurent S. Nadolski</span>
+0014 
+0015 DisplayFlag = 1;
+0016 
+0017 <span class="keyword">for</span> i = length(varargin):-1:1
+0018     <span class="keyword">if</span> strcmpi(varargin(i),<span class="string">'NoDisplay'</span>)
+0019         DisplayFlag = 0;
+0020         varargin(i) = [];
+0021     <span class="keyword">elseif</span> strcmpi(varargin(i),<span class="string">'Display'</span>)
+0022         DisplayFlag = 1;
+0023         varargin(i) = [];
+0024     <span class="keyword">end</span>
+0025 <span class="keyword">end</span>
+0026 
+0027 <span class="keyword">if</span> isempty(varargin)
+0028     <span class="keyword">global</span> THERING GLOBVAL;
+0029 <span class="keyword">else</span>
+0030     THERING = varargin{i};
+0031     GLOBVAL.E0 = THERING{1}.Energy;
+0032     GLOBVAL.LatticeFile = <span class="string">''</span>;  
+0033 <span class="keyword">end</span>
+0034 
+0035 <span class="comment">% Structure to store info</span>
+0036 sum.e0            = GLOBVAL.E0*1e-9;
+0037 sum.circumference = findspos(THERING, length(THERING)+1);
+0038 sum.revTime       = sum.circumference / PhysConstant.speed_of_light_in_vacuum.value;
+0039 sum.revFreq       = PhysConstant.speed_of_light_in_vacuum.value / sum.circumference;
+0040 sum.gamma         = sum.e0 / PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e3; <span class="comment">%0.51099906e-3;</span>
+0041 sum.beta          = sqrt(1 - 1/sum.gamma);
+0042 
+0043 [TD, sum.tunes, sum.chromaticity] = <a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin)">twissring</a>(THERING, 0, 1:length(THERING)+1, <span class="string">'chrom'</span>, 1e-8);
+0044 sum.compactionFactor = mcf(THERING);
+0045 
+0046 <span class="comment">% For calculating the synchrotron integrals</span>
+0047 temp  = cat(2,TD.Dispersion);
+0048 D_x   = temp(1,:)';
+0049 D_x_  = temp(2,:)';
+0050 beta  = cat(1, TD.beta);
+0051 alpha = cat(1, TD.alpha);
+0052 gamma = (1 + alpha.^2) ./ beta;
+0053 circ  = TD(length(THERING)+1).SPos;
+0054 
+0055 <span class="comment">% Synchrotron integral calculation</span>
+0056 sum.integrals = zeros(1,6);
+0057 
+0058 ii =0;
+0059 <span class="keyword">for</span> i = 1:length(THERING)
+0060     <span class="keyword">if</span> isfield(THERING{i}, <span class="string">'BendingAngle'</span>) &amp;&amp; isfield(THERING{i}, <span class="string">'EntranceAngle'</span>)
+0061         ii = ii +1;
+0062         rho = THERING{i}.Length/THERING{i}.BendingAngle;
+0063         [dI1,dI2,dI3,dI4,dI5,curHavg1(ii), Dxavg(ii)] = <span class="keyword">...</span>
+0064             <a href="#_sub1" class="code" title="subfunction [dI1,dI2,dI3,dI4,dI5,curHavg, Dxavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)">calcRadInt</a>(rho,THERING{i}.BendingAngle, <span class="keyword">...</span>
+0065             alpha(i,1),beta(i,1),D_x(i),D_x_(i),<span class="keyword">...</span>
+0066             THERING{i}.K,THERING{i}.EntranceAngle,THERING{i}.ExitAngle);
+0067         
+0068         sum.integrals(1) = sum.integrals(1) + dI1;
+0069         sum.integrals(2) = sum.integrals(2) + dI2;
+0070         sum.integrals(3) = sum.integrals(3) + dI3;
+0071         <span class="comment">% For general wedge magnets</span>
+0072         sum.integrals(4) = sum.integrals(4) + dI4;
+0073         sum.integrals(5) = sum.integrals(5) + dI5;
+0074         <span class="comment">%         sum.integrals(4) = sum.integrals(4) + 2*0.5*(D_x(i)+D_x(i+1))*THERING{i}.Length/rho^3;</span>
+0075         H1 = beta(i,1)*D_x_(i)*D_x_(i)+2*alpha(i)*D_x(i)*D_x_(i)+gamma(i)*D_x(i)*D_x(i);
+0076         H0 = beta(i+1,1)*D_x_(i+1)*D_x_(i+1)+2*alpha(i+1)*D_x(i+1)*D_x_(i+1)+gamma(i+1)*D_x(i+1)*D_x(i+1);
+0077         sum.integrals(6) = sum.integrals(6) + THERING{i}.PolynomB(2)^2*Dxavg(ii)^2*THERING{i}.Length;
+0078     <span class="keyword">end</span>
+0079 <span class="keyword">end</span>
+0080 
+0081 <span class="comment">% Damping numbers</span>
+0082 <span class="comment">% Use Robinson's Theorem</span>
+0083 sum.damping(1) = 1 - sum.integrals(4)/sum.integrals(2);
+0084 sum.damping(2) = 1;
+0085 sum.damping(3) = 2 + sum.integrals(4)/sum.integrals(2);
+0086 
+0087 sum.radiation           = 8.846e-5*sum.e0.^4*sum.integrals(2)/(2*pi);
+0088 sum.naturalEnergySpread = sqrt(3.8319e-13*sum.gamma.^2*sum.integrals(3)/(2*sum.integrals(2) + sum.integrals(4)));
+0089 sum.naturalEmittance    = 3.8319e-13*(sum.e0*1e3/PhysConstant.electron_mass_energy_equivalent_in_MeV.value).^2*sum.integrals(5)/(sum.damping(1)*sum.integrals(2)); <span class="comment">%% need to be replaced by constant ?</span>
+0090 
+0091 <span class="comment">% Damping times</span>
+0092 sum.radiationDamping(1) = 1/(2113.1*sum.e0.^3*sum.integrals(2)*sum.damping(1)/circ);
+0093 sum.radiationDamping(2) = 1/(2113.1*sum.e0.^3*sum.integrals(2)*sum.damping(2)/circ);
+0094 sum.radiationDamping(3) = 1/(2113.1*sum.e0.^3*sum.integrals(2)*sum.damping(3)/circ);
+0095 
+0096 <span class="comment">% Slip factor</span>
+0097 sum.etac = sum.gamma^(-2) - sum.compactionFactor;
+0098 
+0099 cavind = findcells(THERING,<span class="string">'HarmNumber'</span>);
+0100 <span class="keyword">if</span> ~isempty(cavind)
+0101     freq = THERING{cavind(:,1)}.Frequency;
+0102     v_cav = THERING{cavind(:,1)}.Voltage;
+0103 <span class="keyword">else</span>
+0104     <span class="comment">% Default</span>
+0105     freq = 352.202e6;
+0106     v_cav = 3e6;
+0107 <span class="keyword">end</span>
+0108 sum.harmon = sum.circumference/(PhysConstant.speed_of_light_in_vacuum.value/freq); <span class="comment">% Assuming 499.654MHz RF %</span>
+0109 sum.overvoltage = v_cav/(sum.radiation*1e9); 
+0110 <span class="comment">% Assuming the harmon and overvoltage above.</span>
+0111 <span class="comment">% references:  H. Winick, &quot;Synchrotron Radiation Sources: A Primer&quot;,</span>
+0112 <span class="comment">% World Scientific Publishing, Singapore, pp92-95. (1995)</span>
+0113 <span class="comment">% Wiedemann, pp290,350. Chao, pp189.</span>
+0114 sum.syncphase = pi - asin(1/sum.overvoltage);
+0115 sum.energyacceptance = sqrt(v_cav*sin(sum.syncphase)*2*(sqrt(sum.overvoltage^2-1) - acos(1/sum.overvoltage))/(pi*sum.harmon*abs(sum.etac)*sum.e0*1e9));
+0116 sum.synctune = sqrt((sum.etac*sum.harmon*v_cav*cos(sum.syncphase))/(2*pi*sum.e0*1e9));
+0117 sum.bunchlength = sum.beta*PhysConstant.speed_of_light_in_vacuum.value*abs(sum.etac)*sum.naturalEnergySpread/(sum.synctune*sum.revFreq*2*pi);
+0118 
+0119 <span class="comment">% optics</span>
+0120 <span class="comment">% [bx by] = modelbeta;</span>
+0121 <span class="comment">% [ax ay] = modelalpha;</span>
+0122 <span class="comment">% [etax etay] = modeleta;</span>
+0123 <span class="comment">% [etaprimex etaprimey] = modeletaprime;</span>
+0124 
+0125 [LinData,~, ~] = <a href="atlinopt.html" class="code" title="function [lindata, varargout] = atlinopt(RING,DP,varargin)">atlinopt</a>(THERING,0,1);
+0126 bx = LinData.beta(1);
+0127 by = LinData.beta(2);
+0128 ax = LinData.alpha(1);
+0129 ay = LinData.alpha(2);
+0130 etax = LinData.Dispersion(1);
+0131 etay = LinData.Dispersion(3);
+0132 etaprimex = LinData.Dispersion(2);
+0133 etaprimey = LinData.Dispersion(4);
+0134 
+0135 <span class="keyword">if</span> DisplayFlag
+0136     SeparatorString = <span class="string">'   ******************************************************************\n'</span>;
+0137     fprintf(<span class="string">'\n'</span>);
+0138     fprintf(<span class="string">'   *************  Summary for ''%s'' ************\n'</span>, GLOBVAL.LatticeFile);
+0139     fprintf(<span class="string">'   Energy: \t\t\t% 4.5f [GeV]\n'</span>, sum.e0);
+0140     fprintf(<span class="string">'   Gamma: \t\t\t% 4.5f \n'</span>, sum.gamma);
+0141     fprintf(<span class="string">'   Circumference: \t\t% 4.5f [m]\n'</span>, sum.circumference);
+0142     fprintf(<span class="string">'   Revolution time: \t\t% 4.5f [ns] (%4.5f [MHz]) \n'</span>, sum.revTime*1e9,sum.revFreq*1e-6);
+0143     fprintf(<span class="string">'   Betatron tune H: \t\t% 4.5f (%4.5f [kHz])\n'</span>, sum.tunes(1),sum.tunes(1)/sum.revTime*1e-3);
+0144     fprintf(<span class="string">'                 V: \t\t% 4.5f (%4.5f [kHz])\n'</span>, sum.tunes(2),sum.tunes(2)/sum.revTime*1e-3);
+0145     fprintf(<span class="string">'   Momentum Compaction Factor: \t% 4.5e\n'</span>, sum.compactionFactor);
+0146     fprintf(<span class="string">'   Chromaticity H: \t\t%+4.5f\n'</span>, sum.chromaticity(1));
+0147     fprintf(<span class="string">'                V: \t\t%+4.5f\n'</span>, sum.chromaticity(2));
+0148     fprintf(SeparatorString);
+0149     fprintf(<span class="string">'   Synchrotron Integral 1: \t% 4.5e [m]\n'</span>, sum.integrals(1));
+0150     fprintf(<span class="string">'                        2: \t% 4.5e [m^-1]\n'</span>, sum.integrals(2));
+0151     fprintf(<span class="string">'                        3: \t% 4.5e [m^-2]\n'</span>, sum.integrals(3));
+0152     fprintf(<span class="string">'                        4: \t% 4.5e [m^-1]\n'</span>, sum.integrals(4));
+0153     fprintf(<span class="string">'                        5: \t% 4.5e [m^-1]\n'</span>, sum.integrals(5));
+0154     fprintf(<span class="string">'                        6: \t% 4.5e [m^-1]\n'</span>, sum.integrals(6));
+0155     fprintf(<span class="string">'   Damping Partition H: \t% 4.5f\n'</span>, sum.damping(1));
+0156     fprintf(<span class="string">'                     V: \t% 4.5f\n'</span>, sum.damping(2));
+0157     fprintf(<span class="string">'                     E: \t% 4.5f\n'</span>, sum.damping(3));
+0158     fprintf(<span class="string">'   Radiation Loss: \t\t% 4.5f [keV]\n'</span>, sum.radiation*1e6);
+0159     fprintf(<span class="string">'   Natural Energy Spread: \t% 4.5e\n'</span>, sum.naturalEnergySpread);
+0160     fprintf(<span class="string">'   Natural Emittance: \t\t% 4.5e [mrad]\n'</span>, sum.naturalEmittance);
+0161     fprintf(<span class="string">'   Radiation Damping H: \t% 4.5f [ms] or %4.2f turns\n'</span>, sum.radiationDamping(1)*1e3, sum.radiationDamping(1)/sum.revTime);
+0162     fprintf(<span class="string">'                     V: \t% 4.5f [ms] or %4.2f turns\n'</span>, sum.radiationDamping(2)*1e3, sum.radiationDamping(2)/sum.revTime);
+0163     fprintf(<span class="string">'                     E: \t% 4.5f [ms] or %4.2f turns\n'</span>, sum.radiationDamping(3)*1e3, sum.radiationDamping(3)/sum.revTime);
+0164     fprintf(<span class="string">'   Slip factor: \t\t%4.5e\n'</span>, sum.etac);
+0165     fprintf(<span class="string">'   Momentum compaction factor: \t %4.5e (%4.5e)\n'</span>,  sum.integrals(1)/sum.circumference, sum.compactionFactor);
+0166     fprintf(SeparatorString);
+0167     fprintf(<span class="string">'   Assuming cavities Voltage: \t% 4.5f [kV]\n'</span>, v_cav/1e3);
+0168     fprintf(<span class="string">'                   Frequency: \t% 4.5f [MHz]\n'</span>, freq/1e6);
+0169     fprintf(<span class="string">'             Harmonic Number: \t% 4.0f\n'</span>, sum.harmon);
+0170     fprintf(<span class="string">'   Overvoltage factor: \t\t% 4.5f\n'</span>, sum.overvoltage);
+0171     fprintf(<span class="string">'   Synchronous Phase:  \t\t% 4.5f [rad] (%4.5f [deg])\n'</span>, sum.syncphase, sum.syncphase*180/pi);
+0172     fprintf(<span class="string">'   Linear Energy Acceptance:  \t% 4.3f %%\n'</span>, sum.energyacceptance*100);
+0173     fprintf(<span class="string">'   Synchrotron Tune:   \t\t% 4.5f (%4.5f kHz or %4.2f turns) \n'</span>, sum.synctune, sum.synctune/sum.revTime*1e-3, 1/sum.synctune);
+0174     fprintf(<span class="string">'   Bunch Length:       \t\t% 4.5f [mm] (%4.5f ps)\n'</span>, sum.bunchlength*1e3, sum.bunchlength/3e8*1e12);
+0175     fprintf(SeparatorString);
+0176     fprintf(<span class="string">'   Injection:\n'</span>);
+0177     fprintf(<span class="string">'   H: beta = %06.3f [m] alpha = %+04.1e eta = %+04.3f [m] eta'' = %+04.1e \n'</span>, bx(1), ax(1), etax(1), etaprimex(1));
+0178     fprintf(<span class="string">'   V: beta = %06.3f [m] alpha = %+04.1e eta = %+04.3f [m] eta'' = %+04.1e \n'</span>, by(1), ay(1), etay(1), etaprimey(1));
+0179     fprintf(<span class="string">'   ********** End of Summary for ''%s'' **********\n'</span>, GLOBVAL.LatticeFile);
+0180     fprintf(<span class="string">'\n'</span>);
+0181 <span class="keyword">end</span>
+0182 
+0183 <span class="keyword">if</span> nargout &gt; 0
+0184     varargout{1} = sum;
+0185 <span class="keyword">end</span>
+0186 
+0187 <a name="_sub1" href="#_subfunctions" class="code">function [dI1,dI2,dI3,dI4,dI5,curHavg, Dxavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)</a>
+0188 <span class="comment">%[dI1,dI2,dI3,dI4,dI5,curHavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1)</span>
+0189 <span class="comment">%calculate the contribution to the radiation integrals of a dipole.</span>
+0190 <span class="comment">%  INPUTS</span>
+0191 <span class="comment">%  rho, theta, radius and angle of the dipole</span>
+0192 <span class="comment">%  a0, b0, are horizontal alpha and beta at the entrance of the dipole,</span>
+0193 <span class="comment">%  D0, D0p are dispersion at the entrance of the dipole</span>
+0194 <span class="comment">%  K1, the gradient parameter in AT's convention, i.e., positive for</span>
+0195 <span class="comment">%  horizontal focusing, K1=0 by default</span>
+0196 <span class="comment">%  th1, th2, the entrance and exit angle, respectively, th1=th2= 0 [theta/2] by</span>
+0197 <span class="comment">%  default.</span>
+0198 <span class="comment">%</span>
+0199 
+0200 <span class="comment">% If not combine dipole</span>
+0201 <span class="keyword">if</span> nargin == 6
+0202     K1=0;
+0203 <span class="keyword">end</span>
+0204 
+0205 <span class="comment">%</span>
+0206 <span class="keyword">if</span> nargin&lt;9
+0207     th1 = 0; <span class="comment">%theta/2.0;</span>
+0208     th2 = 0; <span class="comment">%theta/2.0;</span>
+0209 <span class="keyword">end</span>
+0210 
+0211 <span class="comment">% Edge focusing</span>
+0212 M21 = tan(th1)/rho;
+0213 D0p = M21*D0+D0p;
+0214 a0 = -M21*b0+a0;
+0215 
+0216 <span class="comment">% split the dipole in N pieces</span>
+0217 N = 100;
+0218 th = (0:N)/N*theta;
+0219 
+0220 <span class="comment">% Compute Twiss parameters inside dipole</span>
+0221 <span class="keyword">for</span> ii=1:length(th)
+0222     [Dx(ii), Dxp(ii)] = <a href="#_sub2" class="code" title="subfunction [Dx, Dxp] = calcdisp(rho, theta, D0, D0p, K1)">calcdisp</a>(rho, th(ii), D0, D0p, K1);
+0223     [ax, bx] = <a href="#_sub3" class="code" title="subfunction [ax, bx] = calctwiss(rho, theta, a0, b0, K1)">calctwiss</a>(rho, th(ii), a0, b0, K1);
+0224     curHavg1(ii) = (Dx(ii)^2+(ax*Dx(ii)+bx*Dxp(ii))^2)/bx;
+0225 <span class="keyword">end</span>
+0226 
+0227 <span class="comment">% Edge focusing</span>
+0228 M21 = tan(th2)/rho;
+0229 Dxp(end) =  M21*Dx(end)+Dxp(end);
+0230 ax  = -M21*bx+ax;
+0231 curHavg1(end) = (Dx(end)^2+(ax*Dx(end)+bx*Dxp(end))^2)/bx;
+0232 
+0233 <span class="comment">% Average data</span>
+0234 curHavg = ((curHavg1(1)+curHavg1(end))/2.0 + sum(curHavg1(2:end-1)))/(length(th)-1);
+0235 Dxavg   = ((Dx(1)+Dx(end))/2.0 + sum(Dx(2:end-1)))/(length(th)-1);
+0236 
+0237 dI1 = ((Dx(1) + Dx(end))/2.0 + sum(Dx(2:end-1)))*theta/N;
+0238 dI2 = abs(theta/rho);
+0239 dI3 = abs(theta/rho^2);
+0240 dI4 = (1/rho^2 + 2*K1)*dI1  - (Dx(1)/rho^2*tan(th1) + Dx(end)/rho^2*tan(th2));
+0241 dI5 = curHavg*abs(theta/rho^2);
+0242 
+0243 <a name="_sub2" href="#_subfunctions" class="code">function [Dx, Dxp] = calcdisp(rho, theta, D0, D0p, K1)</a>
+0244 <span class="comment">%calcdisp - calculate dispersion function inside a combined-function dipole</span>
+0245 <span class="comment">%  INPUTS</span>
+0246 <span class="comment">%  1. rho - curvature radius</span>
+0247 <span class="comment">%  2. theta - angle</span>
+0248 <span class="comment">%  3. D0 - Horizontal dispersion function at the entrance</span>
+0249 <span class="comment">%  4. D0p - DErivative of  Horizontal dispersion function at the entrance</span>
+0250 <span class="comment">%  5. K1 - Focusing</span>
+0251 <span class="comment">%</span>
+0252 <span class="comment">% Transfert matrix of A wedge dipole p58 Handbook af Accelerator Physics</span>
+0253 s = rho*theta;
+0254 <span class="keyword">if</span> K1&gt;-1/rho^2 <span class="comment">%horizontal focusing</span>
+0255     sqK = sqrt(1/rho^2+K1);
+0256     Dx  =  D0*cos(sqK*s) + D0p/sqK*sin(sqK*s)+(1-cos(sqK*s))/rho/sqK^2;
+0257     Dxp = -D0*sqK*sin(sqK*s)+D0p*cos(sqK*s)+sin(sqK*s)/rho/sqK;
+0258 <span class="keyword">else</span> <span class="comment">%horizontal defocusing</span>
+0259     sqK = sqrt(-(1/rho^2+K1));
+0260     Dx =  D0*cosh(sqK*s) + D0p/sqK*sinh(sqK*s)+(-1+cosh(sqK*s))/rho/sqK^2;
+0261     Dxp = D0*sqK*sinh(sqK*s)+D0p*cosh(sqK*s)+sinh(sqK*s)/rho/sqK;
+0262     
+0263 <span class="keyword">end</span>
+0264 
+0265 <a name="_sub3" href="#_subfunctions" class="code">function [ax, bx] = calctwiss(rho, theta, a0, b0, K1)</a>
+0266 <span class="comment">% calctwiss calculate twiss function inside a combined-function dipole manget</span>
+0267 <span class="comment">%  INPUTS</span>
+0268 <span class="comment">%  1. rho - curvature radius</span>
+0269 <span class="comment">%  2. theta - angle</span>
+0270 <span class="comment">%  3. a0 - Horizontal alpha function at the entrance</span>
+0271 <span class="comment">%  4. b0 - Horizontal beta function at the entrance</span>
+0272 <span class="comment">%  5. K1 - Focusing</span>
+0273 <span class="comment">%</span>
+0274 <span class="comment">%  [beta ] = [  Mx11^2        -2*MX11*Mx12         Mx12^2   ] [beta0 ]</span>
+0275 <span class="comment">%  [alpha] = [ -Mx11*Mx21 Mx11*Mx22 + Mx11*Mx21   -Mx12*Mx22] [alpha0]</span>
+0276 <span class="comment">%  [gamma] = [  Mx21^2        -2*MX21*Mx22         Mx22^2   ] [gamma0]</span>
+0277 
+0278 Mx = <a href="#_sub4" class="code" title="subfunction Mx = calcMx(rho,K1,theta)">calcMx</a>(rho, K1,theta);
+0279 g0 = (1+a0^2)/b0;
+0280 twx2 = [Mx(1,1)^2, -2*Mx(1,1)*Mx(1,2), Mx(1,2)^2;
+0281     -Mx(1,1)*Mx(2,1), Mx(1,1)*Mx(2,2)+Mx(1,2)*Mx(2,1),-Mx(1,2)*Mx(2,2);
+0282     Mx(2,1)^2, -2*Mx(2,1)*Mx(2,2),Mx(2,2)^2] * [b0, a0, g0]';
+0283 ax = twx2(2);
+0284 bx = twx2(1);
+0285 
+0286 <a name="_sub4" href="#_subfunctions" class="code">function Mx = calcMx(rho,K1,theta)</a>
+0287 <span class="comment">% calcMx calculate transfer matrice of a combined-function dipole manget</span>
+0288 
+0289 s = rho*theta;
+0290 <span class="keyword">if</span> K1&gt;-1/rho^2 <span class="comment">%horizontal focusing</span>
+0291     sqK = sqrt(1/rho^2+K1);
+0292     Mx = [cos(sqK*s), sin(sqK*s)/sqK; -sqK*sin(sqK*s), cos(sqK*s)];
+0293 <span class="keyword">else</span> <span class="comment">%horizontal defocusing</span>
+0294     sqK = sqrt(-(1/rho^2+K1));
+0295     Mx = [cosh(sqK*s), sinh(sqK*s)/sqK; sqK*sinh(sqK*s), cosh(sqK*s)];
+0296 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

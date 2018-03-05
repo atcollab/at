@@ -1,0 +1,400 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of plothaissinski</title>
+  <meta name="keywords" content="plothaissinski">
+  <meta name="description" content="[z lambda sigma mu] = HASSINSKYFIT(SIGMA0, R, L)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">haissinski</a> &gt; plothaissinski.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/haissinski&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>plothaissinski
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>[z lambda sigma mu] = HASSINSKYFIT(SIGMA0, R, L)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = hassinskyfit(sigma0, q, R, L, frf, h, V, phis, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> [z lambda sigma mu] = HASSINSKYFIT(SIGMA0, R, L)
+ This function will generate a charge distribution for a given SIGMA0 
+ (zero current bunch length), q (bunch total charge in Coloumbs and can be
+ a vector), using a generalised impedance model with R (OHms) and L
+ (Henry) according to the Haissinski equation.
+
+ SIGMA0 (meters, scalar)  : zero current bunch length
+ q      (coloumbs, vector): total charge in bunch
+ R      (Ohms, scalar)    : ring real effective resistance
+ L      (Henry, scalar)   : ring real effecitve impedance
+ frf    (Hz, scalar)      : RF frequency
+ h      (integer, scalar) : harmonic number of the ring
+ V      (Volts, scalar)   : cavity voltage
+ phis   (radians, scalar) : synchronous phase
+
+ Output:
+
+ z      (meters, vector)     : longitudinal position
+ lambda (normalised, vector) : charge distribution along z.
+ sigma  (meters, vector)     : bunch length for each q using fitgaussian.
+ mu     (meters, vector)     : mu of gaussian fit from fitgaussian.
+
+ WARNING: The gaussian fit uses the following command:
+                  fitgaussian(I2,'plot',0,'bg_grad',0,'DC',0);
+          and will thus be a sigma in &quot;points/pixels&quot;, no background
+          gradient and zero DC. Will fit the area, sigma, assymetry factor
+          and the centre of gravity for the gaussian.
+
+ See also <a href="fitgaussian.html" class="code" title="function varargout = fitgaussian(varargin)">FITGAUSSIAN</a>
+
+ 02/03/2010 Eugene</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="fitgaussian.html" class="code" title="function varargout = fitgaussian(varargin)">fitgaussian</a>	GAUSSIAN_PARAM FITERR GAUSSFIT SIGERROR]= FITGAUSSIAN(DATA,[property_value_pair]);</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = hassinskyfit(sigma0, q, R, L, frf, h, V, phis, varargin)</a>
+0002 
+0003 <span class="comment">% [z lambda sigma mu] = HASSINSKYFIT(SIGMA0, R, L)</span>
+0004 <span class="comment">% This function will generate a charge distribution for a given SIGMA0</span>
+0005 <span class="comment">% (zero current bunch length), q (bunch total charge in Coloumbs and can be</span>
+0006 <span class="comment">% a vector), using a generalised impedance model with R (OHms) and L</span>
+0007 <span class="comment">% (Henry) according to the Haissinski equation.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% SIGMA0 (meters, scalar)  : zero current bunch length</span>
+0010 <span class="comment">% q      (coloumbs, vector): total charge in bunch</span>
+0011 <span class="comment">% R      (Ohms, scalar)    : ring real effective resistance</span>
+0012 <span class="comment">% L      (Henry, scalar)   : ring real effecitve impedance</span>
+0013 <span class="comment">% frf    (Hz, scalar)      : RF frequency</span>
+0014 <span class="comment">% h      (integer, scalar) : harmonic number of the ring</span>
+0015 <span class="comment">% V      (Volts, scalar)   : cavity voltage</span>
+0016 <span class="comment">% phis   (radians, scalar) : synchronous phase</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% Output:</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">% z      (meters, vector)     : longitudinal position</span>
+0021 <span class="comment">% lambda (normalised, vector) : charge distribution along z.</span>
+0022 <span class="comment">% sigma  (meters, vector)     : bunch length for each q using fitgaussian.</span>
+0023 <span class="comment">% mu     (meters, vector)     : mu of gaussian fit from fitgaussian.</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% WARNING: The gaussian fit uses the following command:</span>
+0026 <span class="comment">%                  fitgaussian(I2,'plot',0,'bg_grad',0,'DC',0);</span>
+0027 <span class="comment">%          and will thus be a sigma in &quot;points/pixels&quot;, no background</span>
+0028 <span class="comment">%          gradient and zero DC. Will fit the area, sigma, assymetry factor</span>
+0029 <span class="comment">%          and the centre of gravity for the gaussian.</span>
+0030 <span class="comment">%</span>
+0031 <span class="comment">% See also FITGAUSSIAN</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">% 02/03/2010 Eugene</span>
+0034 
+0035 DEBUG = 0;
+0036 TOL = 1e-10;
+0037 MAXIT = 500;
+0038 
+0039 <span class="keyword">if</span> DEBUG
+0040 <span class="comment">%     sigma0 = 20.3e-12*3e8; %natural bunch length in m (145.5/5.6)*e-12*3e8</span>
+0041 <span class="comment">%     R=1600; %resistance (in Ohm)</span>
+0042 <span class="comment">%     L=25e-9; %Inductance (in nanoHenry)</span>
+0043 <span class="comment">%     frf = 499.672e6; %RF frequency</span>
+0044 <span class="comment">%     V=3000000; %RF voltage</span>
+0045 <span class="comment">%     q = ([1:10]/1000)/1.388e6;</span>
+0046 <span class="comment">%     h = 360;</span>
+0047 <span class="comment">%     phis = 2.83964;</span>
+0048 <span class="keyword">end</span>
+0049 
+0050 c = PhysConstant.speed_of_light_in_vacuum.value;
+0051 dz = sigma0/50;
+0052 z = [-sigma0*6:dz:sigma0*6];
+0053 
+0054 <span class="comment">% initialise</span>
+0055 sigmas = zeros(size(q));
+0056 mus = zeros(size(q));
+0057 lambda = zeros(length(z),length(q));
+0058 
+0059 <span class="keyword">for</span> i=1:length(q)
+0060     mu = 0;
+0061     K = -c^2*q(i)/(2*pi*frf*V*cos(phis)*(sigma0^2));
+0062      
+0063     <span class="keyword">if</span> 0
+0064         <span class="comment">% test solution to Hassinski equation based on Oide and Yokoya.</span>
+0065         <span class="comment">% The method has a different method of finding the solution to the</span>
+0066         <span class="comment">% Haissinski equation where you integrate from &quot;infinity&quot; at the</span>
+0067         <span class="comment">% head the bunch towards the tail. This avoids the a fixed point</span>
+0068         <span class="comment">% type algorithm to find the equilibrium solution. This bit has yet</span>
+0069         <span class="comment">% to be tested and debugged fully</span>
+0070         <span class="comment">% Eugene 2/3/2010</span>
+0071         warning(<span class="string">'This algorithm not tested. Use with caution.'</span>);
+0072         I2 = zeros(size(z));
+0073         A = 1/(sigma0*sqrt(2*pi)); <span class="comment">% Initial normalisation factor</span>
+0074         sumint = 0;
+0075         <span class="keyword">while</span> abs(sumint-1) &gt; 0.0001
+0076             <span class="keyword">for</span> j=(length(z)-1):-1:1
+0077                 <span class="comment">% Assume that the solution for I2 is zero for suffidciently</span>
+0078                 <span class="comment">% large z.</span>
+0079                 intR = R*sum(I2(j:end))*dz;
+0080                 intL = c*L*sum(gradient(I2(j:end),dz))*dz;
+0081                 I2(j) = A*(exp(-(z(j)-mu).^2./(2*sigma0^2))).*(exp((-K.*(intR + intL))));
+0082             <span class="keyword">end</span>
+0083             sumint = (sum(I2)*dz);
+0084             A = A/sumint;
+0085         <span class="keyword">end</span>
+0086         converge = 1;
+0087     <span class="keyword">else</span>
+0088         <span class="comment">% Fixted point algorithm based on Rohan's old code that has been</span>
+0089         <span class="comment">% put into functinal form.</span>
+0090         <span class="keyword">if</span> i==1
+0091             <span class="comment">% initial distribution, subsequent starting distributions set at</span>
+0092             <span class="comment">% the bottom of the loop.</span>
+0093             <span class="comment">%         kl = R/2/sqrt(pi)/sigma0;</span>
+0094             mu = 0; <span class="comment">%c*kl*q(i)/(2*pi*frf*V*cos(phis));</span>
+0095             I = (1/sqrt(2*pi)/sigma0)*exp(-(z-mu).^2/(2*sigma0^2));
+0096             I = I./(sum(I)*dz); <span class="comment">% Normalise</span>
+0097             Ip = -((z-mu)/sigma0^2).*I;
+0098         <span class="keyword">else</span>
+0099             I = I_stable;
+0100             Ip = Ip_stable;
+0101         <span class="keyword">end</span>
+0102         
+0103         converge = 0;
+0104         itno = 1;
+0105         <span class="keyword">while</span> ~converge
+0106             intR = R*cumsum(I)*dz;
+0107             intL = c*L*cumsum(Ip)*dz;
+0108             I2 = (1/(sigma0*sqrt(2*pi)))*(exp(-(z-mu).^2./(2*sigma0^2))).*(exp((-K.*(intR + intL))));
+0109             
+0110             <span class="comment">%Renormalise the function</span>
+0111             I2 = I2./(sum(I2)*dz);
+0112             <span class="keyword">if</span> DEBUG
+0113                 fprintf(<span class="string">'Iteration: %03d, STD: %e\n'</span>,itno,std(I2(:)-I(:)));
+0114             <span class="keyword">end</span>
+0115             stderror = std(I2(:)-I(:));
+0116             <span class="keyword">if</span> stderror &lt; TOL; <span class="comment">%convegence condition</span>
+0117                 converge=1;
+0118                 <span class="comment">% plot(I2,'r'); %plot final distribution in red</span>
+0119             <span class="keyword">else</span>
+0120                 I = I2;
+0121                 Ip = gradient(I2,dz);
+0122             <span class="keyword">end</span>
+0123             itno = itno + 1;
+0124             
+0125             <span class="comment">%         if DEBUG &amp;&amp; rem(itno,10) == 0</span>
+0126             <span class="comment">%             figure(98);</span>
+0127             <span class="comment">%             plot(I2);</span>
+0128             <span class="comment">%         end</span>
+0129             
+0130             <span class="keyword">if</span> itno &gt; MAXIT
+0131                 fprintf(<span class="string">'WARNING: Did not converge during fit of Hassinsky''s equation!!\n'</span>);
+0132                 fprintf(<span class="string">'q: %g, std error: %g\n'</span>,q(i),stderror);
+0133                 figure(99);
+0134                 plot(z,I);
+0135                 <span class="keyword">break</span>;
+0136             <span class="keyword">end</span>
+0137         <span class="keyword">end</span>
+0138     <span class="keyword">end</span>
+0139     
+0140     lambda(:,i) = I2;
+0141     
+0142     <span class="keyword">if</span> nargout &gt; 2
+0143         <span class="keyword">if</span> converge
+0144             <span class="comment">% units of meters</span>
+0145             temp = <a href="fitgaussian.html" class="code" title="function varargout = fitgaussian(varargin)">fitgaussian</a>(I2,<span class="string">'plot'</span>,1,<span class="string">'bg_grad'</span>,0,<span class="string">'DC'</span>,0,<span class="string">'scale'</span>,dz);
+0146             sigmas(i) = temp.sigma;
+0147             mus(i) = temp.mu - z(end);
+0148 
+0149             <span class="comment">% Set I and Ip for the next sequence and only keep &quot;stable&quot;</span>
+0150             <span class="comment">% solutions that converge. Otherwise small instabilities will</span>
+0151             <span class="comment">% build up too quickly for subsequent solutions with higher</span>
+0152             <span class="comment">% currents, q.</span>
+0153             <span class="comment">%         kl = R/2/sqrt(pi)/sigmas(i-1);</span>
+0154             mu = 0; <span class="comment">%c*kl*q(i)/(2*pi*frf*V*cos(phis));</span>
+0155             I_stable = I2;
+0156             Ip_stable = gradient(I2,dz);
+0157         <span class="keyword">else</span>
+0158             <span class="comment">% Will try subset (plot envelope). There are &quot;solutions&quot; where</span>
+0159             <span class="comment">% a sinusoidal pattern is observed at the head of the bunch.</span>
+0160             <span class="comment">% This part of the code attempts to plot an envelope gaussian</span>
+0161             <span class="comment">% function by looking for the peaks of the oscilating function</span>
+0162             <span class="comment">% and only fitting to those points.</span>
+0163             ii = find(gradient((lambda(:,i))) &gt; 0); 
+0164             ii = ii(abs(diff(ii)) &gt; 1);
+0165             <span class="keyword">if</span> ~isempty(ii) &amp;&amp; length(ii) &gt; 1
+0166                  <span class="comment">% it usually can't find where the gaussian tail of the</span>
+0167                  <span class="comment">% bunch starts. So assume the distance from the last peak</span>
+0168                  <span class="comment">% to the start of the tail of the gaussian bunch is the</span>
+0169                  <span class="comment">% same as the distance between the head of the gaussian</span>
+0170                  <span class="comment">% part of the bunch and the first peak.</span>
+0171                  ii(end+1) = ii(end) + (ii(2)-ii(1))*2; <span class="comment">% Generate last point as it can't seem to find the last turn around point.</span>
+0172                  <span class="comment">%  datai = [1:ii(1), ii(2:end-1)', ii(end):length(z)];</span>
+0173                  datai = [1:ii(1), ii(end):length(z)];
+0174             <span class="keyword">else</span>
+0175                 <span class="comment">% sometimes convertance isn't met however the nongaussian</span>
+0176                 <span class="comment">% element is not strong so a standard gaussian fit is</span>
+0177                 <span class="comment">% sufficient.</span>
+0178                 datai = [1:length(z)]';
+0179             <span class="keyword">end</span>
+0180             
+0181             z_subset = z(datai);
+0182             I2_subset = lambda(datai,i);
+0183             
+0184             temp = <a href="fitgaussian.html" class="code" title="function varargout = fitgaussian(varargin)">fitgaussian</a>(I2_subset,<span class="string">'plot'</span>,0,<span class="string">'bg_grad'</span>,0,<span class="string">'DC'</span>,0,<span class="string">'scale'</span>,1,<span class="string">'x'</span>,z_subset);
+0185             <span class="comment">% pause;</span>
+0186             <span class="comment">% must have reached iteration limit without convergence</span>
+0187             <span class="comment">% therefore cannot trust fitdata</span>
+0188             sigmas(i) = temp.sigma;
+0189             mus(i) = temp.mu - z(end);
+0190         <span class="keyword">end</span>
+0191     <span class="keyword">else</span>
+0192         I_stable = I2;
+0193         Ip_stable = gradient(I2,dz);
+0194     <span class="keyword">end</span>
+0195 <span class="keyword">end</span>
+0196 
+0197 varargout{1} = z;
+0198 varargout{2} = lambda;
+0199 varargout{3} = sigmas;
+0200 varargout{4} = mus;
+0201 
+0202 
+0203 <span class="keyword">return</span>
+0204 
+0205 
+0206 
+0207 <span class="comment">% Loop over currents</span>
+0208 current = [];
+0209 sigmas = [];
+0210 I2 = [];
+0211 initstep = 0.5;
+0212 itno = 0;
+0213 <span class="keyword">for</span> loop = 1:endloop
+0214 <span class="keyword">if</span> itno &gt;= 600
+0215     initstep = initstep/2;
+0216 <span class="keyword">end</span>
+0217 <span class="comment">% in mA</span>
+0218 <span class="keyword">if</span> loop == 1
+0219     current(loop) = 0.001;
+0220 <span class="keyword">else</span>
+0221     current(loop) = current(loop-1) + initstep;
+0222 <span class="keyword">end</span>
+0223 <span class="comment">%current(loop) = initstep*(loop-1) +0.001;</span>
+0224 <span class="comment">%I = zeros(1001,1); %initial charge distribution</span>
+0225 <span class="comment">%I2 =zeros(1001,1); %final charge distribution</span>
+0226 <span class="comment">%Ip = zeros(1001,1); %deriviative of charge distribution</span>
+0227 c=3e8;
+0228 Frf = 499.672e6; <span class="comment">%RF frequency</span>
+0229 V=3000000; <span class="comment">%RF voltage</span>
+0230 Q=(current(end)/1000)/1.3880e6; <span class="comment">%convert current to charge</span>
+0231 
+0232 <span class="comment">%I2p/I2 = -z/sigma^2 + (c^2*Q*(R*I + c*L*Ip))/(2*pi*Frf*V*cosd(158)*sigma^2)</span>
+0233 
+0234 stop = 0;
+0235 itno=0;
+0236 <span class="comment">%iterate!</span>
+0237 SIGMAx = sigma;
+0238 K = -c^2*Q/(2*pi*Frf*V*cosd(158)*(SIGMAx^2));
+0239 <span class="comment">%set the initial distribution as a gaussian</span>
+0240 <span class="keyword">if</span> loop==1
+0241     Ax = 1;
+0242     MUx = 0; <span class="comment">%centre it</span>
+0243     dz = SIGMAx/50;
+0244     z = [-SIGMAx*6:dz:SIGMAx*6];
+0245     I = 1 * (1/(SIGMAx*sqrt(2*pi)))*exp(-(((z-MUx).^2)/(2*SIGMAx^2)));
+0246     <span class="comment">% Normalise the initial gaussian</span>
+0247     I = I./(sum(I)*dz);
+0248     <span class="comment">% figure(100); hold on; plot(I);  %plot initial distribution</span>
+0249     <span class="comment">% make derivative disribution 'Ip'</span>
+0250     Ip = -((z-MUx)/SIGMAx^2).*I;
+0251 <span class="keyword">else</span>
+0252     I = gaussianY;
+0253     Ip = gradient(I,dz);
+0254 <span class="keyword">end</span>
+0255 
+0256 <span class="keyword">while</span> stop==0;
+0257     itno=itno+1;
+0258     
+0259     <span class="keyword">for</span> a=1:length(z) <span class="comment">%do the I(z'-z)dz itergrations first</span>
+0260         intR = sum(R*I(1:a))*dz;
+0261         intL = sum(c*L*Ip(1:a))*dz;
+0262         <span class="comment">%the Hassinski equation:</span>
+0263         I2(a) = (1/(SIGMAx*sqrt(2*pi)))*(exp(-(z(a)-MUx)^2/(2*SIGMAx^2)))*(exp((-K*(intR + intL))));
+0264     <span class="keyword">end</span>
+0265     <span class="comment">%Renormalise the function</span>
+0266     I2 = I2./(sum(I2)*dz);
+0267  
+0268     <span class="comment">%figure(300);</span>
+0269     <span class="comment">%plot(I2,'g'); %plot iterations in green</span>
+0270     <span class="comment">%hold on;</span>
+0271     
+0272     fprintf(<span class="string">'Iteration: %03d, STD: %e\n'</span>,itno,std(I2(:)-I(:)));
+0273     <span class="keyword">if</span> std(I2(:)-I(:)) &lt; 1e-13; <span class="comment">%convegence condition</span>
+0274         stop=1;
+0275        <span class="comment">% plot(I2,'r'); %plot final distribution in red</span>
+0276         itno; <span class="comment">%print out the iteration number</span>
+0277     <span class="keyword">else</span>
+0278        I = I2;
+0279        Ip = gradient(I2,dz);
+0280 <span class="comment">%         Ip(1)=0;</span>
+0281 <span class="comment">%        for a=1:1001</span>
+0282 <span class="comment">%           I(a) = I2(a);</span>
+0283 <span class="comment">%           if a&gt;1&amp;&amp;a&lt;1001; %take trapezoidal derivative</span>
+0284 <span class="comment">%               Ip(a) = 0.5*((I2(a)-I2(a-1)) + (I2(a+1)-I2(a)) );</span>
+0285 <span class="comment">%           else if a==1 %cant do this on the edges</span>
+0286 <span class="comment">%               Ip(a) = I2(a+1) - I2(a);</span>
+0287 <span class="comment">%               else</span>
+0288 <span class="comment">%                   Ip(a) = I2(a) - I2(a-1);</span>
+0289 <span class="comment">%               end</span>
+0290 <span class="comment">%           end</span>
+0291 <span class="comment">%        end</span>
+0292     <span class="keyword">end</span>
+0293     <span class="keyword">if</span> itno==500; <span class="comment">%stop after 100 iterations.</span>
+0294         stop =1; 
+0295     <span class="keyword">end</span>
+0296 <span class="keyword">end</span>
+0297 <span class="comment">% Fit a gaussian</span>
+0298 temp = <a href="fitgaussian.html" class="code" title="function varargout = fitgaussian(varargin)">fitgaussian</a>(I2,<span class="string">'plot'</span>,0,<span class="string">'bg_grad'</span>,0,<span class="string">'DC'</span>,0);
+0299     <span class="comment">%gaussianY = ones(sizey,1);</span>
+0300     xx = [1:length(I2)];
+0301     gaussianY = temp.area * exp(-0.5*((xx-temp.mu)./((1+sign(xx-temp.mu)*temp.Assym_factor)*temp.sigma)).^2) / sqrt(2*pi*temp.sigma^2) + temp.bg_gradient*xx + temp.DC;
+0302     sigmas(loop) = temp.sigma/c*1e12; <span class="comment">% convert into ps</span>
+0303     <span class="comment">%means(i) = Estimates(2);</span>
+0304     
+0305     figure(201);
+0306     clf;
+0307     plot(z,I2,<span class="string">'b-'</span>); hold on;
+0308     plot(z,gaussianY,<span class="string">'-r'</span>);
+0309 
+0310 <span class="keyword">end</span> <span class="comment">% for each current</span>
+0311 save([pref <span class="string">'_hass'</span>],<span class="string">'fit*'</span>,<span class="string">'cal*'</span>,<span class="string">'ave*'</span>,<span class="string">'measured*'</span>,<span class="string">'current'</span>,<span class="string">'sigmas'</span>);
+0312 
+0313 measuredsigma = avesigmas;
+0314 vectormeas = [avecurrents; measuredsigma];
+0315 vectorsim = [current; sigmas];
+0316 vectorerror = [avecurrents; measurederrorsigma];
+0317 
+0318 figure(950); xlabel(<span class="string">'Current (mA)'</span>); ylabel(<span class="string">'Bunch Sigma (arb. units)'</span>);hold on; 
+0319 plot(vectorsim(1,:),vectorsim(2,:),color);
+0320 <span class="comment">%errorbar(vectormeas(1,17:19),vectormeas(2,17:19),vectorerror(2,17:19),'.');</span>
+0321 errorbar(vectormeas(1,:),vectormeas(2,:),vectorerror(2,:),[<span class="string">'.'</span>,color]);
+0322 <span class="comment">%errorbar(vectormeas(1,17:19),vectormeas(2,17:19),vectorerror(2,17:19),'.');</span>
+0323</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

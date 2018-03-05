@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of calc_TouschekPM</title>
+  <meta name="keywords" content="calc_TouschekPM">
+  <meta name="description" content="tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">pubtools</a> &gt; calc_TouschekPM.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>calc_TouschekPM
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)
+tauT = calc_TouschekPM(TD,dppPM,alpha,Ib,U0,coupling, sigE, emit_x)
+        Ib, mA, single bunch current
+        U0, MeV, one-turn energy loss
+       emit_x, nm-rad
+       coupling, average emit_y/emit_x
+       TD, lattice function structure (same as twissring output) 
+       dppPM, Nx2, positive/negative momentum aperture
+       Trf, a structure or a scalar, when a structure, it consists of [Frequency, HarmNumber, Energy, alpha,
+       Voltage], when a scalar it is alpha of the lattice (other
+       parameters are assumed default of SPEAR3).
+ex:    
+        load('dppAP_LAT_DW_withIDs_Mar20_07_normrf.mat')
+        [td, tune,chrom] = twissring(THERING,0,indextab, 'chrom', 1e-5);
+        dppPM = [deltap' deltam'];
+        tauT = calc_TouschekPM(td,dppPM,a1,100/280,1.04,0.064e-2, 0.001, 18)/3600; %hrs
+        disp(tauT)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function D=funcD(xi)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)</a>
+0002 <span class="comment">%tauT = calc_TouschekPM(TD,dppPM,Trf,Ib,U0,coupling, sigE, emit_x)</span>
+0003 <span class="comment">%tauT = calc_TouschekPM(TD,dppPM,alpha,Ib,U0,coupling, sigE, emit_x)</span>
+0004 <span class="comment">%        Ib, mA, single bunch current</span>
+0005 <span class="comment">%        U0, MeV, one-turn energy loss</span>
+0006 <span class="comment">%       emit_x, nm-rad</span>
+0007 <span class="comment">%       coupling, average emit_y/emit_x</span>
+0008 <span class="comment">%       TD, lattice function structure (same as twissring output)</span>
+0009 <span class="comment">%       dppPM, Nx2, positive/negative momentum aperture</span>
+0010 <span class="comment">%       Trf, a structure or a scalar, when a structure, it consists of [Frequency, HarmNumber, Energy, alpha,</span>
+0011 <span class="comment">%       Voltage], when a scalar it is alpha of the lattice (other</span>
+0012 <span class="comment">%       parameters are assumed default of SPEAR3).</span>
+0013 <span class="comment">%ex:</span>
+0014 <span class="comment">%        load('dppAP_LAT_DW_withIDs_Mar20_07_normrf.mat')</span>
+0015 <span class="comment">%        [td, tune,chrom] = twissring(THERING,0,indextab, 'chrom', 1e-5);</span>
+0016 <span class="comment">%        dppPM = [deltap' deltam'];</span>
+0017 <span class="comment">%        tauT = calc_TouschekPM(td,dppPM,a1,100/280,1.04,0.064e-2, 0.001, 18)/3600; %hrs</span>
+0018 <span class="comment">%        disp(tauT)</span>
+0019 
+0020 e0 = PhysConstant.elementary_charge.value; <span class="comment">%Coulomb</span>
+0021 cspeed = PhysConstant.speed_of_light_in_vacuum.value; 
+0022 r0 = PhysConstant.classical_electron_radius.value; <span class="comment">%m</span>
+0023 
+0024 U0=U0*1e6;
+0025 emit_x = emit_x*1.0e-9; <span class="comment">%convert nm-rad to m-rad</span>
+0026 
+0027 <span class="comment">%cavity related parameters</span>
+0028 <span class="keyword">if</span> isstruct(Trf)
+0029     freq = Trf.Frequency;
+0030     harm = Trf.HarmNumber;
+0031     E0 = Trf.Energy;
+0032     alpha = Trf.alpha;
+0033     Vrf = Trf.Voltage;
+0034     circ = Trf.circum;
+0035 <span class="keyword">else</span>
+0036     freq = 352.202e6; <span class="comment">%Hz</span>
+0037     harm = 992;
+0038     E0 = 6.04e9; <span class="comment">%eV</span>
+0039     alpha = Trf;
+0040     Vrf = 9e6;
+0041     circ = 844.39;
+0042     
+0043 <span class="keyword">end</span>
+0044 gamma = E0/PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;
+0045 N0 = 0.001/(freq/harm)/e0; <span class="comment">%Number of particle per 1mA bunch.</span>
+0046 
+0047 
+0048 <span class="comment">%bunch length</span>
+0049 phi_s = asin(U0/Vrf);
+0050 nus = sqrt(harm*Vrf*alpha*cos(phi_s)/2/pi/E0);
+0051 
+0052 
+0053 sigZ = sigE/nus*harm*alpha/2/pi/freq*cspeed;
+0054 
+0055 <span class="comment">%rf bucket height</span>
+0056 delta_max_rf = sqrt(2*U0/pi/alpha/harm/E0)*sqrt( sqrt((Vrf/U0).^2-1) - acos(U0./Vrf));
+0057 <span class="comment">%---------------------------------</span>
+0058 
+0059 <span class="comment">%beam size around the ring</span>
+0060 <span class="comment">%[td, tune,chrom] = twissring(THERING,0,1:length(THERING)+1, 'chrom', 1e-5);</span>
+0061 td = TD; 
+0062 Dx = cat(2, td.Dispersion)';
+0063 betxy = cat(1, td.beta);
+0064 alfxy = cat(1, td.alpha);
+0065 
+0066 spos = cat(1,td.SPos);
+0067 
+0068 sigX = sqrt(betxy(:,1)*emit_x+Dx(:,1).^2*sigE^2);
+0069 
+0070 sigY = sqrt(betxy(:,2)*emit_x*coupling);
+0071 sigXp = sqrt(emit_x*(1+alfxy(:,1).^2)./betxy(:,1)+Dx(:,2).^2*sigE^2);
+0072 <span class="comment">%--------------------------------</span>
+0073 
+0074 curH = (Dx(:,1).^2 + (betxy(:,1).*Dx(:,2)+alfxy(:,1).*Dx(:,1)).^2)./betxy(:,1);
+0075 
+0076 <span class="comment">%delta_max_perp = hori_acceptance./sqrt(curH);</span>
+0077 deltap = dppPM(:,1);
+0078 deltam = dppPM(:,2);
+0079 
+0080 delta_maxp = min([deltap, ones(size(curH))*delta_max_rf]')';
+0081 delta_maxm = min([-deltam, ones(size(curH))*delta_max_rf]')';
+0082 
+0083 xip = (delta_maxp/gamma.*betxy(:,1)./sigX).^2;
+0084 xim = (delta_maxm/gamma.*betxy(:,1)./sigX).^2;
+0085 Dvalp = <a href="#_sub1" class="code" title="subfunction D=funcD(xi)">funcD</a>(xip);
+0086 Dvalm = <a href="#_sub1" class="code" title="subfunction D=funcD(xi)">funcD</a>(xim);
+0087 
+0088 ds = diff(spos);
+0089 n=1:length(ds);
+0090 
+0091 avgfacp = sum(Dvalp(n)./sigX(n)./sigY(n)/sigZ./delta_maxp(n).^3.*ds)/circ;
+0092 avgfacm = sum(Dvalm(n)./sigX(n)./sigY(n)/sigZ./delta_maxm(n).^3.*ds)/circ;
+0093 
+0094 lossrate = Ib*N0*r0^2*cspeed/8/gamma^2/pi*(avgfacp+avgfacm)/2.;
+0095 tauT = 1/lossrate;
+0096 
+0097 <span class="keyword">if</span> 0
+0098    figure
+0099    h = plot(spos, delta_maxp, spos, -delta_maxm); <span class="comment">%delta_max_rf*ones(size(spos)));</span>
+0100    set(gca,<span class="string">'fontsize'</span>, 16,<span class="string">'xlim'</span>,[0,240])
+0101    xlabel(<span class="string">'s (m)'</span>)
+0102    ylabel(<span class="string">'\delta_{max}'</span>)
+0103    grid
+0104    set(gca,<span class="string">'ylim'</span>,[-0.03,0.03]);
+0105    
+0106 <span class="keyword">end</span>
+0107 
+0108 <a name="_sub1" href="#_subfunctions" class="code">function D=funcD(xi)</a>
+0109 <span class="comment">%a look-up table</span>
+0110 DfunTable = [
+0111 <span class="comment">%xi                Dfunc</span>
+0112 0.000500    0.123802    
+0113 0.001000    0.153464    
+0114 0.001500    0.172578    
+0115 0.002000    0.186757    
+0116 0.002500    0.198008    
+0117 0.003000    0.207298    
+0118 0.003500    0.215179    
+0119 0.004000    0.221992    
+0120 0.004500    0.227968    
+0121 0.005000    0.233269    
+0122 0.005500    0.238015    
+0123 0.006000    0.242294    
+0124 0.006500    0.246176    
+0125 0.007000    0.249717    
+0126 0.007500    0.252961    
+0127 0.008000    0.255944    
+0128 0.008500    0.258697    
+0129 0.009000    0.261244    
+0130 0.009500    0.263607    
+0131 0.010000    0.265805    
+0132 0.010500    0.267852    
+0133 0.011000    0.269763    
+0134 0.011500    0.271549    
+0135 0.012000    0.273221    
+0136 0.012500    0.274788    
+0137 0.013000    0.276259    
+0138 0.013500    0.277640    
+0139 0.014000    0.278938    
+0140 0.014500    0.280159    
+0141 0.015000    0.281308    
+0142 0.015500    0.282391    
+0143 0.016000    0.283411    
+0144 0.016500    0.284372    
+0145 0.017000    0.285278    
+0146 0.017500    0.286132    
+0147 0.018000    0.286938    
+0148 0.018500    0.287698    
+0149 0.019000    0.288415    
+0150 0.019500    0.289090    
+0151 0.020000    0.289727    
+0152 0.020500    0.290327    
+0153 0.021000    0.290893    
+0154 0.021500    0.291425    
+0155 0.022000    0.291926    
+0156 0.022500    0.292397    
+0157 0.023000    0.292840    
+0158 0.023500    0.293256    
+0159 0.024000    0.293646    
+0160 0.024500    0.294011    
+0161 0.025000    0.294352    ];
+0162 ximin = DfunTable(1,1);
+0163 ximax = DfunTable(<span class="keyword">end</span>,1);
+0164 xi(find(xi&lt;ximin)) = ximin;
+0165 xi(find(xi&gt;ximax)) = ximax;
+0166 D = interp1(DfunTable(:,1), DfunTable(:,2), xi,<span class="string">'linear'</span>);
+0167</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

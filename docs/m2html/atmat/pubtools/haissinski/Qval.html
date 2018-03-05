@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Qval</title>
+  <meta name="keywords" content="Qval">
+  <meta name="description" content="Qval gives the unitless Q parameter needed to compute the">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">haissinski</a> &gt; Qval.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/haissinski&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>Qval
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>Qval gives the unitless Q parameter needed to compute the</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function Q = Qval(Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> Qval gives the unitless Q parameter needed to compute the
+ bunch lengthening factor due to the potential well effect</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Q = Qval(Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta)</a>
+0002 <span class="comment">% Qval gives the unitless Q parameter needed to compute the</span>
+0003 <span class="comment">% bunch lengthening factor due to the potential well effect</span>
+0004 
+0005 <span class="comment">% Ib is the bunch current in mA</span>
+0006 <span class="comment">% Zn is the longitudinal broadband impedance</span>
+0007 <span class="comment">% Vrf is the RF voltage in MV</span>
+0008 <span class="comment">% h is the harmonic number</span>
+0009 <span class="comment">% alpha is the momentum compaction factor</span>
+0010 <span class="comment">% sigmadelta is the energy spread</span>
+0011 <span class="comment">% nus is the synchrotron tune</span>
+0012 
+0013 phi=pi - asin(U0/Vrf);
+0014 nus= sqrt(-(Vrf/E0)*(h * alpha)/(2*pi) * cos(phi));
+0015 
+0016 Delta = -(2*pi*Ib*Zn)/(Vrf*h*cos(phi)*(alpha*sigdelta/nus)^3);
+0017 Q=Delta/(4*sqrt(pi));</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

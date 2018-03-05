@@ -1,0 +1,431 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atQuadRDTdispersioncorrection</title>
+  <meta name="keywords" content="atQuadRDTdispersioncorrection">
+  <meta name="description" content="ATQUADRDTDISPERSIONCORRECTION - Make dispersion correction based on RDTs">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">RDT</a> &gt; atQuadRDTdispersioncorrection.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/RDT&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>atQuadRDTdispersioncorrection
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>ATQUADRDTDISPERSIONCORRECTION - Make dispersion correction based on RDTs</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [rcor,inCOD,qs]=atQuadRDTdispersioncorrection(rerr,r0,indBPM,indQCor,inCOD,neigSteerer,correctflags,scalefactor,wdisp,ModelRM,steererlimit,printouttext) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATQUADRDTDISPERSIONCORRECTION - Make dispersion correction based on RDTs
+ function [...
+    rcor,...            1) corrected lattice
+    inCOD,...           2) initial COD (dpp is stored here)
+    hs,vs...            3) required steerers strengths (total)
+    ]=atdispersionfreesteering(...
+     rerr,...           1) AT lattice to correct
+     r0, ...            2) 2xNbpm reference rdt to correct to
+     indBPM,...         3) Nbx1 bpm indexes       (default: monitor)
+     indQCor,...        4) Nqx1 quad. cor indexes (default: sextupole)
+     inCOD,...          5) 6x1 initial COD guess  (default: 6x1 zero)
+     neigSteerer,...    6) 2xNiter eigenvectors for correction H and V at
+                          each iteration (default: [Nq/2])
+     correctflags,...   7) correct [ mean0](default: [ true])
+     scalefactor,...    8) scale factor to correction (default: 1.0)
+     [wdisph wtunes wdispv],...
+                        9) dispersion and tune weight:
+                           dispersionH*wdisph and orbith*(1-wdisph-wtune)
+                           dispersionV*wdispv and orbith*(1-wdispv)                          
+                           (default: 0.7 0.1 0.7)
+     ModelRM,...       10) ModelRM.Disp(N/S)Quad = 6x1 cell of dispersion 
+                           response mat. if [] compute RM (default: [])
+                           (default 0*2xNb, or from r0 if reftune is r0)
+     steererlimit      11) 2x1 limit of steerers abs(steerer)&lt;steererlimit
+                           (default: [], no limits)
+     printouttext      12) if 1 or true, display rms orbit
+     )
+
+ features impelemented:
+ - limit correctors strengths
+ - ddp correction
+ - sum of steerers = 0
+ - 6D orbit with BPM errors
+ - initial coordinate
+ - correction to reference rdt tune dispersion from r0 lattice
+ - retrival of normal and skew quadrupole components also from alignment
+   errors and rotations
+ - use atsetfieldvalues, atgetcells
+
+ http://journals.aps.org/prab/abstract/10.1103/PhysRevSTAB.14.034002
+
+see also: qemsvd_mod findorbit6Err getresponsematrices</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="EquivalentGradientsFromAlignments6D.html" class="code" title="function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)">EquivalentGradientsFromAlignments6D</a>	EQUIVALENTGRADIENTSFROMALIGNMENTS6D Estimated normal quad gradients from sext offsets</li><li><a href="qemrdtresp_mod.html" class="code" title="function [fx,fz,qcor]=qemrdtresp_mod(mach,bpmidx,qcoridx)">qemrdtresp_mod</a>	QEMRDTRESP  compute resonance driving terms at BPM locations</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="testRDTdispersionfreesteering.html" class="code" title="">testRDTdispersionfreesteering</a>	test errors and correction functions</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [rcor,inCOD,qs]=atQuadRDTdispersioncorrection(</a><span class="keyword">...</span>
+0002     rerr,<span class="keyword">...</span>
+0003     r0,<span class="keyword">...</span>
+0004     indBPM,<span class="keyword">...</span>
+0005     indQCor,<span class="keyword">...</span>
+0006     inCOD,<span class="keyword">...</span>
+0007     neigSteerer,<span class="keyword">...</span>
+0008     correctflags,<span class="keyword">...</span>
+0009     scalefactor,<span class="keyword">...</span>
+0010     wdisp,<span class="keyword">...</span>
+0011     ModelRM,<span class="keyword">...</span>
+0012     steererlimit,<span class="keyword">...</span>
+0013     printouttext)
+0014 <span class="comment">%ATQUADRDTDISPERSIONCORRECTION - Make dispersion correction based on RDTs</span>
+0015 <span class="comment">% function [...</span>
+0016 <span class="comment">%    rcor,...            1) corrected lattice</span>
+0017 <span class="comment">%    inCOD,...           2) initial COD (dpp is stored here)</span>
+0018 <span class="comment">%    hs,vs...            3) required steerers strengths (total)</span>
+0019 <span class="comment">%    ]=atdispersionfreesteering(...</span>
+0020 <span class="comment">%     rerr,...           1) AT lattice to correct</span>
+0021 <span class="comment">%     r0, ...            2) 2xNbpm reference rdt to correct to</span>
+0022 <span class="comment">%     indBPM,...         3) Nbx1 bpm indexes       (default: monitor)</span>
+0023 <span class="comment">%     indQCor,...        4) Nqx1 quad. cor indexes (default: sextupole)</span>
+0024 <span class="comment">%     inCOD,...          5) 6x1 initial COD guess  (default: 6x1 zero)</span>
+0025 <span class="comment">%     neigSteerer,...    6) 2xNiter eigenvectors for correction H and V at</span>
+0026 <span class="comment">%                          each iteration (default: [Nq/2])</span>
+0027 <span class="comment">%     correctflags,...   7) correct [ mean0](default: [ true])</span>
+0028 <span class="comment">%     scalefactor,...    8) scale factor to correction (default: 1.0)</span>
+0029 <span class="comment">%     [wdisph wtunes wdispv],...</span>
+0030 <span class="comment">%                        9) dispersion and tune weight:</span>
+0031 <span class="comment">%                           dispersionH*wdisph and orbith*(1-wdisph-wtune)</span>
+0032 <span class="comment">%                           dispersionV*wdispv and orbith*(1-wdispv)</span>
+0033 <span class="comment">%                           (default: 0.7 0.1 0.7)</span>
+0034 <span class="comment">%     ModelRM,...       10) ModelRM.Disp(N/S)Quad = 6x1 cell of dispersion</span>
+0035 <span class="comment">%                           response mat. if [] compute RM (default: [])</span>
+0036 <span class="comment">%                           (default 0*2xNb, or from r0 if reftune is r0)</span>
+0037 <span class="comment">%     steererlimit      11) 2x1 limit of steerers abs(steerer)&lt;steererlimit</span>
+0038 <span class="comment">%                           (default: [], no limits)</span>
+0039 <span class="comment">%     printouttext      12) if 1 or true, display rms orbit</span>
+0040 <span class="comment">%     )</span>
+0041 <span class="comment">%</span>
+0042 <span class="comment">% features impelemented:</span>
+0043 <span class="comment">% - limit correctors strengths</span>
+0044 <span class="comment">% - ddp correction</span>
+0045 <span class="comment">% - sum of steerers = 0</span>
+0046 <span class="comment">% - 6D orbit with BPM errors</span>
+0047 <span class="comment">% - initial coordinate</span>
+0048 <span class="comment">% - correction to reference rdt tune dispersion from r0 lattice</span>
+0049 <span class="comment">% - retrival of normal and skew quadrupole components also from alignment</span>
+0050 <span class="comment">%   errors and rotations</span>
+0051 <span class="comment">% - use atsetfieldvalues, atgetcells</span>
+0052 <span class="comment">%</span>
+0053 <span class="comment">% http://journals.aps.org/prab/abstract/10.1103/PhysRevSTAB.14.034002</span>
+0054 <span class="comment">%</span>
+0055 <span class="comment">%see also: qemsvd_mod findorbit6Err getresponsematrices</span>
+0056 
+0057 
+0058 
+0059 <span class="comment">% response matrix kicks</span>
+0060 <span class="comment">%kval=1e-5;</span>
+0061 delta=1e-3;
+0062 
+0063 <span class="comment">% default arguments</span>
+0064 <span class="keyword">if</span> nargin&lt;12
+0065     printouttext=true;
+0066 <span class="keyword">end</span>
+0067 <span class="keyword">if</span> nargin&lt;11
+0068     steererlimit=[];
+0069 <span class="keyword">end</span>
+0070 
+0071 <span class="keyword">if</span> nargin&lt;4
+0072     <span class="keyword">if</span> printouttext
+0073         disp(<span class="string">'get BPM and Correctors indexes'</span>); <span class="keyword">end</span>;
+0074     indBPM=finc(atgetcells(rerr,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>));
+0075     indQCor=finc(atgetcells(rerr,<span class="string">'Class'</span>,<span class="string">'Quadrupole'</span>));
+0076 <span class="keyword">end</span>
+0077 
+0078 <span class="keyword">if</span> nargin&lt;5
+0079     inCOD=[0 0 0 0 0 0]';
+0080 <span class="keyword">end</span>
+0081 
+0082 <span class="keyword">if</span> nargin&lt;6
+0083     neigSteerer=length(indQCor) /2;
+0084 <span class="keyword">end</span>
+0085 
+0086 <span class="keyword">if</span> nargin&lt;7
+0087     correctflags=true;
+0088 <span class="keyword">end</span>
+0089 
+0090 <span class="keyword">if</span> nargin&lt;8
+0091     <span class="keyword">if</span> printouttext
+0092         disp(<span class="string">' --- scale set to 1.0'</span>); <span class="keyword">end</span>;
+0093     scalefactor=1.0;
+0094 <span class="keyword">end</span>
+0095 
+0096 <span class="keyword">if</span> nargin&lt;9
+0097     <span class="keyword">if</span> printouttext, disp(<span class="string">' --- wdisph=0.7 wtune=0.1'</span>); <span class="keyword">end</span>;
+0098     wdisp=[.7 .1];
+0099 <span class="keyword">end</span>
+0100 
+0101 <span class="keyword">if</span> nargin&lt;10
+0102     <span class="keyword">if</span> printouttext, disp(<span class="string">' --- computing orbit Response matrix'</span>); <span class="keyword">end</span>;
+0103     ModelRM=[];
+0104 <span class="keyword">end</span>
+0105 
+0106 
+0107 <span class="keyword">if</span> scalefactor&lt;0 || scalefactor&gt;1
+0108     <span class="keyword">if</span> printouttext
+0109         disp(<span class="string">' --- scale factor out of range. Set to 1.0'</span>); <span class="keyword">end</span>;
+0110     scalefactor=1.0;
+0111 <span class="keyword">end</span>
+0112 
+0113 
+0114 <span class="comment">% load or compute response matrix</span>
+0115 <span class="keyword">if</span> isempty(ModelRM)
+0116     <span class="comment">% get orbit RM</span>
+0117     <span class="keyword">if</span> printouttext
+0118         disp(<span class="string">'get RM'</span>); <span class="keyword">end</span>;
+0119     
+0120     
+0121         ModelRM=getresponsematrices(<span class="keyword">...</span>
+0122             rerr,<span class="keyword">...</span><span class="comment">          %1 AT lattice</span>
+0123             indBPM,<span class="keyword">...</span><span class="comment">      %2 bpm indexes in at lattice</span>
+0124             [],<span class="keyword">...</span><span class="comment">     %3 h cor indexes</span>
+0125             [],<span class="keyword">...</span><span class="comment">     %4 v cor indexes</span>
+0126             [],<span class="keyword">...</span><span class="comment">     %5 skew cor indexes</span>
+0127             indQCor,<span class="keyword">...</span><span class="comment">     %6 quad cor indexes</span>
+0128             [],<span class="keyword">...</span>
+0129             inCOD,<span class="keyword">...</span><span class="comment">       %7 initial coordinates</span>
+0130             [10 12]<span class="keyword">...</span><span class="comment">        %8 specifiy rm to be computed</span>
+0131             );
+0132         
+0133     
+0134 <span class="keyword">end</span>
+0135 
+0136 <span class="comment">% load RM computed by getresponsematrices</span>
+0137 
+0138 drmQ=ModelRM.DispQCor;
+0139 
+0140 tuneQ=[ModelRM.TuneQCor{1};ModelRM.TuneQCor{2}];
+0141 
+0142 <span class="comment">% quad RDT RM</span>
+0143 [~,~,ind]=<a href="EquivalentGradientsFromAlignments6D.html" class="code" title="function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)">EquivalentGradientsFromAlignments6D</a>(rerr,inCOD);
+0144 indAllQuad=ind;
+0145 
+0146 [respqx,respqz]=<a href="qemrdtresp_mod.html" class="code" title="function [fx,fz,qcor]=qemrdtresp_mod(mach,bpmidx,qcoridx)">qemrdtresp_mod</a>(rerr,indBPM,indAllQuad);    <span class="comment">% RDT response matrix assumes K=1</span>
+0147 QL=atgetfieldvalues(rerr,indAllQuad,<span class="string">'Length'</span>);          <span class="comment">% quadrupole lengths</span>
+0148 QL(QL==0)=1;<span class="comment">% thin lens magnets</span>
+0149 
+0150 <span class="comment">% convert response from KL to K as for dispersion response matrix</span>
+0151 <span class="comment">% this is needed to merge the RM with the dispersion RM in the final</span>
+0152 <span class="comment">% computation of correction.</span>
+0153 lengthsmat=repmat(QL',length(indBPM),1);
+0154 respqx=respqx.*lengthsmat;
+0155 respqz=respqz.*lengthsmat;
+0156 
+0157 [~,qkcor]=ismember(indQCor,indAllQuad);
+0158 rdtQ=[<span class="keyword">...</span>
+0159     real(respqx(:,qkcor));<span class="keyword">...</span>
+0160     imag(respqx(:,qkcor));<span class="keyword">...</span>
+0161     real(respqz(:,qkcor));<span class="keyword">...</span>
+0162     imag(respqz(:,qkcor))];
+0163 
+0164 
+0165 inCOD=[0 0 0 0 0 0]';
+0166 [l,t,~]=atlinopt(r0,0,indBPM);
+0167 refdispersion(1,:)=arrayfun(@(a)a.Dispersion(1),l);
+0168 reftune=t;
+0169 
+0170 [KQnoer,~,~]=<a href="EquivalentGradientsFromAlignments6D.html" class="code" title="function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)">EquivalentGradientsFromAlignments6D</a>(r0,inCOD);
+0171 <span class="comment">%KQnoer=atgetfieldvalues(r0,indAllQuad,'PolynomB',{1,2});</span>
+0172 <span class="comment">%KSnoer=atgetfieldvalues(r0,indAllSkew,'PolynomA',{1,2});</span>
+0173 
+0174 fx=respqx*KQnoer;
+0175 fz=respqz*KQnoer;
+0176 rdtvecq=[<span class="keyword">...</span>
+0177     real(fx);<span class="keyword">...</span>
+0178     imag(fx);<span class="keyword">...</span>
+0179     real(fz);<span class="keyword">...</span>
+0180     imag(fz)]';
+0181 
+0182 refrdt(1,:)=rdtvecq;
+0183 
+0184 
+0185 <span class="comment">% get rdt vectors to correct</span>
+0186 [KQi,~,~]=<a href="EquivalentGradientsFromAlignments6D.html" class="code" title="function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)">EquivalentGradientsFromAlignments6D</a>(rerr,inCOD);
+0187 <span class="comment">%KQ=atgetfieldvalues(rerr,indAllQuad,'PolynomB',{1,2});</span>
+0188 <span class="comment">%KS=atgetfieldvalues(rerr,indAllSkew,'PolynomA',{1,2});</span>
+0189 
+0190 fx=respqx*KQi;
+0191 fz=respqz*KQi;
+0192 rq0=[<span class="keyword">...</span>
+0193     real(fx);<span class="keyword">...</span>
+0194     imag(fx);<span class="keyword">...</span>
+0195     real(fz);<span class="keyword">...</span>
+0196     imag(fz)]';
+0197 
+0198 
+0199 
+0200 alpha=mcf(rerr);
+0201 indrfc=find(atgetcells(rerr,<span class="string">'Frequency'</span>));
+0202 
+0203 <span class="comment">% get initial dispersion</span>
+0204 
+0205 d=finddispersion6Err(rerr,indBPM,indrfc,alpha,delta,inCOD);
+0206 dx0=d(1,:);
+0207 <span class="comment">% get initial tune</span>
+0208 [~,t0,~]=atlinopt(rerr,0,1);
+0209 
+0210 <span class="comment">%rerr0=rerr;</span>
+0211  qs0=atgetfieldvalues(rerr,indQCor,<span class="string">'PolynomB'</span>,{1,2});
+0212 
+0213 <span class="comment">% iterate correction</span>
+0214 Niter=size(neigSteerer,1);
+0215 <span class="keyword">for</span> iter=1:Niter
+0216     
+0217     <span class="keyword">if</span> printouttext
+0218         disp([<span class="string">'RDT Disp. Tune Steering iter '</span> num2str(iter,<span class="string">'%d, '</span>) <span class="keyword">...</span>
+0219             <span class="string">' n-eig: '</span> num2str(neigSteerer(iter,:),<span class="string">'%d, '</span>) <span class="keyword">...</span>
+0220             <span class="string">' alpha: '</span> num2str(wdisp,<span class="string">'%2.2f '</span>)]);
+0221     <span class="keyword">end</span>
+0222     
+0223     <span class="comment">% initial corrector strengths</span>
+0224     corq0=atgetfieldvalues(rerr,indQCor,<span class="string">'PolynomB'</span>,{1,2});
+0225     
+0226     
+0227     <span class="comment">% get current rdt vectors to correct</span>
+0228     [KQe,~,~]=<a href="EquivalentGradientsFromAlignments6D.html" class="code" title="function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)">EquivalentGradientsFromAlignments6D</a>(rerr,inCOD);
+0229     <span class="comment">%KQ=atgetfieldvalues(rerr,indAllQuad,'PolynomB',{1,2});</span>
+0230     <span class="comment">%KS=atgetfieldvalues(rerr,indAllSkew,'PolynomA',{1,2});</span>
+0231     
+0232     fx=respqx*KQe;
+0233     fz=respqz*KQe;
+0234     rq=[<span class="keyword">...</span>
+0235         real(fx);<span class="keyword">...</span>
+0236         imag(fx);<span class="keyword">...</span>
+0237         real(fz);<span class="keyword">...</span>
+0238         imag(fz)]';
+0239     
+0240 
+0241     <span class="comment">% get current dispersion</span>
+0242     d=finddispersion6Err(rerr,indBPM,indrfc,alpha,delta,inCOD);
+0243     dx=d(1,:);
+0244     <span class="comment">% get current tune</span>
+0245     [~,t,~]=atlinopt(rerr,0,1);
+0246     
+0247     
+0248     <span class="comment">% subtract reference orbit</span>
+0249     rq=rq-refrdt(1,:);
+0250     <span class="comment">% subtract reference dispersion</span>
+0251     dx=dx-refdispersion(1,:);
+0252     <span class="comment">% subtract reference tune</span>
+0253     t=t-reftune;
+0254     
+0255     <span class="comment">% weigths between RDT, tune and dispersion</span>
+0256     rq=rq*(1-wdisp(1)-wdisp(2));
+0257     dx=dx*(wdisp(1));
+0258     t=t*(wdisp(2));
+0259     
+0260     <span class="comment">% build RMs</span>
+0261     <span class="keyword">if</span>  correctflags(1) <span class="comment">% mean0 no dpp</span>
+0262         RMQ=[rdtQ*(1-wdisp(1)-wdisp(2));drmQ{1}*(wdisp(1));tuneQ*(wdisp(2));ones(size(indQCor))];
+0263     <span class="comment">%    RMQ=[rdtQ*(1-wdisp(1));drmQ{1}*(wdisp(1));ones(size(indQCor))];</span>
+0264     <span class="keyword">elseif</span> ~correctflags(1) <span class="comment">% no dpp no mean0</span>
+0265        RMQ=[rdtQ*(1-wdisp(1)-wdisp(2));drmQ{1}*(wdisp(1));tuneQ*(wdisp(2))];
+0266        <span class="comment">% RMQ=[rdtQ*(1-wdisp(1));drmQ{1}*(wdisp(1))];</span>
+0267     <span class="keyword">end</span>
+0268     
+0269     <span class="comment">% compute correction</span>
+0270     <span class="keyword">if</span> correctflags(1) <span class="comment">% mean = 0</span>
+0271         vecq=[rq dx t 0]';
+0272      <span class="comment">%   vecq=[rq dx 0]';</span>
+0273     <span class="keyword">else</span> <span class="comment">% no constraint on correctors mean</span>
+0274         vecq=[rq dx t]';
+0275       <span class="comment">%  vecq=[rq dx]';</span>
+0276     <span class="keyword">end</span>
+0277     
+0278     dcq=qemsvd_mod(RMQ,vecq,neigSteerer(iter,1));
+0279     
+0280     <span class="comment">% get total correctors values and apply scaling</span>
+0281     
+0282     qs=corq0-dcq*scalefactor;
+0283     
+0284     <span class="comment">% limit steerers strengths</span>
+0285     <span class="keyword">if</span> ~isempty(steererlimit)
+0286         qs(abs(qs)&gt;steererlimit(1))=steererlimit(1);
+0287     <span class="keyword">end</span>
+0288     
+0289     <span class="comment">% apply correction in lattice</span>
+0290     rcor=rerr;
+0291     rcor=atsetfieldvalues(rcor,indQCor,<span class="string">'PolynomB'</span>,{1,2},qs);
+0292     
+0293     <span class="comment">% lattice start point for next iteration</span>
+0294     rerr=rcor;
+0295 <span class="keyword">end</span>
+0296 
+0297 
+0298 <span class="comment">% get current rdt vectors to correct</span>
+0299 [KQ,~,~]=<a href="EquivalentGradientsFromAlignments6D.html" class="code" title="function [kn,ks,ind]=EquivalentGradientsFromAlignments6D(r,inCOD)">EquivalentGradientsFromAlignments6D</a>(rcor,inCOD);
+0300 <span class="comment">%KQ=atgetfieldvalues(rcor,indQCor,'PolynomB',{1,2});</span>
+0301 <span class="comment">%KS=atgetfieldvalues(rcor,indAllSkew,'PolynomA',{1,2});</span>
+0302 
+0303 fx=respqx*KQ;
+0304 fz=respqz*KQ;
+0305 rqc=[<span class="keyword">...</span>
+0306     real(fx);<span class="keyword">...</span>
+0307     imag(fx);<span class="keyword">...</span>
+0308     real(fz);<span class="keyword">...</span>
+0309     imag(fz)]';
+0310 
+0311 
+0312 <span class="comment">% get current dispersion</span>
+0313 d=finddispersion6Err(rcor,indBPM,indrfc,alpha,delta,inCOD);
+0314 dxc=d(1,:);
+0315 <span class="comment">% get current tune</span>
+0316 [~,tc,~]=atlinopt(rcor,0,1);
+0317 
+0318 
+0319 <span class="keyword">if</span> printouttext
+0320     <span class="comment">% display results</span>
+0321     disp([<span class="string">'        before'</span> <span class="string">'    '</span> <span class="string">'--&gt;'</span> <span class="string">'    '</span> <span class="string">'after'</span>])
+0322     disp([<span class="string">'rq: '</span> num2str(std(rq0-refrdt(1,:))*1e3,<span class="string">'%3.3f'</span>) <span class="string">' -&gt; '</span> num2str(std(rqc-refrdt(1,:))*1e3,<span class="string">'%3.3f'</span>) <span class="string">''</span>]);
+0323     disp([<span class="string">'dX: '</span> num2str(std(dx0-refdispersion(1,:))*1e3,<span class="string">'%3.3f'</span>) <span class="string">' -&gt; '</span> num2str(std(dxc-refdispersion(1,:))*1e3,<span class="string">'%3.3f'</span>) <span class="string">'mm'</span>])
+0324     disp([<span class="string">'tX: '</span> num2str((t0(1)-reftune(1)),<span class="string">'%3.3f'</span>) <span class="string">' -&gt; '</span> num2str((tc(1)-reftune(1)),<span class="string">'%3.3f'</span>) <span class="string">''</span>])
+0325     disp([<span class="string">'tY: '</span> num2str((t0(2)-reftune(2)),<span class="string">'%3.3f'</span>) <span class="string">' -&gt; '</span> num2str((tc(2)-reftune(2)),<span class="string">'%3.3f'</span>) <span class="string">''</span>])
+0326     disp([<span class="string">'    '</span> <span class="string">'min'</span> <span class="string">'    '</span> <span class="string">'mean'</span> <span class="string">'    '</span> <span class="string">'max'</span>])
+0327     disp([<span class="string">'qs:'</span>  num2str([min(qs-qs0) mean(qs-qs0) max(qs-qs0)]*1e0,<span class="string">' %2.2f '</span>) <span class="string">' 1/m2'</span>])
+0328     disp([<span class="string">'dpp: '</span> num2str(inCOD(5))])
+0329     
+0330 <span class="comment">%</span>
+0331 <span class="comment">%     figure;</span>
+0332 <span class="comment">%     subplot(2,1,1);</span>
+0333 <span class="comment">%     plot(rq0-refrdt(1,:),'r'); hold on;</span>
+0334 <span class="comment">%     plot(rqc-refrdt(1,:),'b');</span>
+0335 <span class="comment">%     legend('before','after')</span>
+0336 <span class="comment">%     subplot(2,1,2);</span>
+0337 <span class="comment">%     plot(dx0-refdispersion(1,:),'r'); hold on;</span>
+0338 <span class="comment">%     plot(dxc-refdispersion(1,:),'b');</span>
+0339     
+0340 <span class="keyword">end</span>
+0341 
+0342 
+0343 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
