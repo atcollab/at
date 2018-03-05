@@ -24,7 +24,9 @@ matrix:
 install: |
   if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     brew update
-    brew install python$PYTHON
+    if [[ $PYTHON == 3 ]]; then
+        brew upgrade python
+    fi
     python$PYTHON -m pip install virtualenv
     python$PYTHON -m venv venv
     source venv/bin/activate
