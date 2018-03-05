@@ -22,7 +22,6 @@ matrix:
       env: PYTHON=3
 
 install: |
-  python -c "import numpy; print(numpy.__version__)"
   if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     brew update
     brew install python$PYTHON
