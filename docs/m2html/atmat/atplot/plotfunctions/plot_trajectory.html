@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of plot_trajectory</title>
+  <meta name="keywords" content="plot_trajectory">
+  <meta name="description" content="PLOT_TRAJECTORY    Plots particle trajectories">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atplot</a> &gt; <a href="index.html">plotfunctions</a> &gt; plot_trajectory.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atplot/plotfunctions&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>plot_trajectory
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>PLOT_TRAJECTORY    Plots particle trajectories</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout=plot_trajectory(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">PLOT_TRAJECTORY    Plots particle trajectories
+
+Helper function for atplot: plot
+- H and V trajectories on the left axis
+
+PLOTDATA=PLOT_TRAJECTORY(LINDATA,RING,DPP,IN)
+
+[S,PLOTDATA]=PLOT_TRAJECTORY(RING,DPP,IN)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plot_trajectory.html" class="code" title="function varargout=plot_trajectory(varargin)">plot_trajectory</a>	PLOT_TRAJECTORY    Plots particle trajectories</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plot_trajectory.html" class="code" title="function varargout=plot_trajectory(varargin)">plot_trajectory</a>	PLOT_TRAJECTORY    Plots particle trajectories</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout=plot_trajectory(varargin)</a>
+0002 <span class="comment">%PLOT_TRAJECTORY    Plots particle trajectories</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%Helper function for atplot: plot</span>
+0005 <span class="comment">%- H and V trajectories on the left axis</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%PLOTDATA=PLOT_TRAJECTORY(LINDATA,RING,DPP,IN)</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%[S,PLOTDATA]=PLOT_TRAJECTORY(RING,DPP,IN)</span>
+0010 
+0011 <span class="keyword">if</span> nargout == 1     <span class="comment">% From atplot</span>
+0012     nparts=size(varargin{4},2);
+0013     refpts=1:length(varargin{2})+1;
+0014     rout=linepass(varargin{[2 4]},refpts);
+0015     [xref,zref]=atreforbit(varargin{2});
+0016     xx=reshape(rout(1,:),nparts,[])'+xref(:,ones(1,nparts));
+0017     yy=reshape(rout(3,:),nparts,[])'+zref(:,ones(1,nparts));
+0018     labs=[arrayfun(@(n) num2str(n,<span class="string">'x%d'</span>),1:nparts,<span class="string">'UniformOutput'</span>,false),<span class="keyword">...</span>
+0019         arrayfun(@(n) num2str(n,<span class="string">'z%d'</span>),1:nparts,<span class="string">'UniformOutput'</span>,false)];
+0020     plotdata(1).values=[xx yy];
+0021     plotdata(1).labels=labs;
+0022     plotdata(1).axislabel=<span class="string">'x,z [m]'</span>;
+0023     varargout={plotdata};
+0024 <span class="keyword">else</span>                <span class="comment">% From atbaseplot</span>
+0025     s=findspos(varargin{1},1:length(varargin{1})+1);
+0026     varargout={s,<a href="plot_trajectory.html" class="code" title="function varargout=plot_trajectory(varargin)">plot_trajectory</a>([],varargin{:})};
+0027 <span class="keyword">end</span>
+0028 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

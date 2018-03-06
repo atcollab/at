@@ -1,0 +1,292 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of compRotCorVsDipQuad</title>
+  <meta name="keywords" content="compRotCorVsDipQuad">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">TILT</a> &gt; compRotCorVsDipQuad.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/TILT&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>compRotCorVsDipQuad
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 clear all
+0002 close all
+0003 addpath(<span class="string">'/mntdirect/_users/liuzzo/atwork-code/physics/errorsettingfunctionsAT2'</span>)
+0004 <span class="comment">% load lattice</span>
+0005 load /machfs/liuzzo/ESRF/StorageRing/LATTICE/AT/ESRF_fortol.mat
+0006 
+0007 <span class="comment">% get indexes</span>
+0008 indc=find(atgetcells(ring,<span class="string">'iscorH'</span>,<span class="string">'H'</span>));
+0009 indc=indc(45); <span class="comment">% select a specific magnet for the test</span>
+0010 ring0=ring;
+0011 
+0012 <span class="comment">%set correctors and dipole to 1e-5 rad horizontal kick and 1e-2 quad kick</span>
+0013 kick=1e-5;
+0014 quad=0.01;
+0015 ringcor=ring;
+0016 ringcor=atsetfieldvalues(ringcor,indc,<span class="string">'PolynomB'</span>,{1,1},kick);
+0017 ringcor=atsetfieldvalues(ringcor,indc,<span class="string">'PolynomB'</span>,{1,2},quad);
+0018 
+0019 br=getBrho(ring);
+0020 L=ring{indc}.Length;
+0021 ringdip=ring;
+0022 ringdip=atsetfieldvalues(ringdip,indc,<span class="string">'BendingAngle'</span>,{1,1},kick*L);
+0023 ringdip=atsetfieldvalues(ringdip,indc,<span class="string">'EntranceAngle'</span>,{1,1},0);
+0024 ringdip=atsetfieldvalues(ringdip,indc,<span class="string">'ExitAngle'</span>,{1,1},0);
+0025 ringdip=atsetfieldvalues(ringdip,indc,<span class="string">'PassMethod'</span>,<span class="string">'BndMPoleSymplectic4FrgFPass'</span>);
+0026 ringdip=atsetfieldvalues(ringdip,indc,<span class="string">'PolynomB'</span>,{1,2},quad);
+0027 
+0028 
+0029 <span class="comment">% define s-axis rotation errors in correctors</span>
+0030 dt=1e-4; <span class="comment">% rotation error of 1mrad</span>
+0031 
+0032 <span class="comment">% set errors</span>
+0033 ringcortilt=atsettilt(ringcor,indc,dt); <span class="comment">% corrector</span>
+0034 ringdiptiltref=atsettilt(ringdip,indc,dt); <span class="comment">% dipole tilted</span>
+0035 ringdiptilt=atsettiltdipole(ringdip,indc,dt); <span class="comment">% dipole tilted</span>
+0036 <span class="comment">%ringdiptilt=settilt_THERING_Dipole(ringdip,indc,dt); % dipole tilted</span>
+0037 
+0038 <span class="comment">% plots</span>
+0039 [twin,~,~]=atlinopt(ring0,0,1);
+0040 indall=1:length(ring)+1;
+0041 lcor=twissline(ringcor,0.0,twin,indall,<span class="string">'chrom'</span>); 
+0042 ldip=twissline(ringdip,0.0,twin,indall,<span class="string">'chrom'</span>); 
+0043 lcortilt=twissline(ringcortilt,0.0,twin,indall,<span class="string">'chrom'</span>); 
+0044 ldiptilt=twissline(ringdiptilt,0.0,twin,indall,<span class="string">'chrom'</span>); 
+0045 ldiptiltref=twissline(ringdiptiltref,0.0,twin,indall,<span class="string">'chrom'</span>); 
+0046   
+0047 oxcor=arrayfun(@(a)a.ClosedOrbit(1),lcor,<span class="string">'un'</span>,1);
+0048 oycor=arrayfun(@(a)a.ClosedOrbit(3),lcor,<span class="string">'un'</span>,1);
+0049 dxcor=arrayfun(@(a)a.Dispersion(1),lcor,<span class="string">'un'</span>,1);
+0050 dycor=arrayfun(@(a)a.Dispersion(3),lcor,<span class="string">'un'</span>,1);
+0051 
+0052 oxdip=arrayfun(@(a)a.ClosedOrbit(1),ldip,<span class="string">'un'</span>,1);
+0053 oydip=arrayfun(@(a)a.ClosedOrbit(3),ldip,<span class="string">'un'</span>,1);
+0054 dxdip=arrayfun(@(a)a.Dispersion(1),ldip,<span class="string">'un'</span>,1);
+0055 dydip=arrayfun(@(a)a.Dispersion(3),ldip,<span class="string">'un'</span>,1);
+0056   
+0057 oxcortilt=arrayfun(@(a)a.ClosedOrbit(1),lcortilt,<span class="string">'un'</span>,1);
+0058 oycortilt=arrayfun(@(a)a.ClosedOrbit(3),lcortilt,<span class="string">'un'</span>,1);
+0059 dxcortilt=arrayfun(@(a)a.Dispersion(1),lcortilt,<span class="string">'un'</span>,1);
+0060 dycortilt=arrayfun(@(a)a.Dispersion(3),lcortilt,<span class="string">'un'</span>,1);
+0061 
+0062 oxdiptilt=arrayfun(@(a)a.ClosedOrbit(1),ldiptilt,<span class="string">'un'</span>,1);
+0063 oydiptilt=arrayfun(@(a)a.ClosedOrbit(3),ldiptilt,<span class="string">'un'</span>,1);
+0064 dxdiptilt=arrayfun(@(a)a.Dispersion(1),ldiptilt,<span class="string">'un'</span>,1);
+0065 dydiptilt=arrayfun(@(a)a.Dispersion(3),ldiptilt,<span class="string">'un'</span>,1);
+0066 
+0067 oxdiptiltref=arrayfun(@(a)a.ClosedOrbit(1),ldiptiltref,<span class="string">'un'</span>,1);
+0068 oydiptiltref=arrayfun(@(a)a.ClosedOrbit(3),ldiptiltref,<span class="string">'un'</span>,1);
+0069 dxdiptiltref=arrayfun(@(a)a.Dispersion(1),ldiptiltref,<span class="string">'un'</span>,1);
+0070 dydiptiltref=arrayfun(@(a)a.Dispersion(3),ldiptiltref,<span class="string">'un'</span>,1);
+0071 
+0072 
+0073 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispCorQuad'</span>)
+0074 s=findspos(ring,indall);
+0075 yyaxis left
+0076 plot(s,oxcor,<span class="string">'b'</span>);hold on;
+0077 plot(s,oycor,<span class="string">'r'</span>);
+0078 xlabel(<span class="string">'s [m]'</span>);
+0079 ylabel(<span class="string">'orbit [m]'</span>);
+0080 yyaxis right
+0081 plot(s,dxcor,<span class="string">'c'</span>);hold on;
+0082 plot(s,dycor,<span class="string">'m'</span>);
+0083 xlabel(<span class="string">'s [m]'</span>);
+0084 ylabel(<span class="string">'dispersion [m]'</span>);
+0085 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0086 saveas(gca,<span class="string">'OrbitDispCorQuad.fig'</span>)
+0087 export_fig(<span class="string">'OrbitDispCorQuad.jpg'</span>,<span class="string">'-r300'</span>)
+0088 
+0089 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispDipQuad'</span>)
+0090 s=findspos(ring,indall);
+0091 yyaxis left
+0092 plot(s,oxdip,<span class="string">'b'</span>);hold on;
+0093 plot(s,oydip,<span class="string">'r'</span>);
+0094 xlabel(<span class="string">'s [m]'</span>);
+0095 ylabel(<span class="string">'orbit [m]'</span>);
+0096 yyaxis right
+0097 plot(s,dxdip,<span class="string">'c'</span>);hold on;
+0098 plot(s,dydip,<span class="string">'m'</span>);
+0099 xlabel(<span class="string">'s [m]'</span>);
+0100 ylabel(<span class="string">'dispersion [m]'</span>);
+0101 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0102 saveas(gca,<span class="string">'OrbitDispDipQuad.fig'</span>)
+0103 export_fig(<span class="string">'OrbitDispDipQuad.jpg'</span>,<span class="string">'-r300'</span>)
+0104 
+0105 
+0106 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispCorQuadTilt'</span>)
+0107 s=findspos(ring,indall);
+0108 yyaxis left
+0109 plot(s,oxcortilt,<span class="string">'b'</span>);hold on;
+0110 plot(s,oycortilt,<span class="string">'r'</span>);
+0111 xlabel(<span class="string">'s [m]'</span>);
+0112 ylabel(<span class="string">'orbit [m]'</span>);
+0113 yyaxis right
+0114 plot(s,dxcortilt,<span class="string">'c'</span>);hold on;
+0115 plot(s,dycortilt,<span class="string">'m'</span>);
+0116 xlabel(<span class="string">'s [m]'</span>);
+0117 ylabel(<span class="string">'dispersion [m]'</span>);
+0118 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0119 saveas(gca,<span class="string">'OrbitDispCorQuadTilt.fig'</span>)
+0120 export_fig(<span class="string">'OrbitDispCorQuadTilt.jpg'</span>,<span class="string">'-r300'</span>)
+0121 
+0122 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispDipQuadTilt'</span>)
+0123 s=findspos(ring,indall);
+0124 yyaxis left
+0125 plot(s,oxdiptilt,<span class="string">'b'</span>);hold on;
+0126 plot(s,oydiptilt,<span class="string">'r'</span>);
+0127 xlabel(<span class="string">'s [m]'</span>);
+0128 ylabel(<span class="string">'orbit [m]'</span>);
+0129 yyaxis right
+0130 plot(s,dxdiptilt,<span class="string">'c'</span>);hold on;
+0131 plot(s,dydiptilt,<span class="string">'m'</span>);
+0132 xlabel(<span class="string">'s [m]'</span>);
+0133 ylabel(<span class="string">'dispersion [m]'</span>);
+0134 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0135 saveas(gca,<span class="string">'OrbitDispDipQuadTilt.fig'</span>)
+0136 export_fig(<span class="string">'OrbitDispDipQuadTilt.jpg'</span>,<span class="string">'-r300'</span>)
+0137 
+0138 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispDipQuadTiltRef'</span>)
+0139 s=findspos(ring,indall);
+0140 yyaxis left
+0141 plot(s,oxdiptiltref,<span class="string">'b'</span>);hold on;
+0142 plot(s,oydiptiltref,<span class="string">'r'</span>);
+0143 xlabel(<span class="string">'s [m]'</span>);
+0144 ylabel(<span class="string">'orbit [m]'</span>);
+0145 yyaxis right
+0146 plot(s,dxdiptiltref,<span class="string">'c'</span>);hold on;
+0147 plot(s,dydiptiltref,<span class="string">'m'</span>);
+0148 xlabel(<span class="string">'s [m]'</span>);
+0149 ylabel(<span class="string">'dispersion [m]'</span>);
+0150 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0151 saveas(gca,<span class="string">'OrbitDispDipQuadTiltRef.fig'</span>)
+0152 export_fig(<span class="string">'OrbitDispDipQuadTiltRef.jpg'</span>,<span class="string">'-r300'</span>)
+0153 
+0154 
+0155 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispCorQuadTiltVar'</span>)
+0156 s=findspos(ring,indall);
+0157 yyaxis left
+0158 plot(s,oxcortilt-oxcor,<span class="string">'b'</span>);hold on;
+0159 plot(s,oycortilt-oycor,<span class="string">'r'</span>);
+0160 ax=gca;
+0161 ax1ylim=ax.YLim;
+0162 xlabel(<span class="string">'s [m]'</span>);
+0163 ylabel(<span class="string">'orbit [m]'</span>);
+0164 yyaxis right
+0165 plot(s,dxcortilt-dxcor,<span class="string">'c'</span>);hold on;
+0166 plot(s,dycortilt-dycor,<span class="string">'m'</span>);
+0167 ax=gca;
+0168 ax2ylim=ax.YLim;
+0169 xlabel(<span class="string">'s [m]'</span>);
+0170 ylabel(<span class="string">'dispersion [m]'</span>);
+0171 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0172 saveas(gca,<span class="string">'OrbitDispCorQuadTiltVar.fig'</span>)
+0173 export_fig(<span class="string">'OrbitDispCorQuadTiltVar.jpg'</span>,<span class="string">'-r300'</span>)
+0174 
+0175 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispDipQuadTiltVar'</span>)
+0176 s=findspos(ring,indall);
+0177 yyaxis left
+0178 plot(s,oxdiptilt-oxdip,<span class="string">'b'</span>);hold on;
+0179 plot(s,oydiptilt-oydip,<span class="string">'r'</span>);
+0180 xlabel(<span class="string">'s [m]'</span>);
+0181 ylabel(<span class="string">'orbit [m]'</span>);
+0182 ax=gca;
+0183 ax.YLim=ax1ylim;
+0184 
+0185 yyaxis right
+0186 plot(s,dxdiptilt-dxdip,<span class="string">'c'</span>);hold on;
+0187 plot(s,dydiptilt-dydip,<span class="string">'m'</span>);
+0188 ax=gca;
+0189 ax.YLim=ax2ylim;
+0190 
+0191 xlabel(<span class="string">'s [m]'</span>);
+0192 ylabel(<span class="string">'dispersion [m]'</span>);
+0193 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0194 saveas(gca,<span class="string">'OrbitDispDipQuadTiltVar.fig'</span>)
+0195 export_fig(<span class="string">'OrbitDispDipQuadTiltVar.jpg'</span>,<span class="string">'-r300'</span>)
+0196 
+0197 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispDipQuadTiltVarRef'</span>)
+0198 s=findspos(ring,indall);
+0199 yyaxis left
+0200 plot(s,oxdiptiltref-oxdip,<span class="string">'b'</span>);hold on;
+0201 plot(s,oydiptiltref-oydip,<span class="string">'r'</span>);
+0202 xlabel(<span class="string">'s [m]'</span>);
+0203 ylabel(<span class="string">'orbit [m]'</span>);
+0204 ax=gca;
+0205 ax.YLim=ax1ylim;
+0206 
+0207 yyaxis right
+0208 plot(s,dxdiptiltref-dxdip,<span class="string">'c'</span>);hold on;
+0209 plot(s,dydiptiltref-dydip,<span class="string">'m'</span>);
+0210 ax=gca;
+0211 ax.YLim=ax2ylim;
+0212 
+0213 xlabel(<span class="string">'s [m]'</span>);
+0214 ylabel(<span class="string">'dispersion [m]'</span>);
+0215 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0216 saveas(gca,<span class="string">'OrbitDispDipQuadTiltVarRef.fig'</span>)
+0217 export_fig(<span class="string">'OrbitDispDipQuadTiltVarRef.jpg'</span>,<span class="string">'-r300'</span>)
+0218 
+0219 
+0220 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35],<span class="string">'name'</span>,<span class="string">'OrbitDispDipQuadVsTiltVar'</span>)
+0221 s=findspos(ring,indall);
+0222 yyaxis left
+0223 plot(s,(oxdiptilt-oxdip)-(oxcortilt-oxcor),<span class="string">'b'</span>);hold on;
+0224 plot(s,(oydiptilt-oydip)-(oycortilt-oycor),<span class="string">'r'</span>);
+0225 ax=gca;
+0226 ax.YLim=ax1ylim;
+0227 
+0228 xlabel(<span class="string">'s [m]'</span>);
+0229 ylabel(<span class="string">'orbit [m]'</span>);
+0230 yyaxis right
+0231 plot(s,(dxdiptilt-dxdip)-(dxcortilt-dxcor),<span class="string">'c'</span>);hold on;
+0232 plot(s,(dydiptilt-dydip)-(dycortilt-dycor),<span class="string">'m'</span>);
+0233 ax=gca;
+0234 ax.YLim=ax2ylim;
+0235 xlabel(<span class="string">'s [m]'</span>);
+0236 ylabel(<span class="string">'dispersion [m]'</span>);
+0237 legend(<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'\eta_x'</span>,<span class="string">'\eta_y'</span>)
+0238 saveas(gca,<span class="string">'OrbitDispDipQuadVsTiltVar.fig'</span>)
+0239 export_fig(<span class="string">'OrbitDispDipQuadVsTiltVar.jpg'</span>,<span class="string">'-r300'</span>)
+0240 
+0241 
+0242 <span class="keyword">return</span>
+0243 
+0244 
+0245</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

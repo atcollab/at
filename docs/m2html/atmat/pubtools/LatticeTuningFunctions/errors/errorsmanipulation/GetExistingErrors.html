@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of GetExistingErrors</title>
+  <meta name="keywords" content="GetExistingErrors">
+  <meta name="description" content="this function retrives 6 vectors, for x, y,s misalignments,">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">errorsmanipulation</a> &gt; GetExistingErrors.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/errorsmanipulation&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>GetExistingErrors
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>this function retrives 6 vectors, for x, y,s misalignments,</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> this function retrives 6 vectors, for x, y,s misalignments,
+ Tilts (rot about s), Roll (rot about x) and Pinch (rot about y)
+
+ the vectors are length of THERING or of the optional second input
+
+ in future also bpm errors and girder errors will be added.
+
+see also: ApplyErrorRand SetExistingErrors</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="SetExistingError.html" class="code" title="function rerr=SetExistingError(rerr,magindex,indBPM,X0,Y0,S0,T0,R0,P0,bpm0)">SetExistingError</a>	function SetExistingError(rerr,magindex,X0,Y0,S0,T0,R0,P0,bpm0)</li><li><a href="SumErrors.html" class="code" title="function rsum=SumErrors(r1,r2,magindex,indBPM)">SumErrors</a>	rsum=SumErrors(r1,r2,magindex)</li><li><a href="setBpmOffsetOnDipoleRef.html" class="code" title="function rerr=setBpmOffsetOnDipoleRef(rerr)">setBpmOffsetOnDipoleRef</a>	% set bpm on curve defined by dipole misalignments</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin)</a>
+0002 <span class="comment">% this function retrives 6 vectors, for x, y,s misalignments,</span>
+0003 <span class="comment">% Tilts (rot about s), Roll (rot about x) and Pinch (rot about y)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% the vectors are length of THERING or of the optional second input</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% in future also bpm errors and girder errors will be added.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%see also: ApplyErrorRand SetExistingErrors</span>
+0010 
+0011 <span class="keyword">if</span> numel(varargin)==1
+0012     indxerrors=varargin{1};
+0013 <span class="keyword">else</span>
+0014     indxerrors=1:length(THERING);
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="keyword">if</span> nargout&gt;=2
+0018     <span class="comment">% X and Y misal</span>
+0019     X=zeros(size(indxerrors));
+0020     Y=zeros(size(indxerrors));
+0021     t1=findcells(THERING(indxerrors),<span class="string">'T1'</span>);
+0022     <span class="keyword">if</span> ~isempty(t1)
+0023         X(t1)=-getcellstruct(THERING(indxerrors),<span class="string">'T1'</span>,t1,1);
+0024         Y(t1)=-getcellstruct(THERING(indxerrors),<span class="string">'T1'</span>,t1,3);
+0025     <span class="keyword">end</span>
+0026 <span class="keyword">end</span>
+0027 <span class="keyword">if</span> nargout&gt;=3
+0028     <span class="comment">% S misal</span>
+0029     S=zeros(size(indxerrors));
+0030     s1=findcells(THERING(indxerrors),<span class="string">'DeltaS'</span>);
+0031     <span class="keyword">if</span> ~isempty(s1)
+0032         S(s1)=-getcellstruct(THERING(indxerrors),<span class="string">'DeltaS'</span>,s1,1);
+0033     <span class="keyword">end</span>
+0034 <span class="keyword">end</span>
+0035 <span class="keyword">if</span> nargout&gt;=4
+0036     <span class="comment">% tilt about s-axis</span>
+0037     T=zeros(size(indxerrors));
+0038     tiltedelem=findcells(THERING(indxerrors),<span class="string">'RotAboutS'</span>);
+0039     <span class="keyword">if</span> ~isempty(tiltedelem)
+0040         T(tiltedelem)=getcellstruct(THERING(indxerrors),<span class="string">'RotAboutS'</span>,tiltedelem);
+0041         T(T&lt;1e-7 &amp; T&gt;-1e-7)=0;
+0042     <span class="keyword">end</span>
+0043 <span class="keyword">end</span>
+0044 <span class="keyword">if</span> nargout&gt;=5
+0045     <span class="comment">% roll about x-axis</span>
+0046     R=zeros(size(indxerrors));
+0047     tiltedelem=findcells(THERING(indxerrors),<span class="string">'RotAboutX'</span>);
+0048     <span class="keyword">if</span> ~isempty(tiltedelem)
+0049         R(tiltedelem)=getcellstruct(THERING(indxerrors),<span class="string">'RotAboutX'</span>,tiltedelem);
+0050         R(R&lt;1e-7 &amp; R&gt;-1e-7)=0;
+0051     <span class="keyword">end</span>
+0052 <span class="keyword">end</span>
+0053 <span class="keyword">if</span> nargout&gt;=6
+0054     <span class="comment">% pinch about y-axis</span>
+0055     P=zeros(size(indxerrors));
+0056     tiltedelem=findcells(THERING(indxerrors),<span class="string">'RotAboutY'</span>);
+0057     <span class="keyword">if</span> ~isempty(tiltedelem)
+0058         P(tiltedelem)=getcellstruct(THERING(indxerrors),<span class="string">'RotAboutY'</span>,tiltedelem);
+0059         P(P&lt;1e-7 &amp; P&gt;-1e-7)=0;
+0060     <span class="keyword">end</span>
+0061 <span class="keyword">end</span>
+0062 <span class="keyword">if</span> nargout&gt;=7
+0063     tiltedelem=findcells(THERING,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>);
+0064     bpmerrors.offsetx=zeros(size(tiltedelem));
+0065     bpmerrors.offsety=zeros(size(tiltedelem));
+0066     bpmerrors.rotation=zeros(size(tiltedelem));
+0067     
+0068     <span class="keyword">if</span> ~isempty(tiltedelem)
+0069         
+0070 <span class="keyword">try</span>
+0071     ox=cell2mat(cellfun(@(a)a.Offset(1,1),THERING(tiltedelem),<span class="string">'un'</span>,0));
+0072         oy=cell2mat(cellfun(@(a)a.Offset(1,2),THERING(tiltedelem),<span class="string">'un'</span>,0));
+0073         or=cell2mat(cellfun(@(a)a.Rotation(1,1),THERING(tiltedelem),<span class="string">'un'</span>,0));
+0074 <span class="keyword">catch</span>
+0075     ox=zeros(size(tiltedelem));
+0076     oy=zeros(size(tiltedelem));
+0077     or=zeros(size(tiltedelem));
+0078     
+0079 <span class="keyword">end</span>
+0080         ox(isnan(ox))=0;
+0081         oy(isnan(oy))=0;
+0082         or(isnan(or))=0;
+0083         
+0084         bpmerrors.offsetx=ox(:)';
+0085         bpmerrors.offsety=oy(:)';
+0086         bpmerrors.rotation=or(:)';
+0087         
+0088     <span class="keyword">end</span>
+0089 <span class="keyword">end</span>
+0090 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

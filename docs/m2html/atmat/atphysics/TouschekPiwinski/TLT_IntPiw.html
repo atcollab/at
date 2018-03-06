@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of TLT_IntPiw</title>
+  <meta name="keywords" content="TLT_IntPiw">
+  <meta name="description" content="integral in Piwinski Formula for the Lifetime">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">TouschekPiwinski</a> &gt; TLT_IntPiw.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/TouschekPiwinski&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>TLT_IntPiw
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>integral in Piwinski Formula for the Lifetime</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function I=TLT_IntPiw(u,um,B1,B2) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> integral in Piwinski Formula for the Lifetime</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="TouschekPiwinskiLifeTime.html" class="code" title="function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)">TouschekPiwinskiLifeTime</a>	function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function I=TLT_IntPiw(u,um,B1,B2) </a>
+0002 <span class="comment">% integral in Piwinski Formula for the Lifetime</span>
+0003 
+0004 
+0005 <span class="comment">%   in case the Bessel function has too large value (more than 10^251) it</span>
+0006 <span class="comment">%   is substituted by its exponential approximation:</span>
+0007 <span class="comment">%   I_0(x)~exp(x)/sqrt(2*pi*x)</span>
+0008 
+0009 <span class="keyword">if</span> B2*u&lt;500
+0010     I=(<span class="keyword">...</span>
+0011         (<span class="keyword">...</span>
+0012        ((2+1./u).^2).*(((u./um)./(1+u))-1) +<span class="keyword">...</span>
+0013       1 - <span class="keyword">...</span>
+0014       sqrt((1+u))./sqrt((u./um)) -<span class="keyword">...</span>
+0015       1./(2.*u).*(4+(1./u)).*log((u./um)./(1+u))<span class="keyword">...</span>
+0016       ).*exp(-B1.*u).*besseli(0,B2.*u).*sqrt(u)./sqrt((1+u))<span class="keyword">...</span>
+0017       );
+0018 <span class="keyword">else</span>
+0019     I=(<span class="keyword">...</span>
+0020         (<span class="keyword">...</span>
+0021        ((2+1./u).^2).*(((u./um)./(1+u))-1) +<span class="keyword">...</span>
+0022       1 - <span class="keyword">...</span>
+0023       sqrt((1+u))./sqrt((u./um)) -<span class="keyword">...</span>
+0024       1./(2.*u).*(4+(1./u)).*log((u./um)./(1+u))<span class="keyword">...</span>
+0025       ).*exp(B2.*u-B1.*u)./sqrt(2*pi*B2.*u).*sqrt(u)./sqrt((1+u))<span class="keyword">...</span>
+0026       );
+0027 <span class="keyword">end</span>
+0028 
+0029 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

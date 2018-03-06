@@ -1,0 +1,407 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mad8TOmadx</title>
+  <meta name="keywords" content="mad8TOmadx">
+  <meta name="description" content="converts mad8 sequence files to madX">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">lattice</a> &gt; <a href="../index.html">Converters</a> &gt; <a href="index.html">MAD82MADX</a> &gt; mad8TOmadx.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/Converters/MAD82MADX&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>mad8TOmadx
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>converts mad8 sequence files to madX</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [seqfilemadX]=mad8TOmadx(seqfilemad8,periodname) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> converts mad8 sequence files to madX
+
+function [seqfileMADX]=mad8TOmadx(seqfilemad8)
+
+ This procedure reads a saved sequence in
+ mad8 (SAVE,FILE='seqfilemad8';)
+ and converts it to madx sequence
+ every = goes to :=
+ the order of the declarations is the same in the two files.
+
+ works also with single mad8 files not containing comands, only
+ definitions.
+ does not translate call to files since those may change name
+ 
+ parameters:
+    - seqdilemad8=name of the mad8 lattice file
+    - periodname (optional)= name of the period to use in madx (default is the filename)
+ 
+ Simone Maria Liuzzo PhD@LNF 25-11-2011
+     update 29-2-2012 : corrected a bug that would not translate correctly
+     markers, kickers and monitor declared only by element name (&quot;BPM: monitor&quot; would not convet properly)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [seqfilemadX]=mad8TOmadx(seqfilemad8,periodname)</a>
+0002 <span class="comment">% converts mad8 sequence files to madX</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%function [seqfileMADX]=mad8TOmadx(seqfilemad8)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% This procedure reads a saved sequence in</span>
+0007 <span class="comment">% mad8 (SAVE,FILE='seqfilemad8';)</span>
+0008 <span class="comment">% and converts it to madx sequence</span>
+0009 <span class="comment">% every = goes to :=</span>
+0010 <span class="comment">% the order of the declarations is the same in the two files.</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% works also with single mad8 files not containing comands, only</span>
+0013 <span class="comment">% definitions.</span>
+0014 <span class="comment">% does not translate call to files since those may change name</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% parameters:</span>
+0017 <span class="comment">%    - seqdilemad8=name of the mad8 lattice file</span>
+0018 <span class="comment">%    - periodname (optional)= name of the period to use in madx (default is the filename)</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">% Simone Maria Liuzzo PhD@LNF 25-11-2011</span>
+0021 <span class="comment">%     update 29-2-2012 : corrected a bug that would not translate correctly</span>
+0022 <span class="comment">%     markers, kickers and monitor declared only by element name (&quot;BPM: monitor&quot; would not convet properly)</span>
+0023 
+0024 <span class="comment">%% open mad8 sequence file and madx sequence output file.</span>
+0025 disp(<span class="string">'if periodname is not specified I assume the name of the file (up to the .) to be the sequence name that you want to use'</span>)
+0026 s8=fopen(seqfilemad8,<span class="string">'r'</span>);
+0027 
+0028 sxs=[]; <span class="comment">% string to input to madx file</span>
+0029 
+0030 <span class="comment">% i : segnano tutte le definizioni. ogni : ??? preceduto dal nome</span>
+0031 <span class="comment">% dell'oggetto e seguito dal tipo di oggetto.</span>
+0032 <span class="comment">% tra un : e il successivo trovo tutti i parametri di un oggetto e il nome</span>
+0033 <span class="comment">% dell'oggetto successivo, che sia definizione o linea.</span>
+0034 
+0035 
+0036 S8CELL=textscan(s8,<span class="string">'%s'</span>);
+0037 S8STRING=S8CELL{1}; <span class="comment">% still a cell array but every space or new line now is stored as a new cell.</span>
+0038 
+0039 
+0040 <span class="comment">%save('1');</span>
+0041 
+0042 <span class="comment">%return</span>
+0043 <span class="comment">%% convert to madx</span>
+0044 j=1; <span class="comment">% used in line block counter</span>
+0045 sxs=[<span class="string">'! MADX converted sequence from '</span> seqfilemad8 <span class="string">' '</span>];
+0046 corrcount=1;
+0047 i=12; <span class="comment">% skip header</span>
+0048 S8STRING{12}
+0049 <span class="keyword">while</span> i&lt;length(S8STRING)-2
+0050     
+0051     <span class="keyword">if</span> S8STRING{i}(end)==<span class="string">':'</span> <span class="comment">% new element or line</span>
+0052         sxs=[sxs <span class="string">';\n '</span> S8STRING{i}]; <span class="comment">%#ok&lt;*AGROW&gt; % end line and go to newline add name</span>
+0053        
+0054         S8STRING{i+j}=strrep(S8STRING{i+j},<span class="string">'MARKER'</span>,<span class="string">'MARKER,'</span>);
+0055         S8STRING{i+j}=strrep(S8STRING{i+j},<span class="string">'MARKER,,'</span>,<span class="string">'MARKER,'</span>);
+0056         S8STRING{i+j}=strrep(S8STRING{i+j},<span class="string">'KICKER'</span>,<span class="string">'KICKER,'</span>);
+0057         S8STRING{i+j}=strrep(S8STRING{i+j},<span class="string">'KICKER,,'</span>,<span class="string">'KICKER,'</span>);
+0058         S8STRING{i+j}=strrep(S8STRING{i+j},<span class="string">'MONITOR'</span>,<span class="string">'MONITOR,'</span>);
+0059         S8STRING{i+j}=strrep(S8STRING{i+j},<span class="string">'MONITOR,,'</span>,<span class="string">'MONITOR,'</span>);
+0060 
+0061         ElementType=S8STRING{i+j}(1:end-1);
+0062         <span class="comment">%  sxs=[sxs ' ' S8STRING{i+1}];</span>
+0063         <span class="comment">%j=2;</span>
+0064         nwel=S8STRING{i+j}(end);
+0065         <span class="keyword">switch</span> ElementType
+0066             <span class="keyword">case</span> <span class="string">'QUADRUPOLE'</span>
+0067                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0068                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0069                     j=j+1;
+0070                     nwel=S8STRING{i+j}(end);
+0071                 <span class="keyword">end</span>
+0072                 <span class="comment">% build in monitor, and corrector</span>
+0073                     elname=S8STRING{i}(1:end-1);
+0074                      <span class="keyword">if</span> strcmp(elname(1:2),<span class="string">'QD'</span>) 
+0075                      <span class="keyword">else</span>
+0076                       Q_CM=[<span class="string">';\n'</span><span class="keyword">...</span>
+0077                         <span class="string">'CH_'</span> num2str(corrcount) <span class="string">': Hkicker, kick:=0,L=0;\n'</span><span class="keyword">...</span>
+0078                         <span class="string">'CV_'</span> num2str(corrcount) <span class="string">': Vkicker, kick:=0,L=0;\n'</span><span class="keyword">...</span>
+0079                         <span class="string">'MH_'</span> num2str(corrcount) <span class="string">': Hmonitor;\n'</span><span class="keyword">...</span>
+0080                         <span class="string">'MV_'</span> num2str(corrcount) <span class="string">': Vmonitor;\n'</span><span class="keyword">...</span>
+0081                         <span class="string">'h_'</span> num2str(corrcount) <span class="string">': QUADRUPOLE, K1='</span> elname <span class="string">'-&gt;K1, L=('</span> elname <span class="string">'-&gt;L)/2;\n'</span><span class="keyword">...</span>
+0082                         elname <span class="string">': LINE=(h_'</span> num2str(corrcount) <span class="string">',CH_'</span> num2str(corrcount) <span class="string">',CV_'</span> num2str(corrcount) <span class="string">',MH_'</span> num2str(corrcount) <span class="string">', MV_'</span> num2str(corrcount) <span class="string">',h_'</span> num2str(corrcount) <span class="string">');\n'</span><span class="keyword">...</span>
+0083                         ];
+0084                     corrcount=corrcount+1;
+0085 
+0086                    <span class="comment">% sxs=[sxs ' ' Q_CM];</span>
+0087                     <span class="keyword">end</span>     
+0088             <span class="keyword">case</span> <span class="string">'SEXTUPOLE'</span>
+0089                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0090                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0091                     j=j+1;
+0092                     nwel=S8STRING{i+j}(end);
+0093                 <span class="keyword">end</span>
+0094                 
+0095                     elname=S8STRING{i}(1:end-1);
+0096                     <span class="keyword">if</span> strcmp(elname(1:2),<span class="string">'SD'</span>) 
+0097                     S_CM=[<span class="string">';\n'</span><span class="keyword">...</span>
+0098                         <span class="string">'CH_'</span> num2str(corrcount) <span class="string">': Hkicker, kick:=0,L=0;\n'</span><span class="keyword">...</span>
+0099                         <span class="string">'CV_'</span> num2str(corrcount) <span class="string">': Vkicker, kick:=0,L=0;\n'</span><span class="keyword">...</span>
+0100                         <span class="string">'ksq'</span> num2str(corrcount) <span class="string">':=0;\n'</span><span class="keyword">...</span>
+0101                         <span class="string">'SQ_'</span> num2str(corrcount) <span class="string">': MULTIPOLE, ksl:={0,ksq'</span> num2str(corrcount) <span class="string">'},L=0;\n'</span><span class="keyword">...</span>
+0102                         <span class="string">'MH_'</span> num2str(corrcount) <span class="string">': Hmonitor;\n'</span><span class="keyword">...</span>
+0103                         <span class="string">'MV_'</span> num2str(corrcount) <span class="string">': Vmonitor;\n'</span><span class="keyword">...</span>
+0104                         <span class="string">'h_'</span> num2str(corrcount) <span class="string">': SEXTUPOLE, K2:='</span> elname <span class="string">'-&gt;K2, L:=('</span> elname <span class="string">'-&gt;L)/2;\n'</span><span class="keyword">...</span>
+0105                         elname <span class="string">': LINE=(h_'</span> num2str(corrcount) <span class="string">',CH_'</span> num2str(corrcount) <span class="string">',CV_'</span> num2str(corrcount) <span class="string">',SQ_'</span> num2str(corrcount) <span class="string">',MH_'</span> num2str(corrcount) <span class="string">', MV_'</span> num2str(corrcount) <span class="string">',h_'</span> num2str(corrcount) <span class="string">');\n'</span><span class="keyword">...</span>
+0106                         ];
+0107                     
+0108                    <span class="comment">% sxs=[sxs ' ' S_CM];</span>
+0109                   corrcount=corrcount+1;                       
+0110                     <span class="keyword">end</span>     
+0111             <span class="keyword">case</span> <span class="string">'RBEND'</span>
+0112                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0113                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0114                     j=j+1;
+0115                     nwel=S8STRING{i+j}(end);
+0116                 <span class="keyword">end</span>
+0117             <span class="keyword">case</span> <span class="string">'SBEND'</span>
+0118                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0119                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0120                     j=j+1;
+0121                     nwel=S8STRING{i+j}(end);
+0122                 <span class="keyword">end</span>
+0123             <span class="keyword">case</span> <span class="string">'DRIFT'</span>
+0124                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0125                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0126                     j=j+1;
+0127                     nwel=S8STRING{i+j}(end);
+0128                 <span class="keyword">end</span>
+0129             <span class="keyword">case</span> <span class="string">'RFCAVITY'</span>
+0130                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0131                     a=sum(strfind(S8STRING{i+j},<span class="string">'REMOVED'</span>));
+0132                     <span class="keyword">if</span> a==0
+0133                         
+0134                         sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0135                     <span class="keyword">else</span>
+0136                         disp(S8STRING{i+j})
+0137                     <span class="keyword">end</span>
+0138                     j=j+1;
+0139                     nwel=S8STRING{i+j}(end);
+0140                     
+0141                 <span class="keyword">end</span>
+0142             <span class="keyword">case</span> <span class="string">'MULTIPOLE'</span>  <span class="comment">%%%%% CHANGE TO GOOD MULTIPOLE!</span>
+0143                 KNL=[<span class="string">'KNL:={'</span>];
+0144                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0145                     <span class="keyword">if</span> S8STRING{i+j}(1)~=<span class="string">'K'</span>
+0146                         sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0147                     <span class="keyword">else</span>
+0148                         <span class="keyword">for</span> knl=1:str2double(S8STRING{i+j}(2))
+0149                             KNL=[KNL <span class="string">'0,'</span>];
+0150                         <span class="keyword">end</span>
+0151                         KNL=[KNL S8STRING{i+j}(5:end) <span class="string">'*OCT_ON}'</span>];
+0152                         sxs=[sxs <span class="string">' '</span> KNL ];
+0153                     <span class="keyword">end</span>
+0154                     <span class="comment">%        sxs=[sxs ' ' S8STRING{i+j}];</span>
+0155                     j=j+1;
+0156                     nwel=S8STRING{i+j}(end);
+0157                 <span class="keyword">end</span>
+0158             <span class="keyword">case</span> <span class="string">'OCTUPOLE'</span>
+0159                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0160                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0161                     j=j+1;
+0162                     nwel=S8STRING{i+j}(end);
+0163                 <span class="keyword">end</span>
+0164             <span class="keyword">case</span> <span class="string">'SOLENOID'</span>
+0165                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0166                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0167                     j=j+1;
+0168                     nwel=S8STRING{i+j}(end);
+0169                 <span class="keyword">end</span>
+0170 
+0171             <span class="keyword">case</span> <span class="string">'MARKER'</span>  <span class="comment">%%%%% CHANGE TO GOOD MULTIPOLE!</span>
+0172                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0173                     
+0174                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0175                     j=j+1;
+0176                     nwel=S8STRING{i+j}(end);
+0177                 <span class="keyword">end</span>
+0178             <span class="keyword">case</span> <span class="string">'MONITOR'</span>  <span class="comment">%%%%% CHANGE TO GOOD MULTIPOLE!</span>
+0179                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0180                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0181                     j=j+1;
+0182                     nwel=S8STRING{i+j}(end);
+0183                 <span class="keyword">end</span>
+0184             <span class="keyword">case</span> <span class="string">'KICKER'</span>  <span class="comment">%%%%% CHANGE TO GOOD MULTIPOLE!</span>
+0185                 <span class="keyword">while</span> nwel~=<span class="string">':'</span>
+0186                     sxs=[sxs <span class="string">' '</span> S8STRING{i+j}];
+0187                     j=j+1;
+0188                     nwel=S8STRING{i+j}(end);
+0189                 <span class="keyword">end</span>
+0190             <span class="keyword">case</span> <span class="string">'CONSTAN'</span>  <span class="comment">%%%%% CHANGE TO GOOD MULTIPOLE!</span>
+0191                 sxs=[S8STRING{i}(1:end-1) <span class="string">'='</span> S8STRING{i+j+2} <span class="string">';\n'</span> sxs(1:end-length(S8STRING{i+j}))];
+0192                 j=j+3;
+0193             <span class="keyword">otherwise</span>
+0194                 <span class="comment">%%% unrecognized LINE comand</span>
+0195                 LineMAD=[];
+0196                 <span class="keyword">if</span> strcmp(S8STRING{i+j}(1:5),<span class="string">'LINE='</span>)
+0197                     nwel2=S8STRING{i+j+1}(end);
+0198                     <span class="keyword">while</span> nwel~=<span class="string">':'</span> &amp;&amp; nwel2~=<span class="string">'='</span> <span class="comment">%second case is the value definition</span>
+0199                         <span class="comment">% clean from &amp;</span>
+0200                         <span class="keyword">if</span> S8STRING{i+j}(end)==<span class="string">'&amp;'</span>;
+0201                             S8STRING{i+j}=S8STRING{i+j}(1:end-1);
+0202                         <span class="keyword">end</span>
+0203                         
+0204                         <span class="comment">% apend to madx file</span>
+0205                         LineMAD=[LineMAD <span class="string">' '</span> S8STRING{i+j}];
+0206                         j=j+1;
+0207                         nwel=S8STRING{i+j}(end);
+0208                         nwel2=S8STRING{i+j+1}(end);
+0209                     <span class="keyword">end</span>
+0210                     <span class="comment">% transform ,n*QDF, in ,n*(QDF),</span>
+0211                     multiplication=strfind(LineMAD,<span class="string">'*'</span>);
+0212                     k=0;
+0213                     <span class="keyword">for</span> im=multiplication
+0214                         ind=im+k;
+0215                         comma=strfind(LineMAD(ind:end),<span class="string">','</span>);
+0216                         
+0217                         <span class="keyword">if</span> length(comma)&gt;=1 &amp;&amp; ~isempty(LineMAD(ind:end))
+0218                             comma=comma(1); <span class="comment">% get first comma after multiplication</span>
+0219                             LineMAD=[LineMAD(1:ind) <span class="string">'('</span> LineMAD(ind+1:ind+comma-2) <span class="string">')'</span> LineMAD(ind+comma-1:end)];
+0220                         <span class="keyword">else</span>
+0221                             LineMAD=[LineMAD(1:ind) <span class="string">'('</span> LineMAD(ind+1:end) <span class="string">')'</span>];
+0222                         <span class="keyword">end</span>
+0223                         k=k+2; <span class="comment">% length is encreased by 2 units at every loop</span>
+0224                     <span class="keyword">end</span>
+0225                     sxs=[sxs <span class="string">' '</span> LineMAD <span class="string">';\n'</span>];
+0226                     
+0227                     <span class="keyword">if</span>  nwel==<span class="string">'='</span>
+0228                         j=j-1;
+0229                         <span class="comment">%                    S8STRING{i}</span>
+0230                         <span class="comment">%                    j</span>
+0231                         <span class="comment">%                    S8STRING{i+j}</span>
+0232                     <span class="keyword">end</span>
+0233                     
+0234                 <span class="keyword">else</span>
+0235                     disp([<span class="string">'Unknown element type: '</span> ElementType])
+0236                 <span class="keyword">end</span>
+0237                 
+0238                 
+0239         <span class="keyword">end</span>
+0240         
+0241         
+0242         
+0243     <span class="keyword">else</span> <span class="comment">% variable declaration??</span>
+0244         
+0245         <span class="comment">% copy 3 blocks on top of all variables</span>
+0246         sxs=[S8STRING{i} S8STRING{i+1} S8STRING{i+2} <span class="string">';\n '</span> sxs];
+0247         j=3;
+0248     <span class="keyword">end</span> <span class="comment">% if new element</span>
+0249     
+0250     i=i+j;
+0251     j=1;
+0252     
+0253 <span class="keyword">end</span>
+0254 
+0255 disp(corrcount)
+0256 
+0257 <span class="comment">%% run madx sequence file to check tunes, length betas and dispersion.</span>
+0258 
+0259 <span class="comment">%% out madX sequence file</span>
+0260 [~,seqfilemad8]=fileparts(seqfilemad8);
+0261 seqfilemadX=[seqfilemad8 <span class="string">'X'</span>];
+0262 sX=fopen(seqfilemadX,<span class="string">'w+'</span>);
+0263 sXt=fopen([<span class="string">'test_'</span> seqfilemadX ],<span class="string">'w+'</span>);
+0264 
+0265 
+0266 <span class="keyword">if</span> (nargin == 1) <span class="comment">% only 1 argument provided</span>
+0267     sqname=strrep(seqfilemadX,<span class="string">'.mad8X'</span>,<span class="string">''</span>);
+0268     sqname=strrep(sqname,<span class="string">'.madX'</span>,<span class="string">''</span>);
+0269     sqname=strrep(seqfilemadX,<span class="string">'.MAD8X'</span>,<span class="string">''</span>);
+0270     sqname=strrep(sqname,<span class="string">'.MADX'</span>,<span class="string">''</span>);
+0271     sxs=strrep(sxs,<span class="string">'RING_FF'</span>,sqname);
+0272 <span class="keyword">elseif</span> (nargin == 2) <span class="comment">% provide also name of period to use in test</span>
+0273     
+0274     sqname=periodname;
+0275     
+0276     sxs=strrep(sxs,<span class="string">'RING_FF'</span>,sqname);
+0277 <span class="keyword">end</span>
+0278 
+0279 testtwiss=[<span class="keyword">...</span>
+0280 <span class="string">'setplot,ascale=2,lscale=2,sscale=1.5,rscale=2,xsize=28,ysize=20, \n'</span><span class="keyword">...</span>
+0281  <span class="string">'       post=2,font=-4,lwidth=10;\n'</span><span class="keyword">...</span>
+0282     <span class="string">'\n beam;'</span><span class="keyword">...</span>
+0283     <span class="string">'\n use, period='</span> sqname <span class="string">';'</span><span class="keyword">...</span>
+0284     <span class="string">'\n twiss,chrom,file=test.twiss;'</span><span class="keyword">...</span>
+0285     <span class="string">'\n plot, haxis=s, vaxis=rbetx,rbety, interpolate, style=1,colour=100,file='</span> sqname <span class="string">';'</span><span class="keyword">...</span>
+0286 <span class="keyword">...</span><span class="comment">     '\n plot, haxis=s, vaxis=Wx,Wy, interpolate,style=1,colour=100;'...</span>
+0287 <span class="keyword">...</span><span class="comment">     '\n plot, haxis=s, vaxis=dx,dy, interpolate,style=1,colour=100;'...</span>
+0288 <span class="keyword">...</span><span class="comment">     '\n plot, haxis=s, vaxis=x,y, interpolate,style=1,colour=100;'...</span>
+0289 <span class="keyword">...</span><span class="comment">     '\n plot, range=#s/SF1L[2], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;'...</span>
+0290 <span class="keyword">...</span><span class="comment">     '\n plot, range=SF1L[4]/SF1L[8], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;'...</span>
+0291 <span class="keyword">...</span><span class="comment">     '\n plot, range=SF1L[8]/SF1L[12], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;'...</span>
+0292 <span class="keyword">...</span><span class="comment">     '\n plot, range=SF1L[12]/SF1[2], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;'...</span>
+0293 <span class="keyword">...</span><span class="comment">     '\n plot, range=SF1[2]/SF1[8], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy,  interpolate,style=1,colour=100;'...</span>
+0294 <span class="keyword">...</span><span class="comment">     '\n plot, range=SF1[8]/SF1[12], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy,  interpolate,style=1,colour=100;'...</span>
+0295 <span class="keyword">...</span><span class="comment">     '\n plot, range=SF1[12]/#e, haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;'...</span>
+0296 <span class="keyword">...</span><span class="comment">     '\n plot, range=OC1[1]/CRABL[2], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;'...</span>
+0297 <span class="keyword">...</span><span class="comment">     '\n  plot, range=CRABL[2]/IP[1], haxis=s, vaxis1=betx,bety, vaxis2=dx,dy, interpolate, style=1,colour=100;\n'...</span>
+0298      ];
+0299 
+0300 trackingLines=[<span class="keyword">...</span>
+0301     <span class="string">'\n select, flag=twiss,class=Hkicker,column=name,s; twiss,file=tt;\n\n'</span><span class="keyword">...</span>
+0302     <span class="string">'\n SURVEY, x0=0, y0=0, z0=0, theta0=0, phi0=0, psi0=0,file=surv, table=survey, sequence=sqname;\n'</span><span class="keyword">...</span>
+0303     <span class="string">'plot, table=survey,haxis=z,vaxis=x;\n'</span><span class="keyword">...</span><span class="comment">,hmin=-250,hmax=250,vmin=-450,vmax=50;\n'...</span>
+0304     <span class="string">'save, sequence='</span> sqname <span class="string">', file='</span> seqfilemadX(~ismember(seqfilemadX,<span class="string">'.'</span>)) <span class="string">'.seq; ! savesequence \n '</span><span class="keyword">...</span>
+0305     <span class="keyword">...</span><span class="comment">'use,period=ring_noff;\nsave, sequence=RING_noff, file=' seqfilemadX(~ismember(seqfilemadX,'.')) 'noff.seq,bare; ! savesequence \n '...</span>
+0306     <span class="keyword">...</span><span class="comment"> '    savebeta,label=HER,place=#e;\n'...</span>
+0307     ];
+0308 
+0309 rootdrawlayout=[
+0310 <span class="string">'\n use, period='</span> sqname <span class="string">';\n'</span><span class="keyword">...</span>
+0311 <span class="string">'ptc_create_universe;\n'</span><span class="keyword">...</span>
+0312 <span class="string">'ptc_create_layout, model=1, method=6, nst=100, exact=false, closed_layout=false;\n'</span><span class="keyword">...</span>
+0313 <span class="string">'ptc_setswitch, debuglevel=2, maxacceleration=true, exact_mis=true, time=true, totalpath=true, fringe=true;\n'</span><span class="keyword">...</span>
+0314 <span class="string">'ptc_printframes, file=&quot;draw'</span> sqname <span class="string">'.C&quot;, format=rootmacro;\n'</span><span class="keyword">...</span>
+0315 <span class="string">'ptc_end;\n'</span><span class="keyword">...</span>
+0316 ];
+0317 
+0318 
+0319 sxs=strrep(sxs,<span class="string">'&amp;'</span>,<span class="string">''</span>); <span class="comment">% remove &amp;</span>
+0320 sxs=strrep(sxs,<span class="string">';\n;'</span>,<span class="string">';\n\n'</span>); <span class="comment">% remove useless ;</span>
+0321 sxs=strrep(sxs,<span class="string">'K2='</span>,<span class="string">'K2=SXT_ON*'</span>);  <span class="comment">% add sextupole on switch</span>
+0322 sxs=strrep(sxs,<span class="string">'='</span>,<span class="string">':='</span>); <span class="comment">% add :=</span>
+0323 sxs=strrep(sxs,<span class="string">'::='</span>,<span class="string">':='</span>);
+0324 sxs=strrep(sxs,<span class="string">']'</span>,<span class="string">''</span>); <span class="comment">% convert [] to -&gt;</span>
+0325 sxs=strrep(sxs,<span class="string">'['</span>,<span class="string">'-&gt;'</span>);
+0326 sxs=strrep(sxs,<span class="string">'LINE:='</span>,<span class="string">'LINE='</span>);  <span class="comment">% restore Line definitions to</span>
+0327 sxs=strrep(sxs,<span class="string">', '</span>,<span class="string">','</span>);
+0328 
+0329 
+0330 <span class="comment">%% save close and exit</span>
+0331 fprintf(sX,[sxs]);
+0332 fprintf(sXt,[<span class="string">'call,file='</span> seqfilemadX <span class="string">';\n'</span> testtwiss trackingLines rootdrawlayout]);
+0333 
+0334 system([<span class="string">'madxp &lt; '</span> [<span class="string">'test_'</span> seqfilemadX ] ])
+0335 
+0336 fclose(<span class="string">'all'</span>);
+0337 clear all
+0338 close all
+0339 
+0340 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

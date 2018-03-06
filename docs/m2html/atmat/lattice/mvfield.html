@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mvfield</title>
+  <meta name="keywords" content="mvfield">
+  <meta name="description" content="MVFIELD Move fields from one structure to another">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; mvfield.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>mvfield
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>MVFIELD Move fields from one structure to another</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [dst,src] = mvfield(dst,src,fields) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">MVFIELD Move fields from one structure to another
+
+[NEWDST,NEWSRC]=MVFIELD(DST,SRC,FIELDNAMES)
+   Moves the selected fields from SRC to DST
+
+DST:           Destination structure
+SRC:           Source structure
+FIELDNAMES:    Field names to be moved (Default: all fields from SRC)
+
+NEWDST:        DST structure with fields added
+NEWSRC:        SRC structure with fields removed</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atdivelem.html" class="code" title="function line = atdivelem(elem,frac,varargin)">atdivelem</a>	LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces</li><li><a href="atreduce.html" class="code" title="function [newring,indx,newrefs] = atreduce(oldring,oldrefs)">atreduce</a>	ATREDUCE Remove useless elements from an AT structure</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function movefields(fld)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [dst,src] = mvfield(dst,src,fields)</a>
+0002 <span class="comment">%MVFIELD Move fields from one structure to another</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%[NEWDST,NEWSRC]=MVFIELD(DST,SRC,FIELDNAMES)</span>
+0005 <span class="comment">%   Moves the selected fields from SRC to DST</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%DST:           Destination structure</span>
+0008 <span class="comment">%SRC:           Source structure</span>
+0009 <span class="comment">%FIELDNAMES:    Field names to be moved (Default: all fields from SRC)</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%NEWDST:        DST structure with fields added</span>
+0012 <span class="comment">%NEWSRC:        SRC structure with fields removed</span>
+0013 
+0014 <span class="keyword">if</span> nargin &gt;= 3      <span class="comment">% Select valis fields</span>
+0015     fnames=fields(isfield(src,fields));
+0016 <span class="keyword">else</span>                <span class="comment">% Take all fields from src</span>
+0017     fnames=fieldnames(src);
+0018 <span class="keyword">end</span>
+0019 cellfun(@<a href="#_sub1" class="code" title="subfunction movefields(fld)">movefields</a>,fnames);
+0020 
+0021     <a name="_sub1" href="#_subfunctions" class="code">function movefields(fld)</a>
+0022         dst.(fld)=src.(fld);
+0023         src=rmfield(src,fld);
+0024     <span class="keyword">end</span>
+0025 <span class="keyword">end</span>
+0026</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

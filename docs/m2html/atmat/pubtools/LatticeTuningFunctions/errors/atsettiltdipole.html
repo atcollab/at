@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsettiltdipole</title>
+  <meta name="keywords" content="atsettiltdipole">
+  <meta name="description" content="ATSETTILTDIPOLE sets the entrance and exit rotation matrices">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">LatticeTuningFunctions</a> &gt; <a href="index.html">errors</a> &gt; atsettiltdipole.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>atsettiltdipole
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>ATSETTILTDIPOLE sets the entrance and exit rotation matrices</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function ring=atsettiltdipole(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSETTILTDIPOLE sets the entrance and exit rotation matrices
+ of an element or a group of elements in THERING
+
+ RING=ATSETTILTDIPOLE(RING,ELEMINDEX, PSI)
+ ELEMINDEX contains indexes of elements to be rotated
+ PSI - angle(s) of rotation in RADIANS
+   POSITIVE PSI corresponds to a CORKSCREW (right)
+   rotation of the ELEMENT looking in the direction of the beam.
+   (or CORKSCREW, aligned with s-axis) rotation of the ELEMENT
+   The misalgnment matrixes are stored in fields R1 and R2
+   R1 = [  cos(PSI) sin(PSI); -sin(PSI) cos(PSI) ]
+   R2 = R1'
+
+ the rotated dipole gives a kick in the vertical and horizontal plane.
+
+ ATSETTILTDIPOLE(ELEMINDEX, PSI) Uses the global variable THERING
+
+ See also ATSETSHIFT ATSETTILT</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="setTiltAbout.html" class="code" title="function re=setTiltAbout(r,pos,coord,PSI)">setTiltAbout</a>	SETTILTABOUT Sets tilt errors</li><li><a href="setTiltGirderAbout.html" class="code" title="function re=setTiltGirderAbout(r,mag_gr,coord,PSI)">setTiltGirderAbout</a>	SETTILTGIRDERABOUT Set Tilt error on a magnet</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function elem = attiltelemdip(elem,rots)</a></li><li><a href="#_sub2" class="code">function a=padpol(a)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ring=atsettiltdipole(varargin)</a>
+0002 <span class="comment">%ATSETTILTDIPOLE sets the entrance and exit rotation matrices</span>
+0003 <span class="comment">% of an element or a group of elements in THERING</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% RING=ATSETTILTDIPOLE(RING,ELEMINDEX, PSI)</span>
+0006 <span class="comment">% ELEMINDEX contains indexes of elements to be rotated</span>
+0007 <span class="comment">% PSI - angle(s) of rotation in RADIANS</span>
+0008 <span class="comment">%   POSITIVE PSI corresponds to a CORKSCREW (right)</span>
+0009 <span class="comment">%   rotation of the ELEMENT looking in the direction of the beam.</span>
+0010 <span class="comment">%   (or CORKSCREW, aligned with s-axis) rotation of the ELEMENT</span>
+0011 <span class="comment">%   The misalgnment matrixes are stored in fields R1 and R2</span>
+0012 <span class="comment">%   R1 = [  cos(PSI) sin(PSI); -sin(PSI) cos(PSI) ]</span>
+0013 <span class="comment">%   R2 = R1'</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% the rotated dipole gives a kick in the vertical and horizontal plane.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% ATSETTILTDIPOLE(ELEMINDEX, PSI) Uses the global variable THERING</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% See also ATSETSHIFT ATSETTILT</span>
+0020 
+0021 <span class="keyword">global</span> THERING
+0022 <span class="keyword">if</span> ~iscell(varargin{1})
+0023     THERING=atsettilt(THERING,varargin{:});
+0024 <span class="keyword">else</span>
+0025     [ring,idx,rot]=deal(varargin{:});
+0026     
+0027     <span class="keyword">if</span> length(rot) == 1
+0028         rot=rot*ones(size(idx));
+0029     <span class="keyword">elseif</span> length(rot) ~= length(idx)
+0030         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(rot))
+0031     <span class="keyword">end</span>
+0032     
+0033     <span class="comment">%     tic;</span>
+0034     <span class="comment">%     for i = 1:length(idx)</span>
+0035     <span class="comment">%         ring{idx(i)}=attiltelemdip(ring{idx(i)},rot(i));</span>
+0036     <span class="comment">%     end</span>
+0037     <span class="comment">%     toc</span>
+0038     <span class="comment">%tic;</span>
+0039     ring(idx)=cellfun(@(el,rot)<a href="#_sub1" class="code" title="subfunction elem = attiltelemdip(elem,rots)">attiltelemdip</a>(el,rot),ring(idx),num2cell(rot(:)),<span class="string">'un'</span>,0);
+0040     <span class="comment">%toc</span>
+0041     
+0042 <span class="keyword">end</span>
+0043 
+0044 <span class="keyword">end</span>
+0045 
+0046 <a name="_sub1" href="#_subfunctions" class="code">function elem = attiltelemdip(elem,rots)</a>
+0047 <span class="comment">%ATTILTELEMdip set new rotation parameters</span>
+0048 <span class="comment">%NEWELEM=ATTILTELEMdip(OLDELEM,ROTS)</span>
+0049 <span class="comment">%</span>
+0050 <span class="comment">% ROTS - rotation angle in RADIANS</span>
+0051 <span class="comment">%   POSITIVE ROTS corresponds to a CORKSCREW (right)</span>
+0052 <span class="comment">%   rotation of the ELEMENT looking in the direction of the beam.</span>
+0053 <span class="comment">%   (or CORKSCREW, aligned with s-axis) rotation of the ELEMENT</span>
+0054 <span class="comment">%   The rotation matrixes are stored in fields R1 and R2</span>
+0055 <span class="comment">%   R1 = [  cos(PSI) sin(PSI); -sin(PSI) cos(PSI) ]</span>
+0056 <span class="comment">%   R2 = R1'</span>
+0057 <span class="comment">%See also: atshiftelem, atmodelem</span>
+0058 
+0059 <span class="keyword">if</span> ~isfield(elem,<span class="string">'BendingAngle'</span>)<span class="comment">% rotate reference</span>
+0060      
+0061     C=cos(rots);
+0062     S=sin(rots);
+0063     RM = diag([C C C C 1 1]);
+0064     RM(1,3) = S;
+0065     RM(2,4) = S;
+0066     RM(3,1) = -S;
+0067     RM(4,2) = -S;
+0068     elem.R1=RM;
+0069     elem.R2=RM';
+0070     
+0071 <span class="keyword">else</span><span class="comment">% rotate multipoles</span>
+0072     
+0073     <span class="comment">% bending angle</span>
+0074     bb=-elem.BendingAngle/elem.Length;
+0075     
+0076     <span class="comment">% horizontal kick</span>
+0077     elem.(<span class="string">'PolynomB'</span>)(1)=-(1-cos(rots)).*bb;
+0078     <span class="comment">% vertical kick</span>
+0079     elem.(<span class="string">'PolynomA'</span>)(1)=sin(rots).*bb;
+0080     
+0081     <span class="comment">% rotate all other multipole components ( combined function magnets)</span>
+0082     Lpb=length(elem.(<span class="string">'PolynomB'</span>));
+0083     
+0084     elem=<a href="#_sub2" class="code" title="subfunction a=padpol(a)">padpol</a>(elem);
+0085     
+0086     rotm=-rots*[2:Lpb];
+0087     
+0088     elem.(<span class="string">'PolynomB'</span>)(2:end)=cos(rotm).*elem.(<span class="string">'PolynomB'</span>)(2:end)-sin(rotm).*elem.(<span class="string">'PolynomA'</span>)(2:end);
+0089     elem.(<span class="string">'PolynomA'</span>)(2:end)=sin(rotm).*elem.(<span class="string">'PolynomB'</span>)(2:end)+cos(rotm).*elem.(<span class="string">'PolynomA'</span>)(2:end);
+0090     
+0091 <span class="keyword">end</span>
+0092 
+0093 elem.RotAboutS=rots;
+0094 
+0095 <span class="keyword">end</span>
+0096 
+0097 
+0098 
+0099 <a name="_sub2" href="#_subfunctions" class="code">function a=padpol(a)</a>
+0100 
+0101 <span class="keyword">if</span> isfield(a,<span class="string">'PolynomB'</span>)
+0102     
+0103     lpa=length(a.PolynomA);
+0104     lpb=length(a.PolynomB);
+0105     
+0106     <span class="keyword">if</span> lpa&lt;lpb
+0107         a.PolynomA=[a.PolynomA,zeros(1,lpb-lpa)];
+0108     <span class="keyword">elseif</span> lpa&gt;lpb
+0109         a.PolynomB=[a.PolynomB,zeros(1,lpa-lpb)];
+0110     <span class="keyword">end</span>
+0111     
+0112 <span class="keyword">end</span>
+0113 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

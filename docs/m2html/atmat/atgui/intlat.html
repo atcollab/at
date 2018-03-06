@@ -1,0 +1,447 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of intlat</title>
+  <meta name="keywords" content="intlat">
+  <meta name="description" content="INTLAT Interactive AT lattice editor">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atgui</a> &gt; intlat.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atgui&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>intlat
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>INTLAT Interactive AT lattice editor</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function intlat(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">INTLAT Interactive AT lattice editor
+ INTLAT(DIRECTION)
+  Direction is the initial angle[rad] of the orbit with respect
+  to the plot axis</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="intelem.html" class="code" title="function h0 = intelem(varargin)">intelem</a>	INTELEM Interactive element editor.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function f = SetDefaultIcons(Lattice,Families,Elements)</a></li><li><a href="#_sub2" class="code">function PlotElements(GUIhandles,INDEX)</a></li><li><a href="#_sub3" class="code">function ShowFamilyDisplayMode(h, eventdata, handles, varargin)</a></li><li><a href="#_sub4" class="code">function SelectColor(h, eventdata, handles, varargin)</a></li><li><a href="#_sub5" class="code">function SetIconType(h, eventdata, handles, varargin)</a></li><li><a href="#_sub6" class="code">function SetDisplay(h, eventdata, handles, varargin)</a></li><li><a href="#_sub7" class="code">function SelectFieldsFromList(h, eventdata, handles, varargin)</a></li><li><a href="#_sub8" class="code">function SetIconWidth(h, eventdata, handles, varargin)</a></li><li><a href="#_sub9" class="code">function varargout = ElementCallback(h)</a></li><li><a href="#_sub10" class="code">function varargout = ColorSelection_Callback(h, eventdata, handles, varargin)</a></li><li><a href="#_sub11" class="code">function varargout = listbox1_Callback(h, eventdata, handles, varargin)</a></li><li><a href="#_sub12" class="code">function varargout = Untitled_1_Callback(h, eventdata, handles, varargin)</a></li><li><a href="#_sub13" class="code">function varargout = ZoomButtonCallback(h, eventdata, handles, varargin)</a></li><li><a href="#_sub14" class="code">function [x2d, y2d, a2d] = Survey2D(LATTICE,STARTANGLE)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function intlat(varargin)</a>
+0002 <span class="comment">%INTLAT Interactive AT lattice editor</span>
+0003 <span class="comment">% INTLAT(DIRECTION)</span>
+0004 <span class="comment">%  Direction is the initial angle[rad] of the orbit with respect</span>
+0005 <span class="comment">%  to the plot axis</span>
+0006 
+0007 <span class="keyword">global</span> THERING
+0008 <span class="keyword">if</span> nargin &lt; 1 | isnumeric(varargin{1})
+0009 
+0010     <span class="keyword">if</span> nargin == 1
+0011         STARTANGLE = varargin{1};
+0012     <span class="keyword">else</span>
+0013         STARTANGLE = 0;
+0014     <span class="keyword">end</span>
+0015     
+0016     <span class="comment">% LAUNCH GUI</span>
+0017 
+0018     fig = openfig(mfilename,<span class="string">'reuse'</span>);
+0019     
+0020     set(fig,<span class="string">'ToolBar'</span>,<span class="string">'none'</span>,<span class="string">'HandleVisibility'</span>,<span class="string">'callback'</span>);
+0021 
+0022     handles = guihandles(fig);
+0023     
+0024     guidata(fig,handles);
+0025     NumElements = length(THERING);
+0026     AllFamNames  = getcellstruct(THERING,<span class="string">'FamName'</span>,1:NumElements);
+0027     NumFamilies = 0;
+0028     
+0029     FamNames = {};
+0030     <span class="keyword">for</span> i=1:NumElements
+0031         <span class="keyword">if</span> ~any(strcmp(FamNames,THERING{i}.FamName))
+0032             NumFamilies = NumFamilies + 1;
+0033             FamNames{NumFamilies} = THERING{i}.FamName;
+0034         <span class="keyword">end</span>
+0035     <span class="keyword">end</span>
+0036     FamNames = sort(FamNames);
+0037     [Families(1:NumFamilies).FamName] = deal(FamNames{:});
+0038     
+0039     set(handles.FamilyPMenu,<span class="string">'String'</span>,FamNames);
+0040     set(handles.IconTypePMenu,<span class="string">'String'</span>,{<span class="string">'line'</span>,<span class="string">'rectangle'</span>,<span class="string">'o'</span>,<span class="string">'x'</span>});
+0041     
+0042     [x2d, y2d, a2d] = <a href="#_sub14" class="code" title="subfunction [x2d, y2d, a2d] = Survey2D(LATTICE,STARTANGLE)">Survey2D</a>(THERING,STARTANGLE);
+0043        XScale=max(x2d)-min(x2d);
+0044     YScale=max(y2d)-min(y2d);
+0045 
+0046     set(handles.Axes,<span class="string">'DataAspectRatioMode'</span>,<span class="string">'manual'</span>, <span class="keyword">...</span><span class="comment"> </span>
+0047         <span class="string">'DataAspectRatio'</span>,[1 1 1],<span class="keyword">...</span>
+0048         <span class="string">'PlotBoxAspectRatioMode'</span>,<span class="string">'manual'</span>, <span class="keyword">...</span>
+0049         <span class="string">'PlotBoxAspectRatio'</span>,[XScale YScale 1]);
+0050     
+0051     
+0052     FamNumbers = zeros(1,NumElements);    
+0053     
+0054     <span class="keyword">for</span> i =1:NumFamilies
+0055         Families(i).KidsList = find(strcmp(Families(i).FamName, AllFamNames));
+0056         Families(i).Display = 1;
+0057         Families(i).Color = [0 0 0];
+0058         Families(i).IconType = <span class="string">'line'</span>;
+0059         Families(i).FieldsList = fieldnames(THERING{Families(i).KidsList(1)});
+0060                 
+0061         Families(i).SelectedFields = [find(strcmp(Families(i).FieldsList,<span class="string">'FamName'</span>)),<span class="keyword">...</span>
+0062                 find(strcmp(Families(i).FieldsList,<span class="string">'Length'</span>)),<span class="keyword">...</span>
+0063                 find(strcmp(Families(i).FieldsList,<span class="string">'PassMethod'</span>))];
+0064                 
+0065         Families(i).IconWidth = 0;
+0066         FamNumbers(Families(i).KidsList)=i;
+0067         
+0068     <span class="keyword">end</span>
+0069     
+0070     Elements = struct(<span class="string">'FamIndex'</span>,num2cell(FamNumbers),<span class="string">'IconHandle'</span>,0);
+0071     Families = <a href="#_sub1" class="code" title="subfunction f = SetDefaultIcons(Lattice,Families,Elements)">SetDefaultIcons</a>(THERING,Families,Elements);
+0072     
+0073     setappdata(fig,<span class="string">'Families'</span>,Families);
+0074     setappdata(fig,<span class="string">'Elements'</span>,Elements);
+0075     setappdata(fig,<span class="string">'X2D'</span>,x2d);
+0076     setappdata(fig,<span class="string">'Y2D'</span>,y2d);
+0077     setappdata(fig,<span class="string">'A2D'</span>,a2d);
+0078 
+0079  
+0080         
+0081     <a href="#_sub3" class="code" title="subfunction ShowFamilyDisplayMode(h, eventdata, handles, varargin)">ShowFamilyDisplayMode</a>(handles.FamilyPMenu, [], handles);
+0082     
+0083     <span class="comment">% Plot all elements</span>
+0084     <a href="#_sub2" class="code" title="subfunction PlotElements(GUIhandles,INDEX)">PlotElements</a>(handles,1:NumElements);
+0085     
+0086         
+0087 <span class="keyword">elseif</span> ischar(varargin{1}) <span class="comment">% INVOKE NAMED SUBFUNCTION OR CALLBACK</span>
+0088 
+0089     <span class="keyword">try</span>
+0090         <span class="keyword">if</span> (nargout)
+0091             [varargout{1:nargout}] = feval(varargin{:}); <span class="comment">% FEVAL switchyard</span>
+0092         <span class="keyword">else</span>
+0093             feval(varargin{:}); <span class="comment">% FEVAL switchyard</span>
+0094         <span class="keyword">end</span>
+0095     <span class="keyword">catch</span>
+0096         disp(lasterr);
+0097     <span class="keyword">end</span>
+0098 
+0099 <span class="keyword">end</span>
+0100 
+0101 
+0102 <a name="_sub1" href="#_subfunctions" class="code">function f = SetDefaultIcons(Lattice,Families,Elements)</a>
+0103     L = findspos(Lattice,length(Lattice)+1);
+0104     f = Families;
+0105     <span class="comment">% Make default icons for elements of different physical types</span>
+0106     <span class="keyword">for</span> i=1:length(Families)
+0107         Elem = Lattice{Families(i).KidsList(1)};
+0108         <span class="comment">% make icons for bending magnets</span>
+0109         <span class="keyword">if</span> isfield(Elem,<span class="string">'BendingAngle'</span>) &amp; Elem.BendingAngle
+0110             f(i).Display = 1;
+0111             f(i).Color = [1 1 0];
+0112             f(i).IconType = <span class="string">'rectangle'</span>;
+0113             f(i).IconWidth = L/300;
+0114         <span class="comment">% Quadrupoles</span>
+0115         <span class="keyword">elseif</span> isfield(Elem,<span class="string">'K'</span>) &amp; Elem.K
+0116             <span class="keyword">if</span> Elem.K &gt; 0 <span class="comment">% focusing</span>
+0117                 f(i).Display = 1;
+0118                 f(i).Color = [1 0 0];
+0119                 f(i).IconType = <span class="string">'rectangle'</span>;
+0120                 f(i).IconWidth = L/400;
+0121             <span class="keyword">else</span>
+0122                 f(i).Display = 1;
+0123                 f(i).Color = [0 0 1];
+0124                 f(i).IconType = <span class="string">'rectangle'</span>;
+0125                 f(i).IconWidth = L/400;
+0126             <span class="keyword">end</span>
+0127         <span class="keyword">elseif</span> isfield(Elem,<span class="string">'PolynomB'</span>) &amp; length(Elem.PolynomB)&gt;2 &amp; Elem.PolynomB(3)
+0128             <span class="keyword">if</span> Elem.PolynomB(3)&gt;0 <span class="comment">% focusing sextupole</span>
+0129                 f(i).Display = 1;
+0130                 f(i).Color = [1 0 1];
+0131                 f(i).IconType = <span class="string">'rectangle'</span>;
+0132                 f(i).IconWidth = L/500;
+0133             <span class="keyword">else</span>
+0134                 f(i).Display = 1;
+0135                 f(i).Color = [0 1 0];
+0136                 f(i).IconType = <span class="string">'rectangle'</span>;
+0137                 f(i).IconWidth = L/500;
+0138             <span class="keyword">end</span>
+0139         <span class="keyword">elseif</span> isfield(Elem,<span class="string">'Frequency'</span>) &amp; isfield(Elem,<span class="string">'Voltage'</span>) <span class="comment">% RF cavity</span>
+0140             f(i).Display = 1;
+0141             f(i).Color = [1 0.5 0];
+0142             f(i).IconType = <span class="string">'o'</span>;
+0143             f(i).IconWidth = 0;
+0144             
+0145         <span class="keyword">end</span>
+0146         
+0147     <span class="keyword">end</span>
+0148             
+0149         
+0150 
+0151 
+0152 <span class="comment">% --------------------------------------------------------------------</span>
+0153 <a name="_sub2" href="#_subfunctions" class="code">function PlotElements(GUIhandles,INDEX)</a>
+0154     <span class="comment">% Retrieve application data</span>
+0155     
+0156     <span class="comment">% Temporarily set handle visibility to 'on' for drawing elements</span>
+0157     set(GUIhandles.IntlatMainFigure,<span class="string">'HandleVisibility'</span>,<span class="string">'on'</span>);
+0158     
+0159     figure(GUIhandles.IntlatMainFigure);
+0160     Families = getappdata(GUIhandles.IntlatMainFigure,<span class="string">'Families'</span>);
+0161     Elements = getappdata(GUIhandles.IntlatMainFigure,<span class="string">'Elements'</span>);
+0162     x2d = getappdata(GUIhandles.IntlatMainFigure,<span class="string">'X2D'</span>);
+0163     y2d = getappdata(GUIhandles.IntlatMainFigure,<span class="string">'Y2D'</span>);
+0164     a2d = getappdata(GUIhandles.IntlatMainFigure,<span class="string">'A2D'</span>);
+0165 
+0166     
+0167     xcorners = [-1 -1  1  1];
+0168     ycorners = [ 1  1 -1 -1];
+0169     
+0170     
+0171     <span class="keyword">for</span> i=[INDEX(:)]'
+0172         
+0173         FamIndex = Elements(i).FamIndex;
+0174         
+0175         <span class="comment">% If Icon already exists</span>
+0176         <span class="keyword">if</span> Elements(i).IconHandle
+0177             delete(Elements(i).IconHandle);
+0178             Elements(i).IconHandle = 0;
+0179         <span class="keyword">end</span>
+0180         
+0181         <span class="keyword">if</span>  Families(FamIndex).Display
+0182             <span class="keyword">switch</span> Families(FamIndex).IconType
+0183             <span class="keyword">case</span> <span class="string">'rectangle'</span>
+0184                 <span class="comment">% compute vertex coordinates</span>
+0185                 IconWidth = Families(FamIndex).IconWidth;
+0186                 vx = [ x2d(i), x2d(i+1), x2d(i+1), x2d(i)] + IconWidth*xcorners*sin((a2d(i)+a2d(i+1))/2);
+0187                   vy = [ y2d(i), y2d(i+1), y2d(i+1), y2d(i)] + IconWidth*ycorners*cos((a2d(i)+a2d(i+1))/2);
+0188                   Elements(i).IconHandle = patch(vx,vy,Families(FamIndex).Color);
+0189             <span class="keyword">case</span> <span class="string">'line'</span>
+0190                 Elements(i).IconHandle = line([x2d(i) x2d(i+1)],[y2d(i) y2d(i+1)]);
+0191                 set(Elements(i).IconHandle,<span class="string">'Color'</span>,Families(FamIndex).Color);   
+0192             <span class="keyword">case</span> <span class="string">'o'</span>
+0193                 Elements(i).IconHandle = line([x2d(i) x2d(i+1)],[y2d(i) y2d(i+1)]);
+0194                 set(Elements(i).IconHandle,<span class="string">'Color'</span>,Families(FamIndex).Color,<span class="keyword">...</span>
+0195                     <span class="string">'Marker'</span>,<span class="string">'o'</span>,<span class="string">'MarkerFaceColor'</span>,Families(FamIndex).Color);
+0196             <span class="keyword">case</span> <span class="string">'x'</span>
+0197                 Elements(i).IconHandle = line([x2d(i) x2d(i+1)],[y2d(i) y2d(i+1)]);
+0198                 set(Elements(i).IconHandle,<span class="string">'Color'</span>,Families(FamIndex).Color,<span class="keyword">...</span>
+0199                     <span class="string">'Marker'</span>,<span class="string">'x'</span>);
+0200             <span class="keyword">end</span>
+0201             <span class="comment">% Assign Callback</span>
+0202             set(Elements(i).IconHandle,<span class="string">'UserData'</span>,i,<span class="keyword">...</span>
+0203                 <span class="string">'ButtonDownFcn'</span>,<span class="string">'intlat(''ElementCallback'',gcbo)'</span>);
+0204         <span class="keyword">end</span>
+0205     <span class="keyword">end</span>
+0206     
+0207     setappdata(GUIhandles.IntlatMainFigure,<span class="string">'Elements'</span>,Elements);
+0208     set(GUIhandles.IntlatMainFigure,<span class="string">'HandleVisibility'</span>,<span class="string">'callback'</span>);
+0209     
+0210             
+0211             
+0212             
+0213     
+0214         
+0215 
+0216 <a name="_sub3" href="#_subfunctions" class="code">function ShowFamilyDisplayMode(h, eventdata, handles, varargin)</a>
+0217     Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0218     FNum = get(h,<span class="string">'Value'</span>);    
+0219     
+0220     set(handles.DisplayCheckBox,<span class="string">'Value'</span>,Families(FNum).Display);
+0221     
+0222     
+0223     
+0224     set(handles.ColorSelectionBox,<span class="string">'BackgroundColor'</span>,Families(FNum).Color);
+0225     
+0226     set(handles.FieldListBox,<span class="string">'String'</span>,Families(FNum).FieldsList);
+0227     set(handles.FieldListBox,<span class="string">'Value'</span>,Families(FNum).SelectedFields);
+0228     
+0229     set(handles.WidthEditBox,<span class="string">'String'</span>,num2str(Families(FNum).IconWidth));
+0230     
+0231     PossibleIconTypes = get(handles.IconTypePMenu,<span class="string">'String'</span>);
+0232     
+0233     set(handles.IconTypePMenu,<span class="string">'value'</span>,<span class="keyword">...</span>
+0234         find(strcmp(Families(FNum).IconType,PossibleIconTypes)));
+0235     
+0236     
+0237     <span class="keyword">if</span> Families(FNum).Display 
+0238         Visible = <span class="string">'on'</span>;
+0239     <span class="keyword">else</span>
+0240         Visible = <span class="string">'off'</span>;
+0241     <span class="keyword">end</span>
+0242     set(handles.IconTypePMenu,<span class="string">'Visible'</span>,Visible);
+0243     set(handles.ColorSelectionBox,<span class="string">'Visible'</span>,Visible);
+0244     set(handles.WidthEditBox,<span class="string">'Visible'</span>,Visible);
+0245     set(handles.FieldListBox,<span class="string">'Visible'</span>,Visible);
+0246     set(handles.DisplayIconLabel,<span class="string">'Visible'</span>,Visible);
+0247     set(handles.IconColorLabel,<span class="string">'Visible'</span>,Visible);
+0248     set(handles.IconWidthLabel,<span class="string">'Visible'</span>,Visible);
+0249     set(handles.FieldsLabel,<span class="string">'Visible'</span>,Visible);
+0250 
+0251         
+0252 <a name="_sub4" href="#_subfunctions" class="code">function SelectColor(h, eventdata, handles, varargin)</a>
+0253     Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0254     FNum = get(handles.FamilyPMenu,<span class="string">'Value'</span>);
+0255     NewColor = uisetcolor([<span class="string">'Select icon color for '</span>,Families(FNum).FamName,<span class="string">' family'</span>]);
+0256     
+0257     set(handles.ColorSelectionBox,<span class="string">'BackgroundColor'</span>,NewColor);
+0258     Families(FNum).Color = NewColor;
+0259     setappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>,Families);
+0260     
+0261     <a href="#_sub2" class="code" title="subfunction PlotElements(GUIhandles,INDEX)">PlotElements</a>(handles,Families(FNum).KidsList);
+0262 
+0263 <a name="_sub5" href="#_subfunctions" class="code">function SetIconType(h, eventdata, handles, varargin)</a>
+0264     Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0265     FNum = get(handles.FamilyPMenu,<span class="string">'Value'</span>);
+0266 
+0267     PossibleIconTypes = get(handles.IconTypePMenu,<span class="string">'String'</span>);
+0268     
+0269     NewIconType = PossibleIconTypes{get(h,<span class="string">'Value'</span>)};
+0270     
+0271     Families(FNum).IconType = NewIconType;
+0272     setappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>,Families);
+0273     
+0274     
+0275     <a href="#_sub2" class="code" title="subfunction PlotElements(GUIhandles,INDEX)">PlotElements</a>(handles,Families(FNum).KidsList);
+0276     
+0277 <a name="_sub6" href="#_subfunctions" class="code">function SetDisplay(h, eventdata, handles, varargin)</a>
+0278     Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0279     FNum = get(handles.FamilyPMenu,<span class="string">'Value'</span>);
+0280 
+0281     Families(FNum).Display = get(h,<span class="string">'Value'</span>);
+0282     
+0283     
+0284     <span class="keyword">if</span> Families(FNum).Display 
+0285         Visible = <span class="string">'on'</span>;
+0286     <span class="keyword">else</span>
+0287         Visible = <span class="string">'off'</span>;
+0288     <span class="keyword">end</span>
+0289     set(handles.IconTypePMenu,<span class="string">'Visible'</span>,Visible);
+0290     set(handles.ColorSelectionBox,<span class="string">'Visible'</span>,Visible);
+0291     set(handles.WidthEditBox,<span class="string">'Visible'</span>,Visible);
+0292     set(handles.FieldListBox,<span class="string">'Visible'</span>,Visible);
+0293     set(handles.DisplayIconLabel,<span class="string">'Visible'</span>,Visible);
+0294     set(handles.IconColorLabel,<span class="string">'Visible'</span>,Visible);
+0295     set(handles.IconWidthLabel,<span class="string">'Visible'</span>,Visible);
+0296     set(handles.FieldsLabel,<span class="string">'Visible'</span>,Visible);
+0297     
+0298     setappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>,Families);
+0299     <a href="#_sub2" class="code" title="subfunction PlotElements(GUIhandles,INDEX)">PlotElements</a>(handles,Families(FNum).KidsList);
+0300 <span class="comment">% --------------------------------------------------------------------</span>
+0301 <a name="_sub7" href="#_subfunctions" class="code">function SelectFieldsFromList(h, eventdata, handles, varargin)</a>
+0302 
+0303     Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0304     FNum = get(handles.FamilyPMenu,<span class="string">'Value'</span>);
+0305     Families(FNum).SelectedFields =  get(h,<span class="string">'Value'</span>);
+0306     setappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>,Families);
+0307     
+0308     
+0309 <a name="_sub8" href="#_subfunctions" class="code">function SetIconWidth(h, eventdata, handles, varargin)</a>
+0310 
+0311     Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0312     FNum = get(handles.FamilyPMenu,<span class="string">'Value'</span>);
+0313     NewIconWidth = str2double(get(h,<span class="string">'String'</span>));
+0314     Families(FNum).IconWidth =  NewIconWidth;
+0315     setappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>,Families);
+0316     <a href="#_sub2" class="code" title="subfunction PlotElements(GUIhandles,INDEX)">PlotElements</a>(handles,Families(FNum).KidsList);
+0317 
+0318     
+0319     
+0320 
+0321 
+0322 <span class="comment">% --------------------------------------------------------------------</span>
+0323 <a name="_sub9" href="#_subfunctions" class="code">function varargout = ElementCallback(h)</a>
+0324 
+0325 index = get(h,<span class="string">'UserData'</span>);
+0326 handles = guidata(gcbo);
+0327 Families = getappdata(handles.IntlatMainFigure,<span class="string">'Families'</span>);
+0328 Elements = getappdata(handles.IntlatMainFigure,<span class="string">'Elements'</span>);
+0329 
+0330 FamIndex= Elements(index).FamIndex;
+0331 FieldsList =  Families(FamIndex).FieldsList;
+0332 Fields2Edit = FieldsList(Families(FamIndex).SelectedFields);
+0333 
+0334 <a href="intelem.html" class="code" title="function h0 = intelem(varargin)">intelem</a>(index,Fields2Edit);
+0335 
+0336 <span class="comment">% --------------------------------------------------------------------</span>
+0337 <a name="_sub10" href="#_subfunctions" class="code">function varargout = ColorSelection_Callback(h, eventdata, handles, varargin)</a>
+0338 
+0339 
+0340 
+0341 
+0342 <span class="comment">% --------------------------------------------------------------------</span>
+0343 <a name="_sub11" href="#_subfunctions" class="code">function varargout = listbox1_Callback(h, eventdata, handles, varargin)</a>
+0344 
+0345 
+0346 
+0347 
+0348 <span class="comment">% --------------------------------------------------------------------</span>
+0349 <a name="_sub12" href="#_subfunctions" class="code">function varargout = Untitled_1_Callback(h, eventdata, handles, varargin)</a>
+0350 
+0351 
+0352 
+0353 
+0354 <span class="comment">% --------------------------------------------------------------------</span>
+0355 <a name="_sub13" href="#_subfunctions" class="code">function varargout = ZoomButtonCallback(h, eventdata, handles, varargin)</a>
+0356 
+0357 
+0358 
+0359 
+0360 <span class="comment">% --------------------------------------------------------------------</span>
+0361 <a name="_sub14" href="#_subfunctions" class="code">function [x2d, y2d, a2d] = Survey2D(LATTICE,STARTANGLE)</a>
+0362 <span class="comment">% Determine 2-d geometry of the LATTICE</span>
+0363     NumElements = length(LATTICE);
+0364     x2d = zeros(1,NumElements+1);
+0365     y2d = zeros(1,NumElements+1);
+0366     a2d = zeros(1,NumElements+1); <span class="comment">% angle of orbit in radians</span>
+0367     a2d(1) = STARTANGLE;
+0368     <span class="keyword">for</span> en = 1:NumElements-1
+0369        <span class="keyword">if</span> isfield(LATTICE{en},<span class="string">'BendingAngle'</span>) 
+0370           ba = LATTICE{en}.BendingAngle(1); <span class="comment">% bending angle in radians</span>
+0371           <span class="keyword">else</span>
+0372           ba = 0;
+0373           <span class="keyword">end</span>
+0374         
+0375        <span class="keyword">if</span> ba == 0
+0376            Lt = LATTICE{en}.Length;
+0377              Lp = 0;
+0378        <span class="keyword">else</span>
+0379              Lt = LATTICE{en}.Length*sin(ba)/ba;
+0380              Lp = -LATTICE{en}.Length*(1-cos(ba))/ba;
+0381        <span class="keyword">end</span>
+0382     
+0383        x2d(en+1) = x2d(en) + Lt*cos(a2d(en)) - Lp*sin(a2d(en));
+0384           y2d(en+1) = y2d(en) + Lt*sin(a2d(en)) + Lp*cos(a2d(en));
+0385           a2d(en+1)=a2d(en) - ba;
+0386         
+0387     <span class="keyword">end</span>
+0388     x2d(NumElements+1) = x2d(1);
+0389     y2d(NumElements+1) = y2d(1);
+0390     a2d(NumElements+1) = a2d(1);
+0391 
+0392     X0 = (max(x2d)+min(x2d))/2;
+0393     Y0 = (max(y2d)+min(y2d))/2;    
+0394     x2d = x2d - X0;
+0395     y2d = y2d - Y0;</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

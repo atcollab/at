@@ -1,0 +1,140 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atgetcells</title>
+  <meta name="keywords" content="atgetcells">
+  <meta name="description" content="ATGETCELLS performs a search on MATLAB cell arrays of structures">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atgetcells.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atgetcells
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATGETCELLS performs a search on MATLAB cell arrays of structures</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function ok=atgetcells(cellarray, field, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATGETCELLS performs a search on MATLAB cell arrays of structures
+
+ OK = ATGETCELLS(RING, 'field')
+   returns indexes of elements that have a field named 'field'
+
+ OK = ATGETCELLS(RING, 'field', VALUE1...)
+   returns indexes of elements whose field 'field'
+   is equal to VALUE1, VALUE2, ... or VALUEN. Where VALUE can either be
+   character strings or a number. If its a character string REGULAR
+   expressions can be used.
+
+ OK = ATGETCELLS(RING, 'field', @TESTFUNCTION, ARGS...)
+   Uses the user-defined TESTFUNCTION to select array elements
+   TESTFUNCTION must be of the form:
+       OK=TESTFUNTION(ATELEM,FIELDVALUE,ARGS...)
+
+ OK is a logical array with the same size as RING, refering to matching
+ elements in RING
+
+ See also <a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">ATGETFIELDVALUES</a>, <a href="atsetfieldvalues.html" class="code" title="function newring = atsetfieldvalues(ring,varargin)">ATSETFIELDVALUES</a>, <a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">FINDCELLS</a>, REGEXPI</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="ataddmpoleerrors.html" class="code" title="function newring = ataddmpoleerrors(ring,type,newindex,strength,radius,randflag)">ataddmpoleerrors</a>	ataddrandmpole adds a random multipole component to all elements of type</li><li><a href="atfastring.html" class="code" title="function [newring,newringrad] = atfastring(ring0,varargin)">atfastring</a>	ATFASTRING Generate simplified AT structures</li><li><a href="atfitchrom.html" class="code" title="function newring=atfitchrom(ring,varargin)">atfitchrom</a>	ATFITTUNE fits chromaticites by scaling 2 sextupol families</li><li><a href="atfittune.html" class="code" title="function newring=atfittune(ring,varargin)">atfittune</a>	ATFITTUNE fits linear tunes by scaling 2 quadrupole families</li><li><a href="atreduce.html" class="code" title="function [newring,indx,newrefs] = atreduce(oldring,oldrefs)">atreduce</a>	ATREDUCE Remove useless elements from an AT structure</li><li><a href="atsbreak.html" class="code" title="function [newring,refpts] = atsbreak(ring,sdata)">atsbreak</a>	ATSBREAK Insert markers at given s positions in a lattice</li><li><a href="atsplitelem.html" class="code" title="function line=atsplitelem(baseelem,varargin)">atsplitelem</a>	ATSPLITELEM Creates a line by inserting one or more elements into a base element</li><li><a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">findcells</a>	FINDCELLS performs a search on MATLAB cell arrays of structures</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function ok=defaultfunc(el,fieldval,varargin)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ok=atgetcells(cellarray, field, varargin)</a>
+0002 <span class="comment">%ATGETCELLS performs a search on MATLAB cell arrays of structures</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% OK = ATGETCELLS(RING, 'field')</span>
+0005 <span class="comment">%   returns indexes of elements that have a field named 'field'</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% OK = ATGETCELLS(RING, 'field', VALUE1...)</span>
+0008 <span class="comment">%   returns indexes of elements whose field 'field'</span>
+0009 <span class="comment">%   is equal to VALUE1, VALUE2, ... or VALUEN. Where VALUE can either be</span>
+0010 <span class="comment">%   character strings or a number. If its a character string REGULAR</span>
+0011 <span class="comment">%   expressions can be used.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% OK = ATGETCELLS(RING, 'field', @TESTFUNCTION, ARGS...)</span>
+0014 <span class="comment">%   Uses the user-defined TESTFUNCTION to select array elements</span>
+0015 <span class="comment">%   TESTFUNCTION must be of the form:</span>
+0016 <span class="comment">%       OK=TESTFUNTION(ATELEM,FIELDVALUE,ARGS...)</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% OK is a logical array with the same size as RING, refering to matching</span>
+0019 <span class="comment">% elements in RING</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">% See also ATGETFIELDVALUES, ATSETFIELDVALUES, FINDCELLS, REGEXPI</span>
+0022 
+0023 <span class="comment">% Check if the first argument is the cell array of structures</span>
+0024 <span class="keyword">if</span> ~iscell(cellarray)
+0025     error(<span class="string">'The first argument must be a cell array of structures'</span>)
+0026 <span class="keyword">end</span>
+0027 <span class="comment">% Check if the second argument is a string</span>
+0028 <span class="keyword">if</span>(~ischar(field))
+0029     error(<span class="string">'The second argument must be a character string'</span>)
+0030 <span class="keyword">end</span>
+0031 
+0032 <span class="keyword">if</span> nargin&lt;3
+0033     tesfunc=@(elem,field) true;
+0034     vals={};
+0035 <span class="keyword">elseif</span> isa(varargin{1},<span class="string">'function_handle'</span>)
+0036     tesfunc=varargin{1};
+0037     vals=varargin(2:end);
+0038 <span class="keyword">else</span>
+0039     tesfunc=@<a href="#_sub1" class="code" title="subfunction ok=defaultfunc(el,fieldval,varargin) ">defaultfunc</a>;
+0040     vals=varargin;
+0041 <span class="keyword">end</span>
+0042 
+0043 ok=cellfun(@(elem) isfield(elem,field) &amp;&amp; tesfunc(elem,elem.(field),vals{:}), cellarray);
+0044 
+0045     <a name="_sub1" href="#_subfunctions" class="code">function ok=defaultfunc(el,fieldval,varargin) </a><span class="comment">%#ok&lt;INUSL&gt;</span>
+0046         ok=false;
+0047         <span class="keyword">if</span> ischar(fieldval)
+0048             <span class="comment">%ok=any(cellfun(@charcompare,varargin))</span>
+0049             <span class="keyword">for</span> j=1:length(varargin)
+0050                 <span class="keyword">if</span> ischar(varargin{j}) &amp;&amp; ~isempty(regexpi(fieldval,[<span class="string">'^'</span> varargin{j} <span class="string">'$'</span>]))
+0051                     ok=true;
+0052                     <span class="keyword">break</span>;
+0053                 <span class="keyword">end</span>
+0054             <span class="keyword">end</span>
+0055         <span class="keyword">elseif</span> isnumeric(fieldval)
+0056             <span class="comment">%ok=any(cellfun(@numcompare,varargin))</span>
+0057             <span class="keyword">for</span> j=1:length(varargin)
+0058                 <span class="keyword">if</span> isnumeric(varargin{j}) &amp;&amp; fieldval==varargin{j}
+0059                     ok=true;
+0060                     <span class="keyword">break</span>;
+0061                 <span class="keyword">end</span>
+0062             <span class="keyword">end</span>
+0063         <span class="keyword">end</span>
+0064 <span class="comment">%         function ok=charcompare(val)</span>
+0065 <span class="comment">%             ok=ischar(val) &amp;&amp; ~isempty(regexpi(fieldval,['^' val '$']));</span>
+0066 <span class="comment">%         end</span>
+0067 <span class="comment">%         function ok=numcompare(val)</span>
+0068 <span class="comment">%             ok=isnumeric(val) &amp;&amp; fieldval==val;</span>
+0069 <span class="comment">%         end</span>
+0070     <span class="keyword">end</span>
+0071 
+0072 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

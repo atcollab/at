@@ -1,0 +1,359 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of TouschekPiwinskiLifeTime</title>
+  <meta name="keywords" content="TouschekPiwinskiLifeTime">
+  <meta name="description" content="function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">TouschekPiwinski</a> &gt; TouschekPiwinskiLifeTime.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/TouschekPiwinski&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>TouschekPiwinskiLifeTime
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)
+
+ evaluates Touschek Lifetime using Piwinski formula
+
+ TouschekPiwinskiLifeTime(latticeATring,momentumaperturecolumnvector,0.002)
+  or
+ TouschekPiwinskiLifeTime(
+  latticeATring,
+  momentumaperturecolumnvector,  % column array (size of r or positions)
+  current per bunch in A,                 % scalar
+  positions where to evaluate,  %(default all elements with length&gt;0 )  column array
+  emittancex, %(default atx modemittance(1))   scalar
+  emittancey, %(default 10 pm)               scalar
+  integration method,  % (default quad, may be: 'integral', 'quad', 'trapz', 'elegantLike', 'Approximate')
+  energy sperad,    % scalar
+  bunch length,        % scalar
+               )
+
+  contributionsTL 1/T contribution at each element
+
+  Tl  Lifetime in seconds 1/Tl=sum(contributionsTL.*L)/sum(L);
+
+
+ &quot;The Touscheck Effect in strong focusing storage rings&quot;
+ A.Piwinski, DESY 98-179, November 1998
+
+ &quot;Touscheck Effect calculation and its applications to a transport line&quot;
+ A.Xiao M. Borland, Proceedings of PAC07, Albuquerque, New Mexico, USA
+
+
+ created 31-10-2012
+ updated 22-01-2013 corrected and compared with elegant</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="TLT_IntPiw.html" class="code" title="function I=TLT_IntPiw(u,um,B1,B2)">TLT_IntPiw</a>	integral in Piwinski Formula for the Lifetime</li><li><a href="TLT_IntPiw_k.html" class="code" title="function I=TLT_IntPiw_k(k,km,B1,B2)">TLT_IntPiw_k</a>	integral in Piwinski Formula for the Lifetime with u=tan^2(k)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="simpletestToucheckLT.html" class="code" title="">simpletestToucheckLT</a>	simple example of use of toucheck lifetime formula:</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)</a>
+0002 <span class="comment">% function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% evaluates Touschek Lifetime using Piwinski formula</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% TouschekPiwinskiLifeTime(latticeATring,momentumaperturecolumnvector,0.002)</span>
+0007 <span class="comment">%  or</span>
+0008 <span class="comment">% TouschekPiwinskiLifeTime(</span>
+0009 <span class="comment">%  latticeATring,</span>
+0010 <span class="comment">%  momentumaperturecolumnvector,  % column array (size of r or positions)</span>
+0011 <span class="comment">%  current per bunch in A,                 % scalar</span>
+0012 <span class="comment">%  positions where to evaluate,  %(default all elements with length&gt;0 )  column array</span>
+0013 <span class="comment">%  emittancex, %(default atx modemittance(1))   scalar</span>
+0014 <span class="comment">%  emittancey, %(default 10 pm)               scalar</span>
+0015 <span class="comment">%  integration method,  % (default quad, may be: 'integral', 'quad', 'trapz', 'elegantLike', 'Approximate')</span>
+0016 <span class="comment">%  energy sperad,    % scalar</span>
+0017 <span class="comment">%  bunch length,        % scalar</span>
+0018 <span class="comment">%               )</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">%  contributionsTL 1/T contribution at each element</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">%  Tl  Lifetime in seconds 1/Tl=sum(contributionsTL.*L)/sum(L);</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% &quot;The Touscheck Effect in strong focusing storage rings&quot;</span>
+0026 <span class="comment">% A.Piwinski, DESY 98-179, November 1998</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">% &quot;Touscheck Effect calculation and its applications to a transport line&quot;</span>
+0029 <span class="comment">% A.Xiao M. Borland, Proceedings of PAC07, Albuquerque, New Mexico, USA</span>
+0030 <span class="comment">%</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% created 31-10-2012</span>
+0033 <span class="comment">% updated 22-01-2013 corrected and compared with elegant</span>
+0034 
+0035 <span class="comment">%ensure a column lattice</span>
+0036 r=reshape(r,numel(r),1);
+0037 
+0038 e0 = 1.60217646e-19; <span class="comment">%Coulomb</span>
+0039 r0 = 2.817940327e-15; <span class="comment">%m %  classical electron radius</span>
+0040 spl=299792458; <span class="comment">% speed of ligth</span>
+0041 
+0042 naddvar=length(varargin);
+0043 <span class="keyword">if</span> naddvar&gt;=1
+0044     positions=varargin{1};
+0045 <span class="keyword">else</span>
+0046     <span class="comment">%    positions=1:length(r);</span>
+0047     
+0048     <span class="comment">% positions default= non zero length elements</span>
+0049     positions=findcells(r,<span class="string">'Length'</span>);
+0050     L=getcellstruct(r,<span class="string">'Length'</span>,positions);
+0051     positions=positions(L&gt;0);
+0052     size(positions);
+0053 <span class="keyword">end</span>
+0054 
+0055 <span class="comment">% get optics</span>
+0056 [lo,pa]=atx(r,0,positions);
+0057 
+0058 emitx=pa.modemittance(1);
+0059 emity=emitx./2;
+0060 integrationmethod=<span class="string">'quad'</span>;
+0061 sigp=pa.espread; <span class="comment">% relative momentum spread</span>
+0062 sigs=pa.blength; <span class="comment">% bunch length</span>
+0063 
+0064 <span class="keyword">if</span> naddvar==2
+0065     positions=varargin{1};
+0066     emitx=varargin{2};
+0067     
+0068     disp([<span class="string">'set defaults: ey=ex/2'</span>])
+0069     disp([<span class="string">' integration method is quad,'</span>])
+0070     disp([<span class="string">' energy sperad, bunch length from ATX'</span>])
+0071     
+0072 <span class="keyword">elseif</span> naddvar==3
+0073     positions=varargin{1};
+0074     emitx=varargin{2};
+0075     emity=varargin{3};
+0076     disp([<span class="string">'set defaults: '</span>])
+0077     disp([<span class="string">' integration method is quad,'</span>])
+0078     disp([<span class="string">' energy sperad, bunch length from ATX'</span>])
+0079     
+0080 <span class="keyword">elseif</span> naddvar==4
+0081     positions=varargin{1};
+0082     emitx=varargin{2};
+0083     emity=varargin{3};
+0084     integrationmethod=varargin{4};
+0085     disp([<span class="string">'set defaults: '</span>])
+0086     disp([<span class="string">' energy sperad, bunch length from ATX'</span>])
+0087     
+0088 <span class="keyword">elseif</span> naddvar==5
+0089     positions=varargin{1};
+0090     emitx=varargin{2};
+0091     emity=varargin{3};
+0092     integrationmethod=varargin{4};
+0093     sigp=varargin{5};
+0094     disp([<span class="string">'set defaults: '</span>])
+0095     disp([<span class="string">'bunch length from ATX'</span>])
+0096     
+0097 <span class="keyword">elseif</span> naddvar==6
+0098     positions=varargin{1};
+0099     emitx=varargin{2};
+0100     emity=varargin{3};
+0101     integrationmethod=varargin{4};
+0102     sigp=varargin{5};
+0103     sigs=varargin{6};
+0104     
+0105 <span class="keyword">else</span>
+0106     disp([<span class="string">'set defaults: ey=ex/2'</span>])
+0107     disp([<span class="string">' integration method is quad,'</span>])
+0108     disp([<span class="string">' energy sperad, bunch length, x emittance from ATX'</span>])
+0109     disp([<span class="string">' evaluation at all points with non zero length'</span>])
+0110 <span class="keyword">end</span>
+0111 
+0112 <span class="comment">% if dpp is a scalar assume constant momentum aperture.</span>
+0113 <span class="keyword">if</span> numel(dpp)==1
+0114     dpp=dpp*ones(size(positions'));
+0115 <span class="keyword">end</span>
+0116 
+0117 dppinput=dpp;
+0118 Tlcol=zeros(1,size(dppinput,2));
+0119 
+0120 <span class="keyword">for</span> dppcolnum=1:size(dppinput,2)
+0121     
+0122     dpp=dppinput(:,dppcolnum);
+0123     
+0124     
+0125     Circumference=findspos(r,length(r)+1);
+0126     
+0127     E0=r{1}.(<span class="string">'Energy'</span>);<span class="comment">%</span>
+0128     
+0129     Nb = Ib/(spl/Circumference)/e0; <span class="comment">%Number of particle per bunch.</span>
+0130     
+0131     relgamma = E0/0.510998928e6;
+0132     relbeta=sqrt(1-1./relgamma.^2);
+0133     
+0134     aaa=cat(1,lo.alpha);
+0135     bbb=cat(1,lo.beta);
+0136     ddd=cat(2,lo.Dispersion)';
+0137     
+0138     bx=bbb(:,1); <span class="comment">% betax</span>
+0139     by=bbb(:,2); <span class="comment">% betay</span>
+0140     Dx=ddd(:,1);
+0141     Dy=ddd(:,3);
+0142     
+0143     ax=aaa(:,1);
+0144     ay=aaa(:,2);
+0145     Dpx=ddd(:,2);
+0146     Dpy=ddd(:,4);
+0147     
+0148     
+0149     
+0150     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0151     <span class="comment">%%%%%%%%</span>
+0152     <span class="comment">%%%%%%%% From here calculation takes place.</span>
+0153     <span class="comment">%%%%%%%%</span>
+0154     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0155     
+0156     
+0157     sigxb=sqrt(emitx.*bx);
+0158     sigyb=sqrt(emity.*by);
+0159     
+0160     sigx=sqrt(emitx.*bx+sigp.^2.*Dx.^2);
+0161     sigy=sqrt(emity.*by+sigp.^2.*Dy.^2); <span class="comment">%%%  was mistaken! it was Dx!!!!!!</span>
+0162     
+0163     
+0164     Dtx=Dx.*ax+Dpx.*bx;<span class="comment">%  % alpha=-b'/2</span>
+0165     Dty=Dy.*ay+Dpy.*by;<span class="comment">%</span>
+0166     
+0167     sigtx=sqrt(sigx.^2+sigp.^2.*Dtx.^2);
+0168     sigty=sqrt(sigy.^2+sigp.^2.*Dty.^2);
+0169     
+0170     sigtx2=sigx.^2+sigp.^2.*Dtx.^2;
+0171     sigty2=sigy.^2+sigp.^2.*Dty.^2;
+0172     
+0173     sigp2=sigp.^2;
+0174     Dx2=Dx.^2;
+0175     Dy2=Dy.^2;
+0176     Dtx2=Dtx.^2;
+0177     Dty2=Dty.^2;
+0178     sigxb2=sigxb.^2;
+0179     sigyb2=sigyb.^2;
+0180     
+0181     
+0182     sighinv2=1./(sigp2) +(Dx2+Dtx2)./(sigxb2) + (Dy2+Dty2)./(sigyb2);
+0183     
+0184     sigh=sqrt(1./sighinv2);
+0185     
+0186     um=relbeta.^2*dpp.^2;
+0187     
+0188     B1=1./(2.*(relbeta.^2).*(relgamma.^2)).*( (bx.^2./(sigxb.^2)).*(1-(sigh.^2.*Dtx.^2./(sigxb.^2))) + (by.^2./(sigyb.^2)).*(1-(sigh.^2.*Dty.^2./(sigyb.^2))));
+0189     
+0190     B2sq=1./(4.*(relbeta.^4).*(relgamma.^4)).*((bx.^2./(sigxb.^2)).*(1-(sigh.^2.*Dtx.^2./(sigxb.^2)))-(by.^2./(sigyb.^2)).*(1-(sigh.^2.*Dty.^2./(sigyb.^2)))).^2+(sigh.^4.*bx.^2.*by.^2.*Dtx.^2.*Dty.^2)./((relbeta.^4).*(relgamma.^4).*sigxb.^4.*sigyb.^4);
+0191     
+0192     B2=sqrt(B2sq);
+0193     
+0194     em=bx.^2.*sigx.^2./(relbeta.^2.*relgamma.^2.*sigxb.^2.*sigtx2).*um;
+0195     
+0196     val=zeros(size(B1));
+0197     
+0198     km=atan(sqrt(um));
+0199     
+0200     FpiWfact=sqrt(pi.*(B1.^2-B2.^2)).*um;
+0201     
+0202     <span class="keyword">for</span> ii=1:length(positions)
+0203         
+0204         <span class="comment">% choose integration method</span>
+0205         <span class="keyword">switch</span> integrationmethod
+0206             
+0207             <span class="keyword">case</span> <span class="string">'infiniteintegral'</span>
+0208                 
+0209                 val(ii)= integral(@(u)<a href="TLT_IntPiw.html" class="code" title="function I=TLT_IntPiw(u,um,B1,B2)">TLT_IntPiw</a>(u,um(ii),B1(ii),B2(ii)),um(ii),Inf); <span class="comment">%,...um(ii)*1e4</span>
+0210                 
+0211             <span class="keyword">case</span> <span class="string">'integral'</span>
+0212                 
+0213                 val(ii) = integral(@(k)<a href="TLT_IntPiw_k.html" class="code" title="function I=TLT_IntPiw_k(k,km,B1,B2)">TLT_IntPiw_k</a>(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2); <span class="comment">%,...,'Waypoints',evalpoints um(ii)*1e4</span>
+0214                 
+0215             <span class="keyword">case</span> <span class="string">'quad'</span>
+0216                 
+0217                 val(ii)= quad(@(k)<a href="TLT_IntPiw_k.html" class="code" title="function I=TLT_IntPiw_k(k,km,B1,B2)">TLT_IntPiw_k</a>(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2); <span class="comment">%,...,'Waypoints',evalpoints um(ii)*1e4</span>
+0218             <span class="keyword">case</span> <span class="string">'trapz'</span>
+0219                 
+0220                 
+0221                 k=linspace(km(ii),pi/2,10000);
+0222                 val(ii)= trapz(k,<a href="TLT_IntPiw_k.html" class="code" title="function I=TLT_IntPiw_k(k,km,B1,B2)">TLT_IntPiw_k</a>(k,km(ii),B1(ii),B2(ii))); <span class="comment">%,...,'Waypoints',evalpoints um(ii)*1e4</span>
+0223                 
+0224             <span class="keyword">case</span> <span class="string">'elegantLike'</span>
+0225                 
+0226                 val(ii)=IntegrateLikeElegant(km(ii),B1(ii),B2(ii));
+0227                 
+0228             <span class="keyword">case</span> <span class="string">'Approximate'</span>
+0229                 
+0230                 val(ii)=integral(@(e)Cfun(e,em(ii)),em(ii),Inf);
+0231                 
+0232             <span class="keyword">otherwise</span> <span class="comment">% use default method quad (backward compatible)</span>
+0233                 
+0234                 
+0235                 val(ii)=quad(@(k)<a href="TLT_IntPiw_k.html" class="code" title="function I=TLT_IntPiw_k(k,km,B1,B2)">TLT_IntPiw_k</a>(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2); <span class="comment">%,...,'Waypoints',evalpoints um(ii)*1e4</span>
+0236                 
+0237         <span class="keyword">end</span>
+0238     <span class="keyword">end</span>
+0239     
+0240     
+0241     
+0242     <span class="keyword">switch</span> integrationmethod
+0243         <span class="keyword">case</span> <span class="string">'infiniteintegral'</span>
+0244             frontfact=(r0.^2.*spl.*Nb)./(8.*pi.*(relgamma.^2).*sigs.*sqrt(<span class="keyword">...</span>
+0245                 (sigx.^2).*(sigy.^2)-sigp.^4.*Dx.^2.*Dy.^2).*um).*FpiWfact;
+0246             
+0247         <span class="keyword">case</span> {<span class="string">'integral'</span> <span class="string">'quad'</span> } <span class="comment">%'elegantLike'</span>
+0248             
+0249             frontfact=(r0.^2.*spl.*Nb)./(8.*pi.*(relgamma.^2).*sigs.*sqrt(<span class="keyword">...</span>
+0250                 (sigx.^2).*(sigy.^2)-sigp.^4.*Dx.^2.*Dy.^2).*um).*2.*FpiWfact;
+0251         <span class="keyword">case</span> {<span class="string">'trapz'</span> <span class="string">'elegantLike'</span>}
+0252             
+0253             frontfact=(r0.^2.*spl.*Nb.*sigh.*bx.*by)./(4.*sqrt(pi).*(relbeta.^2).*(relgamma.^4).*sigxb.^2.*sigyb.^2.*sigs.*sigp);
+0254             
+0255         <span class="keyword">case</span> <span class="string">'Approximate'</span>
+0256             
+0257             frontfact=(r0.^2.*spl.*Nb.*bx)./(<span class="keyword">...</span>
+0258                 8.*pi.*(relbeta.^3).*(relgamma.^3).*<span class="keyword">...</span>
+0259                 sigxb.*sigyb.*sigs.*sqrt(sigtx2).*dpp.^2 <span class="keyword">...</span>
+0260                 ).*em;
+0261             
+0262         <span class="keyword">otherwise</span>
+0263             
+0264             frontfact=(r0.^2.*spl.*Nb)./(8.*pi.*(relgamma.^2).*sigs.*sqrt(<span class="keyword">...</span>
+0265                 (sigx.^2).*(sigy.^2)-sigp.^4.*Dx.^2.*Dy.^2).*um).*2.*FpiWfact;
+0266             
+0267     <span class="keyword">end</span>
+0268     contributionsTL=frontfact.*val;
+0269     
+0270     
+0271     L=getcellstruct(r,<span class="string">'Length'</span>,positions);
+0272     Tlcol(dppcolnum)=1/(1/sum(L)*sum(contributionsTL.*L));
+0273     
+0274 <span class="keyword">end</span>
+0275 
+0276 Tl=length(Tlcol)/(sum(1./Tlcol));
+0277 
+0278 <span class="keyword">return</span>
+0279 
+0280 
+0281</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of radiationon</title>
+  <meta name="keywords" content="radiationon">
+  <meta name="description" content="RADIATIONON turns classical radiation  ON">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">Radiation</a> &gt; radiationon.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/Radiation&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>radiationon
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>RADIATIONON turns classical radiation  ON</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">RADIATIONON turns classical radiation  ON
+
+  Switch all magnets currently set to use pass-methods
+  'BndMPoleSymplectic4Pass' and  'StrMPoleSymplectic4Pass'
+  to their equivalents with classical radiation
+  'BndMPoleSymplectic4RadPass' and  'StrMPoleSymplectic4RadPass'
+
+  NOTES:
+    1. Deprecated function, use atradon instead
+    
+   See also <a href="radiationoff.html" class="code" title="">RADIATIONOFF</a>, CAVITYON, CAVITYOFF, <a href="atradon.html" class="code" title="function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring1,varargin)">ATRADON</a>, <a href="atradoff.html" class="code" title="function [ring2,radelemIndex,cavitiesIndex]=atradoff(ring1,varargin)">ATRADOFF</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%RADIATIONON turns classical radiation  ON</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">%  Switch all magnets currently set to use pass-methods</span>
+0004 <span class="comment">%  'BndMPoleSymplectic4Pass' and  'StrMPoleSymplectic4Pass'</span>
+0005 <span class="comment">%  to their equivalents with classical radiation</span>
+0006 <span class="comment">%  'BndMPoleSymplectic4RadPass' and  'StrMPoleSymplectic4RadPass'</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%  NOTES:</span>
+0009 <span class="comment">%    1. Deprecated function, use atradon instead</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   See also RADIATIONOFF, CAVITYON, CAVITYOFF, ATRADON, ATRADOFF</span>
+0012 
+0013 
+0014 <span class="keyword">if</span> ~evalin(<span class="string">'base'</span>,<span class="string">'exist(''THERING'')'</span>) || ~evalin(<span class="string">'base'</span>,<span class="string">'~isempty(whos(''global'',''THERING''))'</span>)
+0015    error(<span class="string">'Global variable THERING could not be found'</span>);
+0016 <span class="keyword">end</span>
+0017 
+0018 localindex = findcells(THERING,<span class="string">'PassMethod'</span>,<span class="string">'StrMPoleSymplectic4Pass'</span>);
+0019 THERING = setcellstruct(THERING,<span class="string">'PassMethod'</span>,localindex, <span class="string">'StrMPoleSymplectic4RadPass'</span>);
+0020 totalswitched = length(localindex);
+0021 
+0022 localindex = findcells(THERING,<span class="string">'PassMethod'</span>,<span class="string">'BndMPoleSymplectic4Pass'</span>);
+0023 THERING = setcellstruct(THERING,<span class="string">'PassMethod'</span>,localindex, <span class="string">'BndMPoleSymplectic4RadPass'</span>);
+0024 totalswitched = totalswitched + length(localindex);
+0025 
+0026 localindex = findcells(THERING,<span class="string">'PassMethod'</span>,<span class="string">'BndMPoleSymplectic4E2Pass'</span>);
+0027 THERING = setcellstruct(THERING,<span class="string">'PassMethod'</span>,localindex, <span class="string">'BndMPoleSymplectic4E2RadPass'</span>);
+0028 totalswitched = totalswitched + length(localindex);
+0029 
+0030 disp([<span class="string">'PassMethod was changed to include radiation in '</span>,num2str(totalswitched),  <span class="string">' elements'</span>]) 
+0031 clear localindex</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

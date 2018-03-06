@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atmexall</title>
+  <meta name="keywords" content="atmexall">
+  <meta name="description" content="ATMEXALL builds all AT platform dependent mex-files from C-sources">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">atmat</a> &gt; atmexall.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>atmexall
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>ATMEXALL builds all AT platform dependent mex-files from C-sources</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function atmexall(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATMEXALL builds all AT platform dependent mex-files from C-sources
+
+ On UNIX platform, the GNU gcc compiler must be installed and
+ properly configured.
+ On Windows, Microsoft Visual C++ is required</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>	ATROOT returns Accelerator Toolbox root directory</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function atmexall(varargin)</a>
+0002 <span class="comment">%ATMEXALL builds all AT platform dependent mex-files from C-sources</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% On UNIX platform, the GNU gcc compiler must be installed and</span>
+0005 <span class="comment">% properly configured.</span>
+0006 <span class="comment">% On Windows, Microsoft Visual C++ is required</span>
+0007 
+0008 PLATFORMOPTION = [<span class="string">'-D'</span>,computer,<span class="string">' '</span>,sprintf(<span class="string">'%s '</span>,varargin{:})];
+0009 LIBDL=<span class="string">''</span>;
+0010 <span class="keyword">switch</span> computer
+0011     <span class="keyword">case</span>'GLNX86'
+0012         LIBDL=<span class="string">' -ldl'</span>;
+0013     <span class="keyword">case</span> <span class="string">'GLNXA64'</span>
+0014         LIBDL=<span class="string">' -ldl'</span>;
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="keyword">try</span>
+0018     <span class="keyword">if</span> ~verLessThan(<span class="string">'matlab'</span>,<span class="string">'7.11'</span>) <span class="comment">%R2010b</span>
+0019         PLATFORMOPTION = [PLATFORMOPTION <span class="string">'-largeArrayDims '</span>];
+0020     <span class="keyword">end</span>
+0021     <span class="keyword">if</span> ~verLessThan(<span class="string">'matlab'</span>,<span class="string">'8.3'</span>) <span class="comment">%R2014a</span>
+0022         PLATFORMOPTION = [PLATFORMOPTION <span class="string">' -silent '</span>];
+0023     <span class="keyword">end</span>
+0024 <span class="keyword">catch</span>
+0025 <span class="keyword">end</span>
+0026 
+0027 <span class="comment">% Navigate to the directory that contains tracking functions</span>
+0028 lastwarn(<span class="string">''</span>);
+0029 
+0030 PASSMETHODDIR = fullfile(<a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>,<span class="string">'..'</span>,<span class="string">'atintegrators'</span>,<span class="string">''</span>);
+0031 cdir=fullfile(<a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>,<span class="string">'attrack'</span>,<span class="string">''</span>);
+0032 MEXCOMMAND = [<span class="string">'mex '</span>,PLATFORMOPTION,<span class="string">'-outdir '</span>,cdir,<span class="string">' -I'''</span>,PASSMETHODDIR,<span class="string">''' '</span>,fullfile(cdir,<span class="string">'atpass.c'</span>),LIBDL];
+0033 disp(MEXCOMMAND);
+0034 eval(MEXCOMMAND);
+0035 [warnmess,warnid]=lastwarn; <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0036 <span class="keyword">if</span> strcmp(warnid,<span class="string">'MATLAB:mex:GccVersion_link'</span>)
+0037     warning(<span class="string">'Disabling the compiler warning'</span>);
+0038 <span class="keyword">end</span>
+0039 
+0040 <span class="comment">% Navigate to the directory that contains some accelerator physics functions</span>
+0041 oldwarns=warning(<span class="string">'OFF'</span>,<span class="string">'MATLAB:mex:GccVersion_link'</span>);
+0042 cdir=fullfile(<a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>,<span class="string">'atphysics'</span>,<span class="string">'Radiation'</span>);
+0043 MEXCOMMAND = [<span class="string">'mex '</span>,PLATFORMOPTION,<span class="string">'-outdir '</span>,cdir,<span class="string">' -I'''</span>,PASSMETHODDIR,<span class="string">''' '</span>,fullfile(cdir,<span class="string">'findmpoleraddiffmatrix.c'</span>)];
+0044 disp(MEXCOMMAND);
+0045 eval(MEXCOMMAND);
+0046 cdir=fullfile(<a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>,<span class="string">'atphysics'</span>,<span class="string">'NonLinearDynamics'</span>);
+0047 MEXCOMMAND = [<span class="string">'mex '</span>,PLATFORMOPTION,<span class="string">'-outdir '</span>,cdir,<span class="string">' '</span>,fullfile(cdir,<span class="string">'RDTelegantAT.cpp'</span>)];
+0048 disp(MEXCOMMAND);
+0049 eval(MEXCOMMAND);
+0050 
+0051 <span class="comment">% NAFF</span>
+0052 cdir=fullfile(<a href="atroot.html" class="code" title="function rootdir = atroot">atroot</a>,<span class="string">'atphysics'</span>,<span class="string">'nafflib'</span>);
+0053 MEXCOMMAND = [<span class="string">'mex '</span>,PLATFORMOPTION,<span class="string">'-outdir '</span>,cdir,<span class="string">' '</span>,fullfile(cdir,<span class="string">'nafflib.c'</span>),<span class="string">' '</span>,<span class="keyword">...</span>
+0054     fullfile(cdir,<span class="string">'modnaff.c'</span>),<span class="string">' '</span>,<span class="keyword">...</span>
+0055     fullfile(cdir,<span class="string">'complexe.c'</span>),<span class="string">' '</span>,<span class="keyword">...</span>
+0056     ];
+0057 disp(MEXCOMMAND);
+0058 eval(MEXCOMMAND);
+0059 
+0060 
+0061 <span class="comment">% Navigate to the directory that contains pass-methods</span>
+0062 mexpassmethod(<span class="string">'all'</span>,PLATFORMOPTION);
+0063 warning(oldwarns.state,oldwarns.identifier);
+0064 
+0065 <span class="comment">% ADD 'MEXING' instructions for other C files</span>
+0066 <span class="comment">%disp('ALL mex-files created successfully')</span>
+0067 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

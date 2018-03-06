@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atindex</title>
+  <meta name="keywords" content="atindex">
+  <meta name="description" content="ATINDEX extracts the information about element families and">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atindex.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atindex
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATINDEX extracts the information about element families and</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function indexstruct = atindex(lattice) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATINDEX extracts the information about element families and
+ indexes from AT lattice
+
+ATI=ATINDEX(LATTICE)
+  returns a srtucture with fields named after element family
+  containing an array of their AT indexes;
+
+   ATI.QF = [...]
+   ATI.QD = [...];
+   ...
+
+ATI=ATINDEX() Uses the global variable THERING
+
+ See also <a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">ATGETCELLS</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atsetfieldvalues.html" class="code" title="function newring = atsetfieldvalues(ring,varargin)">atsetfieldvalues</a>	ATSETFIELDVALUES sets the field values of MATLAB cell array of structures</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function ids=ati(lattice)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function indexstruct = atindex(lattice)</a>
+0002 <span class="comment">%ATINDEX extracts the information about element families and</span>
+0003 <span class="comment">% indexes from AT lattice</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%ATI=ATINDEX(LATTICE)</span>
+0006 <span class="comment">%  returns a srtucture with fields named after element family</span>
+0007 <span class="comment">%  containing an array of their AT indexes;</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%   ATI.QF = [...]</span>
+0010 <span class="comment">%   ATI.QD = [...];</span>
+0011 <span class="comment">%   ...</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%ATI=ATINDEX() Uses the global variable THERING</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% See also ATGETCELLS</span>
+0016 <span class="keyword">global</span> THERING
+0017 
+0018 <span class="keyword">if</span> nargin &lt; 1    
+0019     indexstruct=<a href="#_sub1" class="code" title="subfunction ids=ati(lattice)">ati</a>(THERING);
+0020 <span class="keyword">else</span>
+0021     indexstruct=<a href="#_sub1" class="code" title="subfunction ids=ati(lattice)">ati</a>(lattice);
+0022 <span class="keyword">end</span>
+0023 
+0024     <a name="_sub1" href="#_subfunctions" class="code">function ids=ati(lattice)</a>
+0025         ids=struct();
+0026         <span class="keyword">for</span> i=1:length(lattice);
+0027             <span class="keyword">try</span>
+0028                 famname=lattice{i}.FamName;
+0029                 <span class="keyword">try</span>
+0030                     a.(famname)=0;
+0031                 <span class="keyword">catch</span> <span class="comment">%#ok&lt;CTCH&gt;</span>
+0032                     <span class="keyword">try</span>
+0033                         famname=[<span class="string">'x'</span> famname]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+0034                         a.(famname)=0;
+0035                     <span class="keyword">catch</span>
+0036                         famname=<span class="string">'badname'</span>;
+0037                     <span class="keyword">end</span>
+0038                 <span class="keyword">end</span>
+0039             <span class="keyword">catch</span>
+0040                 famname=<span class="string">'unnamed'</span>;
+0041             <span class="keyword">end</span>
+0042             <span class="keyword">if</span> isfield(ids,famname)
+0043                 ids.(famname)(end+1)=i;
+0044             <span class="keyword">else</span>
+0045                 ids.(famname)(1)=i;
+0046             <span class="keyword">end</span>
+0047         <span class="keyword">end</span>
+0048     <span class="keyword">end</span>
+0049 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

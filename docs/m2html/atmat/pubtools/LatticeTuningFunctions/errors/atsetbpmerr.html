@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsetbpmerr</title>
+  <meta name="keywords" content="atsetbpmerr">
+  <meta name="description" content="ATSETBPMERR sets the misalignment vectors">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">LatticeTuningFunctions</a> &gt; <a href="index.html">errors</a> &gt; atsetbpmerr.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>atsetbpmerr
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>ATSETBPMERR sets the misalignment vectors</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function ring=atsetbpmerr(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSETBPMERR sets the misalignment vectors
+
+ RING=ATSETBPMERR(RING, ELEMINDEX, OX,OY, GX,GY, RX,RY, Rot) 
+ sets the bpm errors of one element or a group of elements 
+ 
+ ELEMINDEX contains indexes of elements to be misaligned [1xN]
+ OX,OY, are reading offsets [1x1 (all identical) or 1xN]
+ GX,GY, are gain errors     [1x1 (all identical) or 1xN]
+ RX,RY, are resolution errors  [1x1 (all identical) or 1xN]
+ Rot is the rotation of the BPM about the s-axis. [1x1 (all identical) or 1xN]
+
+ ATSETBPMERR(ELEMINDEX, OX,OY, GX,GY, RX,RY, Rot) Uses the global variable THERING
+
+ See also: ATSETTILT ATSETSHIFT</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="atsetbpmerr.html" class="code" title="function ring=atsetbpmerr(varargin)">atsetbpmerr</a>	ATSETBPMERR sets the misalignment vectors</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="atsetbpmerr.html" class="code" title="function ring=atsetbpmerr(varargin)">atsetbpmerr</a>	ATSETBPMERR sets the misalignment vectors</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ring=atsetbpmerr(varargin)</a>
+0002 <span class="comment">%ATSETBPMERR sets the misalignment vectors</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% RING=ATSETBPMERR(RING, ELEMINDEX, OX,OY, GX,GY, RX,RY, Rot)</span>
+0005 <span class="comment">% sets the bpm errors of one element or a group of elements</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% ELEMINDEX contains indexes of elements to be misaligned [1xN]</span>
+0008 <span class="comment">% OX,OY, are reading offsets [1x1 (all identical) or 1xN]</span>
+0009 <span class="comment">% GX,GY, are gain errors     [1x1 (all identical) or 1xN]</span>
+0010 <span class="comment">% RX,RY, are resolution errors  [1x1 (all identical) or 1xN]</span>
+0011 <span class="comment">% Rot is the rotation of the BPM about the s-axis. [1x1 (all identical) or 1xN]</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% ATSETBPMERR(ELEMINDEX, OX,OY, GX,GY, RX,RY, Rot) Uses the global variable THERING</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% See also: ATSETTILT ATSETSHIFT</span>
+0016 
+0017 <span class="keyword">global</span> THERING
+0018 <span class="keyword">if</span> ~iscell(varargin{1})
+0019     THERING=<a href="atsetbpmerr.html" class="code" title="function ring=atsetbpmerr(varargin)">atsetbpmerr</a>(THERING,varargin{:});
+0020 <span class="keyword">else</span>
+0021     [ring,idx,ox,oy,gx,gy,rx,ry,rot]=deal(varargin{:});
+0022     
+0023     <span class="keyword">if</span> length(ox) == 1
+0024         ox=ox*ones(size(idx)); <span class="comment">%#ok&lt;*NASGU&gt;</span>
+0025     <span class="keyword">elseif</span> length(ox) ~= length(idx)
+0026         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(ox));
+0027     <span class="keyword">end</span>
+0028     <span class="keyword">if</span> length(oy) == 1
+0029         oy=oy*ones(size(idx));
+0030     <span class="keyword">elseif</span> length(oy) ~= length(idx)
+0031         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(oy))
+0032     <span class="keyword">end</span>
+0033 
+0034     <span class="keyword">if</span> length(gx) == 1
+0035         gx=gx*ones(size(idx));
+0036     <span class="keyword">elseif</span> length(gx) ~= length(idx)
+0037         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(gx));
+0038     <span class="keyword">end</span>
+0039     <span class="keyword">if</span> length(gy) == 1
+0040         gy=gy*ones(size(idx));
+0041     <span class="keyword">elseif</span> length(gy) ~= length(idx)
+0042         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(gy))
+0043     <span class="keyword">end</span>
+0044 
+0045     <span class="keyword">if</span> length(rx) == 1
+0046         rx=rx*ones(size(idx));
+0047     <span class="keyword">elseif</span> length(rx) ~= length(idx)
+0048         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(rx));
+0049     <span class="keyword">end</span>
+0050     <span class="keyword">if</span> length(ry) == 1
+0051         ry=ry*ones(size(idx));
+0052     <span class="keyword">elseif</span> length(ry) ~= length(idx)
+0053         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(ry))
+0054     <span class="keyword">end</span>
+0055     
+0056     <span class="keyword">if</span> length(rot) == 1
+0057         rot=rot*ones(size(idx));
+0058     <span class="keyword">elseif</span> length(rot) ~= length(idx)
+0059         error(<span class="string">'AT:length'</span>,<span class="string">'Vector lengths are incompatible: %i/%i.'</span>,length(idx),length(rot))
+0060     <span class="keyword">end</span>
+0061     
+0062         
+0063     ring(idx)=cellfun(@(el,a,b)setfield(el,<span class="string">'Offset'</span>,[a,b]),ring(idx),num2cell(ox),num2cell(oy),<span class="string">'un'</span>,0);
+0064     ring(idx)=cellfun(@(el,a,b)setfield(el,<span class="string">'Scale'</span>,1+[a,b]),ring(idx),num2cell(gx),num2cell(gy),<span class="string">'un'</span>,0);
+0065     ring(idx)=cellfun(@(el,a,b)setfield(el,<span class="string">'Reading'</span>,[a,b]),ring(idx),num2cell(rx),num2cell(ry),<span class="string">'un'</span>,0);
+0066     ring(idx)=cellfun(@(el,a)setfield(el,<span class="string">'Rotation'</span>,a),ring(idx),num2cell(rot),<span class="string">'un'</span>,0); <span class="comment">%#ok&lt;*SFLD&gt;</span>
+0067     
+0068     
+0069 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of testorbitcorrection</title>
+  <meta name="keywords" content="testorbitcorrection">
+  <meta name="description" content="test errors and correction functions">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">orbit</a> &gt; testorbitcorrection.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/orbit&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>testorbitcorrection
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>test errors and correction functions</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> test errors and correction functions</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atcorrectorbit.html" class="code" title="function [rcor,inCOD,hs,vs]=atcorrectorbit(rerr,indBPM,indHCor,indVCor,inCOD,neigSteerer,correctflags,scalefactor,ModelRM,reforbit,steererlimit,printouttext)">atcorrectorbit</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% test errors and correction functions</span>
+0002 close all
+0003 clear all
+0004 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions'</span>);
+0005 
+0006 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/'</span>);
+0007 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors/'</span>);
+0008 
+0009 load ESRFLattice.mat
+0010 
+0011 <span class="comment">%% get RM</span>
+0012 speclab=<span class="string">'OrbitESRF'</span>;
+0013 
+0014 
+0015 modelrmfile=fullfile(pwd,[<span class="string">'RMmodel'</span> speclab <span class="string">'.mat'</span>]);<span class="comment">%</span>
+0016 
+0017 <span class="keyword">if</span> ~exist([modelrmfile],<span class="string">'file'</span>)
+0018     
+0019     ModelRM<span class="keyword">...</span>
+0020         =getresponsematrices(<span class="keyword">...</span>
+0021         ring,<span class="keyword">...</span>
+0022         indBPM,<span class="keyword">...</span>
+0023         indHCor,<span class="keyword">...</span>
+0024         indVCor,<span class="keyword">...</span>
+0025         indSCor,<span class="keyword">...</span>
+0026         indQCor,<span class="keyword">...</span>
+0027         [],<span class="keyword">...</span>
+0028         [0 0 0 0 0 0]',<span class="keyword">...</span>
+0029         [1 2 3]);
+0030     
+0031     save([modelrmfile],<span class="string">'ModelRM'</span>);
+0032 <span class="keyword">else</span>
+0033     load([modelrmfile],<span class="string">'ModelRM'</span>);
+0034 <span class="keyword">end</span>
+0035 
+0036 <span class="comment">% set errors</span>
+0037 ind=find(atgetcells(ring,<span class="string">'Class'</span>,<span class="string">'Quadrupole'</span>,<span class="string">'Sextupole'</span>));
+0038 dx=5e-6*randn(size(ind));
+0039 dy=5e-6*randn(size(ind));
+0040 
+0041 rerr=atsetshift(ring,ind,dx,dy);
+0042 
+0043 <span class="comment">%% apply correction</span>
+0044 
+0045 <span class="comment">% no steerers limit, no reference orbit</span>
+0046 [rcor,inCOD,hs,vs]=<a href="atcorrectorbit.html" class="code" title="function [rcor,inCOD,hs,vs]=atcorrectorbit(rerr,indBPM,indHCor,indVCor,inCOD,neigSteerer,correctflags,scalefactor,ModelRM,reforbit,steererlimit,printouttext)">atcorrectorbit</a>(rerr,<span class="keyword">...</span>
+0047     indBPM,<span class="keyword">...</span>
+0048     indHCor,<span class="keyword">...</span>
+0049     indVCor,<span class="keyword">...</span>
+0050     [0 0 0 0 0 0]',<span class="keyword">...</span>
+0051     [50 50],<span class="keyword">...</span>
+0052     [false true],<span class="keyword">...</span>
+0053     1.0,<span class="keyword">...</span>
+0054     ModelRM,<span class="keyword">...</span>
+0055     zeros(2,length(indBPM)),<span class="keyword">...</span>
+0056     [],<span class="keyword">...</span>
+0057     true);
+0058 
+0059 <span class="comment">% steerers limited, increase eigenvectors number and changing RF frequency</span>
+0060 [rcor,<span class="keyword">...</span><span class="comment">           % corrected lattice</span>
+0061     inCOD,<span class="keyword">...</span><span class="comment">.      % initial orbit guess after correction</span>
+0062     hs,<span class="keyword">...</span><span class="comment">          % total horizontal steerers strenghts</span>
+0063     vs<span class="keyword">...</span><span class="comment">.          % total vertical steerers strengths</span>
+0064     ]=<a href="atcorrectorbit.html" class="code" title="function [rcor,inCOD,hs,vs]=atcorrectorbit(rerr,indBPM,indHCor,indVCor,inCOD,neigSteerer,correctflags,scalefactor,ModelRM,reforbit,steererlimit,printouttext)">atcorrectorbit</a>(<span class="keyword">...</span><span class="comment">.</span>
+0065     rerr,<span class="keyword">...</span><span class="comment">        % lattice to be corrected</span>
+0066     indBPM,<span class="keyword">...</span><span class="comment">      % BPM indexes</span>
+0067     indHCor,<span class="keyword">...</span><span class="comment">     % horizontal steerers indexes</span>
+0068     indVCor,<span class="keyword">...</span><span class="comment">     % vertical steerers indexes</span>
+0069     inCOD,<span class="keyword">...</span><span class="comment">       % input 6D closed orbit guess</span>
+0070     [<span class="keyword">...</span><span class="comment">            % several correction iterations </span>
+0071     [10 20];<span class="keyword">...</span><span class="comment">     % with different number of eigenvectors </span>
+0072     [30 40];<span class="keyword">...</span><span class="comment">     % for horizontal and vertical plane</span>
+0073     [50 60];<span class="keyword">...</span><span class="comment">     % &lt;-- iter 3, use 50 eig hor., 60 eig ver.</span>
+0074     [70 70];<span class="keyword">...</span><span class="comment">     % &lt;-- iter 4, use 70 eig hor., 70 eig ver.</span>
+0075     [80 80];<span class="keyword">...</span><span class="comment">     % &lt;-- iter 5, use 80 eig hor., 80 eig ver.</span>
+0076     [97 96];<span class="keyword">...</span>
+0077     [97 96]<span class="keyword">...</span>
+0078     ],<span class="keyword">...</span>
+0079     [true true],<span class="keyword">...</span><span class="comment"> % [do dpp correction, keep average of correctors zero] </span>
+0080     1.0,<span class="keyword">...</span><span class="comment">         % scale factor for correction</span>
+0081     ModelRM,<span class="keyword">...</span><span class="comment">     % response matrix, if [], compute it </span>
+0082     zeros(2,length(indBPM)),<span class="keyword">...</span><span class="comment"> % reference orbit to correct to</span>
+0083     [0.5e-3 0.5e-3],<span class="keyword">...</span><span class="comment"> % sterrer strengths limits</span>
+0084     true);          <span class="comment">% verbosity flag</span>
+0085 
+0086 
+0087 o=findorbit6Err(rerr,indBPM,inCOD);
+0088 oxe=o(1,:);
+0089 oye=o(3,:);
+0090 
+0091 o=findorbit6Err(rcor,indBPM,inCOD);
+0092 oxc=o(1,:);
+0093 oyc=o(3,:);
+0094 
+0095 sBPM=findspos(rcor,indBPM);
+0096 figure;subplot(2,1,1);
+0097 plot(sBPM,oxe,<span class="string">'.-'</span>);hold on; plot(sBPM,oxc,<span class="string">'.-'</span>);
+0098 legend(<span class="string">'before'</span>,<span class="string">'after'</span>);
+0099 xlabel(<span class="string">'s [m]'</span>);
+0100 ylabel(<span class="string">'hor. COD'</span>);
+0101 subplot(2,1,2);
+0102 plot(sBPM,oye,<span class="string">'.-'</span>);hold on; plot(sBPM,oyc,<span class="string">'.-'</span>);
+0103 legend(<span class="string">'before'</span>,<span class="string">'after'</span>);
+0104 xlabel(<span class="string">'s [m]'</span>);
+0105 ylabel(<span class="string">'ver. COD'</span>);
+0106 saveas(gca,<span class="string">'OrbitCor.fig'</span>);
+0107 <span class="comment">% export_fig('OrbitCor.jpg','-r300');</span>
+0108 
+0109 
+0110 <span class="comment">% plot output</span>
+0111 
+0112 figure;
+0113 subplot(2,1,1);bar(hs);ylabel(<span class="string">'hor.'</span>)
+0114 subplot(2,1,2);bar(vs);ylabel(<span class="string">'ver.'</span>)
+0115 
+0116 inCOD(5)
+0117 
+0118 rcor0=rcor;</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

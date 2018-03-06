@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of BumpAtBPM</title>
+  <meta name="keywords" content="BumpAtBPM">
+  <meta name="description" content="function roff=BumpAtBPM(...">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../../index.html">Home</a> &gt;  <a href="../../../../../index.html">atmat</a> &gt; <a href="../../../../index.html">pubtools</a> &gt; <a href="../../../index.html">LatticeTuningFunctions</a> &gt; <a href="../../index.html">correction</a> &gt; <a href="#">orbitbumps</a> &gt; <a href="index.html">matching</a> &gt; BumpAtBPM.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../../index.html"><img alt="<" border="0" src="../../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/orbitbumps/matching&nbsp;<img alt=">" border="0" src="../../../../../../right.png"></a></td></tr></table>-->
+
+<h1>BumpAtBPM
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../../up.png"></a></h2>
+<div class="box"><strong>function roff=BumpAtBPM(...</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../../up.png"></a></h2>
+<div class="box"><strong>function [rbump,hs,vs]=BumpAtBPM(ring0,inCOD,bumph,bumpv,indBPMbump,indHCor,indVCor) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function roff=BumpAtBPM(...
+     ring0,... AT lattice structure
+     inCOD,... initial 6x1 coordinate guess 
+     bumph,... hor. bump value at indBPMbump
+     bumpv,... ver. bump value at indBPMbump
+     indBPMbump, bump position
+     indHCor,.... 1x3 correctors to generate bump. last is used for COD=0
+     indVCor.... 1x3 correctors to generate bump. last is used for COD=0
+     )
+
+ ex:
+      % order of correctors does not metter as far as the bpm is within
+      the three correctors. last corrector index is used to match the
+      postion and angle back to zero
+      roff=BumpAtBPM(ring0,0.0,1e-3,50,[4 78 90],[89 34 1]);
+
+      % to match bump at first bpm, use last corrector,
+      roff=BumpAtBPM(ring0,1e-3,1e-7,1,indHCor([end,1,2]),indVCor([end,1,2]));
+ 
+see also: atmatch findorbit6Err</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../../matlabicon.gif)">
+<li><a href="testorbitbump.html" class="code" title="">testorbitbump</a>	test matching orbit bump</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function x=get6dx(r,ind1,ind2,inCOD)</a></li><li><a href="#_sub2" class="code">function x=get6dy(r,ind1,ind2,inCOD)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [rbump,hs,vs]=BumpAtBPM(ring0,inCOD,bumph,bumpv,indBPMbump,indHCor,indVCor)</a>
+0002 <span class="comment">% function roff=BumpAtBPM(...</span>
+0003 <span class="comment">%     ring0,... AT lattice structure</span>
+0004 <span class="comment">%     inCOD,... initial 6x1 coordinate guess</span>
+0005 <span class="comment">%     bumph,... hor. bump value at indBPMbump</span>
+0006 <span class="comment">%     bumpv,... ver. bump value at indBPMbump</span>
+0007 <span class="comment">%     indBPMbump, bump position</span>
+0008 <span class="comment">%     indHCor,.... 1x3 correctors to generate bump. last is used for COD=0</span>
+0009 <span class="comment">%     indVCor.... 1x3 correctors to generate bump. last is used for COD=0</span>
+0010 <span class="comment">%     )</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% ex:</span>
+0013 <span class="comment">%      % order of correctors does not metter as far as the bpm is within</span>
+0014 <span class="comment">%      the three correctors. last corrector index is used to match the</span>
+0015 <span class="comment">%      postion and angle back to zero</span>
+0016 <span class="comment">%      roff=BumpAtBPM(ring0,0.0,1e-3,50,[4 78 90],[89 34 1]);</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%      % to match bump at first bpm, use last corrector,</span>
+0019 <span class="comment">%      roff=BumpAtBPM(ring0,1e-3,1e-7,1,indHCor([end,1,2]),indVCor([end,1,2]));</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%see also: atmatch findorbit6Err</span>
+0022 
+0023 <span class="keyword">if</span> size(indBPMbump)~=[1 1]
+0024     error(<span class="string">'indBPMbump must be size 1x1'</span>)
+0025 <span class="keyword">end</span>
+0026 <span class="keyword">if</span> size(indHCor)~=[1 3]
+0027     error(<span class="string">'indHCor must be size 1x3'</span>)
+0028 <span class="keyword">end</span>
+0029 <span class="keyword">if</span> size(indVCor)~=[1 3]
+0030     error(<span class="string">'indVCor must be size 1x3'</span>)
+0031 <span class="keyword">end</span>
+0032 
+0033 h1=atVariableBuilder(ring0,indHCor(1),{<span class="string">'PolynomB'</span>,{1,1}});
+0034 h2=atVariableBuilder(ring0,indHCor(2),{<span class="string">'PolynomB'</span>,{1,1}});
+0035 h3=atVariableBuilder(ring0,indHCor(3),{<span class="string">'PolynomB'</span>,{1,1}});
+0036 v1=atVariableBuilder(ring0,indVCor(1),{<span class="string">'PolynomA'</span>,{1,1}});
+0037 v2=atVariableBuilder(ring0,indVCor(2),{<span class="string">'PolynomA'</span>,{1,1}});
+0038 v3=atVariableBuilder(ring0,indVCor(3),{<span class="string">'PolynomA'</span>,{1,1}});
+0039 VariabH=[h1 h2 h3];
+0040 VariabV=[v1 v2 v3];
+0041 
+0042 <span class="comment">% 6D orbit</span>
+0043 ConstrH6D=struct(<span class="keyword">...</span>
+0044     <span class="string">'Fun'</span>,@(r,~,~)<a href="#_sub1" class="code" title="subfunction x=get6dx(r,ind1,ind2,inCOD)">get6dx</a>(r,indBPMbump,indHCor(end)+1,inCOD),<span class="keyword">...</span>
+0045     <span class="string">'Weight'</span>,[1e-6 1e-6 1e-6],<span class="keyword">...</span>
+0046     <span class="string">'RefPoints'</span>,1,<span class="keyword">...</span>
+0047     <span class="string">'Min'</span>,[bumph 0.0 0.0],<span class="keyword">...</span>
+0048     <span class="string">'Max'</span>,[bumph 0.0 0.0]);
+0049 
+0050 ConstrV6D=struct(<span class="keyword">...</span>
+0051     <span class="string">'Fun'</span>,@(r,~,~)<a href="#_sub2" class="code" title="subfunction x=get6dy(r,ind1,ind2,inCOD)">get6dy</a>(r,indBPMbump,indHCor(end)+1,inCOD),<span class="keyword">...</span>
+0052     <span class="string">'Weight'</span>,[1e-6 1e-6 1e-6],<span class="keyword">...</span>
+0053     <span class="string">'RefPoints'</span>,1,<span class="keyword">...</span>
+0054     <span class="string">'Min'</span>,[bumpv 0.0 0.0],<span class="keyword">...</span>
+0055     <span class="string">'Max'</span>,[bumpv 0.0 0.0]);
+0056 
+0057 
+0058 rbump=ring0;
+0059 
+0060 <span class="keyword">try</span>
+0061     rbump=atmatch(rbump,VariabH,ConstrH6D,10^-16,10,3,@lsqnonlin);<span class="comment">%,'fminsearch');%</span>
+0062     rbump=atmatch(rbump,VariabV,ConstrV6D,10^-16,10,3,@lsqnonlin);<span class="comment">%,'fminsearch');%</span>
+0063 <span class="keyword">catch</span>
+0064     rbump=atmatch(rbump,VariabH,ConstrH6D,10^-10,40,3);<span class="comment">%,'fminsearch');%</span>
+0065     rbump=atmatch(rbump,VariabV,ConstrV6D,10^-10,40,3);<span class="comment">%,'fminsearch');%</span>
+0066     rbump=atmatch(rbump,VariabH,ConstrH6D,10^-16,10,3,@lsqnonlin);<span class="comment">%,'fminsearch');%</span>
+0067     rbump=atmatch(rbump,VariabV,ConstrV6D,10^-16,10,3,@lsqnonlin);<span class="comment">%,'fminsearch');%</span>
+0068 <span class="keyword">end</span>
+0069 
+0070 <span class="comment">% plot corrector values.</span>
+0071 hs=atgetfieldvalues(rbump,indHCor,<span class="string">'PolynomB'</span>,{1,1});
+0072 vs=atgetfieldvalues(rbump,indVCor,<span class="string">'PolynomA'</span>,{1,1});
+0073 
+0074 <span class="keyword">end</span>
+0075 
+0076 
+0077 <a name="_sub1" href="#_subfunctions" class="code">function x=get6dx(r,ind1,ind2,inCOD)</a>
+0078 o1=findorbit6Err(r,ind1,inCOD);
+0079 o2=findorbit6Err(r,ind2,inCOD);
+0080 x=[o1(1,1),o2(1,1),o2(2,1)]; <span class="comment">% orbit at ind1, orbit and angle at ind2</span>
+0081 <span class="keyword">end</span>
+0082 
+0083 <a name="_sub2" href="#_subfunctions" class="code">function x=get6dy(r,ind1,ind2,inCOD)</a>
+0084 o1=findorbit6Err(r,ind1,inCOD);
+0085 o2=findorbit6Err(r,ind2,inCOD);
+0086 x=[o1(3,1),o2(3,1),o2(4,1)]; <span class="comment">% orbit at ind1, orbit and angle at ind2</span>
+0087 <span class="keyword">end</span>
+0088</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

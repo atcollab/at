@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atfittune</title>
+  <meta name="keywords" content="atfittune">
+  <meta name="description" content="ATFITTUNE fits linear tunes by scaling 2 quadrupole families">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atfittune.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atfittune
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATFITTUNE fits linear tunes by scaling 2 quadrupole families</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function newring=atfittune(ring,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATFITTUNE fits linear tunes by scaling 2 quadrupole families
+ NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+
+ NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+
+RING:          Cell array
+DPP:           Optional momentum deviation (default 0)
+NEWTUNES:      Desired tune values (fractional part only)
+QUADFAMILY1:   1st quadrupole family
+QUADFAMILY2:   2nd quadrupole family
+
+QUADFAMILY may be:
+   string: Family name
+   logical array: mask of selected elements in RING
+   Numeric array: list of selected elements in RING
+   Cell array: All elements selected by each cell</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">atgetcells</a>	ATGETCELLS performs a search on MATLAB cell arrays of structures</li><li><a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">atgetfieldvalues</a>	ATGETFIELDVALUES retrieves the field values AT cell array of elements</li><li><a href="atsetfieldvalues.html" class="code" title="function newring = atsetfieldvalues(ring,varargin)">atsetfieldvalues</a>	ATSETFIELDVALUES sets the field values of MATLAB cell array of structures</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function ring2=setqp(ring,idx,k0,delta)</a></li><li><a href="#_sub2" class="code">function res=varelem(ring,arg)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function newring=atfittune(ring,varargin)</a>
+0002 <span class="comment">%ATFITTUNE fits linear tunes by scaling 2 quadrupole families</span>
+0003 <span class="comment">% NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%RING:          Cell array</span>
+0008 <span class="comment">%DPP:           Optional momentum deviation (default 0)</span>
+0009 <span class="comment">%NEWTUNES:      Desired tune values (fractional part only)</span>
+0010 <span class="comment">%QUADFAMILY1:   1st quadrupole family</span>
+0011 <span class="comment">%QUADFAMILY2:   2nd quadrupole family</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%QUADFAMILY may be:</span>
+0014 <span class="comment">%   string: Family name</span>
+0015 <span class="comment">%   logical array: mask of selected elements in RING</span>
+0016 <span class="comment">%   Numeric array: list of selected elements in RING</span>
+0017 <span class="comment">%   Cell array: All elements selected by each cell</span>
+0018 
+0019 <span class="keyword">if</span> isscalar(varargin{1}) &amp;&amp; isnumeric(varargin{1})
+0020     dpp=varargin{1};
+0021     [newtunes,famname1,famname2]=deal(varargin{2:end});
+0022 <span class="keyword">else</span>
+0023     dpp=0;
+0024     [newtunes,famname1,famname2]=deal(varargin{:});
+0025 <span class="keyword">end</span>
+0026  
+0027 idx1=<a href="#_sub2" class="code" title="subfunction res=varelem(ring,arg)">varelem</a>(ring,famname1);
+0028 idx2=<a href="#_sub2" class="code" title="subfunction res=varelem(ring,arg)">varelem</a>(ring,famname2);
+0029 newtunes=newtunes-floor(newtunes);
+0030 
+0031 kl1=<a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">atgetfieldvalues</a>(ring(idx1),<span class="string">'PolynomB'</span>,{2});
+0032 kl2=<a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">atgetfieldvalues</a>(ring(idx2),<span class="string">'PolynomB'</span>,{2});
+0033 <span class="keyword">if</span> true
+0034     delta = 1e-6;
+0035 
+0036     <span class="comment">% Compute initial tunes before fitting</span>
+0037     [lindata, tunes] = atlinopt(ring,dpp); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0038 
+0039     <span class="comment">% Take Derivative</span>
+0040     [lindata, tunes1] = atlinopt(<a href="#_sub1" class="code" title="subfunction ring2=setqp(ring,idx,k0,delta)">setqp</a>(ring,idx1,kl1,delta),dpp); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0041     [lindata, tunes2] = atlinopt(<a href="#_sub1" class="code" title="subfunction ring2=setqp(ring,idx,k0,delta)">setqp</a>(ring,idx2,kl2,delta),dpp); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0042 
+0043     <span class="comment">%Construct the Jacobian</span>
+0044     J = ([tunes1(:) tunes2(:)] - [tunes(:) tunes(:)])/delta;
+0045     dK = J\(newtunes(:)-tunes(:));
+0046 <span class="keyword">else</span>
+0047     dK=0.01*fminsearch(@funtune,[0;0],<span class="keyword">...</span>
+0048         optimset(optimset(<span class="string">'fminsearch'</span>),<span class="string">'Display'</span>,<span class="string">'iter'</span>,<span class="string">'TolX'</span>,1.e-5));
+0049 <span class="keyword">end</span>
+0050 newring = <a href="#_sub1" class="code" title="subfunction ring2=setqp(ring,idx,k0,delta)">setqp</a>(ring,idx1,kl1,dK(1));
+0051 newring = <a href="#_sub1" class="code" title="subfunction ring2=setqp(ring,idx,k0,delta)">setqp</a>(newring,idx2,kl2,dK(2));
+0052 
+0053 <span class="comment">%     function c=funtune(dK)</span>
+0054 <span class="comment">%         ring2=ring;</span>
+0055 <span class="comment">%         km1=kl1*(1+0.01*dK(1));</span>
+0056 <span class="comment">%         ring2(idx1)=atsetfieldvalues(atsetfieldvalues(ring2(idx1),'K',km1),'PolynomB',{2},km1);</span>
+0057 <span class="comment">%         km2=kl2*(1+0.01*dK(2));</span>
+0058 <span class="comment">%         ring2(idx2)=atsetfieldvalues(atsetfieldvalues(ring2(idx2),'K',km2),'PolynomB',{2},km2);</span>
+0059 <span class="comment">%         [lindata,tunes]=atlinopt(ring2,dpp); %#ok&lt;SETNU&gt;</span>
+0060 <span class="comment">%         dt=abs(newtunes(:)-tunes(:));</span>
+0061 <span class="comment">%         c=sum(dt.*dt);</span>
+0062 <span class="comment">%     end</span>
+0063 
+0064     <a name="_sub1" href="#_subfunctions" class="code">function ring2=setqp(ring,idx,k0,delta)</a>
+0065         k=k0*(1+delta);
+0066         ring2=ring;
+0067         ring2(idx)=<a href="atsetfieldvalues.html" class="code" title="function newring = atsetfieldvalues(ring,varargin)">atsetfieldvalues</a>(<a href="atsetfieldvalues.html" class="code" title="function newring = atsetfieldvalues(ring,varargin)">atsetfieldvalues</a>(ring2(idx),<span class="string">'K'</span>,k),<span class="string">'PolynomB'</span>,{2},k);
+0068     <span class="keyword">end</span>
+0069 
+0070     <a name="_sub2" href="#_subfunctions" class="code">function res=varelem(ring,arg)</a>
+0071         <span class="keyword">if</span> islogical(arg)
+0072             res=arg;
+0073         <span class="keyword">elseif</span> isnumeric(arg)
+0074             res=false(size(ring));
+0075             res(arg)=true;
+0076         <span class="keyword">elseif</span> ischar(arg)
+0077             res=<a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">atgetcells</a>(ring,<span class="string">'FamName'</span>,arg);
+0078         <span class="keyword">elseif</span> iscell(arg)
+0079             res=false(size(ring));
+0080             <span class="keyword">for</span> i=1:length(arg)
+0081                 res=res|<a href="#_sub2" class="code" title="subfunction res=varelem(ring,arg)">varelem</a>(ring,arg{i});
+0082             <span class="keyword">end</span>
+0083         <span class="keyword">else</span>
+0084             error(<span class="string">'AT:GetElemList:WrongArg'</span>,<span class="string">'Cannot parse argument'</span>);
+0085         <span class="keyword">end</span>
+0086     <span class="keyword">end</span>
+0087 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
