@@ -17,7 +17,17 @@ function bpmreading = bpm_process(bpmorbit,rel,tel,trand)
 %
 %         BPM_READING = REL*BPMORBIT + TEL + TRAND.*RANDN(2,1);
 %
-%See also: BPM_MATRICES
+%EXAMPLE (N.B. the following is done by findorbit4Err or findorbit6Err):
+%
+% orbit = findorbit6(RING, indbpm);
+% [rel,tel,trand] = bpm_matrices(RING(indbpm));
+% bpmreading = bpm_process(orbit([1,3],:),rel,tel,trand);
+% orbit_with_errors = orbit; 
+% orbit_with_errors(1,:)=bpmreading(1,:);
+% orbit_with_errors(3,:)=bpmreading(2,:);
+%
+% 
+%See also: BPM_MATRICES findorbit4Err findorbit6Err
 
 bp=cellfun(@process,num2cell(bpmorbit,1),rel,tel,trand,'UniformOutput',false);
 bpmreading=cat(2,bp{:});
