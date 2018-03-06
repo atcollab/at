@@ -1,10 +1,16 @@
 function [r,Pnew,Panew]=AssignFieldErr(r,refpos,N,rho,BNn,ANn)
-% function r=AssignFieldErr(r,refpos,N,rho,BNn,ANn)
+% ASSIGNFIELDERR computes and assign multipole expansions to specific
+% element given the magnetic measurement of multipoles radius rho.
 % 
+% [r,Pnew,Panew]=ASSIGNFIELDERR(r,refpos,N,rho,BNn,ANn)
+%
+%INPUT: 
 % r : at lattice
 % refpos : index of elements for wich the field error has to be applied
 % N main component (2=quadrupole,3=sextupole)
 % rho: reference radius
+% BNn: the normal field errors at rho0
+% ANn: the skew field errors at rho0
 %
 % the field errors are defined by the magnet designer with the multipole
 % expansion
@@ -20,7 +26,8 @@ function [r,Pnew,Panew]=AssignFieldErr(r,refpos,N,rho,BNn,ANn)
 % b_n=radius^(N-n)*b_N*B^(N)_(n)
 %
 % optional output ,Pnew,Panew the PolynomB and PolynomA set in AT.
-% 
+%
+%see also: getcellstruct 
 
 
 if nargin<6
