@@ -1,7 +1,23 @@
 function ErrTab = atcreateerrortable(r)
+% ATCREATEERRORTABLE create empty error table for lattice r
+%
+% USAGE:
+% ErrTab = atcreateerrortable(r)
+%
+% INPUTS:
+% r : AT lattice structure
 % 
-% create empty error table for lattice r
-% 
+% EXAMPLE:
+% r = esrf;
+% % create table of errors
+% ErrTab = atcreateerrortable(r);
+% % enter some errors in the table
+% % hor misal
+% ErrTab.X = randn(size(ErrTab.X)).*1e-6 ;
+% % roll
+% ErrTab.Roll = randn(size(ErrTab.X)).*1e-6 ;
+%
+%see also: atseterrortable
 
 % create table of errors
 FamNamesCell = atgetfieldvalues(r,1:length(r),'FamName');

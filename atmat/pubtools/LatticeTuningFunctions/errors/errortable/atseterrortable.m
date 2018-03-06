@@ -1,7 +1,7 @@
 function rerr = atseterrortable(r,ErrorTable,varargin)
-% ATSETERRORTABLE(r,ErrorTable,varargin)
+% ATSETERRORTABLE Sets errors listed in table ErrorsTable in the AT lattice r
 %
-% Sets errors listed in table ErrorsTable in the AT lattice r
+% rerr = ATSETERRORTABLE(r,ErrorTable,varargin)
 %
 % INPUTS:
 % r : AT lattice (cell array of structures)
