@@ -58,6 +58,14 @@ function rerr = atseterrortable(r,ErrorTable,varargin)
 %
 % NOTE: Pitch and Yaw are implementd using T1 =! T2
 %
+% Errors are set always in the following order:
+% BPM errors, 
+% X,Y,S,
+% Roll,Pitch,Yaw,
+% DAngle_Angle,DK_K,
+% systematic bn/an,
+% random bn/an
+% 
 % see also: atsetshift atsetbpmerr atset_s_shift atsettilt atsetpitch
 %          atsetyaw
 
@@ -116,8 +124,8 @@ if find(ErrorTable.Yaw)
     if verbose, disp('set Yaw errors (rotation about y (vertical))'); end
 end
 
-% set yaw
-if find(ErrorTable.Yaw)
+% set DAngle_Angle
+if find(ErrorTable.DAngle_Angle)
     for im = 1:length(ErrorTable.Index)
         if isfield(r{im},'BendingAngle')
             BA = r{im}.BendingAngle;
