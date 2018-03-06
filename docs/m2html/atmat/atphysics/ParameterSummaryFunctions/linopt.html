@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of linopt</title>
+  <meta name="keywords" content="linopt">
+  <meta name="description" content="LINOPT performs linear analysis of the COUPLED lattices">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">ParameterSummaryFunctions</a> &gt; linopt.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/ParameterSummaryFunctions&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>linopt
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>LINOPT performs linear analysis of the COUPLED lattices</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [LinData, varargout] = linopt(RING,DP,varargin); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">LINOPT performs linear analysis of the COUPLED lattices
+   Notation is the same as in reference [3]
+
+
+ LinData = LINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields
+    
+   ElemIndex   - ordinal position in the RING 
+   SPos        - longitudinal position [m]
+   ClosedOrbit - closed orbit column vector with 
+                 components x, px, y, py (momentums, NOT angles)                        
+   Dispersion  - dispersion orbit position vector with 
+                 components eta_x, eta_prime_x, eta_y, eta_prime_y
+                 calculated with respect to the closed orbit with 
+                 momentum deviation DP
+   M44         - 4x4 transfer matrix M from the beginning of RING
+                 to the entrance of the element for specified DP [2]
+   A           - 2x2 matrix A in [3]
+   B           - 2x2 matrix B in [3]
+   C           - 2x2 matrix C in [3]            
+   gamma       - gamma parameter of the transformation to eigenmodes 
+   mu          - [ mux, muy] horizontal and vertical betatron phase
+   beta        - [betax, betay] vector
+
+   All values are specified at the entrance of each element specified in REFPTS. 
+   REFPTS is an array of increasing indexes that  select elements 
+   from the range 1 to length(LINE)+1. 
+   See further explanation of REFPTS in the 'help' for FINDSPOS 
+
+ [LinData,NU] = LINOPT() returns a vector of linear tunes
+   [nu_u , nu_v] for two normal modes of linear motion [1] 
+
+ [LinData,NU, KSI] = LINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)
+   [ksi_u , ksi_v] - derivatives of [nu_u , nu_v] 
+
+ See also FINDSPOS <a href="twissring.html" class="code" title="function [TD, varargout] = twissring(RING,DP,varargin)">TWISSRING</a> TUNECHROM
+
+   [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+   [2] E.Courant, H.Snyder
+   [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="linopt.html" class="code" title="function [LinData, varargout] = linopt(RING,DP,varargin);">linopt</a>	LINOPT performs linear analysis of the COUPLED lattices</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="linopt.html" class="code" title="function [LinData, varargout] = linopt(RING,DP,varargin);">linopt</a>	LINOPT performs linear analysis of the COUPLED lattices</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [LinData, varargout] = linopt(RING,DP,varargin);</a>
+0002 <span class="comment">%LINOPT performs linear analysis of the COUPLED lattices</span>
+0003 <span class="comment">%   Notation is the same as in reference [3]</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% LinData = LINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   ElemIndex   - ordinal position in the RING</span>
+0009 <span class="comment">%   SPos        - longitudinal position [m]</span>
+0010 <span class="comment">%   ClosedOrbit - closed orbit column vector with</span>
+0011 <span class="comment">%                 components x, px, y, py (momentums, NOT angles)</span>
+0012 <span class="comment">%   Dispersion  - dispersion orbit position vector with</span>
+0013 <span class="comment">%                 components eta_x, eta_prime_x, eta_y, eta_prime_y</span>
+0014 <span class="comment">%                 calculated with respect to the closed orbit with</span>
+0015 <span class="comment">%                 momentum deviation DP</span>
+0016 <span class="comment">%   M44         - 4x4 transfer matrix M from the beginning of RING</span>
+0017 <span class="comment">%                 to the entrance of the element for specified DP [2]</span>
+0018 <span class="comment">%   A           - 2x2 matrix A in [3]</span>
+0019 <span class="comment">%   B           - 2x2 matrix B in [3]</span>
+0020 <span class="comment">%   C           - 2x2 matrix C in [3]</span>
+0021 <span class="comment">%   gamma       - gamma parameter of the transformation to eigenmodes</span>
+0022 <span class="comment">%   mu          - [ mux, muy] horizontal and vertical betatron phase</span>
+0023 <span class="comment">%   beta        - [betax, betay] vector</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">%   All values are specified at the entrance of each element specified in REFPTS.</span>
+0026 <span class="comment">%   REFPTS is an array of increasing indexes that  select elements</span>
+0027 <span class="comment">%   from the range 1 to length(LINE)+1.</span>
+0028 <span class="comment">%   See further explanation of REFPTS in the 'help' for FINDSPOS</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">% [LinData,NU] = LINOPT() returns a vector of linear tunes</span>
+0031 <span class="comment">%   [nu_u , nu_v] for two normal modes of linear motion [1]</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">% [LinData,NU, KSI] = LINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)</span>
+0034 <span class="comment">%   [ksi_u , ksi_v] - derivatives of [nu_u , nu_v]</span>
+0035 <span class="comment">%</span>
+0036 <span class="comment">% See also FINDSPOS TWISSRING TUNECHROM</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">%   [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973</span>
+0039 <span class="comment">%   [2] E.Courant, H.Snyder</span>
+0040 <span class="comment">%   [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)</span>
+0041 
+0042  
+0043 
+0044 NE=length(RING);
+0045 <span class="keyword">if</span>(nargin==2)
+0046    REFPTS= 1;
+0047 <span class="keyword">else</span>
+0048    REFPTS=varargin{1};
+0049 <span class="keyword">end</span>
+0050 
+0051 NR=length(REFPTS);
+0052   
+0053 
+0054 spos = findspos(RING,REFPTS);
+0055 [M44, MS, orb] = findm44(RING,DP,REFPTS);
+0056 
+0057 LinData = struct(<span class="string">'ElemIndex'</span>,num2cell(REFPTS),<span class="string">'SPos'</span>,num2cell(spos),<span class="keyword">...</span>
+0058     <span class="string">'ClosedOrbit'</span>,num2cell(orb,1),<span class="string">'M44'</span>,squeeze(num2cell(MS,[1 2]))');
+0059 
+0060 <span class="comment">% Calculate A,B,C, gamma at the first element</span>
+0061 M =M44(1:2,1:2);
+0062 N =M44(3:4,3:4);
+0063 m =M44(1:2,3:4);
+0064 n =M44(3:4,1:2);
+0065 
+0066 <span class="comment">% 2-by-2 symplectic matrix</span>
+0067 S = [0 1; -1 0];
+0068 H = m + S*n'*S';
+0069 t = trace(M-N);
+0070 
+0071 g = sqrt(1 + sqrt(t*t/(t*t+4*det(H))))/sqrt(2);
+0072 G = diag([g g]);
+0073 C = -H*sign(t)/(g*sqrt(t*t+4*det(H)));
+0074 A = G*G*M  -  G*(m*S*C'*S' + C*n) + C*N*S*C'*S';
+0075 B = G*G*N  +  G*(S*C'*S'*m + n*C) + S*C'*S'*M*C;
+0076 
+0077 
+0078    
+0079 <span class="keyword">if</span> REFPTS(1)==1 &amp; NR&gt;1
+0080     START = 2;
+0081     LinData(1).A=A;
+0082     LinData(1).B=B;
+0083     LinData(1).C=C;
+0084     LinData(1).gamma=g;
+0085     LinData(1).beta(1) = A(1,2)/sin(acos(trace(A/2)));
+0086     LinData(1).beta(2) = B(1,2)/sin(acos(trace(B/2)));
+0087 <span class="keyword">else</span>
+0088     START = 1;
+0089 <span class="keyword">end</span>
+0090 
+0091 
+0092       
+0093     
+0094 
+0095 
+0096 <span class="comment">% find  matrixes in all elements indexed by REFPTS</span>
+0097 <span class="keyword">for</span> i=START:NR;
+0098     M12 =LinData(i).M44(1:2,1:2);
+0099     N12 =LinData(i).M44(3:4,3:4);
+0100     m12 =LinData(i).M44(1:2,3:4);
+0101     n12 =LinData(i).M44(3:4,1:2);
+0102    
+0103     g2 = sqrt(det(n12*C+G*N12));
+0104     E12 = (G*M12-m12*S*C'*S')/g2;
+0105     F12 = (n12*C+G*N12)/g2;
+0106    
+0107     LinData(i).gamma=g2;
+0108     LinData(i).C=(M12*C+G*m12)*S*F12'*S';
+0109     LinData(i).A=E12*A*S*E12'*S';
+0110     LinData(i).B=F12*B*S*F12'*S';
+0111     LinData(i).beta(1) = LinData(i).A(1,2)/sin(acos(trace(A/2)));
+0112     LinData(i).beta(2) = LinData(i).B(1,2)/sin(acos(trace(B/2)));
+0113  
+0114 <span class="keyword">end</span>
+0115 
+0116 
+0117 
+0118 <span class="keyword">if</span> nargout &gt; 1 
+0119    cos_mu_x = trace(A)/2;
+0120    cos_mu_y = trace(B)/2;
+0121    varargout{1} = acos([cos_mu_x cos_mu_y])/2/pi;
+0122 <span class="keyword">end</span>
+0123 
+0124 <span class="keyword">if</span> nargout == 3
+0125     <span class="keyword">global</span> NUMDIFPARAMS
+0126 
+0127     <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'DPStep'</span>)
+0128         dDP = NUMDIFPARAMS.DPStep';
+0129     <span class="keyword">else</span>
+0130         dDP =  1e-8;
+0131     <span class="keyword">end</span>
+0132     <span class="comment">% Calculate tunes for DP+dDP</span>
+0133     [LD, TUNES] = <a href="linopt.html" class="code" title="function [LinData, varargout] = linopt(RING,DP,varargin);">linopt</a>(RING,DP+dDP,1);
+0134     varargout{2} = (TUNES - varargout{1})/dDP;
+0135 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

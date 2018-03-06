@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nlchromplot</title>
+  <meta name="keywords" content="nlchromplot">
+  <meta name="description" content="example:   nlchromplot(esrf,-.04,.04,30,16,1)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">pubtools</a> &gt; nlchromplot.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>nlchromplot
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>example:   nlchromplot(esrf,-.04,.04,30,16,1)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function nlchromplot(ring,min_delta,max_delta,steps,nper,fig,dash) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">example:   nlchromplot(esrf,-.04,.04,30,16,1)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function nlchromplot(ring,min_delta,max_delta,steps,nper,fig,dash)</a>
+0002 <span class="comment">%example:   nlchromplot(esrf,-.04,.04,30,16,1)</span>
+0003 delta_dif=(max_delta-min_delta)/steps;
+0004 delta_vals=linspace(min_delta,max_delta,steps);
+0005 nu_delta=zeros(2,steps);
+0006 <span class="keyword">for</span> j=1:steps
+0007 [lindata,nu_delta(:,j)]=atlinopt(ring,min_delta+(j-1)*delta_dif);
+0008 <span class="comment">%[lindata,nu_delta(:,j)]=linopt(ring,min_delta+(j-1)*delta_dif);</span>
+0009 <span class="keyword">end</span>
+0010 nux=nper*nu_delta(1,:);
+0011 nux=nux-floor(nux);
+0012 nuz=nper*nu_delta(2,:);
+0013 <span class="comment">%nuz=1-(nuz-floor(nuz));</span>
+0014 nuz=nuz-floor(nuz);
+0015 figure(fig)
+0016 <span class="keyword">if</span>(dash)
+0017     plot(delta_vals,nux,<span class="string">'--r'</span>);
+0018     hold on
+0019     plot(delta_vals,nuz,<span class="string">'--b'</span>);
+0020     xlabel(<span class="string">'$\delta$'</span>,<span class="string">'FontSize'</span>,14,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+0021     grid on
+0022 <span class="keyword">else</span>
+0023     plot(delta_vals,nux,<span class="string">'-r'</span>);
+0024     hold on
+0025     plot(delta_vals,nuz,<span class="string">'-b'</span>);
+0026      xlabel(<span class="string">'$\delta$'</span>,<span class="string">'FontSize'</span>,14,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>);
+0027     grid on
+0028 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

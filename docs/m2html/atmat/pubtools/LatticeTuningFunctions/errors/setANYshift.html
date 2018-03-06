@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of setANYshift</title>
+  <meta name="keywords" content="setANYshift">
+  <meta name="description" content="SETANYSHIFT Adds to the existing shift errors additional D">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">LatticeTuningFunctions</a> &gt; <a href="index.html">errors</a> &gt; setANYshift.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>setANYshift
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>SETANYSHIFT Adds to the existing shift errors additional D</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function re=setANYshift(r,pos,coord,D) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SETANYSHIFT Adds to the existing shift errors additional D
+ 
+  See also SETSHIFT</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="setGirderError.html" class="code" title="function rerr=setGirderError(r,pert,errval,mag_group)">setGirderError</a>	rerr=setGirderError(r,pert,errval,mag_group)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function re=setANYshift(r,pos,coord,D)</a>
+0002 <span class="comment">%SETANYSHIFT Adds to the existing shift errors additional D</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%  See also SETSHIFT</span>
+0005 
+0006 numelems = length(pos);
+0007 
+0008 <span class="keyword">if</span> coord&lt;1 | coord&gt;6
+0009     error(<span class="string">'coord should be an index vector between 1 and 6'</span>)
+0010 <span class="keyword">end</span>
+0011 
+0012 <span class="keyword">if</span> (numelems ~= length(D))
+0013     error(<span class="string">'pos, D must have the same number of elements'</span>);
+0014 <span class="keyword">end</span>
+0015 
+0016 additive=0;<span class="comment">% errors are overwritten if this flag is 0.</span>
+0017 
+0018 <span class="keyword">for</span> i = 1:length(pos)
+0019     <span class="keyword">if</span> abs(D(i))&lt;1e-12, D(i)=0; <span class="keyword">end</span>;
+0020     
+0021     <span class="keyword">if</span> additive
+0022         r{pos(i)}.T1(coord,1) = r{pos(i)}.T1(coord,1) -D(i);
+0023         r{pos(i)}.T2(coord,1) = r{pos(i)}.T1(coord,1) +D(i);
+0024     <span class="keyword">else</span> <span class="comment">% no T1 and T2 defined</span>
+0025         r{pos(i)}.T1(coord,1) =  -D(i);
+0026         r{pos(i)}.T2(coord,1) =   D(i);
+0027     <span class="keyword">end</span>
+0028 <span class="keyword">end</span>
+0029 
+0030 re=r;</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

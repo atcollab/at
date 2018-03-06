@@ -1,0 +1,180 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Scan2x2DinCOD</title>
+  <meta name="keywords" content="Scan2x2DinCOD">
+  <meta name="description" content="[bestinputcoord]=ScanPosAngle(...">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">trajectory</a> &gt; Scan2x2DinCOD.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/trajectory&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>Scan2x2DinCOD
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>[bestinputcoord]=ScanPosAngle(...</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [bestinputcoord]=Scan2x2DinCOD(ropen,inCOD,ngridstep,gridsize,figlabel) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">[bestinputcoord]=ScanPosAngle(...
+     ropen,... lattice 
+     inCOD,... initial trajectory [x,xp,y,yp]
+     ngridstep,... grid steps in 1D (51 by default)
+     gridsize,... grid size (5mm by default)
+     figlabel)     figure label name. if not given, no figure
+
+ scans initial coordinates for maximum number of turns
+
+see also: ringpass</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atfirstturntrajectory.html" class="code" title="function [rclosed,inCOD]=atfirstturntrajectory(ropen,inCOD,indBPM,indHCor,indVCor,lim,maxcornum,correctflags,ModelRM,reforbit,steererlimit,printouttext)">atfirstturntrajectory</a>	ATFIRSTTURNTRAJECTORY Makes first turn correction</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [bestinputcoord]=Scan2x2DinCOD(ropen,inCOD,ngridstep,gridsize,figlabel)</a>
+0002 <span class="comment">%[bestinputcoord]=ScanPosAngle(...</span>
+0003 <span class="comment">%     ropen,... lattice</span>
+0004 <span class="comment">%     inCOD,... initial trajectory [x,xp,y,yp]</span>
+0005 <span class="comment">%     ngridstep,... grid steps in 1D (51 by default)</span>
+0006 <span class="comment">%     gridsize,... grid size (5mm by default)</span>
+0007 <span class="comment">%     figlabel)     figure label name. if not given, no figure</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% scans initial coordinates for maximum number of turns</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%see also: ringpass</span>
+0012 
+0013 <span class="keyword">if</span> nargin&lt;5
+0014 figlabel=[];
+0015 <span class="keyword">end</span>
+0016 <span class="keyword">if</span> nargin&lt;4
+0017     gridsize=5e-3;
+0018 <span class="keyword">end</span>
+0019 <span class="keyword">if</span> nargin&lt;3
+0020     ngridstep=51;
+0021 <span class="keyword">end</span>
+0022 
+0023 <span class="comment">% maxexcurs=20e-3;</span>
+0024 <span class="comment">% Xapert=maxexcurs*ones(size(ropen));</span>
+0025 <span class="comment">% Yapert=maxexcurs*ones(size(ropen));</span>
+0026 <span class="comment">% ropen=SetPhysicalAperture(ropen,Xapert/2,Yapert/2);</span>
+0027 
+0028 bestinputcoord=inCOD*0;
+0029 TotTurn=10;
+0030 
+0031 DX=linspace(-1,1,ngridstep)*gridsize;
+0032 DXP=DX/5;
+0033 DY=DX;
+0034 DYP=DX;
+0035 
+0036 <span class="comment">% initial coordinate matrix</span>
+0037 
+0038 [x,xp]=meshgrid(DX,DXP);
+0039 [y,yp]=meshgrid(DY,DYP);
+0040 
+0041 incoory=repmat(inCOD,1,length(x(:)))+<span class="keyword">...</span>
+0042     [repmat(bestinputcoord([1]),length(x(:)),1),<span class="keyword">...</span>
+0043     repmat(bestinputcoord([2]),length(x(:)),1),<span class="keyword">...</span>
+0044     y(:),yp(:),zeros(size(xp(:),1),2)]';
+0045 
+0046 [~,lost,NT,lossinfo]=ringpass(ropen,incoory,TotTurn);
+0047 
+0048 lossinfo.element(isnan(lossinfo.element))=0;<span class="comment">% particle not lost!</span>
+0049 NT(lost==0)=TotTurn;
+0050 maxturnsy=(max(NT)+1);
+0051 elpasy=lossinfo.element+length(ropen).*NT;
+0052 
+0053 [~,indt]=max(elpasy);
+0054 <span class="comment">% if more then one point, take closest to center.</span>
+0055 guessbest=sort([indt find(lost==0)]);
+0056 
+0057 dist=sqrt(incoory([3],guessbest).^2+incoory([4],guessbest).^2);
+0058 [~,indb]=min(dist);
+0059 
+0060 bestinputcoord([3,4])=incoory([3,4],guessbest(indb));
+0061 
+0062 
+0063 incoorx=repmat(inCOD,1,length(x(:)))+<span class="keyword">...</span>
+0064     [x(:),xp(:),<span class="keyword">...</span>
+0065     repmat(bestinputcoord([3]),length(x(:)),1),<span class="keyword">...</span>
+0066     repmat(bestinputcoord([4]),length(x(:)),1),<span class="keyword">...</span>
+0067     zeros(size(xp(:),1),2)]';
+0068 
+0069 [~,lost,NT,lossinfo]=ringpass(ropen,incoorx,TotTurn);
+0070 lossinfo.element(isnan(lossinfo.element))=0;<span class="comment">% particle not lost!</span>
+0071 NT(lost==0)=TotTurn;
+0072 maxturnsx=(max(NT)+1);
+0073 
+0074 elpasx=lossinfo.element+length(ropen).*NT;
+0075 
+0076 [~,indt]=max(elpasx);
+0077 guessbest=sort([indt find(lost==0)]);
+0078 
+0079 dist=sqrt(incoorx([1],guessbest).^2+incoorx([2],guessbest).^2);
+0080 [~,indb]=min(dist);
+0081 
+0082 bestinputcoord([1,2])=incoorx([1,2],guessbest(indb));
+0083 
+0084 
+0085 <span class="comment">%%</span>
+0086 <span class="keyword">if</span> ~isempty(figlabel)
+0087     maxturns=max([maxturnsx,maxturnsy]);
+0088     
+0089     figure(<span class="string">'Units'</span>,<span class="string">'normalized'</span>,<span class="string">'Position'</span>,[0.1 0.2 0.6 0.5]);
+0090     subplot(1,2,1);
+0091     surf(x,xp,reshape(elpasx,length(DX),[]));
+0092       hcb=colorbar;
+0093     caxis([0,length(ropen)*maxturns]);
+0094     set(hcb,<span class="string">'YTick'</span>,[1:maxturns]*length(ropen));
+0095     set(hcb,<span class="string">'YTickLabel'</span>,arrayfun(@(a)num2str(a,<span class="string">'turn %d'</span>),[1:maxturns],<span class="string">'un'</span>,0));
+0096     xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'xp'</span>);view(2);shading flat;
+0097     <span class="comment">%title({['Number of turns vs injection position'],['Initial: ' num2str(inCOD)],['Best: ' num2str(bestinputcoord) ]});</span>
+0098     title({[],[],[],[],[]})
+0099     subplot(1,2,2);
+0100     surf(y,yp,reshape(elpasy,length(DY),[]));
+0101     xlabel(<span class="string">'y'</span>);ylabel(<span class="string">'yp'</span>);view(2);shading flat;
+0102      hcb=colorbar;
+0103     caxis([0,length(ropen)*maxturns]);
+0104     set(hcb,<span class="string">'YTick'</span>,[1:maxturns]*length(ropen));
+0105     set(hcb,<span class="string">'YTickLabel'</span>,arrayfun(@(a)num2str(a,<span class="string">'turn %d'</span>),[1:maxturns],<span class="string">'un'</span>,0));
+0106     title({[],[],[],[],[]})
+0107     
+0108     set(gcf,<span class="string">'NextPlot'</span>,<span class="string">'add'</span>);
+0109     axes;
+0110     h = title({[<span class="string">'Number of turns vs injection position'</span>],[<span class="string">'Initial: '</span> num2str(inCOD)],[<span class="string">'Best: '</span> num2str(bestinputcoord) ]});
+0111     set(gca,<span class="string">'Visible'</span>,<span class="string">'off'</span>);
+0112     set(h,<span class="string">'Visible'</span>,<span class="string">'on'</span>);
+0113 
+0114     
+0115     saveas(gca,[figlabel <span class="string">'.fig'</span>]);
+0116     <span class="keyword">try</span>
+0117         export_fig([figlabel <span class="string">'.jpg'</span>]);
+0118     <span class="keyword">catch</span>
+0119     disp(<span class="string">'missing export_fig, no jpg'</span>)
+0120     <span class="keyword">end</span>
+0121     
+0122 <span class="keyword">end</span>
+0123 
+0124 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nafflib</title>
+  <meta name="keywords" content="nafflib">
+  <meta name="description" content="NAFFLIB MATLAB to NAFF library">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">nafflib</a> &gt; nafflib.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/nafflib&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>nafflib
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>NAFFLIB MATLAB to NAFF library</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> NAFFLIB MATLAB to NAFF library
+
+  INPUTS
+  1. Real part
+  2. Imaginary part
+  3. Window type
+  4. Number of frequencies
+  5. Debug 0 or 1
+
+  OUPUTS
+  1. Fundamental frequency vector
+  2. Amplitude vector
+  3. Phase vector
+
+  EXAMPLE
+  1. [frequency amplitude phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="calcnaff.html" class="code" title="function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)">calcnaff</a>	CALCNAFF Computes NAFF decomposition for a phase space trajectory</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% NAFFLIB MATLAB to NAFF library</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">%  INPUTS</span>
+0004 <span class="comment">%  1. Real part</span>
+0005 <span class="comment">%  2. Imaginary part</span>
+0006 <span class="comment">%  3. Window type</span>
+0007 <span class="comment">%  4. Number of frequencies</span>
+0008 <span class="comment">%  5. Debug 0 or 1</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%  OUPUTS</span>
+0011 <span class="comment">%  1. Fundamental frequency vector</span>
+0012 <span class="comment">%  2. Amplitude vector</span>
+0013 <span class="comment">%  3. Phase vector</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%  EXAMPLE</span>
+0016 <span class="comment">%  1. [frequency amplitude phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);</span>
+0017 
+0018 
+0019 <span class="comment">%% Laurent S. Nadolski, Synchrotron SOLEIL</span>
+0020 
+0021 <span class="comment">% Calls modnaff from:</span>
+0022 <span class="comment">% /* MODNAFF.C version 0.96                                                 */</span>
+0023 <span class="comment">% /* Astronomie et systemes dynamiques                                      */</span>
+0024 <span class="comment">% /* J. LASKAR Bureau des Longitudes, Paris (version originale fortran)     */</span>
+0025 <span class="comment">% /* M. GASTINEAU, portage en C, 03/09/98                                   */</span>
+0026 <span class="comment">% /* v0.96 M. GASTINEAU 09/09/98 : modification dans la fonction naf_ztder  */</span>
+0027 <span class="comment">% /*                               dans les boucles de I en I-1.            */</span>
+0028 <span class="comment">% /* v0.96 M. GASTINEAU 09/11/98 : remplacement des variables PI2 par PICARRE*/</span>
+0029 <span class="comment">% /*                               car PI2 est un define sous LINUX.        */</span>
+0030 <span class="comment">% /* v0.96 M. GASTINEAU 01/12/98 : utilisation des fonctions  complexes     */</span>
+0031 <span class="comment">% /*                               inlines.                                 */</span>
+0032 <span class="comment">% /* v0.96 M. GASTINEAU 07/12/98 : modification dans naf_frefin car bug lors*/</span>
+0033 <span class="comment">% /*                               de l'optimisation sur Mac.               */</span>
+0034 <span class="comment">% /* v0.96 M. GASTINEAU 18/12/98 : modification de naf_iniwin               */</span>
+0035 <span class="comment">% /* v0.96 M. GASTINEAU 06/01/99 : ajout de la liberation de la liste des   */</span>
+0036 <span class="comment">% /*                        fenetres dans naf_cleannaf et naf_cleannaf_notab*/</span>
+0037 <span class="comment">% /* v0.96 M. GASTINEAU 12/01/99 : correction dans le cas ou ICPLX=0 dans   */</span>
+0038 <span class="comment">% /*                        naf_modfre et naf_gramsc.                       */</span>
+0039 <span class="comment">% /*v0.96 M. GASTINEAU 14/01/99 : ajout du support des fenetres dans        */</span>
+0040 <span class="comment">% /*                        naf_mfttab et naf_fftmax.                       */</span>
+0041 <span class="comment">% /*v0.97 M. GASTINEAU 26/05/99 : correction bug (0.97/99/05/26/A) dans     */</span>
+0042 <span class="comment">% /*                        naf_mftnaf                                      */</span>
+0043 <span class="comment">% /* v0.97 M. GASTINEAU 27/05/99 : correction bug (0.97/99/05/27/A) dans le */</span>
+0044 <span class="comment">% /*                  cas ou ICPLX=0 et FS=0 dans naf_modfre et naf_gramsc. */</span>
+0045 
+0046 
+0047</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

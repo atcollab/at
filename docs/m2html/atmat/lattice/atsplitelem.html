@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsplitelem</title>
+  <meta name="keywords" content="atsplitelem">
+  <meta name="description" content="ATSPLITELEM Creates a line by inserting one or more elements into a base element">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atsplitelem.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atsplitelem
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATSPLITELEM Creates a line by inserting one or more elements into a base element</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function line=atsplitelem(baseelem,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSPLITELEM Creates a line by inserting one or more elements into a base element
+
+LINE=ATSPLITELEM(BASEELEM,FRAC1,ELEM1[,FRAC2,ELEM2...])
+   Each inserted element is associated with a location given by 0&lt;=FRAC&lt;=1
+   LINE is a cell array containing the sequence of resulting elements
+
+ FRACi may be a scalar or a line vector of locations. ELEMi must be a
+ single element, or a cell array of elements with the same length as FRACi.
+
+ if FRAC = 0, the element is inserted before BASEELEM (no splitting)
+ if FRAC = 1, the element is inserted after BASEELEM (no splitting)
+
+ if ELEMi = [], nothing is inserted, only the splitting takes place
+
+ ATSPLITELEM will split BASEELEM in elements with negative lengths if
+ necessary. Elements with length 0 are not generated. When splitting
+ dipoles, bending angles are distributed as lengths, and face angles are
+ set to zero at splitting points.
+
+
+ Examples:
+
+&gt;&gt; dr=atdrift('DR',2);       % Insert quadrupoles inside a drift
+&gt;&gt; qf=atquadrupole('QF',0.1,0.5);
+&gt;&gt; qd=atquadrupole('QD',0.1,-0.5);
+&gt;&gt; line=atsplitelem(dr,0.2,qf,0.8,qd);
+
+&gt;&gt; mk=atmarker('MK');
+&gt;&gt; line=atsplitelem(qf,0,mk);   % Insert a marker before a quadrupole
+
+&gt;&gt; line=atsplitelem(qf,0.5,[]); % Split a quadrupole in two halves
+
+ See also <a href="atinsertelems.html" class="code" title="function newring=atinsertelems(ring,refpts,varargin)">ATINSERTELEMS</a> <a href="atdivelem.html" class="code" title="function line = atdivelem(elem,frac,varargin)">ATDIVELEM</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atdivelem.html" class="code" title="function line = atdivelem(elem,frac,varargin)">atdivelem</a>	LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces</li><li><a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">atgetcells</a>	ATGETCELLS performs a search on MATLAB cell arrays of structures</li><li><a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">atgetfieldvalues</a>	ATGETFIELDVALUES retrieves the field values AT cell array of elements</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atinsertelems.html" class="code" title="function newring=atinsertelems(ring,refpts,varargin)">atinsertelems</a>	ATINSERTELEMS Insert elements at given locations in a line</li><li><a href="atsbreak.html" class="code" title="function [newring,refpts] = atsbreak(ring,sdata)">atsbreak</a>	ATSBREAK Insert markers at given s positions in a lattice</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function line=atsplitelem(baseelem,varargin)</a>
+0002 <span class="comment">%ATSPLITELEM Creates a line by inserting one or more elements into a base element</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%LINE=ATSPLITELEM(BASEELEM,FRAC1,ELEM1[,FRAC2,ELEM2...])</span>
+0005 <span class="comment">%   Each inserted element is associated with a location given by 0&lt;=FRAC&lt;=1</span>
+0006 <span class="comment">%   LINE is a cell array containing the sequence of resulting elements</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% FRACi may be a scalar or a line vector of locations. ELEMi must be a</span>
+0009 <span class="comment">% single element, or a cell array of elements with the same length as FRACi.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% if FRAC = 0, the element is inserted before BASEELEM (no splitting)</span>
+0012 <span class="comment">% if FRAC = 1, the element is inserted after BASEELEM (no splitting)</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% if ELEMi = [], nothing is inserted, only the splitting takes place</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% ATSPLITELEM will split BASEELEM in elements with negative lengths if</span>
+0017 <span class="comment">% necessary. Elements with length 0 are not generated. When splitting</span>
+0018 <span class="comment">% dipoles, bending angles are distributed as lengths, and face angles are</span>
+0019 <span class="comment">% set to zero at splitting points.</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% Examples:</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%&gt;&gt; dr=atdrift('DR',2);       % Insert quadrupoles inside a drift</span>
+0025 <span class="comment">%&gt;&gt; qf=atquadrupole('QF',0.1,0.5);</span>
+0026 <span class="comment">%&gt;&gt; qd=atquadrupole('QD',0.1,-0.5);</span>
+0027 <span class="comment">%&gt;&gt; line=atsplitelem(dr,0.2,qf,0.8,qd);</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">%&gt;&gt; mk=atmarker('MK');</span>
+0030 <span class="comment">%&gt;&gt; line=atsplitelem(qf,0,mk);   % Insert a marker before a quadrupole</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">%&gt;&gt; line=atsplitelem(qf,0.5,[]); % Split a quadrupole in two halves</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">% See also ATINSERTELEMS ATDIVELEM</span>
+0035 
+0036 elfrac=varargin(1:2:end);
+0037 elems=cell(size(elfrac));
+0038 <span class="keyword">for</span> i=1:length(elfrac)
+0039     ellist=varargin{2*i};
+0040     <span class="keyword">if</span> ~iscell(ellist)
+0041         ellist={ellist};
+0042     <span class="keyword">end</span>
+0043     elems{i}(1:length(elfrac{i}))=ellist(:);
+0044 <span class="keyword">end</span>
+0045 elems=cat(2,elems{:})';
+0046 elfrac=cat(2,elfrac{:})';
+0047 ellg=0.5*<a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">atgetfieldvalues</a>(elems,<span class="string">'Length'</span>)./baseelem.Length;
+0048 ellg(isnan(ellg))=0;
+0049 drfrac=[elfrac-ellg;1]-[0;elfrac+ellg];
+0050 long=drfrac~=0;
+0051 
+0052 drifts=cell(size(drfrac));
+0053 drifts(long)=<a href="atdivelem.html" class="code" title="function line = atdivelem(elem,frac,varargin)">atdivelem</a>(baseelem,drfrac(long));
+0054 
+0055 list=cell(length(drifts)+length(elems),1);
+0056 list(1:2:end)=drifts;
+0057 list(2:2:end)=elems;
+0058 
+0059 keep=true(size(list));
+0060 keep(1:2:end)=long;                         <span class="comment">% remove useless elements</span>
+0061 keep(2:2:end)=<a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">atgetcells</a>(elems,<span class="string">'FamName'</span>);  <span class="comment">% remove dummy inserts</span>
+0062 
+0063 line=list(keep);
+0064 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of SumErrors</title>
+  <meta name="keywords" content="SumErrors">
+  <meta name="description" content="rsum=SumErrors(r1,r2,magindex)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">errorsmanipulation</a> &gt; SumErrors.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/errorsmanipulation&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>SumErrors
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>rsum=SumErrors(r1,r2,magindex)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function rsum=SumErrors(r1,r2,magindex,indBPM) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> rsum=SumErrors(r1,r2,magindex)
+ 
+ gets errors from r1 and r2 and sum them into rsum</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="GetExistingErrors.html" class="code" title="function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin)">GetExistingErrors</a>	this function retrives 6 vectors, for x, y,s misalignments,</li><li><a href="SetExistingError.html" class="code" title="function rerr=SetExistingError(rerr,magindex,indBPM,X0,Y0,S0,T0,R0,P0,bpm0)">SetExistingError</a>	function SetExistingError(rerr,magindex,X0,Y0,S0,T0,R0,P0,bpm0)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function rsum=SumErrors(r1,r2,magindex,indBPM)</a>
+0002 <span class="comment">% rsum=SumErrors(r1,r2,magindex)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% gets errors from r1 and r2 and sum them into rsum</span>
+0005 <span class="comment">%</span>
+0006 
+0007 <span class="keyword">if</span> length(r1)~=length(r2)
+0008     error(<span class="string">'r1 and r2 must be the same lattice with different errors!'</span>)
+0009 <span class="keyword">end</span>
+0010 
+0011 <span class="keyword">if</span> nargin&lt;3
+0012     magindex=1:length(r1);
+0013 <span class="keyword">end</span>
+0014 
+0015 [X1,Y1,S1,T1,R1,P1,bpm1]=<a href="GetExistingErrors.html" class="code" title="function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin)">GetExistingErrors</a>(r1,magindex);
+0016 [X2,Y2,S2,T2,R2,P2,bpm2]=<a href="GetExistingErrors.html" class="code" title="function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin)">GetExistingErrors</a>(r2,magindex);
+0017 
+0018 bpms.offsetx=bpm1.offsetx+bpm2.offsetx;
+0019 bpms.offsety=bpm1.offsety+bpm2.offsety;
+0020 bpms.rotation=bpm1.rotation+bpm2.rotation;
+0021 
+0022 rsum=<a href="SetExistingError.html" class="code" title="function rerr=SetExistingError(rerr,magindex,indBPM,X0,Y0,S0,T0,R0,P0,bpm0)">SetExistingError</a>(r1,magindex,indBPM,<span class="keyword">...</span>
+0023     X1+X2,<span class="keyword">...</span>
+0024     Y1+Y2,<span class="keyword">...</span>
+0025     S1+S2,<span class="keyword">...</span>
+0026     T1+T2,<span class="keyword">...</span>
+0027     R1+R2,<span class="keyword">...</span>
+0028     P1+P2,<span class="keyword">...</span>
+0029     bpms<span class="keyword">...</span>
+0030     );
+0031 
+0032 
+0033 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of elegant2at</title>
+  <meta name="keywords" content="elegant2at">
+  <meta name="description" content="function elegant2at(elegantlattice,E0,outfilename)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">lattice</a> &gt; <a href="../index.html">Converters</a> &gt; <a href="index.html">ELEGANT2AT</a> &gt; elegant2at.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/Converters/ELEGANT2AT&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>elegant2at
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function elegant2at(elegantlattice,E0,outfilename)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function elegant2at(elegantlattice,E0,outfilename) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">function elegant2at(elegantlattice,E0,outfilename)
+ tansform elegant %s.new file (save_lattice with output_seq=0) file into AT lattice structure.
+
+ This procedure reads a saved elegant lattice and converts it to an AT lattice
+
+ Elegant command to save the lattice sequence : 
+ 
+  _______ filename.ele_________
+  &amp;save_lattice
+   filename = %s.new,
+   output_seq=0,
+ &amp;end
+  ___________________________
+
+  filename.new will contain the list of all the elements that make up the
+  lattice in the correct format in a single file
+ 
+ The routine outputs a Matlab macro with all the AT defitions and variables as
+ in the elegant file  
+
+ Works also with single elegant file not containing commands, only
+ definitions.
+
+ parameters:
+    - elegantlattice = name of the elegant lattice file
+    - E0  = design energy
+    - outfilename (default: elegantlattice_AT_LATTICE.mat)
+    
+ default pass methods:
+          quadrupoles : StrMPoleSymplectic4Pass
+          dipole : BndMPoleSymplectic4Pass
+          multipole : StrMPoleSymplectic4Pass
+          sextupole : StrMPoleSymplectic4Pass
+          thinmultipole : ThinMPolePass
+          correctors : ThinMPolePass
+          cavity : DriftPass</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>	determines atribute and sets field in sxs{i} structure AT</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="ele2at_run_me.html" class="code" title="">ele2at_run_me</a>	test_elegant_converter</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function elegant2at(elegantlattice,E0,outfilename)</a>
+0002 <span class="comment">%function elegant2at(elegantlattice,E0,outfilename)</span>
+0003 <span class="comment">% tansform elegant %s.new file (save_lattice with output_seq=0) file into AT lattice structure.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% This procedure reads a saved elegant lattice and converts it to an AT lattice</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Elegant command to save the lattice sequence :</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%  _______ filename.ele_________</span>
+0010 <span class="comment">%  &amp;save_lattice</span>
+0011 <span class="comment">%   filename = %s.new,</span>
+0012 <span class="comment">%   output_seq=0,</span>
+0013 <span class="comment">% &amp;end</span>
+0014 <span class="comment">%  ___________________________</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">%  filename.new will contain the list of all the elements that make up the</span>
+0017 <span class="comment">%  lattice in the correct format in a single file</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% The routine outputs a Matlab macro with all the AT defitions and variables as</span>
+0020 <span class="comment">% in the elegant file</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% Works also with single elegant file not containing commands, only</span>
+0023 <span class="comment">% definitions.</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% parameters:</span>
+0026 <span class="comment">%    - elegantlattice = name of the elegant lattice file</span>
+0027 <span class="comment">%    - E0  = design energy</span>
+0028 <span class="comment">%    - outfilename (default: elegantlattice_AT_LATTICE.mat)</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">% default pass methods:</span>
+0031 <span class="comment">%          quadrupoles : StrMPoleSymplectic4Pass</span>
+0032 <span class="comment">%          dipole : BndMPoleSymplectic4Pass</span>
+0033 <span class="comment">%          multipole : StrMPoleSymplectic4Pass</span>
+0034 <span class="comment">%          sextupole : StrMPoleSymplectic4Pass</span>
+0035 <span class="comment">%          thinmultipole : ThinMPolePass</span>
+0036 <span class="comment">%          correctors : ThinMPolePass</span>
+0037 <span class="comment">%          cavity : DriftPass</span>
+0038 <span class="comment">%</span>
+0039 
+0040 <span class="comment">%% changes history</span>
+0041 <span class="comment">% created 7-sep-2012 by S.M.Liuzzo @ ESRF as atfrommadx</span>
+0042 <span class="comment">% modified 1-12-2015 by G. Campogiani @LNF as elegant2at</span>
+0043                   
+0044 
+0045 <span class="comment">%% initial warnings</span>
+0046 disp(<span class="string">'PRELIMINARY INFORMATION:'</span>)
+0047 disp(<span class="string">''</span>);
+0048 disp([<span class="string">'1) THE elegant FILE MUST BE OUTPUT OF save_lattice'</span>, <span class="keyword">...</span>
+0049    <span class="string">'&amp;save_lattice filname = %s.new, output_seq=0, &amp;end'</span><span class="keyword">...</span>
+0050     <span class="string">' THIS GARANTES AN APPROPRIATE FILE FORMAT'</span>]);
+0051 disp(<span class="string">''</span>);
+0052 disp([<span class="string">'2) THE elegant PROGRAM allows to use variable not previously defined.'</span><span class="keyword">...</span>
+0053     <span class="string">' This is not known to AT!.'</span><span class="keyword">...</span>
+0054     <span class="string">' If the program fails but generates a ..._macro.m file, '</span><span class="keyword">...</span>
+0055     <span class="string">' please edit this file reordering the declarations and run it.'</span>]);
+0056 
+0057 <span class="comment">%% open madX sequence file</span>
+0058 
+0059 <span class="comment">% the : detect definitions. every : is preceded by a name</span>
+0060 <span class="comment">% of an element.</span>
+0061 <span class="comment">% between two : all the parameter of an elemetn or a line ar found.</span>
+0062 sX=fopen(elegantlattice,<span class="string">'r'</span>);
+0063 
+0064 <span class="comment">%% get madX file in a cell array with a new elment at every space comma or new line.</span>
+0065 
+0066 SXCELL=textscan(sX,<span class="string">'%s'</span>,<span class="string">'delimiter'</span>,<span class="string">'\n'</span>);
+0067 <span class="comment">% SXCELL=strrep(cellstr(SXCELL),'\n','&amp;');</span>
+0068 
+0069 SXSTRING=SXCELL{1}; <span class="comment">% still a cell array but every space or new line now is stored as a new cell.</span>
+0070 
+0071 <span class="comment">% scroll and reshape to divide atributes</span>
+0072 tmp={};
+0073 
+0074 <span class="keyword">for</span> i=1:length(SXSTRING)
+0075     <span class="keyword">if</span> SXSTRING{i}(end)==<span class="string">'&amp;'</span>
+0076         SXSTRING{i}=SXSTRING{i}(1:end-1);
+0077     <span class="keyword">end</span>;
+0078 
+0079     SXSTRING{i}=strrep(SXSTRING{i},<span class="string">' '</span>,<span class="string">''</span>); <span class="comment">% no spaces</span>
+0080 
+0081 
+0082 
+0083     
+0084     c=[1 sort([strfind(SXSTRING{i},<span class="string">','</span>) strfind(SXSTRING{i},<span class="string">':'</span>)<span class="keyword">...</span>
+0085                      strfind(SXSTRING{i},<span class="string">'='</span>) strfind(SXSTRING{i},<span class="string">'('</span>)<span class="keyword">...</span>
+0086                      ]) length(SXSTRING{i})];
+0087     
+0088     <span class="keyword">for</span> jc=1:length(c)
+0089         <span class="keyword">if</span> jc==1
+0090             tmp=[tmp SXSTRING{i}(c(jc):c(jc+1))];
+0091         <span class="keyword">else</span>
+0092             <span class="keyword">if</span> jc==length(c)
+0093                 tmp=[tmp SXSTRING{i}(c(jc))];
+0094             <span class="keyword">else</span>
+0095                 tmp=[tmp SXSTRING{i}(c(jc)+1:c(jc+1))];
+0096             <span class="keyword">end</span>
+0097         <span class="keyword">end</span>
+0098     <span class="keyword">end</span>
+0099 
+0100     
+0101 <span class="keyword">end</span>
+0102 SXSTRING=tmp;
+0103 
+0104 
+0105 
+0106 <span class="comment">%% open .m file to output matlab translated code</span>
+0107 
+0108 filemacroname=[tempname <span class="string">'.m'</span>];
+0109 
+0110 mafileout=fopen(filemacroname,<span class="string">'w+'</span>);
+0111 mst=[<span class="string">'%% this is a macro that converts to AT the madX lattice: '</span><span class="keyword">...</span>
+0112                      elegantlattice <span class="string">'\n%%\n%% Created: '</span> datestr(now)<span class="keyword">...</span>
+0113                      <span class="string">'\n%%\n%%\n\nglobal GLOBVAL;\nGLOBVAL.E0='</span> num2str(E0)<span class="keyword">...</span>
+0114                      <span class="string">';\n\n\n'</span>];
+0115 def=[<span class="string">'\n\n%%%% DEFINITIONS \n\n'</span>]; <span class="comment">%#ok&lt;*NBRAK&gt;</span>
+0116 lines=[<span class="string">'\n\n%%%% LINES \n\n'</span>];
+0117 
+0118 <span class="comment">%% convert to a matlab macro</span>
+0119 j=1; <span class="comment">% used in line block counter (element attributes counter)</span>
+0120 
+0121 elemcount=0;
+0122 i=1; 
+0123 
+0124 <span class="keyword">while</span> i&lt;length(SXSTRING)-2
+0125     
+0126     <span class="keyword">if</span> SXSTRING{i}(end)==<span class="string">':'</span> <span class="comment">% new element or line</span>
+0127         def=[ def <span class="keyword">...</span>
+0128             ]; <span class="comment">% end line and go to newline add name</span>
+0129         SXSTRING{i}(1:end-1)=upper(SXSTRING{i}(1:end-1));
+0130 
+0131 <span class="comment">%          not very clear what's the purpose of the following lines</span>
+0132 <span class="comment">%         SXSTRING{i+j}=strrep(SXSTRING{i+j},'MARKER','MARKER,');</span>
+0133 <span class="comment">%         SXSTRING{i+j}=strrep(SXSTRING{i+j},'MARKER,,','MARKER,');</span>
+0134 <span class="comment">%         SXSTRING{i+j}=strrep(SXSTRING{i+j},'KICKER','KICKER,');</span>
+0135 <span class="comment">%         SXSTRING{i+j}=strrep(SXSTRING{i+j},'KICKER,,','KICKER,');</span>
+0136 <span class="comment">%         SXSTRING{i+j}=strrep(SXSTRING{i+j},'MONITOR','MONITOR,');</span>
+0137 <span class="comment">%         SXSTRING{i+j}=strrep(SXSTRING{i+j},'MONITOR,,','MONITOR,');</span>
+0138         
+0139         ElementType=SXSTRING{i+j}(1:end-1);
+0140 
+0141         nwel=SXSTRING{i+j}(end);
+0142       
+0143         <span class="keyword">switch</span> ElementType
+0144             <span class="keyword">case</span> {<span class="string">'QUAD'</span>,<span class="string">'quadrupole'</span>,<span class="string">'QUADRUPOLE'</span>, <span class="string">'QUADRUPO'</span>}
+0145                 def=[def <span class="string">'\n'</span>];
+0146                 def=[ def <span class="keyword">...</span>
+0147                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0148                     <span class="string">'=atquadrupole('''</span><span class="keyword">...</span>
+0149                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0150                     <span class="string">''',0,0,''StrMPoleSymplectic4Pass'');\n'</span><span class="keyword">...</span>
+0151                     SXSTRING{i}(1:end-1) <span class="string">'.(''NumIntSteps'')=10; \n'</span><span class="keyword">...</span>
+0152                     ];
+0153                 
+0154                 
+0155                 elemcount=elemcount+1;
+0156                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0157                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),SXSTRING{i+j},SXSTRING{i+j+1});
+0158                     j=j+1; <span class="comment">%go to new atribute</span>
+0159                     nwel=SXSTRING{i+j}(end);
+0160                 <span class="keyword">end</span>
+0161                 
+0162             <span class="keyword">case</span> {<span class="string">'SEXT'</span>,<span class="string">'sextupole'</span>,<span class="string">'SEXTUPOLE'</span>}
+0163                 def=[def <span class="string">'\n'</span>];
+0164                 def=[ def <span class="keyword">...</span>
+0165                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0166                     <span class="string">'=atsextupole('''</span><span class="keyword">...</span>
+0167                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0168                     <span class="string">''',0,0,''StrMPoleSymplectic4Pass'');\n'</span><span class="keyword">...</span>
+0169                     ];
+0170                 
+0171                 
+0172                 elemcount=elemcount+1;
+0173                 
+0174                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0175                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),SXSTRING{i+j},SXSTRING{i+j+1});
+0176                     
+0177                     j=j+1; <span class="comment">%go to new atribute</span>
+0178                     nwel=SXSTRING{i+j}(end);
+0179                 <span class="keyword">end</span>
+0180                 def=[ def <span class="keyword">...</span>
+0181                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')='</span> SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')*1/2'</span> <span class="string">';\n'</span> <span class="keyword">...</span>
+0182                 ];
+0183                 
+0184             <span class="keyword">case</span> {<span class="string">'rbend'</span>,<span class="string">'RBEND'</span>}
+0185                 
+0186                 def=[def <span class="string">'\n'</span>];
+0187                
+0188                 def=[ def <span class="keyword">...</span>
+0189                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0190                     <span class="string">'=atrbend('''</span><span class="keyword">...</span>
+0191                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0192                     <span class="string">''',0,0,0,''BndMPoleSymplectic4Pass'');\n'</span><span class="keyword">...</span>
+0193                     ];
+0194                 
+0195                 
+0196                 elemcount=elemcount+1;
+0197                 
+0198                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0199                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),SXSTRING{i+j},SXSTRING{i+j+1});
+0200                     
+0201                     j=j+1; <span class="comment">%go to new atribute</span>
+0202                     nwel=SXSTRING{i+j}(end);
+0203                 <span class="keyword">end</span>
+0204                 <span class="comment">% bendings are  sector by default. change to rectangular</span>
+0205                 def=[ def <span class="keyword">...</span>
+0206                  SXSTRING{i}(1:end-1) <span class="string">'.(''EntranceAngle'')='</span> SXSTRING{i}(1:end-1) <span class="string">'.(''EntranceAngle'')+'</span> SXSTRING{i}(1:end-1) <span class="string">'.(''BendingAngle'')/2; \n'</span><span class="keyword">...</span>
+0207                  SXSTRING{i}(1:end-1) <span class="string">'.(''ExitAngle'')='</span> SXSTRING{i}(1:end-1) <span class="string">'.(''ExitAngle'')+'</span> SXSTRING{i}(1:end-1) <span class="string">'.(''BendingAngle'')/2; \n'</span><span class="keyword">...</span>
+0208                    SXSTRING{i}(1:end-1) <span class="string">'.(''Length'')='</span> SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0209                      <span class="string">'.(''Length'')*('</span> SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0210                      <span class="string">'.(''BendingAngle'')/2)/sin('</span> SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0211                      <span class="string">'.(''BendingAngle'')/2); \n'</span><span class="keyword">...</span>
+0212                   SXSTRING{i}(1:end-1) <span class="string">'.(''MaxOrder'')=length('</span> SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB''))-1; \n'</span>];
+0213               
+0214             <span class="keyword">case</span> {<span class="string">'SBEN'</span>,<span class="string">'sbend'</span>,<span class="string">'SBEND'</span>}
+0215                 def=[def <span class="string">'\n'</span>];
+0216                 
+0217                 def=[ def <span class="keyword">...</span>
+0218                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0219                     <span class="string">'=atsbend('</span><span class="keyword">...</span>
+0220                     <span class="string">''''</span> SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0221                     <span class="string">''',0,0,0,''BndMPoleSymplectic4Pass'');\n'</span><span class="keyword">...</span>
+0222                     SXSTRING{i}(1:end-1) <span class="string">'.(''NumIntSteps'')=10; \n'</span><span class="keyword">...</span>
+0223                     ];
+0224                 
+0225                 elemcount=elemcount+1;
+0226                 
+0227                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0228                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0229                     SXSTRING{i+j},SXSTRING{i+j+1});
+0230                     j=j+1; <span class="comment">%go to new atribute</span>
+0231                     nwel=SXSTRING{i+j}(end);
+0232                 <span class="keyword">end</span>
+0233                 
+0234            def=[ def SXSTRING{i}(1:end-1) <span class="string">'.(''MaxOrder'')=length('</span> SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB''))-1; \n'</span>];
+0235               
+0236             <span class="keyword">case</span> {<span class="string">'DRIF'</span>,<span class="string">'DRIFT'</span>,<span class="string">'drift'</span>}
+0237                 def=[def <span class="string">'\n'</span>];
+0238                 
+0239                 def=[ def <span class="keyword">...</span>
+0240                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0241                     <span class="string">'=atdrift('</span><span class="keyword">...</span>
+0242                     <span class="string">''''</span> SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0243                     <span class="string">''',0,''DriftPass'');\n'</span><span class="keyword">...</span>
+0244                     ];
+0245                 
+0246                 
+0247                 elemcount=elemcount+1;
+0248                 
+0249                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0250                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0251                     SXSTRING{i+j},SXSTRING{i+j+1});
+0252                     
+0253                     j=j+1; <span class="comment">%go to new atribute</span>
+0254                     nwel=SXSTRING{i+j}(end);
+0255                 <span class="keyword">end</span>
+0256             <span class="keyword">case</span> {<span class="string">'RFC'</span>,<span class="string">'RFCA'</span>,<span class="string">'RFCAVITY'</span>,<span class="string">'rfcavity'</span>}
+0257                 def=[def <span class="string">'\n'</span>];
+0258                 
+0259                 def=[ def <span class="keyword">...</span>
+0260                     SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0261                     <span class="string">'=atrfcavity('''</span> SXSTRING{i}(1:end-1)<span class="keyword">...</span>
+0262                     <span class="string">''',0,0,0,0,'</span> num2str(E0) <span class="keyword">...</span>
+0263                     <span class="string">',''DriftPass'');\n'</span><span class="keyword">...</span>
+0264                     ];
+0265                 
+0266                 elemcount=elemcount+1;
+0267                 
+0268                 
+0269                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0270                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0271                     SXSTRING{i+j},SXSTRING{i+j+1});
+0272                     
+0273                     j=j+1; <span class="comment">%go to new atribute</span>
+0274                     nwel=SXSTRING{i+j}(end);
+0275                 <span class="keyword">end</span>
+0276             <span class="keyword">case</span> {<span class="string">'MULT'</span>,<span class="string">'MULTIPOLE'</span>,<span class="string">'multipole'</span>}
+0277                 <span class="comment">% multipoles should be StrMPoleSymplectic4Pass with short length</span>
+0278                 <span class="comment">% to be compatible with MADX</span>
+0279                 
+0280                 def=[def <span class="string">'\n'</span>];
+0281                 
+0282                 def=[ def <span class="keyword">...</span>
+0283                     SXSTRING{i}(1:end-1) <span class="string">'=atthinmultipole('</span><span class="keyword">...</span>
+0284                     <span class="string">''''</span> SXSTRING{i}(1:end-1) <span class="string">''''</span><span class="keyword">...</span>
+0285                     <span class="string">',[0 0 0 0],[0 0 0 0],'</span><span class="keyword">...</span>
+0286                     <span class="string">'''ThinMPolePass'');\n'</span><span class="keyword">...</span>
+0287                      SXSTRING{i}(1:end-1) <span class="string">'.(''Length'')=0; \n'</span><span class="keyword">...</span>
+0288                     ];
+0289                 
+0290                 
+0291                 elemcount=elemcount+1;
+0292                 <span class="comment">% MADX--&gt;   ocf0: multipole,knl:={ 0, 0, 0,kocf0 };</span>
+0293                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0294                     
+0295                 multipoles=[];
+0296                     <span class="keyword">if</span> strcmp(SXSTRING{i+j+1}(1),<span class="string">'{'</span>) <span class="comment">% if open paerntesis found</span>
+0297                         multipoles=[multipoles <span class="string">'['</span> SXSTRING{i+j+1}(2:end)];
+0298                         k=2;
+0299                         <span class="keyword">while</span> ~strcmp(SXSTRING{i+j+k}(end),<span class="string">'}'</span>) &amp;&amp; k&lt;10 <span class="comment">% look for closed parentesis</span>
+0300                             multipoles=[multipoles SXSTRING{i+j+k}];
+0301                             k=k+1;
+0302                         <span class="keyword">end</span>
+0303                         multipoles=[multipoles SXSTRING{i+j+k}(1:(end-1)) <span class="string">']'</span>];
+0304                         
+0305                     <span class="keyword">end</span>
+0306                     
+0307                     <span class="keyword">if</span> ~isempty(multipoles)
+0308                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0309                     SXSTRING{i+j},multipoles);
+0310                 
+0311                     <span class="keyword">else</span>
+0312                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0313                     SXSTRING{i+j},SXSTRING{i+j+1});
+0314                     <span class="keyword">end</span>
+0315                 j=j+1; <span class="comment">%go to new atribute</span>
+0316                     nwel=SXSTRING{i+j}(end);
+0317                     
+0318                 <span class="keyword">end</span>
+0319                 def=[ def <span class="keyword">...</span>
+0320                     SXSTRING{i}(1:end-1) <span class="string">'.(''Class'')=''Multipole''; \n'</span><span class="keyword">...</span><span class="comment">% max order size polynomb -1</span>
+0321                     SXSTRING{i}(1:end-1) <span class="string">'.(''MaxOrder'')=numel('</span> <span class="keyword">...</span>
+0322                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')'</span> <span class="string">')-1; \n'</span><span class="keyword">...</span><span class="comment">% max order size polynomb -1</span>
+0323                     <span class="string">'expansionCoefFixA=1./factorial([1: numel('</span> <span class="keyword">...</span>
+0324                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA''))]-1); \n'</span><span class="keyword">...</span>
+0325                     <span class="string">'expansionCoefFixB=1./factorial([1: numel('</span> <span class="keyword">...</span>
+0326                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB''))]-1); \n'</span><span class="keyword">...</span>
+0327                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')=('</span> <span class="keyword">...</span>
+0328                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')'</span> <span class="string">').*expansionCoefFixB; \n'</span><span class="keyword">...</span>
+0329                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA'')=('</span> <span class="keyword">...</span>
+0330                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA'')'</span> <span class="string">').*expansionCoefFixA; \n'</span><span class="keyword">...</span>
+0331                     ];
+0332                 
+0333             <span class="keyword">case</span> {<span class="string">'OCTUPOLE'</span>,<span class="string">'octupole'</span>}
+0334                 def=[def <span class="string">'\n'</span>];
+0335                 
+0336                 def=[ def <span class="keyword">...</span>
+0337                     SXSTRING{i}(1:end-1) <span class="string">'=atmultipole('</span><span class="keyword">...</span>
+0338                     <span class="string">''''</span> SXSTRING{i}(1:end-1) <span class="string">''''</span><span class="keyword">...</span>
+0339                     <span class="string">',0,[0 0 0 0],[0 0 0 0],'</span><span class="keyword">...</span>
+0340                     <span class="string">'''StrMPoleSymplectic4Pass'');\n'</span><span class="keyword">...</span>
+0341                     ];
+0342                 
+0343                 
+0344                 elemcount=elemcount+1;
+0345                 
+0346                 
+0347                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0348                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0349                     SXSTRING{i+j},SXSTRING{i+j+1});
+0350                     
+0351                     j=j+1; <span class="comment">%go to new atribute</span>
+0352                     nwel=SXSTRING{i+j}(end);
+0353                 <span class="keyword">end</span>
+0354                 
+0355                 <span class="comment">% fix madX-AT multipole coefficents</span>
+0356                 def=[ def <span class="keyword">...</span>
+0357                     SXSTRING{i}(1:end-1) <span class="string">'.(''Class'')=''Octupole''; \n'</span><span class="keyword">...</span><span class="comment">% max order size polynomb -1</span>
+0358                     SXSTRING{i}(1:end-1) <span class="string">'.(''MaxOrder'')=numel('</span> <span class="keyword">...</span>
+0359                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')'</span> <span class="string">')-1; \n'</span><span class="keyword">...</span><span class="comment">% max order size polynomb -1</span>
+0360                     <span class="string">'expansionCoefFixA=1./factorial([1: numel('</span> <span class="keyword">...</span>
+0361                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA''))]-1); \n'</span><span class="keyword">...</span>
+0362                     <span class="string">'expansionCoefFixB=1./factorial([1: numel('</span> <span class="keyword">...</span>
+0363                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB''))]-1); \n'</span><span class="keyword">...</span>
+0364                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')=('</span> <span class="keyword">...</span><span class="comment">.</span>
+0365                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')'</span> <span class="string">').*expansionCoefFixB; \n'</span><span class="keyword">...</span>
+0366                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA'')=('</span> <span class="keyword">...</span>
+0367                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA'')'</span> <span class="string">').*expansionCoefFixA; \n'</span><span class="keyword">...</span>
+0368                     ];
+0369                 
+0370             <span class="keyword">case</span> {<span class="string">'SOLENOID'</span>,<span class="string">'solenoid'</span>}
+0371                 def=[def <span class="string">'\n'</span>];
+0372                 
+0373                  def=[ def <span class="keyword">...</span>
+0374                     SXSTRING{i}(1:end-1) <span class="string">'=atsolenoid('</span><span class="keyword">...</span>
+0375                     <span class="string">''''</span> SXSTRING{i}(1:end-1) <span class="string">''''</span><span class="keyword">...</span>
+0376                     <span class="string">',0,0,'</span><span class="keyword">...</span>
+0377                     <span class="string">'''SolenoidLinearPass'');\n'</span><span class="keyword">...</span>
+0378                     ];
+0379                 
+0380                 
+0381                 elemcount=elemcount+1;
+0382                 
+0383                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0384                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0385                         SXSTRING{i+j},SXSTRING{i+j+1});
+0386                     
+0387                     j=j+1; <span class="comment">%go to new atribute</span>
+0388                     nwel=SXSTRING{i+j}(end);
+0389                 <span class="keyword">end</span>
+0390             <span class="keyword">case</span> {<span class="string">'MARKER'</span>,<span class="string">'marker'</span>,<span class="string">'marke'</span>}
+0391                 def=[def <span class="string">'\n'</span>];
+0392                 
+0393                 def=[ def <span class="keyword">...</span>
+0394                     SXSTRING{i}(1:end-1) <span class="string">'=atmarker('</span><span class="keyword">...</span>
+0395                     <span class="string">''''</span> SXSTRING{i}(1:end-1) <span class="string">''');\n'</span><span class="keyword">...</span>
+0396                      SXSTRING{i}(1:end-1) <span class="string">'.(''Length'')=0; \n'</span><span class="keyword">...</span>
+0397                      SXSTRING{i}(1:end-1) <span class="string">'.(''Class'')=''Marker''; \n'</span><span class="keyword">...</span>
+0398                     ];
+0399                 
+0400                 elemcount=elemcount+1;
+0401                 
+0402                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0403                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0404                         SXSTRING{i+j},SXSTRING{i+j+1});
+0405                     
+0406                     j=j+1; <span class="comment">%go to new atribute</span>
+0407                     nwel=SXSTRING{i+j}(end);
+0408                 <span class="keyword">end</span>
+0409             <span class="keyword">case</span> {<span class="string">'HMO'</span>,<span class="string">'VMO'</span>,<span class="string">'HMON'</span>,<span class="string">'VMON'</span>}
+0410                 def=[def <span class="string">'\n'</span>];
+0411 <span class="comment">%                      SXSTRING{i}(1:end-1) '.(''FamName'')=''' SXSTRING{i}(1:end-1) ''';\n' ...</span>
+0412                 def=[ def <span class="keyword">...</span>
+0413                     SXSTRING{i}(1:end-1) <span class="string">'.(''FamName'')=''BPM'';\n'</span> <span class="keyword">...</span>
+0414                     SXSTRING{i}(1:end-1) <span class="string">'.(''Class'')=''Monitor''; \n'</span><span class="keyword">...</span>
+0415                     SXSTRING{i}(1:end-1) <span class="string">'.(''BetaCode'')=''PU''; \n'</span><span class="keyword">...</span>
+0416                     SXSTRING{i}(1:end-1) <span class="string">'.(''PassMethod'')=''IdentityPass''; \n'</span><span class="keyword">...</span>
+0417                     SXSTRING{i}(1:end-1) <span class="string">'.(''MaxOrder'')=1; \n'</span><span class="keyword">...</span>
+0418                     SXSTRING{i}(1:end-1) <span class="string">'.(''NumIntSteps'')=2; \n'</span><span class="keyword">...</span>
+0419                     SXSTRING{i}(1:end-1) <span class="string">'.(''Length'')=0; \n'</span><span class="keyword">...</span>
+0420                     SXSTRING{i}(1:end-1) <span class="string">'.(''Energy'')='</span> num2str(E0) <span class="string">'; \n'</span><span class="keyword">...</span>
+0421                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomB'')=zeros(1,4); \n'</span><span class="keyword">...</span>
+0422                     SXSTRING{i}(1:end-1) <span class="string">'.(''PolynomA'')=zeros(1,4); \n'</span><span class="keyword">...</span>
+0423                     ];
+0424                 elemcount=elemcount+1;
+0425                 
+0426                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0427                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0428                         SXSTRING{i+j},SXSTRING{i+j+1});
+0429                     
+0430                     j=j+1; <span class="comment">%go to new atribute</span>
+0431                     nwel=SXSTRING{i+j}(end);
+0432                 <span class="keyword">end</span>
+0433                 
+0434             <span class="keyword">case</span> {<span class="string">'MAR'</span>,<span class="string">'MARK'</span>}
+0435                 
+0436                 def=[ def <span class="keyword">...</span>
+0437                     SXSTRING{i}(1:end-1) <span class="string">'.(''FamName'')='''</span> SXSTRING{i}(1:end-1) <span class="string">''';\n'</span> <span class="keyword">...</span>
+0438                     SXSTRING{i}(1:end-1) <span class="string">'.(''Class'')=''Monitor''; \n'</span><span class="keyword">...</span>
+0439                     SXSTRING{i}(1:end-1) <span class="string">'.(''Length'')=0; \n'</span><span class="keyword">...</span>
+0440                     SXSTRING{i}(1:end-1) <span class="string">'.(''PassMethod'')=''IdentityPass''; \n'</span><span class="keyword">...</span>
+0441                     ];
+0442                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0443                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0444                         SXSTRING{i+j},SXSTRING{i+j+1});
+0445                     
+0446                     j=j+1; <span class="comment">%go to new atribute</span>
+0447                     nwel=SXSTRING{i+j}(end);
+0448                 <span class="keyword">end</span>
+0449 
+0450             <span class="keyword">case</span> {<span class="string">'HKIC'</span>,<span class="string">'VKIC'</span>,<span class="string">'KIC'</span>,<span class="string">'hkic'</span>,<span class="string">'vkic'</span>,<span class="string">'kic'</span>}
+0451                 
+0452                 def=[def <span class="string">'\n'</span>];
+0453                 def=[ def <span class="keyword">...</span>
+0454                     SXSTRING{i}(1:end-1) <span class="string">'= atmultipole('</span><span class="keyword">...</span>
+0455                     <span class="string">''''</span> SXSTRING{i}(1:end-2) <span class="string">''''</span><span class="keyword">...</span>
+0456                     <span class="string">',0,[0 0 0 0],[0 0 0 0],'</span><span class="keyword">...</span>
+0457                     <span class="string">'''StrMPoleSymplectic4Pass'');\n'</span><span class="keyword">...</span>
+0458                     ];
+0459                 
+0460                 def=[ def <span class="keyword">...</span>
+0461                     SXSTRING{i}(1:end-1) <span class="string">'.(''MaxOrder'')=1; \n'</span><span class="keyword">...</span>
+0462                     SXSTRING{i}(1:end-1) <span class="string">'.(''Energy'')='</span> num2str(E0) <span class="string">'; \n'</span><span class="keyword">...</span>
+0463                     SXSTRING{i}(1:end-1) <span class="string">'.(''NumIntSteps'')=10; \n'</span><span class="keyword">...</span>
+0464                     ];
+0465                 
+0466                 
+0467                 elemcount=elemcount+1;
+0468                 
+0469                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0470                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0471                         SXSTRING{i+j},SXSTRING{i+j+1});
+0472                     
+0473                     j=j+1; <span class="comment">%go to new atribute</span>
+0474                     nwel=SXSTRING{i+j}(end);
+0475                 <span class="keyword">end</span>
+0476                 
+0477             <span class="keyword">case</span> {<span class="string">'MAXAMP'</span>,<span class="string">'maxamp'</span>}
+0478                 def = [def SXSTRING{i}(1:end-1) <span class="string">'= ataperture('</span><span class="keyword">...</span>
+0479                     <span class="string">''''</span> SXSTRING{i}(1:end-1) <span class="string">''''</span><span class="keyword">...</span>
+0480                     <span class="string">',[0 0 0 0],AperturePass'');\n'</span><span class="keyword">...</span>
+0481                     ];
+0482                 
+0483                 <span class="keyword">while</span> nwel~=<span class="string">':'</span> <span class="comment">% loops atributes of this element definition</span>
+0484                     def=<a href="ParseAtributesELEGANT_2_AT.html" class="code" title="function R=ParseAtributesELEGANT_2_AT(R,elname,var,val)">ParseAtributesELEGANT_2_AT</a>(def,SXSTRING{i}(1:end-1),<span class="keyword">...</span>
+0485                         SXSTRING{i+j},SXSTRING{i+j+1});
+0486                     
+0487                     j=j+1; <span class="comment">%go to new atribute</span>
+0488                     nwel=SXSTRING{i+j}(end);
+0489                 <span class="keyword">end</span>
+0490                 
+0491             <span class="keyword">case</span> {<span class="string">'LINE'</span>,<span class="string">'line'</span>}
+0492                 <span class="comment">% next element is the length</span>
+0493                 seqname=SXSTRING{i}(1:end-1);
+0494                 j=j+1;
+0495                 
+0496                 elname=SXSTRING{i+j};
+0497                 at=<span class="string">'at ='</span>;
+0498                 lines=[lines seqname <span class="string">'= {'</span>];
+0499                 
+0500                 <span class="keyword">while</span> strcmp(at,<span class="string">'at ='</span>) &amp;&amp; ~strcmp(elname,<span class="string">')'</span>)
+0501                 elname= SXSTRING{i+j};
+0502 
+0503                     <span class="keyword">if</span> ~strcmp(elname,<span class="string">')'</span>)
+0504                         elname=strrep(elname,<span class="string">' '</span>,<span class="string">''</span>);
+0505                         elname=strrep(elname,<span class="string">'  '</span>,<span class="string">''</span>);
+0506                         elname=strrep(elname,<span class="string">','</span>,<span class="string">''</span>);
+0507                         elname=strrep(elname,<span class="string">'('</span>,<span class="string">''</span>);
+0508                         elname=strrep(elname,<span class="string">')'</span>,<span class="string">''</span>);
+0509                 
+0510                         lines=[lines upper(elname) <span class="string">' '</span>];
+0511             
+0512                         j=j+1;
+0513                         
+0514                     <span class="keyword">end</span>                   
+0515                 <span class="keyword">end</span>
+0516                 lines=[lines <span class="string">'};\n'</span>];
+0517 
+0518 <span class="comment">%                 sposstring=[sposstring '];\n'];</span>
+0519 <span class="comment">%                 sposstring(10)=[]; % remove extra comma</span>
+0520                 <span class="comment">% call function that builds sequence from list of elements</span>
+0521                 <span class="comment">% and total length of sequence</span>
+0522                 
+0523             <span class="keyword">otherwise</span>
+0524                 disp([<span class="string">'Unknown element type: '</span> ElementType])
+0525             <span class="keyword">end</span>
+0526     <span class="keyword">end</span> <span class="comment">% if new element</span>
+0527     
+0528     i=i+j;
+0529     j=1;
+0530     
+0531 <span class="keyword">end</span>
+0532 lines = [lines <span class="string">'\n %% BUILD LATTICE \n'</span><span class="keyword">...</span>
+0533     <span class="string">'\nglobal THERING;\nTHERING = transpose('</span> seqname <span class="string">');\n'</span>];
+0534 
+0535 
+0536 <span class="comment">%% save close and exit</span>
+0537 
+0538 macroconvertmadXAT=strrep([mst def lines],<span class="string">';;'</span>,<span class="string">';'</span>);
+0539 fprintf(mafileout,macroconvertmadXAT);
+0540 
+0541 fclose(<span class="string">'all'</span>);
+0542 
+0543 <span class="comment">%% clean workspace</span>
+0544 clear macroconvertmadXAT def lines mst 
+0545 clear SXSTRING i j SXCELL elemcount ElementType elname
+0546 
+0547 <span class="comment">%% run macro file and save workspace.</span>
+0548 
+0549 [~,elegantlattice] = fileparts(elegantlattice);
+0550 
+0551 <span class="keyword">try</span> <span class="comment">% try to run the macro generated</span>
+0552     <span class="comment">%%%!!!!! THIS COMAND MAY FAIL! CHECK THE ORDER OF THE DECLARATIONS IN MADX!</span>
+0553     run(filemacroname)
+0554         
+0555     <span class="keyword">if</span> nargin&lt;3
+0556         fileoutname = [elegantlattice <span class="string">'_AT.m'</span>];
+0557     <span class="keyword">end</span>
+0558     
+0559     name=strrep(fileoutname,<span class="string">'.m'</span>,<span class="string">''</span>);
+0560     varoutname=sprintf(<span class="string">'%s.mat'</span>,name);  
+0561 
+0562     save(varoutname,<span class="string">'THERING'</span>);
+0563     
+0564     fclose(<span class="string">'all'</span>);
+0565 
+0566     movefile(filemacroname,fileoutname);
+0567 <span class="comment">%   delete(filemacroname);</span>
+0568     
+0569 
+0570 <span class="keyword">catch</span> <span class="comment">%#ok&lt;CTCH&gt;</span>
+0571     
+0572     fileoutname=[elegantlattice <span class="string">'_AT_macro.m'</span>];
+0573     movefile(filemacroname,fileoutname);
+0574 
+0575     disp([<span class="string">'saved macro in : '</span> fileoutname]);
+0576     
+0577     error([<span class="string">'Could not run the macro file.'</span><span class="keyword">...</span>
+0578         <span class="string">' It is now in your current directory.'</span><span class="keyword">...</span>
+0579         <span class="string">' Please check the order of the definitions'</span>]);
+0580 <span class="keyword">end</span>
+0581 
+0582 
+0583 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findcells</title>
+  <meta name="keywords" content="findcells">
+  <meta name="description" content="FINDCELLS performs a search on MATLAB cell arrays of structures">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; findcells.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>findcells
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>FINDCELLS performs a search on MATLAB cell arrays of structures</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function index = findcells(CELLARRAY, field, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDCELLS performs a search on MATLAB cell arrays of structures
+   
+ INDEX = FINDCELLS(CELLARRAY, 'field') 
+   returns indexes of elements that have a field named 'field'   
+
+ INDEX = FINDCELLS(CELLARRAY, 'field', VALUE) 
+   returns indexes of elements whose field 'field'
+   is equal to VALUE1, VALUE2, ... or VALUEN. Where VALUE can either be
+   character strings or a number. If its a character string REGULAR
+   expressions can be used.
+
+ Example:
+   findcells(THERING,'Length',0, 0.2);  % will match elements of
+                                          lengths 0 and 0.2
+   findcells(THERING,'FamName','SFA','SDA');
+
+ See also <a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">ATGETCELLS</a>, <a href="getcellstruct.html" class="code" title="function values = getcellstruct(CELLARRAY,field,index,varargin)">GETCELLSTRUCT</a>, <a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">SETCELLSTRUCT</a>, REGEXPI</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">atgetcells</a>	ATGETCELLS performs a search on MATLAB cell arrays of structures</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atmakefielderrstruct.html" class="code" title="function ferrs = atmakefielderrstruct(ring,class,nval,Bval,Aval,radius,rnd)">atmakefielderrstruct</a>	MAKERNDFIELDERRS will create a field error data structure</li><li><a href="atsetRFCavity.html" class="code" title="function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq )">atsetRFCavity</a>	ATSETRFCAVITY - sets the RF Cavity with the passmethod RFCavityPass.</li><li><a href="combinebypassmethod.html" class="code" title="function [NEWLATTICE, SHIFTEDKEEPINDEX, SHIFTEDREFINDEX] = combinebypassmethod(LATTICE,METHOD,KEEPINDEX,REFINDEX)">combinebypassmethod</a>	COMBINEBYPASSMETHOD combines adjacent elements that have the same specified pass method</li><li><a href="combinelinear45.html" class="code" title="function [NEWLATTICE, SHIFTEDKEEPINDEX, SHIFTEDREFINDEX] = combinelinear45(LATTICE,KEEPINDEX,REFINDEX)">combinelinear45</a>	COMBINELINEAR45 combines adjacent  elements that use 4-by-5 PassMethods</li><li><a href="findtags.html" class="code" title="function index = findtags(CELLARRAY, MATCHSTR)">findtags</a>	FINDTAGS looks for string matches in 'Tag' field of AT lattice elements</li><li><a href="settags.html" class="code" title="function LATTICE = settags(LATTICE,INDEX,tag,varargin)">settags</a>	SETTAGS sets the 'Tag' field in AT lattice elements</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function index = findcells(CELLARRAY, field, varargin)</a>
+0002 <span class="comment">%FINDCELLS performs a search on MATLAB cell arrays of structures</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% INDEX = FINDCELLS(CELLARRAY, 'field')</span>
+0005 <span class="comment">%   returns indexes of elements that have a field named 'field'</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% INDEX = FINDCELLS(CELLARRAY, 'field', VALUE)</span>
+0008 <span class="comment">%   returns indexes of elements whose field 'field'</span>
+0009 <span class="comment">%   is equal to VALUE1, VALUE2, ... or VALUEN. Where VALUE can either be</span>
+0010 <span class="comment">%   character strings or a number. If its a character string REGULAR</span>
+0011 <span class="comment">%   expressions can be used.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% Example:</span>
+0014 <span class="comment">%   findcells(THERING,'Length',0, 0.2);  % will match elements of</span>
+0015 <span class="comment">%                                          lengths 0 and 0.2</span>
+0016 <span class="comment">%   findcells(THERING,'FamName','SFA','SDA');</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% See also ATGETCELLS, GETCELLSTRUCT, SETCELLSTRUCT, REGEXPI</span>
+0019 
+0020 index=reshape(find(<a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">atgetcells</a>(CELLARRAY,field,varargin{:})),1,[]);</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

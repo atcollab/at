@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of testerrRotCorrector</title>
+  <meta name="keywords" content="testerrRotCorrector">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">TILT</a> &gt; testerrRotCorrector.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/TILT&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>testerrRotCorrector
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 clear all
+0002 close all
+0003 
+0004 <span class="comment">% load lattice</span>
+0005 load ../../ESRFLattice.mat
+0006 
+0007 <span class="comment">% get indexes</span>
+0008 indc=indHCor;
+0009 
+0010 <span class="comment">%set correctors to 1e-5 rad horizontal kick</span>
+0011 ring0=ring;
+0012 ring=atsetfieldvalues(ring,indc(45),<span class="string">'PolynomB'</span>,{1,1},1e-4);
+0013 
+0014 
+0015 <span class="comment">% define s-axis rotation errors in correctors</span>
+0016 dt=1e-3*randn(size(indc)); <span class="comment">% random errors of 1um</span>
+0017 
+0018 <span class="comment">% set errors</span>
+0019 ringerr=atsettilt(ring,indc,dt);
+0020 
+0021 
+0022 <span class="comment">% plots</span>
+0023 [twin,~,~]=atlinopt(ring0,0,1);
+0024 
+0025 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35])
+0026 atplot(ring,<span class="string">'comment'</span>,[],<span class="string">'inputtwiss'</span>,twin,@plClosedOrbit)
+0027 saveas(gca,<span class="string">'OrbitNoErrTiltCor.fig'</span>)
+0028 export_fig(<span class="string">'OrbitNoErrTiltCor.jpg'</span>,<span class="string">'-r300'</span>)
+0029 
+0030 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35])
+0031 atplot(ringerr,<span class="string">'comment'</span>,[],<span class="string">'inputtwiss'</span>,twin,@plClosedOrbit)
+0032 saveas(gca,<span class="string">'OrbitWithErrTiltCor.fig'</span>)
+0033 export_fig(<span class="string">'OrbitWithErrTiltCor.jpg'</span>,<span class="string">'-r300'</span>)
+0034 
+0035 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.3 0.3 0.45 0.35])
+0036 s=findspos(ring,indc);
+0037 plot(s,dt,<span class="string">'b.'</span>);
+0038 atplotsyn(gca,ringerr);
+0039 axis tight;
+0040 xlabel(<span class="string">'s [m]'</span>);
+0041 ylabel(<span class="string">'s-axis rotation [rad]'</span>);
+0042 
+0043 saveas(gca,<span class="string">'SetErrTiltCor.fig'</span>)
+0044 export_fig(<span class="string">'SetErrTiltCor.jpg'</span>,<span class="string">'-r300'</span>)
+0045</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

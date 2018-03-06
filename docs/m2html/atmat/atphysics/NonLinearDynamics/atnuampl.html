@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atnuampl</title>
+  <meta name="keywords" content="atnuampl">
+  <meta name="description" content="ATNUAMPL	computes tune shift with amplitude">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">NonLinearDynamics</a> &gt; atnuampl.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/NonLinearDynamics&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atnuampl
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATNUAMPL	computes tune shift with amplitude</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout=atnuampl(ring,ampl,xz,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATNUAMPL    computes tune shift with amplitude
+[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE)
+[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE,1)
+
+    Computes tunes for the specified horizontal amplitudes
+
+[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE,3)
+
+    Computes tunes for the specified vertical amplitudes
+
+ATNUAMPL(...)
+   Plots the computed tunes in the current axes
+
+ATNUAMPL(...,Name,Value)
+   Uses additional options specified by one or more Name,Value pairs.
+   Possible values are:
+       nturns: specify the number of turns for tracking (default 256)
+       method: specify the method for tune determination
+               1: Highest peak in fft
+               2: Interpolation on fft results
+               3: Windowing + interpolation (default)
+               4: NAFF
+   Other options are transmitted to the plot function</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout=atnuampl(ring,ampl,xz,varargin)</a>
+0002 <span class="comment">%ATNUAMPL    computes tune shift with amplitude</span>
+0003 <span class="comment">%[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE)</span>
+0004 <span class="comment">%[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE,1)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%    Computes tunes for the specified horizontal amplitudes</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%[NUX,NUZ]=ATNUAMPL(RING,AMPLITUDE,3)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%    Computes tunes for the specified vertical amplitudes</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%ATNUAMPL(...)</span>
+0013 <span class="comment">%   Plots the computed tunes in the current axes</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%ATNUAMPL(...,Name,Value)</span>
+0016 <span class="comment">%   Uses additional options specified by one or more Name,Value pairs.</span>
+0017 <span class="comment">%   Possible values are:</span>
+0018 <span class="comment">%       nturns: specify the number of turns for tracking (default 256)</span>
+0019 <span class="comment">%       method: specify the method for tune determination</span>
+0020 <span class="comment">%               1: Highest peak in fft</span>
+0021 <span class="comment">%               2: Interpolation on fft results</span>
+0022 <span class="comment">%               3: Windowing + interpolation (default)</span>
+0023 <span class="comment">%               4: NAFF</span>
+0024 <span class="comment">%   Other options are transmitted to the plot function</span>
+0025 
+0026 
+0027 lab={<span class="string">'x^2'</span>,<span class="string">'p_x^2'</span>,<span class="string">'z^2'</span>,<span class="string">'p_z^2'</span>};
+0028 <span class="keyword">if</span> nargin &lt; 3, xz=1; <span class="keyword">end</span>
+0029 <span class="keyword">if</span> ~isempty(varargin) &amp;&amp; isnumeric(varargin{1})
+0030     orbit=varargin{1};
+0031     varargin(1)=[];
+0032 <span class="keyword">else</span>
+0033     warning off MATLAB:singularMatrix
+0034     orbit=findorbit6(ring);
+0035     warning on MATLAB:singularMatrix
+0036     <span class="keyword">if</span> ~all(isfinite(orbit))
+0037         orbit=zeros(6,1);
+0038         orbit(1:5)=findsyncorbit(ring,0);
+0039     <span class="keyword">end</span>
+0040 <span class="keyword">end</span>
+0041 [nturns,varargin]=getoption(varargin,<span class="string">'nturns'</span>,256);
+0042 [method,varargin]=getoption(varargin,<span class="string">'method'</span>,3);
+0043 
+0044 [~,nbper]=atenergy(ring);
+0045 [lindata,fractune0]=atlinopt(ring,0,1:length(ring)+1);
+0046 tune0=nbper*lindata(end).mu/2/pi;
+0047 offs=[nbper -nbper];
+0048 siza=size(ampl);
+0049 nampl=prod(siza);
+0050 p0=repmat(0.00003*[1;0;1;0;0;0], 1,nampl); <span class="comment">% 30 microns minimum amplitude</span>
+0051 p0(xz,:)=max(p0(xz,:),ampl(:)');
+0052 p0=p0+orbit(:,ones(1,nampl));
+0053 p1=ringpass(ring,p0,nturns)-orbit(:,ones(1,nampl*nturns));
+0054 tunetrack=[findtune(reshape(p1(1,:),nampl,nturns)',method);<span class="keyword">...</span>
+0055     findtune(reshape(p1(3,:),nampl,nturns)',method)]';
+0056 [~,k]=min([fractune0-tunetrack(1,:); 1-fractune0-tunetrack(1,:)]);
+0057 np=offs(k);
+0058 offset=round(tune0-np.*tunetrack(1,:));
+0059 tunetrack=np(ones(nampl,1),:).*tunetrack + offset(ones(nampl,1),:);
+0060 <span class="keyword">if</span> nargout &gt; 0
+0061     varargout={reshape(tunetrack(:,1),siza),reshape(tunetrack(:,2),siza)};
+0062 <span class="keyword">else</span>
+0063     inttunes=floor(tune0);
+0064     plot((ampl.*ampl)',tunetrack-inttunes(ones(nampl,1),:),<span class="string">'o-'</span>,varargin{:});
+0065     legend(<span class="string">'\nu_x'</span>,<span class="string">'\nu_z'</span>);
+0066     xlabel(lab{xz});
+0067     ylabel(<span class="string">'\nu'</span>);
+0068     grid on
+0069 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

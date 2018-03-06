@@ -89,7 +89,7 @@ function updateContents(folder)
     % write to output
     nrows = length(files);
     fid = fopen(filename, 'w'); % open file for writing
-    fprintf(fid, '%s\n%% \n', ['% ' upper(name)]);
+    fprintf(fid, '%s\n%% See also \n%% \n', ['% ' upper(name)]);
     fprintf(fid, '%s\n', ['%   Contents file for ' upper(folder(fIX+1:end)) ' and its subfolders.']);
     for row=1:nrows
         if isempty(H1_lines{row})

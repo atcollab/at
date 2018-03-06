@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of attiltelem</title>
+  <meta name="keywords" content="attiltelem">
+  <meta name="description" content="ATTILTELEM sets new rotation parameters">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; attiltelem.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>attiltelem
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATTILTELEM sets new rotation parameters</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function elem = attiltelem(elem,PSI) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATTILTELEM sets new rotation parameters
+  NEWELEM = ATTILTELEM(OLDELEM,PSI)
+
+  PSI - rotation angle in radians
+   POSITIVE ROTS corresponds to a CORKSCREW (right) 
+   rotation of the ELEMENT looking in the direction of the beam.
+   (or CORKSCREW, aligned with s-axis) rotation of the ELEMENT
+   The rotation matrixes are stored in fields R1 and R2
+   R1 = [cos(PSI) sin(PSI); -sin(PSI) cos(PSI)]
+   R2 = R1'
+
+  See also <a href="atshiftelem.html" class="code" title="function elem = atshiftelem(elem,dx,dz)">ATSHIFTELEM</a>, ATMODELEM</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atsettilt.html" class="code" title="function ring=atsettilt(varargin)">atsettilt</a>	ATSETTILT sets the entrance and exit rotation matrices</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function elem = attiltelem(elem,PSI)</a>
+0002 <span class="comment">%ATTILTELEM sets new rotation parameters</span>
+0003 <span class="comment">%  NEWELEM = ATTILTELEM(OLDELEM,PSI)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%  PSI - rotation angle in radians</span>
+0006 <span class="comment">%   POSITIVE ROTS corresponds to a CORKSCREW (right)</span>
+0007 <span class="comment">%   rotation of the ELEMENT looking in the direction of the beam.</span>
+0008 <span class="comment">%   (or CORKSCREW, aligned with s-axis) rotation of the ELEMENT</span>
+0009 <span class="comment">%   The rotation matrixes are stored in fields R1 and R2</span>
+0010 <span class="comment">%   R1 = [cos(PSI) sin(PSI); -sin(PSI) cos(PSI)]</span>
+0011 <span class="comment">%   R2 = R1'</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%  See also ATSHIFTELEM, ATMODELEM</span>
+0014 
+0015 C       = cos(PSI);
+0016 S       = sin(PSI);
+0017 RM      = diag([C C C C 1 1]);
+0018 RM(1,3) = S;
+0019 RM(2,4) = S;
+0020 RM(3,1) = -S;
+0021 RM(4,2) = -S;
+0022 elem.R1 = RM;
+0023 elem.R2 = RM';
+0024 <span class="keyword">end</span>
+0025</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

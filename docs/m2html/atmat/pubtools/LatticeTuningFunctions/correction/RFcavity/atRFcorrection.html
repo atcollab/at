@@ -1,0 +1,266 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atRFcorrection</title>
+  <meta name="keywords" content="atRFcorrection">
+  <meta name="description" content="function [...">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">RFcavity</a> &gt; atRFcorrection.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/RFcavity&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>atRFcorrection
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [...</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [rcor,inCOD,fc.]=atRFcorrection(rerr,indBPM,inCOD,neigSteerer,scalefactor,ModelRM,reforbit,printouttext) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function [...
+    rcor,...           1) corrected lattice
+    inCOD,...          2) initial COD 
+    fc...              3) required frequency change
+    ]=atRFcorrection(...
+     rerr,...          1) AT lattice to correct
+     indBPM,...        2) Nbx1 bpm indexes
+     inCOD,...         3) 6x1 initial COD guess
+     neigSteerer,...   4) 1xNiter eigenvectors for correction dpp (default: [1])
+     scalefactor,...   5) scale factor to correction (default: 1.0)
+     ModelRM,...       6) ModelRM.Orb(H/V)DPP = 6x1 array of orbit
+                          response to dpp
+                          if [] compute RM (default: [])
+     reforbit,...      7) 2xNbpm reference orbit to correct to (default 0*2xNb)
+     printouttext      8) if 1 or true, display rms orbit
+     )
+
+ corrects RF frequency and TimeLag to have 0 timeLag at cavities and
+ minimize the dispersive contribution to orbit ( final &lt;dpp&gt;_ring =0 )
+
+ features impelemented:
+ ddp correction
+ 6D orbit with BPM errors
+ initial coordinate
+ correction to reference orbit refx refy
+ use atsetfieldvalues, atgetcells
+
+
+see also: qemsvd_mod findorbit6Err getresponsematrices</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="testsetRFCavityErr.html" class="code" title="">testsetRFCavityErr</a>	test errors and correction functions</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [</a><span class="keyword">...</span>
+0002     rcor,<span class="keyword">...</span>
+0003     inCOD,<span class="keyword">...</span>
+0004     fc<span class="keyword">...</span><span class="comment">.</span>
+0005     ]=atRFcorrection(<span class="keyword">...</span>
+0006     rerr,<span class="keyword">...</span>
+0007     indBPM,<span class="keyword">...</span>
+0008     inCOD,<span class="keyword">...</span>
+0009     neigSteerer,<span class="keyword">...</span>
+0010     scalefactor,<span class="keyword">...</span>
+0011     ModelRM,<span class="keyword">...</span>
+0012     reforbit,<span class="keyword">...</span>
+0013     printouttext)
+0014 <span class="comment">% function [...</span>
+0015 <span class="comment">%    rcor,...           1) corrected lattice</span>
+0016 <span class="comment">%    inCOD,...          2) initial COD</span>
+0017 <span class="comment">%    fc...              3) required frequency change</span>
+0018 <span class="comment">%    ]=atRFcorrection(...</span>
+0019 <span class="comment">%     rerr,...          1) AT lattice to correct</span>
+0020 <span class="comment">%     indBPM,...        2) Nbx1 bpm indexes</span>
+0021 <span class="comment">%     inCOD,...         3) 6x1 initial COD guess</span>
+0022 <span class="comment">%     neigSteerer,...   4) 1xNiter eigenvectors for correction dpp (default: [1])</span>
+0023 <span class="comment">%     scalefactor,...   5) scale factor to correction (default: 1.0)</span>
+0024 <span class="comment">%     ModelRM,...       6) ModelRM.Orb(H/V)DPP = 6x1 array of orbit</span>
+0025 <span class="comment">%                          response to dpp</span>
+0026 <span class="comment">%                          if [] compute RM (default: [])</span>
+0027 <span class="comment">%     reforbit,...      7) 2xNbpm reference orbit to correct to (default 0*2xNb)</span>
+0028 <span class="comment">%     printouttext      8) if 1 or true, display rms orbit</span>
+0029 <span class="comment">%     )</span>
+0030 <span class="comment">%</span>
+0031 <span class="comment">% corrects RF frequency and TimeLag to have 0 timeLag at cavities and</span>
+0032 <span class="comment">% minimize the dispersive contribution to orbit ( final &lt;dpp&gt;_ring =0 )</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">% features impelemented:</span>
+0035 <span class="comment">% ddp correction</span>
+0036 <span class="comment">% 6D orbit with BPM errors</span>
+0037 <span class="comment">% initial coordinate</span>
+0038 <span class="comment">% correction to reference orbit refx refy</span>
+0039 <span class="comment">% use atsetfieldvalues, atgetcells</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">%</span>
+0042 <span class="comment">%see also: qemsvd_mod findorbit6Err getresponsematrices</span>
+0043 
+0044 
+0045 
+0046 <span class="comment">% response matrix kicks</span>
+0047 kval=1e-5;
+0048 delta=1e-3;
+0049 
+0050 alpha=mcf(rerr);
+0051 indrfc=find(atgetcells(rerr,<span class="string">'Frequency'</span>));
+0052 
+0053 <span class="comment">% default arguments</span>
+0054 <span class="keyword">if</span> nargin&lt;8
+0055     printouttext=true;
+0056 <span class="keyword">end</span>
+0057 
+0058 <span class="keyword">if</span> nargin&lt;2
+0059     <span class="keyword">if</span> printouttext
+0060         disp(<span class="string">'get BPM and Correctors indexes'</span>); <span class="keyword">end</span>;
+0061     indBPM=finc(atgetcells(rerr,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>));
+0062 <span class="keyword">end</span>
+0063 
+0064 <span class="keyword">if</span> nargin&lt;3
+0065     inCOD=[0 0 0 0 0 0]';
+0066 <span class="keyword">end</span>
+0067 
+0068 <span class="keyword">if</span> nargin&lt;4
+0069     neigSteerer=1;
+0070 <span class="keyword">end</span>
+0071 
+0072 
+0073 <span class="keyword">if</span> nargin&lt;5
+0074     <span class="keyword">if</span> printouttext
+0075         disp(<span class="string">' --- scale set to 1.0'</span>); <span class="keyword">end</span>;
+0076     scalefactor=1.0;
+0077 <span class="keyword">end</span>
+0078 
+0079 <span class="keyword">if</span> nargin&lt;6
+0080     <span class="keyword">if</span> printouttext, disp(<span class="string">' --- computing orbit Response matrix'</span>); <span class="keyword">end</span>;
+0081     ModelRM=[];
+0082 <span class="keyword">end</span>
+0083 
+0084 <span class="keyword">if</span> nargin&lt;7
+0085     <span class="keyword">if</span> printouttext, disp(<span class="string">' --- reference orbit = 0'</span>); <span class="keyword">end</span>;
+0086     reforbit=zeros(2,length(indBPM));
+0087 <span class="keyword">end</span>
+0088 
+0089 <span class="keyword">if</span> scalefactor&lt;0 || scalefactor&gt;1
+0090     <span class="keyword">if</span> printouttext
+0091         disp(<span class="string">' --- scale factor out of range. Set to 1.0'</span>); <span class="keyword">end</span>;
+0092     scalefactor=1.0;
+0093 <span class="keyword">end</span>
+0094 
+0095 <span class="comment">% load or compute response matrix</span>
+0096 <span class="keyword">if</span> isempty(ModelRM)
+0097     <span class="comment">% get orbit RM</span>
+0098     <span class="keyword">if</span> printouttext
+0099         disp(<span class="string">'get orbit RM'</span>); <span class="keyword">end</span>;
+0100     
+0101         ModelRM=getresponsematrices(<span class="keyword">...</span>
+0102             rerr,<span class="keyword">...</span><span class="comment">          %1 AT lattice</span>
+0103             indBPM,<span class="keyword">...</span><span class="comment">      %2 bpm indexes in at lattice</span>
+0104             [],<span class="keyword">...</span><span class="comment">     %3 h cor indexes</span>
+0105             [],<span class="keyword">...</span><span class="comment">     %4 v cor indexes</span>
+0106             [],<span class="keyword">...</span><span class="comment">     %5 skew cor indexes</span>
+0107             [],<span class="keyword">...</span><span class="comment">     %6 quad cor indexes</span>
+0108             [],<span class="keyword">...</span>
+0109             inCOD,<span class="keyword">...</span><span class="comment">       %7 initial coordinates</span>
+0110             [3]<span class="keyword">...</span><span class="comment">      %8 specifiy rm to be computed</span>
+0111             );
+0112    
+0113 <span class="keyword">end</span>
+0114 
+0115 <span class="comment">% kval=ModelRM.kval;</span>
+0116 dppH=ModelRM.OrbHDPP;
+0117 dppV=ModelRM.OrbVDPP;
+0118 <span class="comment">% delta=ModelRM.delta;</span>
+0119 
+0120 <span class="comment">% get intiial RF</span>
+0121 f0=rerr{indrfc(1)}.Frequency;
+0122 tlag0=atgetfieldvalues(rerr,indrfc,<span class="string">'TimeLag'</span>);
+0123     
+0124 <span class="comment">% get initial orbit</span>
+0125 o=findorbit6Err(rerr,indBPM,inCOD);
+0126 ox0=o(1,:);
+0127 oy0=o(3,:);
+0128 
+0129 <span class="comment">%rerr0=rerr;</span>
+0130 
+0131 <span class="comment">% iterate correction</span>
+0132 Niter=size(neigSteerer,1);
+0133 <span class="keyword">for</span> iter=1:Niter
+0134     
+0135     <span class="keyword">if</span> printouttext
+0136         disp([<span class="string">'RF correction iter '</span> num2str(iter,<span class="string">'%d, '</span>) <span class="string">'n-eig: '</span> num2str(neigSteerer(iter,:),<span class="string">'%d, '</span>)]);
+0137     <span class="keyword">end</span>
+0138     
+0139     <span class="comment">% intial RF frequency</span>
+0140     f=rerr{indrfc(1)}.Frequency;
+0141     tlag=atgetfieldvalues(rerr,indrfc,<span class="string">'TimeLag'</span>);
+0142         
+0143     <span class="comment">% get current orbit</span>
+0144     o=findorbit6Err(rerr,indBPM,inCOD);
+0145     ox=o(1,:);
+0146     
+0147     <span class="comment">% subtract reference orbit</span>
+0148     ox=ox-reforbit(1,:);
+0149     
+0150     <span class="comment">% build RMs</span>
+0151     
+0152     RMH=dppH';
+0153     
+0154     <span class="comment">% compute correction</span>
+0155     dd=qemsvd_mod(RMH,ox',neigSteerer(iter,1));
+0156     
+0157    
+0158     <span class="comment">% set RF correction</span>
+0159     rcor=atsetfieldvalues(rerr,indrfc,<span class="string">'Frequency'</span>,f-alpha*(-dd)*f);
+0160     
+0161     <span class="comment">% reset TimeLag</span>
+0162     orb = findorbit6(rcor,indrfc,inCOD);
+0163     rcor=atsetfieldvalues(rcor,indrfc,<span class="string">'TimeLag'</span>,tlag-orb(6,:)');
+0164     
+0165     <span class="keyword">if</span> printouttext
+0166         disp([<span class="string">'Delta RF : '</span> num2str(-alpha*(dd)*f) <span class="string">' Hz'</span>]);
+0167         disp([<span class="string">'Delta TimeLag : '</span> num2str(-orb(6,:)*1e6) <span class="string">' um'</span>]);
+0168     <span class="keyword">end</span>
+0169     
+0170     <span class="comment">% lattice start point for next iteration</span>
+0171     rerr=rcor;
+0172 <span class="keyword">end</span>
+0173 
+0174 <span class="comment">% get current orbit</span>
+0175 o=findorbit6Err(rcor,indBPM,inCOD);
+0176 oxc=o(1,:);
+0177 
+0178 <span class="comment">% intial RF frequency</span>
+0179 fc=rcor{indrfc(1)}.Frequency;
+0180 tlagc=atgetfieldvalues(rcor,indrfc,<span class="string">'TimeLag'</span>);
+0181     
+0182 inCOD=findorbit6Err(rcor,1,inCOD);
+0183 
+0184 <span class="keyword">if</span> printouttext
+0185     <span class="comment">% display results</span>
+0186     disp([<span class="string">'      before'</span> <span class="string">'    '</span> <span class="string">'--&gt;'</span> <span class="string">'    '</span> <span class="string">'after'</span>])
+0187     disp([<span class="string">'oX: '</span> num2str(std(ox0-reforbit(1,:))*1e6,<span class="string">'%3.3f'</span>) <span class="string">' -&gt; '</span> num2str(std(oxc-reforbit(1,:))*1e6,<span class="string">'%3.3f'</span>) <span class="string">'um'</span>]);
+0188     disp([<span class="string">'freq: '</span> num2str(f0,<span class="string">'%3.3f'</span>) <span class="string">' -&gt; '</span> num2str(fc,<span class="string">'%3.3f'</span>) <span class="string">' Hz '</span> <span class="string">' '</span> num2str(fc-f0,<span class="string">'%3.3f'</span>) <span class="string">' Hz '</span>]);
+0189     disp([<span class="string">'tlag: '</span> num2str(tlag0',<span class="string">'%3.3f, '</span>) <span class="string">' -&gt; '</span> num2str(tlagc',<span class="string">'%3.3f, '</span>) <span class="string">' m'</span> <span class="string">' '</span> num2str(tlagc'-tlag0',<span class="string">'%3.3f'</span>) ]);
+0190    disp([<span class="string">'dpp: '</span> num2str(inCOD(5))])
+0191 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

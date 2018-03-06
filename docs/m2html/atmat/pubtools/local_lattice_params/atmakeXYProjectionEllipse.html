@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atmakeXYProjectionEllipse</title>
+  <meta name="keywords" content="atmakeXYProjectionEllipse">
+  <meta name="description" content="ATMAKEXYPROJECTIONELLIPSE Gives points to plot the contour ellipses">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">pubtools</a> &gt; <a href="index.html">local_lattice_params</a> &gt; atmakeXYProjectionEllipse.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/local_lattice_params&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atmakeXYProjectionEllipse
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATMAKEXYPROJECTIONELLIPSE Gives points to plot the contour ellipses</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [x,y] =atmakeXYProjectionEllipse( sigxx,sigyy,sigxy ) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATMAKEXYPROJECTIONELLIPSE Gives points to plot the contour ellipses
+given the second spatial moments &lt;x^2&gt;, &lt;y^2&gt;, and &lt;xy&gt;</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="plotContours.html" class="code" title="function h=plotContours(ring,indices,colorplotstr)">plotContours</a>	PLOTCONTOURS Plots contours</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [x,y] =atmakeXYProjectionEllipse( sigxx,sigyy,sigxy )</a>
+0002 <span class="comment">%ATMAKEXYPROJECTIONELLIPSE Gives points to plot the contour ellipses</span>
+0003 <span class="comment">%given the second spatial moments &lt;x^2&gt;, &lt;y^2&gt;, and &lt;xy&gt;</span>
+0004 
+0005 <span class="comment">%we solve for effective Twiss parameters and emittance.</span>
+0006 <span class="comment">%Note that since this is x-y space, this is just a computational tool</span>
+0007 <span class="comment">%This emittance is not constant around ring.</span>
+0008 
+0009 <span class="comment">%first compute epsilon</span>
+0010 eps=sqrt(sigxx.*sigyy-sigxy.^2);
+0011 <span class="comment">%now compute beta,gamma,alpha</span>
+0012 beta=sigxx./eps;
+0013 gamma=sigyy./eps;
+0014 alpha=-sigxy./eps;
+0015 
+0016 t=linspace(0,2*pi);
+0017 xh=sqrt(eps)*cos(t);
+0018 yh=sqrt(eps)*sin(t);
+0019 
+0020 x=sqrt(beta)*xh;
+0021 y=(-alpha/sqrt(beta))*xh+(1/sqrt(beta))*yh;
+0022</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

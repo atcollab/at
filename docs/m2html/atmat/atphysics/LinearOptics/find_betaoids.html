@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of find_betaoids</title>
+  <meta name="keywords" content="find_betaoids">
+  <meta name="description" content="[H1 H2 H3]=find_betaoids(A)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">LinearOptics</a> &gt; find_betaoids.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/LinearOptics&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>find_betaoids
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>[H1 H2 H3]=find_betaoids(A)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [B1 B2 B3]=find_betaoids(A) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">[H1 H2 H3]=find_betaoids(A)
+Given the normalizing matrix A, we compute the betaoids
+(in Forest's terminology)
+ these can be related to the invariants</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="jmat.html" class="code" title="function mat=jmat(dim)">jmat</a>	JMAT Compute antisymmetric Matrix [O 1; -1 0]</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [B1 B2 B3]=find_betaoids(A)</a>
+0002 <span class="comment">%[H1 H2 H3]=find_betaoids(A)</span>
+0003 <span class="comment">%Given the normalizing matrix A, we compute the betaoids</span>
+0004 <span class="comment">%(in Forest's terminology)</span>
+0005 <span class="comment">% these can be related to the invariants</span>
+0006 
+0007 I1 = <span class="keyword">...</span>
+0008 [1 0 0 0 0 0;<span class="keyword">...</span>
+0009  0 1 0 0 0 0;<span class="keyword">...</span>
+0010  0 0 0 0 0 0;<span class="keyword">...</span>
+0011  0 0 0 0 0 0;<span class="keyword">...</span>
+0012  0 0 0 0 0 0;<span class="keyword">...</span>
+0013  0 0 0 0 0 0];
+0014 
+0015 I2 = <span class="keyword">...</span>
+0016 [0 0 0 0 0 0;<span class="keyword">...</span>
+0017  0 0 0 0 0 0;<span class="keyword">...</span>
+0018  0 0 1 0 0 0;<span class="keyword">...</span>
+0019  0 0 0 1 0 0;<span class="keyword">...</span>
+0020  0 0 0 0 0 0;<span class="keyword">...</span>
+0021  0 0 0 0 0 0];
+0022 
+0023 I3 = <span class="keyword">...</span>
+0024 [0 0 0 0 0 0;<span class="keyword">...</span>
+0025  0 0 0 0 0 0;<span class="keyword">...</span>
+0026  0 0 0 0 0 0;<span class="keyword">...</span>
+0027  0 0 0 0 0 0;<span class="keyword">...</span>
+0028  0 0 0 0 1 0;<span class="keyword">...</span>
+0029  0 0 0 0 0 1];
+0030 
+0031 J=<a href="jmat.html" class="code" title="function mat=jmat(dim)">jmat</a>(3);
+0032 
+0033 B1 = A*J*I1*inv(A);
+0034 B2 = A*J*I2*inv(A);
+0035 B3 = A*J*I3*inv(A);</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

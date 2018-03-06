@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of testerr</title>
+  <meta name="keywords" content="testerr">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">Survey</a> &gt; testerr.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/Survey&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>testerr
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="SetESRFAlgeAlignmentError.html" class="code" title="function ringerr=SetESRFAlgeAlignmentError(ring,algeexcelfile,filenameout,nseeds,fracerr,plotdataALGE)">SetESRFAlgeAlignmentError</a>	function SetESRFAlgeAlignmentError(...</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 clear all
+0002 close all
+0003 
+0004 <span class="comment">% load lattice</span>
+0005 load /machfs/liuzzo/ESRF/StorageRing/LATTICE/AT/ESRF_fortol.mat
+0006 
+0007 
+0008 
+0009 algedir=<span class="string">'/machfs/liuzzo/EBS'</span>;
+0010 algeactfile=fullfile(algedir,<span class="string">'Actual_Position_Simu.xlsx'</span>);
+0011 rerr=<a href="SetESRFAlgeAlignmentError.html" class="code" title="function ringerr=SetESRFAlgeAlignmentError(ring,algeexcelfile,filenameout,nseeds,fracerr,plotdataALGE)">SetESRFAlgeAlignmentError</a>(ring,algeactfile,<span class="string">''</span>,1);
+0012     
+0013 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.1 0.4 0.65 0.35])
+0014 atplot(rerr,<span class="string">'comment'</span>,[],@pltmisalignments)
+0015 
+0016 saveas(gca,<span class="string">'SurveyErrors.fig'</span>)
+0017 export_fig(<span class="string">'SurveyErrors.jpg'</span>,<span class="string">'-r300'</span>)
+0018   
+0019 indm=find(atgetcells(rerr,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>));
+0020 
+0021 <span class="comment">%% plots</span>
+0022 figure(<span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'position'</span>,[0.1 0.4 0.65 0.35])
+0023 s=findspos(rerr,indm);
+0024 o=findorbit4(rerr,0,indm);
+0025 plot(s,o(1,:)'*1e3,<span class="string">'k'</span>);
+0026 hold on;
+0027 oe=findorbit4Err(rerr,0,indm);
+0028 plot(s,oe(1,:)'*1e3,<span class="string">'rx'</span>);
+0029 legend(<span class="string">'orbit'</span>,<span class="string">'bpm reading'</span>);
+0030 oe=findorbit4Err(rerr,0,indm);
+0031 plot(s,oe(1,:)'*1e3,<span class="string">'rx'</span>);
+0032 oe=findorbit4Err(rerr,0,indm);
+0033 plot(s,oe(1,:)'*1e3,<span class="string">'rx'</span>);
+0034 oe=findorbit4Err(rerr,0,indm);
+0035 plot(s,oe(1,:)'*1e3,<span class="string">'rx'</span>);
+0036 oe=findorbit4Err(rerr,0,indm);
+0037 plot(s,oe(1,:)'*1e3,<span class="string">'rx'</span>);
+0038 xlabel(<span class="string">'s [m]'</span>);ylabel(<span class="string">'x [mm]'</span>)
+0039 saveas(gca,<span class="string">'OrbitBPMAllErrX.fig'</span>)
+0040 export_fig(<span class="string">'OrbitBPMAllErrX.jpg'</span>,<span class="string">'-r300'</span>)</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

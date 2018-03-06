@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of demoknob</title>
+  <meta name="keywords" content="demoknob">
+  <meta name="description" content="DEMOKNOB illustrates the use of MATLAB GUI controls with AT">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atdemos</a> &gt; <a href="index.html">gui</a> &gt; demoknob.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos/gui&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>demoknob
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>DEMOKNOB illustrates the use of MATLAB GUI controls with AT</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">DEMOKNOB illustrates the use of MATLAB GUI controls with AT
+   to modify several parameters in THERING
+   In this case - quadrupole strength of QF and QD families 
+   This demo creates spear2 lattice
+   and 2 control slider: for QF and for QD quadrupole families</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atslider.html" class="code" title="function fig = atslider(varargin)">atslider</a>	ATSLIDER is an example of a GUI control of multiple parameters in THERING</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%DEMOKNOB illustrates the use of MATLAB GUI controls with AT</span>
+0002 <span class="comment">%   to modify several parameters in THERING</span>
+0003 <span class="comment">%   In this case - quadrupole strength of QF and QD families</span>
+0004 <span class="comment">%   This demo creates spear2 lattice</span>
+0005 <span class="comment">%   and 2 control slider: for QF and for QD quadrupole families</span>
+0006 
+0007 clear all
+0008 close all
+0009 spear2
+0010 qflist =  findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'QF'</span>);
+0011 qdlist =  findcells(THERING,<span class="string">'FamName'</span>,<span class="string">'QD'</span>);
+0012 QFW =  0.02;
+0013 QDW = -0.02;
+0014 
+0015 weights1 = num2cell(QFW*ones(size(qflist)));
+0016 kn1 = struct(<span class="string">'Position'</span>,num2cell(qflist),<span class="string">'FieldName'</span>,<span class="string">'K'</span>,<span class="string">'M'</span>,1,<span class="string">'N'</span>,1,<span class="string">'Weight'</span>,weights1);
+0017 <span class="comment">% When a value is changed, the PLOTBETA callback renews the beta-functions plot</span>
+0018 <a href="atslider.html" class="code" title="function fig = atslider(varargin)">atslider</a>(kn1,<span class="string">'Demo: Adjust QF'</span>,<span class="string">'plotbeta'</span>);
+0019 <span class="comment">%atslider(kn1,'Demo: Adjust QF');</span>
+0020 
+0021 weights2 = num2cell(QDW*ones(size(qdlist)));
+0022 kn2 = struct(<span class="string">'Position'</span>,num2cell(qdlist),<span class="string">'FieldName'</span>,<span class="string">'K'</span>,<span class="string">'M'</span>,1,<span class="string">'N'</span>,1,<span class="string">'Weight'</span>,weights2);
+0023 <a href="atslider.html" class="code" title="function fig = atslider(varargin)">atslider</a>(kn2,<span class="string">'Demo: Adjust QD'</span>,<span class="string">'plotbeta'</span>);
+0024 <span class="comment">%atslider(kn2,'Demo: Adjust QD');</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
