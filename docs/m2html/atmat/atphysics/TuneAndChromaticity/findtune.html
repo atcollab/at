@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findtune</title>
+  <meta name="keywords" content="findtune">
+  <meta name="description" content="FINDTUNE   get the tune value from turn by turn positions">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">TuneAndChromaticity</a> &gt; findtune.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/TuneAndChromaticity&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>findtune
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>FINDTUNE   get the tune value from turn by turn positions</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [tune,spectrum]=findtune(pos,method) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDTUNE   get the tune value from turn by turn positions
+
+TUNE=FINDTUNE(POS,METHOD)
+
+POS:       Tune-by-turn particle position
+METHOD:    Method for tune determination:
+               1: Highest peak in fft
+               2: Interpolation on fft results
+               3: Windowing + interpolation
+
+[TUNE,SPECTRUM]=FINDTUNE(...) Also returns the fft</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function vv=phi(a,b,c)</a></li><li><a href="#_sub2" class="code">function w=hann_window(n)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [tune,spectrum]=findtune(pos,method)</a>
+0002 <span class="comment">%FINDTUNE   get the tune value from turn by turn positions</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%TUNE=FINDTUNE(POS,METHOD)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%POS:       Tune-by-turn particle position</span>
+0007 <span class="comment">%METHOD:    Method for tune determination:</span>
+0008 <span class="comment">%               1: Highest peak in fft</span>
+0009 <span class="comment">%               2: Interpolation on fft results</span>
+0010 <span class="comment">%               3: Windowing + interpolation</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%[TUNE,SPECTRUM]=FINDTUNE(...) Also returns the fft</span>
+0013 
+0014 
+0015 
+0016 <span class="keyword">if</span> nargin &lt; 2, method=3; <span class="keyword">end</span>
+0017 
+0018 nturns=size(pos,1);
+0019 nparts=size(pos,2);
+0020 nt2=fix(nturns/2);
+0021 
+0022 posm=mean(pos);
+0023 wrong=~isfinite(posm);
+0024 
+0025 <span class="keyword">switch</span> method
+0026 <span class="keyword">case</span> 1
+0027 methname=<span class="string">'highest peak'</span>;
+0028 pos2=pos-posm(ones(nturns,1),:);
+0029 spectrum=fft(pos2);
+0030 [vmax,rmax]=max(abs(spectrum(1:nt2,:))); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0031 tune=(rmax-1)/nturns;
+0032 
+0033 <span class="keyword">case</span> 2
+0034 methname=<span class="string">'interpolation'</span>;
+0035 pos2=pos-posm(ones(nturns,1),:);
+0036 spectrum=fft(pos2);
+0037 [vmax,rmax]=max(abs(spectrum(1:nt2,:))); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0038 rmax=rmax+(rmax==1);
+0039 kmax=sub2ind([nturns nparts],rmax,1:nparts);
+0040 back=(spectrum(kmax-1) &gt; spectrum(kmax+1));
+0041 k1=kmax-back;
+0042 k2=k1+1;
+0043 v1=abs(spectrum(k1));
+0044 v2=abs(spectrum(k2));
+0045 tune=(rmax-back-1 +(v2./(v1+v2)))/nturns;
+0046 
+0047 <span class="keyword">case</span> 3
+0048 methname=<span class="string">'window + interp.'</span>;
+0049 w=<a href="#_sub2" class="code" title="subfunction w=hann_window(n)">hann_window</a>(nturns);
+0050 pos2=(pos-posm(ones(nturns,1),:)).*w(:,ones(1,nparts));
+0051 spectrum=fft(pos2);
+0052 [vmax,rmax]=max(abs(spectrum(1:nt2,:))); <span class="comment">%#ok&lt;ASGLU&gt;</span>
+0053 rmax=rmax+(rmax==1);
+0054 kmax=sub2ind([nturns nparts],rmax,1:nparts);
+0055 back=(spectrum(kmax-1) &gt; spectrum(kmax+1));
+0056 k1=kmax-back;
+0057 k2=k1+1;
+0058 v1=abs(spectrum(k1));
+0059 v2=abs(spectrum(k2));
+0060 tune=(rmax-back-1 +((2*v2-v1)./(v1+v2)))/nturns;
+0061 <span class="comment">%tune2=(rmax-back-1)/nturns + asin(phi(v1,v2,cos(2*pi/nturns))*sin(2*pi/nturns))/2/pi;</span>
+0062 <span class="comment">%disp(['method 4 tune: ' num2str(mean2(tune2')) ' (rms: ' num2str(std(tune2')) ')']);</span>
+0063 
+0064 <span class="keyword">end</span>
+0065 tune(wrong)=NaN;
+0066 errmax=2.5*std(tune');
+0067 keep=(abs(tune-mean(tune'))&lt;=errmax);
+0068 reject=find(~(keep | wrong));
+0069 <span class="keyword">for</span> bpm=reject
+0070     [bname,kdx]=sr.bpmname(bpm);
+0071     disp([<span class="string">'reject '</span> bname <span class="string">' ('</span> num2str(kdx) <span class="string">')'</span>]);
+0072 <span class="keyword">end</span>
+0073 fprintf(<span class="string">'%20s tune:%g (rms:%g)\n'</span>,methname, mean(tune(keep)'),std(tune(keep)'));
+0074 
+0075 <a name="_sub1" href="#_subfunctions" class="code">function vv=phi(a,b,c) </a><span class="comment">%#ok&lt;DEFNU&gt;</span>
+0076 d1=c*(a+b);
+0077 delt=d1.*d1 - 2*a.*b.*(2*c*c-c-1).*a.*a - b.*b - 2*a.*b*c;
+0078 vv=(-(a+b*c).*(a-b) + b.*sqrt(delt))./(a.*a + b.*b  +2*a.*b*c);
+0079 
+0080 
+0081 <a name="_sub2" href="#_subfunctions" class="code">function w=hann_window(n)</a>
+0082 w=0.5*(1-cos(2*pi*(0:n-1)'/n));</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

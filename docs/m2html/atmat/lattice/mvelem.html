@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of mvelem</title>
+  <meta name="keywords" content="mvelem">
+  <meta name="description" content="MVELEM(ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; mvelem.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>mvelem
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>MVELEM(ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function mergedrift(ELEMPOS, DIST) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">MVELEM(ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING
+ surrounded by two DRIFT spaces 
+ 
+  0   &lt; DIST  &lt; LD move downstream
+ -LU  &lt; DIST  &lt; 0  move upstream
+  where LU and LD - lenths of 
+  upstream and downstrem drift drifts BEFORE!!! the move 
+
+ Number of elements in THERING and total length remain the same
+
+ See also: <a href="splitdrift.html" class="code" title="function splitdrift(DRIFTPOS, SPLIT, varargin)">SPLITDRIFT</a>, <a href="mergedrift.html" class="code" title="function mergedrift(SPLITPOS)">MERGEDRIFT</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function mergedrift(ELEMPOS, DIST) </a>
+0002 <span class="comment">%MVELEM(ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING</span>
+0003 <span class="comment">% surrounded by two DRIFT spaces</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%  0   &lt; DIST  &lt; LD move downstream</span>
+0006 <span class="comment">% -LU  &lt; DIST  &lt; 0  move upstream</span>
+0007 <span class="comment">%  where LU and LD - lenths of</span>
+0008 <span class="comment">%  upstream and downstrem drift drifts BEFORE!!! the move</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% Number of elements in THERING and total length remain the same</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% See also: SPLITDRIFT, MERGEDRIFT</span>
+0013 
+0014 <span class="keyword">global</span> THERING
+0015 
+0016 L0 = THERING{ELEMPOS-1}.Length + THERING{ELEMPOS}.Length + THERING{ELEMPOS+1}.Length;
+0017 
+0018 <span class="keyword">if</span> DIST &gt; THERING{ELEMPOS+1}.Length 
+0019     error(<span class="string">'Cannot move downstream more than the length of downstream drift'</span>);
+0020 <span class="keyword">elseif</span> -DIST &gt; THERING{ELEMPOS-1}.Length 
+0021     error(<span class="string">'Cannot move upstream more than the length of upstream drift'</span>);
+0022 <span class="keyword">else</span>
+0023     THERING{ELEMPOS+1}.Length = THERING{ELEMPOS+1}.Length - DIST;
+0024     THERING{ELEMPOS-1}.Length = THERING{ELEMPOS-1}.Length + DIST;
+0025 <span class="keyword">end</span>
+0026 
+0027         
+0028</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

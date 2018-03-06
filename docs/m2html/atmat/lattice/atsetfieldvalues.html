@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsetfieldvalues</title>
+  <meta name="keywords" content="atsetfieldvalues">
+  <meta name="description" content="ATSETFIELDVALUES sets the field values of MATLAB cell array of structures">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atsetfieldvalues.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atsetfieldvalues
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATSETFIELDVALUES sets the field values of MATLAB cell array of structures</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function newring = atsetfieldvalues(ring,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSETFIELDVALUES sets the field values of MATLAB cell array of structures
+
+   Note that the calling syntax must be in the form of assignment:
+   RING = ATSETFIELDVALUES(RING,...)
+   MATLAB does not modify variables that only appear on the right
+   hand side as arguments.
+
+NEWRING=ATSETFIELDVALUES(RING,'field',VALUES)
+   In this mode, the function will set values on all the elements of RING
+
+NEWRING=ATSETFIELDVALUES(RING,INDEX,'field',VALUES)
+   In this mode, the function will set values on the elements of RING
+   specified by INDEX, given as a list of indices or as a logical mask
+
+NEWRING=ATSETFIELDVALUES(RING,'field',VALUESTRUCT)
+   In this mode, the function will set values on the elements of RING
+   whose family names are given by the field names of VALUESTRUCT
+
+NEWRING=ATSETFIELDVALUES(RING,RINGINDEX,....,VALUESTRUCT)
+   As in the previous mode, the function will set values on the elements
+   of RING whose family names are given by the field names of VALUESTRUCT.
+   But RINGINDEX=atindex(RING) is provided to avoid multiple computations.
+
+ Field selection
+ ---------------------------------------------------------
+ NEWRING = ATSETFIELD(RING,'field',VALUES)
+   For each I=1:length(RING), set RING{I}.FIELD=value
+
+ NEWRING = ATSETFIELD(RING,'field',{M,N},VALUES)
+   For each I=1:length(RING), set RING{I}.FIELD(M,N)=value
+
+ More generally,
+ NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)
+   For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)
+
+ The first dimension of VALUES must be either length(INDEX) or 1 (the value
+ will be repeated for each element). For a vector to be repeated, enclose
+ it in a cell array.
+
+ Value format
+ ---------------------------------------------------------
+ Cell array VALUES
+ -----------------
+ Mx1 or 1xM cell array : one cell per element
+ 1x1 cell array : cell 1 is affected to all selected elements
+
+ Character array VALUES
+ ---------------------
+ 1xN char array (string) : the string as affected to all selected elements
+ MxN char array : one row per element
+
+ Numeric array VALUES
+ --------------------
+ 1x1 (scalar) : the value is affected to all selected elements
+ Mx1 (column) : one value per element
+ MxN (matrix) : one row affected per element. If M==1, the single row
+                is affected to all selected elements
+ To assign column vectors to parameters, use a cell array VALUES, with one
+ column per cell
+
+ See also <a href="atgetfieldvalues.html" class="code" title="function values = atgetfieldvalues(ring,varargin)">ATGETFIELDVALUES</a> <a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">ATGETCELLS</a> <a href="setcellstruct.html" class="code" title="function CELLARRAY = setcellstruct(CELLARRAY,field,index,values,varargin)">SETCELLSTRUCT</a> <a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">FINDCELLS</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atindex.html" class="code" title="function indexstruct = atindex(lattice)">atindex</a>	ATINDEX extracts the information about element families and</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atdivelem.html" class="code" title="function line = atdivelem(elem,frac,varargin)">atdivelem</a>	LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces</li><li><a href="atfitchrom.html" class="code" title="function newring=atfitchrom(ring,varargin)">atfitchrom</a>	ATFITTUNE fits chromaticites by scaling 2 sextupol families</li><li><a href="atfittune.html" class="code" title="function newring=atfittune(ring,varargin)">atfittune</a>	ATFITTUNE fits linear tunes by scaling 2 quadrupole families</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function newring = atsetfield(ring,varargin)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function newring = atsetfieldvalues(ring,varargin)</a>
+0002 <span class="comment">%ATSETFIELDVALUES sets the field values of MATLAB cell array of structures</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%   Note that the calling syntax must be in the form of assignment:</span>
+0005 <span class="comment">%   RING = ATSETFIELDVALUES(RING,...)</span>
+0006 <span class="comment">%   MATLAB does not modify variables that only appear on the right</span>
+0007 <span class="comment">%   hand side as arguments.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%NEWRING=ATSETFIELDVALUES(RING,'field',VALUES)</span>
+0010 <span class="comment">%   In this mode, the function will set values on all the elements of RING</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%NEWRING=ATSETFIELDVALUES(RING,INDEX,'field',VALUES)</span>
+0013 <span class="comment">%   In this mode, the function will set values on the elements of RING</span>
+0014 <span class="comment">%   specified by INDEX, given as a list of indices or as a logical mask</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">%NEWRING=ATSETFIELDVALUES(RING,'field',VALUESTRUCT)</span>
+0017 <span class="comment">%   In this mode, the function will set values on the elements of RING</span>
+0018 <span class="comment">%   whose family names are given by the field names of VALUESTRUCT</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">%NEWRING=ATSETFIELDVALUES(RING,RINGINDEX,....,VALUESTRUCT)</span>
+0021 <span class="comment">%   As in the previous mode, the function will set values on the elements</span>
+0022 <span class="comment">%   of RING whose family names are given by the field names of VALUESTRUCT.</span>
+0023 <span class="comment">%   But RINGINDEX=atindex(RING) is provided to avoid multiple computations.</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% Field selection</span>
+0026 <span class="comment">% ---------------------------------------------------------</span>
+0027 <span class="comment">% NEWRING = ATSETFIELD(RING,'field',VALUES)</span>
+0028 <span class="comment">%   For each I=1:length(RING), set RING{I}.FIELD=value</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">% NEWRING = ATSETFIELD(RING,'field',{M,N},VALUES)</span>
+0031 <span class="comment">%   For each I=1:length(RING), set RING{I}.FIELD(M,N)=value</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">% More generally,</span>
+0034 <span class="comment">% NEWRING = ATSETFIELD(RING,subs1,subs2,...,VALUES)</span>
+0035 <span class="comment">%   For each I=1:length(RING), SETFIELD(RING{I},subs1,subs2,...,value)</span>
+0036 <span class="comment">%</span>
+0037 <span class="comment">% The first dimension of VALUES must be either length(INDEX) or 1 (the value</span>
+0038 <span class="comment">% will be repeated for each element). For a vector to be repeated, enclose</span>
+0039 <span class="comment">% it in a cell array.</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">% Value format</span>
+0042 <span class="comment">% ---------------------------------------------------------</span>
+0043 <span class="comment">% Cell array VALUES</span>
+0044 <span class="comment">% -----------------</span>
+0045 <span class="comment">% Mx1 or 1xM cell array : one cell per element</span>
+0046 <span class="comment">% 1x1 cell array : cell 1 is affected to all selected elements</span>
+0047 <span class="comment">%</span>
+0048 <span class="comment">% Character array VALUES</span>
+0049 <span class="comment">% ---------------------</span>
+0050 <span class="comment">% 1xN char array (string) : the string as affected to all selected elements</span>
+0051 <span class="comment">% MxN char array : one row per element</span>
+0052 <span class="comment">%</span>
+0053 <span class="comment">% Numeric array VALUES</span>
+0054 <span class="comment">% --------------------</span>
+0055 <span class="comment">% 1x1 (scalar) : the value is affected to all selected elements</span>
+0056 <span class="comment">% Mx1 (column) : one value per element</span>
+0057 <span class="comment">% MxN (matrix) : one row affected per element. If M==1, the single row</span>
+0058 <span class="comment">%                is affected to all selected elements</span>
+0059 <span class="comment">% To assign column vectors to parameters, use a cell array VALUES, with one</span>
+0060 <span class="comment">% column per cell</span>
+0061 <span class="comment">%</span>
+0062 <span class="comment">% See also ATGETFIELDVALUES ATGETCELLS SETCELLSTRUCT FINDCELLS</span>
+0063 
+0064 <span class="keyword">if</span> isstruct(varargin{end})
+0065     <span class="keyword">if</span> isstruct(varargin{1})
+0066         ringidx=varargin{1};
+0067         args=varargin(2:end-1);
+0068     <span class="keyword">else</span>
+0069         ringidx=<a href="atindex.html" class="code" title="function indexstruct = atindex(lattice)">atindex</a>(ring);
+0070         args=varargin(1:end-1);
+0071     <span class="keyword">end</span>
+0072     newring=ring;
+0073     <span class="keyword">for</span> fn=fieldnames(varargin{end})'
+0074         fname=char(fn);
+0075         newring(ringidx.(fname))=<a href="#_sub1" class="code" title="subfunction newring = atsetfield(ring,varargin)">atsetfield</a>(newring(ringidx.(fname)),<span class="keyword">...</span>
+0076             args{:},varargin{end}.(fname));
+0077     <span class="keyword">end</span>
+0078 <span class="keyword">elseif</span> islogical(varargin{1}) || isnumeric(varargin{1})
+0079     newring=ring;
+0080     newring(varargin{1})=<a href="#_sub1" class="code" title="subfunction newring = atsetfield(ring,varargin)">atsetfield</a>(newring(varargin{1}),varargin{2:end});
+0081 <span class="keyword">else</span>
+0082     newring=<a href="#_sub1" class="code" title="subfunction newring = atsetfield(ring,varargin)">atsetfield</a>(ring,varargin{:});
+0083 <span class="keyword">end</span>
+0084 
+0085     <a name="_sub1" href="#_subfunctions" class="code">function newring = atsetfield(ring,varargin)        </a>
+0086         <span class="keyword">if</span> ischar(varargin{end})
+0087             values=cellstr(varargin{end});
+0088         <span class="keyword">elseif</span> isnumeric(varargin{end})
+0089             values=num2cell(varargin{end},2);
+0090         <span class="keyword">else</span>
+0091             values=varargin{end};
+0092         <span class="keyword">end</span>
+0093         <span class="keyword">if</span> isscalar(values)
+0094             values=values(ones(length(ring),1));
+0095         <span class="keyword">end</span>
+0096         newring=cellfun(@(el,value) setfield(el,varargin{1:end-1},squeeze(value)),<span class="keyword">...</span>
+0097             ring,values(:),<span class="string">'UniformOutput'</span>,false); <span class="comment">%#ok&lt;SFLD&gt;</span>
+0098     <span class="keyword">end</span>
+0099 
+0100 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

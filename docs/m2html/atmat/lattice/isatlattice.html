@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of isatlattice</title>
+  <meta name="keywords" content="isatlattice">
+  <meta name="description" content="ISATLATTICE tests if an input argument is a valid AT lattice.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; isatlattice.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>isatlattice
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ISATLATTICE tests if an input argument is a valid AT lattice.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [T, badlist, errorstr] = isatlattice(LATTICE,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ISATLATTICE tests if an input argument is a valid AT lattice.
+ 
+  A valid AT lattice is a MATLAB cell array of valid AT elements
+   
+  [TEST, BADLIST, ERRORSTR] = ISATLATTICE(ELEM, ['option1',...])
+
+  Allowed otions: 
+   'display' - print problems to command window;
+   'stop'    - return after the first problem is found
+ 
+  TEST     - test result,  1 = valid AT element
+  ERRORSTR - multi-line error message
+    
+  See also <a href="isatelem.html" class="code" title="function [t, errorstr] = isatelem(ELEM,varargin)">ISATELEM</a>, <a href="atelem.html" class="code" title="function elemstruct = atelem(elem,varargin)">ATELEM</a>, ATLATTICE</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="isatelem.html" class="code" title="function [t, errorstr] = isatelem(ELEM,varargin)">isatelem</a>	ISATELEM tests if an input argument is a valid AT element.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [T, badlist, errorstr] = isatlattice(LATTICE,varargin)</a>
+0002 <span class="comment">%ISATLATTICE tests if an input argument is a valid AT lattice.</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%  A valid AT lattice is a MATLAB cell array of valid AT elements</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%  [TEST, BADLIST, ERRORSTR] = ISATLATTICE(ELEM, ['option1',...])</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%  Allowed otions:</span>
+0009 <span class="comment">%   'display' - print problems to command window;</span>
+0010 <span class="comment">%   'stop'    - return after the first problem is found</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%  TEST     - test result,  1 = valid AT element</span>
+0013 <span class="comment">%  ERRORSTR - multi-line error message</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%  See also ISATELEM, ATELEM, ATLATTICE</span>
+0016 
+0017 T = 1;
+0018 errorstr = [];
+0019 badlist = [];
+0020 
+0021 DISPLAYFLAG = 0;
+0022 STOPFLAG = 0;
+0023 
+0024 <span class="keyword">if</span> any(strncmpi(varargin,<span class="string">'disp'</span>,4))
+0025     DISPLAYFLAG = 1;
+0026 <span class="keyword">end</span>
+0027 
+0028 <span class="keyword">if</span> any(strncmpi(varargin,<span class="string">'stop'</span>,4))
+0029     STOPFLAG = 1;
+0030 <span class="keyword">end</span>
+0031 
+0032 <span class="keyword">if</span> ~ iscell(LATTICE)
+0033     errorstr = [errorstr,sprintf(<span class="string">'%s\n'</span>,<span class="string">'Input is not a MATLAB cell array'</span>)];
+0034     T = 0;
+0035 <span class="keyword">else</span>
+0036     <span class="keyword">for</span> k = 1:length(LATTICE)
+0037         [t, s] = <a href="isatelem.html" class="code" title="function [t, errorstr] = isatelem(ELEM,varargin)">isatelem</a>(LATTICE{k});
+0038         <span class="keyword">if</span> ~t
+0039             badlist = [badlist, k];
+0040             T = 0;
+0041             <span class="keyword">if</span> DISPLAYFLAG
+0042                 s = [sprintf(<span class="string">'\nInvalid lattice element # %s\n'</span>, int2str(k)),s];
+0043                 disp(s);
+0044             <span class="keyword">end</span>
+0045             <span class="keyword">if</span> STOPFLAG
+0046                 <span class="keyword">return</span>
+0047             <span class="keyword">end</span>
+0048         <span class="keyword">end</span>
+0049     <span class="keyword">end</span>
+0050     errorstr = <span class="string">'One or more elements are not valid AT elements'</span>;
+0051 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

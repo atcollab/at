@@ -1,0 +1,197 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atset_s_shift</title>
+  <meta name="keywords" content="atset_s_shift">
+  <meta name="description" content="ATSET_S_SHIFT Implements DS longitudinal position drift">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">LatticeTuningFunctions</a> &gt; <a href="index.html">errors</a> &gt; atset_s_shift.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>atset_s_shift
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>ATSET_S_SHIFT Implements DS longitudinal position drift</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function rerr=atset_s_shift(r,pos,DS) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSET_S_SHIFT Implements DS longitudinal position drift
+ by changing drifts at the sides of the
+ elements defined by pos in r
+
+ for dipoles the T2(1) field is also changed and the the out DS is
+ modified:
+ T2(1)=DS*sin(bendignangle)
+ DSout=DS*cos(bendignangle)
+
+ pos and DS must be the same size
+
+  See also atsetshift atsettilt <a href="atsettiltdipole.html" class="code" title="function ring=atsettiltdipole(varargin)">atsettiltdipole</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [dup,ddo]=finddriftsaroundpos(r,pos)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function rerr=atset_s_shift(r,pos,DS)</a>
+0002 <span class="comment">%ATSET_S_SHIFT Implements DS longitudinal position drift</span>
+0003 <span class="comment">% by changing drifts at the sides of the</span>
+0004 <span class="comment">% elements defined by pos in r</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% for dipoles the T2(1) field is also changed and the the out DS is</span>
+0007 <span class="comment">% modified:</span>
+0008 <span class="comment">% T2(1)=DS*sin(bendignangle)</span>
+0009 <span class="comment">% DSout=DS*cos(bendignangle)</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% pos and DS must be the same size</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%  See also atsetshift atsettilt atsettiltdipole</span>
+0014 
+0015 <span class="keyword">if</span> length(pos)~=length(DS)
+0016     error(<span class="string">'pos and DS must be the same size'</span>);
+0017 <span class="keyword">end</span>
+0018 
+0019 rerr=r;
+0020 
+0021 <span class="comment">%find dipoles</span>
+0022 dipind=findcells(r(pos),<span class="string">'BendingAngle'</span>);
+0023 posmag=pos;
+0024 dsmag=DS;
+0025 posdip=pos(dipind);
+0026 dsdip=DS(dipind);
+0027 posmag(dipind)=[];
+0028 dsmag(dipind)=[];
+0029 
+0030 <span class="comment">%% STRAIGTH MAGNETS</span>
+0031 
+0032 <span class="comment">% find first drift before each element in pos</span>
+0033 <span class="comment">% and  first drift after  each element in pos</span>
+0034 <span class="keyword">if</span> ~isempty(posmag)
+0035     [driftUP,driftDO]=<a href="#_sub1" class="code" title="subfunction [dup,ddo]=finddriftsaroundpos(r,pos)">finddriftsaroundpos</a>(r,posmag);
+0036     
+0037     <span class="comment">% shorten drift up</span>
+0038     LDUP0=atgetfieldvalues(r,driftUP,<span class="string">'Length'</span>,{1,1});
+0039     rerr=atsetfieldvalues(rerr,driftUP,<span class="string">'Length'</span>,LDUP0-dsmag');
+0040     <span class="comment">% lengthen drift down</span>
+0041     LDDO0=atgetfieldvalues(r,driftDO,<span class="string">'Length'</span>,{1,1});
+0042     rerr=atsetfieldvalues(rerr,driftDO,<span class="string">'Length'</span>,LDDO0+dsmag');
+0043     rerr=atsetfieldvalues(rerr,posmag,<span class="string">'DeltaS'</span>,dsmag');
+0044     
+0045 <span class="keyword">end</span>
+0046 <span class="keyword">if</span> ~isempty(posdip)
+0047     <span class="comment">%% DIPOLES</span>
+0048     
+0049     <span class="comment">% find first drift before each element in pos</span>
+0050     <span class="comment">% and  first drift after  each element in pos</span>
+0051     [driftUP,driftDO]=<a href="#_sub1" class="code" title="subfunction [dup,ddo]=finddriftsaroundpos(r,pos)">finddriftsaroundpos</a>(r,posdip);
+0052     theta=atgetfieldvalues(rerr,posdip,<span class="string">'BendingAngle'</span>,{1,1});
+0053     
+0054     <span class="comment">%if dipoles have the same MagNum, move each part and sum effect on T2</span>
+0055     <span class="comment">%coordinate change. DS assigned to first slice is assumed as DS of the</span>
+0056     <span class="comment">%whole magnet.</span>
+0057     
+0058     maggr=getMagGroupsFromMagNum(r(posdip));
+0059     
+0060     <span class="keyword">for</span> imaggr=1:length(maggr)
+0061         dipind=maggr{imaggr}; <span class="comment">% sliced dipole indexes in posdip</span>
+0062         
+0063         <span class="comment">% shorten drift up for first dipole in group</span>
+0064         LDUP0=atgetfieldvalues(rerr,driftUP(dipind(1)),<span class="string">'Length'</span>,{1,1});
+0065         rerr=atsetfieldvalues(rerr,driftUP(dipind(1)),<span class="string">'Length'</span>,LDUP0-dsdip(dipind(1))');
+0066         
+0067         dsout=dsdip((dipind(1)))';
+0068         dt2out=dsdip((dipind(1)))';
+0069         
+0070         <span class="keyword">for</span> iiind=1:length(dipind)
+0071             dsout=dsout.*cos(theta(dipind(iiind)));
+0072             dt2out=dt2out.*sin(theta(dipind(iiind)));
+0073         <span class="keyword">end</span>
+0074         
+0075         <span class="keyword">try</span>
+0076             dt2out0=atgetfieldvalues(rerr,posdip(dipind(end)),<span class="string">'T2'</span>,{1,1}); <span class="comment">% add to existing if exists</span>
+0077         <span class="keyword">catch</span>
+0078             dt2out0=zeros(dt2out);
+0079         <span class="keyword">end</span>
+0080         
+0081         <span class="comment">% lengthen drift down FOR last DIPOLE in group. ALSO T2 changes!</span>
+0082         LDDO0=atgetfieldvalues(rerr,driftDO(dipind(end)),<span class="string">'Length'</span>,{1,1});
+0083         rerr=atsetfieldvalues(rerr,driftDO(dipind(end)),<span class="string">'Length'</span>,LDDO0+dsout);<span class="comment">%+dsdip(dipind(1)));%</span>
+0084         rerr=atsetfieldvalues(rerr,posdip(dipind(end)),<span class="string">'T2'</span>,{1,1},dt2out0-dt2out); <span class="comment">%</span>
+0085         
+0086         rerr=atsetfieldvalues(rerr,posdip(dipind),<span class="string">'DeltaS'</span>,dsdip(dipind(1))');
+0087         rerr=atsetfieldvalues(rerr,posdip(dipind),<span class="string">'DeltaST2'</span>,<span class="keyword">...</span>
+0088             [zeros(1,length(dipind)-1) dt2out]);
+0089         
+0090     <span class="keyword">end</span>
+0091         
+0092 <span class="keyword">end</span>
+0093 
+0094 <span class="keyword">return</span>
+0095 
+0096 
+0097 <a name="_sub1" href="#_subfunctions" class="code">function [dup,ddo]=finddriftsaroundpos(r,pos)</a>
+0098 dup=nan(size(pos));
+0099 ddo=nan(size(pos));
+0100 
+0101 <span class="keyword">for</span> indpos=1:length(pos)
+0102     
+0103     i=pos(indpos);
+0104     
+0105     NEL=length(r);
+0106     <span class="keyword">while</span> ~strcmp(r{i}.Class,<span class="string">'Drift'</span>)
+0107         <span class="keyword">if</span> i&lt;NEL
+0108             i=i+1;
+0109         <span class="keyword">else</span>
+0110             i=1;
+0111         <span class="keyword">end</span>
+0112     <span class="keyword">end</span>
+0113     dup(indpos)=i;
+0114     
+0115     i=pos(indpos);
+0116     <span class="keyword">while</span> ~strcmp(r{i}.Class,<span class="string">'Drift'</span>)
+0117         <span class="keyword">if</span> i&gt;1
+0118             i=i-1;
+0119         <span class="keyword">else</span>
+0120             i=NEL;
+0121         <span class="keyword">end</span>
+0122     <span class="keyword">end</span>
+0123     ddo(indpos)=i;
+0124 <span class="keyword">end</span>
+0125 
+0126 <span class="keyword">return</span>
+0127 
+0128 
+0129 <span class="comment">% function a=getmagnumdipole(r,ind)</span>
+0130 <span class="comment">%</span>
+0131 <span class="comment">% try</span>
+0132 <span class="comment">%     a=r{ind}.MagNum;</span>
+0133 <span class="comment">% catch</span>
+0134 <span class="comment">%     a=NaN;</span>
+0135 <span class="comment">% end</span>
+0136 <span class="comment">%</span>
+0137 <span class="comment">% return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

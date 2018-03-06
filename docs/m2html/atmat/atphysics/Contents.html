@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Contents</title>
+  <meta name="keywords" content="Contents">
+  <meta name="description" content="ATPHYSICS">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atphysics</a> &gt; Contents.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>Contents
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATPHYSICS</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> ATPHYSICS
+ 
+   Contents file for ATPHYSICS and its subfolders.
+   
+   ATPHYSICS
+   atavedata                     - Average of optical functions on selected elements
+   findrespm                     - Computes the change in the closed orbit due to parameter perturbations
+   findspos                      - Returns longitudinal positions of accelerator lattice elements
+   numdifparams                  - Global variable in AT (all caps)
+   PhysConstant                  - Fundamental Physical Constants --- Complete Listing
+   
+   ATPHYSICS/COLLECTIVEEFFECTS
+   atbeam                        - Generates a particle distribution according to a sigma matrix
+   atsigma                       - Constructs a beam sigma matrix 2x2 4x4 or 6x6
+   
+   ATPHYSICS/LINEAROPTICS
+   amat                          - Find A matrix from one turn map matrix T such that:
+   atTunesAndDampingRatesFromMat - Find tunes and damping rates from one map matrix with radiation
+   beam22                        - Computes the beam matrix from the 1-turn transfer matrix
+   beam44                        - Computes the coupled beam matrices
+   find_betaoids                 - [H1 H2 H3]=find_betaoids(A)
+   find_etaoids                  - Given the normalizing matrix A, we compute the etaoids
+   find_inv_G                    - This function computes the invariants of a one turn map matrix
+   find_inv_G_fromA              - This function computes the invariant matrices G1,G2,G3
+   findelemm44                   - Numerically finds the 4x4 transfer matrix of an element
+   findelemm66                   - Numerically finds the 6x6 transfer matrix of an element
+   findm44                       - Numerically finds the 4x4 transfer matrix of an accelerator lattice
+   findm66                       - Numerically finds the 6x6 transfer matrix of an accelerator lattice
+   get_dispersion_from_etaoids   - Computes dispersion functions (x,px,y,py) at refpts
+   jmat                          - Compute antisymmetric Matrix [O 1; -1 0]
+   mkSRotationMatrix             - (PSI) coordinate transformation matrix
+   plotbeta                      - Plots UNCOUPLED! beta-functions
+   
+   ATPHYSICS/LONGITUDINALDYNAMICS
+   atBunchLength                 - Bunch length due to the potential well effect
+   atRFacc                       - Computes RF acceptance of the ring
+   atsetcavity                   - ATSECAVITY Sets the synchronous phase of the cavity assuming radiation
+   BunchLength                   - Bunch length due to the potential well effect
+   cavityoff                     - Turns cavities OFF
+   cavityon                      - Turns Cavities ON
+   mcf                           - Momentum compaction factor
+   nus                           - Computes synchrotron tune from RF parameters
+   phis                          - Phase = phis(U0MeV,VrfMV)
+   RFacc                         - Computes the RF acceptance with linear formula
+   
+   ATPHYSICS/NAFFLIB
+   calcnaff                      - Computes NAFF decomposition for a phase space trajectory
+   naff_cc                       - Compile nafflibrary for Matlab
+   naff_example                  - Example to test naff within matlab
+   nafflib                       - MATLAB to NAFF library
+   
+   ATPHYSICS/NONLINEARDYNAMICS
+   atnuampl                      - Computes tune shift with amplitude
+   computeRDT                    - Computes Hamiltonian resonance driving terms (RDTs)
+   tunespaceplot                 - Draws a tune diagram
+   
+   ATPHYSICS/ORBIT
+   findorbit                     - Alias to the orbit search functions: (findorbit4, findsyncorbit,
+   findorbit4                    - Finds closed orbit in the 4-d transverse phase
+   findorbit6                    - Finds closed orbit in the full 6-d phase space
+   findsyncorbit                 - Finds closed orbit, synchronous with the RF cavity
+   plotcod                       - Closed Orbit Distortion
+   
+   ATPHYSICS/PARAMETERSUMMARYFUNCTIONS
+   atlinopt                      - Performs linear analysis of the COUPLED lattices
+   atsummary                     - - Prints out the paramters of the current AT lattice
+   atx                           - Computes and displays global information
+   linopt                        - Performs linear analysis of the COUPLED lattices
+   ringpara                      - Calculates various ring parameters
+   twissline                     - Calculates linear optics functions for an UNCOUPLED transport line
+   twissring                     - Calculates linear optics functions for an UNCOUPLED ring
+   
+   ATPHYSICS/RADIATION
+   atenergy                      - Gets the lattice energy
+   atgetU0                       - Computes Energy loss per turn in eV 
+   atradoff                      - Switches radiation and cavity off
+   atradon                       - Switches RF and radiation on
+   atsetenergy                   - (ring,Energy) sets the Energy field in all
+   findelemraddiffm
+   findmpoleraddiffmatrix        - FINDMPOLERADDIFFMATIRX calculates radiation diffusion matrix of a multipole element
+   findthickmpoleraddiffm
+   findthinmpoleraddiffm
+   ohmienvelope                  - Calculates equilibrium beam envelope in a
+   quantumDiff                   - Compute the radiation-diffusion matrix
+   radiationoff                  - Turns classical radiation  OFF
+   radiationon                   - Turns classical radiation  ON
+   thickmpoleraddiffm            - FINDTHICKMPOLERADDIFFM
+   thinmpoleraddiffm             - FINDTHINMPOLERADDIFFM
+   
+   ATPHYSICS/RADIATION/PRIVATE
+   lyap                          - Solve continuous-time Lyapunov equations
+   
+   ATPHYSICS/TOUSCHEKPIWINSKI
+   MomAperture_allRing           - All Ring momentum aperture
+   momentum_aperture_at          - Function [deltamin, deltamax..
+   simpletestToucheckLT          - Simple example of use of toucheck lifetime formula:
+   TLT_IntPiw                    - Integral in Piwinski Formula for the Lifetime
+   TLT_IntPiw_k                  - Integral in Piwinski Formula for the Lifetime with u=tan^2(k)
+   TouschekPiwinskiLifeTime      - Function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)
+   
+   ATPHYSICS/TUNEANDCHROMATICITY
+   findtune                      - Get the tune value from turn by turn positions
+   fitchrom2                     - Fits chromaticity  of THERING using 2 sextupole families
+   fittune2                      - Fits linear tunes of THERING using 2 quadrupole families
+   intfft                        - Calculates the tune from interpolated FFT of the trajectory
+   tunechrom                     - Computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice
+    
+   This file was generated by updateContents.m on 02 Mar 2018 at 14:38:27.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

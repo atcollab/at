@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of bbr_gentab</title>
+  <meta name="keywords" content="bbr_gentab">
+  <meta name="description" content="xr is extent of wake function in m">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atdemos</a> &gt; <a href="index.html">trackWithImpedance</a> &gt; bbr_gentab.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos/trackWithImpedance&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>bbr_gentab
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>xr is extent of wake function in m</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [ s,bbrx,bbry,bbrz ] = bbr_gentab(xr,npoints,freqx,freqy,freqz,qx,qy,qz,rx,ry,rz) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">xr is extent of wake function in m
+npoints is number of points in table
+freq in GHz
+Rshunt in MOhm</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="makeFastRingWithBBR.html" class="code" title="">makeFastRingWithBBR</a>	SI units</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [ s,bbrx,bbry,bbrz ] = bbr_gentab(xr,npoints,freqx,freqy,freqz,qx,qy,qz,rx,ry,rz)</a>
+0002 <span class="comment">%xr is extent of wake function in m</span>
+0003 <span class="comment">%npoints is number of points in table</span>
+0004 <span class="comment">%freq in GHz</span>
+0005 <span class="comment">%Rshunt in MOhm</span>
+0006 
+0007 <span class="comment">%Based on equations 2.84 and 2.88 in Chao's 'Physics of Collective Instabilities'</span>
+0008 
+0009 clight = PhysConstant.speed_of_light_in_vacuum.value;
+0010 <span class="keyword">if</span> mod(npoints,2) == 0
+0011     npoints=npoints+1;
+0012 <span class="keyword">end</span>
+0013 
+0014 s = linspace(-xr,xr,npoints);
+0015     
+0016 omegarx = 2.0*pi*freqx*1.0e9;
+0017 alphax = omegarx/(2.0*qx);
+0018 omegabarx = sqrt(omegarx*omegarx-alphax*alphax);
+0019 
+0020 omegary = 2.0*pi*freqy*1.0e9;
+0021 alphay = omegary/(2.0*qy);
+0022 omegabary = sqrt(omegary*omegary-alphay*alphay);
+0023 
+0024 omegarz = 2.0*pi*freqz*1.0e9;
+0025 alphaz = omegarz/(2.0*qz);
+0026 omegabarz = sqrt(omegarz*omegarz-alphaz*alphaz);
+0027 
+0028 bbrx=zeros(length(s),1);
+0029 bbry=zeros(length(s),1);
+0030 bbrz=zeros(length(s),1);
+0031 
+0032 <span class="keyword">for</span> i = 1:length(s)
+0033     <span class="comment">%chao 2.88</span>
+0034     <span class="comment">%chao 2.84</span>
+0035     <span class="keyword">if</span> s(i)==0.0
+0036         bbrz(i)=rz*1e6*alphaz;
+0037         bbrx(i)=0.0;
+0038         bbry(i)=0.0;    
+0039     <span class="keyword">elseif</span> s(i)&lt;0.0
+0040         bbrx(i)=0.0;
+0041         bbry(i)=0.0;
+0042         bbrz(i)=0.0;
+0043     <span class="keyword">else</span>
+0044         bbrx(i) = rx*1e6*omegarx*omegarx/qx/omegabarx*exp(alphax*(-s(i))/clight)*sin(omegabarx*(-s(i))/clight);
+0045         bbry(i) = ry*1e6*omegary*omegary/qy/omegabary*exp(alphay*(-s(i))/clight)*sin(omegabary*(-s(i))/clight);
+0046         bbrz(i) = rz*1e6*2.0*alphaz*exp(alphaz*(-s(i))/clight)*(cos(omegabarz*(-s(i))/clight) + <span class="keyword">...</span>
+0047                alphaz/omegabarz*sin(omegabarz*(-s(i))/clight)); 
+0048     <span class="keyword">end</span>
+0049 <span class="keyword">end</span>
+0050 
+0051 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

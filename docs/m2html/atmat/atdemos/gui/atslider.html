@@ -1,0 +1,227 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atslider</title>
+  <meta name="keywords" content="atslider">
+  <meta name="description" content="ATSLIDER is an example of a GUI control of multiple parameters in THERING">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atdemos</a> &gt; <a href="index.html">gui</a> &gt; atslider.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos/gui&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atslider
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATSLIDER is an example of a GUI control of multiple parameters in THERING</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function fig = atslider(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSLIDER is an example of a GUI control of multiple parameters in THERING
+ by mapping from one-dimensional control parameter space.
+ The value of the control parameter is set
+ with a slider or typed in a text window. When it is modified
+ each of the controlled variables is modified accordingly
+
+ HANDLE = ATSLIDER(KnobData,KnobName)
+     creates a new knob figure identified with KnobName
+    with  a slider and editable text. The initial value is set to 0
+  
+  KnobData is MATLAB structure arrray where each element corresponds to
+       one controlled paramater in THERING and controls what gets modified
+       in the ring when the slider value changes
+         
+       Position             Index of an element to be modified in THERING
+         FieldName       Name of the field in the element data structure 
+                       whos value will bi modified
+         M,N             When a field is an array M,N index an element (PolynomA)
+                       When a field is a scalar set M=N=1 
+         Weight          Mapping coefficient between slider position and controlled value
+
+    HANDLE = ATSLIDER(KnobData,KnobName,COMMAND)
+            evaluates COMMAND in MATLAB base workspace
+        for example try COMMAND = 'plotbeta'  for dynamically updating betafunctions
+
+ ATSLIDER(action) with proper 'action' stringis is recursively called 
+ from inside the ATSLIDER function to evaluate callbacks
+        'set'
+        'reset'</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="demoknob.html" class="code" title="">demoknob</a>	DEMOKNOB illustrates the use of MATLAB GUI controls with AT</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function fig = atslider(varargin)</a>
+0002 <span class="comment">%ATSLIDER is an example of a GUI control of multiple parameters in THERING</span>
+0003 <span class="comment">% by mapping from one-dimensional control parameter space.</span>
+0004 <span class="comment">% The value of the control parameter is set</span>
+0005 <span class="comment">% with a slider or typed in a text window. When it is modified</span>
+0006 <span class="comment">% each of the controlled variables is modified accordingly</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% HANDLE = ATSLIDER(KnobData,KnobName)</span>
+0009 <span class="comment">%     creates a new knob figure identified with KnobName</span>
+0010 <span class="comment">%    with  a slider and editable text. The initial value is set to 0</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%  KnobData is MATLAB structure arrray where each element corresponds to</span>
+0013 <span class="comment">%       one controlled paramater in THERING and controls what gets modified</span>
+0014 <span class="comment">%       in the ring when the slider value changes</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">%       Position             Index of an element to be modified in THERING</span>
+0017 <span class="comment">%         FieldName       Name of the field in the element data structure</span>
+0018 <span class="comment">%                       whos value will bi modified</span>
+0019 <span class="comment">%         M,N             When a field is an array M,N index an element (PolynomA)</span>
+0020 <span class="comment">%                       When a field is a scalar set M=N=1</span>
+0021 <span class="comment">%         Weight          Mapping coefficient between slider position and controlled value</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">%    HANDLE = ATSLIDER(KnobData,KnobName,COMMAND)</span>
+0024 <span class="comment">%            evaluates COMMAND in MATLAB base workspace</span>
+0025 <span class="comment">%        for example try COMMAND = 'plotbeta'  for dynamically updating betafunctions</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">% ATSLIDER(action) with proper 'action' stringis is recursively called</span>
+0028 <span class="comment">% from inside the ATSLIDER function to evaluate callbacks</span>
+0029 <span class="comment">%        'set'</span>
+0030 <span class="comment">%        'reset'</span>
+0031 
+0032 <span class="keyword">global</span> THERING
+0033 
+0034 <span class="keyword">if</span> nargin &gt;1 <span class="comment">% initial call</span>
+0035     
+0036  
+0037 
+0038 KnobData = varargin{1};
+0039 KnobName = varargin{2};
+0040 
+0041 <span class="comment">% make a copy of original values of all controlled parametes</span>
+0042 NumVar = length(KnobData);
+0043 I = [KnobData.Position];
+0044 F = [KnobData.FieldName];
+0045 M = [KnobData.M];
+0046 N = [KnobData.N];
+0047 W = [KnobData.Weight];
+0048 <span class="keyword">for</span> i = 1:NumVar
+0049    OriginalValues(i) = getfield(THERING{I(i)},F(i),{M(i),N(i)});
+0050 <span class="keyword">end</span>
+0051 
+0052 
+0053 h0 = figure(<span class="string">'Color'</span>, [0.8 0.8 0.8], <span class="keyword">...</span>
+0054     <span class="string">'FileName'</span>,<span class="string">'D:\MATLABR11\work\atslider.m'</span>, <span class="keyword">...</span>
+0055    <span class="string">'HandleVisibility'</span>, <span class="string">'Callback'</span> , <span class="keyword">...</span>
+0056     <span class="string">'PaperPosition'</span>,[18 180 576 432], <span class="keyword">...</span>
+0057     <span class="string">'PaperUnits'</span>,<span class="string">'points'</span>, <span class="keyword">...</span>
+0058     <span class="string">'Position'</span>,[520 400 300 140], <span class="keyword">...</span>
+0059     <span class="string">'Tag'</span>,<span class="string">'Fig1'</span>, <span class="keyword">...</span>
+0060     <span class="string">'ToolBar'</span>,<span class="string">'none'</span>);
+0061 <span class="keyword">if</span> nargout &gt; 0 
+0062    fig = h0; 
+0063 <span class="keyword">end</span>
+0064 
+0065 s1 = uicontrol(<span class="string">'Parent'</span>,h0, <span class="keyword">...</span>
+0066     <span class="string">'Units'</span>,<span class="string">'points'</span>, <span class="keyword">...</span>
+0067     <span class="string">'BackgroundColor'</span>,[0.752941176470588 0.752941176470588 0.752941176470588], <span class="keyword">...</span>
+0068     <span class="string">'ListboxTop'</span>,0, <span class="keyword">...</span>
+0069     <span class="string">'Position'</span>,[20 20 100 15], <span class="keyword">...</span>
+0070    <span class="string">'Style'</span>,<span class="string">'slider'</span>, <span class="keyword">...</span>
+0071    <span class="string">'Max'</span>,1, <span class="string">'Min'</span>, -1, <span class="keyword">...</span>
+0072    <span class="string">'Callback'</span>,<span class="string">'atslider set'</span>, <span class="keyword">...</span>
+0073    <span class="string">'Tag'</span>,<span class="string">'Slider1'</span>);
+0074 
+0075 e1 = uicontrol(<span class="string">'Parent'</span>,h0, <span class="keyword">...</span>
+0076     <span class="string">'Units'</span>,<span class="string">'points'</span>, <span class="keyword">...</span>
+0077     <span class="string">'BackgroundColor'</span>,[1 1 1], <span class="keyword">...</span>
+0078     <span class="string">'ListboxTop'</span>,0, <span class="keyword">...</span>
+0079     <span class="string">'Position'</span>,[140 20 65 15], <span class="keyword">...</span>
+0080    <span class="string">'Style'</span>,<span class="string">'edit'</span>, <span class="keyword">...</span>
+0081    <span class="string">'Callback'</span>,<span class="string">'atslider set'</span>, <span class="keyword">...</span>
+0082    <span class="string">'Tag'</span>,<span class="string">'EditText1'</span>);
+0083  
+0084 
+0085 <span class="keyword">if</span> nargin == 2 
+0086     set(h0,<span class="string">'UserData'</span>,{e1 s1 KnobData OriginalValues});
+0087 <span class="keyword">elseif</span> nargin == 3
+0088     set(h0,<span class="string">'UserData'</span>,{e1 s1 KnobData OriginalValues varargin{3}});
+0089 <span class="keyword">end</span>
+0090 
+0091 
+0092 t1 = uicontrol(<span class="string">'Parent'</span>,h0, <span class="keyword">...</span>
+0093     <span class="string">'Units'</span>,<span class="string">'points'</span>, <span class="keyword">...</span>
+0094     <span class="string">'BackgroundColor'</span>,[0.8 0.8 0.8], <span class="keyword">...</span>
+0095     <span class="string">'FontSize'</span>,12, <span class="keyword">...</span>
+0096     <span class="string">'ListboxTop'</span>,0, <span class="keyword">...</span>
+0097     <span class="string">'Position'</span>,[20 60 165 20], <span class="keyword">...</span>
+0098     <span class="string">'String'</span>,KnobName, <span class="keyword">...</span>
+0099     <span class="string">'Style'</span>,<span class="string">'text'</span>, <span class="keyword">...</span>
+0100     <span class="string">'Tag'</span>,KnobName);
+0101 
+0102 <span class="keyword">elseif</span> nargin == 1
+0103    action = varargin{1};
+0104    
+0105 
+0106    UD = get(gcbf,<span class="string">'UserData'</span>);
+0107    eh = UD{1};
+0108     sh = UD{2};
+0109     OV = UD{4};  
+0110     <span class="keyword">if</span>(length(UD)==5) 
+0111         COMMAND = UD{5};
+0112         <span class="comment">% quick fix</span>
+0113         COMMAND = strcat(<span class="string">'figure(3);'</span>,COMMAND);
+0114     <span class="keyword">else</span> 
+0115         COMMAND = <span class="string">''</span>;
+0116    <span class="keyword">end</span>
+0117     
+0118 
+0119    I = [UD{3}.Position];
+0120     F = [UD{3}.FieldName];
+0121     M = [UD{3}.M];
+0122     N = [UD{3}.N];
+0123     W = [UD{3}.Weight];
+0124 
+0125    <span class="keyword">switch</span> lower(action)
+0126    <span class="keyword">case</span> <span class="string">'set'</span>
+0127       whoiscalling = gcbo;
+0128       <span class="comment">%synchronize slider and text</span>
+0129       <span class="keyword">switch</span>(whoiscalling)
+0130       <span class="keyword">case</span> sh 
+0131          newvalue = get(sh,<span class="string">'Value'</span>);
+0132          set(eh,<span class="string">'String'</span>,newvalue)
+0133       <span class="keyword">case</span> eh
+0134          newvalue = sscanf(get(eh,<span class="string">'String'</span>),<span class="string">'%f'</span>);
+0135          set(sh,<span class="string">'Value'</span>,newvalue);
+0136       <span class="keyword">end</span>
+0137       
+0138       
+0139       <span class="comment">%update controlled variables in the worksapce</span>
+0140       <span class="keyword">for</span> i = 1:length(OV)
+0141          THERING{I(i)}=setfield(THERING{I(i)},F(i),{M(i),N(i)},OV(i)+newvalue*W(i));
+0142       <span class="keyword">end</span>
+0143        evalin(<span class="string">'base'</span>,COMMAND);  
+0144    <span class="keyword">case</span> <span class="string">'reset'</span>
+0145       <span class="comment">%Do nothing for now</span>
+0146    <span class="keyword">end</span>
+0147    
+0148 <span class="keyword">end</span>
+0149 
+0150    
+0151 
+0152</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

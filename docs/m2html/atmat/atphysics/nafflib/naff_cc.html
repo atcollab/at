@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of naff_cc</title>
+  <meta name="keywords" content="naff_cc">
+  <meta name="description" content="NAFF_CC Compile nafflibrary for Matlab">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">nafflib</a> &gt; naff_cc.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/nafflib&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>naff_cc
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>NAFF_CC Compile nafflibrary for Matlab</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function naff_cc </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">NAFF_CC Compile nafflibrary for Matlab</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function internal_cc(fn)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function naff_cc</a>
+0002 <span class="comment">%NAFF_CC Compile nafflibrary for Matlab</span>
+0003 <span class="comment">%</span>
+0004 
+0005 <span class="comment">% Modified by Laurent S. Nadolski</span>
+0006 <span class="comment">% April 6th, 2007</span>
+0007 
+0008 cd_old = pwd;
+0009 cd(fileparts(which(<span class="string">'naff_cc'</span>)))
+0010 
+0011 disp([<span class="string">'Compiling NAFF routines on '</span>, computer,<span class="string">'.'</span>])
+0012 
+0013 <span class="keyword">switch</span> computer
+0014     <span class="keyword">case</span> <span class="string">'SOL2'</span>
+0015         PLATFORMOPTION = [<span class="string">'-D'</span>,computer,<span class="string">' '</span>];
+0016     <span class="keyword">case</span> <span class="string">'GLNXA64'</span>
+0017         PLATFORMOPTION = [<span class="string">'-ldl -D'</span>,computer,<span class="string">' '</span>]; <span class="comment">% added by Laurent April 6th, 2007</span>
+0018     <span class="keyword">case</span> <span class="string">'GLNX86'</span> 
+0019         PLATFORMOPTION = [<span class="string">'-ldl -D'</span>,computer,<span class="string">' '</span>]; <span class="comment">% added by Laurent April 6th, 2007</span>
+0020     <span class="keyword">case</span>  <span class="string">'PCWIN64'</span>
+0021         PLATFORMOPTION = [<span class="string">'-D'</span>,computer,<span class="string">' LDFLAGS=''-pthread -shared -m64'' '</span>];
+0022     <span class="keyword">case</span>  <span class="string">'PCWIN'</span>
+0023         PLATFORMOPTION = [<span class="string">'-D'</span>,computer,<span class="string">' '</span>];
+0024     <span class="keyword">case</span>  <span class="string">'MACI64'</span>
+0025         PLATFORMOPTION = [<span class="string">'-D'</span>,computer,<span class="string">' LDFLAGS=''-pthread -shared -m64'' '</span>];
+0026     <span class="keyword">otherwise</span>
+0027         error(<span class="string">'Platform not defined'</span>);
+0028 <span class="keyword">end</span>
+0029 <span class="comment">% Object files</span>
+0030 disp(<span class="string">'Compiling: modnaff.c'</span>);
+0031 <span class="comment">%mex LDFLAGS='-pthread -shared -m64' -I/usr/local/matlab/extern/include -O -c modnaff.c</span>
+0032 
+0033 eval([<span class="string">'mex '</span>, PLATFORMOPTION, <span class="string">'-O -c modnaff.c '</span>]);
+0034 
+0035 
+0036 disp(<span class="string">'Compiling: example.c'</span>);
+0037 <span class="comment">%mex LDFLAGS='-pthread -shared -m64' -I/usr/local/matlab/extern/include -O -c complexe.c</span>
+0038 eval([<span class="string">'mex '</span>, PLATFORMOPTION, <span class="string">'-O -c modnaff.c '</span>]);
+0039 eval([<span class="string">'mex '</span>, PLATFORMOPTION, <span class="string">'-O -c complexe.c '</span>]);
+0040 
+0041 disp(<span class="string">'Compiling: nafflib.c'</span>);
+0042 
+0043 <span class="keyword">switch</span> computer
+0044     <span class="keyword">case</span> {<span class="string">'MACI64'</span>, <span class="string">'GLNX86'</span>, <span class="string">'GLNX64'</span>, <span class="string">'GLNXA64'</span>}
+0045         <a href="#_sub1" class="code" title="subfunction internal_cc(fn)">internal_cc</a>(<span class="string">'nafflib.c modnaff.o complexe.o'</span>);
+0046     <span class="keyword">case</span> {<span class="string">'PCWIN'</span>, <span class="string">'PCWIN64'</span>}
+0047         <a href="#_sub1" class="code" title="subfunction internal_cc(fn)">internal_cc</a>(<span class="string">'nafflib.c modnaff.obj complexe.obj'</span>);
+0048 <span class="keyword">end</span>
+0049 
+0050 cd(cd_old);
+0051 
+0052 <a name="_sub1" href="#_subfunctions" class="code">function internal_cc(fn)</a>
+0053 <span class="comment">% cc(filename)</span>
+0054 <span class="comment">%</span>
+0055 <span class="comment">% MAC 64 bits</span>
+0056 <span class="comment">% TODO WINDOWS</span>
+0057 
+0058 disp([<span class="string">'Compiling: '</span>,fn]);
+0059 
+0060 <span class="keyword">switch</span> computer
+0061     <span class="keyword">case</span> {<span class="string">'GLNX86'</span>, <span class="string">'GLNX64'</span>, <span class="string">'GLNXA64'</span>}
+0062         cmdstr = [ <span class="string">'mex -I'</span> matlabroot <span class="string">'/extern/include  -fPIC -O '</span>, fn ];        
+0063     <span class="keyword">case</span> {<span class="string">'MACI64'</span>}
+0064         cmdstr = [ <span class="string">'mex -I'</span> matlabroot <span class="string">'/extern/include -O '</span>, fn ];
+0065     <span class="keyword">case</span> {<span class="string">'PCWIN'</span>, <span class="string">'PCWIN64'</span>}
+0066         cmdstr = [ <span class="string">'mex -I'</span> <span class="string">'LDFLAGS=''-pthread -shared -m64''  -O '</span>, fn];
+0067     <span class="keyword">otherwise</span>
+0068         error(<span class="string">'Architecture not defined'</span>)
+0069 <span class="keyword">end</span>
+0070 disp(cmdstr);
+0071 eval(cmdstr);</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

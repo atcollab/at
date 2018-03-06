@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsetRFCavityErr</title>
+  <meta name="keywords" content="atsetRFCavityErr">
+  <meta name="description" content="ATSETRFCAVITY sets the RF Cavity with the passmethod RFCavityPass.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">RFcavity</a> &gt; atsetRFCavityErr.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/RFcavity&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>atsetRFCavityErr
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>ATSETRFCAVITY sets the RF Cavity with the passmethod RFCavityPass.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [newring, inCOD]= atsetRFCavityErr( ring, rfv, radflag, HarmNumber, inCOD, DeltaFreq ) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">  ATSETRFCAVITY sets the RF Cavity with the passmethod RFCavityPass.
+  RFCavityPass allows to change the energy of the beam changing the
+  frequency of the cavity.
+
+   newring = atSetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq)
+   sets the synchronous phase of the cavity, the voltage, the harmonic
+   number and the PassMethod. All the N cavities will have a voltage rfv/N
+   radflag says whether or not we want radiation on, which affects
+   synchronous phase. If radflag is 0, the function calls atradoff, if it
+   is 1, it calls atradon.
+   Cavities in the ring must have the Class RFCavity.
+   Normally DeltaFreq should be 0, it's different from 0 when you want to
+   simulate a change of energy changing the RF frequency. DeltaFreq is in
+   Hz.
+
+   normal use:
+   newring = atsetRFCavity( ring, 6e6, 1, 992, 0 )
+   for off-energy simulations:
+   newring = atsetRFCavity( ring, 6e6, 1, 992, 100 )
+
+   modified : defaulted DeltaFreq
+              removed U0 set timelag to 6th coordinate of findorbit6
+
+
+   see also: atsetcavity</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [newring, inCOD]= atsetRFCavityErr( ring, rfv, radflag, HarmNumber, inCOD, DeltaFreq )</a>
+0002 <span class="comment">%  ATSETRFCAVITY sets the RF Cavity with the passmethod RFCavityPass.</span>
+0003 <span class="comment">%  RFCavityPass allows to change the energy of the beam changing the</span>
+0004 <span class="comment">%  frequency of the cavity.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   newring = atSetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq)</span>
+0007 <span class="comment">%   sets the synchronous phase of the cavity, the voltage, the harmonic</span>
+0008 <span class="comment">%   number and the PassMethod. All the N cavities will have a voltage rfv/N</span>
+0009 <span class="comment">%   radflag says whether or not we want radiation on, which affects</span>
+0010 <span class="comment">%   synchronous phase. If radflag is 0, the function calls atradoff, if it</span>
+0011 <span class="comment">%   is 1, it calls atradon.</span>
+0012 <span class="comment">%   Cavities in the ring must have the Class RFCavity.</span>
+0013 <span class="comment">%   Normally DeltaFreq should be 0, it's different from 0 when you want to</span>
+0014 <span class="comment">%   simulate a change of energy changing the RF frequency. DeltaFreq is in</span>
+0015 <span class="comment">%   Hz.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">%   normal use:</span>
+0018 <span class="comment">%   newring = atsetRFCavity( ring, 6e6, 1, 992, 0 )</span>
+0019 <span class="comment">%   for off-energy simulations:</span>
+0020 <span class="comment">%   newring = atsetRFCavity( ring, 6e6, 1, 992, 100 )</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">%   modified : defaulted DeltaFreq</span>
+0023 <span class="comment">%              removed U0 set timelag to 6th coordinate of findorbit6</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">%</span>
+0026 <span class="comment">%   see also: atsetcavity</span>
+0027 
+0028 clight=299792458 ;
+0029 
+0030 newring = ring;
+0031 indrfc=findcells(ring,<span class="string">'Class'</span>,<span class="string">'RFCavity'</span>);
+0032 
+0033 beta0=1;
+0034 
+0035 <span class="comment">% circumference + trajectory length modification introduced by orbit in</span>
+0036 <span class="comment">% dipoles</span>
+0037 
+0038 <span class="comment">% DLL=LatticeLengtheningCODDipole(ring,inCOD);</span>
+0039 DLL=0;
+0040 circumference=findspos(ring,length(ring)+1)*(1+DLL);
+0041 
+0042 newring=setcellstruct(newring,<span class="string">'PassMethod'</span>,indrfc,<span class="string">'RFCavityPass'</span>);
+0043 
+0044 freq0=(clight*beta0/circumference)*HarmNumber;
+0045 
+0046 <span class="comment">%now set intial guess for cavity frequencies,</span>
+0047 <span class="comment">% set Harmonic Number and RF Voltage</span>
+0048 <span class="keyword">for</span> j=indrfc
+0049     newring{j}.Frequency=freq0;
+0050     newring{j}.HarmNumber=HarmNumber;
+0051     newring{j}.Voltage=rfv/length(indrfc);
+0052 <span class="keyword">end</span>
+0053 
+0054 <span class="comment">% set radiation pass methods ('auto' sets radiation on also in quadrupoles)</span>
+0055 <span class="keyword">if</span> radflag
+0056     newring=atradon(newring,<span class="string">'RFCavityPass'</span>,<span class="string">'auto'</span>,<span class="string">'auto'</span>);
+0057 <span class="keyword">else</span>
+0058     newring=atradoff(newring,<span class="string">'RFCavityPass'</span>,<span class="string">'auto'</span>,<span class="string">'auto'</span>);
+0059 <span class="keyword">end</span>
+0060 
+0061 <span class="comment">% default DeltaFreq to cancel energy deviation after one turn</span>
+0062 <span class="keyword">if</span> nargin&lt;6
+0063     disp(<span class="string">'DeltaFreq not provided. Setting DeltaFreq to cancel energy variation after one turn'</span>);
+0064     
+0065     <span class="keyword">for</span> i=1:5
+0066         freq=atgetfieldvalues(newring,indrfc,<span class="string">'Frequency'</span>);
+0067         tlag=atgetfieldvalues(newring,indrfc,<span class="string">'TimeLag'</span>);
+0068         
+0069         <span class="comment">%alpha=mcfErr(newring,indrfc,inCOD,DLL);</span>
+0070         alpha=mcf(newring);
+0071         orb = findorbit6(newring,indrfc,inCOD);
+0072         <span class="keyword">if</span> ~isnan(orb(1))
+0073             df = alpha*orb(5,:)'.*freq;
+0074         <span class="keyword">else</span>
+0075             df=zeros(size(freq));
+0076             warning(<span class="string">'findorbit6 failed.'</span>)
+0077         <span class="keyword">end</span>
+0078         
+0079         newring=atsetfieldvalues(newring,indrfc,<span class="string">'Frequency'</span>,freq+df);
+0080         
+0081         orb = findorbit6(newring,indrfc,inCOD);
+0082         newring=atsetfieldvalues(newring,indrfc,<span class="string">'TimeLag'</span>,tlag-orb(6,:)');
+0083     
+0084         
+0085     <span class="keyword">end</span>
+0086     
+0087     freqct=atgetfieldvalues(newring(indrfc),<span class="string">'Frequency'</span>);
+0088     DeltaFreq=freqct(1)-freq0;
+0089     
+0090     
+0091     disp([<span class="string">'DeltaFreq: '</span> num2str(DeltaFreq) <span class="string">' Hz'</span>]);
+0092     
+0093 <span class="keyword">end</span>
+0094 
+0095 freq=freq0+DeltaFreq;
+0096 
+0097 <span class="comment">% set frequency</span>
+0098 newring(indrfc)=atsetfieldvalues(newring(indrfc),<span class="string">'Frequency'</span>,freq);
+0099 
+0100 <span class="comment">% set timelag</span>
+0101 orb = findorbit6(newring,indrfc,inCOD);
+0102 tlag=atgetfieldvalues(newring,indrfc,<span class="string">'TimeLag'</span>);
+0103 ntlag=tlag-orb(6,:)';
+0104 
+0105 newring(indrfc)=atsetfieldvalues(newring(indrfc),<span class="string">'TimeLag'</span>,ntlag);
+0106 
+0107 inCOD = findorbit6(newring,1,inCOD);
+0108 
+0109 <span class="keyword">if</span> nargin&lt;7
+0110     verbose=false;
+0111 <span class="keyword">end</span>
+0112 
+0113 <span class="keyword">if</span> verbose
+0114     disp([<span class="string">'DLL: '</span> num2str(circumference*DLL) <span class="string">' m'</span>]);
+0115     disp([<span class="string">'Delta RF frequency: '</span> num2str(DeltaFreq) <span class="string">' Hz'</span>]);
+0116     disp([<span class="string">'Time Lag: '</span> num2str(ntlag) <span class="string">' m'</span>]);
+0117 <span class="keyword">end</span>
+0118 
+0119 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

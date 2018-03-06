@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of setTiltGirderAbout</title>
+  <meta name="keywords" content="setTiltGirderAbout">
+  <meta name="description" content="SETTILTGIRDERABOUT Set Tilt error on a magnet">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">pubtools</a> &gt; <a href="../index.html">LatticeTuningFunctions</a> &gt; <a href="index.html">errors</a> &gt; setTiltGirderAbout.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>setTiltGirderAbout
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>SETTILTGIRDERABOUT Set Tilt error on a magnet</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function re=setTiltGirderAbout(r,mag_gr,coord,PSI) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SETTILTGIRDERABOUT Set Tilt error on a magnet
+
+ See also: atsettilt <a href="atsettiltdipole.html" class="code" title="function ring=atsettiltdipole(varargin)">atsettiltdipole</a> atsetshift</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="atsettiltdipole.html" class="code" title="function ring=atsettiltdipole(varargin)">atsettiltdipole</a>	ATSETTILTDIPOLE sets the entrance and exit rotation matrices</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="setGirderError.html" class="code" title="function rerr=setGirderError(r,pert,errval,mag_group)">setGirderError</a>	rerr=setGirderError(r,pert,errval,mag_group)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function re=setTiltGirderAbout(r,mag_gr,coord,PSI)</a>
+0002 <span class="comment">%SETTILTGIRDERABOUT Set Tilt error on a magnet</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% See also: atsettilt atsettiltdipole atsetshift</span>
+0005 
+0006 <span class="comment">%mag_gr=getMagGroupsFromGirderIndex(r);</span>
+0007 
+0008 pos=[mag_gr{:}];
+0009 
+0010 numelems = length(pos);
+0011 
+0012 <span class="keyword">if</span> (numelems ~= length(PSI))
+0013     error(<span class="string">'ELEMINDEX, D must have the same number of elements'</span>);
+0014 <span class="keyword">end</span>
+0015 
+0016 
+0017 <span class="keyword">switch</span> coord
+0018     <span class="keyword">case</span> <span class="string">'x'</span>
+0019         <span class="keyword">for</span> i = 1:length(pos)
+0020             
+0021             r{pos(i)}.T1(2) =  -PSI(i);
+0022             r{pos(i)}.T2(2) =   PSI(i);
+0023             r{pos(i)}.T1(1) =  -r{pos(i)}.Length/2*sin(PSI(i));
+0024             r{pos(i)}.T2(1) =   r{pos(i)}.Length/2*sin(PSI(i));
+0025             r{pos(i)}.RotAboutX =   PSI(i);
+0026             <span class="comment">%DS =+L/2(1-cos(psi) both in and out, ignored. (if including, do not change sign!)</span>
+0027            
+0028         <span class="keyword">end</span>
+0029         r=ThetaPhiGirder(r,mag_gr);
+0030         
+0031     <span class="keyword">case</span> <span class="string">'y'</span>
+0032         <span class="keyword">for</span> i = 1:length(pos)<span class="comment">% angle is changing!</span>
+0033             
+0034             r{pos(i)}.T1(4) =  -PSI(i);
+0035             r{pos(i)}.T2(4) =   PSI(i);
+0036             r{pos(i)}.T1(3) =  -r{pos(i)}.Length/2*sin(PSI(i));
+0037             r{pos(i)}.T2(3) =   r{pos(i)}.Length/2*sin(PSI(i));
+0038             r{pos(i)}.RotAboutY =   PSI(i);
+0039             <span class="comment">%DS =+L/2(1-cos(psi) both in and out, ignored. (if including, do not change sign!)</span>
+0040             
+0041         <span class="keyword">end</span>
+0042         r=ThetaPhiGirder(r,mag_gr);
+0043         
+0044     <span class="keyword">case</span>  <span class="string">'s'</span>
+0045         r= <a href="atsettiltdipole.html" class="code" title="function ring=atsettiltdipole(varargin)">atsettiltdipole</a>(r,pos,PSI);
+0046         r= UniformGirderErrors(r,mag_gr);
+0047     <span class="keyword">otherwise</span>
+0048         disp(<span class="string">'tilt about x, y or s'</span>);
+0049 <span class="keyword">end</span>
+0050 
+0051 
+0052 
+0053 re=r;</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

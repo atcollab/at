@@ -1,0 +1,379 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsetwaveerrors</title>
+  <meta name="keywords" content="atsetwaveerrors">
+  <meta name="description" content="function rerr=atsetwaveerrors(...">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">wave</a> &gt; atsetwaveerrors.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/wave&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>atsetwaveerrors
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function rerr=atsetwaveerrors(...</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">function rerr=atsetwaveerrors(...
+ rerr, lattice
+ magindex, indexes of magnts to set errors
+ indBPM,  index of bpm to mode reference using offsets
+ W, wave length
+ A, amplitude
+ type)
+
+ Set Error wave
+
+ is magindex is a cellarray, then also type, W and A must be. This will be
+ applied summing.
+
+ if W and A are vectors the resulting sinusoids are summed. 
+ 
+ type may be: x, y, s, psi, theta, phi, bpm'
+              x.y, x.y.psi, x.y.s.psi,
+              x.y.s.psi.theta.phi'
+
+see also: setANYshift setDSerr setTiltAbout <a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>	function rerr=atsetwaveerrors(...</li><li><a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>	function rerr=atsetwaveerrors(...</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)</a>
+0002 <span class="comment">%function rerr=atsetwaveerrors(...</span>
+0003 <span class="comment">% rerr, lattice</span>
+0004 <span class="comment">% magindex, indexes of magnts to set errors</span>
+0005 <span class="comment">% indBPM,  index of bpm to mode reference using offsets</span>
+0006 <span class="comment">% W, wave length</span>
+0007 <span class="comment">% A, amplitude</span>
+0008 <span class="comment">% type)</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% Set Error wave</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% is magindex is a cellarray, then also type, W and A must be. This will be</span>
+0013 <span class="comment">% applied summing.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">% if W and A are vectors the resulting sinusoids are summed.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% type may be: x, y, s, psi, theta, phi, bpm'</span>
+0018 <span class="comment">%              x.y, x.y.psi, x.y.s.psi,</span>
+0019 <span class="comment">%              x.y.s.psi.theta.phi'</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%see also: setANYshift setDSerr setTiltAbout seterrorwave</span>
+0022 
+0023 <span class="keyword">if</span> iscell(magindex)
+0024     
+0025     <span class="keyword">if</span> length(magindex)~=length(W) || length(magindex)~=length(A) || length(magindex)~=length(type)
+0026         error(<span class="string">'magindex, A, W, type ,must be cell array of the same length, or numeric.'</span>)
+0027     <span class="keyword">end</span>
+0028     
+0029     <span class="comment">% loop magindex to apply errors</span>
+0030     <span class="keyword">for</span> im=1:length(magindex)
+0031         
+0032        disp([<span class="keyword">...</span>
+0033             <span class="string">'magindex '</span> num2str(im)<span class="keyword">...</span>
+0034             <span class="string">', type:'</span> type{im}<span class="keyword">...</span>
+0035             <span class="string">', A:'</span> num2str(A{im}(1)) <span class="string">' ... '</span> num2str(A{im}(end))<span class="keyword">...</span>
+0036             <span class="string">', W: '</span> num2str(W{im}(1)) <span class="string">' ... '</span> num2str(W{im}(end))]<span class="keyword">...</span>
+0037             );
+0038         
+0039         rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(<span class="keyword">...</span>
+0040             rerr,<span class="keyword">...</span>
+0041             magindex{im},<span class="keyword">...</span>
+0042             indBPM,<span class="keyword">...</span>
+0043             W{im},<span class="keyword">...</span>
+0044             A{im},<span class="keyword">...</span>
+0045             type{im});
+0046     <span class="keyword">end</span>
+0047     
+0048     
+0049 <span class="keyword">else</span>
+0050     
+0051     <span class="comment">% set error wave to zero if no error existing</span>
+0052     [X0,Y0,S0,T0,R0,P0,bpmerr]=GetExistingErrors(rerr,magindex);
+0053     
+0054     <span class="keyword">if</span> (std(X0)==0 &amp;&amp; std(Y0)==0)
+0055         <span class="comment">% sets all field of T1 to 0</span>
+0056         errfun=@(r,po,er)setANYshift(r,po,1:6,er);
+0057         rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,1,0);
+0058     <span class="keyword">end</span>
+0059     
+0060     <span class="comment">% set error torequired amplitude and wavelength</span>
+0061     <span class="keyword">switch</span> type
+0062         <span class="keyword">case</span> <span class="string">'x'</span>
+0063             
+0064             disp(<span class="string">'X error'</span>);
+0065             
+0066             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets X errors</span>
+0067             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,X0);
+0068             
+0069             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,1); <span class="comment">% sets X bpm errors</span>
+0070             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsetx);
+0071         <span class="keyword">case</span> <span class="string">'y'</span>
+0072             
+0073             disp(<span class="string">'Y error'</span>);
+0074             
+0075             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0076             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,Y0);
+0077             
+0078             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,2); <span class="comment">% sets Y bpm errors</span>
+0079             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsety);
+0080             
+0081         <span class="keyword">case</span> <span class="string">'s'</span> <span class="comment">% longitudinal displacement</span>
+0082             
+0083             disp(<span class="string">'S error'</span>);
+0084             
+0085             errfun=@(r,po,er)setDSerr(r,po,er); <span class="comment">% sets Y errors</span>
+0086             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,S0);
+0087             
+0088         <span class="keyword">case</span> <span class="string">'phi'</span> <span class="comment">% about x</span>
+0089             
+0090             disp(<span class="string">'phi error'</span>);
+0091             
+0092             errfun=@(r,po,er)setTiltAbout(r,po,<span class="string">'x'</span>,er); <span class="comment">% sets Y errors</span>
+0093             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,R0);
+0094             
+0095         <span class="keyword">case</span> <span class="string">'theta'</span> <span class="comment">% about y</span>
+0096             
+0097             disp(<span class="string">'theta error'</span>);
+0098             
+0099             errfun=@(r,po,er)setTiltAbout(r,po,<span class="string">'y'</span>,er); <span class="comment">% sets Y errors</span>
+0100             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,P0);
+0101             
+0102         <span class="keyword">case</span> <span class="string">'psi'</span> <span class="comment">% about s</span>
+0103             
+0104             disp(<span class="string">'s-asix rotation error'</span>);
+0105             
+0106             errfun=@(r,po,er)setTiltAbout(r,po,<span class="string">'s'</span>,er); <span class="comment">% sets Y errors</span>
+0107             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,T0);
+0108             
+0109             <span class="comment">%  errfun=@(r,po,er)setcellstruct(r,'Rotation',po,er,1); % sets Y bpm errors</span>
+0110             <span class="comment">%  rerr=seterrorwave(rerr,indBPM,errfun,W,-A);</span>
+0111             
+0112         <span class="keyword">case</span> <span class="string">'bpm'</span>
+0113             
+0114             <span class="comment">% bpm</span>
+0115             <span class="comment">% errfun=@(r,po,er)setcellstruct(r,'Rotation',po,er,1); % sets psi bpm errors</span>
+0116             <span class="comment">% rerr=seterrorwave(rerr,indBPM,errfun,W,-A);</span>
+0117             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,1); <span class="comment">% sets x bpm errors</span>
+0118             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsetx);
+0119             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,2); <span class="comment">% sets Y bpm errors</span>
+0120             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsety);
+0121             
+0122         <span class="keyword">case</span> <span class="string">'x.y.s.psi'</span>
+0123             disp(<span class="string">'x,y,s misal, bpm and s-asix rotation error (psi only, no phi and theta)'</span>);
+0124             
+0125             <span class="comment">% rotation</span>
+0126             errfun=@(r,po,er)settilt_THERING_Dipole(r,po,er); <span class="comment">% sets rotation about s</span>
+0127             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,T0);
+0128             
+0129             <span class="comment">% alignment</span>
+0130             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets x errors</span>
+0131             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,X0);
+0132             
+0133             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0134             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,Y0);
+0135             
+0136             errfun=@(r,po,er)setDSerr(r,po,er); <span class="comment">% sets S errors</span>
+0137             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,S0);
+0138             
+0139             <span class="comment">% bpm</span>
+0140             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,1); <span class="comment">% sets x bpm errors</span>
+0141             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsetx);
+0142             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,2); <span class="comment">% sets Y bpm errors</span>
+0143             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsety);
+0144             
+0145         <span class="keyword">case</span> <span class="string">'x.y.psi'</span>
+0146             disp(<span class="string">'x,y misal, bpm and s-asix rotation error (psi only, no phi and theta)'</span>);
+0147             
+0148             <span class="comment">% rotation</span>
+0149             errfun=@(r,po,er)settilt_THERING_Dipole(r,po,er); <span class="comment">% sets rotation about s</span>
+0150             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,T0);
+0151             
+0152             <span class="comment">% alignment</span>
+0153             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets x errors</span>
+0154             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,X0);
+0155             
+0156             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0157             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,Y0);
+0158             
+0159             <span class="comment">% bpm</span>
+0160             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,1); <span class="comment">% sets x bpm errors</span>
+0161             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsetx);
+0162             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,2); <span class="comment">% sets Y bpm errors</span>
+0163             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsety);
+0164             
+0165         <span class="keyword">case</span> <span class="string">'x.y'</span>
+0166             disp(<span class="string">'x,y misal, bpm '</span>);
+0167             
+0168             <span class="comment">% alignment</span>
+0169             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets x errors</span>
+0170             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,X0);
+0171             
+0172             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0173             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,Y0);
+0174             
+0175             <span class="comment">% bpm</span>
+0176             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,1); <span class="comment">% sets x bpm errors</span>
+0177             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsetx);
+0178             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,2); <span class="comment">% sets Y bpm errors</span>
+0179             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsety);
+0180             
+0181         <span class="keyword">case</span> <span class="string">'x.y.s.psi.theta.phi'</span>
+0182             disp(<span class="string">'x,y,s misal, bpm and rotation errors (psi, phi and theta)'</span>);
+0183             
+0184             <span class="comment">% rotation</span>
+0185             errfun=@(r,po,er)settilt_THERING_Dipole(r,po,er); <span class="comment">% sets rotation about s</span>
+0186             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,T0);
+0187             
+0188             errfun=@(r,po,er)setTiltAbout(r,po,<span class="string">'y'</span>,er); <span class="comment">% sets rotation about Y</span>
+0189             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,P0);
+0190             
+0191             errfun=@(r,po,er)setTiltAbout(r,po,<span class="string">'x'</span>,er); <span class="comment">% sets rotation about X</span>
+0192             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,R0);
+0193             
+0194             <span class="comment">% alignment</span>
+0195             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets x errors</span>
+0196             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,X0);
+0197             
+0198             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0199             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,Y0);
+0200             
+0201             errfun=@(r,po,er)setDSerr(r,po,er); <span class="comment">% sets S errors</span>
+0202             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,magindex,errfun,W,A,S0);
+0203             
+0204             <span class="comment">% bpm</span>
+0205             <span class="comment">% errfun=@(r,po,er)setcellstruct(r,'Rotation',po,er,1); % sets psi bpm errors</span>
+0206             <span class="comment">% rerr=seterrorwave(rerr,indBPM,errfun,W,-A);</span>
+0207             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,1); <span class="comment">% sets x bpm errors</span>
+0208             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsetx);
+0209             errfun=@(r,po,er)setcellstruct(r,<span class="string">'Offset'</span>,po,er,1,2); <span class="comment">% sets Y bpm errors</span>
+0210             rerr=<a href="seterrorwave.html" class="code" title="function rwave=seterrorwave(r,...             % nominal lattice">seterrorwave</a>(rerr,indBPM,errfun,W,-A,bpmerr.offsety);
+0211             
+0212         <span class="keyword">case</span> <span class="string">'gx'</span>
+0213             
+0214             disp(<span class="string">'girder X error'</span>);
+0215             
+0216             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'x'</span>);
+0217             rerr=UniformGirderErrors(rerr);
+0218             
+0219         <span class="keyword">case</span> <span class="string">'gy'</span>
+0220             
+0221             disp(<span class="string">'girder Y error'</span>);
+0222             
+0223             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'y'</span>);
+0224             rerr=UniformGirderErrors(rerr);
+0225             
+0226         <span class="keyword">case</span> <span class="string">'gpsi'</span>
+0227             
+0228             disp(<span class="string">'girder PSI error'</span>);
+0229             
+0230             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'psi'</span>);
+0231             rerr=UniformGirderErrors(rerr);
+0232             
+0233         <span class="keyword">case</span> <span class="string">'gx.gy'</span>
+0234             
+0235             disp(<span class="string">'girder X Y error'</span>);
+0236             
+0237             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'x.y'</span>);
+0238             rerr=UniformGirderErrors(rerr);
+0239             
+0240         <span class="keyword">case</span> <span class="string">'gx.gy.gpsi'</span>
+0241             disp(<span class="string">'girder X Y PSI error'</span>);
+0242             
+0243             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'x.y.psi'</span>);
+0244             rerr=UniformGirderErrors(rerr);
+0245             
+0246         <span class="keyword">case</span> <span class="string">'gx.gy.gpsi.x.y.psi'</span>
+0247             
+0248             disp(<span class="string">'girder wave and individual rand mag. X Y PSI error'</span>);
+0249             
+0250             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'x.y.psi'</span>);
+0251             rerr=UniformGirderErrors(rerr);
+0252             
+0253             <span class="comment">% get errors</span>
+0254             [X,Y,T]=GetMisalignments(rerr,magindex);
+0255             
+0256             seed=1;
+0257             nsig=2;
+0258             disp([<span class="string">'Girder wave amplitude: '</span> num2str(A*1e6) <span class="string">' um'</span>])
+0259             betweengird=max(abs(diff(X)));
+0260             disp([<span class="string">'Max distance between two adjacent girders: '</span> num2str(betweengird*1e6) <span class="string">' um'</span>])
+0261             Ar=betweengird/sqrt(2)/2;<span class="comment">% get distance between 2 girders</span>
+0262             disp([<span class="string">'Random errors max amplitude: '</span> num2str(Ar*1e6) <span class="string">' um'</span>])
+0263             Ar=Ar/nsig; 
+0264             <span class="comment">% rotation</span>
+0265             errfun=@(r,po,er)settilt_THERING_Dipole(r,po,er); <span class="comment">% sets rotation about s</span>
+0266             rerr=seterrorrand(rerr,magindex,errfun,seed,Ar,nsig,T);
+0267             
+0268             <span class="comment">% alignment</span>
+0269             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets x errors</span>
+0270             rerr=seterrorrand(rerr,magindex,errfun,seed*0,Ar,nsig,X);
+0271             
+0272             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0273             rerr=seterrorrand(rerr,magindex,errfun,seed*0,Ar,nsig,Y);
+0274             <span class="comment">%uniform errors in sliced magnets</span>
+0275             rerr=UniformMagGroupsErrors(rerr);
+0276             
+0277         <span class="keyword">case</span> <span class="string">'gx.gy.x.y'</span>
+0278             
+0279             disp(<span class="string">'girder wave and individual rand mag. X Y error'</span>);
+0280             
+0281             rerr=<a href="atsetwaveerrors.html" class="code" title="function rerr=atsetwaveerrors(rerr,magindex,indBPM,W,A,type)">atsetwaveerrors</a>(rerr,magindex,indBPM,W,A,<span class="string">'x.y'</span>);
+0282             rerr=UniformGirderErrors(rerr);
+0283             
+0284             <span class="comment">% get errors</span>
+0285             [X,Y,T]=GetMisalignments(rerr,magindex);
+0286             
+0287             seed=1;
+0288             nsig=2;
+0289             disp([<span class="string">'Girder wave amplitude: '</span> num2str(A*1e6) <span class="string">' um'</span>])
+0290             betweengird=max(abs(diff(X)));
+0291             disp([<span class="string">'Max distance between two adjacent girders: '</span> num2str(betweengird*1e6) <span class="string">' um'</span>])
+0292             Ar=betweengird/sqrt(2)/2;<span class="comment">% get distance between 2 girders</span>
+0293             disp([<span class="string">'Random errors max amplitude: '</span> num2str(Ar*1e6) <span class="string">' um'</span>])
+0294             Ar=Ar/nsig; 
+0295            
+0296             <span class="comment">% alignment</span>
+0297             errfun=@(r,po,er)setANYshift(r,po,1,er); <span class="comment">% sets x errors</span>
+0298             rerr=seterrorrand(rerr,magindex,errfun,seed,Ar,nsig,X);
+0299             
+0300             errfun=@(r,po,er)setANYshift(r,po,3,er); <span class="comment">% sets Y errors</span>
+0301             rerr=seterrorrand(rerr,magindex,errfun,seed*0,Ar,nsig,Y);
+0302             <span class="comment">%uniform errors in sliced magnets</span>
+0303             rerr=UniformMagGroupsErrors(rerr);
+0304               
+0305         <span class="keyword">otherwise</span>
+0306             disp(<span class="string">'type may be: x, y, s, psi, theta, phi, bpm'</span>);
+0307             disp(<span class="string">'             x.y, x.y.psi, x.y.s.psi, x.y.s.psi.theta.phi'</span>);
+0308             disp(<span class="string">'             gx, gy, gx.gy, gx.gy.gpsi,gx.gy.x.y, gx.gy.gpsi.x.y.psi'</span>);
+0309     <span class="keyword">end</span>
+0310     
+0311 <span class="keyword">end</span>
+0312 
+0313 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

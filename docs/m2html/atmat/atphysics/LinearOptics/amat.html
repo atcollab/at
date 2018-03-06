@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of amat</title>
+  <meta name="keywords" content="amat">
+  <meta name="description" content="find A matrix from one turn map matrix T such that:">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">LinearOptics</a> &gt; amat.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/LinearOptics&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>amat
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>find A matrix from one turn map matrix T such that:</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function a=amat(transmat) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">find A matrix from one turn map matrix T such that:
+
+           [Rotx  0    0  ]
+inv(A)*T*A=[ 0   Rotz  0  ]
+           [ 0    0   Rots]
+
+Order it so that it is close to the order of x,y,z
+also ensure that positive modes are before negative so that
+one has proper symplecticity
+B. Nash July 18, 2013
+we order and normalize the vectors via
+ v_j' jmat(3) v_k = i sgn(j) delta(j,k)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="jmat.html" class="code" title="function mat=jmat(dim)">jmat</a>	JMAT Compute antisymmetric Matrix [O 1; -1 0]</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atTunesAndDampingRatesFromMat.html" class="code" title="function [nu,chi]=atTunesAndDampingRatesFromMat(m66)">atTunesAndDampingRatesFromMat</a>	find tunes and damping rates from one map matrix with radiation</li><li><a href="get_dispersion_from_etaoids.html" class="code" title="function disp = get_dispersion_from_etaoids(ring,refpts)">get_dispersion_from_etaoids</a>	get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function a=amat(transmat)</a>
+0002 <span class="comment">%find A matrix from one turn map matrix T such that:</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%           [Rotx  0    0  ]</span>
+0005 <span class="comment">%inv(A)*T*A=[ 0   Rotz  0  ]</span>
+0006 <span class="comment">%           [ 0    0   Rots]</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%Order it so that it is close to the order of x,y,z</span>
+0009 <span class="comment">%also ensure that positive modes are before negative so that</span>
+0010 <span class="comment">%one has proper symplecticity</span>
+0011 <span class="comment">%B. Nash July 18, 2013</span>
+0012 <span class="comment">%we order and normalize the vectors via</span>
+0013 <span class="comment">% v_j' jmat(3) v_k = i sgn(j) delta(j,k)</span>
+0014 
+0015 <span class="keyword">persistent</span> Vxyz jm
+0016 <span class="keyword">if</span> isempty(Vxyz)
+0017     Vxyz={<span class="keyword">...</span>
+0018         1/sqrt(2)*[-1i -1;1 1i;],<span class="keyword">...</span>
+0019         1/sqrt(2)*[-1i -1 0 0;1 1i 0 0;0 0 -1i -1;0 0 1 1i;],<span class="keyword">...</span>
+0020         1/sqrt(2)*[-1i -1 0 0 0 0;1 1i 0 0 0 0;0 0 -1i -1 0 0;<span class="keyword">...</span>
+0021         0 0 1 1i 0 0; 0 0 0 0 -1i -1;0 0 0 0 1 1i;]<span class="keyword">...</span>
+0022         };
+0023     jm={<a href="jmat.html" class="code" title="function mat=jmat(dim)">jmat</a>(1),<a href="jmat.html" class="code" title="function mat=jmat(dim)">jmat</a>(2),<a href="jmat.html" class="code" title="function mat=jmat(dim)">jmat</a>(3)};
+0024 <span class="keyword">end</span>
+0025 
+0026 nv=size(transmat,1);
+0027 dms=nv/2;
+0028 idx=reshape(1:nv,2,dms);
+0029 select=idx(1,:);
+0030 
+0031 [V,~]=eig(transmat);
+0032 
+0033 <span class="comment">%compute norms of each:</span>
+0034 Vp=V'*jm{dms};
+0035 n=-0.5i*sum(Vp.'.*V);
+0036 
+0037 <span class="comment">%put positive modes before negative modes (swap columns if first n in pair</span>
+0038 <span class="comment">%is negative)</span>
+0039 order=reshape(idx([1 1],:),1,nv) + (n&lt;0);
+0040 V=V(:,order);
+0041 n=n(order);
+0042 
+0043 <span class="comment">%now normalize each vector</span>
+0044 Vn=V./repmat(sqrt(abs(n)),nv,1);
+0045 
+0046 <span class="comment">%find the vecs that project most onto x,y,z, and reorder</span>
+0047 <span class="comment">%nn will have structure</span>
+0048 <span class="comment">% n1x n1y n1z</span>
+0049 <span class="comment">% n2x n2y n2z</span>
+0050 <span class="comment">% n3x n3y n3z</span>
+0051 nn=0.5*abs(sqrt(-1i*Vn'*jm{dms}*Vxyz{dms}));
+0052 [~,ind]=max(nn(select,select));
+0053 
+0054 indS=ind;
+0055 <span class="comment">%sort ind for the case of repeated indices</span>
+0056 <span class="comment">%[~,indS]=sort(ind,2);</span>
+0057 <span class="comment">%logic still not quite correct- should find best projector on x then y then</span>
+0058 <span class="comment">%z.  Can the one vector project best on both x and y?  Is this projection</span>
+0059 <span class="comment">%definition correct?</span>
+0060 <span class="comment">%14 Oct, 2014- more testing needed before using this additional sort.</span>
+0061 <span class="comment">%B. Nash</span>
+0062 
+0063 <span class="comment">%reorder pairs</span>
+0064 V_ordered=Vn(:,2*indS-1);
+0065 
+0066 <span class="comment">%build a matrix</span>
+0067 a=reshape([real(V_ordered);imag(V_ordered)],nv,nv);
+0068 
+0069 <span class="keyword">end</span>
+0070 
+0071</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

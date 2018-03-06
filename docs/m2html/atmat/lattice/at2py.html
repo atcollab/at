@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of at2py</title>
+  <meta name="keywords" content="at2py">
+  <meta name="description" content="ELSTR=AT2PY(ELEM) convert AT element tp pyat">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; at2py.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>at2py
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ELSTR=AT2PY(ELEM) convert AT element tp pyat</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function elstr=at2py(elem) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ELSTR=AT2PY(ELEM) convert AT element tp pyat
+
+AT2PY Creates a pyat element</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atguessclass.html" class="code" title="function atclass = atguessclass(elem, varargin)">atguessclass</a>	ATGUESSCLASS Tries to determine the class of an element</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atwritepy.html" class="code" title="function pyring=atwritepy(ring,filename)">atwritepy</a>	ATWRITEPY Creates a .m file to store an AT structure</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function s2 = rmfield2(s1,fieldnames)</a></li><li><a href="#_sub2" class="code">function result = getfield2(s,varargin)</a></li><li><a href="#_sub3" class="code">function ret=pyarray(v)</a></li><li><a href="#_sub4" class="code">function [args,opts]=doptions(elem,create,argn,dontcheck,args)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function elstr=at2py(elem)</a>
+0002 <span class="comment">%ELSTR=AT2PY(ELEM) convert AT element tp pyat</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%AT2PY Creates a pyat element</span>
+0005 
+0006 atclass=<a href="atguessclass.html" class="code" title="function atclass = atguessclass(elem, varargin)">atguessclass</a>(elem, <span class="string">'UseClass'</span>);
+0007 
+0008 <span class="keyword">switch</span> atclass
+0009     <span class="keyword">case</span> <span class="string">'Drift'</span>
+0010         create=@atdrift;
+0011         pycreate=@py.at.elements.Drift;
+0012         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>});
+0013     <span class="keyword">case</span> <span class="string">'Quadrupole'</span>
+0014         create=@atquadrupole;
+0015         pycreate=@py.at.elements.Quadrupole;
+0016         args={elem.Length,elem.PolynomB(2)};
+0017         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>,<span class="string">'K'</span>},{<span class="string">'PolynomB'</span>,<span class="string">'PolynomA'</span>},args);
+0018         <span class="keyword">if</span> ~any(abs(<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'PolynomA'</span>,0))&gt;0)
+0019             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'PolynomA'</span>});
+0020         <span class="keyword">end</span>
+0021         anom=abs(<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'PolynomB'</span>,0))~=0;
+0022         anom(2)=false;
+0023         <span class="keyword">if</span> ~any(anom)
+0024             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'PolynomB'</span>});
+0025         <span class="keyword">end</span>
+0026     <span class="keyword">case</span> <span class="string">'Sextupole'</span>
+0027         create=@atsextupole;
+0028         pycreate=@py.at.elements.Sextupole;
+0029         args={elem.Length,elem.PolynomB(3)};
+0030         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>},{<span class="string">'PolynomB'</span>,<span class="string">'PolynomA'</span>},args);
+0031         <span class="keyword">if</span> ~any(abs(<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'PolynomA'</span>,0))&gt;0)
+0032             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'PolynomA'</span>});
+0033         <span class="keyword">end</span>
+0034         anom=abs(<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'PolynomB'</span>,0))~=0;
+0035         anom(3)=false;
+0036         <span class="keyword">if</span> ~any(anom)
+0037             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'PolynomB'</span>});
+0038         <span class="keyword">end</span>
+0039     <span class="keyword">case</span> <span class="string">'Bend'</span>
+0040         create=@atsbend;
+0041         pycreate=@py.at.elements.Dipole;
+0042         args={elem.Length,elem.BendingAngle,elem.PolynomB(2)};
+0043         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>,<span class="string">'BendingAngle'</span>,<span class="string">'K'</span>},<span class="keyword">...</span>
+0044             {<span class="string">'EntranceAngle'</span>,<span class="string">'ExitAngle'</span>,<span class="string">'PolynomB'</span>,<span class="string">'PolynomA'</span>},args);
+0045         angle1=<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'EntranceAngle'</span>,0);
+0046         angle2=<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'ExitAngle'</span>,0);
+0047         <span class="keyword">if</span> angle1 == 0
+0048             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'EntranceAngle'</span>});
+0049         <span class="keyword">end</span>
+0050         <span class="keyword">if</span> angle2 == 0
+0051             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'ExitAngle'</span>});
+0052         <span class="keyword">end</span>
+0053         <span class="keyword">if</span> ~any(abs(<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'PolynomA'</span>,0))&gt;0)
+0054             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'PolynomA'</span>});
+0055         <span class="keyword">end</span>
+0056         anom=abs(<a href="#_sub2" class="code" title="subfunction result = getfield2(s,varargin)">getfield2</a>(elem,<span class="string">'PolynomB'</span>,0))~=0;
+0057         anom(2)=false;
+0058         <span class="keyword">if</span> ~any(anom)
+0059             options=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(options,{<span class="string">'PolynomB'</span>});
+0060         <span class="keyword">end</span>
+0061     <span class="keyword">case</span> <span class="string">'Corrector'</span>
+0062         create=@atcorrector;
+0063         pycreate=@py.at.elements.Drift;
+0064         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>,<span class="string">'KickAngle'</span>});
+0065     <span class="keyword">case</span> <span class="string">'Multipole'</span>
+0066         create=@atmultipole;
+0067         pycreate=@py.at.elements.Multipole;
+0068         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>,<span class="string">'PolynomA'</span>,<span class="string">'PolynomB'</span>});
+0069     <span class="keyword">case</span> <span class="string">'ThinMultipole'</span>
+0070         create=@atthinmultipole;
+0071         pycreate=@py.at.elements.ThinMultipole;
+0072         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'PolynomA'</span>,<span class="string">'PolynomB'</span>});
+0073     <span class="keyword">case</span> <span class="string">'RFCavity'</span>
+0074         create=@atrfcavity;
+0075         pycreate=@py.at.elements.RFCavity;
+0076         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Length'</span>,<span class="string">'Voltage'</span>,<span class="string">'Frequency'</span>,<span class="string">'HarmNumber'</span>,<span class="string">'Energy'</span>});
+0077     <span class="keyword">case</span> <span class="string">'RingParam'</span>
+0078         create=@atringparam;
+0079         pycreate=@py.at.elements.RingParam;
+0080         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Energy'</span>,<span class="string">'Periodicity'</span>});
+0081     <span class="keyword">case</span> <span class="string">'Aperture'</span>
+0082         create=@ataperture;
+0083         pycreate=@py.at.elements.Aperture;
+0084         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Limits'</span>});
+0085     <span class="keyword">case</span> <span class="string">'QuantDiff'</span>
+0086         create=@atQuantDiff;
+0087         pycreate=@py.at.elements.Marker;
+0088         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'Lmatp'</span>});
+0089     <span class="keyword">case</span> <span class="string">'Matrix66'</span>
+0090         create=@atM66;
+0091         pycreate=@py.at.elements.Marker;
+0092         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'M66'</span>});
+0093     <span class="keyword">case</span> <span class="string">'MatrixTijkPass'</span>
+0094         create=@atM66Tijk;
+0095         pycreate=@py.at.elements.Marker;
+0096         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create,{<span class="string">'M66'</span>,<span class="string">'Tijk'</span>});
+0097     <span class="keyword">case</span> <span class="string">'Monitor'</span>
+0098         create=@atmonitor;
+0099         pycreate=@py.at.elements.Monitor;
+0100         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create);
+0101     <span class="keyword">otherwise</span> <span class="comment">%'Marker'</span>
+0102         create=@atmarker;
+0103         pycreate=@py.at.elements.Marker;
+0104         [args,options]=<a href="#_sub4" class="code" title="subfunction [args,opts]=doptions(elem,create,argn,dontcheck,args)">doptions</a>(elem,create);
+0105         <span class="keyword">if</span> isfield(options,<span class="string">'Energy'</span>)
+0106             options=rmfield(options,<span class="string">'Energy'</span>);
+0107         <span class="keyword">end</span>
+0108 <span class="keyword">end</span>
+0109 <span class="comment">% varg=[args,reshape(cat(2,fieldnames(options),struct2cell(options))',1,[])];</span>
+0110 <span class="comment">% fmt=['%15s(%s' repmat(',%s',1,length(varg)-1) ')'];</span>
+0111 <span class="comment">% %strargs=cellfun(@mat2str,varg,'UniformOutput',false);</span>
+0112 <span class="comment">% strargs=cellfun(@(arg) mat2str(reshape(arg,[],size(arg,2))),varg,'UniformOutput',false);</span>
+0113 <span class="comment">% elstr=sprintf(fmt,func2str(create),strargs{:});</span>
+0114 
+0115 args=cellfun(@<a href="#_sub3" class="code" title="subfunction ret=pyarray(v)">pyarray</a>,args,<span class="string">'UniformOutput'</span>,false);
+0116 keys=fieldnames(options);
+0117 vals=cellfun(@(k) <a href="#_sub3" class="code" title="subfunction ret=pyarray(v)">pyarray</a>(options.(k)), keys, <span class="string">'UniformOutput'</span>,false);
+0118 v=reshape([keys vals]',1,[]);
+0119 <span class="keyword">try</span>
+0120     elstr=pycreate(args{:},pyargs(v{:}));
+0121 <span class="keyword">catch</span>
+0122     elstr=py.at.elements.Marker(args{1},pyargs(v{:}));
+0123 <span class="keyword">end</span>
+0124 
+0125     <a name="_sub1" href="#_subfunctions" class="code">function s2 = rmfield2(s1,fieldnames)</a>
+0126         ok=cellfun(@(fn) isfield(s1,fn), fieldnames);
+0127         s2=rmfield(s1,fieldnames(ok));
+0128     <span class="keyword">end</span>
+0129 
+0130     <a name="_sub2" href="#_subfunctions" class="code">function result = getfield2(s,varargin)</a>
+0131         <span class="keyword">try</span>
+0132             result=getfield(s,varargin{1:end-1});
+0133         <span class="keyword">catch</span>
+0134             result=varargin{end};
+0135         <span class="keyword">end</span>
+0136     <span class="keyword">end</span>
+0137 
+0138     <a name="_sub3" href="#_subfunctions" class="code">function ret=pyarray(v)</a>
+0139         <span class="keyword">if</span> isnumeric(v)
+0140             <span class="keyword">if</span> isscalar(v)
+0141                 ret=v;
+0142             <span class="keyword">elseif</span> isvector(v)
+0143                 ret=py.numpy.array(v(:)');
+0144             <span class="keyword">else</span>
+0145                 ret=py.numpy.array(num2cell(v,2));
+0146             <span class="keyword">end</span>
+0147         <span class="keyword">else</span>
+0148             ret=v;
+0149         <span class="keyword">end</span>
+0150     <span class="keyword">end</span>
+0151 
+0152     <a name="_sub4" href="#_subfunctions" class="code">function [args,opts]=doptions(elem,create,argn,dontcheck,args)</a>
+0153         <span class="keyword">if</span> nargin&lt;4, dontcheck={}; <span class="keyword">end</span>
+0154         <span class="keyword">if</span> nargin&lt;3, argn={}; <span class="keyword">end</span>
+0155         <span class="keyword">if</span> nargin&lt;5, args=cellfun(@(field) elem.(field),argn,<span class="string">'UniformOutput'</span>,false); <span class="keyword">end</span>
+0156         args=[{elem.FamName},args];
+0157         defelem=create(args{:});                        <span class="comment">% Build sample element</span>
+0158         argnames=[{<span class="string">'FamName'</span>},argn];
+0159         <span class="keyword">if</span> strcmp(elem.PassMethod,defelem.PassMethod)
+0160             argnames=[argnames,{<span class="string">'PassMethod'</span>}];
+0161         <span class="keyword">end</span>
+0162         defel=rmfield(defelem,[argnames,dontcheck]);    <span class="comment">% Keep only optional fields</span>
+0163         fnames=fieldnames(defel)';
+0164         fvalues=struct2cell(defel)';
+0165         ok=isfield(elem,fnames);                        <span class="comment">% Check for default values</span>
+0166         ok(ok)=cellfun(@(fname,fval) isequal(elem.(fname),fval),fnames(ok),fvalues(ok));
+0167         opts=<a href="#_sub1" class="code" title="subfunction s2 = rmfield2(s1,fieldnames)">rmfield2</a>(elem,[argnames,fnames(ok)]);      <span class="comment">% Keep only non-default values</span>
+0168     <span class="keyword">end</span>
+0169 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

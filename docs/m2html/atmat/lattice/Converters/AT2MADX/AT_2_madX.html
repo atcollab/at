@@ -1,0 +1,295 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of AT_2_madX</title>
+  <meta name="keywords" content="AT_2_madX">
+  <meta name="description" content="function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="../../../index.html">atmat</a> &gt; <a href="../../index.html">lattice</a> &gt; <a href="../index.html">Converters</a> &gt; <a href="index.html">AT2MADX</a> &gt; AT_2_madX.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/Converters/AT2MADX&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>AT_2_madX
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [elelat,defs,lines]=AT_2_madX(AT_ring,linename) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)
+ this functions converts the AT lattice AT_ring in madX format.
+ 
+ a MADX LINE is generated.
+ 
+ file ['' linename '_lattice.madx'] is generated contiaining the lattice
+ (elelat)  elements definitions (defs) and the LINE (lines). 
+ no other comands are introduced
+
+ to test in MADX run (replace linename with apropriate name)
+ madx &lt; linename_lattice.madx 
+ 
+ to test with twiss and plot add following lines at the end of file:
+ beam;
+ use, period=linename;
+ twiss;
+ plot, haxis=s, vaxis1=betx,bety, vaxis2=dx;</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)</a>
+0002 <span class="comment">% function [elelat,defs,lines]=AT_2_madX(AT_ring,linename)</span>
+0003 <span class="comment">% this functions converts the AT lattice AT_ring in madX format.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% a MADX LINE is generated.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% file ['' linename '_lattice.madx'] is generated contiaining the lattice</span>
+0008 <span class="comment">% (elelat)  elements definitions (defs) and the LINE (lines).</span>
+0009 <span class="comment">% no other comands are introduced</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% to test in MADX run (replace linename with apropriate name)</span>
+0012 <span class="comment">% madx &lt; linename_lattice.madx</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% to test with twiss and plot add following lines at the end of file:</span>
+0015 <span class="comment">% beam;</span>
+0016 <span class="comment">% use, period=linename;</span>
+0017 <span class="comment">% twiss;</span>
+0018 <span class="comment">% plot, haxis=s, vaxis1=betx,bety, vaxis2=dx;</span>
+0019 <span class="comment">%</span>
+0020 
+0021 outfile=[<span class="string">''</span> linename <span class="string">'_lattice.madx'</span>];
+0022 
+0023 <span class="comment">%outfile='madXelemdef.elem';</span>
+0024 elelat=[<span class="string">'!!\n!!  madX lattice elements: '</span> linename <span class="string">'\n!!  Created: '</span> datestr(now) <span class="string">'\n!!\n!!\n\n'</span>];
+0025 
+0026 <span class="comment">%% get family names for definitions</span>
+0027 [families,ind_first_oc_ring]=<span class="keyword">...</span>
+0028     unique(getcellstruct(AT_ring,<span class="string">'FamName'</span>,1:length(AT_ring)),<span class="string">'first'</span>);
+0029 formatvalues=<span class="string">'%10.12f'</span>;
+0030 
+0031 elelat=[elelat <span class="string">'! DEFINITIONS \n\n BEAM, PARTICLE=ELECTRON, ENERGY='</span> num2str(atenergy(AT_ring)*1e-9,formatvalues) <span class="string">';\n OCT_ON:=1;\n SXT_ON:=1;\n RF_ON:=0;'</span>];
+0032 
+0033 
+0034 <span class="comment">%% loop families for definitions</span>
+0035 <span class="keyword">for</span> i=1:length(families)
+0036     el= AT_ring{ind_first_oc_ring(i)};
+0037     
+0038     <span class="keyword">if</span> isfield(el,<span class="string">'BetaCode'</span>)
+0039         type=el.BetaCode;
+0040     <span class="keyword">elseif</span> isfield(el,<span class="string">'Class'</span>)
+0041         type=el.Class;
+0042     <span class="keyword">else</span>
+0043         type=<span class="string">'Marker'</span>;
+0044     <span class="keyword">end</span>
+0045     
+0046     <span class="keyword">switch</span> type
+0047         <span class="keyword">case</span> {<span class="string">'DI'</span>,<span class="string">'Dipole'</span>,<span class="string">'Bend'</span>} <span class="comment">% dipole</span>
+0048             
+0049             di=[el.(<span class="string">'FamName'</span>)   <span class="string">': '</span><span class="keyword">...</span>
+0050                 <span class="string">' SBEND,L='</span> num2str(el.(<span class="string">'Length'</span>),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0051                 <span class="string">' ANGLE = '</span> num2str(el.(<span class="string">'BendingAngle'</span>),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0052                 <span class="string">' K0 = '</span> num2str(el.(<span class="string">'PolynomB'</span>)(1),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0053                 <span class="string">' K1 = '</span> num2str(el.(<span class="string">'PolynomB'</span>)(2),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0054                 <span class="string">' E1= '</span> num2str(el.(<span class="string">'EntranceAngle'</span>),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0055                 <span class="string">' E2= '</span> num2str(el.(<span class="string">'ExitAngle'</span>),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0056                 ];
+0057             
+0058             <span class="keyword">if</span> isfield(el,<span class="string">'FringeInt1'</span>)
+0059             di=[di <span class="string">' FINT= '</span> num2str(el.(<span class="string">'FringeInt1'</span>),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0060                 <span class="string">' FINTX= '</span> num2str(el.(<span class="string">'FringeInt2'</span>),formatvalues) <span class="string">', '</span><span class="keyword">...</span>
+0061                 <span class="string">' hgap= '</span> num2str(el.(<span class="string">'FullGap'</span>),formatvalues) <span class="string">'/2, '</span><span class="keyword">...</span>
+0062                 ];
+0063             <span class="keyword">end</span>
+0064             
+0065             di=[di <span class="string">';'</span>];
+0066             
+0067             elelat=[elelat di <span class="string">'\n'</span>]; <span class="comment">%#ok&lt;*AGROW&gt;</span>
+0068         <span class="keyword">case</span> {<span class="string">'QP'</span>,<span class="string">'Quadrupole'</span>} <span class="comment">% quadrupole</span>
+0069             <span class="keyword">if</span> el.(<span class="string">'MaxOrder'</span>)==3
+0070                 <span class="keyword">if</span> el.(<span class="string">'PolynomB'</span>)(4)==0
+0071                     qp=[<span class="string">' '</span> el.(<span class="string">'FamName'</span>) <span class="string">': '</span><span class="keyword">...</span>
+0072                         <span class="string">' quadrupole,  L = '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0073                         <span class="string">'K1 = '</span> num2str(el.(<span class="string">'PolynomB'</span>)(2),formatvalues) <span class="string">'; '</span><span class="keyword">...</span>
+0074                         ];
+0075                 <span class="keyword">else</span> <span class="comment">% if octupole in quadrupole, split quadrupole as in mad8 q oc q q oc q</span>
+0076                     nslice=10;
+0077                     qp=[<span class="string">' '</span> el.(<span class="string">'FamName'</span>) <span class="string">'_sl: '</span><span class="keyword">...</span>
+0078                         <span class="string">' quadrupole,  L = '</span> num2str(el.(<span class="string">'Length'</span>)/nslice/2,formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0079                         <span class="string">'K1 = '</span> num2str(el.(<span class="string">'PolynomB'</span>)(2),formatvalues) <span class="string">'; '</span><span class="keyword">...</span>
+0080                         <span class="string">'\n'</span><span class="keyword">...</span>
+0081                         ];
+0082                     polB=el.(<span class="string">'PolynomB'</span>);
+0083                     polA=el.(<span class="string">'PolynomA'</span>);
+0084                     polB(2)=0;
+0085                     polA(2)=0;
+0086                     
+0087                     qp=[qp <span class="string">' '</span> el.(<span class="string">'FamName'</span>)   <span class="string">'_oc: '</span><span class="keyword">...</span>
+0088                         <span class="string">' MULTIPOLE,'</span> <span class="keyword">...</span><span class="comment">  LRAD= ' num2str(el.('Length'),format)  ', '...</span>
+0089                         <span class="string">'KNL:= {'</span> num2str(polB.*(factorial(0:length(polB)-1))*el.(<span class="string">'Length'</span>)/(nslice),[formatvalues <span class="string">', '</span>]) <span class="string">' 0.0} ,'</span><span class="keyword">...</span>
+0090                         <span class="string">'KSL:= {'</span> num2str(polA.*(factorial(0:length(polA)-1))*el.(<span class="string">'Length'</span>)/(nslice),[formatvalues <span class="string">', '</span>]) <span class="string">' 0.0};'</span><span class="keyword">...</span>
+0091                         <span class="string">'\n'</span><span class="keyword">...</span>
+0092                         ];
+0093                     
+0094                     qp=[qp el.(<span class="string">'FamName'</span>) <span class="string">': line=('</span><span class="keyword">...</span>
+0095                         repmat([el.(<span class="string">'FamName'</span>) <span class="string">'_sl,'</span><span class="keyword">...</span>
+0096                         el.(<span class="string">'FamName'</span>) <span class="string">'_oc,'</span><span class="keyword">...</span>
+0097                         el.(<span class="string">'FamName'</span>) <span class="string">'_sl,'</span><span class="keyword">...</span>
+0098                         ],1,nslice)<span class="keyword">...</span>
+0099                         <span class="string">'\n'</span><span class="keyword">...</span>
+0100                         ];
+0101                     qp(end-2:end)=[];
+0102                     qp=[qp <span class="string">');\n'</span>];
+0103                 <span class="keyword">end</span>
+0104             <span class="keyword">else</span>
+0105                 qp=[<span class="string">' '</span> el.(<span class="string">'FamName'</span>) <span class="string">': '</span><span class="keyword">...</span>
+0106                     <span class="string">' quadrupole,  L = '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0107                     <span class="string">'K1 = '</span> num2str(el.(<span class="string">'PolynomB'</span>)(2),formatvalues) <span class="string">'; '</span><span class="keyword">...</span>
+0108                     ];
+0109                 
+0110             <span class="keyword">end</span>
+0111             
+0112             
+0113             elelat=[elelat qp <span class="string">'\n\n'</span>];
+0114             <span class="comment">%             qp=[el.('FamName')   ': '...</span>
+0115             <span class="comment">%                 ' QUADRUPOLE,  L= ' num2str(el.('Length'),format)  ','...</span>
+0116             <span class="comment">%                 ' K1= ' num2str(el.('PolynomB')(2),format) ';'...</span>
+0117             <span class="comment">%                 ];</span>
+0118             <span class="comment">%</span>
+0119             <span class="comment">%             elelat=[elelat qp '\n'];</span>
+0120         <span class="keyword">case</span> {<span class="string">'SX'</span>,<span class="string">'Sextupole'</span>} <span class="comment">% sextupole</span>
+0121             sx=[el.(<span class="string">'FamName'</span>)   <span class="string">': '</span><span class="keyword">...</span>
+0122                 <span class="string">' SEXTUPOLE,  L= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0123                 <span class="string">' K2= '</span> num2str(el.(<span class="string">'PolynomB'</span>)(3)*2,formatvalues) <span class="string">'*SXT_ON ;'</span><span class="keyword">...</span>
+0124                 ];
+0125             elelat=[elelat sx <span class="string">'\n'</span>];
+0126         <span class="keyword">case</span> {<span class="string">'OC'</span>,<span class="string">'Octupole'</span>} <span class="comment">% sextupole</span>
+0127             sx=[el.(<span class="string">'FamName'</span>)   <span class="string">': '</span><span class="keyword">...</span>
+0128                 <span class="string">' OCTUPOLE,  L= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0129                 <span class="string">' K3='</span> num2str(el.(<span class="string">'PolynomB'</span>)(4)*6,formatvalues) <span class="string">'*OCT_ON ;'</span><span class="keyword">...</span>
+0130                 ];
+0131             elelat=[elelat sx <span class="string">'\n'</span>];
+0132         <span class="keyword">case</span> {<span class="string">'MP'</span>,<span class="string">'Multipole'</span>} <span class="comment">% multipole</span>
+0133             el.(<span class="string">'PolynomB'</span>)(isnan(el.(<span class="string">'PolynomB'</span>)))=0.0;
+0134             <span class="keyword">if</span> el.Length==0
+0135             mp=[el.(<span class="string">'FamName'</span>)   <span class="string">': '</span><span class="keyword">...</span>
+0136                 <span class="string">' MULTIPOLE,  LRAD= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0137                 <span class="string">' L= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0138                 <span class="string">'KNL:= {'</span> num2str(el.(<span class="string">'PolynomB'</span>).*(factorial(0:length(el.(<span class="string">'PolynomB'</span>))-1)),[formatvalues <span class="string">', '</span>]) <span class="string">'0.0} ,'</span><span class="keyword">...</span>
+0139                 <span class="string">'KSL:= {'</span> num2str(el.(<span class="string">'PolynomA'</span>).*(factorial(0:length(el.(<span class="string">'PolynomA'</span>))-1)),[formatvalues <span class="string">', '</span>]) <span class="string">'0.0};'</span><span class="keyword">...</span>
+0140                 ];
+0141             <span class="keyword">else</span>
+0142             mp=[el.(<span class="string">'FamName'</span>)   <span class="string">': '</span><span class="keyword">...</span>
+0143                 <span class="string">' Drift,  L= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">'; '</span><span class="keyword">...</span>
+0144                 ];
+0145             warning(<span class="string">'Multipoles have zero length in MADX, CONVERTED TO DRIFT. please model in AT as Drift-lense-Drift.'</span>)
+0146             <span class="keyword">end</span>
+0147             elelat=[elelat mp <span class="string">'\n'</span>];
+0148         <span class="keyword">case</span> {<span class="string">'ThinMultipole'</span>} <span class="comment">% multipole</span>
+0149             formatm=<span class="string">'%10.5e'</span>;
+0150             mp=[el.(<span class="string">'FamName'</span>)   <span class="string">': '</span><span class="keyword">...</span>
+0151                 <span class="string">' MULTIPOLE,  LRAD= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">', '</span><span class="keyword">...</span>
+0152                 <span class="string">'KNL:= {'</span> num2str(el.(<span class="string">'PolynomB'</span>).*(factorial(0:length(el.(<span class="string">'PolynomB'</span>))-1)),[formatm <span class="string">', '</span>]) <span class="string">'0.0} ,'</span><span class="keyword">...</span>
+0153                 <span class="string">'KSL:= {'</span> num2str(el.(<span class="string">'PolynomA'</span>).*(factorial(0:length(el.(<span class="string">'PolynomA'</span>))-1)),[formatm <span class="string">', '</span>]) <span class="string">'0.0};'</span><span class="keyword">...</span>
+0154                 ];
+0155             elelat=[elelat mp <span class="string">'\n'</span>];
+0156         <span class="keyword">case</span> {<span class="string">'PU'</span>,<span class="string">'Monitor'</span>} <span class="comment">% bpm</span>
+0157             pu=[el.(<span class="string">'FamName'</span>) <span class="string">' :MONITOR'</span> <span class="string">' ;'</span><span class="keyword">...</span>
+0158                 ];
+0159             elelat=[elelat pu <span class="string">'\n'</span>];
+0160         <span class="keyword">case</span> {<span class="string">'MRK'</span>,<span class="string">'Marker'</span>}<span class="comment">% marker</span>
+0161             mrk=[el.(<span class="string">'FamName'</span>) <span class="string">' :MARKER'</span> <span class="string">' ;'</span><span class="keyword">...</span>
+0162                 ];
+0163             elelat=[elelat mrk <span class="string">'\n'</span>];
+0164         <span class="keyword">case</span> {<span class="string">'KI'</span>,<span class="string">'Corrector'</span>} <span class="comment">% kicker</span>
+0165             ki=[el.(<span class="string">'FamName'</span>) <span class="string">' :KICKER, L= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)  <span class="string">' '</span><span class="keyword">...</span>
+0166                 <span class="string">', HKick:='</span> num2str(el.PolynomB(1))<span class="keyword">...</span>
+0167                 <span class="string">', VKick:='</span> num2str(el.PolynomA(1)) <span class="string">' ;'</span><span class="keyword">...</span>
+0168                 ];
+0169             
+0170             elelat=[elelat ki <span class="string">'\n'</span>];
+0171         <span class="keyword">case</span> {<span class="string">'SKW'</span>,<span class="string">'SkewQuadrupole'</span>} <span class="comment">% kicker</span>
+0172             skw=[el.(<span class="string">'FamName'</span>) <span class="string">' :Multipole, KSL:={0,'</span> num2str(el.PolynomA(2))<span class="keyword">...</span>
+0173                  <span class="string">'} ;'</span><span class="keyword">...</span>
+0174                 ];
+0175             
+0176             elelat=[elelat skw <span class="string">'\n'</span>];
+0177         <span class="keyword">case</span> {<span class="string">'DR'</span>,<span class="string">'Drift'</span>} <span class="comment">% drift</span>
+0178             dr=[el.(<span class="string">'FamName'</span>) <span class="string">' : DRIFT, L= '</span> num2str(el.(<span class="string">'Length'</span>),formatvalues) <span class="string">' ;'</span>];
+0179             elelat=[elelat dr <span class="string">'\n'</span>];
+0180         <span class="keyword">case</span> {<span class="string">'CAV'</span>,<span class="string">'RFCavity'</span>} <span class="comment">% drift</span>
+0181             rfc=[el.(<span class="string">'FamName'</span>) <span class="string">' : RFCavity, L='</span> num2str(el.(<span class="string">'Length'</span>),formatvalues)<span class="keyword">...</span>
+0182                 <span class="string">',VOLT=RF_ON*'</span>  num2str(el.(<span class="string">'Voltage'</span>)/1e6,formatvalues) <span class="string">' '</span><span class="keyword">...</span><span class="comment">% MV</span>
+0183                 <span class="keyword">...</span><span class="comment">', NO_CAVITY_TOTALPATH = false'...</span>
+0184                 <span class="string">', freq='</span> num2str(el.(<span class="string">'Frequency'</span>)*1e-6,formatvalues) <span class="string">''</span><span class="keyword">...</span><span class="comment"> MHz</span>
+0185                 <span class="string">' ;'</span>];
+0186             
+0187             elelat=[elelat rfc <span class="string">'\n'</span>];
+0188             
+0189         <span class="keyword">otherwise</span>
+0190             warning([<span class="string">'Element: '</span> el.(<span class="string">'FamName'</span>) <span class="string">' was not converted (marker), since it does not match any Class.'</span>])
+0191             elelat=[elelat el.(<span class="string">'FamName'</span>) <span class="string">' : marker; \n'</span>];
+0192            
+0193             mrk=[el.(<span class="string">'FamName'</span>) <span class="string">' :MARKER'</span> <span class="string">' ;'</span><span class="keyword">...</span>
+0194                 ];
+0195             elelat=[elelat mrk <span class="string">'\n'</span>];
+0196     <span class="keyword">end</span>
+0197     
+0198 <span class="keyword">end</span>
+0199 defs=elelat;
+0200 
+0201 elelat=[];
+0202 
+0203 elelat=[elelat <span class="string">'! LINE \n\n'</span>];
+0204 
+0205 elelat=[elelat linename <span class="string">' : LINE = ('</span> <span class="string">' '</span>];
+0206 
+0207 <span class="comment">%% define lattice line</span>
+0208 <span class="comment">% loop all elements</span>
+0209 <span class="keyword">for</span> i=1:length(AT_ring)
+0210     <span class="keyword">if</span> i~=1
+0211         elelat=[elelat <span class="string">','</span> AT_ring{i}.(<span class="string">'FamName'</span>) <span class="string">'\n '</span>];
+0212     <span class="keyword">else</span>
+0213         elelat=[elelat <span class="string">' '</span> AT_ring{i}.(<span class="string">'FamName'</span>) <span class="string">'\n '</span>];
+0214     <span class="keyword">end</span>
+0215 <span class="keyword">end</span>
+0216 
+0217 elelat=[elelat <span class="string">') ;'</span>];
+0218 lines=elelat;
+0219 
+0220 elelat=[defs lines];
+0221 
+0222 <span class="comment">%% print to file</span>
+0223 
+0224 of=fopen(outfile,<span class="string">'w'</span>);
+0225 fprintf(of,elelat);
+0226 
+0227 fclose(<span class="string">'all'</span>);
+0228 
+0229 
+0230 
+0231 
+0232 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

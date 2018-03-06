@@ -1,0 +1,288 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of getContents</title>
+  <meta name="keywords" content="getContents">
+  <meta name="description" content="GETCONTENTS Get the contents of a specified directory">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">atmat</a> &gt; getContents.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>getContents
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>GETCONTENTS Get the contents of a specified directory</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [cont,dirflag] = getContents(directory,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">GETCONTENTS Get the contents of a specified directory
+
+   This function returns the contents of a specified directory.
+
+   CONT = IOSR.GENERAL.GETCONTENTS(DIRECTORY) returns the files and
+   folders in a directory and returns them to the cell array cont. It
+   ignores hidden files and folders (those starting '.'). DIRECTORY must
+   be a character array (string).
+ 
+   CONT = IOSR.GENERAL.GETCONTENTS(DIRECTORY,'PARAMETER',VALUE) allows
+   search options to be specified. The options include:
+       'rec'       {false} | true
+                   Search recursively within the subfolders of the
+                   specified directory.
+       'path'      {'relative'} | 'full'
+                   Specifies whether returned paths are full or relative
+                   to the specified directory.
+       'sort'      {false} | true
+                   Specify whether the output is sorted alphabetically.
+       'filter'    {'all'} | 'files' | 'folders' | '*.ext' | str
+                   This option allows a filter to be specified. 'files'
+                   returns names of all files in the directory. 'folders'
+                   returns names of all folders in the directory. '*.ext',
+                   where 'ext' is a user-specified file extension, returns
+                   all files with the extension '.ext'. str may be any
+                   string; only elements that contain str will be returned
+                   (files or folders). str is case-sensitive.
+ 
+   [CONT,DIRFLAG] = IOSR.GENERAL.GETCONTENTS(...) returns a logical array
+   DIRFLAG, the same size as CONT, indicating whether each element is a
+   directory.
+ 
+   Examples
+ 
+       Ex. 1
+ 
+       % Return all m-files in the current directory
+ 
+       cont = iosr.general.getContents(cd,'filter','*.m')
+ 
+       Ex. 2
+ 
+       % Return all files in the current directory and its
+       % sub-directories
+ 
+       cont = iosr.general.getContents(cd,'rec',true)
+ 
+       Ex. 3
+ 
+       % Return all files in current directory with names
+       % containing 'foo'
+       
+       % may return files and folders:
+       [cont,dirflag] = iosr.general.getContents(cd,'filter','foo')
+ 
+       % use dirflag to limit:
+       cont = cont(~dirflag);</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="updateContents.html" class="code" title="function updateContents(folder)">updateContents</a>	UPDATECONTENTS Create a Contents.m file including subdirectories</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [cont,dirflag] = main(directory,str)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [cont,dirflag] = getContents(directory,varargin)</a>
+0002 <span class="comment">%GETCONTENTS Get the contents of a specified directory</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%   This function returns the contents of a specified directory.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   CONT = IOSR.GENERAL.GETCONTENTS(DIRECTORY) returns the files and</span>
+0007 <span class="comment">%   folders in a directory and returns them to the cell array cont. It</span>
+0008 <span class="comment">%   ignores hidden files and folders (those starting '.'). DIRECTORY must</span>
+0009 <span class="comment">%   be a character array (string).</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   CONT = IOSR.GENERAL.GETCONTENTS(DIRECTORY,'PARAMETER',VALUE) allows</span>
+0012 <span class="comment">%   search options to be specified. The options include:</span>
+0013 <span class="comment">%       'rec'       {false} | true</span>
+0014 <span class="comment">%                   Search recursively within the subfolders of the</span>
+0015 <span class="comment">%                   specified directory.</span>
+0016 <span class="comment">%       'path'      {'relative'} | 'full'</span>
+0017 <span class="comment">%                   Specifies whether returned paths are full or relative</span>
+0018 <span class="comment">%                   to the specified directory.</span>
+0019 <span class="comment">%       'sort'      {false} | true</span>
+0020 <span class="comment">%                   Specify whether the output is sorted alphabetically.</span>
+0021 <span class="comment">%       'filter'    {'all'} | 'files' | 'folders' | '*.ext' | str</span>
+0022 <span class="comment">%                   This option allows a filter to be specified. 'files'</span>
+0023 <span class="comment">%                   returns names of all files in the directory. 'folders'</span>
+0024 <span class="comment">%                   returns names of all folders in the directory. '*.ext',</span>
+0025 <span class="comment">%                   where 'ext' is a user-specified file extension, returns</span>
+0026 <span class="comment">%                   all files with the extension '.ext'. str may be any</span>
+0027 <span class="comment">%                   string; only elements that contain str will be returned</span>
+0028 <span class="comment">%                   (files or folders). str is case-sensitive.</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">%   [CONT,DIRFLAG] = IOSR.GENERAL.GETCONTENTS(...) returns a logical array</span>
+0031 <span class="comment">%   DIRFLAG, the same size as CONT, indicating whether each element is a</span>
+0032 <span class="comment">%   directory.</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">%   Examples</span>
+0035 <span class="comment">%</span>
+0036 <span class="comment">%       Ex. 1</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">%       % Return all m-files in the current directory</span>
+0039 <span class="comment">%</span>
+0040 <span class="comment">%       cont = iosr.general.getContents(cd,'filter','*.m')</span>
+0041 <span class="comment">%</span>
+0042 <span class="comment">%       Ex. 2</span>
+0043 <span class="comment">%</span>
+0044 <span class="comment">%       % Return all files in the current directory and its</span>
+0045 <span class="comment">%       % sub-directories</span>
+0046 <span class="comment">%</span>
+0047 <span class="comment">%       cont = iosr.general.getContents(cd,'rec',true)</span>
+0048 <span class="comment">%</span>
+0049 <span class="comment">%       Ex. 3</span>
+0050 <span class="comment">%</span>
+0051 <span class="comment">%       % Return all files in current directory with names</span>
+0052 <span class="comment">%       % containing 'foo'</span>
+0053 <span class="comment">%</span>
+0054 <span class="comment">%       % may return files and folders:</span>
+0055 <span class="comment">%       [cont,dirflag] = iosr.general.getContents(cd,'filter','foo')</span>
+0056 <span class="comment">%</span>
+0057 <span class="comment">%       % use dirflag to limit:</span>
+0058 <span class="comment">%       cont = cont(~dirflag);</span>
+0059 
+0060 <span class="comment">%   Copyright 2016 University of Surrey.</span>
+0061 
+0062     <span class="comment">% parse input arguments and arrange call(s) to 'main', which</span>
+0063     <span class="comment">% does the actual searching of directories</span>
+0064 
+0065     assert(ischar(directory), <span class="string">'iosr:getContents:invalidDir'</span>, <span class="string">'directory must be a character array'</span>)
+0066 
+0067     <span class="comment">% Switch trap parses the varargin inputs</span>
+0068     <span class="comment">% default values</span>
+0069     recflag = false;
+0070     pathflag = <span class="string">'relative'</span>;
+0071     sortflag = false;
+0072     str = <span class="string">'all'</span>;
+0073     <span class="comment">% find values</span>
+0074     <span class="keyword">for</span> i = 1:2:length(varargin)
+0075         <span class="keyword">switch</span> lower(varargin{i})
+0076             <span class="keyword">case</span> <span class="string">'path'</span>
+0077                 pathflag=varargin{i+1};
+0078             <span class="keyword">case</span> <span class="string">'rec'</span>
+0079                 recflag=varargin{i+1};
+0080             <span class="keyword">case</span> <span class="string">'sort'</span>
+0081                 sortflag=varargin{i+1};
+0082             <span class="keyword">case</span> <span class="string">'filter'</span>
+0083                 str=varargin{i+1};
+0084             <span class="keyword">otherwise</span>
+0085                 error(<span class="string">'iosr:getContents:unknownOption'</span>,<span class="string">'Unknown option: %s\n'</span>,varargin{i});
+0086         <span class="keyword">end</span>
+0087     <span class="keyword">end</span>
+0088 
+0089     <span class="comment">% check input options</span>
+0090     assert(ischar(pathflag), <span class="string">'iosr:getContents:invalidPath'</span>, <span class="string">'''path'' option must be a string'</span>)
+0091     assert(strcmp(pathflag,<span class="string">'relative'</span>) | strcmp(pathflag,<span class="string">'full'</span>),<span class="keyword">...</span>
+0092         <span class="string">'iosr:getContents:invalidPath'</span>, <span class="keyword">...</span>
+0093         <span class="string">'''path'' option must ''relative'' or ''full'''</span>)
+0094     assert(islogical(recflag) &amp; numel(recflag)==1, <span class="string">'iosr:getContents:invalidRec'</span>, <span class="string">'''rec'' option must be logical'</span>)
+0095     assert(islogical(sortflag) &amp; numel(sortflag)==1, <span class="string">'iosr:getContents:invalidSoftFlag'</span>, <span class="string">'''sort'' option must be a logical'</span>)
+0096     assert(ischar(str), <span class="string">'iosr:getContents:invalidStr'</span>, <span class="string">'str must be a character array'</span>)
+0097 
+0098     <span class="comment">% first pass: contents of top-level folder</span>
+0099     [cont,dirflag] = <a href="#_sub1" class="code" title="subfunction [cont,dirflag] = main(directory,str)">main</a>(directory,str);
+0100 
+0101     <span class="comment">% do the recursive bit, if recursion is requested</span>
+0102     <span class="keyword">if</span> recflag
+0103         dirs = <a href="#_sub1" class="code" title="subfunction [cont,dirflag] = main(directory,str)">main</a>(directory,<span class="string">'folders'</span>);
+0104         count = length(dirs);
+0105         n = 1;
+0106         <span class="keyword">while</span> n &lt;= count <span class="comment">% recursion requested</span>
+0107             [cont_temp,dirflag_temp] = <a href="#_sub1" class="code" title="subfunction [cont,dirflag] = main(directory,str)">main</a>(dirs{n},str); <span class="comment">% search them</span>
+0108             cont = [cont; cont_temp]; <span class="comment">%#ok&lt;AGROW&gt; append search results</span>
+0109             dirflag = [dirflag; dirflag_temp]; <span class="comment">%#ok&lt;AGROW&gt; append search results</span>
+0110             sdirs = <a href="#_sub1" class="code" title="subfunction [cont,dirflag] = main(directory,str)">main</a>(dirs{n},<span class="string">'folders'</span>);
+0111             dirs = [dirs; sdirs]; <span class="comment">%#ok&lt;AGROW&gt;</span>
+0112             count = length(dirs);
+0113             n = n+1;
+0114         <span class="keyword">end</span>
+0115     <span class="keyword">end</span>
+0116 
+0117     <span class="comment">% remove full path</span>
+0118     <span class="keyword">if</span> strcmp(pathflag,<span class="string">'relative'</span>)
+0119         <span class="keyword">if</span> ~strcmp(directory(end),filesep)
+0120             directory = [directory filesep];
+0121         <span class="keyword">end</span>
+0122         <span class="keyword">for</span> n = 1:length(cont)
+0123             cont{n} = strrep(cont{n}, directory, <span class="string">''</span>);
+0124         <span class="keyword">end</span>
+0125     <span class="keyword">end</span>
+0126 
+0127     <span class="comment">% sort output (case insensitive)</span>
+0128     <span class="keyword">if</span> sortflag
+0129         [~,IX] = sort(lower(cont));
+0130         cont = cont(IX);
+0131         dirflag = dirflag(IX);
+0132     <span class="keyword">end</span>
+0133 
+0134 <span class="keyword">end</span>
+0135 
+0136 <a name="_sub1" href="#_subfunctions" class="code">function [cont,dirflag] = main(directory,str)</a>
+0137 <span class="comment">%MAIN get the contents</span>
+0138 
+0139     list = struct2cell(dir(directory));
+0140     dirbool = cell2mat(list(cellfun(@islogical,list(:,1)),:)); <span class="comment">% return directory flags</span>
+0141     list = list(1,:); <span class="comment">% keep only file names</span>
+0142     X = ~strncmp(list, <span class="string">'.'</span>, 1); <span class="comment">% remove hidden files (those starting '.')</span>
+0143     list = list(X);
+0144     list = list(:); <span class="comment">% make column vector</span>
+0145     dirbool = dirbool(X);
+0146     dirbool = dirbool(:); <span class="comment">% make column vector</span>
+0147 
+0148     <span class="keyword">for</span> n = 1:length(list)
+0149         list{n} = fullfile(directory,list{n});
+0150     <span class="keyword">end</span>
+0151 
+0152     <span class="keyword">if</span> nargin &gt; 1
+0153         <span class="comment">% find filename extensions</span>
+0154         exts = cell(size(list));
+0155         <span class="keyword">for</span> n = 1:length(list)
+0156             [~,~,exts{n}] = fileparts(list{n});
+0157         <span class="keyword">end</span>
+0158         <span class="comment">% filter</span>
+0159         <span class="keyword">if</span> strncmp(str,<span class="string">'*.'</span>,2) <span class="comment">% if extensions are requested</span>
+0160             ext = str(2:end);
+0161             str = <span class="string">'ext'</span>;
+0162         <span class="keyword">end</span>
+0163         <span class="keyword">switch</span> lower(str)
+0164             <span class="keyword">case</span> <span class="string">'files'</span>
+0165                 Y = ~dirbool;
+0166             <span class="keyword">case</span> <span class="string">'folders'</span>
+0167                 Y = dirbool;
+0168             <span class="keyword">case</span> <span class="string">'ext'</span>
+0169                 Y = strcmp(exts,ext);
+0170             <span class="keyword">case</span> <span class="string">'all'</span>
+0171                 Y = true(size(dirbool));
+0172             <span class="keyword">otherwise</span> <span class="comment">% use literal search string</span>
+0173                 Y = ~cellfun(@isempty,strfind(list,str));
+0174         <span class="keyword">end</span>
+0175     <span class="keyword">else</span>
+0176         Y = true(size(list));
+0177     <span class="keyword">end</span>
+0178 
+0179     <span class="comment">% return search results</span>
+0180     cont = list(Y);
+0181     dirflag = dirbool(Y);
+0182 
+0183 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
