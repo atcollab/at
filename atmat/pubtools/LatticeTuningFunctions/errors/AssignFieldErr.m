@@ -9,8 +9,8 @@ function [r,Pnew,Panew]=AssignFieldErr(r,refpos,N,rho,BNn,ANn)
 % refpos : index of elements for wich the field error has to be applied
 % N main component (2=quadrupole,3=sextupole)
 % rho: reference radius
-% BNn: the normal field errors at rho0
-% ANn: the skew field errors at rho0
+% BNn: the normal field errors at rho0, should be 1 for reference multipole
+% ANn: the skew field errors at rho0, should be 1 for reference multipole
 %
 % the field errors are defined by the magnet designer with the multipole
 % expansion
