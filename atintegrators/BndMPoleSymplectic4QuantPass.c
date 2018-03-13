@@ -68,8 +68,6 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
     double L2 = SL*DRIFT2;
     double K1 = SL*KICK1;
     double K2 = SL*KICK2;
-    /*bool useFringe1 = (fint1!=0.0 && gap!=0.0 && FringeBendEntrance!=0);
-    bool useFringe2 = (fint2!=0.0 && gap!=0.0 && FringeBendExit!=0);*/
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     double  qe = 1.60217733e-19;

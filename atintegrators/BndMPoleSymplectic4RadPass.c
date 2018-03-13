@@ -57,8 +57,6 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
 {	int c,m;
     double *r6;
     double SL, L1, L2, K1, K2;
-    /*bool useFringe1 = (fint1!=0.0 && gap!=0.0 && FringeBendEntrance!=0);
-    bool useFringe2 = (fint2!=0.0 && gap!=0.0 && FringeBendExit!=0);*/
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     SL = le/num_int_steps;
