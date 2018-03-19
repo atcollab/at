@@ -99,17 +99,34 @@ end
 rerr = rerrt;
 
 disp(['Going to tune: ' num2str(t0,'%2.5f, ')]);
-for frac=(0.75:-0.25:0)
-    tt = WPtune+(te-WPtune)*frac;
+if abs(te-WPtune) > [0.1 0.1] % slowly go to nominal tune
     
-    rerrt = atfittune(rerrt,tt-floor(tt),qfidx,qdidx);
+    for fracval=(0.75:-0.25:0)
+        tt = WPtune+(te-WPtune)*fracval;
+        
+        rerrt = atfittune(rerrt,frac(tt),qfidx,qdidx);
+        
+        % if tune set ok store improved lattice
+        [b]=atlinopt(rerrt,0,1:length(rerrt)+1);
+        te=b(end).mu/2/pi;
+        
+        disp(['Intermediate tune: ' num2str(te,'%2.5f, ')]);
+        
+        if isempty(find(isnan(te)==1,1))
+            rerr = rerrt;
+        end
+    end
+    
+else
+    % go in one shot
+    
+    rerrt = atfittune(rerrt,WPtune,qfidx,qdidx);
+    
+    disp(['Intermediate tune: ' num2str(te,'%2.5f, ')]);
     
     % if tune set ok store improved lattice
     [b]=atlinopt(rerrt,0,1:length(rerrt)+1);
     te=b(end).mu/2/pi;
-     
-    disp(['Intermediate tune: ' num2str(te,'%2.5f, ')]);
-   
     if isempty(find(isnan(te)==1,1))
         rerr = rerrt;
     end
