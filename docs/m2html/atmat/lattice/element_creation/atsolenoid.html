@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atsolenoid</title>
+  <meta name="keywords" content="atsolenoid">
+  <meta name="description" content="ATSOLENOID Creates a new solenoid element with Class 'Solenoid'">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">lattice</a> &gt; <a href="index.html">element_creation</a> &gt; atsolenoid.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice/element_creation&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>atsolenoid
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ATSOLENOID Creates a new solenoid element with Class 'Solenoid'</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function Elem=atsolenoid(fname,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATSOLENOID Creates a new solenoid element with Class 'Solenoid'
+
+   Elem =solenoid('FAMILYNAME',Length [m],KS,'METHOD')
+    
+  INPUTS
+    1. FamName          family name
+    2. Length          length[m]
+    3. KS             solenoid strength KS [rad/m]
+    4. PassMethod     name of the function to use for tracking
+
+
+  OPTIONS (order does not matter)
+    R1                6 x 6 rotation matrix at the entrance
+     R2                6 x 6 rotation matrix at the entrance
+     T1                6 x 1 translation at entrance 
+     T2                6 x 1 translation at exit
+     NumIntSteps    Number of integration steps
+     MaxOrder       Max Order for multipole (1 up to quadrupole)
+
+  OUTPUTS
+  1. ELEM - Structure with the AT element
+
+  NOTES
+  1. Fieldname can be called by calling the passmethod
+     [req opt] = BndMPoleSymplectic4Pass
+                 where req are mandatory field and opt are optional
+                 fields
+
+  See also <a href="atdrift.html" class="code" title="function elem=atdrift(fname,varargin)">atdrift</a>, <a href="atquadrupole.html" class="code" title="function elem=atquadrupole(fname,varargin)">atquadrupole</a>, <a href="atsextupole.html" class="code" title="function elem=atsextupole(fname,varargin)">atsextupole</a>, <a href="atsbend.html" class="code" title="function elem=atsbend(fname,varargin)">atsbend</a>, <a href="atrbend.html" class="code" title="function elem=atrbend(fname,varargin)">atrbend</a> <a href="atskewquad.html" class="code" title="function elem = atskewquad(fname,varargin)">atskewquad</a>,
+          <a href="atthinmultipole.html" class="code" title="function elem=atthinmultipole(fname,varargin)">atthinmultipole</a>, <a href="atmarker.html" class="code" title="function elem=atmarker(fname,varargin)">atmarker</a>, <a href="atcorrector.html" class="code" title="function elem=atcorrector(fname,varargin)">atcorrector</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="atbaselem.html" class="code" title="function elem = atbaselem(famname,method,varargin)">atbaselem</a>	ATBASELEM  Create an AT element structure + various checks</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Elem=atsolenoid(fname,varargin)</a>
+0002 <span class="comment">%ATSOLENOID Creates a new solenoid element with Class 'Solenoid'</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%   Elem =solenoid('FAMILYNAME',Length [m],KS,'METHOD')</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%  INPUTS</span>
+0007 <span class="comment">%    1. FamName          family name</span>
+0008 <span class="comment">%    2. Length          length[m]</span>
+0009 <span class="comment">%    3. KS             solenoid strength KS [rad/m]</span>
+0010 <span class="comment">%    4. PassMethod     name of the function to use for tracking</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%  OPTIONS (order does not matter)</span>
+0014 <span class="comment">%    R1                6 x 6 rotation matrix at the entrance</span>
+0015 <span class="comment">%     R2                6 x 6 rotation matrix at the entrance</span>
+0016 <span class="comment">%     T1                6 x 1 translation at entrance</span>
+0017 <span class="comment">%     T2                6 x 1 translation at exit</span>
+0018 <span class="comment">%     NumIntSteps    Number of integration steps</span>
+0019 <span class="comment">%     MaxOrder       Max Order for multipole (1 up to quadrupole)</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%  OUTPUTS</span>
+0022 <span class="comment">%  1. ELEM - Structure with the AT element</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%  NOTES</span>
+0025 <span class="comment">%  1. Fieldname can be called by calling the passmethod</span>
+0026 <span class="comment">%     [req opt] = BndMPoleSymplectic4Pass</span>
+0027 <span class="comment">%                 where req are mandatory field and opt are optional</span>
+0028 <span class="comment">%                 fields</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">%  See also atdrift, atquadrupole, atsextupole, atsbend, atrbend atskewquad,</span>
+0031 <span class="comment">%          atthinmultipole, atmarker, atcorrector</span>
+0032 
+0033 <span class="comment">% Input parser for option</span>
+0034 [rsrc,L,KS,method]  = decodeatargs({0,0,<span class="string">'SolenoidLinearPass'</span>},varargin);
+0035 [L,rsrc]            = getoption(rsrc,<span class="string">'Length'</span>,L);
+0036 [KS,rsrc]           = getoption(rsrc,<span class="string">'KS'</span>,KS);
+0037 [method,rsrc]       = getoption(rsrc,<span class="string">'PassMethod'</span>,method);
+0038 [cl,rsrc]           = getoption(rsrc,<span class="string">'Class'</span>,<span class="string">'Solenoid'</span>);
+0039 
+0040 <span class="comment">% Gradient setting if not specified explicitly</span>
+0041 Elem=<a href="atbaselem.html" class="code" title="function elem = atbaselem(famname,method,varargin)">atbaselem</a>(fname,method,<span class="string">'Class'</span>,cl,<span class="string">'Length'</span>,L,<span class="keyword">...</span>
+0042     <span class="string">'KS'</span>,KS,rsrc{:});
+0043 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of calc_dppAperture</title>
+  <meta name="keywords" content="calc_dppAperture">
+  <meta name="description" content="calculate the momentum aperture at each location of the ring due to">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">pubtools</a> &gt; calc_dppAperture.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>calc_dppAperture
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>calculate the momentum aperture at each location of the ring due to</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [deltap,deltam, indextab] = calc_dppAperture(THERING, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">calculate the momentum aperture at each location of the ring due to
+transverse dynamic. 
+Tracking including longitudinal motion and radiation damping
+[deltap,deltam, indextab] = calc_dppAperture.m(THERING)
+[deltap,deltam, indextab] = calc_dppAperture.m(THERING, PAmarker, PAlim)
+ For SPEAR PAmarkder = 'SEPTUM'; PAlim=[-0.025 0.025 -0.005 0.005]
+[deltap,deltam, indextab] = calc_dppAperture.m(THERING, PAmarker, PAlim, Vrf)
+ Vrf in MV
+output:
+   deltap, deltam, lists of postive and negative momentum aperture at
+   elements indexed by indextab</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atmomap.html" class="code" title="function [deltap,deltam,Rfin, loss,X0l] = atmomap(ring, Nturn)">atmomap</a>	ATMOMAP			find momentum aperture at start of ring</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [deltap,deltam, indextab] = calc_dppAperture(THERING, varargin)</a>
+0002 <span class="comment">%calculate the momentum aperture at each location of the ring due to</span>
+0003 <span class="comment">%transverse dynamic.</span>
+0004 <span class="comment">%Tracking including longitudinal motion and radiation damping</span>
+0005 <span class="comment">%[deltap,deltam, indextab] = calc_dppAperture.m(THERING)</span>
+0006 <span class="comment">%[deltap,deltam, indextab] = calc_dppAperture.m(THERING, PAmarker, PAlim)</span>
+0007 <span class="comment">% For SPEAR PAmarkder = 'SEPTUM'; PAlim=[-0.025 0.025 -0.005 0.005]</span>
+0008 <span class="comment">%[deltap,deltam, indextab] = calc_dppAperture.m(THERING, PAmarker, PAlim, Vrf)</span>
+0009 <span class="comment">% Vrf in MV</span>
+0010 <span class="comment">%output:</span>
+0011 <span class="comment">%   deltap, deltam, lists of postive and negative momentum aperture at</span>
+0012 <span class="comment">%   elements indexed by indextab</span>
+0013 <span class="comment">%</span>
+0014 
+0015 <span class="keyword">if</span> nargin&gt;=3
+0016    PAmarkder = varargin{1};
+0017    PAlim = varargin{2};
+0018 
+0019    ati = atindex(THERING);
+0020    sepindx = eval([<span class="string">'ati.'</span> PAmarkder]); <span class="comment">%ati.SEPTUM;</span>
+0021    THERING{sepindx}.Limits = PAlim; <span class="comment">%[-0.025 0.025 -0.005 0.005];   %apply physical aperture</span>
+0022    THERING{sepindx}.PassMethod = <span class="string">'AperturePass'</span>;
+0023 <span class="keyword">end</span>
+0024 
+0025 ati = atindex(THERING);
+0026 Vrf = 3200000;
+0027 <span class="keyword">if</span> nargin&gt;=4
+0028    Vrf = varargin{3}*1.0e6; <span class="comment">%Volt</span>
+0029 <span class="keyword">end</span>
+0030 <span class="comment">%THERING = setcellstruct(THERING,'Voltage', ati.RF, Vrf);</span>
+0031 <span class="comment">%THERING = setcellstruct(THERING,'PassMethod', ati.RF, 'ThinCavityPass');</span>
+0032 <span class="comment">%turn cavity on</span>
+0033 <span class="comment">%cavityon(3e9);</span>
+0034 
+0035 <span class="comment">%turn radiation on</span>
+0036 <span class="comment">%bi = findcells(THERING,'PassMethod','BendLinearPass');</span>
+0037 <span class="comment">%bi = sort([ati.BND, ati.B34]);</span>
+0038 bi = findcells(THERING,<span class="string">'BendingAngle'</span>);
+0039 k = getcellstruct(THERING,<span class="string">'K'</span>,bi);
+0040 THERING = setcellstruct(THERING,<span class="string">'Energy'</span>, bi, 3e9); 
+0041 THERING = setcellstruct(THERING,<span class="string">'PolynomA'</span>,bi,0,1,2);
+0042 THERING = setcellstruct(THERING,<span class="string">'PolynomB'</span>,bi,k,1,2);
+0043 THERING = setcellstruct(THERING,<span class="string">'NumIntSteps'</span>,bi,10);
+0044 THERING = setcellstruct(THERING,<span class="string">'MaxOrder'</span>,bi,1);
+0045 THERING = setcellstruct(THERING,<span class="string">'PassMethod'</span>,bi,<span class="string">'BndMPoleSymplectic4RadPass'</span>);
+0046 
+0047 <span class="comment">%allspos = findspos(THERING, 1:length(THERING));</span>
+0048 [curH,allspos]= getcurH(THERING);
+0049 curH(length(allspos)+1)=curH(length(allspos)); <span class="comment">%add an extra element for the last value.</span>
+0050 cnt = 0;
+0051 RING0 = THERING;
+0052 epsH=1e-7;
+0053 tic
+0054 <span class="keyword">for</span> ii=1:length(allspos)
+0055    <span class="keyword">if</span> (RING0{ii}.Length&gt;0 &amp;&amp; abs(curH(ii+1)-curH(ii))&gt;epsH)
+0056       
+0057        cnt = cnt + 1;
+0058       
+0059       indextab(cnt) = ii;
+0060       THERING = [RING0(ii:end), RING0(1:ii-1)];
+0061       [dplus,dminus] = track4dppAp(THERING, 500)
+0062       deltap(cnt) = dplus;
+0063       deltam(cnt) = dminus;
+0064    <span class="keyword">end</span>
+0065 <span class="keyword">end</span>
+0066 toc
+0067 
+0068 [deltap,deltam] = <a href="atmomap.html" class="code" title="function [deltap,deltam,Rfin, loss,X0l] = atmomap(ring, Nturn)">atmomap</a>(ring, Nturn);</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

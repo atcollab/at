@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of computeRDT</title>
+  <meta name="keywords" content="computeRDT">
+  <meta name="description" content="COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">NonLinearDynamics</a> &gt; computeRDT.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/NonLinearDynamics&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>computeRDT
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function RDT=computeRDT(ring, index, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)
+   This function calls RDTElegantAT mex function and returns the
+   hamiltonian resonance driving terms, using the elegant c++ 
+   function computeDrivingTerms().
+   
+   RDT=computeRDT(ring, index, varargin)
+
+   ring is the AT lattice
+   index is the vector of indexes where one wants to compute RDTs
+   The additional arguments can be up to five strings:
+   chromatic, coupling, geometric1, geometric2 and tuneshifts
+   
+   example:
+   RDT=computeRDT(ring, indexBPM, 'geometric1', 'tuneshifts');
+   creates an array of structs (the length of the array is the number of 
+   indexes where you want to compute driving terms) with first order
+   geometric driving terms and tune shifts with amplitude.
+   The driving terms are complex numbers, the tune shifts are real.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function RDT=computeRDT(ring, index, varargin)</a>
+0002 <span class="comment">%COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)</span>
+0003 <span class="comment">%   This function calls RDTElegantAT mex function and returns the</span>
+0004 <span class="comment">%   hamiltonian resonance driving terms, using the elegant c++</span>
+0005 <span class="comment">%   function computeDrivingTerms().</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   RDT=computeRDT(ring, index, varargin)</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%   ring is the AT lattice</span>
+0010 <span class="comment">%   index is the vector of indexes where one wants to compute RDTs</span>
+0011 <span class="comment">%   The additional arguments can be up to five strings:</span>
+0012 <span class="comment">%   chromatic, coupling, geometric1, geometric2 and tuneshifts</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   example:</span>
+0015 <span class="comment">%   RDT=computeRDT(ring, indexBPM, 'geometric1', 'tuneshifts');</span>
+0016 <span class="comment">%   creates an array of structs (the length of the array is the number of</span>
+0017 <span class="comment">%   indexes where you want to compute driving terms) with first order</span>
+0018 <span class="comment">%   geometric driving terms and tune shifts with amplitude.</span>
+0019 <span class="comment">%   The driving terms are complex numbers, the tune shifts are real.</span>
+0020 <span class="comment">%</span>
+0021 
+0022 naddvar=length(varargin);
+0023 chromatic=0;
+0024 coupling=0;
+0025 geometric1=0;
+0026 geometric2=0;
+0027 tuneshifts=0;
+0028 <span class="keyword">for</span> ii=1:naddvar
+0029     <span class="keyword">switch</span> varargin{ii}
+0030         <span class="keyword">case</span> <span class="string">'chromatic'</span>
+0031             chromatic=1;
+0032         <span class="keyword">case</span> <span class="string">'coupling'</span>
+0033             coupling=1;
+0034         <span class="keyword">case</span> <span class="string">'geometric1'</span>
+0035             geometric1=1;
+0036         <span class="keyword">case</span> <span class="string">'geometric2'</span>
+0037             geometric2=1;
+0038         <span class="keyword">case</span> <span class="string">'tuneshifts'</span>
+0039             tuneshifts=1;
+0040         <span class="keyword">otherwise</span>
+0041             disp([<span class="string">'The input number '</span> num2str(ii+2) <span class="string">' must be one of these:'</span>]);
+0042             disp(<span class="string">'''chromatic'', ''coupling'', ''geometric1'',''geometric2'', ''tuneshifts'''</span>);
+0043             disp(<span class="string">'your input will be ignored'</span>);
+0044     <span class="keyword">end</span>
+0045 <span class="keyword">end</span>
+0046 
+0047 <span class="keyword">if</span> naddvar==0
+0048     chromatic=1;
+0049     coupling=1;
+0050     geometric1=1;
+0051     geometric2=1;
+0052     tuneshifts=1;
+0053 <span class="keyword">end</span>
+0054 
+0055 
+0056 indDQSO=findcells(ring,<span class="string">'Class'</span>,<span class="string">'Bend'</span>,<span class="string">'Quadrupole'</span>,<span class="string">'Sextupole'</span>,<span class="string">'Octupole'</span>);
+0057 <span class="comment">% allInd= sort([ indDQSO, index ]);</span>
+0058 <span class="comment">%[LINDATA,AVEBETA,AVEMU,AVEDISP,TUNES,CHROMS]=atavedata(ring,0,indDQSO);</span>
+0059 
+0060 [~,AVEBETA,AVEMU,AVEDISP,~,~]=atavedata(ring,0,1:length(ring));
+0061 
+0062 Lin=atlinopt(ring,0,1:length(ring));
+0063 
+0064 <span class="comment">%create input arguments for the mex function</span>
+0065 sIndex=findspos(ring,indDQSO);
+0066 s=findspos(ring,1:length(ring));
+0067 sEnd=findspos(ring,length(ring)+1);
+0068 betax=AVEBETA(indDQSO,1);
+0069 betay=AVEBETA(indDQSO,2);
+0070 etax=AVEDISP(indDQSO,1);
+0071 phix=AVEMU(indDQSO,1);
+0072 phiy=AVEMU(indDQSO,2);
+0073 a2L=getcellstruct(ring,<span class="string">'PolynomA'</span>,indDQSO,1,2).*getcellstruct(ring,<span class="string">'Length'</span>,indDQSO);
+0074 a2L(isnan(a2L))=0;
+0075 b2L=getcellstruct(ring,<span class="string">'PolynomB'</span>,indDQSO,1,2).*getcellstruct(ring,<span class="string">'Length'</span>,indDQSO);
+0076 b2L(isnan(b2L))=0;
+0077 b3L=getcellstruct(ring,<span class="string">'PolynomB'</span>,indDQSO,1,3).*getcellstruct(ring,<span class="string">'Length'</span>,indDQSO);
+0078 b3L(isnan(b3L))=0;
+0079 b4L=getcellstruct(ring,<span class="string">'PolynomB'</span>,indDQSO,1,4).*getcellstruct(ring,<span class="string">'Length'</span>,indDQSO);
+0080 b4L(isnan(b4L))=0;
+0081 Mux=Lin(length(ring)).mu(1);
+0082 Tunex=Mux/2/pi;
+0083 Muy=Lin(length(ring)).mu(2);
+0084 Tuney=Muy/2/pi;
+0085 nElem=length(indDQSO);
+0086 
+0087 <span class="keyword">for</span> ii=1:length(index)
+0088     FromindexDQSO=sum(indDQSO&lt;index(ii))+1;
+0089     betax_Fromindex=[betax(FromindexDQSO:end);betax(1:FromindexDQSO-1)];
+0090     betay_Fromindex=[betay(FromindexDQSO:end);betay(1:FromindexDQSO-1)];
+0091     etax_Fromindex=[etax(FromindexDQSO:end);etax(1:FromindexDQSO-1)];
+0092     phix_Fromindex=[phix(FromindexDQSO:end)-AVEMU(index(ii),1);phix(1:FromindexDQSO-1)+Mux-AVEMU(index(ii),1)];
+0093     phiy_Fromindex=[phiy(FromindexDQSO:end)-AVEMU(index(ii),2);phiy(1:FromindexDQSO-1)+Muy-AVEMU(index(ii),2)];
+0094     s_Fromindex=[sIndex(FromindexDQSO:end)-s(index(ii)),sIndex(1:FromindexDQSO-1)+sEnd-s(index(ii))];
+0095     a2L_Fromindex=[a2L(FromindexDQSO:end);a2L(1:FromindexDQSO-1)];
+0096     b2L_Fromindex=[b2L(FromindexDQSO:end);b2L(1:FromindexDQSO-1)];
+0097     b3L_Fromindex=[b3L(FromindexDQSO:end);b3L(1:FromindexDQSO-1)];
+0098     b4L_Fromindex=[b4L(FromindexDQSO:end);b4L(1:FromindexDQSO-1)];
+0099         [ReRDT, ImRDT, TSwA]=RDTelegantAT(s_Fromindex,betax_Fromindex,betay_Fromindex,<span class="keyword">...</span>
+0100         etax_Fromindex,phix_Fromindex,phiy_Fromindex,a2L_Fromindex,b2L_Fromindex,<span class="keyword">...</span>
+0101         b3L_Fromindex,b4L_Fromindex,Tunex,Tuney,nElem,<span class="keyword">...</span>
+0102         chromatic,coupling,geometric1,geometric2,tuneshifts);
+0103     <span class="comment">%chromatic</span>
+0104     <span class="keyword">if</span>(chromatic)
+0105     RDT(ii).h11001=ReRDT(6)+1i*ImRDT(6);
+0106     RDT(ii).h00111=ReRDT(7)+1i*ImRDT(7);
+0107     RDT(ii).h20001=ReRDT(8)+1i*ImRDT(8);
+0108     RDT(ii).h00201=ReRDT(9)+1i*ImRDT(9);
+0109     RDT(ii).h10002=ReRDT(10)+1i*ImRDT(10);
+0110     <span class="keyword">end</span>
+0111     <span class="comment">%coupling</span>
+0112     <span class="keyword">if</span>(coupling)
+0113     RDT(ii).h10010=ReRDT(11)+1i*ImRDT(11);
+0114     RDT(ii).h10100=ReRDT(12)+1i*ImRDT(12);
+0115     <span class="keyword">end</span>
+0116     <span class="comment">%geometric1</span>
+0117     <span class="keyword">if</span>(geometric1)
+0118     RDT(ii).h21000=ReRDT(1)+1i*ImRDT(1);
+0119     RDT(ii).h30000=ReRDT(2)+1i*ImRDT(2);
+0120     RDT(ii).h10110=ReRDT(3)+1i*ImRDT(3);
+0121     RDT(ii).h10020=ReRDT(4)+1i*ImRDT(4);
+0122     RDT(ii).h10200=ReRDT(5)+1i*ImRDT(5);
+0123     <span class="keyword">end</span>
+0124     <span class="comment">%geometric2</span>
+0125     <span class="keyword">if</span>(geometric2)
+0126     RDT(ii).h22000=ReRDT(13)+1i*ImRDT(13);
+0127     RDT(ii).h11110=ReRDT(14)+1i*ImRDT(14);
+0128     RDT(ii).h00220=ReRDT(15)+1i*ImRDT(15);
+0129     RDT(ii).h31000=ReRDT(16)+1i*ImRDT(16);
+0130     RDT(ii).h40000=ReRDT(17)+1i*ImRDT(17);
+0131     RDT(ii).h20110=ReRDT(18)+1i*ImRDT(18);
+0132     RDT(ii).h11200=ReRDT(19)+1i*ImRDT(19);
+0133     RDT(ii).h20020=ReRDT(20)+1i*ImRDT(20);
+0134     RDT(ii).h20200=ReRDT(21)+1i*ImRDT(21);
+0135     RDT(ii).h00310=ReRDT(22)+1i*ImRDT(22);
+0136     RDT(ii).h00400=ReRDT(23)+1i*ImRDT(23);
+0137     <span class="keyword">end</span>
+0138     <span class="comment">%tuneshifts</span>
+0139     <span class="keyword">if</span>(tuneshifts)
+0140     RDT(ii).dnux_dJx=TSwA(1);
+0141     RDT(ii).dnux_dJy=TSwA(2);
+0142     RDT(ii).dnuy_dJy=TSwA(3);
+0143     <span class="keyword">end</span>
+0144 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,6 +1,8 @@
 function z = monitor(fname,varargin)
+%MONITOR Creates a monitor element in old AT versions (Obsolete) 
 % monitor('FAMILYNAME','METHOD')
-%       creates a new family in the FAMLIST - a structure with fields
+%  
+%  creates a new family in the FAMLIST - a structure with fields
 %               FamName                 family name
 %               Length                  = 0 for  bpm type
 %               PassMethod              name of the function on disk to use fortracking
@@ -9,6 +11,13 @@ function z = monitor(fname,varargin)
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
 % declare bpms in the lattice file  as BPM = monitor('BPM','IdentityPass');
+%
+%  NOTES
+%  1. Obsolete: use atmonitor instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
+
 
 % The field "Name" was explicitly set in the original function. Why ??
 ElemData=atmonitor(fname,varargin{:},'Name','BPM');

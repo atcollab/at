@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of findm66</title>
+  <meta name="keywords" content="findm66">
+  <meta name="description" content="FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atphysics</a> &gt; <a href="index.html">LinearOptics</a> &gt; findm66.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atphysics/LinearOptics&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>findm66
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [M66, varargout] = findm66(LATTICE, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice
+  by differentiation of LINEPASS near the closed orbit
+  FINDM66 uses FINDORBIT6 to search for the closed orbit in 6-d
+  In order for this to work the ring MUST have a CAVITY element
+
+ M66 = FINDM66(RING)finds full one-turn 6-by-6
+    matrix at the entrance of the first element
+
+ [M66,T] = FINDM66(RING,REFPTS) in addition to M finds
+    6-by-6 transfer matrixes  between entrances of
+    the first element and each element indexed by REFPTS.
+    T is 6-by-6-by-length(REFPTS) 3 dimentional array.
+
+    REFPTS is an array of increasing indexes that  select elements
+    from the range 1 to length(RING)+1.
+    See further explanation of REFPTS in the 'help' for FINDSPOS
+
+    Note:
+    When REFPTS= [ 1 2 .. ] the fist point is the entrance of the first element
+    and T(:,:,1) - identity matrix
+    When REFPTS= [  .. length(RING)+1] the last point is the exit of the last element
+    and the entrance of the first element after 1 turn: T(:,:, ) = M
+
+ [M66,T] = FINDM66(RING,REFPTS,ORBITIN) - Does not search for closed orbit.
+   This syntax is useful to avoid recomputing the closed orbit if it is
+   already known.
+
+ [M66,T,orbit] = FINDM66(RING, REFPTS) in addition returns the closed orbit
+    found in the process of lenearization
+
+ See also <a href="findm44.html" class="code" title="function [M44, varargout]  = findm44(LATTICE,DP,varargin)">FINDM44</a>, FINDORBIT6</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="get_dispersion_from_etaoids.html" class="code" title="function disp = get_dispersion_from_etaoids(ring,refpts)">get_dispersion_from_etaoids</a>	get_dispersion_from_etaoids computes dispersion functions (x,px,y,py) at refpts</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function mask=setelems(mask,idx)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [M66, varargout] = findm66(LATTICE, varargin)</a>
+0002 <span class="comment">%FINDM66 numerically finds the 6x6 transfer matrix of an accelerator lattice</span>
+0003 <span class="comment">%  by differentiation of LINEPASS near the closed orbit</span>
+0004 <span class="comment">%  FINDM66 uses FINDORBIT6 to search for the closed orbit in 6-d</span>
+0005 <span class="comment">%  In order for this to work the ring MUST have a CAVITY element</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% M66 = FINDM66(RING)finds full one-turn 6-by-6</span>
+0008 <span class="comment">%    matrix at the entrance of the first element</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% [M66,T] = FINDM66(RING,REFPTS) in addition to M finds</span>
+0011 <span class="comment">%    6-by-6 transfer matrixes  between entrances of</span>
+0012 <span class="comment">%    the first element and each element indexed by REFPTS.</span>
+0013 <span class="comment">%    T is 6-by-6-by-length(REFPTS) 3 dimentional array.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%    REFPTS is an array of increasing indexes that  select elements</span>
+0016 <span class="comment">%    from the range 1 to length(RING)+1.</span>
+0017 <span class="comment">%    See further explanation of REFPTS in the 'help' for FINDSPOS</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">%    Note:</span>
+0020 <span class="comment">%    When REFPTS= [ 1 2 .. ] the fist point is the entrance of the first element</span>
+0021 <span class="comment">%    and T(:,:,1) - identity matrix</span>
+0022 <span class="comment">%    When REFPTS= [  .. length(RING)+1] the last point is the exit of the last element</span>
+0023 <span class="comment">%    and the entrance of the first element after 1 turn: T(:,:, ) = M</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% [M66,T] = FINDM66(RING,REFPTS,ORBITIN) - Does not search for closed orbit.</span>
+0026 <span class="comment">%   This syntax is useful to avoid recomputing the closed orbit if it is</span>
+0027 <span class="comment">%   already known.</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">% [M66,T,orbit] = FINDM66(RING, REFPTS) in addition returns the closed orbit</span>
+0030 <span class="comment">%    found in the process of lenearization</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">% See also FINDM44, FINDORBIT6</span>
+0033 
+0034 <span class="keyword">if</span> ~iscell(LATTICE)
+0035     error(<span class="string">'First argument must be a cell array'</span>);
+0036 <span class="keyword">end</span>
+0037 
+0038 NE = length(LATTICE);
+0039 
+0040 <span class="keyword">if</span> nargin &gt;= 3 &amp;&amp; ~isempty(varargin{2}) <span class="comment">% FINDM66(RING,REFPTS,ORBITIN)</span>
+0041     R0 = varargin{2};
+0042 <span class="keyword">else</span>
+0043     R0 = findorbit6(LATTICE);
+0044 <span class="keyword">end</span>
+0045 <span class="keyword">if</span> nargin &gt;= 2  <span class="comment">% FINDM66(RING,REFPTS)</span>
+0046     <span class="keyword">if</span> islogical(varargin{1})
+0047         REFPTS=varargin{1};
+0048         REFPTS(end+1:NE+1)=false;
+0049     <span class="keyword">elseif</span> isnumeric(varargin{1})
+0050         REFPTS=<a href="#_sub1" class="code" title="subfunction mask=setelems(mask,idx)">setelems</a>(false(1,NE+1),varargin{1});
+0051     <span class="keyword">else</span>
+0052         error(<span class="string">'REFPTS must be numeric or logical'</span>);
+0053     <span class="keyword">end</span>
+0054 <span class="keyword">else</span>
+0055     REFPTS=false(1,NE+1);
+0056 <span class="keyword">end</span>
+0057 refs=<a href="#_sub1" class="code" title="subfunction mask=setelems(mask,idx)">setelems</a>(REFPTS,NE+1);
+0058 reqs=REFPTS(refs);
+0059 
+0060 <span class="comment">% Determine step size to use for numerical differentiation</span>
+0061 <span class="keyword">global</span> NUMDIFPARAMS
+0062 <span class="comment">% Transverse</span>
+0063 <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'XYStep'</span>)
+0064     dt = NUMDIFPARAMS.XYStep';
+0065 <span class="keyword">else</span>
+0066     <span class="comment">% optimal differentiation step - Numerical Recipes</span>
+0067     dt =  6.055454452393343e-006;
+0068 <span class="keyword">end</span>
+0069 <span class="comment">% Longitudinal</span>
+0070 <span class="keyword">if</span> isfield(NUMDIFPARAMS,<span class="string">'DPStep'</span>)
+0071     dl = NUMDIFPARAMS.DPStep';
+0072 <span class="keyword">else</span>
+0073     <span class="comment">% optimal differentiation step - Numerical Recipes</span>
+0074     dl =  6.055454452393343e-006;
+0075 <span class="keyword">end</span>
+0076 
+0077 <span class="comment">% Build a diagonal matrix of initial conditions</span>
+0078 D6 = [0.5*dt*eye(4),zeros(4,2);zeros(2,4),0.5*dl*eye(2)];
+0079 <span class="comment">% Add to the orbit_in. First 12 columns for derivative</span>
+0080 <span class="comment">% 13-th column is for closed orbit</span>
+0081 RIN = R0(:,ones(1,13)) + [D6 -D6 zeros(6,1)];
+0082 ROUT = linepass(LATTICE,RIN,refs);
+0083 TMAT3 = reshape(ROUT,6,13,[]);
+0084 M66 = [(TMAT3(:,1:4,end)-TMAT3(:,7:10,end))./dt,<span class="keyword">...</span>
+0085     (TMAT3(:,5:6,end)-TMAT3(:,11:12,end))./dl];
+0086 
+0087 <span class="keyword">if</span> nargout &gt;= 2 <span class="comment">% Calculate matrixes at all REFPTS.</span>
+0088     varargout{1} = [(TMAT3(:,1:4,reqs)-TMAT3(:,7:10,reqs))./dt,<span class="keyword">...</span>
+0089         (TMAT3(:,5:6,reqs)-TMAT3(:,11:12,reqs))./dl];
+0090     <span class="comment">% Return closed orbit if requested</span>
+0091     <span class="keyword">if</span> nargout &gt;= 3
+0092         varargout{2}=squeeze(TMAT3(:,13,reqs));
+0093     <span class="keyword">end</span>
+0094 <span class="keyword">end</span>
+0095 
+0096     <a name="_sub1" href="#_subfunctions" class="code">function mask=setelems(mask,idx)</a>
+0097         mask(idx)=true;
+0098     <span class="keyword">end</span>
+0099 
+0100 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

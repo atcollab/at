@@ -1,8 +1,7 @@
 function rerr=SetLargeErrorList(r0,seed,Nsig,factorerr,errnumber)
+%SETLARGEERRORLIST Sets given error list
 %
-% function to set a given error list.
-%
-%see also: ApplyErrorsRand ApplyErrorsWave SetESRFAlgeAlignmentError
+%  See also ApplyErrorsRand ApplyErrorsWave SetESRFAlgeAlignmentError
 
 if nargin==4
     errnumber=1:8; %errors to apply from the list

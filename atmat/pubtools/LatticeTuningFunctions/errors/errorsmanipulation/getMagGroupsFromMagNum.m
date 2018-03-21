@@ -1,12 +1,12 @@
 function maggroups=getMagGroupsFromMagNum(r)
-%
-% output maggroups in r given that the varaible MagNum is available in the
+%GETMAGGROUPSFROMMAGNUM - Gets magnet from a Magnet group
+% output maggroups in r given that the variable MagNum is available in the
 % lattice.
 % maggroups is a cell array of magnet indexes describing a single magnet in
 % reality, but sliced in the lattice
 % a single magnet has the same MagNum value.
 % 
-%see also: SectorDipoleWithParallelFaces 
+%see also SectorDipoleWithParallelFaces 
 
 maggroups={};
 

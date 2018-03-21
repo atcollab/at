@@ -1,11 +1,11 @@
 function [lindata, varargout] = atlinopt(RING,DP,varargin)
-%ATLINOPT			performs linear analysis of the COUPLED lattices
+%ATLINOPT Performs linear analysis of the COUPLED lattices
 %
 % LinData = ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields
 %
 %   ElemIndex   - ordinal position in the RING
 %   SPos        - longitudinal position [m]
-%   ClosedOrbit - closed orbit column vector with
+%   ClosedOrbit - 4x4 closed orbit column vector with
 %                 components x, px, y, py (momentums, NOT angles)
 %   Dispersion  - dispersion orbit position vector with
 %                 components eta_x, eta_prime_x, eta_y, eta_prime_y
@@ -40,13 +40,12 @@ function [lindata, varargout] = atlinopt(RING,DP,varargin)
 %			  Alpha output
 %			  Phase advance output
 %			  Option to skip closed orbit search
+%  REFERENCES
+%    [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+%    [2] E.Courant, H.Snyder
+%    [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
 %
-% See also ATX ATMODUL FINDSPOS TWISSRING TUNECHROM
-%
-%   [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
-%   [2] E.Courant, H.Snyder
-%   [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
-
+%  See also atx atmodl findspos twissring tunechrom
 
 global NUMDIFPARAMS
 
@@ -114,8 +113,8 @@ if nargout >= 3
     end
     refs=false(1,length(RING)+1);
     % Calculate tunes for DP+dDP
-    [orbP,o1P]=findorbit4(RING,DP+0.5*dDP,REFPTS);
-    [orbM,o1M]=findorbit4(RING,DP-0.5*dDP,REFPTS);
+    [orbP,o1P]=findorbit4(RING,DP+0.5*dDP,REFPTS,varargin{2:end});
+    [orbM,o1M]=findorbit4(RING,DP-0.5*dDP,REFPTS,varargin{2:end});
     dispersion = (orbP-orbM)/dDP;
     [LD, tunesP] = atlinopt(RING,DP+0.5*dDP,refs,o1P); %#ok<ASGLU>
     [LD, tunesM] = atlinopt(RING,DP-0.5*dDP,refs,o1M); %#ok<ASGLU>

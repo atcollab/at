@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atinsertelems</title>
+  <meta name="keywords" content="atinsertelems">
+  <meta name="description" content="ATINSERTELEMS Insert elements at given locations in a line">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atinsertelems.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atinsertelems
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATINSERTELEMS Insert elements at given locations in a line</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function newring=atinsertelems(ring,refpts,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATINSERTELEMS Insert elements at given locations in a line
+
+NEWLINE=ATINSERTELEMS(LINE,REFPTS,FRAC1,ELEM1[,FRAC2,ELEM2...])
+   a new line is created by inserting elements at each location specified
+   by REFPTS.
+
+LINE:      Cell array of structures
+REFPTS:    Insertion points (index list or logical mask)
+FRAC:      Location of the inserted element ELEM within LINE{REFPTS(i)}
+           0&lt;=FRAC&lt;=1
+ if FRAC = 0, ELEM is inserted before LINE{REFPTS(i)} (no splitting)
+ if FRAC = 1, ELEM is inserted after LINE{REFPTS(i)} (no splitting)
+ if FRAC = NaN, LINE{REFPTS(i)} is replaced by ELEM (no check for identical length)
+ if ELEM = [], nothing is inserted, only the splitting takes place
+
+ FRAC and ELEM must be scalars or array of the same size as REFPTS
+
+ See also <a href="atsplitelem.html" class="code" title="function line=atsplitelem(baseelem,varargin)">ATSPLITELEM</a> <a href="atdivelem.html" class="code" title="function line = atdivelem(elem,frac,varargin)">ATDIVELEM</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atsplitelem.html" class="code" title="function line=atsplitelem(baseelem,varargin)">atsplitelem</a>	ATSPLITELEM Creates a line by inserting one or more elements into a base element</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function slice=insert(idx,varargin)</a></li><li><a href="#_sub2" class="code">function val=unfold(arg)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function newring=atinsertelems(ring,refpts,varargin)</a>
+0002 <span class="comment">%ATINSERTELEMS Insert elements at given locations in a line</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%NEWLINE=ATINSERTELEMS(LINE,REFPTS,FRAC1,ELEM1[,FRAC2,ELEM2...])</span>
+0005 <span class="comment">%   a new line is created by inserting elements at each location specified</span>
+0006 <span class="comment">%   by REFPTS.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%LINE:      Cell array of structures</span>
+0009 <span class="comment">%REFPTS:    Insertion points (index list or logical mask)</span>
+0010 <span class="comment">%FRAC:      Location of the inserted element ELEM within LINE{REFPTS(i)}</span>
+0011 <span class="comment">%           0&lt;=FRAC&lt;=1</span>
+0012 <span class="comment">% if FRAC = 0, ELEM is inserted before LINE{REFPTS(i)} (no splitting)</span>
+0013 <span class="comment">% if FRAC = 1, ELEM is inserted after LINE{REFPTS(i)} (no splitting)</span>
+0014 <span class="comment">% if FRAC = NaN, LINE{REFPTS(i)} is replaced by ELEM (no check for identical length)</span>
+0015 <span class="comment">% if ELEM = [], nothing is inserted, only the splitting takes place</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% FRAC and ELEM must be scalars or array of the same size as REFPTS</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% See also ATSPLITELEM ATDIVELEM</span>
+0020 
+0021 <span class="keyword">if</span> islogical(refpts),refpts=find(refpts); <span class="keyword">end</span>
+0022 
+0023 vargs=cellfun(@<a href="#_sub2" class="code" title="subfunction val=unfold(arg)">unfold</a>,varargin,<span class="string">'UniformOutput'</span>,false);
+0024 
+0025 deb=1;
+0026 slices=cellfun(@<a href="#_sub1" class="code" title="subfunction slice=insert(idx,varargin)">insert</a>,num2cell(refpts),vargs{:},<span class="string">'UniformOutput'</span>,false);  <span class="comment">%Split into sections</span>
+0027 newring=cat(1,slices{:},ring(deb:end)); <span class="comment">%Concatenate all sections</span>
+0028 
+0029     <a name="_sub1" href="#_subfunctions" class="code">function slice=insert(idx,varargin)</a>
+0030         <span class="keyword">if</span> isnan(varargin{1})
+0031             <span class="keyword">if</span> iscell(varargin{2})
+0032                 slice=[ring(deb:idx-1);varargin{2}];
+0033             <span class="keyword">else</span>
+0034                 slice=[ring(deb:idx-1);varargin(2)];
+0035             <span class="keyword">end</span>
+0036         <span class="keyword">else</span>
+0037             slice=[ring(deb:idx-1);<a href="atsplitelem.html" class="code" title="function line=atsplitelem(baseelem,varargin)">atsplitelem</a>(ring{idx},varargin{:})];
+0038         <span class="keyword">end</span>
+0039         deb=idx+1;
+0040     <span class="keyword">end</span>
+0041 
+0042     <a name="_sub2" href="#_subfunctions" class="code">function val=unfold(arg)</a>
+0043         <span class="keyword">if</span> isempty(arg)
+0044             val=cell(size(refpts));
+0045         <span class="keyword">elseif</span> isscalar(arg)
+0046             val=arg(ones(size(refpts)));
+0047         <span class="keyword">else</span>
+0048             val=reshape(arg,size(refpts));
+0049         <span class="keyword">end</span>
+0050         <span class="keyword">if</span> ~iscell(arg)
+0051             val=num2cell(val);
+0052         <span class="keyword">end</span>
+0053     <span class="keyword">end</span>
+0054 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

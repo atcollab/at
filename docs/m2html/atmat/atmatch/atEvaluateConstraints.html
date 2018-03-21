@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atEvaluateConstraints</title>
+  <meta name="keywords" content="atEvaluateConstraints">
+  <meta name="description" content="This funciton evaluates the contraints defined in Constraints for lattice">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">atmatch</a> &gt; atEvaluateConstraints.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atmatch&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atEvaluateConstraints
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This funciton evaluates the contraints defined in Constraints for lattice</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray,twissin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> This funciton evaluates the contraints defined in Constraints for lattice
+ THERING
+
+ Constraints: structure array struct(...
+                     'Fun',@functname(ring,lindata,globaldata),
+                     'Min',min,
+                     'Max',max,
+                     'Weight',w,
+                     'RefPoints',refpts);
+
+ lindata is the output of atlinopt at the requested locations
+ globdata.fractune=tune fromk atlinopt
+ globdata.chromaticity=chrom from atlinopt
+
+ functname must return a row vector of values to be optimized
+
+ min, max and weight must have the same size as the return value of
+ functname</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atmatch.html" class="code" title="function [NewRing,penalty,dmin]=atmatch(Ring,Variables,Constraints,Tolerance,Calls,verbose,varargin)">atmatch</a>	function [...</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Val=atEvaluateConstraints(R,evalfunc,posarray,indinposarray,twissin)</a>
+0002 <span class="comment">% This funciton evaluates the contraints defined in Constraints for lattice</span>
+0003 <span class="comment">% THERING</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% Constraints: structure array struct(...</span>
+0006 <span class="comment">%                     'Fun',@functname(ring,lindata,globaldata),</span>
+0007 <span class="comment">%                     'Min',min,</span>
+0008 <span class="comment">%                     'Max',max,</span>
+0009 <span class="comment">%                     'Weight',w,</span>
+0010 <span class="comment">%                     'RefPoints',refpts);</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% lindata is the output of atlinopt at the requested locations</span>
+0013 <span class="comment">% globdata.fractune=tune fromk atlinopt</span>
+0014 <span class="comment">% globdata.chromaticity=chrom from atlinopt</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% functname must return a row vector of values to be optimized</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">% min, max and weight must have the same size as the return value of</span>
+0019 <span class="comment">% functname</span>
+0020 <span class="comment">%</span>
+0021 
+0022 <span class="comment">% History of changes</span>
+0023 <span class="comment">% created 26-8-2012</span>
+0024 <span class="comment">% updated 28-8-2012 vector res handling.</span>
+0025 <span class="comment">% updated 28-8-2012 add Weigth field.</span>
+0026 <span class="comment">% updated 11-10-2012 any number of additonal parameters in cell array format.</span>
+0027 <span class="comment">%                    if only one parameter still ok.</span>
+0028 <span class="comment">% updated 11-03-2013 proper use of anonytmous functions introduced.</span>
+0029 <span class="comment">% updated 21-03-2013 Constraints now is a structure array.</span>
+0030 <span class="comment">%                    Weigth divides instead of multipling a constraint.</span>
+0031 <span class="comment">% updated 25-03-2013 Constraints call optimized for linear optics.</span>
+0032 <span class="comment">%</span>
+0033 
+0034 <span class="keyword">if</span> ~isempty(posarray)
+0035     <span class="keyword">if</span> isempty(twissin) <span class="comment">% recursive solution</span>
+0036         [lindata,t,c]=atlinopt(R,0.0,posarray);
+0037         globdata.fractune=t;
+0038         globdata.chromaticity=c;
+0039     <span class="keyword">else</span> <span class="comment">% open line</span>
+0040         [lindata]=twissline(R,0.0,twissin,posarray,<span class="string">'chrom'</span>);
+0041         dpp=0.0001;
+0042         [lindatadpp]=twissline(R,dpp,twissin,posarray,<span class="string">'chrom'</span>);
+0043         [lindatadpm]=twissline(R,-dpp,twissin,posarray,<span class="string">'chrom'</span>);
+0044         globdata.fractune=lindata(end).mu/2/pi;
+0045         globdata.chromaticity=(lindatadpp(end).mu/2/pi-lindatadpm(end).mu/2/pi)/2/dpp;
+0046         
+0047     <span class="keyword">end</span>
+0048 <span class="keyword">else</span>
+0049     lindata=[];
+0050     globdata=[];
+0051 <span class="keyword">end</span>
+0052 
+0053 Val=cellfun(@(func,refpts) func(R,lindata(refpts),globdata),<span class="keyword">...</span>
+0054     evalfunc,indinposarray,<span class="string">'UniformOutput'</span>,false);
+0055 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

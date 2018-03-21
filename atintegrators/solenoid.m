@@ -1,5 +1,5 @@
 function z=solenoid(fname,L,KS,method)
-
+%SOLENOID Creates a solenoid element in old AT versions (Obsolete)
 % z=solenoid('FAMILYNAME',Length [m],KS,'METHOD')
 %	creates a new family in the FAMLIST - a structure with field
 %	FamName			family name
@@ -17,6 +17,12 @@ function z=solenoid(fname,L,KS,method)
 %	R2           		6 x 6 rotation matrix at the entrance
 %	T1					6 x 1 translation at entrance 
 %	T2					6 x 1 translation at exit
+%
+%  NOTES
+%  1. Obsolete: use atsolenoid  instead
+%
+%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
+%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 ElemData.FamName = fname;  % add check for existing identical family names
 ElemData.Length = L;

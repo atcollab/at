@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atgetfieldvalues</title>
+  <meta name="keywords" content="atgetfieldvalues">
+  <meta name="description" content="ATGETFIELDVALUES retrieves the field values AT cell array of elements">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atgetfieldvalues.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atgetfieldvalues
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATGETFIELDVALUES retrieves the field values AT cell array of elements</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function values = atgetfieldvalues(ring,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATGETFIELDVALUES retrieves the field values AT cell array of elements
+
+ VALUES = ATGETFIELDVALUES(RING,'field') extracts the values of
+ the field 'field' in all the elements of RING
+
+ VALUES = ATGETFIELDVALUES(RING,INDEX,'field') extracts the values of
+ the field 'field' in the elements of RING selected by INDEX
+
+ if RING{I}.FIELD is a numeric scalar
+    VALUES is a length(INDEX) x 1 array
+ otherwise
+    VALUES is a length(INDEX) x 1 cell array
+
+
+ More generally ATGETFIELDVALUES(RING,INDEX,subs1,subs2,...) will call
+  GETFIELD(RING{I},subs1,subs2,...) for I in INDEX
+
+ Examples:
+
+ V=ATGETFIELDVALUES(RING,1:10,'PolynomB') is a 10x1  cell array
+ such that V{I}=RING{I}.PolynomB for I=1:10
+
+ V=ATGETFIELDVALUES(RING(1:10),'PolynomB',{1,2}) is a 10x1 array
+ such that V(I)=RING{I},PolynomB(1,2)
+
+
+ See also <a href="atsetfieldvalues.html" class="code" title="function newring = atsetfieldvalues(ring,varargin)">ATSETFIELDVALUES</a> <a href="atgetcells.html" class="code" title="function ok=atgetcells(cellarray, field, varargin)">ATGETCELLS</a> <a href="getcellstruct.html" class="code" title="function values = getcellstruct(CELLARRAY,field,index,varargin)">GETCELLSTRUCT</a> <a href="findcells.html" class="code" title="function index = findcells(CELLARRAY, field, varargin)">FINDCELLS</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="atfastring.html" class="code" title="function [newring,newringrad] = atfastring(ring0,varargin)">atfastring</a>	ATFASTRING Generate simplified AT structures</li><li><a href="atfitchrom.html" class="code" title="function newring=atfitchrom(ring,varargin)">atfitchrom</a>	ATFITTUNE fits chromaticites by scaling 2 sextupol families</li><li><a href="atfittune.html" class="code" title="function newring=atfittune(ring,varargin)">atfittune</a>	ATFITTUNE fits linear tunes by scaling 2 quadrupole families</li><li><a href="atreduce.html" class="code" title="function [newring,indx,newrefs] = atreduce(oldring,oldrefs)">atreduce</a>	ATREDUCE Remove useless elements from an AT structure</li><li><a href="atsplitelem.html" class="code" title="function line=atsplitelem(baseelem,varargin)">atsplitelem</a>	ATSPLITELEM Creates a line by inserting one or more elements into a base element</li><li><a href="getcellstruct.html" class="code" title="function values = getcellstruct(CELLARRAY,field,index,varargin)">getcellstruct</a>	GETCELLSTRUCT retrieves the field values MATLAB cell array of structures</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function values = atgetfield(line,varargin)</a></li><li><a href="#_sub2" class="code">function [val,isnumscal,isok]=scan(el)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function values = atgetfieldvalues(ring,varargin)</a>
+0002 <span class="comment">%ATGETFIELDVALUES retrieves the field values AT cell array of elements</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% VALUES = ATGETFIELDVALUES(RING,'field') extracts the values of</span>
+0005 <span class="comment">% the field 'field' in all the elements of RING</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% VALUES = ATGETFIELDVALUES(RING,INDEX,'field') extracts the values of</span>
+0008 <span class="comment">% the field 'field' in the elements of RING selected by INDEX</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% if RING{I}.FIELD is a numeric scalar</span>
+0011 <span class="comment">%    VALUES is a length(INDEX) x 1 array</span>
+0012 <span class="comment">% otherwise</span>
+0013 <span class="comment">%    VALUES is a length(INDEX) x 1 cell array</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% More generally ATGETFIELDVALUES(RING,INDEX,subs1,subs2,...) will call</span>
+0017 <span class="comment">%  GETFIELD(RING{I},subs1,subs2,...) for I in INDEX</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% Examples:</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">% V=ATGETFIELDVALUES(RING,1:10,'PolynomB') is a 10x1  cell array</span>
+0022 <span class="comment">% such that V{I}=RING{I}.PolynomB for I=1:10</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% V=ATGETFIELDVALUES(RING(1:10),'PolynomB',{1,2}) is a 10x1 array</span>
+0025 <span class="comment">% such that V(I)=RING{I},PolynomB(1,2)</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">% See also ATSETFIELDVALUES ATGETCELLS GETCELLSTRUCT FINDCELLS</span>
+0029 
+0030 <span class="keyword">if</span> islogical(varargin{1}) || isnumeric(varargin{1})
+0031     values=<a href="#_sub1" class="code" title="subfunction values = atgetfield(line,varargin)">atgetfield</a>(ring(varargin{1}),varargin{2:end});
+0032 <span class="keyword">else</span>
+0033     values=<a href="#_sub1" class="code" title="subfunction values = atgetfield(line,varargin)">atgetfield</a>(ring,varargin{:});
+0034 <span class="keyword">end</span>
+0035 
+0036     <a name="_sub1" href="#_subfunctions" class="code">function values = atgetfield(line,varargin)</a>
+0037         [values,isnumscal,isok]=cellfun(@<a href="#_sub2" class="code" title="subfunction [val,isnumscal,isok]=scan(el)">scan</a>,line(:),<span class="string">'UniformOutput'</span>,false);
+0038         isok=cat(1,isok{:});
+0039         <span class="keyword">if</span> all(cat(1,isnumscal{isok}))
+0040             values(~isok)={NaN};
+0041             values=cat(1,values{:});
+0042         <span class="keyword">end</span>
+0043         
+0044         <a name="_sub2" href="#_subfunctions" class="code">function [val,isnumscal,isok]=scan(el)</a>
+0045             <span class="keyword">try</span>
+0046                 val=getfield(el,varargin{:});
+0047                 isnumscal=isnumeric(val) &amp;&amp; isscalar(val);
+0048                 isok=true;
+0049             <span class="keyword">catch</span>
+0050                 val=[];
+0051                 isnumscal=false;
+0052                 isok=false;
+0053             <span class="keyword">end</span>
+0054         <span class="keyword">end</span>
+0055     <span class="keyword">end</span>
+0056 
+0057 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

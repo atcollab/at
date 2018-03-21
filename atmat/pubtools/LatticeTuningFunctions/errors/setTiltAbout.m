@@ -1,9 +1,9 @@
 function re=setTiltAbout(r,pos,coord,PSI)
-%
+%SETTILTABOUT Sets tilt errors
 %
 % update
 %
-%see also: SETSHIFT_THERING settilt_THERING_Dipole
+%  See also setshift_thering settilt_thering_dipole
 
 numelems = length(pos);
 

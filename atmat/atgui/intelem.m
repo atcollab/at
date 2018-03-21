@@ -1,6 +1,5 @@
 function h0 = intelem(varargin)
-
-%INTELEM - interactive element editor. 
+%INTELEM Interactive element editor. 
 %	
 %	INTELEM(INDEX) retrieves THERING{INDEX} from the
 %		main workspace and displays the values of all fields for that element

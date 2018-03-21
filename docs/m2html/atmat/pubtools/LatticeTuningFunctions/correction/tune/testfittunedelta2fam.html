@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of testfittunedelta2fam</title>
+  <meta name="keywords" content="testfittunedelta2fam">
+  <meta name="description" content="test errors and correction functions">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">tune</a> &gt; testfittunedelta2fam.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/tune&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>testfittunedelta2fam
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>test errors and correction functions</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> test errors and correction functions</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="fittunedelta2fam.html" class="code" title="function rerr=fittunedelta2fam(rerr,r0)">fittunedelta2fam</a>	rerr=fittunedelta2fam(rerr,r0)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% test errors and correction functions</span>
+0002 close all
+0003 clear all
+0004 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions'</span>);
+0005 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/response matrix'</span>)
+0006 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/'</span>);
+0007 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors/'</span>);
+0008 
+0009 <span class="comment">% load lattice</span>
+0010 s28d=load(<span class="string">'/machfs/liuzzo/EBS/S28D/LATTICE/AT/S28Dmerged_PA.mat'</span>);
+0011 
+0012 ring=s28d.LOW_EMIT_RING_INJ;
+0013 [l,t,c]=atlinopt(ring,0,1);
+0014 r0=ring;
+0015 
+0016 <span class="comment">% mark quadrupoles to use for tune matching</span>
+0017 indqf1=find(atgetcells(ring,<span class="string">'FamName'</span>,<span class="string">'QF1\w*'</span>));
+0018 ring=atsetfieldvalues(ring,indqf1,<span class="string">'ForTuneF'</span>,1);                
+0019 indqd2=find(atgetcells(ring,<span class="string">'FamName'</span>,<span class="string">'QD2\w*'</span>));
+0020 ring=atsetfieldvalues(ring,indqd2,<span class="string">'ForTuneD'</span>,1);                
+0021 
+0022 <span class="comment">% set errors, large, AT does not find a closed orbit</span>
+0023 ind=find(atgetcells(ring,<span class="string">'Class'</span>,<span class="string">'Quadrupole'</span>,<span class="string">'Sextupole'</span>));
+0024 dx=5e-6*randn(size(ind));
+0025 dy=5e-6*randn(size(ind));
+0026 
+0027 rerr=atsetshift(ring,ind,dx,dy);
+0028 
+0029 <span class="comment">%% test tune matching</span>
+0030 rerr=<a href="fittunedelta2fam.html" class="code" title="function rerr=fittunedelta2fam(rerr,r0)">fittunedelta2fam</a>(rerr,r0);</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

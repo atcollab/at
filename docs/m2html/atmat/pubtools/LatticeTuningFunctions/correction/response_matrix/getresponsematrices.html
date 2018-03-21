@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of getresponsematrices</title>
+  <meta name="keywords" content="getresponsematrices">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">response_matrix</a> &gt; getresponsematrices.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/response_matrix&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>getresponsematrices
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function ModelRM=getresponsematrices(r0,...          %1 AT lattice </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>	FINDRESPM_mod computes the change in the closed orbit due to parameter perturbations</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ModelRM</a><span class="keyword">...</span>
+0002     =getresponsematrices(<span class="keyword">...</span>
+0003     r0,<span class="keyword">...</span><span class="comment">          %1 AT lattice</span>
+0004     indBPM,<span class="keyword">...</span><span class="comment">      %2 bpm indexes in at lattice</span>
+0005     indHorCor,<span class="keyword">...</span><span class="comment">   %3 h cor indexes</span>
+0006     indVerCor,<span class="keyword">...</span><span class="comment">   %4 v cor indexes</span>
+0007     indSkewCor,<span class="keyword">...</span><span class="comment">  %5 skew cor indexes</span>
+0008     indQuadCor,<span class="keyword">...</span><span class="comment">  %6 quad cor indexes</span>
+0009     indSextCor,<span class="keyword">...</span><span class="comment">  %7 sext cor indexes</span>
+0010     inCOD,<span class="keyword">...</span><span class="comment">       %7 initial coordinates</span>
+0011     rmsel<span class="keyword">...</span><span class="comment">        %8 specifiy rm to be computed</span>
+0012     )
+0013 <span class="comment">% function ModelRM...</span>
+0014 <span class="comment">%     =getorbitbetaphasedispersionresponse(...</span>
+0015 <span class="comment">%     r0,...          %1 AT lattice</span>
+0016 <span class="comment">%     indBPM,...      %2 bpm indexes in at lattice</span>
+0017 <span class="comment">%     indHorCor,...   %3 h cor indexes</span>
+0018 <span class="comment">%     indVerCor,...   %4 v cor indexes</span>
+0019 <span class="comment">%     indSkewCor,...  %5 skew cor indexes</span>
+0020 <span class="comment">%     indQuadCor,...  %6 quad cor indexes</span>
+0021 <span class="comment">%     indSextCor,...  %7 sext cor indexes</span>
+0022 <span class="comment">%     inCOD,...)      %7 [0 0 0 0 0 0]' inCOD</span>
+0023 <span class="comment">%     rmsel)          %8 [1 2 ... 12] rm to compute (default: all)</span>
+0024 <span class="comment">%</span>
+0025 <span class="comment">% computes lattice Response Matrix for :</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">% rmsel                                   output structure is:</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">%  1     D  orbit (6D) / D h steerer       ModelRM.OrbHCor</span>
+0030 <span class="comment">%  2     D  orbit (6D) / D v steerer       ModelRM.OrbHCor</span>
+0031 <span class="comment">%  3     D  orbit (6D) / D dpp             ModelRM.OrbHDpp</span>
+0032 <span class="comment">%        D  orbit (6D) / D dpp             ModelRM.OrbVDpp</span>
+0033 <span class="comment">%  4     D  trajectory (6D) / D h steerer  ModelRM.TrajHCor</span>
+0034 <span class="comment">%  5     D  trajectory (6D) / D v steerer  ModelRM.TrajVCor</span>
+0035 <span class="comment">%  6     D  trajectory (6D) / D dpp        ModelRM.TrajHDpp</span>
+0036 <span class="comment">%        D  trajectory (6D) / D dpp        ModelRM.TrajVDpp</span>
+0037 <span class="comment">%  7     D  dispersion (6D) / D h steerer  ModelRM.DispHCor</span>
+0038 <span class="comment">%  8     D  dispersion (6D) / D v steerer  ModelRM.DispVCor</span>
+0039 <span class="comment">%  9     D  dispersion (6D) / D dpp        ModelRM.DispHDpp</span>
+0040 <span class="comment">%        D  dispersion (6D) / D dpp        ModelRM.DispVDpp</span>
+0041 <span class="comment">% 10     D  dispersion (6D) / D norm quad  ModelRM.DispQCor</span>
+0042 <span class="comment">% 11     D  dispersion (6D) / D skew quad  ModelRM.DispSCor</span>
+0043 <span class="comment">% 12     D  tune            / D norm quad  ModelRM.TuneQCor</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">% for the dispersion measurement the RF freq. is changed (finddispersion6Err).</span>
+0046 <span class="comment">%</span>
+0047 <span class="comment">%see also: findrespmat findorbit6Err findtrajectory6Err finddispersion6Err</span>
+0048 
+0049 <span class="comment">%[GRM,GDRM]=getGirderRM(r0,indBPM);</span>
+0050 <span class="comment">%disp(' --- computed Girders RM --- ')</span>
+0051 
+0052 kval=1e-4;
+0053 delta=1e-3;
+0054 
+0055 <span class="keyword">if</span> nargin&lt;9
+0056     rmsel=1:12;
+0057 <span class="keyword">end</span>
+0058 
+0059 <span class="keyword">if</span> nargin&lt;8
+0060     inCOD=[0 0 0 0 0 0]';
+0061 <span class="keyword">end</span>
+0062 
+0063 <span class="comment">% orbit RM dpp</span>
+0064 alpha=mcf(r0);
+0065 indrfc=find(atgetcells(r0,<span class="string">'Frequency'</span>));
+0066 f0=r0{indrfc(1)}.Frequency;
+0067 
+0068 <span class="keyword">for</span> ir=1:length(rmsel)
+0069     <span class="keyword">switch</span> rmsel(ir)
+0070         <span class="keyword">case</span> 1
+0071             <span class="comment">% orbit RM</span>
+0072             ormH=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indHorCor,kval,<span class="string">'PolynomB'</span>,1,1,<span class="string">'findorbit6Err'</span>,inCOD);
+0073             ormH{1}=ormH{1}./kval;
+0074             ormH{2}=ormH{2}./kval;
+0075             ormH{3}=ormH{3}./kval;
+0076             ormH{4}=ormH{4}./kval;
+0077             disp(<span class="string">' --- computed H orbit RM from model --- '</span>);
+0078             <span class="comment">% store data</span>
+0079             ModelRM.OrbHCor=ormH;
+0080         <span class="keyword">case</span> 2
+0081             
+0082             ormV=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indVerCor,kval,<span class="string">'PolynomA'</span>,1,1,<span class="string">'findorbit6Err'</span>,inCOD);
+0083             ormV{1}=ormV{1}./kval;
+0084             ormV{2}=ormV{2}./kval;
+0085             ormV{3}=ormV{3}./kval;
+0086             ormV{4}=ormV{4}./kval;
+0087             disp(<span class="string">' --- computed V orbit RM from model --- '</span>);
+0088             
+0089             <span class="comment">% store data</span>
+0090             ModelRM.OrbVCor=ormV;
+0091             
+0092         <span class="keyword">case</span> 3
+0093             <span class="comment">% plus delta</span>
+0094             RINGp=atsetfieldvalues(r0,indrfc,<span class="string">'Frequency'</span>,f0-alpha*(+delta)*f0);
+0095             o=findorbit6Err(RINGp,indBPM,inCOD);
+0096             oxPdpp=o(1,:);
+0097             oyPdpp=o(3,:);
+0098             
+0099             RINGm=atsetfieldvalues(r0,indrfc,<span class="string">'Frequency'</span>,f0-alpha*(-delta)*f0);
+0100             o=findorbit6Err(RINGm,indBPM,inCOD);
+0101             oxMdpp=o(1,:);
+0102             oyMdpp=o(3,:);
+0103             
+0104             dppH=(oxPdpp-oxMdpp)/2/delta;
+0105             dppV=(oyPdpp-oyMdpp)/2/delta;
+0106             
+0107             disp(<span class="string">' --- computed orbit/dpp RM from model --- '</span>);
+0108             
+0109             <span class="comment">% store data</span>
+0110             
+0111             ModelRM.OrbHDPP=dppH;
+0112             ModelRM.OrbVDPP=dppV;
+0113             
+0114         <span class="keyword">case</span> 4
+0115             <span class="comment">% trajectory</span>
+0116             RMTH=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indHorCor,kval,<span class="string">'PolynomB'</span>,1,1,<span class="string">'findtrajectory6Err'</span>,inCOD);
+0117             RMTH{1}=RMTH{1}./kval;
+0118             RMTH{2}=RMTH{2}./kval;
+0119             RMTH{3}=RMTH{3}./kval;
+0120             RMTH{4}=RMTH{4}./kval;
+0121             disp(<span class="string">' --- computed horizontal trajectory RM from model --- '</span>);
+0122             <span class="comment">% store data</span>
+0123             ModelRM.TrajHCor=RMTH;
+0124             
+0125         <span class="keyword">case</span> 5
+0126             
+0127             RMTV=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indVerCor,kval,<span class="string">'PolynomA'</span>,1,1,<span class="string">'findtrajectory6Err'</span>,inCOD);
+0128             RMTV{1}=RMTV{1}./kval;
+0129             RMTV{2}=RMTV{2}./kval;
+0130             RMTV{3}=RMTV{3}./kval;
+0131             RMTV{4}=RMTV{4}./kval;
+0132             disp(<span class="string">' --- computed vertical trajectory RM from model --- '</span>);
+0133             
+0134             <span class="comment">% store data</span>
+0135             ModelRM.TrajVCor=RMTV;
+0136             
+0137             
+0138         <span class="keyword">case</span> 6
+0139             <span class="comment">% orbit RM dpp</span>
+0140             inCODPdpp=inCOD;
+0141             inCODPdpp(5)=delta;<span class="comment">% linepass is used.</span>
+0142             o=findtrajectory6Err(r0,indBPM,inCODPdpp);
+0143             oxPdpp=o(1,:);
+0144             oyPdpp=o(3,:);
+0145             inCODMdpp=inCOD;
+0146             inCODMdpp(5)=-delta;
+0147             o=findtrajectory6Err(r0,indBPM,inCODMdpp);
+0148             oxMdpp=o(1,:);
+0149             oyMdpp=o(3,:);
+0150             dppH=(oxPdpp-oxMdpp)/2/delta;
+0151             dppV=(oyPdpp-oyMdpp)/2/delta;
+0152             disp(<span class="string">' --- computed trajectory/dpp RM from model --- '</span>);
+0153             
+0154             <span class="comment">% store data</span>
+0155             ModelRM.TrajHDPP=dppH;
+0156             ModelRM.TrajVDPP=dppV;
+0157             
+0158         <span class="keyword">case</span> 7
+0159             
+0160             <span class="comment">% dispersion RM steerers</span>
+0161             
+0162             drmH=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indHorCor,kval,<span class="string">'PolynomB'</span>,1,1,<span class="string">'finddispersion6Err'</span>,indrfc,alpha,delta,inCOD);
+0163             drmH{1}=drmH{1}./kval;
+0164             drmH{2}=drmH{2}./kval;
+0165             drmH{3}=drmH{3}./kval;
+0166             drmH{4}=drmH{4}./kval;
+0167             disp(<span class="string">' --- computed H dispersion RM steerer h from model --- '</span>);
+0168             <span class="comment">% store data</span>
+0169             ModelRM.DispHCor=drmH;
+0170             
+0171         <span class="keyword">case</span> 8
+0172             
+0173             
+0174             drmV=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indHorCor,kval,<span class="string">'PolynomA'</span>,1,1,<span class="string">'finddispersion6Err'</span>,indrfc,alpha,delta,inCOD);
+0175             drmV{1}=drmV{1}./kval;
+0176             drmV{2}=drmV{2}./kval;
+0177             drmV{3}=drmV{3}./kval;
+0178             drmV{4}=drmV{4}./kval;
+0179             disp(<span class="string">' --- computed H dispersion RM steerer v from model --- '</span>);
+0180             
+0181             <span class="comment">% store data</span>
+0182             ModelRM.DispVCor=drmV;
+0183         <span class="keyword">case</span> 9
+0184             
+0185             <span class="comment">% plus delta</span>
+0186             RINGp=atsetfieldvalues(r0,indrfc,<span class="string">'Frequency'</span>,f0-alpha*(+delta)*f0);
+0187             o=finddispersion6Err(RINGp,indBPM,indrfc,alpha,delta,inCOD);
+0188             oxPdpp=o(1,:);
+0189             oyPdpp=o(3,:);
+0190             
+0191             RINGm=atsetfieldvalues(r0,indrfc,<span class="string">'Frequency'</span>,f0-alpha*(-delta)*f0);
+0192             o=finddispersion6Err(RINGm,indBPM,indrfc,alpha,delta,inCOD);
+0193             oxMdpp=o(1,:);
+0194             oyMdpp=o(3,:);
+0195             
+0196             dppH=(oxPdpp-oxMdpp)/2/delta;
+0197             dppV=(oyPdpp-oyMdpp)/2/delta;
+0198             disp(<span class="string">' --- computed dispersion/dpp RM from model --- '</span>);
+0199             
+0200             <span class="comment">% store data</span>
+0201             ModelRM.DispHDPP=dppH;
+0202             ModelRM.DispVDPP=dppV;
+0203             
+0204         <span class="keyword">case</span> 10
+0205             <span class="comment">% dispersion RM quadrupoles</span>
+0206             
+0207             drmQ=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indQuadCor,kval,<span class="string">'PolynomB'</span>,1,2,<span class="string">'finddispersion6Err'</span>,indrfc,alpha,delta,inCOD);
+0208             drmQ{1}=drmQ{1}./kval;
+0209             drmQ{2}=drmQ{2}./kval;
+0210             drmQ{3}=drmQ{3}./kval;
+0211             drmQ{4}=drmQ{4}./kval;
+0212             disp(<span class="string">' --- computed H dispersion RM norm quad from model --- '</span>);
+0213             <span class="comment">% store data</span>
+0214             ModelRM.DispQCor=drmQ;
+0215             
+0216         <span class="keyword">case</span> 11
+0217             drmS=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,indBPM,indSkewCor,kval,<span class="string">'PolynomA'</span>,1,2,<span class="string">'finddispersion6Err'</span>,indrfc,alpha,delta,inCOD);
+0218             drmS{1}=drmS{1}./kval;
+0219             drmS{2}=drmS{2}./kval;
+0220             drmS{3}=drmS{3}./kval;
+0221             drmS{4}=drmS{4}./kval;
+0222             disp(<span class="string">' --- computed H dispersion RM skew quad from model --- '</span>);
+0223             
+0224             <span class="comment">% store data</span>
+0225             ModelRM.DispSCor=drmS;
+0226             
+0227         <span class="keyword">case</span> 12
+0228             
+0229             drmT=<a href="findrespmat.html" class="code" title="function C = findrespmat(RING, OBSINDEX, PERTURB, PVALUE, varargin)">findrespmat</a>(r0,1,indQuadCor,kval,<span class="string">'PolynomB'</span>,1,2,<span class="string">'gettunechromatlinopt'</span>,inCOD);
+0230             drmT{1}=drmT{1}./kval;
+0231             drmT{2}=drmT{2}./kval;
+0232             drmT{3}=drmT{3}./kval;
+0233             drmT{4}=drmT{4}./kval;
+0234             
+0235             ModelRM.TuneQCor=drmT;
+0236             
+0237             disp(<span class="string">' --- computed tune and chrom RM normal quad from model --- '</span>);
+0238             
+0239         <span class="keyword">case</span> 13
+0240             
+0241             ModelRM.misal=1e-5;
+0242             ModelRM.DK=1e-3;
+0243             QM=findrespmatmisal(r0,indBPM,indQuadCor,ModelRM.DK,<span class="string">'PolynomB'</span>,1,2,ModelRM.misal,inCOD);
+0244             QM{1}=QM{1}./kval;
+0245             QM{2}=QM{2}./kval;
+0246             QM{3}=QM{3}./kval;
+0247             QM{4}=QM{4}./kval;
+0248             
+0249             ModelRM.BBAQuad=QM;
+0250             
+0251             disp(<span class="string">' --- computed orbit introduced by normal quad DK offseted by 100um --- '</span>);
+0252             
+0253             
+0254         <span class="keyword">otherwise</span>
+0255     <span class="keyword">end</span>
+0256 <span class="keyword">end</span>
+0257 
+0258 ModelRM.kval=kval;
+0259 ModelRM.delta=delta;
+0260 
+0261 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

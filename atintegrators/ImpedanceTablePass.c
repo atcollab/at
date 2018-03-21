@@ -99,9 +99,10 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
     int *iptr;
     
     /* first find the min and max of the distribution*/
-
+/*
     double srms;
     double smean;
+ */
     double smin = DBL_MAX;
     double smax = -DBL_MAX;
     double stot = 0.0;

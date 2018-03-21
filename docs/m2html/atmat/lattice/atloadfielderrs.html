@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atloadfielderrs</title>
+  <meta name="keywords" content="atloadfielderrs">
+  <meta name="description" content="ATLOADFIELDERRS will load a field error structure into a ring">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">lattice</a> &gt; atloadfielderrs.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/lattice&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atloadfielderrs
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATLOADFIELDERRS will load a field error structure into a ring</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function ring = atloadfielderrs(ring,fielderrstruct) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> ATLOADFIELDERRS will load a field error structure into a ring
+ field error structure has the fields: 
+ elemindex: element indices in ring to impact
+ Nval: reference mpole #, e.g. 2 for Quad, 3 for Sextupole
+ nval: multipole index to change
+ Bval: Value of relative normal coefficient
+ Aval: Value of relative skew coefficient
+ radius: reference radius used to compute error</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="ataddmpolecomppoly.html" class="code" title="function [PolynomOut] = ataddmpolecomppoly(Polynom,refindex,newindex,strength,radius,varargin)">ataddmpolecomppoly</a>	ataddmpolecomppoly adds a multipole component to an existing polynomial,</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ring = atloadfielderrs(ring,fielderrstruct)</a>
+0002 <span class="comment">% ATLOADFIELDERRS will load a field error structure into a ring</span>
+0003 <span class="comment">% field error structure has the fields:</span>
+0004 <span class="comment">% elemindex: element indices in ring to impact</span>
+0005 <span class="comment">% Nval: reference mpole #, e.g. 2 for Quad, 3 for Sextupole</span>
+0006 <span class="comment">% nval: multipole index to change</span>
+0007 <span class="comment">% Bval: Value of relative normal coefficient</span>
+0008 <span class="comment">% Aval: Value of relative skew coefficient</span>
+0009 <span class="comment">% radius: reference radius used to compute error</span>
+0010 
+0011 elemindex=fielderrstruct.elemindex;
+0012 newindex=fielderrstruct.nval;
+0013 refindex=fielderrstruct.Nval;
+0014 Bval=fielderrstruct.Bval;
+0015 Aval=fielderrstruct.Aval;
+0016 radius=fielderrstruct.radius;
+0017 
+0018 <span class="keyword">for</span> j=1:length(elemindex);
+0019     elem=ring{elemindex(j)};
+0020     polyB=elem.PolynomB;
+0021     polyA=elem.PolynomA;
+0022     
+0023     
+0024     polyB=<a href="ataddmpolecomppoly.html" class="code" title="function [PolynomOut] = ataddmpolecomppoly(Polynom,refindex,newindex,strength,radius,varargin)">ataddmpolecomppoly</a>(polyB,refindex(j),newindex(j),Bval(j),radius);
+0025     polyA=<a href="ataddmpolecomppoly.html" class="code" title="function [PolynomOut] = ataddmpolecomppoly(Polynom,refindex,newindex,strength,radius,varargin)">ataddmpolecomppoly</a>(polyA,refindex(j),newindex(j),Aval(j),radius,polyB(refindex(j)));
+0026     
+0027     
+0028     elem.PolynomB=polyB;
+0029     elem.PolynomA=polyA;
+0030     elem.MaxOrder=length(polyB);
+0031     ring{elemindex(j)}=elem;
+0032 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

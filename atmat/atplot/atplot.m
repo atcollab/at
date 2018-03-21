@@ -21,6 +21,8 @@ function curve = atplot(varargin)
 %   'index',REFPTS             Display the index of selected element names
 %   'leftargs',{properties}     properties set on the left axis
 %   'rightargs',{properties}    properties set on the right axis
+%   'KeepAxis'                  flag to keep R1,R2,T1,T2 at each slice in
+%                               detailed plots (mandatory with vert. bend).
 %
 %ATPLOT(...,@PLOTFUNCTION,args...)
 %	Allows for a user supplied function providing the values to be plotted

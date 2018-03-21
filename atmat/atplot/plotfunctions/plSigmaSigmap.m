@@ -1,5 +1,5 @@
 function plotdata=plSigmaSigmap(lindata,ring,dpp,varargin) 
-%
+%PLSIGMASIGMAP Plots beam sizes and divergences
 % Plots sigmax and sigmay on left axis and 
 %       sigmax' and sigmay' on right axis
 
@@ -24,11 +24,11 @@ ay=arrayfun(@(x)x.alpha(2),lindata);
 
 sx=sqrt(bx.*ex+(pm.espread.*dx).^2);
 sxp=sqrt((1+ax.^2)./bx.*ex+(pm.espread.*dxp).^2);
-sxsxp=sx.*sxp;
+%sxsxp=sx.*sxp;
 
 sy=sqrt(by.*ey+(pm.espread.*dy).^2);
 syp=sqrt((1+ay.^2)./by.*ey+(pm.espread.*dyp).^2);
-sysxp=sy.*syp;
+%sysxp=sy.*syp;
 
 plotdata(1).values=[sx; sy]';
 plotdata(1).labels={'\sigma_{x}','\sigma_{y}'};

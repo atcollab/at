@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of atmomap</title>
+  <meta name="keywords" content="atmomap">
+  <meta name="description" content="ATMOMAP			find momentum aperture at start of ring">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">atmat</a> &gt; <a href="index.html">pubtools</a> &gt; atmomap.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>atmomap
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>ATMOMAP			find momentum aperture at start of ring</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [deltap,deltam,Rfin, loss,X0l] = atmomap(ring, Nturn) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">ATMOMAP            find momentum aperture at start of ring
+
+[deltap,deltam] = atmomap(THERING, Nturn)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="calc_dppAperture.html" class="code" title="function [deltap,deltam, indextab] = calc_dppAperture(THERING, varargin)">calc_dppAperture</a>	calculate the momentum aperture at each location of the ring due to</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [deltap,deltam,Rfin, loss,X0l] = atmomap(ring, Nturn)</a>
+0002 <span class="comment">%ATMOMAP            find momentum aperture at start of ring</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%[deltap,deltam] = atmomap(THERING, Nturn)</span>
+0005 
+0006 <span class="comment">%dpp0 = [-0.04:0.001:0.04];</span>
+0007 <span class="comment">%dpp0 = [-0.04:0.005:0.04];</span>
+0008 <span class="comment">%dpp0 = [-0.04:0.002:-0.02, 0, 0.02:0.002:0.04];</span>
+0009 <span class="comment">%dpp0 = [-0.05:0.001:-0.02, 0, 0.02:0.001:0.05];</span>
+0010 dpp0 = [-0.05:0.05:-0.01, 0, 0.01:0.05:0.05];
+0011 <span class="comment">%dpp0=0</span>
+0012 X0l = zeros(6, length(dpp0));
+0013 X0l(5,:) = dpp0;
+0014 <span class="comment">%tic</span>
+0015 <span class="comment">%X0l=[0 0 0 0 -0.03 0]';</span>
+0016 [Rfin, loss] =ringpass(ring,X0l,Nturn);
+0017 <span class="comment">%Rfin</span>
+0018 <span class="comment">%toc</span>
+0019 [tmp, indxzero] = find(dpp0==0);
+0020 taglossp = min([length(dpp0) indxzero-1+find(loss(indxzero:end))]);
+0021 taglossm = max([1 find(loss(1:indxzero))]);
+0022 
+0023 deltap = dpp0(taglossp);
+0024 deltam = dpp0(taglossm);</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

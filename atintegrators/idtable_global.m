@@ -1,4 +1,5 @@
-function [z L] = idtable_global(fname, Nslice, filename, Energy, method)
+function [z, L] = idtable_global(fname, Nslice, filename, Energy, method)
+%IDTABLE Creates a RADIA-Map based element
 % idtable(fname, Nslice, filename, Energy, method)
 %
 % FamName	family name
@@ -19,13 +20,13 @@ function [z L] = idtable_global(fname, Nslice, filename, Energy, method)
 % Modification Log:
 % -----------------
 % 13-09-2007:  Created by M. Munoz, based in J. Safranek code.
-% 17-11-2008:  Modificated by Z.Martí
+% 17-11-2008:  Modificated by Z. Marti
 %---------------------------------------------------------------------------
 
 ElemData.FamName        = fname;  % add check for identical family names
 
-ElemData.Nslice    	= Nslice;
-ElemData.MaxOrder			= 3;
+ElemData.Nslice      	= Nslice;
+ElemData.MaxOrder		= 3;
 ElemData.NumIntSteps 	= 10;
 ElemData.R1             = diag(ones(6,1));
 ElemData.R2             = diag(ones(6,1));
@@ -53,7 +54,7 @@ if isfield(D,'Kick1x')
 %     ElemData.MultiKick= 1;
 %     ElemData.nkicks= nn(3);
 else
-    [header_mat, data_mat]=mhdrload_bis(filename);
+    [~, data_mat]=mhdrload_bis(filename);
     L=data_mat(:,:,1);
     Nx=data_mat(:,:,2);
     Ny=data_mat(:,:,3);
@@ -89,8 +90,8 @@ else
     ykick1=factor1*tykick1;
     
     % Sort arrays in ascending order (needed for "IdTablePass.c")
-    [y indy]=sort(y);
-    [x indx]=sort(x);
+    [y, indy]=sort(y);
+    [x, indx]=sort(x);
     x=x';
     xkick=xkick(indy,indx);
     ykick=ykick(indy,indx);

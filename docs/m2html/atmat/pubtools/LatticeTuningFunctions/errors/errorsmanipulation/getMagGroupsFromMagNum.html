@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of getMagGroupsFromMagNum</title>
+  <meta name="keywords" content="getMagGroupsFromMagNum">
+  <meta name="description" content="GETMAGGROUPSFROMMAGNUM - Gets magnet from a Magnet group">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">errorsmanipulation</a> &gt; getMagGroupsFromMagNum.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/errorsmanipulation&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>getMagGroupsFromMagNum
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>GETMAGGROUPSFROMMAGNUM - Gets magnet from a Magnet group</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function maggroups=getMagGroupsFromMagNum(r) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">GETMAGGROUPSFROMMAGNUM - Gets magnet from a Magnet group
+ output maggroups in r given that the variable MagNum is available in the
+ lattice.
+ maggroups is a cell array of magnet indexes describing a single magnet in
+ reality, but sliced in the lattice
+ a single magnet has the same MagNum value.
+ 
+see also SectorDipoleWithParallelFaces</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="UniformMagGroupsErrors.html" class="code" title="function ring=UniformMagGroupsErrors(ring)">UniformMagGroupsErrors</a>	function ring=UniformMagGroupsErrors(ring)</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function maggroups=getMagGroupsFromMagNum(r)</a>
+0002 <span class="comment">%GETMAGGROUPSFROMMAGNUM - Gets magnet from a Magnet group</span>
+0003 <span class="comment">% output maggroups in r given that the variable MagNum is available in the</span>
+0004 <span class="comment">% lattice.</span>
+0005 <span class="comment">% maggroups is a cell array of magnet indexes describing a single magnet in</span>
+0006 <span class="comment">% reality, but sliced in the lattice</span>
+0007 <span class="comment">% a single magnet has the same MagNum value.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%see also SectorDipoleWithParallelFaces</span>
+0010 
+0011 maggroups={};
+0012 
+0013 magnumind=findcells(r,<span class="string">'MagNum'</span>);
+0014 magnumval=getcellstruct(r,<span class="string">'MagNum'</span>,magnumind,1,1);
+0015 
+0016 imn=1;
+0017 maggroupind=1;
+0018 
+0019 <span class="keyword">while</span> imn&lt;length(magnumval)
+0020     
+0021     eqcount=1;
+0022     exitwhile=0;
+0023     
+0024     <span class="keyword">while</span> magnumval(imn)==magnumval(imn+eqcount) &amp;&amp; ~exitwhile
+0025         <span class="keyword">if</span> imn+eqcount&lt;length(magnumval)
+0026             eqcount=eqcount+1;
+0027         <span class="keyword">else</span>
+0028             exitwhile=1;
+0029         <span class="keyword">end</span>
+0030     <span class="keyword">end</span>
+0031     
+0032     <span class="keyword">if</span> exitwhile
+0033         eqcount=eqcount+1;
+0034     <span class="keyword">end</span>
+0035     
+0036     maggroups{maggroupind}=magnumind(imn:imn+eqcount-1); <span class="comment">%#ok&lt;*AGROW&gt;</span>
+0037     imn=imn+eqcount;
+0038     maggroupind=maggroupind+1;
+0039     
+0040 <span class="keyword">end</span>
+0041 
+0042 <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

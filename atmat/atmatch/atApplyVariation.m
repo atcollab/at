@@ -1,5 +1,5 @@
 function ring=atApplyVariation(ring,Variables,NewValues)
-% this functions applys a series of varaiation to variables as described in
+%ATAPPLYVARIATION Applies a series of variations to variables as described in
 % Variables.
 %
 % Variables is a cell array of structures

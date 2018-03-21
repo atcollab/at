@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of qemrdtresp_mod</title>
+  <meta name="keywords" content="qemrdtresp_mod">
+  <meta name="description" content="QEMRDTRESP  compute resonance driving terms at BPM locations">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">RDT</a> &gt; qemrdtresp_mod.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/RDT&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>qemrdtresp_mod
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>QEMRDTRESP  compute resonance driving terms at BPM locations</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [fx,fz,qcor]=qemrdtresp_mod(mach,bpmidx,qcoridx) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">QEMRDTRESP  compute resonance driving terms at BPM locations
+
+[fx,fz,qcor]=semrdtresp_mod(mach,bpmidx,qcoridx)
+
+ mach    : AT lattice
+ bpmindx : BPM indexes
+ qcoridx : skew quadrupole indexes
+ 
+ fx    : f2000 RDT 
+ fx    : f0020 RDT
+ qcor  : qcor.beta, qcor.phase beta and phase at the quad index (averaged) 
+ 
+ to obtain rdt for a given set of skewidx strengths (KL)
+ 
+ f1001=f1.*k1.*Lquad
+ f1010=f2.*k1.*Lquad
+ 
+ this function is an exact copy of semrdtresp by L.Farvacque
+ 
+see also: <a href="atavedata_mod.html" class="code" title="function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata_mod(ring,dpp,refpts,varargin)">atavedata_mod</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atavedata_mod.html" class="code" title="function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata_mod(ring,dpp,refpts,varargin)">atavedata_mod</a>	ATAVEDATA       Average of optical functions on selected elements</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atQuadRDTdispersioncorrection.html" class="code" title="function [rcor,inCOD,qs]=atQuadRDTdispersioncorrection(rerr,r0,indBPM,indQCor,inCOD,neigSteerer,correctflags,scalefactor,wdisp,ModelRM,steererlimit,printouttext)">atQuadRDTdispersioncorrection</a>	ATQUADRDTDISPERSIONCORRECTION - Make dispersion correction based on RDTs</li><li><a href="atRDTdispersioncorrection.html" class="code" title="function [rcor,inCOD,qs,ss]=atRDTdispersioncorrection(rerr,r0,indBPM,indQCor,indSCor,inCOD,neigSteerer,correctflags,scalefactor,wdisp,ModelRM,steererlimit,printouttext)">atRDTdispersioncorrection</a>	ATRDTDISPERSIONCORRECTION Makes dispersion correction based on RDTs</li><li><a href="atRDTdispersionmeasuredcorrection.html" class="code" title="function [rcor,inCOD,qs,ss]=atRDTdispersionmeasuredcorrection(rerr,rfit,r0,indBPM,indQCor,indSCor,inCOD,neigSteerer,correctflags,scalefactor,wdisp,ModelRM,steererlimit,printouttext)">atRDTdispersionmeasuredcorrection</a>	ATRDTDISPERSIONMEASUREDCORRECTION Makes correction of dispersion based on</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function dph=dphase(phib,phik,mtune)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [fx,fz,qcor]=qemrdtresp_mod(mach,bpmidx,qcoridx)</a>
+0002 <span class="comment">%QEMRDTRESP  compute resonance driving terms at BPM locations</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%[fx,fz,qcor]=semrdtresp_mod(mach,bpmidx,qcoridx)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% mach    : AT lattice</span>
+0007 <span class="comment">% bpmindx : BPM indexes</span>
+0008 <span class="comment">% qcoridx : skew quadrupole indexes</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% fx    : f2000 RDT</span>
+0011 <span class="comment">% fx    : f0020 RDT</span>
+0012 <span class="comment">% qcor  : qcor.beta, qcor.phase beta and phase at the quad index (averaged)</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% to obtain rdt for a given set of skewidx strengths (KL)</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% f1001=f1.*k1.*Lquad</span>
+0017 <span class="comment">% f1010=f2.*k1.*Lquad</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% this function is an exact copy of semrdtresp by L.Farvacque</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%see also: atavedata_mod</span>
+0022 
+0023 nbpm=length(bpmidx);
+0024 nqcor=length(qcoridx);
+0025 
+0026 <span class="comment">% Compute optics</span>
+0027 
+0028 [refpts,~,kl]=unique([qcoridx bpmidx length(mach)+1]);
+0029 jcor=kl(1:nqcor);
+0030 jbpm=kl(nqcor+(1:nbpm));
+0031 jend=kl(end);
+0032 [vdata,avebeta,avemu]=<a href="atavedata_mod.html" class="code" title="function [lindata,avebeta,avemu,avedisp,nu,xsi]=atavedata_mod(ring,dpp,refpts,varargin)">atavedata_mod</a>(mach,0,refpts);
+0033 mtx=vdata(jend).mu(1);
+0034 mtz=vdata(jend).mu(2);
+0035 
+0036 <span class="comment">% Extract parameters</span>
+0037 <span class="keyword">if</span> nargout &gt;= 3
+0038     qcor.beta=avebeta(jcor,:);
+0039     qcor.phase=avemu(jcor,:);
+0040 <span class="keyword">end</span>
+0041 
+0042 <span class="comment">% Compute terms</span>
+0043 
+0044 dphix=<a href="#_sub1" class="code" title="subfunction dph=dphase(phib,phik,mtune)">dphase</a>(avemu(jbpm,1),avemu(jcor,1),mtx);
+0045 dphiz=<a href="#_sub1" class="code" title="subfunction dph=dphase(phib,phik,mtune)">dphase</a>(avemu(jbpm,2),avemu(jcor,2),mtz);
+0046 
+0047 fx=-avebeta(jcor,ones(1,nbpm))'.*complex(cos(2*dphix),sin(2*dphix))./<span class="keyword">...</span>
+0048     (1-complex(cos(2*mtx),sin(2*mtx)))/8;
+0049 
+0050 fz= avebeta(jcor,2*ones(1,nbpm))'.*complex(cos(2*dphiz),sin(2*dphiz))./<span class="keyword">...</span>
+0051     (1-complex(cos(2*mtz),sin(2*mtz)))/8;
+0052 
+0053     <a name="_sub1" href="#_subfunctions" class="code">function dph=dphase(phib,phik,mtune)</a>
+0054         nb=length(phib);
+0055         nk=length(phik);
+0056         dph=phik(:,ones(nb,1))'-phib(:,ones(1,nk));
+0057         neg=(dph &lt; 0);
+0058         dph(neg)=dph(neg)+mtune;
+0059     <span class="keyword">end</span>
+0060 
+0061 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

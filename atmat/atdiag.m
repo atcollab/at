@@ -1,10 +1,11 @@
 function atdiag
-%ATDIAG - test AT intallation
+%ATDIAG Tests AT intallation
+
 try
     disp('>> spear3;')
-    spear3;
+    ring = spear3;
     disp('>> plotbeta');
-    plotbeta;
+    atplot(ring);
     disp('If you see beta-function plots, AT is installed correctly')
 catch
     disp('AT was not installed correctly')

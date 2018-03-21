@@ -1,0 +1,141 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of testdispersioncorrection</title>
+  <meta name="keywords" content="testdispersioncorrection">
+  <meta name="description" content="test errors and correction functions">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">correction</a> &gt; <a href="index.html">dispersion</a> &gt; testdispersioncorrection.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/correction/dispersion&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>testdispersioncorrection
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>test errors and correction functions</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> test errors and correction functions</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="atcorrectdispersion.html" class="code" title="function [rcor,inCOD,qs,ss]=atcorrectdispersion(rerr,indBPM,indQCor,indSCor,inCOD,neigSteerer,correctflags,scalefactor,ModelRM,refdispersion,correctorslimit,printouttext)">atcorrectdispersion</a>	function [...</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% test errors and correction functions</span>
+0002 close all
+0003 clear all
+0004 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions'</span>);
+0005 
+0006 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/correction/'</span>);
+0007 addpath(<span class="string">'/mntdirect/_machfs/liuzzo/CODE/LatticeTuningFunctions/errors/'</span>);
+0008 
+0009 <span class="comment">% load lattice</span>
+0010 load ESRFLattice.mat
+0011 
+0012 <span class="comment">%% get RM</span>
+0013 speclab=<span class="string">'DispersionESRF'</span>;
+0014 
+0015 modelrmfile=fullfile(pwd,[<span class="string">'RMmodel'</span> speclab <span class="string">'.mat'</span>]);<span class="comment">%</span>
+0016 
+0017 <span class="keyword">if</span> ~exist([modelrmfile],<span class="string">'file'</span>)
+0018     
+0019     ModelRM<span class="keyword">...</span>
+0020         =getresponsematrices(<span class="keyword">...</span>
+0021         ring,<span class="keyword">...</span>
+0022         indBPM,<span class="keyword">...</span>
+0023         indHCor,<span class="keyword">...</span>
+0024         indVCor,<span class="keyword">...</span>
+0025         indSCor,<span class="keyword">...</span>
+0026         indQCor,<span class="keyword">...</span>
+0027         [],<span class="keyword">...</span>
+0028         [0 0 0 0 0 0]',<span class="keyword">...</span>
+0029         [9 10 11]);
+0030     
+0031     save([modelrmfile],<span class="string">'ModelRM'</span>);
+0032 <span class="keyword">else</span>
+0033     load([modelrmfile],<span class="string">'ModelRM'</span>);
+0034 <span class="keyword">end</span>
+0035 
+0036 <span class="comment">% set errors</span>
+0037 ind=find(atgetcells(ring,<span class="string">'Class'</span>,<span class="string">'Quadrupole'</span>,<span class="string">'Sextupole'</span>));
+0038 dx=5e-6*randn(size(ind));
+0039 dy=5e-6*randn(size(ind));
+0040 dr=5e-6*randn(size(ind));
+0041 
+0042 rerr=atsetshift(ring,ind,dx,dy);
+0043 rerr=atsettilt(rerr,ind,dr);
+0044 
+0045 <span class="comment">%% apply correction</span>
+0046 inCOD=[0 0 0 0 0 0]';
+0047 [l,~,~]=atlinopt(ring,0,indBPM);
+0048 refdispersion=zeros(2,length(indBPM));
+0049 refdispersion(1,:)=arrayfun(@(a)a.Dispersion(1),l);
+0050 refdispersion(2,:)=arrayfun(@(a)a.Dispersion(3),l);
+0051 
+0052 
+0053 [rcor,inCOD,hs,vs]=<a href="atcorrectdispersion.html" class="code" title="function [rcor,inCOD,qs,ss]=atcorrectdispersion(rerr,indBPM,indQCor,indSCor,inCOD,neigSteerer,correctflags,scalefactor,ModelRM,refdispersion,correctorslimit,printouttext)">atcorrectdispersion</a>(<span class="keyword">...</span>
+0054     rerr,<span class="keyword">...</span>
+0055     indBPM,<span class="keyword">...</span>
+0056     indQCor,<span class="keyword">...</span>
+0057     indSCor,<span class="keyword">...</span>
+0058     inCOD,<span class="keyword">...</span>
+0059     [floor(linspace(20,250,7));<span class="keyword">...</span>
+0060      floor(linspace(20,250,7))]',<span class="keyword">...</span>
+0061     [false true],<span class="keyword">...</span>
+0062     1.0,<span class="keyword">...</span>
+0063     ModelRM,<span class="keyword">...</span>
+0064     refdispersion,<span class="keyword">...</span>
+0065     [],<span class="keyword">...</span>
+0066     true);
+0067 
+0068 alpha=mcf(rerr);
+0069 indrfc=find(atgetcells(rerr,<span class="string">'Frequency'</span>));
+0070      delta=1e-4;
+0071 <span class="comment">% get initial dispersion</span>
+0072 o=finddispersion6Err(rerr,indBPM,indrfc,alpha,delta,inCOD);
+0073 oxe=o(1,:);
+0074 oye=o(3,:);
+0075 
+0076 o=finddispersion6Err(rcor,indBPM,indrfc,alpha,delta,inCOD);
+0077 oxc=o(1,:);
+0078 oyc=o(3,:);
+0079 
+0080 sBPM=findspos(rcor,indBPM);
+0081 figure;subplot(2,1,1);
+0082 plot(sBPM,oxe-refdispersion(1,:),<span class="string">'.-'</span>);hold on; plot(sBPM,oxc-refdispersion(1,:),<span class="string">'.-'</span>);
+0083 legend(<span class="string">'before'</span>,<span class="string">'after'</span>);
+0084 xlabel(<span class="string">'s [m]'</span>);
+0085 ylabel(<span class="string">'hor. disp - model'</span>);
+0086 subplot(2,1,2);
+0087 plot(sBPM,oye-refdispersion(2,:),<span class="string">'.-'</span>);hold on; plot(sBPM,oyc-refdispersion(2,:),<span class="string">'.-'</span>);
+0088 legend(<span class="string">'before'</span>,<span class="string">'after'</span>);
+0089 xlabel(<span class="string">'s [m]'</span>);
+0090 ylabel(<span class="string">'ver. disp'</span>);
+0091 saveas(gca,<span class="string">'DispCor.fig'</span>);
+0092 export_fig(<span class="string">'DispCor.jpg'</span>,<span class="string">'-r300'</span>);
+0093  
+0094  <span class="keyword">return</span></pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

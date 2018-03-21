@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of setBpmOffsetOnDipoleRef</title>
+  <meta name="keywords" content="setBpmOffsetOnDipoleRef">
+  <meta name="description" content="% set bpm on curve defined by dipole misalignments">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">errorsmanipulation</a> &gt; setBpmOffsetOnDipoleRef.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/errorsmanipulation&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>setBpmOffsetOnDipoleRef
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>% set bpm on curve defined by dipole misalignments</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function rerr=setBpmOffsetOnDipoleRef(rerr) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> % set bpm on curve defined by dipole misalignments
+
+see also: ApplyErrorsRand</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="GetExistingErrors.html" class="code" title="function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin)">GetExistingErrors</a>	this function retrives 6 vectors, for x, y,s misalignments,</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function rerr=setBpmOffsetOnDipoleRef(rerr)</a>
+0002 <span class="comment">% % set bpm on curve defined by dipole misalignments</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%see also: ApplyErrorsRand</span>
+0005 
+0006 inddip=findcells(rerr,<span class="string">'BendingAngle'</span>);
+0007 indbpm=findcells(rerr,<span class="string">'Class'</span>,<span class="string">'Monitor'</span>);
+0008 
+0009 [X,Y,~,T,~,~,bpmerr]=<a href="GetExistingErrors.html" class="code" title="function [X,Y,S,T,R,P,bpmerrors]=GetExistingErrors(THERING,varargin)">GetExistingErrors</a>(rerr,inddip);
+0010     
+0011 indbpm=[indbpm(end) indbpm indbpm(1)]; <span class="comment">% last and first bpm</span>
+0012     
+0013 sposBPM=findspos(rerr,indbpm);
+0014 sposDip=findspos(rerr,inddip);
+0015 
+0016 offx=interp1(sposDip,X,sposBPM);offx(isnan(offx))=0;
+0017 offy=interp1(sposDip,Y,sposBPM);offy(isnan(offy))=0;
+0018 offr=interp1(sposDip,T,sposBPM);offr(isnan(offr))=0;
+0019 
+0020 rerr=setcellstruct(rerr,<span class="string">'Offset'</span>,indbpm(2:end-1),bpmerr.offsetx-offx(2:end-1),1,1);
+0021 rerr=setcellstruct(rerr,<span class="string">'Offset'</span>,indbpm(2:end-1),bpmerr.offsetx-offy(2:end-1),1,2);
+0022 rerr=setcellstruct(rerr,<span class="string">'Rotation'</span>,indbpm(2:end-1),bpmerr.rotation-offr(2:end-1)*0,1,1);<span class="comment">% NO ROTATION!! *0</span>
+0023 
+0024 disp(<span class="string">'BPMs on dipole positions curve'</span>);
+0025 
+0026 <span class="keyword">return</span>
+0027</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

@@ -1,12 +1,32 @@
 function  [xref,zref] = atreforbit(ring)
-%ATREFORBIT computes the coordinates of the local referential
-%           It allows plotting functions (trajectory/orbit) to plot through
-%           displaced elements
+%ATREFORBIT Keep track of the nominal reference orbit through displaced elements
 %
-%[XREF,ZREF]=ATREFORBIT(RING)
+%Element displacement vectors T1 and T2 are often used to introduce positioning
+%errors of elements. When plotting the resulting closed orbit or trajectories,
+%it is useful to plot positions with respect to the theoretical reference rather
+%than to the displaced reference. This function generates reference coordinates
+%xref and zref so that:
 %
-%RING:	 AT structure
+%- R(1) and R(3) are the particles horizontal and vertical positions with
+%respect to the actual (displaced) reference,
 %
+%- R(1)+xref and R(3)+zref are the positions with respect to the ideal reference.
+%
+%If any of T1 or T2 is part of the design of the ring, the reference
+%translation can be skipped by setting a field 'hideT1' or 'hideT2' on the
+%element.
+%
+%  INPUTS
+%  1. ring Ring structure
+%
+%  OUTPUTS
+%  1. xref Horizontal reference orbit shift
+%  2. zref Vertical reference orbit shift
+%
+%  EXAMPLE
+%  1. [XREF,ZREF]=ATREFORBIT(RING)
+%
+%  See also atplot
 
 xzc=[0;0];
 slope=[0;0];
@@ -39,7 +59,7 @@ zref=[0;zz];
 %     end
     function hvkick(T1)
         xzc=xzc-T1([1 3]);
-        slope=slope-tan(T1([2 4]));
+        slope=slope-T1([2 4]);
     end
 end
 

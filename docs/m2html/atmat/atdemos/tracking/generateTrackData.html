@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of generateTrackData</title>
+  <meta name="keywords" content="generateTrackData">
+  <meta name="description" content="give some initial coordinates.  Track through sample lattices.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">atmat</a> &gt; <a href="../index.html">atdemos</a> &gt; <a href="index.html">tracking</a> &gt; generateTrackData.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/atdemos/tracking&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>generateTrackData
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>give some initial coordinates.  Track through sample lattices.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">give some initial coordinates.  Track through sample lattices.
+Store results for tracking tests.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%give some initial coordinates.  Track through sample lattices.</span>
+0002 <span class="comment">%Store results for tracking tests.</span>
+0003 xextent = 0.003;
+0004 yextent = 0.003;
+0005 deltaextent = 0.02;
+0006 n = 10;
+0007 Z0=[];
+0008 <span class="keyword">for</span> j=-n:n
+0009     <span class="keyword">for</span> k=-n:n
+0010         <span class="keyword">for</span> l=-n:n
+0011         x0=j*xextent/n;
+0012         y0=k*yextent/n;
+0013         delta0=l*deltaextent/n;
+0014         PS0=[x0;0;y0;0;deltaextent;0];
+0015         Z0=[Z0,PS0];
+0016         <span class="keyword">end</span>
+0017     <span class="keyword">end</span>
+0018 <span class="keyword">end</span>
+0019 <span class="comment">%Now, load each lattice and track</span>
+0020 dba_ring=dba;
+0021 FODO_ring=FODO;
+0022 AS_ring=australian_synchrotron;
+0023 esrf_ring=esrf;
+0024 soleil_ring=soleil;
+0025 thomx_ring=thomx;
+0026 
+0027 Z1_dba=ringpass(dba_ring,Z0,1);
+0028 Z1_FODO=ringpass(FODO_ring,Z0,1);
+0029 Z1_AS=ringpass(AS_ring,Z0,1);
+0030 Z1_esrf=ringpass(esrf_ring,Z0,1);
+0031 Z1_soleil=ringpass(soleil_ring,Z0,1);
+0032 Z1_thomx=ringpass(thomx_ring,Z0,1);
+0033 
+0034 save(<span class="string">'trackTestData.mat'</span>,<span class="string">'Z0'</span>,<span class="string">'Z1_dba'</span>,<span class="string">'Z1_FODO'</span>,<span class="string">'Z1_AS'</span>,<span class="string">'Z1_esrf'</span>,<span class="string">'Z1_soleil'</span>,<span class="string">'Z1_thomx'</span>)</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

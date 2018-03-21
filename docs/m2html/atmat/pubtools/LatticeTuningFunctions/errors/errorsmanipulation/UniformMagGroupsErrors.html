@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of UniformMagGroupsErrors</title>
+  <meta name="keywords" content="UniformMagGroupsErrors">
+  <meta name="description" content="function ring=UniformMagGroupsErrors(ring)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="../../../../index.html">atmat</a> &gt; <a href="../../../index.html">pubtools</a> &gt; <a href="../../index.html">LatticeTuningFunctions</a> &gt; <a href="../index.html">errors</a> &gt; <a href="index.html">errorsmanipulation</a> &gt; UniformMagGroupsErrors.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for atmat/pubtools/LatticeTuningFunctions/errors/errorsmanipulation&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>UniformMagGroupsErrors
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function ring=UniformMagGroupsErrors(ring)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function ring=UniformMagGroupsErrors(ring) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function ring=UniformMagGroupsErrors(ring)
+
+ makes T1, R1, DeltaS and Tilt error in a mag group 
+ identical to the ones on the first element of the group. 
+ 
+ Groups are defined in the lattice by the MagNum Field
+
+see also: <a href="getMagGroupsFromMagNum.html" class="code" title="function maggroups=getMagGroupsFromMagNum(r)">getMagGroupsFromMagNum</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="getMagGroupsFromMagNum.html" class="code" title="function maggroups=getMagGroupsFromMagNum(r)">getMagGroupsFromMagNum</a>	GETMAGGROUPSFROMMAGNUM - Gets magnet from a Magnet group</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ring=UniformMagGroupsErrors(ring)</a>
+0002 <span class="comment">% function ring=UniformMagGroupsErrors(ring)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% makes T1, R1, DeltaS and Tilt error in a mag group</span>
+0005 <span class="comment">% identical to the ones on the first element of the group.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Groups are defined in the lattice by the MagNum Field</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%see also: getMagGroupsFromMagNum</span>
+0010 
+0011 mag_groups=<a href="getMagGroupsFromMagNum.html" class="code" title="function maggroups=getMagGroupsFromMagNum(r)">getMagGroupsFromMagNum</a>(ring);
+0012 
+0013 <span class="keyword">for</span> i=1:length(mag_groups)
+0014     
+0015     <span class="comment">% group indexes</span>
+0016     ind=mag_groups{i};
+0017     <span class="keyword">if</span> length(ind)&gt;1
+0018         
+0019         <span class="comment">% get first element errors</span>
+0020         <span class="keyword">if</span> isfield(ring{ind(1)},<span class="string">'T1'</span>)
+0021             T1=ring{ind(1)}.T1;
+0022         <span class="keyword">else</span>
+0023             T1=zeros(6,1);
+0024         <span class="keyword">end</span>
+0025         
+0026         <span class="keyword">if</span> isfield(ring{ind(1)},<span class="string">'T2'</span>)
+0027             T2=ring{ind(1)}.T2;
+0028         <span class="keyword">else</span>
+0029             T2=zeros(6,1);
+0030         <span class="keyword">end</span>
+0031         
+0032         <span class="keyword">if</span> isfield(ring{ind(1)},<span class="string">'R1'</span>)
+0033             R1=ring{ind(1)}.R1;
+0034         <span class="keyword">else</span>
+0035             R1=eye(6,6);
+0036         <span class="keyword">end</span>
+0037         
+0038         <span class="keyword">if</span> isfield(ring{ind(1)},<span class="string">'R2'</span>)
+0039             R2=ring{ind(1)}.R2;
+0040         <span class="keyword">else</span>
+0041             R2=eye(6,6);
+0042         <span class="keyword">end</span>
+0043         
+0044         <span class="keyword">if</span> isfield(ring{ind(1)},<span class="string">'Tilt'</span>)
+0045             Tilt=ring{ind(1)}.Tilt;
+0046         <span class="keyword">else</span>
+0047             Tilt=0;
+0048         <span class="keyword">end</span>
+0049         
+0050         <span class="keyword">if</span> isfield(ring{ind(1)},<span class="string">'DeltaS'</span>)
+0051             DeltaS=ring{ind(1)}.DeltaS;
+0052         <span class="keyword">else</span>
+0053             DeltaS=0;
+0054         <span class="keyword">end</span>
+0055         
+0056         
+0057         <span class="keyword">for</span> isl=1:length(ind)
+0058             
+0059             <span class="comment">% set all other slices to this value</span>
+0060             ring{ind(isl)}.T1=T1;
+0061             ring{ind(isl)}.T2=T2;
+0062             ring{ind(isl)}.R1=R1;
+0063             ring{ind(isl)}.R2=R2;
+0064             ring{ind(isl)}.Tilt=Tilt;
+0065             ring{ind(isl)}.DeltaS=DeltaS;
+0066             
+0067         <span class="keyword">end</span>
+0068     <span class="keyword">end</span>
+0069     
+0070 <span class="keyword">end</span>
+0071 
+0072</pre></div>
+<hr><address>Generated on Mon 05-Mar-2018 10:51:40 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

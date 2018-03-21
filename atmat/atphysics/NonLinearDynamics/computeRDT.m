@@ -1,5 +1,5 @@
 function RDT=computeRDT(ring, index, varargin)
-%
+%COMPUTERDT Computes Hamiltonian resonance driving terms (RDTs)
 %   This function calls RDTElegantAT mex function and returns the
 %   hamiltonian resonance driving terms, using the elegant c++ 
 %   function computeDrivingTerms().
