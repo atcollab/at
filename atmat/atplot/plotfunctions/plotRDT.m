@@ -1,4 +1,14 @@
 function plotdata = plotRDT(lindata,ring,dpp, varargin)
+%
+%  plotRDT plots the absolute value of the hamiltonian terms
+%  plotRDT must be used with atplot:
+%  
+%  atplot(ring,@plotRDT,'geometric1') plots the first order geometric terms
+%  atplot(ring,@plotRDT,'chromatic') plots the chromatic terms
+%  atplot(ring,@plotRDT,'geometric2') plots the second order geometric terms
+%  atplot(ring,@plotRDT,'coupling') plots the coupling terms
+%  
+%  see also: computeRDT, atplot
 
 naddvar=length(varargin);
 chromatic=0;
@@ -21,8 +31,8 @@ if(naddvar>0)
         case 'tuneshifts'
             tuneshifts=1;
         otherwise
-            disp(['The first input must be one of these:']);
-            disp('''chromatic'', ''coupling'', ''geometric1'', ''geometric2'', ''tuneshifts''');
+            disp('The first input must be one of these:');
+            disp('''chromatic'', ''coupling'', ''geometric1'', ''geometric2''');
             disp('your input will be considered ''geometric1''');
             geometric1=1;
     end
