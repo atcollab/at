@@ -11,7 +11,7 @@ extern "C"
 
 /* field metadata */
 
-static char * FieldNames[] = 
+static const char * FieldNames[] =
 {
     "PolynomA",
     "PolynomB",
@@ -28,11 +28,11 @@ static char * FieldNames[] =
     "T2"
 };
 
-static char * FirstOptionalName = "gK";
+static const char * FirstOptionalName = "gK";
 
 #define NUM_FIELDS_2_REMEMBER (sizeof(FieldNames) / sizeof(FieldNames[0]))
 
-static int Lookup_Field(char * name, const mxArray *ElemData, int optional)
+static int Lookup_Field(const char * name, const mxArray *ElemData, int optional)
 {
     char buffer[1024];
     int fnum = mxGetFieldNumber(ElemData, name);
@@ -67,7 +67,7 @@ static void Lookup_Fields(const mxArray *ElemData, int * Index)
     int optional = 0;
     for(n = 0; n < NUM_FIELDS_2_REMEMBER; n++)
     {
-        char * name = FieldNames[n];
+        const char * name = FieldNames[n];
         if(strcmp(name, FirstOptionalName) == 0)
         {
             optional = 1;
@@ -175,7 +175,7 @@ static void ShowFields(int nlhs, mxArray **plhs)
     int count_optional = 0;
     for(n = 0; n < NUM_FIELDS_2_REMEMBER; n++)
     {
-        char * name = FieldNames[n];
+        const char * name = FieldNames[n];
         if(strcmp(name, FirstOptionalName) == 0)
         {
             optional = 1;
