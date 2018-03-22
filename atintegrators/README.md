@@ -10,7 +10,7 @@ The components of an integrator are as follows, illustrated by the pass
 method DriftPass:
 
 
-###Element parameters
+### Element parameters
 
 The names and types required by the element using a pass method are defined
 in a struct:
@@ -27,7 +27,7 @@ in a struct:
     };
 
 
-###Physics calculation
+### Physics calculation
 
 Each pass method should have a function that takes the array r_in representing 
 the input particles plus the parameters defined in the struct and alters the
@@ -45,7 +45,7 @@ particles in place:
 
 This function should not use any Matlab or Python functionality.
 
-###Track function
+### Track function
 
 The function trackFunction will be used either by Python or Matlab, and uses
 generic functions defined in atelem.c. Those functions have implementations
@@ -67,7 +67,7 @@ For PYAT builds, you need to include
 This does setup for Python imports.
 
 
-###Mex function
+### Mex function
 
 This is defined only for Matlab builds and allows you to call the integrator
 directly from Matlab:
