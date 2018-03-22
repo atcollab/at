@@ -110,7 +110,7 @@ end
         tuneper=lindata(end).mu/2/pi;			% tunes
         tunes=periods*tuneper;                  % tunes
         
-        momcompact=mcf(ring);                   % momentum compaction
+        momcompact=mcf(ring,dpp);                   % momentum compaction
         
         chromaticity=[periods*xsi;xsi./tuneper];		% chromaticity
         
