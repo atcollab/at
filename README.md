@@ -1,7 +1,7 @@
 Installation
 ------------
 
-See the `INSTALL` document.
+See the `INSTALL.md` document.
 
 Online documentation
 --------------------
