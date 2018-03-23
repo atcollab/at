@@ -2,20 +2,24 @@ The AT code in this repository evolved from version 1.3 of the original code and
 involving people from different research institutes. 
 The latest release can be found `here <https://github.com/atcollab/at/releases>`.
 
-Prerequisites:
+Installation process:
+
 1. install git on your computer
-2. download the latest version
 
->> git clone https://github.com/atcollab/at.git
+2. download the latest version of AT
+$ git clone https://github.com/atcollab/at.git
 
-3. go in atmat directory
+3. start Matlab
 
-4. Compile all mexfunctions
+4. go in atmat directory
+>> cd at/atmat
+
+5. Compile all mexfunctions
 >> atmexall
 
-5. Update helpfiles
->> at atupdateContents
+6. Update helpfiles
+>> atupdateContents
 
-athelp list all main functions
+You can now use athelp to list all main functions
 
-6. Update html doc
+6. Update html doc - not yet documented.
