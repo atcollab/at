@@ -1,14 +1,15 @@
 function newring=atfittune(ring,varargin)
 %ATFITTUNE fits linear tunes by scaling 2 quadrupole families
-% NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+% NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2,TOTALTUNE)
 %
-% NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+% NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2,TOTALTUNE)
 %
 %RING:          Cell array
 %DPP:           Optional momentum deviation (default 0)
 %NEWTUNES:      Desired tune values (fractional part only)
 %QUADFAMILY1:   1st quadrupole family
 %QUADFAMILY2:   2nd quadrupole family
+%TOTALTUNE:     boolean flag. if true fit the total tune (default false)
 %
 %QUADFAMILY may be:
 %   string: Family name
@@ -18,28 +19,53 @@ function newring=atfittune(ring,varargin)
 
 if isscalar(varargin{1}) && isnumeric(varargin{1})
     dpp=varargin{1};
-    [newtunes,famname1,famname2]=deal(varargin{2:end});
+    
+    if nargin==5        
+        [newtunes,famname1,famname2]=deal(varargin{2:end});
+        totaltune=false;
+    else
+        [newtunes,famname1,famname2,totaltune]=deal(varargin{2:end});
+    end
 else
     dpp=0;
-    [newtunes,famname1,famname2]=deal(varargin{:});
+    
+    if nargin==4
+        [newtunes,famname1,famname2]=deal(varargin{:});
+        totaltune=false;
+    else
+        [newtunes,famname1,famname2,totaltune]=deal(varargin{:});
+    end
 end
  
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
-newtunes=newtunes-floor(newtunes);
+if ~totaltune
+    newtunes=newtunes-floor(newtunes);
+end
 
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{2});
 if true
     delta = 1e-6;
 
-    % Compute initial tunes before fitting
-    [lindata, tunes] = atlinopt(ring,dpp); %#ok<ASGLU>
-
-    % Take Derivative
-    [lindata, tunes1] = atlinopt(setqp(ring,idx1,kl1,delta),dpp); %#ok<ASGLU>
-    [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),dpp); %#ok<ASGLU>
-
+    if ~totaltune
+        % Compute initial tunes before fitting
+        [lindata, tunes] = atlinopt(ring,dpp); %#ok<ASGLU>
+        
+        % Take Derivative
+        [lindata, tunes1] = atlinopt(setqp(ring,idx1,kl1,delta),dpp); %#ok<ASGLU>
+        [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),dpp); %#ok<ASGLU>
+    else
+        % Compute initial tunes before fitting
+        lr=length(ring);
+        lindata = atlinopt(ring,dpp,1:lr); %#ok<ASGLU>
+        tunes=lindata(lr).mu/2/pi;
+        % Take Derivative
+        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lr); %#ok<ASGLU>
+        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lr); %#ok<ASGLU>
+        tunes1=lindata1(end).mu/2/pi;
+        tunes2=lindata2(end).mu/2/pi;
+    end
     %Construct the Jacobian
     J = ([tunes1(:) tunes2(:)] - [tunes(:) tunes(:)])/delta;
     dK = J\(newtunes(:)-tunes(:));
