@@ -6,10 +6,10 @@ function newring=atfittune(ring,varargin)
 %
 %RING:          Cell array
 %DPP:           Optional momentum deviation (default 0)
-%NEWTUNES:      Desired tune values (fractional part only)
+%NEWTUNES:      Desired tune values
 %QUADFAMILY1:   1st quadrupole family
 %QUADFAMILY2:   2nd quadrupole family
-%TOTALTUNE:     boolean flag. if true fit the total tune (default false)
+%TOTALTUNE:     if true the function fits the total tune (default false)
 %
 %QUADFAMILY may be:
 %   string: Family name
@@ -58,13 +58,13 @@ if true
     else
         % Compute initial tunes before fitting
         lr=length(ring);
-        lindata = atlinopt(ring,dpp,1:lr); %#ok<ASGLU>
-        tunes=lindata(lr).mu/2/pi;
+        lindata = atlinopt(ring,dpp,1:lr+1); %#ok<ASGLU>
+        tunes=lindata(lr+1).mu/2/pi;
         % Take Derivative
-        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lr); %#ok<ASGLU>
-        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lr); %#ok<ASGLU>
-        tunes1=lindata1(end).mu/2/pi;
-        tunes2=lindata2(end).mu/2/pi;
+        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lr+1); %#ok<ASGLU>
+        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lr+1); %#ok<ASGLU>
+        tunes1=lindata1(lr+1).mu/2/pi;
+        tunes2=lindata2(lr+1).mu/2/pi;
     end
     %Construct the Jacobian
     J = ([tunes1(:) tunes2(:)] - [tunes(:) tunes(:)])/delta;
