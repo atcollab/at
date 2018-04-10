@@ -35,8 +35,8 @@ idx2=varelem(ring,famname2);
 if ~UseIntegerPart
     if newtunes(1)>1 || newtunes(2)>1
         warning('you passed also the integer part of the tunes, but it is ignored when you don''t use the flag ''UseIntegerPart''');
+        newtunes=newtunes-floor(newtunes);
     end
-    newtunes=newtunes-floor(newtunes);
 end
 
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
