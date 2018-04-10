@@ -57,14 +57,14 @@ if true
         [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),dpp); %#ok<ASGLU>
     else
         % Compute initial tunes before fitting
-        lr=length(ring);
-        lindata = atlinopt(ring,dpp,1:lr+1); %#ok<ASGLU>
-        tunes=lindata(lr+1).mu/2/pi;
+        lastpos=length(ring)+1;
+        lindata = atlinopt(ring,dpp,1:lastpos); %#ok<ASGLU>
+        tunes=lindata(lastpos).mu/2/pi;
         % Take Derivative
-        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lr+1); %#ok<ASGLU>
-        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lr+1); %#ok<ASGLU>
-        tunes1=lindata1(lr+1).mu/2/pi;
-        tunes2=lindata2(lr+1).mu/2/pi;
+        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lastpos); %#ok<ASGLU>
+        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lastpos); %#ok<ASGLU>
+        tunes1=lindata1(lastpos).mu/2/pi;
+        tunes2=lindata2(lastpos).mu/2/pi;
     end
     %Construct the Jacobian
     J = ([tunes1(:) tunes2(:)] - [tunes(:) tunes(:)])/delta;
