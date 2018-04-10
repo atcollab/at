@@ -1,45 +1,41 @@
 function newring=atfittune(ring,varargin)
 %ATFITTUNE fits linear tunes by scaling 2 quadrupole families
-% NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2,TOTALTUNE)
-%
-% NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2,TOTALTUNE)
+% NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
+% NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
 %
 %RING:          Cell array
 %DPP:           Optional momentum deviation (default 0)
 %NEWTUNES:      Desired tune values
 %QUADFAMILY1:   1st quadrupole family
 %QUADFAMILY2:   2nd quadrupole family
-%TOTALTUNE:     if true the function fits the total tune (default false)
 %
 %QUADFAMILY may be:
 %   string: Family name
 %   logical array: mask of selected elements in RING
 %   Numeric array: list of selected elements in RING
 %   Cell array: All elements selected by each cell
+%
+% NEWRING = ATFITTUNE(RING,...,'UseIntegerPart') Whith this flag, the 
+% function fits the tunes to the total values of NEWTUNES, including 
+% the integer part.
+% With this option the function is substantially slower!
+%
 
+[UseIntegerPart,varargin]=getflag(varargin,'UseIntegerPart');
 if isscalar(varargin{1}) && isnumeric(varargin{1})
     dpp=varargin{1};
-    
-    if nargin==5        
-        [newtunes,famname1,famname2]=deal(varargin{2:end});
-        totaltune=false;
-    else
-        [newtunes,famname1,famname2,totaltune]=deal(varargin{2:end});
-    end
+    [newtunes,famname1,famname2]=deal(varargin{2:end});
 else
     dpp=0;
-    
-    if nargin==4
-        [newtunes,famname1,famname2]=deal(varargin{:});
-        totaltune=false;
-    else
-        [newtunes,famname1,famname2,totaltune]=deal(varargin{:});
-    end
+    [newtunes,famname1,famname2]=deal(varargin{:});
 end
- 
+
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
-if ~totaltune
+if ~UseIntegerPart
+    if newtunes(1)>1 || newtunes(2)>1
+        warning('you passed also the integer part of the tunes, but it is ignored when you don''t use the flag ''UseIntegerPart''');
+    end
     newtunes=newtunes-floor(newtunes);
 end
 
@@ -47,11 +43,9 @@ kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{2});
 if true
     delta = 1e-6;
-
-    if ~totaltune
+    if ~UseIntegerPart
         % Compute initial tunes before fitting
         [lindata, tunes] = atlinopt(ring,dpp); %#ok<ASGLU>
-        
         % Take Derivative
         [lindata, tunes1] = atlinopt(setqp(ring,idx1,kl1,delta),dpp); %#ok<ASGLU>
         [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),dpp); %#ok<ASGLU>
