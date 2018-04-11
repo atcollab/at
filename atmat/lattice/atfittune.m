@@ -15,7 +15,7 @@ function newring=atfittune(ring,varargin)
 %   Numeric array: list of selected elements in RING
 %   Cell array: All elements selected by each cell
 %
-% NEWRING = ATFITTUNE(RING,...,'UseIntegerPart') Whith this flag, the 
+% NEWRING = ATFITTUNE(RING,...,'UseIntegerPart') With this flag, the 
 % function fits the tunes to the total values of NEWTUNES, including 
 % the integer part.
 % With this option the function is substantially slower!
@@ -32,18 +32,16 @@ end
 
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
-if ~UseIntegerPart
-    if newtunes(1)>1 || newtunes(2)>1
-        warning('you passed also the integer part of the tunes, but it is ignored when you don''t use the flag ''UseIntegerPart''');
-        newtunes=newtunes-floor(newtunes);
-    end
-end
 
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{2});
 if true
     delta = 1e-6;
     if ~UseIntegerPart
+        if any(newtunes>=1)
+            warning('AT:FitTune','The integer part of the tunes is ignored unless you use the ''UseIntegerPart'' flag');
+            newtunes=newtunes-floor(newtunes);
+        end
         % Compute initial tunes before fitting
         [lindata, tunes] = atlinopt(ring,dpp); %#ok<ASGLU>
         % Take Derivative
@@ -52,11 +50,11 @@ if true
     else
         % Compute initial tunes before fitting
         lastpos=length(ring)+1;
-        lindata = atlinopt(ring,dpp,1:lastpos); %#ok<ASGLU>
+        lindata = atlinopt(ring,dpp,1:lastpos);
         tunes=lindata(lastpos).mu/2/pi;
         % Take Derivative
-        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lastpos); %#ok<ASGLU>
-        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lastpos); %#ok<ASGLU>
+        lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lastpos);
+        lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lastpos);
         tunes1=lindata1(lastpos).mu/2/pi;
         tunes2=lindata2(lastpos).mu/2/pi;
     end
@@ -65,7 +63,7 @@ if true
     dK = J\(newtunes(:)-tunes(:));
 else
     dK=0.01*fminsearch(@funtune,[0;0],...
-        optimset(optimset('fminsearch'),'Display','iter','TolX',1.e-5));
+        optimset(optimset('fminsearch'),'Display','iter','TolX',1.e-5)); %#ok<UNRCH>
 end
 newring = setqp(ring,idx1,kl1,dK(1));
 newring = setqp(newring,idx2,kl2,dK(2));
