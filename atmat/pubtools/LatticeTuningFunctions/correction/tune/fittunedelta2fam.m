@@ -51,20 +51,20 @@ frac=@(x)(x-floor(x));
 tef=frac(te);
 
 % impose change if tune close to integer or half integer
-if tef(1)<0.1
-    disp(' Qh<0.1')
+if tef(1)<0.05
+    disp(' Qh<0.05')
     te(1) = NaN;
 end
-if tef(2)<0.1
-    disp(' Qv<0.1')
+if tef(2)<0.05
+    disp(' Qv<0.05')
     te(2) = NaN;
 end
-if tef(1)>0.9
-    disp(' Qh > 0.9')
+if tef(1)>0.95
+    disp(' Qh > 0.95')
     te(1) = NaN;
 end
-if tef(2)>0.9
-    disp(' Qv > 0.9')
+if tef(2)>0.95
+    disp(' Qv > 0.95')
     te(2) = NaN;
 end
 if tef(1)>0.45 && tef(1)<0.55
@@ -104,7 +104,8 @@ if abs(te-WPtune) > [0.1 0.1] % slowly go to nominal tune
     for fracval=(0.75:-0.25:0)
         tt = WPtune+(te-WPtune)*fracval;
         
-        rerrt = atfittune(rerrt,frac(tt),qfidx,qdidx);
+        rerrt0=rerrt; % store lattice before change
+        rerrt = atfittune(rerrt,tt,qfidx,qdidx);
         
         % if tune set ok store improved lattice
         [b]=atlinopt(rerrt,0,1:length(rerrt)+1);
@@ -112,14 +113,29 @@ if abs(te-WPtune) > [0.1 0.1] % slowly go to nominal tune
         
         disp(['Intermediate tune: ' num2str(te,'%2.5f, ')]);
         
+        if abs(floor(te(1))-floor(WPtune(1)))~=0 || abs(floor(te(2))-floor(WPtune(2)))~=0  
+            disp('Integer tune is not correct. Use matching of total phase advance.')
+            rerrt=rerrt0; % back to before problems.
+        
+            rerrt=atmatchtunedelta(rerrt,WPtune,{qfidx, qdidx});
+            
+            [b]=atlinopt(rerrt,0,1:length(rerrt)+1);
+            te=b(end).mu/2/pi;
+            disp(['Intermediate tune: ' num2str(te,'%2.5f, ')]);
+            break; % stop loop.
+        end
+        
+        
         if isempty(find(isnan(te)==1,1))
             rerr = rerrt;
         end
+        
     end
     
 else
     % go in one shot
-    
+    disp('Single correction step');
+    rerrt0 = rerrt;
     rerrt = atfittune(rerrt,WPtune,qfidx,qdidx);
     
     disp(['Intermediate tune: ' num2str(te,'%2.5f, ')]);
@@ -127,6 +143,12 @@ else
     % if tune set ok store improved lattice
     [b]=atlinopt(rerrt,0,1:length(rerrt)+1);
     te=b(end).mu/2/pi;
+     
+    if abs(floor(te(1))-floor(WPtune(1)))~=0 || abs(floor(te(2))-floor(WPtune(2)))~=0  
+       disp('Integer tune is not correct. NO TUNE CHANGE.')
+       rerrt=rerrt0; % back to before problems.
+    end
+     
     if isempty(find(isnan(te)==1,1))
         rerr = rerrt;
     end
@@ -138,7 +160,7 @@ disp(['Final tune: ' num2str(tf,'%2.5f, ')]);
 
 % grant that integer tune is correct
 %disp(['check integer tune ok, match full tunes']);
-%rerr=atmatchtunedelta(rerr,WPtune,{qfidx, qdidx});
+rerr=atmatchtunedelta(rerr,WPtune,{qfidx, qdidx});
 
 %%
 if ~isempty(find(isnan(tf)==1,1))
@@ -155,8 +177,8 @@ end
 
 if ~isempty(find((tf-t0)>=0.1,1))
     disp('Corrected tune is >0.1 far from nominal')
-    rerr=rerr0;
-    error('Corrected tune is >0.1 far from nominal')
+    %rerr=rerr0;
+    warning('Corrected tune is >0.1 far from nominal')
 end
 
 end

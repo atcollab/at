@@ -1,12 +1,12 @@
 function arctune0=atmatchtunedelta(arc,tune,quadfams)
 % function arcchrom0=atmatchtunedelta(arc,c,quadfams)
-% 
-% arc    : at lattice 
+%
+% arc    : at lattice
 % tune      : tune to get (with integer part) size(tune)=[2,1]
 % quadfams: {[findcells(arc,'FamName','QF1','QF2')],...
 %          [findcells(arc,'FamName','QD1','QD2')] }
-% 
-% delta on quadrupole families 
+%
+% delta on quadrupole families
 %
 % fits the tune to the desired values, including the integer part.
 
@@ -15,11 +15,13 @@ function arctune0=atmatchtunedelta(arc,tune,quadfams)
 variabs=[];
 
 for iquadfams=1:length(quadfams)
-  KQ=cellfun(@(a)a.PolynomB(2),arc(quadfams{iquadfams}),'un',1);
-  variabs=[variabs, atVariableBuilder(arc,...
-    {@(r,DKquad)setcellstruct(r,'PolynomB',quadfams{iquadfams},KQ+DKquad,1,2)},...
-    {[1e-8]})]; %#ok<*AGROW>
+    KQ=cellfun(@(a)a.PolynomB(2),arc(quadfams{iquadfams}),'un',1);
+    variabs=[variabs, atVariableBuilder(arc,...
+        {@(r,DKquad)funDK(r,DKquad,quadfams{iquadfams},KQ)},...
+        {[1e-5]})]; %#ok<*AGROW>
 end
+
+
 
 ConstrQX=struct(...
     'Fun',@(~,ld,~)mux(ld),...
@@ -38,10 +40,22 @@ ConstrQY=struct(...
 % tol=1e-6;
 % arctune0=atmatch(arc,variabs,[ConstrQX ConstrQY],tol,5,3);%,@lsqnonlin); %
 
- tol=1e-8;
- arctune0=arc;
- arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,10,3,@lsqnonlin); %);%
- arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,50,3); %);%
+tol=1e-5;
+arctune0=arc;
+arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,15,3,@lsqnonlin); %);%
+% arctune0=atmatch(arctune0,variabs,[ConstrQX ConstrQY],tol,50,3); %);%
+
+return
+
+function r1 = funDK(r,DKquad,qfam,KQ)
+
+r1 = setcellstruct(r,'PolynomB',qfam,KQ*(1+DKquad),1,2);
+
+l=atlinopt(r1,0,1:length(r1)+1);
+
+if isnan(l(end).mu)
+    r1 = r;
+end
 
 return
 
