@@ -1,8 +1,8 @@
 function rp = ringpara(THERING,varargin)
 %RINGPARA Calculates various ring parameters
-%(1) The calculation of emittance, mcf, momentum spread, bunch length, damping time, etc 
+%(1) The calculation of emittance, mcf, momentum spread, bunch length, damping time, etc
 %is more accurate than atsummary.m because detailed
-%calculation of dispersion function and curly H function inside dipoles is performed. 
+%calculation of dispersion function and curly H function inside dipoles is performed.
 %(2) calculate contribution of dispersion to vertical emittance.
 %
 % rp = ringpara, use global THERING
@@ -30,15 +30,16 @@ function rp = ringpara(THERING,varargin)
 if nargin==0
     global THERING; %#ok<TLEV>
 end
-Cq = 3.8319E-13; 
+Cq = 3.8319E-13;
 a = findcells(THERING,'Energy');
 if isempty(a)
-   gamma = 3000/PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
+    gamma = 3000/PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
 else
-   gamma = THERING{a(1)}.Energy/(PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6); 
+    gamma = THERING{a(1)}.Energy/(PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6);
 end
 
 dpindex = findcells(THERING,'BendingAngle');
+len = length(dpindex);
 [tw,tune,chrom] = twissring(THERING,0,dpindex,'chrom',0.00001);
 beta = cat(1, tw.beta);
 alpha = cat(1, tw.alpha);
@@ -53,8 +54,22 @@ Dyp = disper(4:4:end);
 
 lendp = getcellstruct(THERING,'Length',dpindex); %bending magnet length
 lendp(lendp==0)=1;
-theta = getcellstruct(THERING,'BendingAngle',dpindex); %bending angle
-rho = lendp./theta;%THERING{dpindex(1)}.Length/THERING{dpindex(1)}.BendingAngle;
+thetadp = getcellstruct(THERING,'BendingAngle',dpindex); %bending angle
+
+% Sliced elements
+issliced=false(len,1);
+if not(isnumeric(thetadp))
+    rho=zeros(len,1);
+    theta=zeros(len,1);
+    for ii=1:len
+        issliced(ii)=numel(thetadp{ii})>1;
+    end
+    theta(not(issliced))=cell2mat(thetadp(not(issliced)));
+    rho(not(issliced))=lendp(not(issliced))./theta(not(issliced));
+else
+    theta=thetadp;
+    rho = lendp./theta;%THERING{dpindex(1)}.Length/THERING{dpindex(1)}.BendingAngle;
+end
 
 I1 = 0;
 I2 = 0;
@@ -62,36 +77,59 @@ I3 = 0;
 I4 = 0;
 I5 = 0;
 
-len = length(dpindex);
 curHavg1 = 1:len;
 for ii=1:len
-  if theta(ii) ~= 0.0
-      K = 0;
-      Kk = 0;
-      Kp = 0;
-      if isfield(THERING{dpindex(ii)},'K')
-          Kk = THERING{dpindex(ii)}.K;
-      end
-      if isfield(THERING{dpindex(ii)},'PolynomB')
-          Kp = THERING{dpindex(ii)}.PolynomB(2);
-      end
-      if Kk~=Kp && (Kk~=0 && Kp~=0)
-          warning('Values in K and PolynomB(2) are different. Using larger absolute value'); 
-      end
-      Ks=[Kk,Kp];
-      [~,i]=max(abs(Ks));
-      K=Ks(i);
-      
-    th1 = THERING{dpindex(ii)}.EntranceAngle;
-    th2 = THERING{dpindex(ii)}.ExitAngle;
-    [dI1,dI2,dI3,dI4,dI5,curHavg1(ii)] = calcRadInt(rho(ii),theta(ii), ...
-         alpha(ii,1),beta(ii,1),Dx(ii),Dxp(ii),K,th1,th2);
-    I1 = I1 + dI1;
-    I2 = I2 + dI2;
-    I3 = I3 + dI3;
-    I4 = I4 + dI4;
-    I5 = I5 + dI5;
-  end
+    if not(issliced(ii))
+        if theta(ii) ~= 0.0
+            Kk = 0;
+            Kp = 0;
+            if isfield(THERING{dpindex(ii)},'K')
+                Kk = THERING{dpindex(ii)}.K;
+            end
+            if isfield(THERING{dpindex(ii)},'PolynomB')
+                Kp = THERING{dpindex(ii)}.PolynomB(2);
+            end
+            if Kk~=Kp && (Kk~=0 && Kp~=0)
+                warning('Values in K and PolynomB(2) are different. Using larger absolute value');
+            end
+            Ks=[Kk,Kp];
+            [~,i]=max(abs(Ks));
+            K=Ks(i);
+            
+            th1 = THERING{dpindex(ii)}.EntranceAngle;
+            th2 = THERING{dpindex(ii)}.ExitAngle;
+            [dI1,dI2,dI3,dI4,dI5,curHavg1(ii)] = calcRadInt(rho(ii),theta(ii), ...
+                alpha(ii,1),beta(ii,1),Dx(ii),Dxp(ii),K,th1,th2);
+            I1 = I1 + dI1;
+            I2 = I2 + dI2;
+            I3 = I3 + dI3;
+            I4 = I4 + dI4;
+            I5 = I5 + dI5;
+        end
+    else
+        thetas=thetadp{ii};
+        lengths=THERING{dpindex(ii)}.Lengths;
+        theta(ii)=sum(thetas);
+        rhos = lengths./thetas;
+        rho(ii)=mean(rhos);
+        th1 = THERING{dpindex(ii)}.EntranceAngle;
+        th2 = THERING{dpindex(ii)}.ExitAngle;
+        K = THERING{dpindex(ii)}.PolynomB(2,:);
+        alpha_ini=alpha(ii,1);
+        beta_ini=beta(ii,1);
+        disp_ini=Dx(ii);
+        dispp_ini=Dxp(ii);
+        nsublen=numel(lengths);
+        for jj=1:nsublen
+            [dI1,dI2,dI3,dI4,dI5,curHavg1(ii),alpha_ini,beta_ini,disp_ini,dispp_ini] = calcRadInt(rhos(jj),thetas(jj), ...
+                alpha_ini,beta_ini,disp_ini,dispp_ini,K(jj),th1(jj),th2(jj));
+            I1 = I1 + dI1;
+            I2 = I2 + dI2;
+            I3 = I3 + dI3;
+            I4 = I4 + dI4;
+            I5 = I5 + dI5;
+        end 
+    end
 end
 % curHavg = sum(curHavg1.*lendp./abs(rho))/sum(lendp);
 % %emittx =  Cq*gamma^2*curHavg/Jx/rho*1e9; %nm-rad
@@ -101,7 +139,7 @@ alphac = I1/2/pi/R;
 U0 = 14.085*(gamma*PhysConstant.electron_mass_energy_equivalent_in_MeV.value/1000)^4*I2*1000.; %eV
 if nargin>=2
     fprintf('dipole radiation loss:  %4.5f keV\n', U0/1000.);
-    U0 = varargin{1}*1e6; %convert MeV to eV 
+    U0 = varargin{1}*1e6; %convert MeV to eV
 end
 sigma_E = gamma*sqrt(Cq*I3/(2*I2+I4));
 Jx = 1-I4/I2;
@@ -187,13 +225,13 @@ rp.delta_max = delta_max;
 %calculate vertical emittance
 %1. contribution of vertical dispersion
 curVavg1 = 1./beta(:,2).*(Dy.^2 + (beta(:,2).*Dyp + alpha(:,2).*Dy).^2);
-curVavg = sum(curVavg1.*lendp./abs(rho))/sum(lendp);
+curVavg = sum(curVavg1.*abs(theta))/sum(lendp);
 emitty_d = Cq*gamma^2*curVavg/Jy; %m-rad
 
 % %2. contribution of linear coupling resonance
-% [G,Delta] = calc_lcG(THERING); 
+% [G,Delta] = calc_lcG(THERING);
 % %emitty_c = emittx*abs(G)^2/(Delta^2+abs(G)^2);
-% emitty_c = emittx*abs(G)^2/Delta^2/2.0; 
+% emitty_c = emittx*abs(G)^2/Delta^2/2.0;
 % rp.emitty_c = emitty_c;
 
 rp.emitty_d = emitty_d;
@@ -234,31 +272,31 @@ if nargout == 0
     fprintf('   Synchrotron Tune:   %4.5f (%4.5f kHz or %4.2f turns) \n', rp.nus, rp.nus/rp.T0*1e-3, 1/rp.nus);
     fprintf('   Bunch Length:       %4.5f [mm], %4.5f [ps]\n', rp.bunchlength*1e3, rp.bunchlength/cspeed*1e12);
     fprintf('\n');
-%     fprintf('   Vertical Emittance:  %4.5f [nm]\n', rp.emitty*1e9);
-%     fprintf('   Emitty from Dy:  %4.5f [nm], from linear coupling: %4.5f\n', rp.emitty_d*1e9,rp.emitty_c*1e9);
+    %     fprintf('   Vertical Emittance:  %4.5f [nm]\n', rp.emitty*1e9);
+    %     fprintf('   Emitty from Dy:  %4.5f [nm], from linear coupling: %4.5f\n', rp.emitty_d*1e9,rp.emitty_c*1e9);
     fprintf('   Emitty from Dy:  %4.5f [nm]\n', rp.emitty_d*1e9);
     fprintf('   Emitty 1/gamma cone limit:  %4.5f [pm]\n', rp.emitty_lim*1e12);
 end
 
 
-function [dI1,dI2,dI3,dI4,dI5,curHavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)
+function [dI1,dI2,dI3,dI4,dI5,curHavg,ax,bx,dx,dpx] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)
 %[dI1,dI2,dI3,dI4,dI5,curHavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1)
-%calcuate the contribution to the radiation integrals of a dipole. 
+%calcuate the contribution to the radiation integrals of a dipole.
 %rho, theta, radius and angle of the dipole
-%a0, b0, are horizontal alpha and beta at the entrance of the dipole, 
+%a0, b0, are horizontal alpha and beta at the entrance of the dipole,
 %D0, D0p are dispersion at the entrace of the dipole
 %K1, the gradient parameter in AT's convention, i.e., positive for
 %horizontal focusing, K1=0 by default
 %th1, th2, the entrance and exit angle, respectively, th1=th2=theta/2 by
-%default. 
+%default.
 %
 
 if nargin==6
-   K1=0; 
+    K1=0;
 end
 if nargin<9
-   th1 = 0; %theta/2.0;
-   th2 = 0; %theta/2.0;
+    th1 = 0; %theta/2.0;
+    th2 = 0; %theta/2.0;
 end
 
 M21 = tan(th1)/rho;
@@ -270,12 +308,13 @@ th = (0:N)/N*theta;
 len = length(th);
 Dx = zeros(len,1); Dxp = zeros(len,1); curHavg1 = zeros(len,1);
 for ii=1:len
-       [Dx(ii), Dxp(ii)] = calcdisp(rho, th(ii), D0, D0p, K1);
-       [ax, bx] = calctwiss(rho, th(ii), a0, b0, K1);
-       curHavg1(ii) = (Dx(ii)^2+(ax*Dx(ii)+bx*Dxp(ii))^2)/bx;
+    [Dx(ii), Dxp(ii)] = calcdisp(rho, th(ii), D0, D0p, K1);
+    [ax, bx] = calctwiss(rho, th(ii), a0, b0, K1);
+    curHavg1(ii) = (Dx(ii)^2+(ax*Dx(ii)+bx*Dxp(ii))^2)/bx;
 end
 curHavg = ((curHavg1(1)+curHavg1(end))/2.0 + sum(curHavg1(2:end-1)))/(length(th)-1);
-
+dx=Dx(end);
+dpx=Dxp(end);
 dI1 = ((Dx(1) + Dx(end))/2.0 + sum(Dx(2:end-1)))*theta/N;
 dI2 = abs(theta/rho);
 dI3 = abs(theta/rho^2);
@@ -293,14 +332,14 @@ else %horizontal defocusing
     sqK = sqrt(-(1/rho^2+K1));
     Dx =  D0*cosh(sqK*s) + D0p/sqK*sinh(sqK*s)+(-1+cosh(sqK*s))/rho/sqK^2;
     Dxp = D0*sqK*sinh(sqK*s)+D0p*cosh(sqK*s)+sinh(sqK*s)/rho/sqK;
-
+    
 end
 
 function [ax, bx] = calctwiss(rho, theta, a0, b0, K1)
 %calculate twiss function inside a combined-function dipole manget
 Mx = calcMx(rho, K1,theta);
 g0 = (1+a0^2)/b0;
-twx2 = [Mx(1,1)^2, -2*Mx(1,1)*Mx(1,2), Mx(1,2)^2; 
+twx2 = [Mx(1,1)^2, -2*Mx(1,1)*Mx(1,2), Mx(1,2)^2;
     -Mx(1,1)*Mx(2,1), Mx(1,1)*Mx(2,2)+Mx(1,2)*Mx(2,1),-Mx(1,2)*Mx(2,2);
     Mx(2,1)^2, -2*Mx(2,1)*Mx(2,2),Mx(2,2)^2] * [b0, a0, g0]';
 ax = twx2(2);
