@@ -119,7 +119,7 @@ for i = 1:length(THERING)
         end
     end
 end
-hold all;plot(sdip,cumsum(curHavg1),'Marker','o');
+%hold all;plot(sdip,curHavg1,'Marker','.');
 % Damping numbers
 % Use Robinson's Theorem
 sum.damping(1) = 1 - sum.integrals(4)/sum.integrals(2);
