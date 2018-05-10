@@ -51,6 +51,7 @@ beta  = cat(1, TD.beta);
 alpha = cat(1, TD.alpha);
 gamma = (1 + alpha.^2) ./ beta;
 circ  = TD(length(THERING)+1).SPos;
+spos=cat(1,TD.SPos);
 
 % Synchrotron integral calculation
 sum.integrals = zeros(1,6);
@@ -58,26 +59,67 @@ sum.integrals = zeros(1,6);
 ii =0;
 for i = 1:length(THERING)
     if isfield(THERING{i}, 'BendingAngle') && isfield(THERING{i}, 'EntranceAngle')
+        theta=THERING{i}.BendingAngle;
         ii = ii +1;
-        rho = THERING{i}.Length/THERING{i}.BendingAngle;
-        [dI1,dI2,dI3,dI4,dI5,curHavg1(ii), Dxavg(ii)] = ...
-            calcRadInt(rho,THERING{i}.BendingAngle, ...
-            alpha(i,1),beta(i,1),D_x(i),D_x_(i),...
-            THERING{i}.K,THERING{i}.EntranceAngle,THERING{i}.ExitAngle);
-        
-        sum.integrals(1) = sum.integrals(1) + dI1;
-        sum.integrals(2) = sum.integrals(2) + dI2;
-        sum.integrals(3) = sum.integrals(3) + dI3;
-        % For general wedge magnets
-        sum.integrals(4) = sum.integrals(4) + dI4;
-        sum.integrals(5) = sum.integrals(5) + dI5;
-        %         sum.integrals(4) = sum.integrals(4) + 2*0.5*(D_x(i)+D_x(i+1))*THERING{i}.Length/rho^3;
-        H1 = beta(i,1)*D_x_(i)*D_x_(i)+2*alpha(i)*D_x(i)*D_x_(i)+gamma(i)*D_x(i)*D_x(i);
-        H0 = beta(i+1,1)*D_x_(i+1)*D_x_(i+1)+2*alpha(i+1)*D_x(i+1)*D_x_(i+1)+gamma(i+1)*D_x(i+1)*D_x(i+1);
-        sum.integrals(6) = sum.integrals(6) + THERING{i}.PolynomB(2)^2*Dxavg(ii)^2*THERING{i}.Length;
+        sdip(ii)=spos(i);
+        nrho=numel(theta);
+        if nrho>1
+            rho = THERING{i}.Lengths./THERING{i}.BendingAngle;
+            th1 = THERING{i}.EntranceAngle;
+            th2 = THERING{i}.ExitAngle;
+            K = THERING{i}.PolynomB(2,:);
+            alpha_ini=alpha(i,1);
+            beta_ini=beta(i,1);
+            disp_ini=D_x(i);
+            dispp_ini=D_x_(i);
+            curHavg2=zeros(1,nrho);
+            Dxavg2=zeros(1,nrho);
+            for jj=1:nrho
+                [dI1,dI2,dI3,dI4,dI5,curHavg2(jj),Dxavg2(jj),alpha_end,beta_end,disp_end,dispp_end] = calcRadInt(rho(jj),theta(jj), ...
+                    alpha_ini,beta_ini,disp_ini,dispp_ini,K(jj),th1(jj),th2(jj));
+                
+                sum.integrals(1) = sum.integrals(1) + dI1;
+                sum.integrals(2) = sum.integrals(2) + dI2;
+                sum.integrals(3) = sum.integrals(3) + dI3;
+                % For general wedge magnets
+                sum.integrals(4) = sum.integrals(4) + dI4;
+                sum.integrals(5) = sum.integrals(5) + dI5;
+                %         sum.integrals(4) = sum.integrals(4) + 2*0.5*(D_x(i)+D_x(i+1))*THERING{i}.Length/rho^3;
+                H1 = beta_ini*dispp_ini*dispp_ini+2*alpha_ini*disp_ini*dispp_ini+(1+alpha_ini^2)/beta_ini*disp_ini*disp_ini;
+                H0 = beta_end*dispp_end*dispp_end+2*alpha_end*disp_end*dispp_end+(1+alpha_end^2)/beta_end*disp_end*disp_end;
+                sum.integrals(6) = sum.integrals(6) + K(jj)^2*Dxavg2(jj)^2*THERING{i}.Lengths(jj);
+                
+                alpha_ini=alpha_end;
+                beta_ini=beta_end;
+                disp_ini=disp_end;
+                dispp_ini=dispp_end;
+            end
+            curHavg1=[curHavg1 curHavg2];
+            Dxavg=[Dxavg Dxavg2];
+            L=cumsum(THERING{i}.Lengths)';
+            sdip=[sdip sdip(end)+L(1:(end-1))];
+            ii=ii+nrho-1;
+        else
+            rho = THERING{i}.Length./THERING{i}.BendingAngle;
+            [dI1,dI2,dI3,dI4,dI5,curHavg1(ii), Dxavg(ii)] = ...
+                calcRadInt(rho,THERING{i}.BendingAngle, ...
+                alpha(i,1),beta(i,1),D_x(i),D_x_(i),...
+                THERING{i}.K,THERING{i}.EntranceAngle,THERING{i}.ExitAngle);
+            
+            sum.integrals(1) = sum.integrals(1) + dI1;
+            sum.integrals(2) = sum.integrals(2) + dI2;
+            sum.integrals(3) = sum.integrals(3) + dI3;
+            % For general wedge magnets
+            sum.integrals(4) = sum.integrals(4) + dI4;
+            sum.integrals(5) = sum.integrals(5) + dI5;
+            %         sum.integrals(4) = sum.integrals(4) + 2*0.5*(D_x(i)+D_x(i+1))*THERING{i}.Length/rho^3;
+            H1 = beta(i,1)*D_x_(i)*D_x_(i)+2*alpha(i)*D_x(i)*D_x_(i)+gamma(i)*D_x(i)*D_x(i);
+            H0 = beta(i+1,1)*D_x_(i+1)*D_x_(i+1)+2*alpha(i+1)*D_x(i+1)*D_x_(i+1)+gamma(i+1)*D_x(i+1)*D_x(i+1);
+            sum.integrals(6) = sum.integrals(6) + THERING{i}.PolynomB(2)^2*Dxavg(ii)^2*THERING{i}.Length;
+        end
     end
 end
-
+hold all;plot(sdip,cumsum(curHavg1),'Marker','o');
 % Damping numbers
 % Use Robinson's Theorem
 sum.damping(1) = 1 - sum.integrals(4)/sum.integrals(2);
@@ -184,7 +226,7 @@ if nargout > 0
     varargout{1} = sum;
 end
 
-function [dI1,dI2,dI3,dI4,dI5,curHavg, Dxavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)
+function [dI1,dI2,dI3,dI4,dI5,curHavg, Dxavg,ax,bx,dx,dpx] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1,th1,th2)
 %[dI1,dI2,dI3,dI4,dI5,curHavg] = calcRadInt(rho,theta, a0,b0,D0,D0p,K1)
 %calculate the contribution to the radiation integrals of a dipole.
 %  INPUTS
@@ -223,6 +265,8 @@ for ii=1:length(th)
     [ax, bx] = calctwiss(rho, th(ii), a0, b0, K1);
     curHavg1(ii) = (Dx(ii)^2+(ax*Dx(ii)+bx*Dxp(ii))^2)/bx;
 end
+dx=Dx(end);
+dpx=Dxp(end);
 
 % Edge focusing
 M21 = tan(th2)/rho;
@@ -239,6 +283,8 @@ dI2 = abs(theta/rho);
 dI3 = abs(theta/rho^2);
 dI4 = (1/rho^2 + 2*K1)*dI1  - (Dx(1)/rho^2*tan(th1) + Dx(end)/rho^2*tan(th2));
 dI5 = curHavg*abs(theta/rho^2);
+
+
 
 function [Dx, Dxp] = calcdisp(rho, theta, D0, D0p, K1)
 %calcdisp - calculate dispersion function inside a combined-function dipole
