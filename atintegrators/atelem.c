@@ -119,7 +119,7 @@ static long atGetLong(const PyObject *element, const char *name)
     return PyLong_AsLong((PyObject *)attr);
 }
 
-static double const atGetDouble(const PyObject *element, const char *name)
+static double atGetDouble(const PyObject *element, const char *name)
 {
     const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
     if (!attr) return 0.0;
@@ -146,7 +146,7 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-static double *atGetDoubleArray(const PyObject *element, const char *name)
+static double *atGetDoubleArray(const PyObject *element, char *name)
 {
     char errmessage[60];
     PyArrayObject *array;
@@ -173,17 +173,17 @@ static double *atGetDoubleArray(const PyObject *element, const char *name)
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
-    return (double *) PyArray_DATA(array);
+    return PyArray_DATA(array);
 }
 
-static double *atGetOptionalDoubleArray(const PyObject *element, const char *name)
+static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 {
     PyObject *obj = PyObject_GetAttrString((PyObject *)element, name);
     if (obj == NULL) {
         PyErr_Clear();
         return NULL;
     }
-    return (double *) atGetDoubleArray(element, name);
+    return atGetDoubleArray(element, name);
 }
 
 #endif /* defined(PYAT) */
