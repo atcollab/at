@@ -255,7 +255,7 @@ static void strthinkickFMrad(double* r, double ReSum, double ImSum, double L, do
       ReSum = ReSumTemp;
    }*/
    
-   printf("ReSum= %f, ImSum= %f \n", ReSum, ImSum);
+   /*printf("ReSum= %f, ImSum= %f \n", ReSum, ImSum);*/
    
    /* calculate angles from momentums 	*/
    p_norm = 1/(1+r[4]);
