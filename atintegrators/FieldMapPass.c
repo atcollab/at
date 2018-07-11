@@ -23,7 +23,6 @@ void FieldMapPass(double *r,struct elem *Elem,double Brho,int num_particles)
     double norm, NormL1, NormL2;
     double *r6;
     double SL, L1, L2, K1divBrho, K2divBrho;
-    /*double Brho=Elem->Energy/299792458;*/
     SL = Elem->Length/Elem->NumIntSteps;
     L1 = SL*DRIFT1;
     L2 = SL*DRIFT2;
@@ -33,9 +32,7 @@ void FieldMapPass(double *r,struct elem *Elem,double Brho,int num_particles)
         r6 = r+c*6;
         if(!atIsNaN(r6[0])) {
             /*  misalignment at entrance  */
-            /*printf("x = %f, y = %f \n",r6[0],r6[2]);*/
             if (Elem->T1) ATaddvv(r6,Elem->T1);
-            /*printf("x = %f, y = %f \n",r6[0],r6[2]);*/
             if (Elem->R1) ATmultmv(r6,Elem->R1);
             /* Check physical apertures at the entrance of the magnet */
             if (Elem->RApertures) checkiflostRectangularAp(r6,Elem->RApertures);
@@ -46,50 +43,24 @@ void FieldMapPass(double *r,struct elem *Elem,double Brho,int num_particles)
                 int xi, yi;
                 double dx, dy, Bx, By;
              	norm = 1/(1+r6[4]);
-                
-                /*printf("~~~~~ start point \n");
-                printf("x = %0.20f, y = %0.20f \n",r6[0],r6[2]);
-                /*printf("xi = %d, yi = %d \n",xi,yi);
-                printf("dx = %f, dy = %f \n",dx,dy);*/
                 NormL1 = L1*norm;
                 NormL2 = L2*norm;
                 fastdrift(r6, NormL1);
                 get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
                 interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                /*printf("xi = %d, yi = %d \n",xi,yi);
-                printf("dx = %f, dy = %f \n",dx,dy);*/
-                /*printf("Bx = %f, By = %f \n",Bx,By);*/
-                /*strthinkick(r6, A, B,  K1, max_order);*/
                 r6[1] -=  K1divBrho*By;
                 r6[3] +=  K1divBrho*Bx;
-                /*printf("Bx = %0.20f, By = %0.20f \n",Bx,By);*/
-                
                 fastdrift(r6, NormL2);
-               
-                /*strthinkick(r6, A, B, K2, max_order);*/
                 get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
                 interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                /*printf("~~~~~ First step \n");
-                printf("xi = %d, yi = %d \n",xi,yi);
-                printf("dx = %f, dy = %f \n",dx,dy);*/
                 r6[1] -=  K2divBrho*By;
                 r6[3] +=  K2divBrho*Bx;
                 fastdrift(r6, NormL2);
-                
-                /*strthinkick(r6, A, B,  K1, max_order);*/
                 get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
                 interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                /*printf("~~~~~ Second step \n");
-                printf("xi = %d, yi = %d \n",xi,yi);
-                printf("dx = %f, dy = %f \n",dx,dy);*/
                 r6[1] -=  K1divBrho*By;
                 r6[3] +=  K1divBrho*Bx;
                 fastdrift(r6, NormL1);
-                /*get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);*/
-                /*printf("~~~~~ Last step \n");
-                printf("xi = %d, yi = %d \n",xi,yi);
-                printf("dx = %f, dy = %f \n",dx,dy);*/
             }
             /* Check physical apertures at the exit of the magnet */
             if (Elem->RApertures) checkiflostRectangularAp(r6,Elem->RApertures);
@@ -267,7 +238,6 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
-        
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);

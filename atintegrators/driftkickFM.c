@@ -52,21 +52,6 @@ static void fastdrift(double* r, double NormL)
    r[5] += NormL*(r[1]*r[1]+r[3]*r[3])/(2*(1+r[4]));
 }
 
-void get_xy_indeces1(double x,double y,int Nx,int Ny,double xmin,double ymin,double delta_x,double delta_y,int *xi,int *yi,double *dx,double *dy)
-{
-    /*printf("here I'm finding the indeces for \n");
-    printf("x = %f and y = %f \n",x,y);*/
-    /**xi=(int)floor(0.5+((x-xmin)/delta_x));
-    *yi=(int)floor(0.5+((y-ymin)/delta_y));*/
-    *xi=(int)floor((x-xmin)/delta_x);
-    *yi=(int)floor((y-ymin)/delta_y);
-    if(*xi<1) *xi=1;
-    if(*xi>Nx-2) *xi=Nx-2;
-    if(*yi<1) *yi=1;
-    if(*yi>Ny-2) *yi=Ny-2;
-    *dx = x-*xi*delta_x-xmin;
-    *dy = y-*yi*delta_y-ymin;
-}
 void get_xy_indeces2(double x,double y,int Nx,int Ny,double xmin,double ymin,double delta_x,double delta_y,int *xi,int *yi,double *dx,double *dy)
 {
     /*printf("here I'm finding the indeces for \n");
@@ -107,10 +92,6 @@ void interpolate2ord(struct elem *Elem,int xi,int yi,double dx,double dy,double 
     
     double deltaxdeltay=(Elem->delta_x) * (Elem->delta_y);
 
-    /*dx2=dx*dx;
-    dxdy=dx*dy;
-    dy2=dy*dy;*/
-    
     Bx0_sw=Elem->LUT_Bx[yi*Nx+xi];
     dBxdx_sw=Elem->LUT_dBxdx[yi*Nx+xi];
     dBxdy_sw=Elem->LUT_dBxdy[yi*Nx+xi];
@@ -150,7 +131,6 @@ void interpolate2ord(struct elem *Elem,int xi,int yi,double dx,double dy,double 
     d2Bydxdy_nw=Elem->LUT_d2Bydxdy[(yi+1)*Nx+xi];
     d2Bydydy_nw=Elem->LUT_d2Bydydy[(yi+1)*Nx+xi];
     
-    
     Bx0_ne=Elem->LUT_Bx[(yi+1)*Nx+xi+1];
     dBxdx_ne=Elem->LUT_dBxdx[(yi+1)*Nx+xi+1];
     dBxdy_ne=Elem->LUT_dBxdy[(yi+1)*Nx+xi+1];
@@ -182,9 +162,7 @@ void interpolate2ord(struct elem *Elem,int xi,int yi,double dx,double dy,double 
     /*printf("dBx_sw=%e, dBx_se=%e, dBx_nw=%e, dBx_ne=%e, Bxtot=%e \n",(Bx_sw-*Bx) / *Bx,(Bx_se-*Bx) / *Bx,(Bx_nw-*Bx) / *Bx,(Bx_ne-*Bx) / *Bx,*Bx);
     printf("dBy_sw=%e, dBy_se=%e, dBy_nw=%e, dBy_ne=%e, Bytot=%e \n",(By_sw-*By) / *By,(By_se-*By) / *By,(By_nw-*By) / *By,(By_ne-*By) / *By,*By);*/
     /*printf("(%e-%e-%e+%e)/%e=%f\n",dx_ne*dy_ne,dx_nw*dy_nw,dx_se*dy_se,dx_sw*dy_sw,deltaxdeltay, (dx_ne*dy_ne-dx_nw*dy_nw-dx_se*dy_se+dx_sw*dy_sw)/deltaxdeltay);*/
-    /**Bx= Bx_sw;
-    *By= By_sw;*/
-    
+   
 }
 
 void interpolate1ord(struct elem *Elem,int xi,int yi,double dx,double dy,double *Bx,double *By)
@@ -235,13 +213,11 @@ static void strthinkickFMrad(double* r, double ReSum, double ImSum, double L, do
  phase space vector in a straight element ( quadrupole)
  
  IMPORTANT !!!
- he reference coordinate system is straight but the field expansion may still
- ontain dipole terms: PolynomA(1), PolynomB(1) - in MATLAB notation,
- [0], B[0] - C,C++ notation
+ the reference coordinate system is straight but the field expansion may still
+ contain dipole terms
  
  ******************************************************************************/
 {
-   int i;
    /*double ReSum = B[max_order];
    double ImSum = A[max_order];
    double ReSumTemp;*/

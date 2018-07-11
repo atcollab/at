@@ -35,9 +35,7 @@ void FieldMapRadPass(double *r,struct elem *Elem,double Brho,int num_particles)
         r6 = r+c*6;
         if(!atIsNaN(r6[0])) {
             /*  misalignment at entrance  */
-            /*printf("x = %f, y = %f \n",r6[0],r6[2]);*/
             if (Elem->T1) ATaddvv(r6,Elem->T1);
-            /*printf("x = %f, y = %f \n",r6[0],r6[2]);*/
             if (Elem->R1) ATmultmv(r6,Elem->R1);
             /* Check physical apertures at the entrance of the magnet */
             if (Elem->RApertures) checkiflostRectangularAp(r6,Elem->RApertures);
@@ -48,11 +46,6 @@ void FieldMapRadPass(double *r,struct elem *Elem,double Brho,int num_particles)
                 int xi, yi;
                 double dx, dy, Bx, By;
              	norm = 1/(1+r6[4]);
-                
-                /*printf("~~~~~ start point \n");
-                printf("x = %0.20f, y = %0.20f \n",r6[0],r6[2]);
-                /*printf("xi = %d, yi = %d \n",xi,yi);
-                printf("dx = %f, dy = %f \n",dx,dy);*/
                 NormL1 = L1*norm;
                 NormL2 = L2*norm;
                 fastdrift(r6, NormL1);
@@ -166,7 +159,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
-MODULE_DEF(FieldMapPass)        /* Dummy module initialisation */
+MODULE_DEF(FieldMapRadPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
