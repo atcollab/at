@@ -121,7 +121,6 @@ double *amplitude_out, double *phase_out, int win, int nfreq, int debug)
 /*  MATLAB TO C-CALL LINKING FUNCTION  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    double	 *scalar_in;
     double   *nu, *amplitude, *phase;
     unsigned int  i, m, n, m2, n2, numfreq;
     int win = 0;
@@ -142,9 +141,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mexErrMsgTxt("CALCNAFF requires that Window be a scalar.");
         }
         
-        /* assign pointer */
-        scalar_in   = mxGetPr(WIN_IN);
-        win = (int )*scalar_in;
+        win = mxGetScalar(WIN_IN);
     }
     
     if (nrhs >= 4){ /* user fequency number */
@@ -156,9 +153,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         {
             mexErrMsgTxt("CALCNAFF requires that frequency number be a scalar.");
         }
-           /* assign pointer for maximum number of frequency */
-        scalar_in   = mxGetPr(NFREQ_IN);
-        nfreq = (int )*scalar_in;
+
+        nfreq = (int )mxGetScalar(NFREQ_IN);
     }
     
     if (nrhs >= 5){ /* debugging flag */
@@ -171,9 +167,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mexErrMsgTxt("CALCNAFF requires that dubbing flag be a scalar.");
         }
         
-            /* assign pointer for debugging flag */
-        scalar_in   = mxGetPr(DEBUG_IN);
-        debug = (int )*scalar_in;
+        debug = (int )mxGetScalar(DEBUG_IN);
         
     }
         
@@ -204,19 +198,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     phase = (double *) mxMalloc(nfreq*sizeof(double));
     
     /* call subroutine that calls routine for all NAFF computation */
-    numfreq = call_naff(mxGetPr(Y_IN),mxGetPr(YP_IN),(int )max(m,n), nu, amplitude, phase,  win, nfreq, debug);
+    numfreq = call_naff(mxGetDoubles(Y_IN),mxGetDoubles(YP_IN),(int )max(m,n),
+            nu, amplitude, phase,  win, nfreq, debug);
     
-    NU_OUT = mxCreateDoubleMatrix(numfreq, 1, mxREAL);
-    memcpy(mxGetPr(NU_OUT), nu, numfreq*sizeof(double));
+    memcpy(mxGetDoubles(NU_OUT), nu, numfreq*sizeof(double));
     
     if (nlhs >= 2){ /* amplitudes */
         AMPLITUDE_OUT = mxCreateDoubleMatrix(numfreq, 1, mxREAL);
-        memcpy(mxGetPr(AMPLITUDE_OUT), amplitude, numfreq*sizeof(double));
+        memcpy(mxGetDoubles(AMPLITUDE_OUT), amplitude, numfreq*sizeof(double));
     }
     
     if (nlhs >= 3){ /* phases */
         PHASE_OUT = mxCreateDoubleMatrix(numfreq, 1, mxREAL);
-        memcpy(mxGetPr(PHASE_OUT), phase, numfreq*sizeof(double));
+        memcpy(mxGetDoubles(PHASE_OUT), phase, numfreq*sizeof(double));
     }
     
     /* free dynamically memory allocation */

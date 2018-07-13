@@ -72,7 +72,7 @@ static double* atGetDoubleArray(const mxArray *ElemData, const char *fieldname)
 {
     mxArray *field=mxGetField(ElemData,0,fieldname);
     if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
-    return mxGetPr(field);
+    return mxGetDoubles(field);
 }
 
 static long atGetOptionalLong(const mxArray *ElemData, const char *fieldname, long default_value)
@@ -90,7 +90,7 @@ static double atGetOptionalDouble(const mxArray *ElemData, const char *fieldname
 static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fieldname)
 {
     mxArray *field=mxGetField(ElemData,0,fieldname);
-    return (field) ? mxGetPr(field) : NULL;
+    return (field) ? mxGetDoubles(field) : NULL;
 }
 
 #endif /* MATLAB_MEX_FILE */
