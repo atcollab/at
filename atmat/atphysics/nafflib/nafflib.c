@@ -17,7 +17,14 @@
 #include "modnaff.h"
 #include "complexe.h"
 /* #include <sys/ddi.h> */
- 
+
+/* Get ready for R2018a C matrix API */
+#ifndef mxGetDoubles
+#define mxGetDoubles mxGetPr
+#define mxSetDoubles mxSetPr
+typedef double mxDouble;
+#endif
+
 /* Input Arguments */
 #define	Y_IN    prhs[0]
 #define	YP_IN   prhs[1]
@@ -201,6 +208,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     numfreq = call_naff(mxGetDoubles(Y_IN),mxGetDoubles(YP_IN),(int )max(m,n),
             nu, amplitude, phase,  win, nfreq, debug);
     
+    NU_OUT = mxCreateDoubleMatrix(numfreq, 1, mxREAL);
     memcpy(mxGetDoubles(NU_OUT), nu, numfreq*sizeof(double));
     
     if (nlhs >= 2){ /* amplitudes */
