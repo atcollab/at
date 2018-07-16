@@ -15,6 +15,11 @@
 #include "atlalib.c"
 #include <math.h>
 
+/* Get ready for R2018a C matrix API */
+#ifndef mxGetDoubles
+#define mxGetDoubles mxGetPr
+typedef double mxDouble;
+#endif
 
 /* Fourth order-symplectic integrator constants */
 
@@ -473,7 +478,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	double *BDIFF;
 	mxArray  *mxtemp;
 
-	double *orb, *orb0;
+    mxDouble *orb0;
+	double *orb;
 	double *pt1, *pt2, *PR1, *PR2;
 
 
@@ -484,7 +490,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
 	/* ALLOCATE memory for the output array */
 	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
-	BDIFF = mxGetPr(plhs[0]);
+	BDIFF = mxGetDoubles(plhs[0]);
 
 
 	/* If the ELEMENT sructure does not have fields PolynomA and PolynomB
@@ -495,7 +501,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
 
 
-	orb0 = mxGetPr(prhs[1]);
+	orb0 = mxGetDoubles(prhs[1]);
 	/* make local copy of the input closed orbit vector */
 	orb = (double*)mxCalloc(6,sizeof(double));
 	for(m=0;m<6;m++)
@@ -509,8 +515,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(le == 0)
 		return;
 	
-	A = mxGetPr(mxGetField(prhs[0],0,"PolynomA"));
-	B = mxGetPr(mxGetField(prhs[0],0,"PolynomB"));
+	A = mxGetDoubles(mxGetField(prhs[0],0,"PolynomA"));
+	B = mxGetDoubles(mxGetField(prhs[0],0,"PolynomB"));
 
 	
     mxtemp = mxGetField(prhs[0],0,"Energy");
@@ -558,25 +564,25 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	/* Optional felds */
     mxtemp = mxGetField(prhs[0],0,"T1");
     if(mxtemp)
-        pt1 = mxGetPr(mxtemp);
+        pt1 = mxGetDoubles(mxtemp);
     else
         pt1 = NULL;
     
     mxtemp = mxGetField(prhs[0],0,"T2");
     if(mxtemp)
-        pt2 = mxGetPr(mxtemp);
+        pt2 = mxGetDoubles(mxtemp);
     else
         pt2 = NULL;
     
     mxtemp = mxGetField(prhs[0],0,"R1");
     if(mxtemp)
-        PR1 = mxGetPr(mxtemp);
+        PR1 = mxGetDoubles(mxtemp);
     else
         PR1 = NULL;
     
     mxtemp = mxGetField(prhs[0],0,"R2");
     if(mxtemp)
-        PR2 = mxGetPr(mxtemp);
+        PR2 = mxGetDoubles(mxtemp);
     else
         PR2 = NULL;
     

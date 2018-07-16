@@ -7,6 +7,18 @@
 #include "atelem.c"
 #include "atlalib.c"
 
+struct elem {
+    double Length;
+    double K;
+    /* Optional fields */
+    double I1a;
+    double I1b;
+    double *R1;
+    double *R2;
+    double *T1;
+    double *T2;
+};
+
 /******************************************************************************/
 /* PHYSICS SECTION ************************************************************/
 
@@ -127,310 +139,120 @@ void quadnonlinearfringe(double *r, double kv)
 void QuadLinearFPass(double *r, double le, double kv, double I1a, double I1b,double *T1, double *T2, double *R1, double *R2, int num_particles)
 {	int c;
 	double *r6;
-	bool useT1, useT2, useR1, useR2;
-
-	if(T1==NULL)
-	    useT1=false;
-	else 
-	    useT1=true;  
-	    
-    if(T2==NULL)
-	    useT2=false; 
-	else 
-	    useT2=true;  
-	
-	if(R1==NULL)
-	    useR1=false; 
-	else 
-	    useR1=true;  
-	    
-    if(R2==NULL)
-	    useR2=false;
-	else 
-	    useR2=true;
 
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6)
-	for(c = 0;c<num_particles;c++)
-		{	r6 = r+c*6;
-		    if(!atIsNaN(r6[0]) && atIsFinite(r6[4]))
-		    /* 
-		       function quad6 internally calculates the square root
-			   of the energy deviation of the particle 
-			   To protect against DOMAIN and OVERFLOW error, check if the
-			   fifth component of the phase spacevector r6[4] is finite
-			*/
-		    {
-			/* Misalignment at entrance */
-	        if(useT1)
-			    ATaddvv(r6,T1);
-			if(useR1)
-			    ATmultmv(r6,R1);
-			
-			if (I1a!=0)
-				quadnonlinearfringe(r6,kv);
-	
-			quadlinearfringe(r6, -kv*I1a);
-			
-			quad6(r6,le,kv);
-			
-			quadlinearfringe(r6, kv*I1b);
-			if (I1b!=0)
-				quadnonlinearfringe(r6,-kv);
-			
-			/* Misalignment at exit */	
-			if(useR2)
-			    ATmultmv(r6,R2);
-		    if(useT2)   
-			    ATaddvv(r6,T2);
-			}
-			
-		}		
+    for (c = 0;c<num_particles;c++) {
+        r6 = r+c*6;
+        if (!atIsNaN(r6[0]) && atIsFinite(r6[4])) {
+            /*
+             * function quad6 internally calculates the square root
+             * of the energy deviation of the particle
+             * To protect against DOMAIN and OVERFLOW error, check if the
+             * fifth component of the phase spacevector r6[4] is finite
+             */
+            /* Misalignment at entrance */
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
+            
+            if (I1a!=0) quadnonlinearfringe(r6,kv);
+            
+            quadlinearfringe(r6, -kv*I1a);
+            quad6(r6,le,kv);
+            quadlinearfringe(r6, kv*I1b);
+            
+            if (I1b!=0) quadnonlinearfringe(r6,-kv);
+            
+            /* Misalignment at exit */
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
+        }
+        
+    }
 }
-
-MODULE_DEF(QuadLinearFPass)        /* Dummy module initialisation */
-
 
 /********** END PHYSICS SECTION ***********************************************/
 /******************************************************************************/
 
-/********** WINDOWS DLL GATEWAY SECTION ***************************************/
+
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+        double *r_in, int num_particles, struct parameters *Param)
+{
+    if (!Elem) {
+        double Length, K, I1a, I1b;
+        double *PolynomB, *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        /*optional fields*/
+        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
+        I1a = atGetOptionalDouble(ElemData, "I1a", 0.0);
+        I1b = atGetOptionalDouble(ElemData, "I1b", 0.0);
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=Length;
+        Elem->K=K;
+        /*optional fields*/
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+        Elem->I1a = I1a;
+        Elem->I1b = I1b;
+    }
+	QuadLinearFPass(r_in, Elem->Length, Elem->K, Elem->I1a, Elem->I1b,
+            Elem->T1 ,Elem->T2, Elem->R1, Elem->R2 , num_particles);
+    return Elem;
+}
+
+MODULE_DEF(QuadLinearFPass)        /* Dummy module initialisation */
+
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
 #ifdef MATLAB_MEX_FILE
-
-#include "elempass.h"
-
-ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
-								double *r_in, int num_particles, int mode)
-
-#define NUM_FIELDS_2_REMEMBER 8
-
-{	double *pr1, *pr2, *pt1, *pt2 , le, kv, I1a, I1b;   
-	int *returnptr,fnum;
-	int *NewFieldNumbers;
-    switch(mode)
-		{	case NO_LOCAL_COPY:	/* Obsolete in AT1.3 et fields by names from MATLAB workspace  */
-		        {	
-				
-				}	break;	
-				
-			case MAKE_LOCAL_COPY: 	/* Find field numbers first
-										Save a list of field number in an array
-										and make returnptr point to that array
-								    */
-				{						
-					NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-					
-					fnum = mxGetFieldNumber(ElemData,"Length");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-					NewFieldNumbers[0] = fnum;
-					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[0]));
-					
-					fnum = mxGetFieldNumber(ElemData,"K");
-					if(fnum<0) 
-					    mexErrMsgTxt("Required field 'K' was not found in the element data structure"); 
-					NewFieldNumbers[1] = fnum;
-					kv = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[1]));
-                    
-					fnum = mxGetFieldNumber(ElemData,"R1");
-					NewFieldNumbers[2] = fnum;
-					if(fnum<0)
-					    pr1 = NULL;
-					else
-					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-
-					fnum = mxGetFieldNumber(ElemData,"R2");
-					NewFieldNumbers[3] = fnum;
-					if(fnum<0)
-					    pr2 = NULL;
-					else
-					    pr2 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-					
-                    fnum = mxGetFieldNumber(ElemData,"T1");
-	                NewFieldNumbers[4] = fnum;
-					if(fnum<0)
-					    pt1 = NULL;
-					else
-					    pt1 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
-	                
-	                fnum = mxGetFieldNumber(ElemData,"T2");
-	                NewFieldNumbers[5] = fnum;
-					if(fnum<0)
-					    pt2 = NULL;
-					else
-					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-	                
-					fnum = mxGetFieldNumber(ElemData,"I1a");
-					NewFieldNumbers[6] = fnum;
-					if(fnum<0) 
-					    I1a = 0;
-					else
-					   I1a = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[6]));
-					
-					fnum = mxGetFieldNumber(ElemData,"I1b");
-					NewFieldNumbers[7] = fnum;
-					if(fnum<0) 
-					    I1b = 0;
-					else
-					   I1b = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[7]));
-
-					returnptr = NewFieldNumbers;
-
-				}	break;
-
-			case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-										The second argument ponter to the array of field 
-										numbers is previously created with 
-										QuadLinPass( ..., MAKE_LOCAL_COPY)
-								    */
-											
-				{	le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-					kv = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-
-					/* Optional fields */
-					if(FieldNumbers[2]<0)
-					    pr1 = NULL;
-					else
-					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-					
-					if(FieldNumbers[3]<0)
-					    pr2 = NULL;
-					else
-					    pr2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-					
-					    
-					if(FieldNumbers[4]<0)
-					    pt1 = NULL;
-					else    
-					    pt1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-					    
-					if(FieldNumbers[5]<0)
-					    pt2 = NULL;
-					else 
-					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-
-					if(FieldNumbers[6]<0)
-					    I1a = 0;
-					else 
-					    I1a = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-					    
-					if(FieldNumbers[7]<0)
-					    I1b = 0;
-					else 
-					    I1b = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));    
-					                        
-					returnptr = FieldNumbers;
-
-		
-				}	break;
-
-		}
-
-	QuadLinearFPass(r_in, le, kv, I1a,I1b,pt1, pt2, pr1, pr2 , num_particles);
-	return(returnptr);	
-}
-
-
-/********** END WINDOWS DLL GATEWAY SECTION ***************************************/
-/********** MATLAB GATEWAY  ***************************************/
-
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{	
-	int m, n;
-	double *r_in;   
-	double  *pr1, *pr2, *pt1, *pt2 , le, kv, I1a, I1b; 
-	mxArray *tmpmxptr;
-	
-
-	if(nrhs)
-	{
-	
-	/* ALLOCATE memory for the output array of the same size as the input */
-	m = mxGetM(prhs[1]);
-	n = mxGetN(prhs[1]);
-	if(m!=6) 
-		{mexErrMsgTxt("Second argument must be a 6 x N matrix");}	
-	
-	/* Required Fields */
-	
-	tmpmxptr = mxGetField(prhs[0],0,"Length");
-	if(tmpmxptr)
-	    le = mxGetScalar(tmpmxptr);
-	else
-	    mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-	    
-	
-	tmpmxptr = mxGetField(prhs[0],0,"K");
-	if(tmpmxptr)
-	    kv = mxGetScalar(tmpmxptr);
-	else
-	    mexErrMsgTxt("Required field 'K' was not found in the element data structure"); 
-	
-	
-	/* Optionnal arguments */    
-	tmpmxptr = mxGetField(prhs[0],0,"R1");
-	if(tmpmxptr)
-	    pr1 = mxGetPr(tmpmxptr);
-	else
-	    pr1=NULL; 
-	    
-	tmpmxptr = mxGetField(prhs[0],0,"R2");
-	if(tmpmxptr)
-	    pr2 = mxGetPr(tmpmxptr);
-	else
-	    pr2=NULL; 
-
-	tmpmxptr = mxGetField(prhs[0],0,"T1");
-
-	
-	if(tmpmxptr)
-	    pt1=mxGetPr(tmpmxptr);
-	else
-	    pt1=NULL;
-
-	tmpmxptr = mxGetField(prhs[0],0,"T2");
-	if(tmpmxptr)
-	    pt2=mxGetPr(tmpmxptr);
-	else
-	    pt2=NULL;  
-
-  /*I1 for the entrance fringe, 
-  I1a and I1b are defined as |\int (K(s)/K0-1)(s-s0) ds|
-  value of I1 defined by J. Irwin (PAC95)  would be -K0*I1a for entrance fringe and K0*I1b for exit fringe */
-	tmpmxptr = mxGetField(prhs[0],0,"I1a"); 
-	if(tmpmxptr)
-	    I1a=mxGetScalar(tmpmxptr);
-	else
-	    I1a=0;
-	    
-	tmpmxptr = mxGetField(prhs[0],0,"I1b");  /*I1 for the exit fringe,   */
-	if(tmpmxptr)
-	    I1b=mxGetScalar(tmpmxptr);
-	else
-	    I1b=0;
-	    
-	    
-	plhs[0] = mxDuplicateArray(prhs[1]);
-	r_in = mxGetPr(plhs[0]);
-	QuadLinearFPass(r_in, le, kv, I1a,I1b,pt1, pt2, pr1, pr2, n);
-	}
-	else
-	{   /* return list of required fields */
-	    plhs[0] = mxCreateCellMatrix(2,1);
-	    mxSetCell(plhs[0],0,mxCreateString("Length"));
-	    mxSetCell(plhs[0],1,mxCreateString("K"));
-	    
-	    if(nlhs>1) /* Required and optional fields */ 
-	    {   plhs[1] = mxCreateCellMatrix(4,1);
-	        mxSetCell(plhs[1],0,mxCreateString("T1"));
-	        mxSetCell(plhs[1],1,mxCreateString("T2"));
-	        mxSetCell(plhs[1],2,mxCreateString("R1"));
-	        mxSetCell(plhs[1],3,mxCreateString("R2"));
-	    }
-	}
+{
+    if (nrhs == 2 ) {
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[1]);
+        double Length, K, I1a, I1b;
+        double *PolynomB, *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        /*optional fields*/
+        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
+        I1a = atGetOptionalDouble(ElemData, "I1a", 0.0);
+        I1b = atGetOptionalDouble(ElemData, "I1b", 0.0);
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetDoubles(plhs[0]);
+        QuadLinearFPass(r_in, Length, K, I1a, I1b, T1, T2, R1, R2 , num_particles);
+    }
+    else if (nrhs == 0) {
+        /* list of required fields */
+        plhs[0] = mxCreateCellMatrix(2,1);
+        mxSetCell(plhs[0],0,mxCreateString("Length"));
+        mxSetCell(plhs[0],1,mxCreateString("K"));
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(6,1);
+            mxSetCell(plhs[1],0,mxCreateString("I1a"));
+            mxSetCell(plhs[1],1,mxCreateString("I1b"));
+            mxSetCell(plhs[1],2,mxCreateString("T1"));
+            mxSetCell(plhs[1],3,mxCreateString("T2"));
+            mxSetCell(plhs[1],4,mxCreateString("R1"));
+            mxSetCell(plhs[1],5,mxCreateString("R2"));
+        }
+    }
+    else {
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
+    }
 }
-
 #endif /*MATLAB_MEX_FILE*/
