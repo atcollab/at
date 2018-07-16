@@ -163,12 +163,12 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(5,1);
+        plhs[0] = mxCreateCellMatrix(2,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
-        mxSetCell(plhs[0],4,mxCreateString("K"));
+        mxSetCell(plhs[0],1,mxCreateString("K"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(8,1);
+            plhs[1] = mxCreateCellMatrix(4,1);
             mxSetCell(plhs[1],0,mxCreateString("T1"));
             mxSetCell(plhs[1],1,mxCreateString("T2"));
             mxSetCell(plhs[1],2,mxCreateString("R1"));

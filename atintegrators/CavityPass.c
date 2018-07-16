@@ -113,8 +113,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],2,mxCreateString("Energy"));
         mxSetCell(plhs[0],3,mxCreateString("Frequency"));
         if (nlhs>1) /* optional fields */
-        {   plhs[1] = mxCreateCellMatrix(2,1);
-            mxSetCell(plhs[1],0,mxCreateString("HarmNumber"));
+        {   plhs[1] = mxCreateCellMatrix(1,1);
             mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
         }
     }

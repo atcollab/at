@@ -234,7 +234,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         irho = BendingAngle/Length;
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4Pass(r_in, Length, irho, PolynomA, PolynomB,
                 MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
                 FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
@@ -278,5 +278,3 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 }
 #endif /* MATLAB_MEX_FILE */
-
-

@@ -237,7 +237,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         irho = BendingAngle/Length;
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4RadPass(r_in, Length, irho, PolynomA, PolynomB,
                 MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
                 FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
@@ -260,11 +260,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(15,1);
-            mxSetCell(plhs[1],3,mxCreateString("FringeBendEntrance"));
-            mxSetCell(plhs[1],4,mxCreateString("FringeBendExit"));
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
             mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
+            mxSetCell(plhs[1],3,mxCreateString("FringeBendEntrance"));
+            mxSetCell(plhs[1],4,mxCreateString("FringeBendExit"));
             mxSetCell(plhs[1],5,mxCreateString("FringeQuadEntrance"));
             mxSetCell(plhs[1],6,mxCreateString("FringeQuadExit"));
             mxSetCell(plhs[1],7,mxCreateString("fringeIntM0"));
@@ -282,5 +282,3 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 }
 #endif /* MATLAB_MEX_FILE */
-
-
