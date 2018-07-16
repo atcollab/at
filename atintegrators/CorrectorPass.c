@@ -72,11 +72,11 @@ MODULE_DEF(CorrectorPass)        /* Dummy module initialisation */
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
-        double Length;
-        double *KickAngle;
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
+        double Length;
+        double *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
         KickAngle = atGetDoubleArray(ElemData, "KickAngle");
         /* ALLOCATE memory for the output array of the same size as the input  */

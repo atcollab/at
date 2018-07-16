@@ -152,13 +152,13 @@ MODULE_DEF(IdTablePass)        /* Dummy module initialisation */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[1]);
         int Nslice, ny_map, nx_map;
         double Length, *xkick, *ykick, *x_map, *y_map;
         double *xkick1, *ykick1;
         double *R1, *R2, *T1, *T2;
-        double *r_in;
-        const mxArray *ElemData = prhs[0];
-        int num_particles = mxGetN(prhs[1]);
         Length=atGetDouble(ElemData,"Length"); check_error();
         xkick=atGetDoubleArraySz(ElemData,"xkick", &nx_map, &ny_map); check_error();
         ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
@@ -174,7 +174,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         IdKickMapModelPass(r_in, Length, xkick1, ykick1, xkick, ykick, x_map, y_map,
                 nx_map, ny_map, Nslice, T1, T2, R1, R2, num_particles);
     }
