@@ -49,21 +49,12 @@ void FieldMapRadPass(double *r,struct elem *Elem,double Brho,int num_particles)
                 NormL1 = L1*norm;
                 NormL2 = L2*norm;
                 fastdrift(r6, NormL1);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                strthinkickFMrad(r6, By/Brho, Bx/Brho, K1, Elem->Energy);
+                strthinkickFMrad(r6, Brho, K1, Elem);
                 fastdrift(r6, NormL2);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                strthinkickFMrad(r6, By/Brho, Bx/Brho, K2, Elem->Energy);
+                strthinkickFMrad(r6, Brho, K2, Elem);
                 fastdrift(r6, NormL2);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                strthinkickFMrad(r6, By/Brho, Bx/Brho, K1, Elem->Energy);
+                strthinkickFMrad(r6, Brho, K1, Elem);
                 fastdrift(r6, NormL1);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-
             }
             /* Check physical apertures at the exit of the magnet */
             if (Elem->RApertures) checkiflostRectangularAp(r6,Elem->RApertures);

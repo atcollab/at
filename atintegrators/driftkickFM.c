@@ -29,6 +29,7 @@ struct elem
     double delta_y;
     double Energy;
     /* Optional fields */
+    double BendingAngle;
     double *R1;
     double *R2;
     double *T1;
@@ -206,8 +207,27 @@ double StrB2perp(double bx, double by,
 
 } 
 
+static void strthinkickFM(double* r6,struct elem *Elem,double KdivBrho)
+/*****************************************************************************
+ Calculate and apply a Field Map kick to a 6-dimentional
+ phase space vector in a straight element ( quadrupole)
+ 
+ IMPORTANT !!!
+ the reference coordinate system is straight but the field map may still
+ contain dipole terms
+ 
+ ******************************************************************************/
+{
+    double dx, dy, Bx, By;
+    int xi, yi;
+    get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
+    interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
+    r6[1] -=  KdivBrho*By;
+    r6[3] +=  KdivBrho*Bx;
+}
 
-static void strthinkickFMrad(double* r, double ReSum, double ImSum, double L, double E0)
+
+static void strthinkickFMrad(double* r, double Brho, double L,struct elem *Elem)
 /*****************************************************************************
  Calculate and apply a multipole kick to a 6-dimentional
  phase space vector in a straight element ( quadrupole)
@@ -223,7 +243,14 @@ static void strthinkickFMrad(double* r, double ReSum, double ImSum, double L, do
    double ReSumTemp;*/
    double irho=0;/*straight elements no curvature.*/
    double x ,xpr, y, ypr, p_norm,dp_0, B2P;
+   double E0=Elem->Energy;
    double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
+   double dx, dy, Bx, By, ReSum, ImSum;
+   int xi, yi;
+   get_xy_indeces2(r[0],r[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
+   interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
+   ReSum=By/Brho;
+   ImSum=Bx/Brho;
    
    /*for (i=max_order-1; i>=0; i--) {
       ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];

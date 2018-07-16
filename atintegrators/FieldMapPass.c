@@ -40,26 +40,15 @@ void FieldMapPass(double *r,struct elem *Elem,double Brho,int num_particles)
             /*  integrator  */
             for (m=0; m < Elem->NumIntSteps; m++) {  /*  Loop over slices */
                 r6 = r+c*6;
-                int xi, yi;
-                double dx, dy, Bx, By;
              	norm = 1/(1+r6[4]);
                 NormL1 = L1*norm;
                 NormL2 = L2*norm;
                 fastdrift(r6, NormL1);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                r6[1] -=  K1divBrho*By;
-                r6[3] +=  K1divBrho*Bx;
+                strthinkickFM(r6, Elem, K1divBrho);
                 fastdrift(r6, NormL2);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                r6[1] -=  K2divBrho*By;
-                r6[3] +=  K2divBrho*Bx;
+                strthinkickFM(r6, Elem, K2divBrho);
                 fastdrift(r6, NormL2);
-                get_xy_indeces2(r6[0],r6[2],Elem->Nx,Elem->Ny,Elem->xmin,Elem->ymin,Elem->delta_x,Elem->delta_y,&xi,&yi,&dx,&dy);
-                interpolate2ord(Elem,xi,yi,dx,dy,&Bx,&By);
-                r6[1] -=  K1divBrho*By;
-                r6[3] +=  K1divBrho*Bx;
+                strthinkickFM(r6, Elem, K1divBrho);
                 fastdrift(r6, NormL1);
             }
             /* Check physical apertures at the exit of the magnet */
