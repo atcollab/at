@@ -11,6 +11,13 @@
 #include <cmath>
 #include <cstring>
 
+/* Get ready for R2018a C matrix API */
+#ifndef mxGetDoubles
+#define mxGetDoubles mxGetPr
+#define mxSetDoubles mxSetPr
+typedef double mxDouble;
+#endif
+
 typedef struct {
   double betax, betay;
   double rbetax, rbetay;           /* rbetax = sqrt(betax) */
@@ -485,16 +492,16 @@ void mexFunction( int nlhs, mxArray *plhs[],
 	tune[1]=Tuney;
 		
     /* create a pointer to the real data in the input matrix  */
-    s = mxGetPr(prhs[0]);
-    betax = mxGetPr(prhs[1]);
-    betay = mxGetPr(prhs[2]);
-    etax = mxGetPr(prhs[3]);
-    phix = mxGetPr(prhs[4]);
-    phiy = mxGetPr(prhs[5]);
-    Lista2L = mxGetPr(prhs[6]);
-    Listb2L = mxGetPr(prhs[7]);
-    Listb3L = mxGetPr(prhs[8]);
-    Listb4L = mxGetPr(prhs[9]);
+    s = mxGetDoubles(prhs[0]);
+    betax = mxGetDoubles(prhs[1]);
+    betay = mxGetDoubles(prhs[2]);
+    etax = mxGetDoubles(prhs[3]);
+    phix = mxGetDoubles(prhs[4]);
+    phiy = mxGetDoubles(prhs[5]);
+    Lista2L = mxGetDoubles(prhs[6]);
+    Listb2L = mxGetDoubles(prhs[7]);
+    Listb3L = mxGetDoubles(prhs[8]);
+    Listb4L = mxGetDoubles(prhs[9]);
 	
 	//printf("s0=%f, s1=%f, s2=%f \n",s[0],s[1],s[2]);	
 	//printf("NumElem=%d\n",NumElem);
@@ -514,9 +521,9 @@ void mexFunction( int nlhs, mxArray *plhs[],
 							Lista2L, Listb2L, Listb3L, Listb4L, tune, 
 							Geometric1, Geometric2, Chromatic1, Coupling1, TuneShifts, nPeriods);
 
-	outMatrixRe = mxGetPr(plhs[0]);
-	outMatrixIm = mxGetPr(plhs[1]);
-	outMatrixTSwA = mxGetPr(plhs[2]);
+	outMatrixRe = mxGetDoubles(plhs[0]);
+	outMatrixIm = mxGetDoubles(plhs[1]);
+	outMatrixTSwA = mxGetDoubles(plhs[2]);
 	/* Compute the resonance driving terms from the hamiltonian driving terms */
 	
 	    

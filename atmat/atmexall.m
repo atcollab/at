@@ -15,7 +15,9 @@ switch computer
 end
 
 try
-    if ~verLessThan('matlab','7.11') %R2010b
+    if ~verLessThan('matlab','9.4')
+        PLATFORMOPTION = [PLATFORMOPTION '-R2018a '];
+    elseif ~verLessThan('matlab','7.11') %R2010b
         PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
     end
     if ~verLessThan('matlab','8.3') %R2014a
