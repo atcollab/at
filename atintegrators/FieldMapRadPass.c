@@ -17,7 +17,7 @@
 #define KICK2    -1.702414383919314656
 
 
-void FieldMapRadPass(double *r,struct elem *Elem,double Brho,int num_particles)
+void FieldMapRadPass(double *r,struct elem *Elem,double Brho,double irho,int num_particles)
 {
     int c,m;
     double norm, NormL1, NormL2;
@@ -41,20 +41,31 @@ void FieldMapRadPass(double *r,struct elem *Elem,double Brho,int num_particles)
             if (Elem->RApertures) checkiflostRectangularAp(r6,Elem->RApertures);
             if (Elem->EApertures) checkiflostEllipticalAp(r6,Elem->EApertures);
             /*  integrator  */
-            for (m=0; m < Elem->NumIntSteps; m++) {  /*  Loop over slices */
-                r6 = r+c*6;
-                int xi, yi;
-                double dx, dy, Bx, By;
-             	norm = 1/(1+r6[4]);
-                NormL1 = L1*norm;
-                NormL2 = L2*norm;
-                fastdrift(r6, NormL1);
-                strthinkickFMrad(r6, Brho, K1, Elem);
-                fastdrift(r6, NormL2);
-                strthinkickFMrad(r6, Brho, K2, Elem);
-                fastdrift(r6, NormL2);
-                strthinkickFMrad(r6, Brho, K1, Elem);
-                fastdrift(r6, NormL1);
+            if (Elem->BendingAngle)
+            {
+                for (m=0; m < Elem->NumIntSteps; m++) {  /*  Loop over slices */
+                    r6 = r+c*6;
+                    ATdrift6(r6,L1);
+                    bndthinkickFMrad(r6, Elem, K1, Brho, irho);
+                    ATdrift6(r6,L2);
+                    bndthinkickFMrad(r6, Elem, K2, Brho, irho);
+                    ATdrift6(r6,L2);
+                    bndthinkickFMrad(r6, Elem, K1, Brho, irho);
+                    ATdrift6(r6,L1);
+                }
+            }
+            else
+            {
+                for (m=0; m < Elem->NumIntSteps; m++) {  /*  Loop over slices */
+                    r6 = r+c*6;
+                    ATdrift6(r6,L1);
+                    strthinkickFMrad(r6, Elem, K1, Brho);
+                    ATdrift6(r6,L2);
+                    strthinkickFMrad(r6, Elem, K2, Brho);
+                    ATdrift6(r6,L2);
+                    strthinkickFMrad(r6, Elem, K1, Brho);
+                    ATdrift6(r6,L1);
+                }
             }
             /* Check physical apertures at the exit of the magnet */
             if (Elem->RApertures) checkiflostRectangularAp(r6,Elem->RApertures);
@@ -72,13 +83,13 @@ void FieldMapRadPass(double *r,struct elem *Elem,double Brho,int num_particles)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
-    double Brho;
+    double Brho, irho;
     if (!Elem) {
         double Length;
         int NumIntSteps, Nx, Ny;
         double *LUT_Bx, *LUT_By, *LUT_dBxdx, *LUT_dBydx, *LUT_dBxdy, *LUT_dBydy;
         double *LUT_d2Bxdxdx, *LUT_d2Bxdxdy, *LUT_d2Bxdydy, *LUT_d2Bydxdx, *LUT_d2Bydxdy, *LUT_d2Bydydy;
-        double *X, *Y, xmin, ymin, delta_x, delta_y, Energy;
+        double *X, *Y, xmin, ymin, delta_x, delta_y, Energy, BendingAngle;
         double *R1, *R2, *T1, *T2, *EApertures, *RApertures, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
         NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
@@ -111,6 +122,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+        BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle",0); check_error();
   
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
@@ -144,9 +156,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
+        Elem->BendingAngle=BendingAngle;
     }
     Brho=Elem->Energy/299792458;
-    FieldMapRadPass(r_in,Elem,Brho,num_particles);
+    irho = Elem->BendingAngle/Elem->Length;
+    FieldMapRadPass(r_in,Elem,Brho,irho,num_particles);
     return Elem;
 }
 
@@ -161,7 +175,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        double Length, Brho;
+        double Length, Brho, irho, BendingAngle;
         int NumIntSteps, Nx, Ny;
         double *LUT_Bx, *LUT_By, *LUT_dBxdx, *LUT_dBydx, *LUT_dBxdy, *LUT_dBydy;
         double *LUT_d2Bxdxdx, *LUT_d2Bxdxdy, *LUT_d2Bxdydy, *LUT_d2Bydxdx, *LUT_d2Bydxdy, *LUT_d2Bydydy;
@@ -198,6 +212,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
         KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+        BendingAngle=atGetOptionalDouble(ElemData,"BendingAngle",0); check_error();
         
         struct elem *Elem;
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -232,13 +247,14 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
         Elem->KickAngle=KickAngle;
-        
+        Elem->BendingAngle=BendingAngle;
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
         Brho=Elem->Energy/299792458;
-        FieldMapRadPass(r_in,Elem,Brho,num_particles);
+        irho = Elem->BendingAngle/Elem->Length;
+        FieldMapRadPass(r_in,Elem,Brho,irho,num_particles);
         
     }
     else if (nrhs == 0) {
