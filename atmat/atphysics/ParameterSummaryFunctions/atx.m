@@ -147,6 +147,7 @@ end
                 [chi,tns]=atdampingrates(m);
                 fs=abs(tns(3))/revperiod;
                 dampingtime=revperiod./chi;
+                dampingJ=DampJfromTau(dampingtime);
                 if any(radindex)
                     jmt=jmat(3);
                     lindata=cellfun(@process,{envelope.R},reshape(num2cell(T,[1 2]),1,[]),num2cell(lindata));
@@ -160,6 +161,7 @@ end
                 espread=NaN;
                 fs=NaN;
                 dampingtime=NaN(1,3);
+                dampingJ=NaN(1,3);
                 lindata=arrayfun(@deflt,lindata);
             end
         else
@@ -167,6 +169,7 @@ end
             espread=NaN;
             fs=NaN;
             dampingtime=NaN(1,3);
+            dampingJ=NaN(1,3);
             lindata=arrayfun(@deflt,lindata);
         end
         modemit=cat(1,lindata.modemit);
@@ -182,6 +185,7 @@ end
             display(projemittance);
             display(projcoupling);
             display(dampingtime);
+            display(dampingJ);
             display(fs);
             display(espread);
             display(blength);
@@ -196,6 +200,7 @@ end
                 'nuh',tunes(1),'nuv',tunes(2),...
                 'chromaticity',chromaticity(1,:),...
                 'dampingtime',dampingtime,...
+                'dampingJ',dampingJ,...
                 'espread',espread,...
                 'blength',blength,...
                 'modemittance',modemittance,...
