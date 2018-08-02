@@ -101,7 +101,7 @@ if ~isempty(cavind)
     freq = THERING{cavind(:,1)}.Frequency;
     v_cav = 0;
     for i = 1:length(cavind)
-        v_cav = v_cav + THERING{cavind(:,1)}.Voltage;
+        v_cav = v_cav + THERING{cavind(:,i)}.Voltage;
     end
 else
     % Default
