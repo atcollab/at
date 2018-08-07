@@ -38,8 +38,8 @@ for i = 1:length(I_cav)
         ring_temp{I_cav(i)} = CavDrift;
         CavElement.Length = 0;
         ring_temp = atinsertelems(ring_temp,I_cav(i),0.5,CavElement);
+        I_cav(i+1:end) = I_cav(i+1:end)+2;
     end
-    I_cav(i+1:end) = I_cav(i+1:end)+2;
 end
 ring0 = ring_temp;
 
