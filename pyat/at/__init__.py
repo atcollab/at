@@ -7,5 +7,5 @@ from .patpass import patpass
 from .track import *
 from .physics import *
 
-from . import elements
-from . import lattice
+from .elements import *
+from .lattice import *

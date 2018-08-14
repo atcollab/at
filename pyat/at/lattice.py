@@ -55,3 +55,39 @@ def get_s_pos(ring, refpts=None):
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
     return numpy.squeeze(s_pos[refpts])
+
+
+def tilt_elem(elem, rots):
+    """
+    set a new tilt angle to an element. The rotation matrices are stored in the R1 and R2 attributes
+    R1 = [[ cos(rots) sin(rots)]    R2 = [[cos(rots) -sin(rots)]
+          [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
+    
+    :param elem: element to be tilted
+    :param rots: tilt angle.
+           rots > 0 corresponds to a corkskew rotation of the element looking in the direction of the beam
+    :return: None
+    """
+    cs = numpy.cos(rots)
+    sn = numpy.sin(rots)
+    rm = numpy.diag([cs, cs, cs, cs, 1.0, 1.0]).T     # transpose to get Fortran alignment
+    rm[0, 2] = sn
+    rm[1, 3] = sn
+    rm[2, 0] = -sn
+    rm[3, 1] = -sn
+    elem.R1 = numpy.asfortranarray(rm)
+    elem.R2 = numpy.asfortranarray(rm.T)
+
+
+def shift_elem(elem, deltax=0.0, deltaz=0.0):
+    """
+    set a new displacement vector to an element. Translation vectors are stored in the T1 and T2 attributes
+
+    :param elem:  element to be displaced
+    :param deltax: horizontal displacement of the element
+    :param deltaz:  vertical displacement of the element
+    :return:
+    """
+    tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
+    elem.T1 = -tr
+    elem.T2 = tr
