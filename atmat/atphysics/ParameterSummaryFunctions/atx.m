@@ -147,7 +147,8 @@ end
                 [chi,tns]=atdampingrates(m);
                 fs=abs(tns(3))/revperiod;
                 dampingtime=revperiod./chi;
-                dampingJ=DampJfromTau(dampingtime);
+                alpha=1.0./dampingtime;
+                dampingJ=4.0*alpha/sum(alpha);
                 if any(radindex)
                     jmt=jmat(3);
                     lindata=cellfun(@process,{envelope.R},reshape(num2cell(T,[1 2]),1,[]),num2cell(lindata));
