@@ -190,8 +190,8 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
-    if ((PyArray_FLAGS(array) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
-        snprintf(errmessage, 60, "The attribute %s is not C-aligned.", name);
+    if ((PyArray_FLAGS(array) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        snprintf(errmessage, 60, "The attribute %s is not Fortran-aligned.", name);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
