@@ -9,7 +9,7 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
-    """lattice_pass tracks particles through each element of the sequence lattice
+    """lattice_pass tracks particles through each element of the iterable lattice
     calling the element-specific tracking function specified in the
     lattice[i].PassMethod field.
 
@@ -18,11 +18,11 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
      * lattice_pass(lattice, r_in, refpts=len(line)) is the same as
        lattice_pass(lattice, r_in) since the reference point len(line) is the
        exit of the last element
-     * linepass(lattice, r_in, refpts=0) is a copy of r_in since the
+     * lattice_pass(lattice, r_in, refpts=0) is a copy of r_in since the
        reference point 0 is the entrance of the first element
 
     Args:
-        lattice: sequence of AT elements
+        lattice: iterable of AT elements
         r_in: 6xN array: input coordinates of N particles
         nturns: number of passes through the lattice line
         refpts: indices of elements at which to return coordinates (see
@@ -38,6 +38,8 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
     nparticles = 1 if r_in.ndim == 1 else r_in.shape[1]
     r_in = numpy.asfortranarray(r_in)
+    if not isinstance(lattice, list):
+        lattice = list(lattice)
     if refpts is None:
         refpts = len(lattice)
     refs = uint32_refpts(refpts, len(lattice))
