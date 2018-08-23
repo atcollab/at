@@ -228,25 +228,15 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             PyErr_SetString(PyExc_ValueError, "refpts is not a uint32 array");
             return NULL;
         }
-        if ((PyArray_FLAGS(refs) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
-            PyErr_SetString(PyExc_ValueError, "refpts is not C aligned");
-            return NULL;
-        }
         refpts = PyArray_DATA(refs);
-        /* empty array for refpts means only get tracking at the last turn */
         num_refpts = PyArray_SIZE(refs);
-        if (num_refpts == 0)
-            outdims[1] = num_particles;
-        else
-            outdims[1] = num_turns*num_refpts*num_particles;
     }
     else {
-        /* no argument provided for refpts means get tracking at the end of each turn */
-        refpts = &num_elements;
-        num_refpts = 1;
-        outdims[1] = num_turns*num_particles;
+        refpts = NULL;
+        num_refpts = 0;
     }
     outdims[0] = 6;
+    outdims[1] = num_turns*num_refpts*num_particles;
     rout = PyArray_EMPTY(2, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
@@ -318,11 +308,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             memcpy(drout, drin, np6*sizeof(double));
             drout += np6; /*  shift the location to write to in the output array */
         }
-    }
-    /* only the last turn requested */
-    if (num_refpts == 0) {
-        memcpy(drout, drin, np6*sizeof(double));
-        drout += np6; /*  shift the location to write to in the output array */
     }
     return rout;
 }
