@@ -183,7 +183,7 @@ class Sextupole(Multipole):
 
 class Octupole(Multipole):
     """pyAT octupole element, with no changes from multipole at present"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+    REQUIRED_ATTRIBUTES = Multipole.REQUIRED_ATTRIBUTES
 
 
 class RFCavity(Element):
