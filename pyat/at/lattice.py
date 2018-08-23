@@ -5,11 +5,10 @@ A lattice as understood by pyAT is any sequence of elements.  These functions
 are useful for working with these sequences.
 
 The refpts functions allow selecting a number of points in a lattice.
-Indexing runs from zero (the start of the first element) to n_elements + 1
-(the end of the last element).
+Indexing runs from zero (the start of the first element) to n_elements (the end of the last element).
 """
 import numpy
-import collections
+import itertools
 
 
 def uint32_refpts(refpts, n_elements):
@@ -18,16 +17,9 @@ def uint32_refpts(refpts, n_elements):
     elements.  This is used for indexing a lattice using explicit indices.
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        urefpts = numpy.array(numpy.flatnonzero(refpts), dtype=numpy.uint32)
+        urefpts = numpy.asarray(numpy.flatnonzero(refpts), dtype=numpy.uint32)
     else:
-        if not isinstance(refpts, (collections.Sequence, numpy.ndarray)):
-            refpts = [refpts]
-        if (numpy.any(numpy.diff(numpy.array(refpts)) < 0) or
-                (refpts[-1] > n_elements) or
-                numpy.any(numpy.array(refpts) < 0)):
-            error_msg = 'refpts must be ascending and less than or equal to {}'
-            raise ValueError(error_msg.format(n_elements))
-        urefpts = numpy.asarray(refpts, dtype=numpy.uint32)
+        urefpts = numpy.ravel(numpy.asarray(refpts, dtype=numpy.uint32))
     return urefpts
 
 
@@ -45,15 +37,119 @@ def bool_refpts(refpts, n_elements):
         return brefpts
 
 
+def checkattr(*args):
+    """Return a function to be used as a filter. Check the presence or the value of an attribute. This function can be
+    used to extract from a ring all elements have a given attribute.
+
+    filtfunc = checkattr(attrname)              returns the function filtfunc such that
+        ok=filtfunc(element) is true if the element has a 'attrname' attribute
+
+    filtfunc = checkattr(attrname, attrvalue)   returns the function filtfunc such that
+        ok=filtfunc(element) is true if the element has a 'attrname' attribute with the value attrvalue
+
+    Examples:
+
+    cavs = filter(checkattr('Frequency'), ring)
+        returns an iterator over all elements in ring that have a 'Frequency' attribute
+
+    elts = filter(checkattr('K', 0.0), ring)
+        returns an iterator over all elements in ring that have a 'K' attribute equal to 0.0
+
+    """
+    def testf(el):
+        try:
+            v = getattr(el, args[0])
+            return len(args) == 1 or v == args[1]
+        except AttributeError:
+            return False
+    return testf
+
+
+def checktype(eltype):
+    """Return a function to be used as a filter. Check the type of an element. This function can be
+    used to extract from a ring all elements have a given type.
+
+    filtfunc = checktype(class)                 returns the function filtfunc such that
+        ok=filtfunc(element) is true if the element is an instance of class
+
+    Example:
+
+    qps = filter(checktype(at.Quadrupole), ring) returns an iterator over all quadrupoles in ring
+
+    """
+    return lambda el: isinstance(el, eltype)
+
+
+def get_cells(ring, *args):
+    """Return a numpy array of booleans, with the same length as ring, marking all elements satisfying a given condition.
+
+    refpts = getcells(ring, filtfunc) selects all elements for which the function filtfunc(element) returns True
+
+    refpts = getcells(ring, attrname) selects all elements having a 'attrname' attribute
+
+    refpts = getcells(ring, attrname, attrvalue) selects all elements having a 'attrname' attribute with value attrvalue
+
+    Example:
+
+    refpts = getcells(ring, 'Frequency')
+        returns a numpy array of booleans where all elements having a 'Frequency' attribute are True
+
+    refpts = getcells(ring, 'K', 0.0)
+        returns a numpy array of booleans where all elements having a 'K' attribute equal to 0.0 are True
+
+    """
+    if callable(args[0]):
+        testf = args[0]
+    else:
+        testf = checkattr(*args)
+    return numpy.array(tuple(map(testf, ring)), dtype=bool)
+
+
+def refpts_iterator(ring, refpts):
+    """Return an iterator over all elements in ring identified by refpts.
+
+    refpts may be:
+
+    1) a list of integers (0 indicating the first element)
+    2) a numpy array of booleans as long as ring where selected elements are true
+
+    """
+    if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
+        for el, tst in zip(ring, refpts):
+            if tst:
+                yield el
+    else:
+        for i in refpts:
+            yield ring[i]
+
+
+def refpts_subset(ring, refpts):
+    """Return a list of all elements in ring identified by refpts.
+
+    refpts may be:
+
+    1) a list of integers (0 indicating the first element)
+    2) a numpy array of booleans as long as ring where selected elements are true
+
+    """
+    if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
+        return [el for el, tst in zip(ring, refpts) if tst]
+    else:
+        return [ring[i] for i in refpts]
+
+
 def get_s_pos(ring, refpts=None):
     """
     Return a numpy array corresponding to the s position of the specified
     elements.
     """
+    if refpts is None:
+        refpts = len(ring)
     # Positions at the end of each element.
     s_pos = numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
+    refpts = uint32_refpts(refpts, len(ring))
     return numpy.squeeze(s_pos[refpts])
 
 
@@ -86,8 +182,46 @@ def shift_elem(elem, deltax=0.0, deltaz=0.0):
     :param elem:  element to be displaced
     :param deltax: horizontal displacement of the element
     :param deltaz:  vertical displacement of the element
-    :return:
+    :return: None
     """
     tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
     elem.T1 = -tr
     elem.T2 = tr
+
+
+def set_tilt(ring, tilts):
+    """Set tilts to a list of elements.
+
+    ring:   any iterable over elements to be tilted
+    tilts:  any iterable as long as ring containing tilt values or
+            scalar tilt value to be applied to all elements
+
+    """
+    try:
+        it = iter(tilts)
+    except TypeError:
+        it = itertools.repeat(tilts)
+    for el, tilt in zip(ring, it):
+        tilt_elem(el, tilt)
+
+
+def set_shift(ring, dxs, dzs):
+    """Set translations to a list of elements.
+
+    ring:   any iterable over elements to be shifted
+    dxs:    any iterable as long as ring containing horizontal displacement values or
+            scalar horizontal displacement value to be applied to all elements
+    dzs:    any iterable as long as ring containing vertical displacement values or
+            scalar vertical displacement value to be applied to all elements
+
+    """
+    try:
+        itx = iter(dxs)
+    except TypeError:
+        itx = itertools.repeat(dxs)
+    try:
+        itz = iter(dzs)
+    except TypeError:
+        itz = itertools.repeat(dzs)
+    for el, dx, dy in zip(ring, itx, itz):
+        shift_elem(el, dx, dy)
