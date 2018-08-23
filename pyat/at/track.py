@@ -22,27 +22,33 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
        reference point 0 is the entrance of the first element
 
     Args:
-        lattice: iterable of AT elements
-        r_in: 6xN array: input coordinates of N particles
-        nturns: number of passes through the lattice line
-        refpts: indices of elements at which to return coordinates (see
-                lattice.py)
+        lattice:    iterable of AT elements
+        r_in:       6xN array: input coordinates of N particles
+        nturns:     number of passes through the lattice line
+        refpts:     indices of elements at which to return coordinates (see
+                    lattice.py)
         keep_lattice: use elements persisted from a previous call to at.atpass.
-                      If True, assume that the lattice has not changed since
-                      that previous call.
+                    If True, assume that the lattice has not changed since
+                    that previous call.
 
     Returns:
-        6xAxBxC array containing output coordinates of A particles at B
-        selected indices for C turns.
+        6xAxBxC array containing output coordinates of A particles at B selected indices for C turns.
     """
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
     nparticles = 1 if r_in.ndim == 1 else r_in.shape[1]
     r_in = numpy.asfortranarray(r_in)
     if not isinstance(lattice, list):
         lattice = list(lattice)
+    nelems = len(lattice)
     if refpts is None:
-        refpts = len(lattice)
-    refs = uint32_refpts(refpts, len(lattice))
+        refpts = nelems
+    refs = uint32_refpts(refpts, nelems)
+    if refs.size > 0:
+        if (numpy.any(numpy.diff(refs) < 0) or
+                (refs[-1] > nelems) or
+                (refs[0]) < 0):
+            error_msg = 'refpts must be ascending and less than or equal to {}'
+            raise ValueError(error_msg.format(nelems))
     result = atpass(lattice, r_in, nturns, refs, int(keep_lattice))
     # atpass returns 6xN array where n = x*y*z;
     # * x is number of particles;
