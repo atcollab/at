@@ -43,12 +43,6 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
     if refpts is None:
         refpts = nelems
     refs = uint32_refpts(refpts, nelems)
-    if refs.size > 0:
-        if (numpy.any(numpy.diff(refs) < 0) or
-                (refs[-1] > nelems) or
-                (refs[0]) < 0):
-            error_msg = 'refpts must be ascending and less than or equal to {}'
-            raise ValueError(error_msg.format(nelems))
     result = atpass(lattice, r_in, nturns, refs, int(keep_lattice))
     # atpass returns 6xN array where n = x*y*z;
     # * x is number of particles;
