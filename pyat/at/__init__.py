@@ -9,3 +9,10 @@ from .physics import *
 
 from .elements import *
 from .lattice import *
+
+
+class AtError(Exception):
+    pass
+
+class AtWarning(Warning):
+    pass
