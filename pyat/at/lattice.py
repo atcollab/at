@@ -17,16 +17,18 @@ def uint32_refpts(refpts, n_elements):
     elements.  This is used for indexing a lattice using explicit indices.
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        urefpts = numpy.asarray(numpy.flatnonzero(refpts), dtype=numpy.uint32)
+        refs = numpy.flatnonzero(refpts)
     else:
-        urefpts = numpy.ravel(numpy.asarray(refpts, dtype=numpy.uint32))
-        if urefpts.size > 0:
-            if (numpy.any(numpy.diff(urefpts) < 0) or
-                    (urefpts[-1] > n_elements) or
-                    (urefpts[0]) < 0):
-                error_msg = 'refpts must be ascending and less than or equal to {}'
-                raise ValueError(error_msg.format(n_elements))
-    return urefpts
+        refs = numpy.ravel(numpy.asarray(refpts))
+
+    if refs.size > 0:
+        if (numpy.any(numpy.diff(refs) < 0) or
+                (refs[-1] > n_elements) or
+                (refs[0]) < 0):
+            error_msg = 'refpts must be ascending and less than or equal to {}'
+            raise ValueError(error_msg.format(n_elements))
+
+    return numpy.asarray(refs, dtype=numpy.uint32)
 
 
 def bool_refpts(refpts, n_elements):
