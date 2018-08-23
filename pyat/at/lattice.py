@@ -19,6 +19,12 @@ def uint32_refpts(refpts, n_elements):
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         urefpts = numpy.asarray(numpy.flatnonzero(refpts), dtype=numpy.uint32)
     else:
+        if len(refpts) > 0:
+            if (numpy.any(numpy.diff(refpts) < 0) or
+                    (refpts[-1] > n_elements) or
+                    (refpts[0]) < 0):
+                error_msg = 'refpts must be ascending and less than or equal to {}'
+                raise ValueError(error_msg.format(n_elements))
         urefpts = numpy.ravel(numpy.asarray(refpts, dtype=numpy.uint32))
     return urefpts
 
