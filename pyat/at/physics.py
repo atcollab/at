@@ -16,7 +16,7 @@ CONVERGENCE = 1e-12
 # dtype for structured array containing Twiss parameters
 TWISS_DTYPE = [('idx', numpy.uint32),
                ('s_pos', numpy.float64),
-               ('closed_orbit', numpy.float64, (4,)),
+               ('closed_orbit', numpy.float64, (6,)),
                ('dispersion', numpy.float64, (4,)),
                ('alpha', numpy.float64, (2,)),
                ('beta', numpy.float64, (2,)),
@@ -27,6 +27,7 @@ TWISS_DTYPE = [('idx', numpy.uint32),
 _s0 = numpy.zeros((2, 2), order='F')
 _s2 = numpy.array([[0, 1], [-1, 0]], order='F')
 _s4 = numpy.concatenate((numpy.concatenate((_s2, _s0), axis=1), numpy.concatenate((_s0, _s2), axis=1)), axis=0)
+# prepare Identity matrix
 
 
 def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
@@ -345,10 +346,8 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, output_orbit=False, **kwargs
         orbit = find_orbit4(ring, dp)
         keeplattice = True
     # Construct matrix of plus and minus deltas
-    dmat = numpy.zeros((6, 8), order='F')
-    for i in range(4):
-        dmat[i, i] = 0.5 * XYStep
-        dmat[i, i + 4] = -0.5 * XYStep
+    dg = numpy.asfortranarray(0.5 * numpy.diag([XYStep] * 6)[:, :4])
+    dmat=numpy.concatenate((dg, -dg, numpy.zeros((6, 1))), axis=1)
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
 
@@ -356,19 +355,16 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, output_orbit=False, **kwargs
     out_mat = numpy.squeeze(at.lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keeplattice), axis=3)
     # out_mat: 8 particles at n refpts for one turn
     # (x + d) - (x - d) / d
-    m44 = (in_mat[:4, :4] - in_mat[:4, 4:]) / XYStep
+    m44 = (in_mat[:4, :4] - in_mat[:4, 4:-1]) / XYStep
 
-    if refpts is None:
-        mstack = numpy.array([]).reshape((4, 4, 0))
-    else:
-        mstack = (out_mat[:4, :4, :] - out_mat[:4, 4:, :]) / XYStep
+    if refpts is not None:
+        mstack = (out_mat[:4, :4, :] - out_mat[:4, 4:-1, :]) / XYStep
         if full:
             mstack = numpy.stack(map(mrotate, numpy.split(mstack, mstack.shape[2], axis=2)), axis=2)
-
-    if output_orbit:
-        return m44, mstack, orbit
-    elif refpts is not None:
-        return m44, mstack
+        if output_orbit:
+            return m44, mstack, out_mat[:, -1, :]
+        else:
+            return m44, mstack
     else:
         return m44
 
@@ -406,8 +402,8 @@ def find_m66(ring, refpts=None, orbit=None, output_orbit=False, **kwargs):
 
     # Construct matrix of plus and minus deltas
     scaling = numpy.array([XYStep, XYStep, XYStep, XYStep, DPStep, DPStep])
-    dg = 0.5*numpy.diag(scaling)
-    dmat = numpy.asfortranarray(numpy.concatenate((dg, -dg), axis=1))
+    dg = numpy.asfortranarray(0.5*numpy.diag(scaling))
+    dmat = numpy.concatenate((dg, -dg, numpy.zeros((6,1))), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
 
@@ -415,17 +411,14 @@ def find_m66(ring, refpts=None, orbit=None, output_orbit=False, **kwargs):
     out_mat = numpy.squeeze(at.lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keeplattice), axis=3)
     # out_mat: 12 particles at n refpts for one turn
     # (x + d) - (x - d) / d
-    m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
+    m66 = (in_mat[:, :6] - in_mat[:, 6:-1]) / scaling.reshape((1, 6))
 
-    if refpts is None:
-        mstack = numpy.array([]).reshape((6, 6, 0))
-    else:
-        mstack = (out_mat[:, :6, :] - out_mat[:, 6:, :]) / scaling.reshape((1, 6, 1))
-
-    if output_orbit:
-        return m66, mstack, orbit
-    elif refpts is not None:
-        return m66, mstack
+    if refpts is not None:
+        mstack = (out_mat[:, :6, :] - out_mat[:, 6:-1, :]) / XYStep
+        if output_orbit:
+            return m66, mstack, out_mat[:, -1, :]
+        else:
+            return m66, mstack
     else:
         return m66
 
@@ -491,6 +484,6 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, ddp=DDP):
     if get_chrom:
         twissb, tuneb, _ = get_twiss(ring, dp + ddp, refpts[:nrefs])
         chrom = (tuneb - tune) / ddp
-        twiss['dispersion'] = (twissb['closed_orbit'] - twiss['closed_orbit']) / ddp
+        twiss['dispersion'] = (twissb['closed_orbit'] - twiss['closed_orbit'])[:,:4] / ddp
 
     return twiss, tune, chrom
