@@ -9,7 +9,7 @@ import numpy
 def _atpass_one(args):
     ring, rin, turns = args
     ans = atpass(ring, rin, turns)
-    return ans
+    return rin
 
 
 def _patpass(ring, rin, nturns, pool_size):
