@@ -10,22 +10,17 @@ import numpy
 
 def _atpass_one(args):
     ring, rin, turns, refpts = args
-    ans = atpass(ring, rin, turns, refpts)
-    return ans
+    return atpass(ring, rin, turns, refpts)
 
 
 def _patpass(ring, rin, nturns, refpts, pool_size):
-    rout = numpy.zeros((rin.shape[0], rin.shape[1] * nturns))
     pool = multiprocessing.Pool(pool_size)
     args = [(ring, rin[:, i], nturns, refpts) for i in range(rin.shape[1])]
     results = pool.map(_atpass_one, args)
-    for i, res in enumerate(results):
-        # Fold the results back into the same shape as atpass.
-        rout[:, i::rin.shape[1]] = res
-    return rout
+    return numpy.concatenate(results, axis=1)
 
 
-def patpass(ring, rin, nturns, reuse=True, refpts=None, pool_size=None):
+def patpass(ring, rin, nturns, refpts=None, reuse=True, pool_size=None):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -33,9 +28,8 @@ def patpass(ring, rin, nturns, reuse=True, refpts=None, pool_size=None):
     """
     if not reuse:
         raise ValueError('patpass does not support altering lattices')
-    if refpts is not None:
-        raise ValueError('patpass does not yet support refpts')
-    refpts = len(ring)
+    if refpts is None:
+        refpts = len(ring)
     refs = uint32_refpts(refpts, len(ring))
     if pool_size is None:
         pool_size = multiprocessing.cpu_count()
