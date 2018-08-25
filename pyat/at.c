@@ -197,7 +197,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     unsigned int nextrefindex;
     unsigned int num_refpts;
     unsigned int reuse=0;
-    npy_intp outdims[2];
+    npy_intp outdims[4];
     int turn;
     struct parameters param;
 
@@ -236,8 +236,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         num_refpts = 0;
     }
     outdims[0] = 6;
-    outdims[1] = num_turns*num_refpts*num_particles;
-    rout = PyArray_EMPTY(2, outdims, NPY_DOUBLE, 1);
+    outdims[1] = num_particles;
+    outdims[2] = num_refpts;
+    outdims[3] = num_turns;
+    rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
     if (!reuse) new_lattice = 1;
@@ -316,10 +318,19 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("atpass(line, rin, nturns, refpts=None, reuse=False)\n\n"
+    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False)\n\n"
               "Track input particles rin along line for nturns turns.\n"
-              "Record 6D phase space at elements corresponding to refpts for each turn.\n"
-              "If reuse, use previously cached details for the lattice.\n"
+              "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
+              "line:    list of elements\n"
+              "rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "         On return, rin contains the final coordinates of the particles\n"
+              "n_turns: number of turns to be tracked\n"
+              "refpts:  numpy array of indices of elements where output is desired\n"
+              "         0 means entrance of the first element\n"
+              "         len(line) means end of the last element\n"
+              "reuse:   if True, use previously cached description of the lattice.\n\n"
+              "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
+              "         of particle coordinates\n"
               )},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
