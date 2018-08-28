@@ -3,12 +3,6 @@ import numpy
 import pytest
 
 
-def test_patpass_raises_ValueError_if_refpts_provided(rin):
-    refpts = numpy.zeros((1,), dtype=numpy.uint32)
-    with pytest.raises(ValueError):
-        patpass([], rin, 1, refpts=refpts)
-
-
 def test_patpass_raises_ValueError_if_reuse_False(rin):
     with pytest.raises(ValueError):
         patpass([], rin, 1, reuse=False)
