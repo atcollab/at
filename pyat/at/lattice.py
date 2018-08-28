@@ -131,21 +131,6 @@ def refpts_iterator(ring, refpts):
             yield ring[i]
 
 
-def refpts_subset(ring, refpts):
-    """Return a list of all elements in ring identified by refpts.
-
-    refpts may be:
-
-    1) a list of integers (0 indicating the first element)
-    2) a numpy array of booleans as long as ring where selected elements are true
-
-    """
-    if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        return [el for el, tst in zip(ring, refpts) if tst]
-    else:
-        return [ring[i] for i in refpts]
-
-
 def get_s_pos(ring, refpts=None):
     """
     Return a numpy array corresponding to the s position of the specified
