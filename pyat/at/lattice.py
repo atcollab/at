@@ -150,15 +150,20 @@ def get_s_pos(ring, refpts=None):
     """
     Return a numpy array corresponding to the s position of the specified
     elements.
+
+    Args:
+        ring: lattice from which to retrieve s position
+        refpts: elements at which to return s position. If None, return
+            s position at all elements in the ring.
     """
     if refpts is None:
-        refpts = len(ring)
+        refpts = range(len(ring) + 1)
     # Positions at the end of each element.
     s_pos = numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
     refpts = uint32_refpts(refpts, len(ring))
-    return numpy.squeeze(s_pos[refpts])
+    return s_pos[refpts]
 
 
 def tilt_elem(elem, rots):
