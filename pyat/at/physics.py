@@ -13,7 +13,7 @@ STEP_SIZE = 1e-6
 MAX_ITERATIONS = 20
 CONVERGENCE = 1e-12
 
-# dtype for structured array containing Twiss parameters
+# dtype for structured array containing Twiss parameters - see get_twiss()
 TWISS_DTYPE = [('idx', numpy.uint32),
                ('s_pos', numpy.float64),
                ('closed_orbit', numpy.float64, (6,)),
@@ -437,10 +437,17 @@ def betatron_phase_unwrap(m):
 
 
 def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, ddp=DDP):
-    """
-    Determine Twiss parameters by first finding the transfer matrix.
-    """
+    """Determine Twiss parameters by first finding the transfer matrix.
 
+    The Twiss structured array has nrefs elements, so:
+     * twiss['idx'].shape is (nrefs,)
+     * twiss['closed_orbit'].shape is (nrefs, 6).
+
+    Returns:
+        twiss - structured array
+        tune - numpy array of shape (2,)
+        chrom - numpy array of shape (2,)
+    """
     def twiss22(mat, ms):
         """
         Calculate Twiss parameters from the standard 2x2 transfer matrix
@@ -476,6 +483,8 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, ddp=DDP):
     tune = numpy.array((mx[-1], my[-1])) / (2 * numpy.pi)
     twiss = numpy.zeros(nrefs, dtype=TWISS_DTYPE)
     twiss['idx'] = refpts[:nrefs]
+    # Use rollaxis to get the arrays in the correct shape for the twiss
+    # structured array - that is, with nrefs as the first dimension.
     twiss['s_pos'] = at.get_s_pos(ring, refpts[:nrefs])
     twiss['closed_orbit'] = numpy.rollaxis(orbit, -1)[:nrefs]
     twiss['m44'] = numpy.rollaxis(mstack, -1)[:nrefs]
