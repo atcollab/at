@@ -118,8 +118,12 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     if refpts is None:
         output = ref_in
     else:
-        all_points = numpy.squeeze(at.lattice_pass(ring, ref_in.copy(order='K'), refpts=refpts,
-                                                   keep_lattice=keeplattice))
+        # We know that there is one particle and one turn, so select the
+        # (6, nrefs) output.
+        all_points = at.lattice_pass(ring,
+                                     ref_in.copy(order='K'),
+                                     refpts=refpts,
+                                     keep_lattice=keeplattice)[:,0,:,0]
         output = (ref_in, all_points)
     return output
 
