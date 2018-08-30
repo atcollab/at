@@ -3,12 +3,6 @@ import numpy
 import pytest
 
 
-def test_patpass_raises_ValueError_if_refpts_provided(rin):
-    refpts = numpy.zeros((1,), dtype=numpy.uint32)
-    with pytest.raises(ValueError):
-        patpass([], rin, 1, refpts=refpts)
-
-
 def test_patpass_raises_ValueError_if_reuse_False(rin):
     with pytest.raises(ValueError):
         patpass([], rin, 1, reuse=False)
@@ -19,19 +13,20 @@ def test_patpass_multiple_particles_and_turns():
     nparticles = 10
     rin = numpy.zeros((6, nparticles))
     d = elements.Drift('drift', 1.0)
-    assert d.Length == 1
     lattice = [d]
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
     rout = patpass(lattice, rin, nturns)
     # results from Matlab
-    assert rout.shape == (6, nparticles*nturns)
-    rout_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(6,)
+    assert rout.shape == (6, nparticles, 1, nturns)
+    rout_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(6,1)
     zeros = numpy.zeros((6,))
-    numpy.testing.assert_equal(rout[:, 0], rout_expected)
-    # only the first particle is not all zeros
+    # The fourth index is for nturns; the first element is after one turn.
+    numpy.testing.assert_equal(rout[:,0,:,0], rout_expected)
     for i in range(nturns):
+        # The first particle is not all zeros.
         with pytest.raises(AssertionError):
-            numpy.testing.assert_equal(rout[:, i * nturns], zeros)
+            numpy.testing.assert_equal(rout[:,0,0,i], zeros)
+        # All other particles are all zeros.
         for j in range(1, nparticles):
-            numpy.testing.assert_equal(rout[:, i * nturns + j], zeros)
+            numpy.testing.assert_equal(rout[:,j,0,i], zeros)

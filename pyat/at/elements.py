@@ -183,7 +183,7 @@ class Sextupole(Multipole):
 
 class Octupole(Multipole):
     """pyAT octupole element, with no changes from multipole at present"""
-    pass
+    REQUIRED_ATTRIBUTES = Multipole.REQUIRED_ATTRIBUTES
 
 
 class RFCavity(Element):
@@ -218,3 +218,14 @@ class RingParam(Element):
         kwargs.setdefault('Periodicity', int(nb_periods))
         kwargs.setdefault('PassMethod', 'IdentityPass')
         super(RingParam, self).__init__(family_name, kwargs.pop('Length', 0.0), **kwargs)
+
+
+class M66(Element):
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+
+    def __init__(self, family_name, m66=None, **kwargs):
+        if m66 is None:
+            m66 = numpy.identity(6)
+        if m66.shape != (6, 6):
+            raise ValueError('Transfer matrix must have a 6x6 shape')
+        super(M66, self).__init__(family_name, M66=numpy.asfortranarray(m66), **kwargs)

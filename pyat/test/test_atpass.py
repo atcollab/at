@@ -1,6 +1,6 @@
 import pytest
 import numpy
-from at import elements, atpass
+from at import elements, atpass, uint32_refpts
 
 
 def test_incorrect_types_raises_value_error(rin):
@@ -109,47 +109,46 @@ def test_two_particles_for_two_turns():
     lattice = [d]
     rin[1][0] = 1e-6
     rin[3][0] = -2e-6
-    rout = atpass(lattice, rin, 2)
+    rout = atpass(lattice, rin, 2, refpts=uint32_refpts([1], 1))
     # results from Matlab
-    rout1_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(6)
-    rout2_expected = numpy.array([2e-6, 1e-6, -4e-6, -2e-6, 0, 5e-12]).reshape(6)
+    rout_particle1_turn1 = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(6,1)
+    rout_particle1_turn2 = numpy.array([2e-6, 1e-6, -4e-6, -2e-6, 0, 5e-12]).reshape(6,1)
     # the second particle doesn't change
-    rout3_expected = numpy.zeros((6,))
-    # the first two 6x1 columns are the two particles after the first turn
-    numpy.testing.assert_equal(rout[:,0], rout1_expected)
-    numpy.testing.assert_equal(rout[:,1], rout3_expected)
-    # the second two 6x1 columns are the two particles after the second turn
-    numpy.testing.assert_equal(rout[:,2], rout2_expected)
-    numpy.testing.assert_equal(rout[:,3], rout3_expected)
+    rout_particle2 = numpy.zeros((6,1))
+    # the second index is particle number
+    numpy.testing.assert_equal(rout[:,0,:,0], rout_particle1_turn1)
+    numpy.testing.assert_equal(rout[:,1,:,0], rout_particle2)
+    # the fourth index is turn number
+    numpy.testing.assert_equal(rout[:,0,:,1], rout_particle1_turn2)
+    numpy.testing.assert_equal(rout[:,1,:,1], rout_particle2)
 
 
-def test_one_particle_for_two_turns_with_empty_refpts(rin):
+def test_one_particle_for_two_turns_with_no_refpts(rin):
     d = elements.Drift('drift', 1.0)
     lattice = [d]
     rin[1][0] = 1e-6
     rin[3][0] = -2e-6
-    # an empty refpts returns only the value at the end of the last turn
-    rout = atpass(lattice, rin, 2, refpts=numpy.zeros((0,), dtype=numpy.uint32))
-    assert rout.shape == (6, 1)
+    atpass(lattice, rin, 2)
     rout_expected = numpy.array([2e-6, 1e-6, -4e-6, -2e-6, 0, 5e-12]).reshape(6, 1)
     # rin is changed in place
     numpy.testing.assert_equal(rin, rout_expected)
-    numpy.testing.assert_equal(rout, rout_expected)
 
 
 def test_1d_particle():
-    # this is just a demonstration that while you can pass a 1d particle
-    # (shape (6,), you get back a 2d array (1, 6)
+    # This is just a demonstration that if you pass no refpts you get back
+    # a (6, *, 0, *) array. You may do this if you want only to operate
+    # on rin in-place.
     d = elements.Drift('drift', 1.0)
     lattice = [d]
     rin = numpy.zeros(6,)
     rin[1] = 1e-6
     # an empty refpts returns only the value at the end of the last turn
     rout = atpass(lattice, rin, 1)
-    # the input may be 1d but the output is 2d
-    assert rout.shape == (6, 1)
+    # output shape: (dimensions, nparticles, refpts, nturns)
+    # if no refpts are supplied, the output is (6, 1, 0, 1) and contains
+    # no data
+    assert rout.shape == (6, 1, 0, 1)
     rout_expected = numpy.array([1e-6, 1e-6, 0, 0, 0, 5e-13])
     # rin is changed in place
     numpy.testing.assert_equal(rin, rout_expected)
-    numpy.testing.assert_equal(rout, rout_expected.reshape(6, 1))
 

@@ -22,29 +22,31 @@ def ring():
 
 
 def test_find_orbit4(ring):
-    orbit4, _ = physics.find_orbit4(ring, DP)
-    expected = numpy.array([1.091636e-7, 1.276747e-15, 0, 0])
+    orbit4 = physics.find_orbit4(ring, DP)
+    expected = numpy.array([1.091636e-7, 1.276747e-15, 0, 0, DP, 0])
     numpy.testing.assert_allclose(orbit4, expected, atol=1e-12)
 
 
 def test_find_orbit4_finds_zeros_if_dp_zero(ring):
-    orbit4, _ = physics.find_orbit4(ring, 0)
-    expected = numpy.zeros((4,))
+    orbit4 = physics.find_orbit4(ring, 0)
+    expected = numpy.zeros((6,))
     numpy.testing.assert_allclose(orbit4, expected)
 
 
 def test_find_orbit4_result_unchanged_by_atpass(ring):
-    orbit4, _ = physics.find_orbit4(ring, DP)
-    orbit6 = numpy.append(orbit4, numpy.zeros((1, 2)))
-    orbit6[4] = DP
-    orbit6_pass = atpass(ring, orbit6, 1)[:, 0]
-    numpy.testing.assert_allclose(orbit4, orbit6_pass[:4], atol=1e-12)
+    orbit = physics.find_orbit4(ring, DP)
+    orbit_copy = numpy.copy(orbit)
+    orbit[4] = DP
+    atpass(ring, orbit, 1)
+    numpy.testing.assert_allclose(orbit[:4], orbit_copy[:4], atol=1e-12)
 
 
 def test_find_orbit4_with_two_refpts(ring):
     _, all_points = physics.find_orbit4(ring, DP, [49, 99])
-    expected = numpy.array([[8.148212e-6, 1.0993354e-5, 0, 0],
-                            [3.0422808e-8, 9.1635269e-8, 0, 0]]).T
+    expected = numpy.array(
+        [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
+         [3.0422808e-8, 9.1635269e-8, 0, 0, DP, 5.9280346e-6]]
+    ).T
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
 
 
@@ -61,8 +63,8 @@ def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
 def test_get_twiss(ring, refpts):
     twiss, tune, chrom = physics.get_twiss(ring, DP, refpts, get_chrom=True)
     numpy.testing.assert_allclose(twiss['s_pos'][-1], 56.209377216)
-    numpy.testing.assert_allclose(twiss['closed_orbit'][-1],
-                                  [1.0916359e-7, 0, 0, 0], atol=1e-12)
+    numpy.testing.assert_allclose(twiss['closed_orbit'][0][:5],
+                                  [1.0916359e-7, 0, 0, 0, DP], atol=1e-12)
     numpy.testing.assert_allclose(twiss['m44'][-1, :, :],
                                   M44_MATLAB, rtol=1e-5, atol=1e-7)
     numpy.testing.assert_almost_equal(twiss['beta'][-1, :],
