@@ -50,6 +50,12 @@
 #include <mex.h>
 #include <matrix.h>
 
+/* Get ready for R2018a C matrix API */
+#ifndef mxGetDoubles
+#define mxGetDoubles mxGetPr
+typedef double mxDouble;
+#endif
+
 #else
 
 #if defined(_WIN32) && (_MSC_VER < 1800)

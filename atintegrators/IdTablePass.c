@@ -10,260 +10,168 @@
  *
  */
 
-#include "at.h"
+#include "atelem.c"
 #include "atlalib.c"
 #include "interpolate.c"
 
-double *GLOBAL_x,*GLOBAL_y,*GLOBAL_xkick1,*GLOBAL_ykick1,*GLOBAL_xkick,*GLOBAL_ykick,*GLOBAL_xkick2,*GLOBAL_ykick2;
-int GLOBAL_m,GLOBAL_n;
+struct elem {
+    double Length;
+    double *xkick;
+    double *ykick;
+    double *x_map;
+    double *y_map;
+    int nx_map;
+    int ny_map;
+    int Nslice;
+    /* Optional fields */
+    double *xkick1;
+    double *ykick1;
+    double *R1;
+    double *R2;
+    double *T1;
+    double *T2;
+};
 
-/*Definition of the interpolated functions*/
-static double Map_x(double x,double y)
+double *GLOBAL_x_map, *GLOBAL_y_map;
+int GLOBAL_nx_map,GLOBAL_ny_map;
+
+static double get_kick(double *r6, double *ktable)
 {
     double f;
     /*cubic interpolation*/
-    /*splin2(GLOBAL_y,GLOBAL_x,GLOBAL_xkick,GLOBAL_xkick2,GLOBAL_n,GLOBAL_m,y,x,&f);*/
+    /*splin2(GLOBAL_y_map,GLOBAL_x_map,GLOBAL_xkick,GLOBAL_xkick2,GLOBAL_n,GLOBAL_nx,y,x,&f);*/
     
     /*biliniar interpolation*/
-    linint(GLOBAL_y,GLOBAL_x,GLOBAL_xkick,GLOBAL_m,GLOBAL_n,y,x,&f);
+    /* Transpose coordinates because the kick-table is FORTRAN-ordered */
+    linint(GLOBAL_y_map, GLOBAL_x_map, ktable, GLOBAL_ny_map, GLOBAL_nx_map, r6[2], r6[0], &f);
     return f;
-}
+ }
 
-static double Map_y(double x,double y)
+void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1,
+        double *xkick, double *ykick, double *x_map, double *y_map,int nx_map,int ny_map, int Nslice,
+        double *T1, double *T2, double *R1, double *R2, int num_particles)
 {
-    double f;
-    /*cubic interpolation*/
-    /*splin2(GLOBAL_y,GLOBAL_x,GLOBAL_ykick,GLOBAL_ykick2,GLOBAL_m,GLOBAL_n,y,x,&f);*/
-    
-    /*biliniar interpolation*/
-    linint(GLOBAL_y,GLOBAL_x,GLOBAL_ykick,GLOBAL_m,GLOBAL_n,y,x,&f);
-    return f;
-}
-
-static double Map1_x(double x,double y)
-{
-    double f;
-    /*cubic interpolation*/
-    /*splin2(GLOBAL_y,GLOBAL_x,GLOBAL_xkick1,GLOBAL_xkick2,GLOBAL_n,GLOBAL_m,y,x,&f);*/
-    
-    /*biliniar interpolation*/
-    linint(GLOBAL_y,GLOBAL_x,GLOBAL_xkick1,GLOBAL_m,GLOBAL_n,y,x,&f);
-    return f;
-}
-
-static double Map1_y(double x,double y)
-{
-    double f;
-    /*cubic interpolation*/
-    /*splin2(GLOBAL_y,GLOBAL_x,GLOBAL_ykick1,GLOBAL_ykick2,GLOBAL_m,GLOBAL_n,y,x,&f);*/
-    
-    /*biliniar interpolation*/
-    linint(GLOBAL_y,GLOBAL_x,GLOBAL_ykick1,GLOBAL_m,GLOBAL_n,y,x,&f);
-    return f;
-}
-/*
-static void markaslost(double *r6,int idx)
-{
-    r6[idx] = mxGetInf();
-}
-*/
-/* Set T1, T2, R1, R2 to NULL pointers to ignore misalignmets*/
-void IdKickMapModelPass(double *r, double le, double *xkick1, double *ykick1, double *xkick, double *ykick, double *x, double *y,int n,int m, int Nslice, double *T1, double *T2, double *R1, double *R2, int num_particles)
-{
-    double *r6,deltaxp,deltayp,deltaxp1,deltayp1,*limitsptr;
-    int c;
-    bool usexkick1 = (xkick1 != NULL);
-    bool useykick1 = (ykick1 != NULL);
-    bool useT1 = (T1 != NULL);
-    bool useT2 = (T2 != NULL);
-    bool useR1 = (R1 != NULL);
-    bool useR2 = (R2 != NULL);
+    double *r6, deltaxp, deltayp, limitsptr[4];
+    int c, ns;
     double L1 = le/(2*Nslice);
     
     /*Act as AperturePass*/
-    limitsptr=(double*)mxCalloc(4,sizeof(double));
-    limitsptr[0]=x[0];
-    limitsptr[1]=x[n-1];
-    limitsptr[2]=y[0];
-    limitsptr[3]=y[m-1];
+    limitsptr[0]=x_map[0];
+    limitsptr[1]=x_map[nx_map-1];
+    limitsptr[2]=y_map[0];
+    limitsptr[3]=y_map[ny_map-1];
     
-    /*globalize*/
-    
-    /* For cubic interpolation only*/
-    
-    /*GLOBAL_xkick2=(double*)mxCalloc(n*m,sizeof(double));
-     * GLOBAL_ykick2=(double*)mxCalloc(n*m,sizeof(double));
-     * splie2(y,x,xkick,m,n,GLOBAL_xkick2);
-     * splie2(y,x,ykick,m,n,GLOBAL_ykick2); */
-    
-    GLOBAL_x=x;
-    GLOBAL_y=y;
-    GLOBAL_xkick1=xkick1;
-    GLOBAL_ykick1=ykick1;
-    GLOBAL_xkick=xkick;
-    GLOBAL_ykick=ykick;
-    GLOBAL_m=m; /* y used as colums*/
-    GLOBAL_n=n; /* x used as rows*/
+    /*globalize*/    
+    GLOBAL_x_map=x_map;
+    GLOBAL_y_map=y_map;
+    GLOBAL_nx_map=nx_map;
+    GLOBAL_ny_map=ny_map;
     
     for (c=0; c<num_particles; c++) {
         r6 = r+c*6;
-        
-        if(!mxIsNaN(r6[0]) && mxIsFinite(r6[4])) {
-            /*
-             * function bend6 internally calculates the square root
-             * of the energy deviation of the particle
-             * To protect against DOMAIN and OVERFLOW error, check if the
-             * fifth component of the phase spacevector r6[4] is finite
-             */
-            if (r6[0]<limitsptr[0] || r6[0]>limitsptr[1])
-                markaslost(r6,0);
-            else if (r6[2]<limitsptr[2] || r6[2]>limitsptr[3])
-                markaslost(r6,2);
-            else {
-                /* Misalignment at entrance */
-                if (useT1) ATaddvv(r6,T1);
-                if (useR1) ATmultmv(r6,R1);
-                /*Tracking in the main body*/
-                for (m=0; m<Nslice; m++) { /* Loop over slices*/
-                    ATdrift6(r6,L1);
-                    if (!mxIsNaN(r6[0])&&!mxIsNaN(r6[2])) {
-                        /*The kick from IDs varies quadratically, not linearly, with energy.   */
-                        deltaxp = (1.0/Nslice)*Map_x(r6[0],r6[2])/(1.0+r6[4]);
-                        deltayp = (1.0/Nslice)*Map_y(r6[0],r6[2])/(1.0+r6[4]);
-                        if(usexkick1)  deltaxp1 = (1.0/Nslice)*Map1_x(r6[0],r6[2]);
-                        if(useykick1)  deltayp1 = (1.0/Nslice)*Map1_y(r6[0],r6[2]);
-                        r6[1] = r6[1] + deltaxp;
-                        if(usexkick1) r6[1]=r6[1]+deltaxp1;
-                        r6[3] = r6[3] + deltayp;
-                        if(useykick1) r6[3]= r6[3] + deltayp1;
-                    }
-                    ATdrift6(r6,L1);
+        if (!atIsNaN(r6[0])) {
+            /* Misalignment at entrance */
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
+            /* Check physical apertures at the entrance of the magnet */
+            checkiflostRectangularAp(r6, limitsptr);
+            /*Tracking in the main body*/
+            for (ns=0; ns<Nslice; ns++) { /* Loop over slices*/
+                ATdrift6(r6,L1);
+                if (!atIsNaN(r6[0])&&!atIsNaN(r6[2])) {
+                    /*The kick from IDs varies quadratically, not linearly, with energy.   */
+                    deltaxp = get_kick(r6, xkick)/(1.0+r6[4]);
+                    deltayp = get_kick(r6, ykick)/(1.0+r6[4]);
+                    if (xkick1)  deltaxp += get_kick(r6, xkick1);
+                    if (ykick1)  deltayp += get_kick(r6, ykick1);
+                    r6[1] = r6[1] + deltaxp / Nslice;
+                    r6[3] = r6[3] + deltayp / Nslice;
                 }
-                /* Misalignment at exit */
-                if (useR2) ATmultmv(r6,R2);
-                if (useT2) ATaddvv(r6,T2);
+                ATdrift6(r6,L1);
             }
+            /* Misalignment at exit */
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
 }
 
-MODULE_DEF(IdTablePass)        /* Dummy module initialisation */
-
-#ifdef MATLAB_MEX_FILE
-
-#include "elempass.h"
-#include "mxutils.c"
-
-ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
-        double *r_in,int num_particles,int mode)
-#define NUM_FIELDS_2_REMEMBER 12
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+        double *r_in, int num_particles, struct parameters *Param)
 {
-    int n_map,m_map;
-    int Nslice;
-    double le;
-    double *pr1, *pr2, *pt1, *pt2, *xkick, *ykick, *xkick1, *ykick1, *x, *y;
-    
-    switch(mode) {
-        case MAKE_LOCAL_COPY:
-            /* Find field numbers first
-             * Save a list of field number in an array
-             * and make returnptr point to that array
-             */
-            FieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-            
-            FieldNumbers[0] = GetRequiredFieldNumber(ElemData, "Length");
-            FieldNumbers[1] = GetRequiredFieldNumber(ElemData, "xkick");
-            FieldNumbers[2] = GetRequiredFieldNumber(ElemData, "ykick");
-            FieldNumbers[3] = GetRequiredFieldNumber(ElemData, "xtable");
-            FieldNumbers[4] = GetRequiredFieldNumber(ElemData, "ytable");
-            FieldNumbers[5] = GetRequiredFieldNumber(ElemData, "Nslice");
-            
-            /* Optional fields */
-            
-            FieldNumbers[6] = mxGetFieldNumber(ElemData, "xkick1");
-            FieldNumbers[7] = mxGetFieldNumber(ElemData, "ykick1");
-            FieldNumbers[8] = mxGetFieldNumber(ElemData, "R1");
-            FieldNumbers[9] = mxGetFieldNumber(ElemData, "R2");
-            FieldNumbers[10] = mxGetFieldNumber(ElemData, "T1");
-            FieldNumbers[11] = mxGetFieldNumber(ElemData, "T2");
-            /* Fall through next section... */
-            
-        case	USE_LOCAL_COPY:
-            /* Get fields from MATLAB using field numbers
-             * The second argument ponter to the array of field
-             * numbers is previously created with
-             * BendLinearPass( ..., MAKE_LOCAL_COPY)
-             */
-            le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-            xkick = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-            ykick = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-            x = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-            y = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-            Nslice = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-            
-            n_map = mxGetN(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-            m_map = mxGetM(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-            
-            /* Optional fields */
-            
-            xkick1 = (FieldNumbers[6] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[6])) : NULL;
-            ykick1 = (FieldNumbers[7] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[7])) : NULL;
-            pr1 = (FieldNumbers[8] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[8])) : NULL;
-            pr2 = (FieldNumbers[9] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[9])) : NULL;
-            pt1 = (FieldNumbers[10] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[10])) : NULL;
-            pt2 = (FieldNumbers[11] >= 0) ? mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[11])) : NULL;
-            break;
+    if (!Elem) {
+        int Nslice, ny_map,nx_map;
+        double Length, *xkick, *ykick, *x_map, *y_map;
+        double *xkick1, *ykick1;
+        double *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        xkick=atGetDoubleArraySz(ElemData,"xkick", &nx_map, &ny_map); check_error();
+        ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
+        x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
+        y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
+        Nslice=atGetLong(ElemData,"Nslice"); check_error();
+        /*optional fields*/
+        xkick1=atGetOptionalDoubleArray(ElemData,"xkick1"); check_error();
+        ykick1=atGetOptionalDoubleArray(ElemData,"ykick1"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=Length;
+        Elem->xkick=xkick;
+        Elem->ykick=ykick;
+        Elem->x_map=x_map;
+        Elem->y_map=y_map;
+        Elem->nx_map=nx_map;
+        Elem->ny_map=ny_map;
+        Elem->Nslice=Nslice;
+        Elem->xkick1=xkick1;
+        Elem->ykick1=ykick1;
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
     }
-    
-    IdKickMapModelPass(r_in, le,xkick1,ykick1,xkick,ykick,x,y,n_map,m_map,Nslice,
-            pt1, pt2, pr1, pr2, num_particles);
-    
-    return FieldNumbers;
+    IdKickMapModelPass(r_in, Elem->Length, Elem->xkick1, Elem->ykick1,
+            Elem->xkick, Elem->ykick, Elem->x_map, Elem->y_map, Elem->nx_map, Elem->ny_map,Elem->Nslice,
+            Elem->T1, Elem->T2, Elem->R1, Elem->R2, num_particles);
+    return Elem;
 }
 
+MODULE_DEF(IdTablePass)        /* Dummy module initialisation */
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
+#ifdef MATLAB_MEX_FILE
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
         double *r_in;
-        double *xkick1, *ykick1, *pr1, *pr2, *pt1, *pt2;
-        mxArray *tmpmxptr = GetRequiredField(prhs[0], "xkick");
-        
-        double le = mxGetScalar(GetRequiredField(prhs[0], "Length"));
-        double *xkick =  mxGetPr(tmpmxptr);
-        int n_map = mxGetN(tmpmxptr);
-        int m_map = mxGetM(tmpmxptr);
-        double *ykick =  mxGetPr(GetRequiredField(prhs[0], "ykick"));
-        double *x =  mxGetPr(GetRequiredField(prhs[0], "xtable"));
-        double *y =  mxGetPr(GetRequiredField(prhs[0], "ytable"));
-        int Nslice = (int)mxGetScalar(GetRequiredField(prhs[0], "Nslice"));
+        const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
-        
-        /*Optional fields*/
-        
-        tmpmxptr = mxGetField(prhs[0],0,"xkick1");
-        xkick1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"ykick1");
-        ykick1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"R1");
-        pr1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"R2");
-        pr2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"T1");
-        pt1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"T2");
-        pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
+        int Nslice, ny_map, nx_map;
+        double Length, *xkick, *ykick, *x_map, *y_map;
+        double *xkick1, *ykick1;
+        double *R1, *R2, *T1, *T2;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        xkick=atGetDoubleArraySz(ElemData,"xkick", &nx_map, &ny_map); check_error();
+        ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
+        x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
+        y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
+        Nslice=atGetLong(ElemData,"Nslice"); check_error();
+        /*optional fields*/
+        xkick1=atGetOptionalDoubleArray(ElemData,"xkick1"); check_error();
+        ykick1=atGetOptionalDoubleArray(ElemData,"ykick1"); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
-        IdKickMapModelPass(r_in, le, xkick1,ykick1, xkick,ykick,x,y,n_map,m_map,Nslice,
-                pt1, pt2, pr1, pr2, num_particles);
+        r_in = mxGetDoubles(plhs[0]);
+        IdKickMapModelPass(r_in, Length, xkick1, ykick1, xkick, ykick, x_map, y_map,
+                nx_map, ny_map, Nslice, T1, T2, R1, R2, num_particles);
     }
     else if (nrhs == 0) {
         /* return list of required fields */
@@ -275,7 +183,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],4,mxCreateString("ytable"));
         mxSetCell(plhs[0],5,mxCreateString("Nslice"));
         
-        if (nlhs>1) {
+        if (nlhs > 1) {
             /* Required and optional fields */
             plhs[1] = mxCreateCellMatrix(6,1);
             mxSetCell(plhs[1],0,mxCreateString("xkick1"));

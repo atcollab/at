@@ -4,8 +4,7 @@
 
 
 1. Use mxCalloc, mxMalloc , mxFree for memory allocation/deallocation
-2. Vector and matrix input arguments are (*double) obtained with
-   mxGetPr
+2. Vector and matrix input arguments are (*double) obtained with mxGetDoubles
     Note: MATLAB internally represents matrixes as column-by-column
    1-dimentional arrays. For example  
                   A B C

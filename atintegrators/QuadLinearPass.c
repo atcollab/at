@@ -158,17 +158,17 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         QuadLinearPass(r_in,Length,K,T1,T2,R1,R2,num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(5,1);
+        plhs[0] = mxCreateCellMatrix(2,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
-        mxSetCell(plhs[0],4,mxCreateString("K"));
+        mxSetCell(plhs[0],1,mxCreateString("K"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(8,1);
+            plhs[1] = mxCreateCellMatrix(4,1);
             mxSetCell(plhs[1],0,mxCreateString("T1"));
             mxSetCell(plhs[1],1,mxCreateString("T2"));
             mxSetCell(plhs[1],2,mxCreateString("R1"));
