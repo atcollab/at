@@ -12,17 +12,9 @@ function rcor = atsetcorrectiontable(ring,cortab)
 
 
 % create correctors table
-allind = 1:length(ring)
+allind = 1:length(ring);
 
-FamNames = atgetfieldvalues(rerr,allind,'FamName');
-%DeviceNames = atgetfieldvalues(rerr,1:length(ring),'Device');
-Lengths = atgetfieldvalues(rerr,allind,'Length');
-KL0n = zeros(size(ring)); % hor steerer
-KL0s = KL0n; % ver steerer
-KL1n = KL0n; % normal quadruple
-KL1s = KL0n; % skew quadrupole
-KL2n = KL0n; % sextupole
-KL3n = KL0n; % octupole
+Lengths = atgetfieldvalues(ring,allind,'Length');
 
 % values for lattice with errors no correction
 ch0  = atgetfieldvalues(ring,allind,'PolynomB',{1,1});
