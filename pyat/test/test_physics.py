@@ -72,7 +72,7 @@ def test_get_twiss(ring, refpts):
     # Why is the tune different for these two cases?
     if refpts == [145]:
         # These are not especially accurate at present.
-        numpy.testing.assert_allclose(tune, (-0.1344708, -0.00628742),
+        numpy.testing.assert_allclose(tune, (0.3655291, 0.4937126),
                                       rtol=1e-5, atol=1e-12)
         numpy.testing.assert_allclose(chrom, (-0.3090409, -0.44186077),
                                       rtol=1e-4)
