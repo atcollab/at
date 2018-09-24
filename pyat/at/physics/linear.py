@@ -1,6 +1,6 @@
 import numpy
 from numpy.linalg import multi_dot as md
-from math import sqrt, acos
+from math import sqrt, atan2, pi
 from .matrix import find_m44, _s2
 from .orbit import find_orbit4
 from ..lattice import uint32_refpts, get_s_pos
@@ -40,24 +40,18 @@ def _twiss22(ms, alpha0, beta0):
     # Unwrap negative jumps in betatron phase advance
     dmu = numpy.diff(mu)
     jumps = numpy.append([0], dmu) < 0
-    mu += numpy.cumsum(jumps) * 2.0 * numpy.pi
+    mu += numpy.cumsum(jumps)*2.0*numpy.pi
     return alpha, beta, mu
 
 
 def _closure(m22):
     diff = (m22[0, 0] - m22[1, 1]) / 2.0
     sinmu = numpy.sign(m22[0, 1]) * sqrt(-m22[0, 1] * m22[1, 0] - diff * diff)
+    cosmu = 0.5 * numpy.trace(m22)
     alpha = diff / sinmu
     beta = m22[0, 1] / sinmu
-    return alpha, beta
-
-
-def _tune(m44):
-    cos_mu = 0.5 * numpy.trace(m44)
-    tune = acos(cos_mu) / 2.0 / numpy.pi
-    if m44[0, 1] < 0.0:
-        tune = 1.0 - tune
-    return tune
+    tune = (atan2(sinmu, cosmu)/2.0/pi) % 1
+    return alpha, beta, tune
 
 
 def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP):
@@ -114,10 +108,15 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     m44, mstack = find_m44(ring, dp, uint32refs, orbit=orbit, keep_lattice=True)
     nrefs = mstack.shape[2]
 
-    alpha_x, beta_x, mu_x = _twiss22(mstack[:2, :2, :], *_closure(m44[:2, :2]))
-    alpha_z, beta_z, mu_z = _twiss22(mstack[2:, 2:, :], *_closure(m44[2:, 2:]))
+    # Get initial twiss parameters
+    a0_x, b0_x, tune_x = _closure(m44[:2, :2])
+    a0_y, b0_y, tune_y = _closure(m44[2:, 2:])
 
-    tune = numpy.array([_tune(m44[:2, :2]), _tune(m44[2:, 2:])])
+    # Propagate to reference points
+    alpha_x, beta_x, mu_x = _twiss22(mstack[:2, :2, :], a0_x, b0_x)
+    alpha_z, beta_z, mu_z = _twiss22(mstack[2:, 2:, :], a0_y, b0_y)
+
+    tune = numpy.array([tune_x, tune_y])
     twiss = numpy.zeros(nrefs, dtype=TWISS_DTYPE)
     twiss['idx'] = uint32refs
     # Use rollaxis to get the arrays in the correct shape for the twiss
@@ -237,10 +236,16 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     A = md((G, G, M)) - numpy.dot(G, (md((m, _s2, C.T, _s2.T)) + md((C, n)))) + md((C, N, _s2, C.T, _s2.T))
     B = md((G, G, N)) + numpy.dot(G, (md((_s2, C.T, _s2.T, m)) + md((n, C)))) + md((_s2, C.T, _s2.T, M, C))
     MSA, MSB, gamma, CL, AL, BL = zip(*map(analyze, numpy.split(mstack, mstack.shape[2], axis=2)))
-    alpha_a, beta_a, mu_a = _twiss22(numpy.stack(MSA, axis=2), *_closure(A))
-    alpha_b, beta_b, mu_b = _twiss22(numpy.stack(MSB, axis=2), *_closure(B))
 
-    tune = numpy.array([_tune(A), _tune(B)])
+    # Get initial twiss parameters
+    a0_a, b0_a, tune_a = _closure(A)
+    a0_b, b0_b, tune_b = _closure(B)
+
+    # Propagate to reference points
+    alpha_a, beta_a, mu_a = _twiss22(numpy.stack(MSA, axis=2), a0_a, b0_a)
+    alpha_b, beta_b, mu_b = _twiss22(numpy.stack(MSB, axis=2), a0_b, b0_b)
+
+    tune = numpy.array([tune_a, tune_b])
     lindata = numpy.zeros(nrefs, dtype=LINDATA_DTYPE)
     lindata['idx'] = uintrefs
     # Use rollaxis to get the arrays in the correct shape for the lindata
