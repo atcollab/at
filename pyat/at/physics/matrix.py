@@ -20,7 +20,7 @@ _s4 = numpy.concatenate((numpy.concatenate((_s2, _s0), axis=1), numpy.concatenat
 # prepare Identity matrix
 
 
-def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, output_orbit=False, **kwargs):
+def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     """find_m44 numerically finds the 4x4 transfer matrix of an accelerator lattice
     for a particle with relative momentum deviation DP
 
@@ -48,9 +48,6 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, output_o
         This syntax is useful to specify the entrance orbit if lattice is not a ring or to avoid recomputing the
         closed orbit if it is already known.
 
-    m44, t, orbit = find_m44(lattice, ..., output_orbit=True)
-        Returns in addition the closed orbit at the entrance of the 1st element
-
     See also find_m66, find_orbit4
     """
     def mrotate(m):
@@ -64,7 +61,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, output_o
         keep_lattice = True
     # Construct matrix of plus and minus deltas
     dg = numpy.asfortranarray(0.5 * numpy.diag([xy_step] * 6)[:, :4])
-    dmat = numpy.concatenate((dg, -dg, numpy.zeros((6, 1))), axis=1)
+    dmat = numpy.concatenate((dg, -dg), axis=1)
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
 
@@ -72,21 +69,18 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, output_o
     out_mat = numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keep_lattice), axis=3)
     # out_mat: 8 particles at n refpts for one turn
     # (x + d) - (x - d) / d
-    m44 = (in_mat[:4, :4] - in_mat[:4, 4:-1]) / xy_step
+    m44 = (in_mat[:4, :4] - in_mat[:4, 4:]) / xy_step
 
     if refpts is not None:
-        mstack = (out_mat[:4, :4, :] - out_mat[:4, 4:-1, :]) / xy_step
+        mstack = (out_mat[:4, :4, :] - out_mat[:4, 4:, :]) / xy_step
         if full:
             mstack = numpy.stack(map(mrotate, numpy.split(mstack, mstack.shape[2], axis=2)), axis=2)
-        if output_orbit:
-            return m44, mstack, out_mat[:, -1, :]
-        else:
-            return m44, mstack
+        return m44, mstack
     else:
         return m44
 
 
-def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, output_orbit=False, **kwargs):
+def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     """find_m66 numerically finds the 6x6 transfer matrix of an accelerator lattice
     by differentiation of lattice_pass near the closed orbit.
     FINDM66 uses find_orbit6 to search for the closed orbit in 6-D
@@ -97,15 +91,12 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, output_orbit=Fal
 
     m66, t = find_m66(lattice, refpts)
         returns 6x6 transfer matrices between the entrance of the first element and each element indexed by refpts.
-        t is 6x6xNrefs array.
+        t is a (6, 6, nrefs) array.
 
     ... = find_m66(lattice, ..., orbit=closed_orbit) - Does not search for closed orbit.
         Does not search for the closed orbit. Instead closed_orbit,a vector of initial conditions is used.
         This syntax is useful to specify the entrance orbit if lattice is not a ring or to avoid recomputing the
         closed orbit if it is already known.
-
-    m66, t, orbit = find_m66(lattice, ..., output_orbit=True)
-        Returns in addition the closed orbit at the entrance of the 1st element
 
     See also find_m44, find_orbit6
 
@@ -119,7 +110,7 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, output_orbit=Fal
     # Construct matrix of plus and minus deltas
     scaling = numpy.array([xy_step, xy_step, xy_step, xy_step, dp_step, dp_step])
     dg = numpy.asfortranarray(0.5*numpy.diag(scaling))
-    dmat = numpy.concatenate((dg, -dg, numpy.zeros((6, 1))), axis=1)
+    dmat = numpy.concatenate((dg, -dg), axis=1)
 
     in_mat = orbit.reshape(6, 1) + dmat
 
@@ -127,13 +118,10 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, output_orbit=Fal
     out_mat = numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keep_lattice), axis=3)
     # out_mat: 12 particles at n refpts for one turn
     # (x + d) - (x - d) / d
-    m66 = (in_mat[:, :6] - in_mat[:, 6:-1]) / scaling.reshape((1, 6))
+    m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
 
     if refpts is not None:
-        mstack = (out_mat[:, :6, :] - out_mat[:, 6:-1, :]) / xy_step
-        if output_orbit:
-            return m66, mstack, out_mat[:, -1, :]
-        else:
-            return m66, mstack
+        mstack = (out_mat[:, :6, :] - out_mat[:, 6:, :]) / xy_step
+        return m66, mstack
     else:
         return m66
