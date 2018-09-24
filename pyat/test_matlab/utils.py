@@ -9,7 +9,7 @@ except ImportError:
 
 
 ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '../..'))
-LATTICE = os.path.join(ROOT_DIR, 'atmat/atmatch/ExampleATMATCH/dba.mat')
+LATTICE = os.path.join(ROOT_DIR, 'atmat/atdemos/atmatchExamples/ExampleATMATCH/dba.mat')
 
 
 def initialise_matlab():
