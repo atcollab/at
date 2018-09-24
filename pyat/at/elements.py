@@ -10,7 +10,8 @@ import itertools
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
-    return numpy.asfortranarray(value, dtype=dtype).reshape(shape)
+    # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
+    return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(shape)
 
 
 def _array66(value):
@@ -42,7 +43,8 @@ class Element(object):
             try:
                 setattr(self, key, self.CONVERSIONS.get(key, _nop)(value))
             except Exception as exc:
-                raise type(exc)('In element {0}, parameter {1}: {2}'.format(family_name, key, exc))
+                exc.args = ('In element {0}, parameter {1}: {2}'.format(family_name, key, exc),)
+                raise
 
     def __str__(self):
         keywords = ('{0:>16} : {1!r}'.format(k, v) for k, v in self.__dict__.items())
