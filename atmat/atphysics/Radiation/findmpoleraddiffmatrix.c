@@ -10,16 +10,8 @@
    radiation integrals', Phys.Rev.E  Vol.49 p.751 (1994)
 */
 
-#include "mex.h"
-#include "matrix.h"
+#include "atelem.c"
 #include "atlalib.c"
-#include <math.h>
-
-/* Get ready for R2018a C matrix API */
-#ifndef mxGetDoubles
-#define mxGetDoubles mxGetPr
-typedef double mxDouble;
-#endif
 
 /* Fourth order-symplectic integrator constants */
 
@@ -49,7 +41,7 @@ void edgefringeB(double* r, double *B, double inv_rho, double edge_angle, double
     int m;
     
     
-    if(inv_rho<=0) return; /* Skip if not a bending element*/
+    if (inv_rho<=0.0) return; /* Skip if not a bending element*/
     
     fx = inv_rho*tan(edge_angle);
     psi = inv_rho*gap*fint*(1+pow(sin(edge_angle),2))/cos(edge_angle);
@@ -342,12 +334,10 @@ void drift_propagateB(double *orb_in, double L,  double *B)
 		
 	int m;
 		
-	double *DRIFTMAT = (double*)mxCalloc(36,sizeof(double));
-	for(m=0;m<36;m++)
-		DRIFTMAT[m] = 0;
+	double DRIFTMAT[36];
+	for (m=0;m<36;m++) DRIFTMAT[m] = 0.0;
 	/* Set diagonal elements to 1	*/
-	for(m=0;m<6;m++)
-		DRIFTMAT[m*7] = 1;
+	for (m=0;m<6;m++) DRIFTMAT[m*7] = 1.0;
 
 	DRIFTMAT[6]  =  L/(1+orb_in[4]);
 	DRIFTMAT[20] =  DRIFTMAT[6];
@@ -358,8 +348,6 @@ void drift_propagateB(double *orb_in, double L,  double *B)
 	DRIFTMAT[29] = -L*(SQR(orb_in[1])+SQR(orb_in[3]))/((1+orb_in[4])*SQR(1+orb_in[4]));
 
 	ATsandwichmmt(DRIFTMAT,B);
-	mxFree(DRIFTMAT);
-	
 }
 
 
@@ -367,7 +355,7 @@ void drift_propagateB(double *orb_in, double L,  double *B)
 
 
 void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
-					double *pt1, double* pt2,double *PR1, double *PR2,
+					double *T1, double* T2,double *R1, double *R2,
 					double entrance_angle, 	double exit_angle,
                     double fringe_int1, double fringe_int2, double full_gap,
 					int max_order, int num_int_steps,
@@ -380,7 +368,7 @@ void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
 	*/
 	
 	int m;	
-	double  *MKICK, *BKICK;
+	double  MKICK[36], BKICK[36];
 
 	/* 4-th order symplectic integrator constants */
 	double SL, L1, L2, K1, K2;
@@ -394,8 +382,6 @@ void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
 	/* Allocate memory for thin kick matrix MKICK
 	   and a diffusion matrix BKICK
 	*/
- 	MKICK = (double*)mxCalloc(36,sizeof(double));
-	BKICK = (double*)mxCalloc(36,sizeof(double));
 	for(m=0; m < 6; m++)
 		{	MKICK[m] = 0;
 			BKICK[m] = 0;
@@ -403,12 +389,8 @@ void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
 	
 	/* Transform orbit to a local coordinate system of an element
        BDIFF stays zero	*/
-    if(pt1)
-        ATaddvv(orbit_in,pt1);	
-    if(PR1)
-        ATmultmv(orbit_in,PR1);	
-
-
+    if (T1) ATaddvv(orbit_in,T1);	
+    if (R1) ATmultmv(orbit_in,R1);
     
     /* Propagate orbit_in and BDIFF through the entrance edge */
     edgefringeB(orbit_in, BDIFF, irho, entrance_angle, fringe_int1, full_gap);
@@ -447,21 +429,13 @@ void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
 				ATdrift6(orbit_in,L1);
 		}  
 		
-        edgefringeB(orbit_in, BDIFF, irho, exit_angle, fringe_int2, full_gap);
-				
+    edgefringeB(orbit_in, BDIFF, irho, exit_angle, fringe_int2, full_gap);
 
-		
-        if(PR2)
-            ATmultmv(orbit_in,PR2);	
-        if(pt2)
-            ATaddvv(orbit_in,pt2);	
-        
-        
-		mxFree(MKICK);
-		mxFree(BKICK);
+    if (R2) ATmultmv(orbit_in,R2);	
+    if (T2) ATaddvv(orbit_in,T2);	
 }
 
-
+#if defined(MATLAB_MEX_FILE)
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 /* The calling syntax of this mex-function from MATLAB is
    FindMPoleRadDiffMatrix(ELEMENT, ORBIT)
@@ -469,149 +443,71 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
            a multipole transverse field model.
    ORBIT is a 6-by-1 vector of the closed orbit at the entrance (calculated elsewhere)
 */
-{	int m,n;
-	double le, ba, irho, fringe_int1,  fringe_int2, full_gap, *A, *B;  
+{
+    double Length, ba, irho, FringeInt1,  FringeInt2, FullGap, *PolynomA, *PolynomB;  
 
 	double E0;		/* Design energy [eV] to be obtained from 'Energy' field of ELEMENT*/
-	int max_order, num_int_steps;
-	double entrance_angle, exit_angle ;
+	int MaxOrder, NumIntSteps;
+	double EntranceAngle, ExitAngle ;
 	double *BDIFF;
-	mxArray  *mxtemp;
+    int i;
 
     mxDouble *orb0;
-	double *orb;
-	double *pt1, *pt2, *PR1, *PR2;
+	double orb[6];
+	double *T1, *T2, *R1, *R2;
+    const mxArray *ElemData = prhs[0];
 
 
-	m = mxGetM(prhs[1]);
-	n = mxGetN(prhs[1]);
-	if(!(m==6 && n==1))
+	int m = mxGetM(prhs[1]);
+	int n = mxGetN(prhs[1]);
+    
+	if (!(m==6 && n==1))
 		mexErrMsgTxt("Second argument must be a 6-by-1 column vector");
     
 	/* ALLOCATE memory for the output array */
 	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
 	BDIFF = mxGetDoubles(plhs[0]);
-
+    for (i=0; i<36; i++) BDIFF[i]=0.0;
 
 	/* If the ELEMENT sructure does not have fields PolynomA and PolynomB
 	   return zero matrix and  exit
 	*/
-	if(mxGetField(prhs[0],0,"PolynomA") == NULL ||  mxGetField(prhs[0],0,"PolynomB") == NULL)
+	if (mxGetField(prhs[0],0,"PolynomA") == NULL ||  mxGetField(prhs[0],0,"PolynomB") == NULL)
 		return;
-
-
 
 	orb0 = mxGetDoubles(prhs[1]);
 	/* make local copy of the input closed orbit vector */
-	orb = (double*)mxCalloc(6,sizeof(double));
 	for(m=0;m<6;m++)
 		orb[m] = orb0[m];
     
-	/* Retrieve element information */
-	
-	le = mxGetScalar(mxGetField(prhs[0],0,"Length"));
-	
+    /* Required fields */
+    Length=atGetDouble(ElemData,"Length"); check_error();
 	/* If ELEMENT has a zero length, return zeros matrix end exit */
-	if(le == 0)
-		return;
-	
-	A = mxGetDoubles(mxGetField(prhs[0],0,"PolynomA"));
-	B = mxGetDoubles(mxGetField(prhs[0],0,"PolynomB"));
-
-	
-    mxtemp = mxGetField(prhs[0],0,"Energy");
-    if(mxtemp != NULL)
-        E0 = mxGetScalar(mxtemp);
-    else
-		mexErrMsgTxt("Required field 'Energy'  not found in the ELEMENT structure");
-
-		
-	mxtemp = mxGetField(prhs[0],0,"NumIntSteps");
-   if(mxtemp != NULL)
-		num_int_steps = (int)mxGetScalar(mxtemp);
-	else
-		mexErrMsgTxt("Field 'NumIntSteps' not found in the ELEMENT structure");
-
-    mxtemp = mxGetField(prhs[0],0,"MaxOrder");
-   if(mxtemp != NULL)
-		max_order = (int)mxGetScalar(mxtemp);
-	else
-		mexErrMsgTxt("Field 'MaxOrder' not found in the ELEMENT structure");
-
-
-	mxtemp = mxGetField(prhs[0],0,"BendingAngle");
-   if(mxtemp != NULL)
-		{	ba = mxGetScalar(mxtemp);
-			irho = ba/le;
-		}
-	else
-		{	ba = 0;
-			irho = 0;
-		}
-		
-	mxtemp = mxGetField(prhs[0],0,"EntranceAngle");
-	if(mxtemp != NULL)
-		entrance_angle = mxGetScalar(mxtemp);
-	else
-			entrance_angle =0;
-
-	mxtemp = mxGetField(prhs[0],0,"ExitAngle");
-	if(mxtemp != NULL)
-		exit_angle = mxGetScalar(mxtemp);
-	else
-			exit_angle =0;
-
-	/* Optional felds */
-    mxtemp = mxGetField(prhs[0],0,"T1");
-    if(mxtemp)
-        pt1 = mxGetDoubles(mxtemp);
-    else
-        pt1 = NULL;
+	if( Length == 0.0) return;
     
-    mxtemp = mxGetField(prhs[0],0,"T2");
-    if(mxtemp)
-        pt2 = mxGetDoubles(mxtemp);
-    else
-        pt2 = NULL;
-    
-    mxtemp = mxGetField(prhs[0],0,"R1");
-    if(mxtemp)
-        PR1 = mxGetDoubles(mxtemp);
-    else
-        PR1 = NULL;
-    
-    mxtemp = mxGetField(prhs[0],0,"R2");
-    if(mxtemp)
-        PR2 = mxGetDoubles(mxtemp);
-    else
-        PR2 = NULL;
-    
-    mxtemp = mxGetField(prhs[0],0,"FringeInt1");
-    if(mxtemp)
-        fringe_int1 = mxGetScalar(mxtemp);
-    else
-        fringe_int1 = 0;
-    
-    mxtemp = mxGetField(prhs[0],0,"FringeInt2");
-    if(mxtemp)
-        fringe_int2 = mxGetScalar(mxtemp);
-    else
-        fringe_int2 = 0;
-	
-    mxtemp = mxGetField(prhs[0],0,"FullGap");
-    if(mxtemp)
-        full_gap = mxGetScalar(mxtemp);
-    else
-        full_gap = 0;
-    
-    
-    
+    PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
+    PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+    MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+    NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
+    E0=atGetDouble(ElemData,"Energy"); check_error();
 
-	FindElemB(orb, le, irho, A, B, 
-					pt1, pt2, PR1, PR2,
-					entrance_angle, 	exit_angle,
-                    fringe_int1, fringe_int2, full_gap,
-					max_order, num_int_steps, E0, BDIFF);
+    /* Optional fields */
+    ba=atGetOptionalDouble(ElemData,"BendingAngle",0.0);
+    irho = ba/Length;
+    EntranceAngle=atGetOptionalDouble(ElemData,"EntranceAngle",0.0);
+    ExitAngle=atGetOptionalDouble(ElemData,"ExitAngle",0.0);
+    FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
+    FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
+    FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
+    R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+    R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+    T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+    T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+
+	FindElemB(orb, Length, irho, PolynomA, PolynomB, 
+					T1, T2, R1, R2,
+					EntranceAngle, 	ExitAngle,
+                    FringeInt1, FringeInt2, FullGap,
+					MaxOrder, NumIntSteps, E0, BDIFF);
 }
-
-
+#endif /*MATLAB_MEX_FILE*/
