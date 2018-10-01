@@ -41,12 +41,17 @@ def integrator_extension(pass_method):
                      extra_compile_args=cflags)
 
 
-
 at = Extension('at.atpass',
                sources=['at.c'],
                define_macros=macros,
-               include_dirs=[numpy.get_include(), integrator_src],
+               include_dirs=[numpy.get_include(), integrator_src_orig],
                extra_compile_args=cflags)
+
+diffmatrix = Extension(name='at.physics.diffmatrix',
+                       sources=['../atmat/atphysics/Radiation/findmpoleraddiffmatrix.c'],
+                       include_dirs=[numpy.get_include(), integrator_src_orig],
+                       define_macros=macros,
+                       extra_compile_args=cflags)
 
 setup(name='at-python',
       version='0.0.1',
@@ -55,5 +60,5 @@ setup(name='at-python',
       author_email='atcollab-general@lists.sourceforge.net',
       install_requires=['numpy>=1.10'],
       packages=['at', 'at.integrators', 'at.lattice', 'at.physics'],
-      ext_modules=[at] + [integrator_extension(pm) for pm in pass_methods],
+      ext_modules=[at, diffmatrix] + [integrator_extension(pm) for pm in pass_methods],
       zip_safe=False)
