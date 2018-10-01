@@ -36,7 +36,7 @@
 
 
 
-void edgefringeB(double* r, double *B, double inv_rho, double edge_angle, double fint, double gap)
+static void edgefringeB(double* r, double *B, double inv_rho, double edge_angle, double fint, double gap)
 {   double fx, fy, psi;
     int m;
     
@@ -78,7 +78,7 @@ void edgefringeB(double* r, double *B, double inv_rho, double edge_angle, double
 }
 
 
-double B2perp(double bx, double by, double irho, 
+static double B2perp(double bx, double by, double irho,
                             double x, double xpr, double y, double ypr)
 /* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity   */
     
@@ -99,7 +99,7 @@ double B2perp(double bx, double by, double irho,
 } 
  
 
-void thinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
+static void thinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
 
 /***************************************************************************** 
 Calculate and apply a multipole kick to a phase space vector *r in a multipole element.
@@ -199,7 +199,7 @@ structure in MATLAB
 
 }
 
-void thinkickM(double* orbit_in, double* A, double* B, double L, 
+static void thinkickM(double* orbit_in, double* A, double* B, double L,
 							double irho, int max_order, double *M66)
 /* Calculate the symplectic (no radiation) transfer matrix of a 
    thin multipole kick near the entrance point orbit_in
@@ -251,7 +251,7 @@ void thinkickM(double* orbit_in, double* A, double* B, double L,
 
 
 
-void thinkickB(double* orbit_in, double* A, double* B, double L, 
+static void thinkickB(double* orbit_in, double* A, double* B, double L,
 							double irho, int max_order, double E0, double *B66)
 
 /* Calculate Ohmi's diffusion matrix of a thin multipole  element 
@@ -320,7 +320,7 @@ void thinkickB(double* orbit_in, double* A, double* B, double L,
 
 
 
-void drift_propagateB(double *orb_in, double L,  double *B)
+static void drift_propagateB(double *orb_in, double L,  double *B)
 {	/* Propagate cumulative Ohmi's diffusion matrix B through a drift
 	   B is a (*double) pointer to 1-dimentional array 
 	   containing 36 elements of matrix elements arranged column-by-column
@@ -351,10 +351,7 @@ void drift_propagateB(double *orb_in, double L,  double *B)
 }
 
 
-
-
-
-void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
+static void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
 					double *T1, double* T2,double *R1, double *R2,
 					double entrance_angle, 	double exit_angle,
                     double fringe_int1, double fringe_int2, double full_gap,
@@ -435,61 +432,29 @@ void FindElemB(double *orbit_in, double le, double irho, double *A, double *B,
     if (T2) ATaddvv(orbit_in,T2);	
 }
 
-#if defined(MATLAB_MEX_FILE)
-void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-/* The calling syntax of this mex-function from MATLAB is
-   FindMPoleRadDiffMatrix(ELEMENT, ORBIT)
-   ELEMENT is the element structure with field names consistent with 
-           a multipole transverse field model.
-   ORBIT is a 6-by-1 vector of the closed orbit at the entrance (calculated elsewhere)
-*/
+
+static double *diffmatrix(const atElem *ElemData, double *orb, double energy, double *bdiff)
 {
     double Length, ba, irho, FringeInt1,  FringeInt2, FullGap, *PolynomA, *PolynomB;  
 
-	double E0;		/* Design energy [eV] to be obtained from 'Energy' field of ELEMENT*/
 	int MaxOrder, NumIntSteps;
-	double EntranceAngle, ExitAngle ;
-	double *BDIFF;
-    int i;
+	double EntranceAngle, ExitAngle;
+    double *R1, *R2, *T1, *T2;
 
-    mxDouble *orb0;
-	double orb[6];
-	double *T1, *T2, *R1, *R2;
-    const mxArray *ElemData = prhs[0];
-
-
-	int m = mxGetM(prhs[1]);
-	int n = mxGetN(prhs[1]);
-    
-	if (!(m==6 && n==1))
-		mexErrMsgTxt("Second argument must be a 6-by-1 column vector");
-    
-	/* ALLOCATE memory for the output array */
-	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
-	BDIFF = mxGetDoubles(plhs[0]);
-    for (i=0; i<36; i++) BDIFF[i]=0.0;
-
-	/* If the ELEMENT sructure does not have fields PolynomA and PolynomB
-	   return zero matrix and  exit
-	*/
-	if (mxGetField(prhs[0],0,"PolynomA") == NULL ||  mxGetField(prhs[0],0,"PolynomB") == NULL)
-		return;
-
-	orb0 = mxGetDoubles(prhs[1]);
-	/* make local copy of the input closed orbit vector */
-	for(m=0;m<6;m++)
-		orb[m] = orb0[m];
-    
     /* Required fields */
-    Length=atGetDouble(ElemData,"Length"); check_error();
+    Length=atGetOptionalDouble(ElemData,"Length", 0.0);
 	/* If ELEMENT has a zero length, return zeros matrix end exit */
-	if( Length == 0.0) return;
-    
-    PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-    PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+	if (Length == 0.0) return bdiff;
+    PolynomA=atGetOptionalDoubleArray(ElemData,"PolynomA");
+    PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB");
+	/* If the ELEMENT does not have PolynomA and PolynomB return zero matrix and  exit */
+	if (PolynomA == NULL ||  PolynomB == NULL) return bdiff;
+
     MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
     NumIntSteps=atGetLong(ElemData,"NumIntSteps"); check_error();
-    E0=atGetDouble(ElemData,"Energy"); check_error();
+    if (atIsNaN(energy)) {
+        energy=atGetDouble(ElemData,"Energy"); check_error();
+    }
 
     /* Optional fields */
     ba=atGetOptionalDouble(ElemData,"BendingAngle",0.0);
@@ -505,9 +470,155 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
 
 	FindElemB(orb, Length, irho, PolynomA, PolynomB, 
-					T1, T2, R1, R2,
-					EntranceAngle, 	ExitAngle,
-                    FringeInt1, FringeInt2, FullGap,
-					MaxOrder, NumIntSteps, E0, BDIFF);
+            T1, T2, R1, R2,
+            EntranceAngle, 	ExitAngle,
+            FringeInt1, FringeInt2, FullGap,
+            MaxOrder, NumIntSteps, energy, bdiff);
+    return bdiff;
+}
+
+
+#if defined(MATLAB_MEX_FILE)
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+/* The calling syntax of this mex-function from MATLAB is
+   FindMPoleRadDiffMatrix(ELEMENT, ORBIT)
+   ELEMENT is the element structure with field names consistent with 
+           a multipole transverse field model.
+   ORBIT is a 6-by-1 vector of the closed orbit at the entrance (calculated elsewhere)
+*/
+{
+
+    mxDouble *orb0;
+    const mxArray *mxElem, *mxOrbit;
+	double *bdiff;
+	double orb[6];
+    double energy;
+    int i, m, n;
+
+    if (nrhs < 2)
+        mexErrMsgIdAndTxt("AT:WrongArg", """findmpoleraddiffmatrix"" needs at least 2 arguments");
+    mxElem = prhs[0];
+    mxOrbit = prhs[1];
+
+	m = mxGetM(mxOrbit);
+	n = mxGetN(mxOrbit);
+	if (!(mxIsDouble(mxOrbit) && (m==6 && n==1)))
+		mexErrMsgIdAndTxt("AT:WrongArg", "Orbit must be a double 6x1 vector");
+
+	orb0 = mxGetDoubles(mxOrbit);
+	/* make local copy of the input closed orbit vector */
+	for (i=0;i<6;i++) orb[i] = orb0[i];
+
+	if (nrhs >= 3) {
+	    const mxArray *mxEnergy = prhs[2];
+	    if (!(mxIsDouble(mxEnergy) && mxIsScalar(mxEnergy)))
+	        mexErrMsgIdAndTxt("AT:WrongArg", "Energy must be a double scalar");
+	    energy=mxGetScalar(mxEnergy);
+	}
+    else {
+        energy=mxGetNaN();
+    }
+	/* ALLOCATE memory for the output array */
+	plhs[0] = mxCreateDoubleMatrix(6,6,mxREAL);
+	bdiff = mxGetDoubles(plhs[0]);
+    for (i=0; i<36; i++) bdiff[i]=0.0;
+    
+    diffmatrix(mxElem, orb, energy, bdiff);
 }
 #endif /*MATLAB_MEX_FILE*/
+
+#if defined(PYAT)
+
+#define MODULE_NAME diffmatrix
+#define MODULE_DESCR "Computation of the radiation diffusion matrix"
+
+static PyObject *compute_diffmatrix(PyObject *self, PyObject *args) {
+    PyObject *pyElem, *pyMatrix;
+    PyArrayObject *pyOrbit;
+    double *orb0, *bdiff, *retval;
+    double orb[6];
+    double energy;
+    npy_intp outdims[2] = {6, 6};
+    int i;
+
+    if (!PyArg_ParseTuple(args, "OO!d", &pyElem, &PyArray_Type, &pyOrbit, &energy)) {
+        PyErr_SetString(PyExc_ValueError, "Failed to parse arguments to find_mpole_raddiff_matrix");
+        return NULL;
+    }
+    if (PyArray_DIM(pyOrbit,0) != 6) {
+        PyErr_SetString(PyExc_ValueError, "Orbit is not a (6,) array");
+        return NULL;
+    }
+    if (PyArray_TYPE(pyOrbit) != NPY_DOUBLE) {
+        PyErr_SetString(PyExc_ValueError, "Orbit is not a double array");
+        return NULL;
+    }
+    if ((PyArray_FLAGS(pyOrbit) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        PyErr_SetString(PyExc_ValueError, "Orbit is not Fortran-aligned");
+        return NULL;
+    }
+
+    orb0 = PyArray_DATA(pyOrbit);
+	/* make local copy of the input closed orbit vector */
+	for (i=0;i<6;i++) orb[i] = orb0[i];
+
+	/* ALLOCATE memory for the output array */
+    pyMatrix = PyArray_ZEROS(2, outdims, NPY_DOUBLE, 1);
+    bdiff = PyArray_DATA((PyArrayObject *)pyMatrix);
+
+    retval = diffmatrix(pyElem, orb, energy, bdiff);
+    if (retval == NULL) {
+        Py_DECREF(pyMatrix);
+        return NULL;
+    }
+    return pyMatrix;
+}
+
+static PyMethodDef AtMethods[] = {
+    {"find_mpole_raddiff_matrix",
+    (PyCFunction)compute_diffmatrix, METH_VARARGS,
+    PyDoc_STR(
+        "diffmatrix=find_mpole_raddiff_matrix(element, orbit, energy)\n\n"
+        "element:   element structure with field names consistent with\n"
+        "           a multipole transverse field model.\n"
+        "orbit:     (6,) vector of the closed orbit at the entrance\n"
+        "energy:    ring energy\n\n"
+             
+        "calculate radiation diffusion matrix B defined in [2]\n"
+        "for multipole elements in MATLAB Accelerator Toolbox\n"
+        "A.Terebilo 8/14/00\n\n"
+
+        "References\n"
+        "[1] M.Sands 'The Physics of Electron Storage Rings\n"
+        "[2] Ohmi, Kirata, Oide 'From the beam-envelope matrix to synchrotron\n"
+        "radiation integrals', Phys.Rev.E  Vol.49 p.751 (1994)\n"
+	)},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+
+PyMODINIT_FUNC MOD_INIT(MODULE_NAME)
+{
+
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    STR(MODULE_NAME), /* m_name */
+    PyDoc_STR(MODULE_DESCR),      /* m_doc */
+    -1,           /* m_size */
+    AtMethods,    /* m_methods */
+    NULL,         /* m_reload */
+    NULL,         /* m_traverse */
+    NULL,         /* m_clear */
+    NULL,         /* m_free */
+    };
+    PyObject *m = PyModule_Create(&moduledef);
+#else
+    PyObject *m = Py_InitModule3(STR(MODULE_NAME), AtMethods,
+        MODULE_DESCR);
+#endif
+    if (m == NULL) return MOD_ERROR_VAL;
+    import_array();
+    return MOD_SUCCESS_VAL(m);
+}
+
+#endif /*PYAT*/
