@@ -5,7 +5,7 @@ except ImportError:
     print('\npyAT requires numpy. '
           'Please install numpy: "pip install numpy"\n')
     sys.exit()
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 import os
 import glob
 import shutil
@@ -36,12 +36,12 @@ def integrator_extension(pass_method):
     name = ".".join(('at', 'integrators', name))
     return Extension(name=name,
                      sources=[pass_method],
-                     include_dirs=[numpy.get_include(), integrator_src],
+                     include_dirs=[numpy.get_include(), integrator_src_orig],
                      define_macros=macros,
                      extra_compile_args=cflags)
 
 
-at = Extension('at.atpass',
+at = Extension('at.tracking.atpass',
                sources=['at.c'],
                define_macros=macros,
                include_dirs=[numpy.get_include(), integrator_src_orig],
@@ -59,6 +59,6 @@ setup(name='at-python',
       author='The AT collaboration',
       author_email='atcollab-general@lists.sourceforge.net',
       install_requires=['numpy>=1.10'],
-      packages=['at', 'at.integrators', 'at.lattice', 'at.physics'],
+      packages=find_packages(),
       ext_modules=[at, diffmatrix] + [integrator_extension(pm) for pm in pass_methods],
       zip_safe=False)

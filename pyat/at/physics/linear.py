@@ -4,7 +4,7 @@ from math import sqrt, atan2, pi
 from .matrix import find_m44, _s2
 from .orbit import find_orbit4
 from ..lattice import uint32_refpts, get_s_pos
-from ..track import lattice_pass
+from ..tracking import lattice_pass
 
 __all__ = ['get_twiss', 'linopt']
 

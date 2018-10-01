@@ -6,7 +6,7 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 
 import numpy
 from .orbit import *
-from ..track import lattice_pass
+from ..tracking import lattice_pass
 
 __all__ = ['find_m44', 'find_m66']
 

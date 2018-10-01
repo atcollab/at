@@ -4,9 +4,11 @@ Simple parallelisation of atpass() using multiprocessing.
 import multiprocessing
 # noinspection PyUnresolvedReferences
 from .atpass import atpass
-from .lattice import uint32_refpts
+from ..lattice import uint32_refpts
 import numpy
 
+
+__all__ = ['patpass']
 
 def _atpass_one(args):
     ring, rin, turns, refpts = args

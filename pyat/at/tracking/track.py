@@ -2,8 +2,10 @@ from __future__ import print_function
 import numpy
 # noinspection PyUnresolvedReferences
 from .atpass import atpass
-from .lattice import uint32_refpts
+from ..lattice import uint32_refpts
 
+
+__all__ = ['lattice_pass']
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
