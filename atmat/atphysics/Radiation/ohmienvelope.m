@@ -66,8 +66,10 @@ envelope=struct('R',rr,'Sigma',ss,'Tilt',tt);
 nout=nargout-3;
 varargout=cell(1,nout);
 if nout>=3, varargout{3}=orbit(:,refpts); end
-if nout>=2, varargout{2}=ms(:,:,refpts); end
-if nout>=1, varargout{1}=mring; end
+%if nout>=2, varargout{2}=ms(:,:,refpts); end
+%if nout>=1, varargout{1}=mring; end
+if nout>=2, varargout{2}=Batbeg; end
+if nout>=1, varargout{1}=R; end
 
     function btx=cumulb(elem,orbit,b)
         % Calculate 6-by-6 linear transfer matrix in each element

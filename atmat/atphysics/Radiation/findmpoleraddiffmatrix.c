@@ -542,7 +542,6 @@ static PyObject *compute_diffmatrix(PyObject *self, PyObject *args) {
     int i;
 
     if (!PyArg_ParseTuple(args, "OO!d", &pyElem, &PyArray_Type, &pyOrbit, &energy)) {
-        PyErr_SetString(PyExc_ValueError, "Failed to parse arguments to find_mpole_raddiff_matrix");
         return NULL;
     }
     if (PyArray_DIM(pyOrbit,0) != 6) {
