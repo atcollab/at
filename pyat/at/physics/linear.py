@@ -100,7 +100,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     uint32refs = uint32_refpts(range(len(ring) + 1) if refpts is None else refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp)
+        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
 
     orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uint32refs,
@@ -165,7 +165,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
                         Defaults to False
 
     OUTPUT
-        lindata         linear optics data
+        lindata         linear optics data at the entrance of each element specified in refpts.
         tune            [tune_A, tune_B], linear tunes for the two normal modes of linear motion [1]
         chrom           [ksi_A , ksi_B], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
@@ -185,7 +185,6 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         mu              [mux, muy], A and B betatron phase                  (nrefs, 2)
         beta            [betax, betay] vector                               (nrefs, 2)
         alpha           [alphax, alphay] vector                             (nrefs, 2)
-        All values are given at the entrance of each element specified in refpts.
 
     REFERENCES
         [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
@@ -212,7 +211,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
 
     uintrefs = uint32_refpts(range(len(ring) + 1) if refpts is None else refpts, len(ring))
     if orbit is None:
-        orbit = find_orbit4(ring, dp)
+        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
     orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
                                       keep_lattice=keep_lattice))

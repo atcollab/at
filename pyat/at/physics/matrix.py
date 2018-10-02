@@ -6,9 +6,9 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 
 import numpy
 from .orbit import *
-from ..tracking import lattice_pass
+from ..tracking import lattice_pass, element_pass
 
-__all__ = ['find_m44', 'find_m66']
+__all__ = ['find_m44', 'find_m66', 'find_elem_m66']
 
 XYDEFSTEP = 6.055454452393343e-006  # Optimal delta?
 DPSTEP = 6.055454452393343e-006  # Optimal delta?
@@ -57,7 +57,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     full = kwargs.pop('full', False)
     if orbit is None:
-        orbit = find_orbit4(ring, dp)
+        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
     # Construct matrix of plus and minus deltas
     dg = numpy.asfortranarray(0.5 * numpy.diag([xy_step] * 6)[:, :4])
@@ -98,13 +98,17 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
         This syntax is useful to specify the entrance orbit if lattice is not a ring or to avoid recomputing the
         closed orbit if it is already known.
 
+    KEYWORDS
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Defaults to False
+
     See also find_m44, find_orbit6
 
     """
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     dp_step = kwargs.pop('DPStep', DPSTEP)
     if orbit is None:
-        orbit = find_orbit6(ring)
+        orbit = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas
@@ -125,3 +129,20 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
         return m66, mstack
     else:
         return m66
+
+
+def find_elem_m66(elem, orbit=None, **kwargs):
+    xy_step = kwargs.pop('XYStep', XYDEFSTEP)
+    dp_step = kwargs.pop('DPStep', DPSTEP)
+    if orbit is None:
+        orbit = numpy.zeros((6,))
+
+    # Construct matrix of plus and minus deltas
+    scaling = numpy.array([xy_step, xy_step, xy_step, xy_step, dp_step, dp_step])
+    dg = numpy.asfortranarray(0.5*numpy.diag(scaling))
+    dmat = numpy.concatenate((dg, -dg), axis=1)
+
+    in_mat = orbit.reshape(6, 1) + dmat
+    element_pass(elem, in_mat)
+    m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
+    return m66
