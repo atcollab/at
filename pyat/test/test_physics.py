@@ -69,12 +69,8 @@ def test_get_twiss(ring, refpts):
                                   M44_MATLAB, rtol=1e-5, atol=1e-7)
     numpy.testing.assert_almost_equal(twiss['beta'][-1, :],
                                       (2.9872, 6.6381), decimal=4)
-    # Why is the tune different for these two cases?
-    if refpts == [145]:
-        # These are not especially accurate at present.
-        numpy.testing.assert_allclose(tune, (0.3655291, 0.4937126),
-                                      rtol=1e-5, atol=1e-12)
-        numpy.testing.assert_allclose(chrom, (-0.3090409, -0.44186077),
-                                      rtol=1e-4)
-    else:
-        numpy.testing.assert_almost_equal(tune, (0.36553, 0.49371), decimal=5)
+
+    numpy.testing.assert_allclose(tune, (0.3655291, 0.4937126),
+                                  rtol=1e-5, atol=1e-12)
+    numpy.testing.assert_allclose(chrom, (-0.3090409, -0.44186077),
+                                  rtol=1e-5)
