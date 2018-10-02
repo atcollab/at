@@ -14,9 +14,6 @@ LATTICE = os.path.join(ROOT_DIR, 'atmat/atdemos/atmatchExamples/ExampleATMATCH/d
 
 def initialise_matlab():
     eng = matlab.engine.start_matlab()
-    eng.addpath(os.path.join(ROOT_DIR, 'atintegrators/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/attrack/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/atphysics/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/lattice/'))
+    eng.addpath(eng.genpath(os.path.join(ROOT_DIR, 'atintegrators/')))
+    eng.addpath(eng.genpath(os.path.join(ROOT_DIR, 'atmat/')))
     return eng
