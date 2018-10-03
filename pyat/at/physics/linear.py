@@ -1,6 +1,7 @@
 import numpy
 from numpy.linalg import multi_dot as md
 from math import sqrt, atan2, pi
+# noinspection PyProtectedMember
 from .matrix import find_m44, _s2
 from .orbit import find_orbit4
 from ..lattice import uint32_refpts, get_s_pos

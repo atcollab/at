@@ -10,6 +10,7 @@ import numpy
 
 __all__ = ['patpass']
 
+
 def _atpass_one(args):
     ring, rin, turns, refpts = args
     return atpass(ring, rin, turns, refpts)

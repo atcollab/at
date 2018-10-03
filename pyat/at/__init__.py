@@ -12,4 +12,3 @@ class AtError(Exception):
 
 class AtWarning(Warning):
     pass
-

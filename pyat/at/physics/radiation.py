@@ -43,11 +43,11 @@ def ohmi_envelope(ring, radindex, refpts=None, orbit=None, keep_lattice=False):
 
         envelope is a structured array with fields:
         sigma           [sigma_a, sigma_b] - RMS size [m] along
-                        the principal axis of a tilted ellips
+                        the principal axis of a tilted ellipse
                         Assuming normal distribution exp(-(z^2)/(2*sigma_z))
-        tilt            Tilt angle of the XY ellipse [rad]
+        tilt            Tilt angle of the XZ ellipse [rad]
                         Positive Tilt corresponds to Corkscrew (right)
-                        rotation of XY plane around s-axis
+                        rotation of XZ plane around s-axis
         R               (6, 6) equilibrium envelope matrix R
 
     REFERENCES
@@ -65,10 +65,11 @@ def ohmi_envelope(ring, radindex, refpts=None, orbit=None, keep_lattice=False):
     def propag(m, cumb):
         """Propagate the beam matrix to refpts"""
         sigmatrix = md((m, rr, m.T)) + cumb
+        # Analyse the projection on the XZ plane
         # noinspection PyTupleAssignmentBalance
-        dr, u = eig(sigmatrix[0:3:2, 0:3:2])
-        tilt = numpy.arcsin(0.5 * (u[1, 0] - u[0, 1]))
-        sigma = numpy.sqrt(dr)
+        eigvects, eigvals = eig(sigmatrix[0:3:2, 0:3:2])
+        tilt = numpy.arcsin(0.5 * (eigvals[1, 0] - eigvals[0, 1]))
+        sigma = numpy.sqrt(eigvects)
         return sigmatrix, tilt, sigma
 
     nelems = len(ring)
