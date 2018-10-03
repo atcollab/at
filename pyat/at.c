@@ -283,7 +283,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         }
         new_lattice = 0;
     }
-    printf("Simulating %u particles for %u turns through %u elements.\n", num_particles, num_turns, num_elements);
 
     param.RingLength = lattice_length;
     param.T0 = lattice_length/299792458.0;
