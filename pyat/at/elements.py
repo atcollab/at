@@ -229,3 +229,16 @@ class M66(Element):
         if m66.shape != (6, 6):
             raise ValueError('Transfer matrix must have a 6x6 shape')
         super(M66, self).__init__(family_name, M66=numpy.asfortranarray(m66), **kwargs)
+
+
+class Corrector(Element):
+    """pyAT corrector element"""
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length', 'KickAngle']
+    
+    def __init__(self, family_name, length, kick_angle, **kwargs):
+        kick_angle = numpy.array(kwargs.pop('KickAngle', kick_angle),
+                                 dtype=numpy.float64)
+        kwargs.setdefault('PassMethod', 'CorrectorPass')
+        kwargs['KickAngle'] = kick_angle
+        super(Corrector, self).__init__(family_name, kwargs.pop('Length', 0.0),
+                                        **kwargs)
