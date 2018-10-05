@@ -66,7 +66,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
                         2) a list of integers
                         3) a numpy array of booleans as long as ring where
                            selected elements are true
-                        Defaults to all points (range(len(ring)+1)
+                        Defaults to None
 
     KEYWORDS
         orbit           avoids looking for the colsed orbit if is already known ((6,) array)
@@ -97,7 +97,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
 
     See also linopts
     """
-    uintrefs = uint32_refpts(range(len(ring) + 1) if refpts is None else refpts, len(ring))
+    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
         orbit = find_orbit4(ring, dp)
