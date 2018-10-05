@@ -101,7 +101,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp)
+        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
 
     orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
@@ -228,7 +228,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp)
+        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
     orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
                                       keep_lattice=keep_lattice))
