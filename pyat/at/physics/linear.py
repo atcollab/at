@@ -75,6 +75,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
                         Defaults to False
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
+        ddp=1.0E-8      momentum deviation used for computation of chromaticities and dispersion
 
     OUTPUT
         twiss           linear optics data
@@ -174,9 +175,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
                         Defaults to False
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
+        ddp=1.0E-8      momentum deviation used for computation of chromaticities and dispersion
 
     OUTPUT
-        lindata0        linear optics data at the entrance of the ring
+        lindata0        linear optics data at the entrance/end of the ring
         tune            [tune_A, tune_B], linear tunes for the two normal modes of linear motion [1]
         chrom           [ksi_A , ksi_B], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
