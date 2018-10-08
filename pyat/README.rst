@@ -26,6 +26,7 @@ It is easiest to do this using a virtualenv:
 * ``virtualenv --no-site-packages venv``
 * ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
 * ``pip install numpy``
+* ``pip install scipy``
 * ``pip install pytest``
 * ``python setup.py install  # install into the virtualenv``
 
