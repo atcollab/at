@@ -3,74 +3,195 @@ Radiation and equilibrium emittances
 """
 import numpy
 from numpy.linalg import multi_dot as md
-from scipy.linalg import inv, eig, solve_sylvester
-from ..lattice import uint32_refpts
+from scipy.linalg import inv, det, solve_sylvester
+from ..lattice import uint32_refpts, get_energy, checktype, RFCavity, Dipole, Quadrupole
 from ..tracking import lattice_pass
 from .orbit import find_orbit6
 from .matrix import find_m66, find_elem_m66
+from .amat import modemit
 # noinspection PyUnresolvedReferences
 from .diffmatrix import find_mpole_raddiff_matrix
 
-__all__ = ['ohmi_envelope']
+__all__ = ['radiation_on', 'radiation_off', 'ohmi_envelope']
+
+_submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
 # dtype for structured array containing Twiss parameters
-ENVELOPE_DTYPE = [('R', numpy.float64, (6, 6)),
-                  ('tilt', numpy.float64),
-                  ('sigma', numpy.float64, (2,))]
+ENVELOPE_DTYPE = [('R66', numpy.float64, (6, 6)),
+                  ('R44', numpy.float64, (4, 4)),
+                  ('m66', numpy.float64, (6, 6)),
+                  ('orbit6', numpy.float64, (6,)),
+                  ('emitXY', numpy.float64, (2,)),
+                  ('emitXYZ', numpy.float64, (3,))]
 
 
-def ohmi_envelope(ring, radindex, refpts=None, orbit=None, keep_lattice=False):
+def mod_elem(ring, checkfun, modfun):
+    n = 0
+    for elem in filter(checkfun, ring):
+        modfun(elem)
+        n += 1
+    return n
+
+
+def _radiation_switch(ring, cavity_func=None, dipole_func=None, quadrupole_func=None):
+    if cavity_func is not None:
+        n = mod_elem(ring, checktype(RFCavity), cavity_func)
+        print('{0} modified cavities'.format(n))
+    if dipole_func is not None:
+        n = mod_elem(ring, checktype(Dipole), dipole_func)
+        print('{0} modified dipoles'.format(n))
+    if quadrupole_func is not None:
+        n = mod_elem(ring, checktype(Quadrupole), quadrupole_func)
+        print('{0} modified quadrupoles'.format(n))
+
+
+def radiation_on(ring, cavity_pass='CavityPass', dipole_pass='auto', quadrupole_pass=None):
+    """
+    Turn acceleration and radiation on
+
+    INPUT
+        ring                lattice description, modified in-place
+
+    KEYWORDS
+        cavity_pass='CavityPass'    PassMethod set on cavities
+        dipole_pass='auto'          PassMethod set on dipoles
+        quadrupole_pass=None        PassMethod set on quadrupoles
+
+        For PassMethod names, the convention is:
+            None            no change
+            'auto'          replace *Pass by *RadPass
+            anything else   set as it is
+
+    """
+    def repfunc(pass_method):
+        if pass_method is None:
+            ff = None
+        elif pass_method == 'auto':
+            def ff(elem):
+                if not elem.PassMethod.endswith('RadPass'):
+                    elem.PassMethod = ''.join((elem.PassMethod[:-4], 'RadPass'))
+                    elem.Energy = energy
+        else:
+            def ff(elem):
+                elem.PassMethod = pass_method
+                elem.Energy = energy
+        return ff
+
+    energy, _ = get_energy(ring)
+    _radiation_switch(ring, repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
+
+
+def radiation_off(ring, cavity_pass='IdentityPass', dipole_pass='auto', quadrupole_pass=None):
+    """
+    Turn acceleration and radiation off
+
+    INPUT
+        ring                lattice description, modified in-place
+
+    KEYWORDS
+        cavity_pass='IdentityPass'  PassMethod set on cavities
+        dipole_pass='auto'          PassMethod set on dipoles
+        quadrupole_pass=None        PassMethod set on quadrupoles
+
+        For PassMethod names, the convention is:
+            None            no change
+            'auto'          replace *RadPass by *Pass
+            anything else   set as it is
+
+    """
+    def repfunc(pass_method):
+        if pass_method is None:
+            ff = None
+        elif pass_method == 'auto':
+            def ff(elem):
+                if elem.PassMethod.endswith('RadPass'):
+                    elem.PassMethod = ''.join((elem.PassMethod[:-7], 'Pass'))
+        else:
+            def ff(elem):
+                elem.PassMethod = pass_method
+        return ff
+
+    _radiation_switch(ring, repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
+
+
+def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
 
-    envelope, rmsdp, rmsbl = ohmi_envelope(ring, ,radelemindex, refpts)
+    emit0, mode_emit, damping_rates, tunes, emit = ohmi_envelope(ring, refpts)
 
     PARAMETERS
-        ring            lattice description
-        radelemindex    elements producing radiation (same format as refpts)
-        refpts          elements at which data is returned. It can be
-                        1) an integer (0 indicating the first element)
-                        2) a list of integers
-                        3) a numpy array of booleans as long as ring where
-                           selected elements are true
-                        Defaults to ring entrance ([0])
+        ring                lattice description
+        refpts              elements at which data is returned. It can be
+                            1) an integer (0 indicating the first element)
+                            2) a list of integers
+                            3) a numpy array of booleans as long as ring where selected elements are true
+                            Defaults to None
+
+    KEYWORDS
+        orbit=None          Avoids looking for the colsed orbit if is already known ((6,) array)
+        keep_lattice=False  Assume no lattice change since the previous tracking.
+                            Defaults to False
 
     OUTPUT
-        envelope        envelope description at the entrance of each element specified in refpts.
-        rmsdp           RMS momentum spread
-        rmsbl           RMS bunch length [m]
+        emit0               emittance data at the start/end of the ring
+        beamdata            beam parameters at the start of the ring
+        mode_emit           emittances of the 3 normal modes
+        damping_rates       damping_rates of the 3 normal modes
+        tunes               tunes of the 3 normal modes
+        emit                Only returned if refpts is not None:
+                            emittance data at the points refered to by refpts
 
-        envelope is a structured array with fields:
-        sigma           [sigma_a, sigma_b] - RMS size [m] along
-                        the principal axis of a tilted ellipse
-                        Assuming normal distribution exp(-(z^2)/(2*sigma_z))
-        tilt            Tilt angle of the XZ ellipse [rad]
-                        Positive Tilt corresponds to Corkscrew (right)
-                        rotation of XZ plane around s-axis
-        R               (6, 6) equilibrium envelope matrix R
+        emit is a structured array with fields:
+        R66                 (6, 6) equilibrium envelope matrix R
+        R44                 (4, 4) betatron emittance matrix (dpp = 0)
+        T66                 (6, 6) transfer matrix from the start of the ring
+        orbit6              (6,) closed orbit
+        emitXY              betatron emittance projected on xxp and yyp
+        emitXYZ             6x6 emittance projected on xxp, yyp, ldp
+
+        beamdata is a names tuple with attributes:
+        tunes               tunes of the 3 normal modes
+        damping_rates       damping rates of the 3 normal modes
+        mode_emittances     equilibrium emittances of the 3 normal modes
+        mode_matrices       R-matrices of the 3 normal modes
 
     REFERENCES
         [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
     """
+
     def cumulb(it):
         """accumulate diffusion matrices"""
-        bcum = numpy.zeros((6, 6))
-        yield bcum
+        cumul = numpy.zeros((6, 6))
+        yield cumul
         for elem, orbin, b in it:
             m = find_elem_m66(elem, orbin)
-            bcum = md((m, bcum, m.T)) + b
-            yield bcum
+            cumul = md((m, cumul, m.T)) + b
+            yield cumul
 
-    def propag(m, cumb):
+    def process(r66):
+        # projections on xx', zz', ldp
+        emit3 = numpy.sqrt(numpy.array([det(r66[s, s]) for s in _submat]))
+        # Emittance cut for dpp=0
+        if emit3[0] < 1.E-13:               # No equilibrium emittance
+            r44 = numpy.nan*numpy.ones((4, 4))
+        elif emit3[1] < 1.E-13:             # Uncoupled machine
+            minv = inv(r66[[0, 1, 4, 5], :][:, [0, 1, 4, 5]])
+            r44 = numpy.zeros((4, 4))
+            r44[:2, :2] = inv(minv[:2, :2])
+        else:                               # Coupled machine
+            minv = inv(r66)
+            r44 = inv(minv[:4, :4])
+        # betatron emittances (dpp=0)
+        emit2 = numpy.sqrt(numpy.array([det(r44[s, s], check_finite=False) for s in _submat[:2]]))
+        return r44, emit2, emit3
+
+    def propag(m, cumb, orbit6):
         """Propagate the beam matrix to refpts"""
         sigmatrix = md((m, rr, m.T)) + cumb
-        # Analyse the projection on the XZ plane
-        # noinspection PyTupleAssignmentBalance
-        eigvects, eigvals = eig(sigmatrix[0:3:2, 0:3:2])
-        tilt = numpy.arcsin(0.5 * (eigvals[1, 0] - eigvals[0, 1]))
-        sigma = numpy.sqrt(eigvects)
-        return sigmatrix, tilt, sigma
+        m44, emit2, emit3 = process(sigmatrix)
+        return sigmatrix, m44, m, orbit6, emit2, emit3
 
     nelems = len(ring)
     uint32refs = uint32_refpts([0] if refpts is None else refpts, nelems)
@@ -80,28 +201,36 @@ def ohmi_envelope(ring, radindex, refpts=None, orbit=None, keep_lattice=False):
         orbit = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orb = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                                                    keep_lattice=keep_lattice)), -1)
+    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
+                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
-    bb = [numpy.zeros((6, 6))] * nelems
-    for idx in radindex:
-        bb[idx] = find_mpole_raddiff_matrix(ring[idx], numpy.squeeze(orb[idx, :]), 6.0e9)
-    batbeg = numpy.stack(cumulb(zip(ring, orb, bb)), axis=0)
+    energy, _ = get_energy(ring)
+    b0 = numpy.zeros((6, 6))
+    bb = [find_mpole_raddiff_matrix(elem, orbit, energy) if elem.PassMethod.endswith('RadPass') else b0
+          for elem in ring]
+    bbcum = numpy.stack(cumulb(zip(ring, orbs, bb)), axis=0)
     # ------------------------------------------------------------------------
-    # Equation for the moment matrix RR is
-    #         RR = MRING*RR*MRING' + BCUM;
+    # Equation for the moment matrix R is
+    #         R = MRING*R*MRING' + BCUM;
     # We rewrite it in the form of Lyapunov-Sylvester equation to use scipy's solve_sylvester function
-    #            AA*RR + RR*BB = QQ
+    #            A*R + R*B = Q
     # where
-    #               AA =  inv(MRING)
-    #               BB = -MRING'
-    #               QQ = inv(MRING)*BCUM
+    #               A =  inv(MRING)
+    #               B = -MRING'
+    #               Q = inv(MRING)*BCUM
     # -----------------------------------------------------------------------
     aa = inv(mring)
     bb = -mring.T
-    qq = numpy.dot(aa, batbeg[-1])
+    qq = numpy.dot(aa, bbcum[-1])
     rr = solve_sylvester(aa, bb, qq)
-    rmsdp = numpy.sqrt(rr[4, 4])
-    rmsbl = numpy.sqrt(rr[5, 5])
-    lindata = numpy.array(list(map(propag, numpy.rollaxis(ms, -1), batbeg[uint32refs])), dtype=ENVELOPE_DTYPE)
-    return lindata, rmsdp, rmsbl
+    rr = 0.5 * (rr + rr.T)
+    rr4, emitxy, emitxyz = process(rr)
+    r66data = modemit(mring, rr)
+    data0 = numpy.array((rr, rr4, mring, orbit, emitxy, emitxyz), dtype=ENVELOPE_DTYPE)
+    if refpts is None:
+        return data0, r66data
+    else:
+        data = numpy.array(
+            list(map(propag, numpy.rollaxis(ms, -1), bbcum[uint32refs], orbs[uint32refs, :])),
+            dtype=ENVELOPE_DTYPE)
+        return data0, r66data, data

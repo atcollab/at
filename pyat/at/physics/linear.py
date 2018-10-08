@@ -1,8 +1,7 @@
 import numpy
 from numpy.linalg import multi_dot as md
 from math import sqrt, atan2, pi
-# noinspection PyProtectedMember
-from .matrix import find_m44, _s2
+from .matrix import find_m44, jmat
 from .orbit import find_orbit4
 from ..lattice import uint32_refpts, get_s_pos
 from ..tracking import lattice_pass
@@ -10,6 +9,8 @@ from ..tracking import lattice_pass
 __all__ = ['get_twiss', 'linopt']
 
 DDP = 1e-8
+
+_jmt = jmat(1)
 
 # dtype for structured array containing Twiss parameters
 TWISS_DTYPE = [('idx', numpy.uint32),
@@ -105,8 +106,8 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
-                                      keep_lattice=keep_lattice))
+    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
+                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
@@ -141,7 +142,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         # Use rollaxis to get the arrays in the correct shape for the twiss
         # structured array - that is, with nrefs as the first dimension.
         twiss['s_pos'] = get_s_pos(ring, uintrefs[:nrefs])
-        twiss['closed_orbit'] = numpy.rollaxis(orbs, -1)
+        twiss['closed_orbit'] = orbs
         twiss['m44'] = numpy.rollaxis(mstack, -1)
         twiss['alpha'] = numpy.stack((alpha_x, alpha_z), axis=1)
         twiss['beta'] = numpy.stack((beta_x, beta_z), axis=1)
@@ -219,11 +220,11 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         m = t44[:2, 2:]
         n = t44[2:, :2]
         gamma = sqrt(numpy.linalg.det(numpy.dot(n, C) + numpy.dot(G, nn)))
-        msa = (md((G, mm)) - md((m, _s2, C.T, _s2.T))) / gamma
+        msa = (md((G, mm)) - md((m, _jmt, C.T, _jmt.T))) / gamma
         msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
-        cc = md(((numpy.dot(mm, C) + numpy.dot(G, m)), _s2, msb.T, _s2.T))
-        aa = md((msa, A, _s2, msa.T, _s2.T))
-        bb = md((msb, B, _s2, msb.T, _s2.T))
+        cc = md(((numpy.dot(mm, C) + numpy.dot(G, m)), _jmt, msb.T, _jmt.T))
+        aa = md((msa, A, _jmt, msa.T, _jmt.T))
+        bb = md((msb, B, _jmt, msb.T, _jmt.T))
         return msa, msb, gamma, cc, aa, bb
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
@@ -231,8 +232,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     if orbit is None:
         orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
-    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
-                                      keep_lattice=keep_lattice))
+    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
+                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
@@ -242,7 +243,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     m = m44[:2, 2:]
     n = m44[2:, :2]
 
-    H = m + md((_s2, n.T, _s2.T))
+    H = m + md((_jmt, n.T, _jmt.T))
     t = numpy.trace(M - N)
     t2 = t * t
     t2h = t2 + 4.0 * numpy.linalg.det(H)
@@ -250,8 +251,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     g = sqrt(1.0 + sqrt(t2 / t2h)) / sqrt(2.0)
     G = numpy.diag((g, g))
     C = -H * numpy.sign(t) / (g * sqrt(t2h))
-    A = md((G, G, M)) - numpy.dot(G, (md((m, _s2, C.T, _s2.T)) + md((C, n)))) + md((C, N, _s2, C.T, _s2.T))
-    B = md((G, G, N)) + numpy.dot(G, (md((_s2, C.T, _s2.T, m)) + md((n, C)))) + md((_s2, C.T, _s2.T, M, C))
+    A = md((G, G, M)) - numpy.dot(G, (md((m, _jmt, C.T, _jmt.T)) + md((C, n)))) + md((C, N, _jmt, C.T, _jmt.T))
+    B = md((G, G, N)) + numpy.dot(G, (md((_jmt, C.T, _jmt.T, m)) + md((n, C)))) + md((_jmt, C.T, _jmt.T, M, C))
 
     # Get initial twiss parameters
     a0_a, b0_a, tune_a = _closure(A)
@@ -284,7 +285,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         # Use rollaxis to get the arrays in the correct shape for the lindata
         # structured array - that is, with nrefs as the first dimension.
         lindata['s_pos'] = get_s_pos(ring, uintrefs)
-        lindata['closed_orbit'] = numpy.rollaxis(orbs, -1)
+        lindata['closed_orbit'] = orbs
         lindata['m44'] = numpy.rollaxis(mstack, -1)
         lindata['alpha'] = numpy.stack((alpha_a, alpha_b), axis=1)
         lindata['beta'] = numpy.stack((beta_a, beta_b), axis=1)
