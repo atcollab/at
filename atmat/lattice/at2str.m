@@ -106,9 +106,9 @@ switch atclass
         end
 end
 varg=[args,reshape(cat(2,fieldnames(options),struct2cell(options))',1,[])];
+famname=varg{1};
 fmt=['%15s(%s' repmat(',%s',1,length(varg)-1) ')'];
-%strargs=cellfun(@mat2str,varg,'UniformOutput',false);
-strargs=cellfun(@(arg) mat2str(reshape(arg,[],size(arg,2))),varg,'UniformOutput',false);
+strargs=cellfun(@arg2str,varg,'UniformOutput',false);
 elstr=sprintf(fmt,func2str(create),strargs{:});
 
     function s2 = rmfield2(s1,fieldnames)
@@ -122,6 +122,18 @@ elstr=sprintf(fmt,func2str(create),strargs{:});
         catch
             result=varargin{end};
         end
+    end
+
+    function argstr=arg2str(arg)
+        persistent prevarg
+        try
+            argstr=mat2str(reshape(arg,[],size(arg,2)));
+        catch
+            argstr=sprintf('%s([])',class(arg));
+            warning('AT:CannotDisplay',...
+            'In the element ''%s'' the %s field cannot be displayed (replaced by ''%s'')',famname, prevarg, argstr);
+        end
+        prevarg=argstr;
     end
 
     function [opts,args]=doptions(elem,create,argn,dontcheck,args)
