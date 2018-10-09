@@ -244,3 +244,14 @@ class M66(Element):
             m66 = numpy.identity(6)
         kwargs.setdefault('PassMethod', 'Matrix66Pass')
         super(M66, self).__init__(family_name, M66=m66, **kwargs)
+
+
+class Corrector(Element):
+    """pyAT corrector element"""
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length', 'KickAngle']
+    CONVERSIONS = dict(Element.CONVERSIONS, KickAngle=_array)
+
+    def __init__(self, family_name, length, kick_angle, **kwargs):
+        kwargs.setdefault('PassMethod', 'CorrectorPass')
+        super(Corrector, self).__init__(family_name, kwargs.pop('Length', 0.0),
+                                        KickAngle=kick_angle, **kwargs)

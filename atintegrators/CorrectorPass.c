@@ -56,7 +56,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double Length;
         double *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        KickAngle = atGetDoubleArray(ElemData, "KickAngle");
+        KickAngle=atGetDoubleArray(ElemData, "KickAngle"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->KickAngle = KickAngle;
@@ -78,7 +78,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Length;
         double *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
-        KickAngle = atGetDoubleArray(ElemData, "KickAngle");
+        KickAngle=atGetDoubleArray(ElemData, "KickAngle"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
