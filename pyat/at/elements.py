@@ -249,11 +249,9 @@ class M66(Element):
 class Corrector(Element):
     """pyAT corrector element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length', 'KickAngle']
+    CONVERSIONS = dict(Element.CONVERSIONS, KickAngle=_array)
 
     def __init__(self, family_name, length, kick_angle, **kwargs):
-        kick_angle = numpy.array(kwargs.pop('KickAngle', kick_angle),
-                                 dtype=numpy.float64)
         kwargs.setdefault('PassMethod', 'CorrectorPass')
-        kwargs['KickAngle'] = kick_angle
         super(Corrector, self).__init__(family_name, kwargs.pop('Length', 0.0),
-                                        **kwargs)
+                                        KickAngle=kick_angle, **kwargs)
