@@ -137,9 +137,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     OUTPUT
         emit0               emittance data at the start/end of the ring
         beamdata            beam parameters at the start of the ring
-        mode_emit           emittances of the 3 normal modes
-        damping_rates       damping_rates of the 3 normal modes
-        tunes               tunes of the 3 normal modes
         emit                Only returned if refpts is not None:
                             emittance data at the points refered to by refpts
 
@@ -151,11 +148,11 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         emitXY              betatron emittance projected on xxp and yyp
         emitXYZ             6x6 emittance projected on xxp, yyp, ldp
 
-        beamdata is a names tuple with attributes:
+        beamdata is a named tuple with attributes:
         tunes               tunes of the 3 normal modes
         damping_rates       damping rates of the 3 normal modes
-        mode_emittances     equilibrium emittances of the 3 normal modes
         mode_matrices       R-matrices of the 3 normal modes
+        mode_emittances     equilibrium emittances of the 3 normal modes
 
     REFERENCES
         [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
