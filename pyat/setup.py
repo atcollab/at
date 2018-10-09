@@ -54,6 +54,6 @@ setup(name='at-python',
       author='The AT collaboration',
       author_email='atcollab-general@lists.sourceforge.net',
       install_requires=['numpy>=1.10'],
-      packages=['at', 'at.integrators'],
+      packages=['at', 'at.integrators', 'at.lattice', 'at.physics'],
       ext_modules=[at] + [integrator_extension(pm) for pm in pass_methods],
       zip_safe=False)
