@@ -80,10 +80,12 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         ddp=1.0E-8      momentum deviation used for computation of chromaticities and dispersion
 
     OUTPUT
-        twiss           linear optics data
+        twiss0          linear optics data at the entrance/end of the ring
         tune            [tune_h, tune_v], fractional part of the linear tunes
         chrom           [ksi_h , ksi_v], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
+        twiss           Only returned if refpts is not None:
+                        linear optics at the points refered to by refpts
 
         twiss is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
@@ -98,7 +100,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         alpha           [alphax, alphay] vector                             (nrefs, 2)
         All values are given at the entrance of each element specified in refpts.
 
-    See also linopts
+    See also linopt
     """
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
