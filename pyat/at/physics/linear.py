@@ -117,18 +117,18 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     # Calculate chromaticity by calling this function again at a slightly
     # different momentum.
     if get_chrom:
-        l_up, tune_up, _ = get_twiss(ring, dp + 0.5 * ddp, uintrefs, keep_lattice=True)
-        l_down, tune_down, _ = get_twiss(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True)
+        d0_up, tune_up, _, l_up = get_twiss(ring, dp + 0.5 * ddp, uintrefs, keep_lattice=True)
+        d0_down, tune_down, _, l_down = get_twiss(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True)
         chrom = (tune_up - tune_down) / ddp
         dispersion = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4] / ddp
-        d0 = numpy.NaN
+        disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
         chrom = None
         dispersion = numpy.NaN
-        d0 = numpy.NaN
+        disp0 = numpy.NaN
 
-    data0 = numpy.array(
-        (0, 0.0, orbit, d0, numpy.array([a0_x, a0_y]), numpy.array([b0_x, b0_y]), 0.0, m44), dtype=TWISS_DTYPE)
+    twiss0 = numpy.array(
+        (0, 0.0, orbit, disp0, numpy.array([a0_x, a0_y]), numpy.array([b0_x, b0_y]), 0.0, m44), dtype=TWISS_DTYPE)
 
     # Propagate to reference points
     if nrefs > 0:
@@ -149,7 +149,10 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     else:
         twiss = numpy.array([], dtype=TWISS_DTYPE)
 
-    return twiss, tune, chrom
+    if refpts is None:
+        return twiss0, tune, chrom
+    else:
+        return twiss0, tune, chrom, twiss
 
 
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP):
@@ -262,14 +265,14 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True)
         chrom = (tune_up - tune_down) / ddp
         dispersion = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4] / ddp
-        d0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
+        disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
         chrom = None
         dispersion = numpy.NaN
-        d0 = numpy.NaN
+        disp0 = numpy.NaN
 
-    data0 = numpy.array(
-        (0, 0.0, orbit, d0, numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]), 0.0, m44, A, B, C, g),
+    lindata0 = numpy.array(
+        (0, 0.0, orbit, disp0, numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]), 0.0, m44, A, B, C, g),
         dtype=LINDATA_DTYPE)
 
     # Propagate to reference points
@@ -297,6 +300,6 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         lindata = numpy.array([], dtype=LINDATA_DTYPE)
 
     if refpts is None:
-        return data0, tune, chrom
+        return lindata0, tune, chrom
     else:
-        return data0, tune, chrom, lindata
+        return lindata0, tune, chrom, lindata

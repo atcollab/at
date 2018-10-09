@@ -61,7 +61,7 @@ def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 def test_get_twiss(ring, refpts):
-    twiss, tune, chrom = physics.get_twiss(ring, DP, refpts, get_chrom=True)
+    twiss0, tune, chrom, twiss = physics.get_twiss(ring, DP, refpts, get_chrom=True)
     numpy.testing.assert_allclose(twiss['s_pos'][-1], 56.209377216)
     numpy.testing.assert_allclose(twiss['closed_orbit'][0][:5],
                                   [1.0916359e-7, 0, 0, 0, DP], atol=1e-12)
@@ -72,5 +72,5 @@ def test_get_twiss(ring, refpts):
 
     numpy.testing.assert_allclose(tune, (0.3655291, 0.4937126),
                                   rtol=1e-5, atol=1e-12)
-    numpy.testing.assert_allclose(chrom, (-0.3090409, -0.44186077),
+    numpy.testing.assert_allclose(chrom, (-0.30903657, -0.4418593),
                                   rtol=1e-5)
