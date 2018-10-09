@@ -8,7 +8,7 @@ from ..lattice import uint32_refpts, get_energy, checktype, RFCavity, Dipole, Qu
 from ..tracking import lattice_pass
 from .orbit import find_orbit6
 from .matrix import find_m66, find_elem_m66
-from .amat import modemit
+from .amat import get_tunes_damp
 # noinspection PyUnresolvedReferences
 from .diffmatrix import find_mpole_raddiff_matrix
 
@@ -225,7 +225,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     rr = solve_sylvester(aa, bb, qq)
     rr = 0.5 * (rr + rr.T)
     rr4, emitxy, emitxyz = process(rr)
-    r66data = modemit(mring, rr)
+    r66data = get_tunes_damp(mring, rr)
     data0 = numpy.array((rr, rr4, mring, orbit, emitxy, emitxyz), dtype=ENVELOPE_DTYPE)
     if refpts is None:
         return data0, r66data

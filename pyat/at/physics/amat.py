@@ -9,7 +9,8 @@ _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
-R66Data = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_emittances', 'mode_matrices'))
+_Data1 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices'))
+_Data2 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices', 'mode_emittances'))
 
 
 def amat(tt):
@@ -60,14 +61,15 @@ def amat(tt):
     return aa
 
 
-def r_matrix(a):
+def get_mode_matrices(a):
     dms = int(a.shape[0] / 2)
-    return tuple(numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms])
+    # return tuple(numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms])
+    return numpy.stack((numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]), axis=0)
 
 
-def modemit(tt, rr):
+def get_tunes_damp(tt, rr):
     """
-    mode_emit, damping_rates, tunes = modemit(T, R)
+    mode_emit, damping_rates, tunes = get_tunes_damp(T, R)
 
     INPUT
     T       (m, m) transfer matrix for 1 turn
@@ -82,8 +84,11 @@ def modemit(tt, rr):
     dms = int(nv/2)
     jmt = jmat(dms)
     aa = amat(tt)
-    rdiag = numpy.diag(md((aa.T, jmt, rr, jmt, aa)))
-    mode_emit = -0.5*(rdiag[0:nv:2] + rdiag[1:nv:2])
     rmat = md((inv(aa), tt, aa))
     damping_rates, tunes = zip(*(decode(rmat[s, s]) for s in _submat[:dms]))
-    return R66Data(tunes, damping_rates, mode_emit, r_matrix(aa))
+    if rr is None:
+        return _Data1(tunes, damping_rates, get_mode_matrices(aa))
+    else:
+        rdiag = numpy.diag(md((aa.T, jmt, rr, jmt, aa)))
+        mode_emit = -0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
+        return _Data2(tunes, damping_rates, get_mode_matrices(aa), mode_emit)
