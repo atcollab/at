@@ -5,11 +5,11 @@ from at import elements, atpass, uint32_refpts
 
 def test_incorrect_types_raises_value_error(rin):
     l = []
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         atpass(1, rin, 1)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         atpass(l, 1, 1)
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         atpass(l, rin, 'a')
 
 
