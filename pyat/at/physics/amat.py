@@ -1,3 +1,4 @@
+""""""
 from collections import namedtuple
 import numpy
 from numpy.linalg import multi_dot as md
@@ -27,10 +28,10 @@ def amat(tt):
     B. Nash July 18, 2013
 
     INPUT
-    T       (m, m) transfer matrix for 1 turn
+    T       (m, m)  transfer matrix for 1 turn
 
     OUTPUT
-    A       (m, m)
+    A       (m, m)  A-matrix
 
     """
     nv = tt.shape[0]
@@ -62,8 +63,8 @@ def amat(tt):
 
 
 def get_mode_matrices(a):
+    """Given a (m, m) A matrix , find the m normal modes"""
     dms = int(a.shape[0] / 2)
-    # return tuple(numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms])
     return numpy.stack((numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]), axis=0)
 
 
@@ -72,8 +73,17 @@ def get_tunes_damp(tt, rr):
     mode_emit, damping_rates, tunes = get_tunes_damp(T, R)
 
     INPUT
-    T       (m, m) transfer matrix for 1 turn
-    R       (m, m) beam matrix
+        T                   (m, m) transfer matrix for 1 turn
+        R                   (m, m) beam matrix (optional)
+
+        m can be 2 (single plane), 4 (betatron motion) or 6 (full motion)
+
+    OUTPUT
+        named tuple with the follwong attributes:
+        tunes               (m,) tunes of the m normal modes
+        damping_rates       (m,) damping rated of the m normal modes
+        mode_matrices       (3, m, m) the R-matrices of the m normal modes
+        mode_emittances     Only if R is specified: (m,) emittance of eavh mode
     """
     def decode(rot22):
         tune = (numpy.arctan2(rot22[0, 1] - rot22[1, 0], rot22[0, 0] + rot22[1, 1]) / 2.0 / pi) % 1

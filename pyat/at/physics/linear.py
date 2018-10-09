@@ -1,3 +1,6 @@
+"""
+Coupled or non-coupled 4x4 linear motion
+"""
 import numpy
 from numpy.linalg import multi_dot as md
 from math import sqrt, atan2, pi

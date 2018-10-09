@@ -16,9 +16,9 @@ __all__ = ['radiation_on', 'radiation_off', 'ohmi_envelope']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
-# dtype for structured array containing Twiss parameters
-ENVELOPE_DTYPE = [('R66', numpy.float64, (6, 6)),
-                  ('R44', numpy.float64, (4, 4)),
+# dtype for structured array containing optical parameters
+ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
+                  ('r44', numpy.float64, (4, 4)),
                   ('m66', numpy.float64, (6, 6)),
                   ('orbit6', numpy.float64, (6,)),
                   ('emitXY', numpy.float64, (2,)),
