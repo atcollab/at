@@ -39,7 +39,7 @@ Finally, you should be able to run the tests:
 Any changes to .py files are automatically reinstalled in the build, but to
 ensure any changes to .c files are reinstalled rerun the following:
 
-* ``python setup.py develop``
+* ``python setup.py install``
 
 
 Comparing results with Matlab
