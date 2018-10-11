@@ -11,7 +11,7 @@
 .cache
 
 #Temporary files
-*.m~
+*~
 
 # Virtual environment
 venv
