@@ -8,8 +8,8 @@ from . import elements
 import numpy
 
 
-CLASS_MAPPING = {'Quad': 'Quadrupole', 'Sext': 'Sextupole', 'AP': 'Aperture',
-                 'RF': 'RFCavity', 'BPM': 'Monitor'}
+CLASS_MAPPING = {'quad': 'Quadrupole', 'sext': 'Sextupole', 'ap': 'Aperture',
+                 'rf': 'RFCavity', 'bpm': 'Monitor'}
 
 CLASSES = set(['Marker', 'Monitor', 'Aperture', 'Drift', 'ThinMultipole',
                'Multipole', 'Dipole', 'Bend', 'Quadrupole', 'Sextupole',
@@ -37,7 +37,7 @@ def hasattrs(element_kwargs, *attributes):
 
 def find_class_name(elem_kwargs):
     try:
-        class_name = elem_kwargs.pop('Class')
+        class_name = elem_kwargs.pop('Class').lower()
         class_name = CLASS_MAPPING.get(class_name, class_name)
         if class_name in CLASSES:
             return class_name
@@ -48,11 +48,11 @@ def find_class_name(elem_kwargs):
         fam_name = elem_kwargs.get('FamName')
         if fam_name in CLASSES:
             return fam_name
-        elif fam_name == 'AP':
+        elif fam_name.lower() == 'ap':
             return 'Aperture'
-        elif fam_name == 'RF':
+        elif fam_name.lower() == 'rf':
             return 'RFCavity'
-        elif fam_name == 'BPM':
+        elif fam_name.lower() == 'bpm':
             return 'Monitor'
         else:
             pass_method = elem_kwargs.get('PassMethod')
@@ -120,20 +120,21 @@ def find_class_name(elem_kwargs):
 
 def sanitise_class(element_kwargs):
     pass_method = element_kwargs.get('PassMethod')
-    if (pass_method == 'IdentityPass') and (element_kwargs['Class'] == 'Drift'):
-        element_kwargs['Class'] = 'Monitor'
-    elif pass_method != None:
+    if pass_method != None:
         pass_to_class = PASSMETHOD_MAPPING.get(pass_method)
-        if pass_to_class != None:
-            if pass_to_class != element_kwargs['Class']:
+        if (pass_method == 'IdentityPass') and (element_kwargs['Class'].lower()
+                                                == 'drift'):
+            element_kwargs['Class'] = 'Monitor'
+        elif pass_to_class != None:
+            if pass_to_class.lower() != element_kwargs['Class'].lower():
                 raise AttributeError("On element {0}, Class {1} is not "
                                      "compatible with PassMethod {2}:{3}."
                                      .format(element_kwargs['Index'],
                                              element_kwargs['Class'],
                                              pass_method))
         else:
-            if element_kwargs['Class'] in ['Marker', 'Monitor', 'Drift',
-                                           'RingParam']:
+            if element_kwargs['Class'].lower() in ['marker', 'monitor', 'drift',
+                                                   'ringparam']:
                 if pass_method not in ['DriftPass', 'IdentityPass']:
                     raise AttributeError("On element {0}, Class {1} is not "
                                          "compatible with PassMethod {2}."
