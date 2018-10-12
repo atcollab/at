@@ -8,8 +8,8 @@ from . import elements
 import numpy
 
 
-CLASS_MAPPING = {'quad': 'Quadrupole', 'sext': 'Sextupole', 'ap': 'Aperture',
-                 'rf': 'RFCavity', 'bpm': 'Monitor'}
+CLASS_MAPPING = {'Quad': 'Quadrupole', 'Sext': 'Sextupole', 'AP': 'Aperture',
+                 'RF': 'RFCavity', 'BPM': 'Monitor'}
 
 CLASSES = set(['Marker', 'Monitor', 'Aperture', 'Drift', 'ThinMultipole',
                'Multipole', 'Dipole', 'Bend', 'Quadrupole', 'Sextupole',
@@ -37,13 +37,13 @@ def hasattrs(element_kwargs, *attributes):
 
 def find_class_name(elem_kwargs):
     try:
-        class_name = elem_kwargs.pop('Class').lower()
+        class_name = elem_kwargs.pop('Class')
         class_name = CLASS_MAPPING.get(class_name, class_name)
         if class_name in CLASSES:
             return class_name
         else:
             raise AttributeError("Invalid Class {0} on element {1}."
-                                 .format(class_name, kwargs['Index']))
+                                 .format(class_name, elem_kwargs['Index']))
     except KeyError:
         fam_name = elem_kwargs.get('FamName')
         if fam_name in CLASSES:
