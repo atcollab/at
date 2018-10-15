@@ -6,7 +6,7 @@ import numpy
 import scipy.constants as constants
 import at       # for AtWarning, AtError
 from ..tracking import lattice_pass
-from ..lattice import get_s_pos, checktype, RFCavity
+from ..lattice import get_s_pos, RFCavity
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -244,7 +244,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
 
     # Get evolution period
     l0 = get_s_pos(ring, len(ring))
-    cavities = list(filter(checktype(RFCavity), ring))
+    cavities = [elem for elem in ring if isinstance(elem, RFCavity)]
     if len(cavities) == 0:
         raise at.AtError('No cavity found in the lattice.')
 

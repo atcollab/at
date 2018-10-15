@@ -3,7 +3,7 @@ from math import pi
 import numpy
 from scipy.constants import physical_constants as cst
 import at       # for AtWarning, AtError
-from ..lattice import checktype, elements
+from ..lattice import elements
 
 __all__ = ['get_energy', 'get_voltage', 'get_energy_loss']
 
@@ -24,17 +24,16 @@ def get_energy(ring):
         energy          Ring energy in eV
         periodicity     Number of periods to make 2pi bending
     """
-    params = list(filter(checktype(elements.RingParam), ring))
+    params = [elem for elem in ring if isinstance(elem, elements.RingParam)]
 
     if len(params) > 0:
         energy = params[0].Energy
         periodicity = params[0].Periodicity
     else:
-        cavities = list(filter(checktype(elements.RFCavity), ring))
+        cavities = [elem for elem in ring if isinstance(elem, elements.RFCavity)]
         if len(cavities) > 0:
             energy = cavities[0].Energy
-            dipoles = filter(checktype(elements.Dipole), ring)
-            theta = [elem.BendingAngle for elem in dipoles]
+            theta = [elem.BendingAngle for elem in ring if isinstance(elem, elements.Dipole)]
             try:
                 nbp = 2.0 * pi / sum(theta)
             except ZeroDivisionError:
@@ -61,7 +60,7 @@ def get_voltage(ring):
         voltage    Total RF voltage
         harmnumber Harmonic number
     """
-    cavities = list(filter(checktype(elements.RFCavity), ring))
+    cavities = [elem for elem in ring if isinstance(elem, elements.RFCavity)]
     energy, periodicity = get_energy(ring)
 
     if len(cavities) > 0:
@@ -86,9 +85,9 @@ def get_energy_loss(ring):
 
     Losses = Cgamma / 2pi * EGeV^4 * I2
     """
-    dipoles = filter(checktype(elements.Dipole), ring)
-    theta = numpy.array([elem.BendingAngle for elem in dipoles])
-    lendp = numpy.array([elem.Length for elem in dipoles])
+    lenthe = numpy.array([(elem.Length, elem.BendingAngle) for elem in ring if isinstance(elem, elements.Dipole)])
+    lendp = lenthe[:, 0]
+    theta = lenthe[:, 1]
     energy, periodicity = get_energy(ring)
 
     e_radius = cst['classical electron radius'][0]
