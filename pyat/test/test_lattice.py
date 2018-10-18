@@ -3,6 +3,14 @@ from at import lattice, elements
 import pytest
 
 
+@pytest.fixture
+def simple_ring():
+    ring = [elements.Drift('D1', 1, R1=numpy.eye(6), R2=numpy.eye(6)),
+            elements.Marker('M', attr='a_value'),
+            elements.Drift('D2', 1, T1=numpy.zeros(6), T2=numpy.zeros(6))]
+    return ring
+
+
 def test_uint32_refpts_handles_array_as_input():
     expected = numpy.array([1, 2, 3], dtype=numpy.uint32)
     requested = numpy.array([1, 2, 3], dtype=numpy.uint32)
@@ -17,6 +25,51 @@ def test_uint32_refpts_handles_array_as_input():
 def test_uint32_refpts_throws_ValueError_if_input_invalid(input):
     with pytest.raises(ValueError):
         r = lattice.uint32_refpts(input, 2)
+
+
+def test_bool_refpts():
+    bool_rps = numpy.ones(5, dtype=bool)
+    bool_rps[3] = False
+    numpy.testing.assert_equal(bool_rps, lattice.bool_refpts(bool_rps, 4))
+    numpy.testing.assert_equal(lattice.bool_refpts([0, 1, 2, 4], 4), bool_rps)
+
+
+def test_checkattr(simple_ring):
+    assert lattice.checkattr('Length')(simple_ring[0]) is True
+    assert lattice.checkattr('not_an_attr')(simple_ring[0]) is False
+    assert (filter(lattice.checkattr('Length', 1), simple_ring) ==
+            [simple_ring[0], simple_ring[2]])
+    assert filter(lattice.checkattr('Length', 2), simple_ring) == []
+    assert filter(lattice.checkattr('not_an_attr'), simple_ring) == []  # not sure if this is intended.
+
+
+def test_checktype(simple_ring):
+    assert lattice.checktype(elements.Drift)(simple_ring[0]) is True
+    assert lattice.checktype(elements.Marker)(simple_ring[0]) is False
+    assert (filter(lattice.checktype(elements.Drift), simple_ring) ==
+            [simple_ring[0], simple_ring[2]])
+    assert filter(lattice.checktype(elements.Monitor), simple_ring) == []
+
+
+def test_get_cells(simple_ring):
+    numpy.testing.assert_equal(lattice.get_cells(simple_ring,
+                                                 lattice.checkattr('Length')),
+                               numpy.ones(3, dtype=bool))
+    numpy.testing.assert_equal(lattice.get_cells(simple_ring, 'attr'),
+                               numpy.array([False, True, False]))
+    numpy.testing.assert_equal(lattice.get_cells(simple_ring, 'FamName', 'D1'),
+                               numpy.array([True, False, False]))
+
+
+def test_refpts_iterator(simple_ring):
+    assert list(lattice.refpts_iterator(simple_ring, [0, 1, 2])) == simple_ring
+    assert (list(lattice.refpts_iterator(simple_ring, numpy.ones(3,
+                                                                 dtype=bool)))
+            == simple_ring)
+    assert list(lattice.refpts_iterator(simple_ring, [1])) == [simple_ring[1]]
+    assert (list(lattice.refpts_iterator(simple_ring, numpy.array([False, True,
+                                                                   False]))) ==
+            [simple_ring[1]])
 
 
 def test_get_s_pos_returns_zero_for_empty_lattice():
@@ -49,3 +102,19 @@ def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_bool_r
     lat = [e, f]
     numpy.testing.assert_equal(lattice.get_s_pos(lat, numpy.array((True, True, True))),
                                numpy.array([0, 0.1, 2.2]))
+
+
+def test_tilt_elem(simple_ring):
+    lattice.tilt_elem(simple_ring[0], (numpy.pi/4))
+    v = 1/2**0.5
+    a = numpy.diag([v, v, v, v, 1.0, 1.0])
+    a[0, 2], a[1, 3], a[2, 0], a[3, 1] = v, v, -v, -v
+    numpy.testing.assert_allclose(simple_ring[0].R1, a)
+    numpy.testing.assert_allclose(simple_ring[0].R2, a.T)
+
+
+def test_shift_elem(simple_ring):
+    lattice.shift_elem(simple_ring[2], 1.0, 1.0)
+    a = numpy.array([1.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+    numpy.testing.assert_equal(simple_ring[2].T1, -a)
+    numpy.testing.assert_equal(simple_ring[2].T2, a)

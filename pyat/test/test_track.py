@@ -23,3 +23,12 @@ def test_multiple_particles_lattice_pass():
     numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 1])
     numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 0])
     numpy.testing.assert_equal(r_original[:, 1], r_out[:, 1, 0, 1])
+
+
+def test_lattice_convert_to_list_if_incorrect_type():
+    lattice = numpy.array([elements.Drift('Drift', 1.0)])
+    rin = numpy.zeros((6, 2))
+    rin[0, 0] = 1e-6
+    r_original = numpy.copy(rin)
+    r_out = track.lattice_pass(lattice, rin, 1)
+    numpy.testing.assert_equal(r_original, r_out.reshape(6, 2))

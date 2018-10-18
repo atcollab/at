@@ -176,7 +176,7 @@ def test_ringparam(rin):
 def test_m66(rin):
     m66 = elements.M66('m66')
     assert m66.Length == 0
-    assert numpy.allclose(m66.M66, numpy.eye(6))
+    numpy.testing.assert_equal(m66.M66, numpy.eye(6))
     # should probably have some pass testing?
 
 
