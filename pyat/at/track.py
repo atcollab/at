@@ -26,7 +26,7 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
         r_in:       6xN array: input coordinates of N particles
         nturns:     number of passes through the lattice line
         refpts:     indices of elements at which to return coordinates (see
-                    lattice.py)
+                    lattice/utils.py)
         keep_lattice: use elements persisted from a previous call to at.atpass.
                     If True, assume that the lattice has not changed since
                     that previous call.
