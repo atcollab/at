@@ -4,6 +4,33 @@ from at import atpass
 from at import elements
 
 
+def test_data_checks():
+    val = numpy.zeros([6,6])
+    val = elements._array(val)  # should I test for the other stuff too?
+    assert val.shape == (36,)
+    val = elements._array66(val)
+    assert val.shape == (6, 6)
+    val = 0
+    val = elements._float(val)
+    assert val == 0.0
+    val = elements._int(val)
+    assert val == 0
+    # not really sure how to test nop
+
+
+def test_element_creation_bits_and_bobs():
+    d = elements.Drift('Drift', 1, attr=numpy.array(0))
+    assert d.__str__() == ("Drift:\n         FamName : 'Drift'\n          "
+                           "Length : 1.0\n      PassMethod : 'DriftPass'\n"
+                           "            attr : array(0)")
+    assert d.__repr__() == "Drift('Drift',1.0,attr=array(0))"
+
+
+def test_element_creation_raises_exception():
+    with pytest.raises(ValueError):
+        elements.Element('family_name', R1='not_an_array')
+
+
 def test_correct_dimensions_does_not_raise_error(rin):
     l = []
     atpass(l, rin, 1)
@@ -28,6 +55,16 @@ def test_marker(rin):
     m = elements.Marker('marker')
     assert m.Length == 0
     lattice = [m]
+    rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
+    rin_orig = numpy.array(rin, copy=True, order='F')
+    atpass(lattice, rin, 1)
+    numpy.testing.assert_equal(rin, rin_orig)
+
+
+def test_monitor(rin):
+    mon = elements.Monitor('monitor')
+    assert mon.Length == 0
+    lattice = [mon]
     rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
     rin_orig = numpy.array(rin, copy=True, order='F')
     atpass(lattice, rin, 1)
@@ -118,6 +155,29 @@ def test_quad_incorrect_array(rin):
     lattice = [q]
     with pytest.raises(RuntimeError):
         atpass(lattice, rin, 1)
+
+
+def test_rfcavity(rin):
+    rf = elements.RFCavity('rfcavity', 0.0, 10, 2100, 10, 12500)
+    # do something I guess?
+    # test the result?
+
+
+def test_ringparam(rin):
+    rp = elements.RingParam('ringparam', 1.e+09)
+    assert rp.Length == 0
+    lattice = [rp]
+    rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
+    rin_orig = numpy.array(rin, copy=True, order='F')
+    atpass(lattice, rin, 1)
+    numpy.testing.assert_equal(rin, rin_orig)
+
+
+def test_m66(rin):
+    m66 = elements.M66('m66')
+    assert m66.Length == 0
+    assert numpy.allclose(m66.M66, numpy.eye(6))
+    # should probably have some pass testing?
 
 
 def test_corrector(rin):
