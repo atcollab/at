@@ -4,7 +4,7 @@ Radiation and equilibrium emittances
 import numpy
 from numpy.linalg import multi_dot as md
 from scipy.linalg import inv, det, solve_sylvester
-from ..lattice import uint32_refpts, get_energy, checktype, RFCavity, Dipole, Quadrupole
+from ..lattice import uint32_refpts
 from ..tracking import lattice_pass
 from .orbit import find_orbit6
 from .matrix import find_m66, find_elem_m66
@@ -12,7 +12,7 @@ from .amat import get_tunes_damp
 # noinspection PyUnresolvedReferences
 from .diffmatrix import find_mpole_raddiff_matrix
 
-__all__ = ['radiation_on', 'radiation_off', 'ohmi_envelope']
+__all__ = ['ohmi_envelope']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -25,95 +25,6 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def mod_elem(ring, checkfun, modfun):
-    n = 0
-    for elem in filter(checkfun, ring):
-        modfun(elem)
-        n += 1
-    return n
-
-
-def _radiation_switch(ring, cavity_func=None, dipole_func=None, quadrupole_func=None):
-    if cavity_func is not None:
-        n = mod_elem(ring, checktype(RFCavity), cavity_func)
-        print('{0} modified cavities'.format(n))
-    if dipole_func is not None:
-        n = mod_elem(ring, checktype(Dipole), dipole_func)
-        print('{0} modified dipoles'.format(n))
-    if quadrupole_func is not None:
-        n = mod_elem(ring, checktype(Quadrupole), quadrupole_func)
-        print('{0} modified quadrupoles'.format(n))
-
-
-def radiation_on(ring, cavity_pass='CavityPass', dipole_pass='auto', quadrupole_pass=None):
-    """
-    Turn acceleration and radiation on
-
-    INPUT
-        ring                lattice description, modified in-place
-
-    KEYWORDS
-        cavity_pass='CavityPass'    PassMethod set on cavities
-        dipole_pass='auto'          PassMethod set on dipoles
-        quadrupole_pass=None        PassMethod set on quadrupoles
-
-        For PassMethod names, the convention is:
-            None            no change
-            'auto'          replace *Pass by *RadPass
-            anything else   set as it is
-
-    """
-    def repfunc(pass_method):
-        if pass_method is None:
-            ff = None
-        elif pass_method == 'auto':
-            def ff(elem):
-                if not elem.PassMethod.endswith('RadPass'):
-                    elem.PassMethod = ''.join((elem.PassMethod[:-4], 'RadPass'))
-                    elem.Energy = energy
-        else:
-            def ff(elem):
-                elem.PassMethod = pass_method
-                elem.Energy = energy
-        return ff
-
-    energy, _ = get_energy(ring)
-    _radiation_switch(ring, repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
-
-
-def radiation_off(ring, cavity_pass='IdentityPass', dipole_pass='auto', quadrupole_pass=None):
-    """
-    Turn acceleration and radiation off
-
-    INPUT
-        ring                lattice description, modified in-place
-
-    KEYWORDS
-        cavity_pass='IdentityPass'  PassMethod set on cavities
-        dipole_pass='auto'          PassMethod set on dipoles
-        quadrupole_pass=None        PassMethod set on quadrupoles
-
-        For PassMethod names, the convention is:
-            None            no change
-            'auto'          replace *RadPass by *Pass
-            anything else   set as it is
-
-    """
-    def repfunc(pass_method):
-        if pass_method is None:
-            ff = None
-        elif pass_method == 'auto':
-            def ff(elem):
-                if elem.PassMethod.endswith('RadPass'):
-                    elem.PassMethod = ''.join((elem.PassMethod[:-7], 'Pass'))
-        else:
-            def ff(elem):
-                elem.PassMethod = pass_method
-        return ff
-
-    _radiation_switch(ring, repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
-
-
 def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
     Calculate the equilibrium beam envelope in a
@@ -122,7 +33,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     emit0, mode_emit, damping_rates, tunes, emit = ohmi_envelope(ring, refpts)
 
     PARAMETERS
-        ring                lattice description
+        ring                at.Lattice object
         refpts              elements at which data is returned. It can be
                             1) an integer (0 indicating the first element)
                             2) a list of integers
@@ -201,9 +112,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
                                                      keep_lattice=keep_lattice), axis=(1, 3)), -1)
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
-    energy, _ = get_energy(ring)
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbit, energy) if elem.PassMethod.endswith('RadPass') else b0
+    bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy) if elem.PassMethod.endswith('RadPass') else b0
           for elem in ring]
     bbcum = numpy.stack(cumulb(zip(ring, orbs, bb)), axis=0)
     # ------------------------------------------------------------------------
