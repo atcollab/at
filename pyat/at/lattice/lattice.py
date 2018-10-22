@@ -1,5 +1,6 @@
 """Lattice object"""
 import sys
+import copy
 import at  # for AtWarning, AtError
 import numpy
 from scipy.constants import physical_constants as cst
@@ -18,46 +19,63 @@ class Lattice(list):
     An AT lattice is a sequence of AT elements. This object accepts extended indexing"""
 
     def __init__(self, *args, **kwargs):
+        """Lattice(elements, **kwargs)
+        Create a new lattice object
+
+        INPUT
+            elements:       iterable of AT elements
+
+        KEYWORDS
+            name:           name of the lattice (default '')
+            energy:         energy of the lattice (default taken from the elements)
+            periodicity:    numner of periods (default take from the elements)
+
+            all other keywords will be set as Lattice attributes
+        """
         descr = args[0] if len(args) > 0 else []
         if isinstance(descr, Lattice):
             params = []
-            ener = descr.energy
-            period = descr.periodicity
-            nam = descr.name
+            attrs = descr.__dict__
         else:
             params = [elem for elem in descr if isinstance(elem, elements.RingParam)]
             descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
-            ener = None
-            period = None
-            nam = None
-        super(Lattice, self).__init__(descr)
-        energy = kwargs.pop('energy', ener)
-        periodicity = kwargs.pop('periodicity', period)
-        name = kwargs.pop('name', nam)
-        if energy is None:
-            if len(params) > 0:
-                energy = params[0].Energy
-                periodicity = params[0].Periodicity
-            else:
-                cavities = [elem for elem in descr if isinstance(elem, elements.RFCavity)]
-                if len(cavities) > 0:
-                    energy = cavities[0].Energy
-                    theta = [elem.BendingAngle for elem in descr if isinstance(elem, elements.Dipole)]
-                    try:
-                        nbp = 2.0 * pi / sum(theta)
-                    except ZeroDivisionError:
-                        warn(at.AtWarning('No bending in the cell, set "Periodicity" to 1'))
-                        periodicity = 1
-                    else:
-                        periodicity = int(round(nbp))
-                        if abs(periodicity - nbp) > TWO_PI_ERROR:
-                            warn(at.AtWarning('non-integer number of cells: {0} -> {1}'.format(nbp, periodicity)))
-                else:
-                    raise at.AtError('Energy not defined (searched in "RingParam" and "Cavities")')
+            attrs = dict(name='', energy=None, periodicity=None)
+        attrs.update(kwargs)
 
-        self.energy = energy
-        self.periodicity = periodicity
-        self.name = name
+        super(Lattice, self).__init__(descr)
+
+        if attrs['energy'] is None:
+            if len(params) > 0:
+                attrs['energy'] = params[0].Energy
+            else:
+                # Guess energy from the Energy attribute of the elements
+                energies = [elem.Energy for elem in descr if hasattr(elem, 'Energy')]
+                if len(energies) == 0:
+                    raise at.AtError('Energy not defined')
+                energy = max(energies)
+                if min(energies) < energy:
+                    warn(at.AtWarning('Inconsistent energy values, "Energy" set to {0}'.format(energy)))
+                attrs['energy'] = energy
+
+        if attrs['periodicity'] is None:
+            if len(params) > 0:
+                attrs['periodicity'] = params[0].Periodicity
+            else:
+                # Guess periodicity from the bending angle of the superperiod
+                theta = [elem.BendingAngle for elem in descr if isinstance(elem, elements.Dipole)]
+                try:
+                    nbp = 2.0 * pi / sum(theta)
+                except ZeroDivisionError:
+                    warn(at.AtWarning('No bending in the cell, set "Periodicity" to 1'))
+                    attrs['periodicity'] = 1
+                else:
+                    periodicity = int(round(nbp))
+                    if abs(periodicity - nbp) > TWO_PI_ERROR:
+                        warn(at.AtWarning('non-integer number of cells: {0} -> {1}'.format(nbp, periodicity)))
+                    attrs['periodicity'] = periodicity
+
+        for key, value in attrs.items():
+            setattr(self, key, value)
 
     def __getitem__(self, key):
         if isinstance(key, (int, numpy.int_)):
@@ -70,9 +88,17 @@ class Lattice(list):
             return Lattice([self[i] for i in key], **self.__dict__)
 
     if sys.version_info < (3, 0):
-        # This won't be defined if version is at least 3.0 final
+        # This won't be defined if version is at least 3.0
         def __getslice__(self, i, j):
             return self[max(0, i):max(0, j):]
+
+    def copy(self):
+        """Return a shallow copy"""
+        return Lattice(self)
+
+    def deepcopy(self):
+        """Return a deep copy"""
+        return copy.deepcopy(self)
 
     @property
     def voltage(self):
