@@ -39,7 +39,12 @@ class Lattice(list):
         else:
             params = [elem for elem in descr if isinstance(elem, elements.RingParam)]
             descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
-            attrs = dict(name='', energy=None, periodicity=None)
+            radon = False
+            for elem in descr:
+                if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith('CavityPass'):
+                    radon = True
+                    break
+            attrs = dict(name='', energy=None, periodicity=None, _radiation_on=radon)
         attrs.update(kwargs)
 
         super(Lattice, self).__init__(descr)
@@ -180,6 +185,7 @@ class Lattice(list):
             return ff
 
         self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
+        self._radiation_on = True
 
     def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto', quadrupole_pass=None):
         """
@@ -210,3 +216,4 @@ class Lattice(list):
             return ff
 
         self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
+        self._radiation_on = False

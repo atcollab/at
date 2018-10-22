@@ -7,4 +7,4 @@ are useful for working with these sequences.
 
 from .utils import *
 from .elements import *
-from .lattice import *
+from .lattice_object import *
