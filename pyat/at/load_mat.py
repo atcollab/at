@@ -23,7 +23,17 @@ PASSMETHOD_MAPPING = {'CorrectorPass': 'Corrector', 'Matrix66Pass': 'M66',
 
 def hasattrs(kwargs, *attributes):
     """Check if the element would have the specified attribute(s), i.e. if they
-        are in kwargws; allows checking for multiple attributes in one go.
+        are in kwargs; allows checking for multiple attributes in one go.
+
+    Args:
+        kwargs (dict): The dictionary of keyword arguments passed to the Element
+                        constructor.
+        attributes (iterable): A list of strings, the attribute names to be
+                                checked.
+
+    Returns:
+        bool: A single boolean, True if the element has any of the specified
+               attributes.
     """
     results = []
     for attribute in attributes:
@@ -36,6 +46,19 @@ def hasattrs(kwargs, *attributes):
 
 
 def find_class_name(kwargs):
+    """Attempts to correctly identify the Class of the element from its kwargs.
+
+    Args:
+        kwargs (dict): The dictionary of keyword arguments passed to the Element
+                        constructor.
+
+    Returns:
+        str: The guessed Class name, as a string.
+
+    Raises:
+        AttributeError: if the Class name found in kwargs is not a valid Class
+                         in pyAT.
+    """
     try:
         class_name = kwargs.pop('Class')
         class_name = CLASS_MAPPING.get(class_name, class_name)
@@ -117,6 +140,18 @@ def find_class_name(kwargs):
 
 
 def sanitise_class(kwargs):
+    """Checks that the Class and PassMethod of the element are a valid
+        combination. Some Classes and PassMethods are incompatible and would
+        raise errors during calculation if left, so we raise an error here with
+        a more helpful message.
+
+    Args:
+        kwargs (dict): The dictionary of keyword arguments passed to the Element
+                        constructor.
+
+    Raises:
+        AttributeError: if the PassMethod and Class are incompatible.
+    """
     pass_method = kwargs.get('PassMethod')
     if pass_method != None:
         pass_to_class = PASSMETHOD_MAPPING.get(pass_method)
