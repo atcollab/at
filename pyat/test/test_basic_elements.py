@@ -19,11 +19,10 @@ def test_data_checks():
 
 
 def test_element_creation_bits_and_bobs():
-    d = elements.Drift('Drift', 1, attr=numpy.array(0))
-    assert d.__str__() == ("Drift:\n         FamName : 'Drift'\n          "
-                           "Length : 1.0\n      PassMethod : 'DriftPass'\n"
-                           "            attr : array(0)")
-    assert d.__repr__() == "Drift('Drift',1.0,attr=array(0))"
+    d = elements.Drift('D0', 1, attr=numpy.array(0))
+    assert d.__str__() == ("Drift:\nFamName : 'D0'\nLength : 1.0\nPassMethod :"
+                           " 'DriftPass'\nattr : array(0)")
+    assert d.__repr__() == "Drift('D0', 1.0, attr=array(0))"
 
 
 def test_element_creation_raises_exception():
