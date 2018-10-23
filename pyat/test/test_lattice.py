@@ -39,18 +39,18 @@ def test_bool_refpts():
 def test_checkattr(simple_ring):
     assert lattice.checkattr('Length')(simple_ring[0]) is True
     assert lattice.checkattr('not_an_attr')(simple_ring[0]) is False
-    assert (filter(lattice.checkattr('Length', 1), simple_ring) ==
+    assert (list(filter(lattice.checkattr('Length', 1), simple_ring)) ==
             [simple_ring[0], simple_ring[3], simple_ring[4], simple_ring[5]])
-    assert filter(lattice.checkattr('Length', 2), simple_ring) == []
-    assert filter(lattice.checkattr('not_an_attr'), simple_ring) == []  # not sure if this is intended.
+    assert list(filter(lattice.checkattr('Length', 2), simple_ring)) == []
+    assert list(filter(lattice.checkattr('not_an_attr'), simple_ring)) == []  # not sure if this is intended.
 
 
 def test_checktype(simple_ring):
     assert lattice.checktype(elements.Drift)(simple_ring[0]) is True
     assert lattice.checktype(elements.Marker)(simple_ring[0]) is False
-    assert (filter(lattice.checktype(elements.Drift), simple_ring) ==
+    assert (list(filter(lattice.checktype(elements.Drift), simple_ring)) ==
             [simple_ring[0], simple_ring[3], simple_ring[4], simple_ring[5]])
-    assert filter(lattice.checktype(elements.Monitor), simple_ring) == []
+    assert list(filter(lattice.checktype(elements.Monitor), simple_ring)) == []
 
 
 def test_get_cells(simple_ring):
