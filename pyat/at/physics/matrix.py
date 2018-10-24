@@ -6,7 +6,7 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 
 import numpy
 from scipy.linalg import block_diag
-from .orbit import *
+from ..physics import find_orbit4, find_orbit6
 from ..tracking import lattice_pass, element_pass
 
 __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'jmat']

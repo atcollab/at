@@ -4,9 +4,8 @@ Closed orbit related functions
 
 import numpy
 import scipy.constants as constants
-import at       # for AtWarning, AtError
 from ..tracking import lattice_pass
-from ..lattice import get_s_pos, RFCavity
+from ..lattice import AtWarning, AtError, get_s_pos, RFCavity
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -99,7 +98,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
         keeplattice = True
 
     if itercount == max_iterations:
-        warnings.warn(at.AtWarning('Maximum number of iterations reached. Possible non-convergence'))
+        warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
     if refpts is None:
         output = ref_in
@@ -184,7 +183,7 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
         keeplattice = True
 
     if itercount == max_iterations:
-        warnings.warn(at.AtWarning('Maximum number of iterations reached. Possible non-convergence'))
+        warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
     if refpts is None:
         output = ref_in
@@ -246,7 +245,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     l0 = get_s_pos(ring, len(ring))
     cavities = [elem for elem in ring if isinstance(elem, RFCavity)]
     if len(cavities) == 0:
-        raise at.AtError('No cavity found in the lattice.')
+        raise AtError('No cavity found in the lattice.')
 
     f_rf = cavities[0].Frequency
     harm_number = cavities[0].HarmNumber
@@ -281,7 +280,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
         keeplattice = True
 
     if itercount == max_iterations:
-        warnings.warn(at.AtWarning('Maximum number of iterations reached. Possible non-convergence'))
+        warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
     if refpts is None:
         output = ref_in

@@ -6,9 +6,7 @@ from numpy.linalg import multi_dot as md
 from scipy.linalg import inv, det, solve_sylvester
 from ..lattice import uint32_refpts
 from ..tracking import lattice_pass
-from .orbit import find_orbit6
-from .matrix import find_m66, find_elem_m66
-from .amat import get_tunes_damp
+from ..physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
 from .diffmatrix import find_mpole_raddiff_matrix
 
@@ -30,7 +28,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
 
-    emit0, mode_emit, damping_rates, tunes, emit = ohmi_envelope(ring, refpts)
+    emit0, mode_emit, damping_rates, tunes[, emit] = ohmi_envelope(ring[, refpts])
 
     PARAMETERS
         ring                at.Lattice object

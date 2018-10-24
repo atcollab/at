@@ -11,6 +11,14 @@ import numpy
 import itertools
 
 
+class AtError(Exception):
+    pass
+
+
+class AtWarning(Warning):
+    pass
+
+
 def uint32_refpts(refpts, n_elements):
     """
     Return a uint32 numpy array with contents as the indices of the selected

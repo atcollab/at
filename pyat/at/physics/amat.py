@@ -4,7 +4,7 @@ import numpy
 from numpy.linalg import multi_dot as md
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
-from .matrix import jmat
+from ..physics import jmat
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
