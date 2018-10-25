@@ -15,9 +15,12 @@
 #Temporary files
 *~
 
-# Virtual environment
-venv
-venv3
+#Pip files
+Pipfile
+Pipfile.lock
+
+# Virtual environments
+venv*
 
 # pyat build stuff
 pyat/build
