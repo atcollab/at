@@ -15,10 +15,6 @@
 #Temporary files
 *~
 
-#Pip files
-Pipfile
-Pipfile.lock
-
 # Virtual environments
 venv*
 
