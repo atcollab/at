@@ -23,7 +23,7 @@ Installation (all platforms)
 
 All the binaries should be built when building the Python extension.
 
-It is easiest to do this using a virtualenv:
+It is easiest to do this using a virtualenv, inside pyat:
 
 * ``virtualenv --no-site-packages venv``
 * ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
@@ -40,6 +40,11 @@ Any changes to .py files are automatically reinstalled in the build, but to
 ensure any changes to .c files are reinstalled rerun the following:
 
 * ``python setup.py install``
+
+If you get strange behaviour even after running setup.py install, then deleting
+everything inside pyat/build and rerunning setup.py install should fix it. N.B.
+setup.py develop/install needs to be run with the same version of Python that
+you are using to run pyAT.
 
 
 Comparing results with Matlab
