@@ -6,7 +6,7 @@ from .atpass import atpass
 from .patpass import patpass
 from .track import *
 from .physics import *
-
+from .load_mat import *
 from .elements import *
 from .lattice import *
 
