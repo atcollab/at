@@ -1,4 +1,4 @@
-from at import elements, track
+from at import elements, lattice_pass
 import numpy
 import pytest
 
@@ -8,7 +8,7 @@ def test_lattice_pass_raises_AssertionError_if_rin_incorrect_shape(input_dim):
     rin = numpy.zeros(input_dim)
     lattice = []
     with pytest.raises(AssertionError):
-        track.lattice_pass(lattice, rin)
+        lattice_pass(lattice, rin)
 
 
 def test_multiple_particles_lattice_pass():
@@ -17,7 +17,7 @@ def test_multiple_particles_lattice_pass():
     rin[0, 0] = 1e-6  # particle one offset in x
     rin[2, 1] = 1e-6  # particle two offset in y
     r_original = numpy.copy(rin)
-    r_out = track.lattice_pass(lattice, rin, nturns=2)
+    r_out = lattice_pass(lattice, rin, nturns=2)
     # particle position is not changed passing through the drift
     numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 0])
     numpy.testing.assert_equal(r_original[:, 0], r_out[:, 0, 0, 1])

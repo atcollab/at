@@ -1,18 +1,15 @@
 """Python port of the Accelerator Toolbox"""
 
 # Make all functions visible in the at namespace:
-# noinspection PyUnresolvedReferences
-from .atpass import atpass
-from .patpass import patpass
-from .track import *
+from .tracking import *
 from .physics import *
-from .load_mat import *
-from .elements import *
 from .lattice import *
+from .load_mat import *
 
 
 class AtError(Exception):
     pass
+
 
 class AtWarning(Warning):
     pass
