@@ -265,10 +265,11 @@ class Lattice(list):
         return ohmi_envelope(self, *args, **kwargs)
 
 
-Lattice.linopt.__doc__ += linopt.__doc__
-Lattice.ohmi_envelope.__doc__ += ohmi_envelope.__doc__
-Lattice.find_orbit4.__doc__ += find_orbit4.__doc__
-Lattice.find_sync_orbit.__doc__ += find_sync_orbit.__doc__
-Lattice.find_orbit6.__doc__ += find_orbit6.__doc__
-Lattice.find_m44.__doc__ += find_m44.__doc__
-Lattice.find_m66.__doc__ += find_m66.__doc__
+if sys.version_info >= (3, 0):
+    Lattice.linopt.__doc__ += linopt.__doc__
+    Lattice.ohmi_envelope.__doc__ += ohmi_envelope.__doc__
+    Lattice.find_orbit4.__doc__ += find_orbit4.__doc__
+    Lattice.find_sync_orbit.__doc__ += find_sync_orbit.__doc__
+    Lattice.find_orbit6.__doc__ += find_orbit6.__doc__
+    Lattice.find_m44.__doc__ += find_m44.__doc__
+    Lattice.find_m66.__doc__ += find_m66.__doc__
