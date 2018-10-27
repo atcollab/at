@@ -33,7 +33,7 @@ def _nop(value):
 class Element(object):
     REQUIRED_ATTRIBUTES = ['FamName']
     CONVERSIONS = dict(R1=_array66, R2=_array66, T1=lambda v: _array(v, (6,)), T2=lambda v: _array(v, (6,)),
-                       RApertures=lambda v: _array(v, (4,)), EApertures=lambda v: _array(v, (4,)))
+                       RApertures=lambda v: _array(v, (4,)), EApertures=lambda v: _array(v, (2,)))
 
     def __init__(self, family_name, Length=0.0, PassMethod='IdentityPass', **kwargs):
         self.FamName = family_name
