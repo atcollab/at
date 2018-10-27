@@ -151,11 +151,14 @@ class Lattice(list):
                 n += 1
             return n
 
+        def checkdipole(elem):
+            return isinstance(elem, elements.Dipole) and (elem.BendingAngle != 0.0)
+
         if cavity_func is not None:
             n = mod_elem(self, checktype(elements.RFCavity), cavity_func)
             print('{0} modified cavities'.format(n))
         if dipole_func is not None:
-            n = mod_elem(self, checktype(elements.Dipole), dipole_func)
+            n = mod_elem(self, checkdipole, dipole_func)
             print('{0} modified dipoles'.format(n))
         if quadrupole_func is not None:
             n = mod_elem(self, checktype(elements.Quadrupole), quadrupole_func)
