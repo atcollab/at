@@ -32,7 +32,8 @@ def _nop(value):
 
 class Element(object):
     REQUIRED_ATTRIBUTES = ['FamName']
-    CONVERSIONS = dict(R1=_array66, R2=_array66, T1=lambda v: _array(v, (6,)), T2=lambda v: _array(v, (6,)))
+    CONVERSIONS = dict(R1=_array66, R2=_array66, T1=lambda v: _array(v, (6,)), T2=lambda v: _array(v, (6,)),
+                       RApertures=lambda v: _array(v, (4,)), EApertures=lambda v: _array(v, (4,)))
 
     def __init__(self, family_name, Length=0.0, PassMethod='IdentityPass', **kwargs):
         self.FamName = family_name
@@ -95,14 +96,14 @@ class Drift(Element):
         """Drift(FamName, Length, **keywords)
         """
         kwargs.setdefault('PassMethod', 'DriftPass')
-        super(Drift, self).__init__(family_name, Length=length, **kwargs)
+        super(Drift, self).__init__(family_name, Length=kwargs.pop('Length', length), **kwargs)
 
 
 class ThinMultipole(Element):
     """pyAT thin multipole element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['PolynomA',
                                                          'PolynomB']
-    CONVERSIONS = dict(Element.CONVERSIONS, MaxOrder=_int,
+    CONVERSIONS = dict(Element.CONVERSIONS, BendingAngle=_float, MaxOrder=_int,
                        PolynomB=_array, PolynomA=_array)
 
     def __init__(self, family_name, poly_a, poly_b, MaxOrder=0, **kwargs):
@@ -126,7 +127,7 @@ class Multipole(ThinMultipole):
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length',
                                                          'PolynomA',
                                                          'PolynomB']
-    CONVERSIONS = dict(ThinMultipole.CONVERSIONS, NumIntSteps=_int)
+    CONVERSIONS = dict(ThinMultipole.CONVERSIONS, NumIntSteps=_int, KickAngle=_array)
 
     def __init__(self, family_name, length, poly_a, poly_b, NumIntSteps=10, **kwargs):
         """Multipole(FamName, Length, PolynomA, PolynomB, **keywords)
@@ -136,13 +137,14 @@ class Multipole(ThinMultipole):
         'NumIntSteps'   Number of integration steps (default: 10)
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
-        super(Multipole, self).__init__(family_name, poly_a, poly_b, Length=length, NumIntSteps=NumIntSteps, **kwargs)
+        super(Multipole, self).__init__(family_name, poly_a, poly_b, Length=kwargs.pop('Length', length),
+                                        NumIntSteps=NumIntSteps, **kwargs)
 
 
 class Dipole(Multipole):
     """pyAT dipole element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length', 'BendingAngle']
-    CONVERSIONS = dict(Multipole.CONVERSIONS, BendingAngle=_float, EntranceAngle=_float, ExitAngle=_float,
+    CONVERSIONS = dict(Multipole.CONVERSIONS, EntranceAngle=_float, ExitAngle=_float,
                        FringeQuadEntrance=_int, FringeQuadExit=_int,
                        FringeBendEntrance=_int, FringeBendExit=_int)
 
@@ -253,5 +255,5 @@ class Corrector(Element):
 
     def __init__(self, family_name, length, kick_angle, **kwargs):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
-        super(Corrector, self).__init__(family_name, kwargs.pop('Length', 0.0),
+        super(Corrector, self).__init__(family_name, kwargs.pop('Length', length),
                                         KickAngle=kick_angle, **kwargs)
