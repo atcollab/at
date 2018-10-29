@@ -30,20 +30,25 @@ It is easiest to do this using a virtualenv, inside pyat:
 * ``pip install numpy``
 * ``pip install scipy``
 * ``pip install pytest``
-* ``python setup.py develop  # install into the virtualenv``
+* ``python setup.py develop``
 
 Finally, you should be able to run the tests:
 
 * ``py.test test``
 
 Any changes to .py files are automatically reinstalled in the build, but to
-ensure any changes to .c files are reinstalled rerun the following:
+ensure any changes to .c files are reinstalled rerun:
 
-* ``python setup.py install``
+* ``python setup.py develop``
 
-If you get strange behaviour even after running setup.py install, then deleting
-everything inside pyat/build and rerunning setup.py install should fix it. N.B.
-setup.py develop/install needs to be run with the same version of Python that
+If you get strange behaviour even after running setup.py develop again, then
+running the following should fix it:
+
+* ``find at -name "*.pyc" -exec rm '{}' \;``
+* ``find at -name "*.so" -exec rm '{}' \;``
+* ``python setup.py develop``
+
+N.B. setup.py develop needs to be run with the same version of Python that
 you are using to run pyAT.
 
 
