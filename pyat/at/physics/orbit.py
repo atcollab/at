@@ -76,7 +76,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     delta_matrix = numpy.zeros((6, 5), order='F')
     for i in range(4):
         delta_matrix[i, i] = step_size
-    id4 = numpy.asfortranarray(numpy.eye(4))
+    id4 = numpy.asfortranarray(numpy.identity(4))
     change = 1
     itercount = 0
     keeplattice = False
@@ -258,7 +258,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     for i in range(6):
         delta_matrix[i, i] = step_size
 
-    id6 = numpy.asfortranarray(numpy.eye(6))
+    id6 = numpy.asfortranarray(numpy.identity(6))
     change = 1
     itercount = 0
     keeplattice = False
