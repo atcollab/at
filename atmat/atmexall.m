@@ -5,9 +5,6 @@ function atmexall(varargin)
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
-% Add AT directories to the Matlab path
-atpath
-
 PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
 LIBDL='';
 switch computer
