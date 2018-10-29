@@ -256,5 +256,5 @@ class Corrector(Element):
 
     def __init__(self, family_name, length, kick_angle, **kwargs):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
-        super(Corrector, self).__init__(family_name, kwargs.pop('Length', 0.0),
+        super(Corrector, self).__init__(family_name, length,
                                         KickAngle=kick_angle, **kwargs)
