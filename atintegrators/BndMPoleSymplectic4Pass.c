@@ -65,7 +65,6 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
     K1 = SL*KICK1;
     K2 = SL*KICK2;
 
-    
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le; 
         A[0] += sin(KickAngle[1])/le;
@@ -139,7 +138,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                 FringeInt1, FringeInt2;
         int MaxOrder, NumIntSteps,  FringeBendEntrance, FringeBendExit,
                 FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -217,7 +216,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 FringeInt1, FringeInt2;
         int MaxOrder, NumIntSteps, FringeBendEntrance, FringeBendExit,
                 FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         double irho;
         double *r_in;
         const mxArray *ElemData = prhs[0];

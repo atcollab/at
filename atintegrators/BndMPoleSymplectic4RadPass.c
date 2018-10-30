@@ -39,6 +39,7 @@ struct elem
     double *T2;
     double *RApertures;
     double *EApertures;
+    double *KickAngle;    
 };
 
 void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, double *B,
@@ -52,9 +53,10 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double E0, int num_particles)
+        double *KickAngle, double E0, int num_particles)
         
-{	int c,m;
+{	
+    int c,m;
     double *r6;
     double SL, L1, L2, K1, K2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
@@ -65,9 +67,13 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
     K1 = SL*KICK1;
     K2 = SL*KICK2;
     
+    if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
+        B[0] -= sin(KickAngle[0])/le;
+        A[0] += sin(KickAngle[1])/le;
+    }
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
     for(c = 0;c<num_particles;c++)	/* Loop over particles */
-    {   
+    {
         r6 = r+c*6;
         if(!atIsNaN(r6[0]))
         {
@@ -78,7 +84,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* edge focus */
-            edge_fringe_entrance(r6, irho, entrance_angle, fint1, gap, FringeBendEntrance);            
+            edge_fringe_entrance(r6, irho, entrance_angle, fint1, gap, FringeBendEntrance);
             /* quadrupole gradient fringe */
             if (FringeQuadEntrance && B[1]!=0) {
                 if (useLinFrEleEntrance) /*Linear fringe fields from elegant*/
@@ -105,7 +111,7 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
                     QuadFringePassN(r6, B[1]);
             }
             /* edge focus */
-            edge_fringe_exit(r6, irho, exit_angle, fint2, gap, FringeBendExit);            
+            edge_fringe_exit(r6, irho, exit_angle, fint2, gap, FringeBendExit);
             /* Check physical apertures at the exit of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
@@ -113,6 +119,10 @@ void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, do
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
         }
+    }
+    if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
+        B[0] += sin(KickAngle[0])/le;
+        A[0] -= sin(KickAngle[1])/le;
     }
 }
 
@@ -128,7 +138,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                 FringeInt1, FringeInt2, Energy;
         int MaxOrder, NumIntSteps,  FringeBendEntrance, FringeBendExit,
                 FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         Length=atGetDouble(ElemData,"Length"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
@@ -154,6 +164,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();
+
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->PolynomA=PolynomA;
@@ -180,6 +192,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->T2=T2;
         Elem->EApertures=EApertures;
         Elem->RApertures=RApertures;
+        Elem->KickAngle=KickAngle;
     }
     irho = Elem->BendingAngle/Elem->Length;
     BndMPoleSymplectic4RadPass(r_in,Elem->Length,irho,Elem->PolynomA,Elem->PolynomB,
@@ -188,7 +201,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,
             Elem->FringeQuadEntrance,Elem->FringeQuadExit,
             Elem->fringeIntM0,Elem->fringeIntP0,Elem->T1,Elem->T2,
-            Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
+            Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,
+            Elem->KickAngle,Elem->Energy,num_particles);
     return Elem;
 }
 
@@ -204,7 +218,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 FringeInt1, FringeInt2, Energy;
         int MaxOrder, NumIntSteps, FringeBendEntrance, FringeBendExit,
                 FringeQuadEntrance, FringeQuadExit;
-        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0;
+        double *PolynomA, *PolynomB, *R1, *R2, *T1, *T2, *EApertures, *RApertures, *fringeIntM0, *fringeIntP0, *KickAngle;
         double irho;
         double *r_in;
         const mxArray *ElemData = prhs[0];
@@ -234,15 +248,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         EApertures=atGetOptionalDoubleArray(ElemData,"EApertures"); check_error();
         RApertures=atGetOptionalDoubleArray(ElemData,"RApertures"); check_error();
+        KickAngle=atGetOptionalDoubleArray(ElemData,"KickAngle"); check_error();        
         irho = BendingAngle/Length;
+
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4RadPass(r_in, Length, irho, PolynomA, PolynomB,
                 MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
                 FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
-                FullGap,FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,Energy,num_particles);
+                FullGap,FringeQuadEntrance,FringeQuadExit,fringeIntM0,
+                fringeIntP0,T1,T2,R1,R2,RApertures,EApertures,KickAngle,
+                Energy,num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -259,7 +276,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(15,1);
+            plhs[1] = mxCreateCellMatrix(16,1);
             mxSetCell(plhs[1],0,mxCreateString("FullGap"));
             mxSetCell(plhs[1],1,mxCreateString("FringeInt1"));
             mxSetCell(plhs[1],2,mxCreateString("FringeInt2"));
@@ -275,6 +292,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[1],12,mxCreateString("R2"));
             mxSetCell(plhs[1],13,mxCreateString("RApertures"));
             mxSetCell(plhs[1],14,mxCreateString("EApertures"));
+            mxSetCell(plhs[1],15,mxCreateString("KickAngle"));
         }
     }
     else {
