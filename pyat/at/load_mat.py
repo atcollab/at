@@ -15,6 +15,8 @@ CLASSES = set(['Marker', 'Monitor', 'Aperture', 'Drift', 'ThinMultipole',
                'Multipole', 'Dipole', 'Bend', 'Quadrupole', 'Sextupole',
                'Octupole', 'RFCavity', 'RingParam', 'M66', 'Corrector'])
 
+FAMILY_MAPPING = {'ap': 'Aperture', 'rf': 'RFCavity', 'bpm': 'Monitor'}
+
 PASSMETHOD_MAPPING = {'CorrectorPass': 'Corrector', 'Matrix66Pass': 'M66',
                       'CavityPass': 'RFCavity', 'QuadLinearPass': 'Quadrupole',
                       'BendLinearPass': 'Bend', 'AperturePass': 'Aperture',
@@ -70,12 +72,8 @@ def find_class_name(kwargs):
         fam_name = kwargs.get('FamName')
         if fam_name in CLASSES:
             return fam_name
-        elif fam_name.lower() == 'ap':
-            return 'Aperture'
-        elif fam_name.lower() == 'rf':
-            return 'RFCavity'
-        elif fam_name.lower() == 'bpm':
-            return 'Monitor'
+        elif fam_name.lower() in FAMILY_MAPPING.keys():
+            return FAMILY_MAPPING[fam_name.lower()]
         else:
             pass_method = kwargs.get('PassMethod')
             class_from_pass = PASSMETHOD_MAPPING.get(pass_method)
@@ -85,7 +83,8 @@ def find_class_name(kwargs):
                 if hasattrs(kwargs, 'FullGap', 'FringeInt1', 'FringeInt2', 'gK',
                             'EntranceAngle', 'ExitAngle'):
                     return 'Bend'
-                elif hasattrs(kwargs, 'Frequency', 'HarmNumber', 'PhaseLag'):
+                elif hasattrs(kwargs, 'Voltage', 'Frequency', 'HarmNumber',
+                              'PhaseLag', 'TimeLag'):
                     return 'RFCavity'
                 elif hasattrs(kwargs, 'KickAngle'):
                     return 'Corrector'
@@ -130,7 +129,7 @@ def find_class_name(kwargs):
                             return 'ThinMultipole'
                 elif hasattrs(kwargs, 'BendingAngle'):
                     return 'Dipole'
-                elif hasattrs(kwargs, 'Length'):
+                elif hasattrs(kwargs, 'Length'): # Don't all elems have Length?
                     if float(kwargs['Length']) != 0.0:
                         return 'Drift'
                     else:
@@ -155,17 +154,15 @@ def sanitise_class(kwargs):
     pass_method = kwargs.get('PassMethod')
     if pass_method != None:
         pass_to_class = PASSMETHOD_MAPPING.get(pass_method)
-        if (pass_method == 'IdentityPass') and (kwargs['Class'].lower() ==
-                                                'drift'):
+        if (pass_method == 'IdentityPass') and (kwargs['Class'] == 'Drift'):
             kwargs['Class'] = 'Monitor'
         elif pass_to_class != None:
-            if pass_to_class.lower() != kwargs['Class'].lower():
+            if pass_to_class != kwargs['Class']:
                 raise AttributeError("PassMethod {0} is not compatible with "
                                      "Class {1}.".format(pass_method,
                                                          kwargs['Class']))
         else:
-            if kwargs['Class'].lower() in ['marker', 'monitor', 'drift',
-                                                   'ringparam']:
+            if kwargs['Class'] in ['Marker', 'Monitor', 'Drift', 'RingParam']:
                 if pass_method not in ['DriftPass', 'IdentityPass']:
                     raise AttributeError("PassMethod {0} is not compatible with"
                                          " Class {1}.".format(pass_method,
@@ -190,9 +187,6 @@ def load_element(index, element_array):
     sanitise_class(kwargs)
 
     cl = getattr(elements, kwargs['Class'])
-    if cl == None:
-        raise AttributeError("Class {0} does not exist."
-                             .format(kwargs['Class']))
     # Remove mandatory attributes from the keyword arguments.
     args = [kwargs.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
     element = cl(*args, **kwargs)
