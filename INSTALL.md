@@ -27,14 +27,11 @@ in the Matlab path. This can be done by:
         `>> cd  at_installation/atmat`
         `>> atpath`
 
-4. Go in atmat directory:
-    `>> cd at/atmat`
-
-5. Compile all mexfunctions:
+4. Compile all mexfunctions:
     `>> atmexall`
 
-6. Update helpfiles:
+5. Update helpfiles:
     `>> atupdateContents`
     You can now use `athelp` to list all main functions.
 
-7. Update html doc - not yet documented.
+6. Update html doc - not yet documented.
