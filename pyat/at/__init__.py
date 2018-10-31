@@ -4,6 +4,7 @@
 from .tracking import *
 from .physics import *
 from .lattice import *
+from .load_mat import *
 
 
 class AtError(Exception):

@@ -1,6 +1,8 @@
 
 # Shared objects
+*.o
 *.so
+*.mex
 *.mexa64
 *.mexmaci64
 
@@ -11,11 +13,10 @@
 .cache
 
 #Temporary files
-*.m~
+*~
 
-# Virtual environment
-venv
-venv3
+# Virtual environments
+venv*
 
 # pyat build stuff
 pyat/build
@@ -24,6 +25,8 @@ pyat/at.egg-info
 pyat/prefix
 pyat/integrator-src
 *.egg-info
+.pytest_cache
+.coverage
 
 # dynamic integrator list
 atintegrators/passmethodlist.m
