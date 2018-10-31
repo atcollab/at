@@ -166,7 +166,7 @@ def tilt_elem(elem, rots):
           [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
     
     :param elem: element to be tilted
-    :param rots: tilt angle.
+    :param rots: tilt angle (in radians).
            rots > 0 corresponds to a corkskew rotation of the element looking in the direction of the beam
     :return: None
     """

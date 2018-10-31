@@ -48,7 +48,10 @@ class Element(object):
                 raise
 
     def __str__(self):
-        keywords = ('{0:>16} : {1!r}'.format(k, v) for k, v in self.__dict__.items())
+        first3 = ['FamName', 'Length', 'PassMethod']
+        keywords = ['{0} : {1!s}'.format(k, self.__dict__[k]) for k in first3]
+        keywords = keywords + ['{0} : {1!s}'.format(k, v) for k, v in
+                               self.__dict__.items() if k not in first3]
         return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
@@ -61,7 +64,7 @@ class Element(object):
         defelem = self.__class__(*(getattr(self, k) for k in self.REQUIRED_ATTRIBUTES))
         arguments = ('{0!r}'.format(getattr(self, k)) for k in self.REQUIRED_ATTRIBUTES)
         keywords = ('{0}={1!r}'.format(k, v) for k, v in self.__dict__.items() if differ(v, getattr(defelem, k, None)))
-        return '{0}({1})'.format(self.__class__.__name__, ','.join(itertools.chain(arguments, keywords)))
+        return '{0}({1})'.format(self.__class__.__name__, ', '.join(itertools.chain(arguments, keywords)))
 
 
 class Marker(Element):

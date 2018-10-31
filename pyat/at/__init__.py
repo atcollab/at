@@ -4,3 +4,4 @@
 from .lattice import *
 from .tracking import *
 from .physics import *
+from .load_mat import *
