@@ -22,19 +22,19 @@ def ring():
 
 
 def test_find_orbit4(ring):
-    orbit4 = physics.find_orbit4(ring, DP)
+    orbit4, _ = physics.find_orbit4(ring, DP)
     expected = numpy.array([1.091636e-7, 1.276747e-15, 0, 0, DP, 0])
     numpy.testing.assert_allclose(orbit4, expected, atol=1e-12)
 
 
 def test_find_orbit4_finds_zeros_if_dp_zero(ring):
-    orbit4 = physics.find_orbit4(ring, 0)
+    orbit4, _ = physics.find_orbit4(ring, 0)
     expected = numpy.zeros((6,))
     numpy.testing.assert_allclose(orbit4, expected)
 
 
 def test_find_orbit4_result_unchanged_by_atpass(ring):
-    orbit = physics.find_orbit4(ring, DP)
+    orbit, _ = physics.find_orbit4(ring, DP)
     orbit_copy = numpy.copy(orbit)
     orbit[4] = DP
     atpass(ring, orbit, 1)
@@ -46,7 +46,7 @@ def test_find_orbit4_with_two_refpts(ring):
     expected = numpy.array(
         [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
          [3.0422808e-8, 9.1635269e-8, 0, 0, DP, 5.9280346e-6]]
-    ).T
+    )
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
 
 
@@ -56,7 +56,7 @@ def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
 
     numpy.testing.assert_allclose(m44[:4], M44_MATLAB[:4], rtol=1e-5, atol=1e-7)
     stack_size = 0 if refpts is None else len(refpts)
-    assert mstack.shape == (4, 4, stack_size)
+    assert mstack.shape == (stack_size, 4, 4)
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
