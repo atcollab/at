@@ -2,7 +2,7 @@
  * This file contains the Python interface to AT, compatible with Python
  * 2 and 3. It provides a module 'atpass' containing one method 'atpass'.
  */
-
+#include <stdarg.h>
 #include <Python.h>
 #include "attypes.h"
 
@@ -79,6 +79,16 @@ static PyObject *print_error(int elem_number, PyObject *rout)
     return NULL;
 }
 
+static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
+{
+    char buffer[132];
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf(buffer, fmt, ap);
+    PyErr_SetString(errtype, buffer);
+    va_end(ap);
+    return NULL;
+}
 /*
  * Recursively search the list to check if the library containing
  * method_name is already loaded. If it is - return the pointer to the
@@ -203,7 +213,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!I", kwlist, &PyList_Type, &lattice,
         &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse)) {
-        PyErr_SetString(PyExc_ValueError, "Failed to parse arguments to atpass");
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -313,6 +322,49 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     return rout;
 }
 
+static PyObject *at_elempass(PyObject *self, PyObject *args)
+{
+    PyObject *element;
+    PyArrayObject *rin;
+    PyObject *PyPassMethod;
+    npy_uint32 num_particles;
+    track_function fn_handle;
+    double *drin;
+    struct parameters param;
+    struct elem *elem_data = NULL;
+
+    if (!PyArg_ParseTuple(args, "OO!", &element,  &PyArray_Type, &rin)) {
+        return NULL;
+    }
+    if (PyArray_DIM(rin,0) != 6) {
+        return set_error(PyExc_ValueError, "rin is not 6D");
+    }
+    if (PyArray_TYPE(rin) != NPY_DOUBLE) {
+        return set_error(PyExc_ValueError, "rin is not a double array");
+    }
+    if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        return set_error(PyExc_ValueError, "rin is not Fortran-aligned");
+    }
+    num_particles = (PyArray_SIZE(rin)/6);
+    drin = PyArray_DATA(rin);
+
+    param.RingLength = 0.0;
+    param.T0 = 0.0;
+    param.nturn = 0;
+
+    PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
+    if (!PyPassMethod)
+        return NULL;
+    fn_handle = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
+    if (!fn_handle)
+        return NULL;
+    elem_data = fn_handle(element, elem_data, drin, num_particles, &param);
+    if (!elem_data)
+        return NULL;
+    free(elem_data);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 /* Boilerplate to register methods. */
 
 static PyMethodDef AtMethods[] = {
@@ -331,7 +383,14 @@ static PyMethodDef AtMethods[] = {
               "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
               "         of particle coordinates\n"
               )},
-    {NULL, NULL, 0, NULL}        /* Sentinel */
+    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS,
+    PyDoc_STR("rout = elempass(element, rin)\n\n"
+              "Track input particles rin through a single element.\n\n"
+              "element: AT element\n"
+              "rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "         On return, rin contains the final coordinates of the particles\n"
+             )},
+   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 MOD_INIT(atpass)

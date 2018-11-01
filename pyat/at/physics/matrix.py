@@ -5,19 +5,34 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 
 import numpy
+from scipy.linalg import block_diag
 from .orbit import *
-from ..track import lattice_pass
+from ..tracking import lattice_pass, element_pass
 
-__all__ = ['find_m44', 'find_m66']
+__all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'jmat']
 
 XYDEFSTEP = 6.055454452393343e-006  # Optimal delta?
 DPSTEP = 6.055454452393343e-006  # Optimal delta?
 
 # Prepare symplectic identity matrix
-_s0 = numpy.zeros((2, 2), order='F')
-_s2 = numpy.array([[0, 1], [-1, 0]], order='F')
-_s4 = numpy.concatenate((numpy.concatenate((_s2, _s0), axis=1), numpy.concatenate((_s0, _s2), axis=1)), axis=0)
-# prepare Identity matrix
+_j2 = numpy.array([[0., 1.], [-1., 0.]])
+_jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
+
+
+def jmat(ind):
+    """
+    Return the antisymetric block diagonal matrix [[0, 1][-1, 0]]
+
+    INPUT
+        ind     1, 2 or 3. Matrix dimension
+
+    OUTPUT
+        jm      block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
+    """
+    return _jm[ind-1]
+
+
+_jmt = jmat(2)
 
 
 def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs):
@@ -35,29 +50,27 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
         !!! With this syntax find_m44 assumes that the lattice
         is a ring and first finds the closed orbit
 
-    m44, t = find_m44(lattice, dp, refpts)
+    m44, t = find_m44(lattice, dp=0.0, refpts)
         returns 4x4 transfer matrices between the entrance of the first element and each element indexed by refpts.
         t is a 4x4xNrefs array
 
-    m44, t = find_m44(lattice, dp, refpts, full=True)
-        Same as above except that matrixes returned in t are full 1-turn matrices at the entrance of each
-        element indexed by refpts.
-
-    ... = find_m44(lattice, ..., orbit=closed_orbit)
-        Does not search for the closed orbit. Instead closed_orbit,a vector of initial conditions is used.
-        This syntax is useful to specify the entrance orbit if lattice is not a ring or to avoid recomputing the
-        closed orbit if it is already known.
+    KEYWORDS
+        keep_lattice=False  When True, assume no lattice change since the previous tracking.
+        full=False          When True, matrices are full 1-turn matrices at the entrance of each
+                            element indexed by refpts.
+        orbit=None          Avoids looking for the closed orbit if is already known ((6,) array)
+        XYStep=6.055e-6     transverse step for numerical computation
 
     See also find_m66, find_orbit4
     """
     def mrotate(m):
         m = numpy.squeeze(m)
-        return numpy.linalg.multi_dot([m, m44, _s4.T, m.T, _s4])
+        return numpy.linalg.multi_dot([m, m44, _jmt.T, m.T, _jmt])
 
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     full = kwargs.pop('full', False)
     if orbit is None:
-        orbit = find_orbit4(ring, dp)
+        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
     # Construct matrix of plus and minus deltas
     dg = numpy.asfortranarray(0.5 * numpy.diag([xy_step] * 6)[:, :4])
@@ -93,10 +106,11 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
         returns 6x6 transfer matrices between the entrance of the first element and each element indexed by refpts.
         t is a (6, 6, nrefs) array.
 
-    ... = find_m66(lattice, ..., orbit=closed_orbit) - Does not search for closed orbit.
-        Does not search for the closed orbit. Instead closed_orbit,a vector of initial conditions is used.
-        This syntax is useful to specify the entrance orbit if lattice is not a ring or to avoid recomputing the
-        closed orbit if it is already known.
+    KEYWORDS
+        keep_lattice=False  When True, assume no lattice change since the previous tracking.
+        orbit=None          Avoids looking for the closed orbit if is already known ((6,) array)
+        XYStep=6.055e-6     transverse step for numerical computation
+        DPStep=6.055e-6     longitudinal step for numerical computation
 
     See also find_m44, find_orbit6
 
@@ -104,7 +118,7 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     dp_step = kwargs.pop('DPStep', DPSTEP)
     if orbit is None:
-        orbit = find_orbit6(ring)
+        orbit = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas
@@ -125,3 +139,34 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
         return m66, mstack
     else:
         return m66
+
+
+def find_elem_m66(elem, orbit=None, **kwargs):
+    """
+    Numerically find the 6x6 transfer matrix of a single element
+
+    INPUT
+        elem                AT element
+
+    KEYWORDS
+        orbit=None          closed orbit at the entrance of the element. Default: 0.0
+        XYStep=6.055e-6     transverse step for numerical computation
+        DPStep=6.055e-6     longitudinal step for numerical computation
+
+    OUTPUT
+        m66                 (6, 6) transfer matrix
+    """
+    xy_step = kwargs.pop('XYStep', XYDEFSTEP)
+    dp_step = kwargs.pop('DPStep', DPSTEP)
+    if orbit is None:
+        orbit = numpy.zeros((6,))
+
+    # Construct matrix of plus and minus deltas
+    scaling = numpy.array([xy_step, xy_step, xy_step, xy_step, dp_step, dp_step])
+    dg = numpy.asfortranarray(0.5*numpy.diag(scaling))
+    dmat = numpy.concatenate((dg, -dg), axis=1)
+
+    in_mat = orbit.reshape(6, 1) + dmat
+    element_pass(elem, in_mat)
+    m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
+    return m66

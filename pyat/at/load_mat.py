@@ -4,7 +4,7 @@ Load lattice from Matlab file.
 This is working from a specific file and may not be general.
 """
 import scipy.io
-from . import elements
+from .lattice import elements
 import numpy
 
 
