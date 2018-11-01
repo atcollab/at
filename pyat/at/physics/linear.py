@@ -42,8 +42,8 @@ def _twiss22(ms, alpha0, beta0):
     alpha = -(aaa * (ms[:, 1, 0] * beta0 - ms[:, 1, 1] * alpha0) + bbb * ms[:, 1, 1]) / beta0
     mu = numpy.arctan2(bbb, aaa)
     # Unwrap negative jumps in betatron phase advance
-    dmu = numpy.diff(mu)
-    jumps = numpy.append([0], dmu) < 0
+    dmu = numpy.diff(numpy.append([0], mu))
+    jumps = dmu < 0
     mu += numpy.cumsum(jumps) * 2.0 * numpy.pi
     return alpha, beta, mu
 
@@ -62,7 +62,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     """
     Perform linear analysis of the NON-COUPLED lattices
 
-    twiss0, tune, chrom[, twiss] = get_twiss(ring, dp[, refpts])
+    twiss0, tune, chrom, twiss = get_twiss(ring, dp[, refpts])
 
     PARAMETERS
         ring            lattice description
@@ -88,8 +88,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         tune            [tune_h, tune_v], fractional part of the linear tunes
         chrom           [ksi_h , ksi_v], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
-        twiss           Only returned if refpts is not None:
-                        linear optics at the points refered to by refpts
+        twiss           linear optics at the points refered to by refpts
 
         twiss is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
@@ -109,15 +108,12 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
-                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
+    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs, keep_lattice=keep_lattice),
+                         axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
-    # Use rollaxis to get the arrays in the correct shape for the lindata
-    # structured array - that is, with nrefs as the first dimension.
-    mstack = numpy.rollaxis(mstack, -1)
     nrefs = uintrefs.size
 
     # Get initial twiss parameters
@@ -159,17 +155,14 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     else:
         twiss = numpy.array([], dtype=TWISS_DTYPE)
 
-    if refpts is None:
-        return twiss0, tune, chrom
-    else:
-        return twiss0, tune, chrom, twiss
+    return twiss0, tune, chrom, twiss
 
 
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP, coupled=True):
     """
     Perform linear analysis of a lattice
 
-    lindata0, tune, chrom[, lindata] = linopt(ring, dp[, refpts])
+    lindata0, tune, chrom, lindata = linopt(ring, dp[, refpts])
 
     PARAMETERS
         ring            lattice description
@@ -196,8 +189,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         tune            [tune_A, tune_B], linear tunes for the two normal modes of linear motion [1]
         chrom           [ksi_A , ksi_B], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
-        lindata         Only returned if refpts is not None:
-                        linear optics at the points refered to by refpts
+        lindata         linear optics at the points refered to by refpts
 
         lindata is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
@@ -240,14 +232,11 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
-    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
-                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
+    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs, keep_lattice=keep_lattice),
+                         axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
-    # Use rollaxis to get the arrays in the correct shape for the lindata
-    # structured array - that is, with nrefs as the first dimension.
-    mstack = numpy.rollaxis(mstack, -1)
     nrefs = uintrefs.size
 
     M = m44[:2, :2]
@@ -325,7 +314,4 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     else:
         lindata = numpy.array([], dtype=LINDATA_DTYPE)
 
-    if refpts is None:
-        return lindata0, tune, chrom
-    else:
-        return lindata0, tune, chrom, lindata
+    return lindata0, tune, chrom, lindata

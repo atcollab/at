@@ -100,17 +100,11 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     if itercount == max_iterations:
         warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    if refpts is None:
-        output = ref_in
-    else:
-        # We know that there is one particle and one turn, so select the
-        # (6, nrefs) output.
-        all_points = lattice_pass(ring,
-                                  ref_in.copy(order='K'),
-                                  refpts=refpts,
-                                  keep_lattice=keeplattice)[:, 0, :, 0]
-        output = (ref_in, all_points)
-    return output
+    refs = () if refpts is None else refpts
+    all_points = numpy.empty((0, 6), dtype=float) if (len(refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=refs, keep_lattice=keeplattice), axis=(1, 3)).T
+
+    return ref_in, all_points
 
 
 def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
@@ -185,13 +179,11 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     if itercount == max_iterations:
         warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    if refpts is None:
-        output = ref_in
-    else:
-        all_points = numpy.squeeze(lattice_pass(ring, ref_in.copy(order='K'), refpts=refpts,
-                                                keep_lattice=keeplattice))
-        output = (ref_in, all_points)
-    return output
+    refs = () if refpts is None else refpts
+    all_points = numpy.empty((0, 6), dtype=float) if (len(refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=refs, keep_lattice=keeplattice), axis=(1, 3)).T
+
+    return ref_in, all_points
 
 
 def find_orbit6(ring, refpts=None, guess=None, **kwargs):
@@ -282,10 +274,8 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     if itercount == max_iterations:
         warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    if refpts is None:
-        output = ref_in
-    else:
-        all_points = numpy.squeeze(lattice_pass(ring, ref_in.copy(order='K'), refpts=refpts,
-                                                keep_lattice=keeplattice))
-        output = (ref_in, all_points)
-    return output
+    refs = () if refpts is None else refpts
+    all_points = numpy.empty((0, 6), dtype=float) if (len(refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=refs, keep_lattice=keeplattice), axis=(1, 3)).T
+
+    return ref_in, all_points

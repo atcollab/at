@@ -28,7 +28,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
 
-    emit0, mode_emit, damping_rates, tunes[, emit] = ohmi_envelope(ring[, refpts])
+    emit0, mode_emit, damping_rates, tunes, emit = ohmi_envelope(ring[, refpts])
 
     PARAMETERS
         ring                at.Lattice object
@@ -46,8 +46,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     OUTPUT
         emit0               emittance data at the start/end of the ring
         beamdata            beam parameters at the start of the ring
-        emit                Only returned if refpts is not None:
-                            emittance data at the points refered to by refpts
+        emit                emittance data at the points refered to by refpts
 
         emit is a structured array with fields:
         R66                 (6, 6) equilibrium envelope matrix R
@@ -80,13 +79,13 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         # projections on xx', zz', ldp
         emit3 = numpy.sqrt(numpy.array([det(r66[s, s]) for s in _submat]))
         # Emittance cut for dpp=0
-        if emit3[0] < 1.E-13:               # No equilibrium emittance
-            r44 = numpy.nan*numpy.ones((4, 4))
-        elif emit3[1] < 1.E-13:             # Uncoupled machine
+        if emit3[0] < 1.E-13:  # No equilibrium emittance
+            r44 = numpy.nan * numpy.ones((4, 4))
+        elif emit3[1] < 1.E-13:  # Uncoupled machine
             minv = inv(r66[[0, 1, 4, 5], :][:, [0, 1, 4, 5]])
             r44 = numpy.zeros((4, 4))
             r44[:2, :2] = inv(minv[:2, :2])
-        else:                               # Coupled machine
+        else:  # Coupled machine
             minv = inv(r66)
             r44 = inv(minv[:4, :4])
         # betatron emittances (dpp=0)
@@ -104,11 +103,11 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     allrefs = uint32_refpts(range(nelems), nelems)
 
     if orbit is None:
-        orbit = find_orbit6(ring, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
+    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs, keep_lattice=keep_lattice),
+                         axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy) if elem.PassMethod.endswith('RadPass') else b0
@@ -131,11 +130,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     rr = 0.5 * (rr + rr.T)
     rr4, emitxy, emitxyz = process(rr)
     r66data = get_tunes_damp(mring, rr)
+
     data0 = numpy.array((rr, rr4, mring, orbit, emitxy, emitxyz), dtype=ENVELOPE_DTYPE)
-    if refpts is None:
-        return data0, r66data
-    else:
-        data = numpy.array(
-            list(map(propag, numpy.rollaxis(ms, -1), bbcum[uint32refs], orbs[uint32refs, :])),
-            dtype=ENVELOPE_DTYPE)
-        return data0, r66data, data
+    data = numpy.array(list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])), dtype=ENVELOPE_DTYPE)
+
+    return data0, r66data, data
