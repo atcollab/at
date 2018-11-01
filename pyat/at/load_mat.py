@@ -28,8 +28,8 @@ def hasattrs(kwargs, *attributes):
         are in kwargs; allows checking for multiple attributes in one go.
 
     Args:
-        kwargs (dict): The dictionary of keyword arguments passed to the Element
-                        constructor.
+        kwargs (dict): The dictionary of keyword arguments passed to the
+                        Element constructor.
         attributes (iterable): A list of strings, the attribute names to be
                                 checked.
 
@@ -51,8 +51,8 @@ def find_class_name(kwargs):
     """Attempts to correctly identify the Class of the element from its kwargs.
 
     Args:
-        kwargs (dict): The dictionary of keyword arguments passed to the Element
-                        constructor.
+        kwargs (dict): The dictionary of keyword arguments passed to the
+                        Element constructor.
 
     Returns:
         str: The guessed Class name, as a string.
@@ -67,7 +67,8 @@ def find_class_name(kwargs):
         if class_name in CLASSES:
             return class_name
         else:
-            raise AttributeError("Class {0} does not exist.".format(class_name))
+            raise AttributeError("Class {0} does not exist."
+                                 .format(class_name))
     except KeyError:
         fam_name = kwargs.get('FamName')
         if fam_name in CLASSES:
@@ -77,11 +78,11 @@ def find_class_name(kwargs):
         else:
             pass_method = kwargs.get('PassMethod')
             class_from_pass = PASSMETHOD_MAPPING.get(pass_method)
-            if class_from_pass != None:
+            if class_from_pass is not None:
                 return class_from_pass
             else:
-                if hasattrs(kwargs, 'FullGap', 'FringeInt1', 'FringeInt2', 'gK',
-                            'EntranceAngle', 'ExitAngle'):
+                if hasattrs(kwargs, 'FullGap', 'FringeInt1', 'FringeInt2',
+                            'gK', 'EntranceAngle', 'ExitAngle'):
                     return 'Bend'
                 elif hasattrs(kwargs, 'Voltage', 'Frequency', 'HarmNumber',
                               'PhaseLag', 'TimeLag'):
@@ -104,8 +105,7 @@ def find_class_name(kwargs):
                                                dtype=numpy.float64)
                         loworder = numpy.where(PolynomB != 0.0)[0][0]
                     except IndexError:
-                        if (kwargs.get('PassMethod') ==
-                            'StrMPoleSymplectic4Pass'):
+                        if kwargs.get('PassMethod') == 'StrMPoleSymplectic4Pass':
                             return 'Multipole'
                         elif hasattrs(kwargs, 'BendingAngle'):
                             if float(kwargs['BendingAngle']) == 0.0:
@@ -129,7 +129,7 @@ def find_class_name(kwargs):
                             return 'ThinMultipole'
                 elif hasattrs(kwargs, 'BendingAngle'):
                     return 'Dipole'
-                elif hasattrs(kwargs, 'Length'): # Don't all elems have Length?
+                elif hasattrs(kwargs, 'Length'):
                     if float(kwargs['Length']) != 0.0:
                         return 'Drift'
                     else:
@@ -145,18 +145,18 @@ def sanitise_class(kwargs):
         a more helpful message.
 
     Args:
-        kwargs (dict): The dictionary of keyword arguments passed to the Element
-                        constructor.
+        kwargs (dict): The dictionary of keyword arguments passed to the
+                        Element constructor.
 
     Raises:
         AttributeError: if the PassMethod and Class are incompatible.
     """
     pass_method = kwargs.get('PassMethod')
-    if pass_method != None:
+    if pass_method is not None:
         pass_to_class = PASSMETHOD_MAPPING.get(pass_method)
         if (pass_method == 'IdentityPass') and (kwargs['Class'] == 'Drift'):
             kwargs['Class'] = 'Monitor'
-        elif pass_to_class != None:
+        elif pass_to_class is not None:
             if pass_to_class != kwargs['Class']:
                 raise AttributeError("PassMethod {0} is not compatible with "
                                      "Class {1}.".format(pass_method,
@@ -164,14 +164,13 @@ def sanitise_class(kwargs):
         else:
             if kwargs['Class'] in ['Marker', 'Monitor', 'Drift', 'RingParam']:
                 if pass_method not in ['DriftPass', 'IdentityPass']:
-                    raise AttributeError("PassMethod {0} is not compatible with"
-                                         " Class {1}.".format(pass_method,
-                                                              kwargs['Class']))
+                    raise AttributeError("PassMethod {0} is not compatible "
+                                         "with Class {1}."
+                                         .format(pass_method, kwargs['Class']))
 
 
 def load_element(index, element_array):
-    """
-    Load what scipy produces into a pyat element object.
+    """Load what scipy produces into a pyat element object.
     """
     kwargs = {}
     kwargs['Index'] = index
@@ -203,5 +202,6 @@ def load(filename, key='RING'):
         try:
             py_ring.append(load_element(i, element_arrays[i][0, 0]))
         except AttributeError as error_message:
-            raise AttributeError('On element {0}, {1}'.format(i, error_message))
+            raise AttributeError('On element {0}, {1}'
+                                 .format(i, error_message))
     return py_ring

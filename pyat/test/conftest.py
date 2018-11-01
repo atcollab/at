@@ -3,7 +3,6 @@ A special file that contains test fixtures for the other test files to use.
 """
 import numpy
 import pytest
-from at import load_mat
 
 
 @pytest.fixture
