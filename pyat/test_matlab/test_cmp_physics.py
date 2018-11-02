@@ -40,11 +40,8 @@ def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
     numpy.testing.assert_almost_equal(py_m44, numpy.asarray(ml_m44), decimal=8)
 
 
-# Because of a limitation of the Matlab interface, only a single reference point is allowed in functions returning
-# structures
-
 @pytest.mark.parametrize('dp', (0.0, 0.01))
-@pytest.mark.parametrize('refpts', ([0], [10], None))
+@pytest.mark.parametrize('refpts', ([0], [0,1,2], None))
 def test_linopt(engine, ml_lattice, py_lattice, dp, refpts):
 
     def compare_lindata(py_data, ml_data, decimal=8):
@@ -53,23 +50,24 @@ def test_linopt(engine, ml_lattice, py_lattice, dp, refpts):
                                  ('A', 'A'), ('B', 'B'), ('C', 'C'), ('gamma', 'gamma')]:
             ml_val = numpy.squeeze(numpy.asarray(ml_data[ml_key]))
             if py_key == 'closed_orbit':
-                py_val = py_data[py_key][:4]
+                py_val = numpy.squeeze(py_data[py_key][:, :4])
+                numpy.testing.assert_almost_equal(py_val, ml_val, decimal=decimal)
             else:
-                py_val = py_data[py_key]
-            numpy.testing.assert_almost_equal(py_val, ml_val, decimal=decimal)
+                py_val = numpy.squeeze(py_data[py_key])
+                numpy.testing.assert_almost_equal(py_val, ml_val, decimal=decimal)
 
     # Python call
     py_lindata0, py_nu, py_xsi, py_lindata = physics.linopt(py_lattice, 0.0, refpts, get_chrom=True)
 
     if refpts is None:
         # Matlab call
-        ml_lindata, ml_nu, ml_xsi = engine.atlinopt(ml_lattice, 0.0, matlab.double([len(ml_lattice)+1]), nargout=3)
+        ml_lindata, ml_nu, ml_xsi = engine.pyproxy('atlinopt', ml_lattice, 0.0, matlab.double([len(ml_lattice)+1]), nargout=3)
         # test initial values
         numpy.testing.assert_almost_equal(py_nu, numpy.squeeze(numpy.asarray(ml_nu)), decimal=6)
         numpy.testing.assert_almost_equal(py_xsi, numpy.squeeze(numpy.asarray(ml_xsi)), decimal=5)
-        compare_lindata(py_lindata0, ml_lindata, decimal=6)
+        compare_lindata(numpy.expand_dims(py_lindata0, 0), ml_lindata, decimal=6)
     else:
         # Matlab call
-        ml_lindata, ml_nu, ml_xsi = engine.atlinopt(ml_lattice, 0.0, matlab.double([r + 1 for r in refpts]), nargout=3)
+        ml_lindata, ml_nu, ml_xsi = engine.pyproxy('atlinopt', ml_lattice, 0.0, matlab.double([r + 1 for r in refpts]), nargout=3)
         # test refpoints
-        compare_lindata(py_lindata[0], ml_lindata)
+        compare_lindata(py_lindata, ml_lindata)

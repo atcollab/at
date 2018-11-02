@@ -17,4 +17,5 @@ def initialise_matlab():
     eng = matlab.engine.start_matlab()
     eng.addpath(eng.genpath(os.path.join(ROOT_DIR, 'atintegrators/')))
     eng.addpath(eng.genpath(os.path.join(ROOT_DIR, 'atmat/')))
+    eng.addpath(os.path.dirname(__file__))
     return eng
