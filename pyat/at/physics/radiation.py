@@ -99,8 +99,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
     nelems = len(ring)
-    uint32refs = uint32_refpts([0] if refpts is None else refpts, nelems)
-    allrefs = uint32_refpts(range(nelems), nelems)
+    uint32refs = uint32_refpts(refpts, nelems)
+    allrefs = uint32_refpts(range(nelems+1), nelems)
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)

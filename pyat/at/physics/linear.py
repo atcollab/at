@@ -105,7 +105,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
 
     See also linopt
     """
-    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
+    uintrefs = uint32_refpts(refpts, len(ring))
 
     if orbit is None:
         orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)

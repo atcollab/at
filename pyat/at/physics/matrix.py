@@ -6,6 +6,7 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 
 import numpy
 from scipy.linalg import block_diag
+from ..lattice import uint32_refpts
 from ..physics import find_orbit4, find_orbit6
 from ..tracking import lattice_pass, element_pass
 
@@ -79,7 +80,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
 
-    refs = () if refpts is None else refpts
+    refs = uint32_refpts(refpts, len(ring))
     out_mat = numpy.rollaxis(
               numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keep_lattice), axis=3), -1)
     # out_mat: 8 particles at n refpts for one turn
@@ -130,7 +131,7 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
 
     in_mat = orbit.reshape(6, 1) + dmat
 
-    refs = () if refpts is None else refpts
+    refs = uint32_refpts(refpts, len(ring))
     out_mat = numpy.rollaxis(
               numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keep_lattice), axis=3), -1)
     # out_mat: 12 particles at n refpts for one turn
