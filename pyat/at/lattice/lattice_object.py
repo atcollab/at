@@ -29,9 +29,10 @@ class Lattice(list):
             elements:       iterable of AT elements
 
         KEYWORDS
-            name:           name of the lattice (default '')
-            energy:         energy of the lattice (default taken from the elements)
-            periodicity:    numner of periods (default take from the elements)
+            keep_all        Keep RingParam elements in the lattice (default: False)
+            name            Name of the lattice (default: '')
+            energy          Energy of the lattice (default: taken from the elements)
+            periodicity     Number of periods (default: taken from the elements)
 
             all other keywords will be set as Lattice attributes
         """
@@ -40,8 +41,10 @@ class Lattice(list):
             # Keep all attributes
             attrs = descr.__dict__
         else:
+            keep_all = kwargs.pop('keep_all', False)
             params = [elem for elem in descr if isinstance(elem, elements.RingParam)]
-            descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
+            if not keep_all:
+                descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
             radon = False
             for elem in descr:
                 if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith('CavityPass'):
@@ -90,14 +93,17 @@ class Lattice(list):
             setattr(self, key, value)
 
     def __getitem__(self, key):
-        if isinstance(key, (int, numpy.int_)):
-            return super(Lattice, self).__getitem__(key)
-        elif isinstance(key, slice):
-            return Lattice(super(Lattice, self).__getitem__(key), **self.__dict__)
-        elif isinstance(key, numpy.ndarray) and key.dtype == bool:
-            return Lattice([el for el, tst in zip(self, key) if tst], **self.__dict__)
+        try:
+            elems = super(Lattice, self).__getitem__(key)
+        except TypeError:
+            if isinstance(key, numpy.ndarray) and key.dtype == bool:
+                elems = Lattice([el for el, tst in zip(self, key) if tst], **self.__dict__)
+            else:
+                elems = Lattice([self[i] for i in key], **self.__dict__)
         else:
-            return Lattice([self[i] for i in key], **self.__dict__)
+            if isinstance(elems, list):
+                elems = Lattice(elems, **self.__dict__)
+        return elems
 
     if sys.version_info < (3, 0):
         # This won't be defined if version is at least 3.0

@@ -115,14 +115,14 @@ class ThinMultipole(Element):
         Available keywords:
         'MaxOrder'      Number of desired multipoles
         """
-        poly_a = numpy.array(kwargs.pop('PolynomA', poly_a), dtype=numpy.float64)
-        poly_b = numpy.array(kwargs.pop('PolynomB', poly_b), dtype=numpy.float64)
-        poly_size = max(MaxOrder + 1, len(poly_a), len(poly_b))
-        poly_a = numpy.concatenate((poly_a, numpy.zeros(poly_size - len(poly_a))))
-        poly_b = numpy.concatenate((poly_b, numpy.zeros(poly_size - len(poly_b))))
+        kwargs.setdefault('PolynomA', poly_a)
+        kwargs.setdefault('PolynomB', poly_b)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
-        super(ThinMultipole, self).__init__(family_name, PolynomB=poly_b, PolynomA=poly_a,
-                                            MaxOrder=MaxOrder, **kwargs)
+        super(ThinMultipole, self).__init__(family_name, MaxOrder=MaxOrder, **kwargs)
+        # Adjust polynom lengths
+        poly_size = max(self.MaxOrder + 1, len(self.PolynomA), len(self.PolynomB))
+        self.PolynomA = numpy.concatenate((self.PolynomA, numpy.zeros(poly_size - len(self.PolynomA))))
+        self.PolynomB = numpy.concatenate((self.PolynomB, numpy.zeros(poly_size - len(self.PolynomB))))
 
 
 class Multipole(ThinMultipole):

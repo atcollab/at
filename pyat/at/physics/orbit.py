@@ -4,8 +4,8 @@ Closed orbit related functions
 
 import numpy
 import scipy.constants as constants
+from ..lattice import AtWarning, AtError, get_s_pos, RFCavity, uint32_refpts
 from ..tracking import lattice_pass
-from ..lattice import AtWarning, AtError, get_s_pos, RFCavity
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -100,9 +100,9 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     if itercount == max_iterations:
         warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    refs = () if refpts is None else refpts
-    all_points = numpy.empty((0, 6), dtype=float) if (len(refs) == 0) else numpy.squeeze(
-        lattice_pass(ring, ref_in.copy(order='K'), refpts=refs, keep_lattice=keeplattice), axis=(1, 3)).T
+    uint32refs = uint32_refpts(refpts, len(ring))
+    all_points = numpy.empty((0, 6), dtype=float) if (len(uint32refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
 
     return ref_in, all_points
 
@@ -179,9 +179,9 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     if itercount == max_iterations:
         warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    refs = () if refpts is None else refpts
-    all_points = numpy.empty((0, 6), dtype=float) if (len(refs) == 0) else numpy.squeeze(
-        lattice_pass(ring, ref_in.copy(order='K'), refpts=refs, keep_lattice=keeplattice), axis=(1, 3)).T
+    uint32refs = uint32_refpts(refpts, len(ring))
+    all_points = numpy.empty((0, 6), dtype=float) if (len(uint32refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
 
     return ref_in, all_points
 
@@ -274,8 +274,8 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     if itercount == max_iterations:
         warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    refs = () if refpts is None else refpts
-    all_points = numpy.empty((0, 6), dtype=float) if (len(refs) == 0) else numpy.squeeze(
-        lattice_pass(ring, ref_in.copy(order='K'), refpts=refs, keep_lattice=keeplattice), axis=(1, 3)).T
+    uint32refs = uint32_refpts(refpts, len(ring))
+    all_points = numpy.empty((0, 6), dtype=float) if (len(uint32refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
 
     return ref_in, all_points
