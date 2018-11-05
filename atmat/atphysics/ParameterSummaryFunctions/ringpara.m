@@ -76,7 +76,8 @@ for ii=1:len
           Kp = THERING{dpindex(ii)}.PolynomB(2);
       end
       if Kk~=Kp && (Kk~=0 && Kp~=0)
-          warning('Values in K and PolynomB(2) are different. Using larger absolute value'); 
+          Kk=0;
+          warning('Values in K and PolynomB(2) are different and both not zero. Using PolynomB(2).'); 
       end
       Ks=[Kk,Kp];
       [~,i]=max(abs(Ks));

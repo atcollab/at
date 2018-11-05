@@ -5,8 +5,7 @@ This is working from a specific file and may not be general.
 """
 
 import scipy.io
-import at
-from at import elements
+from .lattice import elements
 import numpy
 
 
@@ -20,15 +19,14 @@ def load_element(element_array):
     """
     Load what scipy produces into a pyat element object.
     """
-    raw_data = element_array[0]
     kwargs = {}
-    for item in element_array[0][0][0].dtype.fields:
+    for field_name in element_array.dtype.fields:
         # Remove any surplus dimensions in arrays.
-        data = numpy.squeeze(raw_data[item][0, 0])
+        data = numpy.squeeze(element_array[field_name])
         # Convert strings in arrays back to strings.
         if data.dtype.type is numpy.unicode_:
             data = str(data)
-        kwargs[item] = data
+        kwargs[field_name] = data
 
     try:
         class_name = kwargs.pop('Class')
@@ -47,16 +45,5 @@ def load(filename, key='RING'):
     """Load a matlab at structure into a Python at list
     """
     m = scipy.io.loadmat(filename)
-    mat_ring = m[key]
-    py_ring = []
-    for item in mat_ring:
-        py_ring.append(load_element(item))
+    py_ring = [load_element(item[0, 0]) for item in m[key].flat]
     return py_ring
-
-
-if __name__ == '__main__':
-    m = load('../atmat/atmatch/ExampleATMATCH/dba.mat')
-    rin = numpy.array((1e-6, 0, 0, 0, 0, 0))
-    print(rin)
-    at.atpass(m, rin, 1)
-    print(rin)

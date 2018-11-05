@@ -42,13 +42,8 @@ static double get_kick(double *r6, double *ktable)
     /*splin2(GLOBAL_y_map,GLOBAL_x_map,GLOBAL_xkick,GLOBAL_xkick2,GLOBAL_n,GLOBAL_nx,y,x,&f);*/
     
     /*biliniar interpolation*/
-#ifdef MATLAB_MEX_FILE
     /* Transpose coordinates because the kick-table is FORTRAN-ordered */
     linint(GLOBAL_y_map, GLOBAL_x_map, ktable, GLOBAL_ny_map, GLOBAL_nx_map, r6[2], r6[0], &f);
-#else
-    /* Assume the kick-table is C-ordered */
-    linint(GLOBAL_x_map, GLOBAL_y_map, ktable, GLOBAL_nx_map, GLOBAL_ny_map, r6[0], r6[2], &f);
-#endif
     return f;
  }
 

@@ -118,3 +118,15 @@ def test_quad_incorrect_array(rin):
     lattice = [q]
     with pytest.raises(RuntimeError):
         atpass(lattice, rin, 1)
+
+
+def test_corrector(rin):
+    c = elements.Corrector('corrector', 0.0, numpy.array([0.9, 0.5], dtype=numpy.float64))
+    assert c.Length == 0
+    lattice = [c]
+    rin[0, 0] = 1e-6
+    rin_orig = numpy.array(rin, copy=True)
+    rin_orig[1] = 0.9
+    rin_orig[3] = 0.5
+    atpass(lattice, rin, 1)
+    numpy.testing.assert_equal(rin, rin_orig)
