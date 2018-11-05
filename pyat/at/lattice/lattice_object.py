@@ -5,8 +5,7 @@ import numpy
 from scipy.constants import physical_constants as cst
 from warnings import warn
 from math import pi
-from . import elements
-from ..lattice import checktype, AtWarning, AtError
+from . import elements, checktype, AtWarning, AtError
 from ..physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44, find_m66, linopt, ohmi_envelope
 
 __all__ = ['Lattice']
