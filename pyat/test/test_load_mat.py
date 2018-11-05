@@ -4,12 +4,6 @@ import pytest
 from at.load_mat import find_class_name, sanitise_class
 
 
-class_list = list(at.load_mat.CLASSES)
-class_mapped = at.load_mat.CLASS_MAPPING
-famname_mapped = at.load_mat.FAMILY_MAPPING
-passmethod_mapped = at.load_mat.PASSMETHOD_MAPPING
-
-
 def test_invalid_class_raises_AttributeError():
     elem_kwargs = {'Class': 'Invalid'}
     with pytest.raises(AttributeError):
@@ -18,35 +12,35 @@ def test_invalid_class_raises_AttributeError():
 
 def test_correct_class_names():
     elem_kwargs = {'FamName': 'fam'}
-    for class_name in class_list:
+    for class_name in at.load_mat.CLASSES:
         elem_kwargs['Class'] = class_name
         assert find_class_name(elem_kwargs) == class_name
 
 
 def test_class_mapping():
     elem_kwargs = {'FamName': 'fam'}
-    for class_name in class_mapped.keys():
+    for class_name in at.load_mat.CLASS_MAPPING.keys():
         elem_kwargs['Class'] = class_name
-        assert find_class_name(elem_kwargs) == class_mapped[class_name]
+        assert find_class_name(elem_kwargs) == at.load_mat.CLASS_MAPPING[class_name]
 
 
 def test_family_mapping():
     elem_kwargs = {}
-    for family_name in class_list:
+    for family_name in at.load_mat.CLASSES:
         elem_kwargs['FamName'] = family_name
         assert find_class_name(elem_kwargs) == family_name
-    for family_name in famname_mapped.keys():
+    for family_name in at.load_mat.FAMILY_MAPPING.keys():
         elem_kwargs['FamName'] = family_name
-        assert find_class_name(elem_kwargs) == famname_mapped[family_name]
+        assert find_class_name(elem_kwargs) == at.load_mat.FAMILY_MAPPING[family_name]
         elem_kwargs['FamName'] = family_name.upper()
-        assert find_class_name(elem_kwargs) == famname_mapped[family_name]
+        assert find_class_name(elem_kwargs) == at.load_mat.FAMILY_MAPPING[family_name]
 
 
 def test_PassMethod_mapping():
     elem_kwargs = {'FamName': 'fam'}
-    for pass_method in passmethod_mapped.keys():
+    for pass_method in at.load_mat.PASSMETHOD_MAPPING.keys():
         elem_kwargs['PassMethod'] = pass_method
-        assert find_class_name(elem_kwargs) == passmethod_mapped[pass_method]
+        assert find_class_name(elem_kwargs) == at.load_mat.PASSMETHOD_MAPPING[pass_method]
 
 
 def test_find_Aperture():
