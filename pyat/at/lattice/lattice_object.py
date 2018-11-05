@@ -20,7 +20,7 @@ class Lattice(list):
     _translate = dict(Energy='energy', Periodicity='periodicity', FamName='name')
     _ignore = {'PassMethod', 'Length'}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, descr=None, **kwargs):
         """Lattice(elements, **kwargs)
         Create a new lattice object
 
@@ -35,7 +35,8 @@ class Lattice(list):
 
             all other keywords will be set as Lattice attributes
         """
-        descr = args[0] if len(args) > 0 else []
+        if descr is None:
+            descr = []
         if isinstance(descr, Lattice):
             # Keep all attributes
             attrs = descr.__dict__
