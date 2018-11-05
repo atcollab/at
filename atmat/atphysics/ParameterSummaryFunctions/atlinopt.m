@@ -158,7 +158,7 @@ lindata=reshape(ld(isel),size(isel));
     function UP = BetatronPhaseUnwrap(P)
         % unwrap negative jumps in betatron
         %JUMPS = [0; diff(P)] < -1.e-5;
-        JUMPS = [0; diff(P)] < -1.e-3;
+        JUMPS = diff([0;P]) < -1.e-3;
         UP = P+cumsum(JUMPS)*2*pi;
     end
 

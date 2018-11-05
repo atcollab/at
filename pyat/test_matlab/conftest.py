@@ -4,7 +4,7 @@ between other modules.
 """
 import pytest
 import utils
-from at import load_mat
+from at import load_mat, Lattice
 
 
 @pytest.fixture(scope='session')
@@ -22,4 +22,4 @@ def ml_lattice(engine):
 
 @pytest.fixture
 def py_lattice():
-    return load_mat.load(utils.LATTICE)
+    return Lattice(load_mat.load(utils.LATTICE), keep_all=True)

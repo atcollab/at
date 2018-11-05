@@ -4,8 +4,7 @@ Coupled or non-coupled 4x4 linear motion
 import numpy
 from numpy.linalg import multi_dot as md
 from math import sqrt, atan2, pi
-from .matrix import find_m44, jmat
-from .orbit import find_orbit4
+from ..physics import find_orbit4, find_m44, jmat
 from ..lattice import uint32_refpts, get_s_pos
 from ..tracking import lattice_pass
 
@@ -37,14 +36,14 @@ def _twiss22(ms, alpha0, beta0):
     Calculate Twiss parameters from the standard 2x2 transfer matrix
     (i.e. x or y).
     """
-    bbb = ms[0, 1, :]
-    aaa = ms[0, 0, :] * beta0 - bbb * alpha0
+    bbb = ms[:, 0, 1]
+    aaa = ms[:, 0, 0] * beta0 - bbb * alpha0
     beta = (aaa * aaa + bbb * bbb) / beta0
-    alpha = -(aaa * (ms[1, 0, :] * beta0 - ms[1, 1, :] * alpha0) + bbb * ms[1, 1, :]) / beta0
+    alpha = -(aaa * (ms[:, 1, 0] * beta0 - ms[:, 1, 1] * alpha0) + bbb * ms[:, 1, 1]) / beta0
     mu = numpy.arctan2(bbb, aaa)
     # Unwrap negative jumps in betatron phase advance
-    dmu = numpy.diff(mu)
-    jumps = numpy.append([0], dmu) < 0
+    dmu = numpy.diff(numpy.append([0], mu))
+    jumps = dmu < 0
     mu += numpy.cumsum(jumps) * 2.0 * numpy.pi
     return alpha, beta, mu
 
@@ -62,6 +61,8 @@ def _closure(m22):
 def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP):
     """
     Perform linear analysis of the NON-COUPLED lattices
+
+    twiss0, tune, chrom, twiss = get_twiss(ring, dp[, refpts])
 
     PARAMETERS
         ring            lattice description
@@ -87,8 +88,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         tune            [tune_h, tune_v], fractional part of the linear tunes
         chrom           [ksi_h , ksi_v], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
-        twiss           Only returned if refpts is not None:
-                        linear optics at the points refered to by refpts
+        twiss           linear optics at the points refered to by refpts
 
         twiss is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
@@ -98,21 +98,21 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
                         Only computed if 'get_chrom' is True                (nrefs, 4)
         m44             4x4 transfer matrix M from the beginning of ring    (nrefs, 4, 4)
                         to the entrance of the element [2]
-        mu              [mux, muy], A and B betatron phase                  (nrefs, 2)
+        mu              [mux, muy], A and B betatron phase (modulo 2*pi)    (nrefs, 2)
         beta            [betax, betay] vector                               (nrefs, 2)
         alpha           [alphax, alphay] vector                             (nrefs, 2)
         All values are given at the entrance of each element specified in refpts.
 
     See also linopt
     """
-    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
+    uintrefs = uint32_refpts(refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
-                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
+    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs, keep_lattice=keep_lattice),
+                         axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
@@ -135,20 +135,19 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         disp0 = numpy.NaN
 
     twiss0 = numpy.array(
-        (0, 0.0, orbit, disp0, numpy.array([a0_x, a0_y]), numpy.array([b0_x, b0_y]), 0.0, m44), dtype=TWISS_DTYPE)
+        (len(ring), get_s_pos(ring, len(ring)), orbit, disp0, numpy.array([a0_x, a0_y]), numpy.array([b0_x, b0_y]),
+         2.0 * pi * tune, m44), dtype=TWISS_DTYPE)
 
     # Propagate to reference points
     if nrefs > 0:
-        alpha_x, beta_x, mu_x = _twiss22(mstack[:2, :2, :], a0_x, b0_x)
-        alpha_z, beta_z, mu_z = _twiss22(mstack[2:, 2:, :], a0_y, b0_y)
+        alpha_x, beta_x, mu_x = _twiss22(mstack[:, :2, :2], a0_x, b0_x)
+        alpha_z, beta_z, mu_z = _twiss22(mstack[:, 2:, 2:], a0_y, b0_y)
 
         twiss = numpy.zeros(nrefs, dtype=TWISS_DTYPE)
         twiss['idx'] = uintrefs
-        # Use rollaxis to get the arrays in the correct shape for the twiss
-        # structured array - that is, with nrefs as the first dimension.
         twiss['s_pos'] = get_s_pos(ring, uintrefs[:nrefs])
         twiss['closed_orbit'] = orbs
-        twiss['m44'] = numpy.rollaxis(mstack, -1)
+        twiss['m44'] = mstack
         twiss['alpha'] = numpy.stack((alpha_x, alpha_z), axis=1)
         twiss['beta'] = numpy.stack((beta_x, beta_z), axis=1)
         twiss['mu'] = numpy.stack((mu_x, mu_z), axis=1)
@@ -156,17 +155,14 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     else:
         twiss = numpy.array([], dtype=TWISS_DTYPE)
 
-    if refpts is None:
-        return twiss0, tune, chrom
-    else:
-        return twiss0, tune, chrom, twiss
+    return twiss0, tune, chrom, twiss
 
 
-def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP):
+def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP, coupled=True):
     """
-    Perform linear analysis of the COUPLED lattices
+    Perform linear analysis of a lattice
 
-    lindata, tune, chrom = linopt(ring, dp, refpts)
+    lindata0, tune, chrom, lindata = linopt(ring, dp[, refpts])
 
     PARAMETERS
         ring            lattice description
@@ -180,20 +176,20 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
 
     KEYWORDS
         orbit           avoids looking for the colsed orbit if is already known ((6,) array)
-        get_chrom       compute dispersion and chromaticities. Needs computing the optics
+        get_chrom=False compute dispersion and chromaticities. Needs computing the optics
                         at 2 different momentum deviations around the central one.
                         Defaults to False
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         ddp=1.0E-8      momentum deviation used for computation of chromaticities and dispersion
+        coupled=True    if False, simplify the calculations by assuming no H/V coupling
 
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
         tune            [tune_A, tune_B], linear tunes for the two normal modes of linear motion [1]
         chrom           [ksi_A , ksi_B], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
-        lindata         Only returned if refpts is not None:
-                        linear optics at the points refered to by refpts
+        lindata         linear optics at the points refered to by refpts
 
         lindata is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
@@ -207,7 +203,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         B               (2, 2) matrix B in [3]                              (nrefs, 2, 2)
         C               (2, 2) matrix C in [3]                              (nrefs, 2, 2)
         gamma           gamma parameter of the transformation to eigenmodes (nrefs,)
-        mu              [mux, muy], A and B betatron phase                  (nrefs, 2)
+        mu              [mux, muy], A and B betatron phase (modulo 2*pi)    (nrefs, 2)
         beta            [betax, betay] vector                               (nrefs, 2)
         alpha           [alphax, alphay] vector                             (nrefs, 2)
         All values are given at the entrance of each element specified in refpts.
@@ -231,36 +227,40 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         msa = (md((G, mm)) - md((m, _jmt, C.T, _jmt.T))) / gamma
         msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
         cc = md(((numpy.dot(mm, C) + numpy.dot(G, m)), _jmt, msb.T, _jmt.T))
-        aa = md((msa, A, _jmt, msa.T, _jmt.T))
-        bb = md((msb, B, _jmt, msb.T, _jmt.T))
-        return msa, msb, gamma, cc, aa, bb
+        return msa, msb, gamma, cc
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
-        orbit = find_orbit4(ring, dp, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
-    orbs = numpy.rollaxis(numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
-                                                     keep_lattice=keep_lattice), axis=(1, 3)), -1)
+    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs, keep_lattice=keep_lattice),
+                         axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
-    # Calculate A, B, C, gamma at the first element
     M = m44[:2, :2]
     N = m44[2:, 2:]
     m = m44[:2, 2:]
     n = m44[2:, :2]
 
-    H = m + md((_jmt, n.T, _jmt.T))
-    t = numpy.trace(M - N)
-    t2 = t * t
-    t2h = t2 + 4.0 * numpy.linalg.det(H)
+    if coupled:
+        # Calculate A, B, C, gamma at the first element
+        H = m + md((_jmt, n.T, _jmt.T))
+        t = numpy.trace(M - N)
+        t2 = t * t
+        t2h = t2 + 4.0 * numpy.linalg.det(H)
 
-    g = sqrt(1.0 + sqrt(t2 / t2h)) / sqrt(2.0)
-    G = numpy.diag((g, g))
-    C = -H * numpy.sign(t) / (g * sqrt(t2h))
-    A = md((G, G, M)) - numpy.dot(G, (md((m, _jmt, C.T, _jmt.T)) + md((C, n)))) + md((C, N, _jmt, C.T, _jmt.T))
-    B = md((G, G, N)) + numpy.dot(G, (md((_jmt, C.T, _jmt.T, m)) + md((n, C)))) + md((_jmt, C.T, _jmt.T, M, C))
+        g = sqrt(1.0 + sqrt(t2 / t2h)) / sqrt(2.0)
+        G = numpy.diag((g, g))
+        C = -H * numpy.sign(t) / (g * sqrt(t2h))
+        A = md((G, G, M)) - numpy.dot(G, (md((m, _jmt, C.T, _jmt.T)) + md((C, n)))) + md((C, N, _jmt, C.T, _jmt.T))
+        B = md((G, G, N)) + numpy.dot(G, (md((_jmt, C.T, _jmt.T, m)) + md((n, C)))) + md((_jmt, C.T, _jmt.T, M, C))
+    else:
+        A = M
+        B = N
+        C = numpy.zeros((2, 2))
+        g = 1.0
 
     # Get initial twiss parameters
     a0_a, b0_a, tune_a = _closure(A)
@@ -268,8 +268,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     tune = numpy.array([tune_a, tune_b])
 
     if get_chrom:
-        d0_up, tune_up, _, l_up = linopt(ring, dp + 0.5 * ddp, uintrefs, keep_lattice=True)
-        d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True)
+        d0_up, tune_up, _, l_up = linopt(ring, dp + 0.5 * ddp, uintrefs, keep_lattice=True, coupled=coupled)
+        d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True, coupled=coupled)
         chrom = (tune_up - tune_down) / ddp
         dispersion = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4] / ddp
         disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
@@ -279,34 +279,39 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         disp0 = numpy.NaN
 
     lindata0 = numpy.array(
-        (0, 0.0, orbit, disp0, numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]), 0.0, m44, A, B, C, g),
+        (len(ring), get_s_pos(ring, len(ring)), orbit, disp0, numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]),
+         2.0 * pi * tune, m44, A, B, C, g),
         dtype=LINDATA_DTYPE)
 
     # Propagate to reference points
     if nrefs > 0:
-        MSA, MSB, gamma, CL, AL, BL = zip(*map(analyze, numpy.split(mstack, mstack.shape[2], axis=2)))
-        alpha_a, beta_a, mu_a = _twiss22(numpy.stack(MSA, axis=2), a0_a, b0_a)
-        alpha_b, beta_b, mu_b = _twiss22(numpy.stack(MSB, axis=2), a0_b, b0_b)
+        if coupled:
+            MSA, MSB, gamma, CL = zip(*[analyze(m44) for m44 in mstack])
+            msa = numpy.stack(MSA, axis=0)
+            msb = numpy.stack(MSB, axis=0)
+        else:
+            msa = mstack[:, :2, :2]
+            msb = mstack[:, 2:, 2:]
+            gamma = 1.0
+            CL = numpy.zeros((1, 2, 2))
+
+        alpha_a, beta_a, mu_a = _twiss22(msa, a0_a, b0_a)
+        alpha_b, beta_b, mu_b = _twiss22(msb, a0_b, b0_b)
 
         lindata = numpy.zeros(nrefs, dtype=LINDATA_DTYPE)
         lindata['idx'] = uintrefs
-        # Use rollaxis to get the arrays in the correct shape for the lindata
-        # structured array - that is, with nrefs as the first dimension.
         lindata['s_pos'] = get_s_pos(ring, uintrefs)
         lindata['closed_orbit'] = orbs
-        lindata['m44'] = numpy.rollaxis(mstack, -1)
+        lindata['m44'] = mstack
         lindata['alpha'] = numpy.stack((alpha_a, alpha_b), axis=1)
         lindata['beta'] = numpy.stack((beta_a, beta_b), axis=1)
         lindata['mu'] = numpy.stack((mu_a, mu_b), axis=1)
-        lindata['A'] = AL
-        lindata['B'] = BL
+        lindata['A'] = [md((ms, A, _jmt, ms.T, _jmt.T)) for ms in msa]
+        lindata['B'] = [md((ms, B, _jmt, ms.T, _jmt.T)) for ms in msb]
         lindata['C'] = CL
         lindata['gamma'] = gamma
         lindata['dispersion'] = dispersion
     else:
         lindata = numpy.array([], dtype=LINDATA_DTYPE)
 
-    if refpts is None:
-        return lindata0, tune, chrom
-    else:
-        return lindata0, tune, chrom, lindata
+    return lindata0, tune, chrom, lindata
