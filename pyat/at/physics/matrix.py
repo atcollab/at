@@ -90,7 +90,6 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
     if len(refs) > 0:
         mstack = (out_mat[:, :4, :4] - out_mat[:, :4, 4:]) / xy_step
         if full:
-            # mstack = numpy.stack(map(mrotate, numpy.split(mstack, mstack.shape[0], axis=0)), axis=0)
             mstack = numpy.stack((mrotate(mat) for mat in mstack), axis=0)
     else:
         mstack = numpy.empty((0, 4, 4), dtype=float)
