@@ -13,6 +13,57 @@ __all__ = ['Lattice']
 TWO_PI_ERROR = 1.E-4
 
 
+def _scan_list(descr, keep_all=False, **kwargs):
+    """Extract the lattice attributes from an element list"""
+    attrs = {'name': '', '_radiation_on': False}
+    params = [elem for elem in descr if isinstance(elem, elements.RingParam)]
+    if len(params) > 0:
+        # Set all RingParam attributes to the lattice object
+        attrs.update(
+            (Lattice._translate.get(key, key.lower()), value) for (key, value) in params[0].__dict__.items()
+            if key not in Lattice._ignore)
+
+    if not keep_all:
+        descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
+
+    for elem in descr:
+        if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith('CavityPass'):
+            attrs['_radiation_on'] = True
+            break
+
+    attrs.update(kwargs)
+
+    if attrs.get('energy') is None:
+        # Guess energy from the Energy attribute of the elements
+        # Look first in cavities
+        energies = [elem.Energy for elem in descr if isinstance(elem, elements.RFCavity)]
+        if len(energies) == 0:
+            # Then look in all elements
+            energies = [elem.Energy for elem in descr if hasattr(elem, 'Energy')]
+        if len(energies) == 0:
+            raise AtError('Energy not defined')
+        energy = max(energies)
+        if min(energies) < energy:
+            warn(AtWarning('Inconsistent energy values, "Energy" set to {0}'.format(energy)))
+        attrs['energy'] = energy
+
+    if attrs.get('periodicity') is None:
+        # Guess periodicity from the bending angle of the superperiod
+        theta = [elem.BendingAngle for elem in descr if isinstance(elem, elements.Dipole)]
+        try:
+            nbp = 2.0 * pi / sum(theta)
+        except ZeroDivisionError:
+            warn(AtWarning('No bending in the cell, set "Periodicity" to 1'))
+            attrs['periodicity'] = 1
+        else:
+            periodicity = int(round(nbp))
+            if abs(periodicity - nbp) > TWO_PI_ERROR:
+                warn(AtWarning('non-integer number of cells: {0} -> {1}'.format(nbp, periodicity)))
+            attrs['periodicity'] = periodicity
+
+    return descr, attrs
+
+
 class Lattice(list):
     """Lattice object
     An AT lattice is a sequence of AT elements. This object accepts extended indexing"""
@@ -25,7 +76,7 @@ class Lattice(list):
         Create a new lattice object
 
         INPUT
-            elements:       iterable of AT elements
+            elements:       sequence of AT elements
 
         KEYWORDS
             keep_all        Keep RingParam elements in the lattice (default: False)
@@ -37,72 +88,37 @@ class Lattice(list):
         """
         if descr is None:
             descr = []
+
         if isinstance(descr, Lattice):
-            # Keep all attributes
-            attrs = descr.__dict__
+            attrs = {}
+            attrs.update(descr.__dict__)
+            attrs.update(kwargs)
         else:
-            keep_all = kwargs.pop('keep_all', False)
-            params = [elem for elem in descr if isinstance(elem, elements.RingParam)]
-            if not keep_all:
-                descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
-            radon = False
-            for elem in descr:
-                if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith('CavityPass'):
-                    radon = True
-                    break
-            # Initialize attributes to blank
-            attrs = dict(name='', energy=None, periodicity=None, _radiation_on=radon)
-            if len(params) > 0:
-                # Set all RingParam attributes to the lattice object
-                attrs.update(
-                    (self._translate.get(key, key.lower()), value) for (key, value) in params[0].__dict__.items()
-                    if key not in self._ignore)
-        attrs.update(kwargs)
+            descr, attrs = _scan_list(descr, **kwargs)
 
         super(Lattice, self).__init__(descr)
-
-        if attrs['energy'] is None:
-            # Guess energy from the Energy attribute of the elements
-            # Look first in cavities
-            energies = [elem.Energy for elem in descr if isinstance(elem, elements.RFCavity)]
-            if len(energies) == 0:
-                # Then look in all elements
-                energies = [elem.Energy for elem in descr if hasattr(elem, 'Energy')]
-            if len(energies) == 0:
-                raise AtError('Energy not defined')
-            energy = max(energies)
-            if min(energies) < energy:
-                warn(AtWarning('Inconsistent energy values, "Energy" set to {0}'.format(energy)))
-            attrs['energy'] = energy
-
-        if attrs['periodicity'] is None:
-            # Guess periodicity from the bending angle of the superperiod
-            theta = [elem.BendingAngle for elem in descr if isinstance(elem, elements.Dipole)]
-            try:
-                nbp = 2.0 * pi / sum(theta)
-            except ZeroDivisionError:
-                warn(AtWarning('No bending in the cell, set "Periodicity" to 1'))
-                attrs['periodicity'] = 1
-            else:
-                periodicity = int(round(nbp))
-                if abs(periodicity - nbp) > TWO_PI_ERROR:
-                    warn(AtWarning('non-integer number of cells: {0} -> {1}'.format(nbp, periodicity)))
-                attrs['periodicity'] = periodicity
 
         for key, value in attrs.items():
             setattr(self, key, value)
 
     def __getitem__(self, key):
+
+        def set_lattice(obj):
+            for k, value in self.__dict__.items():
+                setattr(obj, k, value)
+            obj.__class__ = Lattice
+            return obj
+
         try:
             elems = super(Lattice, self).__getitem__(key)
         except TypeError:
             if isinstance(key, numpy.ndarray) and key.dtype == bool:
-                elems = Lattice([el for el, tst in zip(self, key) if tst], **self.__dict__)
+                elems = set_lattice(el for el, tst in zip(self, key) if tst)
             else:
-                elems = Lattice([self[i] for i in key], **self.__dict__)
+                elems = set_lattice(self[i] for i in key)
         else:
             if isinstance(elems, list):
-                elems = Lattice(elems, **self.__dict__)
+                elems = set_lattice(elems)
         return elems
 
     if sys.version_info < (3, 0):
@@ -134,7 +150,7 @@ class Lattice(list):
     def energy_loss(self):
         """Energy loss per turn [eV]
 
-        Losses = Cgamma / 2pi * EGeV^4 * I2
+        Losses = Cgamma / 2pi * EGeV^4 * i2
         """
         lenthe = numpy.array([(elem.Length, elem.BendingAngle) for elem in self if isinstance(elem, elements.Dipole)])
         lendp = lenthe[:, 0]
@@ -144,18 +160,18 @@ class Lattice(list):
         e_mass = cst['electron mass energy equivalent in MeV'][0]
         cgamma = 4.0E9 * pi * e_radius / 3.0 / pow(e_mass, 3)
 
-        I2 = self.periodicity * (numpy.sum(theta * theta / lendp))
-        e_loss = cgamma / 2.0 / pi * pow(self.energy * 1.0E-9, 4) * I2 * 1.e9
+        i2 = self.periodicity * (numpy.sum(theta * theta / lendp))
+        e_loss = cgamma / 2.0 / pi * pow(self.energy * 1.0E-9, 4) * i2 * 1.e9
         return e_loss
 
     def _radiation_switch(self, cavity_func=None, dipole_func=None, quadrupole_func=None):
 
         def mod_elem(ring, checkfun, modfun):
-            n = 0
+            nb = 0
             for elem in filter(checkfun, ring):
                 modfun(elem)
-                n += 1
-            return n
+                nb += 1
+            return nb
 
         def checkdipole(elem):
             return isinstance(elem, elements.Dipole) and (elem.BendingAngle != 0.0)
