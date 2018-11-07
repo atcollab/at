@@ -143,7 +143,7 @@ def test_find_Marker():
 
 
 @pytest.mark.parametrize('class_name,pass_method', (
-('Drift', 'CavityPass'), ('Marker', 'Invalid'),
+('Drift', 'IdentityPass'), ('Drift', 'CavityPass'), ('Marker', 'Invalid'),
 ('Monitor', 'Invalid'), ('Drift', 'Invalid'), ('RingParam', 'Invalid')))
 def test_sanitise_class_error(class_name, pass_method):
     with pytest.raises(AttributeError):
