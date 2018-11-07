@@ -152,14 +152,14 @@ def sanitise_class(class_name, kwargs):
             if pass_method != 'DriftPass':
                 raise AttributeError(
                     "PassMethod {0} is not compatible with Class {1}.".format(pass_method, class_name))
-    return class_name
 
 
-def element_from_dict(elem_dict):
+def element_from_dict(elem_dict, check=True):
     """return an AT element from a dictinary of attributes
     """
     class_name = find_class_name(elem_dict)
-    class_name = sanitise_class(class_name, elem_dict)
+    if check:
+        sanitise_class(class_name, elem_dict)
     cl = getattr(elements, class_name)
     # Remove mandatory attributes from the keyword arguments.
     args = [elem_dict.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
@@ -167,7 +167,7 @@ def element_from_dict(elem_dict):
     return element
 
 
-def load_element(element_array):
+def load_element(element_array, check=True):
     """Load what scipy produces into a pyat element object.
     """
     kwargs = {}
@@ -179,10 +179,10 @@ def load_element(element_array):
             data = str(data)
         kwargs[field_name] = data
 
-    return element_from_dict(kwargs)
+    return element_from_dict(kwargs, check=check)
 
 
-def load(filename, key='RING'):
+def load(filename, key='RING', check=True):
     """Load a matlab at structure into a Python at list
     """
     m = scipy.io.loadmat(filename)
@@ -190,7 +190,7 @@ def load(filename, key='RING'):
     element_arrays = m[key].flat
     for i in range(len(element_arrays)):
         try:
-            py_ring.append(load_element(element_arrays[i][0, 0]))
+            py_ring.append(load_element(element_arrays[i][0, 0], check=check))
         except AttributeError as error_message:
             raise AttributeError('On element {0}, {1}'.format(i, error_message))
     return py_ring
