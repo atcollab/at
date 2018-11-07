@@ -20,8 +20,8 @@ def test_data_checks():
 
 def test_element_creation_bits_and_bobs():
     d = elements.Drift('D0', 1, attr=numpy.array(0))
-    assert d.__str__() == ("Drift:\nFamName : 'D0'\nLength : 1.0\nPassMethod :"
-                           " 'DriftPass'\nattr : array(0)")
+    assert d.__str__() == ("Drift:\nFamName : D0\nLength : 1.0\nPassMethod :"
+                           " DriftPass\nattr : 0")
     assert d.__repr__() == "Drift('D0', 1.0, attr=array(0))"
 
 

@@ -30,5 +30,5 @@ def test_lattice_convert_to_list_if_incorrect_type():
     rin = numpy.zeros((6, 2))
     rin[0, 0] = 1e-6
     r_original = numpy.copy(rin)
-    r_out = track.lattice_pass(lattice, rin, 1)
+    r_out = lattice_pass(lattice, rin, 1)
     numpy.testing.assert_equal(r_original, r_out.reshape(6, 2))

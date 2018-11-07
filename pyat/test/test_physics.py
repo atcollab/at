@@ -61,19 +61,12 @@ def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
 
 
 def test_find_sync_orbit_finds_zeros(ring):
-    sync_orbit = physics.find_sync_orbit(ring)
+    sync_orbit = physics.find_sync_orbit(ring)[0]
     numpy.testing.assert_equal(sync_orbit, numpy.zeros(6))
 
 
-@pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
-def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
-    m44, mstack = physics.find_m44(ring, dp=DP, refpts=refpts)
-    numpy.testing.assert_allclose(m44[:4], M44_MATLAB[:4], rtol=1e-5, atol=1e-7)
-    stack_size = 0 if refpts is None else len(refpts)
-    assert mstack.shape == (4, 4, stack_size)
-
 def test_find_m44_no_refpts(ring):
-    m44 = physics.find_m44(ring, dp=DP)
+    m44 = physics.find_m44(ring, dp=DP)[0]
     expected = numpy.array([[-0.66380, 2.23415, 0., 0.],
                             [-0.25037, -0.66380, 0.,0.],
                             [-1.45698e-31, -1.15008e-30, -0.99922, 0.26217],
@@ -98,9 +91,9 @@ def test_get_twiss(ring, refpts):
 
 
 def test_get_twiss_no_refpts(ring):
-    twiss0, tune, chrom, twiss = physics.get_twiss(ring, DP, [], get_chrom=True)
+    twiss0, tune, chrom, twiss = physics.get_twiss(ring, DP, get_chrom=True)
     assert list(twiss) == []
-    assert len(physics.get_twiss(ring, DP, get_chrom=True)) is 3
+    assert len(physics.get_twiss(ring, DP, get_chrom=True)) is 4
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
@@ -139,7 +132,6 @@ def test_linopt(ring, refpts):
 
 
 def test_linopt_no_refpts(ring):
-    lindata0, tune, chrom, lindata = physics.linopt(ring, DP, [],
-                                                    get_chrom=True)
+    lindata0, tune, chrom, lindata = physics.linopt(ring, DP, get_chrom=True)
     assert list(lindata) == []
-    assert len(physics.linopt(ring, DP, get_chrom=True)) is 3
+    assert len(physics.linopt(ring, DP, get_chrom=True)) is 4
