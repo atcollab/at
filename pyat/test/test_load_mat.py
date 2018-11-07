@@ -142,12 +142,6 @@ def test_find_Marker():
     assert find_class_name(elem_kwargs) == 'Marker'
 
 
-@pytest.mark.parametrize('class_name,pass_method', (('Drift', 'IdentityPass'),))
-def test_sanitise_class_ok(class_name, pass_method):
-    class_name = sanitise_class(class_name, {'PassMethod': pass_method})
-    assert class_name == 'Monitor'
-
-
 @pytest.mark.parametrize('class_name,pass_method', (
 ('Drift', 'CavityPass'), ('Marker', 'Invalid'),
 ('Monitor', 'Invalid'), ('Drift', 'Invalid'), ('RingParam', 'Invalid')))
