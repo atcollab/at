@@ -4,7 +4,8 @@ Closed orbit related functions
 
 import numpy
 import scipy.constants as constants
-import at
+from ..lattice import AtWarning, AtError, get_s_pos, RFCavity, uint32_refpts
+from ..tracking import lattice_pass
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -80,7 +81,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     keeplattice = False
     while (change > convergence) and itercount < max_iterations:
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
-        _ = at.lattice_pass(ring, in_mat, refpts=[], keep_lattice=keeplattice)
+        _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keeplattice)
         # the reference particle after one turn
         ref_out = in_mat[:, 4]
         # 4x4 jacobian matrix from numerical differentiation:
@@ -97,19 +98,13 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
         keeplattice = True
 
     if itercount == max_iterations:
-        warnings.warn(at.AtWarning('Maximum number of iterations reached. Possible non-convergence'))
+        warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    if refpts is None:
-        output = ref_in
-    else:
-        # We know that there is one particle and one turn, so select the
-        # (6, nrefs) output.
-        all_points = at.lattice_pass(ring,
-                                     ref_in.copy(order='K'),
-                                     refpts=refpts,
-                                     keep_lattice=keeplattice)[:, 0, :, 0]
-        output = (ref_in, all_points)
-    return output
+    uint32refs = uint32_refpts(refpts, len(ring))
+    all_points = numpy.empty((0, 6), dtype=float) if (len(uint32refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
+
+    return ref_in, all_points
 
 
 def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
@@ -165,7 +160,7 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     keeplattice = False
     while (change > convergence) and itercount < max_iterations:
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
-        _ = at.lattice_pass(ring, in_mat, refpts=[], keep_lattice=keeplattice)
+        _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keeplattice)
         # the reference particle after one turn
         ref_out = in_mat[:, -1]
         # 5x5 jacobian matrix from numerical differentiation:
@@ -182,15 +177,13 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
         keeplattice = True
 
     if itercount == max_iterations:
-        warnings.warn(at.AtWarning('Maximum number of iterations reached. Possible non-convergence'))
+        warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    if refpts is None:
-        output = ref_in
-    else:
-        all_points = numpy.squeeze(at.lattice_pass(ring, ref_in.copy(order='K'), refpts=refpts,
-                                                   keep_lattice=keeplattice))
-        output = (ref_in, all_points)
-    return output
+    uint32refs = uint32_refpts(refpts, len(ring))
+    all_points = numpy.empty((0, 6), dtype=float) if (len(uint32refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
+
+    return ref_in, all_points
 
 
 def find_orbit6(ring, refpts=None, guess=None, **kwargs):
@@ -241,10 +234,10 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
     # Get evolution period
-    l0 = at.get_s_pos(ring, len(ring))
-    cavities = list(filter(at.checktype(at.RFCavity), ring))
+    l0 = get_s_pos(ring, len(ring))
+    cavities = [elem for elem in ring if isinstance(elem, RFCavity)]
     if len(cavities) == 0:
-        raise at.AtError('No cavity found in the lattice.')
+        raise AtError('No cavity found in the lattice.')
 
     f_rf = cavities[0].Frequency
     harm_number = cavities[0].HarmNumber
@@ -262,7 +255,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     keeplattice = False
     while (change > convergence) and itercount < max_iterations:
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
-        _ = at.lattice_pass(ring, in_mat, refpts=[], keep_lattice=keeplattice)
+        _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keeplattice)
         # the reference particle after one turn
         ref_out = in_mat[:, 6]
         # 6x6 jacobian matrix from numerical differentiation:
@@ -279,12 +272,10 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
         keeplattice = True
 
     if itercount == max_iterations:
-        warnings.warn(at.AtWarning('Maximum number of iterations reached. Possible non-convergence'))
+        warnings.warn(AtWarning('Maximum number of iterations reached. Possible non-convergence'))
 
-    if refpts is None:
-        output = ref_in
-    else:
-        all_points = numpy.squeeze(at.lattice_pass(ring, ref_in.copy(order='K'), refpts=refpts,
-                                                   keep_lattice=keeplattice))
-        output = (ref_in, all_points)
-    return output
+    uint32refs = uint32_refpts(refpts, len(ring))
+    all_points = numpy.empty((0, 6), dtype=float) if (len(uint32refs) == 0) else numpy.squeeze(
+        lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
+
+    return ref_in, all_points

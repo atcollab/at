@@ -23,7 +23,7 @@ def test_uint32_refpts_handles_array_as_input():
                                expected)
 
 
-@pytest.mark.parametrize('input', ([-1], [3], [3, 2, 1]))
+@pytest.mark.parametrize('input', ([-1, 0], [0, 0], [2, 1], [0, 1, 2, 3]))
 def test_uint32_refpts_throws_ValueError_if_input_invalid(input):
     with pytest.raises(ValueError):
         r = lattice.uint32_refpts(input, 2)
