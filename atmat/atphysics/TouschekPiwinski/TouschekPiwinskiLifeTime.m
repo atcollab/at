@@ -34,7 +34,8 @@ function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
 %
 % created 31-10-2012
 % updated 22-01-2013 corrected and compared with elegant
-% updates 08-11-2018 add: PhysConstant, default 'integral',
+% updates 08-11-2018 add: PhysConstant, default 'integral', contributionTL
+%                         given for positive and negative side
 
 %ensure a column lattice
 r=reshape(r,numel(r),1);
