@@ -40,7 +40,7 @@ function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
 %ensure a column lattice
 r=reshape(r,numel(r),1);
 
-e0 = PhysConstant.atomic_unit_of_charge.value; %1.60217646e-19; %Coulomb
+e0 = PhysConstant.elementary_charge.value; %1.60217646e-19; %Coulomb
 r0 = PhysConstant.classical_electron_radius.value; %2.817940327e-15; %m %  classical electron radius
 spl = PhysConstant.speed_of_light_in_vacuum.value; %299792458; % speed of ligth
 
