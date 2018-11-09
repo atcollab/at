@@ -71,7 +71,7 @@ class Lattice(list):
     _translate = dict(Energy='energy', Periodicity='periodicity', FamName='name')
     _ignore = {'PassMethod', 'Length'}
 
-    def __init__(self, descr=None, **kwargs):
+    def __init__(self, descr=None, _scan=True, **kwargs):
         """Lattice(elements, **kwargs)
         Create a new lattice object
 
@@ -93,8 +93,11 @@ class Lattice(list):
             attrs = {}
             attrs.update(descr.__dict__)
             attrs.update(kwargs)
-        else:
+        elif _scan:
             descr, attrs = _scan_list(descr, **kwargs)
+        else:
+            attrs={}
+            attrs.update(kwargs)
 
         super(Lattice, self).__init__(descr)
 
@@ -102,24 +105,23 @@ class Lattice(list):
             setattr(self, key, value)
 
     def __getitem__(self, key):
-
-        def set_lattice(obj):
-            for k, value in self.__dict__.items():
-                setattr(obj, k, value)
-            obj.__class__ = Lattice
-            return obj
-
         try:
             elems = super(Lattice, self).__getitem__(key)
         except TypeError:
             if isinstance(key, numpy.ndarray) and key.dtype == bool:
-                elems = set_lattice(el for el, tst in zip(self, key) if tst)
+                return Lattice((el for el, tst in zip(self, key) if tst), _scan=False, **self.__dict__)
             else:
-                elems = set_lattice(self[i] for i in key)
+                return Lattice((self[i] for i in key), _scan=False, **self.__dict__)
         else:
             if isinstance(elems, list):
-                elems = set_lattice(elems)
-        return elems
+                elems = Lattice(elems, _scan=False, **self.__dict__)
+            return elems
+
+    def __add__(self, other):
+        return Lattice(super(Lattice, self).__add__(other), _scan=False, **self.__dict__)
+
+    def __mul__(self, other):
+        return Lattice(super(Lattice, self).__mul__(other), _scan=False, **self.__dict__)
 
     if sys.version_info < (3, 0):
         # This won't be defined if version is at least 3.0
