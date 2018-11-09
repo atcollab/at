@@ -1,7 +1,4 @@
 """Lattice object"""
-
-__all__ = ['Lattice']
-
 import sys
 import copy
 import numpy
@@ -12,6 +9,8 @@ from . import elements, checktype, AtWarning, AtError
 from ..lattice import get_s_pos
 from ..physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44, \
     find_m66, linopt, ohmi_envelope, get_mcf
+
+__all__ = ['Lattice']
 
 TWO_PI_ERROR = 1.E-4
 
