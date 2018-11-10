@@ -7,10 +7,10 @@ import scipy.io
 from .lattice import elements
 import numpy
 
-CLASS_MAPPING = {'Quad': 'Quadrupole', 'Sext': 'Sextupole', 'AP': 'Aperture',
+CLASS_MAPPING = {'Quad': 'Quadrupole', 'Sext': 'Sextupole', 'Bend': 'Dipole', 'AP': 'Aperture',
                  'RF': 'RFCavity', 'BPM': 'Monitor'}
 
-CLASSES = set(['Marker', 'Monitor', 'Aperture', 'Drift', 'ThinMultipole', 'Multipole', 'Dipole', 'Bend', 'Quadrupole',
+CLASSES = set(['Marker', 'Monitor', 'Aperture', 'Drift', 'ThinMultipole', 'Multipole', 'Dipole', 'Quadrupole',
                'Sextupole', 'Octupole', 'RFCavity', 'RingParam', 'M66', 'Corrector'])
 
 FAMILY_MAPPING = {'ap': 'Aperture', 'rf': 'RFCavity', 'bpm': 'Monitor'}
@@ -165,8 +165,8 @@ def element_from_dict(elem_dict, index=None, check=True):
         sanitise_class(index, class_name, elem_dict)
     cl = getattr(elements, class_name)
     # Remove mandatory attributes from the keyword arguments.
-    args = [elem_dict.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
-    element = cl(*args, **elem_dict)
+    elem_args = [elem_dict.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
+    element = cl(*elem_args, **elem_dict)
     return element
 
 
