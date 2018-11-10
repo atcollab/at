@@ -8,7 +8,7 @@ from ..physics import find_orbit4, find_m44, jmat
 from ..lattice import uint32_refpts, get_s_pos
 from ..tracking import lattice_pass
 
-__all__ = ['get_twiss', 'linopt']
+__all__ = ['get_twiss', 'linopt', 'get_mcf']
 
 DDP = 1e-8
 
@@ -315,3 +315,23 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         lindata = numpy.array([], dtype=LINDATA_DTYPE)
 
     return lindata0, tune, chrom, lindata
+
+
+def get_mcf(ring,dp=0.0, ddp=DDP, keep_lattice=False):
+    """Compute momentum compaction factor
+
+    PARAMETERS
+        ring            lattice description
+        dp              momentum deviation. Defaults to 0
+
+    KEYWORDS
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Defaults to False
+        ddp=1.0E-8      momentum deviation used for differentiation
+    """
+    fp_a, _ = find_orbit4(ring, dp=dp-0.5*ddp, keep_lattice=keep_lattice)
+    fp_b, _ = find_orbit4(ring, dp=dp+0.5*ddp, keep_lattice=True)
+    fp=numpy.stack((fp_a, fp_b), axis=0).T  # generate a Fortran contiguous array
+    b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
+    ring_length = get_s_pos(ring, len(ring))
+    return (b[5, 1] - b[5, 0])/ddp/ring_length[0]
