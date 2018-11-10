@@ -6,7 +6,8 @@ from scipy.constants import physical_constants as cst
 from warnings import warn
 from math import pi
 from . import elements, checktype, AtWarning, AtError
-from ..physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44, find_m66, linopt, ohmi_envelope
+from ..lattice import get_s_pos
+from ..physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44, find_m66, linopt, ohmi_envelope, get_mcf
 
 __all__ = ['Lattice']
 
@@ -20,7 +21,7 @@ def _scan_list(descr, keep_all=False, **kwargs):
     if len(params) > 0:
         # Set all RingParam attributes to the lattice object
         attrs.update(
-            (Lattice._translate.get(key, key.lower()), value) for (key, value) in params[0].__dict__.items()
+            (Lattice._translate.get(key, key.lower()), value) for (key, value) in vars(params[0]).items()
             if key not in Lattice._ignore)
 
     if not keep_all:
@@ -91,12 +92,12 @@ class Lattice(list):
 
         if isinstance(descr, Lattice):
             attrs = {}
-            attrs.update(descr.__dict__)
+            attrs.update(vars(descr))
             attrs.update(kwargs)
         elif _scan:
             descr, attrs = _scan_list(descr, **kwargs)
         else:
-            attrs={}
+            attrs = {}
             attrs.update(kwargs)
 
         super(Lattice, self).__init__(descr)
@@ -109,19 +110,19 @@ class Lattice(list):
             elems = super(Lattice, self).__getitem__(key)
         except TypeError:
             if isinstance(key, numpy.ndarray) and key.dtype == bool:
-                return Lattice((el for el, tst in zip(self, key) if tst), _scan=False, **self.__dict__)
+                return Lattice((el for el, tst in zip(self, key) if tst), _scan=False, **vars(self))
             else:
-                return Lattice((self[i] for i in key), _scan=False, **self.__dict__)
+                return Lattice((self[i] for i in key), _scan=False, **vars(self))
         else:
             if isinstance(elems, list):
-                elems = Lattice(elems, _scan=False, **self.__dict__)
+                elems = Lattice(elems, _scan=False, **vars(self))
             return elems
 
     def __add__(self, other):
-        return Lattice(super(Lattice, self).__add__(other), _scan=False, **self.__dict__)
+        return Lattice(super(Lattice, self).__add__(other), _scan=False, **vars(self))
 
     def __mul__(self, other):
-        return Lattice(super(Lattice, self).__mul__(other), _scan=False, **self.__dict__)
+        return Lattice(super(Lattice, self).__mul__(other), _scan=False, **vars(self))
 
     if sys.version_info < (3, 0):
         # This won't be defined if version is at least 3.0
@@ -252,31 +253,6 @@ class Lattice(list):
         self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
         self._radiation_on = False
 
-    def find_orbit4(self, *args, **kwargs):
-        """See at.physics.find_orbit4():
-        """
-        return find_orbit4(self, *args, **kwargs)
-
-    def find_sync_orbit(self, *args, **kwargs):
-        """See at.physics.find_sync_orbit():
-        """
-        return find_sync_orbit(self, *args, **kwargs)
-
-    def find_orbit6(self, *args, **kwargs):
-        """See at.physics.find_orbit6():
-        """
-        return find_orbit6(self, *args, **kwargs)
-
-    def find_m44(self, *args, **kwargs):
-        """See at.physics.find_m44():
-        """
-        return find_m44(self, *args, **kwargs)
-
-    def find_m66(self, *args, **kwargs):
-        """See at.physics.find_m66():
-        """
-        return find_m66(self, *args, **kwargs)
-
     def linopt(self, *args, **kwargs):
         """See at.physics.linopt():
         """
@@ -292,19 +268,17 @@ class Lattice(list):
         return ohmi_envelope(self, *args, **kwargs)
 
 
+Lattice.get_s_pos = get_s_pos
+Lattice.get_mcf = get_mcf
+Lattice.find_orbit4 = find_orbit4
+Lattice.find_sync_orbit = find_sync_orbit
+Lattice.find_orbit6 = find_orbit6
+Lattice.find_m44 = find_m44
+Lattice.find_m66 = find_m66
+
 if sys.version_info < (3, 0):
     Lattice.linopt.__func__.__doc__ += linopt.__doc__
     Lattice.ohmi_envelope.__func__.__doc__ += ohmi_envelope.__doc__
-    Lattice.find_orbit4.__func__.__doc__ += find_orbit4.__doc__
-    Lattice.find_sync_orbit.__func__.__doc__ += find_sync_orbit.__doc__
-    Lattice.find_orbit6.__func__.__doc__ += find_orbit6.__doc__
-    Lattice.find_m44.__func__.__doc__ += find_m44.__doc__
-    Lattice.find_m66.__func__.__doc__ += find_m66.__doc__
 else:
     Lattice.linopt.__doc__ += linopt.__doc__
     Lattice.ohmi_envelope.__doc__ += ohmi_envelope.__doc__
-    Lattice.find_orbit4.__doc__ += find_orbit4.__doc__
-    Lattice.find_sync_orbit.__doc__ += find_sync_orbit.__doc__
-    Lattice.find_orbit6.__doc__ += find_orbit6.__doc__
-    Lattice.find_m44.__doc__ += find_m44.__doc__
-    Lattice.find_m66.__doc__ += find_m66.__doc__
