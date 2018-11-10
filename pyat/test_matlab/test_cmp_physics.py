@@ -144,3 +144,25 @@ def test_parameters(engine, ml_lattice, py_lattice, dp):
     py_mcf = py_lattice.get_mcf(dp, ddp=1.E-6)  # Matlab uses ddp=1.E-6
     ml_mcf = engine.mcf(ml_lattice, dp)
     numpy.testing.assert_allclose(py_mcf, ml_mcf, rtol=1.E-8)
+
+
+@pytest.mark.parametrize('dp', (0.0, 0.01, -0.01))
+def test_parameters(engine, ml_lattice, py_lattice, dp):
+
+    # Test perimeter
+    py_length = py_lattice.get_s_pos(len(py_lattice))
+    ml_length = engine.findspos(ml_lattice, len(ml_lattice)+1)
+    numpy.testing.assert_allclose(py_length, ml_length, rtol=1.E-8)
+
+    # test energy loss
+    ml_energy, ml_periods, ml_voltage, ml_harms, ml_eloss = engine.atenergy(ml_lattice, nargout=5)
+    # numpy.testing.assert_allclose(py_lattice.voltage, ml_voltage, rtol=1.E-8)
+    # numpy.testing.assert_allclose(py_lattice.energy_loss, ml_eloss, rtol=1.E-8)
+    assert py_lattice.energy == ml_energy
+    assert py_lattice.periodicity == int(ml_periods)
+    assert py_lattice.harmonic_number == int(ml_harms)
+
+    # test momentum compaction factor
+    py_mcf = py_lattice.get_mcf(dp, ddp=1.E-6)  # Matlab uses ddp=1.E-6
+    ml_mcf = engine.mcf(ml_lattice, dp)
+    numpy.testing.assert_allclose(py_mcf, ml_mcf, rtol=1.E-8)
