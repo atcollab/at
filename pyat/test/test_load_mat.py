@@ -1,7 +1,7 @@
 import at
 import numpy
 import pytest
-from at.load_mat import find_class_name, sanitise_class
+from at.load_mat import find_class_name, element_from_dict
 
 
 def test_invalid_class_raises_AttributeError():
@@ -66,21 +66,15 @@ def test_find_Monitor():
     assert find_class_name(elem_kwargs) == 'Monitor'
 
 
-def test_find_Dipole():
-    elem_kwargs = {'FullGap': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
-    elem_kwargs = {'FringeInt1': 0.5, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
-    elem_kwargs = {'FringeInt2': 0.5, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
-    elem_kwargs = {'gK': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
-    elem_kwargs = {'EntranceAngle': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
-    elem_kwargs = {'ExitAngle': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
-    elem_kwargs = {'BendingAngle': 0.1, 'PolynomB': [0, 0, 0, 0],
-                   'FamName': 'fam'}
+@pytest.mark.parametrize('elem_kwargs', (
+        {'FullGap': 0.05, 'FamName': 'fam'},
+        {'FringeInt1': 0.5, 'FamName': 'fam'},
+        {'FringeInt2': 0.5, 'FamName': 'fam'},
+        {'EntranceAngle': 0.05, 'FamName': 'fam'},
+        {'ExitAngle': 0.05, 'FamName': 'fam'},
+        {'PassMethod': 'BndMPoleSymplectic4Pass', 'PolynomB': [0, 0, 0, 0], 'FamName': 'fam'}
+))
+def test_find_Dipole(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'Dipole'
 
 
@@ -142,9 +136,14 @@ def test_find_Marker():
     assert find_class_name(elem_kwargs) == 'Marker'
 
 
-@pytest.mark.parametrize('class_name,pass_method', (
-('Drift', 'IdentityPass'), ('Drift', 'CavityPass'), ('Marker', 'Invalid'),
-('Monitor', 'Invalid'), ('Drift', 'Invalid'), ('RingParam', 'Invalid')))
-def test_sanitise_class_error(class_name, pass_method):
+@pytest.mark.parametrize('elem_kwargs', (
+        {'FamName': '', 'Class': 'Marker', 'PassMethod': 'IdentityPass', 'Length': 1.0},
+        {'FamName': '', 'Class': 'Quadrupole', 'PassMethod': 'CavityPass', 'Length': 1.0},
+        {'FamName': '', 'Class': 'Marker', 'PassMethod': 'Invalid'},
+        {'FamName': '', 'Class': 'Monitor', 'PassMethod': 'Invalid'},
+        {'FamName': '', 'Class': 'RingParam', 'PassMethod': 'Invalid', 'Energy': 3E9},
+        {'FamName': '', 'Class': 'Drift', 'PassMethod': 'IdentityPass', 'Length': 1.0}
+))
+def test_sanitise_class_error(elem_kwargs):
     with pytest.raises(AttributeError):
-        sanitise_class(class_name, {'PassMethod': pass_method})
+        elem = element_from_dict(elem_kwargs)
