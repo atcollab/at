@@ -72,7 +72,7 @@ def find_class_name(kwargs):
         if class_name in CLASSES:
             return class_name
         else:
-            raise AttributeError("Class {0} does not exist.".format(class_name))
+            raise AttributeError("Class {0} does not exist.\n{1}".format(class_name, kwargs))
     except KeyError:
         fam_name = kwargs.get('FamName')
         if fam_name in CLASSES:
@@ -142,7 +142,8 @@ def element_from_dict(elem_dict, index=None, check=True):
 
         def error_message(message, *args):
             location = '' if index is None else 'Error in element {0}: '.format(index)
-            return location + 'PassMethod {0} is not compatible with '.format(pass_method) + message.format(*args)
+            return ''.join((location, 'PassMethod {0} is not compatible with '.format(pass_method),
+                            message.format(*args), '\n{0}'.format(kwargs)))
 
         pass_method = kwargs.get('PassMethod')
         if pass_method is not None:
