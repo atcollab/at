@@ -43,7 +43,7 @@ def load_mat(filename, key=None, check=True, **kwargs):
     """
     m = scipy.io.loadmat(filename)
     if key is None:
-        matvars = [varname for varname in m if not varname.startwith('__')]
+        matvars = [varname for varname in m if not varname.startswith('__')]
         key = matvars[0] if (len(matvars) == 1) else 'RING'
     element_arrays = m[key].flat
     return Lattice([_load_element(i, elem[0][0], check=check) for (i, elem) in
