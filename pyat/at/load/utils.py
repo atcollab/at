@@ -1,11 +1,8 @@
 """
-Load lattice from Matlab file.
-
-This is working from a specific file and may not be general.
+Conversion utilities for creating pyat elements
 """
-import scipy.io
-from .lattice import elements
 import numpy
+from at.lattice import elements
 
 CLASS_MAPPING = {'Quad': 'Quadrupole', 'Sext': 'Sextupole', 'Bend': 'Dipole', 'AP': 'Aperture',
                  'RF': 'RFCavity', 'BPM': 'Monitor'}
@@ -169,26 +166,3 @@ def element_from_dict(elem_dict, index=None, check=True):
     elem_args = [elem_dict.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
     element = cl(*elem_args, **elem_dict)
     return element
-
-
-def load_element(index, element_array, check=True):
-    """Load what scipy produces into a pyat element object.
-    """
-    kwargs = {}
-    for field_name in element_array.dtype.fields:
-        # Remove any surplus dimensions in arrays.
-        data = numpy.squeeze(element_array[field_name])
-        # Convert strings in arrays back to strings.
-        if data.dtype.type is numpy.unicode_:
-            data = str(data)
-        kwargs[field_name] = data
-
-    return element_from_dict(kwargs, index=index, check=check)
-
-
-def load(filename, key='RING', check=True):
-    """Load a matlab at structure into a Python at list
-    """
-    m = scipy.io.loadmat(filename)
-    element_arrays = m[key].flat
-    return [load_element(i, elem[0][0], check=check) for (i, elem) in enumerate(element_arrays)]
