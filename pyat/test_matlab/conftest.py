@@ -4,6 +4,7 @@ between other modules.
 """
 import pytest
 import utils
+from at import Lattice
 from at.load import load_mat
 
 
@@ -22,4 +23,4 @@ def ml_lattice(engine):
 
 @pytest.fixture
 def py_lattice():
-    return load_mat(utils.LATTICE, keep_all=True)
+    return Lattice(load_mat(utils.LATTICE, key='RING'), keep_all=True)
