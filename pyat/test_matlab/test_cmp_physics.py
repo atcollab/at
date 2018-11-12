@@ -124,7 +124,7 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
     _compare_physdata(py_emit, ml_emit, fields)
 
 
-@pytest.mark.parametrize('dp', (0.0, 0.01, -0.01))
+@pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
 def test_parameters(engine, ml_lattice, py_lattice, dp):
 
     # Test perimeter
@@ -133,9 +133,9 @@ def test_parameters(engine, ml_lattice, py_lattice, dp):
     numpy.testing.assert_allclose(py_length, ml_length, rtol=1.E-8)
 
     # test energy loss
-    ml_energy, ml_periods, ml_voltage, ml_harms, ml_eloss = engine.atenergy(ml_lattice, nargout=5)
-    # numpy.testing.assert_allclose(py_lattice.voltage, ml_voltage, rtol=1.E-8)
-    # numpy.testing.assert_allclose(py_lattice.energy_loss, ml_eloss, rtol=1.E-8)
+    ml_energy, ml_periods, ml_voltage, ml_harms, ml_eloss = engine.pyproxy('atenergy', ml_lattice, nargout=5)
+    numpy.testing.assert_allclose(py_lattice.voltage, ml_voltage, rtol=1.E-8)
+    numpy.testing.assert_allclose(py_lattice.energy_loss, ml_eloss, rtol=1.E-6)
     assert py_lattice.energy == ml_energy
     assert py_lattice.periodicity == int(ml_periods)
     assert py_lattice.harmonic_number == int(ml_harms)
