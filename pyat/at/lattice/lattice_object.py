@@ -18,14 +18,14 @@ def _scan_list(descr, keep_all=False, **kwargs):
     """Extract the lattice attributes from an element list"""
     attrs = {'name': '', '_radiation_on': False}
     params = [elem for elem in descr if isinstance(elem, elements.RingParam)]
-    if len(params) > 0:
+    if params:
         # Set all RingParam attributes to the lattice object
         attrs.update(
             (Lattice._translate.get(key, key.lower()), value) for (key, value) in vars(params[0]).items()
             if key not in Lattice._ignore)
 
-    if not keep_all:
-        descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
+        if not keep_all:
+            descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
 
     for elem in descr:
         if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith('CavityPass'):
@@ -38,10 +38,10 @@ def _scan_list(descr, keep_all=False, **kwargs):
         # Guess energy from the Energy attribute of the elements
         # Look first in cavities
         energies = [elem.Energy for elem in descr if isinstance(elem, elements.RFCavity)]
-        if len(energies) == 0:
+        if not energies:
             # Then look in all elements
             energies = [elem.Energy for elem in descr if hasattr(elem, 'Energy')]
-        if len(energies) == 0:
+        if not energies:
             raise AtError('Energy not defined')
         energy = max(energies)
         if min(energies) < energy:
@@ -147,7 +147,7 @@ class Lattice(list):
     def harmonic_number(self):
         """Harmonic number"""
         harms = [elem.HarmNumber for elem in self if isinstance(elem, elements.RFCavity)]
-        return self.periodicity * harms[0] if len(harms) > 0 else None
+        return self.periodicity * harms[0] if harms else None
 
     @property
     def energy_loss(self):
