@@ -33,7 +33,7 @@ class Element(object):
                        EApertures=lambda v: _array(v, (2,)),
                        Energy=float,
                        )
-    
+
     entrance_fields = ['T1', 'R1']
     exit_fields = ['T2', 'R2']
 
@@ -312,7 +312,7 @@ class Dipole(Multipole):
                                      BendingAngle=BendingAngle,
                                      EntranceAngle=EntranceAngle,
                                      ExitAngle=ExitAngle, **kwargs)
-    
+
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
