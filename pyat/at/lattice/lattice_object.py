@@ -1,4 +1,7 @@
 """Lattice object"""
+
+__all__ = ['Lattice']
+
 import sys
 import copy
 import numpy
@@ -7,9 +10,8 @@ from warnings import warn
 from math import pi
 from . import elements, checktype, AtWarning, AtError
 from ..lattice import get_s_pos
-from ..physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44, find_m66, linopt, ohmi_envelope, get_mcf
-
-__all__ = ['Lattice']
+from ..physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44, \
+    find_m66, linopt, ohmi_envelope, get_mcf
 
 TWO_PI_ERROR = 1.E-4
 
@@ -21,14 +23,17 @@ def _scan_list(descr, keep_all=False, **kwargs):
     if params:
         # Set all RingParam attributes to the lattice object
         attrs.update(
-            (Lattice._translate.get(key, key.lower()), value) for (key, value) in vars(params[0]).items()
+            (Lattice._translate.get(key, key.lower()), value)
+            for (key, value) in vars(params[0]).items()
             if key not in Lattice._ignore)
 
         if not keep_all:
-            descr = [elem for elem in descr if not isinstance(elem, elements.RingParam)]
+            descr = [elem for elem in descr
+                     if not isinstance(elem, elements.RingParam)]
 
     for elem in descr:
-        if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith('CavityPass'):
+        if elem.PassMethod.endswith('RadPass') or elem.PassMethod.endswith(
+                'CavityPass'):
             attrs['_radiation_on'] = True
             break
 
@@ -37,20 +42,25 @@ def _scan_list(descr, keep_all=False, **kwargs):
     if attrs.get('energy') is None:
         # Guess energy from the Energy attribute of the elements
         # Look first in cavities
-        energies = [elem.Energy for elem in descr if isinstance(elem, elements.RFCavity)]
+        energies = [elem.Energy for elem in descr
+                    if isinstance(elem, elements.RFCavity)]
         if not energies:
             # Then look in all elements
-            energies = [elem.Energy for elem in descr if hasattr(elem, 'Energy')]
+            energies = [elem.Energy for elem in descr
+                        if hasattr(elem, 'Energy')]
         if not energies:
-            raise AtError('Energy not defined')
+            raise AtError('Lattice Energy is not defined')
         energy = max(energies)
         if min(energies) < energy:
-            warn(AtWarning('Inconsistent energy values, "Energy" set to {0}'.format(energy)))
+            warn(AtWarning(
+                'Inconsistent energy values, "Energy" set to {0}'.format(
+                    energy)))
         attrs['energy'] = energy
 
     if attrs.get('periodicity') is None:
         # Guess periodicity from the bending angle of the superperiod
-        theta = [elem.BendingAngle for elem in descr if isinstance(elem, elements.Dipole)]
+        theta = [elem.BendingAngle for elem in descr if
+                 isinstance(elem, elements.Dipole)]
         try:
             nbp = 2.0 * pi / sum(theta)
         except ZeroDivisionError:
@@ -59,7 +69,9 @@ def _scan_list(descr, keep_all=False, **kwargs):
         else:
             periodicity = int(round(nbp))
             if abs(periodicity - nbp) > TWO_PI_ERROR:
-                warn(AtWarning('non-integer number of cells: {0} -> {1}'.format(nbp, periodicity)))
+                warn(AtWarning(
+                    'Non-integer number of cells: {0} -> {1}'.format(
+                        nbp, periodicity)))
             attrs['periodicity'] = periodicity
 
     return descr, attrs
@@ -67,9 +79,11 @@ def _scan_list(descr, keep_all=False, **kwargs):
 
 class Lattice(list):
     """Lattice object
-    An AT lattice is a sequence of AT elements. This object accepts extended indexing"""
+    An AT lattice is a sequence of AT elements.
+    This object accepts extended indexing"""
 
-    _translate = dict(Energy='energy', Periodicity='periodicity', FamName='name')
+    _translate = {'Energy': 'energy', 'Periodicity': 'periodicity',
+                  'FamName': 'name'}
     _ignore = {'PassMethod', 'Length'}
 
     def __init__(self, descr=None, _scan=True, **kwargs):
@@ -80,10 +94,12 @@ class Lattice(list):
             elements:       sequence of AT elements
 
         KEYWORDS
-            keep_all        Keep RingParam elements in the lattice (default: False)
-            name            Name of the lattice (default: '')
-            energy          Energy of the lattice (default: taken from the elements)
-            periodicity     Number of periods (default: taken from the elements)
+            keep_all=False  if True, keep RingParam elements in the lattice
+            name=''         Name of the lattice
+            energy          Energy of the lattice
+                            (default: taken from the elements)
+            periodicity     Number of periods
+                            (default: taken from the elements)
 
             all other keywords will be set as Lattice attributes
         """
@@ -110,19 +126,35 @@ class Lattice(list):
             elems = super(Lattice, self).__getitem__(key)
         except TypeError:
             if isinstance(key, numpy.ndarray) and key.dtype == bool:
-                return Lattice((el for el, tst in zip(self, key) if tst), _scan=False, **vars(self))
+                return Lattice((el for el, tst in zip(self, key) if tst),
+                               _scan=False, **vars(self))
             else:
-                return Lattice((self[i] for i in key), _scan=False, **vars(self))
+                return Lattice((self[i] for i in key), _scan=False,
+                               **vars(self))
         else:
             if isinstance(elems, list):
                 elems = Lattice(elems, _scan=False, **vars(self))
             return elems
 
+    def __repr__(self):
+        at = ', '.join(
+            '{0}={1!r}'.format(key, val) for key, val in vars(self).items() if
+            not key.startswith('_'))
+        return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(), at)
+
+    def __str__(self):
+        at = ', '.join(
+            '{0}={1!r}'.format(key, val) for key, val in vars(self).items() if
+            not key.startswith('_'))
+        return 'Lattice(<{0} elements>, {1})'.format(len(self), at)
+
     def __add__(self, other):
-        return Lattice(super(Lattice, self).__add__(other), _scan=False, **vars(self))
+        return Lattice(super(Lattice, self).__add__(other), _scan=False,
+                       **vars(self))
 
     def __mul__(self, other):
-        return Lattice(super(Lattice, self).__mul__(other), _scan=False, **vars(self))
+        return Lattice(super(Lattice, self).__mul__(other), _scan=False,
+                       **vars(self))
 
     if sys.version_info < (3, 0):
         # This won't be defined if version is at least 3.0
@@ -140,13 +172,15 @@ class Lattice(list):
     @property
     def voltage(self):
         """Accelerating voltage"""
-        volts = [elem.Voltage for elem in self if isinstance(elem, elements.RFCavity)]
+        volts = [elem.Voltage for elem in self if
+                 isinstance(elem, elements.RFCavity)]
         return self.periodicity * sum(volts)
 
     @property
     def harmonic_number(self):
         """Harmonic number"""
-        harms = [elem.HarmNumber for elem in self if isinstance(elem, elements.RFCavity)]
+        harms = [elem.HarmNumber for elem in self if
+                 isinstance(elem, elements.RFCavity)]
         return self.periodicity * harms[0] if harms else None
 
     @property
@@ -155,7 +189,9 @@ class Lattice(list):
 
         Losses = Cgamma / 2pi * EGeV^4 * i2
         """
-        lenthe = numpy.array([(elem.Length, elem.BendingAngle) for elem in self if isinstance(elem, elements.Dipole)])
+        lenthe = numpy.array(
+            [(elem.Length, elem.BendingAngle) for elem in self if
+             isinstance(elem, elements.Dipole)])
         lendp = lenthe[:, 0]
         theta = lenthe[:, 1]
 
@@ -167,7 +203,8 @@ class Lattice(list):
         e_loss = cgamma / 2.0 / pi * pow(self.energy * 1.0E-9, 4) * i2 * 1.e9
         return e_loss
 
-    def _radiation_switch(self, cavity_func=None, dipole_func=None, quadrupole_func=None):
+    def _radiation_switch(self, cavity_func=None, dipole_func=None,
+                          quadrupole_func=None):
 
         def mod_elem(ring, checkfun, modfun):
             nb = 0
@@ -177,7 +214,8 @@ class Lattice(list):
             return nb
 
         def checkdipole(elem):
-            return isinstance(elem, elements.Dipole) and (elem.BendingAngle != 0.0)
+            return isinstance(elem, elements.Dipole) and (
+                    elem.BendingAngle != 0.0)
 
         if cavity_func is not None:
             n = mod_elem(self, checktype(elements.RFCavity), cavity_func)
@@ -189,7 +227,8 @@ class Lattice(list):
             n = mod_elem(self, checktype(elements.Quadrupole), quadrupole_func)
             print('{0} modified quadrupoles'.format(n))
 
-    def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto', quadrupole_pass=None):
+    def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
+                     quadrupole_pass=None):
         """
         Turn acceleration and radiation on
 
@@ -211,7 +250,8 @@ class Lattice(list):
             elif pass_method == 'auto':
                 def ff(elem):
                     if not elem.PassMethod.endswith('RadPass'):
-                        elem.PassMethod = ''.join((elem.PassMethod[:-4], 'RadPass'))
+                        elem.PassMethod = ''.join(
+                            (elem.PassMethod[:-4], 'RadPass'))
                         elem.Energy = self.energy
             else:
                 def ff(elem):
@@ -219,10 +259,12 @@ class Lattice(list):
                     elem.Energy = self.energy
             return ff
 
-        self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
+        self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass),
+                               repfunc(quadrupole_pass))
         self._radiation_on = True
 
-    def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto', quadrupole_pass=None):
+    def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto',
+                      quadrupole_pass=None):
         """
         Turn acceleration and radiation off
 
@@ -244,13 +286,15 @@ class Lattice(list):
             elif pass_method == 'auto':
                 def ff(elem):
                     if elem.PassMethod.endswith('RadPass'):
-                        elem.PassMethod = ''.join((elem.PassMethod[:-7], 'Pass'))
+                        elem.PassMethod = ''.join(
+                            (elem.PassMethod[:-7], 'Pass'))
             else:
                 def ff(elem):
                     elem.PassMethod = pass_method
             return ff
 
-        self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass), repfunc(quadrupole_pass))
+        self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass),
+                               repfunc(quadrupole_pass))
         self._radiation_on = False
 
     def linopt(self, *args, **kwargs):
