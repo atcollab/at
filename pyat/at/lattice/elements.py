@@ -34,8 +34,10 @@ class Element(object):
                        Energy=float,
                        )
 
-    entrance_fields = ['T1', 'R1']
-    exit_fields = ['T2', 'R2']
+    entrance_fields = ['T1', 'R1', 'EntranceAngle', 'FringeInt1',
+                       'FringeBendEntrance', 'FringeQuadEntrance']
+    exit_fields = ['T2', 'R2', 'ExitAngle', 'FringeInt2',
+                   'FringeBendExit', 'FringeQuadExit']
 
     def __init__(self, family_name, Length=0.0, PassMethod='IdentityPass',
                  **kwargs):
