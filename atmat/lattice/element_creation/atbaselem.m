@@ -22,7 +22,17 @@ if any(ab)
     if ~ab(1), elem.PolynomA=[]; end
     if ~ab(2), elem.PolynomB=[]; end
     if ~isfield(elem,'MaxOrder')
-        elem.MaxOrder=max([1 find(abs(elem.PolynomB)>0,1,'last') find(abs(elem.PolynomA)>0,1,'last')])-1;
+        MaxOrder1 = max([1 find(abs(elem.PolynomB)>0,1,'last') find(abs(elem.PolynomA)>0,1,'last')])-1;
+        MaxOrder2 = 0;
+        switch elem.Class
+            case 'Quadrupole'
+                MaxOrder2 = 1;
+            case 'Sextupole'
+                MaxOrder2 = 2;
+            case 'Multipole'
+                MaxOrder2 = 3;
+        end
+        elem.MaxOrder = max([MaxOrder1, MaxOrder2]);
     end
     la = length(elem.PolynomA);
     lb = length(elem.PolynomB);
