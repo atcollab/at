@@ -1,7 +1,6 @@
 import numpy
 import pytest
-from at import physics
-from at import load_mat
+from at import physics, load_mat
 from at import atpass
 
 
@@ -17,7 +16,7 @@ M44_MATLAB = numpy.array([[-0.66380202, 2.23414498, 0, 0],
 
 @pytest.fixture
 def ring():
-    ring = load_mat.load(LATTICE_FILE)
+    ring = load_mat(LATTICE_FILE)
     return ring
 
 
