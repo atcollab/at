@@ -1,7 +1,8 @@
 import at
 import numpy
 import pytest
-from at.load_mat import find_class_name, sanitise_class
+from at.load import find_class_name, element_from_dict
+from at.load import CLASSES, CLASS_MAPPING, FAMILY_MAPPING, PASSMETHOD_MAPPING
 
 
 def test_invalid_class_raises_AttributeError():
@@ -12,35 +13,35 @@ def test_invalid_class_raises_AttributeError():
 
 def test_correct_class_names():
     elem_kwargs = {'FamName': 'fam'}
-    for class_name in at.load_mat.CLASSES:
+    for class_name in CLASSES:
         elem_kwargs['Class'] = class_name
         assert find_class_name(elem_kwargs) == class_name
 
 
 def test_class_mapping():
     elem_kwargs = {'FamName': 'fam'}
-    for class_name in at.load_mat.CLASS_MAPPING.keys():
+    for class_name in CLASS_MAPPING.keys():
         elem_kwargs['Class'] = class_name
-        assert find_class_name(elem_kwargs) == at.load_mat.CLASS_MAPPING[class_name]
+        assert find_class_name(elem_kwargs) == CLASS_MAPPING[class_name]
 
 
 def test_family_mapping():
     elem_kwargs = {}
-    for family_name in at.load_mat.CLASSES:
+    for family_name in CLASSES:
         elem_kwargs['FamName'] = family_name
         assert find_class_name(elem_kwargs) == family_name
-    for family_name in at.load_mat.FAMILY_MAPPING.keys():
+    for family_name in FAMILY_MAPPING.keys():
         elem_kwargs['FamName'] = family_name
-        assert find_class_name(elem_kwargs) == at.load_mat.FAMILY_MAPPING[family_name]
+        assert find_class_name(elem_kwargs) == FAMILY_MAPPING[family_name]
         elem_kwargs['FamName'] = family_name.upper()
-        assert find_class_name(elem_kwargs) == at.load_mat.FAMILY_MAPPING[family_name]
+        assert find_class_name(elem_kwargs) == FAMILY_MAPPING[family_name]
 
 
 def test_PassMethod_mapping():
     elem_kwargs = {'FamName': 'fam'}
-    for pass_method in at.load_mat.PASSMETHOD_MAPPING.keys():
+    for pass_method in PASSMETHOD_MAPPING.keys():
         elem_kwargs['PassMethod'] = pass_method
-        assert find_class_name(elem_kwargs) == at.load_mat.PASSMETHOD_MAPPING[pass_method]
+        assert find_class_name(elem_kwargs) == PASSMETHOD_MAPPING[pass_method]
 
 
 def test_find_Aperture():
@@ -66,22 +67,16 @@ def test_find_Monitor():
     assert find_class_name(elem_kwargs) == 'Monitor'
 
 
-def test_find_Bend():
-    elem_kwargs = {'FullGap': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
-    elem_kwargs = {'FringeInt1': 0.5, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
-    elem_kwargs = {'FringeInt2': 0.5, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
-    elem_kwargs = {'gK': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
-    elem_kwargs = {'EntranceAngle': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
-    elem_kwargs = {'ExitAngle': 0.05, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
-    elem_kwargs = {'BendingAngle': 0.1, 'PolynomB': [0, 0, 0, 0],
-                   'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Bend'
+@pytest.mark.parametrize('elem_kwargs', (
+        {'FullGap': 0.05, 'FamName': 'fam'},
+        {'FringeInt1': 0.5, 'FamName': 'fam'},
+        {'FringeInt2': 0.5, 'FamName': 'fam'},
+        {'EntranceAngle': 0.05, 'FamName': 'fam'},
+        {'ExitAngle': 0.05, 'FamName': 'fam'},
+        {'PassMethod': 'BndMPoleSymplectic4Pass', 'PolynomB': [0, 0, 0, 0], 'FamName': 'fam'}
+))
+def test_find_Dipole(elem_kwargs):
+    assert find_class_name(elem_kwargs) == 'Dipole'
 
 
 def test_find_Corrector():
@@ -102,25 +97,15 @@ def test_find_M66():
 def test_find_Quadrupole():
     elem_kwargs = {'K': -0.5, 'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Quadrupole'
-    elem_kwargs = {'PolynomB': [0, -0.5, 0, 0], 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Quadrupole'
 
 
 def test_find_Multipole():
     elem_kwargs = {'PolynomB': [0, 0, 0, 0],
                    'PassMethod': 'StrMPoleSymplectic4Pass', 'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Multipole'
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
-                   'Length': 0, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Multipole'
 
 
 def test_find_Drift():
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0], 'BendingAngle': 0.0,
-                   'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Drift'
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0], 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Drift'
     elem_kwargs = {'Length': 1.0, 'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Drift'
 
@@ -128,16 +113,10 @@ def test_find_Drift():
 def test_find_Sextupole():
     elem_kwargs = {'PolynomB': [0, 0, 1, 0], 'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Sextupole'
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 1, 0, 0],
-                   'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Sextupole'
 
 
 def test_find_Octupole():
     elem_kwargs = {'PolynomB': [0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
-                   'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Octupole'
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 0, 0, 1],
                    'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Octupole'
 
@@ -146,11 +125,9 @@ def test_find_ThinMultipole():
     elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
                    'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'ThinMultipole'
-
-
-def test_find_Dipole():
-    elem_kwargs = {'BendingAngle': 0.1, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Dipole'
+    elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
+                   'Length': 0, 'FamName': 'fam'}
+    assert find_class_name(elem_kwargs) == 'ThinMultipole'
 
 
 def test_find_Marker():
@@ -160,22 +137,14 @@ def test_find_Marker():
     assert find_class_name(elem_kwargs) == 'Marker'
 
 
-def test_sanitise_class():
-    elem_kwargs = {'PassMethod': 'IdentityPass', 'Class': 'Drift'}
-    sanitise_class(elem_kwargs)
-    assert elem_kwargs['Class'] == 'Monitor'
-    elem_kwargs = {'PassMethod': 'CavityPass', 'Class': 'Drift'}
+@pytest.mark.parametrize('elem_kwargs', (
+        {'FamName': '', 'Class': 'Marker', 'PassMethod': 'IdentityPass', 'Length': 1.0},
+        {'FamName': '', 'Class': 'Quadrupole', 'PassMethod': 'CavityPass', 'Length': 1.0},
+        {'FamName': '', 'Class': 'Marker', 'PassMethod': 'Invalid'},
+        {'FamName': '', 'Class': 'Monitor', 'PassMethod': 'Invalid'},
+        {'FamName': '', 'Class': 'RingParam', 'PassMethod': 'Invalid', 'Energy': 3E9},
+        {'FamName': '', 'Class': 'Drift', 'PassMethod': 'IdentityPass', 'Length': 1.0}
+))
+def test_sanitise_class_error(elem_kwargs):
     with pytest.raises(AttributeError):
-        sanitise_class(elem_kwargs)
-    elem_kwargs = {'PassMethod': 'Invalid', 'Class': 'Marker'}
-    with pytest.raises(AttributeError):
-        sanitise_class(elem_kwargs)
-    elem_kwargs = {'PassMethod': 'Invalid', 'Class': 'Monitor'}
-    with pytest.raises(AttributeError):
-        sanitise_class(elem_kwargs)
-    elem_kwargs = {'PassMethod': 'Invalid', 'Class': 'Drift'}
-    with pytest.raises(AttributeError):
-        sanitise_class(elem_kwargs)
-    elem_kwargs = {'PassMethod': 'Invalid', 'Class': 'RingParam'}
-    with pytest.raises(AttributeError):
-        sanitise_class(elem_kwargs)
+        elem = element_from_dict(elem_kwargs)

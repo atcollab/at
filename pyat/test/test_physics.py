@@ -1,7 +1,7 @@
 import at
 import numpy
 import pytest
-from at import physics, load_mat, atpass, elements
+from at import physics, load, atpass
 
 
 LATTICE_FILE = '../atmat/atdemos/atmatchExamples/ExampleATMATCH/dba.mat'
@@ -17,13 +17,13 @@ M44_MATLAB = numpy.array([[-0.66380202, 2.23414498, 0, 0],
 
 @pytest.fixture
 def ring():
-    ring = load_mat.load(LATTICE_FILE)
+    ring = load.load_mat(LATTICE_FILE)
     return ring
 
 
 @pytest.fixture
 def cavity_ring():
-    ring = load_mat.load(CAVITY_FILE)
+    ring = load.load_mat(CAVITY_FILE)
     return ring
 
 
