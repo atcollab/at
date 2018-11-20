@@ -49,16 +49,13 @@ def test_find_Aperture():
     assert find_class_name(elem_kwargs) == 'Aperture'
 
 
-def test_find_RFCavity():
-    elem_kwargs = {'Voltage': 2.5e+6, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'RFCavity'
-    elem_kwargs = {'Frequency': 5.e+8, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'RFCavity'
-    elem_kwargs = {'HarmNumber': 1000, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'RFCavity'
-    elem_kwargs = {'PhaseLag': 0, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'RFCavity'
-    elem_kwargs = {'TimeLag': 0.0, 'FamName': 'fam'}
+@pytest.mark.parametrize('elem_kwargs', (
+        {'Voltage': 2.5e+6, 'FamName': 'fam'},
+        {'Frequency': 5.e+8, 'FamName': 'fam'},
+        {'HarmNumber': 1000, 'FamName': 'fam'},
+        {'PhaseLag': 0, 'FamName': 'fam'},
+        {'TimeLag': 0.0, 'FamName': 'fam'}))
+def test_find_RFCavity(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'RFCavity'
 
 
@@ -71,10 +68,9 @@ def test_find_Monitor():
         {'FullGap': 0.05, 'FamName': 'fam'},
         {'FringeInt1': 0.5, 'FamName': 'fam'},
         {'FringeInt2': 0.5, 'FamName': 'fam'},
+        {'gK': 0.03, 'FamName': 'fam'},
         {'EntranceAngle': 0.05, 'FamName': 'fam'},
-        {'ExitAngle': 0.05, 'FamName': 'fam'},
-        {'PassMethod': 'BndMPoleSymplectic4Pass', 'PolynomB': [0, 0, 0, 0], 'FamName': 'fam'}
-))
+        {'ExitAngle': 0.05, 'FamName': 'fam'}))
 def test_find_Dipole(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'Dipole'
 
@@ -94,19 +90,23 @@ def test_find_M66():
     assert find_class_name(elem_kwargs) == 'M66'
 
 
-def test_find_Quadrupole():
-    elem_kwargs = {'K': -0.5, 'FamName': 'fam'}
+@pytest.mark.parametrize('elem_kwargs', (
+        {'K': -0.5, 'FamName': 'fam'},
+        {'PolynomB': [0, 1, 0, 0], 'FamName': 'fam'}))
+def test_find_Quadrupole(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'Quadrupole'
 
 
-def test_find_Multipole():
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0],
-                   'PassMethod': 'StrMPoleSymplectic4Pass', 'FamName': 'fam'}
+@pytest.mark.parametrize('elem_kwargs', (
+        {'PolynomB': [0, 0, 0, 0], 'PassMethod': 'StrMPoleSymplectic4Pass',
+         'FamName': 'fam'},
+        {'PolynomB': [0, 0, 0, 0], 'Length': 1, 'FamName': 'fam'}))
+def test_find_Multipole(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'Multipole'
 
 
 def test_find_Drift():
-    elem_kwargs = {'Length': 1.0, 'FamName': 'fam'}
+    elem_kwargs = {'Length': 1, 'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Drift'
 
 
@@ -116,35 +116,38 @@ def test_find_Sextupole():
 
 
 def test_find_Octupole():
-    elem_kwargs = {'PolynomB': [0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
-                   'FamName': 'fam'}
+    elem_kwargs = {'PolynomB': [0, 0, 0, 1], 'FamName': 'fam'}
     assert find_class_name(elem_kwargs) == 'Octupole'
 
 
-def test_find_ThinMultipole():
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
-                   'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'ThinMultipole'
-    elem_kwargs = {'PolynomB': [0, 0, 0, 0, 1], 'PolynomA': [0, 0, 0, 0],
-                   'Length': 0, 'FamName': 'fam'}
+@pytest.mark.parametrize('elem_kwargs', (
+        {'PolynomB': [0, 0, 0, 0], 'FamName': 'fam'},
+        {'PolynomB': [0, 0, 0, 0, 1], 'FamName': 'fam'},
+        {'PolynomB': [0, 0, 0, 0], 'FamName': 'fam'},
+        {'PolynomB': [0, 0, 0, 0, 1], 'Length': 0, 'FamName': 'fam'}))
+def test_find_ThinMultipole(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'ThinMultipole'
 
 
-def test_find_Marker():
-    elem_kwargs = {'Length': 0.0, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs) == 'Marker'
-    elem_kwargs = {'FamName': 'fam'}
+@pytest.mark.parametrize('elem_kwargs', ({'FamName': 'fam'},
+                                         {'Length': 0.0, 'FamName': 'fam'}))
+def test_find_Marker(elem_kwargs):
     assert find_class_name(elem_kwargs) == 'Marker'
 
 
 @pytest.mark.parametrize('elem_kwargs', (
-        {'FamName': '', 'Class': 'Marker', 'PassMethod': 'IdentityPass', 'Length': 1.0},
-        {'FamName': '', 'Class': 'Quadrupole', 'PassMethod': 'CavityPass', 'Length': 1.0},
-        {'FamName': '', 'Class': 'Marker', 'PassMethod': 'Invalid'},
-        {'FamName': '', 'Class': 'Monitor', 'PassMethod': 'Invalid'},
-        {'FamName': '', 'Class': 'RingParam', 'PassMethod': 'Invalid', 'Energy': 3E9},
-        {'FamName': '', 'Class': 'Drift', 'PassMethod': 'IdentityPass', 'Length': 1.0}
-))
+        {'Class': 'Marker', 'PassMethod': 'IdentityPass', 'Length': 1,
+         'FamName': 'fam'},
+        {'Class': 'Quadrupole', 'PassMethod': 'CavityPass', 'Length': 1,
+         'FamName': 'fam'},
+        {'Class': 'Marker', 'PassMethod': 'StrMPoleSymplectic4Pass',
+         'FamName': 'fam'},
+        {'Class': 'Monitor', 'PassMethod': 'StrMPoleSymplectic4Pass',
+         'FamName': 'fam'},
+        {'Class': 'RingParam', 'PassMethod': 'StrMPoleSymplectic4Pass',
+         'Energy': 3E9, 'FamName': 'fam'},
+        {'Class': 'Drift', 'PassMethod': 'StrMPoleSymplectic4Pass',
+         'Length': 1.0, 'FamName': 'fam'}))
 def test_sanitise_class_error(elem_kwargs):
     with pytest.raises(AttributeError):
         elem = element_from_dict(elem_kwargs)

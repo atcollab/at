@@ -95,7 +95,7 @@ def find_class_name(kwargs):
                     return 'M66'
                 elif hasattrs(kwargs, 'K'):
                     return 'Quadrupole'
-                elif hasattrs(kwargs, 'PolynomB'):
+                elif hasattrs(kwargs, 'PolynomB', 'PolynomA'):
                     loworder = low_order('PolynomB')
                     if loworder == 1:
                         return 'Quadrupole'
