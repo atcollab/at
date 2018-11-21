@@ -3,9 +3,24 @@
    A.Terebilo terebilo@ssrl.slac.stanford.edu
 */
 
-#include "at.h"
+#include "atelem.c"
 #include "atlalib.c"
 #include "driftkick.c"
+
+struct elem 
+{
+    double *PolynomA;
+    double *PolynomB;
+    int MaxOrder;
+    double BendingAngle;
+    /* Optional fields */
+    double bax;
+    double bay;
+    double *R1;
+    double *R2;
+    double *T1;
+    double *T2;
+};
 
 void ThinMPolePass(double *r, double *A, double *B, int max_order,
         double bax, double bay,
@@ -16,140 +31,95 @@ void ThinMPolePass(double *r, double *A, double *B, int max_order,
     double *r6;
     for (c = 0;c<num_particles;c++)	{ /* Loop over particles */
         r6 = r+c*6;
-        if(!mxIsNaN(r6[0])) {
+        if (!atIsNaN(r6[0])) {
             /*  misalignment at entrance  */
-            if (T1 != NULL) ATaddvv(r6,T1);
-            if (R1 != NULL) ATmultmv(r6,R1);
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             strthinkick(r6, A, B, 1.0, max_order);
             r6[1] += bax*r6[4];
             r6[3] -= bay*r6[4];
             r6[5] -= bax*r6[0]-bay*r6[2]; /* Path lenghtening */
             /*  misalignment at exit  */
-            if (R2 != NULL) ATmultmv(r6,R2);
-            if (T2 != NULL) ATaddvv(r6,T2);
+            if (R2) ATmultmv(r6,R2);
+            if (T2) ATaddvv(r6,T2);
         }
     }
+}
+
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+			      double *r_in, int num_particles, struct parameters *Param)
+{
+    if (!Elem) {
+        double bax = 0.0, bay = 0.0;
+        int MaxOrder;
+        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2;
+        int nl, nc;
+        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        /*optional fields*/
+        BendingAngle=atGetOptionalDoubleArraySz(ElemData,"BendingAngle", &nl, &nc); check_error();
+        if (BendingAngle) {
+            int sz = nl*nc;
+            if (sz >= 2) bay = BendingAngle[1];
+            if (sz >= 1) bax = BendingAngle[0];
+        }
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->PolynomA=PolynomA;
+        Elem->PolynomB=PolynomB;
+        Elem->MaxOrder=MaxOrder;
+        /*optional fields*/
+        Elem->bax=bax;
+        Elem->bay=bay;
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+    }
+    ThinMPolePass(r_in, Elem->PolynomA, Elem->PolynomB, Elem->MaxOrder,
+            Elem->bax, Elem->bay, Elem->T1, Elem->T2, Elem->R1, Elem->R2, num_particles);
+    return Elem;
 }
 
 MODULE_DEF(ThinMPolePass)        /* Dummy module initialisation */
 
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
 #ifdef MATLAB_MEX_FILE
-
-#include "elempass.h"
-#include "mxutils.c"
-
-ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
-								double *r_in, int num_particles, int mode)
-
-#define NUM_FIELDS_2_REMEMBER 8
-
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    double *A , *B, bax, bay;
-    double  *pr1, *pr2, *pt1, *pt2;
-    int max_order;
-    
-    switch(mode) {
-        /* case NO_LOCAL_COPY:	Not used in AT1.3 */
-        
-        case MAKE_LOCAL_COPY: 	/* Find field numbers first
-                                    Save a list of field number in an array
-                                    and make returnptr point to that array
-                                */
-            /* Allocate memory for integer array of
-             * field numbers for faster futurereference
-             */
-            
-            FieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-            
-            /* Populate */
-            
-            FieldNumbers[0] = GetRequiredFieldNumber(ElemData, "PolynomA");
-            FieldNumbers[1] = GetRequiredFieldNumber(ElemData, "PolynomB");
-            FieldNumbers[2] = GetRequiredFieldNumber(ElemData, "MaxOrder");
-            
-            /* Optional fields */
-            FieldNumbers[3] = mxGetFieldNumber(ElemData,"BendingAngle");
-            FieldNumbers[4] = mxGetFieldNumber(ElemData,"R1");
-            FieldNumbers[5] = mxGetFieldNumber(ElemData,"R2");
-            FieldNumbers[6] = mxGetFieldNumber(ElemData,"T1");
-            FieldNumbers[7] = mxGetFieldNumber(ElemData,"T2");
-            
-        case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-         * The second argument ponter to the array of field
-         * numbers is previously created with
-         * QuadLinPass( ..., MAKE_LOCAL_COPY)
-         */
-            
-            A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-            B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-            max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-            if (FieldNumbers[3] >= 0) {
-                mxArray *tmpmxptr = mxGetFieldByNumber(ElemData,0,FieldNumbers[3]);
-                double *tmpdblptr = mxGetPr(tmpmxptr);
-                bax = tmpdblptr[0];
-                bay = (mxGetNumberOfElements(tmpmxptr)>1) ? tmpdblptr[1] : 0.0;
-            }
-            else {
-                bax = 0.0;
-                bay = 0.0;
-            }
-            /* Optional fields */
-            pr1 = (FieldNumbers[4] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-            pr2 = (FieldNumbers[5] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-            pt1 = (FieldNumbers[6] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-            pt2 = (FieldNumbers[7] < 0) ? NULL : mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
-            break;
-        default:
-            mexErrMsgTxt("No match for calling mode in function ThinMPolePass\n");
-    }
-    
-    ThinMPolePass(r_in,A, B, max_order, bax, bay, pt1, pt2, pr1, pr2, num_particles);
-    
-    return FieldNumbers;
-    
-}
-
-void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{
-    if (nrhs == 2) {
+    if (nrhs == 2 ) {
         double *r_in;
-        double bax, bay, *pr1, *pr2, *pt1, *pt2 ;
-        mxArray *tmpmxptr;
-        
-        double *A = mxGetPr(GetRequiredField(prhs[0], "PolynomA"));
-        double *B = mxGetPr(GetRequiredField(prhs[0], "PolynomB"));
-        int max_order = (int) mxGetScalar(GetRequiredField(prhs[0], "MaxOrder"));
+        const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
-                
-        /* Optional arguments */
-        tmpmxptr = mxGetField(prhs[0],0,"BendingAngle");
-        if (tmpmxptr) {
-            double *tmpdblptr = mxGetPr(tmpmxptr);
-            bax = tmpdblptr[0];
-            bay = (mxGetNumberOfElements(tmpmxptr)>1) ? tmpdblptr[1] : 0.0;
+        double bax = 0.0, bay = 0.0;
+        int MaxOrder;
+        double *PolynomA, *PolynomB, *BendingAngle, *R1, *R2, *T1, *T2;
+        int nl, nc;
+        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
+        /*optional fields*/
+        BendingAngle=atGetOptionalDoubleArraySz(ElemData,"BendingAngle", &nl, &nc); check_error();
+        if (BendingAngle) {
+            int sz = nl*nc;
+            if (sz >= 2) bay = BendingAngle[1];
+            if (sz >= 1) bax = BendingAngle[0];
         }
-        else {
-            bax = 0;
-            bay = 0;
-        }
-        tmpmxptr = mxGetField(prhs[0],0,"R1");
-        pr1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"R2");
-        pr2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"T1");
-        pt1 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"T2");
-        pt2 = tmpmxptr ? mxGetPr(tmpmxptr) : NULL;
-
-        /* ALLOCATE memory for the output array of the same size as the input */
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
-        ThinMPolePass(r_in, A, B, max_order, bax, bay,
-                pt1, pt2, pr1, pr2, num_particles);
+        r_in = mxGetDoubles(plhs[0]);
+        ThinMPolePass(r_in, PolynomA, PolynomB, MaxOrder,
+            bax, bay, T1, T2, R1, R2, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
@@ -157,7 +127,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],0,mxCreateString("PolynomA"));
         mxSetCell(plhs[0],1,mxCreateString("PolynomB"));
         mxSetCell(plhs[0],2,mxCreateString("MaxOrder"));
-        if(nlhs>1) {
+        
+        if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(5,1);
             mxSetCell(plhs[1],0,mxCreateString("BendingAngle"));
@@ -170,6 +141,5 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
-    
 }
-#endif
+#endif /* MATLAB_MEX_FILE */

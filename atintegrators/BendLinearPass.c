@@ -241,7 +241,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         BendLinearPass(r_in,Length,K,BendingAngle,ByError,
                 EntranceAngle,ExitAngle,FringeInt1,FringeInt2,
                 FullGap,T1,T2,R1,R2,num_particles);

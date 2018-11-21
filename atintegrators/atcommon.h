@@ -8,18 +8,25 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
 
+#define STR(name) XSTR(name)
+#define XSTR(name) #name
 #if PY_MAJOR_VERSION >= 3
-#define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+#define MOD_INIT_STR(name) PyInit_##name(void)
 #define MOD_ERROR_VAL NULL
+#define MOD_SUCCESS_VAL(val) val
 #define NUMPY_IMPORT_ARRAY_RETVAL NULL
 #define NUMPY_IMPORT_ARRAY_TYPE void *
 #else
-#define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
+#define MOD_INIT_STR(name) init##name(void)
 #define MOD_ERROR_VAL
+#define MOD_SUCCESS_VAL(val)
 #define NUMPY_IMPORT_ARRAY_RETVAL
 #define NUMPY_IMPORT_ARRAY_TYPE void
 #define PyLong_AsLong PyInt_AsLong
-#endif
+#endif /*PY_MAJOR_VERSION*/
+#define MOD_INIT(name) MOD_INIT_STR(name)
+
+
 #if defined(_WIN32)    /* Create a dummy module initialisation function for Windows */
 #define MODULE_DEF(name) MOD_INIT(name) {return MOD_ERROR_VAL;}
 #endif /* _WIN32 */
@@ -49,6 +56,12 @@
 /* Matlab only */
 #include <mex.h>
 #include <matrix.h>
+
+/* Get ready for R2018a C matrix API */
+#ifndef mxGetDoubles
+#define mxGetDoubles mxGetPr
+typedef double mxDouble;
+#endif
 
 #else
 

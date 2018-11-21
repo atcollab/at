@@ -2,7 +2,7 @@
  * This file contains the Python interface to AT, compatible with Python
  * 2 and 3. It provides a module 'atpass' containing one method 'atpass'.
  */
-
+#include <stdarg.h>
 #include <Python.h>
 #include "attypes.h"
 
@@ -79,6 +79,16 @@ static PyObject *print_error(int elem_number, PyObject *rout)
     return NULL;
 }
 
+static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
+{
+    char buffer[132];
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf(buffer, fmt, ap);
+    PyErr_SetString(errtype, buffer);
+    va_end(ap);
+    return NULL;
+}
 /*
  * Recursively search the list to check if the library containing
  * method_name is already loaded. If it is - return the pointer to the
@@ -197,13 +207,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     unsigned int nextrefindex;
     unsigned int num_refpts;
     unsigned int reuse=0;
-    npy_intp outdims[2];
+    npy_intp outdims[4];
     int turn;
     struct parameters param;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!I", kwlist, &PyList_Type, &lattice,
         &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse)) {
-        PyErr_SetString(PyExc_ValueError, "Failed to parse arguments to atpass");
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -228,26 +237,18 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             PyErr_SetString(PyExc_ValueError, "refpts is not a uint32 array");
             return NULL;
         }
-        if ((PyArray_FLAGS(refs) & NPY_ARRAY_CARRAY_RO) != NPY_ARRAY_CARRAY_RO) {
-            PyErr_SetString(PyExc_ValueError, "refpts is not C aligned");
-            return NULL;
-        }
         refpts = PyArray_DATA(refs);
-        /* empty array for refpts means only get tracking at the last turn */
         num_refpts = PyArray_SIZE(refs);
-        if (num_refpts == 0)
-            outdims[1] = num_particles;
-        else
-            outdims[1] = num_turns*num_refpts*num_particles;
     }
     else {
-        /* no argument provided for refpts means get tracking at the end of each turn */
-        refpts = &num_elements;
-        num_refpts = 1;
-        outdims[1] = num_turns*num_particles;
+        refpts = NULL;
+        num_refpts = 0;
     }
     outdims[0] = 6;
-    rout = PyArray_EMPTY(2, outdims, NPY_DOUBLE, 1);
+    outdims[1] = num_particles;
+    outdims[2] = num_refpts;
+    outdims[3] = num_turns;
+    rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
     if (!reuse) new_lattice = 1;
@@ -291,7 +292,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         }
         new_lattice = 0;
     }
-    printf("Simulating %u particles for %u turns through %u elements.\n", num_particles, num_turns, num_elements);
 
     param.RingLength = lattice_length;
     param.T0 = lattice_length/299792458.0;
@@ -319,24 +319,78 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             drout += np6; /*  shift the location to write to in the output array */
         }
     }
-    /* only the last turn requested */
-    if (num_refpts == 0) {
-        memcpy(drout, drin, np6*sizeof(double));
-        drout += np6; /*  shift the location to write to in the output array */
-    }
     return rout;
 }
 
+static PyObject *at_elempass(PyObject *self, PyObject *args)
+{
+    PyObject *element;
+    PyArrayObject *rin;
+    PyObject *PyPassMethod;
+    npy_uint32 num_particles;
+    track_function fn_handle;
+    double *drin;
+    struct parameters param;
+    struct elem *elem_data = NULL;
+
+    if (!PyArg_ParseTuple(args, "OO!", &element,  &PyArray_Type, &rin)) {
+        return NULL;
+    }
+    if (PyArray_DIM(rin,0) != 6) {
+        return set_error(PyExc_ValueError, "rin is not 6D");
+    }
+    if (PyArray_TYPE(rin) != NPY_DOUBLE) {
+        return set_error(PyExc_ValueError, "rin is not a double array");
+    }
+    if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
+        return set_error(PyExc_ValueError, "rin is not Fortran-aligned");
+    }
+    num_particles = (PyArray_SIZE(rin)/6);
+    drin = PyArray_DATA(rin);
+
+    param.RingLength = 0.0;
+    param.T0 = 0.0;
+    param.nturn = 0;
+
+    PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
+    if (!PyPassMethod)
+        return NULL;
+    fn_handle = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
+    if (!fn_handle)
+        return NULL;
+    elem_data = fn_handle(element, elem_data, drin, num_particles, &param);
+    if (!elem_data)
+        return NULL;
+    free(elem_data);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 /* Boilerplate to register methods. */
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("atpass(line, rin, nturns, refpts=None, reuse=False)\n\n"
+    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False)\n\n"
               "Track input particles rin along line for nturns turns.\n"
-              "Record 6D phase space at elements corresponding to refpts for each turn.\n"
-              "If reuse, use previously cached details for the lattice.\n"
+              "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
+              "line:    list of elements\n"
+              "rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "         On return, rin contains the final coordinates of the particles\n"
+              "n_turns: number of turns to be tracked\n"
+              "refpts:  numpy array of indices of elements where output is desired\n"
+              "         0 means entrance of the first element\n"
+              "         len(line) means end of the last element\n"
+              "reuse:   if True, use previously cached description of the lattice.\n\n"
+              "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
+              "         of particle coordinates\n"
               )},
-    {NULL, NULL, 0, NULL}        /* Sentinel */
+    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS,
+    PyDoc_STR("rout = elempass(element, rin)\n\n"
+              "Track input particles rin through a single element.\n\n"
+              "element: AT element\n"
+              "rin:     6 x n_particles Fortran-ordered numpy array.\n"
+              "         On return, rin contains the final coordinates of the particles\n"
+             )},
+   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 MOD_INIT(atpass)

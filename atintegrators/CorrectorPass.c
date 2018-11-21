@@ -6,7 +6,13 @@
    Length, KickAngle
 */
 
-#include "at.h"
+#include "atelem.c"
+
+struct elem
+{
+    double Length;
+    double *KickAngle;
+};
 
 void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int num_particles)
 /* xkick, ykick - horizontal and vertical kicks in radiand 
@@ -18,7 +24,7 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
 	if (len==0)
 	    for(c = 0;c<num_particles;c++) {
 	        c6 = c*6;
-		    if(!mxIsNaN(r_in[c6])) {
+		    if(!atIsNaN(r_in[c6])) {
 		        r_in[c6+1] += xkick;
    		        r_in[c6+3] += ykick; 		    
    		    }
@@ -27,7 +33,7 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD*10) default(shared) shared(r_in,num_particles) private(c,c6)
         for(c = 0;c<num_particles;c++) {
             c6 = c*6;
-		    if(!mxIsNaN(r_in[c6])) {
+		    if(!atIsNaN(r_in[c6])) {
 		        p_norm = 1/(1+r_in[c6+4]);
 			    NormL  = len*p_norm;
 	            r_in[c6+5] += NormL*p_norm*(xkick*xkick/3 + ykick*ykick/3 +
@@ -42,102 +48,49 @@ void CorrectorPass(double *r_in, double xkick, double ykick, double len,  int nu
 		}	
 }
 
-MODULE_DEF(CorrectorPass)        /* Dummy module initialisation */
-
-#ifdef MATLAB_MEX_FILE
-
-#include "elempass.h"
-#define NUM_FIELDS_2_REMEMBER 2
-
-ExportMode int* passFunction(const mxArray *ElemData,int *FieldNumbers,
-				double *r_in, int num_particles, int mode)
-
-
-
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+        double *r_in, int num_particles, struct parameters *Param)
 {
-    double *kickptr;
-    double le;
-	int *returnptr;
-	int *NewFieldNumbers, fnum;
-	switch (mode) {
-			case MAKE_LOCAL_COPY: 	/* Find field numbers first
-										Save a list of field number in an array
-										and make returnptr point to that array
-									*/
-                NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-
-                fnum = mxGetFieldNumber(ElemData,"KickAngle");
-                if(fnum<0)
-                    mexErrMsgTxt("Required field 'KickAngle' was not found in the element data structure");
-                NewFieldNumbers[0] = fnum;
-
-                fnum = mxGetFieldNumber(ElemData,"Length");
-                if(fnum<0)
-                    mexErrMsgTxt("Required field 'Length' was not found in the element data structure");
-                NewFieldNumbers[1] = fnum;
-
-                kickptr = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[0]));
-                le = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[1]));
-                returnptr = NewFieldNumbers;
-				break;
-
-			case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-										The second argument ponter to the array of field 
-										numbers is previously created with 
-										QuadLinPass( ..., MAKE_LOCAL_COPY)
-									*/
-                kickptr = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-                le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-                returnptr = FieldNumbers;
-                break;
-			default:
-				mexErrMsgTxt("No match for calling mode in function CorrectorPass\n");
-	}
-	CorrectorPass(r_in, kickptr[0], kickptr[1], le, num_particles);
-	return returnptr;
+    if (!Elem) {
+        double Length;
+        double *KickAngle;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        KickAngle=atGetDoubleArray(ElemData, "KickAngle"); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=Length;
+        Elem->KickAngle = KickAngle;
+    }
+	CorrectorPass(r_in, Elem->KickAngle[0], Elem->KickAngle[1], Elem->Length, num_particles);
+    return Elem;
 }
 
+MODULE_DEF(CorrectorPass)        /* Dummy module initialisation */
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
+#ifdef MATLAB_MEX_FILE
 void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    double *kickptr,le;
-	int m,n;
-	double *r_in;   
-	mxArray *tmpmxptr;
-	
-	if(nrhs) {
-	/* ALLOCATE memory for the output array of the same size as the input */
-	m = mxGetM(prhs[1]);
-	n = mxGetN(prhs[1]);
-	if(m!=6)
-		mexErrMsgTxt("Second argument must be a 6 x N matrix");
-   
-	
-	tmpmxptr=mxGetField(prhs[0],0,"KickAngle");
-	if(tmpmxptr)
-        kickptr = mxGetPr(tmpmxptr);
-    else
-		mexErrMsgTxt("Required field 'KickAngle' was not found in the element data structure"); 
-
-				
-	tmpmxptr=mxGetField(prhs[0],0,"Length");
-	if(tmpmxptr)
-		le = mxGetScalar(tmpmxptr);
-	else
-		mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-
-	
-	plhs[0] = mxDuplicateArray(prhs[1]);
-	r_in = mxGetPr(plhs[0]);
-	CorrectorPass(r_in, kickptr[0], kickptr[1],le, n);	
-    }
-    else {   /* return list of required fields */
+    if (nrhs == 2) {
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[1]);
+        double Length;
+        double *KickAngle;
+        Length=atGetDouble(ElemData,"Length"); check_error();
+        KickAngle=atGetDoubleArray(ElemData, "KickAngle"); check_error();
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetDoubles(plhs[0]);
+        CorrectorPass(r_in, KickAngle[0], KickAngle[1], Length, num_particles);
+      }
+    else {
 	    plhs[0] = mxCreateCellMatrix(2,1);
 	    mxSetCell(plhs[0],0,mxCreateString("Length"));
 	    mxSetCell(plhs[0],1,mxCreateString("KickAngle"));
 	    if(nlhs>1) /* Required and optional fields */ 
 	    {   plhs[1] = mxCreateCellMatrix(0,0); /* No optional fields */
 	    }
-	}
+    }
 }
-#endif
+#endif /*MATLAB_MEX_FILE*/

@@ -238,7 +238,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         StrMPoleSymplectic4QuantPass(r_in,Length,PolynomA,PolynomB,MaxOrder,NumIntSteps,
                 FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
                 T1,T2,R1,R2,RApertures,EApertures,KickAngle,Energy,num_particles);

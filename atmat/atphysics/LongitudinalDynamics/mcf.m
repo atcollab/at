@@ -6,18 +6,16 @@ function a = mcf(RING,dp0)
 
 if nargin < 2, dp0=0; end
 ddp = 0.000001;
-fp0 = findorbit4(RING,dp0);
-fp = findorbit4(RING,dp0+ddp);
+fpdown = findorbit4(RING,dp0-0.5*ddp);
+fpup = findorbit4(RING,dp0+0.5*ddp);
 % Build initial condition vector that starts
 % on the fixed point
-X0dP = fp;
-X0dP(5) = ddp;
-X0dP(6) = 0;
 
-X0 = [fp0;0;0];
+Xdown = [fpdown;dp0-0.5*ddp;0];
+Xup = [fpup;dp0+0.5*ddp;0];
 
 % Track X0 for 1 turn
-T = ringpass(RING,[X0 X0dP]);
+T = ringpass(RING,[Xdown Xup]);
 % Calculate alpha
 RingLength = findspos(RING,length(RING)+1);
 a = (T(6,2)-T(6,1))/(ddp*RingLength);

@@ -29,6 +29,20 @@ function [newring,newringrad] = atfastring(ring0,varargin)
 
 global GLOBVAL
 
+I_cav = findcells(ring0,'Frequency');
+ring_temp = ring0;
+for i = 1:length(I_cav)
+    if ring_temp{I_cav(i)}.Length ~= 0
+        CavElement = ring_temp{I_cav(i)};
+        CavDrift = atdrift('CavDrift',CavElement.Length);
+        ring_temp{I_cav(i)} = CavDrift;
+        CavElement.Length = 0;
+        ring_temp = atinsertelems(ring_temp,I_cav(i),0.5,CavElement);
+        I_cav(i+1:end) = I_cav(i+1:end)+2;
+    end
+end
+ring0 = ring_temp;
+
 [doplot,varargin]=getflag(varargin,'Plot');
 split=getargs(varargin,{[]});
 if nargin < 2

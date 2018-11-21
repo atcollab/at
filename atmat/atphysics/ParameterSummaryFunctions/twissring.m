@@ -51,60 +51,10 @@ function [TD, varargout] = twissring(RING,DP,varargin)
 % See also TWISSLINE, LINOPT, TUNECHROM.
 
 NE=length(RING);
-DDP_default = 1e-8;
 % Process input arguments
-switch nargin
-case 2
-    REFPTS=NE+1;
-    CHROMFLAG=0;
-case 3 
-    if isnumeric(varargin{1})
-        REFPTS = varargin{1};
-        CHROMFLAG = 0;
-    elseif ischar(varargin{1}) & strncmp(lower(varargin{1}),'chrom',5)
-        CHROMFLAG = 1;
-        REFPTS = NE+1;
-        DDP = DDP_default;
-    else
-        error('Third argument must be a numeric array or string');
-    end
-case 4
-    if isnumeric(varargin{1})
-        REFPTS = varargin{1};
-        if ischar(varargin{2}) & strncmp(lower(varargin{2}),'chrom',5)
-            CHROMFLAG = 1;
-            DDP = DDP_default;
-        else
-            error('Fourth argument - wrong type');
-        end
-    elseif ischar(varargin{1}) & strncmp(lower(varargin{1}),'chrom',5)
-        CHROMFLAG = 1;
-        REFPTS = NE+1;
-        if isnumeric(varargin{2})
-            DDP = varargin{2};
-        else
-            error('Fourth argument - wrong type');
-        end
-    end
-case 5
-    if isnumeric(varargin{1})
-        REFPTS = varargin{1};
-    else
-        error('Third argument - wrong type');
-    end
-    if ischar(varargin{2}) & strncmp(lower(varargin{2}),'chrom',5)
-         CHROMFLAG = 1;
-    else
-         error('Fourth argument - wrong type');
-    end
-    if isnumeric(varargin{3})
-        DDP = varargin{3};
-    else
-        error('Fifth argument - wrong type');
-    end
-otherwise
-    error('Wrong number of arguments');
-end
+[CHROMFLAG,args]=getflag(varargin,'chrom');
+[REFPTS,DDP]=getargs(args,{NE+1,1.e-8});
+CHROMFLAG=CHROMFLAG || (nargout == 3);
 
 % Include the endpoint if it is not already in REFPTS
 if REFPTS(end)==NE+1
@@ -112,9 +62,6 @@ if REFPTS(end)==NE+1
 else
     [M44, MS, orb] = findm44(RING,DP,[REFPTS,NE+1]);
 end
-
-
-
 
 cos_mu_x = (M44(1,1)+M44(2,2))/2;
 cos_mu_y = (M44(3,3)+M44(4,4))/2;
@@ -142,7 +89,7 @@ MY = atan(squeeze(MS(3,4,:)./(MS(3,3,:)*by-MS(3,4,:)*ay)));
 MX = BetatronPhaseUnwrap(MX);
 MY = BetatronPhaseUnwrap(MY);
 
-tune = [MX(end),MY(end)]/2/pi;
+tune=mod(atan2([sin_mu_x,sin_mu_y],[cos_mu_x cos_mu_y])/2/pi,1.0);
 
 NR = length(REFPTS);
 % Build TD only for points originally referenced in REFPTS
@@ -156,23 +103,21 @@ TD = struct('ElemIndex',num2cell(REFPTS),...
 
 
 if CHROMFLAG
-    [TD_DDP tune_DDP] = twissring(RING,DP+DDP,REFPTS);
+    [TD_DDP,tune_DDP] = twissring(RING,DP+DDP,REFPTS);
     DORBIT = reshape(cat(1,TD_DDP.ClosedOrbit),4,[]);
     DISPERSION = num2cell((DORBIT-orb(:,1:NR))/DDP,1);
     [TD.Dispersion] = deal( DISPERSION{:});
+    varargout{2} = (tune_DDP-tune)/DDP;
 end
     
 if nargout>1
     varargout{1}=tune;
 end
-if nargout==3 & CHROMFLAG
-    varargout{2} = (tune_DDP-tune)/DDP;
-end
 
 function UP = BetatronPhaseUnwrap(P)
-% unwrap negative jumps in betatron
-    DP = diff(P);
-    JUMPS = [0; diff(P)] < 0;
-    UP = P+cumsum(JUMPS)*pi;
+    % unwrap negative jumps in betatron
+    %JUMPS = [0; diff(P)] < -1.e-5;
+    JUMPS = [0; diff(P)] < -1.e-3;
+    UP = P+cumsum(JUMPS)*2*pi;
 
 

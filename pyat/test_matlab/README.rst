@@ -12,8 +12,10 @@ You need an installation of Matlab and a valid licence in order to be able to
 call Matlab directly from Python.  MATLAB_ROOT is the root directory of your
 Matlab installation.
 
-Your Matlab installation will support only certain versions of Python.  Python3
-has proved easiest for me to use.
+Your Matlab installation will support only certain versions of Python, Python3
+has proved easiest for me to use.  N.B. please ensure that the versions of the
+packages required by pyAT (numpy, scipy and pytest) that you have installed are
+compatable with the version of Python that Matlab requires you to run.
 
 
 Set up a virtualenv:
@@ -32,9 +34,9 @@ Install the Matlab engine for Python into the virtualenv:
 * Make sure your virtualenv is still active
 * ``mkdir /tmp/mlp``
 * ``cd $MATLAB_ROOT/extern/engines/python``
-* ``python setup.py --build-base=/tmp/mlp install``
+* ``python setup.py build -b /tmp/mlp install``
 
 Now run the tests.
 
-* ``cd $AT_ROOT/pyat/mlcompare``
-* ``py.test``
+* ``cd $AT_ROOT/pyat``
+* ``python -m pytest``
