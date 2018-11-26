@@ -103,7 +103,7 @@ def test_find_sync_orbit(ring):
                             [3.86388e-8, 1.163782e-7, -9.671192e-30,
                              3.567819e-30, 1.265181e-5, 7.5e-6]])
     _, all_points = physics.find_sync_orbit(ring, DP, [49, 99])
-    numpy.testing.assert_allclose(all_points, expected, rtol=1e-5)
+    numpy.testing.assert_allclose(all_points, expected, rtol=1e-5, atol=1e-7)
 
 
 def test_find_sync_orbit_finds_zeros(ring):
@@ -142,7 +142,7 @@ def test_get_twiss(ring, refpts):
     numpy.testing.assert_almost_equal(twiss['beta'][-1, :], [2.9872, 6.6381],
                                       decimal=4)
     numpy.testing.assert_allclose(tune, [0.3655291, 0.4937126], rtol=1e-5,
-                                  atol=1e-12)
+                                  atol=1e-7)
     numpy.testing.assert_allclose(chrom, [-0.30903657, -0.4418593], rtol=1e-5)
 
 
@@ -164,7 +164,7 @@ def test_linopt(ring, refpts):
                                    1.117703e-33, DP], atol=1e-12)
     numpy.testing.assert_allclose(lindata['dispersion'][-1],
                                   [1.107402e-2, 1.262031e-10, -2.139355e-25,
-                                   3.757804e-25], rtol=1e-5)
+                                   3.757804e-25], rtol=1e-5, atol=1e-7)
     expected = [[-0.663802, 2.234145, 0, 0], [-0.250372, -0.663802, 0, 0],
                 [-1.456977e-31, -1.150075e-30, -0.99922, 0.262171],
                 [6.577482e-33, 8.75482e-32, -5.949696e-3, -0.99922]]
@@ -196,10 +196,11 @@ def test_linopt_uncoupled(ring, refpts):
     numpy.testing.assert_allclose(lindata['closed_orbit'][-1][:5],
                                   [1.091636e-7, 1.276757e-15, 4.238871e-33,
                                    1.117703e-33, DP], atol=1e-12)
-    expected = [[-0.663802, 2.234145, 0, 0], [-0.250372, -0.663802, 0, 0],
-                [-1.456977e-31, -1.150075e-30, -0.99922, 0.262171],
-                [6.577482e-33, 8.75482e-32, -5.949696e-3, -0.99922]]
-    numpy.testing.assert_allclose(lindata['m44'][-1], expected, rtol=1e-5)
+    expected_m44 = [[-0.663802, 2.234145, 0, 0], [-0.250372, -0.663802, 0, 0],
+                    [-1.456977e-31, -1.150075e-30, -0.99922, 0.262171],
+                    [6.577482e-33, 8.75482e-32, -5.949696e-3, -0.99922]]
+    numpy.testing.assert_allclose(lindata['m44'][-1], expected_m44, rtol=1e-5,
+                                                                    atol=1e-7)
     numpy.testing.assert_allclose(lindata['alpha'][-1], [-1.32787e-7,
                                                          1.85909e-7], rtol=1e-5)
     numpy.testing.assert_almost_equal(lindata['beta'][-1], [2.98719, 6.638115],
