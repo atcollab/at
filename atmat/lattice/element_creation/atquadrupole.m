@@ -49,5 +49,5 @@ if ~isempty(K), PolynomB(2)=K; end
 
 % Build the element
 elem=atbaselem(fname,method,'Class',cl,'Length',L,'K',PolynomB(2),...
-    'PolynomB',PolynomB,rsrc{:});
+    'PolynomB',PolynomB,'DefaultMaxOrder',1,rsrc{:});
 end
