@@ -166,6 +166,6 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         sanitise_class(index, class_name, elem_dict)
     cl = getattr(elements, class_name)
     # Remove mandatory attributes from the keyword arguments.
-    elem_args = [elem_dict.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
-    element = cl(*elem_args, **elem_dict)
+    elem_args = (elem_dict.pop(attr, None) for attr in cl.REQUIRED_ATTRIBUTES)
+    element = cl(*(el for el in elem_args if el is not None), **elem_dict)
     return element
