@@ -1,7 +1,6 @@
 import numpy
 import pytest
-from at import physics
-from at import load_mat
+from at import physics, load_mat
 from at import atpass
 
 
@@ -17,24 +16,24 @@ M44_MATLAB = numpy.array([[-0.66380202, 2.23414498, 0, 0],
 
 @pytest.fixture
 def ring():
-    ring = load_mat.load(LATTICE_FILE)
+    ring = load_mat(LATTICE_FILE)
     return ring
 
 
 def test_find_orbit4(ring):
-    orbit4 = physics.find_orbit4(ring, DP)
+    orbit4, _ = physics.find_orbit4(ring, DP)
     expected = numpy.array([1.091636e-7, 1.276747e-15, 0, 0, DP, 0])
     numpy.testing.assert_allclose(orbit4, expected, atol=1e-12)
 
 
 def test_find_orbit4_finds_zeros_if_dp_zero(ring):
-    orbit4 = physics.find_orbit4(ring, 0)
+    orbit4, _ = physics.find_orbit4(ring, 0)
     expected = numpy.zeros((6,))
     numpy.testing.assert_allclose(orbit4, expected)
 
 
 def test_find_orbit4_result_unchanged_by_atpass(ring):
-    orbit = physics.find_orbit4(ring, DP)
+    orbit, _ = physics.find_orbit4(ring, DP)
     orbit_copy = numpy.copy(orbit)
     orbit[4] = DP
     atpass(ring, orbit, 1)
@@ -46,7 +45,7 @@ def test_find_orbit4_with_two_refpts(ring):
     expected = numpy.array(
         [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
          [3.0422808e-8, 9.1635269e-8, 0, 0, DP, 5.9280346e-6]]
-    ).T
+    )
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
 
 
@@ -56,12 +55,12 @@ def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
 
     numpy.testing.assert_allclose(m44[:4], M44_MATLAB[:4], rtol=1e-5, atol=1e-7)
     stack_size = 0 if refpts is None else len(refpts)
-    assert mstack.shape == (4, 4, stack_size)
+    assert mstack.shape == (stack_size, 4, 4)
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 def test_get_twiss(ring, refpts):
-    twiss, tune, chrom = physics.get_twiss(ring, DP, refpts, get_chrom=True)
+    twiss0, tune, chrom, twiss = physics.get_twiss(ring, DP, refpts, get_chrom=True)
     numpy.testing.assert_allclose(twiss['s_pos'][-1], 56.209377216)
     numpy.testing.assert_allclose(twiss['closed_orbit'][0][:5],
                                   [1.0916359e-7, 0, 0, 0, DP], atol=1e-12)
@@ -69,12 +68,8 @@ def test_get_twiss(ring, refpts):
                                   M44_MATLAB, rtol=1e-5, atol=1e-7)
     numpy.testing.assert_almost_equal(twiss['beta'][-1, :],
                                       (2.9872, 6.6381), decimal=4)
-    # Why is the tune different for these two cases?
-    if refpts == [145]:
-        # These are not especially accurate at present.
-        numpy.testing.assert_allclose(tune, (-0.1344708, -0.00628742),
-                                      rtol=1e-5, atol=1e-12)
-        numpy.testing.assert_allclose(chrom, (-0.3090409, -0.44186077),
-                                      rtol=1e-4)
-    else:
-        numpy.testing.assert_almost_equal(tune, (0.36553, 0.49371), decimal=5)
+
+    numpy.testing.assert_allclose(tune, (0.3655291, 0.4937126),
+                                  rtol=1e-5, atol=1e-12)
+    numpy.testing.assert_allclose(chrom, (-0.30903657, -0.4418593),
+                                  rtol=1e-5)

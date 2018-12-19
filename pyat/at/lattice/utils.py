@@ -11,24 +11,44 @@ import numpy
 import itertools
 
 
+class AtError(Exception):
+    pass
+
+
+class AtWarning(Warning):
+    pass
+
+
 def uint32_refpts(refpts, n_elements):
     """
     Return a uint32 numpy array with contents as the indices of the selected
     elements.  This is used for indexing a lattice using explicit indices.
     """
-    if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        refs = numpy.flatnonzero(refpts)
+    if isinstance(refpts, numpy.ndarray):
+        if refpts.dtype == numpy.uint32:
+            return refpts
+        elif refpts.dtype == bool:
+            refs = numpy.flatnonzero(refpts)
+        else:
+            refs = refpts
+    elif refpts is None:
+        return numpy.array([], dtype=numpy.uint32)
     else:
-        refs = numpy.ravel(numpy.asarray(refpts))
+        # number or sequence of numbers
+        refs = numpy.asarray(refpts)
 
+    # Handle negative indices
+    refs = numpy.array([i if (i == n_elements) else i % n_elements for i in numpy.ravel(refs)], dtype=numpy.uint32)
+
+    # Check ascending
     if refs.size > 0:
-        if (numpy.any(numpy.diff(refs) < 0) or
-                (refs[-1] > n_elements) or
-                (refs[0]) < 0):
-            error_msg = 'refpts must be ascending and less than or equal to {}'
-            raise ValueError(error_msg.format(n_elements))
+        prev = refs[0]
+        for next in refs[1:]:
+            if next <= prev:
+                raise ValueError('refpts must be ascending')
+            prev = next
 
-    return numpy.asarray(refs, dtype=numpy.uint32)
+    return refs
 
 
 def bool_refpts(refpts, n_elements):
@@ -64,12 +84,14 @@ def checkattr(*args):
         returns an iterator over all elements in ring that have a 'K' attribute equal to 0.0
 
     """
+
     def testf(el):
         try:
             v = getattr(el, args[0])
             return len(args) == 1 or v == args[1]
         except AttributeError:
             return False
+
     return testf
 
 
@@ -158,13 +180,13 @@ def tilt_elem(elem, rots):
           [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
     
     :param elem: element to be tilted
-    :param rots: tilt angle.
+    :param rots: tilt angle (in radians).
            rots > 0 corresponds to a corkskew rotation of the element looking in the direction of the beam
     :return: None
     """
     cs = numpy.cos(rots)
     sn = numpy.sin(rots)
-    rm = numpy.diag([cs, cs, cs, cs, 1.0, 1.0]).T     # transpose to get Fortran alignment
+    rm = numpy.diag([cs, cs, cs, cs, 1.0, 1.0]).T  # transpose to get Fortran alignment
     rm[0, 2] = sn
     rm[1, 3] = sn
     rm[2, 0] = -sn
