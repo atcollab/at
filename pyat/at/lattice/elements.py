@@ -33,11 +33,9 @@ class Element(object):
                        EApertures=lambda v: _array(v, (2,)),
                        Energy=float,
                        )
-
-    entrance_fields = ['T1', 'R1', 'EntranceAngle', 'FringeInt1',
-                       'FringeBendEntrance', 'FringeQuadEntrance']
-    exit_fields = ['T2', 'R2', 'ExitAngle', 'FringeInt2',
-                   'FringeBendExit', 'FringeQuadExit']
+    
+    entrance_fields = ['T1', 'R1']
+    exit_fields = ['T2', 'R2']
 
     def __init__(self, family_name, Length=0.0, PassMethod='IdentityPass',
                  **kwargs):
@@ -85,6 +83,13 @@ class Element(object):
 class LongElement(Element):
     """pyAT long element"""
 
+    def _part(self, fr, sumfr):
+        pp = self.copy()
+        pp.Length = fr * self.Length
+        if hasattr(self, 'KickAngle'):
+            pp.KickAngle = fr / sumfr * self.KickAngle
+        return pp
+
     def divide(self, frac, keep_axis=False):
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
@@ -110,13 +115,6 @@ class LongElement(Element):
             delattr(element, attr)
             return attr, val
 
-        def part(fr):
-            pp = el.copy()
-            pp.Length = fr * el.Length
-            if hasattr(el, 'BendingAngle'):
-                pp.BendingAngle = fr / numpy.sum(frac) * el.BendingAngle
-            return pp
-
         frac = numpy.asarray(frac, dtype=float)
         el = self.copy()
         first = 0 if keep_axis else 2
@@ -126,7 +124,7 @@ class LongElement(Element):
         fout = dict(popattr(el, key) for key in vars(self) if
                     key in self.exit_fields[first:])
         # Split element
-        element_list = [part(f) for f in frac]
+        element_list = [el._part(f, numpy.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
         for key, value in fin.items():
             setattr(element_list[0], key, value)
@@ -254,6 +252,7 @@ class Multipole(LongElement, ThinMultipole):
         Available keywords:
         MaxOrder        Number of desired multipoles
         NumIntSteps     Number of integration steps (default: 10)
+        KickAngle       Correction deviation angles (H, V)
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Multipole, self).__init__(family_name, poly_a, poly_b,
@@ -271,28 +270,41 @@ class Dipole(Multipole):
                        FringeQuadEntrance=int, FringeQuadExit=int,
                        FringeBendEntrance=int, FringeBendExit=int)
 
+    entrance_fields = Multipole.entrance_fields + ['EntranceAngle',
+                                                   'FringeInt1',
+                                                   'FringeBendEntrance'
+                                                   'FringeQuadEntrance']
+    exit_fields = Multipole.exit_fields + ['ExitAngle',
+                                           'FringeInt2',
+                                           'FringeBendExit',
+                                           'FringeQuadExit']
+
     def __init__(self, family_name, length, BendingAngle, k=0.0,
                  EntranceAngle=0.0, ExitAngle=0.0, **kwargs):
         """Dipole(FamName, Length, BendingAngle, Strength=0, **keywords)
 
         Available keywords:
-        EntranceAngle entrance angle (default 0.0)
+        EntranceAngle   entrance angle (default 0.0)
         ExitAngle       exit angle (default 0.0)
         PolynomB        straight multipoles
         PolynomA        skew multipoles
         MaxOrder        Number of desired multipoles
         NumIntSteps     Number of integration steps (default: 10)
-        FullGap
-        FringeInt1
+        FullGap         Magnet full gap
+        FringeInt1      Fring field extension
         FringeInt2
-        FringeBendEntrance
+        FringeBendEntrance  1: legacy version Brown First Order (default)
+                            2: SOLEIL close to second order of Brown
+                            3: THOMX
         FringeBendExit
-        FringeQuadEntrance
+        FringeQuadEntrance  0: no fringe fiels effect (default)
+                            1: Lee-Whiting's thin lens limit formula
+                            2: elegant-like
         FringeQuadExit
-        fringeIntM0
+        fringeIntM0         Integrals for FringeQuad method 2
         fringeIntP0
-         KickAngle
-   """
+        KickAngle       Correction deviation angles (H, V)
+        """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         _ = kwargs.pop('K', None)
         kwargs.setdefault('PassMethod', 'BendLinearPass')
@@ -300,6 +312,11 @@ class Dipole(Multipole):
                                      BendingAngle=BendingAngle,
                                      EntranceAngle=EntranceAngle,
                                      ExitAngle=ExitAngle, **kwargs)
+    
+    def _part(self, fr, sumfr):
+        pp = super(Dipole, self)._part(fr, sumfr)
+        pp.BendingAngle = fr / sumfr * self.BendingAngle
+        return pp
 
     @property
     def K(self):
@@ -320,6 +337,9 @@ class Quadrupole(Multipole):
     CONVERSIONS = dict(Multipole.CONVERSIONS, FringeQuadEntrance=int,
                        FringeQuadExit=int)
 
+    entrance_fields = Multipole.entrance_fields + ['FringeQuadEntrance']
+    exit_fields = Multipole.exit_fields + ['FringeQuadExit']
+
     def __init__(self, family_name, length, k=0.0, MaxOrder=1, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
@@ -328,11 +348,13 @@ class Quadrupole(Multipole):
         PolynomA        skew multipoles
         MaxOrder        Number of desired multipoles
         NumIntSteps     Number of integration steps (default: 10)
-        FringeQuadEntrance
+        FringeQuadEntrance  0: no fringe fiels effect (default)
+                            1: Lee-Whiting's thin lens limit formula
+                            2: elegant-like
         FringeQuadExit
-        fringeIntM0
+        fringeIntM0         Integrals for FringeQuad method 2
         fringeIntP0
-        KickAngle
+        KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         _ = kwargs.pop('K', None)
@@ -361,6 +383,7 @@ class Sextupole(Multipole):
         PolynomA        skew multipoles
         MaxOrder        Number of desired multipoles
         NumIntSteps     Number of integration steps (default: 10)
+        KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', [0, 0, h])
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
