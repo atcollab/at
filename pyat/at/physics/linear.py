@@ -38,7 +38,8 @@ def _twiss22(ms, alpha0, beta0):
     bbb = ms[:, 0, 1]
     aaa = ms[:, 0, 0] * beta0 - bbb * alpha0
     beta = (aaa * aaa + bbb * bbb) / beta0
-    alpha = -(aaa * (ms[:, 1, 0] * beta0 - ms[:, 1, 1] * alpha0) + bbb * ms[:, 1, 1]) / beta0
+    alpha = -(aaa * (ms[:, 1, 0] * beta0 - ms[:, 1, 1] * alpha0) +
+              bbb * ms[:, 1, 1]) / beta0
     mu = numpy.arctan2(bbb, aaa)
     # Unwrap negative jumps in betatron phase advance
     dmu = numpy.diff(numpy.append([0], mu))
@@ -57,7 +58,8 @@ def _closure(m22):
     return alpha, beta, tune
 
 
-def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP):
+def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
+              keep_lattice=False, ddp=DDP):
     """
     Perform linear analysis of the NON-COUPLED lattices
 
@@ -65,42 +67,48 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
 
     PARAMETERS
         ring            lattice description
-        dp              momentum deviation. Defaults to 0
-        refpts          elements at which data is returned. It can be
+        dp=0.0          momentum deviation. Defaults to 0
+        refpts=None     elements at which data is returned. It can be
                         1) an integer (0 indicating the first element)
                         2) a list of integers
                         3) a numpy array of booleans as long as ring where
                            selected elements are true
-                        Defaults to None
 
     KEYWORDS
-        orbit           avoids looking for the colsed orbit if is already known ((6,) array)
-        get_chrom       compute dispersion and chromaticities. Needs computing the optics
-                        at 2 different momentum deviations around the central one.
-                        Defaults to False
+        orbit           avoids looking for the colsed orbit if is already known
+                        ((6,) array)
+        get_chrom=False compute dispersion and chromaticities. Needs computing
+                        the optics at 2 different momentum deviations around
+                        the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
-        ddp=1.0E-8      momentum deviation used for computation of chromaticities and dispersion
+        ddp=1.0E-8      momentum deviation used for computation of
+                        chromaticities and dispersion
 
     OUTPUT
         twiss0          linear optics data at the entrance/end of the ring
         tune            [tune_h, tune_v], fractional part of the linear tunes
-        chrom           [ksi_h , ksi_v], vector of chromaticities ksi = d(nu)/(dP/P).
+        chrom           [ksi_h , ksi_v], chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
         twiss           linear optics at the points refered to by refpts
 
-        twiss is a structured array with fields:
-        idx             element index in the ring                           (nrefs,)
-        s_pos           longitudinal position [m]                           (nrefs,)
-        closed_orbit    closed orbit vector with                            (nrefs, 6)
-        dispersion      dispersion vector.                                  (nrefs, 4)
-                        Only computed if 'get_chrom' is True                (nrefs, 4)
-        m44             4x4 transfer matrix M from the beginning of ring    (nrefs, 4, 4)
-                        to the entrance of the element [2]
-        mu              [mux, muy], A and B betatron phase (modulo 2*pi)    (nrefs, 2)
-        beta            [betax, betay] vector                               (nrefs, 2)
-        alpha           [alphax, alphay] vector                             (nrefs, 2)
-        All values are given at the entrance of each element specified in refpts.
+        twiss is a record array with fields:
+        idx             element index in the ring
+        s_pos           longitudinal position [m]
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
+                        Only computed if 'get_chrom' is True
+        m44             (4, 4) transfer matrix M from the beginning of ring
+                        to the entrance of the element
+        mu              (2,) betatron phase (modulo 2*pi)
+        beta            [betax, betay] vector
+        alpha           [alphax, alphay] vector
+        All values given at the entrance of each element specified in refpts.
+
+        Field values can be obtained with either
+        twiss['idx']    or
+        twiss.idx
+
 
     See also linopt
     """
@@ -110,8 +118,10 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs, keep_lattice=keep_lattice),
-                         axis=(1, 3)).T
+    orbs = numpy.squeeze(
+        lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
+                     keep_lattice=keep_lattice),
+        axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
@@ -123,26 +133,30 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     # Calculate chromaticity by calling this function again at a slightly
     # different momentum.
     if get_chrom:
-        d0_up, tune_up, _, l_up = get_twiss(ring, dp + 0.5 * ddp, uintrefs, keep_lattice=True)
-        d0_down, tune_down, _, l_down = get_twiss(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True)
+        d0_up, tune_up, _, l_up = get_twiss(ring, dp + 0.5 * ddp,
+                                            uintrefs, keep_lattice=True)
+        d0_down, tune_down, _, l_down = get_twiss(ring, dp - 0.5 * ddp,
+                                                  uintrefs, keep_lattice=True)
         chrom = (tune_up - tune_down) / ddp
-        dispersion = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4] / ddp
+        dispersion = (l_up['closed_orbit'] -
+                      l_down['closed_orbit'])[:, :4] / ddp
         disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
         chrom = None
         dispersion = numpy.NaN
         disp0 = numpy.NaN
 
-    twiss0 = numpy.array(
-        (len(ring), get_s_pos(ring, len(ring)), orbit, disp0, numpy.array([a0_x, a0_y]), numpy.array([b0_x, b0_y]),
+    twiss0 = numpy.rec.fromarrays(
+        (len(ring), get_s_pos(ring, len(ring))[0], orbit, disp0,
+         numpy.array([a0_x, a0_y]), numpy.array([b0_x, b0_y]),
          2.0 * pi * tune, m44), dtype=TWISS_DTYPE)
 
     # Propagate to reference points
+    twiss = numpy.rec.array(numpy.zeros(nrefs, dtype=TWISS_DTYPE))
     if nrefs > 0:
         alpha_x, beta_x, mu_x = _twiss22(mstack[:, :2, :2], a0_x, b0_x)
         alpha_z, beta_z, mu_z = _twiss22(mstack[:, 2:, 2:], a0_y, b0_y)
 
-        twiss = numpy.zeros(nrefs, dtype=TWISS_DTYPE)
         twiss['idx'] = uintrefs
         twiss['s_pos'] = get_s_pos(ring, uintrefs[:nrefs])
         twiss['closed_orbit'] = orbs
@@ -151,13 +165,12 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         twiss['beta'] = numpy.stack((beta_x, beta_z), axis=1)
         twiss['mu'] = numpy.stack((mu_x, mu_z), axis=1)
         twiss['dispersion'] = dispersion
-    else:
-        twiss = numpy.array([], dtype=TWISS_DTYPE)
 
     return twiss0, tune, chrom, twiss
 
 
-def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=False, ddp=DDP, coupled=True):
+def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
+           keep_lattice=False, ddp=DDP, coupled=True):
     """
     Perform linear analysis of a lattice
 
@@ -174,43 +187,52 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
                         Defaults to None
 
     KEYWORDS
-        orbit           avoids looking for the colsed orbit if is already known ((6,) array)
-        get_chrom=False compute dispersion and chromaticities. Needs computing the optics
-                        at 2 different momentum deviations around the central one.
-                        Defaults to False
+        orbit           avoids looking for the colsed orbit if is already known
+                        ((6,) array)
+        get_chrom=False compute dispersion and chromaticities. Needs computing
+                        the optics at 2 different momentum deviations around
+                        the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
-        ddp=1.0E-8      momentum deviation used for computation of chromaticities and dispersion
-        coupled=True    if False, simplify the calculations by assuming no H/V coupling
+        ddp=1.0E-8      momentum deviation used for computation of
+                        chromaticities and dispersion
+        coupled=True    if False, simplify the calculations by assuming
+                        no H/V coupling
 
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
-        tune            [tune_A, tune_B], linear tunes for the two normal modes of linear motion [1]
-        chrom           [ksi_A , ksi_B], vector of chromaticities ksi = d(nu)/(dP/P).
+        tune            [tune_A, tune_B], linear tunes for the two normal modes
+                        of linear motion [1]
+        chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
         lindata         linear optics at the points refered to by refpts
 
-        lindata is a structured array with fields:
-        idx             element index in the ring                           (nrefs,)
-        s_pos           longitudinal position [m]                           (nrefs,)
-        closed_orbit    closed orbit vector with                            (nrefs, 6)
-        dispersion      dispersion vector.                                  (nrefs, 4)
-                        Only computed if 'get_chrom' is True                (nrefs, 4)
-        m44             4x4 transfer matrix M from the beginning of ring    (nrefs, 4, 4)
+        lindata is a record array with fields:
+        idx             element index in the ring
+        s_pos           longitudinal position [m]
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
+                        Only computed if 'get_chrom' is True
+        m44             (4, 4) transfer matrix M from the beginning of ring
                         to the entrance of the element [2]
-        A               (2, 2) matrix A in [3]                              (nrefs, 2, 2)
-        B               (2, 2) matrix B in [3]                              (nrefs, 2, 2)
-        C               (2, 2) matrix C in [3]                              (nrefs, 2, 2)
-        gamma           gamma parameter of the transformation to eigenmodes (nrefs,)
-        mu              [mux, muy], A and B betatron phase (modulo 2*pi)    (nrefs, 2)
-        beta            [betax, betay] vector                               (nrefs, 2)
-        alpha           [alphax, alphay] vector                             (nrefs, 2)
-        All values are given at the entrance of each element specified in refpts.
+        A               (2, 2) matrix A in [3]
+        B               (2, 2) matrix B in [3]
+        C               (2, 2) matrix C in [3]
+        gamma           gamma parameter of the transformation to eigenmodes
+        mu              [mux, muy], betatron phase (modulo 2*pi)
+        beta            [betax, betay] vector
+        alpha           [alphax, alphay] vector
+        All values given at the entrance of each element specified in refpts.
+
+        Field values can be obtained with either
+        lindata['idx']    or
+        lindata.idx
 
     REFERENCES
         [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
         [2] E.Courant, H.Snyder
-        [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
+        [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
+            vol.2 (1999)
 
     See also get_twiss
 
@@ -233,8 +255,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     if orbit is None:
         orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
         keep_lattice = True
-    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs, keep_lattice=keep_lattice),
-                         axis=(1, 3)).T
+    orbs = numpy.squeeze(
+        lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
+                     keep_lattice=keep_lattice),
+        axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
@@ -267,22 +291,29 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     tune = numpy.array([tune_a, tune_b])
 
     if get_chrom:
-        d0_up, tune_up, _, l_up = linopt(ring, dp + 0.5 * ddp, uintrefs, keep_lattice=True, coupled=coupled)
-        d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs, keep_lattice=True, coupled=coupled)
+        d0_up, tune_up, _, l_up = linopt(ring, dp + 0.5 * ddp, uintrefs,
+                                         keep_lattice=True,
+                                         coupled=coupled)
+        d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs,
+                                               keep_lattice=True,
+                                               coupled=coupled)
         chrom = (tune_up - tune_down) / ddp
-        dispersion = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4] / ddp
+        dispersion = (l_up['closed_orbit'] -
+                      l_down['closed_orbit'])[:, :4] / ddp
         disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
         chrom = None
         dispersion = numpy.NaN
         disp0 = numpy.NaN
 
-    lindata0 = numpy.array(
-        (len(ring), get_s_pos(ring, len(ring)), orbit, disp0, numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]),
+    lindata0 = numpy.rec.fromarrays(
+        (len(ring), get_s_pos(ring, len(ring))[0], orbit, disp0,
+         numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]),
          2.0 * pi * tune, m44, A, B, C, g),
         dtype=LINDATA_DTYPE)
 
     # Propagate to reference points
+    lindata = numpy.rec.array(numpy.zeros(nrefs, dtype=LINDATA_DTYPE))
     if nrefs > 0:
         if coupled:
             MSA, MSB, gamma, CL = zip(*[analyze(m44) for m44 in mstack])
@@ -297,7 +328,6 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         alpha_a, beta_a, mu_a = _twiss22(msa, a0_a, b0_a)
         alpha_b, beta_b, mu_b = _twiss22(msb, a0_b, b0_b)
 
-        lindata = numpy.zeros(nrefs, dtype=LINDATA_DTYPE)
         lindata['idx'] = uintrefs
         lindata['s_pos'] = get_s_pos(ring, uintrefs)
         lindata['closed_orbit'] = orbs
@@ -310,13 +340,11 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         lindata['C'] = CL
         lindata['gamma'] = gamma
         lindata['dispersion'] = dispersion
-    else:
-        lindata = numpy.array([], dtype=LINDATA_DTYPE)
 
     return lindata0, tune, chrom, lindata
 
 
-def get_mcf(ring,dp=0.0, ddp=DDP, keep_lattice=False):
+def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     """Compute momentum compaction factor
 
     PARAMETERS
@@ -328,9 +356,10 @@ def get_mcf(ring,dp=0.0, ddp=DDP, keep_lattice=False):
                         Defaults to False
         ddp=1.0E-8      momentum deviation used for differentiation
     """
-    fp_a, _ = find_orbit4(ring, dp=dp-0.5*ddp, keep_lattice=keep_lattice)
-    fp_b, _ = find_orbit4(ring, dp=dp+0.5*ddp, keep_lattice=True)
-    fp=numpy.stack((fp_a, fp_b), axis=0).T  # generate a Fortran contiguous array
+    fp_a, _ = find_orbit4(ring, dp=dp - 0.5 * ddp, keep_lattice=keep_lattice)
+    fp_b, _ = find_orbit4(ring, dp=dp + 0.5 * ddp, keep_lattice=True)
+    fp = numpy.stack((fp_a, fp_b),
+                     axis=0).T  # generate a Fortran contiguous array
     b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
-    return (b[5, 1] - b[5, 0])/ddp/ring_length[0]
+    return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
