@@ -2,7 +2,6 @@
 Coupled or non-coupled 4x4 linear motion
 """
 import numpy
-from numpy.linalg import multi_dot as md
 from math import sqrt, atan2, pi
 from ..physics import find_orbit4, find_m44, jmat
 from ..lattice import uint32_refpts, get_s_pos
@@ -224,9 +223,9 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         m = t44[:2, 2:]
         n = t44[2:, :2]
         gamma = sqrt(numpy.linalg.det(numpy.dot(n, C) + numpy.dot(G, nn)))
-        msa = (md((G, mm)) - md((m, _jmt, C.T, _jmt.T))) / gamma
+        msa = (G.dot(mm) - m.dot(_jmt.dot(C.T.dot(_jmt.T)))) / gamma
         msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
-        cc = md(((numpy.dot(mm, C) + numpy.dot(G, m)), _jmt, msb.T, _jmt.T))
+        cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(_jmt.dot(msb.T.dot(_jmt.T)))
         return msa, msb, gamma, cc
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
@@ -246,7 +245,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
 
     if coupled:
         # Calculate A, B, C, gamma at the first element
-        H = m + md((_jmt, n.T, _jmt.T))
+        H = m + _jmt.dot(n.T.dot(_jmt.T))
         t = numpy.trace(M - N)
         t2 = t * t
         t2h = t2 + 4.0 * numpy.linalg.det(H)
@@ -254,8 +253,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         g = sqrt(1.0 + sqrt(t2 / t2h)) / sqrt(2.0)
         G = numpy.diag((g, g))
         C = -H * numpy.sign(t) / (g * sqrt(t2h))
-        A = md((G, G, M)) - numpy.dot(G, (md((m, _jmt, C.T, _jmt.T)) + md((C, n)))) + md((C, N, _jmt, C.T, _jmt.T))
-        B = md((G, G, N)) + numpy.dot(G, (md((_jmt, C.T, _jmt.T, m)) + md((n, C)))) + md((_jmt, C.T, _jmt.T, M, C))
+        A = G.dot(G.dot(M)) - numpy.dot(G, (m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(N.dot(_jmt.dot(C.T.dot(_jmt.T))))
+        B = G.dot(G.dot(N)) + numpy.dot(G, (_jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(C.T.dot(_jmt.T.dot(M.dot(C))))
     else:
         A = M
         B = N
@@ -306,8 +305,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         lindata['alpha'] = numpy.stack((alpha_a, alpha_b), axis=1)
         lindata['beta'] = numpy.stack((beta_a, beta_b), axis=1)
         lindata['mu'] = numpy.stack((mu_a, mu_b), axis=1)
-        lindata['A'] = [md((ms, A, _jmt, ms.T, _jmt.T)) for ms in msa]
-        lindata['B'] = [md((ms, B, _jmt, ms.T, _jmt.T)) for ms in msb]
+        lindata['A'] = [ms.dot(A.dot(_jmt.dot(ms.T.dot(_jmt.T)))) for ms in msa]
+        lindata['B'] = [ms.dot(B.dot(_jmt.dot(ms.T.dot(_jmt.T)))) for ms in msb]
         lindata['C'] = CL
         lindata['gamma'] = gamma
         lindata['dispersion'] = dispersion
