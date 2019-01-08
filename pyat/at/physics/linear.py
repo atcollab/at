@@ -75,7 +75,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                            selected elements are true
 
     KEYWORDS
-        orbit           avoids looking for the colsed orbit if is already known
+        orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute dispersion and chromaticities. Needs computing
                         the optics at 2 different momentum deviations around
@@ -106,8 +106,8 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         All values given at the entrance of each element specified in refpts.
 
         Field values can be obtained with either
-        twiss['idx']    or
-        twiss.idx
+        twiss['beta']    or
+        twiss.beta
 
 
     See also linopt
@@ -187,7 +187,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         Defaults to None
 
     KEYWORDS
-        orbit           avoids looking for the colsed orbit if is already known
+        orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute dispersion and chromaticities. Needs computing
                         the optics at 2 different momentum deviations around
@@ -225,8 +225,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         All values given at the entrance of each element specified in refpts.
 
         Field values can be obtained with either
-        lindata['idx']    or
-        lindata.idx
+        lindata['beta']    or
+        lindata.beta
 
     REFERENCES
         [1] D.Edwars,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
@@ -247,7 +247,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         gamma = sqrt(numpy.linalg.det(numpy.dot(n, C) + numpy.dot(G, nn)))
         msa = (G.dot(mm) - m.dot(_jmt.dot(C.T.dot(_jmt.T)))) / gamma
         msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
-        cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(_jmt.dot(msb.T.dot(_jmt.T)))
+        cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(
+            _jmt.dot(msb.T.dot(_jmt.T)))
         return msa, msb, gamma, cc
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
@@ -277,8 +278,12 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         g = sqrt(1.0 + sqrt(t2 / t2h)) / sqrt(2.0)
         G = numpy.diag((g, g))
         C = -H * numpy.sign(t) / (g * sqrt(t2h))
-        A = G.dot(G.dot(M)) - numpy.dot(G, (m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(N.dot(_jmt.dot(C.T.dot(_jmt.T))))
-        B = G.dot(G.dot(N)) + numpy.dot(G, (_jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(C.T.dot(_jmt.T.dot(M.dot(C))))
+        A = G.dot(G.dot(M)) - numpy.dot(G, (
+                    m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(
+            N.dot(_jmt.dot(C.T.dot(_jmt.T))))
+        B = G.dot(G.dot(N)) + numpy.dot(G, (
+                    _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(
+            C.T.dot(_jmt.T.dot(M.dot(C))))
     else:
         A = M
         B = N
