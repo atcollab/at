@@ -17,7 +17,7 @@ def _ml_refs(refpts, nelems):
     return matlab.double([ref+1 for ref in uintrefs])
 
 
-@pytest.mark.parametrize('dp', (0, 1e-8, 1e-7, 1e-6))
+@pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
 def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
 
@@ -40,7 +40,7 @@ def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
         numpy.testing.assert_almost_equal(py_orbit4[:, :4], ml_convert(ml_orbit4), decimal=8)
 
 
-@pytest.mark.parametrize('dp', (0.0, 1e-8, 1e-7, 1e-6))
+@pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
 def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
 
@@ -65,7 +65,7 @@ def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
         numpy.testing.assert_almost_equal(py_mstack, ml_convert(ml_mstack, nrefs), decimal=8)
 
 
-@pytest.mark.parametrize('dp', (0.0, 1e-8, 1e-7, 1e-6))
+@pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', ([1], [1, 2, 3], [145]))
 def test_get_twiss(engine, ml_lattice, py_lattice, dp, refpts):
     # Matlab call
@@ -90,7 +90,7 @@ def test_get_twiss(engine, ml_lattice, py_lattice, dp, refpts):
     # different values.
 
 
-@pytest.mark.parametrize('dp', (0.0, 0.01))
+@pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
 def test_linopt(engine, ml_lattice, py_lattice, dp, refpts):
 

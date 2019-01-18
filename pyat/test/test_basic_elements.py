@@ -8,10 +8,6 @@ def test_data_checks():
     val = numpy.zeros([6,6])
     assert elements._array(val).shape == (36,)
     assert elements._array66(val).shape == (6, 6)
-    val = 0
-    assert elements._float(val) == 0.0
-    assert elements._int(val) == 0
-    assert elements._nop(val) is val
 
 
 def test_element_string_ordering():
