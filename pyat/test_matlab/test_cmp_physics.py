@@ -17,143 +17,98 @@ def _ml_refs(refpts, nelems):
     return matlab.double([ref+1 for ref in uintrefs])
 
 
+def _compare_physdata(py_data, ml_data, fields, decimal=8):
+    for (ml_key, py_key) in fields:
+        ml_val = _py_data(ml_data[ml_key])
+        if py_key == 'closed_orbit':
+            py_val = numpy.squeeze(py_data[py_key][:, :4])
+        else:
+            py_val = numpy.squeeze(py_data[py_key])
+        numpy.testing.assert_almost_equal(py_val, ml_val, decimal=decimal)
+
+
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
-@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
+@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
 def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
-
-    def ml_convert(orbit):
-        return numpy.rollaxis(numpy.asarray(orbit), -1)
-
     nelems = len(py_lattice)
-    if isinstance(refpts, str):
-        refpts = range(nelems+1)
+    refpts = range(nelems + 1) if refpts is None else refpts
 
     # Python call
     py_orb4, py_orbit4 = physics.find_orbit4(py_lattice, dp, refpts)
+    # Matlab call
     ml_orbit4, ml_orb4 = engine.findorbit4(ml_lattice, dp, _ml_refs(refpts, nelems), nargout=2)
-
-    if refpts is None:
-        # test initial orbit
-        numpy.testing.assert_almost_equal(py_orb4, _py_data(ml_orb4), decimal=8)
-    else:
-        # test refpoints
-        numpy.testing.assert_almost_equal(py_orbit4[:, :4], ml_convert(ml_orbit4), decimal=8)
+    ml_orbit4 = numpy.rollaxis(numpy.asarray(ml_orbit4), -1)
+    # Comparison
+    numpy.testing.assert_almost_equal(py_orb4, _py_data(ml_orb4), decimal=8)
+    numpy.testing.assert_almost_equal(py_orbit4[:, :4], ml_orbit4, decimal=8)
 
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
-@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
+@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
 def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
-
-    def ml_convert(matrix, nrefs):
-        return numpy.rollaxis(numpy.asarray(matrix).reshape((4, 4, nrefs)), -1)
-
     nelems = len(py_lattice)
-    if isinstance(refpts, str):
-        refpts = range(nelems+1)
+    refpts = range(nelems + 1) if refpts is None else refpts
+    nrefs = len(uint32_refpts(refpts, nelems))
 
     # Python call
     py_m44, py_mstack = physics.find_m44(py_lattice, dp, refpts)
-
-    if refpts is None:
-        ml_m44 = engine.findm44(ml_lattice, dp)
-        # test 1-turn matrix
-        numpy.testing.assert_almost_equal(py_m44, numpy.asarray(ml_m44), decimal=8)
-    else:
-        ml_m44, ml_mstack = engine.findm44(ml_lattice, dp, _ml_refs(refpts, nelems), nargout=2)
-        # test refpoints: Matlab wrongly squeezes ml_stack if len(refpts)==1
-        nrefs = len(uint32_refpts(refpts, nelems))
-        numpy.testing.assert_almost_equal(py_mstack, ml_convert(ml_mstack, nrefs), decimal=8)
-
-
-@pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
-@pytest.mark.parametrize('refpts', ([1], [1, 2, 3], [145]))
-def test_get_twiss(engine, ml_lattice, py_lattice, dp, refpts):
     # Matlab call
-    ml_twiss = engine.pyproxy('twissring', ml_lattice, dp, _ml_refs(refpts, len(py_lattice)))
-    # Python call
-    py_twiss = physics.get_twiss(py_lattice, dp, refpts)[3]
-    # Local assignment
-    ml_orbit = _py_data(ml_twiss['ClosedOrbit'])
-    ml_m44 = _py_data(ml_twiss['M44'])
-    ml_alpha = _py_data(ml_twiss['alpha'])
-    ml_beta = _py_data(ml_twiss['beta'])
-    py_orbit = numpy.squeeze(py_twiss['closed_orbit'][:, :4])
-    py_m44 = numpy.squeeze(py_twiss['m44'])
-    py_alpha = numpy.squeeze(py_twiss['alpha'])
-    py_beta = numpy.squeeze(py_twiss['beta'])
-    # Matches to 10 d.p.
-    numpy.testing.assert_almost_equal(py_orbit, ml_orbit, decimal=10)
-    numpy.testing.assert_almost_equal(py_m44, ml_m44, decimal=10)
-    numpy.testing.assert_almost_equal(py_alpha, ml_alpha, decimal=10)
-    numpy.testing.assert_almost_equal(py_beta, ml_beta, decimal=10)
-    # The comparison of mu between Matlab and Python is left out as they return
-    # different values.
+    ml_m44, ml_mstack = engine.findm44(ml_lattice, dp, _ml_refs(refpts, nelems), nargout=2)
+    ml_mstack = numpy.rollaxis(numpy.asarray(ml_mstack).reshape((4, 4, nrefs)), -1)
+    # Comparison
+    numpy.testing.assert_almost_equal(py_m44, numpy.asarray(ml_m44), decimal=8)
+    numpy.testing.assert_almost_equal(py_mstack, ml_mstack, decimal=8)
 
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
-@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
-def test_linopt(engine, ml_lattice, py_lattice, dp, refpts):
-
-    def compare_lindata(py_data, ml_data, decimal=8):
-        for (ml_key, py_key) in [('SPos', 's_pos'), ('ClosedOrbit', 'closed_orbit'), ('Dispersion', 'dispersion'),
-                                 ('beta', 'beta'), ('alpha', 'alpha'), ('mu', 'mu'), ('M44', 'm44'),
-                                 ('A', 'A'), ('B', 'B'), ('C', 'C'), ('gamma', 'gamma')]:
-            ml_val = _py_data(ml_data[ml_key])
-            if py_key == 'closed_orbit':
-                py_val = numpy.squeeze(py_data[py_key][:, :4])
-            else:
-                py_val = numpy.squeeze(py_data[py_key])
-            numpy.testing.assert_almost_equal(py_val, ml_val, decimal=decimal)
-
+@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
+@pytest.mark.parametrize('func_data', (('twissring', [('SPos', 's_pos'),
+    ('ClosedOrbit', 'closed_orbit'), ('Dispersion', 'dispersion'),
+    ('alpha', 'alpha'), ('beta', 'beta'), ('M44', 'm44')]),
+    ('atlinopt', [('SPos', 's_pos'), ('ClosedOrbit', 'closed_orbit'),
+    ('Dispersion', 'dispersion'), ('alpha', 'alpha'), ('beta', 'beta'),
+    ('mu', 'mu'), ('M44', 'm44'), ('A', 'A'), ('B', 'B'), ('C', 'C'),
+    ('gamma', 'gamma')])))
+def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
+    """N.B. a 'mu' comparison is left out for twiss data as the values for 'mu'
+        returned by 'twissring' in Matlab are inconsistent with those from
+        'get_twiss' and 'linopt' in Python as well as those returned from
+        'atlinopt' in Matlab.
+    """
     nelems = len(py_lattice)
-    if isinstance(refpts, str):
-        refpts = range(nelems+1)
+    refpts = range(nelems + 1) if refpts is None else refpts
 
     # Python call
-    py_lindata0, py_nu, py_xsi, py_lindata = physics.linopt(py_lattice, 0.0, refpts, get_chrom=True)
-
-    if refpts is None:
-        # Matlab call for last element
-        ml_lindata, ml_nu, ml_xsi = engine.pyproxy('atlinopt', ml_lattice, 0.0, _ml_refs(nelems, nelems), nargout=3)
-        # test initial values
-        numpy.testing.assert_almost_equal(py_nu, _py_data(ml_nu), decimal=6)
-        numpy.testing.assert_almost_equal(py_xsi, _py_data(ml_xsi), decimal=5)
-        compare_lindata(numpy.expand_dims(py_lindata0, 0), ml_lindata, decimal=6)
+    if func_data[0] == 'twissring':
+        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice, dp, refpts, True)
     else:
-        # Matlab call
-        ml_lindata, ml_nu, ml_xsi = engine.pyproxy('atlinopt', ml_lattice, 0.0, _ml_refs(refpts, nelems), nargout=3)
-        # test refpoints
-        compare_lindata(py_lindata, ml_lindata)
+        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp, refpts, True)
+    # Matlab call
+    ml_data, ml_tune, ml_chrom = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(refpts, nelems), nargout=3)
+    ml_data0 = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(nelems, nelems), nargout=3)[0]
+    # Comparison
+    numpy.testing.assert_almost_equal(py_tune, _py_data(ml_tune), decimal=6)
+    numpy.testing.assert_almost_equal(py_chrom, _py_data(ml_chrom), decimal=4)
+    _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, func_data[1], decimal=5)
+    _compare_physdata(py_data, ml_data, func_data[1], decimal=5)
 
 
-@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None, '-'))
+@pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
 def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
-
-    def compare_lindata(py_data, ml_data, decimal=8):
-        for (ml_key, py_key) in [('beam66', 'r66'), ('beam44', 'r44'), ('emit66', 'emitXYZ'), ('emit44', 'emitXY')]:
-            ml_val = _py_data(ml_data[ml_key])
-            py_val = numpy.squeeze(py_data[py_key])
-            numpy.testing.assert_almost_equal(py_val, ml_val, decimal=decimal)
-
+    fields = [('beam66', 'r66'), ('beam44', 'r44'), ('emit66', 'emitXYZ'), ('emit44', 'emitXY')]
     nelems = len(py_lattice)
-    if isinstance(refpts, str):
-        refpts = range(nelems+1)
+    refpts = range(nelems + 1) if refpts is None else refpts
 
     # Python call
     py_lattice.radiation_on()
-    emit0, beamdata, emit = physics.ohmi_envelope(py_lattice, refpts)
-
-    if refpts is None:
-        # Matlab call at initial point
-        ml_data, ml_params = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(0, nelems), nargout=2)
-        # test initial values
-        revolution_period = get_s_pos(py_lattice, nelems) / speed_of_light
-        damping_times = revolution_period / beamdata.damping_rates
-        numpy.testing.assert_almost_equal(damping_times, _py_data(ml_params['dampingtime']), decimal=8)
-        numpy.testing.assert_almost_equal(beamdata.mode_emittances, _py_data(ml_data['modemit']), decimal=8)
-        compare_lindata(numpy.expand_dims(emit0, 0), ml_data)
-    else:
-        # Matlab call
-        ml_data = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(refpts, nelems))
-        # test refpoints
-        compare_lindata(emit, ml_data)
+    py_emit0, py_beamdata, py_emit = physics.ohmi_envelope(py_lattice, refpts)
+    # Matlab call
+    ml_emit = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(refpts, nelems))
+    ml_emit0, ml_params = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(0, nelems), nargout=2)
+    revolution_period = get_s_pos(py_lattice, nelems) / speed_of_light
+    damping_times = revolution_period / py_beamdata.damping_rates
+    # Comparison
+    numpy.testing.assert_almost_equal(damping_times, _py_data(ml_params['dampingtime']), decimal=8)
+    numpy.testing.assert_almost_equal(py_beamdata.mode_emittances, _py_data(ml_emit0['modemit']), decimal=8)
+    _compare_physdata(numpy.expand_dims(py_emit0, 0), ml_emit0, fields)
+    _compare_physdata(py_emit, ml_emit, fields)
