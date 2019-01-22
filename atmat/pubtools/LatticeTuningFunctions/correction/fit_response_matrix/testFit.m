@@ -31,7 +31,10 @@ indvsel = find(atgetcells(r0,'Class','Sextupole'))';
 indhsel = indhsel(1:14:end); indvsel = indhsel;
 
 % mark fit locations
-ind = find(atgetcells(r0,'Class','Quadrupole','Bend'));
+iq = find(atgetcells(r0,'Class','Quadrupole'));
+ib = find(atgetcells(r0,'Class','Bend'));
+% ind = [iq(1:40:end); ib(1:40:end)];
+ind = [iq(1:1:end); ib(1:1:end)];
 r0 = atsetfieldvalues(r0,ind,'FitElement',1);
 
 % number of eigenvectors for fit [quad, dip, skew]
