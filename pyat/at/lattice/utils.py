@@ -4,8 +4,13 @@ Helper functions for working with AT lattices.
 A lattice as understood by pyAT is any sequence of elements.  These functions
 are useful for working with these sequences.
 
-The refpts functions allow selecting a number of points in a lattice.
-Indexing runs from zero (the start of the first element) to n_elements (the end of the last element).
+The refpts allow functions to select points in the lattice, returned values are
+given at the entrance of each element specified in refpts.
+refpts can be: an integer in the range [-len(ring), len(ring)-1] selecting the
+element according to python indexing rules. As a special case, len(ring) is
+allowed and refers to the end of the last element, an ordered list of such
+integers without duplicates, a numpy array of booleans of maximum length
+len(ring)+1, where selected elements are True.
 """
 import numpy
 import itertools
@@ -24,28 +29,27 @@ def uint32_refpts(refpts, n_elements):
     Return a uint32 numpy array with contents as the indices of the selected
     elements.  This is used for indexing a lattice using explicit indices.
     """
-    if isinstance(refpts, numpy.ndarray):
-        if refpts.dtype == numpy.uint32:
-            return refpts
-        elif refpts.dtype == bool:
-            refs = numpy.flatnonzero(refpts)
-        else:
-            refs = refpts
-    elif refpts is None:
+    refs = numpy.asarray(refpts).reshape(-1)
+    if (refpts is None) or (refs.size is 0):
         return numpy.array([], dtype=numpy.uint32)
-    else:
-        # number or sequence of numbers
-        refs = numpy.asarray(refpts)
+    elif (refs.size > n_elements+1):
+        raise ValueError('too many reftps given')
+    elif numpy.issubdtype(refs.dtype, numpy.bool_):
+        refs = numpy.flatnonzero(refs)
 
     # Handle negative indices
-    refs = numpy.array([i if (i == n_elements) else i % n_elements for i in numpy.ravel(refs)], dtype=numpy.uint32)
+    refs = numpy.array([i if (i == n_elements) else i % n_elements for i in refs],
+                       dtype=numpy.uint32)
 
     # Check ascending
-    if refs.size > 0:
+    if refs.size > 1:
         prev = refs[0]
         for next in refs[1:]:
-            if next <= prev:
-                raise ValueError('refpts must be ascending')
+            if next < prev:
+                raise ValueError('refpts should be given in ascending order')
+            elif next == prev:
+                raise ValueError('refpts contains duplicates or index(es) out'
+                                 ' of range')
             prev = next
 
     return refs
@@ -58,7 +62,13 @@ def bool_refpts(refpts, n_elements):
     values.
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        return refpts
+        diff = 1 + n_elements - refpts.size
+        if diff is 0:
+            return refpts
+        elif diff > 0:
+            return numpy.append(refpts, numpy.zeros(diff, dtype=bool))
+        else:
+            return refpts[:n_elements+1]
     else:
         brefpts = numpy.zeros(n_elements + 1, dtype=bool)
         brefpts[refpts] = True
