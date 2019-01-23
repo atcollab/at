@@ -43,9 +43,9 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
                         Defaults to None
 
     KEYWORDS
-        orbit=None          Avoids looking for the closed orbit if it is
-                            already known                           (6,) array)
-        keep_lattice=False  Assume no lattice change since the previous tracking
+        orbit=None          Avoids looking for the colsed orbit if is already known ((6,) array)
+        keep_lattice=False  Assume no lattice change since the previous tracking.
+                            Defaults to False
 
     OUTPUT
         emit0               emittance data at the start/end of the ring
@@ -53,17 +53,13 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         emit                emittance data at the points refered to by refpts,
                             if refpts is None an empty structure is returned.
 
-        emit is a record array with fields:
-        r66                 (6, 6) equilibrium envelope matrix R
-        r44                 (4, 4) betatron emittance matrix (dpp = 0)
-        m66                 (6, 6) transfer matrix from the start of the ring
+        emit is a structured array with fields:
+        R66                 (6, 6) equilibrium envelope matrix R
+        R44                 (4, 4) betatron emittance matrix (dpp = 0)
+        T66                 (6, 6) transfer matrix from the start of the ring
         orbit6              (6,) closed orbit
         emitXY              betatron emittance projected on xxp and yyp
         emitXYZ             6x6 emittance projected on xxp, yyp, ldp
-
-        Field values can be obtained with either
-        emit['r66']    or
-        emit.r66
 
         beamdata is a named tuple with attributes:
         tunes               tunes of the 3 normal modes
@@ -79,8 +75,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         """accumulate diffusion matrices"""
         cumul = numpy.zeros((6, 6))
         yield cumul
-        for el, orbin, b in it:
-            m = find_elem_m66(el, orbin)
+        for elem, orbin, b in it:
+            m = find_elem_m66(elem, orbin)
             cumul = md((m, cumul, m.T)) + b
             yield cumul
 
@@ -98,8 +94,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
             minv = inv(r66)
             r44 = inv(minv[:4, :4])
         # betatron emittances (dpp=0)
-        emit2 = numpy.sqrt(numpy.array(
-            [det(r44[s, s], check_finite=False) for s in _submat[:2]]))
+        emit2 = numpy.sqrt(numpy.array([det(r44[s, s], check_finite=False) for s in _submat[:2]]))
         return r44, emit2, emit3
 
     def propag(m, cumb, orbit6):
@@ -110,26 +105,23 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
 
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
-    allrefs = uint32_refpts(range(nelems + 1), nelems)
+    allrefs = uint32_refpts(range(nelems+1), nelems)
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
         keep_lattice = True
 
-    orbs = numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                     keep_lattice=keep_lattice),
-        axis=(1, 3)).T
+    orbs = numpy.squeeze(lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs, keep_lattice=keep_lattice),
+                         axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy)
-          if elem.PassMethod.endswith('RadPass') else b0 for elem in ring]
+    bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy) if elem.PassMethod.endswith('RadPass') else b0
+          for elem in ring]
     bbcum = numpy.stack(cumulb(zip(ring, orbs, bb)), axis=0)
     # ------------------------------------------------------------------------
     # Equation for the moment matrix R is
     #         R = MRING*R*MRING' + BCUM;
-    # We rewrite it in the form of Lyapunov-Sylvester equation to use scipy's
-    # solve_sylvester function
+    # We rewrite it in the form of Lyapunov-Sylvester equation to use scipy's solve_sylvester function
     #            A*R + R*B = Q
     # where
     #               A =  inv(MRING)
@@ -144,11 +136,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     rr4, emitxy, emitxyz = process(rr)
     r66data = get_tunes_damp(mring, rr)
 
-    data0 = numpy.rec.fromarrays(
-        (rr, rr4, mring, orbit, emitxy, emitxyz),
-        dtype=ENVELOPE_DTYPE)
-    data = numpy.rec.fromrecords(
-        list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])),
-        dtype=ENVELOPE_DTYPE)
+    data0 = numpy.array((rr, rr4, mring, orbit, emitxy, emitxyz), dtype=ENVELOPE_DTYPE)
+    data = numpy.array(list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])), dtype=ENVELOPE_DTYPE)
 
     return data0, r66data, data
