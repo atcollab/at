@@ -2,7 +2,7 @@ import at
 import numpy
 import pytest
 from at.load import find_class_name, element_from_dict
-from at.load import CLASSES, CLASS_MAPPING, FAMILY_MAPPING, PASSMETHOD_MAPPING
+from at.load import CLASSES, CLASS_MAPPING, PASS_MAPPING
 
 
 def test_invalid_class_raises_AttributeError():
@@ -13,8 +13,10 @@ def test_invalid_class_raises_AttributeError():
 
 def test_correct_class_names():
     elem_kwargs = {'FamName': 'fam'}
-    for class_name in CLASSES:
+    for class_name in CLASSES.values():
         elem_kwargs['Class'] = class_name
+        assert find_class_name(elem_kwargs) == class_name
+        elem_kwargs['Class'] = class_name.upper()
         assert find_class_name(elem_kwargs) == class_name
 
 
@@ -27,21 +29,23 @@ def test_class_mapping():
 
 def test_family_mapping():
     elem_kwargs = {}
-    for family_name in CLASSES:
+    for family_name in CLASSES.values():
         elem_kwargs['FamName'] = family_name
         assert find_class_name(elem_kwargs) == family_name
-    for family_name in FAMILY_MAPPING.keys():
-        elem_kwargs['FamName'] = family_name
-        assert find_class_name(elem_kwargs) == FAMILY_MAPPING[family_name]
         elem_kwargs['FamName'] = family_name.upper()
-        assert find_class_name(elem_kwargs) == FAMILY_MAPPING[family_name]
+        assert find_class_name(elem_kwargs) == family_name
+    for family_name in CLASS_MAPPING.keys():
+        elem_kwargs['FamName'] = family_name
+        assert find_class_name(elem_kwargs) == CLASS_MAPPING[family_name]
+        elem_kwargs['FamName'] = family_name.upper()
+        assert find_class_name(elem_kwargs) == CLASS_MAPPING[family_name]
 
 
 def test_PassMethod_mapping():
     elem_kwargs = {'FamName': 'fam'}
-    for pass_method in PASSMETHOD_MAPPING.keys():
+    for pass_method in PASS_MAPPING.keys():
         elem_kwargs['PassMethod'] = pass_method
-        assert find_class_name(elem_kwargs) == PASSMETHOD_MAPPING[pass_method]
+        assert find_class_name(elem_kwargs) == PASS_MAPPING[pass_method]
 
 
 def test_find_Aperture():
