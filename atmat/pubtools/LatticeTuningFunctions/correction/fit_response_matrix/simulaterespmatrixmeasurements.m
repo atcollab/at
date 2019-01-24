@@ -39,7 +39,7 @@ delta=1e-4;
 
 alpha=mcf(r);
 indrfc=find(atgetcells(r,'Frequency'));
-            
+f0=r{indrfc(1)}.HarmNumber*PhysConstant.speed_of_light_in_vacuum.value/findspos(r,length(r)+1);            
             
 % get tune chrom orbit and dispersion
 [l,t,ch]=atlinopt(r,0,indHCor);
@@ -49,9 +49,12 @@ by=arrayfun(@(a)a.beta(2),l);
 o=findorbit6Err(r,indBPM,inCOD);
 Ox=o(1,:);
 Oy=o(3,:);
-d=finddispersion6Err(r,indBPM,indrfc,alpha,delta,inCOD);
-Dx=d(1,:);
-Dy=d(3,:);
+% d=finddispersion6Err(r,indBPM,indrfc,alpha,delta,inCOD);
+% Dx=d(1,:);
+% Dy=d(3,:);
+ 
+Dx=getdisph6D(r,indBPM,indrfc,alpha,delta,inCOD)'; % [m/Hz] *Hz
+Dy=getdispv6D(r,indBPM,indrfc,alpha,delta,inCOD)'; % [m/Hz] *Hz
 
 % get bpm resolution value 
 bpmresx=atgetfieldvalues(r,indBPM,'Reading',{1,1});
@@ -76,10 +79,10 @@ disp(msg);
 ormH=findrespmat(r,indBPM,indHCor,kval./sqrt(bx),'PolynomB',1,1,'findorbit6Err',inCOD);
 ormV=findrespmat(r,indBPM,indVCor,kval./sqrt(by),'PolynomA',1,1,'findorbit6Err',inCOD);
 
-OH=ormH{1}./repmat(kval./sqrt(bx).*LH',length(indBPM),1);%./repmat(bpmresx,length(indHCor),1)';
+OH=-ormH{1}./repmat(kval./sqrt(bx).*LH',length(indBPM),1);%./repmat(bpmresx,length(indHCor),1)';
 OV=ormV{3}./repmat(kval./sqrt(by).*LV',length(indBPM),1);%./repmat(bpmresy,length(indVCor),1)';
 OHV=ormH{3}./repmat(kval./sqrt(bx).*LH',length(indBPM),1);%./repmat(bpmresy,length(indHCor),1)';
-OVH=ormV{1}./repmat(kval./sqrt(by).*LV',length(indBPM),1);%./repmat(bpmresx,length(indVCor),1)';
+OVH=-ormV{1}./repmat(kval./sqrt(by).*LV',length(indBPM),1);%./repmat(bpmresx,length(indVCor),1)';
 
 respvectornorm=[ OH(:) ;... H orm
                  OV(:) ;... V orm
