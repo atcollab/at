@@ -126,7 +126,7 @@ angd=2*getcellstruct(RING,'BendingAngle',bendlist,1,1)';
     
 if isnan(Fint)
     
-    warning('no FringeInt1 defined');
+%    warning('no FringeInt1 defined');
     Fint=zeros(size(Fint));
 
 end
@@ -537,7 +537,7 @@ termTS=repmat(S,[1 1 nfq]).*(termS2-termS1+termS3);
 % the dipoles term
 Amplitude_ik=sqrt(bxb*(bxd))/2/sx;
 if nbd>0
-    warning('CalcRespXXRespMat_thick_V2: problem if more dipoles than quadrupoles!')
+%    warning('CalcRespXXRespMat_thick_V2: problem if more dipoles than quadrupoles!')
     dipoleterm=[zeros(nb,nfq-nbd) (ones(nb,1)*h_j).*Amplitude_ik.*((ones(nb,1)*dI_js1).*S_ij1+(ones(nb,1)*dI_jc1).*C_ij1)];
 else
     dipoleterm=[zeros(nb,nfq)];
