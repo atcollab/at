@@ -53,14 +53,13 @@ nsubsets = 4;
     ]=atFitResponseMatrixAndDispersion(...
     rerr,...        1) lattice with errors to model
     r0,...          2) lattice without errors
-    inCOD,...       3) guess for initial coordinates
-    indbsel,...     3) bpm indexes for rm fit
-    indhsel,...     4) h correctors for rm fit
-    indvsel,...     5) v correctors for rm fit
-    neig,...        6) # eigenvectors for fit [quad, dip, skew]
-    nsubsets,...    7) # subsets for fit [quad, skew] errors=<fit(subsets)>
-    'Analytic',...
-    speclab...      8) label to distinguish rm files and avoid recomputation if already existing
+    'indBPM',indbsel,...     3) bpm indexes for rm fit
+    'indHCor',indhsel,...     4) h correctors for rm fit
+    'indVCor',indvsel,...     5) v correctors for rm fit
+    'neig',neig,...        6) # eigenvectors for fit [quad, dip, skew]
+    'nsubsets',nsubsets,...    7) # subsets for fit [quad, skew] errors=<fit(subsets)>
+    'modecalc','Analytic',...
+    'speclab',speclab...      8) label to distinguish rm files and avoid recomputation if already existing
     );
 
 
