@@ -10,12 +10,14 @@ function [...
     rerr,...        1) lattice with errors to model
     r0,...          2) lattice without errors
     inCOD,...       3) guess for initial coordinates
-    indbsel,...     3) bpm indexes for rm fit
-    indhsel,...     4) h correctors for rm fit
-    indvsel,...     5) v correctors for rm fit
-    neig,...        6) # eigenvectors for fit [quad, dip, skew]
-    nsubsets,...    7) # subsets for fit [quad, skew] errors=<fit(subsets)>
-    speclab...      8) label to distinguish rm files and avoid recomputation if already existing
+    indBPM,...      4) bpm indexes for rm fit
+    indHCor,...     5) h correctors for rm fit
+    indVCor,...     6) v correctors for rm fit
+    neig,...        7) # eigenvectors for fit [quad, dip, skew]
+    nsubsets,...    8) # subsets for fit [quad, skew] errors=<fit(subsets)>
+    modecalc,...    9) 'Analytic', 'Numeric', 'OAR'(ESRF)
+    speclab,...     10) label to distinguish rm files and avoid recomputation if already existing
+    measuredRM...   11) measured RM structure with function handles to simulate the same measurement
     )
 %
 % Function for RM fit. BASED ON ASD OAR CLUSTER @ ESRF
@@ -26,24 +28,59 @@ function [...
 %
 %see also:
 
-if nargin<7
+% 
+% p=inputParser();
+% 
+% p = addRequired('r');
+
+
+if nargin<9
+    modecalc='Numeric';
+end
+if nargin<10
     speclab='';
 end
+if nargin<11
+    measuredRM = [];
+end
+
+%modecalc = 'Analytic' ; % 'Analytic' 'OAR' 'Numeric'
+speclab = [speclab modecalc];
+
+wdisph = 1; 
+wdispv = 1; 
+wtune = 1;
 
 delta=1e-4;
 alpha=mcf(rerr);
 indrfc=find(atgetcells(rerr,'Frequency'));
 
-% "measure" RM, dispersion
-rmfunctnorm =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'normdisp',[1e-2 1e-2],txt);
-rmfunctskew =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'skewdisp',1e-2,txt);
-rmfunctdh =@(r,ib,~,~,~,~)getdisph6D(r,ib,indrfc,alpha,delta,inCOD);
-rmfunctdv =@(r,ib,~,~,~,~)getdispv6D(r,ib,indrfc,alpha,delta,inCOD);
+alpha0=mcf(r0);
+f0=r0{indrfc(1)}.HarmNumber*PhysConstant.speed_of_light_in_vacuum.value/findspos(r0,length(r0)+1);
+           
 
-RMH=rmfunctnorm(rerr,indbsel,indhsel,indvsel,[],'computing hor. cor. RM');
-RMV=rmfunctskew(rerr,indbsel,indhsel,indvsel,[],'computing ver. cor. RM');
-DH=rmfunctdh(rerr,indbsel,[],[],[],'');
-DV=rmfunctdv(rerr,indbsel,[],[],[],'');
+% "measure" RM, dispersion
+if isempty(measuredRM)
+    rmfunctnorm =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'normdisp',[wdisph wtune],txt);
+    rmfunctskew =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'skewdisp',wdispv,txt);
+    rmfunctdh =@(r,ib,~,~,~,~)getdisph6D(r,ib,indrfc,alpha,delta,inCOD);
+    rmfunctdv =@(r,ib,~,~,~,~)getdispv6D(r,ib,indrfc,alpha,delta,inCOD);
+
+    RMH=rmfunctnorm(rerr,indBPM,indHCor,indVCor,[],'computing hor. cor. RM');
+    RMV=rmfunctskew(rerr,indBPM,indHCor,indVCor,[],'computing ver. cor. RM');
+    DH=rmfunctdh(rerr,indBPM,[],[],[],'');
+    DV=rmfunctdv(rerr,indBPM,[],[],[],'');
+else
+    rmfunctnorm = measuredRM.rmfunctnorm;
+    rmfunctskew = measuredRM.rmfunctskew;
+    rmfunctdh = measuredRM.rmfunctdh;
+    rmfunctdv = measuredRM.rmfunctdv;
+    
+    RMH = measuredRM.RMH;
+    RMV = measuredRM.RMV;
+    DH = measuredRM.DH;
+    DV = measuredRM.DV;
+end
 
 %% build "Response of RM to errors" for fit using OAR cluster.
 indQuadsDeriv=find(atgetcells(r0,'Class','Quadrupole','Sextupole') & atgetcells(r0,'FitElement') )';
@@ -51,183 +88,300 @@ indDip=find(atgetcells(r0,'Class','Bend') & atgetcells(r0,'FitElement') )';
 indquad=indQuadsDeriv;
 inddip=indDip;
 
-AnalyticRMderiv = false;
-
 forceRMderivcalc = false;
 
-if ~AnalyticRMderiv
-    if ~exist([speclab 'Norm' '.mat'],'file') || ...
-            ~exist([speclab 'Skew' '.mat'],'file') || ...
-            ~exist([speclab 'DH' '.mat'],'file') || ...
-            ~exist([speclab 'DV' '.mat'],'file') || forceRMderivcalc
+% quad gradient error skew
+QuadKn.index=indQuadsDeriv;
+QuadKn.perturbation={'PolynomB',[1,2]};
+QuadKn.delta=0;
+QuadKn.dk=1e-6;
+
+% quad gradient error skew
+QuadKs.index=indQuadsDeriv;
+QuadKs.perturbation={'PolynomA',[1,2]};
+QuadKs.delta=0;
+QuadKs.dk=1e-6;
+
+% dipole angle
+DipAng.index=indDip;
+DipAng.perturbation={'BendingAngle',[1,1]};
+DipAng.delta=0;
+DipAng.dk=1e-6;
+
+% dipole rotations
+DipRot.index=indDip;
+DipRot.perturbation=@(rr,ind,val)atsettilt(rr,ind,val); % Dipole rotation psiPAds(ipads).delta=0;
+DipRot.delta=0;
+DipRot.dk=1e-5;
+
+% if files do not exist already
+if ~exist([speclab 'Norm' '.mat'],'file') || ...
+        ~exist([speclab 'Skew' '.mat'],'file') || ...
+        ~exist([speclab 'DH' '.mat'],'file') || ...
+        ~exist([speclab 'DV' '.mat'],'file') || forceRMderivcalc
+    
+    switch modecalc
         
-        oarspecstring='-l walltime=6 -q asd';
-        
-        % quad gradient error skew
-        QuadKn.index=indQuadsDeriv;
-        QuadKn.perturbation={'PolynomB',[1,2]};
-        QuadKn.delta=0;
-        QuadKn.dk=1e-6;
-        
-        % quad gradient error skew
-        QuadKs.index=indQuadsDeriv;
-        QuadKs.perturbation={'PolynomA',[1,2]};
-        QuadKs.delta=0;
-        QuadKs.dk=1e-6;
-        
-        % dipole angle
-        DipAng.index=indDip;
-        DipAng.perturbation={'BendingAngle',[1,1]};
-        DipAng.delta=0;
-        DipAng.dk=1e-6;
-        
-        % dipole rotations
-        DipRot.index=indDip;
-        DipRot.perturbation=@(rr,ind,val)atsettilt(rr,ind,val); % Dipole rotation psiPAds(ipads).delta=0;
-        DipRot.delta=0;
-        DipRot.dk=1e-5;
-        
-        tmpName=[tempname '.mat']; % 'latat.mat';%
-        save(tmpName,'r0'); %r0 with initialized fields for errors and offsets.
-        
-        % run OAR cluster RM derivative
-        tic;
-        RMFoldNorm=RunRMGenericDerivArray(...
-            tmpName,...
-            'r0',...
-            50,...
-            [QuadKn ],...
-            indhsel,...
-            indvsel,...
-            indbsel,...
-            rmfunctnorm,... norm quad rm
-            [speclab 'Norm'],...
-            oarspecstring);            % dpp
-        
-        RMFoldSkew=RunRMGenericDerivArray(...
-            tmpName,...
-            'r0',...
-            50,...
-            [QuadKs ],...
-            indhsel,...
-            indvsel,...
-            indbsel,...
-            rmfunctskew,... % skew quad RM
-            [speclab 'Skew'],...
-            oarspecstring);            % dpp
-        
-        RMFoldDH=RunRMGenericDerivArray(...
-            tmpName,...
-            'r0',...
-            10,...
-            [ DipAng],...
-            indhsel,...
-            indvsel,...
-            indbsel,...
-            rmfunctdh,... norm quad rm
-            [speclab 'DH'],...
-            oarspecstring);            % dpp
-        
-        RMFoldDV=RunRMGenericDerivArray(...
-            tmpName,...
-            'r0',...
-            10,...
-            [ DipRot],...
-            indhsel,...
-            indvsel,...
-            indbsel,...
-            rmfunctdv,... % skew quad RM
-            [speclab 'DV'],...
-            oarspecstring);            % dpp
-        
-        
-        disp('Waiting for all files to be appropriately saved');
-        pause(10);
-        % collect data
-        CollectRMGenericDerivOARData(RMFoldNorm,...
-            fullfile(RMFoldNorm,['../' speclab 'Norm.mat']));
-        CollectRMGenericDerivOARData(RMFoldSkew,...
-            fullfile(RMFoldSkew,['../' speclab 'Skew.mat']));
-        
-        CollectRMGenericDerivOARData(RMFoldDH,...
-            fullfile(RMFoldDH,['../' speclab 'DH.mat']));
-        CollectRMGenericDerivOARData(RMFoldDV,...
-            fullfile(RMFoldDV,['../' speclab 'DV.mat']));
-        % remove supporting folders and files
-        
-        rmdir(RMFoldNorm,'s');
-        rmdir(RMFoldSkew,'s');
-        rmdir(RMFoldDH,'s');
-        rmdir(RMFoldDV,'s');
-        delete(tmpName);
-        toc;
-        
+        case 'OAR'
+            
+            oarspecstring='-l walltime=6 -q asd';
+            
+            tmpName=[tempname '.mat']; % 'latat.mat';%
+            save(tmpName,'r0'); %r0 with initialized fields for errors and offsets.
+            
+            % run OAR cluster RM derivative
+            tic;
+            RMFoldNorm=RunRMGenericDerivArray(...
+                tmpName,...
+                'r0',...
+                50,...
+                [QuadKn ],...
+                indHCor,...
+                indVCor,...
+                indBPM,...
+                rmfunctnorm,... norm quad rm
+                [speclab 'Norm'],...
+                oarspecstring);            % dpp
+            
+            RMFoldSkew=RunRMGenericDerivArray(...
+                tmpName,...
+                'r0',...
+                50,...
+                [QuadKs ],...
+                indHCor,...
+                indVCor,...
+                indBPM,...
+                rmfunctskew,... % skew quad RM
+                [speclab 'Skew'],...
+                oarspecstring);            % dpp
+            
+            RMFoldDH=RunRMGenericDerivArray(...
+                tmpName,...
+                'r0',...
+                10,...
+                [ DipAng],...
+                indHCor,...
+                indVCor,...
+                indBPM,...
+                rmfunctdh,... norm quad rm
+                [speclab 'DH'],...
+                oarspecstring);            % dpp
+            
+            RMFoldDV=RunRMGenericDerivArray(...
+                tmpName,...
+                'r0',...
+                10,...
+                [ DipRot],...
+                indHCor,...
+                indVCor,...
+                indBPM,...
+                rmfunctdv,... % skew quad RM
+                [speclab 'DV'],...
+                oarspecstring);            % dpp
+            
+            
+            disp('Waiting for all files to be appropriately saved');
+            pause(10);
+            % collect data
+            CollectRMGenericDerivOARData(RMFoldNorm,...
+                fullfile(RMFoldNorm,['../' speclab 'Norm.mat']));
+            CollectRMGenericDerivOARData(RMFoldSkew,...
+                fullfile(RMFoldSkew,['../' speclab 'Skew.mat']));
+            
+            CollectRMGenericDerivOARData(RMFoldDH,...
+                fullfile(RMFoldDH,['../' speclab 'DH.mat']));
+            CollectRMGenericDerivOARData(RMFoldDV,...
+                fullfile(RMFoldDV,['../' speclab 'DV.mat']));
+            % remove supporting folders and files
+            
+            rmdir(RMFoldNorm,'s');
+            rmdir(RMFoldSkew,'s');
+            rmdir(RMFoldDH,'s');
+            rmdir(RMFoldDV,'s');
+            delete(tmpName);
+            toc;
+            
+            
+        case 'Analytic' % analytic RM derivative
+          
+            warning('This option is available only for dipole and quadrupole errors fit (specify better !!!)');
+            
+            % get anlytical RM response
+            dpp = 0;
+            [...
+                dX_dq, dY_dq, ...
+                dDx_dq, dDx_db, Dx, ...
+                dXY_ds, dYX_ds, ...
+                dDx_ds, dDy_ds, ...
+                dDy_da...
+                ]=AnalyticResponseMatrixDerivative(...
+                r0',dpp,...
+                indBPM',... % bpm
+                indHCor,...  % correctors
+                indquad,... % quadrupoles
+                indDip(1)',... % no dipoles, later
+                indquad);
+            
+            %  select relevant quadrupoles
+            
+            qind=find(atgetcells(r0,'Class','Quadrupole'))'; % response matrix computed always at all quadrupoles
+            quadforresponse=find(ismember(qind,indquad)); % quadrupoles to use for fit amoung all
+            nq = length(indquad);
+            dval = ones(size(indquad));
+            
+            warning('dispersion/quadK not ok yet. never used in SR before 2018');
+            for iq=1:nq
+                
+                ib = quadforresponse(iq); % use only selected quadrupoles
+                rha=dX_dq(:,:,ib);
+                rva=dY_dq(:,:,ib);
+                dxdqa=[dDx_dq(:,ib)/(alpha0*f0);0;0]/dval(iq);% analytic, no tune dispersion derivative very different from
+                drespnorm(:,iq)=[rha(:);rva(:);dxdqa];
+                rhsa=dXY_ds(:,:,ib);
+                rvsa=dYX_ds(:,:,ib);
+                dxdqsa=[dDy_ds(:,ib)/(alpha0*f0)]/dval(iq);% analytic, no tune dispersion derivative very different from
+                drespskew(:,iq)=-[rvsa(:);rhsa(:);dxdqsa];
+                
+            end
+            
+            % dispersion RM
+            nb=length(indBPM);
+            alldip=find(atgetcells(r0,'BendingAngle'));
+            Ndip=numel(alldip);
+            dipsel=sort([1:Ndip]);
+            bndidx=sort(alldip(dipsel));% only long part
+            bang=atgetfieldvalues(r0,alldip,'BendingAngle');
+            
+            % make sure order is as in qempanel vector.
+            [~,b]=ismember(indDip,bndidx);
+
+            [N,S,~,~]=dDxyDtheta(r0,indBPM,alldip,'magmodel','thick');
+            % negative sign, probably due to dipole sign convention
+            N_sort= N(:,dipsel(b));
+            % qempanel response in [m/Hz] instead of [m/%]
+            N_sort=N_sort/(-alpha0*f0);
+            % in qempanel the response is for scaling factors, not deltas
+            % % N_sort=N_sort.*repmat(bang(dipsel(b))',nb,1);
+            
+            
+            S_sort=S(:,dipsel(b));
+            % qempanel response in [m/Hz] instead of [m/%]
+            S_sort=S_sort/(-alpha0*f0);
+            % in qempanel the response is for scaling factors, not deltas
+            S_sort=S_sort.*repmat(-bang(dipsel(b))',nb,1); % tilt not vertical angle
+           
+            rx = N_sort;
+            rz = S_sort;
+
+            % save files to use with GenericRMFit
+            rmfunctnorm =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'normdisp',[wdisph wtune],txt);
+            rmfunctskew =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'skewdisp',wdispv,txt);
+            rmfunctdh =@(r,ib,~,~,~,~)getdisph6D(r,ib,indrfc,alpha,delta,inCOD);
+            rmfunctdv =@(r,ib,~,~,~,~)getdispv6D(r,ib,indrfc,alpha,delta,inCOD);
+            
+            rmcalcfun = rmfunctnorm;
+            PertArray = QuadKn; 
+            dresp = drespnorm;
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'Norm.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+            rmcalcfun = rmfunctskew;
+            PertArray = QuadKs; 
+            dresp = drespskew;
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'Skew.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+            rmcalcfun = rmfunctdh;
+            PertArray = DipAng; 
+            dresp = rx ;
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'DH.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+            rmcalcfun = rmfunctdv;
+            PertArray = DipRot; 
+            dresp = rz ;
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'DV.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+        case 'Numeric' % numeric quad, dip derivative 
+           
+            % save files to use with GenericRMFit
+            rmcalcfun = rmfunctnorm;
+            PertArray = QuadKn; 
+            dresp = GenericRMDerivative(r0,...  lattice
+                indBPM,... RM bpm indexes
+                indHCor,... RM corrector indexes
+                indVCor,...
+                PertArray,... function for perturbation
+                rmcalcfun...     function to compute RM (default (getfullrespmatrixvector))
+                );
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+
+            save([speclab 'Norm.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+            
+            rmcalcfun = rmfunctskew;
+            PertArray = QuadKs; 
+            dresp = GenericRMDerivative(r0,...  lattice
+                indBPM,... RM bpm indexes
+                indHCor,... RM corrector indexes
+                indVCor,...
+                PertArray,... function for perturbation
+                rmcalcfun...     function to compute RM (default (getfullrespmatrixvector))
+                );
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'Skew.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+            rmcalcfun = rmfunctdh;
+            PertArray = DipAng; 
+            dresp = GenericRMDerivative(r0,...  lattice
+                indBPM,... RM bpm indexes
+                indHCor,... RM corrector indexes
+                indVCor,...
+                PertArray,... function for perturbation
+                rmcalcfun...     function to compute RM (default (getfullrespmatrixvector))
+                );
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'DH.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
+            rmcalcfun = rmfunctdv;
+            PertArray = DipRot; 
+            dresp = GenericRMDerivative(r0,...  lattice
+                indBPM,... RM bpm indexes
+                indHCor,... RM corrector indexes
+                indVCor,...
+                PertArray,... function for perturbation
+                rmcalcfun...     function to compute RM (default (getfullrespmatrixvector))
+                );
+            LongPertArray=arrayfun(@(a)StretchPertArray(a),PertArray,'un',0);
+            PertArray=[LongPertArray{:}];
+            save([speclab 'DV.mat'],'dresp','PertArray','rmcalcfun','indBPM','indHCor','indVCor');
+            
     end
-else % analytic RM derivative
-    error('not working feature')
-    % get anlytical RM response
-[...
-    dX_dq, dY_dq, ...
-    dDx_dq, dDx_db, Dx, ...
-    dXY_ds, dYX_ds, ...
-    dDx_ds, dDy_ds...
-    ]=CalcRespXXRespMat_thick_V2(...
-    mach',dpp,...
-    bpmidx',... % bpm
-    hsidxlat,...  % correctors
-    varidx,... % quadrupoles
-    bndidx',...
-    varidx);
-
-% normalize 
-[l,t,ch]=atlinopt(r,0,indHCor);
-bx=arrayfun(@(a)a.beta(1),l);
-by=arrayfun(@(a)a.beta(2),l);
-
-o=findorbit6Err(r,indBPM,inCOD);
-Ox=o(1,:);
-Oy=o(3,:);
-d=finddispersion6Err(r,indBPM,indrfc,alpha,delta,inCOD);
-Dx=d(1,:);
-Dy=d(3,:);
-
-% get bpm resolution value 
-bpmresx=atgetfieldvalues(r,indBPM,'Reading',{1,1});
-bpmresy=atgetfieldvalues(r,indBPM,'Reading',{1,2});
-LH=atgetfieldvalues(r,indHCor,'Length',{1,1});
-LV=atgetfieldvalues(r,indVCor,'Length',{1,1});
-
-
-OH=ormH{1}./repmat(kval./sqrt(bx).*LH',length(indBPM),1);%./repmat(bpmresx,length(indHCor),1)';
-OV=ormV{3}./repmat(kval./sqrt(by).*LV',length(indBPM),1);%./repmat(bpmresy,length(indVCor),1)';
-OHV=ormH{3}./repmat(kval./sqrt(bx).*LH',length(indBPM),1);%./repmat(bpmresy,length(indHCor),1)';
-OVH=ormV{1}./repmat(kval./sqrt(by).*LV',length(indBPM),1);%./repmat(bpmresx,length(indVCor),1)';
-
-respvectornorm=[ OH(:) ;... H orm
-                 OV(:) ;... V orm
-               ]; % response in a column vector
-
-respvectorskew=[ OHV(:) ;... H orm
-                 OVH(:) ;... V orm
-                ]; % response in a column vector
-
-rm=[OH, OVH;... H orm
-    OHV, OV;... V orm
-    ];
+    
+    
 end
 
-if nargout==0
-    disp('only matrices for fit computed');
-    return
-end
+% 
+% if nargout==0
+%     disp('only matrices for fit computed');
+%     return
+% end
 
 %% fit measured RM
 % implement average of errors fitted over several (4x4, instead of 16) subsets of correctors.
 % define masks to fit subsets
 N=nsubsets;
 
-maskh=zeros(length(indbsel),length(indhsel));
-maskv=zeros(length(indbsel),length(indvsel));
+maskh=zeros(length(indBPM),length(indHCor));
+maskv=zeros(length(indBPM),length(indVCor));
 
 fitsubsetsH=zeros(N,length(RMH));
 fitsubsetsV=zeros(N,length(RMV));
@@ -236,8 +390,8 @@ for ii=1:N
     maskvii=maskv;
     maskhii(:,ii:N:end)=maskhii(:,ii:N:end)+1;
     maskvii(:,ii:N:end)=maskvii(:,ii:N:end)+1;
-    fitsubsetsH(ii,:)=[maskhii(:);maskvii(:);ones(length(indbsel),1);1;1];
-    fitsubsetsV(ii,:)=[maskhii(:);maskvii(:);ones(length(indbsel),1)];
+    fitsubsetsH(ii,:)=[maskhii(:);maskvii(:);ones(length(indBPM),1);1;1];
+    fitsubsetsV(ii,:)=[maskhii(:);maskvii(:);ones(length(indBPM),1)];
 end
 
 
@@ -394,9 +548,9 @@ Kdv=Kdv+DKdv;
 %% compare set errors to fitted errors
 comparefitmod=false;
 if comparefitmod
-    [resperr]=rmfunctnorm(rerr,indbsel,indhsel,indvsel,delta,...
+    [resperr]=rmfunctnorm(rerr,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
-    [respfit]=rmfunctnorm(rfit,indbsel,indhsel,indvsel,delta,...
+    [respfit]=rmfunctnorm(rfit,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
     
     figure;
@@ -407,9 +561,9 @@ if comparefitmod
         ['RMfit: ' num2str(std(respfit))]);
     title('response matrix deviation normal');
     
-    [resperr]=rmfunctskew(rerr,indbsel,indhsel,indvsel,delta,...
+    [resperr]=rmfunctskew(rerr,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
-    [respfit]=rmfunctskew(rfit,indbsel,indhsel,indvsel,delta,...
+    [respfit]=rmfunctskew(rfit,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
     
     figure;
@@ -421,9 +575,9 @@ if comparefitmod
     title('response matrix deviation skew');
     
     
-    [resperr]=rmfunctdh(rerr,indbsel,indhsel,indvsel,delta,...
+    [resperr]=rmfunctdh(rerr,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
-    [respfit]=rmfunctdh(rfit,indbsel,indhsel,indvsel,delta,...
+    [respfit]=rmfunctdh(rfit,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
     
     figure;
@@ -435,9 +589,9 @@ if comparefitmod
     title('response matrix deviation h dispersion');
     
     
-    [resperr]=rmfunctdv(rerr,indbsel,indhsel,indvsel,delta,...
+    [resperr]=rmfunctdv(rerr,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
-    [respfit]=rmfunctdv(rfit,indbsel,indhsel,indvsel,delta,...
+    [respfit]=rmfunctdv(rfit,indBPM,indHCor,indVCor,delta,...
         ['computed ORM with errors dpp: ' num2str(delta)]);
     
     figure;
@@ -453,4 +607,4 @@ if comparefitmod
     figure; atplot(rfit);
 end
 
-return
+end
