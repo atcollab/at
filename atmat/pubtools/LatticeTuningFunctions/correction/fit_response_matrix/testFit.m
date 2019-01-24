@@ -59,6 +59,7 @@ nsubsets = 4;
     indvsel,...     5) v correctors for rm fit
     neig,...        6) # eigenvectors for fit [quad, dip, skew]
     nsubsets,...    7) # subsets for fit [quad, skew] errors=<fit(subsets)>
+    'Analytic',...
     speclab...      8) label to distinguish rm files and avoid recomputation if already existing
     );
 
