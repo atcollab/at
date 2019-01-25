@@ -16,12 +16,12 @@ end
 FamNames = atgetfieldvalues(rerr,1:length(ring),'FamName');
 %DeviceNames = atgetfieldvalues(rerr,1:length(ring),'Device');
 Lengths = atgetfieldvalues(rerr,1:length(ring),'Length');
-b.indHCor = atgetfieldvalues(rerr,1:length(ring),'KickAngle');
-b.indVCor = atgetfieldvalues(rerr,1:length(ring),'KickAngle');
-b.indQCor = atgetfieldvalues(rerr,1:length(ring),'Class','Quadrupole');
-b.indSCor = atgetfieldvalues(rerr,1:length(ring),'KickAngle');
-b.indSext = atgetfieldvalues(rerr,1:length(ring),'Class','Sextupole');
-b.indOctu = atgetfieldvalues(rerr,1:length(ring),'Class','Octupole');
+b.indHCor = atgetcells(rerr,'KickAngle');
+b.indVCor = atgetcells(rerr,'KickAngle');
+b.indQCor = atgetcells(rerr,'Class','Quadrupole');
+b.indSCor = atgetcells(rerr,'KickAngle');
+b.indSext = atgetcells(rerr,'Class','Sextupole');
+b.indOctu = atgetcells(rerr,'Class','Octupole');
 
 KL0n = zeros(size(ring)); % hor steerer
 KL0s = KL0n; % ver steerer
@@ -31,18 +31,18 @@ KL2n = KL0n; % sextupole
 KL3n = KL0n; % octupole
 
 % values for lattice with errors no correction
-ch0  = atgetfieldvalues(ring,b.indQCor,'PolynomB',{1,1});
-cv0  = atgetfieldvalues(ring,b.indQCor,'PolynomB',{1,1});
+ch0  = atgetfieldvalues(ring,b.indHCor,'PolynomB',{1,1});
+cv0  = atgetfieldvalues(ring,b.indVCor,'PolynomB',{1,1});
 cq0  = atgetfieldvalues(ring,b.indQCor,'PolynomB',{1,2});
-csk0 = atgetfieldvalues(ring,b.indQCor,'PolynomA',{1,2});
+csk0 = atgetfieldvalues(ring,b.indSCor,'PolynomA',{1,2});
 cs0  = atgetfieldvalues(ring,b.indSext,'PolynomB',{1,3});
 co0  = atgetfieldvalues(ring,b.indOctu,'PolynomB',{1,4});
 
 % values for lattice with errors and correction
-che  = atgetfieldvalues(rerr,b.indQCor,'PolynomB',{1,1});
-cve  = atgetfieldvalues(rerr,b.indQCor,'PolynomB',{1,1});
+che  = atgetfieldvalues(rerr,b.indHCor,'PolynomB',{1,1});
+cve  = atgetfieldvalues(rerr,b.indVCor,'PolynomB',{1,1});
 cqe  = atgetfieldvalues(rerr,b.indQCor,'PolynomB',{1,2});
-cske = atgetfieldvalues(rerr,b.indQCor,'PolynomA',{1,2});
+cske = atgetfieldvalues(rerr,b.indSCor,'PolynomA',{1,2});
 cse  = atgetfieldvalues(rerr,b.indSext,'PolynomB',{1,3});
 coe  = atgetfieldvalues(rerr,b.indOctu,'PolynomB',{1,4});
 
