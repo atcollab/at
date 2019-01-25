@@ -71,11 +71,13 @@ function rerr = atseterrortable(r,ErrorTable,varargin)
 
 p = inputParser;
 addRequired(p,'r',@iscell);
+addRequired(p,'ErrorTable',@istable);
 addOptional(p,'verbose',false,@islogical);
 
-parse(p,r,varargin{:});
+parse(p,r,ErrorTable,varargin{:});
 
 r=p.Results.r;
+ErrorTable = p.Results.ErrorTable;
 verbose=p.Results.verbose;
 
 
