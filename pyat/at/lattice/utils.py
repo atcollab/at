@@ -35,7 +35,7 @@ def uint32_refpts(refpts, n_elements):
     elif (refs.size > n_elements+1):
         raise ValueError('too many reftps given')
     elif numpy.issubdtype(refs.dtype, numpy.bool_):
-        return numpy.flatnonzero(refs)
+        return numpy.flatnonzero(refs).astype(numpy.uint32)
 
     # Handle negative indices
     refs = numpy.array([i if (i == n_elements) else i % n_elements for i in refs],
