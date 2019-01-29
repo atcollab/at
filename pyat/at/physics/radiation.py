@@ -50,7 +50,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     OUTPUT
         emit0               emittance data at the start/end of the ring
         beamdata            beam parameters at the start of the ring
-        emit                emittance data at the points refered to by refpts
+        emit                emittance data at the points refered to by refpts,
+                            if refpts is None an empty structure is returned.
 
         emit is a structured array with fields:
         R66                 (6, 6) equilibrium envelope matrix R
