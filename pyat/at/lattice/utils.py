@@ -5,12 +5,14 @@ A lattice as understood by pyAT is any sequence of elements.  These functions
 are useful for working with these sequences.
 
 The refpts allow functions to select points in the lattice, returned values are
-given at the entrance of each element specified in refpts.
-refpts can be: an integer in the range [-len(ring), len(ring)-1] selecting the
-element according to python indexing rules. As a special case, len(ring) is
-allowed and refers to the end of the last element, an ordered list of such
-integers without duplicates, a numpy array of booleans of maximum length
-len(ring)+1, where selected elements are True.
+given at the entrance of each element specified in refpts;
+refpts can be:
+    - an integer in the range [-len(ring), len(ring)-1] selecting the element
+        according to python indexing rules. As a special case, len(ring) is
+        allowed and refers to the end of the last element,
+    - an ordered list of such integers without duplicates,
+    - a numpy array of booleans of maximum length len(ring)+1, where selected
+        elements are True.
 """
 import numpy
 import itertools

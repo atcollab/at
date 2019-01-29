@@ -59,7 +59,8 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
                         2) an ordered list of such integers without duplicates,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
-                        Defaults to None
+                        Defaults to None, if refpts is None an empty array is
+                        returned for orbit.
 
     See also find_sync_orbit, find_orbit6.
     """
@@ -163,7 +164,8 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
                         2) an ordered list of such integers without duplicates,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
-                        Defaults to None
+                        Defaults to None, if refpts is None an empty array is
+                        returned for orbit.
 
     See also find_orbit4, find_orbit6.
     """
@@ -262,7 +264,8 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
                         2) an ordered list of such integers without duplicates,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
-                        Defaults to None
+                        Defaults to None, if refpts is None an empty array is
+                        returned for orbit.
 
     See also find_orbit4, find_sync_orbit.
     """

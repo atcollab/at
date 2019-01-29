@@ -66,7 +66,8 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
                         2) an ordered list of such integers without duplicates,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
-                        Defaults to None
+                        Defaults to None, if refpts is None an empty array is
+                        returned for mstack.
 
     KEYWORDS
         keep_lattice=False  When True, assume no lattice change since the previous tracking.
@@ -132,7 +133,8 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
                         2) an ordered list of such integers without duplicates,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
-                        Defaults to None
+                        Defaults to None, if refpts is None an empty array is
+                        returned for mstack.
 
     KEYWORDS
         keep_lattice=False  When True, assume no lattice change since the previous tracking.

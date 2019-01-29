@@ -41,7 +41,8 @@ def patpass(ring, rin, nturns, refpts=None, reuse=True, pool_size=None):
                         2) an ordered list of such integers without duplicates,
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
-                        Defaults to None
+                        Defaults to None, meaning no refpts, equivelent to
+                        passing an empty array for calculation purposes.
     """
     if not reuse:
         raise ValueError('patpass does not support altering lattices')
