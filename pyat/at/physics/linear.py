@@ -66,11 +66,14 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
     PARAMETERS
         ring            lattice description
         dp              momentum deviation. Defaults to 0
-        refpts          elements at which data is returned. It can be
-                        1) an integer (0 indicating the first element)
-                        2) a list of integers
-                        3) a numpy array of booleans as long as ring where
-                           selected elements are true
+        refpts          elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
                         Defaults to None
 
     KEYWORDS
@@ -87,7 +90,8 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_latti
         tune            [tune_h, tune_v], fractional part of the linear tunes
         chrom           [ksi_h , ksi_v], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
-        twiss           linear optics at the points refered to by refpts
+        twiss           linear optics at the points refered to by refpts, if
+                        refpts is None an empty twiss structure is returned.
 
         twiss is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
@@ -166,11 +170,14 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
     PARAMETERS
         ring            lattice description
         dp              momentum deviation. Defaults to 0
-        refpts          Optional: elements at which data is returned. It can be
-                        1) an integer (0 indicating the first element)
-                        2) a list of integers
-                        3) a numpy array of booleans as long as ring where
-                           selected elements are true
+        refpts          elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
                         Defaults to None
 
     KEYWORDS
@@ -188,7 +195,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None, keep_lattice=
         tune            [tune_A, tune_B], linear tunes for the two normal modes of linear motion [1]
         chrom           [ksi_A , ksi_B], vector of chromaticities ksi = d(nu)/(dP/P).
                         Only computed if 'get_chrom' is True
-        lindata         linear optics at the points refered to by refpts
+        lindata         linear optics at the points refered to by refpts, if
+                        refpts is None an empty lindata structure is returned.
 
         lindata is a structured array with fields:
         idx             element index in the ring                           (nrefs,)
