@@ -2,39 +2,34 @@ import at
 import numpy
 import pytest
 from at.load import find_class_name, element_from_dict
-from at.load import CLASSES, CLASS_MAPPING, PASS_MAPPING
+from at.load import CLASS_MAPPING, PASS_MAPPING
 
 
-def test_invalid_class_raises_AttributeError():
+def test_invalid_class_warns_when_quiet_is_False():
     elem_kwargs = {'Class': 'Invalid'}
-    with pytest.raises(AttributeError):
-        find_class_name(elem_kwargs)
+    with pytest.warns(at.AtWarning):
+        find_class_name(elem_kwargs, quiet=False)
 
 
-def test_correct_class_names():
-    elem_kwargs = {'FamName': 'fam'}
-    for class_name in CLASSES.values():
-        elem_kwargs['Class'] = class_name
-        assert find_class_name(elem_kwargs) == class_name
-        elem_kwargs['Class'] = class_name.upper()
-        assert find_class_name(elem_kwargs) == class_name
+def test_invalid_class_does_not_warn_when_quiet_is_True():
+    elem_kwargs = {'Class': 'Invalid'}
+    with pytest.warns(None) as record:
+        find_class_name(elem_kwargs, quiet=True)
+    assert len(record) is 0
 
 
 def test_class_mapping():
     elem_kwargs = {'FamName': 'fam'}
-    for class_name in CLASS_MAPPING.keys():
+    for class_name in CLASS_MAPPING:
         elem_kwargs['Class'] = class_name
+        assert find_class_name(elem_kwargs) == CLASS_MAPPING[class_name]
+        elem_kwargs['Class'] = class_name.upper()
         assert find_class_name(elem_kwargs) == CLASS_MAPPING[class_name]
 
 
 def test_family_mapping():
     elem_kwargs = {}
-    for family_name in CLASSES.values():
-        elem_kwargs['FamName'] = family_name
-        assert find_class_name(elem_kwargs) == family_name
-        elem_kwargs['FamName'] = family_name.upper()
-        assert find_class_name(elem_kwargs) == family_name
-    for family_name in CLASS_MAPPING.keys():
+    for family_name in CLASS_MAPPING:
         elem_kwargs['FamName'] = family_name
         assert find_class_name(elem_kwargs) == CLASS_MAPPING[family_name]
         elem_kwargs['FamName'] = family_name.upper()

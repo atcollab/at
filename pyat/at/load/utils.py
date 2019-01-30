@@ -2,17 +2,19 @@
 Conversion utilities for creating pyat elements
 """
 import numpy
+from warnings import warn
 from at.lattice import elements
+from at.lattice.utils import AtWarning
 
 
-CLASSES = {'marker': 'Marker', 'corrector': 'Corrector', 'monitor': 'Monitor',
-           'drift': 'Drift', 'rfcavity': 'RFCavity', 'ringparam': 'RingParam',
-           'octupole': 'Octupole', 'aperture': 'Aperture', 'dipole': 'Dipole',
-           'm66': 'M66', 'quadrupole': 'Quadrupole', 'multipole': 'Multipole',
-           'thinmultipole': 'ThinMultipole', 'sextupole': 'Sextupole'}
-
-CLASS_MAPPING = {'quad': 'Quadrupole', 'sext': 'Sextupole', 'bend': 'Dipole',
-                 'ap': 'Aperture', 'rf': 'RFCavity', 'bpm': 'Monitor'}
+CLASS_MAPPING = {'multipole': 'Multipole', 'quadrupole': 'Quadrupole',
+                 'thinmultipole': 'ThinMultipole', 'sextupole': 'Sextupole',
+                 'aperture': 'Aperture', 'm66': 'M66', 'rfcavity': 'RFCavity',
+                 'corrector': 'Corrector', 'rf': 'RFCavity', 'bpm': 'Monitor',
+                 'ap': 'Aperture', 'octupole': 'Octupole', 'dipole': 'Dipole',
+                 'drift': 'Drift', 'bend': 'Dipole', 'ringparam': 'RingParam',
+                 'quad': 'Quadrupole', 'sext': 'Sextupole', 'marker': 'Marker',
+                 'monitor': 'Monitor'}
 
 PASS_MAPPING = {'CorrectorPass': 'Corrector', 'BendLinearPass': 'Dipole',
                 'QuadLinearPass': 'Quadrupole', 'RFCavityPass': 'RFCavity',
@@ -42,7 +44,7 @@ def hasattrs(kwargs, *attributes):
     return False
 
 
-def find_class_name(kwargs):
+def find_class_name(kwargs, quiet=False):
     """Attempts to correctly identify the Class of the element from its kwargs.
 
     Args:
@@ -66,20 +68,15 @@ def find_class_name(kwargs):
         return low
 
     try:
-        class_name = kwargs.pop('Class')
-        if class_name.lower() in CLASSES.keys():
-            return CLASSES[class_name.lower()]
-        elif class_name.lower() in CLASS_MAPPING.keys():
-            return CLASS_MAPPING[class_name.lower()]
-        else:
-            raise AttributeError("Class '{0}' does not exist.\n{1}".format(class_name, kwargs))
+        class_name = kwargs.pop('Class', '')
+        return CLASS_MAPPING[class_name.lower()]
     except KeyError:
-        fam_name = kwargs.get('FamName')
-        if fam_name.lower() in CLASSES.keys():
-            return CLASSES[fam_name.lower()]
-        elif fam_name.lower() in CLASS_MAPPING.keys():
+        if (quiet is False) and (class_name != ''):
+            warn(AtWarning("Class '{0}' does not exist.\n{1}".format(class_name, kwargs)))
+        fam_name = kwargs.get('FamName', '')
+        try:
             return CLASS_MAPPING[fam_name.lower()]
-        else:
+        except KeyError:
             pass_method = kwargs.get('PassMethod', '')
             class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
@@ -123,7 +120,7 @@ def find_class_name(kwargs):
                     return 'Marker'
 
 
-def element_from_dict(elem_dict, index=None, check=True):
+def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     """return an AT element from a dictinary of attributes
     """
 
@@ -164,7 +161,7 @@ def element_from_dict(elem_dict, index=None, check=True):
                 if pass_method != 'DriftPass':
                     raise AttributeError(error_message("Class {0}.", class_name))
 
-    class_name = find_class_name(elem_dict)
+    class_name = find_class_name(elem_dict, quiet=quiet)
     if check:
         sanitise_class(index, class_name, elem_dict)
     cl = getattr(elements, class_name)
