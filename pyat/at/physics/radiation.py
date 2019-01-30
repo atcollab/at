@@ -32,11 +32,15 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
 
     PARAMETERS
         ring                at.Lattice object
-        refpts              elements at which data is returned. It can be
-                            1) an integer (0 indicating the first element)
-                            2) a list of integers
-                            3) a numpy array of booleans as long as ring where selected elements are true
-                            Defaults to None
+        refpts          elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+                        Defaults to None
 
     KEYWORDS
         orbit=None          Avoids looking for the colsed orbit if is already known ((6,) array)
@@ -46,7 +50,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     OUTPUT
         emit0               emittance data at the start/end of the ring
         beamdata            beam parameters at the start of the ring
-        emit                emittance data at the points refered to by refpts
+        emit                emittance data at the points refered to by refpts,
+                            if refpts is None an empty structure is returned.
 
         emit is a structured array with fields:
         R66                 (6, 6) equilibrium envelope matrix R

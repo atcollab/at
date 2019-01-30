@@ -14,6 +14,7 @@ DefaultNumIntSteps = 10;
 [famname,rsrc] = getoption(varargin,'FamName',famname);
 [method,rsrc]  = getoption(rsrc,'PassMethod',method);
 [lg,rsrc]      = getoption(rsrc,'Length',0);
+[defmax,rsrc]  = getoption(rsrc,'DefaultMaxOrder',0);
 elem           = struct('FamName',famname,'PassMethod',method,'Length',lg,rsrc{:});
 
 % Making PolynomA of same length with zero padding when necesssary
@@ -22,7 +23,7 @@ if any(ab)
     if ~ab(1), elem.PolynomA=[]; end
     if ~ab(2), elem.PolynomB=[]; end
     if ~isfield(elem,'MaxOrder')
-        elem.MaxOrder=max([1 find(abs(elem.PolynomB)>0,1,'last') find(abs(elem.PolynomA)>0,1,'last')])-1;
+        elem.MaxOrder=max([defmax+1 find(abs(elem.PolynomB)>0,1,'last') find(abs(elem.PolynomA)>0,1,'last')])-1;
     end
     la = length(elem.PolynomA);
     lb = length(elem.PolynomB);
