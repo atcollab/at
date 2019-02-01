@@ -318,11 +318,6 @@ class Dipole(Multipole):
         pp.BendingAngle = fr / sumfr * self.BendingAngle
         return pp
 
-    def _part(self, fr, sumfr):
-        pp = super(Dipole, self)._part(fr, sumfr)
-        pp.BendingAngle = fr / sumfr * self.BendingAngle
-        return pp
-
     @property
     def K(self):
         return self.PolynomB[1]

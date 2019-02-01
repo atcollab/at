@@ -66,8 +66,8 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     twiss0, tune, chrom, twiss = get_twiss(ring, dp[, refpts])
 
     PARAMETERS
-        ring            lattice description
-        dp=0.0          momentum deviation. Defaults to 0
+        ring            lattice description.
+        dp=0.0          momentum deviation.
         refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
@@ -78,7 +78,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                            len(ring)+1, where selected elements are True.
 
     KEYWORDS
-        orbit           avoids looking for the colsed orbit if is already known
+        orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute dispersion and chromaticities. Needs computing
                         the optics at 2 different momentum deviations around
@@ -181,8 +181,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     lindata0, tune, chrom, lindata = linopt(ring, dp[, refpts])
 
     PARAMETERS
-        ring            lattice description
-        dp=0.0          momentum deviation. Defaults to 0
+        ring            lattice description.
+        dp=0.0          momentum deviation.
         refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
@@ -193,7 +193,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                            len(ring)+1, where selected elements are True.
 
     KEYWORDS
-        orbit           avoids looking for the colsed orbit if is already known
+        orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute dispersion and chromaticities. Needs computing
                         the optics at 2 different momentum deviations around
@@ -254,7 +254,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         gamma = sqrt(numpy.linalg.det(numpy.dot(n, C) + numpy.dot(G, nn)))
         msa = (G.dot(mm) - m.dot(_jmt.dot(C.T.dot(_jmt.T)))) / gamma
         msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
-        cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(_jmt.dot(msb.T.dot(_jmt.T)))
+        cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(
+            _jmt.dot(msb.T.dot(_jmt.T)))
         return msa, msb, gamma, cc
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
@@ -284,10 +285,12 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         g = sqrt(1.0 + sqrt(t2 / t2h)) / sqrt(2.0)
         G = numpy.diag((g, g))
         C = -H * numpy.sign(t) / (g * sqrt(t2h))
-        A = G.dot(G.dot( M)) - numpy.dot(G, (
-                    m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(N.dot(_jmt.dot(C.T.dot(_jmt.T))))
-        B = G.dot(G.dot( N)) + numpy.dot(G, (
-                    _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(C.T.dot(_jmt.T.dot(M.dot(C))))
+        A = G.dot(G.dot(M)) - numpy.dot(G, (
+                m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(
+            N.dot(_jmt.dot(C.T.dot(_jmt.T))))
+        B = G.dot(G.dot(N)) + numpy.dot(G, (
+                _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(
+            C.T.dot(_jmt.T.dot(M.dot(C))))
     else:
         A = M
         B = N
