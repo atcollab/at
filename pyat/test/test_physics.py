@@ -4,7 +4,7 @@ import pytest
 from at import physics, load, atpass
 
 
-LATTICE_FILE = '../atmat/atdemos/atmatchExamples/ExampleATMATCH/dba.mat'
+LATTICE_FILE = 'test_matlab/dba.mat'
 CAVITY_FILE = 'test_matlab/hmba.mat'
 
 

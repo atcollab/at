@@ -29,6 +29,9 @@ def _compare_physdata(py_data, ml_data, fields, decimal=8):
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
+@pytest.mark.parametrize('ml_lattice, py_lattice',
+                         [(pytest.lazy_fixture('ml_dba'), pytest.lazy_fixture('py_dba')),
+                          (pytest.lazy_fixture('ml_hmba'), pytest.lazy_fixture('py_hmba'))])
 def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
     nelems = len(py_lattice)
     refpts = range(nelems + 1) if refpts is None else refpts
@@ -45,6 +48,9 @@ def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
+@pytest.mark.parametrize('ml_lattice, py_lattice',
+                         [(pytest.lazy_fixture('ml_dba'), pytest.lazy_fixture('py_dba')),
+                          (pytest.lazy_fixture('ml_hmba'), pytest.lazy_fixture('py_hmba'))])
 def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
     nelems = len(py_lattice)
     refpts = range(nelems + 1) if refpts is None else refpts
@@ -69,6 +75,8 @@ def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
     ('Dispersion', 'dispersion'), ('alpha', 'alpha'), ('beta', 'beta'),
     ('mu', 'mu'), ('M44', 'm44'), ('A', 'A'), ('B', 'B'), ('C', 'C'),
     ('gamma', 'gamma')])))
+@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
+                                                     pytest.lazy_fixture('py_hmba'))])
 def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
     """N.B. a 'mu' comparison is left out for twiss data as the values for 'mu'
         returned by 'twissring' in Matlab are inconsistent with those from
@@ -94,6 +102,8 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
 
 
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
+@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
+                                                     pytest.lazy_fixture('py_hmba'))])
 def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
     fields = [('beam66', 'r66'), ('beam44', 'r44'), ('emit66', 'emitXYZ'), ('emit44', 'emitXY')]
     nelems = len(py_lattice)
