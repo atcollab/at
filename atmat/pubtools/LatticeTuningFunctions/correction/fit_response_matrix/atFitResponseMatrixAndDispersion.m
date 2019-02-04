@@ -382,18 +382,24 @@ Kqn=Kqn+DKqn;
 CalcDerivatives(rfit,true);
 [~,rfit,DKdh,~,~]=GenericRMFit(DH,rfit,[speclab 'DH.mat'],neig(2),1); % fit normal
 Kdh=Kdh+DKdh;
-CalcDerivatives(rfit,true);
-[~,rfit,DKqn,~,~]=GenericRMFit(RMH,rfit,[speclab 'Norm.mat'],neig(1),1,fitsubsetsH,false,false);  % fit normal
-Kqn=Kqn+DKqn;
-CalcDerivatives(rfit,true);
-[~,rfit,DKdh,~,~]=GenericRMFit(DH,rfit,[speclab 'DH.mat'],neig(2),1,2); % fit normal
-Kdh=Kdh+DKdh;
+% CalcDerivatives(rfit,true);
+% [~,rfit,DKqn,~,~]=GenericRMFit(RMH,rfit,[speclab 'Norm.mat'],neig(1),1,fitsubsetsH,false,false);  % fit normal
+% Kqn=Kqn+DKqn;
+% CalcDerivatives(rfit,true);
+% [~,rfit,DKdh,~,~]=GenericRMFit(DH,rfit,[speclab 'DH.mat'],neig(2),1,2); % fit normal
+% Kdh=Kdh+DKdh;
 CalcDerivatives(rfit,true);
 [~,rfit,DKqs,~,~]=GenericRMFit(RMV,rfit,[speclab 'Skew.mat'],neig(3),1,fitsubsetsV,false,false); % fit skew
 Kqs=Kqs+DKqs;
 CalcDerivatives(rfit,true);
 [~,rfit,DKdv,~,~]=GenericRMFit(DV,rfit,[speclab 'DV.mat'],neig(2),1); % fit skew
 Kdv=Kdv+DKdv;
+CalcDerivatives(rfit,true);
+[~,rfit,DKqn,~,~]=GenericRMFit(RMH,rfit,[speclab 'Norm.mat'],neig(1),1,fitsubsetsH,false,false);  % fit normal
+Kqn=Kqn+DKqn;
+CalcDerivatives(rfit,true);
+[~,rfit,DKdh,~,~]=GenericRMFit(DH,rfit,[speclab 'DH.mat'],neig(2),1); % fit normal
+Kdh=Kdh+DKdh;
 
 
 %% compare set errors to fitted errors
