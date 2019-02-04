@@ -55,6 +55,20 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
         Unless an input orbit is introduced, find_m44 assumes that the lattice is a ring and first
         finds the closed orbit.
 
+    PARAMETERS
+        ring            lattice description
+        dp              momentum deviation. Defaults to 0
+        refpts          elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+                        Defaults to None, if refpts is None an empty array is
+                        returned for mstack.
+
     KEYWORDS
         keep_lattice=False  When True, assume no lattice change since the previous tracking.
         full=False          When True, matrices are full 1-turn matrices at the entrance of each
@@ -107,6 +121,20 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
         m66:    full one-turn 6-by-6 matrix at the entrance of the first element
         t:      6x6 transfer matrices between the entrance of the first element and each element indexed by refpts:
                 (nrefs, 6, 6) array.
+
+    PARAMETERS
+        ring            lattice description
+        dp              momentum deviation. Defaults to 0
+        refpts          elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+                        Defaults to None, if refpts is None an empty array is
+                        returned for mstack.
 
     KEYWORDS
         keep_lattice=False  When True, assume no lattice change since the previous tracking.
