@@ -2,22 +2,26 @@
 Conversion utilities for creating pyat elements
 """
 import numpy
+from warnings import warn
 from at.lattice import elements
+from at.lattice.utils import AtWarning
 
-CLASS_MAPPING = {'Quad': 'Quadrupole', 'Sext': 'Sextupole', 'Bend': 'Dipole', 'AP': 'Aperture',
-                 'RF': 'RFCavity', 'BPM': 'Monitor'}
 
-CLASSES = set(['Marker', 'Monitor', 'Aperture', 'Drift', 'ThinMultipole', 'Multipole', 'Dipole', 'Quadrupole',
-               'Sextupole', 'Octupole', 'RFCavity', 'RingParam', 'M66', 'Corrector'])
+CLASS_MAPPING = {'multipole': 'Multipole', 'quadrupole': 'Quadrupole',
+                 'thinmultipole': 'ThinMultipole', 'sextupole': 'Sextupole',
+                 'aperture': 'Aperture', 'm66': 'M66', 'rfcavity': 'RFCavity',
+                 'corrector': 'Corrector', 'rf': 'RFCavity', 'bpm': 'Monitor',
+                 'ap': 'Aperture', 'octupole': 'Octupole', 'dipole': 'Dipole',
+                 'drift': 'Drift', 'bend': 'Dipole', 'ringparam': 'RingParam',
+                 'quad': 'Quadrupole', 'sext': 'Sextupole', 'marker': 'Marker',
+                 'monitor': 'Monitor'}
 
-FAMILY_MAPPING = {'ap': 'Aperture', 'rf': 'RFCavity', 'bpm': 'Monitor'}
-
-PASSMETHOD_MAPPING = {'CorrectorPass': 'Corrector', 'Matrix66Pass': 'M66',
-                      'CavityPass': 'RFCavity', 'RFCavityPass': 'RFCavity',
-                      'QuadLinearPass': 'Quadrupole', 'BendLinearPass': 'Dipole',
-                      'BndMPoleSymplectic4Pass': 'Dipole', 'BndMPoleSymplectic4RadPass': 'Dipole',
-                      'AperturePass': 'Aperture', 'ThinMPolePass': 'ThinMultipole',
-                      'DriftPass': 'Drift'}
+PASS_MAPPING = {'CorrectorPass': 'Corrector', 'BendLinearPass': 'Dipole',
+                'QuadLinearPass': 'Quadrupole', 'RFCavityPass': 'RFCavity',
+                'CavityPass': 'RFCavity', 'ThinMPolePass': 'ThinMultipole',
+                'Matrix66Pass': 'M66', 'BndMPoleSymplectic4Pass': 'Dipole',
+                'BndMPoleSymplectic4RadPass': 'Dipole', 'DriftPass': 'Drift',
+                'AperturePass': 'Aperture'}
 
 
 def hasattrs(kwargs, *attributes):
@@ -40,7 +44,7 @@ def hasattrs(kwargs, *attributes):
     return False
 
 
-def find_class_name(kwargs):
+def find_class_name(kwargs, quiet=False):
     """Attempts to correctly identify the Class of the element from its kwargs.
 
     Args:
@@ -64,28 +68,26 @@ def find_class_name(kwargs):
         return low
 
     try:
-        class_name = kwargs.pop('Class')
-        class_name = CLASS_MAPPING.get(class_name, class_name)
-        if class_name in CLASSES:
-            return class_name
-        else:
-            raise AttributeError("Class {0} does not exist.\n{1}".format(class_name, kwargs))
+        class_name = kwargs.pop('Class', '')
+        return CLASS_MAPPING[class_name.lower()]
     except KeyError:
-        fam_name = kwargs.get('FamName')
-        if fam_name in CLASSES:
-            return fam_name
-        elif fam_name.lower() in FAMILY_MAPPING.keys():
-            return FAMILY_MAPPING[fam_name.lower()]
-        else:
-            pass_method = kwargs.get('PassMethod')
-            class_from_pass = PASSMETHOD_MAPPING.get(pass_method)
+        if (quiet is False) and (class_name != ''):
+            warn(AtWarning("Class '{0}' does not exist.\n{1}".format(class_name, kwargs)))
+        fam_name = kwargs.get('FamName', '')
+        try:
+            return CLASS_MAPPING[fam_name.lower()]
+        except KeyError:
+            pass_method = kwargs.get('PassMethod', '')
+            class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
             else:
                 length = float(kwargs.get('Length', 0.0))
-                if hasattrs(kwargs, 'FullGap', 'FringeInt1', 'FringeInt2', 'gK', 'EntranceAngle', 'ExitAngle'):
+                if hasattrs(kwargs, 'FullGap', 'FringeInt1', 'FringeInt2',
+                            'gK', 'EntranceAngle', 'ExitAngle'):
                     return 'Dipole'
-                elif hasattrs(kwargs, 'Voltage', 'Frequency', 'HarmNumber', 'PhaseLag', 'TimeLag'):
+                elif hasattrs(kwargs, 'Voltage', 'Frequency', 'HarmNumber',
+                              'PhaseLag', 'TimeLag'):
                     return 'RFCavity'
                 elif hasattrs(kwargs, 'Periodicity'):
                     return 'RingParam'
@@ -95,7 +97,7 @@ def find_class_name(kwargs):
                     return 'M66'
                 elif hasattrs(kwargs, 'K'):
                     return 'Quadrupole'
-                elif hasattrs(kwargs, 'PolynomB'):
+                elif hasattrs(kwargs, 'PolynomB', 'PolynomA'):
                     loworder = low_order('PolynomB')
                     if loworder == 1:
                         return 'Quadrupole'
@@ -103,7 +105,8 @@ def find_class_name(kwargs):
                         return 'Sextupole'
                     elif loworder == 3:
                         return 'Octupole'
-                    elif (pass_method in {'StrMPoleSymplectic4Pass', 'StrMPoleSymplectic4RadPass'}) or (length > 0):
+                    elif (pass_method.startswith('StrMPoleSymplectic4') or
+                          (length > 0)):
                         return 'Multipole'
                     else:
                         return 'ThinMultipole'
@@ -117,15 +120,15 @@ def find_class_name(kwargs):
                     return 'Marker'
 
 
-def element_from_dict(elem_dict, index=None, check=True):
+def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     """return an AT element from a dictinary of attributes
     """
 
     def sanitise_class(index, class_name, kwargs):
         """Checks that the Class and PassMethod of the element are a valid
-            combination. Some Classes and PassMethods are incompatible and would
-            raise errors during calculation if left, so we raise an error here with
-            a more helpful message.
+            combination. Some Classes and PassMethods are incompatible and
+            would raise errors during calculation if left, so we raise an error
+            here with a more helpful message.
 
         Args:
             index:          element index
@@ -144,7 +147,7 @@ def element_from_dict(elem_dict, index=None, check=True):
 
         pass_method = kwargs.get('PassMethod')
         if pass_method is not None:
-            pass_to_class = PASSMETHOD_MAPPING.get(pass_method)
+            pass_to_class = PASS_MAPPING.get(pass_method)
             length = float(kwargs.get('Length', 0.0))
             if (pass_method == 'IdentityPass') and (length != 0.0):
                 raise AttributeError(error_message("length {0}.", length))
@@ -158,7 +161,7 @@ def element_from_dict(elem_dict, index=None, check=True):
                 if pass_method != 'DriftPass':
                     raise AttributeError(error_message("Class {0}.", class_name))
 
-    class_name = find_class_name(elem_dict)
+    class_name = find_class_name(elem_dict, quiet=quiet)
     if check:
         sanitise_class(index, class_name, elem_dict)
     cl = getattr(elements, class_name)

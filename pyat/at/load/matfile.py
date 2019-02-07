@@ -7,7 +7,7 @@ from . import element_from_dict
 from ..lattice import Lattice
 
 
-def _load_element(index, element_array, check=True):
+def _load_element(index, element_array, check=True, quiet=False):
     """Load what scipy produces into a pyat element object.
     """
     kwargs = {}
@@ -19,10 +19,10 @@ def _load_element(index, element_array, check=True):
             data = str(data)
         kwargs[field_name] = data
 
-    return element_from_dict(kwargs, index=index, check=check)
+    return element_from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
-def load_mat(filename, key=None, check=True):
+def load_mat(filename, key=None, check=True, quiet=False):
     """Load a matlab at structure into a Python at list
 
     PARAMETERS
@@ -42,5 +42,5 @@ def load_mat(filename, key=None, check=True):
         matvars = [varname for varname in m if not varname.startswith('__')]
         key = matvars[0] if (len(matvars) == 1) else 'RING'
     element_arrays = m[key].flat
-    return [_load_element(i, elem[0][0], check=check) for (i, elem) in
-                    enumerate(element_arrays)]
+    return [_load_element(i, elem[0][0], check=check, quiet=quiet) for
+            (i, elem) in enumerate(element_arrays)]
