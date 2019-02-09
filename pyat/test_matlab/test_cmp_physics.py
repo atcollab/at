@@ -1,4 +1,3 @@
-import math
 from at import physics, get_s_pos, uint32_refpts
 from scipy.constants import speed_of_light
 import matlab
@@ -125,6 +124,8 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
 
 
 @pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
+@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
+                                                     pytest.lazy_fixture('py_hmba'))])
 def test_parameters(engine, ml_lattice, py_lattice, dp):
 
     # Test perimeter
