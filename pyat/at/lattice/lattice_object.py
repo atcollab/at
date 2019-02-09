@@ -124,12 +124,12 @@ class Lattice(list):
         try:
             elems = super(Lattice, self).__getitem__(key)
         except TypeError:
-            if isinstance(key, numpy.ndarray) and key.dtype == bool:
-                return Lattice((el for el, tst in zip(self, key) if tst),
-                               _scan=False, **vars(self))
+            if isinstance(key, numpy.ndarray) \
+                    and numpy.issubdtype(key.dtype, numpy.bool_):
+                elems = (el for el, tst in zip(self, key) if tst)
             else:
-                return Lattice((self[i] for i in key), _scan=False,
-                               **vars(self))
+                elems = (super(Lattice, self).__getitem__(i) for i in key)
+            return Lattice(elems, _scan=False, **vars(self))
         else:
             if isinstance(elems, list):
                 elems = Lattice(elems, _scan=False, **vars(self))
