@@ -75,6 +75,29 @@ class Element(object):
         return '{0}({1})'.format(self.__class__.__name__, ', '.join(
             itertools.chain(arguments, keywords)))
 
+    def divide(self, frac, keep_axis=False):
+        """split the element in len(frac) pieces whose length
+        is frac[i]*self.Length
+
+        arguments:
+            frac            length of each slice expressed as a fraction of the
+                            initial length. sum(frac) may differ from 1.
+
+        keywords:
+            keep_axis=False If True, displacement and rotation are applied to
+                            each slice, if False they are applied
+                            at extremities only
+
+        Return a list of elements equivalent to the original.
+
+        Example:
+
+        >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
+        [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
+        """
+        # by default, the element is indivisible
+        return [self]
+
     def copy(self):
         """Return a shallow copy of the element"""
         return copy.copy(self)
@@ -243,7 +266,7 @@ class Multipole(LongElement, ThinMultipole):
                                                          'PolynomA',
                                                          'PolynomB']
     CONVERSIONS = dict(ThinMultipole.CONVERSIONS, NumIntSteps=int,
-                       K=float, KickAngle=_array)
+                       K=float, KickAngle=lambda v: _array(v, (2,)))
 
     def __init__(self, family_name, length, poly_a, poly_b, NumIntSteps=10,
                  **kwargs):
@@ -267,6 +290,7 @@ class Dipole(Multipole):
                                                          'K']
     CONVERSIONS = dict(Multipole.CONVERSIONS, EntranceAngle=float,
                        ExitAngle=float,
+                       FringeInt1=float, FringeInt2=float,
                        FringeQuadEntrance=int, FringeQuadExit=int,
                        FringeBendEntrance=int, FringeBendExit=int)
 
@@ -291,7 +315,7 @@ class Dipole(Multipole):
         MaxOrder        Number of desired multipoles
         NumIntSteps     Number of integration steps (default: 10)
         FullGap         Magnet full gap
-        FringeInt1      Fring field extension
+        FringeInt1      Fringe field extension
         FringeInt2
         FringeBendEntrance  1: legacy version Brown First Order (default)
                             2: SOLEIL close to second order of Brown
@@ -301,7 +325,7 @@ class Dipole(Multipole):
                             1: Lee-Whiting's thin lens limit formula
                             2: elegant-like
         FringeQuadExit
-        fringeIntM0         Integrals for FringeQuad method 2
+        fringeIntM0     Integrals for FringeQuad method 2
         fringeIntP0
         KickAngle       Correction deviation angles (H, V)
         """
@@ -352,7 +376,7 @@ class Quadrupole(Multipole):
                             1: Lee-Whiting's thin lens limit formula
                             2: elegant-like
         FringeQuadExit
-        fringeIntM0         Integrals for FringeQuad method 2
+        fringeIntM0     Integrals for FringeQuad method 2
         fringeIntP0
         KickAngle       Correction deviation angles (H, V)
         """
@@ -429,6 +453,7 @@ class RingParam(Element):
 
 
 class M66(Element):
+    """Linear (6, 6) transfer matrix"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
     CONVERSIONS = dict(Element.CONVERSIONS, M66=_array66)
 
