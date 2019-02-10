@@ -123,7 +123,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy)
           if elem.PassMethod.endswith('RadPass') else b0 for elem in ring]
-    bbcum = numpy.stack(cumulb(zip(ring, orbs, bb)), axis=0)
+    bbcum = numpy.stack(list(cumulb(zip(ring, orbs, bb))), axis=0)
     # ------------------------------------------------------------------------
     # Equation for the moment matrix R is
     #         R = MRING*R*MRING' + BCUM;
