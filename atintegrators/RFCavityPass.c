@@ -113,7 +113,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
-      r_in = mxGetPr(plhs[0]);
+      r_in = mxGetDoubles(plhs[0]);
       RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, 0, T0, num_particles);
 
     }

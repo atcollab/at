@@ -446,7 +446,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         /* ALLOCATE memory for the output array of the same size as the input */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         BndMPoleSymplectic4E2RadPass(r_in, Length, irho, PolynomA, PolynomB, MaxOrder, NumIntSteps, EntranceAngle, ExitAngle,
                 Fint1, Fint2, Gap, h1, h2, T1, T2, R1, R2, RApertures,EApertures,Energy,num_particles);
     }

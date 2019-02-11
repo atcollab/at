@@ -141,7 +141,7 @@ while i<length(SXSTRING)-2
         nwel=SXSTRING{i+j}(end);
       
         switch ElementType
-            case {'QUAD','quadrupole','QUADRUPOLE', 'QUADRUPO'}
+            case {'QUAD','KQUAD','quadrupole','QUADRUPOLE', 'QUADRUPO'}
                 def=[def '\n'];
                 def=[ def ...
                     SXSTRING{i}(1:end-1)...
@@ -159,7 +159,7 @@ while i<length(SXSTRING)-2
                     nwel=SXSTRING{i+j}(end);
                 end
                 
-            case {'SEXT','sextupole','SEXTUPOLE'}
+            case {'SEXT','KSEXT','sextupole','SEXTUPOLE'}
                 def=[def '\n'];
                 def=[ def ...
                     SXSTRING{i}(1:end-1)...
@@ -211,7 +211,7 @@ while i<length(SXSTRING)-2
                      '.(''BendingAngle'')/2); \n'...
                   SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
               
-            case {'SBEN','sbend','SBEND'}
+            case {'SBEN','sbend','SBEND','CSBEND'}
                 def=[def '\n'];
                 
                 def=[ def ...
@@ -233,7 +233,7 @@ while i<length(SXSTRING)-2
                 
            def=[ def SXSTRING{i}(1:end-1) '.(''MaxOrder'')=length(' SXSTRING{i}(1:end-1) '.(''PolynomB''))-1; \n'];
               
-            case {'DRIF','DRIFT','drift'}
+            case {'DRIF','DRIFT','EDRIFT','drift'}
                 def=[def '\n'];
                 
                 def=[ def ...
@@ -273,7 +273,7 @@ while i<length(SXSTRING)-2
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
                 end
-            case {'MULT','MULTIPOLE','multipole'}
+            case {'MULT','MUL','MULTIPOLE','multipole'}
                 % multipoles should be StrMPoleSymplectic4Pass with short length
                 % to be compatible with MADX
                 
@@ -330,7 +330,7 @@ while i<length(SXSTRING)-2
                     SXSTRING{i}(1:end-1) '.(''PolynomA'')' ').*expansionCoefFixA; \n'...
                     ];
                 
-            case {'OCTUPOLE','octupole'}
+            case {'OCTUPOLE','KOCT','octupole'}
                 def=[def '\n'];
                 
                 def=[ def ...
@@ -406,7 +406,7 @@ while i<length(SXSTRING)-2
                     j=j+1; %go to new atribute
                     nwel=SXSTRING{i+j}(end);
                 end
-            case {'HMO','VMO','HMON','VMON'}
+            case {'HMO','VMO','HMON','VMON','MONI'}
                 def=[def '\n'];
 %                      SXSTRING{i}(1:end-1) '.(''FamName'')=''' SXSTRING{i}(1:end-1) ''';\n' ...
                 def=[ def ...
@@ -431,7 +431,7 @@ while i<length(SXSTRING)-2
                     nwel=SXSTRING{i+j}(end);
                 end
                 
-            case {'MAR','MARK'}
+            case {'MAR','MARK','WATCH','MALIG','MALIGN','TWISS','RECIR','SREFFECTS','MAGNIFY'}
                 
                 def=[ def ...
                     SXSTRING{i}(1:end-1) '.(''FamName'')=''' SXSTRING{i}(1:end-1) ''';\n' ...
@@ -447,7 +447,7 @@ while i<length(SXSTRING)-2
                     nwel=SXSTRING{i+j}(end);
                 end
 
-            case {'HKIC','VKIC','KIC','hkic','vkic','kic'}
+            case {'HKIC','VKIC','KIC','hkic','vkic','kic','KICK','KICKE','HKICK','VKICK'}
                 
                 def=[def '\n'];
                 def=[ def ...
@@ -477,7 +477,7 @@ while i<length(SXSTRING)-2
             case {'MAXAMP','maxamp'}
                 def = [def SXSTRING{i}(1:end-1) '= ataperture('...
                     '''' SXSTRING{i}(1:end-1) ''''...
-                    ',[0 0 0 0],AperturePass'');\n'...
+                    ',[0 0 0 0],''AperturePass'');\n'...
                     ];
                 
                 while nwel~=':' % loops atributes of this element definition

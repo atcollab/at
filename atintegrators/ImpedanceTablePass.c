@@ -99,9 +99,10 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
     int *iptr;
     
     /* first find the min and max of the distribution*/
-
+/*
     double srms;
     double smean;
+ */
     double smin = DBL_MAX;
     double smax = -DBL_MAX;
     double stot = 0.0;
@@ -352,7 +353,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
-        r_in = mxGetPr(plhs[0]);
+        r_in = mxGetDoubles(plhs[0]);
         impedance_tablePass(r_in, num_particles, Elem);
     }
     else if (nrhs == 0) {

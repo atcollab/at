@@ -9,14 +9,13 @@ except ImportError:
 
 
 ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '../..'))
-LATTICE = os.path.join(ROOT_DIR, 'atmat/atmatch/ExampleATMATCH/dba.mat')
+dba_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/dba.mat')
+hmba_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/hmba.mat')
 
 
 def initialise_matlab():
     eng = matlab.engine.start_matlab()
-    eng.addpath(os.path.join(ROOT_DIR, 'atintegrators/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/attrack/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/atphysics/'))
-    eng.addpath(os.path.join(ROOT_DIR, 'atmat/lattice/'))
+    eng.addpath(eng.genpath(os.path.join(ROOT_DIR, 'atintegrators/')))
+    eng.addpath(eng.genpath(os.path.join(ROOT_DIR, 'atmat/')))
+    eng.addpath(os.path.dirname(__file__))
     return eng
