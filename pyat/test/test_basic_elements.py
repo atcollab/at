@@ -4,6 +4,24 @@ from at import atpass
 from at import elements
 
 
+def test_data_checks():
+    val = numpy.zeros([6,6])
+    assert elements._array(val).shape == (36,)
+    assert elements._array66(val).shape == (6, 6)
+
+
+def test_element_string_ordering():
+    d = elements.Drift('D0', 1, attr=numpy.array(0))
+    assert d.__str__() == ("Drift:\nFamName : D0\nLength : 1.0\nPassMethod :"
+                           " DriftPass\nattr : 0")
+    assert d.__repr__() == "Drift('D0', 1.0, attr=array(0))"
+
+
+def test_element_creation_raises_exception():
+    with pytest.raises(ValueError):
+        elements.Element('family_name', R1='not_an_array')
+
+
 def test_correct_dimensions_does_not_raise_error(rin):
     l = []
     atpass(l, rin, 1)
@@ -28,6 +46,16 @@ def test_marker(rin):
     m = elements.Marker('marker')
     assert m.Length == 0
     lattice = [m]
+    rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
+    rin_orig = numpy.array(rin, copy=True, order='F')
+    atpass(lattice, rin, 1)
+    numpy.testing.assert_equal(rin, rin_orig)
+
+
+def test_monitor(rin):
+    mon = elements.Monitor('monitor')
+    assert mon.Length == 0
+    lattice = [mon]
     rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
     rin_orig = numpy.array(rin, copy=True, order='F')
     atpass(lattice, rin, 1)
@@ -103,12 +131,8 @@ def test_quad(rin):
     lattice = [q]
     rin[0, 0] = 1e-6
     atpass(lattice, rin, 1)
-    expected = numpy.array([0.921060994002885,
-                            -0.389418342308651,
-                            0,
-                            0,
-                            0,
-                            0.000000010330489]).reshape(6, 1) * 1e-6
+    expected = numpy.array([0.921060994002885, -0.389418342308651, 0,
+                            0, 0, 0.000000010330489]).reshape(6, 1) * 1e-6
     numpy.testing.assert_allclose(rin, expected)
 
 
@@ -118,6 +142,38 @@ def test_quad_incorrect_array(rin):
     lattice = [q]
     with pytest.raises(RuntimeError):
         atpass(lattice, rin, 1)
+
+
+def test_rfcavity(rin):
+    rf = elements.RFCavity('rfcavity', 0.0, 187500, 3.5237e+8, 31, 6.e+9)
+    lattice = [rf, rf, rf, rf]
+    rin[4, 0] = 1e-6
+    rin[5, 0] = 1e-6
+    atpass(lattice, rin, 1)
+    expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
+    numpy.testing.assert_allclose(rin, expected, atol=1e-12)
+
+
+def test_ringparam(rin):
+    rp = elements.RingParam('ringparam', 1.e+09)
+    assert rp.Length == 0
+    lattice = [rp]
+    rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
+    rin_orig = numpy.array(rin, copy=True, order='F')
+    atpass(lattice, rin, 1)
+    numpy.testing.assert_equal(rin, rin_orig)
+
+@pytest.mark.parametrize("n", (0, 1, 2, 3, 4, 5))
+def test_m66(rin, n):
+    m = numpy.random.rand(6, 6)
+    m66 = elements.M66('m66', m)
+    assert m66.Length == 0
+    lattice = [m66]
+    rin[n, 0] = 1e-6
+    atpass(lattice, rin, 1)
+    expected = numpy.array([m[0, n], m[1, n], m[2, n], m[3, n], m[4, n],
+                            m[5, n]]).reshape(6, 1) * 1e-6
+    numpy.testing.assert_equal(rin, expected)
 
 
 def test_corrector(rin):

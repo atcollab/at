@@ -16,11 +16,21 @@ def engine():
 
 
 @pytest.fixture
-def ml_lattice(engine):
-    lattice = engine.load(utils.LATTICE)
+def ml_dba(engine):
+    lattice = engine.load(utils.dba_ring)
+    return lattice['RING']
+
+@pytest.fixture
+def ml_hmba(engine):
+    lattice = engine.load(utils.hmba_ring)
     return lattice['RING']
 
 
 @pytest.fixture
-def py_lattice():
-    return Lattice(load_mat(utils.LATTICE, key='RING'), keep_all=True)
+def py_dba():
+    return Lattice(load_mat(utils.dba_ring, key='RING'), keep_all=True)
+
+
+@pytest.fixture
+def py_hmba():
+    return Lattice(load_mat(utils.hmba_ring, key='RING'), keep_all=True)
