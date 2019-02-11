@@ -205,7 +205,7 @@ DipRot.dk=1e-5;
                     quadforresponse=find(ismember(qind,indquad)); % quadrupoles to use for fit amoung all
                     nq = length(indquad);
                     dval = ones(size(indquad));
-                    
+                   
                     % warning('dispersion/quadK not ok yet. never used in SR before 2018');
                     for iq=1:nq
                         
@@ -232,7 +232,8 @@ DipRot.dk=1e-5;
                     % make sure order is as in qempanel vector.
                     [~,b]=ismember(indDip,bndidx);
                     
-                    [N,S,~,~]=dDxyDtheta(r0,indBPM,alldip,'magmodel','thick');
+                    % dispersion response varying dipole angle and rotation
+                    [N,S,~,~]=dDxyDthetaDQ(r0,indBPM,alldip,'magmodel','thick');
                     % negative sign, probably due to dipole sign convention
                     N_sort= N(:,dipsel(b));
                     % qempanel response in [m/Hz] instead of [m/%]
@@ -249,6 +250,8 @@ DipRot.dk=1e-5;
                     
                     rx = N_sort;
                     rz = S_sort;
+                    
+                    
                     
                     % save files to use with GenericRMFit
                     rmfunctnorm =@(r,ib,ih,iv,~,txt)simulaterespmatrixmeasurements(r,inCOD,ib,ih,iv,'normdisp',[wdisph wtune],txt);
