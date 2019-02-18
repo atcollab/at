@@ -121,7 +121,7 @@ def find_class_name(kwargs, quiet=False):
 
 
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
-    """return an AT element from a dictinary of attributes
+    """return an AT element from a dictionary of attributes
     """
 
     def sanitise_class(index, class_name, kwargs):
