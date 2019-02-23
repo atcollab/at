@@ -27,7 +27,7 @@ def load_mat(filename, key=None, check=True, quiet=False):
 
     PARAMETERS
         filename        name of a '.mat' file
-        varname         name of the Matlab variable containing the lattice.
+        key             name of the Matlab variable containing the lattice.
                         Default: Matlab variable name if there is only one,
                         otherwise 'RING'
 
