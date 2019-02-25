@@ -22,7 +22,7 @@ class AtError(Exception):
     pass
 
 
-class AtWarning(Warning):
+class AtWarning(UserWarning):
     pass
 
 

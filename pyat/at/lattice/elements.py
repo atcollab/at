@@ -196,13 +196,14 @@ class Drift(LongElement):
         """insert elements inside a drift
 
         arguments:
-            insert_list iterable. Each item of elems is iself an iterable
-                        with 2 objects
-                        The 1st object is the location of the elements to
-                        be inserted, given as a fraction of the Drift length.
+            insert_list iterable. Each item of insert_list is itself an iterable
+                        with 2 objects:
+                        The 1st object is the location where the center of the
+                        element will be inserted, given as a fraction of the
+                        Drift length,
                         The 2nd object is an element to be inserted at that
-                        location. If None, self will be divided but no element
-                        will be inserted.
+                        location. If None, the drift will be divided but no
+                        element will be inserted.
 
         Return a list of elements.
 
@@ -330,7 +331,6 @@ class Dipole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
-        _ = kwargs.pop('K', None)
         kwargs.setdefault('PassMethod', 'BendLinearPass')
         super(Dipole, self).__init__(family_name, length, [], poly_b,
                                      BendingAngle=BendingAngle,
@@ -381,7 +381,6 @@ class Quadrupole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
-        _ = kwargs.pop('K', None)
         kwargs.setdefault('PassMethod', 'QuadLinearPass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          MaxOrder=MaxOrder, **kwargs)

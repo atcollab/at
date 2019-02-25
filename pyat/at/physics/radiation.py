@@ -57,8 +57,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         r44                 (4, 4) betatron emittance matrix (dpp = 0)
         m66                 (6, 6) transfer matrix from the start of the ring
         orbit6              (6,) closed orbit
-        emitXY              betatron emittance projected on xxp and yyp
-        emitXYZ             6x6 emittance projected on xxp, yyp, ldp
+        emitXY              (2,) betatron emittance projected on xxp and yyp
+        emitXYZ             (3,) 6x6 emittance projected on xxp, yyp, ldp
 
         Field values can be obtained with either
         emit['r66']    or
