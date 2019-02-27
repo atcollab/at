@@ -87,9 +87,9 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
 
     # Python call
     if func_data[0] == 'twissring':
-        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice, dp, refpts, True)
+        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice, dp, refpts, get_chrom=True, ddp=1.E-6)
     else:
-        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp, refpts, True)
+        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp, refpts, get_chrom=True, ddp=1.E-6)
     # Matlab call
     ml_data, ml_tune, ml_chrom = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(refpts, nelems), nargout=3)
     ml_data0 = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(nelems, nelems), nargout=3)[0]
@@ -97,7 +97,7 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
     numpy.testing.assert_almost_equal(py_tune, _py_data(ml_tune), decimal=6)
     numpy.testing.assert_almost_equal(py_chrom, _py_data(ml_chrom), decimal=4)
     _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, func_data[1], decimal=5)
-    _compare_physdata(py_data, ml_data, func_data[1], decimal=5)
+    _compare_physdata(py_data, ml_data, func_data[1], decimal=6)
 
 
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
