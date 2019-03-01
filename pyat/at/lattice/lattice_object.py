@@ -209,7 +209,7 @@ class Lattice(list):
 
     @property
     def radiation(self):
-        """Longtudinal motion active"""
+        """If True, at least one element modifies the beam energy"""
         return self._radiation
 
     @property

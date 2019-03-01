@@ -2,13 +2,12 @@
 Radiation and equilibrium emittances
 """
 import numpy
-from numpy.linalg import multi_dot as md
 from scipy.linalg import inv, det, solve_sylvester
-from ..lattice import uint32_refpts
-from ..tracking import lattice_pass
-from ..physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
+from at.lattice import uint32_refpts
+from at.tracking import lattice_pass
+from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
-from .diffmatrix import find_mpole_raddiff_matrix
+from at.physics import find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope']
 
@@ -80,7 +79,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         yield cumul
         for el, orbin, b in it:
             m = find_elem_m66(el, orbin)
-            cumul = md((m, cumul, m.T)) + b
+            cumul = m.dot(cumul).dot(m.T) + b
             yield cumul
 
     def process(r66):
@@ -103,7 +102,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
 
     def propag(m, cumb, orbit6):
         """Propagate the beam matrix to refpts"""
-        sigmatrix = md((m, rr, m.T)) + cumb
+        sigmatrix = m.dot(rr).dot(m.T) + cumb
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 

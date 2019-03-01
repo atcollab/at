@@ -6,9 +6,9 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 
 import numpy
 from scipy.linalg import block_diag
-from ..lattice import uint32_refpts
-from ..physics import find_orbit4, find_orbit6
-from ..tracking import lattice_pass, element_pass
+from at.lattice import uint32_refpts
+from at.physics import find_orbit4, find_orbit6
+from at.tracking import lattice_pass, element_pass
 
 __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'jmat']
 
@@ -104,7 +104,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
     if len(refs) > 0:
         mstack = (out_mat[:, :4, :4] - out_mat[:, :4, 4:]) / xy_step
         if full:
-            mstack = numpy.stack((mrotate(mat) for mat in mstack), axis=0)
+            mstack = numpy.stack([mrotate(mat) for mat in mstack], axis=0)
     else:
         mstack = numpy.empty((0, 4, 4), dtype=float)
 
