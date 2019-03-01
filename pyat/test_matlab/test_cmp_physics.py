@@ -1,4 +1,3 @@
-import math
 from at import physics, get_s_pos, uint32_refpts
 from scipy.constants import speed_of_light
 import matlab
@@ -88,9 +87,9 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
 
     # Python call
     if func_data[0] == 'twissring':
-        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice, dp, refpts, True)
+        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice, dp, refpts, get_chrom=True, ddp=1.E-6)
     else:
-        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp, refpts, True)
+        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp, refpts, get_chrom=True, ddp=1.E-6)
     # Matlab call
     ml_data, ml_tune, ml_chrom = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(refpts, nelems), nargout=3)
     ml_data0 = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(nelems, nelems), nargout=3)[0]
@@ -98,7 +97,7 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
     numpy.testing.assert_almost_equal(py_tune, _py_data(ml_tune), decimal=6)
     numpy.testing.assert_almost_equal(py_chrom, _py_data(ml_chrom), decimal=4)
     _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, func_data[1], decimal=5)
-    _compare_physdata(py_data, ml_data, func_data[1], decimal=5)
+    _compare_physdata(py_data, ml_data, func_data[1], decimal=6)
 
 
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
@@ -122,3 +121,27 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
     numpy.testing.assert_almost_equal(py_beamdata.mode_emittances, _py_data(ml_emit0['modemit']), decimal=8)
     _compare_physdata(numpy.expand_dims(py_emit0, 0), ml_emit0, fields)
     _compare_physdata(py_emit, ml_emit, fields)
+
+
+@pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
+@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
+                                                     pytest.lazy_fixture('py_hmba'))])
+def test_parameters(engine, ml_lattice, py_lattice, dp):
+
+    # Test perimeter
+    py_length = py_lattice.get_s_pos(len(py_lattice))
+    ml_length = engine.findspos(ml_lattice, len(ml_lattice)+1)
+    numpy.testing.assert_allclose(py_length, ml_length, rtol=1.E-8)
+
+    # test energy loss
+    ml_energy, ml_periods, ml_voltage, ml_harms, ml_eloss = engine.pyproxy('atenergy', ml_lattice, nargout=5)
+    numpy.testing.assert_allclose(py_lattice.voltage, ml_voltage, rtol=1.E-8)
+    numpy.testing.assert_allclose(py_lattice.energy_loss, ml_eloss, rtol=1.E-6)
+    assert py_lattice.energy == ml_energy
+    assert py_lattice.periodicity == int(ml_periods)
+    assert py_lattice.harmonic_number == int(ml_harms)
+
+    # test momentum compaction factor
+    py_mcf = py_lattice.get_mcf(dp, ddp=1.E-6)  # Matlab uses ddp=1.E-6
+    ml_mcf = engine.mcf(ml_lattice, dp)
+    numpy.testing.assert_allclose(py_mcf, ml_mcf, rtol=1.E-8)

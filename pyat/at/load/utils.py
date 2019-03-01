@@ -6,7 +6,6 @@ from warnings import warn
 from at.lattice import elements
 from at.lattice.utils import AtWarning
 
-
 CLASS_MAPPING = {'multipole': 'Multipole', 'quadrupole': 'Quadrupole',
                  'thinmultipole': 'ThinMultipole', 'sextupole': 'Sextupole',
                  'aperture': 'Aperture', 'm66': 'M66', 'rfcavity': 'RFCavity',
@@ -26,7 +25,7 @@ PASS_MAPPING = {'CorrectorPass': 'Corrector', 'BendLinearPass': 'Dipole',
 
 def hasattrs(kwargs, *attributes):
     """Check if the element would have the specified attribute(s), i.e. if they
-        are in kwargs; allows checking for multiple attributes in one go.
+    are in kwargs; allows checking for multiple attributes in one go.
 
     Args:
         kwargs (dict): The dictionary of keyword arguments passed to the
@@ -44,60 +43,60 @@ def hasattrs(kwargs, *attributes):
     return False
 
 
-def find_class_name(kwargs, quiet=False):
+def find_class_name(elem_dict, quiet=False):
     """Attempts to correctly identify the Class of the element from its kwargs.
 
     Args:
-        kwargs (dict): The dictionary of keyword arguments passed to the
-                        Element constructor.
+        elem_dict:  The dictionary of keyword arguments passed to the
+                    Element constructor.
+
+    Keywords:
+        quiet=False If True, suppress the warning for non-standard classes
 
     Returns:
-        str: The guessed Class name, as a string.
-
-    Raises:
-        AttributeError: if the Class name found in kwargs is not a valid Class
-                         in pyAT.
+        str:        The guessed Class name, as a string.
     """
 
     def low_order(key):
-        polynom = numpy.array(kwargs[key], dtype=numpy.float64).reshape(-1)
+        polynom = numpy.array(elem_dict[key], dtype=numpy.float64).reshape(-1)
         try:
             low = numpy.where(polynom != 0.0)[0][0]
         except IndexError:
             low = -1
         return low
 
+    class_name = elem_dict.pop('Class', '')
     try:
-        class_name = kwargs.pop('Class', '')
         return CLASS_MAPPING[class_name.lower()]
     except KeyError:
         if (quiet is False) and (class_name != ''):
-            warn(AtWarning("Class '{0}' does not exist.\n{1}".format(class_name, kwargs)))
-        fam_name = kwargs.get('FamName', '')
+            warn(AtWarning("Class '{0}' does not exist.\n"
+                           "{1}".format(class_name, elem_dict)))
+        fam_name = elem_dict.get('FamName', '')
         try:
             return CLASS_MAPPING[fam_name.lower()]
         except KeyError:
-            pass_method = kwargs.get('PassMethod', '')
+            pass_method = elem_dict.get('PassMethod', '')
             class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
             else:
-                length = float(kwargs.get('Length', 0.0))
-                if hasattrs(kwargs, 'FullGap', 'FringeInt1', 'FringeInt2',
+                length = float(elem_dict.get('Length', 0.0))
+                if hasattrs(elem_dict, 'FullGap', 'FringeInt1', 'FringeInt2',
                             'gK', 'EntranceAngle', 'ExitAngle'):
                     return 'Dipole'
-                elif hasattrs(kwargs, 'Voltage', 'Frequency', 'HarmNumber',
+                elif hasattrs(elem_dict, 'Voltage', 'Frequency', 'HarmNumber',
                               'PhaseLag', 'TimeLag'):
                     return 'RFCavity'
-                elif hasattrs(kwargs, 'Periodicity'):
+                elif hasattrs(elem_dict, 'Periodicity'):
                     return 'RingParam'
-                elif hasattrs(kwargs, 'Limits'):
+                elif hasattrs(elem_dict, 'Limits'):
                     return 'Aperture'
-                elif hasattrs(kwargs, 'M66'):
+                elif hasattrs(elem_dict, 'M66'):
                     return 'M66'
-                elif hasattrs(kwargs, 'K'):
+                elif hasattrs(elem_dict, 'K'):
                     return 'Quadrupole'
-                elif hasattrs(kwargs, 'PolynomB', 'PolynomA'):
+                elif hasattrs(elem_dict, 'PolynomB', 'PolynomA'):
                     loworder = low_order('PolynomB')
                     if loworder == 1:
                         return 'Quadrupole'
@@ -110,11 +109,11 @@ def find_class_name(kwargs, quiet=False):
                         return 'Multipole'
                     else:
                         return 'ThinMultipole'
-                elif hasattrs(kwargs, 'KickAngle'):
+                elif hasattrs(elem_dict, 'KickAngle'):
                     return 'Corrector'
                 elif length > 0.0:
                     return 'Drift'
-                elif hasattrs(kwargs, 'GCR'):
+                elif hasattrs(elem_dict, 'GCR'):
                     return 'Monitor'
                 else:
                     return 'Marker'
@@ -139,33 +138,35 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         Raises:
             AttributeError: if the PassMethod and Class are incompatible.
         """
-
-        def error_message(message, *args):
-            location = '' if index is None else 'Error in element {0}: '.format(index)
-            return ''.join((location, 'PassMethod {0} is not compatible with '.format(pass_method),
-                            message.format(*args), '\n{0}'.format(kwargs)))
+        def err_message(message, *args):
+            location = '' if index is None else 'Error in element {0}: '.format(
+                index)
+            return ''.join(
+                (location,
+                 'PassMethod {0} is not compatible with '.format(pass_method),
+                 message.format(*args), '\n{0}'.format(kwargs)))
 
         pass_method = kwargs.get('PassMethod')
         if pass_method is not None:
             pass_to_class = PASS_MAPPING.get(pass_method)
             length = float(kwargs.get('Length', 0.0))
             if (pass_method == 'IdentityPass') and (length != 0.0):
-                raise AttributeError(error_message("length {0}.", length))
+                raise AttributeError(err_message("length {0}.", length))
             elif pass_to_class is not None:
                 if pass_to_class != class_name:
-                    raise AttributeError(error_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("Class {0}.", class_name))
             elif class_name in ['Marker', 'Monitor', 'RingParam']:
                 if pass_method != 'IdentityPass':
-                    raise AttributeError(error_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("Class {0}.", class_name))
             elif class_name == 'Drift':
                 if pass_method != 'DriftPass':
-                    raise AttributeError(error_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("Class {0}.", class_name))
 
     class_name = find_class_name(elem_dict, quiet=quiet)
     if check:
         sanitise_class(index, class_name, elem_dict)
     cl = getattr(elements, class_name)
     # Remove mandatory attributes from the keyword arguments.
-    elem_args = [elem_dict.pop(attr) for attr in cl.REQUIRED_ATTRIBUTES]
-    element = cl(*elem_args, **elem_dict)
+    elem_args = (elem_dict.pop(attr, None) for attr in cl.REQUIRED_ATTRIBUTES)
+    element = cl(*(arg for arg in elem_args if arg is not None), **elem_dict)
     return element

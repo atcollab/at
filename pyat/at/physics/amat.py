@@ -11,7 +11,8 @@ _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
 _Data1 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices'))
-_Data2 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices', 'mode_emittances'))
+_Data2 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices',
+                                'mode_emittances'))
 
 
 def amat(tt):
@@ -35,7 +36,7 @@ def amat(tt):
 
     """
     nv = tt.shape[0]
-    dms = int(nv/2)
+    dms = int(nv / 2)
     jmt = jmat(dms)
     select = numpy.arange(0, nv, 2)
     rbase = numpy.stack((select, select), axis=1).flatten()
@@ -43,29 +44,31 @@ def amat(tt):
     _, vv = eig(tt)
     # Compute the norms
     vp = numpy.dot(vv.conj().T, jmt)
-    n = -0.5j * numpy.sum(vp.T*vv, axis=0)
+    n = -0.5j * numpy.sum(vp.T * vv, axis=0)
     # Move positive before negatives
     order = rbase + (n < 0)
     vv = vv[:, order]
     n = n[order]
     # Normalize vectors
-    vn = vv/numpy.sqrt(abs(n)).reshape((1, nv))
+    vn = vv / numpy.sqrt(abs(n)).reshape((1, nv))
     # find the vectors that project most onto x,y,z, and reorder
     # nn will have structure
     #  n1x n1y n1z
     #  n2x n2y n2z
     #  n3x n3y n3z
-    nn = 0.5 * abs(numpy.sqrt(-1.j * md((vn.conj().T, jmt, _vxyz[dms-1]))))
+    nn = 0.5 * abs(numpy.sqrt(-1.j * md((vn.conj().T, jmt, _vxyz[dms - 1]))))
     ind = numpy.argmax(nn[select, :][:, select], axis=0)
-    v_ordered = vn[:, 2*ind]
-    aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape((nv, nv), order='F')
+    v_ordered = vn[:, 2 * ind]
+    aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
+        (nv, nv), order='F')
     return aa
 
 
 def get_mode_matrices(a):
     """Given a (m, m) A matrix , find the m normal modes"""
     dms = int(a.shape[0] / 2)
-    return numpy.stack((numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]), axis=0)
+    return numpy.stack([numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]],
+                       axis=0)
 
 
 def get_tunes_damp(tt, rr):
@@ -79,19 +82,21 @@ def get_tunes_damp(tt, rr):
         m can be 2 (single plane), 4 (betatron motion) or 6 (full motion)
 
     OUTPUT
-        named tuple with the follwong attributes:
+        named tuple with the follwing attributes:
         tunes               (m,) tunes of the m normal modes
-        damping_rates       (m,) damping rated of the m normal modes
+        damping_rates       (m,) damping rates of the m normal modes
         mode_matrices       (3, m, m) the R-matrices of the m normal modes
-        mode_emittances     Only if R is specified: (m,) emittance of eavh mode
+        mode_emittances     Only if R is specified: (m,) emittance of each mode
     """
+
     def decode(rot22):
-        tune = (numpy.arctan2(rot22[0, 1] - rot22[1, 0], rot22[0, 0] + rot22[1, 1]) / 2.0 / pi) % 1
+        tune = (numpy.arctan2(rot22[0, 1] - rot22[1, 0],
+                              rot22[0, 0] + rot22[1, 1]) / 2.0 / pi) % 1
         chi = -numpy.log(numpy.sqrt(det(rot22)))
         return chi, tune
 
     nv = tt.shape[0]
-    dms = int(nv/2)
+    dms = int(nv / 2)
     jmt = jmat(dms)
     aa = amat(tt)
     rmat = md((inv(aa), tt, aa))
