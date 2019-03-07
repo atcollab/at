@@ -29,8 +29,10 @@ def _compare_physdata(py_data, ml_data, fields, decimal=8):
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
 @pytest.mark.parametrize('ml_lattice, py_lattice',
-                         [(pytest.lazy_fixture('ml_dba'), pytest.lazy_fixture('py_dba')),
-                          (pytest.lazy_fixture('ml_hmba'), pytest.lazy_fixture('py_hmba'))])
+                         [(pytest.lazy_fixture('ml_dba'),
+                           pytest.lazy_fixture('py_dba')),
+                          (pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
 def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
     nelems = len(py_lattice)
     refpts = range(nelems + 1) if refpts is None else refpts
@@ -38,7 +40,8 @@ def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
     # Python call
     py_orb4, py_orbit4 = physics.find_orbit4(py_lattice, dp, refpts)
     # Matlab call
-    ml_orbit4, ml_orb4 = engine.findorbit4(ml_lattice, dp, _ml_refs(refpts, nelems), nargout=2)
+    ml_orbit4, ml_orb4 = engine.findorbit4(ml_lattice, dp,
+                                           _ml_refs(refpts, nelems), nargout=2)
     ml_orbit4 = numpy.rollaxis(numpy.asarray(ml_orbit4), -1)
     # Comparison
     numpy.testing.assert_almost_equal(py_orb4, _py_data(ml_orb4), decimal=8)
@@ -48,8 +51,10 @@ def test_find_orbit4(engine, ml_lattice, py_lattice, dp, refpts):
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
 @pytest.mark.parametrize('ml_lattice, py_lattice',
-                         [(pytest.lazy_fixture('ml_dba'), pytest.lazy_fixture('py_dba')),
-                          (pytest.lazy_fixture('ml_hmba'), pytest.lazy_fixture('py_hmba'))])
+                         [(pytest.lazy_fixture('ml_dba'),
+                           pytest.lazy_fixture('py_dba')),
+                          (pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
 def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
     nelems = len(py_lattice)
     refpts = range(nelems + 1) if refpts is None else refpts
@@ -58,8 +63,10 @@ def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
     # Python call
     py_m44, py_mstack = physics.find_m44(py_lattice, dp, refpts)
     # Matlab call
-    ml_m44, ml_mstack = engine.findm44(ml_lattice, dp, _ml_refs(refpts, nelems), nargout=2)
-    ml_mstack = numpy.rollaxis(numpy.asarray(ml_mstack).reshape((4, 4, nrefs)), -1)
+    ml_m44, ml_mstack = engine.findm44(ml_lattice, dp,
+                                       _ml_refs(refpts, nelems), nargout=2)
+    ml_mstack = numpy.rollaxis(numpy.asarray(ml_mstack).reshape((4, 4,
+                                                                 nrefs)), -1)
     # Comparison
     numpy.testing.assert_almost_equal(py_m44, numpy.asarray(ml_m44), decimal=8)
     numpy.testing.assert_almost_equal(py_mstack, ml_mstack, decimal=8)
@@ -67,15 +74,22 @@ def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
-@pytest.mark.parametrize('func_data', (('twissring', [('SPos', 's_pos'),
-    ('ClosedOrbit', 'closed_orbit'), ('Dispersion', 'dispersion'),
-    ('alpha', 'alpha'), ('beta', 'beta'), ('M44', 'm44')]),
-    ('atlinopt', [('SPos', 's_pos'), ('ClosedOrbit', 'closed_orbit'),
-    ('Dispersion', 'dispersion'), ('alpha', 'alpha'), ('beta', 'beta'),
-    ('mu', 'mu'), ('M44', 'm44'), ('A', 'A'), ('B', 'B'), ('C', 'C'),
-    ('gamma', 'gamma')])))
-@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
-                                                     pytest.lazy_fixture('py_hmba'))])
+@pytest.mark.parametrize('ml_lattice, py_lattice',
+                         [(pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
+@pytest.mark.parametrize('func_data',
+                         (('twissring', [('SPos', 's_pos'),
+                                         ('ClosedOrbit', 'closed_orbit'),
+                                         ('Dispersion', 'dispersion'),
+                                         ('alpha', 'alpha'), ('beta', 'beta'),
+                                         ('M44', 'm44')]),
+                          ('atlinopt', [('SPos', 's_pos'),
+                                        ('ClosedOrbit', 'closed_orbit'),
+                                        ('Dispersion', 'dispersion'),
+                                        ('alpha', 'alpha'), ('beta', 'beta'),
+                                        ('mu', 'mu'), ('M44', 'm44'),
+                                        ('A', 'A'), ('B', 'B'), ('C', 'C'),
+                                        ('gamma', 'gamma')])))
 def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
     """N.B. a 'mu' comparison is left out for twiss data as the values for 'mu'
         returned by 'twissring' in Matlab are inconsistent with those from
@@ -87,24 +101,35 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
 
     # Python call
     if func_data[0] == 'twissring':
-        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice, dp, refpts, get_chrom=True, ddp=1.E-6)
+        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice,
+                                                                 dp, refpts,
+                                                                 True,
+                                                                 ddp=1.E-6)
     else:
-        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp, refpts, get_chrom=True, ddp=1.E-6)
+        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp,
+                                                              refpts, True,
+                                                              ddp=1.E-6)
     # Matlab call
-    ml_data, ml_tune, ml_chrom = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(refpts, nelems), nargout=3)
-    ml_data0 = engine.pyproxy(func_data[0], ml_lattice, dp, _ml_refs(nelems, nelems), nargout=3)[0]
+    ml_data, ml_tune, ml_chrom = engine.pyproxy(func_data[0], ml_lattice, dp,
+                                                _ml_refs(refpts, nelems),
+                                                nargout=3)
+    ml_data0 = engine.pyproxy(func_data[0], ml_lattice, dp,
+                              _ml_refs(nelems, nelems), nargout=3)[0]
     # Comparison
     numpy.testing.assert_almost_equal(py_tune, _py_data(ml_tune), decimal=6)
     numpy.testing.assert_almost_equal(py_chrom, _py_data(ml_chrom), decimal=4)
-    _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, func_data[1], decimal=5)
+    _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, func_data[1],
+                      decimal=5)
     _compare_physdata(py_data, ml_data, func_data[1], decimal=6)
 
 
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
-@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
-                                                     pytest.lazy_fixture('py_hmba'))])
+@pytest.mark.parametrize('ml_lattice, py_lattice',
+                         [(pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
 def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
-    fields = [('beam66', 'r66'), ('beam44', 'r44'), ('emit66', 'emitXYZ'), ('emit44', 'emitXY')]
+    fields = [('beam66', 'r66'), ('beam44', 'r44'), ('emit66', 'emitXYZ'),
+              ('emit44', 'emitXY')]
     nelems = len(py_lattice)
     refpts = range(nelems + 1) if refpts is None else refpts
 
@@ -113,19 +138,24 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
     py_emit0, py_beamdata, py_emit = physics.ohmi_envelope(py_lattice, refpts)
     # Matlab call
     ml_emit = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(refpts, nelems))
-    ml_emit0, ml_params = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(0, nelems), nargout=2)
+    ml_emit0, ml_params = engine.pyproxy('atx', ml_lattice, 0.0,
+                                         _ml_refs(0, nelems), nargout=2)
     revolution_period = get_s_pos(py_lattice, nelems) / speed_of_light
     damping_times = revolution_period / py_beamdata.damping_rates
     # Comparison
-    numpy.testing.assert_almost_equal(damping_times, _py_data(ml_params['dampingtime']), decimal=8)
-    numpy.testing.assert_almost_equal(py_beamdata.mode_emittances, _py_data(ml_emit0['modemit']), decimal=8)
+    numpy.testing.assert_almost_equal(damping_times,
+                                      _py_data(ml_params['dampingtime']),
+                                      decimal=8)
+    numpy.testing.assert_almost_equal(py_beamdata.mode_emittances,
+                                      _py_data(ml_emit0['modemit']), decimal=8)
     _compare_physdata(numpy.expand_dims(py_emit0, 0), ml_emit0, fields)
     _compare_physdata(py_emit, ml_emit, fields)
 
 
 @pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
-@pytest.mark.parametrize('ml_lattice, py_lattice', [(pytest.lazy_fixture('ml_hmba'),
-                                                     pytest.lazy_fixture('py_hmba'))])
+@pytest.mark.parametrize('ml_lattice, py_lattice',
+                         [(pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
 def test_parameters(engine, ml_lattice, py_lattice, dp):
 
     # Test perimeter

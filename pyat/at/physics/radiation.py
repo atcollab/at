@@ -3,7 +3,9 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import uint32_refpts
+from warnings import warn
+import at
+from at.lattice import uint32_refpts, RFCavity, AtError, AtWarning
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
@@ -22,15 +24,16 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
+def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
+                  energy=None):
     """
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
 
-    emit0, mode_emit, damping_rates, tunes, emit = ohmi_envelope(ring[, refpts])
+    emit0, beamdata, emit = ohmi_envelope(ring[, refpts])
 
     PARAMETERS
-        ring            at.Lattice object
+        ring            lattice description.
         refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
@@ -43,13 +46,23 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     KEYWORDS
         orbit=None          Avoids looking for the closed orbit if it is
                             already known                           (6,) array)
-        keep_lattice=False  Assume no lattice change since the previous tracking
+        keep_lattice=False  Assume no lattice change since the previous
+                            tracking
+        energy=None         Energy of the ring; if it is not specified it is:
+                            - lattice.energy if a lattice object is passed,
+                            - otherwise, taken from the elements.
 
     OUTPUT
         emit0               emittance data at the start/end of the ring
         beamdata            beam parameters at the start of the ring
         emit                emittance data at the points refered to by refpts,
                             if refpts is None an empty structure is returned.
+
+        beamdata is a named tuple with attributes:
+        tunes               tunes of the 3 normal modes
+        damping_rates       damping rates of the 3 normal modes
+        mode_matrices       R-matrices of the 3 normal modes
+        mode_emittances     equilibrium emittances of the 3 normal modes
 
         emit is a record array with fields:
         r66                 (6, 6) equilibrium envelope matrix R
@@ -62,12 +75,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         Field values can be obtained with either
         emit['r66']    or
         emit.r66
-
-        beamdata is a named tuple with attributes:
-        tunes               tunes of the 3 normal modes
-        damping_rates       damping rates of the 3 normal modes
-        mode_matrices       R-matrices of the 3 normal modes
-        mode_emittances     equilibrium emittances of the 3 normal modes
 
     REFERENCES
         [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
@@ -109,6 +116,25 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
+    if energy is None:
+        if isinstance(ring, at.lattice.Lattice):
+            energy = ring.energy
+        else:
+            rf_energies = []
+            energies = []
+            for elem in ring:
+                if hasattr(elem, 'Energy'):
+                    energies.append(elem.Energy)
+                if isinstance(elem, RFCavity):
+                    rf_energies.append(elem.Energy)
+            if len(energies) is 0:
+                raise AtError('Lattice energy is not defined')
+            else:
+                energy = max(energies if len(rf_energies) is 0
+                             else rf_energies)
+                if len(set(energies)) > 1:
+                    warn(AtWarning('Inconsistent energy values in ring, {0} '
+                                   'has been used'.format(energy)))
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
@@ -120,7 +146,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy)
+    bb = [find_mpole_raddiff_matrix(elem, orbit, energy)
           if elem.PassMethod.endswith('RadPass') else b0 for elem in ring]
     bbcum = numpy.stack(list(cumulb(zip(ring, orbs, bb))), axis=0)
     # ------------------------------------------------------------------------
@@ -133,7 +159,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     #               A =  inv(MRING)
     #               B = -MRING'
     #               Q = inv(MRING)*BCUM
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     aa = inv(mring)
     bb = -mring.T
     qq = numpy.dot(aa, bbcum[-1])
