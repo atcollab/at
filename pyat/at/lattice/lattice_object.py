@@ -2,12 +2,14 @@
 import sys
 import copy
 import numpy
+import math
 from scipy.constants import physical_constants as cst
 from warnings import warn
 from at.lattice import elements, get_s_pos, checktype, uint32_refpts
 from at.lattice import AtWarning, AtError
 from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
+from at.plot import plot_beta, plot_trajectory
 
 __all__ = ['Lattice']
 
@@ -28,7 +30,7 @@ class Lattice(list):
         """Create a new lattice object
 
         INPUT
-            elems:          sequence of AT elements
+            elems:          any iterable of AT elements
 
         KEYWORDS
             name            Name of the lattice
@@ -42,7 +44,8 @@ class Lattice(list):
             all other keywords will be set as Lattice attributes
         """
 
-        def full_scan(elems, keep_all=False, **kwargs):
+        # noinspection PyShadowingNames
+        def full_scan(elems, attributes, keep_all=False, **kwargs):
             """Extract the lattice attributes from an element list
 
             If a RingParam element is found, its energy will be used, energies
@@ -52,21 +55,20 @@ class Lattice(list):
             Otherwise, necessary values will be guessed from other elements.
             """
             params = []
-            valid_elems = []
             energies = []
             thetas = []
-            attributes = dict(_radiation=False)
 
+            radiate = False
             for idx, elem in enumerate(elems):
                 if isinstance(elem, elements.RingParam):
                     params.append(elem)
                     if keep_all:
-                        valid_elems.append(elem)
+                        yield elem
                 elif isinstance(elem, elements.Element):
-                    valid_elems.append(elem)
+                    yield elem
                 else:
                     warn(AtWarning('item {0} ({1}) is not an AT element: '
-                    'ignored'.format(idx, elem)))
+                                   'ignored'.format(idx, elem)))
                     continue
                 if hasattr(elem, 'Energy'):
                     energies.append(elem.Energy)
@@ -74,7 +76,8 @@ class Lattice(list):
                     thetas.append(elem.BendingAngle)
                 if elem.PassMethod.endswith(
                         'RadPass') or elem.PassMethod.endswith('CavityPass'):
-                    attributes['_radiation'] = True
+                    radiate = True
+            attributes['_radiation'] = radiate
 
             if params:
                 # At least one RingParam element, use the 1st one
@@ -113,18 +116,6 @@ class Lattice(list):
                                 '{0} -> {1}'.format(nbp, periodicity)))
                         attributes['periodicity'] = periodicity
 
-            return valid_elems, attributes
-
-        def short_scan(elems):
-            """Check the radiation status of a list of elements"""
-            attributes = dict(_radiation=False)
-            for elem in elems:
-                if elem.PassMethod.endswith(
-                        'RadPass') or elem.PassMethod.endswith('CavityPass'):
-                    attributes['_radiation'] = True
-                    break
-            return attributes
-
         if elems is None:
             elems = []
 
@@ -135,17 +126,23 @@ class Lattice(list):
         if periodicity is not None:
             kwargs['periodicity'] = periodicity
 
+        attrs = {}
         if isinstance(elems, Lattice):
-            attrs = {}
             attrs.update(vars(elems))
         elif None in {name, energy, periodicity}:
-            elems, attrs = full_scan(elems, keep_all=keep_all, **kwargs)
-        else:
-            attrs = short_scan(elems)
+            elems = full_scan(iter(elems), attrs, keep_all=keep_all, **kwargs)
+
+        super(Lattice, self).__init__(elems)
 
         attrs.update(kwargs)
 
-        super(Lattice, self).__init__(elems)
+        if '_radiation' not in attrs:
+            attrs['_radiation'] = False
+            for elem in self:
+                if (elem.PassMethod.endswith('RadPass') or
+                        elem.PassMethod.endswith('CavityPass')):
+                    attrs['_radiation'] = True
+                    break
 
         for key, value in attrs.items():
             setattr(self, key, value)
@@ -192,6 +189,59 @@ class Lattice(list):
     def deepcopy(self):
         """Return a deep copy"""
         return copy.deepcopy(self)
+
+    def slice(self, s_range=None, size=None, slices=None):
+        """Define a range of interest in a Lattice and optionally slice it into
+        small elements
+
+        KEYWORDS
+            s_range=None    range of interest, given as (s_min, s_max)
+                            defaults to the full cell
+            size=None       Length of a slice. Default: computed from the
+                            range and number of points:
+                                    sx = (s_max-s_min)/slices.
+            slices=None     Number of slices in the specified range. Ignored if
+                            size is specified. Default: no slicing
+
+        RETURN
+            New Lattice object with two additional attributes:
+                self.s_range    range of interest
+                self.i_range    refpoints overlapping the range of interest
+       """
+        def slice_iter():
+            for elem in self[:i1]:
+                yield elem
+            for elem in self[i1:i2]:
+                nslices = math.ceil(elem.Length / size)
+                if nslices > 1:
+                    frac = numpy.ones(nslices) / nslices
+                    for el in elem.divide(frac):
+                        yield el
+                else:
+                    yield elem
+            for elem in self[i2:]:
+                yield elem
+
+        rlen = len(self)
+        spos = self.get_s_pos(range(rlen + 1))
+        if s_range is None:
+            s_range = (0.0, spos[-1])
+        if (size is None) and (slices is not None):
+            size = (s_range[1] - s_range[0]) / slices
+        ok = numpy.flatnonzero(
+            numpy.logical_and(spos > s_range[0], spos < s_range[1]))
+        i1 = max(ok[0] - 1, 0)
+        i2 = min(ok[-1] + 1, len(self))
+        if size is None:
+            newring = Lattice(self)
+            newrlen = rlen
+        else:
+            newring = Lattice(slice_iter(), **vars(self))
+            newrlen = len(newring)
+            i2 += newrlen - rlen
+        newring.s_range = s_range
+        newring.i_range = uint32_refpts(range(i1, i2+1), newrlen)
+        return newring
 
     @property
     def voltage(self):
@@ -289,6 +339,7 @@ class Lattice(list):
 
         self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass),
                                repfunc(quadrupole_pass))
+        # noinspection PyAttributeOutsideInit
         self._radiation = True
 
     def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto',
@@ -323,10 +374,12 @@ class Lattice(list):
 
         self._radiation_switch(repfunc(cavity_pass), repfunc(dipole_pass),
                                repfunc(quadrupole_pass))
+        # noinspection PyAttributeOutsideInit
         self._radiation = False
 
     def linopt(self, *args, **kwargs):
-        """See at.physics.linopt():
+        """
+        See at.physics.linopt():
         """
         if self._radiation:
             raise AtError('linopt needs no radiation in the lattice')
@@ -347,6 +400,8 @@ Lattice.find_sync_orbit = find_sync_orbit
 Lattice.find_orbit6 = find_orbit6
 Lattice.find_m44 = find_m44
 Lattice.find_m66 = find_m66
+Lattice.plot_beta = plot_beta
+Lattice.plot_trajectory = plot_trajectory
 
 if sys.version_info < (3, 0):
     Lattice.linopt.__func__.__doc__ += linopt.__doc__
