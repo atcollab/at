@@ -332,6 +332,8 @@ class Dipole(Multipole):
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
+        pp.EntranceAngle = 0.0
+        pp.ExitAngle = 0.0
         return pp
 
     @property
