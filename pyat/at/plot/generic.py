@@ -5,6 +5,7 @@ SLICES = 400
 try:
     # noinspection PyPackageRequirements
     import matplotlib.pyplot as plt
+    from matplotlib.rcsetup import cycler
 except ImportError:
     # noinspection PyUnusedLocal
     def baseplot(ring, plot_function, *args, **kwargs):
@@ -36,35 +37,41 @@ else:
                     or None if no secondary axis is needed
 
                 left[0]   xdata: (N,) array
-                left[1]   ydata: (N,) or (N,M) array, for plotting M curves
+                left[1]   ydata: list of (N,) or (N,M) arrays
                 left[2]   y-axis label
                 left[3]   (optional) list of M labels associated with each curve
-                left[4]   (optional) dictionary of keyword arguments for 'plot'
 
         KEYWORDS
             s_range=None    plot range, defaults to the full ring
             axes=None       axes for plotting as (primary_axes, secondary_axes)
                             Default: create new axes
             slices=400      Number of slices
+            legend=False    Show a legend on the plot
 
             Other keywords are sent to the plotting function
 
         RETURN
             axis1, axes2    primary and secondary plot axes
         """
-        def plot1(ax, x, y, yaxis_label='', labels=None, options=None):
+        def plot1(ax, x, y, yaxis_label='', labels=None):
             if labels is None:
                 labels = []
-            if options is None:
-                options = {}
-            lines = ax.plot(x, y, **options)
-            ax.set_ylabel(yaxis_label)
+            lines=[]
+            for y1, prop in zip(y, props):
+                lines += ax.plot(x, y1, **prop)
             for line, label in zip(lines, labels):
                 line.set_label(label)
+            ax.set_ylabel(yaxis_label)
+            return lines
+
+        def labeled(line):
+            return not line.properties()['label'].startswith('_')
 
         s_range = kwargs.pop('s_range', None)
         slices = kwargs.pop('slices', SLICES)
         axes = kwargs.pop('axes', None)
+        legend = kwargs.pop('legend', False)
+        cycle_props = plt.rcParams['axes.prop_cycle']
 
         # slice the ring
         rg = ring.slice(s_range=s_range, slices=slices)
@@ -84,10 +91,14 @@ else:
             # Use existing axes
             ax1, ax2 = axes
 
+        props = iter(cycle_props())
+
         # left plot
-        plot1(ax1, *left)
+        lines = plot1(ax1, *left)
         # right plot
         if not ((right is None) or (ax2 is None)):
-            plot1(ax2, *right)
+            lines += plot1(ax2, *right)
+        if legend:
+            ax1.legend(handles=[line for line in lines if labeled(line)])
         plt.show()
         return ax1, ax2

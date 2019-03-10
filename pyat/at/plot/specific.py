@@ -16,8 +16,11 @@ def pldata_beta_disp(ring, refpts, **kwargs):
     """Generates data for plotting beta functions and dispersion"""
     data0, _, _, data = linopt(ring, refpts=refpts, get_chrom=True, **kwargs)
     s_pos = data['s_pos']
-    left = (s_pos, data['beta'], r'$\beta [m]$', [r'$\beta_x$', r'$\beta_z$'])
-    right = (s_pos, data['dispersion'][:, 0], 'dispersion [m]', ['dispersion'])
+    betax = data['beta'][:,0]
+    betaz = data['beta'][:,1]
+    dispersion = data['dispersion'][:, 0]
+    left = (s_pos, [betax, betaz], r'$\beta [m]$', [r'$\beta_x$', r'$\beta_z$'])
+    right = (s_pos, [dispersion], 'dispersion [m]', ['dispersion'])
     return 'Optical functions', left, right
 
 # A convenience function makes the call easier
@@ -49,7 +52,7 @@ def plot_beta(ring, **kwargs):
 # Here the data generating function is embedded in the convenience function
 
 
-def plot_trajectory(ring, r_in, **kwargs):
+def plot_trajectory(ring, r_in, nturns=1, **kwargs):
     """
     plot a particle's trajectory
 
@@ -63,11 +66,11 @@ def plot_trajectory(ring, r_in, **kwargs):
     """
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, **kwargs):
-        r_out = lattice_pass(ring, r_in, nturns=1, refpts=refpts, **kwargs)
+        r_out = lattice_pass(ring, r_in, nturns=nturns, refpts=refpts, **kwargs)
         s_pos = get_s_pos(ring, refpts)
-        xx = r_out[0, 0, :, 0]
-        zz = r_out[2, 0, :, 0]
-        left = (s_pos, numpy.stack((xx, zz), axis=1), 'position [m]')
+        xx = r_out[0, 0, :, :]
+        zz = r_out[2, 0, :, :]
+        left = (s_pos, [xx], 'position [m]', ['x'])
         return 'Trajectory', left, None
 
     return baseplot(ring, pldata_trajectory, r_in, **kwargs)
