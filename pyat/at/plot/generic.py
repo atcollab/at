@@ -5,7 +5,6 @@ SLICES = 400
 try:
     # noinspection PyPackageRequirements
     import matplotlib.pyplot as plt
-    from matplotlib.rcsetup import cycler
 except ImportError:
     # noinspection PyUnusedLocal
     def baseplot(ring, plot_function, *args, **kwargs):
@@ -56,7 +55,7 @@ else:
         def plot1(ax, x, y, yaxis_label='', labels=None):
             if labels is None:
                 labels = []
-            lines=[]
+            lines = []
             for y1, prop in zip(y, props):
                 lines += ax.plot(x, y1, **prop)
             for line, label in zip(lines, labels):
@@ -82,10 +81,8 @@ else:
         # prepare the axes
         if axes is None:
             # Create new axes
-            fig, ax1 = plt.subplots()
-            ax1.set_xlim(*rg.s_range)
-            ax1.set_xlabel('s [m]')
-            ax1.set_title(title)
+            fig = plt.figure()
+            ax1 = fig.add_subplot(111, title=title, xlim=rg.s_range, xlabel='s [m]')
             ax2 = None if right is None else ax1.twinx()
         else:
             # Use existing axes
@@ -94,11 +91,16 @@ else:
         props = iter(cycle_props())
 
         # left plot
-        lines = plot1(ax1, *left)
+        lines1 = plot1(ax1, *left)
         # right plot
-        if not ((right is None) or (ax2 is None)):
-            lines += plot1(ax2, *right)
+        lines2 = [] if (right is None or ax2 is None) else plot1(ax2, *right)
         if legend:
-            ax1.legend(handles=[line for line in lines if labeled(line)])
+            if ax2 is None:
+                ax1.legend(handles=[l for l in lines1 if labeled(l)])
+            elif ax1.get_shared_x_axes().joined(ax1, ax2):
+                ax1.legend(handles=[l for l in lines1+lines2 if labeled(l)])
+            else:
+                ax1.legend(handles=[l for l in lines1 if labeled(l)])
+                ax2.legend(handles=[l for l in lines2 if labeled(l)])
         plt.show()
         return ax1, ax2
