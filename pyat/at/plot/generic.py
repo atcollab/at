@@ -5,7 +5,9 @@ SLICES = 400
 try:
     # noinspection PyPackageRequirements
     import matplotlib.pyplot as plt
-except ImportError:
+except (ImportError, RuntimeError) as exc:
+    print(exc)
+    print('Plotting is disabled')
     # noinspection PyUnusedLocal
     def baseplot(ring, plot_function, *args, **kwargs):
         raise ImportError('Matplotlib is not available: plotting is disabled')
@@ -70,7 +72,10 @@ else:
         slices = kwargs.pop('slices', SLICES)
         axes = kwargs.pop('axes', None)
         legend = kwargs.pop('legend', False)
-        cycle_props = plt.rcParams['axes.prop_cycle']
+        try:
+            cycle_props = plt.rcParams['axes.prop_cycle']
+        except KeyErrer:
+            cycle_props = plt.rcParams['axes.color_cycle']
 
         # slice the ring
         rg = ring.slice(s_range=s_range, slices=slices)
