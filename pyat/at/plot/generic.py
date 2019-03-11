@@ -72,10 +72,7 @@ else:
         slices = kwargs.pop('slices', SLICES)
         axes = kwargs.pop('axes', None)
         legend = kwargs.pop('legend', False)
-        try:
-            cycle_props = plt.rcParams['axes.prop_cycle']
-        except KeyError:
-            cycle_props = plt.rcParams['axes.color_cycle']
+        cycle_props = plt.rcParams['axes.prop_cycle']
 
         # slice the ring
         rg = ring.slice(s_range=s_range, slices=slices)
