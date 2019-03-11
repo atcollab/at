@@ -74,7 +74,7 @@ else:
         legend = kwargs.pop('legend', False)
         try:
             cycle_props = plt.rcParams['axes.prop_cycle']
-        except KeyErrer:
+        except KeyError:
             cycle_props = plt.rcParams['axes.color_cycle']
 
         # slice the ring
