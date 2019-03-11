@@ -1,5 +1,5 @@
 """AT generic plotting function"""
-
+from itertools import chain, repeat
 SLICES = 400
 
 try:
@@ -36,9 +36,10 @@ else:
                     or None if no secondary axis is needed
 
                 left[0]   xdata: (N,) array
-                left[1]   ydata: list of (N,) or (N,M) arrays
+                left[1]   ydata: list of (N,) or (N,M) arrays. Lines from a
+                          (N, M) array share the same style and label
                 left[2]   y-axis label
-                left[3]   (optional) list of M labels associated with each curve
+                left[3]   labels: (optional) list of strings as long as ydata
 
         KEYWORDS
             s_range=None    plot range, defaults to the full ring
@@ -52,14 +53,13 @@ else:
         RETURN
             axis1, axes2    primary and secondary plot axes
         """
-        def plot1(ax, x, y, yaxis_label='', labels=None):
-            if labels is None:
-                labels = []
+        def plot1(ax, x, y, yaxis_label='', labels=()):
             lines = []
-            for y1, prop in zip(y, props):
-                lines += ax.plot(x, y1, **prop)
-            for line, label in zip(lines, labels):
-                line.set_label(label)
+            for y1, prop, label in zip(y, props, chain(labels, repeat(None))):
+                ll = ax.plot(x, y1, **prop)
+                if label is not None:
+                    ll[0].set_label(label)
+                lines += ll
             ax.set_ylabel(yaxis_label)
             return lines
 
