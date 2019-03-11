@@ -212,7 +212,7 @@ class Lattice(list):
             for elem in self[:i1]:
                 yield elem
             for elem in self[i1:i2]:
-                nslices = math.ceil(elem.Length / size)
+                nslices = int(math.ceil(elem.Length / size))
                 if nslices > 1:
                     frac = numpy.ones(nslices) / nslices
                     for el in elem.divide(frac):
