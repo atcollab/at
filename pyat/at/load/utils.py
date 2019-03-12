@@ -1,8 +1,10 @@
 """
 Conversion utilities for creating pyat elements
 """
+import os
 import numpy
 from warnings import warn
+from distutils import sysconfig
 from at.lattice import elements
 from at.lattice.utils import AtWarning
 
@@ -77,6 +79,8 @@ def find_class_name(elem_dict, quiet=False):
             return CLASS_MAPPING[fam_name.lower()]
         except KeyError:
             pass_method = elem_dict.get('PassMethod', '')
+            if (quiet is False) and (pass_method is ''):
+                warn(AtWarning("No PassMethod provided.\n".format(elem_dict)))
             class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
@@ -150,7 +154,14 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         if pass_method is not None:
             pass_to_class = PASS_MAPPING.get(pass_method)
             length = float(kwargs.get('Length', 0.0))
-            if (pass_method == 'IdentityPass') and (length != 0.0):
+            extension = sysconfig.get_config_vars().get('EXT_SUFFIX', '.so')
+            file_path = os.path.realpath(os.path.join(__file__,
+                                                      '../../integrators',
+                                                      pass_method + extension))
+            if not os.path.exists(file_path):
+                raise AttributeError('PassMethod {0} does not exist.'
+                                     '\n{1}'.format(pass_method, kwargs))
+            elif (pass_method == 'IdentityPass') and (length != 0.0):
                 raise AttributeError(err_message("length {0}.", length))
             elif pass_to_class is not None:
                 if pass_to_class != class_name:
