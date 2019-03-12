@@ -36,21 +36,6 @@ Finally, you should be able to run the tests:
 
 * ``py.test test``
 
-Any changes to .py files are automatically reinstalled in the build, but to
-ensure any changes to .c files are reinstalled rerun:
-
-* ``python setup.py develop``
-
-If you get strange behaviour even after running setup.py develop again, then
-running the following should fix it:
-
-* ``find at -name "*.pyc" -exec rm '{}' \;``
-* ``find at -name "*.so" -exec rm '{}' \;``
-* ``python setup.py develop``
-
-N.B. setup.py develop needs to be run with the same version of Python that
-you are using to run pyAT.
-
 
 Comparing results with Matlab
 -----------------------------
@@ -67,3 +52,19 @@ Print statements in the C code will work once the integrators are
 recompiled.  To force recompilation, remove the build directory:
 
 * ``rm -rf build``
+
+Any changes to .py files are automatically reinstalled in the build, but to
+ensure any changes to .c files are reinstalled rerun:
+
+* ``python setup.py develop``
+
+If you get strange behaviour even after running setup.py develop again, then
+running the following, inside pyat, should fix it:
+
+* ``rm -rf build``
+* ``find at -name "*.pyc" -exec rm '{}' \;``
+* ``find at -name "*.so" -exec rm '{}' \;``
+* ``python setup.py develop``
+
+N.B. setup.py develop needs to be run with the same version of Python (and
+numpy) that you are using to run pyAT.
