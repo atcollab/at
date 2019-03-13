@@ -74,18 +74,13 @@ class Element(object):
         return '{0}({1})'.format(self.__class__.__name__, ', '.join(
             itertools.chain(arguments, keywords)))
 
-    def divide(self, frac, keep_axis=False):
+    def divide(self, frac):
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
 
         arguments:
             frac            length of each slice expressed as a fraction of the
                             initial length. sum(frac) may differ from 1.
-
-        keywords:
-            keep_axis=False If True, displacement and rotation are applied to
-                            each slice, if False they are applied
-                            at extremities only
 
         Return a list of elements equivalent to the original.
 
@@ -113,18 +108,13 @@ class LongElement(Element):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
-    def divide(self, frac, keep_axis=False):
+    def divide(self, frac):
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
 
         arguments:
             frac            length of each slice expressed as a fraction of the
                             initial length. sum(frac) may differ from 1.
-
-        keywords:
-            keep_axis=False If True, displacement and rotation are applied to
-                            each slice, if False they are applied
-                            at extremities only
 
         Return a list of elements equivalent to the original.
 
@@ -140,12 +130,11 @@ class LongElement(Element):
 
         frac = numpy.asarray(frac, dtype=float)
         el = self.copy()
-        first = 0 if keep_axis else 2
         # Remove entrance and exit attributes
         fin = dict(popattr(el, key) for key in vars(self) if
-                   key in self._entrance_fields[first:])
+                   key in self._entrance_fields)
         fout = dict(popattr(el, key) for key in vars(self) if
-                    key in self._exit_fields[first:])
+                    key in self._exit_fields)
         # Split element
         element_list = [el._part(f, numpy.sum(frac)) for f in frac]
         # Restore entrance and exit attributes
