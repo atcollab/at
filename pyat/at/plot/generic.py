@@ -31,18 +31,17 @@ else:
 
             title, left, right = plot_function(ring, refpts, *args, **kwargs)
 
-            and should return 3 output:
+            and should return 2 or 3 output:
 
             title   plot title or None
             left    tuple returning the data for the main (left) axis
-            right   tuple returning the data for the secondary (right) axis
-                    or None if no secondary axis is needed
-
                 left[0]   xdata: (N,) array
                 left[1]   ydata: list of (N,) or (N,M) arrays. Lines from a
                           (N, M) array share the same style and label
                 left[2]   y-axis label
                 left[3]   labels: (optional) list of strings as long as ydata
+            right   tuple returning the data for the secondary (right) axis
+                    (optional)
 
         KEYWORDS
             s_range=None    plot range, defaults to the full ring
