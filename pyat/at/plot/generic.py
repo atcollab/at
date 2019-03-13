@@ -8,6 +8,7 @@ try:
 except (ImportError, RuntimeError) as exc:
     print(exc)
     print('Plotting is disabled')
+
     # noinspection PyUnusedLocal
     def baseplot(ring, plot_function, *args, **kwargs):
         raise ImportError('Matplotlib is not available: plotting is disabled')
@@ -78,31 +79,37 @@ else:
         rg = ring.slice(s_range=s_range, slices=slices)
 
         # get the data for the plot
-        title, left, right = plot_function(rg, rg.i_range, *args, **kwargs)
+        pout = plot_function(rg, rg.i_range, *args, **kwargs)
+        title = pout[0]
+        plots = pout[1:]
 
         # prepare the axes
         if axes is None:
             # Create new axes
+            nplots = len(plots)
             fig = plt.figure()
-            ax1 = fig.add_subplot(111, title=title, xlim=rg.s_range, xlabel='s [m]')
-            ax2 = None if right is None else ax1.twinx()
+            axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]')
+            axright = axleft.twinx() if (nplots >= 2) else None
+            axleft.set_title(title)
+            axleft.set_title(ring.name, loc='left')
         else:
             # Use existing axes
-            ax1, ax2 = axes
+            axleft, axright = axes
+            nplots = 1 if axright is None else len(plots)
 
         props = iter(cycle_props())
 
         # left plot
-        lines1 = plot1(ax1, *left)
+        lines1 = plot1(axleft, *plots[0])
         # right plot
-        lines2 = [] if (right is None or ax2 is None) else plot1(ax2, *right)
+        lines2 = [] if (nplots < 2) else plot1(axright, *plots[1])
         if legend:
-            if ax2 is None:
-                ax1.legend(handles=[l for l in lines1 if labeled(l)])
-            elif ax1.get_shared_x_axes().joined(ax1, ax2):
-                ax1.legend(handles=[l for l in lines1+lines2 if labeled(l)])
+            if nplots < 2:
+                axleft.legend(handles=[l for l in lines1 if labeled(l)])
+            elif axleft.get_shared_x_axes().joined(axleft, axright):
+                axleft.legend(handles=[l for l in lines1+lines2 if labeled(l)])
             else:
-                ax1.legend(handles=[l for l in lines1 if labeled(l)])
-                ax2.legend(handles=[l for l in lines2 if labeled(l)])
+                axleft.legend(handles=[l for l in lines1 if labeled(l)])
+                axright.legend(handles=[l for l in lines2 if labeled(l)])
         plt.show()
-        return ax1, ax2
+        return axleft, axright
