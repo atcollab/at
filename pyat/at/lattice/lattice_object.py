@@ -190,7 +190,30 @@ class Lattice(list):
         """Return a deep copy"""
         return copy.deepcopy(self)
 
-    def slice(self, s_range=None, size=None, slices=None):
+    # noinspection PyAttributeOutsideInit
+    def set_roi(self, s_range=None):
+        """Define a range of interest in a Lattice
+
+        This method sets 2 additional attributes to the Lattice:
+                self.s_range    range of interest
+                self.i_range    refpoints overlapping the range of interest
+
+        KEYWORDS
+            s_range=None    range of interest, given as (s_min, s_max)
+                            defaults to the full cell
+       """
+        rlen = len(self)
+        spos = self.get_s_pos(range(rlen + 1))
+        if s_range is None:
+            s_range = (0.0, spos[-1])
+        ok = numpy.flatnonzero(
+            numpy.logical_and(spos > s_range[0], spos < s_range[1]))
+        i1 = max(ok[0] - 1, 0)
+        i2 = min(ok[-1] + 1, len(self))
+        self.s_range = s_range
+        self.i_range = uint32_refpts(range(i1, i2+1), rlen)
+
+    def slice(self, s_range=None, size=None, slices=1):
         """Define a range of interest in a Lattice and optionally slice it into
         small elements
 
@@ -200,18 +223,18 @@ class Lattice(list):
             size=None       Length of a slice. Default: computed from the
                             range and number of points:
                                     sx = (s_max-s_min)/slices.
-            slices=None     Number of slices in the specified range. Ignored if
+            slices=1        Number of slices in the specified range. Ignored if
                             size is specified. Default: no slicing
 
         RETURN
-            New Lattice object with two additional attributes:
+            New Lattice object with attributes:
                 self.s_range    range of interest
                 self.i_range    refpoints overlapping the range of interest
        """
-        def slice_iter():
-            for elem in self[:i1]:
+        def slice_iter(ibeg, iend):
+            for elem in self[:ibeg]:
                 yield elem
-            for elem in self[i1:i2]:
+            for elem in self[ibeg:iend]:
                 nslices = int(math.ceil(elem.Length / size))
                 if nslices > 1:
                     frac = numpy.ones(nslices) / nslices
@@ -219,27 +242,21 @@ class Lattice(list):
                         yield el
                 else:
                     yield elem
-            for elem in self[i2:]:
+            for elem in self[iend:]:
                 yield elem
 
-        rlen = len(self)
-        spos = self.get_s_pos(range(rlen + 1))
-        if s_range is None:
-            s_range = (0.0, spos[-1])
-        if (size is None) and (slices is not None):
-            size = (s_range[1] - s_range[0]) / slices
-        ok = numpy.flatnonzero(
-            numpy.logical_and(spos > s_range[0], spos < s_range[1]))
-        i1 = max(ok[0] - 1, 0)
-        i2 = min(ok[-1] + 1, len(self))
+        if s_range is not None or getattr(self, 's_range', None) is None:
+            self.set_roi(s_range=s_range)
+
         if size is None:
-            newring = Lattice(self)
-            newrlen = rlen
-        else:
-            newring = Lattice(slice_iter(), **vars(self))
-            newrlen = len(newring)
-            i2 += newrlen - rlen
-        newring.s_range = s_range
+            smin, smax = self.s_range
+            size = (smax - smin) / slices
+
+        i1 = self.i_range[0]
+        i2 = self.i_range[-1]
+        newring = Lattice(slice_iter(i1, i2), **vars(self))
+        newrlen = len(newring)
+        i2 += newrlen - len(self)
         newring.i_range = uint32_refpts(range(i1, i2+1), newrlen)
         return newring
 
@@ -404,7 +421,9 @@ Lattice.plot_beta = plot_beta
 Lattice.plot_trajectory = plot_trajectory
 
 if sys.version_info < (3, 0):
+    # noinspection PyUnresolvedReferences
     Lattice.linopt.__func__.__doc__ += linopt.__doc__
+    # noinspection PyUnresolvedReferences
     Lattice.ohmi_envelope.__func__.__doc__ += ohmi_envelope.__doc__
 else:
     Lattice.linopt.__doc__ += linopt.__doc__
