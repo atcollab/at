@@ -172,6 +172,7 @@ def test_parameters(engine, ml_lattice, py_lattice, dp):
     assert py_lattice.harmonic_number == int(ml_harms)
 
     # test momentum compaction factor
+    py_lattice.radiation_off()
     py_mcf = py_lattice.get_mcf(dp, ddp=1.E-6)  # Matlab uses ddp=1.E-6
     ml_mcf = engine.mcf(ml_lattice, dp)
     numpy.testing.assert_allclose(py_mcf, ml_mcf, rtol=1.E-8)

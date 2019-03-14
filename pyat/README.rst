@@ -27,9 +27,7 @@ It is easiest to do this using a virtualenv, inside pyat:
 
 * ``virtualenv --no-site-packages venv``
 * ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
-* ``pip install numpy``
-* ``pip install scipy``
-* ``pip install pytest``
+* ``pip install -r requirements.txt``
 * ``python setup.py develop``
 
 Finally, you should be able to run the tests:
