@@ -80,7 +80,8 @@ def find_class_name(elem_dict, quiet=False):
         except KeyError:
             pass_method = elem_dict.get('PassMethod', '')
             if (quiet is False) and (pass_method is ''):
-                warn(AtWarning("No PassMethod provided.\n".format(elem_dict)))
+                warn(AtWarning("No PassMethod provided."
+                               "\n{0}".format(elem_dict)))
             class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
