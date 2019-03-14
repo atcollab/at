@@ -1,5 +1,7 @@
 """AT generic plotting function"""
 from itertools import chain, repeat
+from at.plot import plot_synopt
+
 SLICES = 400
 
 try:
@@ -55,6 +57,7 @@ else:
         RETURN
             axis1, axes2    primary and secondary plot axes
         """
+
         def plot1(ax, x, y, yaxis_label='', labels=()):
             lines = []
             for y1, prop, label in zip(y, props, chain(labels, repeat(None))):
@@ -68,14 +71,21 @@ else:
         def labeled(line):
             return not line.properties()['label'].startswith('_')
 
+        # extract baseplot arguments
         s_range = kwargs.pop('s_range', None)
         slices = kwargs.pop('slices', SLICES)
         axes = kwargs.pop('axes', None)
-        legend = kwargs.pop('legend', False)
+        legend = kwargs.pop('legend', True)
+        # extract synopt arguments
+        synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole', 'monitor']
+        kwkeys = list(kwargs.keys())
+        synargs = dict((k, kwargs.pop(k)) for k in kwkeys if k in synkeys)
+        # get color cycle
         cycle_props = plt.rcParams['axes.prop_cycle']
 
         # slice the ring
-        rg = ring.slice(s_range=s_range, slices=slices)
+        ring.set_roi(s_range=s_range)
+        rg = ring.slice(slices=slices)
 
         # get the data for the plot
         pout = plot_function(rg, rg.i_range, *args, **kwargs)
@@ -87,13 +97,17 @@ else:
             # Create new axes
             nplots = len(plots)
             fig = plt.figure()
-            axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]')
+            axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]',
+                                     facecolor=[1.0, 1.0, 1.0, 0.0])
             axright = axleft.twinx() if (nplots >= 2) else None
             axleft.set_title(title)
-            axleft.set_title(ring.name, loc='left')
+            axleft.set_title(ring.name, fontdict={'fontsize': 'medium'},
+                             loc='left')
+            axsyn = plot_synopt(ring, axes=axleft, **synargs)
         else:
             # Use existing axes
             axleft, axright = axes
+            axsyn = None
             nplots = 1 if axright is None else len(plots)
 
         props = iter(cycle_props())
@@ -106,9 +120,10 @@ else:
             if nplots < 2:
                 axleft.legend(handles=[l for l in lines1 if labeled(l)])
             elif axleft.get_shared_x_axes().joined(axleft, axright):
-                axleft.legend(handles=[l for l in lines1+lines2 if labeled(l)])
+                axleft.legend(
+                    handles=[l for l in lines1 + lines2 if labeled(l)])
             else:
                 axleft.legend(handles=[l for l in lines1 if labeled(l)])
                 axright.legend(handles=[l for l in lines2 if labeled(l)])
         plt.show()
-        return axleft, axright
+        return axleft, axright, axsyn
