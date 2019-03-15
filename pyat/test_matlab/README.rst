@@ -37,7 +37,7 @@ Install the Matlab engine for Python, ensuring your virtualenv is still active:
 Now run the tests inside your virtualenv:
 
 * ``cd $AT_ROOT/pyat``
-* ``$PYTHON_EXECUTABLE -m pytest``
+* ``$PYTHON_EXECUTABLE -m pytest test_matlab``
 
 
 Footnotes
