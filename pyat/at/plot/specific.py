@@ -16,13 +16,20 @@ from at.tracking import lattice_pass
 # data generating function
 def pldata_beta_disp(ring, refpts, **kwargs):
     """Generates data for plotting beta functions and dispersion"""
+
+    # compute linear optics at the required locations
     data0, _, _, data = linopt(ring, refpts=refpts, get_chrom=True, **kwargs)
+
+    # Extract the plot data
     s_pos = data['s_pos']
     betax = data['beta'][:, 0]
     betaz = data['beta'][:, 1]
     dispersion = data['dispersion'][:, 0]
-    left = (s_pos, [betax, betaz], r'$\beta [m]$', [r'$\beta_x$', r'$\beta_z$'])
-    right = (s_pos, [dispersion], 'dispersion [m]', ['dispersion'])
+
+    # Left axis definition
+    left = (r'$\beta [m]$', s_pos, [betax, betaz], [r'$\beta_x$', r'$\beta_z$'])
+    # Right axis definition
+    right = ('dispersion [m]', s_pos, [dispersion], ['dispersion'])
     return 'Optical functions', left, right
 
 
@@ -53,24 +60,39 @@ def plot_beta(ring, **kwargs):
 # data generating function
 def pldata_linear(ring, refpts, *keys, **kwargs):
     """data extraction function for plotting results of linopt"""
+
     class Lind(object):
         """helper class for lindata extraction"""
-        lab2 = ("x", "z")
+        lab2 = "xz"
         lab6 = ("x", "x'", "z", "z'", "l", "\\delta")
+        id6 = "123456"
         params = dict(
             beta=(r'$\beta [m]$', r'$\beta_{0}$', lab2),
             closed_orbit=('position [m]', r'${0}$', lab6),
             dispersion=('dispersion [m]', r'$\eta_{0}$', lab6),
             alpha=(r'$\alpha$', r'$\alpha_{0}$', lab2),
-            mu=(r'Phase advance', r'$\mu_{0}$', lab2)
+            mu=(r'Phase advance', r'$\mu_{0}$', lab2),
+            gamma=('Gamma', 'Gamma', None),
+            A=('A', r'$A_{{{0}{1}}}$', id6),
+            B=('B', r'$B_{{{0}{1}}}$', id6),
+            C=('C', r'$C_{{{0}{1}}}$', id6),
+            m44=('Transfert', r'$T_{{{0},{1}}}$', id6)
         )
 
         @classmethod
-        def extract(cls, lindata, key, idx):
-            axis_title, fmt, variables = cls.params[key]
-            labels = [fmt.format(variables[i]) for i in idx]
-            datay = [lindata[key][:, i] for i in idx]
-            return lindata['s_pos'], datay, axis_title, labels
+        def extract(cls, lindata, key, *idx):
+            def it(v):
+                try:
+                    return iter(v)
+                except TypeError:
+                    return iter([v])
+
+            axis_title, fmt, convert = cls.params[key]
+            indices = list(zip(*(it(i) for i in idx)))
+            print(indices)
+            datay = (lindata[key][(slice(None),) + ic] for ic in indices)
+            labels = (fmt.format(*(convert[i] for i in ic)) for ic in indices)
+            return axis_title, lindata['s_pos'], datay, labels
 
     title = kwargs.pop('title', 'Linear optics')
     data0, _, _, data = linopt(ring, refpts=refpts, get_chrom=True, **kwargs)
@@ -85,8 +107,22 @@ def plot_linear(ring, *keys, **kwargs):
 
     PARAMETERS
         ring            Lattice object
-        left            Left axis description: tuple(key, list_of_indices)
-        right           Right axis description or None
+        left            Left axis description as a tuple:
+                        (key[, indices[, indices]])
+                          key:        'beta', 'closed_orbit',...
+                          indices:    integer, sequence of integers, or slice
+                        The number if sequences of indices is data[key].ndim-1
+                        The number of indices is the number of curves to plot.
+                        All sequences must have the same length.
+
+                        Examples:
+                          ('beta', [0, 1])          beta_x, beta_z
+                          ('dispersion', 0)         eta_x
+                          ('closed_orbit'), [1, 3]) x', z'
+                          ('m44', 2, 2)             T33
+                          ('m44', [0, 0], [Ø, 1])   T11, T12
+                          ('m44', slice(4), 2)      T31, T32, T33, T34
+        right           Right axis (optional)
 
     KEYWORDS
         title           Plot title, defaults to "Linear optics"
@@ -120,15 +156,15 @@ def plot_trajectory(ring, r_in, nturns=1, **kwargs):
                         Defaults to False
     """
     # noinspection PyShadowingNames
-    def pldata_trajectory(ring, refpts, r_in, **kwargs):
-        r_out = lattice_pass(ring, r_in, nturns=nturns, refpts=refpts, **kwargs)
+    def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):
+        r_out = lattice_pass(ring, r_in, refpts=refpts, nturns=nturns, **kwargs)
         s_pos = get_s_pos(ring, refpts)
         particles = range(r_out.shape[1])
         xx = [r_out[0, i, :, :] for i in particles]
         zz = [r_out[2, i, :, :] for i in particles]
         xlabels = [r'$x_{0}$'.format(i) for i in particles]
         zlabels = [r'$z_{0}$'.format(i) for i in particles]
-        left = (s_pos, xx+zz, 'position [m]', xlabels+zlabels)
+        left = ('position [m]', s_pos, xx+zz, xlabels+zlabels)
         return 'Trajectory', left
 
-    return baseplot(ring, pldata_trajectory, r_in, **kwargs)
+    return baseplot(ring, pldata_trajectory, r_in, nturns=nturns, **kwargs)

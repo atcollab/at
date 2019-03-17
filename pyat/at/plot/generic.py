@@ -37,11 +37,11 @@ else:
 
             title   plot title or None
             left    tuple returning the data for the main (left) axis
-                left[0]   xdata: (N,) array
-                left[1]   ydata: list of (N,) or (N,M) arrays. Lines from a
-                          (N, M) array share the same style and label
-                left[2]   y-axis label
-                left[3]   labels: (optional) list of strings as long as ydata
+               left[0]   y-axis label
+               left[1]   xdata: (N,) array (s coordinate)
+               left[2]   ydata: iterable of (N,) or (N,M) arrays. Lines from a
+                         (N, M) array share the same style and label
+               left[3]   labels: (optional) iterable of strings as long as ydata
             right   tuple returning the data for the secondary (right) axis
                     (optional)
 
@@ -50,15 +50,24 @@ else:
             axes=None       axes for plotting as (primary_axes, secondary_axes)
                             Default: create new axes
             slices=400      Number of slices
-            legend=False    Show a legend on the plot
+            legend=True     Show a legend on the plot
+            dipole={}       Dictionary of properties overloading the default
+                            properties of dipole representation.
+                            See 'plot_synopt' for details
+            quadrupoles={}  Same definition as for dipoles
+            sextupoles={}   Same definition as for dipoles
+            multipoles={}   Same definition as for dipoles
+            monitor={}      Same definition as for dipoles
 
-            Other keywords are sent to the plotting function
+            All other keywords are sent to the plotting function
 
         RETURN
-            axis1, axes2    primary and secondary plot axes
+            left_axes       Main (left) axes
+            right_axes      Secondary (right) axes or None
+            synopt_axes     Synoptic axes
         """
 
-        def plot1(ax, x, y, yaxis_label='', labels=()):
+        def plot1(ax, yaxis_label, x, y, labels=()):
             lines = []
             for y1, prop, label in zip(y, props, chain(labels, repeat(None))):
                 ll = ax.plot(x, y1, **prop)
@@ -98,9 +107,9 @@ else:
             nplots = len(plots)
             fig = plt.figure()
             axleft = fig.add_subplot(111, xlim=rg.s_range, xlabel='s [m]',
-                                     facecolor=[1.0, 1.0, 1.0, 0.0])
+                                     facecolor=[1.0, 1.0, 1.0, 0.0],
+                                     title=title)
             axright = axleft.twinx() if (nplots >= 2) else None
-            axleft.set_title(title)
             axleft.set_title(ring.name, fontdict={'fontsize': 'medium'},
                              loc='left')
             axsyn = plot_synopt(ring, axes=axleft, **synargs)
