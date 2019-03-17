@@ -1,5 +1,7 @@
+"""Plot a lattice synoptic"""
 import numpy
 
+# Default properties for element representation
 DIPOLE = dict(label='Dipoles', facecolor=(0.5, 0.5, 1.0))
 QUADRUPOLE = dict(label='Quadrupoles', facecolor=(1.0, 0.5, 0.5))
 SEXTUPOLE = dict(label='Sextupoles', facecolor=(0.5, 1.0, 0.5))
@@ -26,6 +28,26 @@ else:
     # noinspection PyDefaultArgument
     def plot_synopt(ring, axes=None, dipole={}, quadrupole={}, sextupole={},
                     multipole={}, monitor={}):
+        """Plot a synoptic of a lattice
+
+        PARAMETERS
+            ring            Lattice object
+
+        KEYWORDS
+            s_range=None    plot range, defaults to the full ring
+            axes=None       axes for plotting the synoptic. If None, a new
+                            figure will be created. Otherwise, a new axes object
+                            sharing the same x-axis as the given one is created.
+            dipole={}       Dictionary of properties overloading the default
+                            properties. If None, dipoles will not be shown.
+            quadrupoles={}  Same definition as for dipoles
+            sextupoles={}   Same definition as for dipoles
+            multipoles={}   Same definition as for dipoles
+            dipole={}       Same definition as for dipoles
+
+        RETURN
+            synopt_axes     Synoptic axes
+         """
 
         class Dipole(Polygon):
             xx = numpy.array([0, 0, 1, 1], dtype=float)
@@ -78,9 +100,9 @@ else:
             axsyn = fig.add_subplot(111, xlim=ring.s_range)
         else:
             axsyn = axes.twinx()
-        axsyn.set_axis_off()
-        axsyn.set_ylim((0.0, 20.0))
-        axsyn.set_zorder(-0.2)
+        axsyn.set_axis_off()         # Set axis invisible
+        axsyn.set_ylim((0.0, 20.0))  # Initial scaling of elements
+        axsyn.set_zorder(-0.2)       # Put synoptic in the background
 
         s_pos = ring.get_s_pos(range(len(ring) + 1))
 
