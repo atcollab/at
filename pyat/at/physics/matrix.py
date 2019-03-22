@@ -81,7 +81,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
 
     def mrotate(m):
         m = numpy.squeeze(m)
-        return numpy.linalg.multi_dot([m, m44, _jmt.T, m.T, _jmt])
+        return m.dot(m44.dot(_jmt.T.dot(m.T.dot(_jmt))))
 
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     full = kwargs.pop('full', False)

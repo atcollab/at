@@ -82,6 +82,10 @@ def find_class_name(elem_dict, quiet=False):
             if (quiet is False) and (pass_method is ''):
                 warn(AtWarning("No PassMethod provided."
                                "\n{0}".format(elem_dict)))
+            elif (quiet is False) and (not pass_method.endswith('Pass')):
+                warn(AtWarning("Invalid PassMethod ({0}), provided pass "
+                               "methods should end in 'Pass'."
+                               "\n{1}".format(pass_method, elem_dict)))
             class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
