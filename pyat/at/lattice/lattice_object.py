@@ -175,16 +175,22 @@ class Lattice(list):
                 super(Lattice, self).__delitem__(i)
 
     def __repr__(self):
-        at = ', '.join(
-            '{0}={1!r}'.format(key, val) for key, val in vars(self).items() if
-            not key.startswith('_'))
-        return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(), at)
+        attrs = vars(self).copy()
+        keywords = ['{0}={1!r}'.format(key, attrs.pop(key)) for key in
+                    Lattice._translate.values()]
+        keywords += ['{0}={1!r}'.format(key, val) for key, val in
+                     attrs.items() if not key.startswith('_')]
+        return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(),
+                                          ', '.join(keywords))
 
     def __str__(self):
-        at = ', '.join(
-            '{0}={1!r}'.format(key, val) for key, val in vars(self).items() if
-            not key.startswith('_'))
-        return 'Lattice(<{0} elements>, {1})'.format(len(self), at)
+        attrs = vars(self).copy()
+        keywords = ['{0}={1!r}'.format(key, attrs.pop(key)) for key in
+                    Lattice._translate.values()]
+        keywords += ['{0}={1!r}'.format(key, val) for key, val in
+                     attrs.items() if not key.startswith('_')]
+        return 'Lattice(<{0} elements>, {1})'.format(len(self),
+                                                     ', '.join(keywords))
 
     def copy(self):
         """Return a shallow copy"""

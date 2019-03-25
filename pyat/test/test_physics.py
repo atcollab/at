@@ -1,7 +1,8 @@
 import at
 import numpy
 import pytest
-from at import physics, load, atpass
+from at import physics, load, atpass, elements
+from at.lattice import AtWarning, AtError
 
 
 LATTICE_FILE = 'test_matlab/dba.mat'
@@ -59,13 +60,23 @@ def test_find_orbit4_with_two_refpts_with_and_without_guess(ring):
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
 
 
+def test_orbit_maxiter_warnings(cavity_ring):
+    with pytest.warns(AtWarning):
+        physics.find_orbit4(cavity_ring, max_iterations=1)
+    with pytest.warns(AtWarning):
+        physics.find_sync_orbit(cavity_ring, max_iterations=1)
+    with pytest.warns(AtWarning):
+        physics.find_orbit6(cavity_ring, max_iterations=1)
+
+
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
 def test_find_m44_returns_same_answer_as_matlab(ring, refpts):
     m44, mstack = physics.find_m44(ring, dp=DP, refpts=refpts)
-
     numpy.testing.assert_allclose(m44, M44_MATLAB, rtol=1e-5, atol=1e-7)
-    stack_size = 0 if refpts is None else len(refpts)
-    assert mstack.shape == (stack_size, 4, 4)
+    assert mstack.shape == (len(refpts), 4, 4)
+    m44, mstack = physics.find_m44(ring, dp=DP, refpts=refpts, full=True)
+    numpy.testing.assert_allclose(m44, M44_MATLAB, rtol=1e-5, atol=1e-7)
+    assert mstack.shape == (len(refpts), 4, 4)
 
 
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
@@ -305,3 +316,13 @@ def test_ohmi_envelope(cavity_ring, refpts):
                                                            2.2368375e-31, 4.4139269e-6, -5.8843664e-2])
     numpy.testing.assert_almost_equal(emit['emitXY'][-1], [1.3252791e-10, 0.])
     numpy.testing.assert_almost_equal(emit['emitXYZ'][-1], [3.10938742e-10, 6.58179984e-38, 2.85839567e-6])
+
+
+def test_ohmi_envelope_energy_finding(hmba_lattice):
+    with pytest.raises(AtError):
+        physics.ohmi_envelope([elements.Drift('d1', 1)])
+    hmba_lattice.append(elements.Marker('m1', Energy=5000000000))
+    hmba_lattice.radiation_on()
+    ring = hmba_lattice[:]
+    with pytest.warns(AtWarning):
+        physics.ohmi_envelope(ring)

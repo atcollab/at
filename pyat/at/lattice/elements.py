@@ -60,19 +60,14 @@ class Element(object):
         return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
-        def differ(v1, v2):
-            if isinstance(v1, numpy.ndarray):
-                return not numpy.array_equal(v1, v2)
-            else:
-                return v1 != v2
         attrs = vars(self).copy()
-        args = [attrs.pop(k, getattr(self, k)) for k in self.REQUIRED_ATTRIBUTES]
-        defelem = self.__class__(*args)
-        arguments = ('{0!r}'.format(arg) for arg in args)
-        keywords = ('{0}={1!r}'.format(k, v) for k, v in attrs.items()
-                    if differ(v, getattr(defelem, k, None)))
-        return '{0}({1})'.format(self.__class__.__name__, ', '.join(
-            itertools.chain(arguments, keywords)))
+        arguments = [attrs.pop(k, getattr(self, k)) for k in
+                     self.REQUIRED_ATTRIBUTES]
+        defelem = self.__class__(*arguments)
+        keywords = ['{0!r}'.format(arg) for arg in arguments]
+        keywords += ['{0}={1!r}'.format(k, v) for k, v in attrs.items()
+                    if not numpy.array_equal(v, getattr(defelem, k, None))]
+        return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
 
     def divide(self, frac, keep_axis=False):
         """split the element in len(frac) pieces whose length

@@ -78,6 +78,15 @@ def test_lattice_creation_warnings_and_errors():
     # >1 RingParams already tested
 
 
+def test_lattice_string_ordering():
+    l = Lattice([elements.Drift('D0', 1.0, attr1=numpy.array(0))], name='lat',
+                energy=5, periodicity=1, attr2=3)
+    assert l.__str__() == ("Lattice(<1 elements>, energy=5, name='lat',"
+                           " periodicity=1, attr2=3)")
+    assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))],"
+                            " energy=5, name='lat', periodicity=1, attr2=3)")
+
+
 def test_copy_and_deepcopy(hmba_lattice):
     assert id(hmba_lattice.copy()) != id(hmba_lattice)
     assert id(hmba_lattice.copy()[0]) == id(hmba_lattice[0])

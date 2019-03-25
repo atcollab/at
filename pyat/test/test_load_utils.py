@@ -5,14 +5,28 @@ from at.load import find_class_name, element_from_dict
 from at.load import CLASS_MAPPING, PASS_MAPPING
 
 
-def test_invalid_class_warns_when_quiet_is_False():
+def test_invalid_class_warns_when_correctly():
     elem_kwargs = {'Class': 'Invalid'}
     with pytest.warns(at.AtWarning):
         find_class_name(elem_kwargs, quiet=False)
+    with pytest.warns(None) as record:
+        find_class_name(elem_kwargs, quiet=True)
+    assert len(record) is 0
 
 
-def test_invalid_class_does_not_warn_when_quiet_is_True():
-    elem_kwargs = {'Class': 'Invalid'}
+def test_no_pass_method_warns_correctly():
+    elem_kwargs = {}
+    with pytest.warns(at.AtWarning):
+        find_class_name(elem_kwargs, quiet=False)
+    with pytest.warns(None) as record:
+        find_class_name(elem_kwargs, quiet=True)
+    assert len(record) is 0
+
+
+def test_invalid_pass_method_warns_correctly():
+    elem_kwargs = {'PassMethod': 'invalid'}
+    with pytest.warns(at.AtWarning):
+        find_class_name(elem_kwargs, quiet=False)
     with pytest.warns(None) as record:
         find_class_name(elem_kwargs, quiet=True)
     assert len(record) is 0
