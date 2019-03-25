@@ -155,7 +155,8 @@ class Lattice(list):
             return super(Lattice, self).__getitem__(key)
         except TypeError:
             key = uint32_refpts(key, len(self))
-            return [super(Lattice, self).__getitem__(i) for i in key]
+            items = [super(Lattice, self).__getitem__(i) for i in key]
+            return items[0] if len(items) == 1 else items
 
     def __setitem__(self, key, values):
         try:

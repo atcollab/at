@@ -1,6 +1,7 @@
 import pytest
 import numpy
 from at import elements
+from at.load import load_mat
 from at.lattice import Lattice, AtWarning, AtError
 
 
@@ -75,3 +76,59 @@ def test_lattice_creation_warnings_and_errors():
     with pytest.warns(AtWarning):
         Lattice([m1, m2], periodicity=1)
     # >1 RingParams already tested
+
+
+def test_copy_and_deepcopy(hmba_lattice):
+    assert id(hmba_lattice.copy()) != id(hmba_lattice)
+    assert id(hmba_lattice.copy()[0]) == id(hmba_lattice[0])
+    assert id(hmba_lattice.deepcopy()) != id(hmba_lattice)
+    assert id(hmba_lattice.deepcopy()[0]) != id(hmba_lattice[0])
+
+
+def test_property_values_against_known(hmba_lattice):
+    assert hmba_lattice.voltage == 6000000
+    assert hmba_lattice.harmonic_number == 992
+    assert hmba_lattice.radiation == False
+    numpy.testing.assert_almost_equal(hmba_lattice.energy_loss,
+                                      2526188.713461808)
+
+
+def test_radiation_change(hmba_lattice):
+    rfs = [elem for elem in hmba_lattice if isinstance(elem,
+                                                       elements.RFCavity)]
+    dipoles = [elem for elem in hmba_lattice if isinstance(elem,
+                                                           elements.Dipole)]
+    quads = [elem for elem in hmba_lattice if isinstance(elem,
+                                                         elements.Quadrupole)]
+    hmba_lattice.radiation_on(None, 'pass2', 'auto')
+    assert hmba_lattice.radiation == True
+    for elem in rfs:
+        assert elem.PassMethod == 'IdentityPass'
+    for elem in dipoles:
+        assert elem.PassMethod == 'pass2'
+    for elem in quads:
+        assert elem.PassMethod == 'StrMPoleSymplectic4RadPass'
+    hmba_lattice.radiation_off(None, 'BndMPoleSymplectic4Pass', 'auto')
+    assert hmba_lattice.radiation == False
+    for elem in rfs:
+        assert elem.PassMethod == 'IdentityPass'
+    for elem in dipoles:
+        assert elem.PassMethod == 'BndMPoleSymplectic4Pass'
+    for elem in quads:
+        assert elem.PassMethod == 'StrMPoleSymplectic4Pass'
+
+
+def test_radiation_state_errors(hmba_lattice):
+    hmba_lattice.radiation_on()
+    with pytest.raises(AtError):
+        hmba_lattice.linopt()
+    hmba_lattice.radiation_off()
+    hmba_lattice.linopt()
+    with pytest.raises(AtError):
+        hmba_lattice.ohmi_envelope()
+    hmba_lattice.radiation_on()
+    hmba_lattice.ohmi_envelope()
+    with pytest.raises(AtError):
+        hmba_lattice.get_mcf()
+    hmba_lattice.radiation_off()
+    hmba_lattice.get_mcf()
