@@ -3,16 +3,6 @@ from at import lattice, elements
 import pytest
 
 
-@pytest.fixture
-def simple_ring():
-    ring = [elements.Drift('D1', 1, R1=numpy.eye(6), R2=numpy.eye(6)),
-            elements.Marker('M', attr='a_value'), elements.M66('M66'),
-            elements.Drift('D2', 1, T1=numpy.zeros(6), T2=numpy.zeros(6)),
-            elements.Drift('D3', 1, R1=numpy.eye(6), R2=numpy.eye(6)),
-            elements.Drift('D4', 1, T1=numpy.zeros(6), T2=numpy.zeros(6))]
-    return ring
-
-
 @pytest.mark.parametrize('ref_in, expected', (
     [2, numpy.array([2], dtype=numpy.uint32)],
     [-1, numpy.array([4], dtype=numpy.uint32)],
