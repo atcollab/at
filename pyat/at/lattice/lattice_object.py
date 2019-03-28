@@ -2,12 +2,15 @@
 import sys
 import copy
 import numpy
+from fnmatch import fnmatch
 from scipy.constants import physical_constants as cst
 from warnings import warn
+from at.load import CLASS_MAPPING
 from at.lattice import elements, get_s_pos, checktype, uint32_refpts
 from at.lattice import AtWarning, AtError
 from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
+
 
 __all__ = ['Lattice']
 
@@ -232,6 +235,44 @@ class Lattice(list):
         e_loss = cgamma / 2.0 / numpy.pi * pow(self.energy * 1.0E-9,
                                                4) * i2 * 1.e9
         return e_loss
+
+    def get_elements(self, key):
+        if isinstance(key, str):
+            elem_class = CLASS_MAPPING.get(key.lower())
+            if elem_class is not None:
+                # this is case insensitive as CLASS_MAPPING requires lowercase
+                elems = [elem for elem in self if
+                         type(elem).__name__ == elem_class]
+                if len(elems) == 0:
+                    raise AtError("No elements of class {0} in the "
+                                  "ring.".format(elem_class))
+            else:
+                # this is case sensitive, should it be?
+                elems = [elem for elem in self if fnmatch(elem.FamName, key)]
+                if len(elems) == 0:
+                    raise AtError("No elements of family or class {0} in the "
+                                  "ring.".format(key))
+                matched_fams = set(elem.FamName for elem in elems)
+                ending = 'y' if len(matched_fams) == 1 else 'ies'
+                print("String '{0}' matched {1} famil{2}: {3}\nall {4} "
+                      "corresponding elements have been "
+                      "returned.".format(key, len(matched_fams), ending,
+                                         ', '.join(matched_fams), len(elems)))
+        elif isinstance(key, elements.Element):
+            elems = [elem for elem in self if isinstance(elem, type(key))]
+            if len(elems) == 0:
+                raise AtError("No elements of class {0} in the "
+                              "ring.".format(type(key).__name__))
+        elif isinstance(key, type):
+            elems = [elem for elem in self if isinstance(elem, key)]
+            if len(elems) == 0:
+                raise AtError("No elements of class {0} in the "
+                              "ring.".format(key.__name__))
+        else:
+            raise AtError("Invalid key type {0}; please enter a string, "
+                          "element type, or element instance."
+                          .format(type(key)))
+        return elems
 
     # noinspection PyUnusedLocal
     def _radiation_switch(self, cavity_func=None, dipole_func=None,
