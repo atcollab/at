@@ -51,13 +51,14 @@ else:
                             Default: create new axes
             slices=400      Number of slices
             legend=True     Show a legend on the plot
+            block=False     if True, block until the figure is closed
             dipole={}       Dictionary of properties overloading the default
                             properties of dipole representation.
                             See 'plot_synopt' for details
-            quadrupoles={}  Same definition as for dipoles
-            sextupoles={}   Same definition as for dipoles
-            multipoles={}   Same definition as for dipoles
-            monitor={}      Same definition as for dipoles
+            quadrupole={}   Same definition as for dipole
+            sextupole={}    Same definition as for dipole
+            multipole={}    Same definition as for dipole
+            monitor={}      Same definition as for dipole
 
             All other keywords are sent to the plotting function
 
@@ -85,6 +86,7 @@ else:
         slices = kwargs.pop('slices', SLICES)
         axes = kwargs.pop('axes', None)
         legend = kwargs.pop('legend', True)
+        block=kwargs.pop('block', False)
         # extract synopt arguments
         synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole', 'monitor']
         kwkeys = list(kwargs.keys())
@@ -134,5 +136,5 @@ else:
             else:
                 axleft.legend(handles=[l for l in lines1 if labeled(l)])
                 axright.legend(handles=[l for l in lines2 if labeled(l)])
-        plt.show()
+        plt.show(block)
         return axleft, axright, axsyn

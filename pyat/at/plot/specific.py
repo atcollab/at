@@ -27,7 +27,7 @@ def pldata_beta_disp(ring, refpts, **kwargs):
     dispersion = data['dispersion'][:, 0]
 
     # Left axis definition
-    left = (r'$\beta [m]$', s_pos, [betax, betaz], [r'$\beta_x$', r'$\beta_z$'])
+    left = (r'$\beta$ [m]', s_pos, [betax, betaz], [r'$\beta_x$', r'$\beta_z$'])
     # Right axis definition
     right = ('dispersion [m]', s_pos, [dispersion], ['dispersion'])
     return 'Optical functions', left, right
@@ -67,7 +67,7 @@ def pldata_linear(ring, refpts, *keys, **kwargs):
         lab6 = ("x", "x'", "z", "z'", "l", "\\delta")
         id6 = "123456"
         params = dict(
-            beta=(r'$\beta [m]$', r'$\beta_{0}$', lab2),
+            beta=(r'$\beta$ [m]', r'$\beta_{0}$', lab2),
             closed_orbit=('position [m]', r'${0}$', lab6),
             dispersion=('dispersion [m]', r'$\eta_{0}$', lab6),
             alpha=(r'$\alpha$', r'$\alpha_{0}$', lab2),
@@ -120,8 +120,8 @@ def plot_linear(ring, *keys, **kwargs):
                           ('dispersion', 0)         eta_x
                           ('closed_orbit'), [1, 3]) x', z'
                           ('m44', 2, 2)             T33
-                          ('m44', [0, 0], [Ø, 1])   T11, T12
-                          ('m44', slice(4), 2)      T31, T32, T33, T34
+                          ('m44', [0, 0], [0, 1])   T11, T12
+                          ('m44', 2, slice(4))      T31, T32, T33, T34
         right           Right axis (optional)
 
     KEYWORDS

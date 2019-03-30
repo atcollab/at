@@ -40,10 +40,10 @@ else:
                             sharing the same x-axis as the given one is created.
             dipole={}       Dictionary of properties overloading the default
                             properties. If None, dipoles will not be shown.
-            quadrupoles={}  Same definition as for dipoles
-            sextupoles={}   Same definition as for dipoles
-            multipoles={}   Same definition as for dipoles
-            dipole={}       Same definition as for dipoles
+            quadrupole={}   Same definition as for dipole
+            sextupole={}    Same definition as for dipole
+            multipole={}    Same definition as for dipole
+            monitor={}      Same definition as for dipole
 
         RETURN
             synopt_axes     Synoptic axes
