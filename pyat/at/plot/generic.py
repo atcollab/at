@@ -46,7 +46,8 @@ else:
                     (optional)
 
         KEYWORDS
-            s_range=None    plot range, defaults to the full ring
+            s_range         lattice range of interest, default: unchanged,
+                            initially set to the full cell.
             axes=None       axes for plotting as (primary_axes, secondary_axes)
                             Default: create new axes
             slices=400      Number of slices
@@ -82,20 +83,22 @@ else:
             return not line.properties()['label'].startswith('_')
 
         # extract baseplot arguments
-        s_range = kwargs.pop('s_range', None)
         slices = kwargs.pop('slices', SLICES)
         axes = kwargs.pop('axes', None)
         legend = kwargs.pop('legend', True)
-        block=kwargs.pop('block', False)
+        block = kwargs.pop('block', False)
+        if 's_range' in kwargs:
+            ring.s_range = kwargs.pop('s_range')
+
         # extract synopt arguments
         synkeys = ['dipole', 'quadrupole', 'sextupole', 'multipole', 'monitor']
         kwkeys = list(kwargs.keys())
         synargs = dict((k, kwargs.pop(k)) for k in kwkeys if k in synkeys)
+
         # get color cycle
         cycle_props = plt.rcParams['axes.prop_cycle']
 
         # slice the ring
-        ring.set_roi(s_range=s_range)
         rg = ring.slice(slices=slices)
 
         # get the data for the plot

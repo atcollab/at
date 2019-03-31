@@ -6,7 +6,7 @@ DIPOLE = dict(label='Dipoles', facecolor=(0.5, 0.5, 1.0))
 QUADRUPOLE = dict(label='Quadrupoles', facecolor=(1.0, 0.5, 0.5))
 SEXTUPOLE = dict(label='Sextupoles', facecolor=(0.5, 1.0, 0.5))
 MULTIPOLE = dict(label='Multipoles', facecolor=(0.25, 0.75, 0.25))
-MONITOR = dict(label='Monitors', linestyle='-', edgecolor='k', linewidth=2.0)
+MONITOR = dict(label='Monitors', linestyle=None, marker=10, color='k')
 
 try:
     # noinspection PyPackageRequirements
@@ -104,7 +104,7 @@ else:
         axsyn.set_ylim((0.0, 20.0))  # Initial scaling of elements
         axsyn.set_zorder(-0.2)       # Put synoptic in the background
 
-        s_pos = ring.get_s_pos(range(len(ring) + 1))
+        s_pos = ring.get_s_pos(range(len(ring)))
 
         if dipole is not None:
             props = DIPOLE.copy()
@@ -143,9 +143,9 @@ else:
         if monitor is not None:
             props = MONITOR.copy()
             props.update(monitor)
-            monitors = PatchCollection(
-                (Monitor(s) for s, el in zip(s_pos, ring)
-                 if isinstance(el, elts.Monitor)), **props)
-            axsyn.add_collection(monitors)
+            s = s_pos[[isinstance(el, elts.Monitor) for el in ring]]
+            y = numpy.zeros(s.shape)
+            # noinspection PyUnusedLocal
+            monitors = axsyn.plot(s, y, **props)
 
         return axsyn
