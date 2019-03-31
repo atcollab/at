@@ -19,7 +19,14 @@ TWO_PI_ERROR = 1.E-4
 class Lattice(list):
     """Lattice object
     An AT lattice is a sequence of AT elements.
-    This object accepts extended indexing"""
+    A Lattice accepts extended indexing (as a numpy ndarray).
+
+    ATTRIBUTES
+        name        Name of the lattice
+        energy      Particle energy
+        periodicity Number of super-periods to describe the full ring
+
+        """
 
     _translate = {'Energy': 'energy', 'Periodicity': 'periodicity',
                   'FamName': 'name'}
@@ -38,7 +45,7 @@ class Lattice(list):
             energy          Energy of the lattice
                             (default: taken from the elements)
             periodicity     Number of periods
-                            (default: taken from the elements)
+                            (default: taken from the elements, or 1)
             keep_all=False  if True, keep RingParam elements in the lattice
 
             all other keywords will be set as Lattice attributes
@@ -92,7 +99,7 @@ class Lattice(list):
                 # No RingParam element, try to guess
                 attributes['name'] = ''
                 if 'energy' not in kwargs:
-                    # Guess energy from the Energy attribute of the elems
+                    # Guess energy from the Energy attribute of the elements
                     if not energies:
                         raise AtError('Lattice energy is not defined')
                     energy = max(energies)
@@ -147,6 +154,8 @@ class Lattice(list):
         for key, value in attrs.items():
             setattr(self, key, value)
 
+        self.s_range = getattr(self, '_s_range', None)
+
     def __getitem__(self, key):
         try:
             return super(Lattice, self).__getitem__(key)
@@ -190,36 +199,11 @@ class Lattice(list):
         """Return a deep copy"""
         return copy.deepcopy(self)
 
-    # noinspection PyAttributeOutsideInit
-    def set_roi(self, s_range=None):
-        """Define a range of interest in a Lattice
-
-        This method sets 2 additional attributes to the Lattice:
-                self.s_range    range of interest
-                self.i_range    refpoints overlapping the range of interest
+    def slice(self, size=None, slices=1):
+        """Create a new lattice by slicing the range of interest into small
+        elements
 
         KEYWORDS
-            s_range=None    range of interest, given as (s_min, s_max)
-                            defaults to the full cell
-       """
-        rlen = len(self)
-        spos = self.get_s_pos(range(rlen + 1))
-        if s_range is None:
-            s_range = (0.0, spos[-1])
-        ok = numpy.flatnonzero(
-            numpy.logical_and(spos > s_range[0], spos < s_range[1]))
-        i1 = max(ok[0] - 1, 0)
-        i2 = min(ok[-1] + 1, len(self))
-        self.s_range = s_range
-        self.i_range = uint32_refpts(range(i1, i2+1), rlen)
-
-    def slice(self, s_range=None, size=None, slices=1):
-        """Define a range of interest in a Lattice and optionally slice it into
-        small elements
-
-        KEYWORDS
-            s_range=None    range of interest, given as (s_min, s_max)
-                            defaults to the full cell
             size=None       Length of a slice. Default: computed from the
                             range and number of points:
                                     sx = (s_max-s_min)/slices.
@@ -227,9 +211,7 @@ class Lattice(list):
                             size is specified. Default: no slicing
 
         RETURN
-            New Lattice object with attributes:
-                self.s_range    range of interest
-                self.i_range    refpoints overlapping the range of interest
+            New Lattice object
        """
         def slice_iter(ibeg, iend):
             for elem in self[:ibeg]:
@@ -245,20 +227,36 @@ class Lattice(list):
             for elem in self[iend:]:
                 yield elem
 
-        if s_range is not None or getattr(self, 's_range', None) is None:
-            self.set_roi(s_range=s_range)
-
         if size is None:
             smin, smax = self.s_range
             size = (smax - smin) / slices
 
-        i1 = self.i_range[0]
-        i2 = self.i_range[-1]
-        newring = Lattice(slice_iter(i1, i2), **vars(self))
-        newrlen = len(newring)
-        i2 += newrlen - len(self)
-        newring.i_range = uint32_refpts(range(i1, i2+1), newrlen)
-        return newring
+        i1 = self._i_range[0]
+        i2 = self._i_range[-1]
+        return Lattice(slice_iter(i1, i2), **vars(self))
+
+    @property
+    def s_range(self):
+        """Range of interest. Initially set to the full cell.
+        'None' means the full cell."""
+        return self._s_range
+
+    @s_range.setter
+    def s_range(self, value):
+        spos = self.get_s_pos(range(len(self) + 1))
+        if value is None:
+            value = (0.0, spos[-1])
+        ok = numpy.flatnonzero(
+            numpy.logical_and(spos > value[0], spos < value[1]))
+        i1 = max(ok[0] - 1, 0)
+        i2 = min(ok[-1] + 1, len(self))
+        self._s_range = value
+        self._i_range = range(i1, i2 + 1)
+
+    @property
+    def i_range(self):
+        """Range of elements inside the range of interest"""
+        return uint32_refpts(self._i_range, len(self))
 
     @property
     def voltage(self):
