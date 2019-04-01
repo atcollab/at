@@ -91,10 +91,10 @@ class Lattice(list):
                 if len(params) > 1:
                     warn(AtWarning(
                         'More than 1 RingParam element, 1st one used'))
-                attributes.update(
-                    (self._translate.get(key, key.lower()), value)
-                    for (key, value) in vars(params[0]).items()
-                    if key not in self._ignore)
+                attributes.update((self._translate.get(key, key.lower()),
+                                   getattr(params[0], key))
+                                  for key in params[0]
+                                  if key not in self._ignore)
             else:
                 # No RingParam element, try to guess
                 attributes['name'] = ''
