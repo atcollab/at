@@ -115,13 +115,15 @@ def plot_linear(ring, *keys, **kwargs):
                         The number of indices is the number of curves to plot.
                         All sequences must have the same length.
 
-                        Examples:
-                          ('beta', [0, 1])          beta_x, beta_z
-                          ('dispersion', 0)         eta_x
-                          ('closed_orbit'), [1, 3]) x', z'
-                          ('m44', 2, 2)             T33
-                          ('m44', [0, 0], [0, 1])   T11, T12
-                          ('m44', 2, slice(4))      T31, T32, T33, T34
+            Examples:
+              ('beta', [0, 1])              beta_x, beta_z
+              ('dispersion', 0)             eta_x
+              ('closed_orbit'), [1, 3])     x', z'
+              ('m44', 2, 2)                 T33
+              ('m44', [0, 0], [0, 1])       T11, T12
+              ('m44', 2, slice(4))          T31, T32, T33, T34 as a single block
+              ('m44', [2,2,2,2], [0,1,2,3]) T31, T32, T33, T34
+
         right           Right axis (optional)
 
     KEYWORDS
