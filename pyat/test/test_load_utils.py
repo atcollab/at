@@ -5,7 +5,7 @@ from at.load import find_class_name, element_from_dict
 from at.load import CLASS_MAPPING, PASS_MAPPING
 
 
-def test_invalid_class_warns_when_correctly():
+def test_invalid_class_warns_correctly():
     elem_kwargs = {'Class': 'Invalid'}
     with pytest.warns(at.AtWarning):
         find_class_name(elem_kwargs, quiet=False)

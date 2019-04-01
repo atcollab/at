@@ -224,10 +224,12 @@ def test_linopt_no_refpts(dba_ring):
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-def test_ohmi_envelope(hmba_ring, refpts):
-    lattice = at.Lattice(hmba_ring)
-    lattice.radiation_on()
-    emit0, beamdata, emit = lattice.ohmi_envelope(refpts)
+@pytest.mark.parametrize('ring_test', (False, True))
+def test_ohmi_envelope(hmba_lattice, refpts, ring_test):
+    hmba_lattice.radiation_on()
+    if ring_test:
+        hmba_lattice = hmba_lattice[:]
+    emit0, beamdata, emit = physics.ohmi_envelope(hmba_lattice, refpts)
     expected_beamdata = [([0.38156302, 0.85437641, 1.0906073e-4]),
                          ([1.0044543e-5, 6.6238162e-6, 9.6533473e-6]),
                          ([[[6.9000153, -2.6064253e-5, 1.643376e-25,
@@ -300,13 +302,3 @@ def test_ohmi_envelope(hmba_ring, refpts):
                                                            2.2368375e-31, 4.4139269e-6, -5.8843664e-2])
     numpy.testing.assert_almost_equal(emit['emitXY'][-1], [1.3252791e-10, 0.])
     numpy.testing.assert_almost_equal(emit['emitXYZ'][-1], [3.10938742e-10, 6.58179984e-38, 2.85839567e-6])
-
-
-def test_ohmi_envelope_energy_finding(hmba_lattice):
-    with pytest.raises(AtError):
-        physics.ohmi_envelope([elements.Drift('d1', 1)])
-    hmba_lattice.append(elements.Marker('m1', Energy=5000000000))
-    hmba_lattice.radiation_on()
-    ring = hmba_lattice[:]
-    with pytest.warns(AtWarning):
-        physics.ohmi_envelope(ring)
