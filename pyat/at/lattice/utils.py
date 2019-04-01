@@ -167,7 +167,7 @@ def refpts_iterator(ring, refpts):
             yield ring[i]
 
 
-def get_elements(ring, key):
+def get_elements(ring, key, quiet=True):
     """Get the elements of a family or class (type) from the lattice.
 
     Args:
@@ -179,19 +179,22 @@ def get_elements(ring, key):
                 lattice, e.g. key=at.elements.Sextupole
              3) a string to match against elements' FamName, supports Unix
                 shell-style wildcards, e.g. key='BPM_*1'
+        quiet: if false print information about matched elements for FamName
+               matches, defaults to True.
     """
     if isinstance(key, elements.Element):
         elems = [elem for elem in ring if isinstance(elem, type(key))]
     elif isinstance(key, type):
         elems = [elem for elem in ring if isinstance(elem, key)]
-    elif numpy.issubdtype(type(key), numpy.string_):
+    elif numpy.issubdtype(type(key), numpy.str_):
         elems = [elem for elem in ring if fnmatch(elem.FamName, key)]
-        matched_fams = set(elem.FamName for elem in elems)
-        ending = 'y' if len(matched_fams) == 1 else 'ies'
-        print("String '{0}' matched {1} famil{2}: {3}\nall corresponding "
-              "elements have been returned.".format(key, len(matched_fams),
-                                                    ending,
-                                                    ', '.join(matched_fams)))
+        if not quiet:
+            matched_fams = set(elem.FamName for elem in elems)
+            ending = 'y' if len(matched_fams) == 1 else 'ies'
+            print("String '{0}' matched {1} famil{2}: {3}\n"
+                  "all corresponding elements have been "
+                  "returned.".format(key, len(matched_fams), ending,
+                                     ', '.join(matched_fams)))
     else:
         raise TypeError("Invalid key type {0}; please enter a string, element"
                         " type, or element instance.".format(type(key)))
