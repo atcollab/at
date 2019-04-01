@@ -3,9 +3,8 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from warnings import warn
 import at
-from at.lattice import uint32_refpts, RFCavity, AtError, AtWarning
+from at.lattice import uint32_refpts, get_ring_energy
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
@@ -120,21 +119,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
         if isinstance(ring, at.lattice.Lattice):
             energy = ring.energy
         else:
-            rf_energies = []
-            energies = []
-            for elem in ring:
-                if hasattr(elem, 'Energy'):
-                    energies.append(elem.Energy)
-                if isinstance(elem, RFCavity):
-                    rf_energies.append(elem.Energy)
-            if len(energies) is 0:
-                raise AtError('Lattice energy is not defined')
-            else:
-                energy = max(energies if len(rf_energies) is 0
-                             else rf_energies)
-                if len(set(energies)) > 1:
-                    warn(AtWarning('Inconsistent energy values in ring, {0} '
-                                   'has been used'.format(energy)))
+            energy = get_ring_energy(ring)
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
@@ -171,8 +156,11 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
     data0 = numpy.rec.fromarrays(
         (rr, rr4, mring, orbit, emitxy, emitxyz),
         dtype=ENVELOPE_DTYPE)
-    data = numpy.rec.fromrecords(
-        list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])),
-        dtype=ENVELOPE_DTYPE)
+    if uint32refs.shape == (0,):
+        data = numpy.recarray((0,), dtype=ENVELOPE_DTYPE)
+    else:
+        data = numpy.rec.fromrecords(
+            list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])),
+            dtype=ENVELOPE_DTYPE)
 
     return data0, r66data, data

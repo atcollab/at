@@ -16,6 +16,8 @@ refpts can be:
 """
 import numpy
 import itertools
+from warnings import warn
+from at.lattice import elements
 
 
 class AtError(Exception):
@@ -183,6 +185,41 @@ def get_s_pos(ring, refpts=None):
     s_pos = numpy.concatenate(([0.0], s_pos))
     refpts = uint32_refpts(refpts, len(ring))
     return s_pos[refpts]
+
+
+def get_ring_energy(ring):
+    """Establish the energy of the ring from the Energy attribute of the
+    elements. Energies of RingParam elements are most prioritised, if none are
+    found then the energies from RFCavity elements will be used, if none are
+    found then the energies from all elements will be used. An error will be
+    raised if no elements have a 'Energy' attribute or if inconsistent values
+    for energy are found.
+
+    Args:
+        ring: sequence of elements of which you wish to establish the energy.
+    """
+    rp_energies = []
+    rf_energies = []
+    energies = []
+    for elem in ring:
+        if hasattr(elem, 'Energy'):
+            energies.append(elem.Energy)
+            if isinstance(elem, elements.RingParam):
+                rp_energies.append(elem.Energy)
+            elif isinstance(elem, elements.RFCavity):
+                rf_energies.append(elem.Energy)
+    if not energies:
+        raise AtError('Lattice energy is not defined.')
+    elif rp_energies:
+        energy = max(rp_energies)
+    elif rf_energies:
+        energy = max(rf_energies)
+    else:
+        energy = max(energies)
+    if len(set(energies)) > 1:
+        warn(AtWarning('Inconsistent energy values in ring, {0} has been '
+                       'used.'.format(energy)))
+    return energy
 
 
 def tilt_elem(elem, rots):

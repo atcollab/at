@@ -146,7 +146,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                       l_down['closed_orbit'])[:, :4] / ddp
         disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
-        chrom = None
+        chrom = numpy.array([numpy.NaN, numpy.NaN])
         dispersion = numpy.NaN
         disp0 = numpy.NaN
 
@@ -314,7 +314,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                       l_down['closed_orbit'])[:, :4] / ddp
         disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
-        chrom = None
+        chrom = numpy.array([numpy.NaN, numpy.NaN])
         dispersion = numpy.NaN
         disp0 = numpy.NaN
 

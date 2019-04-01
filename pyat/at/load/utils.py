@@ -148,12 +148,10 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             AttributeError: if the PassMethod and Class are incompatible.
         """
         def err_message(message, *args):
-            location = '' if index is None else 'Error in element {0}: '.format(
-                index)
-            return ''.join(
-                (location,
-                 'PassMethod {0} is not compatible with '.format(pass_method),
-                 message.format(*args), '\n{0}'.format(kwargs)))
+            location = ': ' if index is None else ' {0}: '.format(index)
+            return ''.join(('Error in element', location,
+                            'PassMethod {0} '.format(pass_method),
+                             message.format(*args), '\n{0}'.format(kwargs)))
 
         pass_method = kwargs.get('PassMethod')
         if pass_method is not None:
@@ -164,19 +162,22 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
                                                       '../../integrators',
                                                       pass_method + extension))
             if not os.path.exists(file_path):
-                raise AttributeError('PassMethod {0} does not exist.'
-                                     '\n{1}'.format(pass_method, kwargs))
+                raise AttributeError(err_message("does not exist."))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
-                raise AttributeError(err_message("length {0}.", length))
+                raise AttributeError(err_message("is not compatible with "
+                                                 "length {0}.", length))
             elif pass_to_class is not None:
                 if pass_to_class != class_name:
-                    raise AttributeError(err_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("is not compatible with "
+                                                     "Class {0}.", class_name))
             elif class_name in ['Marker', 'Monitor', 'RingParam']:
                 if pass_method != 'IdentityPass':
-                    raise AttributeError(err_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("is not compatible with "
+                                                     "Class {0}.", class_name))
             elif class_name == 'Drift':
                 if pass_method != 'DriftPass':
-                    raise AttributeError(err_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("is not compatible with "
+                                                     "Class {0}.", class_name))
 
     class_name = find_class_name(elem_dict, quiet=quiet)
     if check:
