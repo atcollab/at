@@ -16,6 +16,8 @@ refpts can be:
 """
 import numpy
 import itertools
+from fnmatch import fnmatch
+from at.lattice import elements
 
 
 class AtError(Exception):
@@ -163,6 +165,37 @@ def refpts_iterator(ring, refpts):
     else:
         for i in refpts:
             yield ring[i]
+
+
+def get_elements(ring, key):
+    """Get the elements of a family or class (type) from the lattice.
+
+    Args:
+        ring: lattice from which to retrieve the elements.
+        key: can be:
+             1) an element instance, will return all elements of the same type
+                in the lattice, e.g. key=Drift('d1', 1.0)
+             2) an element type, will return all elements of that type in the
+                lattice, e.g. key=at.elements.Sextupole
+             3) a string to match against elements' FamName, supports Unix
+                shell-style wildcards, e.g. key='BPM_*1'
+    """
+    if isinstance(key, elements.Element):
+        elems = [elem for elem in ring if isinstance(elem, type(key))]
+    elif isinstance(key, type):
+        elems = [elem for elem in ring if isinstance(elem, key)]
+    elif numpy.issubdtype(type(key), numpy.string_):
+        elems = [elem for elem in ring if fnmatch(elem.FamName, key)]
+        matched_fams = set(elem.FamName for elem in elems)
+        ending = 'y' if len(matched_fams) == 1 else 'ies'
+        print("String '{0}' matched {1} famil{2}: {3}\nall corresponding "
+              "elements have been returned.".format(key, len(matched_fams),
+                                                    ending,
+                                                    ', '.join(matched_fams)))
+    else:
+        raise TypeError("Invalid key type {0}; please enter a string, element"
+                        " type, or element instance.".format(type(key)))
+    return elems
 
 
 def get_s_pos(ring, refpts=None):
