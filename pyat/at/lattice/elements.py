@@ -130,9 +130,9 @@ class LongElement(Element):
         frac = numpy.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        fin = dict(popattr(el, key) for key in vars(self) if
+        fin = dict(popattr(el, key) for key in self if
                    key in self._entrance_fields)
-        fout = dict(popattr(el, key) for key in vars(self) if
+        fout = dict(popattr(el, key) for key in self if
                     key in self._exit_fields)
         # Split element
         element_list = [el._part(f, numpy.sum(frac)) for f in frac]
