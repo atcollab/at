@@ -7,7 +7,6 @@ responsibility to ensure that the appropriate attributes are present.
 """
 import numpy
 import copy
-import itertools
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -52,27 +51,27 @@ class Element(object):
                         family_name, key, exc),)
                 raise
 
+    def __iter__(self):
+        """Implement iter(self)"""
+        for k in vars(self):
+            yield k
+
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
-        attrs = vars(self).copy()
+        attrs = dict((k, getattr(self, k)) for k in self)
         keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
         keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
         return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
-        def differ(v1, v2):
-            if isinstance(v1, numpy.ndarray):
-                return not numpy.array_equal(v1, v2)
-            else:
-                return v1 != v2
-        attrs = vars(self).copy()
-        args = [attrs.pop(k, getattr(self, k)) for k in self.REQUIRED_ATTRIBUTES]
-        defelem = self.__class__(*args)
-        arguments = ('{0!r}'.format(arg) for arg in args)
-        keywords = ('{0}={1!r}'.format(k, v) for k, v in attrs.items()
-                    if differ(v, getattr(defelem, k, None)))
-        return '{0}({1})'.format(self.__class__.__name__, ', '.join(
-            itertools.chain(arguments, keywords)))
+        attrs = dict((k, getattr(self, k)) for k in self)
+        arguments = [attrs.pop(k, getattr(self, k)) for k in
+                     self.REQUIRED_ATTRIBUTES]
+        defelem = self.__class__(*arguments)
+        keywords = ['{0!r}'.format(arg) for arg in arguments]
+        keywords += ['{0}={1!r}'.format(k, v) for k, v in attrs.items()
+                     if not numpy.array_equal(v, getattr(defelem, k, None))]
+        return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
 
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
