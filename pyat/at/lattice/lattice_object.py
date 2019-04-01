@@ -5,7 +5,7 @@ import numpy
 from scipy.constants import physical_constants as cst
 from warnings import warn
 from at.lattice import elements, get_s_pos, checktype, uint32_refpts
-from at.lattice import AtWarning, AtError, get_ring_energy
+from at.lattice import AtWarning, AtError
 from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
 
@@ -53,6 +53,7 @@ class Lattice(list):
             """
             params = []
             valid_elems = []
+            energies = []
             thetas = []
             attributes = dict(_radiation=False)
 
@@ -67,6 +68,8 @@ class Lattice(list):
                     warn(AtWarning('item {0} ({1}) is not an AT element: '
                     'ignored'.format(idx, elem)))
                     continue
+                if hasattr(elem, 'Energy'):
+                    energies.append(elem.Energy)
                 if isinstance(elem, elements.Dipole):
                     thetas.append(elem.BendingAngle)
                 if elem.PassMethod.endswith(
@@ -87,7 +90,13 @@ class Lattice(list):
                 attributes['name'] = ''
                 if 'energy' not in kwargs:
                     # Guess energy from the Energy attribute of the elems
-                    attributes['energy'] = get_ring_energy(elems)
+                    if not energies:
+                        raise AtError('Lattice energy is not defined')
+                    energy = max(energies)
+                    if min(energies) < energy:
+                        warn(AtWarning('Inconsistent energy values, '
+                                       '"energy" set to {0}'.format(energy)))
+                    attributes['energy'] = energy
                 if 'periodicity' not in kwargs:
                     # Guess periodicity from the bending angles of the lattice
                     try:
