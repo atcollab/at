@@ -36,11 +36,10 @@ class Element(object):
     _entrance_fields = ['T1', 'R1']
     _exit_fields = ['T2', 'R2']
 
-    def __init__(self, family_name, Length=0.0, PassMethod='IdentityPass',
-                 **kwargs):
+    def __init__(self, family_name, length=0.0, **kwargs):
         self.FamName = family_name
-        self.Length = float(Length)
-        self.PassMethod = PassMethod
+        self.Length = float(kwargs.pop('Length', length))
+        self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
 
         for (key, value) in kwargs.items():
             try:
@@ -228,7 +227,7 @@ class ThinMultipole(Element):
     _conversions = dict(Element._conversions, BendingAngle=float, MaxOrder=int,
                         PolynomB=_array, PolynomA=_array)
 
-    def __init__(self, family_name, poly_a, poly_b, MaxOrder=0, **kwargs):
+    def __init__(self, family_name, poly_a, poly_b, **kwargs):
         """ThinMultipole(FamName, PolynomA, PolynomB, **keywords)
 
         Available keywords:
@@ -237,8 +236,8 @@ class ThinMultipole(Element):
         kwargs.setdefault('PolynomA', poly_a)
         kwargs.setdefault('PolynomB', poly_b)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
-        super(ThinMultipole, self).__init__(family_name, MaxOrder=MaxOrder,
-                                            **kwargs)
+        kwargs.setdefault('MaxOrder', 0)
+        super(ThinMultipole, self).__init__(family_name, **kwargs)
         # Adjust polynom lengths
         poly_size = max(self.MaxOrder + 1, len(self.PolynomA),
                         len(self.PolynomB))
@@ -255,8 +254,7 @@ class Multipole(LongElement, ThinMultipole):
     _conversions = dict(ThinMultipole._conversions, NumIntSteps=int,
                         K=float, KickAngle=lambda v: _array(v, (2,)))
 
-    def __init__(self, family_name, length, poly_a, poly_b, NumIntSteps=10,
-                 **kwargs):
+    def __init__(self, family_name, length, poly_a, poly_b, **kwargs):
         """Multipole(FamName, Length, PolynomA, PolynomB, **keywords)
 
         Available keywords:
@@ -265,9 +263,10 @@ class Multipole(LongElement, ThinMultipole):
         KickAngle       Correction deviation angles (H, V)
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
+        kwargs.setdefault('NumIntSteps', 0)
         super(Multipole, self).__init__(family_name, poly_a, poly_b,
                                         Length=kwargs.pop('Length', length),
-                                        NumIntSteps=NumIntSteps, **kwargs)
+                                        **kwargs)
 
 
 class Dipole(Multipole):
@@ -289,9 +288,8 @@ class Dipole(Multipole):
                                              'FringeBendExit',
                                              'FringeQuadExit']
 
-    def __init__(self, family_name, length, BendingAngle, k=0.0,
-                 EntranceAngle=0.0, ExitAngle=0.0, **kwargs):
-        """Dipole(FamName, Length, BendingAngle, Strength=0, **keywords)
+    def __init__(self, family_name, length, bending_angle, k=0.0, **kwargs):
+        """Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
 
         Available keywords:
         EntranceAngle   entrance angle (default 0.0)
@@ -316,11 +314,12 @@ class Dipole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
+        kwargs.setdefault('EntranceAngle', 0.0)
+        kwargs.setdefault('ExitAngle', 0.0)
         kwargs.setdefault('PassMethod', 'BendLinearPass')
         super(Dipole, self).__init__(family_name, length, [], poly_b,
-                                     BendingAngle=BendingAngle,
-                                     EntranceAngle=EntranceAngle,
-                                     ExitAngle=ExitAngle, **kwargs)
+                                     BendingAngle=bending_angle,
+                                     **kwargs)
     
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
@@ -329,10 +328,12 @@ class Dipole(Multipole):
         pp.ExitAngle = 0.0
         return pp
 
+    # noinspection PyPep8Naming
     @property
     def K(self):
         return self.PolynomB[1]
 
+    # noinspection PyPep8Naming
     @K.setter
     def K(self, strength):
         self.PolynomB[1] = strength
@@ -351,7 +352,7 @@ class Quadrupole(Multipole):
     _entrance_fields = Multipole._entrance_fields + ['FringeQuadEntrance']
     _exit_fields = Multipole._exit_fields + ['FringeQuadExit']
 
-    def __init__(self, family_name, length, k=0.0, MaxOrder=1, **kwargs):
+    def __init__(self, family_name, length, k=0.0, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
         Available keywords:
@@ -368,14 +369,17 @@ class Quadrupole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
+        kwargs.setdefault('MaxOrder', 1)
         kwargs.setdefault('PassMethod', 'QuadLinearPass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
-                                         MaxOrder=MaxOrder, **kwargs)
+                                         **kwargs)
 
+    # noinspection PyPep8Naming
     @property
     def K(self):
         return self.PolynomB[1]
 
+    # noinspection PyPep8Naming
     @K.setter
     def K(self, strength):
         self.PolynomB[1] = strength
@@ -385,7 +389,7 @@ class Sextupole(Multipole):
     """pyAT sextupole element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES
 
-    def __init__(self, family_name, length, h=0.0, MaxOrder=2, **kwargs):
+    def __init__(self, family_name, length, h=0.0, **kwargs):
         """Sextupole(FamName, Length, Strength=0, **keywords)
 
         Available keywords:
@@ -396,9 +400,10 @@ class Sextupole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', [0, 0, h])
+        kwargs.setdefault('MaxOrder', 2)
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
-                                        MaxOrder=MaxOrder, **kwargs)
+                                        **kwargs)
 
 
 class Octupole(Multipole):
@@ -416,16 +421,19 @@ class RFCavity(LongElement):
                         HarmNumber=int, TimeLag=float)
 
     def __init__(self, family_name, length, voltage, frequency, harmonic_number,
-                 energy, TimeLag=0.0, **kwargs):
+                 energy, **kwargs):
         """
         Available keywords:
         TimeLag   time lag with respect to the reference particle
         """
+        kwargs.setdefault('TimeLag', 0.0)
         kwargs.setdefault('PassMethod', 'CavityPass')
-        super(RFCavity, self).__init__(family_name, length, Voltage=voltage,
+        super(RFCavity, self).__init__(family_name,
+                                       Length=kwargs.pop('Length', length),
+                                       Voltage=voltage,
                                        Frequency=frequency,
                                        HarmNumber=harmonic_number,
-                                       Energy=energy, TimeLag=TimeLag, **kwargs)
+                                       Energy=energy, **kwargs)
 
     def _part(self, fr, sumfr):
         pp = super(RFCavity, self)._part(fr, sumfr)
@@ -438,10 +446,10 @@ class RingParam(Element):
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Energy']
     _conversions = dict(Element._conversions, Energy=float, Periodicity=int)
 
-    def __init__(self, family_name, energy, Periodicity=1, **kwargs):
+    def __init__(self, family_name, energy, **kwargs):
+        kwargs.setdefault('Periodicity', 1)
         kwargs.setdefault('PassMethod', 'IdentityPass')
-        super(RingParam, self).__init__(family_name, Energy=energy,
-                                        Periodicity=Periodicity, **kwargs)
+        super(RingParam, self).__init__(family_name, Energy=energy, **kwargs)
 
 
 class M66(Element):
@@ -464,5 +472,5 @@ class Corrector(LongElement):
     def __init__(self, family_name, length, kick_angle, **kwargs):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
         super(Corrector, self).__init__(family_name,
-                                        kwargs.pop('Length', length),
+                                        Length=kwargs.pop('Length', length),
                                         KickAngle=kick_angle, **kwargs)
