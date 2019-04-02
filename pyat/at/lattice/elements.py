@@ -66,7 +66,7 @@ class Element(object):
         defelem = self.__class__(*arguments)
         keywords = ['{0!r}'.format(arg) for arg in arguments]
         keywords += ['{0}={1!r}'.format(k, v) for k, v in attrs.items()
-                    if not numpy.array_equal(v, getattr(defelem, k, None))]
+                     if not numpy.array_equal(v, getattr(defelem, k, None))]
         return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
 
     def divide(self, frac, keep_axis=False):

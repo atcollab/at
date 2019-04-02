@@ -57,12 +57,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
         emit                emittance data at the points refered to by refpts,
                             if refpts is None an empty structure is returned.
 
-        beamdata is a named tuple with attributes:
-        tunes               tunes of the 3 normal modes
-        damping_rates       damping rates of the 3 normal modes
-        mode_matrices       R-matrices of the 3 normal modes
-        mode_emittances     equilibrium emittances of the 3 normal modes
-
         emit is a record array with fields:
         r66                 (6, 6) equilibrium envelope matrix R
         r44                 (4, 4) betatron emittance matrix (dpp = 0)
@@ -74,6 +68,12 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
         Field values can be obtained with either
         emit['r66']    or
         emit.r66
+
+        beamdata is a named tuple with attributes:
+        tunes               tunes of the 3 normal modes
+        damping_rates       damping rates of the 3 normal modes
+        mode_matrices       R-matrices of the 3 normal modes
+        mode_emittances     equilibrium emittances of the 3 normal modes
 
     REFERENCES
         [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)

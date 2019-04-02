@@ -1,6 +1,6 @@
 import sys
-import pytest
 import numpy
+import pytest
 from at import elements
 from at.load import load_mat
 from at.lattice import Lattice, AtWarning, AtError
@@ -95,6 +95,37 @@ def test_lattice_string_ordering():
         assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))],"
                                 " energy=5, periodicity=1, name='lat', "
                                 "attr2=3)")
+
+
+def test_getitem(simple_lattice, simple_ring):
+    assert simple_lattice[-1] == simple_ring[-1]
+    bool_refs = numpy.array([False, True, False, True, False, True])
+    assert simple_lattice[bool_refs] == simple_ring[1::2]
+
+
+def test_setitem(simple_lattice):
+    new = elements.Monitor('M2')
+    old = simple_lattice[5]
+    simple_lattice[5] = new
+    assert simple_lattice[5] != old
+    assert simple_lattice[5] == new
+    bool_refs = numpy.array([False, False, False, False, False, True])
+    simple_lattice[bool_refs] = old
+    assert simple_lattice[5] != new
+    assert simple_lattice[5] == old
+
+
+def test_delitem(simple_lattice, simple_ring):
+    mon = elements.Monitor('M2')
+    simple_lattice.append(mon)
+    assert len(simple_lattice) == 7
+    del simple_lattice[-1]
+    assert simple_lattice[:] == simple_ring
+    bool_refs = numpy.array([False, False, False, False, False, False, True])
+    simple_lattice.append(mon)
+    assert len(simple_lattice) == 7
+    del simple_lattice[bool_refs]
+    assert simple_lattice[:] == simple_ring
 
 
 def test_copy_and_deepcopy(hmba_lattice):
