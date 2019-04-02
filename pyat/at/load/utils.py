@@ -5,6 +5,7 @@ import os
 import numpy
 from warnings import warn
 from distutils import sysconfig
+from at import integrators
 from at.lattice import elements
 from at.lattice.utils import AtWarning
 
@@ -158,10 +159,9 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             pass_to_class = PASS_MAPPING.get(pass_method)
             length = float(kwargs.get('Length', 0.0))
             extension = sysconfig.get_config_vars().get('EXT_SUFFIX', '.so')
-            file_path = os.path.realpath(os.path.join(__file__,
-                                                      '../../integrators',
+            file_path = os.path.realpath(os.path.join(integrators.__path__[0],
                                                       pass_method + extension))
-            if not os.path.exists(file_path):
+            if not os.path.isfile(file_path):
                 raise AttributeError(err_message("does not exist."))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
                 raise AttributeError(err_message("is not compatible with "
