@@ -4,7 +4,6 @@ Load lattices from Matlab files.
 import scipy.io
 import numpy
 from . import element_from_dict
-from ..lattice import Lattice
 
 
 def _load_element(index, element_array, check=True, quiet=False):
@@ -35,7 +34,7 @@ def load_mat(filename, key=None, check=True, quiet=False):
         check=True      if False, skip the coherence tests
 
     OUTPUT
-        pyat Lattice object
+        list    pyat ring
     """
     m = scipy.io.loadmat(filename)
     if key is None:

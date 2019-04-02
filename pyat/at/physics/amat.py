@@ -1,7 +1,6 @@
 """"""
 from collections import namedtuple
 import numpy
-from numpy.linalg import multi_dot as md
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
 from ..physics import jmat
@@ -56,7 +55,7 @@ def amat(tt):
     #  n1x n1y n1z
     #  n2x n2y n2z
     #  n3x n3y n3z
-    nn = 0.5 * abs(numpy.sqrt(-1.j * md((vn.conj().T, jmt, _vxyz[dms - 1]))))
+    nn = 0.5 * abs(numpy.sqrt(-1.j * vn.conj().T.dot(jmt).dot(_vxyz[dms - 1])))
     ind = numpy.argmax(nn[select, :][:, select], axis=0)
     v_ordered = vn[:, 2 * ind]
     aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
@@ -99,11 +98,11 @@ def get_tunes_damp(tt, rr):
     dms = int(nv / 2)
     jmt = jmat(dms)
     aa = amat(tt)
-    rmat = md((inv(aa), tt, aa))
+    rmat = inv(aa).dot(tt.dot(aa))
     damping_rates, tunes = zip(*(decode(rmat[s, s]) for s in _submat[:dms]))
     if rr is None:
         return _Data1(tunes, damping_rates, get_mode_matrices(aa))
     else:
-        rdiag = numpy.diag(md((aa.T, jmt, rr, jmt, aa)))
+        rdiag = numpy.diag(aa.T.dot(jmt.dot(rr.dot(jmt.dot(aa)))))
         mode_emit = -0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
         return _Data2(tunes, damping_rates, get_mode_matrices(aa), mode_emit)

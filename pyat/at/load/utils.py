@@ -1,8 +1,11 @@
 """
 Conversion utilities for creating pyat elements
 """
+import os
 import numpy
 from warnings import warn
+from distutils import sysconfig
+from at import integrators
 from at.lattice import elements
 from at.lattice.utils import AtWarning
 
@@ -77,6 +80,13 @@ def find_class_name(elem_dict, quiet=False):
             return CLASS_MAPPING[fam_name.lower()]
         except KeyError:
             pass_method = elem_dict.get('PassMethod', '')
+            if (quiet is False) and (pass_method is ''):
+                warn(AtWarning("No PassMethod provided."
+                               "\n{0}".format(elem_dict)))
+            elif (quiet is False) and (not pass_method.endswith('Pass')):
+                warn(AtWarning("Invalid PassMethod ({0}), provided pass "
+                               "methods should end in 'Pass'."
+                               "\n{1}".format(pass_method, elem_dict)))
             class_from_pass = PASS_MAPPING.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
@@ -139,28 +149,35 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             AttributeError: if the PassMethod and Class are incompatible.
         """
         def err_message(message, *args):
-            location = '' if index is None else 'Error in element {0}: '.format(
-                index)
-            return ''.join(
-                (location,
-                 'PassMethod {0} is not compatible with '.format(pass_method),
-                 message.format(*args), '\n{0}'.format(kwargs)))
+            location = ': ' if index is None else ' {0}: '.format(index)
+            return ''.join(('Error in element', location,
+                            'PassMethod {0} '.format(pass_method),
+                             message.format(*args), '\n{0}'.format(kwargs)))
 
         pass_method = kwargs.get('PassMethod')
         if pass_method is not None:
             pass_to_class = PASS_MAPPING.get(pass_method)
             length = float(kwargs.get('Length', 0.0))
-            if (pass_method == 'IdentityPass') and (length != 0.0):
-                raise AttributeError(err_message("length {0}.", length))
+            extension = sysconfig.get_config_vars().get('EXT_SUFFIX', '.so')
+            file_path = os.path.realpath(os.path.join(integrators.__path__[0],
+                                                      pass_method + extension))
+            if not os.path.isfile(file_path):
+                raise AttributeError(err_message("does not exist."))
+            elif (pass_method == 'IdentityPass') and (length != 0.0):
+                raise AttributeError(err_message("is not compatible with "
+                                                 "length {0}.", length))
             elif pass_to_class is not None:
                 if pass_to_class != class_name:
-                    raise AttributeError(err_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("is not compatible with "
+                                                     "Class {0}.", class_name))
             elif class_name in ['Marker', 'Monitor', 'RingParam']:
                 if pass_method != 'IdentityPass':
-                    raise AttributeError(err_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("is not compatible with "
+                                                     "Class {0}.", class_name))
             elif class_name == 'Drift':
                 if pass_method != 'DriftPass':
-                    raise AttributeError(err_message("Class {0}.", class_name))
+                    raise AttributeError(err_message("is not compatible with "
+                                                     "Class {0}.", class_name))
 
     class_name = find_class_name(elem_dict, quiet=quiet)
     if check:

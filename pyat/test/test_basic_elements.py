@@ -22,6 +22,56 @@ def test_element_creation_raises_exception():
         elements.Element('family_name', R1='not_an_array')
 
 
+def test_base_element_methods():
+    e = elements.Element('family_name')
+    assert e.divide([0.2, 0.5, 0.3]) == [e]
+    assert id(e.copy()) != id(e)
+
+
+def test_divide_splits_attributes_correctly():
+    pre = elements.Drift('drift', 1, KickAngle=0.5)
+    post = pre.divide([0.2, 0.5, 0.3])
+    assert len(post) == 3
+    assert sum([e.Length for e in post]) == pre.Length
+    assert sum([e.KickAngle for e in post]) == pre.KickAngle
+    pre = elements.Dipole('dipole', 1, KickAngle=[0.5, -0.5], BendingAngle=0.2)
+    post = pre.divide([0.2, 0.5, 0.3])
+    assert len(post) == 3
+    assert sum([e.Length for e in post]) == pre.Length
+    assert sum([e.KickAngle[0] for e in post]) == pre.KickAngle[0]
+    assert sum([e.KickAngle[1] for e in post]) == pre.KickAngle[1]
+    assert sum([e.BendingAngle for e in post]) == pre.BendingAngle
+    pre = elements.RFCavity('rfc', 1, voltage=187500, frequency=3.5237e+8,
+                            harmonic_number=31, energy=6.e+9, KickAngle=0.5)
+    post = pre.divide([0.2, 0.5, 0.3])
+    assert len(post) == 3
+    assert sum([e.Length for e in post]) == pre.Length
+    assert sum([e.KickAngle for e in post]) == pre.KickAngle
+    assert sum([e.Voltage for e in post]) == pre.Voltage
+
+
+def test_insert_into_drift():
+    # Create elements
+    drift = elements.Drift('drift', 1)
+    monitor = elements.Monitor('bpm')
+    quad = elements.Quadrupole('quad', 0.3)
+    # Test None splitting behaviour
+    el_list = drift.insert([(0., None), (0.3, None), (0.7, None), (1., None)])
+    assert len(el_list) == 3
+    numpy.testing.assert_almost_equal([e.Length for e in el_list],
+                                      [0.3, 0.4, 0.3])
+    # Test normal insertion
+    el_list = drift.insert([(0.3, monitor), (0.7, quad)])
+    assert len(el_list) == 5
+    numpy.testing.assert_almost_equal([e.Length for e in el_list],
+                                      [0.3, 0.0, 0.25, 0.3, 0.15])
+    # Test insertion at either end produces -ve length drifts
+    el_list = drift.insert([(0.0, quad), (1.0, quad)])
+    assert len(el_list) == 5
+    numpy.testing.assert_almost_equal([e.Length for e in el_list],
+                                      [-0.15, 0.3, 0.7, 0.3, -0.15])
+
+
 def test_correct_dimensions_does_not_raise_error(rin):
     l = []
     atpass(l, rin, 1)
@@ -40,6 +90,11 @@ def test_dipole(rin, dipole_class):
     atpass(l, rin, 1)
     rin_expected = numpy.array([1e-6, 0, 0, 0, 0, 1e-7]).reshape((6, 1))
     numpy.testing.assert_almost_equal(rin_orig, rin_expected)
+    assert b.K == 0.0
+    b.PolynomB[1] = 0.2
+    assert b.K == 0.2
+    b.K = 0.1
+    assert b.PolynomB[1] == 0.1
 
 
 def test_marker(rin):
@@ -134,6 +189,11 @@ def test_quad(rin):
     expected = numpy.array([0.921060994002885, -0.389418342308651, 0,
                             0, 0, 0.000000010330489]).reshape(6, 1) * 1e-6
     numpy.testing.assert_allclose(rin, expected)
+    assert q.K == 1
+    q.PolynomB[1] = 0.2
+    assert q.K == 0.2
+    q.K = 0.1
+    assert q.PolynomB[1] == 0.1
 
 
 def test_quad_incorrect_array(rin):

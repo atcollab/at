@@ -3,7 +3,8 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import uint32_refpts
+import at
+from at.lattice import uint32_refpts, get_ring_energy
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
@@ -22,15 +23,16 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
+def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
+                  energy=None):
     """
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
 
-    emit0, mode_emit, damping_rates, tunes, emit = ohmi_envelope(ring[, refpts])
+    emit0, beamdata, emit = ohmi_envelope(ring[, refpts])
 
     PARAMETERS
-        ring            at.Lattice object
+        ring            lattice description.
         refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
@@ -43,7 +45,11 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     KEYWORDS
         orbit=None          Avoids looking for the closed orbit if it is
                             already known                           (6,) array)
-        keep_lattice=False  Assume no lattice change since the previous tracking
+        keep_lattice=False  Assume no lattice change since the previous
+                            tracking
+        energy=None         Energy of the ring; if it is not specified it is:
+                            - lattice.energy if a lattice object is passed,
+                            - otherwise, taken from the elements.
 
     OUTPUT
         emit0               emittance data at the start/end of the ring
@@ -109,6 +115,11 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
+    if energy is None:
+        if isinstance(ring, at.lattice.Lattice):
+            energy = ring.energy
+        else:
+            energy = get_ring_energy(ring)
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
@@ -120,7 +131,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbit, ring.energy)
+    bb = [find_mpole_raddiff_matrix(elem, orbit, energy)
           if elem.PassMethod.endswith('RadPass') else b0 for elem in ring]
     bbcum = numpy.stack(list(cumulb(zip(ring, orbs, bb))), axis=0)
     # ------------------------------------------------------------------------
@@ -133,7 +144,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     #               A =  inv(MRING)
     #               B = -MRING'
     #               Q = inv(MRING)*BCUM
-    # -----------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     aa = inv(mring)
     bb = -mring.T
     qq = numpy.dot(aa, bbcum[-1])
@@ -145,8 +156,11 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     data0 = numpy.rec.fromarrays(
         (rr, rr4, mring, orbit, emitxy, emitxyz),
         dtype=ENVELOPE_DTYPE)
-    data = numpy.rec.fromrecords(
-        list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])),
-        dtype=ENVELOPE_DTYPE)
+    if uint32refs.shape == (0,):
+        data = numpy.recarray((0,), dtype=ENVELOPE_DTYPE)
+    else:
+        data = numpy.rec.fromrecords(
+            list(map(propag, ms, bbcum[uint32refs], orbs[uint32refs, :])),
+            dtype=ENVELOPE_DTYPE)
 
     return data0, r66data, data
