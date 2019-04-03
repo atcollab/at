@@ -11,7 +11,7 @@ from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
 from at.plot import plot_beta, plot_trajectory
 
-__all__ = ['Lattice', 'get_ring_properties']
+__all__ = ['Lattice', 'get_ring_properties', 'get_ring_energy']
 
 TWO_PI_ERROR = 1.E-4
 
@@ -43,7 +43,8 @@ class Lattice(list):
         Otherwise, necessary values will be guessed from other elements.
         """
         params = []
-        energies = []
+        rf_energies = []
+        el_energies = []
         thetas = []
 
         radiate = False
@@ -58,8 +59,11 @@ class Lattice(list):
                 warn(AtWarning('item {0} ({1}) is not an AT element: '
                                'ignored'.format(idx, elem)))
                 continue
+
             if hasattr(elem, 'Energy'):
-                energies.append(elem.Energy)
+                if isinstance(elem, elements.RFCavity):
+                    rf_energies.append(elem.Energy)
+                el_energies.append(elem.Energy)
             if isinstance(elem, elements.Dipole):
                 thetas.append(elem.BendingAngle)
             if elem.PassMethod.endswith(
@@ -71,7 +75,7 @@ class Lattice(list):
             # At least one RingParam element, use the 1st one
             if len(params) > 1:
                 warn(AtWarning(
-                    'More than 1 RingParam element, 1st one used'))
+                    'More than 1 RingParam element, the 1st one is used'))
             attributes.update((Lattice._translate.get(key, key.lower()),
                                getattr(params[0], key))
                               for key in params[0]
@@ -81,6 +85,7 @@ class Lattice(list):
             attributes['name'] = ''
             if 'energy' not in kwargs:
                 # Guess energy from the Energy attribute of the elements
+                energies = rf_energies if rf_energies else el_energies
                 if not energies:
                     raise AtError('Lattice energy is not defined')
                 energy = max(energies)
@@ -419,16 +424,33 @@ class Lattice(list):
 
 
 def get_ring_properties(ring):
-    """Get a directory of ring properties from a Lattice object or from a
-    sequence of elements.
+    """Get ring properties from a Lattice object or from a sequence of elements.
 
-    properties include:
-        name        Name of the lattice
-        energy      Particle energy
-        periodicity Number of super-periods to describe the full ring
+    PARAMETER
+        ring            Lattice object or any iterable of AT elements
 
-    other properties may come from a lattice object or a RingParam element in
-    the lattice
+    RETURN
+        Directory with keys:
+
+            name        Name of the lattice taken, in priority order, from:
+                            - a Lattice object,
+                            - a RingParam element
+                        Defaults to ''
+            energy      Particle energy taken, in priority order, from:
+                            - a Lattice object,
+                            - a RingParam element
+                            - a RFCavity element
+                            - any other element having an 'Energy' attribute
+                        An error is raised if no energy is found
+            periodicity Number of super-periods to describe the full ring,
+                        taken in priority order from:
+                            - a Lattice object,
+                            - a RingParam element
+                            - the sum of bending angles in the lattice
+                        Defaults to 1
+
+        Other properties may come from a lattice object or a RingParam element
+        in the lattice
     """
     if isinstance(ring, Lattice):
         props = vars(ring).copy()
@@ -438,6 +460,23 @@ def get_ring_properties(ring):
         for elem in Lattice._scanner(ring, props):
             pass
     return props
+
+
+def get_ring_energy(ring):
+    """Get the ring energy from a Lattice object or from a sequence of elements.
+
+    PARAMETER
+        ring            Lattice object or any iterable of AT elements
+
+    RETURN
+        energy      Particle energy taken, in priority order, from:
+                        - a Lattice object,
+                        - a RingParam element
+                        - a RFCavity element
+                        - any other element having an 'Energy' attribute
+                    An error is raised if no energy is found
+    """
+    return get_ring_properties(ring)['energy']
 
 
 Lattice.get_elements = get_elements
