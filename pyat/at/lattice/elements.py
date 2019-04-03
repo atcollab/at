@@ -288,7 +288,7 @@ class Dipole(Multipole):
                                              'FringeBendExit',
                                              'FringeQuadExit']
 
-    def __init__(self, family_name, length, bending_angle, k=0.0, **kwargs):
+    def __init__(self, family_name, length, bending_angle=0.0, k=0.0, **kwargs):
         """Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
 
         Available keywords:
@@ -314,12 +314,11 @@ class Dipole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
+        kwargs.setdefault('BendingAngle', bending_angle)
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
         kwargs.setdefault('PassMethod', 'BendLinearPass')
-        super(Dipole, self).__init__(family_name, length, [], poly_b,
-                                     BendingAngle=bending_angle,
-                                     **kwargs)
+        super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
     
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)

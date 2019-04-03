@@ -4,7 +4,7 @@ Radiation and equilibrium emittances
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 import at
-from at.lattice import uint32_refpts, get_ring_energy
+from at.lattice import uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
@@ -116,10 +116,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
     if energy is None:
-        if isinstance(ring, at.lattice.Lattice):
-            energy = ring.energy
-        else:
-            energy = get_ring_energy(ring)
+        energy = at.get_ring_properties(ring)['energy']
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)

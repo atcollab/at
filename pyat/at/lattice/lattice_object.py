@@ -5,13 +5,13 @@ import numpy
 import math
 from scipy.constants import physical_constants as cst
 from warnings import warn
-from at.lattice import elements, get_s_pos, checktype, uint32_refpts
+from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
 from at.lattice import AtWarning, AtError
 from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
 from at.plot import plot_beta, plot_trajectory
 
-__all__ = ['Lattice']
+__all__ = ['Lattice', 'get_ring_properties']
 
 TWO_PI_ERROR = 1.E-4
 
@@ -32,6 +32,78 @@ class Lattice(list):
                   'FamName': 'name'}
     _ignore = {'PassMethod', 'Length'}
 
+    @staticmethod
+    def _scanner(elems, attributes, keep_all=False, **kwargs):
+        """Extract the lattice attributes from an element list
+
+        If a RingParam element is found, its energy will be used, energies
+        defined in other elements are ignored. All its user-defined
+        attributes will also be set as Lattice attributes.
+
+        Otherwise, necessary values will be guessed from other elements.
+        """
+        params = []
+        energies = []
+        thetas = []
+
+        radiate = False
+        for idx, elem in enumerate(elems):
+            if isinstance(elem, elements.RingParam):
+                params.append(elem)
+                if keep_all:
+                    yield elem
+            elif isinstance(elem, elements.Element):
+                yield elem
+            else:
+                warn(AtWarning('item {0} ({1}) is not an AT element: '
+                               'ignored'.format(idx, elem)))
+                continue
+            if hasattr(elem, 'Energy'):
+                energies.append(elem.Energy)
+            if isinstance(elem, elements.Dipole):
+                thetas.append(elem.BendingAngle)
+            if elem.PassMethod.endswith(
+                    'RadPass') or elem.PassMethod.endswith('CavityPass'):
+                radiate = True
+        attributes['_radiation'] = radiate
+
+        if params:
+            # At least one RingParam element, use the 1st one
+            if len(params) > 1:
+                warn(AtWarning(
+                    'More than 1 RingParam element, 1st one used'))
+            attributes.update((Lattice._translate.get(key, key.lower()),
+                               getattr(params[0], key))
+                              for key in params[0]
+                              if key not in Lattice._ignore)
+        else:
+            # No RingParam element, try to guess
+            attributes['name'] = ''
+            if 'energy' not in kwargs:
+                # Guess energy from the Energy attribute of the elements
+                if not energies:
+                    raise AtError('Lattice energy is not defined')
+                energy = max(energies)
+                if min(energies) < energy:
+                    warn(AtWarning('Inconsistent energy values, '
+                                   '"energy" set to {0}'.format(energy)))
+                attributes['energy'] = energy
+            if 'periodicity' not in kwargs:
+                # Guess periodicity from the bending angles of the lattice
+                try:
+                    nbp = 2.0 * numpy.pi / sum(thetas)
+                except ZeroDivisionError:
+                    warn(AtWarning('No bending in the cell, '
+                                   'set "Periodicity" to 1'))
+                    attributes['periodicity'] = 1
+                else:
+                    periodicity = int(round(nbp))
+                    if abs(periodicity - nbp) > TWO_PI_ERROR:
+                        warn(AtWarning(
+                            'Non-integer number of cells: '
+                            '{0} -> {1}'.format(nbp, periodicity)))
+                    attributes['periodicity'] = periodicity
+
     def __init__(self, elems=None, name=None, energy=None, periodicity=None,
                  keep_all=False, **kwargs):
         """Create a new lattice object
@@ -50,79 +122,6 @@ class Lattice(list):
 
             all other keywords will be set as Lattice attributes
         """
-
-        # noinspection PyShadowingNames
-        def full_scan(elems, attributes, keep_all=False, **kwargs):
-            """Extract the lattice attributes from an element list
-
-            If a RingParam element is found, its energy will be used, energies
-            defined in other elements are ignored. All its user-defined
-            attributes will also be set as Lattice attributes.
-
-            Otherwise, necessary values will be guessed from other elements.
-            """
-            params = []
-            energies = []
-            thetas = []
-
-            radiate = False
-            for idx, elem in enumerate(elems):
-                if isinstance(elem, elements.RingParam):
-                    params.append(elem)
-                    if keep_all:
-                        yield elem
-                elif isinstance(elem, elements.Element):
-                    yield elem
-                else:
-                    warn(AtWarning('item {0} ({1}) is not an AT element: '
-                                   'ignored'.format(idx, elem)))
-                    continue
-                if hasattr(elem, 'Energy'):
-                    energies.append(elem.Energy)
-                if isinstance(elem, elements.Dipole):
-                    thetas.append(elem.BendingAngle)
-                if elem.PassMethod.endswith(
-                        'RadPass') or elem.PassMethod.endswith('CavityPass'):
-                    radiate = True
-            attributes['_radiation'] = radiate
-
-            if params:
-                # At least one RingParam element, use the 1st one
-                if len(params) > 1:
-                    warn(AtWarning(
-                        'More than 1 RingParam element, 1st one used'))
-                attributes.update((self._translate.get(key, key.lower()),
-                                   getattr(params[0], key))
-                                  for key in params[0]
-                                  if key not in self._ignore)
-            else:
-                # No RingParam element, try to guess
-                attributes['name'] = ''
-                if 'energy' not in kwargs:
-                    # Guess energy from the Energy attribute of the elements
-                    if not energies:
-                        raise AtError('Lattice energy is not defined')
-                    energy = max(energies)
-                    if min(energies) < energy:
-                        warn(AtWarning('Inconsistent energy values, '
-                                       '"energy" set to {0}'.format(energy)))
-                    attributes['energy'] = energy
-                if 'periodicity' not in kwargs:
-                    # Guess periodicity from the bending angles of the lattice
-                    try:
-                        nbp = 2.0 * numpy.pi / sum(thetas)
-                    except ZeroDivisionError:
-                        warn(AtWarning('No bending in the cell, '
-                                       'set "Periodicity" to 1'))
-                        attributes['periodicity'] = 1
-                    else:
-                        periodicity = int(round(nbp))
-                        if abs(periodicity - nbp) > TWO_PI_ERROR:
-                            warn(AtWarning(
-                                'Non-integer number of cells: '
-                                '{0} -> {1}'.format(nbp, periodicity)))
-                        attributes['periodicity'] = periodicity
-
         if elems is None:
             elems = []
 
@@ -137,7 +136,8 @@ class Lattice(list):
         if isinstance(elems, Lattice):
             attrs.update(vars(elems))
         elif None in {name, energy, periodicity}:
-            elems = full_scan(iter(elems), attrs, keep_all=keep_all, **kwargs)
+            elems = Lattice._scanner(iter(elems), attrs, keep_all=keep_all,
+                                     **kwargs)
 
         super(Lattice, self).__init__(elems)
 
@@ -219,6 +219,7 @@ class Lattice(list):
         RETURN
             New Lattice object
        """
+
         def slice_iter(ibeg, iend):
             for elem in self[:ibeg]:
                 yield elem
@@ -254,10 +255,13 @@ class Lattice(list):
             value = (0.0, spos[-1])
         ok = numpy.flatnonzero(
             numpy.logical_and(spos > value[0], spos < value[1]))
-        i1 = max(ok[0] - 1, 0)
-        i2 = min(ok[-1] + 1, len(self))
+        if len(ok) > 0:
+            i1 = max(ok[0] - 1, 0)
+            i2 = min(ok[-1] + 1, len(self))
+            self._i_range = range(i1, i2 + 1)
+        else:
+            self._i_range = range(0, 0)
         self._s_range = value
-        self._i_range = range(i1, i2 + 1)
 
     @property
     def i_range(self):
@@ -304,27 +308,21 @@ class Lattice(list):
                                                4) * i2 * 1.e9
         return e_loss
 
-    # noinspection PyUnusedLocal
     def _radiation_switch(self, cavity_func=None, dipole_func=None,
                           quadrupole_func=None):
 
-        def mod_elem(ring, checkfun, modfun):
-            nb = 0
-            for elem in filter(checkfun, ring):
-                modfun(elem)
-                nb += 1
-            return nb
+        def switch(elfunc, elcheck):
+            if elfunc is not None:
+                for el in (e for e in self if elcheck(e)):
+                    elfunc(el)
 
-        def checkdipole(elem):
+        def isdipole(elem):
             return isinstance(elem, elements.Dipole) and (
                     elem.BendingAngle != 0.0)
 
-        if cavity_func is not None:
-            n = mod_elem(self, checktype(elements.RFCavity), cavity_func)
-        if dipole_func is not None:
-            n = mod_elem(self, checkdipole, dipole_func)
-        if quadrupole_func is not None:
-            n = mod_elem(self, checktype(elements.Quadrupole), quadrupole_func)
+        switch(cavity_func, lambda e: isinstance(e, elements.RFCavity))
+        switch(dipole_func, isdipole)
+        switch(quadrupole_func, lambda e: isinstance(e, elements.Quadrupole))
 
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
                      quadrupole_pass=None):
@@ -399,8 +397,7 @@ class Lattice(list):
         self._radiation = False
 
     def linopt(self, *args, **kwargs):
-        """
-        See at.physics.linopt():
+        """See at.physics.linopt():
         """
         if self._radiation:
             raise AtError('linopt needs no radiation in the lattice')
@@ -421,6 +418,29 @@ class Lattice(list):
         return ohmi_envelope(self, *args, **kwargs)
 
 
+def get_ring_properties(ring):
+    """Get a directory of ring properties from a Lattice object or from a
+    sequence of elements.
+
+    properties include:
+        name        Name of the lattice
+        energy      Particle energy
+        periodicity Number of super-periods to describe the full ring
+
+    other properties may come from a lattice object or a RingParam element in
+    the lattice
+    """
+    if isinstance(ring, Lattice):
+        props = vars(ring).copy()
+    else:
+        props = {}
+        # noinspection PyUnusedLocal,PyProtectedMember
+        for elem in Lattice._scanner(ring, props):
+            pass
+    return props
+
+
+Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.find_orbit4 = find_orbit4
 Lattice.find_sync_orbit = find_sync_orbit
