@@ -170,11 +170,11 @@ def test_get_ring_energy():
             elements.RFCavity('RF', 1.0, 24, 46, 12, 2.e+6),
             elements.Element('EL1', Energy=3.e+6),
             elements.Element('EL2', Energy=4.e+6)]
+    assert get_ring_energy(ring) == 1.e+6           # should not warn
     with pytest.warns(AtWarning):
-        assert get_ring_energy(ring) == 1.e+6
-        assert get_ring_energy(ring[1:]) == 2.e+6
-        assert get_ring_energy(ring[2:]) == 4.e+6
-    assert get_ring_energy(ring[2:3]) == 3.e+6  # shouldn't warn
+        assert get_ring_energy(ring[1:]) == 2.e+6   # no bending
+        assert get_ring_energy(ring[2:]) == 4.e+6   # inconsistent values
+        assert get_ring_energy(ring[2:3]) == 3.e+6  # no bending
     with pytest.raises(AtError):
         get_ring_energy([elements.Drift('D1', 1.0)])
 
