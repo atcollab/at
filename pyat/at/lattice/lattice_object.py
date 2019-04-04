@@ -11,7 +11,7 @@ from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
 from at.plot import plot_beta, plot_trajectory
 
-__all__ = ['Lattice', 'get_ring_properties', 'get_ring_energy']
+__all__ = ['Lattice', 'get_ring_properties']
 
 TWO_PI_ERROR = 1.E-4
 
@@ -460,23 +460,6 @@ def get_ring_properties(ring):
         for elem in Lattice._scanner(ring, props):
             pass
     return props
-
-
-def get_ring_energy(ring):
-    """Get the ring energy from a Lattice object or from a sequence of elements.
-
-    PARAMETER
-        ring            Lattice object or any iterable of AT elements
-
-    RETURN
-        energy      Particle energy taken, in priority order, from:
-                        - a Lattice object,
-                        - a RingParam element
-                        - a RFCavity element
-                        - any other element having an 'Energy' attribute
-                    An error is raised if no energy is found
-    """
-    return get_ring_properties(ring)['energy']
 
 
 Lattice.get_elements = get_elements

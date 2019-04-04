@@ -4,7 +4,7 @@ from io import BytesIO, StringIO
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
-from at.lattice import get_ring_energy, AtWarning, AtError
+from at.lattice import AtWarning, AtError
 import pytest
 
 
@@ -163,20 +163,6 @@ def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_bool_r
     lat = [e, f]
     numpy.testing.assert_equal(get_s_pos(lat, numpy.ones(3, dtype=bool)),
                                numpy.array([0, 0.1, 2.2]))
-
-
-def test_get_ring_energy():
-    ring = [elements.RingParam('RP', 1.e+6),
-            elements.RFCavity('RF', 1.0, 24, 46, 12, 2.e+6),
-            elements.Element('EL1', Energy=3.e+6),
-            elements.Element('EL2', Energy=4.e+6)]
-    assert get_ring_energy(ring) == 1.e+6           # should not warn
-    with pytest.warns(AtWarning):
-        assert get_ring_energy(ring[1:]) == 2.e+6   # no bending
-        assert get_ring_energy(ring[2:]) == 4.e+6   # inconsistent values
-        assert get_ring_energy(ring[2:3]) == 3.e+6  # no bending
-    with pytest.raises(AtError):
-        get_ring_energy([elements.Drift('D1', 1.0)])
 
 
 def test_tilt_elem(simple_ring):
