@@ -102,8 +102,10 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
             minv = inv(r66)
             r44 = inv(minv[:4, :4])
         # betatron emittances (dpp=0)
-        emit2 = numpy.sqrt(numpy.array(
-            [det(r44[s, s], check_finite=False) for s in _submat[:2]]))
+        emit2sq = numpy.array(
+            [det(r44[s, s], check_finite=False) for s in _submat[:2]])
+        # Prevent from unrealistic negative values of the determinant
+        emit2 = numpy.sqrt(numpy.maximum(emit2sq, 0.0))
         return r44, emit2, emit3
 
     def propag(m, cumb, orbit6):
