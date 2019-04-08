@@ -1,4 +1,4 @@
-/* GWigSymplecticPass.c for
+/* GWigSymplecticRadPass.c for
    Accelerator Toolbox 
 */
 
@@ -16,531 +16,264 @@
  *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu  
  */
 
-#include "mex.h"
-#include "elempass.h"
+#include "atelem.c"
 #include "atlalib.c"
-#include <stdlib.h>
-#include <math.h>
-#include "gwigR.h"
-
-#define GWIG
-
 #include "gwigR.c"
 
-/******************************************************************************/
-/* PHYSICS SECTION ************************************************************/
+struct elem {
+    double Energy;
+    double Length;
+    double Lw;
+    double Bmax;
+    int Nstep;
+    int Nmeth;
+    int NHharm;
+    int NVharm;
+    double *By;
+    double *Bx;
+    double *R1;
+    double *R2;
+    double *T1;
+    double *T2;
+};
 
-void GWigInit(struct gwig *Wig,double Eg, double Ltot, double Lw, double Bmax,
-	      int Nstep, int Nmeth, int NHharm, int NVharm,
-		  int HSplitPole,int VSplitPole,double *zEndPointH,double *zEndPointV,
-	      double *pBy, double *pBx, double *T1, double *T2, 
-	      double *R1, double *R2)
-{  double *tmppr;
- // double design_energy;
-  int    i;
-  double kw;
-  mxArray *E0Field;
-  const mxArray *GLOBVALPTR = mexGetVariablePtr("GLOBVAL","global");
+/*****************************************************************************/
+/* PHYSICS SECTION ***********************************************************/
 
-  /* Get the design energy for normalization from GLOBVAL.E0 in
-   * global workspace 
-   */
-/*
-  if(GLOBVALPTR == NULL)
-    mexPrintf("GLOBVALPTR = NULL\n");
-  if(GLOBVALPTR != NULL){
-    E0Field = mxGetField(GLOBVALPTR,0,"E0");
-    if(E0Field != NULL)
-      design_energy = mxGetScalar(E0Field)*1e-9;
-    else
-      mexErrMsgTxt("Field 'E0' is not defined in GLOBVAL structure");
-  }
-  else
-    mexErrMsgTxt("global variable GLOBVAL does not exist");
-  */
-  /*double pCentral , particleCharge , particleMass , c_mks;*/
-  Wig->E0 = Eg*1e-9;
-  Wig->Po = Wig->E0/XMC2;
-  Wig->Pmethod = Nmeth;
-  Wig->PN = Nstep;
-  Wig->Nw = (int)(Ltot / Lw);
-  Wig->NHharm = NHharm;
-  Wig->NVharm = NVharm;
-  Wig->PB0 = Bmax;
-  Wig->Lw  = Lw;
-  //------------------ radiation including -------------------
-  /*pCentral=Wig->Po;
-  particleCharge=q_e;
-  particleMass=m_e;
-  c_mks=clight;*/
-  Wig->srCoef = (q_e*q_e)*((Wig->Po)*(Wig->Po)*(Wig->Po))/(6*PI*epsilon_o*m_e*(clight*clight));
-  Wig->HSplitPole = HSplitPole;
-  Wig->VSplitPole = VSplitPole;
-  Wig->zStartH = zEndPointH[0];
-  Wig->zEndH = zEndPointH[1];
-  Wig->zStartV = zEndPointV[0];
-  Wig->zEndV = zEndPointV[1];
-  //----------------------------------------------------------
-  kw = 2.0e0*PI/(Wig->Lw);
-  Wig->Zw = 0.0;
-  Wig->Aw = 0.0;
-  tmppr = pBy;
-  for (i = 0; i < NHharm; i++){
-    tmppr++;
-    Wig->HCw[i] = 0.0;
-    Wig->HCw_raw[i] = *tmppr;
+void GWigInit(struct gwig *Wig,double design_energy, double Ltot, double Lw,
+            double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
+            int HSplitPole, int VSplitPole, double *zEndPointH,
+            double *zEndPointV, double *By, double *Bx, double *T1,
+            double *T2, double *R1, double *R2)
+{
+    double *tmppr;
+    int    i;
+    double kw;
 
-    tmppr++;
-    Wig->Hkx[i]     = (*tmppr) * kw;
+    Wig->E0 = design_energy;
+    Wig->Po = Wig->E0/XMC2;
+    Wig->Pmethod = Nmeth;
+    Wig->PN = Nstep;
+    Wig->Nw = (int)(Ltot / Lw);
+    Wig->NHharm = NHharm;
+    Wig->NVharm = NVharm;
+    Wig->PB0 = Bmax;
+    Wig->Lw = Lw;
+    /*------------------ radiation including -------------------*/
+    Wig->srCoef = (q_e*q_e)*((Wig->Po)*(Wig->Po)*(Wig->Po))/(6*PI*epsilon_o*m_e*(clight*clight));
+    Wig->HSplitPole = HSplitPole;
+    Wig->VSplitPole = VSplitPole;
+    Wig->zStartH = zEndPointH[0];
+    Wig->zEndH = zEndPointH[1];
+    Wig->zStartV = zEndPointV[0];
+    Wig->zEndV = zEndPointV[1];
+    /*----------------------------------------------------------*/
 
-    tmppr++;
-    Wig->Hky[i]     = (*tmppr) * kw;
-
-    tmppr++;
-    Wig->Hkz[i]     = (*tmppr) * kw;
-
-    tmppr++;
-    Wig->Htz[i]     =  *tmppr;
-
-    tmppr++;
-  }
-
-  tmppr = pBx;
-  for (i = 0; i < NVharm; i++){
-    tmppr++;
-    Wig->VCw[i] = 0.0;
-    Wig->VCw_raw[i] = *tmppr;
-
-    tmppr++;
-    Wig->Vkx[i]     = (*tmppr) * kw;
-
-    tmppr++;
-    Wig->Vky[i]     = (*tmppr) * kw;
-
-    tmppr++;
-    Wig->Vkz[i]     = (*tmppr) * kw;
-
-    tmppr++;
-    Wig->Vtz[i]     =  *tmppr;
-
-    tmppr++;
-  }
-  
-  for (i = NHharm ; i< WHmax; i++) {
-    Wig->HCw[i] = 0.0;
-    Wig->HCw_raw[i] = 0.0;
-    Wig->Hkx[i] = 0.0;
-    Wig->Hky[i] = 0.0;
-    Wig->Hkz[i] = 0.0;
-    Wig->Htz[i] = 0.0;
-  }
-  for (i = NVharm ; i< WHmax; i++) {
-    Wig->VCw[i] = 0.0;
-    Wig->VCw_raw[i] = 0.0;
-    Wig->Vkx[i] = 0.0;
-    Wig->Vky[i] = 0.0;
-    Wig->Vkz[i] = 0.0;
-    Wig->Vtz[i] = 0.0;
-  }
+    kw = 2.0e0*PI/(Wig->Lw);
+    Wig->Zw = 0.0;
+    Wig->Aw = 0.0;
+    tmppr = By;
+    for (i = 0; i < NHharm; i++) {
+        tmppr++;
+        Wig->HCw[i] = 0.0;
+        Wig->HCw_raw[i] = *tmppr;
+        tmppr++;
+        Wig->Hkx[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Hky[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Hkz[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Htz[i] = *tmppr;
+        tmppr++;
+    }
+    tmppr = Bx;
+    for (i = 0; i < NVharm; i++) {
+        tmppr++;
+        Wig->VCw[i] = 0.0;
+        Wig->VCw_raw[i] = *tmppr;
+        tmppr++;
+        Wig->Vkx[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Vky[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Vkz[i] = (*tmppr) * kw;
+        tmppr++;
+        Wig->Vtz[i] = *tmppr;
+        tmppr++;
+    }
+    for (i = NHharm; i< WHmax; i++) {
+        Wig->HCw[i] = 0.0;
+        Wig->HCw_raw[i] = 0.0;
+        Wig->Hkx[i] = 0.0;
+        Wig->Hky[i] = 0.0;
+        Wig->Hkz[i] = 0.0;
+        Wig->Htz[i] = 0.0;
+    }
+    for (i = NVharm; i< WHmax; i++) {
+        Wig->VCw[i] = 0.0;
+        Wig->VCw_raw[i] = 0.0;
+        Wig->Vkx[i] = 0.0;
+        Wig->Vky[i] = 0.0;
+        Wig->Vkz[i] = 0.0;
+        Wig->Vtz[i] = 0.0;
+    }
 }
 
 #define second 2
 #define fourth 4
-void GWigSymplecticPass(double *r,double Eg, double Ltot, double Lw, double Bmax,
-			int Nstep, int Nmeth, int NHharm, int NVharm,
-			double *pBy, double *pBx, double *T1, double *T2, 
-			double *R1, double *R2, int num_particles)
-{	
+void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
+            double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
+            double *By, double *Bx, double *T1, double *T2,
+            double *R1, double *R2, int num_particles)
+{
+    int c;
+    double *r6;
+    double zEndPointH[2];
+    double zEndPointV[2];
+    struct gwig Wig;
 
-  int c;
-  double *r6;
-  double *tmppr;
-  double zEndPointH[2];
-  double zEndPointV[2];
-  struct gwig Wig;
-  
-  zEndPointH[0] = 0;
-  zEndPointH[1] = Ltot;
-  zEndPointV[0] = 0;
-  zEndPointV[1] = Ltot;
-/*
-void GWigInit(struct gwig *Wig, double Ltot, double Lw, double Bmax,
-	      int Nstep, int Nmeth, int NHharm, int NVharm,
-		  int HSplitPole,int VSplitPole,double *zEndPointH,double *zEndPointV,
-	      double *pBy, double *pBx, double *T1, double *T2, 
-	      double *R1, double *R2)
-		  */
-		  
-  GWigInit(&Wig, Eg, Ltot, Lw, Bmax, Nstep, Nmeth,NHharm,NVharm,0,0,zEndPointH,zEndPointV,pBy,pBx,T1,T2,R1,R2);
-  for(c = 0;c<num_particles;c++){	
-    r6 = r+c*6;	
-    
-    if(!mxIsNaN(r6[0]) & mxIsFinite(r6[4]))
-    {
-    switch (Nmeth) {
-      case second :
-	GWigPass_2nd(&Wig, r6);
-	break;
-      case fourth:
-	GWigPass_4th(&Wig, r6);
-	break;
-      default:
-	printf("Invalid method ...\n");
-	break;
+    zEndPointH[0] = 0;
+    zEndPointH[1] = Ltot;
+    zEndPointV[0] = 0;
+    zEndPointV[1] = Ltot;
+
+    GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm,0, 0, zEndPointH, zEndPointV, By, Bx, T1, T2, R1, R2);
+
+    for(c = 0;c<num_particles;c++) {
+        r6 = r+c*6;
+        if(!atIsNaN(r6[0])) {
+            switch (Nmeth) {
+                case second:
+                    GWigPass_2nd(&Wig, r6);
+                    break;
+                case fourth:
+                    GWigPass_4th(&Wig, r6);
+                    break;
+                default:
+                    printf("Invalid method ...\n");
+                    break;
+            }
+        }
     }
-    }  
-  }
-
 }
 
-/********** END PHYSICS SECTION ***********************************************/
-/******************************************************************************/
-ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
-			     double *r_in, int num_particles, int mode)
+/********** END PHYSICS SECTION **********************************************/
+/*****************************************************************************/
 
-#define NUM_FIELDS_2_REMEMBER 12
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+        double *r_in, int num_particles, struct parameters *Param)
 
-{	
-  double *pr1, *pr2, *pt1, *pt2;
-  int m, n;
-  double *pBy, *pBx;
-  double Ltot, Lw, Bmax,Eg; 
-  int Nstep, Nmeth;
-  int NHharm, NVharm;
-  mxArray *tmpmxptr;
-  int *returnptr,fnum;
-  int *NewFieldNumbers;
+{
+    if (!Elem) {
+        double *R1, *R2, *T1, *T2;
+        double *By, *Bx;
+        double Ltot, Lw, Bmax, Energy;
+        int Nstep, Nmeth;
+        int NHharm, NVharm;
 
-  switch(mode)
-    {	
-    case NO_LOCAL_COPY:	/* Get fields by names from MATLAB workspace  */
-      {
-    tmpmxptr = mxGetField(ElemData,0,"Energy");
-	if(tmpmxptr)
-	  Eg = mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Energy' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"Length");
-	if(tmpmxptr)
-	  Ltot = mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"Lw");
-	if(tmpmxptr)
-	  Lw = mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Lw' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"Bmax");
-	if(tmpmxptr)
-	  Bmax = mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Bmax' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"Nstep");
-	if(tmpmxptr)
-	  Nstep = (int)mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Nstep' was not found in the element data structure"); 
-  
-	tmpmxptr = mxGetField(ElemData,0,"Nmeth");
-	if(tmpmxptr)
-	  Nmeth = (int)mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Nmeth' was not found in the element data structure"); 
+        Energy = atGetDouble(ElemData, "Energy"); check_error();
+        Ltot = atGetDouble(ElemData, "Length"); check_error();
+        Lw = atGetDouble(ElemData, "Lw"); check_error();
+        Bmax = atGetDouble(ElemData, "Bmax"); check_error();
+        Nstep = atGetLong(ElemData, "Nstep"); check_error();
+        Nmeth = atGetLong(ElemData, "Nmeth"); check_error();
+        NHharm = atGetLong(ElemData, "NHharm"); check_error();
+        NVharm = atGetLong(ElemData, "NVharm"); check_error();
+        By = atGetDoubleArray(ElemData, "By"); check_error();
+        Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
+        R1 = atGetDoubleArray(ElemData, "R1"); check_error();
+        R2 = atGetDoubleArray(ElemData, "R2"); check_error();
+        T1 = atGetDoubleArray(ElemData, "T1"); check_error();
+        T2 = atGetDoubleArray(ElemData, "T2"); check_error();
 
-	tmpmxptr = mxGetField(ElemData,0,"NHharm");
-	if(tmpmxptr)
-	  NHharm = (int)mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'NHharm' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"NVharm");
-	if(tmpmxptr)
-	  NVharm = (int)mxGetScalar(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'NVharm' was not found in the element data structure"); 
-
-	tmpmxptr = mxGetField(ElemData,0,"By");
-	if(tmpmxptr)
-	  pBy = mxGetPr(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'By' was not found in the element data structure"); 
-
-	tmpmxptr = mxGetField(ElemData,0,"Bx");
-	if(tmpmxptr)
-	  pBx = mxGetPr(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'Bx' was not found in the element data structure"); 
-  
-	tmpmxptr = mxGetField(ElemData,0,"R1");
-	if(tmpmxptr)
-	  pr1 = mxGetPr(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'R1' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"R2");
-	if(tmpmxptr)
-	  pr2 = mxGetPr(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'R2' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"T1");
-	if(tmpmxptr)
-	  pt1 = mxGetPr(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'T1' was not found in the element data structure"); 
-	
-	tmpmxptr = mxGetField(ElemData,0,"T2");
-	if(tmpmxptr)
-	  pt2 = mxGetPr(tmpmxptr);
-	else
-	  mexErrMsgTxt("Required field 'T2' was not found in the element data structure"); 	    
-
-	returnptr = NULL;
-	
-      }	break;	
-    case MAKE_LOCAL_COPY: 	/* Find field numbers first 
-				 * Save a list of field number in an array
-				 *  and make returnptr point to that array
-				 */
-      {						
-	NewFieldNumbers = (int*)mxCalloc(NUM_FIELDS_2_REMEMBER,sizeof(int));
-	fnum = mxGetFieldNumber(ElemData,"Energy");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Energy' was not found in the element data structure"); 
-	NewFieldNumbers[0] = fnum;
-    
-	fnum = mxGetFieldNumber(ElemData,"Length");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-	NewFieldNumbers[1] = fnum;
-					
-	fnum = mxGetFieldNumber(ElemData,"Lw");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Lw' was not found in the element data structure"); 
-	NewFieldNumbers[2] = fnum;
-					
-
-	fnum = mxGetFieldNumber(ElemData,"Bmax");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Bmax' was not found in the element data structure"); 
-	NewFieldNumbers[3] = fnum;
-					
-
-	fnum = mxGetFieldNumber(ElemData,"Nstep");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Nstep' was not found in the element data structure"); 
-	NewFieldNumbers[4] = fnum;
-					
-					
-	fnum = mxGetFieldNumber(ElemData,"Nmeth");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Nmeth' was not found in the element data structure"); 
-	NewFieldNumbers[5] = fnum;
-					
-	fnum = mxGetFieldNumber(ElemData,"NHharm");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'NHharm' was not found in the element data structure"); 
-	NewFieldNumbers[6] = fnum;
-
-	fnum = mxGetFieldNumber(ElemData,"NVharm");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'NVharm' was not found in the element data structure"); 
-	NewFieldNumbers[7] = fnum;       
-         
-	fnum = mxGetFieldNumber(ElemData,"By");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'By' was not found in the element data structure"); 
-	NewFieldNumbers[8] = fnum;
-	                
-	fnum = mxGetFieldNumber(ElemData,"Bx");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'Bx' was not found in the element data structure"); 
-	NewFieldNumbers[9] = fnum;
-	                
-	fnum = mxGetFieldNumber(ElemData,"R1");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'R1' was not found in the element data structure"); 
-	NewFieldNumbers[10] = fnum;
-	
-	
-	fnum = mxGetFieldNumber(ElemData,"R2");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'R2' was not found in the element data structure"); 
-	NewFieldNumbers[11] = fnum;
-	
-	
-	fnum = mxGetFieldNumber(ElemData,"T1");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'T1' was not found in the element data structure"); 
-	NewFieldNumbers[12] = fnum;
-	
-	
-	fnum = mxGetFieldNumber(ElemData,"T2");
-	if(fnum<0) 
-	  mexErrMsgTxt("Required field 'T2' was not found in the element data structure"); 
-	NewFieldNumbers[13] = fnum;
-	
-    Eg     = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[0]));
-	Ltot   = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[1]));
-	Lw     = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[2]));
-	Bmax   = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[3]));
-	Nstep  = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[4]));
-	Nmeth  = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[5]));
-	NHharm = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[6]));
-	NVharm = mxGetScalar(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[7]));
-	pBy    = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[8]));
-	pBx    = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[9]));
-	pr1    = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[10]));
-	pr2    = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[11]));
-	pt1    = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[12]));
-	pt2    = mxGetPr(mxGetFieldByNumber(ElemData,0,NewFieldNumbers[13]));
-	
-	returnptr = NewFieldNumbers;
-      }	break;
-    case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-				   The second argument ponter to the array of
-				   field numbers is previously created with 
-				   QuadLinPass( ..., MAKE_LOCAL_COPY)
-				*/
-      {	
-    Eg     = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
-	Ltot   = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
-	Lw     = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
-	Bmax   = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
-	Nstep  = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-	Nmeth  = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-	NHharm = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-	NVharm = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
-	pBy    = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[8]));
-	pBx    = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[9]));
-	pr1    = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[10]));
-	pr2    = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[11]));
-	pt1    = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[12]));
-	pt2    = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[13]));
-	
-	returnptr = FieldNumbers;
-      }	break;
-    default:
-      {	mexErrMsgTxt("No match for calling mode in function QuadLinPass\n");
-      }
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Energy=Energy;
+        Elem->Length=Ltot;
+        Elem->Lw=Lw;
+        Elem->Bmax=Bmax;
+        Elem->Nstep=Nstep;
+        Elem->Nmeth=Nmeth;
+        Elem->NHharm=NHharm;
+        Elem->NVharm=NVharm;
+        Elem->By=By;
+        Elem->Bx=Bx;
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
     }
-
-  GWigSymplecticPass(r_in,Eg,Ltot,Lw,Bmax,Nstep,Nmeth,NHharm,NVharm,pBy,pBx,pt1,pt2,pr1,pr2,num_particles);
-  return(returnptr);	
+    GWigSymplecticRadPass(r_in, Elem->Energy, Elem->Length, Elem->Lw,
+            Elem->Bmax, Elem->Nstep, Elem->Nmeth, Elem->NHharm, Elem->NVharm,
+            Elem->By, Elem->Bx, Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+            num_particles);
+  return Elem;
 }
 
-/********** END WINDOWS DLL GATEWAY SECTION ***************************************/
+/********** END WINDOWS DLL GATEWAY SECTION **********************************/
 
-/********** MATLAB GATEWAY  ***************************************/
+/********** MATLAB GATEWAY ***************************************************/
 
+MODULE_DEF(GWigSymplecticRadPass)        /* Dummy module initialisation */
 
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{	
-  int m, n;
-  double *r_in;
-  double *pBy, *pBx;
-  double *pr1, *pr2, *pt1, *pt2 ;
-  double Ltot, Lw, Bmax,Eg; 
-  int Nstep, Nmeth;
-  int NHharm, NVharm;
-  mxArray *tmpmxptr;
-	
-  /* ALLOCATE memory for the output array of the same size as the input */
-  m = mxGetM(prhs[1]);
-  n = mxGetN(prhs[1]);
-  if(m!=6) 
-    {mexErrMsgTxt("Second argument must be a 6 x N matrix");}	
-	
-  tmpmxptr = mxGetField(prhs[0],0,"Energy");
-  if(tmpmxptr)
-    Eg = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Energy' was not found in the element data structure"); 
-	
-  tmpmxptr = mxGetField(prhs[0],0,"Length");
-  if(tmpmxptr)
-    Ltot = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Length' was not found in the element data structure"); 
-	
-  tmpmxptr = mxGetField(prhs[0],0,"Lw");
-  if(tmpmxptr)
-    Lw = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Lw' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"Bmax");
-  if(tmpmxptr)
-    Bmax = mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Bmax' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"Nstep");
-  if(tmpmxptr)
-    Nstep = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Nstep' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"Nmeth");
-  if(tmpmxptr)
-    Nmeth = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Nmeth' was not found in the element data structure"); 
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
-  tmpmxptr = mxGetField(prhs[0],0,"NHharm");
-  if(tmpmxptr)
-    NHharm = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'NHharm' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"NVharm");
-  if(tmpmxptr)
-    NVharm = (int)mxGetScalar(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'NVharm' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"By");
-  if(tmpmxptr)
-    pBy = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'By' was not found in the element data structure"); 
+#if defined(MATLAB_MEX_FILE)
+void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    if (nrhs == 2) {
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[1]);
+        double *By, *Bx;
+        double *R1, *R2, *T1, *T2;
+        double Ltot, Lw, Bmax, Energy;
+        int Nstep, Nmeth;
+        int NHharm, NVharm;
 
-  tmpmxptr = mxGetField(prhs[0],0,"Bx");
-  if(tmpmxptr)
-    pBx = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'Bx' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"R1");
-  if(tmpmxptr)
-    pr1 = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'R1' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"R2");
-  if(tmpmxptr)
-    pr2 = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'R2' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"T1");
-  if(tmpmxptr)
-    pt1 = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'T1' was not found in the element data structure"); 
-  
-  tmpmxptr = mxGetField(prhs[0],0,"T2");
-  if(tmpmxptr)
-    pt2 = mxGetPr(tmpmxptr);
-  else
-    mexErrMsgTxt("Required field 'T2' was not found in the element data structure"); 	    
-
-  plhs[0] = mxDuplicateArray(prhs[1]);
-  r_in = mxGetPr(plhs[0]);
-  
-  GWigSymplecticPass(r_in,Eg,Ltot,Lw,Bmax,Nstep,Nmeth,NHharm,NVharm,pBy,pBx,pt1,pt2,pr1,pr2,n);
+        Energy = atGetDouble(ElemData, "Energy"); check_error();
+        Ltot = atGetDouble(ElemData, "Length"); check_error();
+        Lw = atGetDouble(ElemData, "Lw"); check_error();
+        Bmax = atGetDouble(ElemData, "Bmax"); check_error();
+        Nstep = atGetLong(ElemData, "Nstep"); check_error();
+        Nmeth = atGetLong(ElemData, "Nmeth"); check_error();
+        NHharm = atGetLong(ElemData, "NHharm"); check_error();
+        NVharm = atGetLong(ElemData, "NVharm"); check_error();
+        By = atGetDoubleArray(ElemData, "By"); check_error();
+        Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
+        R1 = atGetDoubleArray(ElemData, "R1"); check_error();
+        R2 = atGetDoubleArray(ElemData, "R2"); check_error();
+        T1 = atGetDoubleArray(ElemData, "T1"); check_error();
+        T2 = atGetDoubleArray(ElemData, "T2"); check_error();
+        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetDoubles(plhs[0]);
+        GWigSymplecticRadPass(r_in, Energy, Ltot, Lw, Bmax, Nstep, Nmeth,
+            NHharm, NVharm, By, Bx, T1, T2, R1, R2, num_particles);
+    }
+    else if (nrhs == 0) {
+        /* list of required fields */
+        plhs[0] = mxCreateCellMatrix(14,1);
+        mxSetCell(plhs[0],0,mxCreateString("Energy"));
+        mxSetCell(plhs[0],1,mxCreateString("Length"));
+        mxSetCell(plhs[0],2,mxCreateString("Lw"));
+        mxSetCell(plhs[0],3,mxCreateString("Bmax"));
+        mxSetCell(plhs[0],4,mxCreateString("Nstep"));
+        mxSetCell(plhs[0],5,mxCreateString("Nmeth"));
+        mxSetCell(plhs[0],6,mxCreateString("NHharm"));
+        mxSetCell(plhs[0],7,mxCreateString("NVharm"));
+        mxSetCell(plhs[0],8,mxCreateString("By"));
+        mxSetCell(plhs[0],9,mxCreateString("Bx"));
+        mxSetCell(plhs[0],10,mxCreateString("R1"));
+        mxSetCell(plhs[0],11,mxCreateString("R2"));
+        mxSetCell(plhs[0],12,mxCreateString("T1"));
+        mxSetCell(plhs[0],13,mxCreateString("T2"));
+    }
+    else {
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
+    }
 }
+
+#endif /*MATLAB_MEX_FILE*/
