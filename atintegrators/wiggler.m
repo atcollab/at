@@ -1,5 +1,4 @@
 function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
-%WIGGLER Creates a wiggler element in old AT versions (Obsolete)
 % wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % FamName	family name
@@ -14,15 +13,12 @@ function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % returns assigned address in the FAMLIST that is uniquely identifies
 % the family
-%  NOTES
-%  1. Obsolete: use atwiggler instead
-%
-%  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
-%          atmultipole, atthinmultipole, atmarker, atcorrector
 
 %---------------------------------------------------------------------------
 % Modification Log:
 % -----------------
+% .04  2018-07-30   A.Mash'al, Iranian Light Source Facility 
+%                               Add energy to ElemData
 % .03  2003-06-19	YK Wu, Duke University, wu@fel.duke.edu
 %                               Add checks for input arguments
 % .02  2003-06-18	YK Wu, Duke University
@@ -35,6 +31,7 @@ function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
 
+global GLOBVAL
 GWIG_EPS = 1e-6;
 dNw = abs(mod(Ltot/Lw, 1));
 if dNw > GWIG_EPS
@@ -42,10 +39,11 @@ if dNw > GWIG_EPS
 end
 
 ElemData.FamName        = fname;  % add check for identical family names
-ElemData.Length		= Ltot;
+ElemData.Energy         = GLOBVAL.E0;
+ElemData.Length		    = Ltot;
 ElemData.Lw             = Lw;
 ElemData.Bmax           = Bmax;
-ElemData.Nstep    	= Nstep;
+ElemData.Nstep      	= Nstep;
 ElemData.Nmeth      	= Nmeth;
 if ~isempty(By)
   ElemData.NHharm       = length(By(1,:));
@@ -54,7 +52,7 @@ if ~isempty(By)
     dk = sqrt(abs(ky*ky - kz*kz - kx*kx))/abs(kz);
     if ( dk > GWIG_EPS ) 
       error([' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = ', num2str(i,3)]);
-    end
+    end;
   end
 else
   ElemData.NHharm         = 0;
@@ -65,9 +63,9 @@ if ~isempty(Bx)
   for i=1:ElemData.NVharm
     kx = Bx(3,i); ky = Bx(4,i); kz = Bx(5,i);
     dk = sqrt(abs(kx*kx - kz*kz - ky*ky))/abs(kz);
-    if ( dk > GWIG_EPS )
+    if ( dk > GWIG_EPS ) 
       error([' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = ', num2str(i,3)]);
-    end
+    end;
   end
 else
   ElemData.NVharm         = 0;
