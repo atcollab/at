@@ -1,18 +1,53 @@
-# This file configures Appveyor to run builds on Windows machines for each pull request.
-# See https://www.appveyor.com/docs/build-environment/
+# This file configures AppVeyor to run builds on Windows machines for each pull
+# request, to ensure the tests pass and to build Windows wheels of pyAT. If the
+# build is triggered by a tag then the wheels are uploaded to TestPyPI using
+# twine. For this repository TWINE_USERNAME and TWINE_PASSWORD are set in
+# AppVeyor under Settings -> Environment -> Environment variables.
+image: Visual Studio 2015
+platform: x64
 environment:
   matrix:
-   - CONDA_DIR: "C:\\Miniconda-x64"
-   - CONDA_DIR: "C:\\Miniconda35-x64"
-   - CONDA_DIR: "C:\\Miniconda36-x64"
+   - PYTHON: 27
+     CIBW_BEFORE_BUILD: ""
+   - PYTHON: 34
+     CIBW_BEFORE_BUILD: ""
+   - PYTHON: 35
+     CIBW_BEFORE_BUILD: ""
+   - PYTHON: 36
+     CIBW_BEFORE_BUILD: ""
+
+   - PYTHON: 27
+     CIBW_BEFORE_BUILD: "pip install numpy"
 
 install:
-  - set "PATH=%CONDA_DIR%\\Scripts;%PATH%"
-  - conda create -y --name conda-env pip numpy scipy
-  - activate conda-env
-  - pip install pytest
+  - set "PATH=C:\Python%PYTHON%-x64;C:\Python%PYTHON%-x64\Scripts;%PATH%"
+  - python -m virtualenv venv
+  - venv\Scripts\activate
   - cd pyat
-  - python setup.py install
+  - python -m pip install --upgrade pip setuptools wheel
+  - pip install --only-binary=numpy,scipy -r requirements.txt
+  - python setup.py build
+
+before_build:
+  - python setup.py develop
 
 build_script:
-  - py.test test
+  - ps: |
+      if ($env:CIBW_BEFORE_BUILD -eq "pip install numpy") {
+        rm "build" -r -fo
+        python -m pip install --upgrade cibuildwheel
+        & cmd /c 'cibuildwheel 2>&1' --output-dir wheelhouse
+        if ($env:APPVEYOR_REPO_TAG -eq $true) {
+          python -m pip install twine
+          python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
+        }
+      }
+      else {
+        python -m pip install pytest-cov
+        python -m pytest test --cov-report term-missing --cov=at
+        new-item -name wheelhouse -itemtype directory
+      }
+
+artifacts:
+  - path: "pyat\\wheelhouse"
+    name: Wheels
