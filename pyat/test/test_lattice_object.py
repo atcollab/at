@@ -2,7 +2,6 @@ import sys
 import numpy
 import pytest
 from at import elements
-from at.load import load_mat
 from at.lattice import Lattice, AtWarning, AtError
 
 
@@ -110,10 +109,10 @@ def test_lattice_string_ordering():
                                        "attr1=array(0))], ")
         assert l.__repr__().endswith(", attr2=3)")
     else:
-        assert l.__str__() == ("Lattice(<1 elements>, energy=5, periodicity=1,"
-                               " name='lat', attr2=3)")
-        assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))],"
-                                " energy=5, periodicity=1, name='lat', "
+        assert l.__str__() == ("Lattice(<1 elements>, name='lat', energy=5, "
+                               "periodicity=1, attr2=3)")
+        assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))], "
+                                "name='lat', energy=5, periodicity=1, "
                                 "attr2=3)")
 
 

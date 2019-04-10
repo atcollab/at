@@ -2,6 +2,7 @@
 
 # Make all functions visible in the at namespace:
 from .lattice import *
+from .load import *
 from .tracking import *
 from .physics import *
-from .load import *
+from .plot import *

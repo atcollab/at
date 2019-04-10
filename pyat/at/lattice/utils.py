@@ -16,6 +16,7 @@ refpts can be:
 """
 import numpy
 import itertools
+from warnings import warn
 from fnmatch import fnmatch
 from at.lattice import elements
 
@@ -36,25 +37,26 @@ def uint32_refpts(refpts, n_elements):
     refs = numpy.asarray(refpts).reshape(-1)
     if (refpts is None) or (refs.size is 0):
         return numpy.array([], dtype=numpy.uint32)
-    elif (refs.size > n_elements+1):
+    elif refs.size > n_elements + 1:
         raise ValueError('too many reftps given')
     elif numpy.issubdtype(refs.dtype, numpy.bool_):
         return numpy.flatnonzero(refs).astype(numpy.uint32)
 
     # Handle negative indices
-    refs = numpy.array([i if (i == n_elements) else i % n_elements for i in refs],
-                       dtype=numpy.uint32)
+    refs = numpy.array(
+        [i if (i == n_elements) else i % n_elements for i in refs],
+        dtype=numpy.uint32)
 
     # Check ascending
     if refs.size > 1:
-        prev = refs[0]
-        for next in refs[1:]:
-            if next < prev:
+        prv = refs[0]
+        for nxt in refs[1:]:
+            if nxt < prv:
                 raise ValueError('refpts should be given in ascending order')
-            elif next == prev:
+            elif nxt == prv:
                 raise ValueError('refpts contains duplicates or index(es) out'
                                  ' of range')
-            prev = next
+            prv = nxt
 
     return refs
 
@@ -72,7 +74,7 @@ def bool_refpts(refpts, n_elements):
         elif diff > 0:
             return numpy.append(refpts, numpy.zeros(diff, dtype=bool))
         else:
-            return refpts[:n_elements+1]
+            return refpts[:n_elements + 1]
     else:
         brefpts = numpy.zeros(n_elements + 1, dtype=bool)
         brefpts[refpts] = True
@@ -80,25 +82,28 @@ def bool_refpts(refpts, n_elements):
 
 
 def checkattr(*args):
-    """Return a function to be used as a filter. Check the presence or the value of an attribute. This function can be
+    """Return a function to be used as a filter.
+    Check the presence or the value of an attribute. This function can be
     used to extract from a ring all elements have a given attribute.
 
-    filtfunc = checkattr(attrname)              returns the function filtfunc such that
-        ok=filtfunc(element) is true if the element has a 'attrname' attribute
+    filtfunc = checkattr(attrname)
+        return a function filtfunc such that ok=filtfunc(element) is true
+        if the element has a 'attrname' attribute
 
-    filtfunc = checkattr(attrname, attrvalue)   returns the function filtfunc such that
-        ok=filtfunc(element) is true if the element has a 'attrname' attribute with the value attrvalue
+    filtfunc = checkattr(attrname, attrvalue)
+        returns a function filtfunc such that ok=filtfunc(element) is true
+        if the element has a 'attrname' attribute with the value attrvalue
 
     Examples:
 
     cavs = filter(checkattr('Frequency'), ring)
-        returns an iterator over all elements in ring that have a 'Frequency' attribute
+        returns an iterator over all elements in ring that have
+        a 'Frequency' attribute
 
     elts = filter(checkattr('K', 0.0), ring)
-        returns an iterator over all elements in ring that have a 'K' attribute equal to 0.0
-
+        returns an iterator over all elements in ring that have
+        a 'K' attribute equal to 0.0
     """
-
     def testf(el):
         try:
             v = getattr(el, args[0])
@@ -110,37 +115,44 @@ def checkattr(*args):
 
 
 def checktype(eltype):
-    """Return a function to be used as a filter. Check the type of an element. This function can be
-    used to extract from a ring all elements have a given type.
+    """Return a function to be used as a filter.
+    Check the type of an element. This function can be used to extract
+    from a ring all elements have a given type.
 
-    filtfunc = checktype(class)                 returns the function filtfunc such that
-        ok=filtfunc(element) is true if the element is an instance of class
+    filtfunc = checktype(class)
+        return a function filtfunc such that ok=filtfunc(element) is true
+        if the element is an instance of class
 
     Example:
 
-    qps = filter(checktype(at.Quadrupole), ring) returns an iterator over all quadrupoles in ring
-
+    qps = filter(checktype(at.Quadrupole), ring) returns an iterator over
+        all quadrupoles in ring
     """
     return lambda el: isinstance(el, eltype)
 
 
 def get_cells(ring, *args):
-    """Return a numpy array of booleans, with the same length as ring, marking all elements satisfying a given condition.
+    """Return a numpy array of booleans, with the same length as ring,
+    marking all elements satisfying a given condition.
 
-    refpts = getcells(ring, filtfunc) selects all elements for which the function filtfunc(element) returns True
+    refpts = getcells(ring, filtfunc) selects all elements for which
+        the function filtfunc(element) returns True
 
-    refpts = getcells(ring, attrname) selects all elements having a 'attrname' attribute
+    refpts = getcells(ring, attrname)
+        selects all elements having a 'attrname' attribute
 
-    refpts = getcells(ring, attrname, attrvalue) selects all elements having a 'attrname' attribute with value attrvalue
+    refpts = getcells(ring, attrname, attrvalue)
+        selects all elements having a 'attrname' attribute with value attrvalue
 
     Example:
 
     refpts = getcells(ring, 'Frequency')
-        returns a numpy array of booleans where all elements having a 'Frequency' attribute are True
+        return a numpy array of booleans where all elements having
+        a 'Frequency' attribute are True
 
     refpts = getcells(ring, 'K', 0.0)
-        returns a numpy array of booleans where all elements having a 'K' attribute equal to 0.0 are True
-
+        returns a numpy array of booleans where all elements having
+        a 'K' attribute equal to 0.0 are True
     """
     if callable(args[0]):
         testf = args[0]
@@ -154,8 +166,9 @@ def refpts_iterator(ring, refpts):
 
     refpts may be:
 
-    1) a list of integers (0 indicating the first element)
-    2) a numpy array of booleans as long as ring where selected elements are true
+    1)  a list of integers (0 indicating the first element)
+    2)  a numpy array of booleans as long as ring where
+        selected elements are true
 
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
@@ -201,6 +214,127 @@ def get_elements(ring, key, quiet=True):
     return elems
 
 
+def _scanner(elems, attributes, keep_all=False, **kwargs):
+    """Extract the lattice attributes from an element list
+
+    If a RingParam element is found, its energy will be used, energies
+    defined in other elements are ignored. All its user-defined
+    attributes will also be set as Lattice attributes.
+
+    Otherwise, necessary values will be guessed from other elements.
+    """
+    _translate = {'Energy': 'energy', 'Periodicity': 'periodicity',
+                  'FamName': 'name'}
+    _ignore = {'PassMethod', 'Length'}
+    _two_pi_error = 1.E-4
+
+    params = []
+    rf_energies = []
+    el_energies = []
+    thetas = []
+
+    radiate = False
+    for idx, elem in enumerate(elems):
+        if isinstance(elem, elements.RingParam):
+            params.append(elem)
+            if keep_all:
+                yield elem
+        elif isinstance(elem, elements.Element):
+            yield elem
+        else:
+            warn(AtWarning('item {0} ({1}) is not an AT element: '
+                           'ignored'.format(idx, elem)))
+            continue
+
+        if hasattr(elem, 'Energy'):
+            if isinstance(elem, elements.RFCavity):
+                rf_energies.append(elem.Energy)
+            el_energies.append(elem.Energy)
+        if isinstance(elem, elements.Dipole):
+            thetas.append(elem.BendingAngle)
+        if elem.PassMethod.endswith(
+                'RadPass') or elem.PassMethod.endswith('CavityPass'):
+            radiate = True
+    attributes['_radiation'] = radiate
+
+    if params:
+        # At least one RingParam element, use the 1st one
+        if len(params) > 1:
+            warn(AtWarning(
+                'More than 1 RingParam element, the 1st one is used'))
+        attributes.update((_translate.get(key, key.lower()),
+                           getattr(params[0], key))
+                          for key in params[0]
+                          if key not in _ignore)
+    else:
+        # No RingParam element, try to guess
+        attributes['name'] = ''
+        if 'energy' not in kwargs:
+            # Guess energy from the Energy attribute of the elements
+            energies = rf_energies if rf_energies else el_energies
+            if not energies:
+                raise AtError('Lattice energy is not defined')
+            energy = max(energies)
+            if min(energies) < energy:
+                warn(AtWarning('Inconsistent energy values, '
+                               '"energy" set to {0}'.format(energy)))
+            attributes['energy'] = energy
+        if 'periodicity' not in kwargs:
+            # Guess periodicity from the bending angles of the lattice
+            try:
+                nbp = 2.0 * numpy.pi / sum(thetas)
+            except ZeroDivisionError:
+                warn(AtWarning('No bending in the cell, '
+                               'set "Periodicity" to 1'))
+                attributes['periodicity'] = 1
+            else:
+                periodicity = int(round(nbp))
+                if abs(periodicity - nbp) > _two_pi_error:
+                    warn(AtWarning(
+                        'Non-integer number of cells: '
+                        '{0} -> {1}'.format(nbp, periodicity)))
+                attributes['periodicity'] = periodicity
+
+
+def get_ring_properties(ring):
+    """Get ring properties from a Lattice object or from a sequence of elements.
+
+    PARAMETER
+        ring            Lattice object or any iterable of AT elements
+
+    RETURN
+        Directory with keys:
+
+            name        Name of the lattice taken, in priority order, from:
+                            - a Lattice object,
+                            - a RingParam element
+                        Defaults to ''
+            energy      Particle energy taken, in priority order, from:
+                            - a Lattice object,
+                            - a RingParam element
+                            - a RFCavity element
+                            - any other element having an 'Energy' attribute
+                        An error is raised if no energy is found
+            periodicity Number of super-periods to describe the full ring,
+                        taken in priority order from:
+                            - a Lattice object,
+                            - a RingParam element
+                            - the sum of bending angles in the lattice
+                        Defaults to 1
+
+        Other properties may come from a lattice object or a RingParam element
+        in the lattice
+    """
+    try:
+        props = vars(ring).copy()
+    except TypeError:
+        props = {}
+        # noinspection PyUnusedLocal,PyProtectedMember
+        for elem in _scanner(ring, props):
+            pass
+    return props
+
+
 def get_s_pos(ring, refpts=None):
     """
     Return a numpy array corresponding to the s position of the specified
@@ -223,18 +357,22 @@ def get_s_pos(ring, refpts=None):
 
 def tilt_elem(elem, rots):
     """
-    set a new tilt angle to an element. The rotation matrices are stored in the R1 and R2 attributes
+    set a new tilt angle to an element. The rotation matrices are stored
+    in the R1 and R2 attributes:
+
     R1 = [[ cos(rots) sin(rots)]    R2 = [[cos(rots) -sin(rots)]
           [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
     
     :param elem: element to be tilted
     :param rots: tilt angle (in radians).
-           rots > 0 corresponds to a corkskew rotation of the element looking in the direction of the beam
+           rots > 0 corresponds to a corkskew rotation of the element
+           looking in the direction of the beam
     :return: None
     """
     cs = numpy.cos(rots)
     sn = numpy.sin(rots)
-    rm = numpy.diag([cs, cs, cs, cs, 1.0, 1.0]).T  # transpose to get Fortran alignment
+    rm = numpy.diag(
+        [cs, cs, cs, cs, 1.0, 1.0]).T  # transpose to get Fortran alignment
     rm[0, 2] = sn
     rm[1, 3] = sn
     rm[2, 0] = -sn
@@ -245,7 +383,8 @@ def tilt_elem(elem, rots):
 
 def shift_elem(elem, deltax=0.0, deltaz=0.0):
     """
-    set a new displacement vector to an element. Translation vectors are stored in the T1 and T2 attributes
+    set a new displacement vector to an element. Translation vectors are stored
+    in the T1 and T2 attributes.
 
     :param elem:  element to be displaced
     :param deltax: horizontal displacement of the element
@@ -277,11 +416,10 @@ def set_shift(ring, dxs, dzs):
     """Set translations to a list of elements.
 
     ring:   any iterable over elements to be shifted
-    dxs:    any iterable as long as ring containing horizontal displacement values or
-            scalar horizontal displacement value to be applied to all elements
-    dzs:    any iterable as long as ring containing vertical displacement values or
-            scalar vertical displacement value to be applied to all elements
-
+    dxs:    scalar or iterable as long as ring containing horizontal
+            displacement values to be applied to all elements
+    dzs:    scalar or iterable as long as ring containing vertical
+            displacement values to be applied to all elements
     """
     try:
         itx = iter(dxs)
