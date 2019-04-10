@@ -73,3 +73,4 @@ Footnotes
 
    >>> import sys
    >>> print('ucs4' if sys.maxunicode > 65535 else 'ucs2')
+
