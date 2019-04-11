@@ -471,3 +471,22 @@ class Corrector(LongElement):
         super(Corrector, self).__init__(family_name,
                                         kwargs.pop('Length', length),
                                         KickAngle=kick_angle, **kwargs)
+
+
+class Wiggler(LongElement):
+    """pyAT wiggler element"""
+    REQUIRED_ATTRIBUTES = ['Lw', 'Bmax', 'Nstep', 'Nmeth', 'By', 'Bx']
+    _conversions = dict(Element._conversions, Lw=float, Bmax=float, Nstep=int,
+                        Nmeth=int, By=_array, Bx=_array, Energy=float)
+
+    def __init__(self, family_name, length, wiggle_period, b_max, n_step,
+                 n_meth, by, bx, energy, **kwargs):
+        """
+        Available keywords:
+        NHharm    Number of horizontal harmonics
+        NVharm    Number of vertical harmonics
+        """
+        kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
+        super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
+                                      Bmax=b_max, Nstep=n_step, Nmeth=n_meth,
+                                      By=by, Bx=bx, Energy=energy, **kwargs)
