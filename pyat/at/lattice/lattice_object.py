@@ -210,6 +210,31 @@ class Lattice(list):
         """Return a deep copy"""
         return copy.deepcopy(self)
 
+    def sbreak(self, s):
+        """
+        Create a new lattice with a marker with name 'sbreak' at positions s.
+        If s is a list of positions, many markers are added to the lattice.
+        """
+        if type(s)!=list:
+            s=[s]
+        for ii in list(range(len(s))):
+            if s[ii]<=0:
+                self=Lattice([elements.Marker('sbreak')]+self)
+            elif s[ii]>self.get_s_pos(len(self)):
+                self=Lattice(self+[elements.Marker('sbreak')])
+            else:
+                spos=self.get_s_pos(list(range(0,len(self))))
+                mask_before= spos<=s[ii]
+                before=self[mask_before]
+                after=self[spos>s[ii]]
+                elem=before[-1]
+                selem=spos[mask_before][-1]
+                frac=(s[ii]-selem)/elem.Length
+                elems=elem.divide([frac, 1-frac])
+                elems=[elems[0],elements.Marker('sbreak'),elems[1]]
+                self=Lattice(before[0:-1]+elems+after)
+        return self
+            
     def slice(self, size=None, slices=1):
         """Create a new lattice by slicing the range of interest into small
         elements
