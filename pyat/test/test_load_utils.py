@@ -93,11 +93,6 @@ def test_find_Corrector():
     assert find_class_name(elem_kwargs, True) == 'Corrector'
 
 
-def test_find_RingParam():
-    elem_kwargs = {'Periodicity': 1, 'FamName': 'fam'}
-    assert find_class_name(elem_kwargs, True) == 'RingParam'
-
-
 def test_find_M66():
     elem_kwargs = {'M66': numpy.eye(6), 'FamName': 'fam'}
     assert find_class_name(elem_kwargs, True) == 'M66'

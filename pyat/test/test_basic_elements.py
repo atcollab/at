@@ -213,16 +213,6 @@ def test_rfcavity(rin):
     expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
-
-def test_ringparam(rin):
-    rp = elements.RingParam('ringparam', 1.e+09)
-    assert rp.Length == 0
-    lattice = [rp]
-    rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
-    rin_orig = numpy.array(rin, copy=True, order='F')
-    atpass(lattice, rin, 1)
-    numpy.testing.assert_equal(rin, rin_orig)
-
 @pytest.mark.parametrize("n", (0, 1, 2, 3, 4, 5))
 def test_m66(rin, n):
     m = numpy.random.rand(6, 6)

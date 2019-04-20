@@ -6,24 +6,48 @@ import numpy
 from warnings import warn
 from distutils import sysconfig
 from at import integrators
-from at.lattice import elements
+from at.lattice import elements as elt
 from at.lattice.utils import AtWarning
 
-CLASS_MAPPING = {'multipole': 'Multipole', 'quadrupole': 'Quadrupole',
-                 'thinmultipole': 'ThinMultipole', 'sextupole': 'Sextupole',
-                 'aperture': 'Aperture', 'm66': 'M66', 'rfcavity': 'RFCavity',
-                 'corrector': 'Corrector', 'rf': 'RFCavity', 'bpm': 'Monitor',
-                 'ap': 'Aperture', 'octupole': 'Octupole', 'dipole': 'Dipole',
-                 'drift': 'Drift', 'bend': 'Dipole', 'ringparam': 'RingParam',
-                 'quad': 'Quadrupole', 'sext': 'Sextupole', 'marker': 'Marker',
-                 'monitor': 'Monitor'}
 
-PASS_MAPPING = {'CorrectorPass': 'Corrector', 'BendLinearPass': 'Dipole',
-                'QuadLinearPass': 'Quadrupole', 'RFCavityPass': 'RFCavity',
-                'CavityPass': 'RFCavity', 'ThinMPolePass': 'ThinMultipole',
-                'Matrix66Pass': 'M66', 'BndMPoleSymplectic4Pass': 'Dipole',
-                'BndMPoleSymplectic4RadPass': 'Dipole', 'DriftPass': 'Drift',
-                'AperturePass': 'Aperture'}
+class _RingParam(elt.Element):
+    """Private class for Matlab RingParam element"""
+    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy']
+    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int)
+
+    def __init__(self, family_name, energy, **kwargs):
+        kwargs.setdefault('Periodicity', 1)
+        kwargs.setdefault('PassMethod', 'IdentityPass')
+        super(_RingParam, self).__init__(family_name, Energy=energy, **kwargs)
+
+
+_CLASS_MAP = {'multipole': elt.Multipole,
+              'thinmultipole': elt.ThinMultipole,
+              'dipole': elt.Dipole, 'bend': elt.Dipole,
+              'quadrupole': elt.Quadrupole, 'quad': elt.Quadrupole,
+              'sextupole': elt.Sextupole, 'sext': elt.Sextupole,
+              'octupole': elt.Octupole,
+              'drift': elt.Drift,
+              'aperture': elt.Aperture, 'ap': elt.Aperture,
+              'm66': elt.M66,
+              'rfcavity': elt.RFCavity, 'rf': elt.RFCavity,
+              'corrector': elt.Corrector,
+              'monitor': elt.Monitor, 'bpm': elt.Monitor,
+              'marker': elt.Marker,
+              'ringparam': _RingParam}
+
+_PASS_MAP = {'CorrectorPass': elt.Corrector, 'BendLinearPass': elt.Dipole,
+             'QuadLinearPass': elt.Quadrupole, 'RFCavityPass': elt.RFCavity,
+             'CavityPass': elt.RFCavity, 'ThinMPolePass': elt.ThinMultipole,
+             'Matrix66Pass': elt.M66, 'BndMPoleSymplectic4Pass': elt.Dipole,
+             'BndMPoleSymplectic4RadPass': elt.Dipole,
+             'DriftPass': elt.Drift,
+             'AperturePass': elt.Aperture}
+
+
+def _isparam(elem):
+    """Chack for temporary RingParam elements"""
+    return isinstance(elem, _RingParam)
 
 
 def hasattrs(kwargs, *attributes):
@@ -46,18 +70,17 @@ def hasattrs(kwargs, *attributes):
     return False
 
 
-def find_class_name(elem_dict, quiet=False):
+def find_class(elem_dict, quiet=False):
     """Attempts to correctly identify the Class of the element from its kwargs.
 
     Args:
-        elem_dict:  The dictionary of keyword arguments passed to the
-                    Element constructor.
-
+        elem_dict       The dictionary of keyword arguments passed to the
+                        Element constructor.
     Keywords:
-        quiet=False If True, suppress the warning for non-standard classes
+        quiet=False     If True, suppress the warning for non-standard classes
 
     Returns:
-        str:        The guessed Class name, as a string.
+        element_class:  The guessed Class name
     """
 
     def low_order(key):
@@ -70,14 +93,14 @@ def find_class_name(elem_dict, quiet=False):
 
     class_name = elem_dict.pop('Class', '')
     try:
-        return CLASS_MAPPING[class_name.lower()]
+        return _CLASS_MAP[class_name.lower()]
     except KeyError:
         if (quiet is False) and (class_name != ''):
             warn(AtWarning("Class '{0}' does not exist.\n"
                            "{1}".format(class_name, elem_dict)))
         fam_name = elem_dict.get('FamName', '')
         try:
-            return CLASS_MAPPING[fam_name.lower()]
+            return _CLASS_MAP[fam_name.lower()]
         except KeyError:
             pass_method = elem_dict.get('PassMethod', '')
             if (quiet is False) and (pass_method is ''):
@@ -87,53 +110,54 @@ def find_class_name(elem_dict, quiet=False):
                 warn(AtWarning("Invalid PassMethod ({0}), provided pass "
                                "methods should end in 'Pass'."
                                "\n{1}".format(pass_method, elem_dict)))
-            class_from_pass = PASS_MAPPING.get(pass_method)
+            class_from_pass = _PASS_MAP.get(pass_method)
             if class_from_pass is not None:
                 return class_from_pass
             else:
                 length = float(elem_dict.get('Length', 0.0))
                 if hasattrs(elem_dict, 'FullGap', 'FringeInt1', 'FringeInt2',
                             'gK', 'EntranceAngle', 'ExitAngle'):
-                    return 'Dipole'
+                    return elt.Dipole
                 elif hasattrs(elem_dict, 'Voltage', 'Frequency', 'HarmNumber',
                               'PhaseLag', 'TimeLag'):
-                    return 'RFCavity'
+                    return elt.RFCavity
                 elif hasattrs(elem_dict, 'Periodicity'):
-                    return 'RingParam'
+                    return _RingParam
                 elif hasattrs(elem_dict, 'Limits'):
-                    return 'Aperture'
+                    return elt.Aperture
                 elif hasattrs(elem_dict, 'M66'):
-                    return 'M66'
+                    return elt.M66
                 elif hasattrs(elem_dict, 'K'):
-                    return 'Quadrupole'
+                    return elt.Quadrupole
                 elif hasattrs(elem_dict, 'PolynomB', 'PolynomA'):
                     loworder = low_order('PolynomB')
                     if loworder == 1:
-                        return 'Quadrupole'
+                        return elt.Quadrupole
                     elif loworder == 2:
-                        return 'Sextupole'
+                        return elt.Sextupole
                     elif loworder == 3:
-                        return 'Octupole'
+                        return elt.Octupole
                     elif (pass_method.startswith('StrMPoleSymplectic4') or
                           (length > 0)):
-                        return 'Multipole'
+                        return elt.Multipole
                     else:
-                        return 'ThinMultipole'
+                        return elt.ThinMultipole
                 elif hasattrs(elem_dict, 'KickAngle'):
-                    return 'Corrector'
+                    return elt.Corrector
                 elif length > 0.0:
-                    return 'Drift'
+                    return elt.Drift
                 elif hasattrs(elem_dict, 'GCR'):
-                    return 'Monitor'
+                    return elt.Monitor
                 else:
-                    return 'Marker'
+                    return elt.Marker
 
 
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     """return an AT element from a dictionary of attributes
     """
 
-    def sanitise_class(index, class_name, kwargs):
+    # noinspection PyShadowingNames
+    def sanitise_class(index, cls, elem_dict):
         """Checks that the Class and PassMethod of the element are a valid
             combination. Some Classes and PassMethods are incompatible and
             would raise errors during calculation if left, so we raise an error
@@ -141,49 +165,58 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
 
         Args:
             index:          element index
-            class_name:     Proposed class name
-            kwargs (dict):  The dictionary of keyword arguments passed to the
+            cls:            Proposed class
+            elem_dict:      he dictionary of keyword arguments passed to the
                             Element constructor.
 
         Raises:
             AttributeError: if the PassMethod and Class are incompatible.
         """
-        def err_message(message, *args):
-            location = ': ' if index is None else ' {0}: '.format(index)
-            return ''.join(('Error in element', location,
-                            'PassMethod {0} '.format(pass_method),
-                             message.format(*args), '\n{0}'.format(kwargs)))
 
-        pass_method = kwargs.get('PassMethod')
+        def err(message, *args):
+            location = ': ' if index is None else ' {0}: '.format(index)
+            msg = ''.join(('Error in element', location,
+                           'PassMethod {0} '.format(pass_method),
+                           message.format(*args), '\n{0}'.format(elem_dict)))
+            return AttributeError(msg)
+
+        class_name = cls.__name__
+        pass_method = elem_dict.get('PassMethod')
         if pass_method is not None:
-            pass_to_class = PASS_MAPPING.get(pass_method)
-            length = float(kwargs.get('Length', 0.0))
+            pass_to_class = _PASS_MAP.get(pass_method)
+            length = float(elem_dict.get('Length', 0.0))
             extension = sysconfig.get_config_vars().get('EXT_SUFFIX', '.so')
             file_path = os.path.realpath(os.path.join(integrators.__path__[0],
                                                       pass_method + extension))
             if not os.path.isfile(file_path):
-                raise AttributeError(err_message("does not exist."))
+                raise err("does not exist.")
             elif (pass_method == 'IdentityPass') and (length != 0.0):
-                raise AttributeError(err_message("is not compatible with "
-                                                 "length {0}.", length))
+                raise err("is not compatible with length {0}.", length)
             elif pass_to_class is not None:
-                if pass_to_class != class_name:
-                    raise AttributeError(err_message("is not compatible with "
-                                                     "Class {0}.", class_name))
-            elif class_name in ['Marker', 'Monitor', 'RingParam']:
+                if not issubclass(cls, pass_to_class):
+                    raise err("is not compatible with Class {0}.", class_name)
+            elif issubclass(cls, (elt.Marker, elt.Monitor, _RingParam)):
                 if pass_method != 'IdentityPass':
-                    raise AttributeError(err_message("is not compatible with "
-                                                     "Class {0}.", class_name))
-            elif class_name == 'Drift':
+                    raise err("is not compatible with Class {0}.", class_name)
+            elif cls == elt.Drift:
                 if pass_method != 'DriftPass':
-                    raise AttributeError(err_message("is not compatible with "
-                                                     "Class {0}.", class_name))
+                    raise err("is not compatible with Class {0}.", class_name)
 
-    class_name = find_class_name(elem_dict, quiet=quiet)
+    cls = find_class(elem_dict, quiet=quiet)
     if check:
-        sanitise_class(index, class_name, elem_dict)
-    cl = getattr(elements, class_name)
+        sanitise_class(index, cls, elem_dict)
     # Remove mandatory attributes from the keyword arguments.
-    elem_args = (elem_dict.pop(attr, None) for attr in cl.REQUIRED_ATTRIBUTES)
-    element = cl(*(arg for arg in elem_args if arg is not None), **elem_dict)
+    elem_args = (elem_dict.pop(attr, None) for attr in cls.REQUIRED_ATTRIBUTES)
+    element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
     return element
+
+# Kept for compatibility but should be deprecated:
+
+
+CLASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _CLASS_MAP.items())
+
+PASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _PASS_MAP.items())
+
+
+def find_class_name(elem_dict, quiet=False):
+    return find_class(elem_dict, quiet=quiet).__name__

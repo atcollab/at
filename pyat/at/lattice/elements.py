@@ -440,17 +440,6 @@ class RFCavity(LongElement):
         return pp
 
 
-class RingParam(Element):
-    """pyAT RingParam element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Energy']
-    _conversions = dict(Element._conversions, Energy=float, Periodicity=int)
-
-    def __init__(self, family_name, energy, **kwargs):
-        kwargs.setdefault('Periodicity', 1)
-        kwargs.setdefault('PassMethod', 'IdentityPass')
-        super(RingParam, self).__init__(family_name, Energy=energy, **kwargs)
-
-
 class M66(Element):
     """Linear (6, 6) transfer matrix"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES

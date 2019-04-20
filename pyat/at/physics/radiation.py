@@ -3,7 +3,6 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-import at
 from at.lattice import uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
@@ -120,7 +119,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
     if energy is None:
-        energy = at.get_ring_properties(ring)['energy']
+        energy = ring.energy
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
@@ -128,8 +127,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
 
     orbs = numpy.squeeze(
         lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                     keep_lattice=keep_lattice),
-        axis=(1, 3)).T
+                     keep_lattice=keep_lattice), axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, orbit, energy)

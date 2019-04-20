@@ -40,8 +40,3 @@ def hmba_ring():
     path = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                          '../test_matlab/hmba.mat'))
     return load.load_mat(path)
-
-
-@pytest.fixture(scope='session')
-def hmba_lattice(hmba_ring):
-    return lattice.Lattice(hmba_ring)

@@ -4,7 +4,6 @@ between other modules.
 """
 import pytest
 import utils
-from at import Lattice
 from at.load import load_mat
 
 
@@ -35,14 +34,14 @@ def ml_err(engine):
 
 @pytest.fixture(scope='session')
 def py_dba():
-    return Lattice(load_mat(utils.dba_ring, key='RING'), keep_all=True)
+    return load_mat(utils.dba_ring, key='RING', keep_all=True)
 
 
 @pytest.fixture(scope='session')
 def py_hmba():
-    return Lattice(load_mat(utils.hmba_ring, key='RING'), keep_all=True)
+    return load_mat(utils.hmba_ring, key='RING', keep_all=True)
 
 
 @pytest.fixture(scope='session')
 def py_err():
-    return Lattice(load_mat(utils.err_ring, key='RING'), keep_all=True)
+    return load_mat(utils.err_ring, key='RING', keep_all=True)

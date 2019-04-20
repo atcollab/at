@@ -4,8 +4,9 @@ Load lattices from Matlab files.
 from warnings import warn
 import scipy.io
 import numpy
-from . import element_from_dict
 from at.lattice import elements, Lattice, AtWarning
+# noinspection PyProtectedMember
+from at.load import _isparam, element_from_dict
 
 TWO_PI_ERROR = 1.E-4
 
@@ -46,7 +47,7 @@ def _scanner(elems, **kwargs):
 
     radiate = False
     for elem in elems:
-        if isinstance(elem, elements.RingParam):
+        if _isparam(elem):
             params.append(elem)
         if hasattr(elem, 'Energy'):
             if isinstance(elem, elements.RFCavity):
@@ -55,8 +56,8 @@ def _scanner(elems, **kwargs):
         if isinstance(elem, elements.Dipole):
             # noinspection PyUnresolvedReferences
             thetas.append(elem.BendingAngle)
-        if elem.PassMethod.endswith(
-                'RadPass') or elem.PassMethod.endswith('CavityPass'):
+        if (elem.PassMethod.endswith('RadPass') or
+                elem.PassMethod.endswith('CavityPass')):
             radiate = True
     attributes['_radiation'] = radiate
 
@@ -124,8 +125,9 @@ def load_mat(filename, key=None, check=True, quiet=False, keep_all=False,
     OUTPUT
         list    pyat ring
     """
+
     def substitute(elem):
-        if isinstance(elem, elements.RingParam):
+        if _isparam(elem):
             params = vars(elem).copy()
             name = params.pop('FamName')
             return elements.Marker(name, **params)
@@ -141,6 +143,8 @@ def load_mat(filename, key=None, check=True, quiet=False, keep_all=False,
                  (i, elem) in enumerate(element_arrays)]
     attrs = _scanner(elem_list, **kwargs)
     attrs.update(kwargs)
-    if not keep_all:
+    if keep_all:
         elem_list = (substitute(elem) for elem in elem_list)
+    else:
+        elem_list = (elem for elem in elem_list if not _isparam(elem))
     return Lattice(elem_list, **attrs)
