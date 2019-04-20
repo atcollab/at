@@ -22,8 +22,7 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
-                  energy=None):
+def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
@@ -118,8 +117,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
-    if energy is None:
-        energy = ring.energy
+    energy = ring.energy
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)

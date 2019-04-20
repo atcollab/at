@@ -10,17 +10,6 @@ from at.lattice import elements as elt
 from at.lattice.utils import AtWarning
 
 
-class _RingParam(elt.Element):
-    """Private class for Matlab RingParam element"""
-    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy']
-    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int)
-
-    def __init__(self, family_name, energy, **kwargs):
-        kwargs.setdefault('Periodicity', 1)
-        kwargs.setdefault('PassMethod', 'IdentityPass')
-        super(_RingParam, self).__init__(family_name, Energy=energy, **kwargs)
-
-
 _CLASS_MAP = {'multipole': elt.Multipole,
               'thinmultipole': elt.ThinMultipole,
               'dipole': elt.Dipole, 'bend': elt.Dipole,
@@ -34,7 +23,7 @@ _CLASS_MAP = {'multipole': elt.Multipole,
               'corrector': elt.Corrector,
               'monitor': elt.Monitor, 'bpm': elt.Monitor,
               'marker': elt.Marker,
-              'ringparam': _RingParam}
+              'ringparam': elt._RingParam}
 
 _PASS_MAP = {'CorrectorPass': elt.Corrector, 'BendLinearPass': elt.Dipole,
              'QuadLinearPass': elt.Quadrupole, 'RFCavityPass': elt.RFCavity,
@@ -43,11 +32,6 @@ _PASS_MAP = {'CorrectorPass': elt.Corrector, 'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
              'DriftPass': elt.Drift,
              'AperturePass': elt.Aperture}
-
-
-def _isparam(elem):
-    """Chack for temporary RingParam elements"""
-    return isinstance(elem, _RingParam)
 
 
 def hasattrs(kwargs, *attributes):
@@ -122,7 +106,7 @@ def find_class(elem_dict, quiet=False):
                               'PhaseLag', 'TimeLag'):
                     return elt.RFCavity
                 elif hasattrs(elem_dict, 'Periodicity'):
-                    return _RingParam
+                    return elt._RingParam
                 elif hasattrs(elem_dict, 'Limits'):
                     return elt.Aperture
                 elif hasattrs(elem_dict, 'M66'):
@@ -195,7 +179,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
                     raise err("is not compatible with Class {0}.", class_name)
-            elif issubclass(cls, (elt.Marker, elt.Monitor, _RingParam)):
+            elif issubclass(cls, (elt.Marker, elt.Monitor, elt._RingParam)):
                 if pass_method != 'IdentityPass':
                     raise err("is not compatible with Class {0}.", class_name)
             elif cls == elt.Drift:

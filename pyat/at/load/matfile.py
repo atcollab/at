@@ -4,9 +4,8 @@ Load lattices from Matlab files.
 from warnings import warn
 import scipy.io
 import numpy
-from at.lattice import elements, Lattice, AtWarning
-# noinspection PyProtectedMember
-from at.load import _isparam, element_from_dict
+from at.lattice import elements, Lattice, AtError, AtWarning
+from at.load import element_from_dict
 
 TWO_PI_ERROR = 1.E-4
 
@@ -29,30 +28,42 @@ def _load_element(index, element_array, check=True, quiet=False):
 def _scanner(elems, **kwargs):
     """Extract the lattice attributes from an element list
 
-    If a RingParam element is found, its energy will be used, energies
-    defined in other elements are ignored. All its user-defined
-    attributes will also be set as Lattice attributes.
+    energy is taken from:
+        1) Radiative elements (Cavity, RingParam, Radiating magnets)
+        2) Any other element
 
-    Otherwise, necessary values will be guessed from other elements.
+    periodicity is taken from:
+        1) RingParam element
+        2) Sum ofthe bending angles of magnets
+        3) 1
+
+    name is taken from
+        1) RingParam element
+        2) ""
+
+    All RingParam attributes are extracted
+    The function removes the Energy attribute of non-radiating elements
     """
     _translate = {'Energy': 'energy', 'Periodicity': 'periodicity',
                   'FamName': 'name'}
-    _ignore = {'PassMethod', 'Length'}
+    _ignore = {'energy', 'PassMethod', 'Length'}
 
     attributes = {}
     params = []
-    rf_energies = []
+    rad_energies = []
     el_energies = []
     thetas = []
 
     radiate = False
     for elem in elems:
-        if _isparam(elem):
+        if isinstance(elem, elements._RingParam):
             params.append(elem)
-        if hasattr(elem, 'Energy'):
-            if isinstance(elem, elements.RFCavity):
-                rf_energies.append(elem.Energy)
+        if (isinstance(elem, (elements.RFCavity, elements._RingParam)) or
+                elem.PassMethod.endswith('RadPass')):
+            rad_energies.append(elem.Energy)
+        elif hasattr(elem, 'Energy'):
             el_energies.append(elem.Energy)
+            del elem.Energy
         if isinstance(elem, elements.Dipole):
             # noinspection PyUnresolvedReferences
             thetas.append(elem.BendingAngle)
@@ -61,27 +72,35 @@ def _scanner(elems, **kwargs):
             radiate = True
     attributes['_radiation'] = radiate
 
+    if 'energy' not in kwargs:
+        # Guess energy from the Energy attribute of the elements
+        if rad_energies:
+            # Energy of radiating elements must be consistent
+            energy = max(rad_energies)
+            if min(rad_energies) < energy:
+                raise AtError('Inconsistent energy values,')
+            attributes['energy'] = energy
+        elif el_energies:
+            # Energy of other elements is informative only
+            energy = max(el_energies)
+            if min(el_energies) < energy:
+                warn(AtWarning('Inconsistent energy values, '
+                               '"energy" set to {0}'.format(energy)))
+            attributes['energy'] = energy
+        else:
+            raise AtError('Lattice energy is not defined')
+
     if params:
         # At least one RingParam element, use the 1st one
         if len(params) > 1:
             warn(AtWarning(
                 'More than 1 RingParam element, the 1st one is used'))
-        attributes.update((_translate.get(key, key.lower()),
-                           getattr(params[0], key))
-                          for key in params[0]
+        attributes.update((_translate.get(key, key.lower()),attr)
+                          for key, attr in vars(params[0]).items()
                           if key not in _ignore)
     else:
         # No RingParam element, try to guess
         attributes['name'] = ''
-        if 'energy' not in kwargs:
-            # Guess energy from the Energy attribute of the elements
-            energies = rf_energies if rf_energies else el_energies
-            if energies:
-                energy = max(energies)
-                if min(energies) < energy:
-                    warn(AtWarning('Inconsistent energy values, '
-                                   '"energy" set to {0}'.format(energy)))
-                attributes['energy'] = energy
         if 'periodicity' not in kwargs:
             # Guess periodicity from the bending angles of the lattice
             try:
@@ -127,7 +146,7 @@ def load_mat(filename, key=None, check=True, quiet=False, keep_all=False,
     """
 
     def substitute(elem):
-        if _isparam(elem):
+        if isinstance(elem, elements._RingParam):
             params = vars(elem).copy()
             name = params.pop('FamName')
             return elements.Marker(name, **params)
@@ -146,5 +165,6 @@ def load_mat(filename, key=None, check=True, quiet=False, keep_all=False,
     if keep_all:
         elem_list = (substitute(elem) for elem in elem_list)
     else:
-        elem_list = (elem for elem in elem_list if not _isparam(elem))
+        elem_list = (elem for elem in elem_list if
+                     not isinstance(elem, elements._RingParam))
     return Lattice(elem_list, **attrs)

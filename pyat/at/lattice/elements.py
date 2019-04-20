@@ -57,13 +57,13 @@ class Element(object):
 
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
-        attrs = dict((k, getattr(self, k)) for k in self)
+        attrs = dict((k, v) for k, v in vars(self).items())
         keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
         keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
         return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
-        attrs = dict((k, getattr(self, k)) for k in self)
+        attrs = dict((k, v) for k, v in vars(self).items())
         arguments = [attrs.pop(k, getattr(self, k)) for k in
                      self.REQUIRED_ATTRIBUTES]
         defelem = self.__class__(*arguments)
@@ -462,3 +462,14 @@ class Corrector(LongElement):
         super(Corrector, self).__init__(family_name,
                                         Length=kwargs.pop('Length', length),
                                         KickAngle=kick_angle, **kwargs)
+
+
+class _RingParam(Element):
+    """Private class for Matlab RingParam element"""
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Energy']
+    _conversions = dict(Element._conversions, Energy=float, Periodicity=int)
+
+    def __init__(self, family_name, energy, **kwargs):
+        kwargs.setdefault('Periodicity', 1)
+        kwargs.setdefault('PassMethod', 'IdentityPass')
+        super(_RingParam, self).__init__(family_name, Energy=energy, **kwargs)
