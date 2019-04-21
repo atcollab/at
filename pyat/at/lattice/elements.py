@@ -50,11 +50,6 @@ class Element(object):
                         family_name, key, exc),)
                 raise
 
-    def __iter__(self):
-        """Implement iter(self)"""
-        for k in vars(self):
-            yield k
-
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
         attrs = dict((k, v) for k, v in vars(self).items())
@@ -129,9 +124,9 @@ class LongElement(Element):
         frac = numpy.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        fin = dict(popattr(el, key) for key in self if
+        fin = dict(popattr(el, key) for key in vars(self) if
                    key in self._entrance_fields)
-        fout = dict(popattr(el, key) for key in self if
+        fout = dict(popattr(el, key) for key in vars(self) if
                     key in self._exit_fields)
         # Split element
         element_list = [el._part(f, numpy.sum(frac)) for f in frac]

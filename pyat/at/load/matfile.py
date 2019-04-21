@@ -95,7 +95,7 @@ def _scanner(elems, **kwargs):
         if len(params) > 1:
             warn(AtWarning(
                 'More than 1 RingParam element, the 1st one is used'))
-        attributes.update((_translate.get(key, key.lower()),attr)
+        attributes.update((_translate.get(key, key.lower()), attr)
                           for key, attr in vars(params[0]).items()
                           if key not in _ignore)
     else:
