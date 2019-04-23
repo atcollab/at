@@ -8,6 +8,7 @@ responsibility to ensure that the appropriate attributes are present.
 import numpy
 import copy
 import itertools
+from at.exceptions import AtError
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -475,9 +476,13 @@ class Corrector(LongElement):
 
 class Wiggler(LongElement):
     """pyAT wiggler element"""
-    REQUIRED_ATTRIBUTES = ['Lw', 'Bmax', 'Nstep', 'Nmeth', 'By', 'Bx']
+    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
+                                                             'Nstep', 'Nmeth',
+                                                             'By', 'Bx',
+                                                             'Energy']
     _conversions = dict(Element._conversions, Lw=float, Bmax=float, Nstep=int,
-                        Nmeth=int, By=_array, Bx=_array, Energy=float)
+                        Nmeth=int, NHharm=int, NVharm=int, By=_array,
+                        Bx=_array, Energy=float)
 
     def __init__(self, family_name, length, wiggle_period, b_max, n_step,
                  n_meth, by, bx, energy, **kwargs):
@@ -486,7 +491,42 @@ class Wiggler(LongElement):
         NHharm    Number of horizontal harmonics
         NVharm    Number of vertical harmonics
         """
+        if abs((length / wiggle_period) % 1) > 1e-6:
+            raise AtError("Wiggler: length/wiggle_period is not an integer.")
+        nh = kwargs.pop('NHharm', None)
+        nv = kwargs.pop('NVharm', None)
+        if nh is None:
+            try:
+                nh = len(by[0])
+            except TypeError:
+                nh = 1
+            except IndexError:
+                nh = 0
+        if nv is None:
+            try:
+                nv = len(bx[0])
+            except TypeError:
+                nv = 1
+            except IndexError:
+                nv = 0
+        for i in range(nh):
+            if i == 0:
+                dk = abs(by[3]**2 - by[4]**2 - by[2]**2) / abs(by[4])
+            else:
+                dk = abs(by[3, i]**2 - by[4, i]**2 - by[2, i]**2) / abs(by[4])
+            if dk > 1e-6:
+                raise AtError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
+                              "{0}".format(i))
+        for i in range(nv):
+            if i == 0:
+                dk = abs(bx[2]**2 - bx[4]**2 - bx[3]**2) / abs(bx[4])
+            else:
+                dk = abs(bx[2, i]**2 - bx[4, i]**2 - bx[3, i]**2) / abs(bx[4])
+            if dk > 1e-6:
+                raise AtError("Wiggler(H): ky^2 + kz^2 -kx^2 !=0, i = "
+                              "{0}".format(i))
         kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
         super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
                                       Bmax=b_max, Nstep=n_step, Nmeth=n_meth,
-                                      By=by, Bx=bx, Energy=energy, **kwargs)
+                                      NHharm=nh, NVharm=nv, By=by, Bx=bx,
+                                      Energy=energy, **kwargs)

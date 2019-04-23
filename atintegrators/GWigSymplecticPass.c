@@ -31,6 +31,7 @@ struct elem {
     int NVharm;
     double *By;
     double *Bx;
+    /* Optional fields */
     double *R1;
     double *R2;
     double *T1;
@@ -165,10 +166,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         NVharm = atGetLong(ElemData, "NVharm"); check_error();
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
-        R1 = atGetDoubleArray(ElemData, "R1"); check_error();
-        R2 = atGetDoubleArray(ElemData, "R2"); check_error();
-        T1 = atGetDoubleArray(ElemData, "T1"); check_error();
-        T2 = atGetDoubleArray(ElemData, "T2"); check_error();
+        /* Optional fields */
+        R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
+        R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
+        T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
+        T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
 
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Energy=Energy;
@@ -181,6 +183,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->NVharm=NVharm;
         Elem->By=By;
         Elem->Bx=Bx;
+        /* Optional fields */
         Elem->R1=R1;
         Elem->R2=R2;
         Elem->T1=T1;
@@ -224,10 +227,11 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         NVharm = atGetLong(ElemData, "NVharm"); check_error();
         By = atGetDoubleArray(ElemData, "By"); check_error();
         Bx = atGetDoubleArray(ElemData, "Bx"); check_error();
-        R1 = atGetDoubleArray(ElemData, "R1"); check_error();
-        R2 = atGetDoubleArray(ElemData, "R2"); check_error();
-        T1 = atGetDoubleArray(ElemData, "T1"); check_error();
-        T2 = atGetDoubleArray(ElemData, "T2"); check_error();
+        /* Optional fields */
+        R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
+        R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
+        T1 = atGetOptionalDoubleArray(ElemData, "T1"); check_error();
+        T2 = atGetOptionalDoubleArray(ElemData, "T2"); check_error();
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -237,7 +241,7 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(14,1);
+        plhs[0] = mxCreateCellMatrix(10,1);
         mxSetCell(plhs[0],0,mxCreateString("Energy"));
         mxSetCell(plhs[0],1,mxCreateString("Length"));
         mxSetCell(plhs[0],2,mxCreateString("Lw"));
@@ -248,10 +252,14 @@ void mexFunction(       int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs
         mxSetCell(plhs[0],7,mxCreateString("NVharm"));
         mxSetCell(plhs[0],8,mxCreateString("By"));
         mxSetCell(plhs[0],9,mxCreateString("Bx"));
-        mxSetCell(plhs[0],10,mxCreateString("R1"));
-        mxSetCell(plhs[0],11,mxCreateString("R2"));
-        mxSetCell(plhs[0],12,mxCreateString("T1"));
-        mxSetCell(plhs[0],13,mxCreateString("T2"));
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(4,1);
+            mxSetCell(plhs[1],0,mxCreateString("R1"));
+            mxSetCell(plhs[1],1,mxCreateString("R2"));
+            mxSetCell(plhs[1],2,mxCreateString("T1"));
+            mxSetCell(plhs[1],3,mxCreateString("T2"));
+        }
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");

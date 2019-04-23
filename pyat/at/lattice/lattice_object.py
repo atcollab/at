@@ -4,8 +4,8 @@ import copy
 import numpy
 from scipy.constants import physical_constants as cst
 from warnings import warn
+from at.exceptions import AtWarning, AtError
 from at.lattice import elements, get_s_pos, checktype, uint32_refpts
-from at.lattice import AtWarning, AtError
 from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
 from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
 

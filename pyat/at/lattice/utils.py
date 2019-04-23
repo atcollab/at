@@ -19,14 +19,7 @@ import itertools
 from warnings import warn
 from fnmatch import fnmatch
 from at.lattice import elements
-
-
-class AtError(Exception):
-    pass
-
-
-class AtWarning(UserWarning):
-    pass
+from at.exceptions import AtError, AtWarning
 
 
 def uint32_refpts(refpts, n_elements):

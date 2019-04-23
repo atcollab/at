@@ -29,6 +29,7 @@ function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
 
+global GLOBVAL;
 global MaxOrder;
 global NumIntSteps;
 
@@ -39,10 +40,11 @@ if dNw > GWIG_EPS
 end
 
 Elem.FamName        = fname;  % add check for identical family names
-Elem.Length		= Ltot;
+Elem.Energy         = GLOBVAL.E0
+Elem.Length		    = Ltot;
 Elem.Lw             = Lw;
 Elem.Bmax           = Bmax;
-Elem.Nstep    	= Nstep;
+Elem.Nstep    	    = Nstep;
 Elem.Nmeth      	= Nmeth;
 if ~isempty(By)
   Elem.NHharm       = length(By(1,:));

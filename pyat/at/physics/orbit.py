@@ -4,8 +4,9 @@ Closed orbit related functions
 
 import numpy
 import scipy.constants as constants
-from ..lattice import AtWarning, AtError, get_s_pos, RFCavity, uint32_refpts
-from ..tracking import lattice_pass
+from at.exceptions import AtWarning, AtError
+from at.lattice import get_s_pos, RFCavity, uint32_refpts
+from at.tracking import lattice_pass
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']

@@ -6,8 +6,7 @@ import numpy
 from warnings import warn
 from distutils import sysconfig
 from at import integrators
-from at.lattice import elements
-from at.lattice.utils import AtWarning
+from at.lattice import elements, AtWarning
 
 CLASS_MAPPING = {'multipole': 'Multipole', 'quadrupole': 'Quadrupole',
                  'thinmultipole': 'ThinMultipole', 'sextupole': 'Sextupole',
@@ -16,14 +15,14 @@ CLASS_MAPPING = {'multipole': 'Multipole', 'quadrupole': 'Quadrupole',
                  'ap': 'Aperture', 'octupole': 'Octupole', 'dipole': 'Dipole',
                  'drift': 'Drift', 'bend': 'Dipole', 'ringparam': 'RingParam',
                  'quad': 'Quadrupole', 'sext': 'Sextupole', 'marker': 'Marker',
-                 'monitor': 'Monitor'}
+                 'monitor': 'Monitor', 'wiggler': 'Wiggler', 'wig': 'Wiggler'}
 
 PASS_MAPPING = {'CorrectorPass': 'Corrector', 'BendLinearPass': 'Dipole',
                 'QuadLinearPass': 'Quadrupole', 'RFCavityPass': 'RFCavity',
                 'CavityPass': 'RFCavity', 'ThinMPolePass': 'ThinMultipole',
                 'Matrix66Pass': 'M66', 'BndMPoleSymplectic4Pass': 'Dipole',
                 'BndMPoleSymplectic4RadPass': 'Dipole', 'DriftPass': 'Drift',
-                'AperturePass': 'Aperture'}
+                'AperturePass': 'Aperture', 'GWigSymplecticPass': 'Wiggler'}
 
 
 def hasattrs(kwargs, *attributes):
