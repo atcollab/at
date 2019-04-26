@@ -30,7 +30,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     emit0, beamdata, emit = ohmi_envelope(ring[, refpts])
 
     PARAMETERS
-        ring            lattice description.
+        ring            Lattice object.
         refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
@@ -45,9 +45,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
                             already known                           (6,) array)
         keep_lattice=False  Assume no lattice change since the previous
                             tracking
-        energy=None         Energy of the ring; if it is not specified it is:
-                            - lattice.energy if a lattice object is passed,
-                            - otherwise, taken from the elements.
 
     OUTPUT
         emit0               emittance data at the start/end of the ring
