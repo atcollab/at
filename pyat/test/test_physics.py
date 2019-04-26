@@ -12,60 +12,60 @@ M44_MATLAB = numpy.array([[-0.66380202, 2.23414498, 0, 0],
                           [0, 0, -0.0059496965, -0.99921979]])
 
 
-def test_find_orbit4(dba_ring):
-    orbit4, _ = physics.find_orbit4(dba_ring, DP)
+def test_find_orbit4(dba_lattice):
+    orbit4, _ = physics.find_orbit4(dba_lattice, DP)
     expected = numpy.array([1.091636e-7, 1.276747e-15, 0, 0, DP, 0])
     numpy.testing.assert_allclose(orbit4, expected, atol=1e-12)
 
 
-def test_find_orbit4_finds_zeros_if_dp_zero(dba_ring):
-    orbit4, _ = physics.find_orbit4(dba_ring, 0)
+def test_find_orbit4_finds_zeros_if_dp_zero(dba_lattice):
+    orbit4, _ = physics.find_orbit4(dba_lattice, 0)
     expected = numpy.zeros((6,))
     numpy.testing.assert_allclose(orbit4, expected, atol=1e-7)
 
 
-def test_find_orbit4_result_unchanged_by_atpass(dba_ring):
-    orbit, _ = physics.find_orbit4(dba_ring, DP)
+def test_find_orbit4_result_unchanged_by_atpass(dba_lattice):
+    orbit, _ = physics.find_orbit4(dba_lattice, DP)
     orbit_copy = numpy.copy(orbit)
     orbit[4] = DP
-    atpass(dba_ring, orbit, 1)
+    atpass(dba_lattice, orbit, 1)
     numpy.testing.assert_allclose(orbit[:4], orbit_copy[:4], atol=1e-12)
 
 
-def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_ring):
+def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_lattice):
     expected = numpy.array(
         [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
          [3.0422808e-8, 9.1635269e-8, 0, 0, DP, 5.9280346e-6]]
     )
-    _, all_points = physics.find_orbit4(dba_ring, DP, [49, 99])
+    _, all_points = physics.find_orbit4(dba_lattice, DP, [49, 99])
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
-    _, all_points = physics.find_orbit4(dba_ring, DP, [49, 99],
+    _, all_points = physics.find_orbit4(dba_lattice, DP, [49, 99],
                                         numpy.array([0., 0., 0., 0., DP, 0.]))
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
 
 
-def test_orbit_maxiter_warnings(hmba_ring):
+def test_orbit_maxiter_warnings(hmba_lattice):
     with pytest.warns(AtWarning):
-        physics.find_orbit4(hmba_ring, max_iterations=1)
+        physics.find_orbit4(hmba_lattice, max_iterations=1)
     with pytest.warns(AtWarning):
-        physics.find_sync_orbit(hmba_ring, max_iterations=1)
+        physics.find_sync_orbit(hmba_lattice, max_iterations=1)
     with pytest.warns(AtWarning):
-        physics.find_orbit6(hmba_ring, max_iterations=1)
+        physics.find_orbit6(hmba_lattice, max_iterations=1)
 
 
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
-def test_find_m44_returns_same_answer_as_matlab(dba_ring, refpts):
-    m44, mstack = physics.find_m44(dba_ring, dp=DP, refpts=refpts)
+def test_find_m44_returns_same_answer_as_matlab(dba_lattice, refpts):
+    m44, mstack = physics.find_m44(dba_lattice, dp=DP, refpts=refpts)
     numpy.testing.assert_allclose(m44, M44_MATLAB, rtol=1e-5, atol=1e-7)
     assert mstack.shape == (len(refpts), 4, 4)
-    m44, mstack = physics.find_m44(dba_ring, dp=DP, refpts=refpts, full=True)
+    m44, mstack = physics.find_m44(dba_lattice, dp=DP, refpts=refpts, full=True)
     numpy.testing.assert_allclose(m44, M44_MATLAB, rtol=1e-5, atol=1e-7)
     assert mstack.shape == (len(refpts), 4, 4)
 
 
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
-def test_find_m66(hmba_ring, refpts):
-    m66, mstack = physics.find_m66(hmba_ring, refpts=refpts)
+def test_find_m66(hmba_lattice, refpts):
+    m66, mstack = physics.find_m66(hmba_lattice, refpts=refpts)
     expected = numpy.array([[-0.735654, 4.673766, 0., 0., 2.997161e-3, 0.],
                             [-9.816788e-2, -0.735654, 0., 0., 1.695263e-4, 0.],
                             [0., 0., 0.609804, -2.096051, 0., 0.],
@@ -78,8 +78,8 @@ def test_find_m66(hmba_ring, refpts):
 
 
 @pytest.mark.parametrize('index', (19, 0, 1))
-def test_find_elem_m66(hmba_ring, index):
-    m66 = physics.find_elem_m66(hmba_ring[index])
+def test_find_elem_m66(hmba_lattice, index):
+    m66 = physics.find_elem_m66(hmba_lattice[index])
     if index is 19:
         expected = numpy.array([[1.0386, 0.180911, 0., 0., 0., 0.],
                                 [0.434959, 1.0386, 0., 0., 0., 0.],
@@ -92,32 +92,32 @@ def test_find_elem_m66(hmba_ring, index):
     numpy.testing.assert_allclose(m66, expected, rtol=1e-5, atol=1e-7)
 
 
-def test_find_sync_orbit(dba_ring):
+def test_find_sync_orbit(dba_lattice):
     expected = numpy.array([[1.030844e-5, 1.390795e-5, -2.439041e-30,
                              4.701621e-30, 1.265181e-5, 3.749859e-6],
                             [3.86388e-8, 1.163782e-7, -9.671192e-30,
                              3.567819e-30, 1.265181e-5, 7.5e-6]])
-    _, all_points = physics.find_sync_orbit(dba_ring, DP, [49, 99])
+    _, all_points = physics.find_sync_orbit(dba_lattice, DP, [49, 99])
     numpy.testing.assert_allclose(all_points, expected, rtol=1e-5, atol=1e-7)
 
 
-def test_find_sync_orbit_finds_zeros(dba_ring):
-    sync_orbit = physics.find_sync_orbit(dba_ring)[0]
+def test_find_sync_orbit_finds_zeros(dba_lattice):
+    sync_orbit = physics.find_sync_orbit(dba_lattice)[0]
     numpy.testing.assert_equal(sync_orbit, numpy.zeros(6))
 
 
-def test_find_orbit6(hmba_ring):
-    expected = numpy.zeros((len(hmba_ring), 6))
-    refpts = numpy.ones(len(hmba_ring), dtype=bool)
-    _, all_points = physics.find_orbit6(hmba_ring, refpts)
+def test_find_orbit6(hmba_lattice):
+    expected = numpy.zeros((len(hmba_lattice), 6))
+    refpts = numpy.ones(len(hmba_lattice), dtype=bool)
+    _, all_points = physics.find_orbit6(hmba_lattice, refpts)
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
 
-def test_find_orbit6_raises_AtError_if_there_is_no_cavity(dba_ring):
+def test_find_orbit6_raises_AtError_if_there_is_no_cavity(dba_lattice):
     with pytest.raises(at.lattice.utils.AtError):
-        physics.find_orbit6(dba_ring)
+        physics.find_orbit6(dba_lattice)
 
-def test_find_m44_no_refpts(dba_ring):
-    m44 = physics.find_m44(dba_ring, dp=DP)[0]
+def test_find_m44_no_refpts(dba_lattice):
+    m44 = physics.find_m44(dba_lattice, dp=DP)[0]
     expected = numpy.array([[-0.66380, 2.23415, 0., 0.],
                             [-0.25037, -0.66380, 0.,0.],
                             [-1.45698e-31, -1.15008e-30, -0.99922, 0.26217],
@@ -126,8 +126,8 @@ def test_find_m44_no_refpts(dba_ring):
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-def test_get_twiss(dba_ring, refpts):
-    twiss0, tune, chrom, twiss = physics.get_twiss(dba_ring, DP, refpts,
+def test_get_twiss(dba_lattice, refpts):
+    twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP, refpts,
                                                    get_chrom=True)
     numpy.testing.assert_allclose(twiss['s_pos'][-1], 56.209377216, atol=1e-9)
     numpy.testing.assert_allclose(twiss['closed_orbit'][0][:5],
@@ -142,15 +142,15 @@ def test_get_twiss(dba_ring, refpts):
                                   atol=1e-7)
 
 
-def test_get_twiss_no_refpts(dba_ring):
-    twiss0, tune, chrom, twiss = physics.get_twiss(dba_ring, DP, get_chrom=True)
+def test_get_twiss_no_refpts(dba_lattice):
+    twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP, get_chrom=True)
     assert list(twiss) == []
-    assert len(physics.get_twiss(dba_ring, DP, get_chrom=True)) is 4
+    assert len(physics.get_twiss(dba_lattice, DP, get_chrom=True)) is 4
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-def test_linopt(dba_ring, refpts):
-    lindata0, tune, chrom, lindata = physics.linopt(dba_ring, DP, refpts,
+def test_linopt(dba_lattice, refpts):
+    lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, refpts,
                                                     get_chrom=True)
     numpy.testing.assert_allclose(tune, [0.365529, 0.493713], rtol=1e-5)
     numpy.testing.assert_allclose(chrom, [-0.309037, -0.441859], rtol=1e-5)
@@ -186,8 +186,8 @@ def test_linopt(dba_ring, refpts):
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-def test_linopt_uncoupled(dba_ring, refpts):
-    lindata0, tune, chrom, lindata = physics.linopt(dba_ring, DP, refpts,
+def test_linopt_uncoupled(dba_lattice, refpts):
+    lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, refpts,
                                                     coupled=False)
     numpy.testing.assert_allclose(tune, [0.365529, 0.493713], rtol=1e-5)
     numpy.testing.assert_allclose(lindata['s_pos'][-1], 56.209377216, atol=1e-9)
@@ -217,19 +217,19 @@ def test_linopt_uncoupled(dba_ring, refpts):
                                   rtol=1e-5, atol=1e-7)
 
 
-def test_linopt_no_refpts(dba_ring):
-    lindata0, tune, chrom, lindata = physics.linopt(dba_ring, DP, get_chrom=True)
+def test_linopt_no_refpts(dba_lattice):
+    lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, get_chrom=True)
     assert list(lindata) == []
-    assert len(physics.linopt(dba_ring, DP, get_chrom=True)) is 4
+    assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) is 4
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 @pytest.mark.parametrize('ring_test', (False, True))
-def test_ohmi_envelope(hmba_ring, refpts, ring_test):
-    hmba_ring.radiation_on()
+def test_ohmi_envelope(hmba_lattice, refpts, ring_test):
+    hmba_lattice.radiation_on()
     if ring_test:
-        hmba_ring = hmba_ring[:]
-    emit0, beamdata, emit = physics.ohmi_envelope(hmba_ring, refpts)
+        hmba_lattice = hmba_lattice[:]
+    emit0, beamdata, emit = physics.ohmi_envelope(hmba_lattice, refpts)
     expected_beamdata = [([0.38156302, 0.85437641, 1.0906073e-4]),
                          ([1.0044543e-5, 6.6238162e-6, 9.6533473e-6]),
                          ([[[6.9000153, -2.6064253e-5, 1.643376e-25,

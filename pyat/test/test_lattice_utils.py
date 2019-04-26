@@ -97,36 +97,36 @@ def test_refpts_iterator(simple_ring):
     assert list(refpts_iterator(simple_ring, a)) == [simple_ring[1]]
 
 
-def test_get_elements(hmba_ring):
+def test_get_elements(hmba_lattice):
     # test FamName direct match
-    assert get_elements(hmba_ring, 'BPM_06') == [hmba_ring[65]]
+    assert get_elements(hmba_lattice, 'BPM_06') == [hmba_lattice[65]]
     # test FamName wildcard matching
-    assert get_elements(hmba_ring, 'QD2?') == list(hmba_ring[9, 113])
-    assert get_elements(hmba_ring, 'QD3*') == list(hmba_ring[19, 105])
-    assert get_elements(hmba_ring, 'S*H2B') == list([hmba_ring[55]])
-    assert get_elements(hmba_ring, '*C_1') == list(hmba_ring[59, 60])
-    assert get_elements(hmba_ring, 'DR_2[1-3]') == list(hmba_ring[54, 56, 58])
-    assert get_elements(hmba_ring, 'DR_2[!1-7]') == list(hmba_ring[52, 78, 80])
+    assert get_elements(hmba_lattice, 'QD2?') == list(hmba_lattice[9, 113])
+    assert get_elements(hmba_lattice, 'QD3*') == list(hmba_lattice[19, 105])
+    assert get_elements(hmba_lattice, 'S*H2B') == list([hmba_lattice[55]])
+    assert get_elements(hmba_lattice, '*C_1') == list(hmba_lattice[59, 60])
+    assert get_elements(hmba_lattice, 'DR_2[1-3]') == list(hmba_lattice[54, 56, 58])
+    assert get_elements(hmba_lattice, 'DR_2[!1-7]') == list(hmba_lattice[52, 78, 80])
     # test element instance
     marker = elements.Marker('M1')
-    assert get_elements(hmba_ring, marker) == list(hmba_ring[1, 12, 61,
+    assert get_elements(hmba_lattice, marker) == list(hmba_lattice[1, 12, 61,
                                                               67, 73])
     # test element type
-    assert get_elements(hmba_ring, elements.RFCavity) == [hmba_ring[0]]
+    assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError
     with pytest.raises(TypeError):
-        get_elements(hmba_ring, None)
+        get_elements(hmba_lattice, None)
     # test quiet suppresses print statement correctly
     if sys.version_info < (3, 0):
         capturedOutput = BytesIO()
     else:
         capturedOutput = StringIO()
     sys.stdout = capturedOutput
-    get_elements(hmba_ring, 'BPM_06', quiet=True)
+    get_elements(hmba_lattice, 'BPM_06', quiet=True)
     sys.stdout = sys.__stdout__
     assert capturedOutput.getvalue() == ''
     sys.stdout = capturedOutput
-    get_elements(hmba_ring, 'BPM_06', quiet=False)
+    get_elements(hmba_lattice, 'BPM_06', quiet=False)
     sys.stdout = sys.__stdout__
     assert capturedOutput.getvalue() == ("String 'BPM_06' matched 1 family: "
                                          "BPM_06\nall corresponding elements "

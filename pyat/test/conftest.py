@@ -29,14 +29,14 @@ def simple_lattice(simple_ring):
 
 
 @pytest.fixture(scope='session')
-def dba_ring():
+def dba_lattice():
     path = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                          '../test_matlab/dba.mat'))
     return load.load_mat(path)
 
 
 @pytest.fixture(scope='session')
-def hmba_ring():
+def hmba_lattice():
     path = os.path.realpath(os.path.join(os.path.dirname(__file__),
                                          '../test_matlab/hmba.mat'))
     return load.load_mat(path)

@@ -9,31 +9,58 @@ from at import integrators
 from at.lattice import elements as elt
 from at.lattice.utils import AtWarning
 
-# noinspection PyProtectedMember
-_CLASS_MAP = {'multipole': elt.Multipole,
-              'thinmultipole': elt.ThinMultipole,
+
+class RingParam(elt.Element):
+    """Private class for Matlab RingParam element"""
+    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy']
+    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int)
+
+    def __init__(self, family_name, energy, **kwargs):
+        kwargs.setdefault('Periodicity', 1)
+        kwargs.setdefault('PassMethod', 'IdentityPass')
+        super(RingParam, self).__init__(family_name, Energy=energy, **kwargs)
+
+
+# Matlab to Python class translation
+_CLASS_MAP = {'drift': elt.Drift,
               'dipole': elt.Dipole, 'bend': elt.Dipole,
               'quadrupole': elt.Quadrupole, 'quad': elt.Quadrupole,
               'sextupole': elt.Sextupole, 'sext': elt.Sextupole,
               'octupole': elt.Octupole,
-              'drift': elt.Drift,
-              'aperture': elt.Aperture, 'ap': elt.Aperture,
-              'm66': elt.M66,
-              'rfcavity': elt.RFCavity, 'rf': elt.RFCavity,
+              'multipole': elt.Multipole,
+              'thinmultipole': elt.ThinMultipole,
               'corrector': elt.Corrector,
+              'rfcavity': elt.RFCavity, 'rf': elt.RFCavity,
               'monitor': elt.Monitor, 'bpm': elt.Monitor,
               'marker': elt.Marker,
-              'ringparam': elt._RingParam}
+              'm66': elt.M66,
+              'aperture': elt.Aperture, 'ap': elt.Aperture,
+              'ringparam': RingParam}
 
-_PASS_MAP = {'CorrectorPass': elt.Corrector, 'BendLinearPass': elt.Dipole,
-             'QuadLinearPass': elt.Quadrupole, 'RFCavityPass': elt.RFCavity,
-             'CavityPass': elt.RFCavity, 'ThinMPolePass': elt.ThinMultipole,
-             'Matrix66Pass': elt.M66, 'BndMPoleSymplectic4Pass': elt.Dipole,
+_PASS_MAP = {'DriftPass': elt.Drift,
+             'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
-             'DriftPass': elt.Drift,
+             'BndMPoleSymplectic4Pass': elt.Dipole,
+             'QuadLinearPass': elt.Quadrupole,
+             'CorrectorPass': elt.Corrector,
+             'CavityPass': elt.RFCavity, 'RFCavityPass': elt.RFCavity,
+             'ThinMPolePass': elt.ThinMultipole,
+             'Matrix66Pass': elt.M66,
              'AperturePass': elt.Aperture}
 
-_translate = {'Dipole': 'Bend', '_RingParam': 'RingParam'}
+# Matlab to Python attribute translation
+_param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
+                     'FamName': 'name'}
+
+# Python to Matlab class translation
+_matclass_map = {'Dipole': 'Bend'}
+
+# Python to Matlab attribute translation
+_matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
+
+# Python to Matlab type translation
+_mattype_map = {int: float,
+                numpy.ndarray: lambda attr: numpy.asanyarray(attr, dtype=float)}
 
 
 def hasattrs(kwargs, *attributes):
@@ -109,7 +136,7 @@ def find_class(elem_dict, quiet=False):
                     return elt.RFCavity
                 elif hasattrs(elem_dict, 'Periodicity'):
                     # noinspection PyProtectedMember
-                    return elt._RingParam
+                    return RingParam
                 elif hasattrs(elem_dict, 'Limits'):
                     return elt.Aperture
                 elif hasattrs(elem_dict, 'M66'):
@@ -182,7 +209,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
                     raise err("is not compatible with Class {0}.", class_name)
-            elif issubclass(cls, (elt.Marker, elt.Monitor, elt._RingParam)):
+            elif issubclass(cls, (elt.Marker, elt.Monitor, RingParam)):
                 if pass_method != 'IdentityPass':
                     raise err("is not compatible with Class {0}.", class_name)
             elif cls == elt.Drift:
@@ -198,21 +225,23 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     return element
 
 
-class MatlabType(object):
-
-    cvt = {int: float,
-           numpy.ndarray: lambda attr: numpy.asanyarray(attr, dtype=float)}
-
-    @classmethod
-    def convert(cls, items):
-        return dict((k, cls.cvt.get(type(v), lambda attr: attr)(v)) for k, v in items)
-
-
 def element_to_dict(elem):
-    dct = MatlabType.convert(elem.items())
+    dct = dict((k, _mattype_map.get(type(v), lambda attr: attr)(v))
+               for k, v in elem.items())
     class_name = elem.__class__.__name__
-    dct['Class'] = _translate.get(class_name, class_name)
+    dct['Class'] = _matclass_map.get(class_name, class_name)
     return dct
+
+
+def lattice_to_matlab(ring):
+    dct = dict((_matattr_map.get(k, k.title()), v)
+               for k, v in vars(ring).items() if not k.startswith('_'))
+    famname = dct.pop('FamName')
+    energy = dct.pop('Energy')
+    prm = RingParam(famname, energy, **dct)
+    yield element_to_dict(prm)
+    for elem in ring:
+        yield element_to_dict(elem)
 
 
 # Kept for compatibility but should be deprecated:

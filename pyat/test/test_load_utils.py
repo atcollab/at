@@ -1,8 +1,8 @@
 import at
 import numpy
 import pytest
-from at.load import find_class_name, element_from_dict
-from at.load import CLASS_MAPPING, PASS_MAPPING
+from at.load.utils import find_class_name, element_from_dict
+from at.load.utils import CLASS_MAPPING, PASS_MAPPING
 
 
 def test_invalid_class_warns_correctly():
