@@ -9,7 +9,7 @@ from at import integrators
 from at.lattice import elements as elt
 from at.lattice.utils import AtWarning
 
-
+# noinspection PyProtectedMember
 _CLASS_MAP = {'multipole': elt.Multipole,
               'thinmultipole': elt.ThinMultipole,
               'dipole': elt.Dipole, 'bend': elt.Dipole,
@@ -32,6 +32,8 @@ _PASS_MAP = {'CorrectorPass': elt.Corrector, 'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
              'DriftPass': elt.Drift,
              'AperturePass': elt.Aperture}
+
+_translate = {'Dipole': 'Bend', '_RingParam': 'RingParam'}
 
 
 def hasattrs(kwargs, *attributes):
@@ -106,6 +108,7 @@ def find_class(elem_dict, quiet=False):
                               'PhaseLag', 'TimeLag'):
                     return elt.RFCavity
                 elif hasattrs(elem_dict, 'Periodicity'):
+                    # noinspection PyProtectedMember
                     return elt._RingParam
                 elif hasattrs(elem_dict, 'Limits'):
                     return elt.Aperture
@@ -193,6 +196,24 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     elem_args = (elem_dict.pop(attr, None) for attr in cls.REQUIRED_ATTRIBUTES)
     element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
     return element
+
+
+class MatlabType(object):
+
+    cvt = {int: float,
+           numpy.ndarray: lambda attr: numpy.asanyarray(attr, dtype=float)}
+
+    @classmethod
+    def convert(cls, items):
+        return dict((k, cls.cvt.get(type(v), lambda attr: attr)(v)) for k, v in items)
+
+
+def element_to_dict(elem):
+    dct = MatlabType.convert(elem.items())
+    class_name = elem.__class__.__name__
+    dct['Class'] = _translate.get(class_name, class_name)
+    return dct
+
 
 # Kept for compatibility but should be deprecated:
 

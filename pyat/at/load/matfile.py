@@ -5,9 +5,13 @@ from warnings import warn
 import scipy.io
 import numpy
 from at.lattice import elements, Lattice, AtError, AtWarning
-from at.load import element_from_dict
+from at.load import element_from_dict, element_to_dict
 
 TWO_PI_ERROR = 1.E-4
+
+_param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
+                     'FamName': 'name'}
+_lattice_to_param = dict(((v, k) for k, v in _param_to_lattice.items()))
 
 
 def _load_element(index, element_array, check=True, quiet=False):
@@ -44,8 +48,6 @@ def _scanner(elems, **kwargs):
     All RingParam attributes are extracted
     The function removes the Energy attribute of non-radiating elements
     """
-    _translate = {'Energy': 'energy', 'Periodicity': 'periodicity',
-                  'FamName': 'name'}
     _ignore = {'energy', 'PassMethod', 'Length'}
 
     attributes = {}
@@ -95,7 +97,7 @@ def _scanner(elems, **kwargs):
         if len(params) > 1:
             warn(AtWarning(
                 'More than 1 RingParam element, the 1st one is used'))
-        attributes.update((_translate.get(key, key.lower()), attr)
+        attributes.update((_param_to_lattice.get(key, key.lower()), attr)
                           for key, attr in vars(params[0]).items()
                           if key not in _ignore)
     else:
@@ -168,3 +170,13 @@ def load_mat(filename, key=None, check=True, quiet=False, keep_all=False,
         elem_list = (elem for elem in elem_list if
                      not isinstance(elem, elements._RingParam))
     return Lattice(elem_list, **attrs)
+
+
+def save_mat(filename, ring, key='ring'):
+    dct = dict((_lattice_to_param.get(k, k.title()), v)
+               for k, v in vars(ring).items() if not k.startswith('_'))
+    famname = dct.pop('FamName')
+    energy = dct.pop('Energy')
+    prm = elements._RingParam(famname,energy, **dct)
+    lring = list(element_to_dict(elem) for elem in [prm] + ring)
+    scipy.io.savemat(filename, {key: lring})
