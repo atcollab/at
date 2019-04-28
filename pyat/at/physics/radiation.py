@@ -3,7 +3,7 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import uint32_refpts
+from at.lattice import Lattice, AtError, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
@@ -111,6 +111,9 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         m44, emit2, emit3 = process(sigmatrix)
         return sigmatrix, m44, m, orbit6, emit2, emit3
 
+    if not ring._radiation:
+        raise AtError('ohmi_envelope needs radiation in the lattice')
+
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
@@ -158,3 +161,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
             dtype=ENVELOPE_DTYPE)
 
     return data0, r66data, data
+
+
+Lattice.ohmi_envelope = ohmi_envelope

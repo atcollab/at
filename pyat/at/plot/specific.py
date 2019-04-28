@@ -1,10 +1,8 @@
 """AT plotting functions"""
-
-from at.plot import baseplot
-from at.lattice import get_s_pos
-from at.physics import linopt
+from at.lattice import Lattice, get_s_pos
 from at.tracking import lattice_pass
-
+from at.physics import linopt
+from at.plot import baseplot
 
 # --------- Example 1 --------
 
@@ -170,3 +168,6 @@ def plot_trajectory(ring, r_in, nturns=1, **kwargs):
         return 'Trajectory', left
 
     return baseplot(ring, pldata_trajectory, r_in, nturns=nturns, **kwargs)
+
+Lattice.plot_beta = plot_beta
+Lattice.plot_trajectory = plot_trajectory

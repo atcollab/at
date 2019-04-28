@@ -3,9 +3,9 @@ Coupled or non-coupled 4x4 linear motion
 """
 import numpy
 from math import sqrt, atan2, pi
-from ..physics import find_orbit4, find_m44, jmat
-from ..lattice import uint32_refpts, get_s_pos
+from ..lattice import Lattice, uint32_refpts, get_s_pos, AtError
 from ..tracking import lattice_pass
+from ..physics import find_orbit4, find_m44, jmat
 
 __all__ = ['get_twiss', 'linopt', 'get_mcf']
 
@@ -258,6 +258,12 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             _jmt.dot(msb.T.dot(_jmt.T)))
         return msa, msb, gamma, cc
 
+    try:
+        if ring._radiation:
+            raise AtError('linopt needs no radiation in the lattice')
+    except AttributeError:
+        pass
+
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if orbit is None:
@@ -368,6 +374,12 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
                         Defaults to False
         ddp=1.0E-8      momentum deviation used for differentiation
     """
+    try:
+        if ring._radiation:
+            raise AtError('get_mcf needs no radiation in the lattice')
+    except AttributeError:
+        pass
+
     fp_a, _ = find_orbit4(ring, dp=dp - 0.5 * ddp, keep_lattice=keep_lattice)
     fp_b, _ = find_orbit4(ring, dp=dp + 0.5 * ddp, keep_lattice=True)
     fp = numpy.stack((fp_a, fp_b),
@@ -375,3 +387,7 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
     return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
+
+
+Lattice.linopt = linopt
+Lattice.get_mcf = get_mcf

@@ -8,9 +8,6 @@ from warnings import warn
 from scipy.constants import physical_constants as cst
 from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
 from at.lattice import AtError, AtWarning
-from at.physics import find_orbit4, find_orbit6, find_sync_orbit, find_m44
-from at.physics import find_m66, linopt, ohmi_envelope, get_mcf
-from at.plot import plot_beta, plot_trajectory
 
 __all__ = ['Lattice']
 
@@ -356,46 +353,6 @@ class Lattice(list):
         # noinspection PyAttributeOutsideInit
         self._radiation = False
 
-    def linopt(self, *args, **kwargs):
-        """See at.physics.linopt():
-        """
-        if self._radiation:
-            raise AtError('linopt needs no radiation in the lattice')
-        return linopt(self, *args, **kwargs)
-
-    def get_mcf(self, *args, **kwargs):
-        """See at.physics.get_mcf():
-        """
-        if self._radiation:
-            raise AtError('get_mcf needs no radiation in the lattice')
-        return get_mcf(self, *args, **kwargs)
-
-    def ohmi_envelope(self, *args, **kwargs):
-        """See at.physics.ohmi_envelope():
-        """
-        if not self._radiation:
-            raise AtError('ohmi_envelope needs radiation in the lattice')
-        return ohmi_envelope(self, *args, **kwargs)
-
 
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
-Lattice.find_orbit4 = find_orbit4
-Lattice.find_sync_orbit = find_sync_orbit
-Lattice.find_orbit6 = find_orbit6
-Lattice.find_m44 = find_m44
-Lattice.find_m66 = find_m66
-Lattice.plot_beta = plot_beta
-Lattice.plot_trajectory = plot_trajectory
-
-if sys.version_info < (3, 0):
-    # noinspection PyUnresolvedReferences
-    Lattice.linopt.__func__.__doc__ += linopt.__doc__
-    # noinspection PyUnresolvedReferences
-    Lattice.get_mcf.__func__.__doc__ += get_mcf.__doc__
-    # noinspection PyUnresolvedReferences
-    Lattice.ohmi_envelope.__func__.__doc__ += ohmi_envelope.__doc__
-else:
-    Lattice.linopt.__doc__ += linopt.__doc__
-    Lattice.get_mcf.__doc__ += get_mcf.__doc__
-    Lattice.ohmi_envelope.__doc__ += ohmi_envelope.__doc__

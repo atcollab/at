@@ -4,8 +4,9 @@ Closed orbit related functions
 
 import numpy
 import scipy.constants as constants
-from ..lattice import AtWarning, AtError, get_s_pos, RFCavity, uint32_refpts
-from ..tracking import lattice_pass
+from at.lattice import AtWarning, AtError
+from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
+from at.tracking import lattice_pass
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -276,7 +277,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
 
     # Get evolution period
     l0 = get_s_pos(ring, len(ring))
-    cavities = [elem for elem in ring if isinstance(elem, RFCavity)]
+    cavities = [elem for elem in ring if isinstance(elem, elements.RFCavity)]
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
 
@@ -320,3 +321,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
         lattice_pass(ring, ref_in.copy(order='K'), refpts=uint32refs, keep_lattice=keeplattice), axis=(1, 3)).T
 
     return ref_in, all_points
+
+Lattice.find_orbit4 = find_orbit4
+Lattice.find_sync_orbit = find_sync_orbit
+Lattice.find_orbit6 = find_orbit6
