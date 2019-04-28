@@ -21,10 +21,10 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     space by numerically solving for a fixed point of the one turn
     map M calculated with lattice_pass.
 
-        (X, PX, Y, PY, dP2, CT2 ) = M (X, PX, Y, PY, dP1, CT1)
+        (X, PX, Y, PY, dP, CT2 ) = M (X, PX, Y, PY, dP, CT1)
 
-    under the CONSTANT MOMENTUM constraint, dP2 = dP1 = dP and
-    there is NO constraint on the 6-th coordinate CT
+    under the CONSTANT MOMENTUM constraint dP and with NO constraint
+    on the 6-th coordinate CT
 
     IMPORTANT!!! findorbit4 imposes a constraint on dP and relaxes
     the constraint on the revolution frequency. A physical storage
@@ -134,9 +134,9 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     % by numerically solving  for a fixed point
     % of the one turn map M calculated with lattice_pass
 
-        (X, PX, Y, PY, dP2, CT2 ) = M (X, PX, Y, PY, dP1, CT1)
+        (X, PX, Y, PY, dP, CT2 ) = M (X, PX, Y, PY, dP, CT1)
 
-    under constraints CT2 - CT1 =  dCT = c/Frev - c/Frev0 and dP2 = dP1, where
+    under the constraint dCT = CT2 - CT1 = C/Frev - C/Frev0, where
     Frev0 = Frf0/HarmNumber is the design revolution frequency
     Frev  = (Frf0 + dFrf)/HarmNumber is the imposed revolution frequency
 
