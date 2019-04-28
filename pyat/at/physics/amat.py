@@ -4,7 +4,7 @@ import numpy
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
 
-__all__ = ['amat', 'jmat', 'get_tunes_damp']
+__all__ = ['amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices']
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 

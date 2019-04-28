@@ -6,8 +6,8 @@ import math
 import itertools
 from warnings import warn
 from scipy.constants import physical_constants as cst
-from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
 from at.lattice import AtError, AtWarning
+from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
 
 __all__ = ['Lattice']
 
