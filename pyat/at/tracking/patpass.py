@@ -3,8 +3,8 @@ Simple parallelisation of atpass() using multiprocessing.
 """
 import multiprocessing
 # noinspection PyUnresolvedReferences
-from .atpass import atpass
-from ..lattice import uint32_refpts
+from at.tracking import atpass
+from at.lattice import uint32_refpts
 import numpy
 
 

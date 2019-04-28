@@ -1,8 +1,8 @@
 from __future__ import print_function
 import numpy
 # noinspection PyUnresolvedReferences
-from .atpass import atpass, elempass
-from ..lattice import uint32_refpts
+from at.tracking import atpass, elempass
+from at.lattice import uint32_refpts
 
 
 __all__ = ['lattice_pass', 'element_pass']

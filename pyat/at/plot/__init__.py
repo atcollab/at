@@ -1,6 +1,6 @@
 """AT plotting functions"""
-print('plot start')
 try:
+    # noinspection PyPackageRequirements
     import matplotlib
     from .synopt import *
     from .generic import *
@@ -8,4 +8,3 @@ try:
 except (ImportError, RuntimeError) as exc:
     print(exc)
     print('Plotting is disabled')
-print('plot end')
