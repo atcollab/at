@@ -61,7 +61,7 @@ def _matlab_scanner(elems, **kwargs):
     for elem in elems:
         if isinstance(elem, RingParam):
             params.append(elem)
-        if (isinstance(elem, (elements.RFCavity, RingParam)) or
+        if (isinstance(elem, elements.RFCavity) or
                 elem.PassMethod.endswith('RadPass')):
             rad_energies.append(elem.Energy)
         elif hasattr(elem, 'Energy'):
@@ -73,25 +73,6 @@ def _matlab_scanner(elems, **kwargs):
         if (elem.PassMethod.endswith('RadPass') or
                 elem.PassMethod.endswith('CavityPass')):
             radiate = True
-    attributes['_radiation'] = radiate
-
-    if 'energy' not in kwargs:
-        # Guess energy from the Energy attribute of the elements
-        if rad_energies:
-            # Energy of radiating elements must be consistent
-            energy = max(rad_energies)
-            if min(rad_energies) < energy:
-                raise AtError('Inconsistent energy values,')
-            attributes['energy'] = energy
-        elif el_energies:
-            # Energy of other elements is informative only
-            energy = max(el_energies)
-            if min(el_energies) < energy:
-                warn(AtWarning('Inconsistent energy values, '
-                               '"energy" set to {0}'.format(energy)))
-            attributes['energy'] = energy
-        else:
-            raise AtError('Lattice energy is not defined')
 
     if params:
         # At least one RingParam element, use the 1st one
@@ -101,24 +82,45 @@ def _matlab_scanner(elems, **kwargs):
         attributes.update((_param_to_lattice.get(key, key.lower()), attr)
                           for key, attr in vars(params[0]).items()
                           if key not in _ignore)
-    else:
-        # No RingParam element, try to guess
+
+    attributes.update(kwargs)
+
+    if '_radiation' not in attributes:
+        attributes['_radiation'] = radiate
+
+    if 'energy' not in attributes:
+        # Guess energy from the Energy attribute of the elements
+        if rad_energies:
+            # Energy of radiating elements must be consistent
+            energy = max(rad_energies)
+            if min(rad_energies) < energy:
+                raise AtError('Inconsistent energy values,')
+        elif el_energies:
+            # Energy of other elements is informative only
+            energy = max(el_energies)
+            if min(el_energies) < energy:
+                warn(AtWarning('Inconsistent energy values, '
+                               '"energy" set to {0}'.format(energy)))
+        else:
+            raise AtError('Lattice energy is not defined')
+        attributes['energy'] = energy
+
+    if 'name' not in attributes:
         attributes['name'] = ''
-        if 'periodicity' not in kwargs:
-            # Guess periodicity from the bending angles of the lattice
-            try:
-                nbp = 2.0 * numpy.pi / sum(thetas)
-            except ZeroDivisionError:
-                warn(AtWarning('No bending in the cell, '
-                               'set "Periodicity" to 1'))
-                attributes['periodicity'] = 1
-            else:
-                periodicity = int(round(nbp))
-                if abs(periodicity - nbp) > TWO_PI_ERROR:
-                    warn(AtWarning(
-                        'Non-integer number of cells: '
-                        '{0} -> {1}'.format(nbp, periodicity)))
-                attributes['periodicity'] = periodicity
+
+    if 'periodicity' not in attributes:
+        # Guess periodicity from the bending angles of the lattice
+        try:
+            nbp = 2.0 * numpy.pi / sum(thetas)
+        except ZeroDivisionError:
+            periodicity = 1
+            warn(AtWarning('No bending in the cell, set "Periodicity" to 1'))
+        else:
+            periodicity = int(round(nbp))
+            if abs(periodicity - nbp) > TWO_PI_ERROR:
+                warn(AtWarning('Non-integer number of cells: '
+                               '{0} -> {1}'.format(nbp, periodicity)))
+        attributes['periodicity'] = periodicity
 
     return attributes
 
