@@ -35,13 +35,20 @@ class AtWarning(UserWarning):
 
 
 def check_radiation(rad):
+    """Function to be used as a decorator for optics functions
+
+    If ring is a Lattice object, raises an exception
+        if ring.radiation is not rad
+
+    If ring is any other sequence, no test is performed
+    """
     def radiation_decorator(func):
         @functools.wraps(func)
         def wrapper(ring, *args, **kwargs):
             try:
                 if ring.radiation is not rad:
-                    message = '{0} needs radiation {1}'.format(func.__name__, 'ON' if rad else 'OFF')
-                    raise AtError(message)
+                    raise AtError('{0} needs radiation {1}'.format(
+                        func.__name__, 'ON' if rad else 'OFF'))
             except AttributeError:
                 pass
             return func(ring, *args, **kwargs)
