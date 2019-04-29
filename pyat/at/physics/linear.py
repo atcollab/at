@@ -3,8 +3,7 @@ Coupled or non-coupled 4x4 linear motion
 """
 import numpy
 from math import sqrt, atan2, pi
-from at.lattice import AtError
-from at.lattice import Lattice, uint32_refpts, get_s_pos
+from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
 
@@ -59,6 +58,7 @@ def _closure(m22):
     return alpha, beta, tune
 
 
+@check_radiation(False)
 def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
               keep_lattice=False, ddp=DDP):
     """
@@ -174,6 +174,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     return twiss0, tune, chrom, twiss
 
 
+@check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
            keep_lattice=False, ddp=DDP, coupled=True):
     """
@@ -258,12 +259,6 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(
             _jmt.dot(msb.T.dot(_jmt.T)))
         return msa, msb, gamma, cc
-
-    try:
-        if ring._radiation:
-            raise AtError('linopt needs no radiation in the lattice')
-    except AttributeError:
-        pass
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
@@ -363,6 +358,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     return lindata0, tune, chrom, lindata
 
 
+@check_radiation(False)
 def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     """Compute momentum compaction factor
 
@@ -375,12 +371,6 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
                         Defaults to False
         ddp=1.0E-8      momentum deviation used for differentiation
     """
-    try:
-        if ring._radiation:
-            raise AtError('get_mcf needs no radiation in the lattice')
-    except AttributeError:
-        pass
-
     fp_a, _ = find_orbit4(ring, dp=dp - 0.5 * ddp, keep_lattice=keep_lattice)
     fp_b, _ = find_orbit4(ring, dp=dp + 0.5 * ddp, keep_lattice=True)
     fp = numpy.stack((fp_a, fp_b),

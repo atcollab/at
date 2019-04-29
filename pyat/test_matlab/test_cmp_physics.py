@@ -135,7 +135,7 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
 
     # Python call
     py_lattice.radiation_on()
-    py_emit0, py_beamdata, py_emit = physics.ohmi_envelope(py_lattice, refpts)
+    py_emit0, py_beamdata, py_emit = py_lattice.ohmi_envelope(refpts)
     # Matlab call
     ml_emit = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(refpts, nelems))
     ml_emit0, ml_params = engine.pyproxy('atx', ml_lattice, 0.0,

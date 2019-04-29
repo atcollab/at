@@ -16,8 +16,14 @@ refpts can be:
 """
 import numpy
 import itertools
+import functools
 from fnmatch import fnmatch
 from at.lattice import elements
+
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'uint32_refpts',
+           'bool_refpts', 'checkattr', 'checktype', 'get_cells', 'get_elements',
+           'refpts_iterator', 'get_s_pos', 'set_shift', 'set_tilt', 'tilt_elem',
+           'shift_elem']
 
 
 class AtError(Exception):
@@ -28,6 +34,21 @@ class AtWarning(UserWarning):
     pass
 
 
+def check_radiation(rad):
+    def radiation_decorator(func):
+        @functools.wraps(func)
+        def wrapper(ring, *args, **kwargs):
+            try:
+                if ring.radiation is not rad:
+                    message = '{0} needs radiation {1}'.format(func.__name__, 'ON' if rad else 'OFF')
+                    raise AtError(message)
+            except AttributeError:
+                pass
+            return func(ring, *args, **kwargs)
+        return wrapper
+    return radiation_decorator
+
+
 def uint32_refpts(refpts, n_elements):
     """
     Return a uint32 numpy array with contents as the indices of the selected
@@ -36,7 +57,7 @@ def uint32_refpts(refpts, n_elements):
     refs = numpy.asarray(refpts).reshape(-1)
     if (refpts is None) or (refs.size is 0):
         return numpy.array([], dtype=numpy.uint32)
-    elif (refs.size > n_elements+1):
+    elif refs.size > n_elements+1:
         raise ValueError('too many reftps given')
     elif numpy.issubdtype(refs.dtype, numpy.bool_):
         return numpy.flatnonzero(refs).astype(numpy.uint32)

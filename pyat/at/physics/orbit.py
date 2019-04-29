@@ -4,7 +4,7 @@ Closed orbit related functions
 
 import numpy
 import scipy.constants as constants
-from at.lattice import AtWarning, AtError
+from at.lattice import AtWarning, AtError, check_radiation
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
 import warnings
@@ -16,6 +16,7 @@ MAX_ITERATIONS = 20
 CONVERGENCE = 1e-12
 
 
+@check_radiation(False)
 def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     """findorbit4 finds the closed orbit in the 4-d transverse phase
     space by numerically solving for a fixed point of the one turn
@@ -128,6 +129,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     return ref_in, all_points
 
 
+@check_radiation(False)
 def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     """find_sync_orbit finds the closed orbit, synchronous with the RF cavity
     and momentum deviation dP (first 5 components of the phase space vector)
