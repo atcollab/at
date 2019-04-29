@@ -101,16 +101,16 @@ def test_get_elements(hmba_lattice):
     # test FamName direct match
     assert get_elements(hmba_lattice, 'BPM_06') == [hmba_lattice[65]]
     # test FamName wildcard matching
-    assert get_elements(hmba_lattice, 'QD2?') == hmba_lattice[9, 113]
-    assert get_elements(hmba_lattice, 'QD3*') == hmba_lattice[19, 105]
-    assert get_elements(hmba_lattice, 'S*H2B') == [hmba_lattice[55]]
-    assert get_elements(hmba_lattice, '*C_1') == hmba_lattice[59, 60]
-    assert get_elements(hmba_lattice, 'DR_2[1-3]') == hmba_lattice[54, 56, 58]
-    assert get_elements(hmba_lattice, 'DR_2[!1-7]') == hmba_lattice[52, 78, 80]
+    assert get_elements(hmba_lattice, 'QD2?') == list(hmba_lattice[9, 113])
+    assert get_elements(hmba_lattice, 'QD3*') == list(hmba_lattice[19, 105])
+    assert get_elements(hmba_lattice, 'S*H2B') == list([hmba_lattice[55]])
+    assert get_elements(hmba_lattice, '*C_1') == list(hmba_lattice[59, 60])
+    assert get_elements(hmba_lattice, 'DR_2[1-3]') == list(hmba_lattice[54, 56, 58])
+    assert get_elements(hmba_lattice, 'DR_2[!1-7]') == list(hmba_lattice[52, 78, 80])
     # test element instance
     marker = elements.Marker('M1')
-    assert get_elements(hmba_lattice, marker) == hmba_lattice[1, 12, 61,
-                                                              67, 73]
+    assert get_elements(hmba_lattice, marker) == list(hmba_lattice[1, 12, 61,
+                                                              67, 73])
     # test element type
     assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError

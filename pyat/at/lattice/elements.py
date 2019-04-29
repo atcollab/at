@@ -7,6 +7,7 @@ responsibility to ensure that the appropriate attributes are present.
 """
 import numpy
 import copy
+from inspect import getmembers, isdatadescriptor
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -25,6 +26,7 @@ def _nop(value):
 
 class Element(object):
     """Base of pyat elements"""
+
     REQUIRED_ATTRIBUTES = ['FamName']
     _conversions = dict(R1=_array66, R2=_array66, T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
@@ -32,7 +34,7 @@ class Element(object):
                         EApertures=lambda v: _array(v, (2,)),
                         Energy=float,
                         )
-    
+
     _entrance_fields = ['T1', 'R1']
     _exit_fields = ['T2', 'R2']
 
@@ -50,20 +52,15 @@ class Element(object):
                         family_name, key, exc),)
                 raise
 
-    def __iter__(self):
-        """Implement iter(self)"""
-        for k in vars(self):
-            yield k
-
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
-        attrs = dict((k, getattr(self, k)) for k in self)
+        attrs = dict(self.items())
         keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
         keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
         return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
-        attrs = dict((k, getattr(self, k)) for k in self)
+        attrs = dict(self.items())
         arguments = [attrs.pop(k, getattr(self, k)) for k in
                      self.REQUIRED_ATTRIBUTES]
         defelem = self.__class__(*arguments)
@@ -94,6 +91,15 @@ class Element(object):
         """Return a shallow copy of the element"""
         return copy.copy(self)
 
+    def items(self):
+        """Iterates through the data members including slots and properties"""
+        # Get attributes
+        for k, v in vars(self).items():
+            yield k, v
+        # Get slots and properties
+        for k, v in getmembers(self.__class__, isdatadescriptor):
+            if not k.startswith('_'):
+                yield k, getattr(self, k)
 
 class LongElement(Element):
     """pyAT long element"""
@@ -121,6 +127,7 @@ class LongElement(Element):
         >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
         [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
+
         def popattr(element, attr):
             val = getattr(element, attr)
             delattr(element, attr)
@@ -129,9 +136,9 @@ class LongElement(Element):
         frac = numpy.asarray(frac, dtype=float)
         el = self.copy()
         # Remove entrance and exit attributes
-        fin = dict(popattr(el, key) for key in self if
+        fin = dict(popattr(el, key) for key in vars(self) if
                    key in self._entrance_fields)
-        fout = dict(popattr(el, key) for key in self if
+        fout = dict(popattr(el, key) for key in vars(self) if
                     key in self._exit_fields)
         # Split element
         element_list = [el._part(f, numpy.sum(frac)) for f in frac]
@@ -210,11 +217,11 @@ class Drift(LongElement):
         lg = [0.0 if el is None else el.Length for el in elements]
         fr = numpy.asarray(frac, dtype=float)
         lg = 0.5 * numpy.asarray(lg, dtype=float) / self.Length
-        drfrac = numpy.hstack((fr-lg, 1.0)) - numpy.hstack((0.0, fr+lg))
+        drfrac = numpy.hstack((fr - lg, 1.0)) - numpy.hstack((0.0, fr + lg))
         long_elems = (drfrac != 0.0)
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
-        line = [None]*(len(drifts)+len(elements))
+        line = [None] * (len(drifts) + len(elements))
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
@@ -319,7 +326,7 @@ class Dipole(Multipole):
         kwargs.setdefault('ExitAngle', 0.0)
         kwargs.setdefault('PassMethod', 'BendLinearPass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
-    
+
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
@@ -438,17 +445,6 @@ class RFCavity(LongElement):
         pp = super(RFCavity, self)._part(fr, sumfr)
         pp.Voltage = fr * self.Voltage
         return pp
-
-
-class RingParam(Element):
-    """pyAT RingParam element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Energy']
-    _conversions = dict(Element._conversions, Energy=float, Periodicity=int)
-
-    def __init__(self, family_name, energy, **kwargs):
-        kwargs.setdefault('Periodicity', 1)
-        kwargs.setdefault('PassMethod', 'IdentityPass')
-        super(RingParam, self).__init__(family_name, Energy=energy, **kwargs)
 
 
 class M66(Element):
