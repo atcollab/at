@@ -9,7 +9,7 @@ from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 # noinspection PyUnresolvedReferences
 from at.physics import find_mpole_raddiff_matrix
 
-__all__ = []
+__all__ = ['ohmi_envelope']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -23,7 +23,7 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
 
 
 @check_radiation(True)
-def _ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
+def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
@@ -161,4 +161,4 @@ def _ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     return data0, r66data, data
 
 
-Lattice.ohmi_envelope = _ohmi_envelope
+Lattice.ohmi_envelope = ohmi_envelope

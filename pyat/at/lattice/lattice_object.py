@@ -1,4 +1,15 @@
-"""Lattice object"""
+"""Lattice object
+
+The methods implemented in this module are internal to the 'lattice' package.
+This is necessary to ensure that the 'lattice' package is independent
+from other AT packages.
+
+Other Lattice methods are implemented in other AT packages and are available
+as soon as the package is imported. The 'tracking' and 'physics' packages are
+automatically imported.
+
+As an example, see the at.physics.orbit module
+"""
 import sys
 import copy
 import numpy
@@ -22,7 +33,10 @@ class Lattice(list):
         energy      Particle energy
         periodicity Number of super-periods to describe the full ring
 
-        """
+    To reduce the inter-package dependencies, some methods of the
+    lattice object are defined in other AT packages, in the module where
+    the underlying function is implemented.
+    """
     _1st_attributes = ('name', 'energy', 'periodicity')
 
     def __init__(self, elems=None, name=None, energy=None, periodicity=None,
@@ -133,7 +147,8 @@ class Lattice(list):
         return Lattice(itertools.chain(self, elems), **vars(self))
 
     def __mul__(self, times):
-        return Lattice(itertools.chain(*itertools.repeat(self, times)), **vars(self))
+        return Lattice(itertools.chain(*itertools.repeat(self, times)),
+                       **vars(self))
 
     def iterator(self, key):
         """Iterates over the indices selected by a slice or an array"""
