@@ -1,8 +1,7 @@
 import at
 import numpy
 import pytest
-from at import physics, atpass
-from at.lattice import AtWarning
+from at import AtWarning, physics, atpass
 
 
 DP = 1e-5
@@ -224,12 +223,9 @@ def test_linopt_no_refpts(dba_lattice):
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-@pytest.mark.parametrize('ring_test', (False, True))
-def test_ohmi_envelope(hmba_lattice, refpts, ring_test):
+def test_ohmi_envelope(hmba_lattice, refpts):
     hmba_lattice.radiation_on()
-    if ring_test:
-        hmba_lattice = hmba_lattice[:]
-    emit0, beamdata, emit = physics.ohmi_envelope(hmba_lattice, refpts)
+    emit0, beamdata, emit = hmba_lattice.ohmi_envelope(refpts)
     expected_beamdata = [([0.38156302, 0.85437641, 1.0906073e-4]),
                          ([1.0044543e-5, 6.6238162e-6, 9.6533473e-6]),
                          ([[[6.9000153, -2.6064253e-5, 1.643376e-25,

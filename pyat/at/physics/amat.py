@@ -3,15 +3,34 @@ from collections import namedtuple
 import numpy
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
-from ..physics import jmat
+
+__all__ = ['amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices']
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
+
+# Prepare symplectic identity matrix
+_j2 = numpy.array([[0., 1.], [-1., 0.]])
+_jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
+
 _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
 _Data1 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices'))
 _Data2 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices',
                                 'mode_emittances'))
+
+
+def jmat(ind):
+    """
+    Return the antisymetric block diagonal matrix [[0, 1][-1, 0]]
+
+    INPUT
+        ind     1, 2 or 3. Matrix dimension
+
+    OUTPUT
+        jm      block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
+    """
+    return _jm[ind - 1]
 
 
 def amat(tt):

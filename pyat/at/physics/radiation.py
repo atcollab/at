@@ -3,10 +3,9 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import uint32_refpts
+from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-# noinspection PyUnresolvedReferences
 from at.physics import find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope']
@@ -22,6 +21,7 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
+@check_radiation(True)
 def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
     Calculate the equilibrium beam envelope in a
@@ -158,3 +158,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
             dtype=ENVELOPE_DTYPE)
 
     return data0, r66data, data
+
+
+Lattice.ohmi_envelope = ohmi_envelope

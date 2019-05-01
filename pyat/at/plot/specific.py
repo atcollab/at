@@ -1,10 +1,8 @@
 """AT plotting functions"""
-
-from at.plot import baseplot
-from at.lattice import get_s_pos
-from at.physics import linopt
+from at.lattice import Lattice
 from at.tracking import lattice_pass
-
+from at.physics import linopt
+from at.plot import baseplot
 
 # --------- Example 1 --------
 
@@ -160,7 +158,7 @@ def plot_trajectory(ring, r_in, nturns=1, **kwargs):
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):
         r_out = lattice_pass(ring, r_in, refpts=refpts, nturns=nturns, **kwargs)
-        s_pos = get_s_pos(ring, refpts)
+        s_pos = ring.get_s_pos(refpts)
         particles = range(r_out.shape[1])
         xx = [r_out[0, i, :, :] for i in particles]
         zz = [r_out[2, i, :, :] for i in particles]
@@ -170,3 +168,7 @@ def plot_trajectory(ring, r_in, nturns=1, **kwargs):
         return 'Trajectory', left
 
     return baseplot(ring, pldata_trajectory, r_in, nturns=nturns, **kwargs)
+
+
+Lattice.plot_beta = plot_beta
+Lattice.plot_trajectory = plot_trajectory

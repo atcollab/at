@@ -1,8 +1,6 @@
-from __future__ import print_function
 import numpy
-# noinspection PyUnresolvedReferences
-from .atpass import atpass, elempass
-from ..lattice import uint32_refpts
+from at.tracking import atpass, elempass
+from at.lattice import uint32_refpts
 
 
 __all__ = ['lattice_pass', 'element_pass']
@@ -11,7 +9,7 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
-    """lattice_pass tracks particles through each element of the iterable lattice
+    """lattice_pass tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the
     lattice[i].PassMethod field.
 
@@ -23,7 +21,7 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
      * lattice_pass(lattice, r_in, refpts=0) is a copy of r_in since the
        reference point 0 is the entrance of the first element
 
-    Args:
+    PARAMETERS
         lattice:    iterable of AT elements
         r_in:       6xN array: input coordinates of N particles
         nturns:     number of passes through the lattice line
@@ -41,8 +39,9 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
                     If True, assume that the lattice has not changed since
                     that previous call.
 
-    Returns:
-        6xAxBxC array containing output coordinates of A particles at B selected indices for C turns.
+    OUTPUT
+        (6, A, B, C) array containing output coordinates of A particles
+        at B selected indices for C turns.
     """
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
     r_in = numpy.asfortranarray(r_in)
