@@ -45,12 +45,10 @@ def check_radiation(rad):
     def radiation_decorator(func):
         @functools.wraps(func)
         def wrapper(ring, *args, **kwargs):
-            try:
-                if ring.radiation is not rad:
-                    raise AtError('{0} needs radiation {1}'.format(
-                        func.__name__, 'ON' if rad else 'OFF'))
-            except AttributeError:
-                pass
+            ringrad = getattr(ring, 'radiation', rad)
+            if ringrad is not rad:
+                raise AtError('{0} needs radiation {1}'.format(
+                    func.__name__, 'ON' if rad else 'OFF'))
             return func(ring, *args, **kwargs)
         return wrapper
     return radiation_decorator
@@ -76,13 +74,13 @@ def uint32_refpts(refpts, n_elements):
     # Check ascending
     if refs.size > 1:
         prev = refs[0]
-        for next in refs[1:]:
-            if next < prev:
+        for nxt in refs[1:]:
+            if nxt < prev:
                 raise ValueError('refpts should be given in ascending order')
-            elif next == prev:
+            elif nxt == prev:
                 raise ValueError('refpts contains duplicates or index(es) out'
                                  ' of range')
-            prev = next
+            prev = nxt
 
     return refs
 

@@ -302,9 +302,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
 
-    # noinspection PyUnresolvedReferences
     f_rf = cavities[0].Frequency
-    # noinspection PyUnresolvedReferences
     harm_number = cavities[0].HarmNumber
 
     theta = numpy.zeros((6,))

@@ -101,6 +101,7 @@ class Element(object):
             if not k.startswith('_'):
                 yield k, getattr(self, k)
 
+
 class LongElement(Element):
     """pyAT long element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']

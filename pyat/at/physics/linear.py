@@ -174,6 +174,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     return twiss0, tune, chrom, twiss
 
 
+# noinspection PyPep8Naming
 @check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
            keep_lattice=False, ddp=DDP, coupled=True):
@@ -247,6 +248,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
 
     """
 
+    # noinspection PyShadowingNames
     def analyze(r44):
         t44 = r44.reshape((4, 4))
         mm = t44[:2, :2]

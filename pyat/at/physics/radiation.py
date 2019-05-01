@@ -6,7 +6,6 @@ from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-# noinspection PyUnresolvedReferences
 from at.physics import find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope']
