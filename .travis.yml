@@ -3,6 +3,7 @@
 # of pyAT. If the build is triggered by a tag then the wheels are uploaded to
 # TestPyPI using twine. For this repository TWINE_USERNAME and TWINE_PASSWORD
 # are set in Travis CI under More options -> Settings -> Environment Variables.
+dist: xenial
 language: python
 matrix:
   include:
