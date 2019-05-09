@@ -28,7 +28,9 @@ class Element(object):
     """Base of pyat elements"""
 
     REQUIRED_ATTRIBUTES = ['FamName']
-    _conversions = dict(R1=_array66, R2=_array66, T1=lambda v: _array(v, (6,)),
+    _conversions = dict(FamName=str, PassMethod=str, Length=float,
+                        R1=_array66, R2=_array66,
+                        T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
                         RApertures=lambda v: _array(v, (4,)),
                         EApertures=lambda v: _array(v, (2,)),
@@ -38,19 +40,22 @@ class Element(object):
     _entrance_fields = ['T1', 'R1']
     _exit_fields = ['T2', 'R2']
 
-    def __init__(self, family_name, length=0.0, **kwargs):
+    def __init__(self, family_name, **kwargs):
         self.FamName = family_name
-        self.Length = float(kwargs.pop('Length', length))
+        self.Length = kwargs.pop('Length', 0.0)
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
 
         for (key, value) in kwargs.items():
-            try:
-                setattr(self, key, self._conversions.get(key, _nop)(value))
-            except Exception as exc:
-                exc.args = (
-                    'In element {0}, parameter {1}: {2}'.format(
-                        family_name, key, exc),)
-                raise
+            setattr(self, key, value)
+
+    def __setattr__(self, key, value):
+        try:
+            super(Element, self).__setattr__(
+                key, self._conversions.get(key, _nop)(value))
+        except Exception as exc:
+            exc.args = ('In element {0}, parameter {1}: {2}'.format(
+                self.FamName, key, exc),)
+            raise
 
     def __str__(self):
         first3 = ['FamName', 'Length', 'PassMethod']
@@ -106,6 +111,10 @@ class LongElement(Element):
     """pyAT long element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']
 
+    def __init__(self, family_name, length, *args, **kwargs):
+        kwargs.setdefault('Length', length)
+        super(LongElement, self).__init__(family_name, *args, **kwargs)
+
     def _part(self, fr, sumfr):
         pp = self.copy()
         pp.Length = fr * self.Length
@@ -154,15 +163,9 @@ class LongElement(Element):
 class Marker(Element):
     """pyAT marker element"""
 
-    def __init__(self, family_name, **kwargs):
-        super(Marker, self).__init__(family_name, **kwargs)
-
 
 class Monitor(Element):
     """pyAT monitor element"""
-
-    def __init__(self, family_name, **kwargs):
-        super(Monitor, self).__init__(family_name, **kwargs)
 
 
 class Aperture(Element):
@@ -182,9 +185,7 @@ class Drift(LongElement):
         """Drift(FamName, Length, **keywords)
         """
         kwargs.setdefault('PassMethod', 'DriftPass')
-        super(Drift, self).__init__(family_name,
-                                    Length=kwargs.pop('Length', length),
-                                    **kwargs)
+        super(Drift, self).__init__(family_name, length, **kwargs)
 
     def insert(self, insert_list):
         """insert elements inside a drift
@@ -241,18 +242,38 @@ class ThinMultipole(Element):
         Available keywords:
         MaxOrder      Number of desired multipoles
         """
-        kwargs.setdefault('PolynomA', poly_a)
-        kwargs.setdefault('PolynomB', poly_b)
+        # Remove MaxOrder, PolynomA and PolynomB
+        maxorder = kwargs.pop('MaxOrder', 0)
+        polya = kwargs.pop('PolynomA', poly_a)
+        polyb = kwargs.pop('PolynomB', poly_b)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
-        kwargs.setdefault('MaxOrder', 0)
         super(ThinMultipole, self).__init__(family_name, **kwargs)
-        # Adjust polynom lengths
-        poly_size = max(self.MaxOrder + 1, len(self.PolynomA),
-                        len(self.PolynomB))
-        self.PolynomA = numpy.concatenate(
-            (self.PolynomA, numpy.zeros(poly_size - len(self.PolynomA))))
-        self.PolynomB = numpy.concatenate(
-            (self.PolynomB, numpy.zeros(poly_size - len(self.PolynomB))))
+        # Set MaxOrder while PolynomA and PolynomB are not set yet
+        super(ThinMultipole, self).__setattr__('MaxOrder', maxorder)
+        # Adjust polynom lengths and set them
+        poly_size = max(maxorder + 1, len(polya), len(polya))
+        dl = max(0, poly_size - len(polya))
+        self.PolynomA = numpy.concatenate((polya, numpy.zeros(dl)))
+        dl = max(0, poly_size - len(polyb))
+        self.PolynomB = numpy.concatenate((polyb, numpy.zeros(dl)))
+
+    def __setattr__(self, key, value):
+        """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
+        polys = ('PolynomA', 'PolynomB')
+        if key in polys:
+            value = _array(value)
+            lmin = getattr(self, 'MaxOrder')
+            if not len(value) > lmin:
+                raise ValueError(
+                    'Length of {0} must be larger than {1}'.format(key, lmin))
+        elif key == 'MaxOrder':
+            value = int(value)
+            lmax = min(len(getattr(self, k)) for k in polys)
+            if not value < lmax:
+                raise ValueError(
+                    'MaxOrder must be smaller than {0}'.format(lmax))
+
+        super(ThinMultipole, self).__setattr__(key, value)
 
 
 class Multipole(LongElement, ThinMultipole):
@@ -272,9 +293,8 @@ class Multipole(LongElement, ThinMultipole):
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         kwargs.setdefault('NumIntSteps', 0)
-        super(Multipole, self).__init__(family_name, poly_a, poly_b,
-                                        Length=kwargs.pop('Length', length),
-                                        **kwargs)
+        super(Multipole, self).__init__(family_name, length,
+                                        poly_a, poly_b, **kwargs)
 
 
 class Dipole(Multipole):
@@ -394,7 +414,7 @@ class Quadrupole(Multipole):
 
 class Sextupole(Multipole):
     """pyAT sextupole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES
+    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['H']
 
     def __init__(self, family_name, length, h=0.0, **kwargs):
         """Sextupole(FamName, Length, Strength=0, **keywords)
@@ -412,6 +432,16 @@ class Sextupole(Multipole):
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
 
+    # noinspection PyPep8Naming
+    @property
+    def H(self):
+        return self.PolynomB[2]
+
+    # noinspection PyPep8Naming
+    @H.setter
+    def H(self, strength):
+        self.PolynomB[2] = strength
+
 
 class Octupole(Multipole):
     """pyAT octupole element, with no changes from multipole at present"""
@@ -424,7 +454,8 @@ class RFCavity(LongElement):
                                                              'Frequency',
                                                              'HarmNumber',
                                                              'Energy']
-    _conversions = dict(Element._conversions, Voltage=float, Frequency=float,
+    _conversions = dict(LongElement._conversions,
+                        Voltage=float, Frequency=float,
                         HarmNumber=int, TimeLag=float)
 
     def __init__(self, family_name, length, voltage, frequency, harmonic_number,
@@ -435,8 +466,7 @@ class RFCavity(LongElement):
         """
         kwargs.setdefault('TimeLag', 0.0)
         kwargs.setdefault('PassMethod', 'CavityPass')
-        super(RFCavity, self).__init__(family_name,
-                                       Length=kwargs.pop('Length', length),
+        super(RFCavity, self).__init__(family_name, length,
                                        Voltage=voltage,
                                        Frequency=frequency,
                                        HarmNumber=harmonic_number,
@@ -463,10 +493,9 @@ class M66(Element):
 class Corrector(LongElement):
     """pyAT corrector element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['KickAngle']
-    _conversions = dict(Element._conversions, KickAngle=_array)
+    _conversions = dict(LongElement._conversions, KickAngle=_array)
 
     def __init__(self, family_name, length, kick_angle, **kwargs):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
-        super(Corrector, self).__init__(family_name,
-                                        Length=kwargs.pop('Length', length),
+        super(Corrector, self).__init__(family_name, length,
                                         KickAngle=kick_angle, **kwargs)

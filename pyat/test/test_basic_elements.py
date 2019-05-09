@@ -198,10 +198,8 @@ def test_quad(rin):
 
 def test_quad_incorrect_array(rin):
     q = elements.Quadrupole('quad', 0.4, k=1)
-    q.PolynomB = 'a'
-    lattice = [q]
-    with pytest.raises(RuntimeError):
-        atpass(lattice, rin, 1)
+    with pytest.raises(ValueError):
+        q.PolynomB = 'a'
 
 
 def test_rfcavity(rin):
