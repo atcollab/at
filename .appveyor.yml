@@ -39,9 +39,10 @@ build_script:
         rm "build" -r -fo
         python -m pip install --upgrade cibuildwheel
         & cmd /c 'cibuildwheel 2>&1' --output-dir wheelhouse
+        python setup.py sdist --dist-dir=wheelhouse
         if ($env:APPVEYOR_REPO_TAG -eq $true) {
           python -m pip install twine
-          python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
+          python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*
         }
       }
       else {
