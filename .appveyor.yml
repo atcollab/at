@@ -6,27 +6,19 @@
 image: Visual Studio 2015
 platform: x64
 environment:
+  CIBW_BEFORE_BUILD: "pip install numpy"
   matrix:
    - PYTHON: 27
-     CIBW_BEFORE_BUILD: ""
    - PYTHON: 34
-     CIBW_BEFORE_BUILD: ""
    - PYTHON: 35
-     CIBW_BEFORE_BUILD: ""
    - PYTHON: 36
-     CIBW_BEFORE_BUILD: ""
    - PYTHON: 37
-     CIBW_BEFORE_BUILD: ""
-
-   - PYTHON: 27
-     CIBW_BEFORE_BUILD: "pip install numpy"
 
 install:
   - set "PATH=C:\Python%PYTHON%-x64;C:\Python%PYTHON%-x64\Scripts;%PATH%"
   - python -m virtualenv venv
   - venv\Scripts\activate
   - cd pyat
-  - python -m pip install --upgrade pip setuptools wheel
   - pip install --only-binary=numpy,scipy -r requirements.txt
   - python setup.py build
 
@@ -35,22 +27,17 @@ before_build:
 
 build_script:
   - ps: |
-      if ($env:CIBW_BEFORE_BUILD -eq "pip install numpy") {
+      if (($env:APPVEYOR_REPO_TAG -eq $true) -And ($env:PYTHON -eq 36)) {
         rm "build" -r -fo
         python -m pip install --upgrade cibuildwheel
         & cmd /c 'cibuildwheel 2>&1' --output-dir wheelhouse
+        if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode )  }
         python setup.py sdist --dist-dir=wheelhouse
-        if ($env:APPVEYOR_REPO_TAG -eq $true) {
-          python -m pip install twine
-          python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*
-        }
+        if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode )  }
+        python -m pip install twine
+        python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*
       }
       else {
         python -m pip install pytest-cov
         python -m pytest test --cov-report term-missing --cov=at
-        new-item -name wheelhouse -itemtype directory
       }
-
-artifacts:
-  - path: "pyat\\wheelhouse"
-    name: Wheels

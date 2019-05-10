@@ -5,64 +5,53 @@
 # are set in Travis CI under More options -> Settings -> Environment Variables.
 dist: xenial
 language: python
+env:
+  global:
+    - CIBW_BEFORE_BUILD='pip install numpy'
 matrix:
   include:
     - os: linux
-      python: '2.7'
+      python: 2.7
     - os: linux
-      python: '3.4'
+      python: 3.4
     - os: linux
-      python: '3.5'
+      python: 3.5
     - os: linux
-      python: '3.6'
+      python: 3.6
     - os: linux
-      python: '3.7'
-
+      python: 3.7
     - os: osx
-      sudo: required
       language: generic
       env: PYTHON=2
     - os: osx
-      sudo: required
       language: generic
       env: PYTHON=3
-
-    - sudo: required
-      services: docker
-      env: CIBW_BEFORE_BUILD='pip install numpy'
-    - os: osx
-      language: generic
-      env: CIBW_BEFORE_BUILD='pip install numpy'
 
 install: |
   if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
     python$PYTHON -m pip install virtualenv
     python$PYTHON -m virtualenv venv
     source venv/bin/activate
-    cd pyat
-    pip$PYTHON install --only-binary=numpy,scipy -r requirements.txt
-    python$PYTHON setup.py build
   else
     pip install virtualenv
     python -m virtualenv venv
     source venv/bin/activate
-    cd pyat
-    pip install --only-binary=numpy,scipy -r requirements.txt
-    python setup.py build
   fi
+  cd pyat
+  pip install --only-binary=numpy,scipy -r requirements.txt
+  python setup.py build
 
 before_script:
   - python setup.py develop
 
 script: |
-  if [[ $CIBW_BEFORE_BUILD != '' ]]; then
+  PYTHON_VERSION=$(python -V 2>&1 | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
+  if [[ $TRAVIS_TAG ]] && [[ $PYTHON_VERSION == 3.6 ]]; then
     rm -rf build
     python -m pip install --upgrade cibuildwheel
     cibuildwheel --output-dir wheelhouse
-    if [[ $TRAVIS_TAG ]]; then
-      python -m pip install twine
-      python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
-    fi
+    python -m pip install twine
+    python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*.whl
   else
     python -m pip install pytest-cov
     python -m pytest test --cov-report term-missing --cov=at
