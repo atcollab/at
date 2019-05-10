@@ -16,9 +16,14 @@ refpts can be:
 """
 import numpy
 import itertools
-from warnings import warn
+import functools
 from fnmatch import fnmatch
 from at.lattice import elements
+
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'uint32_refpts',
+           'bool_refpts', 'checkattr', 'checktype', 'get_cells', 'get_elements',
+           'refpts_iterator', 'get_s_pos', 'set_shift', 'set_tilt', 'tilt_elem',
+           'shift_elem']
 
 
 class AtError(Exception):
@@ -29,6 +34,26 @@ class AtWarning(UserWarning):
     pass
 
 
+def check_radiation(rad):
+    """Function to be used as a decorator for optics functions
+
+    If ring is a Lattice object, raises an exception
+        if ring.radiation is not rad
+
+    If ring is any other sequence, no test is performed
+    """
+    def radiation_decorator(func):
+        @functools.wraps(func)
+        def wrapper(ring, *args, **kwargs):
+            ringrad = getattr(ring, 'radiation', rad)
+            if ringrad is not rad:
+                raise AtError('{0} needs radiation {1}'.format(
+                    func.__name__, 'ON' if rad else 'OFF'))
+            return func(ring, *args, **kwargs)
+        return wrapper
+    return radiation_decorator
+
+
 def uint32_refpts(refpts, n_elements):
     """
     Return a uint32 numpy array with contents as the indices of the selected
@@ -37,7 +62,7 @@ def uint32_refpts(refpts, n_elements):
     refs = numpy.asarray(refpts).reshape(-1)
     if (refpts is None) or (refs.size is 0):
         return numpy.array([], dtype=numpy.uint32)
-    elif (refs.size > n_elements+1):
+    elif refs.size > n_elements+1:
         raise ValueError('too many reftps given')
     elif numpy.issubdtype(refs.dtype, numpy.bool_):
         return numpy.flatnonzero(refs).astype(numpy.uint32)
@@ -49,13 +74,13 @@ def uint32_refpts(refpts, n_elements):
     # Check ascending
     if refs.size > 1:
         prev = refs[0]
-        for next in refs[1:]:
-            if next < prev:
+        for nxt in refs[1:]:
+            if nxt < prev:
                 raise ValueError('refpts should be given in ascending order')
-            elif next == prev:
+            elif nxt == prev:
                 raise ValueError('refpts contains duplicates or index(es) out'
                                  ' of range')
-            prev = next
+            prev = nxt
 
     return refs
 
@@ -220,41 +245,6 @@ def get_s_pos(ring, refpts=None):
     s_pos = numpy.concatenate(([0.0], s_pos))
     refpts = uint32_refpts(refpts, len(ring))
     return s_pos[refpts]
-
-
-def get_ring_energy(ring):
-    """Establish the energy of the ring from the Energy attribute of the
-    elements. Energies of RingParam elements are most prioritised, if none are
-    found then the energies from RFCavity elements will be used, if none are
-    found then the energies from all elements will be used. An error will be
-    raised if no elements have a 'Energy' attribute or if inconsistent values
-    for energy are found.
-
-    Args:
-        ring: sequence of elements of which you wish to establish the energy.
-    """
-    rp_energies = []
-    rf_energies = []
-    energies = []
-    for elem in ring:
-        if hasattr(elem, 'Energy'):
-            energies.append(elem.Energy)
-            if isinstance(elem, elements.RingParam):
-                rp_energies.append(elem.Energy)
-            elif isinstance(elem, elements.RFCavity):
-                rf_energies.append(elem.Energy)
-    if not energies:
-        raise AtError('Lattice energy is not defined.')
-    elif rp_energies:
-        energy = max(rp_energies)
-    elif rf_energies:
-        energy = max(rf_energies)
-    else:
-        energy = max(energies)
-    if len(set(energies)) > 1:
-        warn(AtWarning('Inconsistent energy values in ring, {0} has been '
-                       'used.'.format(energy)))
-    return energy
 
 
 def tilt_elem(elem, rots):

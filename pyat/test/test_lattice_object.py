@@ -2,7 +2,6 @@ import sys
 import numpy
 import pytest
 from at import elements
-from at.load import load_mat
 from at.lattice import Lattice, AtWarning, AtError
 
 
@@ -43,60 +42,14 @@ def test_lattice_creation_from_lattice_inherits_attributes():
     assert lat.another_attr == 5
 
 
-def test_lattice_gets_attributes_from_RingParam():
-    rp = elements.RingParam('lattice_name', 3.e+6, Periodicity=32)
-    l = Lattice([rp])
-    assert len(l) == 0
-    assert l.name == 'lattice_name'
-    assert l.energy == 3.e+6
-    assert l.periodicity == 32
-    assert l._radiation is False
-    assert len(Lattice([rp], keep_all=True)) == 1
-
-
-def test_lattice_gets_attributes_from_elements():
-    d = elements.Dipole('d1', 1, BendingAngle=numpy.pi, Energy=3.e+6,
-                        PassMethod='BndMPoleSymplectic4RadPass')
-    l = Lattice([d])
-    assert len(l) == 1
-    assert l.name == ''
-    assert l.energy == 3.e+6
-    assert l.periodicity == 2
-    assert l._radiation is True
-
-
 def test_lattice_energy_is_not_defined_raises_AtError():
     with pytest.raises(AtError):
         Lattice()
 
 
-def test_no_bending_in_the_cell_warns_correctly():
-    with pytest.warns(AtWarning):
-        Lattice([], energy=0)
-
-
 def test_item_is_not_an_AT_element_warns_correctly():
     with pytest.warns(AtWarning):
         Lattice(['a'], energy=0, periodicity=1)
-
-
-def test__non_integer_number_of_cells_warns_correctly():
-    d = elements.Dipole('d1', 1, BendingAngle=0.5)
-    with pytest.warns(AtWarning):
-        Lattice([d], energy=0)
-
-
-def test_inconsistent_energy_values_warns_correctly():
-    m1 = elements.Marker('m1', Energy=5)
-    m2 = elements.Marker('m2', Energy=3)
-    with pytest.warns(AtWarning):
-        Lattice([m1, m2], periodicity=1)
-
-
-def test_more_than_one_RingParam_in_ring_raises_warning():
-    with pytest.warns(AtWarning):
-        l = Lattice([elements.RingParam('rp1', 3.e+6),
-                     elements.RingParam('rp2', 12)])
 
 
 def test_lattice_string_ordering():
@@ -110,11 +63,10 @@ def test_lattice_string_ordering():
                                        "attr1=array(0))], ")
         assert l.__repr__().endswith(", attr2=3)")
     else:
-        assert l.__str__() == ("Lattice(<1 elements>, energy=5, periodicity=1,"
-                               " name='lat', attr2=3)")
-        assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))],"
-                                " energy=5, periodicity=1, name='lat', "
-                                "attr2=3)")
+        assert l.__str__() == ("Lattice(<1 elements>, "
+                               "name='lat', energy=5, periodicity=1, attr2=3)")
+        assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))], "
+                                "name='lat', energy=5, periodicity=1, attr2=3)")
 
 
 def test_getitem(simple_lattice, simple_ring):

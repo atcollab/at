@@ -4,7 +4,7 @@ from io import BytesIO, StringIO
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
-from at.lattice import get_ring_energy, AtWarning, AtError
+from at.lattice import AtWarning, AtError
 import pytest
 
 
@@ -101,16 +101,16 @@ def test_get_elements(hmba_lattice):
     # test FamName direct match
     assert get_elements(hmba_lattice, 'BPM_06') == [hmba_lattice[65]]
     # test FamName wildcard matching
-    assert get_elements(hmba_lattice, 'QD2?') == hmba_lattice[9, 113]
-    assert get_elements(hmba_lattice, 'QD3*') == hmba_lattice[19, 105]
-    assert get_elements(hmba_lattice, 'S*H2B') == [hmba_lattice[55]]
-    assert get_elements(hmba_lattice, '*C_1') == hmba_lattice[59, 60]
-    assert get_elements(hmba_lattice, 'DR_2[1-3]') == hmba_lattice[54, 56, 58]
-    assert get_elements(hmba_lattice, 'DR_2[!1-7]') == hmba_lattice[52, 78, 80]
+    assert get_elements(hmba_lattice, 'QD2?') == list(hmba_lattice[9, 113])
+    assert get_elements(hmba_lattice, 'QD3*') == list(hmba_lattice[19, 105])
+    assert get_elements(hmba_lattice, 'S*H2B') == list([hmba_lattice[55]])
+    assert get_elements(hmba_lattice, '*C_1') == list(hmba_lattice[59, 60])
+    assert get_elements(hmba_lattice, 'DR_2[1-3]') == list(hmba_lattice[54, 56, 58])
+    assert get_elements(hmba_lattice, 'DR_2[!1-7]') == list(hmba_lattice[52, 78, 80])
     # test element instance
     marker = elements.Marker('M1')
-    assert get_elements(hmba_lattice, marker) == hmba_lattice[1, 12, 61,
-                                                              67, 73]
+    assert get_elements(hmba_lattice, marker) == list(hmba_lattice[1, 12, 61,
+                                                              67, 73])
     # test element type
     assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError
@@ -163,20 +163,6 @@ def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_bool_r
     lat = [e, f]
     numpy.testing.assert_equal(get_s_pos(lat, numpy.ones(3, dtype=bool)),
                                numpy.array([0, 0.1, 2.2]))
-
-
-def test_get_ring_energy():
-    ring = [elements.RingParam('RP', 1.e+6),
-            elements.RFCavity('RF', 1.0, 24, 46, 12, 2.e+6),
-            elements.Element('EL1', Energy=3.e+6),
-            elements.Element('EL2', Energy=4.e+6)]
-    with pytest.warns(AtWarning):
-        assert get_ring_energy(ring) == 1.e+6
-        assert get_ring_energy(ring[1:]) == 2.e+6
-        assert get_ring_energy(ring[2:]) == 4.e+6
-    assert get_ring_energy(ring[2:3]) == 3.e+6  # shouldn't warn
-    with pytest.raises(AtError):
-        get_ring_energy([elements.Drift('D1', 1.0)])
 
 
 def test_tilt_elem(simple_ring):
