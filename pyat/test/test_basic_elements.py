@@ -28,6 +28,22 @@ def test_base_element_methods():
     assert id(e.copy()) != id(e)
 
 
+def test_argument_checks():
+    q = elements.Quadrupole('quad', 1.0, 0.5)
+    # Test type
+    with pytest.raises(ValueError):
+        q.Length = 'a'
+    # Test shape
+    with pytest.raises(ValueError):
+        q.T1 = [0.0, 0.0]
+    # Test coherence of polynoms
+    with pytest.raises(ValueError):
+        q.MaxOrder = 2
+    with pytest.raises(ValueError):
+        q.PolynomA = [0.0]
+    with pytest.raises(ValueError):
+        q.PolynomB = [0.0]
+
 def test_divide_splits_attributes_correctly():
     pre = elements.Drift('drift', 1, KickAngle=0.5)
     post = pre.divide([0.2, 0.5, 0.3])
@@ -198,10 +214,8 @@ def test_quad(rin):
 
 def test_quad_incorrect_array(rin):
     q = elements.Quadrupole('quad', 0.4, k=1)
-    q.PolynomB = 'a'
-    lattice = [q]
-    with pytest.raises(RuntimeError):
-        atpass(lattice, rin, 1)
+    with pytest.raises(ValueError):
+        q.PolynomB = 'a'
 
 
 def test_rfcavity(rin):

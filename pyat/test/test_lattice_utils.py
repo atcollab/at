@@ -138,28 +138,28 @@ def test_get_s_pos_returns_zero_for_empty_lattice():
 
 
 def test_get_s_pos_returns_length_for_lattice_with_one_element():
-    e = elements.Element('e', 0.1)
+    e = elements.LongElement('e', 0.1)
     assert get_s_pos([e], [1]) == numpy.array([0.1])
 
 
 def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_and_refpts_None():
-    e = elements.Element('e', 0.1)
-    f = elements.Element('e', 2.1)
+    e = elements.LongElement('e', 0.1)
+    f = elements.LongElement('e', 2.1)
     print(get_s_pos([e, f], None))
     numpy.testing.assert_equal(get_s_pos([e, f], None),
                                numpy.array([0, 0.1, 2.2]))
 
 
 def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_int_refpts():
-    e = elements.Element('e', 0.1)
-    f = elements.Element('e', 2.1)
+    e = elements.LongElement('e', 0.1)
+    f = elements.LongElement('e', 2.1)
     lat = [e, f]
     numpy.testing.assert_equal(get_s_pos(lat, range(len(lat) + 1)),
                                numpy.array([0, 0.1, 2.2]))
 
 def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_bool_refpts():
-    e = elements.Element('e', 0.1)
-    f = elements.Element('e', 2.1)
+    e = elements.LongElement('e', 0.1)
+    f = elements.LongElement('e', 2.1)
     lat = [e, f]
     numpy.testing.assert_equal(get_s_pos(lat, numpy.ones(3, dtype=bool)),
                                numpy.array([0, 0.1, 2.2]))
