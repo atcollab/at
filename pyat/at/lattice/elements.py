@@ -113,6 +113,8 @@ class LongElement(Element):
 
     def __init__(self, family_name, length, *args, **kwargs):
         kwargs.setdefault('Length', length)
+        # Ancestor may be either Element of ThinMultipole
+        # noinspection PyArgumentList
         super(LongElement, self).__init__(family_name, *args, **kwargs)
 
     def _part(self, fr, sumfr):
