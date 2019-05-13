@@ -13,7 +13,7 @@ from inspect import getmembers, isdatadescriptor
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
-        shape, order='F')
+        shape)
 
 
 def _array66(value):
@@ -44,7 +44,9 @@ class Element(object):
         self.FamName = family_name
         self.Length = kwargs.pop('Length', 0.0)
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
-        self.update(kwargs)
+
+        for (key, value) in kwargs.items():
+            setattr(self, key, value)
 
     def __setattr__(self, key, value):
         try:
@@ -90,24 +92,9 @@ class Element(object):
         # by default, the element is indivisible
         return [self]
 
-    def update(self, *args, **kwargs):
-        """Update the element attributes with the given arguments
-
-        update(**kwargs)
-        update(mapping, **kwargs)
-        update(iterable, **kwargs)
-        """
-        attrs = dict(*args, **kwargs)
-        for (key, value) in attrs.items():
-            setattr(self, key, value)
-
     def copy(self):
         """Return a shallow copy of the element"""
         return copy.copy(self)
-
-    def deepcopy(self):
-        """Return a deep copy of the element"""
-        return copy.deepcopy(self)
 
     def items(self):
         """Iterates through the data members including slots and properties"""
@@ -206,14 +193,14 @@ class Drift(LongElement):
         """insert elements inside a drift
 
         arguments:
-            insert_list: iterable, each item of insert_list is itself an
-                         iterable with 2 objects:
-                             1. the location where the center of the element
-                                will be inserted, given as a fraction of the
-                                Drift length.
-                             2. an element to be inserted at that location. If
-                                None, the drift will be divided but no element
-                                will be inserted.
+            insert_list iterable. Each item of insert_list is itself an iterable
+                        with 2 objects:
+                        The 1st object is the location where the center of the
+                        element will be inserted, given as a fraction of the
+                        Drift length,
+                        The 2nd object is an element to be inserted at that
+                        location. If None, the drift will be divided but no
+                        element will be inserted.
 
         Return a list of elements.
 
@@ -318,7 +305,7 @@ class Multipole(LongElement, ThinMultipole):
         KickAngle       Correction deviation angles (H, V)
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
-        kwargs.setdefault('NumIntSteps', 10)
+        kwargs.setdefault('NumIntSteps', 0)
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
 
@@ -344,8 +331,7 @@ class Dipole(Multipole):
 
     DefaultOrder = 0
 
-    def __init__(self, family_name, length, bending_angle=0.0, k=0.0,
-                 **kwargs):
+    def __init__(self, family_name, length, bending_angle=0.0, k=0.0, **kwargs):
         """Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
 
         Available keywords:
@@ -491,8 +477,8 @@ class RFCavity(LongElement):
                         Voltage=float, Frequency=float,
                         HarmNumber=int, TimeLag=float)
 
-    def __init__(self, family_name, length, voltage, frequency,
-                 harmonic_number, energy, **kwargs):
+    def __init__(self, family_name, length, voltage, frequency, harmonic_number,
+                 energy, **kwargs):
         """
         Available keywords:
         TimeLag   time lag with respect to the reference particle
@@ -532,7 +518,3 @@ class Corrector(LongElement):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
         super(Corrector, self).__init__(family_name, length,
                                         KickAngle=kick_angle, **kwargs)
-
-
-CLASS_MAP = dict((k, v) for k, v in locals().items()
-                 if isinstance(v, type) and issubclass(v, Element))
