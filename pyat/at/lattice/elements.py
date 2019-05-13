@@ -242,22 +242,32 @@ class ThinMultipole(Element):
         """ThinMultipole(FamName, PolynomA, PolynomB, **keywords)
 
         Available keywords:
-        MaxOrder      Number of desired multipoles
+        MaxOrder        Number of desired multipoles. Default: highest index of
+                        non-zero polynomial coefficients
         """
+        def getpol(poly):
+            nonzero = numpy.flatnonzero(poly != 0.0)
+            return poly, len(poly), nonzero[-1] if len(nonzero) > 0 else -1
+
+        def lengthen(poly, dl):
+            if dl > 0:
+                return numpy.concatenate((poly, numpy.zeros(dl)))
+            else:
+                return poly
+
         # Remove MaxOrder, PolynomA and PolynomB
-        maxorder = kwargs.pop('MaxOrder', 0)
-        polya = kwargs.pop('PolynomA', poly_a)
-        polyb = kwargs.pop('PolynomB', poly_b)
+        poly_a, len_a, ord_a = getpol(_array(kwargs.pop('PolynomA', poly_a)))
+        poly_b, len_b, ord_b = getpol(_array(kwargs.pop('PolynomB', poly_b)))
+        deforder = max(getattr(self, 'DefaultOrder', 0), ord_a, ord_b)
+        maxorder = kwargs.pop('MaxOrder', deforder)
+        len_ab = max(maxorder + 1, len_a, len_b)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
         super(ThinMultipole, self).__init__(family_name, **kwargs)
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super(ThinMultipole, self).__setattr__('MaxOrder', maxorder)
         # Adjust polynom lengths and set them
-        poly_size = max(maxorder + 1, len(polya), len(polya))
-        dl = max(0, poly_size - len(polya))
-        self.PolynomA = numpy.concatenate((polya, numpy.zeros(dl)))
-        dl = max(0, poly_size - len(polyb))
-        self.PolynomB = numpy.concatenate((polyb, numpy.zeros(dl)))
+        self.PolynomA = lengthen(poly_a, len_ab - len_a)
+        self.PolynomB = lengthen(poly_b, len_ab - len_b)
 
     def __setattr__(self, key, value):
         """Check the compatibility of MaxOrder, PolynomA and PolynomB"""
@@ -289,7 +299,8 @@ class Multipole(LongElement, ThinMultipole):
         """Multipole(FamName, Length, PolynomA, PolynomB, **keywords)
 
         Available keywords:
-        MaxOrder        Number of desired multipoles
+        MaxOrder        Number of desired multipoles. Default: highest index of
+                        non-zero polynomial coefficients
         NumIntSteps     Number of integration steps (default: 10)
         KickAngle       Correction deviation angles (H, V)
         """
@@ -317,6 +328,8 @@ class Dipole(Multipole):
                                              'FringeInt2',
                                              'FringeBendExit',
                                              'FringeQuadExit']
+
+    DefaultOrder = 0
 
     def __init__(self, family_name, length, bending_angle=0.0, k=0.0, **kwargs):
         """Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
@@ -381,6 +394,8 @@ class Quadrupole(Multipole):
     _entrance_fields = Multipole._entrance_fields + ['FringeQuadEntrance']
     _exit_fields = Multipole._exit_fields + ['FringeQuadExit']
 
+    DefaultOrder = 1
+
     def __init__(self, family_name, length, k=0.0, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
@@ -398,7 +413,6 @@ class Quadrupole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
-        kwargs.setdefault('MaxOrder', 1)
         kwargs.setdefault('PassMethod', 'QuadLinearPass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
@@ -418,6 +432,8 @@ class Sextupole(Multipole):
     """pyAT sextupole element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['H']
 
+    DefaultOrder = 2
+
     def __init__(self, family_name, length, h=0.0, **kwargs):
         """Sextupole(FamName, Length, Strength=0, **keywords)
 
@@ -429,7 +445,6 @@ class Sextupole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', [0, 0, h])
-        kwargs.setdefault('MaxOrder', 2)
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
@@ -448,6 +463,8 @@ class Sextupole(Multipole):
 class Octupole(Multipole):
     """pyAT octupole element, with no changes from multipole at present"""
     REQUIRED_ATTRIBUTES = Multipole.REQUIRED_ATTRIBUTES
+
+    DefaultOrder = 3
 
 
 class RFCavity(LongElement):
