@@ -1,8 +1,9 @@
 # This file configures Travis CI to run builds on Linux and Mac machines for
 # each pull request, to ensure the tests pass and to build Linux and Mac wheels
-# of pyAT. If the build is triggered by a tag then the wheels are uploaded to
-# TestPyPI using twine. For this repository TWINE_USERNAME and TWINE_PASSWORD
-# are set in Travis CI under More options -> Settings -> Environment Variables.
+# of pyAT. If the build is triggered by a tag and the tag name starts with
+# "pyat" then the wheels are uploaded to TestPyPI using twine. For this
+# repository TWINE_USERNAME and TWINE_PASSWORD are set in Travis CI under
+# More options -> Settings -> Environment Variables.
 dist: xenial
 language: python
 env:
@@ -46,7 +47,7 @@ before_script:
 
 script: |
   PYTHON_VERSION=$(python -V 2>&1 | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
-  if [[ $TRAVIS_TAG ]] && [[ $PYTHON_VERSION == 3.6 ]]; then
+  if [[ $TRAVIS_TAG == pyat* ]] && [[ $PYTHON_VERSION == 3.6 ]]; then
     rm -rf build
     python -m pip install --upgrade cibuildwheel
     cibuildwheel --output-dir wheelhouse

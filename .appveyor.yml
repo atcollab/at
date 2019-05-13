@@ -1,8 +1,9 @@
 # This file configures AppVeyor to run builds on Windows machines for each pull
 # request, to ensure the tests pass and to build Windows wheels of pyAT. If the
-# build is triggered by a tag then the wheels are uploaded to TestPyPI using
-# twine. For this repository TWINE_USERNAME and TWINE_PASSWORD are set in
-# AppVeyor under Settings -> Environment -> Environment variables.
+# build is triggered by a tag and the tag name starts with "pyat" then the
+# wheels are uploaded to TestPyPI using twine. For this repository
+# TWINE_USERNAME and TWINE_PASSWORD are set in AppVeyor under
+# Settings -> Environment -> Environment variables.
 image: Visual Studio 2015
 platform: x64
 environment:
@@ -27,7 +28,10 @@ before_build:
 
 build_script:
   - ps: |
-      if (($env:APPVEYOR_REPO_TAG -eq $true) -And ($env:PYTHON -eq 36)) {
+      if ($env:APPVEYOR_REPO_TAG_NAME -eq $null) {
+        $env:APPVEYOR_REPO_TAG_NAME = "None"
+      }
+      if ($env:APPVEYOR_REPO_TAG_NAME.StartsWith("pyat") -And ($env:PYTHON -eq 36)) {
         rm "build" -r -fo
         python -m pip install --upgrade cibuildwheel
         & cmd /c 'cibuildwheel 2>&1' --output-dir wheelhouse
