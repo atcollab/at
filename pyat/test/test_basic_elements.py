@@ -62,8 +62,7 @@ def test_dipole():
     assert d.MaxOrder == 2
     assert len(d.PolynomA) == 3
     assert d.K == 0.0
-    d = elements.Dipole('dipole', 1.0, 0.01, PolynomB=[0.0, 0.0, 0.005],
-                        MaxOrder=0)
+    d = elements.Dipole('dipole', 1.0, 0.01, PolynomB=[0.0, 0.0, 0.005], MaxOrder=0)
     assert d.MaxOrder == 0
     assert len(d.PolynomA) == 3
     assert d.K == 0.0
@@ -82,8 +81,7 @@ def test_quadrupole():
     assert q.MaxOrder == 2
     assert len(q.PolynomA) == 3
     assert q.K == 0.0
-    q = elements.Quadrupole('quadrupole', 1.0, PolynomB=[0.0, 0.5, 0.005],
-                            MaxOrder=1)
+    q = elements.Quadrupole('quadrupole', 1.0, PolynomB=[0.0, 0.5, 0.005], MaxOrder=1)
     assert q.MaxOrder == 1
     assert len(q.PolynomA) == 3
     assert q.K == 0.5
@@ -106,8 +104,7 @@ def test_sextupole():
     assert s.MaxOrder == 3
     assert len(s.PolynomA) == 4
     assert s.H == 0.005
-    s = elements.Sextupole('sextupole', 1.0, PolynomB=[0.0, 0.5, 0.005, 0.001],
-                           MaxOrder=2)
+    s = elements.Sextupole('sextupole', 1.0, PolynomB=[0.0, 0.5, 0.005, 0.001], MaxOrder=2)
     assert s.MaxOrder == 2
     assert len(s.PolynomA) == 4
     assert s.H == 0.005
@@ -171,20 +168,21 @@ def test_insert_into_drift():
 
 
 def test_correct_dimensions_does_not_raise_error(rin):
-    atpass([], rin, 1)
+    l = []
+    atpass(l, rin, 1)
     rin = numpy.zeros((6,))
-    atpass([], rin, 1)
+    atpass(l, rin, 1)
     rin = numpy.array(numpy.zeros((6, 2), order='F'))
-    atpass([], rin, 1)
+    atpass(l, rin, 1)
 
 
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
-def test_dipole_bend_synonym(rin, dipole_class):
+def test_dipole(rin, dipole_class):
     b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
-    lat = [b]
+    l = [b]
     rin[0, 0] = 1e-6
     rin_orig = numpy.copy(rin)
-    atpass(lat, rin, 1)
+    atpass(l, rin, 1)
     rin_expected = numpy.array([1e-6, 0, 0, 0, 0, 1e-7]).reshape((6, 1))
     numpy.testing.assert_almost_equal(rin_orig, rin_expected)
     assert b.K == 0.0
@@ -254,8 +252,7 @@ def test_drift_divergence(rin):
     rin[3, 0] = -2e-6
     atpass(lattice, rin, 1)
     # results from Matlab
-    rin_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
-                                2.5e-12]).reshape(6, 1)
+    rin_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(6, 1)
     numpy.testing.assert_equal(rin, rin_expected)
 
 
@@ -274,8 +271,7 @@ def test_drift_two_particles(rin):
     atpass(lattice, two_rin, 1)
     # results from Matlab
     p1_expected = numpy.array(two_rin_orig[:, 0]).reshape(6, 1)
-    p2_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
-                               2.5e-12]).reshape(6, 1)
+    p2_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0, 2.5e-12]).reshape(6, 1)
     two_rin_expected = numpy.concatenate((p1_expected, p2_expected), axis=1)
     numpy.testing.assert_equal(two_rin, two_rin_expected)
 
@@ -319,8 +315,7 @@ def test_m66(rin, n):
 
 
 def test_corrector(rin):
-    c = elements.Corrector('corrector', 0.0, numpy.array([0.9, 0.5],
-                                                         dtype=numpy.float64))
+    c = elements.Corrector('corrector', 0.0, numpy.array([0.9, 0.5], dtype=numpy.float64))
     assert c.Length == 0
     lattice = [c]
     rin[0, 0] = 1e-6
