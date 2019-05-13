@@ -187,6 +187,14 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             AttributeError: if the PassMethod and Class are incompatible.
         """
 
+        def get_file_path(pass_method):
+            extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
+            extension = set(filter(None, extension_list))
+            if len(extension) == 1:
+                return pass_method + extension.pop()
+            else:
+                return pass_method + '.so'
+
         def err(message, *args):
             location = ': ' if index is None else ' {0}: '.format(index)
             msg = ''.join(('Error in element', location,
@@ -199,11 +207,10 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         if pass_method is not None:
             pass_to_class = _PASS_MAP.get(pass_method)
             length = float(elem_dict.get('Length', 0.0))
-            extension = sysconfig.get_config_vars().get('EXT_SUFFIX', '.so')
-            file_path = os.path.realpath(os.path.join(integrators.__path__[0],
-                                                      pass_method + extension))
-            if not os.path.isfile(file_path):
-                raise err("does not exist.")
+            file_name = get_file_path(pass_method)
+            file_path = os.path.join(integrators.__path__[0], file_name)
+            if not os.path.isfile(os.path.realpath(file_path)):
+                raise err("does not have a {0} file.".format(file_name))
             elif (pass_method == 'IdentityPass') and (length != 0.0):
                 raise err("is not compatible with length {0}.", length)
             elif pass_to_class is not None:
