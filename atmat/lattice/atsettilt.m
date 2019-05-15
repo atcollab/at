@@ -12,10 +12,14 @@ function ring=atsettilt(varargin)
 %   R1 = [  cos(PSI) sin(PSI); -sin(PSI) cos(PSI) ]
 %   R2 = R1'
 %
+% NEWELEM=ATSETTILT(RING,ELEMINDEX,PSI,'RelativeTilt')
+% the rotation is added to the previous misalignment
+%
 % ATSETTILT(ELEMINDEX, PSI) Uses the global variable THERING
 %
 % See also ATSETSHIFT
 
+[RelativeTilt,varargin]=getflag(varargin,'RelativeTilt');
 global THERING
 if ~iscell(varargin{1})
     THERING=atsettilt(THERING,varargin{:});
@@ -27,8 +31,13 @@ else
     elseif length(rot) ~= length(idx)
         error('AT:length','Vector lengths are incompatible: %i/%i.',length(idx),length(rot))
     end
-    
-    for i = 1:length(idx)
-        ring{idx(i)}=attiltelem(ring{idx(i)},rot(i));
+    if RelativeTilt
+        for i = 1:length(idx)
+            ring{idx(i)}=attiltelem(ring{idx(i)},rot(i),'RelativeTilt');
+        end
+    else
+        for i = 1:length(idx)
+            ring{idx(i)}=attiltelem(ring{idx(i)},rot(i));
+        end
     end
 end
