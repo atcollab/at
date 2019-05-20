@@ -18,12 +18,11 @@ function ring=atsetshift(varargin)
 % 
 % See also: ATSETTILT
 
-[RelativeShift,varargin]=getflag(varargin,'RelativeShift');
 global THERING
 if ~iscell(varargin{1})
     THERING=atsetshift(THERING,varargin{:});
 else
-    [ring,idx,dx,dy]=deal(varargin{:});
+    [ring,idx,dx,dy]=deal(varargin{1:4});
     if length(dx) == 1
         dx=dx*ones(size(idx));
     elseif length(dx) ~= length(idx)
@@ -35,13 +34,7 @@ else
         error('AT:length','Vector lengths are incompatible: %i/%i.',length(idx),length(dy))
     end
     
-    if RelativeShift
-        for i = 1:length(idx)
-            ring{idx(i)}=atshiftelem(ring{idx(i)},dx(i),dy(i),'RelativeShift');
-        end
-    else
-        for i = 1:length(idx)
-            ring{idx(i)}=atshiftelem(ring{idx(i)},dx(i),dy(i));
-        end
+    for i = 1:length(idx)
+        ring{idx(i)}=atshiftelem(ring{idx(i)},dx(i),dy(i),varargin{5:end});
     end
 end

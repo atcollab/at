@@ -15,7 +15,10 @@ function elem = attiltelem(elem,PSI,varargin)
 %
 %  See also ATSETTILT, ATSHIFTELEM, ATMODELEM
 
-[RelativeTilt,~]=getflag(varargin,'RelativeTilt');
+[RelativeTilt,options]=getflag(varargin,'RelativeTilt');
+if ~isempty(options)
+    error('AT:WrongArgument','Unexpected argument "%s"',num2str(options{1}))
+end
 C       = cos(PSI);
 S       = sin(PSI);
 RM      = diag([C C C C 1 1]);
@@ -24,7 +27,7 @@ RM(2,4) = S;
 RM(3,1) = -S;
 RM(4,2) = -S;
 if RelativeTilt && isfield(elem,'R1') && isfield(elem,'R2')
-    newR1=RM*elem.R1;
+    newR1=elem.R1*RM;
     newR2=RM'*elem.R2;
     elem.R1=newR1;
     elem.R2=newR2;

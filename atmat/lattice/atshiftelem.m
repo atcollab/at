@@ -11,7 +11,10 @@ function elem = atshiftelem(elem,dx,dy,varargin)
 %
 %See also: atsetshift, attiltelem, atmodelem
 
-RelativeShift=getflag(varargin,'RelativeShift');
+[RelativeShift,options]=getflag(varargin,'RelativeShift');
+if ~isempty(options)
+    error('AT:WrongArgument','Unexpected argument "%s"',num2str(options{1}))
+end
 disp=[dx;0;dy;0;0;0];
 if RelativeShift && isfield(elem,'T1') && isfield(elem,'T2')
     elem.T1=elem.T1-disp;
