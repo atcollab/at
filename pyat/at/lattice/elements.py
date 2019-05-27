@@ -13,7 +13,7 @@ from inspect import getmembers, isdatadescriptor
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(
-        shape)
+        shape, order='F')
 
 
 def _array66(value):
@@ -44,9 +44,7 @@ class Element(object):
         self.FamName = family_name
         self.Length = kwargs.pop('Length', 0.0)
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
-
-        for (key, value) in kwargs.items():
-            setattr(self, key, value)
+        self.update(kwargs)
 
     def __setattr__(self, key, value):
         try:
@@ -92,9 +90,24 @@ class Element(object):
         # by default, the element is indivisible
         return [self]
 
+    def update(self, *args, **kwargs):
+        """Update the element attributes with the given arguments
+
+        update(**kwargs)
+        update(mapping, **kwargs)
+        update(iterable, **kwargs)
+        """
+        attrs = dict(*args, **kwargs)
+        for (key, value) in attrs.items():
+            setattr(self, key, value)
+
     def copy(self):
         """Return a shallow copy of the element"""
         return copy.copy(self)
+
+    def deepcopy(self):
+        """Return a deep copy of the element"""
+        return copy.deepcopy(self)
 
     def items(self):
         """Iterates through the data members including slots and properties"""
@@ -518,3 +531,7 @@ class Corrector(LongElement):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
         super(Corrector, self).__init__(family_name, length,
                                         KickAngle=kick_angle, **kwargs)
+
+
+CLASS_MAP = dict((k, v) for k, v in locals().items()
+                 if isinstance(v, type) and issubclass(v, Element))
