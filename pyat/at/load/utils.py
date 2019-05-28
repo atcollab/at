@@ -174,10 +174,8 @@ def find_class(elem_dict, quiet=False):
 def get_pass_method_file_name(pass_method):
     extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
     extension = set(filter(None, extension_list))
-    if len(extension) == 1:
-        return pass_method + extension.pop()
-    else:
-        return pass_method + '.so'
+    ext = extension.pop() if len(extension) == 1 else '.so'
+    return pass_method + ext
 
 
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
