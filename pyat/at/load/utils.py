@@ -6,37 +6,38 @@ import numpy
 from warnings import warn
 from distutils import sysconfig
 from at import integrators
-from at.lattice import elements as elt
-from at.lattice.utils import AtWarning
+from at.lattice import AtWarning
+from at.lattice import CLASS_MAP, elements as elt
+# imports necessary in' globals()' for 'eval'
+# noinspection PyUnresolvedReferences
+from numpy import array, uint8  # For global namespace
 
 
 class RingParam(elt.Element):
     """Private class for Matlab RingParam element"""
-    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy']
-    _conversions = dict(elt.Element._conversions, Energy=float,
-                        Periodicity=int)
+    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
+                                                             'Periodicity']
+    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int)
 
-    def __init__(self, family_name, energy, **kwargs):
-        kwargs.setdefault('Periodicity', 1)
+    def __init__(self, family_name, energy, periodicity=1, **kwargs):
+        kwargs.setdefault('Periodicity', periodicity)
         kwargs.setdefault('PassMethod', 'IdentityPass')
         super(RingParam, self).__init__(family_name, Energy=energy, **kwargs)
 
 
-# Matlab to Python class translation
-_CLASS_MAP = {'drift': elt.Drift,
-              'dipole': elt.Dipole, 'bend': elt.Dipole,
-              'quadrupole': elt.Quadrupole, 'quad': elt.Quadrupole,
-              'sextupole': elt.Sextupole, 'sext': elt.Sextupole,
-              'octupole': elt.Octupole,
-              'multipole': elt.Multipole,
-              'thinmultipole': elt.ThinMultipole,
-              'corrector': elt.Corrector,
-              'rfcavity': elt.RFCavity, 'rf': elt.RFCavity,
-              'monitor': elt.Monitor, 'bpm': elt.Monitor,
-              'marker': elt.Marker,
-              'm66': elt.M66,
-              'aperture': elt.Aperture, 'ap': elt.Aperture,
+_alias_map = {'rbend': elt.Dipole,
+              'sbend': elt.Dipole,
+              'quad': elt.Quadrupole,
+              'sext': elt.Sextupole,
+              'rf': elt.RFCavity,
+              'bpm': elt.Monitor,
+              'ap': elt.Aperture,
               'ringparam': RingParam}
+
+
+# Matlab to Python class translation
+_CLASS_MAP = dict((k.lower(), v) for k, v in CLASS_MAP.items())
+_CLASS_MAP.update(_alias_map)
 
 _PASS_MAP = {'DriftPass': elt.Drift,
              'BendLinearPass': elt.Dipole,
@@ -56,13 +57,15 @@ _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
 # Python to Matlab class translation
 _matclass_map = {'Dipole': 'Bend'}
 
-# Python to Matlab attribute translation
-_matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
-
 # Python to Matlab type translation
 _mattype_map = {int: float,
                 numpy.ndarray: lambda attr: numpy.asanyarray(attr,
                                                              dtype=float)}
+
+_class_to_matfunc = {
+    elt.Dipole: 'atsbend',
+    elt.Bend: 'atsbend',
+    elt.M66: 'atM66'}
 
 
 def hasattrs(kwargs, *attributes):
@@ -234,7 +237,44 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     return element
 
 
+def element_from_string(elem_string):
+    """Generate an AT-element from its repr string"""
+    return eval(elem_string, globals(), CLASS_MAP)
+
+
+def element_from_m(line):
+    """Generate a AT-element from a line in a m-file"""
+
+    def convert(argmt):
+        """convert Matlab syntax to numpy syntax"""
+
+        def setarray(arr):
+            lns = arr.split(';')
+            rr = [setarray(v) for v in lns] if len(lns) > 1 else lns[0].split()
+            return '[{0}]'.format(', '.join(rr))
+
+        if argmt.startswith('['):
+            return 'array({0})'.format(setarray(argmt[1:-1]))
+        else:
+            return argmt
+
+    left = line.index('(')
+    right = line.rindex(')')
+    cls = _CLASS_MAP[line[:left].strip()[2:]]
+    arguments = [a.strip() for a in line[left + 1:right].split(',')]
+    ll = len(cls.REQUIRED_ATTRIBUTES)
+    if ll < len(arguments) and arguments[ll].endswith("Pass'"):
+        arguments.insert(ll, "'PassMethod'")
+    keys = arguments[ll::2]
+    vals = arguments[ll + 1::2]
+    args = [convert(v) for v in arguments[:ll]]
+    keywords = ['='.join((k[1:-1], convert(v))) for k, v in zip(keys, vals)]
+    elem_string = '{0}({1})'.format(cls.__name__, ', '.join(args + keywords))
+    return element_from_string(elem_string)
+
+
 def element_to_dict(elem):
+    """Generate the Matlab structure for a AT element"""
     dct = dict((k, _mattype_map.get(type(v), lambda attr: attr)(v))
                for k, v in elem.items())
     class_name = elem.__class__.__name__
@@ -242,15 +282,33 @@ def element_to_dict(elem):
     return dct
 
 
-def lattice_to_matlab(ring):
-    dct = dict((_matattr_map.get(k, k.title()), v)
-               for k, v in vars(ring).items() if not k.startswith('_'))
-    famname = dct.pop('FamName')
-    energy = dct.pop('Energy')
-    prm = RingParam(famname, energy, **dct)
-    yield element_to_dict(prm)
-    for elem in ring:
-        yield element_to_dict(elem)
+def element_to_m(elem):
+    """Generate the Matlab-evaluable string for a AT element"""
+
+    def convert(arg):
+        if isinstance(arg, numpy.ndarray):
+            if arg.ndim > 1:
+                lns = (str(list(ln)).replace(',', '')[1:-1] for ln in arg)
+                return ''.join(('[', '; '.join(lns), ']'))
+            else:
+                return str(list(arg)).replace(',', '')
+        else:
+            return repr(arg)
+
+    def m_name(elclass):
+        stdname = ''.join(('at', elclass.__name__.lower()))
+        return _class_to_matfunc.get(elclass, stdname)
+
+    attrs = dict(elem.items())
+    args = [attrs.pop(k, getattr(elem, k)) for k in elem.REQUIRED_ATTRIBUTES]
+    defelem = elem.__class__(*args)
+    kwds = dict((k, v) for k, v in attrs.items()
+                if not numpy.array_equal(v, getattr(defelem, k, None)))
+    argstrs = [convert(arg) for arg in args]
+    if 'PassMethod' in kwds:
+        argstrs.append(convert(kwds.pop('PassMethod')))
+    argstrs += [', '.join((repr(k), convert(v))) for k, v in kwds.items()]
+    return '{0:>15}({1});...'.format(m_name(elem.__class__), ', '.join(argstrs))
 
 
 # Kept for compatibility but should be deprecated:
