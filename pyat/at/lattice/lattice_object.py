@@ -377,8 +377,7 @@ class Lattice(list):
             return lattice_modify()
 
     @staticmethod
-    def _radiation_attrs(cavity_func, dipole_func,
-                         quadrupole_func, wiggler_func):
+    def _radiation_attrs(cavity_func, dipole_func, quadrupole_func):
         """Create a function returning the modified attributes"""
 
         def elem_func(elem):
@@ -393,8 +392,6 @@ class Lattice(list):
                 return dipole_func(elem)
             elif isinstance(elem, elements.Quadrupole):
                 return quadrupole_func(elem)
-            elif isinstance(elem, elements.Wiggler):
-                return wiggler_func(elem)
             else:
                 return None
 
@@ -402,7 +399,7 @@ class Lattice(list):
 
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
-                     quadrupole_pass=None, wiggler_pass='auto', copy=False):
+                     quadrupole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
 
@@ -410,7 +407,6 @@ class Lattice(list):
             cavity_pass='CavityPass'    PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
-            wiggler_pass='auto          PassMethod set on wigglers
             copy=False                  Return a shallow copy of the lattice and
                                         replace only the modified attributes
                                         Otherwise modify the lattice in-place.
@@ -445,13 +441,12 @@ class Lattice(list):
 
         elem_func = self._radiation_attrs(repfunc(cavity_pass),
                                           repfunc(dipole_pass),
-                                          repfunc(quadrupole_pass),
-                                          repfunc(wiggler_pass))
+                                          repfunc(quadrupole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     # noinspection PyShadowingNames
     def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto',
-                      quadrupole_pass=None, wiggler_pass='auto', copy=False):
+                      quadrupole_pass=None, copy=False):
         """
         Turn acceleration and radiation off and return the lattice
 
@@ -491,8 +486,7 @@ class Lattice(list):
 
         elem_func = self._radiation_attrs(repfunc(cavity_pass),
                                           repfunc(dipole_pass),
-                                          repfunc(quadrupole_pass),
-                                          repfunc(wiggler_pass))
+                                          repfunc(quadrupole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
 
