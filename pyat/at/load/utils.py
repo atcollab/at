@@ -66,6 +66,11 @@ _class_to_matfunc = {
     elt.Bend: 'atsbend',
     elt.M66: 'atM66'}
 
+_class_to_matfunc = {
+    elt.Dipole: 'atsbend',
+    elt.Bend: 'atsbend',
+    elt.M66: 'atM66'}
+
 
 def hasattrs(kwargs, *attributes):
     """Check if the element would have the specified attribute(s), i.e. if they
