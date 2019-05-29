@@ -131,7 +131,7 @@ else
 end
 
 %% build "Response of RM to errors" for fit using OAR cluster.
-indQuadsDeriv=find(atgetcells(r0,'Class','Quadrupole','Sextupole') & atgetcells(r0,'FitElement') )';
+indQuadsDeriv=find(atgetcells(r0,'Class','Quadrupole') & atgetcells(r0,'FitElement') )';
 indDip=find(atgetcells(r0,'Class','Bend') & atgetcells(r0,'FitElement') )';
 if isempty(indQuadsDeriv)
     warning('Empty quadrupole fit locations. using all quadrupoles');
@@ -201,7 +201,7 @@ DipRot.dk=1e-5;
                     
                     %  select relevant quadrupoles
                     
-                    qind=find(atgetcells(r0,'Class','Quadrupole'))'; % response matrix computed always at all quadrupoles
+                    qind=find(atgetcells(r0,'Class','Quadrupole','Sextupole'))'; % response matrix computed always at all quadrupoles
                     quadforresponse=find(ismember(qind,indquad)); % quadrupoles to use for fit amoung all
                     nq = length(indquad);
                     dval = ones(size(indquad));

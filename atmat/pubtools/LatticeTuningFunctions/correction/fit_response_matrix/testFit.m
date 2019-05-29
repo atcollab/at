@@ -85,7 +85,7 @@ delta =1e-4;
 inCOD = zeros(6,1);
 
 % reference lattice
-[l,t,ch]=atlinopt(r0,0,indHCor);
+[l,t,ch]=atlinopt(r0,0,indBPM);
 bx0=arrayfun(@(a)a.beta(1),l);
 by0=arrayfun(@(a)a.beta(2),l);
 
@@ -94,7 +94,7 @@ dx0=d(1,:);
 dy0=d(3,:);
 
 % lattice with errors
-[l,t,ch]=atlinopt(rerr,0,indHCor);
+[l,t,ch]=atlinopt(rerr,0,indBPM);
 bxe=arrayfun(@(a)a.beta(1),l);
 bye=arrayfun(@(a)a.beta(2),l);
 
@@ -103,7 +103,7 @@ dxe=d(1,:);
 dye=d(3,:);
 
 
-[l,t,ch]=atlinopt(rfit,0,indHCor);
+[l,t,ch]=atlinopt(rfit,0,indBPM);
 bxf=arrayfun(@(a)a.beta(1),l);
 byf=arrayfun(@(a)a.beta(2),l);
 

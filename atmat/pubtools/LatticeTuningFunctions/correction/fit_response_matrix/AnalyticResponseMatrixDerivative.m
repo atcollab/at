@@ -22,7 +22,14 @@ function [...
 %
 
 % define Params structure
-qind=find(atgetcells(RING,'Class','Quadrupole'))';
+
+% pb2ind = find(atgetcells(RING,'PolynomB'))';
+% pb2 = atgetfieldvalues(RING,pb2ind,'PolynomB',{1,2});
+%qind=sort(unique([find(atgetcells(RING,'Class','Quadrupole'))'; pb2ind(abs(pb2)>0)]))';
+
+qind=find(atgetcells(RING,'Class','Quadrupole') )';
+%qind=magnetlist;
+
 nq=length(qind);
 bind=bendlist;
 nb=length(bind);

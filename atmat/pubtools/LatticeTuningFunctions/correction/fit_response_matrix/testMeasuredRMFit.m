@@ -76,7 +76,7 @@ figure; plot(DH(:)); hold on; plot(measuredRM.DH(:)); legend('theory','measureme
       
     
 % number of eigenvectors for fit [quad, dip, skew]
-neig = [100 64 100];
+neig = [150 128 150];
 
 nsubsets = 4;
 
