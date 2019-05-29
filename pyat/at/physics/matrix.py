@@ -5,33 +5,14 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 
 import numpy
-from scipy.linalg import block_diag
-from ..lattice import uint32_refpts
-from ..physics import find_orbit4, find_orbit6
-from ..tracking import lattice_pass, element_pass
+from at.lattice import Lattice, uint32_refpts
+from at.tracking import lattice_pass, element_pass
+from at.physics import find_orbit4, find_orbit6, jmat
 
-__all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'jmat']
+__all__ = ['find_m44', 'find_m66', 'find_elem_m66']
 
 XYDEFSTEP = 6.055454452393343e-006  # Optimal delta?
 DPSTEP = 6.055454452393343e-006  # Optimal delta?
-
-# Prepare symplectic identity matrix
-_j2 = numpy.array([[0., 1.], [-1., 0.]])
-_jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
-
-
-def jmat(ind):
-    """
-    Return the antisymetric block diagonal matrix [[0, 1][-1, 0]]
-
-    INPUT
-        ind     1, 2 or 3. Matrix dimension
-
-    OUTPUT
-        jm      block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
-    """
-    return _jm[ind - 1]
-
 
 _jmt = jmat(2)
 
@@ -81,7 +62,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
 
     def mrotate(m):
         m = numpy.squeeze(m)
-        return numpy.linalg.multi_dot([m, m44, _jmt.T, m.T, _jmt])
+        return m.dot(m44.dot(_jmt.T.dot(m.T.dot(_jmt))))
 
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     full = kwargs.pop('full', False)
@@ -104,7 +85,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
     if len(refs) > 0:
         mstack = (out_mat[:, :4, :4] - out_mat[:, :4, 4:]) / xy_step
         if full:
-            mstack = numpy.stack((mrotate(mat) for mat in mstack), axis=0)
+            mstack = numpy.stack([mrotate(mat) for mat in mstack], axis=0)
     else:
         mstack = numpy.empty((0, 4, 4), dtype=float)
 
@@ -202,3 +183,7 @@ def find_elem_m66(elem, orbit=None, **kwargs):
     element_pass(elem, in_mat)
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
     return m66
+
+
+Lattice.find_m44 = find_m44
+Lattice.find_m66 = find_m66

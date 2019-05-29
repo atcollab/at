@@ -11,6 +11,7 @@ except ImportError:
 ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '../..'))
 dba_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/dba.mat')
 hmba_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/hmba.mat')
+err_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/err.mat')
 
 
 def initialise_matlab():
