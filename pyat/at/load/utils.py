@@ -165,6 +165,13 @@ def find_class(elem_dict, quiet=False):
                 else:
                     return elt.Marker
 
+def get_pass_method_file_name(pass_method):
+    extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
+    extension = set(filter(None, extension_list))
+    if len(extension) == 1:
+        return pass_method + extension.pop()
+    else:
+        return pass_method + '.so'
 
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     """return an AT element from a dictionary of attributes
@@ -186,15 +193,6 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         Raises:
             AttributeError: if the PassMethod and Class are incompatible.
         """
-
-        def get_file_path(pass_method):
-            extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
-            extension = set(filter(None, extension_list))
-            if len(extension) == 1:
-                return pass_method + extension.pop()
-            else:
-                return pass_method + '.so'
-
         def err(message, *args):
             location = ': ' if index is None else ' {0}: '.format(index)
             msg = ''.join(('Error in element', location,
@@ -207,7 +205,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         if pass_method is not None:
             pass_to_class = _PASS_MAP.get(pass_method)
             length = float(elem_dict.get('Length', 0.0))
-            file_name = get_file_path(pass_method)
+            file_name = get_pass_method_file_name(pass_method)
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
                 raise err("does not have a {0} file.".format(file_name))
