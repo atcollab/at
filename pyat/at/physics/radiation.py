@@ -3,11 +3,9 @@ Radiation and equilibrium emittances
 """
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-import at
-from at.lattice import uint32_refpts, get_ring_energy
+from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-# noinspection PyUnresolvedReferences
 from at.physics import find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope']
@@ -23,8 +21,8 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
-def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
-                  energy=None):
+@check_radiation(True)
+def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
     Calculate the equilibrium beam envelope in a
     circular accelerator using Ohmi's beam envelope formalism [1]
@@ -32,7 +30,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
     emit0, beamdata, emit = ohmi_envelope(ring[, refpts])
 
     PARAMETERS
-        ring            lattice description.
+        ring            Lattice object.
         refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
@@ -47,9 +45,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
                             already known                           (6,) array)
         keep_lattice=False  Assume no lattice change since the previous
                             tracking
-        energy=None         Energy of the ring; if it is not specified it is:
-                            - lattice.energy if a lattice object is passed,
-                            - otherwise, taken from the elements.
 
     OUTPUT
         emit0               emittance data at the start/end of the ring
@@ -90,7 +85,9 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
 
     def process(r66):
         # projections on xx', zz', ldp
-        emit3 = numpy.sqrt(numpy.array([det(r66[s, s]) for s in _submat]))
+        emit3sq = numpy.array([det(r66[s, s]) for s in _submat])
+        # Prevent from unrealistic negative values of the determinant
+        emit3 = numpy.sqrt(numpy.maximum(emit3sq, 0.0))
         # Emittance cut for dpp=0
         if emit3[0] < 1.E-13:  # No equilibrium emittance
             r44 = numpy.nan * numpy.ones((4, 4))
@@ -102,8 +99,10 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
             minv = inv(r66)
             r44 = inv(minv[:4, :4])
         # betatron emittances (dpp=0)
-        emit2 = numpy.sqrt(numpy.array(
-            [det(r44[s, s], check_finite=False) for s in _submat[:2]]))
+        emit2sq = numpy.array(
+            [det(r44[s, s], check_finite=False) for s in _submat[:2]])
+        # Prevent from unrealistic negative values of the determinant
+        emit2 = numpy.sqrt(numpy.maximum(emit2sq, 0.0))
         return r44, emit2, emit3
 
     def propag(m, cumb, orbit6):
@@ -115,11 +114,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
     allrefs = uint32_refpts(range(nelems + 1), nelems)
-    if energy is None:
-        if isinstance(ring, at.lattice.Lattice):
-            energy = ring.energy
-        else:
-            energy = get_ring_energy(ring)
+    energy = ring.energy
 
     if orbit is None:
         orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
@@ -127,8 +122,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
 
     orbs = numpy.squeeze(
         lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                     keep_lattice=keep_lattice),
-        axis=(1, 3)).T
+                     keep_lattice=keep_lattice), axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, orbit, energy)
@@ -164,3 +158,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False,
             dtype=ENVELOPE_DTYPE)
 
     return data0, r66data, data
+
+
+Lattice.ohmi_envelope = ohmi_envelope

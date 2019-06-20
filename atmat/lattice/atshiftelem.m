@@ -1,13 +1,26 @@
-function elem = atshiftelem(elem,dx,dz)
+function elem = atshiftelem(elem,dx,dy,varargin)
 %ATSHIFTELEM set new displacement parameters
 %NEWELEM=ATSHIFTELEM(OLDELEM,DX,DZ)
 %
 %DX:	horizontal element displacement
-%DZ:	Vertical element displacement
+%DY:	Vertical element displacement
 %
-%See also: attiltelem, atmodelem
+%
+%NEWELEM=ATSHIFTELEM(OLDELEM,DX,DY,'RelativeShift')
+%the shift is added to the previous misalignment of the element
+%
+%See also: atsetshift, attiltelem, atmodelem
 
-disp=[dx;0;dz;0;0;0];
-elem.T1=-disp;
-elem.T2=disp;
+[RelativeShift,options]=getflag(varargin,'RelativeShift');
+if ~isempty(options)
+    error('AT:WrongArgument','Unexpected argument "%s"',num2str(options{1}))
+end
+disp=[dx;0;dy;0;0;0];
+if RelativeShift && isfield(elem,'T1') && isfield(elem,'T2')
+    elem.T1=elem.T1-disp;
+    elem.T2=elem.T2+disp;
+else
+    elem.T1=-disp;
+    elem.T2=disp;
+end
 end

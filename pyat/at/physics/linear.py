@@ -3,9 +3,9 @@ Coupled or non-coupled 4x4 linear motion
 """
 import numpy
 from math import sqrt, atan2, pi
-from ..physics import find_orbit4, find_m44, jmat
-from ..lattice import uint32_refpts, get_s_pos
-from ..tracking import lattice_pass
+from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos
+from at.tracking import lattice_pass
+from at.physics import find_orbit4, find_m44, jmat
 
 __all__ = ['get_twiss', 'linopt', 'get_mcf']
 
@@ -58,6 +58,7 @@ def _closure(m22):
     return alpha, beta, tune
 
 
+@check_radiation(False)
 def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
               keep_lattice=False, ddp=DDP):
     """
@@ -173,6 +174,8 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     return twiss0, tune, chrom, twiss
 
 
+# noinspection PyPep8Naming
+@check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
            keep_lattice=False, ddp=DDP, coupled=True):
     """
@@ -245,6 +248,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
 
     """
 
+    # noinspection PyShadowingNames
     def analyze(r44):
         t44 = r44.reshape((4, 4))
         mm = t44[:2, :2]
@@ -356,6 +360,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     return lindata0, tune, chrom, lindata
 
 
+@check_radiation(False)
 def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     """Compute momentum compaction factor
 
@@ -375,3 +380,7 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
     ring_length = get_s_pos(ring, len(ring))
     return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
+
+
+Lattice.linopt = linopt
+Lattice.get_mcf = get_mcf
