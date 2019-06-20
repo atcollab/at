@@ -13,7 +13,8 @@ from at.lattice.utils import AtWarning
 class RingParam(elt.Element):
     """Private class for Matlab RingParam element"""
     REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy']
-    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int)
+    _conversions = dict(elt.Element._conversions, Energy=float,
+                        Periodicity=int)
 
     def __init__(self, family_name, energy, **kwargs):
         kwargs.setdefault('Periodicity', 1)
@@ -60,7 +61,8 @@ _matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
-                numpy.ndarray: lambda attr: numpy.asanyarray(attr, dtype=float)}
+                numpy.ndarray: lambda attr: numpy.asanyarray(attr,
+                                                             dtype=float)}
 
 
 def hasattrs(kwargs, *attributes):
@@ -165,6 +167,7 @@ def find_class(elem_dict, quiet=False):
                 else:
                     return elt.Marker
 
+
 def get_pass_method_file_name(pass_method):
     extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
     extension = set(filter(None, extension_list))
@@ -172,6 +175,7 @@ def get_pass_method_file_name(pass_method):
         return pass_method + extension.pop()
     else:
         return pass_method + '.so'
+
 
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     """return an AT element from a dictionary of attributes

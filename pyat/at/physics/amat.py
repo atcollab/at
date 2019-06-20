@@ -1,5 +1,4 @@
 """"""
-from collections import namedtuple
 import numpy
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
@@ -14,10 +13,6 @@ _jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
 
 _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
-
-_Data1 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices'))
-_Data2 = namedtuple('R66Data', ('tunes', 'damping_rates', 'mode_matrices',
-                                'mode_emittances'))
 
 
 def jmat(ind):
@@ -83,13 +78,13 @@ def amat(tt):
 
 
 def get_mode_matrices(a):
-    """Given a (m, m) A matrix , find the m normal modes"""
+    """Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes"""
     dms = int(a.shape[0] / 2)
     return numpy.stack([numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]],
                        axis=0)
 
 
-def get_tunes_damp(tt, rr):
+def get_tunes_damp(tt, rr=None):
     """
     mode_emit, damping_rates, tunes = get_tunes_damp(T, R)
 
@@ -100,11 +95,12 @@ def get_tunes_damp(tt, rr):
         m can be 2 (single plane), 4 (betatron motion) or 6 (full motion)
 
     OUTPUT
-        named tuple with the follwing attributes:
-        tunes               (m,) tunes of the m normal modes
-        damping_rates       (m,) damping rates of the m normal modes
-        mode_matrices       (3, m, m) the R-matrices of the m normal modes
-        mode_emittances     Only if R is specified: (m,) emittance of each mode
+        record array with the following fields:
+        tunes               (m/2,) tunes of the m/2 normal modes
+        damping_rates       (m/2,) damping rates of the m/2 normal modes
+        mode_matrices       (m/2, m, m) the R-matrices of the m/2 normal modes
+        mode_emittances     Only if R is specified: (m/2,) emittance of each
+                            of the m/2 normal modes
     """
 
     def decode(rot22):
@@ -120,8 +116,21 @@ def get_tunes_damp(tt, rr):
     rmat = inv(aa).dot(tt.dot(aa))
     damping_rates, tunes = zip(*(decode(rmat[s, s]) for s in _submat[:dms]))
     if rr is None:
-        return _Data1(tunes, damping_rates, get_mode_matrices(aa))
+        return numpy.rec.fromarrays(
+            (numpy.array(tunes), numpy.array(damping_rates),
+             numpy.array(get_mode_matrices(aa))),
+            dtype=[('tunes', numpy.float64, (dms,)),
+                   ('damping_rates', numpy.float64, (dms,)),
+                   ('mode_matrices', numpy.float64, (dms, nv, nv))]
+        )
     else:
         rdiag = numpy.diag(aa.T.dot(jmt.dot(rr.dot(jmt.dot(aa)))))
         mode_emit = -0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
-        return _Data2(tunes, damping_rates, get_mode_matrices(aa), mode_emit)
+        return numpy.rec.fromarrays(
+            (numpy.array(tunes), numpy.array(damping_rates),
+             numpy.array(get_mode_matrices(aa)), mode_emit),
+            dtype=[('tunes', numpy.float64, (dms,)),
+                   ('damping_rates', numpy.float64, (dms,)),
+                   ('mode_matrices', numpy.float64, (dms, nv, nv)),
+                   ('mode_emittances', numpy.float64, (dms,))]
+        )

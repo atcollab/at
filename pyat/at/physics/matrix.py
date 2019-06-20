@@ -17,9 +17,10 @@ DPSTEP = 6.055454452393343e-006  # Optimal delta?
 _jmt = jmat(2)
 
 
-def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs):
-    """find_m44 numerically finds the 4x4 transfer matrix of an accelerator lattice
-    for a particle with relative momentum deviation DP
+def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False,
+             **kwargs):
+    """find_m44 numerically finds the 4x4 transfer matrix of an accelerator
+    lattice for a particle with relative momentum deviation DP
 
     IMPORTANT!!! find_m44 assumes constant momentum deviation.
     PassMethod used for any element in the lattice SHOULD NOT
@@ -28,13 +29,15 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
     2.  have any time dependence (localized impedance, fast kickers, ...)
 
     m44, t = find_m44(lattice, dp=0.0, refpts)
-        return 4x4 transfer matrices between the entrance of the first element and each element indexed by refpts.
-        m44:    full one-turn matrix at the entrance of the first element
-        t:      4x4 transfer matrices between the entrance of the first element and each element indexed by refpts:
-                (Nrefs, 4, 4) array
+        return 4x4 transfer matrices between the entrance of the first element
+        and each element indexed by refpts.
+            m44:    full one-turn matrix at the entrance of the first element
+            t:      4x4 transfer matrices between the entrance of the first
+                    element and each element indexed by refpts:
+                    (Nrefs, 4, 4) array
 
-        Unless an input orbit is introduced, find_m44 assumes that the lattice is a ring and first
-        finds the closed orbit.
+    Unless an input orbit is introduced, find_m44 assumes that the lattice is
+    a ring and first finds the closed orbit.
 
     PARAMETERS
         ring            lattice description
@@ -51,10 +54,13 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
                         returned for mstack.
 
     KEYWORDS
-        keep_lattice=False  When True, assume no lattice change since the previous tracking.
-        full=False          When True, matrices are full 1-turn matrices at the entrance of each
+        keep_lattice=False  When True, assume no lattice change since the
+                            previous tracking.
+        full=False          When True, matrices are full 1-turn matrices at
+                            the entrance of each
                             element indexed by refpts.
-        orbit=None          Avoids looking for the closed orbit if is already known ((6,) array)
+        orbit=None          Avoids looking for the closed orbit if is already
+                            known (6,) array
         XYStep=6.055e-6     transverse step for numerical computation
 
     See also find_m66, find_orbit4
@@ -77,7 +83,9 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
 
     refs = uint32_refpts(refpts, len(ring))
     out_mat = numpy.rollaxis(
-              numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keep_lattice), axis=3), -1)
+        numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
+                                   keep_lattice=keep_lattice), axis=3), -1
+    )
     # out_mat: 8 particles at n refpts for one turn
     # (x + d) - (x - d) / d
     m44 = (in_mat[:4, :4] - in_mat[:4, 4:]) / xy_step
@@ -93,15 +101,16 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False, **kwargs
 
 
 def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
-    """find_m66 numerically finds the 6x6 transfer matrix of an accelerator lattice
-    by differentiation of lattice_pass near the closed orbit.
+    """find_m66 numerically finds the 6x6 transfer matrix of an accelerator
+    lattice by differentiation of lattice_pass near the closed orbit.
     find_m66 uses find_orbit6 to search for the closed orbit in 6-D
     In order for this to work the ring MUST have a CAVITY element
 
     m66, t = find_m66(lattice, refpts)
-        m66:    full one-turn 6-by-6 matrix at the entrance of the first element
-        t:      6x6 transfer matrices between the entrance of the first element and each element indexed by refpts:
-                (nrefs, 6, 6) array.
+        m66:    full one-turn 6-by-6 matrix at the entrance of the
+                first element.
+        t:      6x6 transfer matrices between the entrance of the first
+                element and each element indexed by refpts (nrefs, 6, 6) array.
 
     PARAMETERS
         ring            lattice description
@@ -118,13 +127,14 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
                         returned for mstack.
 
     KEYWORDS
-        keep_lattice=False  When True, assume no lattice change since the previous tracking.
-        orbit=None          Avoids looking for the closed orbit if is already known ((6,) array)
+        keep_lattice=False  When True, assume no lattice change since the
+                            previous tracking.
+        orbit=None          Avoids looking for the closed orbit if is already
+                            known (6,) array
         XYStep=6.055e-6     transverse step for numerical computation
         DPStep=6.055e-6     longitudinal step for numerical computation
 
     See also find_m44, find_orbit6
-
     """
     xy_step = kwargs.pop('XYStep', XYDEFSTEP)
     dp_step = kwargs.pop('DPStep', DPSTEP)
@@ -133,7 +143,8 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas
-    scaling = numpy.array([xy_step, xy_step, xy_step, xy_step, dp_step, dp_step])
+    scaling = numpy.array([xy_step, xy_step, xy_step,
+                           xy_step, dp_step, dp_step])
     dg = numpy.asfortranarray(0.5 * numpy.diag(scaling))
     dmat = numpy.concatenate((dg, -dg), axis=1)
 
@@ -141,7 +152,9 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
 
     refs = uint32_refpts(refpts, len(ring))
     out_mat = numpy.rollaxis(
-              numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs, keep_lattice=keep_lattice), axis=3), -1)
+        numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
+                                   keep_lattice=keep_lattice), axis=3), -1
+    )
     # out_mat: 12 particles at n refpts for one turn
     # (x + d) - (x - d) / d
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
@@ -162,7 +175,8 @@ def find_elem_m66(elem, orbit=None, **kwargs):
         elem                AT element
 
     KEYWORDS
-        orbit=None          closed orbit at the entrance of the element. Default: 0.0
+        orbit=None          closed orbit at the entrance of the element,
+                            default: 0.0
         XYStep=6.055e-6     transverse step for numerical computation
         DPStep=6.055e-6     longitudinal step for numerical computation
 
@@ -175,7 +189,8 @@ def find_elem_m66(elem, orbit=None, **kwargs):
         orbit = numpy.zeros((6,))
 
     # Construct matrix of plus and minus deltas
-    scaling = numpy.array([xy_step, xy_step, xy_step, xy_step, dp_step, dp_step])
+    scaling = numpy.array([xy_step, xy_step, xy_step,
+                           xy_step, dp_step, dp_step])
     dg = numpy.asfortranarray(0.5 * numpy.diag(scaling))
     dmat = numpy.concatenate((dg, -dg), axis=1)
 

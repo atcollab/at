@@ -206,14 +206,14 @@ class Drift(LongElement):
         """insert elements inside a drift
 
         arguments:
-            insert_list iterable. Each item of insert_list is itself an iterable
-                        with 2 objects:
-                        The 1st object is the location where the center of the
-                        element will be inserted, given as a fraction of the
-                        Drift length,
-                        The 2nd object is an element to be inserted at that
-                        location. If None, the drift will be divided but no
-                        element will be inserted.
+            insert_list: iterable, each item of insert_list is itself an
+                         iterable with 2 objects:
+                             1. the location where the center of the element
+                                will be inserted, given as a fraction of the
+                                Drift length.
+                             2. an element to be inserted at that location. If
+                                None, the drift will be divided but no element
+                                will be inserted.
 
         Return a list of elements.
 
@@ -344,7 +344,8 @@ class Dipole(Multipole):
 
     DefaultOrder = 0
 
-    def __init__(self, family_name, length, bending_angle=0.0, k=0.0, **kwargs):
+    def __init__(self, family_name, length, bending_angle=0.0, k=0.0,
+                 **kwargs):
         """Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
 
         Available keywords:
@@ -490,8 +491,8 @@ class RFCavity(LongElement):
                         Voltage=float, Frequency=float,
                         HarmNumber=int, TimeLag=float)
 
-    def __init__(self, family_name, length, voltage, frequency, harmonic_number,
-                 energy, **kwargs):
+    def __init__(self, family_name, length, voltage, frequency,
+                 harmonic_number, energy, **kwargs):
         """
         Available keywords:
         TimeLag   time lag with respect to the reference particle
