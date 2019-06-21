@@ -350,7 +350,8 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
   double cx, sx, chx, shx;
   double cy, sy, chy, shy;
   double cz;
-  double B0;
+  /* B0 is a reserved symbol on MacOS, defined in termios.h */
+  double _B0;
   
   x = Xvec[0];
   y = Xvec[2];
@@ -362,7 +363,7 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
   B[1] = 0;
 
   if (pWig->NHharm && z>=pWig->zStartH && z<=pWig->zEndH) {
-    B0 = pWig->PB0;
+    _B0 = pWig->PB0;
     if (!pWig->HSplitPole) {
       /* Normal Horizontal Wiggler: note that one potentially could have: kx=0 */
       for (i = 0; i < pWig->NHharm; i++) {
@@ -378,8 +379,8 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
         cz = cos(kz*z+tz);
         
         /* Accumulate field values in user-supplied array (Bx, By) */
-        B[0] += B0*pWig->HCw_raw[i]*kx/ky*sx*shy*cz;
-        B[1] -= B0*pWig->HCw_raw[i]*cx*chy*cz;
+        B[0] += _B0*pWig->HCw_raw[i]*kx/ky*sx*shy*cz;
+        B[1] -= _B0*pWig->HCw_raw[i]*cx*chy*cz;
       }
     } else {
       /* Split-pole Horizontal Wiggler: note that one potentially could have: ky=0 (caught in main routine) */
@@ -395,14 +396,14 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
         sy  = sin(ky * y);
         cz  = cos(kz*z+tz);
         
-        B[0] -= B0*pWig->HCw_raw[i]*kx/ky*shx*sy*cz;
-        B[1] -= B0*pWig->HCw_raw[i]*chx*cy*cz;
+        B[0] -= _B0*pWig->HCw_raw[i]*kx/ky*shx*sy*cz;
+        B[1] -= _B0*pWig->HCw_raw[i]*chx*cy*cz;
       }
     }
   }
   
   if (pWig->NVharm && z>=pWig->zStartV && z<=pWig->zEndV) {
-    B0 = pWig->PB0;
+    _B0 = pWig->PB0;
     if (!pWig->VSplitPole) {
       /* Normal Vertical Wiggler: note that one potentially could have: ky=0 */
       for (i = 0; i < pWig->NVharm; i++ ) {
@@ -418,8 +419,8 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
         cz  = cos(kz*z + tz);
 
         /* Accumulate field values in user-supplied array (Bx, By) */
-        B[0] += B0*pWig->VCw_raw[i]*chx*cy*cz;
-        B[1] -= B0*pWig->VCw_raw[i]*ky/kx*shx*sy*cz;
+        B[0] += _B0*pWig->VCw_raw[i]*chx*cy*cz;
+        B[1] -= _B0*pWig->VCw_raw[i]*ky/kx*shx*sy*cz;
       }
     } else {
       /* Split-pole Vertical Wiggler: note that one potentially could have: kx=0 (caught in main routine) */
@@ -436,8 +437,8 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
         cz  = cos(kz*z + tz);
 
         /* Accumulate field values in user-supplied array (Bx, By) */
-        B[0] += B0*pWig->VCw_raw[i]*cx*chy*cz;
-        B[1] += B0*pWig->VCw_raw[i]*ky/kx*sx*shy*cz;
+        B[0] += _B0*pWig->VCw_raw[i]*cx*chy*cz;
+        B[1] += _B0*pWig->VCw_raw[i]*ky/kx*sx*shy*cz;
       }
     }
   }
