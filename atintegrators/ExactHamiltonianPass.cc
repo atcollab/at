@@ -13,10 +13,17 @@ struct elem
     double *PolynomB;
     int MaxOrder;
     int NumIntSteps;
+    /* type is defined in track.h:
+        - 0: drift
+        - 1: dipole
+        - 2: multipole
+        - 3: marker
+     */
     int Type;
     /* Optional fields */
-    double gK;
-    int MultipoleFringe;
+    double gK;  /* g * K, required for bend */
+    double Phi; /* ?, required for bend */
+    int MultipoleFringe; /* bool, whether to calculate multipole fringe */
     double *R1;
     double *R2;
     double *T1;
@@ -86,39 +93,48 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                                struct parameters *Param)
 
 {
-    double le, bending_angle;
-    double *polynom_a, *polynom_b;
-    long max_order, num_int_steps, type, multipole_fringe;
-    double *R1, *R2, *T1, *T2;
-    double phi, gK;
-    le = atGetDouble(ElemData,"Length"); check_error();
-    bending_angle = atGetDouble(ElemData,"BendingAngle"); check_error();
-    polynom_a = atGetDoubleArray(ElemData,"PolynomA"); check_error();
-    polynom_b = atGetDoubleArray(ElemData,"PolynomB"); check_error();
-    max_order = atGetLong(ElemData, "MaxOrder"); check_error();
-    num_int_steps = atGetLong(ElemData, "NumIntSteps"); check_error();
-    type = atGetLong(ElemData, "Type"); check_error();
-    multipole_fringe = atGetLong(ElemData, "Type"); check_error();
-    phi = atGetDouble(ElemData,"Phi"); check_error();
-    gK = atGetDouble(ElemData,"gK"); check_error();
-    R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
-    R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
-    T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
-    T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-    ExactHamiltonianPass(r_in, le, polynom_a, polynom_b, T1, T2, R1, R2, max_order,
-             num_int_steps, phi, type, gK, multipole_fringe, num_particles);
-    Elem = (struct elem*)atMalloc(sizeof(struct elem));
-    Elem->Length=le;
-    Elem->BendingAngle=bending_angle;
-    Elem->PolynomA=polynom_a;
-    Elem->PolynomB=polynom_b;
-    Elem->MaxOrder=max_order;
-    Elem->NumIntSteps=num_int_steps;
-    /*optional fields*/
-    Elem->R1=R1;
-    Elem->R2=R2;
-    Elem->T1=T1;
-    Elem->T2=T2;
+    if (!Elem) {
+        double le, bending_angle;
+        double *polynom_a, *polynom_b;
+        long max_order, num_int_steps, type, multipole_fringe;
+        double *R1, *R2, *T1, *T2;
+        double phi, gK;
+        le = atGetDouble(ElemData,"Length"); check_error();
+        bending_angle = atGetDouble(ElemData,"BendingAngle"); check_error();
+        polynom_a = atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        polynom_b = atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        max_order = atGetLong(ElemData, "MaxOrder"); check_error();
+        num_int_steps = atGetLong(ElemData, "NumIntSteps"); check_error();
+        type = atGetLong(ElemData, "Type"); check_error();
+        multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
+        phi = atGetOptionalDouble(ElemData,"Phi", 0.0); check_error();
+        gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
+        R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
+        R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
+        T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
+        T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->Length=le;
+        Elem->BendingAngle=bending_angle;
+        Elem->PolynomA=polynom_a;
+        Elem->PolynomB=polynom_b;
+        Elem->MaxOrder=max_order;
+        Elem->NumIntSteps=num_int_steps;
+        Elem->Type = type;
+        /*optional fields*/
+        Elem->MultipoleFringe = multipole_fringe;
+        Elem->Phi = phi;
+        Elem->gK = gK;
+        Elem->R1=R1;
+        Elem->R2=R2;
+        Elem->T1=T1;
+        Elem->T2=T2;
+    }
+    ExactHamiltonianPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
+                               Elem->T1, Elem->T2, Elem->R1, Elem->R2,
+                               Elem->MaxOrder, Elem->NumIntSteps,
+                               Elem->Phi, Elem->Type, Elem->gK,
+                               Elem->MultipoleFringe, num_particles);
 
     return Elem;
 }
@@ -126,7 +142,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
 MODULE_DEF(ExactHamiltonianPass) /* Dummy module initialisation */
 
 #endif /* defined(PYAT) || defined(MATLAB_MEX_FILE) */
-
 
 
 #if defined(MATLAB_MEX_FILE)
@@ -152,10 +167,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         max_order = atGetLong(ElemData, "MaxOrder"); check_error();
         num_int_steps = atGetLong(ElemData, "NumIntSteps"); check_error();
         type = atGetLong(ElemData, "Type"); check_error();
-        multipole_fringe = atGetLong(ElemData, "Type"); check_error();
-        phi = atGetDouble(ElemData,"Phi"); check_error();
-        gK = atGetDouble(ElemData,"gK"); check_error();
         /*optional fields*/
+        multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
+        phi = atGetOptionalDouble(ElemData,"Phi", 0.0); check_error();
+        gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
@@ -177,7 +192,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],3,mxCreateString("MaxOrder"));
         mxSetCell(plhs[0],4,mxCreateString("NumIntSteps"));
         mxSetCell(plhs[0],4,mxCreateString("Type"));
-        mxSetCell(plhs[0],4,mxCreateString("Type"));
+        mxSetCell(plhs[0],4,mxCreateString("MultipoleFringe"));
         mxSetCell(plhs[0],4,mxCreateString("Phi"));
         mxSetCell(plhs[0],4,mxCreateString("gK"));
         if (nlhs>1) {
