@@ -534,7 +534,10 @@ class Corrector(LongElement):
 
 
 class Wiggler(LongElement):
-    """pyAT wiggler element"""
+    """pyAT wiggler element
+
+    See atwiggler.m
+    """
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
                                                              'Nstep', 'Nmeth',
                                                              'By', 'Bx',
@@ -546,9 +549,18 @@ class Wiggler(LongElement):
     def __init__(self, family_name, length, wiggle_period, b_max, n_step,
                  n_meth, by, bx, energy, **kwargs):
         """
+
+        Args:
+            length: total length of the wiggler
+            wiggle_period: length must be a multiple of this
+            b_max: peak wiggler field [Tesla]
+            n_step: number of integration steps.
+            n_meth: symplectic integration order: 2 or 4
+            by: harmonics for horizontal wiggler: example [1, 1, 0, 1, 1, 0]
+            bx: harmonics for vertical wiggler: example []
         Available keywords:
-        NHharm    Number of horizontal harmonics
-        NVharm    Number of vertical harmonics
+            NHharm    Number of horizontal harmonics
+            NVharm    Number of vertical harmonics
         """
         n_wiggles = length / wiggle_period
         if abs(round(n_wiggles) - n_wiggles) > 1e-6:
