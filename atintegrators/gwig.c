@@ -37,19 +37,20 @@ void GWigMap_2nd(struct gwig *pWig, double *X, double dl);
 void GWigAx(struct gwig *pWig, double *Xvec, double *pax, double *paxpy);
 void GWigAy(struct gwig *pWig, double *Xvec, double *pay, double *paypx);
 double sinc(double x );
-void GWigGauge(struct gwig *pWig, double *X, int flag)
 
+/* This function appears to be unused. */
+void GWigGauge(struct gwig *pWig, double *X, int flag)
 {
   double ax, ay, axpy, aypx;
 
   GWigAx(pWig, X, &ax, &axpy);
   GWigAy(pWig, X, &ay, &aypx);
  
-  if (flag = Elem_Entrance) {
+  if (flag == Elem_Entrance) {
     /* At the entrance of the wiggler */
     X[1] = X[1] + ax;
     X[3] = X[3] + ay;
-  } else if (flag = Elem_Exit) {
+  } else if (flag == Elem_Exit) {
     /* At the exit of the wiggler */
     X[1] = X[1] - ax;
     X[3] = X[3] - ay;

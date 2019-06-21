@@ -40,17 +40,18 @@ void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxyz, double dl);
 void GWigB(struct gwigR *pWig, double *Xvec, double *B);
 double sinc(double x );
 
+/* This function appears to be unused. */
 void GWigGauge(struct gwigR *pWig, double *X, int flag)
 {
   double ax, ay, axpy, aypx;
   GWigAx(pWig, X, &ax, &axpy);
   GWigAy(pWig, X, &ay, &aypx);
  
-  if (flag = Elem_Entrance) {
+  if (flag == Elem_Entrance) {
     /* At the entrance of the wiggler */
     X[1] = X[1] + ax;
     X[3] = X[3] + ay;
-  } else if (flag = Elem_Exit) {
+  } else if (flag == Elem_Exit) {
     /* At the exit of the wiggler */
     X[1] = X[1] - ax;
     X[3] = X[3] - ay;
