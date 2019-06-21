@@ -27,6 +27,7 @@ class CopyDuringBuild(build_ext):
         diffmatrix_source = os.path.abspath(os.path.join(here, '../atmat/atphysics/Radiation'))
         # Copy files into pyat for distribution.
         source_files = glob.glob(os.path.join(integrator_src_orig, '*.[ch]'))
+        source_files.extend(glob.glob(os.path.join(integrator_src_orig, '*.cc')))
         source_files.extend(glob.glob(os.path.join(diffmatrix_source, 'findmpoleraddiffmatrix.c')))
         if not os.path.exists(integrator_src):
             os.makedirs(integrator_src)
@@ -40,6 +41,7 @@ integrator_src_orig = os.path.abspath(os.path.join(here, '../atintegrators'))
 integrator_src = os.path.abspath(os.path.join(here, 'integrator-src'))
 diffmatrix_source = os.path.abspath(os.path.join(here, '../atmat/atphysics/Radiation'))
 pass_methods = glob.glob(os.path.join(integrator_src, '*Pass.c'))
+pass_methods.extend(glob.glob(os.path.join(integrator_src, '*Pass.cc')))
 diffmatrix_method = os.path.join(integrator_src, 'findmpoleraddiffmatrix.c')
 
 cflags = []

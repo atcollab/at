@@ -199,7 +199,7 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
     dims = PyArray_SHAPE(array);
     *nsz = (ndims >= 2) ? dims[1] : 0;
     *msz = (ndims >= 1) ? dims[0] : 0;
-    return PyArray_DATA(array);
+    return (double *) PyArray_DATA(array);
 }
 
 static double *atGetDoubleArray(const PyObject *element, char *name)
@@ -229,7 +229,13 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 #if defined(PYAT) || defined(MATLAB_MEX_FILE)
 #include "attypes.h"
 
-ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem, double *r_in,
+#ifdef __cplusplus
+#define C_LINK extern "C"
+#else
+#define C_LINK
+#endif
+
+C_LINK ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem, double *r_in,
                                       int num_particles, struct parameters *Param);
 
 #endif /* defined(PYAT) || defined(MATLAB_MEX_FILE) */
