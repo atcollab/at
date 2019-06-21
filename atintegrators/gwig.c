@@ -193,8 +193,8 @@ void GWigAx(struct gwig *pWig, double *Xvec, double *pax, double *paxpy)
     ax  = ax + (pWig->HCw[i])*(kw/kz)*cx*chy*sz;
 
     shy = sinh(ky * y);
-    if ( abs(kx/kw) > GWIG_EPS ) {
-      sxkx = sin(kx * x)/kx;	
+    if (fabs(kx/kw) > GWIG_EPS) {
+      sxkx = sin(kx * x)/kx;
     } else {
       sxkx = x*sinc(kx*x);
     }
@@ -281,14 +281,14 @@ void GWigAy(struct gwig *pWig, double *Xvec, double *pay, double *paypx)
     ay  = ay + (pWig->VCw[i])*(kw/kz)*chx*cy*sz;
 
     shx = sinh(kx * x);
-    if (abs(ky/kw) > GWIG_EPS) {
+    if (fabs(ky/kw) > GWIG_EPS) {
       syky  = sin(ky * y)/ky;
     } else {
       syky = y * sinc(ky * y);
       aypx = aypx + (pWig->VCw[i])*(kw/kz)* kx*shx*syky*sz;
     }
   }
-  
+
   *pay = ay;
   *paypx = aypx;
 }
