@@ -1,4 +1,4 @@
-function elem = attiltelem(elem,PSI)
+function elem = attiltelem(elem,PSI,varargin)
 %ATTILTELEM sets new rotation parameters
 %  NEWELEM = ATTILTELEM(OLDELEM,PSI)
 %
@@ -10,8 +10,15 @@ function elem = attiltelem(elem,PSI)
 %   R1 = [cos(PSI) sin(PSI); -sin(PSI) cos(PSI)]
 %   R2 = R1'
 %
-%  See also ATSHIFTELEM, ATMODELEM
+%   NEWELEM=ATTILTELEM(OLDELEM,PSI,'RelativeTilt')
+%   the rotation is added to the previous misalignment
+%
+%  See also ATSETTILT, ATSHIFTELEM, ATMODELEM
 
+[RelativeTilt,options]=getflag(varargin,'RelativeTilt');
+if ~isempty(options)
+    error('AT:WrongArgument','Unexpected argument "%s"',num2str(options{1}))
+end
 C       = cos(PSI);
 S       = sin(PSI);
 RM      = diag([C C C C 1 1]);
@@ -19,7 +26,14 @@ RM(1,3) = S;
 RM(2,4) = S;
 RM(3,1) = -S;
 RM(4,2) = -S;
-elem.R1 = RM;
-elem.R2 = RM';
+if RelativeTilt && isfield(elem,'R1') && isfield(elem,'R2')
+    newR1=elem.R1*RM;
+    newR2=RM'*elem.R2;
+    elem.R1=newR1;
+    elem.R2=newR2;
+else
+    elem.R1 = RM;
+    elem.R2 = RM';
+end
 end
 

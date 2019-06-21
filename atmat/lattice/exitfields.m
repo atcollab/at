@@ -11,7 +11,7 @@ rottrasl=getflag(varargin,'KeepAxis');
 start=1;
 
 if rottrasl
-   start=3; % remove R1 T1 from list of field at entrance
+   start=3; % remove R2 T2 from list of field at exit
 end
 
 persistent fnms

@@ -16,14 +16,42 @@ refpts can be:
 """
 import numpy
 import itertools
+import functools
+from fnmatch import fnmatch
+from at.lattice import elements
+
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'uint32_refpts',
+           'bool_refpts', 'checkattr', 'checktype', 'get_cells', 'get_elements',
+           'refpts_iterator', 'get_s_pos', 'set_shift', 'set_tilt', 'tilt_elem',
+           'shift_elem']
 
 
 class AtError(Exception):
     pass
 
 
-class AtWarning(Warning):
+class AtWarning(UserWarning):
     pass
+
+
+def check_radiation(rad):
+    """Function to be used as a decorator for optics functions
+
+    If ring is a Lattice object, raises an exception
+        if ring.radiation is not rad
+
+    If ring is any other sequence, no test is performed
+    """
+    def radiation_decorator(func):
+        @functools.wraps(func)
+        def wrapper(ring, *args, **kwargs):
+            ringrad = getattr(ring, 'radiation', rad)
+            if ringrad is not rad:
+                raise AtError('{0} needs radiation {1}'.format(
+                    func.__name__, 'ON' if rad else 'OFF'))
+            return func(ring, *args, **kwargs)
+        return wrapper
+    return radiation_decorator
 
 
 def uint32_refpts(refpts, n_elements):
@@ -34,7 +62,7 @@ def uint32_refpts(refpts, n_elements):
     refs = numpy.asarray(refpts).reshape(-1)
     if (refpts is None) or (refs.size is 0):
         return numpy.array([], dtype=numpy.uint32)
-    elif (refs.size > n_elements+1):
+    elif refs.size > n_elements+1:
         raise ValueError('too many reftps given')
     elif numpy.issubdtype(refs.dtype, numpy.bool_):
         return numpy.flatnonzero(refs).astype(numpy.uint32)
@@ -46,13 +74,13 @@ def uint32_refpts(refpts, n_elements):
     # Check ascending
     if refs.size > 1:
         prev = refs[0]
-        for next in refs[1:]:
-            if next < prev:
+        for nxt in refs[1:]:
+            if nxt < prev:
                 raise ValueError('refpts should be given in ascending order')
-            elif next == prev:
+            elif nxt == prev:
                 raise ValueError('refpts contains duplicates or index(es) out'
                                  ' of range')
-            prev = next
+            prev = nxt
 
     return refs
 
@@ -165,6 +193,40 @@ def refpts_iterator(ring, refpts):
             yield ring[i]
 
 
+def get_elements(ring, key, quiet=True):
+    """Get the elements of a family or class (type) from the lattice.
+
+    Args:
+        ring: lattice from which to retrieve the elements.
+        key: can be:
+             1) an element instance, will return all elements of the same type
+                in the lattice, e.g. key=Drift('d1', 1.0)
+             2) an element type, will return all elements of that type in the
+                lattice, e.g. key=at.elements.Sextupole
+             3) a string to match against elements' FamName, supports Unix
+                shell-style wildcards, e.g. key='BPM_*1'
+        quiet: if false print information about matched elements for FamName
+               matches, defaults to True.
+    """
+    if isinstance(key, elements.Element):
+        elems = [elem for elem in ring if isinstance(elem, type(key))]
+    elif isinstance(key, type):
+        elems = [elem for elem in ring if isinstance(elem, key)]
+    elif numpy.issubdtype(type(key), numpy.str_):
+        elems = [elem for elem in ring if fnmatch(elem.FamName, key)]
+        if not quiet:
+            matched_fams = set(elem.FamName for elem in elems)
+            ending = 'y' if len(matched_fams) == 1 else 'ies'
+            print("String '{0}' matched {1} famil{2}: {3}\n"
+                  "all corresponding elements have been "
+                  "returned.".format(key, len(matched_fams), ending,
+                                     ', '.join(matched_fams)))
+    else:
+        raise TypeError("Invalid key type {0}; please enter a string, element"
+                        " type, or element instance.".format(type(key)))
+    return elems
+
+
 def get_s_pos(ring, refpts=None):
     """
     Return a numpy array corresponding to the s position of the specified
@@ -185,75 +247,78 @@ def get_s_pos(ring, refpts=None):
     return s_pos[refpts]
 
 
-def tilt_elem(elem, rots):
+def tilt_elem(elem, rots, relative=False):
     """
-    set a new tilt angle to an element. The rotation matrices are stored in the R1 and R2 attributes
+    set a new tilt angle to an element.
+    The rotation matrices are stored in the R1 and R2 attributes
+
     R1 = [[ cos(rots) sin(rots)]    R2 = [[cos(rots) -sin(rots)]
           [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
     
-    :param elem: element to be tilted
-    :param rots: tilt angle (in radians).
-           rots > 0 corresponds to a corkskew rotation of the element looking in the direction of the beam
-    :return: None
+    elem            element to be tilted
+    rots            tilt angle (in radians).
+                    rots > 0 corresponds to a corkskew rotation of the element
+                    looking in the direction of the beam
+    relative=False  Rotation relative to the previous element rotation
     """
     cs = numpy.cos(rots)
     sn = numpy.sin(rots)
-    rm = numpy.diag([cs, cs, cs, cs, 1.0, 1.0]).T  # transpose to get Fortran alignment
+    rm = numpy.asfortranarray(numpy.diag([cs, cs, cs, cs, 1.0, 1.0]))
     rm[0, 2] = sn
     rm[1, 3] = sn
     rm[2, 0] = -sn
     rm[3, 1] = -sn
-    elem.R1 = numpy.asfortranarray(rm)
-    elem.R2 = numpy.asfortranarray(rm.T)
+    if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
+        elem.R1 = elem.R1.dot(rm)
+        elem.R2 = rm.T.dot(elem.R2)
+    else:
+        elem.R1 = rm
+        elem.R2 = rm.T
 
 
-def shift_elem(elem, deltax=0.0, deltaz=0.0):
+def shift_elem(elem, deltax=0.0, deltaz=0.0, relative=False):
     """
-    set a new displacement vector to an element. Translation vectors are stored in the T1 and T2 attributes
+    set a new displacement vector to an element.
+    The ranslation vectors are stored in the T1 and T2 attributes
 
-    :param elem:  element to be displaced
-    :param deltax: horizontal displacement of the element
-    :param deltaz:  vertical displacement of the element
-    :return: None
+    elem            element to be displaced
+    deltax          horizontal displacement of the element
+    deltaz          vertical displacement of the element
+    relative=False  Displacement relative to the previous alignment
     """
     tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
-    elem.T1 = -tr
-    elem.T2 = tr
+    if relative and hasattr(elem, 'T1') and hasattr(elem, 'T2'):
+        elem.T1 -= tr
+        elem.T2 += tr
+    else:
+        elem.T1 = -tr
+        elem.T2 = tr
 
 
-def set_tilt(ring, tilts):
+def set_tilt(ring, tilts, relative=False):
     """Set tilts to a list of elements.
 
-    ring:   any iterable over elements to be tilted
-    tilts:  any iterable as long as ring containing tilt values or
-            scalar tilt value to be applied to all elements
-
+    ring            sequence of elements to be tilted
+    tilts           sequence of tilt values as long as ring or
+                    scalar tilt value applied to all elements
+    relative=False  Rotation relative to the previous tilt angle
     """
-    try:
-        it = iter(tilts)
-    except TypeError:
-        it = itertools.repeat(tilts)
-    for el, tilt in zip(ring, it):
-        tilt_elem(el, tilt)
+    tilts = numpy.broadcast_to(tilts, (len(ring),))
+    for el, tilt in zip(ring, tilts):
+        tilt_elem(el, tilt, relative=relative)
 
 
-def set_shift(ring, dxs, dzs):
+def set_shift(ring, dxs, dzs, relative=False):
     """Set translations to a list of elements.
 
-    ring:   any iterable over elements to be shifted
-    dxs:    any iterable as long as ring containing horizontal displacement values or
-            scalar horizontal displacement value to be applied to all elements
-    dzs:    any iterable as long as ring containing vertical displacement values or
-            scalar vertical displacement value to be applied to all elements
-
+    ring            sequence of elements to be shifted
+    dxs             sequence of horizontal displacement as long as ring or
+                    scalar horizontal displacement applied to all elements
+    dzs             sequence of vertical displacement as long as ring or
+                    scalar vertical displacement applied to all elements
+    relative=False  Displacement relative to the previous alignment
     """
-    try:
-        itx = iter(dxs)
-    except TypeError:
-        itx = itertools.repeat(dxs)
-    try:
-        itz = iter(dzs)
-    except TypeError:
-        itz = itertools.repeat(dzs)
-    for el, dx, dy in zip(ring, itx, itz):
-        shift_elem(el, dx, dy)
+    dxs = numpy.broadcast_to(dxs, (len(ring),))
+    dzs = numpy.broadcast_to(dzs, (len(ring),))
+    for el, dx, dy in zip(ring, dxs, dzs):
+        shift_elem(el, dx, dy, relative=relative)
