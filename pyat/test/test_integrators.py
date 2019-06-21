@@ -10,7 +10,7 @@ def test_exact_hamiltonian_pass(rin):
     drift.Type = 0
     drift.PassMethod = 'ExactHamiltonianPass'
     drift.BendingAngle = 0
-    l = Lattice([drift], name='lat', energy=5)
+    l = Lattice([drift], name='lat', energy=3e9)
     atpass(l, rin, 1)
 
 
@@ -19,5 +19,12 @@ def test_gwig_symplectic_pass(rin, passmethod):
     # Parameters copied from one of the Diamond wigglers.
     wiggler = elements.Wiggler('w', 1.15, 0.05, 0, 5, 4, [1, 1, 0, 1, 1, 0], [], 3e9)
     wiggler.PassMethod = passmethod
-    l = Lattice([wiggler], name='lat', energy=5)
+    l = Lattice([wiggler], name='lat', energy=3e9)
+    atpass(l, rin, 1)
+
+
+def test_bndstrmpole_symplectic_4_pass(rin):
+    bend = elements.Dipole('b', 1.0)
+    bend.PassMethod = 'BndStrMPoleSymplectic4Pass'
+    l = Lattice([bend], name='lat', energy=3e9)
     atpass(l, rin, 1)
