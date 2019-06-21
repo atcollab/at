@@ -174,6 +174,7 @@ def test_find_Quadrupole(elem_kwargs):
 def test_find_Multipole(elem_kwargs):
     assert find_class(elem_kwargs, True) is elements.Multipole
 
+
 def test_find_Drift():
     elem_kwargs = {'Length': 1, 'FamName': 'fam'}
     assert find_class(elem_kwargs, True) is elements.Drift
@@ -220,4 +221,4 @@ def test_find_Marker(elem_kwargs):
         {'Class': 'Drift', 'PassMethod': 'InvalidPass'}))
 def test_sanitise_class_error(elem_kwargs):
     with pytest.raises(AttributeError):
-        elem = element_from_dict(elem_kwargs)
+        element_from_dict(elem_kwargs)
