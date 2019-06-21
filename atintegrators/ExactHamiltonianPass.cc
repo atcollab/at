@@ -48,7 +48,7 @@ void ExactHamiltonianPass(double *r_in, double le,
         e.F[2 * n]     = B[n];
         e.F[2 * n + 1] = A[n];
     }
-    
+
     e.L = le;
     e.phi = phi;
     e.gK = gK;
@@ -59,21 +59,21 @@ void ExactHamiltonianPass(double *r_in, double le,
 
     for(c = 0; c<num_particles; c++)
     {
-        r6 = r_in+c*6;	
+        r6 = r_in+c*6;
         if(!atIsNaN(r6[0]))
-        {   
+        {
             /* misalignment at entrance */
             if(T1)
                 ATaddvv(r6,T1);
             if(R1)
                 ATmultmv(r6,R1);
-            
+
             track_element(r6, &e);
-            
+
             /* misalignment at exit */
             if(R2)
                 ATmultmv(r6,R2);
-            if(T2)   
+            if(T2)
                 ATaddvv(r6,T2);
         }
     }
@@ -130,78 +130,67 @@ MODULE_DEF(ExactHamiltonianPass) /* Dummy module initialisation */
 
 
 #if defined(MATLAB_MEX_FILE)
-
-/* generic show required and optional fields */
-static void ShowFields(int nlhs, mxArray **plhs)
-{
-    int n;
-    int optional = 0;
-    int count_required = 0;
-    int count_optional = 0;
-    for(n = 0; n < NUM_FIELDS_2_REMEMBER; n++)
-    {
-        const char * name = FieldNames[n];
-        if(strcmp(name, FirstOptionalName) == 0)
-        {
-            optional = 1;
-        }
-        if(optional)
-        {
-            count_optional++;
-        }
-        else
-        {
-            count_required++;
-        }
-    }
-    plhs[0] = mxCreateCellMatrix(count_required, 1);
-    for(n = 0; n < count_required; n++)
-    {
-        mxSetCell(plhs[0],n,mxCreateString(FieldNames[n]));
-    }
-    if(nlhs > 1)
-    {   
-        plhs[1] = mxCreateCellMatrix(count_optional, 1);
-        for(n = 0; n < count_optional; n++)
-        {
-            mxSetCell(plhs[1],n,mxCreateString(FieldNames[n + count_required]));
-        }
-    }
-}
-
-/* generic mexFunction */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    int FieldNumbers[NUM_FIELDS_2_REMEMBER];
-    double * r_in;
-    if(nrhs >= 2)
-    {
-	int m = mxGetM(prhs[1]);
-	int n = mxGetN(prhs[1]);
+    if (nrhs >= 2) {
+        double * r_in;
         const mxArray * ElemData = prhs[0];
-	if(m!=6) 
+        int num_particles = mxGetN(prhs[1]);
+        int m = mxGetM(prhs[1]);
+        if (m!=6)
             mexErrMsgTxt("Second argument must be a 6 x N matrix");
-        Lookup_Fields(ElemData, FieldNumbers);
-	plhs[0] = mxDuplicateArray(prhs[1]);
-	r_in = mxGetPr(plhs[0]);
+
+        double le, bending_angle;
+        double *polynom_a, *polynom_b;
+        long max_order, num_int_steps, type, multipole_fringe;
+        double *R1, *R2, *T1, *T2;
+        double phi, gK;
         le = atGetDouble(ElemData,"Length"); check_error();
-        PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
-        max_order = atGetInt(ElemData, "MaxOrder"); check_error();
-        num_int_steps = atGetInt(ElemData, "NumIntSteps"); check_error();
+        bending_angle = atGetDouble(ElemData,"BendingAngle"); check_error();
+        polynom_a = atGetDoubleArray(ElemData,"PolynomA"); check_error();
+        polynom_b = atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        max_order = atGetLong(ElemData, "MaxOrder"); check_error();
+        num_int_steps = atGetLong(ElemData, "NumIntSteps"); check_error();
+        type = atGetLong(ElemData, "Type"); check_error();
+        multipole_fringe = atGetLong(ElemData, "Type"); check_error();
         phi = atGetDouble(ElemData,"Phi"); check_error();
         gK = atGetDouble(ElemData,"gK"); check_error();
-        multipole_fringe = atGetLong(ElemData, "Type"); check_error();
+        /*optional fields*/
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
+
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetPr(plhs[0]);
         ExactHamiltonianPass(r_in, le, polynom_a, polynom_b, T1, T2, R1, R2, max_order,
-                 num_int_steps, phi, type, gK, multipole_fringe, num_particles)
+                     num_int_steps, phi, type, gK, multipole_fringe, num_particles);
     }
-    else
-    {
-        ShowFields(nlhs, plhs);
+    else if (nrhs == 0) {
+        /* list of required fields */
+        plhs[0] = mxCreateCellMatrix(5,1);
+        mxSetCell(plhs[0],0,mxCreateString("Length"));
+        mxSetCell(plhs[0],0,mxCreateString("BendingAngle"));
+        mxSetCell(plhs[0],1,mxCreateString("PolynomA"));
+        mxSetCell(plhs[0],2,mxCreateString("PolynomB"));
+        mxSetCell(plhs[0],3,mxCreateString("MaxOrder"));
+        mxSetCell(plhs[0],4,mxCreateString("NumIntSteps"));
+        mxSetCell(plhs[0],4,mxCreateString("Type"));
+        mxSetCell(plhs[0],4,mxCreateString("Type"));
+        mxSetCell(plhs[0],4,mxCreateString("Phi"));
+        mxSetCell(plhs[0],4,mxCreateString("gK"));
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(11,1);
+            mxSetCell(plhs[1], 4,mxCreateString("T1"));
+            mxSetCell(plhs[1], 5,mxCreateString("T2"));
+            mxSetCell(plhs[1], 6,mxCreateString("R1"));
+            mxSetCell(plhs[1], 7,mxCreateString("R2"));
+        }
+    }
+    else {
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif
+#endif /*MATLAB_MEX_FILE*/
