@@ -24,23 +24,23 @@
  */
 
 #ifndef  GWIG
-#include "gwigR.h"
+#include "gwig.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 #endif
 
-void GWigGauge(struct gwig *pWig, double *X, int flag);
-void GWigPass_2nd(struct gwig *pWig, double *X);
-void GWigPass_4th(struct gwig *pWig, double *X);
-void GWigMap_2nd(struct gwig *pWig, double *X, double dl);
-void GWigAx(struct gwig *pWig, double *Xvec, double *pax, double *paxpy);
-void GWigAy(struct gwig *pWig, double *Xvec, double *pay, double *paypx);
-void GWigRadiationKicks(struct gwig *pWig, double *X, double *Bxyz, double dl);
-void GWigB(struct gwig *pWig, double *Xvec, double *B);
+void GWigGauge(struct gwigR *pWig, double *X, int flag);
+void GWigPass_2nd(struct gwigR *pWig, double *X);
+void GWigPass_4th(struct gwigR *pWig, double *X);
+void GWigMap_2nd(struct gwigR *pWig, double *X, double dl);
+void GWigAx(struct gwigR *pWig, double *Xvec, double *pax, double *paxpy);
+void GWigAy(struct gwigR *pWig, double *Xvec, double *pay, double *paypx);
+void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxyz, double dl);
+void GWigB(struct gwigR *pWig, double *Xvec, double *B);
 double sinc(double x );
 
-void GWigGauge(struct gwig *pWig, double *X, int flag)
+void GWigGauge(struct gwigR *pWig, double *X, int flag)
 {
   double ax, ay, axpy, aypx;
   GWigAx(pWig, X, &ax, &axpy);
@@ -60,7 +60,7 @@ void GWigGauge(struct gwig *pWig, double *X, int flag)
 }
 
 
-void GWigPass_2nd(struct gwig *pWig, double *X) 
+void GWigPass_2nd(struct gwigR *pWig, double *X) 
 {
   int    i, Nstep;
   double dl;
@@ -92,7 +92,7 @@ void GWigPass_2nd(struct gwig *pWig, double *X)
 }
 
 
-void GWigPass_4th(struct gwig *pWig, double *X)
+void GWigPass_4th(struct gwigR *pWig, double *X)
 {
 
   const double x1 = 1.3512071919596576340476878089715e0;
@@ -132,7 +132,7 @@ void GWigPass_4th(struct gwig *pWig, double *X)
 }
 
 
-void GWigMap_2nd(struct gwig *pWig, double *X, double dl) 
+void GWigMap_2nd(struct gwigR *pWig, double *X, double dl) 
 {
 
   double dld, dl2, dl2d;
@@ -190,7 +190,7 @@ void GWigMap_2nd(struct gwig *pWig, double *X, double dl)
 }
 
 
-void GWigAx(struct gwig *pWig, double *Xvec, double *pax, double *paxpy) 
+void GWigAx(struct gwigR *pWig, double *Xvec, double *pax, double *paxpy) 
 {
 
   int    i;
@@ -260,7 +260,7 @@ void GWigAx(struct gwig *pWig, double *Xvec, double *pax, double *paxpy)
 }
 
 
-void GWigAy(struct gwig *pWig, double *Xvec, double *pay, double *paypx)
+void GWigAy(struct gwigR *pWig, double *Xvec, double *pay, double *paypx)
 {
   int    i;
   double x, y, z;
@@ -339,7 +339,7 @@ double sinc(double x)
 
 
 
-void GWigB(struct gwig *pWig, double *Xvec, double *B) 
+void GWigB(struct gwigR *pWig, double *Xvec, double *B) 
 /* Compute magnetic field at particle location.
  * Added by M. Borland, August 2007.
  */
@@ -445,7 +445,7 @@ void GWigB(struct gwig *pWig, double *Xvec, double *B)
 }
 
 
-void GWigRadiationKicks(struct gwig *pWig, double *X, double *Bxy, double dl)
+void GWigRadiationKicks(struct gwigR *pWig, double *X, double *Bxy, double dl)
 /* Apply kicks for synchrotron radiation.
  * Added by M. Borland, August 2007.
  */

@@ -41,7 +41,7 @@ struct elem {
 /*****************************************************************************/
 /* PHYSICS SECTION ***********************************************************/
 
-void GWigInit(struct gwig *Wig,double design_energy, double Ltot, double Lw,
+void GWigInit(struct gwigR *Wig,double design_energy, double Ltot, double Lw,
             double Bmax, int Nstep, int Nmeth, int NHharm, int NVharm,
             int HSplitPole, int VSplitPole, double *zEndPointH,
             double *zEndPointV, double *By, double *Bx, double *T1,
@@ -132,7 +132,7 @@ void GWigSymplecticRadPass(double *r,double Energy, double Ltot, double Lw,
     double *r6;
     double zEndPointH[2];
     double zEndPointV[2];
-    struct gwig Wig;
+    struct gwigR Wig;
 
     zEndPointH[0] = 0;
     zEndPointH[1] = Ltot;
