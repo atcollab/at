@@ -184,24 +184,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(5,1);
+        plhs[0] = mxCreateCellMatrix(7,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
-        mxSetCell(plhs[0],0,mxCreateString("BendingAngle"));
-        mxSetCell(plhs[0],1,mxCreateString("PolynomA"));
-        mxSetCell(plhs[0],2,mxCreateString("PolynomB"));
-        mxSetCell(plhs[0],3,mxCreateString("MaxOrder"));
-        mxSetCell(plhs[0],4,mxCreateString("NumIntSteps"));
-        mxSetCell(plhs[0],4,mxCreateString("Type"));
-        mxSetCell(plhs[0],4,mxCreateString("MultipoleFringe"));
-        mxSetCell(plhs[0],4,mxCreateString("Phi"));
-        mxSetCell(plhs[0],4,mxCreateString("gK"));
+        mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
+        mxSetCell(plhs[0],2,mxCreateString("PolynomA"));
+        mxSetCell(plhs[0],3,mxCreateString("PolynomB"));
+        mxSetCell(plhs[0],4,mxCreateString("MaxOrder"));
+        mxSetCell(plhs[0],5,mxCreateString("NumIntSteps"));
+        mxSetCell(plhs[0],6,mxCreateString("Type"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(11,1);
-            mxSetCell(plhs[1], 4,mxCreateString("T1"));
-            mxSetCell(plhs[1], 5,mxCreateString("T2"));
-            mxSetCell(plhs[1], 6,mxCreateString("R1"));
-            mxSetCell(plhs[1], 7,mxCreateString("R2"));
+            plhs[1] = mxCreateCellMatrix(7,1);
+            mxSetCell(plhs[1],0,mxCreateString("MultipoleFringe"));
+            mxSetCell(plhs[1],1,mxCreateString("Phi"));
+            mxSetCell(plhs[1],2,mxCreateString("gK"));
+            mxSetCell(plhs[1],3,mxCreateString("T1"));
+            mxSetCell(plhs[1],4,mxCreateString("T2"));
+            mxSetCell(plhs[1],5,mxCreateString("R1"));
+            mxSetCell(plhs[1],6,mxCreateString("R2"));
         }
     }
     else {
