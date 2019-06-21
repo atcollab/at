@@ -80,3 +80,7 @@ directly from Matlab:
         ...
     }
 
+An example of calling an integrator in Matlab:
+
+    >> d = atdrift('drift', 1)
+    >> DriftPass(d, zeros(6,1))
