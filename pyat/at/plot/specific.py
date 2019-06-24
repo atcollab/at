@@ -25,7 +25,8 @@ def pldata_beta_disp(ring, refpts, **kwargs):
     dispersion = data['dispersion'][:, 0]
 
     # Left axis definition
-    left = (r'$\beta$ [m]', s_pos, [betax, betaz], [r'$\beta_x$', r'$\beta_z$'])
+    left = (r'$\beta$ [m]', s_pos, [betax, betaz],
+            [r'$\beta_x$', r'$\beta_z$'])
     # Right axis definition
     right = ('dispersion [m]', s_pos, [dispersion], ['dispersion'])
     return 'Optical functions', left, right
@@ -119,7 +120,8 @@ def plot_linear(ring, *keys, **kwargs):
               ('closed_orbit'), [1, 3])     x', z'
               ('m44', 2, 2)                 T33
               ('m44', [0, 0], [0, 1])       T11, T12
-              ('m44', 2, slice(4))          T31, T32, T33, T34 as a single block
+              ('m44', 2, slice(4))          T31, T32, T33, T34
+                                            as a single block
               ('m44', [2,2,2,2], [0,1,2,3]) T31, T32, T33, T34
 
         right           Right axis (optional)
@@ -157,7 +159,8 @@ def plot_trajectory(ring, r_in, nturns=1, **kwargs):
     """
     # noinspection PyShadowingNames
     def pldata_trajectory(ring, refpts, r_in, nturns=1, **kwargs):
-        r_out = lattice_pass(ring, r_in, refpts=refpts, nturns=nturns, **kwargs)
+        r_out = lattice_pass(ring, r_in, refpts=refpts, nturns=nturns,
+                             **kwargs)
         s_pos = ring.get_s_pos(refpts)
         particles = range(r_out.shape[1])
         xx = [r_out[0, i, :, :] for i in particles]

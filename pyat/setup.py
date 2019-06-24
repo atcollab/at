@@ -1,19 +1,25 @@
+import os
+import glob
 import sys
+import shutil
 try:
     import numpy
 except ImportError:
     print('\npyAT requires numpy. '
           'Please install numpy: "pip install numpy"\n')
     sys.exit()
+from io import open
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-import os
-import glob
-import shutil
 
 
 here = os.path.abspath(os.path.dirname(__file__))
 macros = [('PYAT', None)]
+
+
+# Get the long description from the README file
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 
 class CopyDuringBuild(build_ext):
@@ -76,6 +82,7 @@ setup(cmdclass={'build_ext': CopyDuringBuild},
       name='accelerator-toolbox',
       version='0.0.1',
       description='Accelerator Toolbox',
+      long_description=long_description,
       author='The AT collaboration',
       author_email='atcollab-general@lists.sourceforge.net',
       url='https://pypi.org/project/accelerator-toolbox/',

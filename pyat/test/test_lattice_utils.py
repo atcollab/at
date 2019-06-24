@@ -4,7 +4,6 @@ from io import BytesIO, StringIO
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
-from at.lattice import AtWarning, AtError
 import pytest
 
 
@@ -30,8 +29,10 @@ def test_uint32_refpts_converts_numerical_inputs_correctly(ref_in, expected):
     [True, numpy.array([0], dtype=numpy.uint32)],
     [False, numpy.array([], dtype=numpy.uint32)],
     [[True, False, True], numpy.array([0, 2], dtype=numpy.uint32)],
-    [[False, False, False, False, False, False], numpy.array([], dtype=numpy.uint32)],
-    [[True, True, True, True, True, True], numpy.array([0, 1, 2, 3, 4, 5], dtype=numpy.uint32)]
+    [[False, False, False, False, False, False],
+     numpy.array([], dtype=numpy.uint32)],
+    [[True, True, True, True, True, True],
+     numpy.array([0, 1, 2, 3, 4, 5], dtype=numpy.uint32)]
 ))
 def test_uint32_refpts_converts_other_input_types_correctly(ref_in, expected):
     numpy.testing.assert_equal(uint32_refpts(ref_in, 5), expected)
@@ -45,7 +46,7 @@ def test_uint32_refpts_converts_other_input_types_correctly(ref_in, expected):
                                     [0, -2], [3, 0], [1, 3], [-1, 3], [3, -2]))
 def test_uint32_refpts_throws_ValueError_correctly(ref_in):
     with pytest.raises(ValueError):
-        r = uint32_refpts(ref_in, 2)
+        uint32_refpts(ref_in, 2)
 
 
 def test_bool_refpts():
@@ -105,12 +106,14 @@ def test_get_elements(hmba_lattice):
     assert get_elements(hmba_lattice, 'QD3*') == list(hmba_lattice[19, 105])
     assert get_elements(hmba_lattice, 'S*H2B') == list([hmba_lattice[55]])
     assert get_elements(hmba_lattice, '*C_1') == list(hmba_lattice[59, 60])
-    assert get_elements(hmba_lattice, 'DR_2[1-3]') == list(hmba_lattice[54, 56, 58])
-    assert get_elements(hmba_lattice, 'DR_2[!1-7]') == list(hmba_lattice[52, 78, 80])
+    assert get_elements(hmba_lattice,
+                        'DR_2[1-3]') == list(hmba_lattice[54, 56, 58])
+    assert get_elements(hmba_lattice,
+                        'DR_2[!1-7]') == list(hmba_lattice[52, 78, 80])
     # test element instance
     marker = elements.Marker('M1')
-    assert get_elements(hmba_lattice, marker) == list(hmba_lattice[1, 12, 61,
-                                                              67, 73])
+    assert get_elements(hmba_lattice,
+                        marker) == list(hmba_lattice[1, 12, 61, 67, 73])
     # test element type
     assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError
@@ -157,6 +160,7 @@ def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_int_re
     numpy.testing.assert_equal(get_s_pos(lat, range(len(lat) + 1)),
                                numpy.array([0, 0.1, 2.2]))
 
+
 def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_bool_refpts():
     e = elements.LongElement('e', 0.1)
     f = elements.LongElement('e', 2.1)
@@ -197,8 +201,8 @@ def test_set_tilt(simple_ring):
 
 
 def test_set_shift(simple_ring):
-    set_shift(simple_ring, numpy.array([0., 0., 0., 1., 0., 0.5,]),
-                      numpy.array([0., 0., 0., 2., 0., 1.,]))
+    set_shift(simple_ring, numpy.array([0., 0., 0., 1., 0., 0.5]),
+              numpy.array([0., 0., 0., 2., 0., 1.]))
     a = numpy.array([0.5, 0., 1., 0., 0., 0.])
     numpy.testing.assert_equal(simple_ring[3].T1, -a*2)
     numpy.testing.assert_equal(simple_ring[3].T2, a*2)
