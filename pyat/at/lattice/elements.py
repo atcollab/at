@@ -533,5 +533,79 @@ class Corrector(LongElement):
                                         KickAngle=kick_angle, **kwargs)
 
 
+class Wiggler(LongElement):
+    """pyAT wiggler element
+
+    See atwiggler.m
+    """
+    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
+                                                             'Nstep', 'Nmeth',
+                                                             'By', 'Bx',
+                                                             'Energy']
+    _conversions = dict(Element._conversions, Lw=float, Bmax=float, Nstep=int,
+                        Nmeth=int, NHharm=int, NVharm=int, By=_array,
+                        Bx=_array, Energy=float)
+
+    def __init__(self, family_name, length, wiggle_period, b_max, n_step,
+                 n_meth, by, bx, energy, **kwargs):
+        """
+
+        Args:
+            length: total length of the wiggler
+            wiggle_period: length must be a multiple of this
+            b_max: peak wiggler field [Tesla]
+            n_step: number of integration steps.
+            n_meth: symplectic integration order: 2 or 4
+            by: harmonics for horizontal wiggler: example [1, 1, 0, 1, 1, 0]
+            bx: harmonics for vertical wiggler: example []
+        Available keywords:
+            NHharm    Number of horizontal harmonics
+            NVharm    Number of vertical harmonics
+        """
+        n_wiggles = length / wiggle_period
+        if abs(round(n_wiggles) - n_wiggles) > 1e-6:
+            raise ValueError("Wiggler: length / wiggle_period is not an "
+                             "integer. ({0}/{1}={2})".format(length,
+                                                             wiggle_period,
+                                                             n_wiggles))
+        nh = kwargs.pop('NHharm', None)
+        nv = kwargs.pop('NVharm', None)
+        if nh is None:
+            try:
+                nh = len(by[0])
+            except TypeError:
+                nh = 1
+            except IndexError:
+                nh = 0
+        if nv is None:
+            try:
+                nv = len(bx[0])
+            except TypeError:
+                nv = 1
+            except IndexError:
+                nv = 0
+        for i in range(nh):
+            if i == 0:
+                dk = abs(by[3]**2 - by[4]**2 - by[2]**2) / abs(by[4])
+            else:
+                dk = abs(by[3, i]**2 - by[4, i]**2 - by[2, i]**2) / abs(by[4])
+            if dk > 1e-6:
+                raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
+                                 "{0}".format(i))
+        for i in range(nv):
+            if i == 0:
+                dk = abs(bx[2]**2 - bx[4]**2 - bx[3]**2) / abs(bx[4])
+            else:
+                dk = abs(bx[2, i]**2 - bx[4, i]**2 - bx[3, i]**2) / abs(bx[4])
+            if dk > 1e-6:
+                raise ValueError("Wiggler(H): ky^2 + kz^2 -kx^2 !=0, i = "
+                                 "{0}".format(i))
+        kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
+        super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
+                                      Bmax=b_max, Nstep=n_step, Nmeth=n_meth,
+                                      NHharm=nh, NVharm=nv, By=by, Bx=bx,
+                                      Energy=energy, **kwargs)
+
+
 CLASS_MAP = dict((k, v) for k, v in locals().items()
                  if isinstance(v, type) and issubclass(v, Element))
