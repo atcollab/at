@@ -8,7 +8,6 @@
 struct elem
 {
     double Length;
-    double BendingAngle;
     double *PolynomA;
     double *PolynomB;
     int MaxOrder;
@@ -22,7 +21,7 @@ struct elem
     int Type;
     /* Optional fields */
     double gK;  /* g * K, required for bend */
-    double Phi; /* ?, required for bend */
+    double BendingAngle; /* required for bend */
     int MultipoleFringe; /* bool, whether to calculate multipole fringe */
     double *R1;
     double *R2;
@@ -100,14 +99,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
         double *R1, *R2, *T1, *T2;
         double phi, gK;
         le = atGetDouble(ElemData,"Length"); check_error();
-        bending_angle = atGetDouble(ElemData,"BendingAngle"); check_error();
         polynom_a = atGetDoubleArray(ElemData,"PolynomA"); check_error();
         polynom_b = atGetDoubleArray(ElemData,"PolynomB"); check_error();
         max_order = atGetLong(ElemData, "MaxOrder"); check_error();
         num_int_steps = atGetLong(ElemData, "NumIntSteps"); check_error();
         type = atGetLong(ElemData, "Type"); check_error();
         multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
-        phi = atGetOptionalDouble(ElemData,"Phi", 0.0); check_error();
+        bending_angle = atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
         gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -115,7 +113,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=le;
-        Elem->BendingAngle=bending_angle;
         Elem->PolynomA=polynom_a;
         Elem->PolynomB=polynom_b;
         Elem->MaxOrder=max_order;
@@ -123,7 +120,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
         Elem->Type = type;
         /*optional fields*/
         Elem->MultipoleFringe = multipole_fringe;
-        Elem->Phi = phi;
+        Elem->BendingAngle = bending_angle;
         Elem->gK = gK;
         Elem->R1=R1;
         Elem->R2=R2;
@@ -133,7 +130,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     ExactHamiltonianPass(r_in, Elem->Length, Elem->PolynomA, Elem->PolynomB,
                                Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                                Elem->MaxOrder, Elem->NumIntSteps,
-                               Elem->Phi, Elem->Type, Elem->gK,
+                               Elem->BendingAngle, Elem->Type, Elem->gK,
                                Elem->MultipoleFringe, num_particles);
 
     return Elem;
@@ -161,7 +158,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *R1, *R2, *T1, *T2;
         double phi, gK;
         le = atGetDouble(ElemData,"Length"); check_error();
-        bending_angle = atGetDouble(ElemData,"BendingAngle"); check_error();
         polynom_a = atGetDoubleArray(ElemData,"PolynomA"); check_error();
         polynom_b = atGetDoubleArray(ElemData,"PolynomB"); check_error();
         max_order = atGetLong(ElemData, "MaxOrder"); check_error();
@@ -169,7 +165,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         type = atGetLong(ElemData, "Type"); check_error();
         /*optional fields*/
         multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
-        phi = atGetOptionalDouble(ElemData,"Phi", 0.0); check_error();
+        bending_angle = atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
         gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
@@ -180,23 +176,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetPr(plhs[0]);
         ExactHamiltonianPass(r_in, le, polynom_a, polynom_b, T1, T2, R1, R2, max_order,
-                     num_int_steps, phi, type, gK, multipole_fringe, num_particles);
+                     num_int_steps, bending_angle, type, gK, multipole_fringe, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(7,1);
+        plhs[0] = mxCreateCellMatrix(6,1);
         mxSetCell(plhs[0],0,mxCreateString("Length"));
-        mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
-        mxSetCell(plhs[0],2,mxCreateString("PolynomA"));
-        mxSetCell(plhs[0],3,mxCreateString("PolynomB"));
-        mxSetCell(plhs[0],4,mxCreateString("MaxOrder"));
-        mxSetCell(plhs[0],5,mxCreateString("NumIntSteps"));
-        mxSetCell(plhs[0],6,mxCreateString("Type"));
+        mxSetCell(plhs[0],1,mxCreateString("PolynomA"));
+        mxSetCell(plhs[0],2,mxCreateString("PolynomB"));
+        mxSetCell(plhs[0],3,mxCreateString("MaxOrder"));
+        mxSetCell(plhs[0],4,mxCreateString("NumIntSteps"));
+        mxSetCell(plhs[0],5,mxCreateString("Type"));
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(7,1);
             mxSetCell(plhs[1],0,mxCreateString("MultipoleFringe"));
-            mxSetCell(plhs[1],1,mxCreateString("Phi"));
+            mxSetCell(plhs[1],1,mxCreateString("BendingAngle"));
             mxSetCell(plhs[1],2,mxCreateString("gK"));
             mxSetCell(plhs[1],3,mxCreateString("T1"));
             mxSetCell(plhs[1],4,mxCreateString("T2"));
