@@ -61,7 +61,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         emitXY              (2,) betatron emittance projected on xxp and yyp
         emitXYZ             (3,) 6x6 emittance projected on xxp, yyp, ldp
 
-        beamdata is a redord array with fields:
+        beamdata is a record array with fields:
         tunes               tunes of the 3 normal modes
         damping_rates       damping rates of the 3 normal modes
         mode_matrices       R-matrices of the 3 normal modes
