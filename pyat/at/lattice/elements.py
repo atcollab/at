@@ -318,7 +318,7 @@ class Multipole(LongElement, ThinMultipole):
         KickAngle       Correction deviation angles (H, V)
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
-        kwargs.setdefault('NumIntSteps', 0)
+        kwargs.setdefault('NumIntSteps', 10)
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
 

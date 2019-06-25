@@ -128,6 +128,14 @@ def test_thinmultipole():
     assert len(m.PolynomA) == 4
 
 
+def test_multipole():
+    m = elements.Multipole('multi', 1.0, [], [0.0, 0.0, 0.0, 0.0])
+    assert m.Length == 1.0
+    assert m.MaxOrder == 0
+    assert m.NumIntSteps == 10
+    assert m.PassMethod == 'StrMPoleSymplectic4Pass'
+
+
 def test_divide_splits_attributes_correctly():
     pre = elements.Drift('drift', 1)
     post = pre.divide([0.2, 0.5, 0.3])
