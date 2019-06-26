@@ -15,15 +15,14 @@ refpts can be:
         elements are True.
 """
 import numpy
-import itertools
 import functools
 from fnmatch import fnmatch
 from at.lattice import elements
 
 __all__ = ['AtError', 'AtWarning', 'check_radiation', 'uint32_refpts',
-           'bool_refpts', 'checkattr', 'checktype', 'get_cells', 'get_elements',
-           'refpts_iterator', 'get_s_pos', 'set_shift', 'set_tilt', 'tilt_elem',
-           'shift_elem']
+           'bool_refpts', 'checkattr', 'checktype', 'get_cells',
+           'get_elements', 'refpts_iterator', 'get_s_pos', 'set_shift',
+           'set_tilt', 'tilt_elem', 'shift_elem']
 
 
 class AtError(Exception):
@@ -68,8 +67,8 @@ def uint32_refpts(refpts, n_elements):
         return numpy.flatnonzero(refs).astype(numpy.uint32)
 
     # Handle negative indices
-    refs = numpy.array([i if (i == n_elements) else i % n_elements for i in refs],
-                       dtype=numpy.uint32)
+    refs = numpy.array([i if (i == n_elements) else i % n_elements
+                        for i in refs], dtype=numpy.uint32)
 
     # Check ascending
     if refs.size > 1:
@@ -106,23 +105,27 @@ def bool_refpts(refpts, n_elements):
 
 
 def checkattr(*args):
-    """Return a function to be used as a filter. Check the presence or the value of an attribute. This function can be
-    used to extract from a ring all elements have a given attribute.
+    """Return a function to be used as a filter. Check the presence or the
+    value of an attribute. This function can be used to extract from a ring
+    all elements have a given attribute.
 
-    filtfunc = checkattr(attrname)              returns the function filtfunc such that
-        ok=filtfunc(element) is true if the element has a 'attrname' attribute
+    filtfunc = checkattr(attrname)
+        returns the function filtfunc such that ok=filtfunc(element) is True if
+        the element has a 'attrname' attribute
 
-    filtfunc = checkattr(attrname, attrvalue)   returns the function filtfunc such that
-        ok=filtfunc(element) is true if the element has a 'attrname' attribute with the value attrvalue
+    filtfunc = checkattr(attrname, attrvalue)
+        returns the function filtfunc such that ok=filtfunc(element) is True if
+        the element has a 'attrname' attribute with the value attrvalue
 
     Examples:
 
     cavs = filter(checkattr('Frequency'), ring)
-        returns an iterator over all elements in ring that have a 'Frequency' attribute
+        returns an iterator over all elements in ring that have a
+        'Frequency' attribute
 
     elts = filter(checkattr('K', 0.0), ring)
-        returns an iterator over all elements in ring that have a 'K' attribute equal to 0.0
-
+        returns an iterator over all elements in ring that have a 'K'
+        attribute equal to 0.0
     """
 
     def testf(el):
@@ -136,37 +139,45 @@ def checkattr(*args):
 
 
 def checktype(eltype):
-    """Return a function to be used as a filter. Check the type of an element. This function can be
-    used to extract from a ring all elements have a given type.
+    """Return a function to be used as a filter. Check the type of an element.
+    This function can be used to extract from a ring all elements have a
+    given type.
 
-    filtfunc = checktype(class)                 returns the function filtfunc such that
-        ok=filtfunc(element) is true if the element is an instance of class
+    filtfunc = checktype(class)
+        returns the function filtfunc such that ok=filtfunc(element) is True
+        if the element is an instance of class
 
     Example:
 
-    qps = filter(checktype(at.Quadrupole), ring) returns an iterator over all quadrupoles in ring
-
+    qps = filter(checktype(at.Quadrupole), ring)
+        returns an iterator over all quadrupoles in ring
     """
     return lambda el: isinstance(el, eltype)
 
 
 def get_cells(ring, *args):
-    """Return a numpy array of booleans, with the same length as ring, marking all elements satisfying a given condition.
+    """Return a numpy array of booleans, with the same length as ring,
+    marking all elements satisfying a given condition.
 
-    refpts = getcells(ring, filtfunc) selects all elements for which the function filtfunc(element) returns True
+    refpts = getcells(ring, filtfunc)
+        selects all elements for which the function filtfunc(element)
+        returns True
 
-    refpts = getcells(ring, attrname) selects all elements having a 'attrname' attribute
+    refpts = getcells(ring, attrname)
+        selects all elements having a 'attrname' attribute
 
-    refpts = getcells(ring, attrname, attrvalue) selects all elements having a 'attrname' attribute with value attrvalue
+    refpts = getcells(ring, attrname, attrvalue)
+        selects all elements having a 'attrname' attribute with value attrvalue
 
     Example:
 
     refpts = getcells(ring, 'Frequency')
-        returns a numpy array of booleans where all elements having a 'Frequency' attribute are True
+        returns a numpy array of booleans where all elements having a
+        'Frequency' attribute are True
 
     refpts = getcells(ring, 'K', 0.0)
-        returns a numpy array of booleans where all elements having a 'K' attribute equal to 0.0 are True
-
+        returns a numpy array of booleans where all elements having a 'K'
+        attribute equal to 0.0 are True
     """
     if callable(args[0]):
         testf = args[0]
@@ -181,8 +192,8 @@ def refpts_iterator(ring, refpts):
     refpts may be:
 
     1) a list of integers (0 indicating the first element)
-    2) a numpy array of booleans as long as ring where selected elements are true
-
+    2) a numpy array of booleans as long as ring where selected elements
+       are true
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         for el, tst in zip(ring, refpts):
@@ -235,7 +246,7 @@ def get_s_pos(ring, refpts=None):
     Args:
         ring: lattice from which to retrieve s position
         refpts: elements at which to return s position. If None, return
-            s position at all elements in the ring.
+                s position at all elements in the ring.
     """
     if refpts is None:
         refpts = range(len(ring) + 1)
@@ -254,7 +265,7 @@ def tilt_elem(elem, rots, relative=False):
 
     R1 = [[ cos(rots) sin(rots)]    R2 = [[cos(rots) -sin(rots)]
           [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
-    
+
     elem            element to be tilted
     rots            tilt angle (in radians).
                     rots > 0 corresponds to a corkskew rotation of the element

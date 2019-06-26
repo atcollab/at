@@ -6,40 +6,41 @@ from at.lattice import Lattice, AtWarning, AtError
 
 
 def test_lattice_creation_gets_attributes_from_arguments():
-    l = Lattice(name='lattice', energy=3.e+6, periodicity=32, an_attr=12)
-    assert len(l) == 0
-    assert l.name == 'lattice'
-    assert l.energy == 3.e+6
-    assert l.periodicity == 32
-    assert l._radiation is False
-    assert l.an_attr == 12
+    lat = Lattice(name='lattice', energy=3.e+6, periodicity=32, an_attr=12)
+    assert len(lat) == 0
+    assert lat.name == 'lattice'
+    assert lat.energy == 3.e+6
+    assert lat.periodicity == 32
+    assert lat._radiation is False
+    assert lat.an_attr == 12
 
 
 def test_lattice_creation_short_scan_reads_radiation_status_correctly():
     d = elements.Dipole('d1', 1, BendingAngle=numpy.pi, Energy=5.e+6,
                         PassMethod='BndMPoleSymplectic4RadPass')
-    l = Lattice([d], name='lattice', energy=3.e+6, periodicity=32)
-    assert len(l) == 1
-    assert l.name == 'lattice'
-    assert l.energy == 3.e+6
-    assert l.periodicity == 32
-    assert l._radiation is True
-
-
-def test_lattice_creation_from_lattice_inherits_attributes():
-    d = elements.Dipole('d1', 1, BendingAngle=numpy.pi, Energy=5.e+6,
-                        PassMethod='BndMPoleSymplectic4RadPass')
-    l = Lattice([d], name='lattice', energy=3.e+6, periodicity=32, an_attr=12)
-    l.another_attr = 5
-    lat = Lattice(l)
-    assert id(l) != id(lat)
+    lat = Lattice([d], name='lattice', energy=3.e+6, periodicity=32)
     assert len(lat) == 1
     assert lat.name == 'lattice'
     assert lat.energy == 3.e+6
     assert lat.periodicity == 32
     assert lat._radiation is True
-    assert lat.an_attr == 12
-    assert lat.another_attr == 5
+
+
+def test_lattice_creation_from_lattice_inherits_attributes():
+    d = elements.Dipole('d1', 1, BendingAngle=numpy.pi, Energy=5.e+6,
+                        PassMethod='BndMPoleSymplectic4RadPass')
+    lat1 = Lattice([d], name='lattice', energy=3.e+6, periodicity=32,
+                   an_attr=12)
+    lat1.another_attr = 5
+    lat2 = Lattice(lat1)
+    assert id(lat1) != id(lat2)
+    assert len(lat2) == 1
+    assert lat2.name == 'lattice'
+    assert lat2.energy == 3.e+6
+    assert lat2.periodicity == 32
+    assert lat2._radiation is True
+    assert lat2.an_attr == 12
+    assert lat2.another_attr == 5
 
 
 def test_lattice_energy_is_not_defined_raises_AtError():
@@ -53,20 +54,21 @@ def test_item_is_not_an_AT_element_warns_correctly():
 
 
 def test_lattice_string_ordering():
-    l = Lattice([elements.Drift('D0', 1.0, attr1=numpy.array(0))], name='lat',
-                energy=5, periodicity=1, attr2=3)
+    lat = Lattice([elements.Drift('D0', 1.0, attr1=numpy.array(0))],
+                  name='lat', energy=5, periodicity=1, attr2=3)
     # Default dictionary ordering is only in Python >= 3.6
     if sys.version_info < (3, 6):
-        assert l.__str__().startswith("Lattice(<1 elements>, ")
-        assert l.__str__().endswith(", attr2=3)")
-        assert l.__repr__().startswith("Lattice([Drift('D0', 1.0, "
-                                       "attr1=array(0))], ")
-        assert l.__repr__().endswith(", attr2=3)")
+        assert lat.__str__().startswith("Lattice(<1 elements>, ")
+        assert lat.__str__().endswith(", attr2=3)")
+        assert lat.__repr__().startswith("Lattice([Drift('D0', 1.0, "
+                                         "attr1=array(0))], ")
+        assert lat.__repr__().endswith(", attr2=3)")
     else:
-        assert l.__str__() == ("Lattice(<1 elements>, "
-                               "name='lat', energy=5, periodicity=1, attr2=3)")
-        assert l.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))], "
-                                "name='lat', energy=5, periodicity=1, attr2=3)")
+        assert lat.__str__() == ("Lattice(<1 elements>, name='lat', energy=5,"
+                                 " periodicity=1, attr2=3)")
+        assert lat.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))],"
+                                  " name='lat', energy=5, periodicity=1,"
+                                  " attr2=3)")
 
 
 def test_getitem(simple_lattice, simple_ring):
@@ -113,7 +115,7 @@ def test_deepcopy(hmba_lattice):
 def test_property_values_against_known(hmba_lattice):
     assert hmba_lattice.voltage == 6000000
     assert hmba_lattice.harmonic_number == 992
-    assert hmba_lattice.radiation == False
+    assert hmba_lattice.radiation is False
     numpy.testing.assert_almost_equal(hmba_lattice.energy_loss,
                                       2526188.713461808)
 
@@ -126,7 +128,7 @@ def test_radiation_change(hmba_lattice):
     quads = [elem for elem in hmba_lattice if isinstance(elem,
                                                          elements.Quadrupole)]
     hmba_lattice.radiation_on(None, 'pass2', 'auto')
-    assert hmba_lattice.radiation == True
+    assert hmba_lattice.radiation is True
     for elem in rfs:
         assert elem.PassMethod == 'IdentityPass'
     for elem in dipoles:
@@ -134,7 +136,7 @@ def test_radiation_change(hmba_lattice):
     for elem in quads:
         assert elem.PassMethod == 'StrMPoleSymplectic4RadPass'
     hmba_lattice.radiation_off(None, 'BndMPoleSymplectic4Pass', 'auto')
-    assert hmba_lattice.radiation == False
+    assert hmba_lattice.radiation is False
     for elem in rfs:
         assert elem.PassMethod == 'IdentityPass'
     for elem in dipoles:

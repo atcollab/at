@@ -8,6 +8,7 @@ SLICES = 400
 
 __all__ = ['baseplot']
 
+
 def baseplot(ring, plot_function, *args, **kwargs):
     """
     baseplot divides the region of interest of ring into small elements,
@@ -132,5 +133,5 @@ def baseplot(ring, plot_function, *args, **kwargs):
         else:
             axleft.legend(handles=[l for l in lines1 if labeled(l)])
             axright.legend(handles=[l for l in lines2 if labeled(l)])
-    plt.show(block)
+    plt.show(block=block)
     return axleft, axright, axsyn

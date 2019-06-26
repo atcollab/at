@@ -60,15 +60,15 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         emitXY              (2,) betatron emittance projected on xxp and yyp
         emitXYZ             (3,) 6x6 emittance projected on xxp, yyp, ldp
 
-        Field values can be obtained with either
-        emit['r66']    or
-        emit.r66
-
-        beamdata is a named tuple with attributes:
+        beamdata is a redord array with fields:
         tunes               tunes of the 3 normal modes
         damping_rates       damping rates of the 3 normal modes
         mode_matrices       R-matrices of the 3 normal modes
         mode_emittances     equilibrium emittances of the 3 normal modes
+
+        Field values can be obtained with either
+        emit['r66']    or
+        emit.r66
 
     REFERENCES
         [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)

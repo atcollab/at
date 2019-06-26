@@ -332,7 +332,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     lindata = numpy.rec.array(numpy.zeros(nrefs, dtype=LINDATA_DTYPE))
     if nrefs > 0:
         if coupled:
-            MSA, MSB, gamma, CL = zip(*[analyze(m44) for m44 in mstack])
+            MSA, MSB, gamma, CL = zip(*[analyze(ms44) for ms44 in mstack])
             msa = numpy.stack(MSA, axis=0)
             msb = numpy.stack(MSB, axis=0)
         else:
@@ -351,8 +351,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         lindata['alpha'] = numpy.stack((alpha_a, alpha_b), axis=1)
         lindata['beta'] = numpy.stack((beta_a, beta_b), axis=1)
         lindata['mu'] = numpy.stack((mu_a, mu_b), axis=1)
-        lindata['A'] = [ms.dot(A.dot(_jmt.dot(ms.T.dot(_jmt.T)))) for ms in msa]
-        lindata['B'] = [ms.dot(B.dot(_jmt.dot(ms.T.dot(_jmt.T)))) for ms in msb]
+        lindata['A'] = [ms.dot(A.dot(_jmt.dot(ms.T.dot(_jmt.T))))
+                        for ms in msa]
+        lindata['B'] = [ms.dot(B.dot(_jmt.dot(ms.T.dot(_jmt.T))))
+                        for ms in msb]
         lindata['C'] = CL
         lindata['gamma'] = gamma
         lindata['dispersion'] = dispersion
