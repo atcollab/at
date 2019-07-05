@@ -6,6 +6,7 @@ from .orbit import *
 from .amat import *
 from .matrix import *
 from .linear import *
+from .ring_parameters import *
 # noinspection PyUnresolvedReferences
 from .diffmatrix import find_mpole_raddiff_matrix
 from .radiation import *
