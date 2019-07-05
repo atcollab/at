@@ -240,7 +240,7 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
             i1 += eta_ave * ll / rho
             i2 += ll / rho2
             i3 += ll / abs(rho) / rho2
-            i4 += eta_ave * ll * (2*k2+1/rho2)/rho \
+            i4 += eta_ave * ll * (2.0*elem.K+1.0/rho2) / rho \
                 - (eta0*eps1 + eta3*eps2)/rho
             i5 += h_ave * ll / abs(rho) / rho2
 
