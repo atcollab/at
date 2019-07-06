@@ -241,6 +241,10 @@ class Lattice(list):
         return uint32_refpts(i_range, len(self))
 
     @property
+    def circumference(self):
+        return self.periodicity * self.get_s_pos(len(self))[0]
+
+    @property
     def voltage(self):
         """Accelerating voltage"""
         volts = [elem.Voltage for elem in self if
