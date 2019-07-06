@@ -14,6 +14,7 @@ Cq = 55 / 32 / sqrt(3) * _hbar / _e_mass * 1.0e-15          # m
 
 _fields = {
     'tunes':        '              Frac. tunes: {0}',
+    'tunes6':       '  Frac. tunes (6D motion): {0}',
     'fulltunes':    '                    Tunes: {0}',
     'chromaticities': '           Chromaticities: {0}',
     'E0':           '                   Energy: {0:e} eV',
@@ -48,14 +49,15 @@ class RingParameters(object):
 
 # noinspection PyPep8Naming
 def radiation_parameters(ring, dp=0.0, params=None):
-    """Compute ring parameters from the radiation integrals. N
+    """Compute ring parameters from the radiation integrals. Valid for
+    uncoupled lattices with no RF cavity or radiating element.
 
     INPUT
         ring            Lattice object.
-        dp=0.0          momentum deviation
+        dp=0.0          momentum deviation.
 
     KEYWORD
-        params=None     RingParam object to be updated
+        params=None     RingParam object to be updated.
 
     OUTPUT
         params          RingParam object. The computed attributes are,
@@ -85,7 +87,7 @@ def radiation_parameters(ring, dp=0.0, params=None):
     rp.chromaticities = chroms * ring.periodicity
     integs = ring.get_radiation_integrals(dp, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = numpy.array(integs) * ring.periodicity
-    circumference = ring.get_s_pos(len(ring))[0] * ring.periodicity
+    circumference = ring.circumference
     revolution_period = circumference / _c
     voltage = ring.voltage
     E0 = ring.energy
@@ -124,14 +126,12 @@ def envelope_parameters(ring, params=None):
         ring            Lattice object.
 
     KEYWORD
-        params=None     RingParam object to be updated
+        params=None     RingParam object to be updated.
 
     OUTPUT
         params          RingParam object. The computed attributes are,
 
-            tunes           (3,) fractional (H, V, Long.) tunes
-            E0              Energy [eV]
-            U0              Energy loss / turn [eV]
+            tunes6          (3,) fractional (H, V, Long.) tunes (6D motion)
             emittances      (3,) Mode emittances
             J               (3,) Damping partition numbers
             Tau             (3,) Damping times [s]
@@ -143,18 +143,17 @@ def envelope_parameters(ring, params=None):
     """
     rp = RingParameters() if params is None else params
     emit0, beamdata, emit = ring.ohmi_envelope()
-    circumference = ring.get_s_pos(len(ring))[0] * ring.periodicity
     voltage = ring.voltage
     rp.E0 = ring.energy
     rp.U0 = ring.energy_loss
-    revolution_period = circumference / _c
+    revolution_period = ring.circumference / _c
     rp.Tau = revolution_period / beamdata.damping_rates / ring.periodicity
     alpha = 1.0 / rp.Tau
     rp.J = 4.0 * alpha / numpy.sum(alpha)
-    rp.tunes, _ = numpy.modf(ring.periodicity * beamdata.tunes)
+    rp.tunes6, _ = numpy.modf(ring.periodicity * beamdata.tunes)
     rp.phi_s = pi - asin(rp.U0 / voltage)
     rp.voltage = voltage
-    rp.f_s = rp.tunes[2] / revolution_period
+    rp.f_s = rp.tunes6[2] / revolution_period
     rp.emittances = beamdata.mode_emittances
     rp.sigma_e = sqrt(emit0.r66[4, 4])
     rp.sigma_l = sqrt(emit0.r66[5, 5])

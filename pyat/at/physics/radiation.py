@@ -164,7 +164,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
 @check_radiation(False)
 def get_radiation_integrals(ring, dp=0.0, twiss=None):
     """
-    Compute the 5 radiation integrals
+    Compute the 5 radiation integrals for uncoupled lattices. No RF cavity or
+    radiating element is allowed.
 
     PARAMETERS
         ring            lattice description.
