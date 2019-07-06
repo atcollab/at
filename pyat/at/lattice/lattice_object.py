@@ -242,11 +242,12 @@ class Lattice(list):
 
     @property
     def circumference(self):
+        """Ring circumference"""
         return self.periodicity * self.get_s_pos(len(self))[0]
 
     @property
     def voltage(self):
-        """Accelerating voltage"""
+        """Total accelerating voltage"""
         volts = [elem.Voltage for elem in self if
                  isinstance(elem, elements.RFCavity)]
         return self.periodicity * sum(volts)
