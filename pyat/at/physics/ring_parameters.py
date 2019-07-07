@@ -1,45 +1,48 @@
 from math import pi, sqrt, asin
 import numpy
 from numpy import nan
-from scipy.constants import physical_constants as cst
+from scipy.constants import c
+from at.lattice import Lattice
+from at.physics import Cgamma, Cq, e_mass
 
-_e_radius = cst['classical electron radius'][0]
-_e_mass = cst['electron mass energy equivalent in MeV'][0]
-_c = cst['speed of light in vacuum'][0]
-_hbar = cst['Planck constant over 2 pi times c in MeV fm'][0]
-
-Cgamma = 4.0E9 * pi * _e_radius / 3.0 / pow(_e_mass, 3)     # m / GeV^3
-Cq = 55 / 32 / sqrt(3) * _hbar / _e_mass * 1.0e-15          # m
-
-
-_fields = {
-    'tunes':        '              Frac. tunes: {0}',
-    'tunes6':       '  Frac. tunes (6D motion): {0}',
-    'fulltunes':    '                    Tunes: {0}',
-    'chromaticities': '           Chromaticities: {0}',
-    'E0':           '                   Energy: {0:e} eV',
-    'U0':           '       Energy loss / turn: {0:e} eV',
-    'i1':           ' Radiation integrals - I1: {0} m',
-    'i2':           '                       I2: {0} m^-1',
-    'i3':           '                       I3: {0} m^-2',
-    'i4':           '                       I4: {0} m^-1',
-    'i5':           '                       I5: {0} m^-1',
-    'emittances':   '          Mode emittances: {0}',
-    'J':            'Damping partition numbers: {0}',
-    'Tau':          '            Damping times: {0} s',
-    'sigma_e':      '            Energy spread: {0:g}',
-    'sigma_l':      '             Bunch length: {0:g} m',
-    'voltage':      '         Cavities voltage: {0} V',
-    'phi_s':        '        Synchrotron phase: {0:g} rd',
-    'f_s':          '    Synchrotron frequency; {0:g} Hz'
-}
+__all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 
 
 class RingParameters(object):
     """Class for pretty printing the ring properties"""
+
+    props = {
+        'tunes':            '              Frac. tunes: {0}',
+        'tunes6':           '  Frac. tunes (6D motion): {0}',
+        'fulltunes':        '                    Tunes: {0}',
+        'chromaticities':   '           Chromaticities: {0}',
+        'alphac':           ' Momentum compact. factor: {0:e}',
+        'etac':             '              Slip factor: {0:e}',
+        'E0':               '                   Energy: {0:e} eV',
+        'U0':               '       Energy loss / turn: {0:e} eV',
+        'i1':               ' Radiation integrals - I1: {0} m',
+        'i2':               '                       I2: {0} m^-1',
+        'i3':               '                       I3: {0} m^-2',
+        'i4':               '                       I4: {0} m^-1',
+        'i5':               '                       I5: {0} m^-1',
+        'emittances':       '          Mode emittances: {0}',
+        'J':                'Damping partition numbers: {0}',
+        'Tau':              '            Damping times: {0} s',
+        'sigma_e':          '            Energy spread: {0:g}',
+        'sigma_l':          '             Bunch length: {0:g} m',
+        'voltage':          '         Cavities voltage: {0} V',
+        'phi_s':            '        Synchrotron phase: {0:g} rd',
+        'f_s':              '    Synchrotron frequency; {0:g} Hz'
+    }
+
+    def __init__(self, **kwargs):
+        """Initialisation"""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
     def __str__(self):
         vrs = vars(self).copy()
-        vals = [(_fields[k], vrs.pop(k, None)) for k in _fields]
+        vals = [(self.props[k], vrs.pop(k, None)) for k in self.props]
         # Predefined attributes
         lines = [f.format(v) for f, v in vals if v is not None]
         # Other attributes
@@ -65,6 +68,8 @@ def radiation_parameters(ring, dp=0.0, params=None):
             tunes           (3,) fractional (H, V, Long.) tunes
             fulltunes       (3,) full tunes
             chromaticities  (2,) H, V Chromaticities
+            alphac          Momentum compaction factor
+            etac            Frequency slip factor
             E0              Energy [eV]
             U0              nergy loss / turn [eV]
             i1              Radiation integrals - I1 [m]
@@ -88,24 +93,27 @@ def radiation_parameters(ring, dp=0.0, params=None):
     integs = ring.get_radiation_integrals(dp, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = numpy.array(integs) * ring.periodicity
     circumference = ring.circumference
-    revolution_period = circumference / _c
+    revolution_period = circumference / c
     voltage = ring.voltage
     E0 = ring.energy
-    gamma = 1.0e-6 * E0 / _e_mass
-    U0 = 1.0e-27 * Cgamma / 2.0 / pi * E0**4 * rp.i2
+    gamma = E0 / e_mass
+    gamma2 = gamma * gamma
+    beta2 = 1.0 - 1.0/gamma2
+    U0 = Cgamma / 2.0 / pi * E0**4 * rp.i2
     Jx = 1.0 - rp.i4/rp.i2
     Jz = 1.0
     Je = 2.0 + rp.i4/rp.i2
     damping_partition_numbers = numpy.array([Jx, Jz, Je])
-    ct = 2.0 * E0 / U0 * circumference / _c
+    ct = 2.0 * E0 / U0 * revolution_period
     rp.E0 = E0
     rp.U0 = U0
     emitx = Cq * gamma * gamma * rp.i5 / Jx / rp.i2
     rp.emittances = numpy.array([emitx, nan, nan])
     alphac = rp.i1 / circumference
+    etac = 1.0/gamma/gamma - alphac
     rp.phi_s = pi - asin(U0 / voltage)
-    nus = sqrt(alphac * ring.harmonic_number *
-               sqrt(voltage*voltage - U0*U0) / 2.0 / pi / E0)
+    nus = sqrt(abs(etac) * ring.harmonic_number *
+               sqrt(voltage*voltage - U0*U0) / beta2 / E0 / 2.0 / pi)
     rp.voltage = voltage
     rp.f_s = nus / revolution_period
     rp.Tau = ct / damping_partition_numbers
@@ -115,6 +123,8 @@ def radiation_parameters(ring, dp=0.0, params=None):
     ringtunes, _ = numpy.modf(ring.periodicity * tunes)
     rp.fulltunes = ring.periodicity * twiss[-1].mu / 2.0 / pi
     rp.tunes = numpy.concatenate((ringtunes, (nus,)))
+    rp.alphac = alphac
+    rp.etac = etac
     return rp
 
 
@@ -146,7 +156,7 @@ def envelope_parameters(ring, params=None):
     voltage = ring.voltage
     rp.E0 = ring.energy
     rp.U0 = ring.energy_loss
-    revolution_period = ring.circumference / _c
+    revolution_period = ring.circumference / c
     rp.Tau = revolution_period / beamdata.damping_rates / ring.periodicity
     alpha = 1.0 / rp.Tau
     rp.J = 4.0 * alpha / numpy.sum(alpha)
@@ -158,3 +168,7 @@ def envelope_parameters(ring, params=None):
     rp.sigma_e = sqrt(emit0.r66[4, 4])
     rp.sigma_l = sqrt(emit0.r66[5, 5])
     return rp
+
+
+Lattice.radiation_parameters = radiation_parameters
+Lattice.envelope_parameters = envelope_parameters

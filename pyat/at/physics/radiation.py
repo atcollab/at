@@ -1,13 +1,13 @@
 """
 Radiation and equilibrium emittances
 """
-from math import sin, cos, tan, sqrt, sinh, cosh
+from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import elements, Lattice, check_radiation, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-from at.physics import linopt, find_mpole_raddiff_matrix
+from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals']
 
@@ -248,5 +248,22 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     return i1, i2, i3, i4, i5
 
 
+def get_energy_loss(ring):
+    """Energy loss per turn [eV]
+
+    Losses = Cgamma / 2pi * EGeV^4 * i2
+    """
+    lenthe = numpy.array(
+        [(elem.Length, elem.BendingAngle) for elem in ring if
+         isinstance(elem, elements.Dipole)])
+    lendp = lenthe[:, 0]
+    theta = lenthe[:, 1]
+
+    i2 = ring.periodicity * (numpy.sum(theta * theta / lendp))
+    e_loss = Cgamma / 2.0 / pi * ring.energy**4 * i2
+    return e_loss
+
+
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
+Lattice.energy_loss = property(get_energy_loss)
