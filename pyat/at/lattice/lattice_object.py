@@ -16,7 +16,6 @@ import numpy
 import math
 import itertools
 from warnings import warn
-from scipy.constants import physical_constants as cst
 from at.lattice import AtError, AtWarning
 from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
 
@@ -241,8 +240,13 @@ class Lattice(list):
         return uint32_refpts(i_range, len(self))
 
     @property
+    def circumference(self):
+        """Ring circumference"""
+        return self.periodicity * self.get_s_pos(len(self))[0]
+
+    @property
     def voltage(self):
-        """Accelerating voltage"""
+        """Total accelerating voltage"""
         volts = [elem.Voltage for elem in self if
                  isinstance(elem, elements.RFCavity)]
         return self.periodicity * sum(volts)
@@ -258,27 +262,6 @@ class Lattice(list):
     def radiation(self):
         """If True, at least one element modifies the beam energy"""
         return self._radiation
-
-    @property
-    def energy_loss(self):
-        """Energy loss per turn [eV]
-
-        Losses = Cgamma / 2pi * EGeV^4 * i2
-        """
-        lenthe = numpy.array(
-            [(elem.Length, elem.BendingAngle) for elem in self if
-             isinstance(elem, elements.Dipole)])
-        lendp = lenthe[:, 0]
-        theta = lenthe[:, 1]
-
-        e_radius = cst['classical electron radius'][0]
-        e_mass = cst['electron mass energy equivalent in MeV'][0]
-        cgamma = 4.0E9 * numpy.pi * e_radius / 3.0 / pow(e_mass, 3)
-
-        i2 = self.periodicity * (numpy.sum(theta * theta / lendp))
-        e_loss = cgamma / 2.0 / numpy.pi * pow(self.energy * 1.0E-9,
-                                               4) * i2 * 1.e9
-        return e_loss
 
     def _radiation_switch(self, cavity_func=None, dipole_func=None,
                           quadrupole_func=None):
