@@ -1,3 +1,6 @@
+"""Generic function to save and load python AT lattices. The format is
+determined by the file extension
+"""
 import os.path
 from at.lattice import Lattice
 
@@ -17,11 +20,11 @@ def load_lattice(filepath, **kwargs):
 
     KEYWORDS
         name            Name of the lattice
-                        (default: taken from the lattice, or '')
+                        (default: taken from the file, or '')
         energy          Energy of the lattice
-                        (default: taken from the elements)
+                        (default: taken from the file)
         periodicity     Number of periods
-                        (default: taken from the elements, or 1)
+                        (default: taken from the file, or 1)
         *               all other keywords will be set as Lattice attributes
 
     MAT-FILE SPECIFIC KEYWORDS
