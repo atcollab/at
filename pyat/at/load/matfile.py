@@ -14,8 +14,8 @@ from at.load.utils import element_to_dict, element_to_m
 
 numpy.set_printoptions(linewidth=200, floatmode='unique')
 
-__all__ = ['matfile_generator', 'ringparam_filter', 'mfile_generator',
-           'load_mat', 'save_mat', 'load_m', 'save_m', 'load_var']
+__all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
+           'load_var']
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name'}

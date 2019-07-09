@@ -1,3 +1,6 @@
+"""Text representation of a python AT lattice with each element represented by
+its 'repr' string
+"""
 from __future__ import print_function
 import sys
 from os.path import abspath
@@ -7,8 +10,6 @@ from at.load import register_format
 from at.load.utils import element_from_string
 
 __all__ = ['load_repr', 'save_repr']
-
-numpy.set_printoptions(linewidth=200, floatmode='unique')
 
 
 def load_repr(filename, **kwargs):
@@ -50,11 +51,17 @@ def save_repr(ring, filename=None):
         for elem in ring:
             print(repr(elem), file=file)
 
+    # Save the current options
+    opts = numpy.get_printoptions()
+    # Set options to print the full representation of float variables
+    numpy.set_printoptions(linewidth=200, floatmode='unique')
     if filename is None:
         save(sys.stdout)
     else:
         with open(filename, 'wt') as reprfile:
             save(reprfile)
+    # Restore the current options
+    numpy.set_printoptions(**opts)
 
 
 register_format('.repr', load_repr, save_repr,
