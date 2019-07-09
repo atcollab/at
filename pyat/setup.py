@@ -78,7 +78,7 @@ diffmatrix = Extension(name='at.physics.diffmatrix',
 
 setup(cmdclass={'build_ext': CopyDuringBuild},
       name='accelerator-toolbox',
-      version='0.0.1',
+      version='0.0.2',
       description='Accelerator Toolbox',
       long_description=long_description,
       author='The AT collaboration',
