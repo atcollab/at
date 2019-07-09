@@ -14,9 +14,8 @@ import sys
 import copy
 import numpy
 import math
-from warnings import warn
 import itertools
-from scipy.constants import physical_constants as cst
+from warnings import warn
 from at.lattice import AtError, AtWarning
 from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
 
@@ -277,8 +276,13 @@ class Lattice(list):
         return uint32_refpts(i_range, len(self))
 
     @property
+    def circumference(self):
+        """Ring circumference"""
+        return self.periodicity * self.get_s_pos(len(self))[0]
+
+    @property
     def voltage(self):
-        """Accelerating voltage"""
+        """Total accelerating voltage"""
         volts = [elem.Voltage for elem in self if
                  isinstance(elem, elements.RFCavity)]
         return self.periodicity * sum(volts)
@@ -305,27 +309,6 @@ class Lattice(list):
             # noinspection PyAttributeOutsideInit
             self._radiation = radiate
             return radiate
-
-    @property
-    def energy_loss(self):
-        """Energy loss per turn [eV]
-
-        Losses = Cgamma / 2pi * EGeV^4 * i2
-        """
-        lenthe = numpy.array(
-            [(elem.Length, elem.BendingAngle) for elem in self if
-             isinstance(elem, elements.Dipole)])
-        lendp = lenthe[:, 0]
-        theta = lenthe[:, 1]
-
-        e_radius = cst['classical electron radius'][0]
-        e_mass = cst['electron mass energy equivalent in MeV'][0]
-        cgamma = 4.0E9 * numpy.pi * e_radius / 3.0 / pow(e_mass, 3)
-
-        i2 = self.periodicity * (numpy.sum(theta * theta / lendp))
-        e_loss = cgamma / 2.0 / numpy.pi * pow(self.energy * 1.0E-9,
-                                               4) * i2 * 1.e9
-        return e_loss
 
     # noinspection PyShadowingNames
     def modify_elements(self, elem_modify, copy=True):
@@ -378,7 +361,7 @@ class Lattice(list):
 
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
-                         quadrupole_func, wiggler_func):
+                         quadrupole_func):
         """Create a function returning the modified attributes"""
 
         def elem_func(elem):
@@ -393,8 +376,6 @@ class Lattice(list):
                 return dipole_func(elem)
             elif isinstance(elem, elements.Quadrupole):
                 return quadrupole_func(elem)
-            elif isinstance(elem, elements.Wiggler):
-                return wiggler_func(elem)
             else:
                 return None
 
@@ -402,7 +383,7 @@ class Lattice(list):
 
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
-                     quadrupole_pass=None, wiggler_pass='auto', copy=False):
+                     quadrupole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
 
@@ -410,7 +391,6 @@ class Lattice(list):
             cavity_pass='CavityPass'    PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
-            wiggler_pass='auto          PassMethod set on wigglers
             copy=False                  Return a shallow copy of the lattice and
                                         replace only the modified attributes
                                         Otherwise modify the lattice in-place.
@@ -445,13 +425,12 @@ class Lattice(list):
 
         elem_func = self._radiation_attrs(repfunc(cavity_pass),
                                           repfunc(dipole_pass),
-                                          repfunc(quadrupole_pass),
-                                          repfunc(wiggler_pass))
+                                          repfunc(quadrupole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     # noinspection PyShadowingNames
     def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto',
-                      quadrupole_pass=None, wiggler_pass='auto', copy=False):
+                      quadrupole_pass=None, copy=False):
         """
         Turn acceleration and radiation off and return the lattice
 
@@ -491,8 +470,7 @@ class Lattice(list):
 
         elem_func = self._radiation_attrs(repfunc(cavity_pass),
                                           repfunc(dipole_pass),
-                                          repfunc(quadrupole_pass),
-                                          repfunc(wiggler_pass))
+                                          repfunc(quadrupole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
 
