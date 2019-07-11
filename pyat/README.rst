@@ -5,7 +5,7 @@ pyAT is a Python interface to the pass methods defined in Accelerator Toolbox,
 implemented by compiling the C code used in the AT 'integrators' plus a Python
 extension.
 
-It supports Python 2.7 and 3.3 to 3.6.
+It supports Python 2.7 and 3.4 to 3.7.
 
 
 Installation preparation (Windows)
@@ -66,3 +66,29 @@ running the following, inside pyat, should fix it:
 
 N.B. setup.py develop needs to be run with the same version of Python (and
 numpy) that you are using to run pyAT.
+
+Releasing a version to PyPI
+---------------------------
+
+Because pyAT compiles C code, releasing a version is not simple. The code
+must be compiled for different operating systems and Python versions.
+
+To do this, we use the continuous integration services Travis CI (for Linux
+and Mac) and Appveyor (for Windows). When a tag of the form pyat-x.y.z is
+pushed to Github, wheels for each of the different platforms will be built
+and automatically uploaded to
+https://test.pypi.org/project/accelerator-toolbox/. Once there, someone
+should manually test that the wheels are working correctly, then they can
+manually download the files and upload them to PyPI itself.
+
+For Travis to be authenticated to Test PyPI, someone must set the variables
+TWINE_USERNAME and TWINE_PASSWORD in the Travis CI project settings. These
+are not public so it is possible to use personal details; it may be best
+not to use the same password for PyPI.
+
+A similar process is necessary for the Appveyor settings. You can click the
+little lock to keep the variable values private.
+
+Because there are complications putting special characters into these
+environment variables it may be simpler to ensure your Test PyPI password
+contains only alphanumeric characters.
