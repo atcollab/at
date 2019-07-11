@@ -21,7 +21,6 @@ install:
   - venv\Scripts\activate
   - cd pyat
   - pip install --only-binary=numpy,scipy -r requirements.txt
-  - python setup.py build
 
 before_build:
   - python setup.py develop
