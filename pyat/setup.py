@@ -22,29 +22,21 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 
-class CopyDuringBuild(build_ext):
-    """Only copy integrators and diffmatrix during build. This avoids filepath
-    issues during wheel building where a temporary copy of pyAT is made.
-    """
-    def run(self):
-        here = os.path.abspath(os.path.dirname(__file__))
-        integrator_src_orig = os.path.abspath(os.path.join(here, '../atintegrators'))
-        integrator_src = os.path.abspath(os.path.join(here, 'integrator-src'))
-        diffmatrix_source = os.path.abspath(os.path.join(here, '../atmat/atphysics/Radiation'))
-        # Copy files into pyat for distribution.
-        source_files = glob.glob(os.path.join(integrator_src_orig, '*.[ch]'))
-        source_files.extend(glob.glob(os.path.join(diffmatrix_source, 'findmpoleraddiffmatrix.c')))
-        if not os.path.exists(integrator_src):
-            os.makedirs(integrator_src)
-        for f in source_files:
-            shutil.copy2(f, integrator_src)
-        build_ext.run(self)
-
-
 at_source = os.path.abspath(os.path.join(here,'at.c'))
-integrator_src_orig = os.path.abspath(os.path.join(here, '../atintegrators'))
+integrator_src_orig = os.path.abspath(os.path.join(here, '..', 'atintegrators'))
 integrator_src = os.path.abspath(os.path.join(here, 'integrator-src'))
 diffmatrix_source = os.path.abspath(os.path.join(here, '../atmat/atphysics/Radiation'))
+if os.path.exists(integrator_src_orig):
+    diffmatrix_source = os.path.abspath(os.path.join(here, '../atmat/atphysics/Radiation'))
+    # Copy files into pyat for distribution.
+    source_files = glob.glob(os.path.join(integrator_src_orig, '*.[ch]'))
+    source_files.extend(glob.glob(os.path.join(diffmatrix_source, 'findmpoleraddiffmatrix.c')))
+    if not os.path.exists(integrator_src):
+        os.makedirs(integrator_src)
+    for f in source_files:
+        shutil.copy2(f, integrator_src)
+
+
 pass_methods = glob.glob(os.path.join(integrator_src, '*Pass.c'))
 diffmatrix_method = os.path.join(integrator_src, 'findmpoleraddiffmatrix.c')
 
@@ -76,16 +68,17 @@ diffmatrix = Extension(name='at.physics.diffmatrix',
                        define_macros=macros,
                        extra_compile_args=cflags)
 
-setup(cmdclass={'build_ext': CopyDuringBuild},
-      name='accelerator-toolbox',
-      version='0.0.2',
-      description='Accelerator Toolbox',
-      long_description=long_description,
-      author='The AT collaboration',
-      author_email='atcollab-general@lists.sourceforge.net',
-      url='https://pypi.org/project/accelerator-toolbox/',
-      install_requires=['numpy>=1.10', 'scipy>=0.16'],
-      packages=find_packages(),
-      ext_modules=[at, diffmatrix] + [integrator_extension(pm) for pm in pass_methods],
-      zip_safe=False,
-      python_requires='>=2.7.4')
+setup(
+    name='accelerator-toolbox',
+    version='0.0.2',
+    description='Accelerator Toolbox',
+    long_description=long_description,
+    author='The AT collaboration',
+    author_email='atcollab-general@lists.sourceforge.net',
+    url='https://pypi.org/project/accelerator-toolbox/',
+    install_requires=['numpy>=1.10', 'scipy>=0.16'],
+    packages=find_packages(),
+    ext_modules=[at, diffmatrix] + [integrator_extension(pm) for pm in pass_methods],
+    zip_safe=False,
+    python_requires='>=2.7.4'
+)
