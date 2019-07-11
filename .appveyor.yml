@@ -37,8 +37,6 @@ build_script:
         if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode )  }
         python setup.py sdist --dist-dir=wheelhouse
         if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode )  }
-        python -m pip install twine
-        python -m twine upload --repository-url https://test.pypi.org/legacy/ wheelhouse/*
       }
       else {
         python -m pip install pytest-cov
