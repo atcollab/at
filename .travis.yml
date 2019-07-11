@@ -40,7 +40,6 @@ install: |
   fi
   cd pyat
   pip install --only-binary=numpy,scipy -r requirements.txt
-  python setup.py build
 
 before_script:
   - python setup.py develop
