@@ -4,14 +4,13 @@ import os
 from os.path import abspath, basename, dirname, exists, join, splitext
 import sys
 import shutil
+from setuptools import setup, Extension, find_packages
 try:
     import numpy
 except ImportError:
     print('\npyAT requires numpy. '
           'Please install numpy: "pip install numpy"\n')
     sys.exit()
-from setuptools import setup, Extension, find_packages
-from setuptools.command.build_ext import build_ext
 
 
 here = abspath(dirname(__file__))
@@ -42,7 +41,6 @@ diffmatrix_source = abspath(
 )
 
 if exists(integrator_src_orig):
-    diffmatrix_source = abspath(join(here, '../atmat/atphysics/Radiation'))
     # Copy files into pyat for distribution.
     source_files = glob.glob(join(integrator_src_orig, '*.[ch]'))
     source_files.extend(
