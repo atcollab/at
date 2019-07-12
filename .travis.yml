@@ -40,9 +40,10 @@ install: |
   fi
   cd pyat
   pip install --only-binary=numpy,scipy -r requirements.txt
-  python setup.py build
 
 before_script:
+    # Use develop as we will be running the tests from the directory
+    # containing the at package.
   - python setup.py develop
 
 script: |
