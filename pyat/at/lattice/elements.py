@@ -68,9 +68,12 @@ class Element(object):
                      self.REQUIRED_ATTRIBUTES]
         defelem = self.__class__(*arguments)
         keywords = ['{0!r}'.format(arg) for arg in arguments]
-        keywords += ['{0}={1!r}'.format(k, v) for k, v in attrs.items()
+        keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
                      if not numpy.array_equal(v, getattr(defelem, k, None))]
         return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
+
+    def __eq__(self, other):
+        return repr(self) == repr(other)
 
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
@@ -532,6 +535,16 @@ class Corrector(LongElement):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
         super(Corrector, self).__init__(family_name, length,
                                         KickAngle=kick_angle, **kwargs)
+
+
+class Wiggler(LongElement):
+    """
+    place holder for a Wiggler element, acts as a drift
+    """
+    # noinspection PyUnusedLocal
+    def __init__(self, family_name, length, *args, **kwargs):
+        kwargs.setdefault('PassMethod', 'DriftPass')
+        super(Wiggler, self).__init__(family_name, length, **kwargs)
 
 
 CLASS_MAP = dict((k, v) for k, v in locals().items()
