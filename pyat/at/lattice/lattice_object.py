@@ -321,6 +321,10 @@ class Lattice(list):
             Otherwise, elem_modify(elem) must return a dictionary of
             attribute name and values, to be set to elem.
 
+        RETURNS
+            New lattice if copy == True
+            None if copy == False
+
         KEYWORDS
             copy=True           Return a shallow copy of the lattice. Only the
                                 modified attributes are replaced. Otherwise
@@ -338,7 +342,6 @@ class Lattice(list):
                         elem.PassMethod.endswith('CavityPass')):
                     radiate = True
             self._radiation = radiate
-            return self
 
         def lattice_copy(params):
             """Custom iterator for the creation of a new lattice"""
@@ -357,7 +360,7 @@ class Lattice(list):
         if copy:
             return Lattice(iterator=lattice_copy)
         else:
-            return lattice_modify()
+            lattice_modify()
 
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
