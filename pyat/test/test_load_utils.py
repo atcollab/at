@@ -1,11 +1,19 @@
 import at
 import numpy
 import pytest
-from at import AtError, AtWarning
-from at.lattice import elements
+from at import AtWarning
+from at.lattice import Lattice, elements, params_filter, no_filter
 from at.load.utils import find_class, element_from_dict
 from at.load.utils import _CLASS_MAP, _PASS_MAP, RingParam
-from at.load.matfile import _matlab_scanner
+from at.load import ringparam_filter
+
+
+def _matlab_scanner(element_list, **kwargs):
+    """This function simulates a mat-file reading but replaces the mat-file by
+    a list of elements"""
+    latt = Lattice(ringparam_filter, no_filter, element_list,
+                   iterator=params_filter, **kwargs)
+    return vars(latt)
 
 
 def test_lattice_gets_attributes_from_RingParam():
@@ -50,8 +58,9 @@ def test_inconsistent_energy_values_warns_correctly():
     with pytest.warns(AtWarning):
         params = _matlab_scanner([m1, m2])
         assert params['energy'] == 5.e+9
-    with pytest.raises(AtError):
+    with pytest.warns(AtWarning):
         params = _matlab_scanner([d1, d2])
+        assert params['energy'] == 5.e+9
 
 
 def test_more_than_one_RingParam_in_ring_raises_warning():

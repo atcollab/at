@@ -32,8 +32,10 @@ def test_find_orbit4_result_unchanged_by_atpass(dba_lattice):
 
 
 def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_lattice):
-    expected = [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
-                [3.0422808e-8, 9.1635269e-8, 0, 0, DP, 5.9280346e-6]]
+    expected = numpy.array(
+        [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
+         [3.0422808e-8, 9.1635269e-8, 0, 0, DP, 5.9280346e-6]]
+    )
     _, all_points = physics.find_orbit4(dba_lattice, DP, [49, 99])
     numpy.testing.assert_allclose(all_points, expected, atol=1e-12)
     _, all_points = physics.find_orbit4(dba_lattice, DP, [49, 99],
@@ -64,12 +66,13 @@ def test_find_m44_returns_same_answer_as_matlab(dba_lattice, refpts):
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
 def test_find_m66(hmba_lattice, refpts):
     m66, mstack = physics.find_m66(hmba_lattice, refpts=refpts)
-    expected = [[-0.735654, 4.673766, 0., 0., 2.997161e-3, 0.],
-                [-9.816788e-2, -0.735654, 0., 0., 1.695263e-4, 0.],
-                [0., 0., 0.609804, -2.096051, 0., 0.],
-                [0., 0., 0.299679, 0.609799, 0., 0.],
-                [0., 0., 0., 0., 1., 0.],
-                [1.695128e-4, 2.997255e-3, 0., 0., 2.243281e-3, 1.]]
+    expected = numpy.array(
+        [[-0.735654, 4.673766, 0., 0., 2.997161e-3, 0.],
+         [-9.816788e-2, -0.735654, 0., 0., 1.695263e-4, 0.],
+         [0., 0., 0.609804, -2.096051, 0., 0.],
+         [0., 0., 0.299679, 0.609799, 0., 0.],
+         [0., 0., 0., 0., 1., 0.],
+         [1.695128e-4, 2.997255e-3, 0., 0., 2.243281e-3, 1.]])
     numpy.testing.assert_allclose(m66, expected, rtol=1e-5, atol=1e-7)
     stack_size = 0 if refpts is None else len(refpts)
     assert mstack.shape == (stack_size, 6, 6)
@@ -118,9 +121,11 @@ def test_find_orbit6_raises_AtError_if_there_is_no_cavity(dba_lattice):
 
 def test_find_m44_no_refpts(dba_lattice):
     m44 = physics.find_m44(dba_lattice, dp=DP)[0]
-    expected = [[-0.66380, 2.23415, 0., 0.], [-0.25037, -0.66380, 0., 0.],
-                [-1.45698e-31, -1.15008e-30, -0.99922, 0.26217],
-                [6.57748e-33, 8.75482e-32, -5.9497e-3, -0.99922]]
+    expected = numpy.array(
+        [[-0.66380, 2.23415, 0., 0.],
+         [-0.25037, -0.66380, 0., 0.],
+         [-1.45698e-31, -1.15008e-30, -0.99922, 0.26217],
+         [6.57748e-33, 8.75482e-32, -5.9497e-3, -0.99922]])
     numpy.testing.assert_allclose(m44, expected, rtol=1e-5, atol=1e-7)
 
 
@@ -234,7 +239,8 @@ def test_ohmi_envelope(hmba_lattice, refpts):
     numpy.testing.assert_almost_equal(beamdata['tunes'],
                                       [0.38156302, 0.85437641, 1.0906073e-4])
     numpy.testing.assert_almost_equal(beamdata['damping_rates'],
-                                      [1.004454e-5, 6.623816e-6, 9.653347e-6])
+                                      [1.0044543e-5, 6.6238162e-6,
+                                       9.6533473e-6])
     numpy.testing.assert_almost_equal(
         beamdata['mode_matrices'],
         [[[6.9000153, -2.6064253e-5, 1.643376e-25,

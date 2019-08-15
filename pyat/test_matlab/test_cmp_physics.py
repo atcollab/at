@@ -134,7 +134,7 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
     refpts = range(nelems + 1) if refpts is None else refpts
 
     # Python call
-    py_lattice.radiation_on()
+    py_lattice = py_lattice.radiation_on(copy=True)
     py_emit0, py_beamdata, py_emit = py_lattice.ohmi_envelope(refpts)
     # Matlab call
     ml_emit = engine.pyproxy('atx', ml_lattice, 0.0, _ml_refs(refpts, nelems))
@@ -172,7 +172,6 @@ def test_parameters(engine, ml_lattice, py_lattice, dp):
     assert py_lattice.harmonic_number == int(ml_harms)
 
     # test momentum compaction factor
-    py_lattice.radiation_off()
     py_mcf = py_lattice.get_mcf(dp, ddp=1.E-6)  # Matlab uses ddp=1.E-6
     ml_mcf = engine.mcf(ml_lattice, dp)
     numpy.testing.assert_allclose(py_mcf, ml_mcf, rtol=1.E-8)
