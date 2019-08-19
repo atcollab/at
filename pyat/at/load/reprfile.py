@@ -4,6 +4,7 @@ its 'repr' string
 from __future__ import print_function
 import sys
 from os.path import abspath
+import re
 import numpy
 from at.lattice import Lattice
 from at.load import register_format
@@ -46,15 +47,16 @@ def save_repr(ring, filename=None):
         filename=None   name of the '.repr' file. Default: output on sys.stdout
     """
     def save(file):
-        print(repr(dict((k, v) for k, v in vars(ring).items()
-                        if not k.startswith('_'))), file=file)
+        valid = repr(dict((k, v) for k, v in vars(ring).items()
+                        if not k.startswith('_')))
+        print(re.sub('\n\s*', ' ', valid), file=file)
         for elem in ring:
-            print(repr(elem), file=file)
+            print(re.sub('\n\s*', ' ', repr(elem)), file=file)
 
     # Save the current options
     opts = numpy.get_printoptions()
     # Set options to print the full representation of float variables
-    numpy.set_printoptions(linewidth=200, floatmode='unique')
+    numpy.set_printoptions(formatter={'float_kind': repr})
     if filename is None:
         save(sys.stdout)
     else:
