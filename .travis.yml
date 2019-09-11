@@ -8,7 +8,8 @@ dist: xenial
 language: python
 env:
   global:
-    - CIBW_BEFORE_BUILD='pip install numpy'
+    # Build against the oldest supported version of numpy.
+    - CIBW_BEFORE_BUILD='python -m pip install numpy==1.14.3'
 matrix:
   include:
     - os: linux
