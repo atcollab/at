@@ -72,9 +72,6 @@ class Element(object):
                      if not numpy.array_equal(v, getattr(defelem, k, None))]
         return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
 
-    def __eq__(self, other):
-        return repr(self) == repr(other)
-
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
