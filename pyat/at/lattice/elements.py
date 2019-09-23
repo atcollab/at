@@ -74,9 +74,6 @@ class Element(object):
         args = re.sub('\n\s*', ' ', ', '.join(keywords))
         return '{0}({1})'.format(self.__class__.__name__, args)
 
-    def __eq__(self, other):
-        return repr(self) == repr(other)
-
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
