@@ -288,8 +288,10 @@ def element_to_m(elem):
             if arg.ndim > 1:
                 lns = (str(list(ln)).replace(',', '')[1:-1] for ln in arg)
                 return ''.join(('[', '; '.join(lns), ']'))
-            else:
+            elif arg.ndim > 0:
                 return str(list(arg)).replace(',', '')
+            else:
+                return str(arg)
         else:
             return repr(arg)
 

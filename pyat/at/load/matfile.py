@@ -12,8 +12,6 @@ from at.load import register_format
 from at.load.utils import element_from_dict, element_from_m, RingParam
 from at.load.utils import element_to_dict, element_to_m
 
-numpy.set_printoptions(linewidth=200, floatmode='unique')
-
 __all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
            'load_var']
 

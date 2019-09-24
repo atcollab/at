@@ -54,7 +54,7 @@ def save_repr(ring, filename=None):
     # Save the current options
     opts = numpy.get_printoptions()
     # Set options to print the full representation of float variables
-    numpy.set_printoptions(linewidth=200, floatmode='unique')
+    numpy.set_printoptions(formatter={'float_kind': repr})
     if filename is None:
         save(sys.stdout)
     else:

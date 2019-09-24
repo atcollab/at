@@ -5,6 +5,7 @@ Each element has a default PassMethod attribute for which it should have the
 appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
+import re
 import numpy
 import copy
 from inspect import getmembers, isdatadescriptor
@@ -70,7 +71,8 @@ class Element(object):
         keywords = ['{0!r}'.format(arg) for arg in arguments]
         keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
                      if not numpy.array_equal(v, getattr(defelem, k, None))]
-        return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
+        args = re.sub('\n\s*', ' ', ', '.join(keywords))
+        return '{0}({1})'.format(self.__class__.__name__, args)
 
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
