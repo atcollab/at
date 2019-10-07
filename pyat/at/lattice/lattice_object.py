@@ -526,10 +526,14 @@ class Lattice(list):
         # set default insertion
         if break_elems is None:
             break_elems = elements.Marker('sbreak')
+        break_elems = numpy.reshape(break_elems, -1)
+        # Check element lengths
+        if not all(e.Length==0 for e in break_elems):
+            warn(AtWarning(
+                 "Inserting elements with length!=0 may change the lattice"))
         # broadcast break_s and break_elems to arrays of same size
         # and create an iterator over the elements to be inserted
-        iter_mk = zip(*numpy.broadcast_arrays(numpy.reshape(break_s, -1),
-                                              break_elems))
+        iter_mk = zip(*numpy.broadcast_arrays(break_s, break_elems))
 
         return Lattice(sbreak_iterator(self, iter_mk), **vars(self))
 
