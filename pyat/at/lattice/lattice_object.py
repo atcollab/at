@@ -482,6 +482,61 @@ class Lattice(list):
                                           repfunc(wiggler_pass))
         return self.modify_elements(elem_func, copy=copy)
 
+    def sbreak(self, break_s, break_elems=None):
+        """Insert elements at selected locations in the lattice
+
+        PARAMETERS
+            break_s:        location or array of locations of breakpoints
+            break_elems:    elements to be inserted at breakpoints (array of
+                            elements as long as break_s or single element
+                            duplicated as necessary). Default: Marker('sbreak')
+        RETURNS
+            A new lattice with new elements inserted at breakpoints
+        """
+
+        def sbreak_iterator(elems, insertions):
+            """Iterate over elements and breaks where necessary"""
+
+            def next_mk():
+                """Extract the next element to insert"""
+                try:
+                    return next(insertions)
+                except StopIteration:
+                    return sys.float_info.max, None
+
+            s_end = 0.0
+            # get the 1st insertion
+            smk, mk = next_mk()
+            # skip all insertions at negative break_s, if any
+            while smk < s_end:
+                smk, mk = next_mk()
+
+            for elem in elems:
+                s_end += elem.Length
+                # loop over all insertions within the element
+                while smk < s_end:
+                    frac = (s_end - smk) / elem.Length
+                    if frac < 1.0:  # breakpoint is within the element
+                        el0, elem = elem.divide([1.0 - frac, frac])
+                        yield el0
+                    yield mk
+                    smk, mk = next_mk()
+                yield elem
+
+        # set default insertion
+        if break_elems is None:
+            break_elems = elements.Marker('sbreak')
+        break_elems = numpy.reshape(break_elems, -1)
+        # Check element lengths
+        if not all(e.Length==0 for e in break_elems):
+            warn(AtWarning(
+                 "Inserting elements with length!=0 may change the lattice"))
+        # broadcast break_s and break_elems to arrays of same size
+        # and create an iterator over the elements to be inserted
+        iter_mk = zip(*numpy.broadcast_arrays(break_s, break_elems))
+
+        return Lattice(sbreak_iterator(self, iter_mk), **vars(self))
+
 
 def lattice_filter(params, elems):
     """Copy lattice parameters an run through all lattice elements"""
