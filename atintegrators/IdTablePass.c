@@ -107,6 +107,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
         xkick=atGetDoubleArraySz(ElemData,"xkick", &ny_map, &nx_map); check_error();
+        /* the third input of atGetDoubleArraySz is a pointer for the 
+         * number of rows in the 2-D array, the fourth input is a pointer 
+         * for the number of columns
+         */
         ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
         x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
         y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
@@ -156,6 +160,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
         xkick=atGetDoubleArraySz(ElemData,"xkick", &ny_map, &nx_map); check_error();
+        /* the third input of atGetDoubleArraySz is a pointer for the 
+         * number of rows in the 2-D array, the fourth input is a pointer 
+         * for the number of columns
+         */
         ykick=atGetDoubleArray(ElemData,"ykick"); check_error();
         x_map=atGetDoubleArray(ElemData,"xtable"); check_error();
         y_map=atGetDoubleArray(ElemData,"ytable"); check_error();
