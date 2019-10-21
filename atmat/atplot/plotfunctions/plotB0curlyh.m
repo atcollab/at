@@ -1,7 +1,8 @@
 function plotdata=plotB0curlyh(lindata,ring,dpp,varargin)
 
-spl=299792458;
-Brho=1e9/spl*(6.03);
+spl=PhysConstant.speed_of_light_in_vacuum.value;
+E0 = atenergy(ring);
+Brho=E0/spl;
 
 idx=cat(1,lindata.ElemIndex);
 H=CurlyHlindata(lindata);
@@ -13,7 +14,7 @@ B0(dips)=Brho*getcellstruct(ring,'BendingAngle',dips)./...
 
 beta=cat(1,lindata.beta);                     % left axis
 plotdata(1).values=B0;
-plotdata(1).labels={'B [T]'};
+plotdata(1).labels={['B [T] ' num2str(E0*1e-9) 'GeV']};
 plotdata(1).axislabel='B [T]';
 dispersion=cat(2,lindata.Dispersion)'; % right axis
 

@@ -35,7 +35,8 @@ params   = atgetcells(ring(:,1),'Class','RingParam');
 cavities = atgetcells(ring(:,1),'Frequency');
 dipoles  = atgetcells(ring(:,1),'BendingAngle');
 theta    = atgetfieldvalues(ring(dipoles),'BendingAngle');
-
+E0s = atgetfieldvalues(ring,'Energy');
+        
 if any(params) % case RingParam is defined in the lattice
     parmelem=ring{find(params,1)};
     energy=parmelem.Energy;
@@ -47,9 +48,16 @@ else % else look for energy in cavity or GLOBVAL
         energy=ring{find(cavities,1)}.Energy;
     elseif isfield(GLOBVAL,'E0')
         energy=GLOBVAL.E0;
+    elseif length(unique(E0s)) ==1
+        
+           energy = unique(E0s);
+    elseif length(unique(E0s)) >1
+        error('Energy field not equal for all elements')
     else
         error('AT:NoEnergy',...
-            'Energy not defined (searched in ''RingParam'',''RFCavity'',GLOBVAL.E0)');
+            ['Energy not defined (searched in '...
+            '''RingParam'',''RFCavity'',GLOBVAL.E0,',...
+            ' field ''Energy'' of each element)']);
     end
     if nargout >= 2 % get number of periods
         if size(ring,2) > 1
