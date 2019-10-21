@@ -1,6 +1,6 @@
 function plotdata=plotB0curlyh(lindata,ring,dpp,varargin)
 
-spl=299792458;
+spl=PhysConstant.speed_of_light_in_vacuum.value;
 E0 = atenergy(ring);
 Brho=E0/spl;
 
