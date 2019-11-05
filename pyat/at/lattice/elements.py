@@ -35,6 +35,10 @@ class Element(object):
                         T2=lambda v: _array(v, (6,)),
                         RApertures=lambda v: _array(v, (4,)),
                         EApertures=lambda v: _array(v, (2,)),
+                        KickAngle=lambda v: _array(v, (2,)),
+                        PolynomB=_array, PolynomA=_array,
+                        BendingAngle=float,
+                        MaxOrder=int, NumIntSteps=int,
                         Energy=float,
                         )
 
@@ -250,8 +254,6 @@ class ThinMultipole(Element):
     """pyAT thin multipole element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['PolynomA',
                                                          'PolynomB']
-    _conversions = dict(Element._conversions, BendingAngle=float, MaxOrder=int,
-                        PolynomB=_array, PolynomA=_array)
 
     def __init__(self, family_name, poly_a, poly_b, **kwargs):
         """ThinMultipole(FamName, PolynomA, PolynomB, **keywords)
@@ -307,8 +309,7 @@ class Multipole(LongElement, ThinMultipole):
     """pyAT multipole element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['PolynomA',
                                                              'PolynomB']
-    _conversions = dict(ThinMultipole._conversions, NumIntSteps=int,
-                        K=float, KickAngle=lambda v: _array(v, (2,)))
+    _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name, length, poly_a, poly_b, **kwargs):
         """Multipole(FamName, Length, PolynomA, PolynomB, **keywords)
@@ -528,7 +529,6 @@ class M66(Element):
 class Corrector(LongElement):
     """pyAT corrector element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['KickAngle']
-    _conversions = dict(LongElement._conversions, KickAngle=_array)
 
     def __init__(self, family_name, length, kick_angle, **kwargs):
         kwargs.setdefault('PassMethod', 'CorrectorPass')
