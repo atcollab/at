@@ -83,8 +83,8 @@ BY = squeeze((MS(3,3,:)*by-MS(3,4,:)*ay).^2 + MS(3,4,:).^2)/by;
 AX = -squeeze((MS(1,1,:)*bx-MS(1,2,:)*ax).*(MS(2,1,:)*bx-MS(2,2,:)*ax) + MS(1,2,:).*MS(2,2,:))/bx;
 AY = -squeeze((MS(3,3,:)*by-MS(3,4,:)*ay).*(MS(4,3,:)*by-MS(4,4,:)*ay) + MS(3,4,:).*MS(4,4,:))/by;
 
-MX = atan(squeeze( MS(1,2,:)./(MS(1,1,:)*bx-MS(1,2,:)*ax)));
-MY = atan(squeeze(MS(3,4,:)./(MS(3,3,:)*by-MS(3,4,:)*ay)));
+MX = atan2(squeeze(MS(1,2,:),(MS(1,1,:)*bx-MS(1,2,:)*ax)));
+MY = atan2(squeeze(MS(3,4,:),(MS(3,3,:)*by-MS(3,4,:)*ay)));
 
 MX = BetatronPhaseUnwrap(MX);
 MY = BetatronPhaseUnwrap(MY);
