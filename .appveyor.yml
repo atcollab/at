@@ -11,10 +11,10 @@ environment:
   CIBW_BEFORE_BUILD: "python -m pip install numpy==1.14.3"
   matrix:
    - PYTHON: 27
-   - PYTHON: 34
    - PYTHON: 35
    - PYTHON: 36
    - PYTHON: 37
+   - PYTHON: 38
 
 install:
   - set "PATH=C:\Python%PYTHON%-x64;C:\Python%PYTHON%-x64\Scripts;%PATH%"

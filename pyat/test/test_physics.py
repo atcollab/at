@@ -81,7 +81,7 @@ def test_find_m66(hmba_lattice, refpts):
 @pytest.mark.parametrize('index', (19, 0, 1))
 def test_find_elem_m66(hmba_lattice, index):
     m66 = physics.find_elem_m66(hmba_lattice[index])
-    if index is 19:
+    if index == 19:
         expected = numpy.array([[1.0386, 0.180911, 0., 0., 0., 0.],
                                 [0.434959, 1.0386, 0., 0., 0., 0.],
                                 [0., 0., 0.961891, 0.176344, 0., 0.],
@@ -150,7 +150,7 @@ def test_get_twiss_no_refpts(dba_lattice):
     twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP,
                                                    get_chrom=True)
     assert list(twiss) == []
-    assert len(physics.get_twiss(dba_lattice, DP, get_chrom=True)) is 4
+    assert len(physics.get_twiss(dba_lattice, DP, get_chrom=True)) == 4
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
@@ -229,7 +229,7 @@ def test_linopt_no_refpts(dba_lattice):
     lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP,
                                                     get_chrom=True)
     assert list(lindata) == []
-    assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) is 4
+    assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))

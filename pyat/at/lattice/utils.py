@@ -45,7 +45,7 @@ def check_radiation(rad):
         @functools.wraps(func)
         def wrapper(ring, *args, **kwargs):
             ringrad = getattr(ring, 'radiation', rad)
-            if ringrad is not rad:
+            if ringrad != rad:
                 raise AtError('{0} needs radiation {1}'.format(
                     func.__name__, 'ON' if rad else 'OFF'))
             return func(ring, *args, **kwargs)
@@ -59,7 +59,7 @@ def uint32_refpts(refpts, n_elements):
     elements.  This is used for indexing a lattice using explicit indices.
     """
     refs = numpy.asarray(refpts).reshape(-1)
-    if (refpts is None) or (refs.size is 0):
+    if (refpts is None) or (refs.size == 0):
         return numpy.array([], dtype=numpy.uint32)
     elif refs.size > n_elements+1:
         raise ValueError('too many reftps given')
@@ -92,7 +92,7 @@ def bool_refpts(refpts, n_elements):
     """
     if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
         diff = 1 + n_elements - refpts.size
-        if diff is 0:
+        if diff == 0:
             return refpts
         elif diff > 0:
             return numpy.append(refpts, numpy.zeros(diff, dtype=bool))
