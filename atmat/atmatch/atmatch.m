@@ -25,6 +25,9 @@ function [NewRing,penalty,dmin]=atmatch(...
 % verbose     : verbosity 0-3 (see later)
 % minimizer   : @fminsearch (default) or @lsqnonlin 
 % twissin     : open line matching initial parameters
+% dpp         : ...,'dpp',0.0,... use atlinopt off energy by dpp
+% UseParallel : ...,'UseParallel',false,... use parallel pool for
+%               optimization
 %
 % Variables  struct('Indx',{[indx],...
 %                           @(ring,varval)fun(ring,varval,...),...
@@ -93,23 +96,40 @@ function [NewRing,penalty,dmin]=atmatch(...
 %                   reshaped initialization of tipx for lsqnonlin
 %                   atlinopt call optimized in the constraint evaluation call
 %                   changed constraint structure
+% updated 28-1-2020 introduce dp/p 
+% updated 24-3-2020 introduce UseParallel
 
 %% optional arguments
-minimizer=@fminsearch; 
-twissin=[];  
+minimizer_def=@fminsearch; 
+twissin_def=[];  
 
-if length(varargin)==1
-    if ~isstruct(varargin{1})
-        minimizer=varargin{1};
-        twissin=[];
-    else
-        twissin=varargin{1};
-        minimizer=@fminsearch;
-    end
-elseif length(varargin)==2
-    minimizer=varargin{1};
-    twissin=varargin{2};
-end
+p = inputParser();
+
+addRequired(p,'Ring',@iscell);
+addRequired(p,'Variables');
+addRequired(p,'Constraints');
+addRequired(p,'Tolerance',@isnumeric);
+addRequired(p,'Calls',@isnumeric);
+addRequired(p,'verbose',@isnumeric);
+
+addOptional(p,'minimizer',minimizer_def);
+addOptional(p,'twissin',twissin_def,@isstruct);
+addParameter(p,'dpp',0.0);
+addParameter(p,'UseParallel',false);
+
+parse(p,Ring,Variables,Constraints,Tolerance,Calls,verbose,varargin{:});
+
+Ring = p.Results.Ring;
+Variables = p.Results.Variables;
+Constraints = p.Results.Constraints;
+Tolerance = p.Results.Tolerance;
+Calls = p.Results.Calls;
+verbose = p.Results.verbose;
+minimizer = p.Results.minimizer;
+twissin = p.Results.twissin;
+dpp = p.Results.dpp;
+usepar = p.Results.UseParallel;
+
 
 options=optimset(minimizer);
 
@@ -140,7 +160,8 @@ options=optimset(options,...
     'MaxIter',Calls,...
     'TypicalX',tipx,...
     'TolFun',Tolerance,...
-    'TolX',Tolerance);
+    'TolX',Tolerance,...
+    'UseParallel',usepar);
 
 if verbose == 0
     options = optimset(options,...
@@ -156,21 +177,21 @@ switch func2str(minimizer)
     case 'lsqnonlin'
         
         f = @(d) evalvector(Ring,Variables,Constraints,splitvar(d),...
-            evalfunc,posarray,indinposarray,twissin); % vector
+            evalfunc,posarray,indinposarray,twissin,dpp); % vector
         args={initval,Blow,Bhigh};
     case 'fminsearch'
         
         f = @(d)evalsum(Ring,Variables,Constraints,...
-            splitvar(d),evalfunc,posarray,indinposarray,twissin); % scalar (sum of squares of f)
+            splitvar(d),evalfunc,posarray,indinposarray,twissin,dpp); % scalar (sum of squares of f)
         args={initval};
     case 'fmincon'
         
         f = @(d)evalsum(Ring,Variables,Constraints,...
-            splitvar(d),evalfunc,posarray,indinposarray,twissin); % scalar (sum of squares of f)
+            splitvar(d),evalfunc,posarray,indinposarray,twissin,dpp); % scalar (sum of squares of f)
         args={initval,[],[],[],[],Blow,Bhigh,[]};
 end
 
-cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray,twissin);
+cstr1=atEvaluateConstraints(Ring,evalfunc,posarray,indinposarray,twissin,dpp);
 penalty0=atGetPenalty(cstr1,Constraints);
 
 if verbose>0
@@ -192,7 +213,7 @@ end
 
 NewRing=atApplyVariation(Ring,Variables,splitvar(dmin));
 
-cstr2=atEvaluateConstraints(NewRing,evalfunc,posarray,indinposarray,twissin);
+cstr2=atEvaluateConstraints(NewRing,evalfunc,posarray,indinposarray,twissin,dpp);
 penalty=atGetPenalty(cstr2,Constraints);
 
 if verbose>1
@@ -218,14 +239,14 @@ if verbose>2
     atDisplayVariableChange(Ring,NewRing,Variables);
 end
 
-    function Val=evalvector(R,v,c,d,e,posarray,indinposarray,twissin)
+    function Val=evalvector(R,v,c,d,e,posarray,indinposarray,twissin,dpp)
         R=atApplyVariation(R,v,d);
-        cstr=atEvaluateConstraints(R,e,posarray,indinposarray,twissin);
+        cstr=atEvaluateConstraints(R,e,posarray,indinposarray,twissin,dpp);
         Val=atGetPenalty(cstr,c);
     end
 
-    function sVal=evalsum(R,v,c,d,e,posarray,indinposarray,twissin)
-        Val=evalvector(R,v,c,d,e,posarray,indinposarray,twissin);
+    function sVal=evalsum(R,v,c,d,e,posarray,indinposarray,twissin,dpp)
+        Val=evalvector(R,v,c,d,e,posarray,indinposarray,twissin,dpp);
         sVal=sum(Val.^2);
     end
 
