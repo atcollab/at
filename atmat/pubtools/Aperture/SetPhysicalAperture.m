@@ -17,7 +17,9 @@ function ringapert=SetPhysicalAperture(ring,apertureX,apertureY)
 % Yapert=0.04*ones(size(ring));
 % ring=SetPhysicalAperture(ring,Xapert/2,Yapert/2);
 %
-% atplot(ringinj,@plotAperture);
+% atplot(ringinj,@plotAperture);  % backward compatibility with old format
+% atplot(ringinj,@plotRAperture); % rectangular aperture
+% atplot(ringinj,@plotEAperture); % Elliptic aperture
 %
 %See also: ATAPERTURE, plotAperture
 
