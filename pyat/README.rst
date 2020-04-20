@@ -5,7 +5,7 @@ pyAT is a Python interface to the pass methods defined in Accelerator Toolbox,
 implemented by compiling the C code used in the AT 'integrators' plus a Python
 extension.
 
-It supports Python 2.7 and 3.4 to 3.7.
+It supports Python 2.7 (deprecated) and 3.5 to 3.8.
 
 
 Installation preparation (Windows)
@@ -23,16 +23,25 @@ Installation (all platforms)
 
 All the binaries should be built when building the Python extension.
 
-It is easiest to do this using a virtualenv, inside pyat:
+It is easiest to do this using a virtualenv. inside pyat:
+
+We recommend using Python 3. If you are still using Python 2, you need virtualenv installed:
 
 * ``virtualenv --no-site-packages venv``
+
+If you are using Python 3, you can use the built-in venv module:
+
+* ``python3 -m venv venv``
+
+Then:
+
 * ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
 * ``pip install -r requirements.txt``
-* ``python setup.py develop``
+* ``pip install -e .``
 
 Finally, you should be able to run the tests:
 
-* ``py.test test``
+* ``python -m pytest test``
 
 
 Comparing results with Matlab
