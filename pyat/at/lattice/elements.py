@@ -78,6 +78,15 @@ class Element(object):
         args = re.sub('\n\s*', ' ', ', '.join(keywords))
         return '{0}({1})'.format(self.__class__.__name__, args)
 
+    def equals(self, other):
+        """Whether an element is equivalent to another.
+
+        This implementation was found to be too slow for the generic
+        __eq__ method when comparing lattices.
+
+        """
+        return repr(self) == repr(other)
+
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
