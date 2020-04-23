@@ -271,7 +271,7 @@ def load_elegant(filename, **kwargs):
         lat = Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
         return lat
     except Exception as e:
-        print("Failed to load elegant lattice: {}".format(e))
+        print("Failed to load elegant lattice {}: {}".format(filename, e))
 
 
 register_format(".lte", load_elegant, descr="Elegant format")
