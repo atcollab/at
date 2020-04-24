@@ -1,7 +1,9 @@
+import itertools
 import pytest
 
 from at.load.elegant import (
     expand_elegant,
+    parse_chunk,
     parse_lines,
     elegant_element_from_string,
     split_ignoring_parentheses,
@@ -112,6 +114,19 @@ def test_elegant_element_from_string_handles_variable(defaults):
     correct_drift = Drift("d1", 1)
     constructed_drift = elegant_element_from_string("d1", drift, defaults)
     assert correct_drift.equals(constructed_drift)
+
+
+@pytest.mark.parametrize("value,elements,chunks,expected", [
+    ["line=(a)", {"a": Marker('m')}, {}, [Marker('m')]],
+    ["2*a", {"a": Marker('m')}, {}, [Marker('m'), Marker('m')]],
+    ["2*(a)", {"a": Marker('m')}, {}, [Marker('m'), Marker('m')]],
+    ["b", {}, {"b": [Marker('1'), Marker('2')]}, [Marker('1'), Marker('2')]],
+    ["-b", {}, {"b": [Marker('1'), Marker('2')]}, [Marker('2'), Marker('1')]],
+])
+def test_parse_chunk(value, elements, chunks, expected):
+    result = parse_chunk(value, elements, chunks)
+    for r, e in itertools.zip_longest(result, expected):
+        assert r.equals(e)
 
 
 def test_expand_elegant():

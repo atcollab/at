@@ -184,7 +184,7 @@ def parse_chunk(value, elements, chunks):
         if "symmetry" in part:
             continue
         if "inv" in part:
-            chunk_to_invert = re.match("inv\((.*)\)", part).groups()[0]
+            chunk_to_invert = re.match("inv\\((.*)\\)", part).groups()[0]
             inverted_chunk = []
             for el in reversed(chunks[chunk_to_invert]):
                 if el.__class__ == Dipole:

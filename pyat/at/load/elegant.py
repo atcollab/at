@@ -1,6 +1,6 @@
 """Load a lattice from an Elegant file (.lte).
 
-This is not complete but can parse the example file that I have.
+This is not complete but can parse the example files that I have.
 
 Note that Elegant scales magnet polynomials in a different way
 to AT, so the parsed coefficients need to be divided by n! for
@@ -8,16 +8,19 @@ the coefficient of order n.
 
 """
 import collections
+import logging as log
 from os.path import abspath
 import re
+
 from at.lattice.elements import (
+    Corrector,
     Drift,
     Dipole,
-    Quadrupole,
-    Sextupole,
-    Corrector,
     Marker,
+    Octupole,
+    Quadrupole,
     RFCavity,
+    Sextupole,
 )
 from at.lattice import Lattice
 from at.load import register_format
@@ -47,6 +50,15 @@ def create_sext(name, params, energy, harmonic_number):
     return Sextupole(name, length, k2 / 2, **params)
 
 
+def create_oct(name, params, energy, harmonic_number):
+    length = params.pop("l", 0)
+    params["NumIntSteps"] = params.pop("n_kicks", 10)
+    k3 = float(params.pop("k3", 0))
+    PolynomA = [0, 0, 0, 0]
+    PolynomB = [0, 0, 0, k3]
+    return Octupole(name, length, PolynomA, PolynomB, **params)
+
+
 def create_dipole(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -54,10 +66,11 @@ def create_dipole(name, params, energy, harmonic_number):
     params["BendingAngle"] = float(params.pop("angle"))
     params["EntranceAngle"] = float(params.pop("e1"))
     params["ExitAngle"] = float(params.pop("e2"))
-    params["FullGap"] = float(params.pop("hgap")) * 2
-    fint = params.pop("fint")
-    params["FringeInt1"] = fint
-    params["FringeInt2"] = fint
+    if "hgap" in params:
+        params["FullGap"] = float(params.pop("hgap")) * 2
+        fint = params.pop("fint")
+        params["FringeInt1"] = fint
+        params["FringeInt2"] = fint
     k1 = float(params.pop("k1", 0))
     k2 = float(params.pop("k2", 0))
     k3 = float(params.pop("k3", 0))
@@ -68,8 +81,8 @@ def create_dipole(name, params, energy, harmonic_number):
 
 def create_corrector(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
-    hkick = params.pop("hkick")
-    vkick = params.pop("vkick")
+    hkick = params.pop("hkick", 0)
+    vkick = params.pop("vkick", 0)
     kick_angle = [hkick, vkick]
     return Corrector(name, length, kick_angle, **params)
 
@@ -85,13 +98,17 @@ def create_cavity(name, params, energy, harmonic_number):
 ELEMENT_MAP = {
     "drift": create_drift,
     "drif": create_drift,
+    "edrift": create_drift,
     "csben": create_dipole,
     "csbend": create_dipole,
     "csrcsben": create_dipole,
     "quadrupole": create_quad,
     "kquad": create_quad,
     "ksext": create_sext,
+    "koct": create_oct,
     "kicker": create_corrector,
+    "hkick": create_corrector,
+    "vkick": create_corrector,
     "mark": create_marker,
     "malign": create_marker,
     "recirc": create_marker,
@@ -100,6 +117,7 @@ ELEMENT_MAP = {
     "watch": create_marker,
     "charge": create_marker,
     "monitor": create_marker,
+    "moni": create_marker,
     "rfca": create_cavity,
 }
 
@@ -146,15 +164,22 @@ def parse_lines(contents):
 
 
 def parse_chunk(value, elements, chunks):
+    """Parse a non-element part of a lattice file.
+
+    line(a,b,c) => [a, b, c]
+    """
     chunk = []
     parts = split_ignoring_parentheses(value, ",")
     for part in parts:
+        # What's this?
         if "symmetry" in part:
             continue
         if "line" in part:
-            line_parts = re.match("line=\((.*)\)", part).groups()[0]
+            line_parts = re.match("line=\\((.*)\\)", part).groups()[0]
             for p in line_parts.split(","):
                 p = p.strip()
+                chunk.extend(parse_chunk(p, elements, chunks))
+                """
                 if p.startswith("-"):
                     chunk.extend(reversed(chunks[p[1:]]))
                 elif p in elements:
@@ -165,21 +190,15 @@ def parse_chunk(value, elements, chunks):
                     raise Exception(
                         "Could not understand lattice section {}.".format(p)
                     )
-        elif "inv" in part:
-            chunk_to_invert = re.match("inv\((.*)\)", part).groups()[0]
-            inverted_chunk = []
-            for el in reversed(chunks[chunk_to_invert]):
-                if el.__class__ == Dipole:
-                    inverted_dipole = el.copy()
-                    inverted_dipole.EntranceAngle = el.ExitAngle
-                    inverted_dipole.ExitAngle = el.EntranceAngle
-                    inverted_chunk.append(inverted_dipole)
-                else:
-                    inverted_chunk.append(el)
-            chunk.extend(inverted_chunk)
+                """
+        elif part.startswith("-"):
+            chunk.extend(reversed(chunks[part[1:]]))
         elif "*" in part:
             num, chunk_name = part.split("*")
-            chunk.extend(int(num) * chunks[chunk_name])
+            if chunk_name[0] == "(":
+                assert chunk_name[-1] == ")"
+                chunk_name = chunk_name[1:-1]
+            chunk.extend(int(num) * parse_chunk(chunk_name, elements, chunks))
         elif part in elements:
             chunk.append(elements[part])
         elif part in chunks:
@@ -208,7 +227,7 @@ def expand_elegant(contents, lattice_key, energy, harmonic_number):
                 chunk = parse_chunk(value, elements, chunks)
                 chunks[key] = chunk
 
-    return chunks[lattice_key]
+    return chunks[lattice_key.lower()]
 
 
 def handle_value(value):
@@ -234,6 +253,7 @@ def handle_value(value):
 
 
 def elegant_element_from_string(name, element_string, variables):
+    log.debug("Parsing elegant element {}".format(element_string))
     parts = split_ignoring_parentheses(element_string, ",")
     params = {}
     element_type = parts[0]
@@ -271,7 +291,7 @@ def load_elegant(filename, **kwargs):
         lat = Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
         return lat
     except Exception as e:
-        print("Failed to load elegant lattice {}: {}".format(filename, e))
+        raise ValueError("Failed to load elegant lattice {}: {}".format(filename, e))
 
 
 register_format(".lte", load_elegant, descr="Elegant format")
