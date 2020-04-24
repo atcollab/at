@@ -95,6 +95,7 @@ ELEMENT_MAP = {
     "multipole": create_multipole,
     "corrector": create_corrector,
     "marker": create_marker,
+    "map": create_marker,
     "beampositionmonitor": create_marker,
     "cavity": create_cavity,
 }
@@ -140,17 +141,15 @@ def parse_float(expression):
 def split_ignoring_parentheses(string, delimiter):
     PLACEHOLDER = "placeholder"
     substituted = string[:]
-    matches = collections.deque(re.finditer("\(.*?\)", string))
+    matches = collections.deque(re.finditer("\\(.*?\\)", string))
     for match in matches:
-        substituted = "{}{}{}".format(
-            substituted[: match.start()], PLACEHOLDER, substituted[match.end() :]
-        )
+        substituted = substituted.replace(match.group(), PLACEHOLDER, 1)
     parts = substituted.split(delimiter)
     replaced_parts = []
     for part in parts:
         if PLACEHOLDER in part:
             next_match = matches.popleft()
-            part = part.replace(PLACEHOLDER, next_match.group())
+            part = part.replace(PLACEHOLDER, next_match.group(), 1)
         replaced_parts.append(part)
     assert not matches
 
@@ -177,8 +176,10 @@ def parse_lines(contents):
 
 
 def parse_chunk(value, elements, chunks):
+    log.debug('parse_chunk %s', value)
     chunk = []
     parts = split_ignoring_parentheses(value, ",")
+    log.debug(parts)
     for part in parts:
         if "symmetry" in part:
             continue
@@ -195,8 +196,11 @@ def parse_chunk(value, elements, chunks):
                     inverted_chunk.append(el)
             chunk.extend(inverted_chunk)
         elif "*" in part:
-            num, chunk_name = part.split("*")
-            chunk.extend(int(num) * chunks[chunk_name])
+            num, contents = part.split("*")
+            if contents.startswith("("):
+                assert contents[-1] == ")"
+                contents = contents[1:-1]
+            chunk.extend(int(num) * parse_chunk(contents, elements, chunks))
         elif part in elements:
             chunk.append(elements[part])
         elif part in chunks:
