@@ -221,6 +221,8 @@ def expand_tracy(contents, lattice_key, harmonic_number):
     for line in lines[1:-2]:
         if ":" not in line:
             key, value = line.split("=")
+            if key == "energy":
+                value = parse_float(value) * 1e9
             variables[key] = value
         else:
             key, value = line.split(":")
@@ -230,7 +232,7 @@ def expand_tracy(contents, lattice_key, harmonic_number):
                 chunk = parse_chunk(value, elements, chunks)
                 chunks[key] = chunk
 
-    return chunks[lattice_key], float(variables["energy"]) * 1e9
+    return chunks[lattice_key], variables["energy"]
 
 
 def parse_hom(hom_string):
