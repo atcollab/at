@@ -125,7 +125,13 @@ def test_elegant_element_from_string_handles_variable(defaults):
 ])
 def test_parse_chunk(value, elements, chunks, expected):
     result = parse_chunk(value, elements, chunks)
-    for r, e in itertools.zip_longest(result, expected):
+    try:
+        zipped = itertools.zip_longest(result, expected)
+    except AttributeError:
+        # Python 2 compatibility.
+        zipped = itertools.izip_longest(result, expected)
+
+    for r, e in zipped:
         assert r.equals(e)
 
 
