@@ -7,7 +7,6 @@ from at.load.tracy import (
     expand_tracy,
     parse_lines,
     tracy_element_from_string,
-    split_ignoring_parentheses,
 )
 from at.lattice.elements import (
     Dipole,
@@ -44,19 +43,6 @@ def test_tokenise_expression(exp, target):
 )
 def test_parse_float(exp, target):
     assert parse_float(exp) == target
-
-
-@pytest.mark.parametrize(
-    "string,delimiter,target",
-    [
-        ["a,b", ",", ["a", "b"]],
-        ["a,b(c,d)", ",", ["a", "b(c,d)"]],
-        ["l=0,hom(4,0.0,0)", ",", ["l=0", "hom(4,0.0,0)"]],
-        ["inv(arca_c1r),3*(ms,arca_c2)", ",", ["inv(arca_c1r)", "3*(ms,arca_c2)"]]
-    ],
-)
-def test_split_ignoring_parentheses(string, delimiter, target):
-    assert split_ignoring_parentheses(string, delimiter) == target
 
 
 def test_parse_lines_removes_comments():

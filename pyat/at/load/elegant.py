@@ -23,7 +23,7 @@ from at.lattice.elements import (
     Sextupole,
 )
 from at.lattice import Lattice
-from at.load import register_format
+from at.load import register_format, utils
 
 
 def create_drift(name, params, energy, harmonic_number):
@@ -122,26 +122,6 @@ ELEMENT_MAP = {
 }
 
 
-def split_ignoring_parentheses(string, delimiter):
-    PLACEHOLDER = "placeholder"
-    substituted = string[:]
-    matches = collections.deque(re.finditer("\(.*?\)", string))
-    for match in matches:
-        substituted = "{}{}{}".format(
-            substituted[: match.start()], PLACEHOLDER, substituted[match.end() :]
-        )
-    parts = substituted.split(delimiter)
-    replaced_parts = []
-    for part in parts:
-        if PLACEHOLDER in part:
-            next_match = matches.popleft()
-            part = part.replace(PLACEHOLDER, next_match.group())
-        replaced_parts.append(part)
-    assert not matches
-
-    return replaced_parts
-
-
 def parse_lines(contents):
     """Return individual lines.
 
@@ -169,7 +149,7 @@ def parse_chunk(value, elements, chunks):
     line(a,b,c) => [a, b, c]
     """
     chunk = []
-    parts = split_ignoring_parentheses(value, ",")
+    parts = utils.split_ignoring_parentheses(value, ",")
     for part in parts:
         # What's this?
         if "symmetry" in part:
@@ -254,11 +234,11 @@ def handle_value(value):
 
 def elegant_element_from_string(name, element_string, variables):
     log.debug("Parsing elegant element {}".format(element_string))
-    parts = split_ignoring_parentheses(element_string, ",")
+    parts = utils.split_ignoring_parentheses(element_string, ",")
     params = {}
     element_type = parts[0]
     for part in parts[1:]:
-        key, value = split_ignoring_parentheses(part, "=")
+        key, value = utils.split_ignoring_parentheses(part, "=")
         key = key.strip()
         value = handle_value(value)
         if value in variables:

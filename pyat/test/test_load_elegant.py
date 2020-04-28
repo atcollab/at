@@ -6,7 +6,6 @@ from at.load.elegant import (
     parse_chunk,
     parse_lines,
     elegant_element_from_string,
-    split_ignoring_parentheses,
 )
 from at.lattice.elements import (
     Dipole,
@@ -21,18 +20,6 @@ from at.lattice.elements import (
 @pytest.fixture
 def defaults():
     return {"energy": 3e9, "harmonic_number": 936}
-
-
-@pytest.mark.parametrize(
-    "string,delimiter,target",
-    [
-        ["a,b", ",", ["a", "b"]],
-        ["a,b(c,d)", ",", ["a", "b(c,d)"]],
-        ["l=0,hom(4,0.0,0)", ",", ["l=0", "hom(4,0.0,0)"]],
-    ],
-)
-def test_split_ignoring_parentheses(string, delimiter, target):
-    assert split_ignoring_parentheses(string, delimiter) == target
 
 
 def test_parse_lines_removes_comments():

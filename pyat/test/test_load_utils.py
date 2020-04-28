@@ -4,7 +4,7 @@ import pytest
 from at import AtWarning
 from at.lattice import Lattice, elements, params_filter, no_filter
 from at.load.utils import find_class, element_from_dict
-from at.load.utils import _CLASS_MAP, _PASS_MAP, RingParam
+from at.load.utils import _CLASS_MAP, _PASS_MAP, RingParam, split_ignoring_parentheses
 from at.load import ringparam_filter
 
 
@@ -231,3 +231,16 @@ def test_find_Marker(elem_kwargs):
 def test_sanitise_class_error(elem_kwargs):
     with pytest.raises(AttributeError):
         element_from_dict(elem_kwargs)
+
+
+@pytest.mark.parametrize(
+    "string,delimiter,target",
+    [
+        ["a,b", ",", ["a", "b"]],
+        ["a,b(c,d)", ",", ["a", "b(c,d)"]],
+        ["l=0,hom(4,0.0,0)", ",", ["l=0", "hom(4,0.0,0)"]],
+        ["inv(arca_c1r),3*(ms,arca_c2)", ",", ["inv(arca_c1r)", "3*(ms,arca_c2)"]]
+    ],
+)
+def test_split_ignoring_parentheses(string, delimiter, target):
+    assert split_ignoring_parentheses(string, delimiter) == target

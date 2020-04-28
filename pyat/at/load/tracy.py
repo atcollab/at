@@ -15,7 +15,7 @@ from at.lattice.elements import (
     RFCavity,
 )
 from at.lattice import Lattice
-from at.load import register_format
+from at.load import register_format, utils
 
 
 def create_drift(name, params, energy, harmonic_number):
@@ -138,24 +138,6 @@ def parse_float(expression):
             return float(tokens[0]) - float(tokens[2])
 
 
-def split_ignoring_parentheses(string, delimiter):
-    PLACEHOLDER = "placeholder"
-    substituted = string[:]
-    matches = collections.deque(re.finditer("\\(.*?\\)", string))
-    for match in matches:
-        substituted = substituted.replace(match.group(), PLACEHOLDER, 1)
-    parts = substituted.split(delimiter)
-    replaced_parts = []
-    for part in parts:
-        if PLACEHOLDER in part:
-            next_match = matches.popleft()
-            part = part.replace(PLACEHOLDER, next_match.group(), 1)
-        replaced_parts.append(part)
-    assert not matches
-
-    return replaced_parts
-
-
 def parse_lines(contents):
     """Return individual lines.
 
@@ -178,7 +160,7 @@ def parse_lines(contents):
 def parse_chunk(value, elements, chunks):
     log.debug('parse_chunk %s', value)
     chunk = []
-    parts = split_ignoring_parentheses(value, ",")
+    parts = utils.split_ignoring_parentheses(value, ",")
     log.debug(parts)
     for part in parts:
         if "symmetry" in part:
@@ -261,12 +243,12 @@ def parse_hom(hom_string):
 
 def tracy_element_from_string(name, element_string, variables):
     log.debug("Parsing tracy element {}".format(element_string))
-    parts = split_ignoring_parentheses(element_string, ",")
+    parts = utils.split_ignoring_parentheses(element_string, ",")
     params = {}
     element_type = parts[0]
     for part in parts[1:]:
         try:
-            key, value = split_ignoring_parentheses(part, "=")
+            key, value = utils.split_ignoring_parentheses(part, "=")
         except ValueError:
             key, value = part, None
         if value in variables:
