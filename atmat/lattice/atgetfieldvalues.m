@@ -12,6 +12,8 @@ function values = atgetfieldvalues(ring,varargin)
 % otherwise
 %    VALUES is a length(INDEX) x 1 cell array
 %
+%VALUES = ATGETFIELDVALUES(...,'Default',default_value) Uses default_values
+%   if the required field is not existing
 %
 % More generally ATGETFIELDVALUES(RING,INDEX,subs1,subs2,...) will call
 %  GETFIELD(RING{I},subs1,subs2,...) for I in INDEX
@@ -27,30 +29,34 @@ function values = atgetfieldvalues(ring,varargin)
 %
 % See also ATSETFIELDVALUES ATGETCELLS GETCELLSTRUCT FINDCELLS
 
-if islogical(varargin{1}) || isnumeric(varargin{1})
-    values=atgetfield(ring(varargin{1}),varargin{2:end});
+[default_val,vargs]=getoption(varargin,'Default',NaN);
+def=(length(vargs)==length(varargin));  % No default value specified
+
+if islogical(vargs{1}) || isnumeric(vargs{1})
+    values=atgetfield(ring(vargs{1}),vargs{2:end});
 else
-    values=atgetfield(ring,varargin{:});
+    values=atgetfield(ring,vargs{:});
 end
 
     function values = atgetfield(line,varargin)
         [values,isnumscal,isok]=cellfun(@scan,line(:),'UniformOutput',false);
-        isok=cat(1,isok{:});
-        if all(cat(1,isnumscal{isok}))
-            values(~isok)={NaN};
-            values=cat(1,values{:});
+        isok=cell2mat(isok);
+        isnumscal=cell2mat(isnumscal);
+        if all(isnumscal)
+            values=cell2mat(values);
+        elseif all(~isnumscal(isok)) && def
+            values(~isok)={[]};
         end
         
         function [val,isnumscal,isok]=scan(el)
             try
                 val=getfield(el,varargin{:});
-                isnumscal=isnumeric(val) && isscalar(val);
                 isok=true;
             catch
-                val=[];
-                isnumscal=false;
+                val=default_val;
                 isok=false;
             end
+            isnumscal=isnumeric(val) && isscalar(val);
         end
     end
 
