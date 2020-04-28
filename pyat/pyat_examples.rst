@@ -27,6 +27,11 @@ Initialisation:
 Basic Use:
 ----------
 
+- The lattice object is a Python interator:
+
+    >>> for element in ring:
+    ...   print(element)
+
 - Viewing the first element in the ring::
 
     >>> ring[0]

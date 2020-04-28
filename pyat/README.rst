@@ -7,6 +7,8 @@ extension.
 
 It supports Python 2.7 (deprecated) and 3.5 to 3.8.
 
+For some examples of how to use pyAT, see pyat_examples.rst.
+
 
 Installation preparation (Windows)
 ----------------------------------
