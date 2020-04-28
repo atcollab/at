@@ -184,6 +184,8 @@ def parse_chunk(value, elements, chunks):
         if "symmetry" in part:
             continue
         if "inv" in part:
+            # Reverse a sequence of elements. When doing this, swap
+            # the entrance and exit angles for any dipoles.
             chunk_to_invert = re.match("inv\\((.*)\\)", part).groups()[0]
             inverted_chunk = []
             for el in reversed(chunks[chunk_to_invert]):

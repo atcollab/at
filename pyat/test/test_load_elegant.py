@@ -116,13 +116,22 @@ def test_elegant_element_from_string_handles_variable(defaults):
     assert correct_drift.equals(constructed_drift)
 
 
-@pytest.mark.parametrize("value,elements,chunks,expected", [
-    ["line=(a)", {"a": Marker('m')}, {}, [Marker('m')]],
-    ["2*a", {"a": Marker('m')}, {}, [Marker('m'), Marker('m')]],
-    ["2*(a)", {"a": Marker('m')}, {}, [Marker('m'), Marker('m')]],
-    ["b", {}, {"b": [Marker('1'), Marker('2')]}, [Marker('1'), Marker('2')]],
-    ["-b", {}, {"b": [Marker('1'), Marker('2')]}, [Marker('2'), Marker('1')]],
-])
+@pytest.mark.parametrize(
+    "value,elements,chunks,expected",
+    [
+        ["line=(a)", {"a": Marker("m")}, {}, [Marker("m")]],
+        ["2*a", {"a": Marker("m")}, {}, [Marker("m"), Marker("m")]],
+        ["2*(a)", {"a": Marker("m")}, {}, [Marker("m"), Marker("m")]],
+        ["b", {}, {"b": [Marker("1"), Marker("2")]}, [Marker("1"), Marker("2")]],
+        ["-b", {}, {"b": [Marker("1"), Marker("2")]}, [Marker("2"), Marker("1")]],
+        [
+            "-bb",
+            {},
+            {"bb": [Dipole("bb", 1.0, 0.05, EntranceAngle=0.02, ExitAngle=0.03,)]},
+            [Dipole("bb", 1.0, 0.05, EntranceAngle=0.03, ExitAngle=0.02)],
+        ],
+    ],
+)
 def test_parse_chunk(value, elements, chunks, expected):
     result = parse_chunk(value, elements, chunks)
     try:

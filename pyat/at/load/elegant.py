@@ -179,20 +179,20 @@ def parse_chunk(value, elements, chunks):
             for p in line_parts.split(","):
                 p = p.strip()
                 chunk.extend(parse_chunk(p, elements, chunks))
-                """
-                if p.startswith("-"):
-                    chunk.extend(reversed(chunks[p[1:]]))
-                elif p in elements:
-                    chunk.append(elements[p.strip()])
-                elif p in chunks:
-                    chunk.extend(chunks[p.strip()])
-                else:
-                    raise Exception(
-                        "Could not understand lattice section {}.".format(p)
-                    )
-                """
         elif part.startswith("-"):
-            chunk.extend(reversed(chunks[part[1:]]))
+            # Reverse a sequence of elements. When doing this, swap
+            # the entrance and exit angles for any dipoles.
+            chunk_to_invert = part[1:]
+            inverted_chunk = []
+            for el in reversed(chunks[chunk_to_invert]):
+                if el.__class__ == Dipole:
+                    inverted_dipole = el.copy()
+                    inverted_dipole.EntranceAngle = el.ExitAngle
+                    inverted_dipole.ExitAngle = el.EntranceAngle
+                    inverted_chunk.append(inverted_dipole)
+                else:
+                    inverted_chunk.append(el)
+            chunk.extend(inverted_chunk)
         elif "*" in part:
             num, chunk_name = part.split("*")
             if chunk_name[0] == "(":
