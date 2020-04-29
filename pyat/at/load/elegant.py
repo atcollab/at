@@ -125,22 +125,22 @@ ELEMENT_MAP = {
 def parse_lines(contents):
     """Return individual lines.
 
-    Remove comments and whitespace, convert to lowercase, and split on
-    semicolons.
+    Remove comments and whitespace and convert to lowercase.
     """
-    lines = [l.lower().strip() for l in contents.splitlines()]
-    parsed_lines = []
+    lines = []
     current_line = ""
-    for l in lines:
-        if not l or l.startswith("!"):
-            continue
-        if l.endswith("&"):
-            current_line += l[:-1]
-        else:
-            parsed_lines.append(current_line + l)
-            current_line = ""
+    for line in contents.splitlines():
+        line = line.lower()
+        line = line.split("!")[0]
+        line = line.strip()
+        if line:
+            if line.endswith("&"):
+                current_line += line[:-1]
+            else:
+                lines.append(current_line + line)
+                current_line = ""
 
-    return parsed_lines
+    return lines
 
 
 def parse_chunk(value, elements, chunks):

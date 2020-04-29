@@ -22,13 +22,18 @@ def defaults():
     return {"energy": 3e9, "harmonic_number": 936}
 
 
-def test_parse_lines_removes_comments():
-    assert parse_lines("a\n!b\nc") == ["a", "c"]
-
-
-def test_parse_lines_handles_ampersand():
-    assert parse_lines("a&\nb") == ["ab"]
-    assert parse_lines("a&\nb\nc") == ["ab", "c"]
+@pytest.mark.parametrize(
+    "line,target",
+    [
+        ["a\n!b\nc", ["a", "c"]],
+        ["a\nb!comment\nc", ["a", "b", "c"]],
+        ["a\nb& !comment\nc\nd", ["a", "bc", "d"]],
+        ["a&\nb", ["ab"]],
+        ["a&\nb\nc", ["ab", "c"]],
+    ],
+)
+def test_parse_lines(line, target):
+    assert parse_lines(line) == target
 
 
 def test_elegant_element_from_string_handles_drift(defaults):
