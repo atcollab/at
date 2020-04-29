@@ -13,6 +13,7 @@ from os.path import abspath
 import re
 
 from at.lattice.elements import (
+    Aperture,
     Corrector,
     Drift,
     Dipole,
@@ -33,6 +34,13 @@ def create_drift(name, params, energy, harmonic_number):
 
 def create_marker(name, params, energy, harmonic_number):
     return Marker(name, **params)
+
+
+def create_aperture(name, params, energy, harmonic_number):
+    x_lim = float(params.get('x_max'))
+    y_lim = float(params.get('y_max'))
+    limits = [-x_lim, x_lim, -y_lim, y_lim]
+    return Aperture(name, limits)
 
 
 def create_quad(name, params, energy, harmonic_number):
@@ -68,7 +76,8 @@ def create_dipole(name, params, energy, harmonic_number):
     params["ExitAngle"] = float(params.pop("e2"))
     if "hgap" in params:
         params["FullGap"] = float(params.pop("hgap")) * 2
-        fint = params.pop("fint")
+        # What should we do if no fint property?
+        fint = params.pop("fint", 1)
         params["FringeInt1"] = fint
         params["FringeInt2"] = fint
     k1 = float(params.pop("k1", 0))
@@ -99,6 +108,8 @@ ELEMENT_MAP = {
     "drift": create_drift,
     "drif": create_drift,
     "edrift": create_drift,
+    # This should be a wiggler.
+    "cwiggler": create_drift,
     "csben": create_dipole,
     "csbend": create_dipole,
     "csrcsben": create_dipole,
@@ -118,6 +129,7 @@ ELEMENT_MAP = {
     "charge": create_marker,
     "monitor": create_marker,
     "moni": create_marker,
+    "maxamp": create_aperture,
     "rfca": create_cavity,
 }
 
@@ -155,7 +167,7 @@ def parse_chunk(value, elements, chunks):
         if "symmetry" in part:
             continue
         if "line" in part:
-            line_parts = re.match("line=\\((.*)\\)", part).groups()[0]
+            line_parts = re.match("line\\s*=\\s*\\((.*)\\)", part).groups()[0]
             for p in line_parts.split(","):
                 p = p.strip()
                 chunk.extend(parse_chunk(p, elements, chunks))

@@ -27,7 +27,7 @@ Initialisation:
 Basic Use:
 ----------
 
-- The lattice object is a Python interator:
+- The lattice object is a Python interator::
 
     >>> for element in ring:
     ...   print(element)
