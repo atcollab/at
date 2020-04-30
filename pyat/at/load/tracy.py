@@ -1,3 +1,8 @@
+"""Load a lattice from a Tracy file (.lat).
+
+This is not complete but can parse the example files that I have.
+
+"""
 import collections
 import logging as log
 from os.path import abspath

@@ -158,7 +158,17 @@ def parse_lines(contents):
 def parse_chunk(value, elements, chunks):
     """Parse a non-element part of a lattice file.
 
-    line(a,b,c) => [a, b, c]
+    That part can reference already-parsed elements and chunks.
+
+    if
+    chunks = {"x": ["a", "b"]}
+    and
+    elements = {"a": Marker(...), "b": Quadrupole(...)}
+
+    line(a,b) => [a, b]
+    -x        => [b, a]
+    2*x       => [a, b, a, b]
+
     """
     chunk = []
     parts = utils.split_ignoring_parentheses(value, ",")
@@ -245,6 +255,11 @@ def handle_value(value):
 
 
 def elegant_element_from_string(name, element_string, variables):
+    """Create element from Elegant's string representation.
+
+    e.g. drift,l=0.045 => Drift(name, 0.045)
+
+    """
     log.debug("Parsing elegant element {}".format(element_string))
     parts = utils.split_ignoring_parentheses(element_string, ",")
     params = {}
