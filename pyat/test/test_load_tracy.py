@@ -18,6 +18,7 @@ from at.lattice.elements import (
     Sextupole,
 )
 
+
 @pytest.fixture
 def defaults():
     return {"energy": 3e9, "harmonic_number": 936}
@@ -29,8 +30,13 @@ def defaults():
         ["3", ["3"]],
         ["-3", ["-3"]],
         ["3+4", ["3", "+", "4"]],
+        ["3 + 4", ["3", "+", "4"]],
         ["3+4e3", ["3", "+", "4e3"]],
         ["1e3+4e-3", ["1e3", "+", "4e-3"]],
+        ["1 - (3 / 2)", ["1", "-", "(", "3", "/", "2", ")"]],
+        ["(1 - 1e-1) + 3", ["(", "1", "-", "1e-1", ")", "+", "3"]],
+        ["0.485-0.002", ["0.485", "-", "0.002"]],
+        [" (3.482-0.02)-1.85", ["(", "3.482", "-", "0.02", ")", "-", "1.85"]],
     ],
 )
 def test_tokenise_expression(exp, target):
@@ -39,7 +45,15 @@ def test_tokenise_expression(exp, target):
 
 @pytest.mark.parametrize(
     "exp,target",
-    [["3", 3], ["-3", -3], ["3+4", 7], ["3+4e3", 4003], ["1e3+4e-3", 1000.004]],
+    [
+        ["3.4", 3.4],
+        ["-3", -3],
+        ["3+4", 7],
+        ["3+4e3", 4003],
+        ["1e3+4e-3", 1000.004],
+        ["1 + 12 / (2 + 1)", 5],
+        ["0.485-0.002", 0.483],
+    ],
 )
 def test_parse_float(exp, target):
     assert parse_float(exp) == target
@@ -59,7 +73,9 @@ def test_parse_line_splits_on_semicolons():
 
 def test_tracy_element_from_string_handles_drift(defaults):
     drift = "drift,l=0.0450000"
-    assert tracy_element_from_string("d1", drift, defaults).equals(Drift("d1", 0.0450000))
+    assert tracy_element_from_string("d1", drift, defaults).equals(
+        Drift("d1", 0.0450000)
+    )
 
 
 def test_tracy_element_from_string_handles_marker(defaults):
@@ -116,8 +132,8 @@ def test_tracy_element_from_string_handles_bending(defaults):
         FringeInt1=1,
         FringeInt2=1,
         NumIntSteps=2,
-        PolynomA=numpy.array([0,0,0,0], dtype=numpy.float64),
-        PolynomB=numpy.array([0,-0.124,0,0], dtype=numpy.float64),
+        PolynomA=numpy.array([0, 0, 0, 0], dtype=numpy.float64),
+        PolynomB=numpy.array([0, -0.124, 0, 0], dtype=numpy.float64),
         method="4",
         PassMethod="BndMPoleSymplectic4Pass",
     )

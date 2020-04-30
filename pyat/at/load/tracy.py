@@ -110,13 +110,26 @@ def tokenise_expression(expression):
     tokens = []
     current_token = ""
     for char in expression:
-        if char in "+-*/":
-            if not current_token or current_token and current_token[-1] == "e":
-                current_token += char
-            else:
+        if char.isspace():  # complete the current token
+            if current_token:
                 tokens.append(current_token)
-                tokens.append(char)
                 current_token = ""
+            continue
+        if char in "+-":
+            if not current_token:
+                # special case for -3, +5.3
+                if not tokens or tokens[-1] in "*/+-(":
+                    current_token += char
+                    continue
+            elif current_token and current_token[-1] == "e":
+                # special case for 1e-4 or 1.23e+3
+                current_token += char
+                continue
+        if char in "+-*/()":  # standalone tokens: complete the current token and add this
+            if current_token:
+                tokens.append(current_token)
+                current_token = ""
+            tokens.append(char)
         else:
             current_token += char
 
@@ -133,14 +146,35 @@ def parse_float(expression):
     except ValueError:
         tokens = tokenise_expression(expression)
         log.debug(tokens)
-        if ("*") in tokens:
-            return float(tokens[0]) * float(tokens[2])
-        elif ("/") in tokens:
-            return float(tokens[0]) / float(tokens[2])
-        elif ("+") in tokens:
-            return float(tokens[0]) + float(tokens[2])
-        elif ("-") in tokens:
-            return float(tokens[0]) - float(tokens[2])
+
+        def evaluate(tokens):
+            if len(tokens) == 1:
+                return float(tokens[0])
+            # Remove superfluous outer parentheses.
+            if tokens[0] == "(" and tokens[-1] == ")":
+                return evaluate(tokens[1:-1])
+            # First evaluate contents of parentheses.
+            try:
+                b1 = tokens.index("(")
+                b2 = len(tokens) - 1 - tokens[::-1].index(")")
+                return evaluate(tokens[:b1] + [evaluate(tokens[b1 + 1:b2])] + tokens[b2 + 1:])
+            except ValueError:
+                # No open parentheses found.
+                pass
+            # Evaluate / and * from left to right.
+            for i, token in enumerate(tokens[:-1]):
+                if token == "/":
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) / float(tokens[i+1])] + tokens[i+2:])
+                if token == "*":
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) / float(tokens[i+1])] + tokens[i+2:])
+            # Evaluate + and - from left to right.
+            for i, token in enumerate(tokens[:-1]):
+                if token == "+":
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) + float(tokens[i+1])] + tokens[i+2:])
+                if token == "-":
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) - float(tokens[i+1])] + tokens[i+2:])
+
+        return evaluate(tokens)
 
 
 def parse_lines(contents):
