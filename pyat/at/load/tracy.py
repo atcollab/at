@@ -23,45 +23,45 @@ from at.lattice import Lattice
 from at.load import register_format, utils
 
 
-def create_drift(name, params, energy, harmonic_number):
-    length = parse_float(params.pop("l", 0))
+def create_drift(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
     return Drift(name, length, **params)
 
 
-def create_marker(name, params, energy, harmonic_number):
+def create_marker(name, params, variables):
     return Marker(name, **params)
 
 
-def create_quad(name, params, energy, harmonic_number):
-    length = parse_float(params.pop("l", 0))
-    params["NumIntSteps"] = params.pop("n", 10)
-    params["k"] = parse_float(params.pop("k"))
+def create_quad(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
+    params["NumIntSteps"] = parse_float(params.pop("n", 10), variables)
+    params["k"] = parse_float(params.pop("k"), variables)
     params["PassMethod"] = "StrMPoleSymplectic4Pass"
     return Quadrupole(name, length, **params)
 
 
-def create_sext(name, params, energy, harmonic_number):
-    length = parse_float(params.pop("l", 0))
-    params["NumIntSteps"] = params.pop("n", 10)
-    k2 = parse_float(params.pop("k", 0))
+def create_sext(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
+    params["NumIntSteps"] = parse_float(params.pop("n", 10), variables)
+    k2 = parse_float(params.pop("k", 0), variables)
     return Sextupole(name, length, k2, **params)
 
 
-def create_dipole(name, params, energy, harmonic_number):
-    length = parse_float(params.pop("l", 0))
-    params["NumIntSteps"] = params.pop("n", 10)
+def create_dipole(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
+    params["NumIntSteps"] = parse_float(params.pop("n", 10), variables)
     params["PassMethod"] = "BndMPoleSymplectic4Pass"
-    params["BendingAngle"] = (float(params.pop("t")) / 180) * numpy.pi
-    params["EntranceAngle"] = (float(params.pop("t1")) / 180) * numpy.pi
-    params["ExitAngle"] = (float(params.pop("t2")) / 180) * numpy.pi
+    params["BendingAngle"] = (parse_float(params.pop("t"), variables) / 180) * numpy.pi
+    params["EntranceAngle"] = (parse_float(params.pop("t1"), variables) / 180) * numpy.pi
+    params["ExitAngle"] = (parse_float(params.pop("t2"), variables) / 180) * numpy.pi
     # Tracy is encoding gap plus fringe int in the 'gap' field.
     # Since BndMPoleSymplectic4Pass only uses the product of FringeInt
     # and gap we can substitute the following.
     if "gap" in params:
-        params["FullGap"] = float(params.pop("gap")) / 2
+        params["FullGap"] = parse_float(params.pop("gap"), variables) / 2
         params["FringeInt1"] = 1
         params["FringeInt2"] = 1
-    k = parse_float(params.pop("k", 0))
+    k = parse_float(params.pop("k", 0), variables)
     if "PolynomB" in params:
         params["PolynomB"][1] = k
     else:
@@ -69,26 +69,28 @@ def create_dipole(name, params, energy, harmonic_number):
     return Dipole(name, length, **params)
 
 
-def create_corrector(name, params, energy, harmonic_number):
-    length = parse_float(params.pop("l", 0))
+def create_corrector(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
     # Is there a property for this?
     kick_angle = [0, 0]
     return Corrector(name, length, kick_angle, **params)
 
 
-def create_multipole(name, params, energy, harmonic_number):
-    length = params.pop("l", 0)
-    params["NumIntSteps"] = params.pop("n", 10)
+def create_multipole(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
+    params["NumIntSteps"] = parse_float(params.pop("n", 10), variables)
     poly_a = [0, 0, 0, 0]
     poly_b = [0, 0, 0, 0]
     return Multipole(name, length, poly_a, poly_b, **params)
 
 
-def create_cavity(name, params, energy, harmonic_number):
-    length = parse_float(params.pop("l", 0))
-    voltage = parse_float(params.pop("voltage"))
-    frequency = parse_float(params.pop("frequency"))
-    params["Phi"] = parse_float(params.pop("phi"))
+def create_cavity(name, params, variables):
+    length = parse_float(params.pop("l", 0), variables)
+    voltage = parse_float(params.pop("voltage"), variables)
+    frequency = parse_float(params.pop("frequency"), variables)
+    params["Phi"] = parse_float(params.pop("phi", 0), variables)
+    harmonic_number = variables["harmonic_number"]
+    energy = variables["energy"]
     return RFCavity(name, length, voltage, frequency, harmonic_number, energy, **params)
 
 
@@ -138,13 +140,19 @@ def tokenise_expression(expression):
     return tokens
 
 
-def parse_float(expression):
+def parse_float(expression, variables):
     """Can of worms."""
     log.debug("parse_float {}".format(expression))
     try:
         return float(expression)
     except ValueError:
-        tokens = tokenise_expression(expression)
+        raw_tokens = tokenise_expression(expression)
+        tokens = []
+        for token in raw_tokens:
+            if token in variables:
+                tokens.append(variables[token])
+            else:
+                tokens.append(token)
         log.debug(tokens)
 
         def evaluate(tokens):
@@ -245,8 +253,11 @@ def expand_tracy(contents, lattice_key, harmonic_number):
         if ":" not in line:
             key, value = line.split("=")
             if key == "energy":
-                value = parse_float(value) * 1e9
-            variables[key] = value
+                value = parse_float(value, variables) * 1e9
+            try:
+                variables[key] = parse_float(value, variables)
+            except ValueError:
+                variables[key] = value
         else:
             key, value = line.split(":")
             if value.split(",")[0].strip() in ELEMENT_MAP:
@@ -258,7 +269,7 @@ def expand_tracy(contents, lattice_key, harmonic_number):
     return chunks[lattice_key], variables["energy"]
 
 
-def parse_hom(hom_string):
+def parse_hom(hom_string, variables):
     """Parse 'hom' string from lattice file. Note that PolynomB
     is before PolynomA.
 
@@ -272,8 +283,8 @@ def parse_hom(hom_string):
     for i in range(len(hom_parts) // 3):
         order = int(hom_parts[i * 3])
         # PolynomB before PolynomA.
-        b = parse_float(hom_parts[i * 3 + 1])
-        a = parse_float(hom_parts[i * 3 + 2])
+        b = parse_float(hom_parts[i * 3 + 1], variables)
+        a = parse_float(hom_parts[i * 3 + 2], variables)
         polynom_a[order - 1] = a
         polynom_b[order - 1] = b
 
@@ -295,16 +306,13 @@ def tracy_element_from_string(name, element_string, variables):
         if key == "hom":
             assert value[0] == "("
             assert value[-1] == ")"
-            polynom_a, polynom_b = parse_hom(value[1:-1])
+            polynom_a, polynom_b = parse_hom(value[1:-1], variables)
             params["PolynomA"] = polynom_a
             params["PolynomB"] = polynom_b
         else:
             params[key] = value
 
-    energy = variables["energy"]
-    harmonic_number = variables["harmonic_number"]
-
-    return ELEMENT_MAP[element_type](name, params, energy, harmonic_number)
+    return ELEMENT_MAP[element_type](name, params, variables)
 
 
 def load_tracy(filename, **kwargs):

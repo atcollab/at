@@ -51,12 +51,12 @@ def test_tokenise_expression(exp, target):
         ["3+4", 7],
         ["3+4e3", 4003],
         ["1e3+4e-3", 1000.004],
-        ["1 + 12 / (2 + 1)", 5],
+        ["1 + 12 / (a + 1)", 5],
         ["0.485-0.002", 0.483],
     ],
 )
 def test_parse_float(exp, target):
-    assert parse_float(exp) == target
+    assert parse_float(exp, {"a": 2}) == target
 
 
 def test_parse_lines_removes_comments():
