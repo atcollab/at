@@ -3,7 +3,6 @@
 This is not complete but can parse the example files that I have.
 
 """
-import collections
 import logging as log
 from os.path import abspath
 import re
@@ -123,11 +122,12 @@ def tokenise_expression(expression):
                 if not tokens or tokens[-1] in "*/+-(":
                     current_token += char
                     continue
-            elif current_token and current_token[-1] == "e":
-                # special case for 1e-4 or 1.23e+3
+            elif current_token and current_token[-1] in "de":
+                # special case for 1e-4, 1.23e+3, 2.2d6
                 current_token += char
                 continue
-        if char in "+-*/()":  # standalone tokens: complete the current token and add this
+        if (char in "+-*/()"):
+            # standalone tokens: complete the current token and add this
             if current_token:
                 tokens.append(current_token)
                 current_token = ""
@@ -141,7 +141,7 @@ def tokenise_expression(expression):
 
 
 def parse_float(expression, variables):
-    """Can of worms."""
+    """Evaluate the provided arithmetic expression substituting variables."""
     log.debug("parse_float {}".format(expression))
     try:
         return float(expression)
@@ -152,7 +152,14 @@ def parse_float(expression, variables):
             if token in variables:
                 tokens.append(variables[token])
             else:
-                tokens.append(token)
+                # Handle unusual format 2.2d6 which means 2.2e+6.
+                dformat_matches = re.match("(-?\\d+.?\\d*)d(-?\\d+)", token)
+                if dformat_matches:
+                    mantissa, exponent = dformat_matches.groups()
+                    tokens.append("{}e{}".format(mantissa, exponent))
+                else:
+                    tokens.append(token)
+
         log.debug(tokens)
 
         def evaluate(tokens):
@@ -205,7 +212,7 @@ def parse_lines(contents):
 
 
 def parse_chunk(value, elements, chunks):
-    log.debug('parse_chunk %s', value)
+    log.debug("Parse_chunk %s", value)
     chunk = []
     parts = utils.split_ignoring_parentheses(value, ",")
     log.debug(parts)

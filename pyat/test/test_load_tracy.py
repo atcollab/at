@@ -53,6 +53,8 @@ def test_tokenise_expression(exp, target):
         ["1e3+4e-3", 1000.004],
         ["1 + 12 / (a + 1)", 5],
         ["0.485-0.002", 0.483],
+        ["4.85d3", 4850],
+        ["-4.85d-3", -0.00485],
     ],
 )
 def test_parse_float(exp, target):
