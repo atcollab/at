@@ -1,7 +1,9 @@
 """
 Conversion utilities for creating pyat elements
 """
+import collections
 import os
+import re
 import numpy
 from warnings import warn
 from distutils import sysconfig
@@ -113,7 +115,7 @@ def find_class(elem_dict, quiet=False):
     try:
         return _CLASS_MAP[class_name.lower()]
     except KeyError:
-        if (quiet == False) and (class_name != ''):
+        if not quiet and class_name:
             warn(AtWarning("Class '{0}' does not exist.\n"
                            "{1}".format(class_name, elem_dict)))
         fam_name = elem_dict.get('FamName', '')
@@ -121,10 +123,10 @@ def find_class(elem_dict, quiet=False):
             return _CLASS_MAP[fam_name.lower()]
         except KeyError:
             pass_method = elem_dict.get('PassMethod', '')
-            if (quiet == False) and (pass_method == ''):
+            if not quiet and not pass_method:
                 warn(AtWarning("No PassMethod provided."
                                "\n{0}".format(elem_dict)))
-            elif (quiet == False) and (not pass_method.endswith('Pass')):
+            elif not quiet and not pass_method.endswith('Pass'):
                 warn(AtWarning("Invalid PassMethod ({0}), provided pass "
                                "methods should end in 'Pass'."
                                "\n{1}".format(pass_method, elem_dict)))
@@ -321,3 +323,21 @@ PASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _PASS_MAP.items())
 
 def find_class_name(elem_dict, quiet=False):
     return find_class(elem_dict, quiet=quiet).__name__
+
+
+def split_ignoring_parentheses(string, delimiter):
+    PLACEHOLDER = "placeholder"
+    substituted = string[:]
+    matches = collections.deque(re.finditer("\\(.*?\\)", string))
+    for match in matches:
+        substituted = substituted.replace(match.group(), PLACEHOLDER, 1)
+    parts = substituted.split(delimiter)
+    replaced_parts = []
+    for part in parts:
+        if PLACEHOLDER in part:
+            next_match = matches.popleft()
+            part = part.replace(PLACEHOLDER, next_match.group(), 1)
+        replaced_parts.append(part)
+    assert not matches
+
+    return replaced_parts
