@@ -7,7 +7,7 @@ from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
 
-__all__ = ['get_twiss', 'linopt', 'get_mcf']
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf']
 
 DDP = 1e-8
 
@@ -360,6 +360,116 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         lindata['dispersion'] = dispersion
 
     return lindata0, tune, chrom, lindata
+
+
+# noinspection PyPep8Naming
+@check_radiation(False)
+def avlinopt(ring, dp=0.0, refpts=None, orbit=None,
+             keep_lattice=False, ddp=DDP, coupled=True):
+    """
+    Perform linear analysis of a lattice and returns average beta, dispersion
+    and phase advance
+
+    lindata,avebeta,avemu,avedisp,tune,chrom = avlinopt(ring, dp[, refpts])
+
+    PARAMETERS
+        ring            lattice description.
+        dp=0.0          momentum deviation.
+        refpts=None     elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+
+    KEYWORDS
+        orbit           avoids looking for the closed orbit if is already known
+                        ((6,) array)
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Defaults to False
+        ddp=1.0E-8      momentum deviation used for computation of
+                        chromaticities and dispersion
+        coupled=True    if False, simplify the calculations by assuming
+                        no H/V coupling
+
+    OUTPUT
+        lindata         linear optics at the points refered to by refpts, if
+                        refpts is None an empty lindata structure is returned.
+                        See linopt for details
+        avebeta         Average beta functions [betax,betay] at refpts
+        avemu           Average phase advances [mux,muy] at refpts
+        avedisp         Average dispersion [Dx,Dx',Dy,Dy',muy] at refpts
+        avespos         Average s position at refpts
+        tune            [tune_A, tune_B], linear tunes for the two normal modes
+                        of linear motion [1]
+        chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
+                        Only computed if 'get_chrom' is True
+
+
+    See also get_twiss,linopt
+
+    """
+  
+    def betadrift(beta0,beta1,alpha0,L):
+        gamma0=(alpha0*alpha0+1)/beta0
+        return 0.5*(beta0+beta1)-gamma0*L*L/6
+
+    def betafoc(beta1,alpha0,alpha1,K,L):
+        gamma1=(alpha1*alpha1+1)/beta1
+        return 0.5*((gamma1+K*beta1)*L+alpha1-alpha0)/K/L
+
+    def dispfoc(dispp0,dispp1,K,L):
+        return (dispp0-dispp1)/K/L
+
+    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))  
+    longi_refpts = [i for i in uintrefs if ring[i].Length>0]
+    longf_refpts = [i+1 for i in uintrefs if ring[i].Length>0]
+    shorti_refpts = [i for i in uintrefs if ring[i].Length==0]
+    all_refpts = sorted(numpy.unique(longi_refpts+longf_refpts+shorti_refpts))
+    uintrefs_i = [all_refpts.index(i) for i in uintrefs]
+    longf_i = [all_refpts.index(i) for i in longf_refpts]
+    longi_i = [all_refpts.index(i) for i in longi_refpts]                
+    lindata0,tune,chrom,lindata_all = linopt(ring,dp=dp, refpts=all_refpts,get_chrom=True, 
+                                             orbit=orbit,keep_lattice=keep_lattice,ddp=ddp,
+                                             coupled=coupled)        
+    lindata=lindata_all[uintrefs_i]
+    avebeta=lindata.beta.copy()
+    avemu=lindata.mu.copy()
+    avedisp=lindata.dispersion.copy()
+    aves = lindata.s_pos.copy()
+    if len(longi_refpts)>0:
+        lindatai = lindata_all[longi_i]
+        lindataf = lindata_all[longf_i]
+        for i,ii in enumerate(longi_refpts):
+            si = lindatai[i].s_pos
+            sf = lindataf[i].s_pos
+            betai = lindatai[i].beta
+            betaf = lindataf[i].beta
+            alphai = lindatai[i].alpha
+            alphaf = lindataf[i].alpha
+            mui = lindatai[i].mu
+            muf = lindataf[i].mu   
+            dispi = lindatai[i].dispersion
+            dispf = lindataf[i].dispersion
+            avedispi=numpy.zeros(4)
+            avedispi[[0,2]]=(dispf[[0,2]]+dispi[[0,2]])*0.5
+            l = ring[ii].Length            
+            k = getattr(ring[ii],'PolynomB',None)
+            if k is not None and numpy.absolute(k[1])>0:
+                k2 = numpy.array([k[1],-k[1]])
+                avebetai=betafoc(betaf,alphai,alphaf,k2,l)
+                avedispi[[0,2]]=dispfoc(dispi[[1,3]],dispf[[1,3]],k2,l)
+            else:
+                avebetai=betadrift(betai,betaf,alphai,l);
+            avedispi[[1,3]]=(dispf[[0,2]]-dispi[[0,2]])/l;
+            ind = numpy.squeeze(numpy.where(uintrefs==ii))
+            avebeta[ind]=avebetai
+            avemu[ind]= 0.5*(mui+muf)
+            aves[ind] = 0.5*(si+sf)
+            avedisp[ind]=avedispi
+    return lindata,avebeta,avemu,avedisp,avespos,tune,chrom
 
 
 @check_radiation(False)
