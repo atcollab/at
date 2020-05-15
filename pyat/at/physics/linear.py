@@ -469,7 +469,7 @@ def avlinopt(ring, dp=0.0, refpts=None, orbit=None,
             avemu[ind]= 0.5*(mui+muf)
             aves[ind] = 0.5*(si+sf)
             avedisp[ind]=avedispi
-    return lindata,avebeta,avemu,avedisp,avespos,tune,chrom
+    return lindata,avebeta,avemu,avedisp,aves,tune,chrom
 
 
 @check_radiation(False)
@@ -496,3 +496,4 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
 
 Lattice.linopt = linopt
 Lattice.get_mcf = get_mcf
+Lattice.avlinopt = avlinopt
