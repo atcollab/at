@@ -220,7 +220,12 @@ def get_elements(ring, key, quiet=True, return_refpts=False):
         quiet: if false print information about matched elements for FamName
                matches, defaults to True.
         return_refpts: if True returns also the refpts of the elements. 
-               Default is False        
+               Default is False   
+
+    Returns:
+        elems: a list of elems matching key    
+        a numpy array of the indexes of these elements in ring (refpts) 
+        if return_refpts==True 
     """
     if isinstance(key, elements.Element):
         elems = [elem for elem in ring if isinstance(elem, type(key))]
@@ -239,7 +244,7 @@ def get_elements(ring, key, quiet=True, return_refpts=False):
         raise TypeError("Invalid key type {0}; please enter a string, element"
                         " type, or element instance.".format(type(key)))
     if return_refpts:
-        return elems,list(map(lambda x:ring.index(x),elems))
+        return elems,numpy.array(list(map(lambda x:ring.index(x),elems)))
     else:
         return elems
 
@@ -280,7 +285,8 @@ def set_value_refpts(ring,refpts,var,value,order=None,increment=False):
     if increment:
         value = value+get_value_refpts(ring,uintrefs,var,order=order)
     if order==None:
-        map(lambda x: setattr(ring[x],var,value),uintrefs)          
+        for i,ii in enumerate(uintrefs): 
+            setattr(ring[ii],var,value[i])            
     else:
         for i,ii in enumerate(uintrefs): 
             getattr(ring[ii],var)[order]=value[i]
