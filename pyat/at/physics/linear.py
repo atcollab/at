@@ -6,8 +6,9 @@ from math import sqrt, atan2, pi
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
+from .harmonic_analysis import HarmonicAnalysis, compute_tunes_harmonic, compute_tunes_fft
 
-__all__ = ['get_twiss', 'linopt', 'get_mcf']
+__all__ = ['get_twiss', 'linopt', 'get_mcf', 'get_tune']
 
 DDP = 1e-8
 
@@ -384,5 +385,106 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
 
 
+
+
+def get_tune(ring, method='linopt', **kwargs):
+    '''
+    gets the tune using several available methods
+    
+    method can be 'linopt', 'fft' or 'harmonic'
+    linopt: returns the tune from the linopt function
+    fft: tracks a single particle (one for x and one for y) and computes the tune from the fft
+    harmonic: tracks a single particle (one for x and one for y) and computes the harmonic components
+
+
+    INPUT
+    for linopt:
+        no input needed
+
+    for fft:
+        nturns = number of turns for the tracking
+        ampl = initial amplitude for the tracked particle (same for x and y)
+
+    for harmonic:
+        nturns = number of turns for the tracking
+        ampl = initial amplitude for the tracked particle (same for x and y)    
+        nharmonics = number of harmonic components to compute (before mask applied).
+        quadrant = specify if you want masking applied based on where you expect the tune to be. quadrant = 0 returns all tunes and amplitudes, quadrant = 1 only returns tune values between 0 and 0.5, quadrant = 2 only returns tune values between 0.5 and 1. (default quadrant=0)
+
+    OUTPUT
+    for linopt and fft:
+        tune_x, tune_y = ring.get_tune()
+
+    for harmonic
+        output_x, output_y =...
+        
+        output_x is a 2D array showing the frequency components and their respective amplitudes in the horizontal plane
+        output_y is a 2D array showing the frequency components and their respective amplitudes in the vertical plane
+    '''
+
+    if method=='linopt':
+        lindata0,tunes,xi,lindata = linopt(ring, refpts=None)
+        return tunes
+
+    elif method=='fft':
+        nturns = kwargs.pop('nturns',None)
+        ampl = kwargs.pop('ampl', None)
+        assert nturns is not None
+        assert ampl is not None
+        cent_x,cent_y = gen_centroid(ring, ampl, nturns)
+        tunes = compute_tunes_fft(cent_x, cent_y)        
+        return tunes
+
+    elif method=='harmonic':
+        nturns = kwargs.pop('nturns',None)
+        ampl = kwargs.pop('ampl', None)
+        nharmonics = kwargs.pop('nharmonics', None)
+        quadrant = kwargs.pop('quadrant', 0)
+        assert nturns is not None
+        assert ampl is not None
+        assert nharmonics is not None
+        cent_x,cent_y = gen_centroid(ring, ampl, nturns)
+        output_x, output_y = compute_tunes_harmonic(cent_x, cent_y, num_harmonics = nharmonics)        
+        return output_x, output_y
+
+
+def gen_centroid(ring, ampl, nturns):
+    '''
+    This function tracks two particles turn by turn:
+    one particle with only horizontal offset
+    one particle with only vertical offset
+    
+    INPUT
+    ampl is the amplitude of the particle offset and is
+    the same for H and V
+    
+    nturns is the number of turns to track for
+
+    OUTPUT
+    cent_x, cent_y = gen_centroid(ring, ampl, nturns)
+
+    cent_x is the centroid motion for the particle with x
+    offset
+
+    cent_y is the centroid motion for the particle with y
+    offset
+    
+
+    '''
+    p0 = numpy.zeros((6,2))
+    p0[0,0] = ampl
+    p0[2,1] = ampl
+    p1 = lattice_pass(ring, p0, refpts=len(ring), nturns=nturns)
+
+    cent_x = p1[0,0,0,:]
+    cent_y = p1[2,1,0,:]
+
+    return cent_x, cent_y
+
+
+
+
+
 Lattice.linopt = linopt
 Lattice.get_mcf = get_mcf
+Lattice.get_tune = get_tune

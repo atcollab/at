@@ -1,5 +1,5 @@
 '''
-Original author 
+Original author of HarmonicAnalysis class
 Jaime Maria Coello De Portugal - Martinez Vazquez
 
 
@@ -147,11 +147,11 @@ class HarmonicAnalysis(object):
         """
         try:
             from numba import jit
-            print("Using compiled Numba functions.")
+            #print("Using compiled Numba functions.")
             return jit(HarmonicAnalysis._compute_coef_goertzel,
                        nopython=True, nogil=True)
         except ImportError:
-            print("Numba not found, using numpy functions.")
+            #print("Numba not found, using numpy functions.")
             return HarmonicAnalysis._compute_coef_simple
 
     @staticmethod
@@ -205,3 +205,63 @@ class HarmonicPlotter(object):
     def _show_and_reset(self):
         self._plt.show()
         self._plt.clf()
+
+
+
+def compute_tunes_fft(cent_x, cent_y):
+    ''' 
+    INPUT
+    cent_x, cent_y are the centroid motions for a particle with horizontal offset only and vertical offset only.
+
+    OUTPUT
+    tune_x, tune_y
+
+    '''
+    tune_x = np.fft.rfftfreq(len(cent_x))[np.argmax(np.abs(np.fft.rfft(cent_x)))]
+    tune_y = np.fft.rfftfreq(len(cent_x))[np.argmax(np.abs(np.fft.rfft(cent_y)))]
+    return np.array([tune_x, tune_y])
+
+
+def compute_tunes_harmonic(cent_x, cent_y, num_harmonics=None, quadrant=None):
+    ''' 
+    INPUT
+    cent_x, cent_y are the centroid motions for a particle with horizontal offset only and vertical offset only.
+    nharmonics = number of harmonic components to compute (before mask applied).
+    quadrant = specify if you want masking applied based on where you expect the tune to be. quadrant = 0 returns all tunes and amplitudes, quadrant = 1 only returns tune values between 0 and 0.5, quadrant = 2 only returns tune values between 0.5 and 1. (default quadrant=0)
+
+    OUTPUT
+    output_x, output_y =...
+    
+    output_x is a 2D array showing the frequency components and their respective amplitudes in the horizontal plane
+    output_y is a 2D array showing the frequency components and their respective amplitudes in the vertical plane
+
+    '''
+    ha_x = HarmonicAnalysis(cent_x)
+    ha_tune_x, ha_amp_x = ha_x.laskar_method(num_harmonics=num_harmonics)
+    ha_amp_x = np.abs(np.array(ha_amp_x))
+    ha_tune_x = np.array(ha_tune_x)
+
+    ha_y = HarmonicAnalysis(cent_y)
+    ha_tune_y, ha_amp_y = ha_y.laskar_method(num_harmonics=num_harmonics)
+    ha_amp_y = np.abs(np.array(ha_amp_y))
+    ha_tune_y = np.array(ha_tune_y)
+
+    output_x = np.vstack((ha_tune_x, ha_amp_x)).T 
+    output_y = np.vstack((ha_tune_y, ha_amp_y)).T 
+
+    msk_x = None
+    msk_y = None
+
+    if quadrant==1:
+        msk_x = np.logical_and(ha_tune_x > 0, ha_tune_x < 0.5)
+        msk_y = np.logical_and(ha_tune_y > 0, ha_tune_y < 0.5)
+    elif quadrant==2:
+        msk_x = np.logical_and(ha_tune_x > 0.5, ha_tune_x < 1)
+        msk_y = np.logical_and(ha_tune_y > 0.5, ha_tune_y < 1)
+
+    output_x = np.vstack((ha_tune_x[msk_x], ha_amp_x[msk_x])).T 
+    output_y = np.vstack((ha_tune_y[msk_y], ha_amp_y[msk_y])).T 
+
+    
+    return [output_x, output_y]
+
