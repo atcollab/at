@@ -388,7 +388,7 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
 
 
 def get_tune(ring, method='linopt', **kwargs):
-    '''
+    """
     gets the tune using several available methods
     
     method can be 'linopt', 'fft' or 'harmonic'
@@ -420,7 +420,7 @@ def get_tune(ring, method='linopt', **kwargs):
         
         output_x is a 2D array showing the frequency components and their respective amplitudes in the horizontal plane
         output_y is a 2D array showing the frequency components and their respective amplitudes in the vertical plane
-    '''
+    """
 
     if method=='linopt':
         lindata0,tunes,xi,lindata = linopt(ring, refpts=None)
@@ -449,7 +449,7 @@ def get_tune(ring, method='linopt', **kwargs):
 
 
 def gen_centroid(ring, ampl, nturns):
-    '''
+    """
     This function tracks two particles turn by turn:
     one particle with only horizontal offset
     one particle with only vertical offset
@@ -470,7 +470,7 @@ def gen_centroid(ring, ampl, nturns):
     offset
     
 
-    '''
+    """
     p0 = numpy.zeros((6,2))
     p0[0,0] = ampl
     p0[2,1] = ampl

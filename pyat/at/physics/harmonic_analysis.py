@@ -209,21 +209,21 @@ class HarmonicPlotter(object):
 
 
 def compute_tunes_fft(cent_x, cent_y):
-    ''' 
+    """
     INPUT
     cent_x, cent_y are the centroid motions for a particle with horizontal offset only and vertical offset only.
 
     OUTPUT
     tune_x, tune_y
 
-    '''
+    """
     tune_x = np.fft.rfftfreq(len(cent_x))[np.argmax(np.abs(np.fft.rfft(cent_x)))]
     tune_y = np.fft.rfftfreq(len(cent_x))[np.argmax(np.abs(np.fft.rfft(cent_y)))]
     return np.array([tune_x, tune_y])
 
 
 def compute_tunes_harmonic(cent_x, cent_y, num_harmonics=None, quadrant=None):
-    ''' 
+    """
     INPUT
     cent_x, cent_y are the centroid motions for a particle with horizontal offset only and vertical offset only.
     nharmonics = number of harmonic components to compute (before mask applied).
@@ -235,7 +235,7 @@ def compute_tunes_harmonic(cent_x, cent_y, num_harmonics=None, quadrant=None):
     output_x is a 2D array showing the frequency components and their respective amplitudes in the horizontal plane
     output_y is a 2D array showing the frequency components and their respective amplitudes in the vertical plane
 
-    '''
+    """
     ha_x = HarmonicAnalysis(cent_x)
     ha_tune_x, ha_amp_x = ha_x.laskar_method(num_harmonics=num_harmonics)
     ha_amp_x = np.abs(np.array(ha_amp_x))
