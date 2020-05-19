@@ -244,7 +244,7 @@ def get_elements(ring, key, quiet=True, return_refpts=False):
         raise TypeError("Invalid key type {0}; please enter a string, element"
                         " type, or element instance.".format(type(key)))
     if return_refpts:
-        return elems,numpy.array(list(map(lambda x:ring.index(x),elems)))
+        return elems,numpy.fromiter(map(lambda x:ring.index(x),elems),dtype=int)
     else:
         return elems
 
