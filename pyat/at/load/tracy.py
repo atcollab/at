@@ -1,6 +1,7 @@
 """Load a lattice from a Tracy file (.lat).
 
 This is not complete but can parse the example files that I have.
+This parser is quite similar to the Elegant parser in elegant.py.
 
 """
 import logging as log
@@ -124,8 +125,14 @@ def tokenise_expression(expression):
                     continue
             elif current_token and current_token[-1] in "de":
                 # special case for 1e-4, 1.23e+3, 2.2d6
-                current_token += char
-                continue
+                try:
+                    # If d or e refers to a number, it must be possible
+                    # to convert the preceding characters into a float.
+                    float(current_token[:-1])
+                    current_token += char
+                    continue
+                except ValueError:
+                    pass
         if (char in "+-*/()"):
             # standalone tokens: complete the current token and add this
             if current_token:
