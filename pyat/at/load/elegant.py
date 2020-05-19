@@ -214,9 +214,15 @@ def parse_chunk(value, elements, chunks):
         elif part.startswith("-"):
             # Reverse a sequence of elements. When doing this, swap
             # the entrance and exit angles for any dipoles.
-            chunk_to_invert = part[1:]
+            chunk_name = part[1:]
+            try:
+                chunk_to_invert = chunks[chunk_name]
+            except KeyError:
+                # You can reverse just a single element: probably a
+                # bend, as there's no reason to invert other elements.
+                chunk_to_invert = [elements[chunk_name]]
             inverted_chunk = []
-            for el in reversed(chunks[chunk_to_invert]):
+            for el in reversed(chunk_to_invert):
                 if el.__class__ == Dipole:
                     inverted_dipole = el.copy()
                     inverted_dipole.EntranceAngle = el.ExitAngle
