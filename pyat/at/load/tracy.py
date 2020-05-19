@@ -189,7 +189,7 @@ def parse_float(expression, variables):
                 if token == "/":
                     return evaluate(tokens[:i-1] + [float(tokens[i-1]) / float(tokens[i+1])] + tokens[i+2:])
                 if token == "*":
-                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) / float(tokens[i+1])] + tokens[i+2:])
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) * float(tokens[i+1])] + tokens[i+2:])
             # Evaluate + and - from left to right.
             for i, token in enumerate(tokens[:-1]):
                 if token == "+":
