@@ -18,31 +18,6 @@ def _get_chrom(ring,dp=0):
     return chrom
 
 
-def _get_opt_data(ring,varname,**kwargs): 
-    dp=kwargs.pop('dp',0)
-    if varname == 'tune':
-        return _get_tune(ring,dp=dp)
-    elif varname == 'chrom':
-        return _get_chrom(ring,dp=dp)
-    else:
-        print('Field not yet defined')
-        return
-
-
-def _get_resp_tune_chrom(ring,vari,varname,delta,obsname,dp=0):
-    if obsname=='tune':
-        order=1
-    elif obsname=='chrom':
-        order=2    
-    set_value_refpts(ring,vari,varname,delta,order=order,increment=True)
-    datap = _get_opt_data(ring,obsname,dp=dp)
-    set_value_refpts(ring,vari,varname,-2*delta,order=order,increment=True)
-    datan = _get_opt_data(ring,obsname,dp=dp)           
-    set_value_refpts(ring,vari,varname,delta,order=order,increment=True)
-    data = numpy.subtract(datap,datan)/(2*delta)
-    return data
-
-
 def fit_tune_chrom(ring,varname,key1,key2,newval,tol=1.0e-12,dp=0,niter=3):
     '''
     Function to fit the tune or chromaticity of the ring, using 2 families
@@ -67,19 +42,45 @@ def fit_tune_chrom(ring,varname,key1,key2,newval,tol=1.0e-12,dp=0,niter=3):
     Typical usage:
     at.matching.fit_tune_chrom(ring, 'tune', 'QF1*', 'QD2*', [0.1,0.25])
     at.matching.fit_tune_chrom(ring, 'chrom', 'SD*', 'SF*', [10,5]) 
-    '''   
+    '''
+
+    def _get_opt_data(ring,varname,**kwargs): 
+        dp=kwargs.pop('dp',0)
+        if varname == 'tune':
+            return _get_tune(ring,dp=dp)
+        elif varname == 'chrom':
+            return _get_chrom(ring,dp=dp)
+        else:
+            print('Field not yet defined')
+            return
+
+
+    def _get_resp_tune_chrom(ring,vari,varname,delta,obsname,dp=0):
+        if obsname=='tune':
+            order=1
+        elif obsname=='chrom':
+            order=2    
+        set_value_refpts(ring,vari,varname,delta,order=order,increment=True)
+        datap = _get_opt_data(ring,obsname,dp=dp)
+        set_value_refpts(ring,vari,varname,-2*delta,order=order,increment=True)
+        datan = _get_opt_data(ring,obsname,dp=dp)           
+        set_value_refpts(ring,vari,varname,delta,order=order,increment=True)
+        data = numpy.subtract(datap,datan)/(2*delta)
+        return data
+   
 
     if varname=='tune':
         order=1
     elif varname=='chrom':
         order=2
+
     _,fam1i = get_elements(ring,key1,return_refpts=True)
     _,fam2i = get_elements(ring,key2,return_refpts=True)
     try:
        assert fam1i.size !=0 and fam2i.size !=0
     except AssertionError:
-       print('The selected elements are not found in ring, no fitting done')
-       return
+       raise ValueError('The selected elements are not found in ring, no fitting done')
+
     delta = 1e-6*10**(order)
     val= _get_opt_data(ring,varname) 
     dq1 = _get_resp_tune_chrom(ring,fam1i,'PolynomB',delta,varname,dp=dp)
@@ -88,6 +89,7 @@ def fit_tune_chrom(ring,varname,key1,key2,newval,tol=1.0e-12,dp=0,niter=3):
     dk = numpy.linalg.solve(J,numpy.subtract(newval,val));
     set_value_refpts(ring,fam1i,'PolynomB',dk[0],order=order,increment=True)
     set_value_refpts(ring,fam2i,'PolynomB',dk[1],order=order,increment=True)
+
     val= _get_opt_data(ring,varname) 
     sumsq = numpy.sum(numpy.square(numpy.subtract(val,newval)))
     if sumsq>tol and niter>0:
