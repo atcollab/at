@@ -426,7 +426,8 @@ def get_tune(ring, method='linopt',**kwargs):
 
 
     if method=='linopt':
-        _,tunes,_,_= linopt(ring)
+        dp = kwargs.pop('dp',0)
+        _,tunes,_,_= linopt(ring,dp=dp)
     else:
         num_harmonics = kwargs.pop('num_harmonics',20)
         hann = kwargs.pop('hann',False)
