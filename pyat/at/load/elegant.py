@@ -1,13 +1,19 @@
 """Load a lattice from an Elegant file (.lte).
 
 This is not complete but can parse the example files that I have.
+This parser is quite similar to the Tracy parser in tracy.py.
+
+The Elegant file format is described briefly here:
+https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009
+
+It is similar to the MAD-X format, described briefly here:
+http://madx.web.cern.ch/madx/
 
 Note that Elegant scales magnet polynomials in a different way
 to AT, so the parsed coefficients need to be divided by n! for
 the coefficient of order n.
 
 """
-import collections
 import logging as log
 from os.path import abspath
 import re
@@ -18,6 +24,7 @@ from at.lattice.elements import (
     Drift,
     Dipole,
     Marker,
+    Multipole,
     Octupole,
     Quadrupole,
     RFCavity,
@@ -63,8 +70,28 @@ def create_oct(name, params, energy, harmonic_number):
     params["NumIntSteps"] = params.pop("n_kicks", 10)
     k3 = float(params.pop("k3", 0))
     PolynomA = [0, 0, 0, 0]
-    PolynomB = [0, 0, 0, k3]
+    PolynomB = [0, 0, 0, k3 / 6]
     return Octupole(name, length, PolynomA, PolynomB, **params)
+
+
+def create_multipole(name, params, energy, harmonic_number):
+    def factorial(x, acc=1):
+        if x == 0:
+            return acc
+        else:
+            return factorial(x - 1, acc * x)
+
+    length = params.pop("l", 0)
+    PolynomA = [0, 0, 0, 0]
+    PolynomB = [0, 0, 0, 0]
+    if "knl" in params:
+        order = int(float(params.pop("order")))
+        PolynomB[order] = float(params.pop("knl")) / factorial(order)
+    if "ksl" in params:
+        order = int(float(params.pop("order")))
+        PolynomA[order] = float(params.pop("ksl")) / factorial(order)
+
+    return Multipole(name, length, PolynomA, PolynomB, **params)
 
 
 def create_dipole(name, params, energy, harmonic_number):
@@ -117,10 +144,13 @@ ELEMENT_MAP = {
     "kquad": create_quad,
     "ksext": create_sext,
     "koct": create_oct,
+    "mult": create_multipole,
+    "multipole": create_multipole,
     "kicker": create_corrector,
     "hkick": create_corrector,
     "vkick": create_corrector,
     "mark": create_marker,
+    "marker": create_marker,
     "malign": create_marker,
     "recirc": create_marker,
     "sreffects": create_marker,
