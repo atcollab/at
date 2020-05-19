@@ -117,23 +117,18 @@ def tokenise_expression(expression):
                 tokens.append(current_token)
                 current_token = ""
             continue
-        if char in "+-":
-            if not current_token:
-                # special case for -3, +5.3
-                if not tokens or tokens[-1] in "*/+-(":
-                    current_token += char
-                    continue
-            elif current_token and current_token[-1] in "de":
-                # special case for 1e-4, 1.23e+3, 2.2d6
-                try:
-                    # If d or e refers to a number, it must be possible
-                    # to convert the preceding characters into a float.
-                    float(current_token[:-1])
-                    current_token += char
-                    continue
-                except ValueError:
-                    pass
-        if (char in "+-*/()"):
+        if char in "+-" and current_token and current_token[-1] in "de":
+            # special case for 1e-4, 1.23e+3, 2.2d6:
+            # + or - are part of the current token, not their own token.
+            try:
+                # If d or e refers to a number, it must be possible
+                # to convert the preceding characters into a float.
+                float(current_token[:-1])
+                current_token += char
+                continue
+            except ValueError:
+                pass
+        if char in "+-*/()":
             # standalone tokens: complete the current token and add this
             if current_token:
                 tokens.append(current_token)
@@ -172,6 +167,12 @@ def parse_float(expression, variables):
         def evaluate(tokens):
             if len(tokens) == 1:
                 return float(tokens[0])
+            if len(tokens) == 2:
+                if tokens[0] == "+":
+                    return float(tokens[1])
+                elif tokens[0] == "-":
+                    return -float(tokens[1])
+
             # Remove superfluous outer parentheses.
             if tokens[0] == "(" and tokens[-1] == ")":
                 return evaluate(tokens[1:-1])
