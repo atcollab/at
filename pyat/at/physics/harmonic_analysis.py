@@ -166,13 +166,13 @@ class HarmonicAnalysis(object):
             from scipy.fftpack import fftfreq as scipy_fftfreq
             fft = staticmethod(scipy_fft)
             fftfreq = staticmethod(scipy_fftfreq)
-            print("Scipy found, using scipy FFT.")
+            #print("Scipy found, using scipy FFT.")
         except ImportError:
             from numpy.fft import fft as numpy_fft
             from numpy.fft import fftfreq as numpy_fftfreq
             fft = staticmethod(numpy_fft)
             fftfreq = staticmethod(numpy_fftfreq)
-            print("Scipy not found, using numpy FFT.")
+            #print("Scipy not found, using numpy FFT.")
         return fft,fftfreq
 
 # Set up conditional functions on load ##############################################
