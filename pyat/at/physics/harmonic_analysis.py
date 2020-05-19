@@ -163,17 +163,21 @@ class HarmonicAnalysis(object):
         """
         try:
             from scipy.fftpack import fft as scipy_fft
+            from scipy.fftpack import fftfreq as scipy_fftfreq
             fft = staticmethod(scipy_fft)
-            #print("Scipy found, using scipy FFT.")
+            fftfreq = staticmethod(scipy_fftfreq)
+            print("Scipy found, using scipy FFT.")
         except ImportError:
             from numpy.fft import fft as numpy_fft
+            from numpy.fft import fftfreq as numpy_fftfreq
             fft = staticmethod(numpy_fft)
-            #print("Scipy not found, using numpy FFT.")
-        return fft
+            fftfreq = staticmethod(numpy_fftfreq)
+            print("Scipy not found, using numpy FFT.")
+        return fft,fftfreq
 
 # Set up conditional functions on load ##############################################
 HarmonicAnalysis._compute_coef = staticmethod(HarmonicAnalysis._conditional_import_compute_coef())
-HarmonicAnalysis._fft = HarmonicAnalysis._conditional_import_fft()
+HarmonicAnalysis._fft,HarmonicAnalysis._fftfreq = HarmonicAnalysis._conditional_import_fft()
 #####################################################################################
 
 
@@ -207,7 +211,67 @@ class HarmonicPlotter(object):
         self._plt.clf()
 
 
+def get_spectrum_harmonic(cent,num_harmonics=20,method='laskar',hann=False):
+    """
+    INPUT
+    cent: centroid motions of the particle
+    num_harmonics: number of harmonic components to compute (before mask applied, default=20)
+    method: laskar or fft [default=laskar]
+    hann: flag to turn on hanning window [default-> False]
 
+    OUTPUT
+    freq,amp: numpy arrays for the frequency and amplitude
+    """
+    ha = HarmonicAnalysis(cent,hann=hann)
+
+    if method=='laskar':
+        ha_tune, ha_amp = ha.laskar_method(num_harmonics=num_harmonics)
+    elif method=='fft':
+        signal = ha.get_signal()
+        fft = ha._fft(signal)
+        ha_tune, ha_amp = ha._fftfreq(len(fft)), np.abs(fft) 
+    else:
+        raise ValueError('The method '+method+' is undefined')
+
+    ha_amp = np.abs(np.array(ha_amp))
+    ha_tune = np.array(ha_tune)
+    return ha_tune, ha_amp
+
+
+def get_tunes_harmonic(cents,method,num_harmonics=20,hann=False,fmin=0,fmax=1):
+    """
+    INPUT
+    cents: are the centroid motions of the particles
+    method: laskar or fft
+    num_harmonics: number of harmonic components to compute (before mask applied, default=20)
+    fmin/fmax: determine the boundaries within which the tune is located[default 0->1]
+    hann: flag to turn on hanning window [default-> False]
+
+    OUTPUT
+    tunes: numpy array of length len(cents), max of the spectrum within fmin:fmax
+    """
+    def get_max_spectrum(freq,amp,fmin,fmax):
+        msk = np.logical_and(freq>=fmin , freq<=fmax)
+        amp = amp[msk]
+        freq = freq[msk]
+        tune = freq[np.argmax(amp)]
+        return tune
+
+    cents = np.array(cents)
+    if cents.ndim > 1:
+      npart = cents.shape[0]
+    else:
+      cents = np.asarray(cents)
+      npart=1
+    tunes = np.zeros(npart)
+
+    for i in range(npart):
+        freq,amp = get_spectrum_harmonic(cents[i],num_harmonics=num_harmonics,method=method,hann=hann)
+        tunes[i] = get_max_spectrum(freq,amp,fmin,fmax)
+
+    return tunes
+
+'''
 def compute_tunes_fft(cent_x, cent_y):
     """
     INPUT
@@ -220,7 +284,7 @@ def compute_tunes_fft(cent_x, cent_y):
     tune_x = np.fft.rfftfreq(len(cent_x))[np.argmax(np.abs(np.fft.rfft(cent_x)))]
     tune_y = np.fft.rfftfreq(len(cent_x))[np.argmax(np.abs(np.fft.rfft(cent_y)))]
     return np.array([tune_x, tune_y])
-
+    
 
 def compute_tunes_harmonic(cent_x, cent_y, num_harmonics=None, quadrant=None):
     """
@@ -246,9 +310,6 @@ def compute_tunes_harmonic(cent_x, cent_y, num_harmonics=None, quadrant=None):
     ha_amp_y = np.abs(np.array(ha_amp_y))
     ha_tune_y = np.array(ha_tune_y)
 
-    output_x = np.vstack((ha_tune_x, ha_amp_x)).T 
-    output_y = np.vstack((ha_tune_y, ha_amp_y)).T 
-
     msk_x = None
     msk_y = None
 
@@ -264,4 +325,4 @@ def compute_tunes_harmonic(cent_x, cent_y, num_harmonics=None, quadrant=None):
 
     
     return [output_x, output_y]
-
+'''
