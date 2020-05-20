@@ -3,12 +3,14 @@ Coupled or non-coupled 4x4 linear motion
 """
 import numpy
 from math import sqrt, atan2, pi
-from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos
+from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
+    bool_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['get_twiss', 'linopt', 'get_mcf', 'get_tune']
+
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune']
 
 DDP = 1e-8
 
@@ -363,6 +365,121 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     return lindata0, tune, chrom, lindata
 
 
+# noinspection PyPep8Naming
+@check_radiation(False)
+def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
+    """
+    Perform linear analysis of a lattice and returns average beta, dispersion
+    and phase advance
+
+    lindata,avebeta,avemu,avedisp,tune,chrom = avlinopt(ring, dp[, refpts])
+
+    PARAMETERS
+        ring            lattice description.
+        dp=0.0          momentum deviation.
+        refpts=None     elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+
+    KEYWORDS
+        orbit           avoids looking for the closed orbit if is already known
+                        ((6,) array)
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Defaults to False
+        ddp=1.0E-8      momentum deviation used for computation of
+                        chromaticities and dispersion
+        coupled=True    if False, simplify the calculations by assuming
+                        no H/V coupling
+
+    OUTPUT
+        lindata         linear optics at the points refered to by refpts, if
+                        refpts is None an empty lindata structure is returned.
+                        See linopt for details
+        avebeta         Average beta functions [betax,betay] at refpts
+        avemu           Average phase advances [mux,muy] at refpts
+        avedisp         Average dispersion [Dx,Dx',Dy,Dy',muy] at refpts
+        avespos         Average s position at refpts
+        tune            [tune_A, tune_B], linear tunes for the two normal modes
+                        of linear motion [1]
+        chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
+                        Only computed if 'get_chrom' is True
+
+
+    See also get_twiss,linopt
+
+    """
+
+    def get_strength(elem):
+        try:
+            k = elem.PolynomB[1]
+        except (AttributeError, IndexError):
+            k = 0.0
+        return k
+
+    def betadrift(beta0, beta1, alpha0, lg):
+        gamma0 = (alpha0 * alpha0 + 1) / beta0
+        return 0.5 * (beta0 + beta1) - gamma0 * lg * lg / 6
+
+    def betafoc(beta1, alpha0, alpha1, k2, lg):
+        gamma1 = (alpha1 * alpha1 + 1) / beta1
+        return 0.5 * ((gamma1 + k2 * beta1) * lg + alpha1 - alpha0) / k2 / lg
+
+    def dispfoc(dispp0, dispp1, k2, lg):
+        return (dispp0 - dispp1) / k2 / lg
+
+    boolrefs = bool_refpts([] if refpts is None else refpts, len(ring))
+    length = numpy.array([el.Length for el in ring[boolrefs]])
+    strength = numpy.array([get_strength(el) for el in ring[boolrefs]])
+    longelem = bool_refpts([], len(ring))
+    longelem[boolrefs] = (length != 0)
+
+    shorti_refpts = (~longelem) & boolrefs
+    longi_refpts = longelem & boolrefs
+    longf_refpts = numpy.roll(longi_refpts, 1)
+
+    all_refs = shorti_refpts | longi_refpts | longf_refpts
+    _, tune, chrom, d_all = linopt(ring, dp=dp, refpts=all_refs, get_chrom=True,
+                                   **kwargs)
+    lindata = d_all[boolrefs[all_refs]]
+
+    avebeta = lindata.beta.copy()
+    avemu = lindata.mu.copy()
+    avedisp = lindata.dispersion.copy()
+    aves = lindata.s_pos.copy()
+
+    di = d_all[longi_refpts[all_refs]]
+    df = d_all[longf_refpts[all_refs]]
+
+    long = (length != 0.0)
+    kfoc = (strength != 0.0)
+    foc = long & kfoc
+    nofoc = long & (~kfoc)
+    K2 = numpy.stack((strength[foc], -strength[foc]), axis=1)
+    fff = foc[long]
+    length = length.reshape((-1, 1))
+
+    avemu[long] = 0.5 * (di.mu + df.mu)
+    aves[long] = 0.5 * (df.s_pos + di.s_pos)
+    avebeta[nofoc] = \
+        betadrift(di.beta[~fff], df.beta[~fff], di.alpha[~fff], length[nofoc])
+    avebeta[foc] = \
+        betafoc(df.beta[fff], di.alpha[fff], df.alpha[fff], K2, length[foc])
+    avedisp[numpy.ix_(long, [1, 3])] = \
+        (df.dispersion[:, [0, 2]] - di.dispersion[:, [0, 2]]) / length[long]
+    idx = numpy.ix_(~fff, [0, 2])
+    avedisp[numpy.ix_(nofoc, [0, 2])] = (di.dispersion[idx] +
+                                         df.dispersion[idx]) * 0.5
+    idx = numpy.ix_(fff, [1, 3])
+    avedisp[numpy.ix_(foc, [0, 2])] = \
+        dispfoc(di.dispersion[idx], df.dispersion[idx], K2, length[foc])
+    return lindata, avebeta, avemu, avedisp, aves, tune, chrom
+
+
 @check_radiation(False)
 def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     """Compute momentum compaction factor
@@ -450,5 +567,8 @@ def get_tune(ring, method='linopt',**kwargs):
 
 
 Lattice.linopt = linopt
+Lattice.avlinopt = avlinopt
 Lattice.get_mcf = get_mcf
+Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
+
