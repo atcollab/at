@@ -3,7 +3,7 @@ Collection of functions to fit various global parameters
 such as the tune and the chromaticity
 """
 import numpy
-from at.lattice import get_elements, set_value_refpts
+from at.lattice import get_refpts, set_value_refpts
 from at.physics import linopt
 
 __all__ = ['fit_tune_chrom']
@@ -74,8 +74,8 @@ def fit_tune_chrom(ring,varname,key1,key2,newval,tol=1.0e-12,dp=0,niter=3):
     elif varname=='chrom':
         order=2
 
-    _,fam1i = get_elements(ring,key1,return_refpts=True)
-    _,fam2i = get_elements(ring,key2,return_refpts=True)
+    fam1i = get_refpts(ring,key1)
+    fam2i = get_refpts(ring,key2)
     try:
        assert fam1i.size !=0 and fam2i.size !=0
     except AssertionError:
