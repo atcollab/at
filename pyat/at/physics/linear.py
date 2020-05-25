@@ -500,7 +500,7 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
 
 
 
-def get_tune(ring, method='linopt',**kwargs):
+def get_tune(ring, method='linopt', **kwargs):
     """
     gets the tune using several available methods
     
@@ -539,27 +539,24 @@ def get_tune(ring, method='linopt',**kwargs):
 
 
     if method=='linopt':
-        dp = kwargs.pop('dp',0)
-        _,tunes,_,_= linopt(ring,dp=dp)
+        dp = kwargs.pop('dp', 0)
+        _, tunes, _, _= linopt(ring,cdp=dp)
     else:
-        num_harmonics = kwargs.pop('num_harmonics',20)
-        hann = kwargs.pop('hann',False)
-        fmin = kwargs.pop('fmin',0)
-        fmax = kwargs.pop('fmax',1)
-        nturns = kwargs.pop('nturns',None)
+        num_harmonics = kwargs.pop('num_harmonics', 20)
+        hann = kwargs.pop('hann', False)
+        fmin = kwargs.pop('fmin', 0)
+        fmax = kwargs.pop('fmax', 1)
+        nturns = kwargs.pop('nturns', None)
         ampl = kwargs.pop('ampl', None)
         try:
             assert nturns is not None
             assert ampl is not None
         except AssertionError:
-            raise ValueError('The number of turns and amplitude have to be defined for '+method)
-        cent_x,cent_y = gen_centroid(ring, ampl, nturns) 
-        cents = numpy.vstack((cent_x,cent_y)) 
-        tunes = get_tunes_harmonic(cents,method,num_harmonics=num_harmonics,hann=hann,fmin=fmin,fmax=fmax)  
-    return tunes       
-
-
-
+            raise ValueError('The number of turns and amplitude have to be defined for ' + method)
+        cent_x, cent_y = gen_centroid(ring, ampl, nturns)
+        cents = numpy.vstack((cent_x,cent_y))
+        tunes = get_tunes_harmonic(cents, method, num_harmonics=num_harmonics, hann=hann, fmin=fmin, fmax=fmax)
+    return tunes
 
 
 Lattice.linopt = linopt
