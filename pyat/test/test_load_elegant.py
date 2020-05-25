@@ -114,6 +114,7 @@ def test_elegant_element_from_string_handles_variable(defaults):
         ["line=(a)", {"a": Marker("m")}, {}, [Marker("m")]],
         ["2*a", {"a": Marker("m")}, {}, [Marker("m"), Marker("m")]],
         ["2*(a)", {"a": Marker("m")}, {}, [Marker("m"), Marker("m")]],
+        ["-a", {"a": Marker("m")}, {}, [Marker("m")]],
         ["b", {}, {"b": [Marker("1"), Marker("2")]}, [Marker("1"), Marker("2")]],
         ["-b", {}, {"b": [Marker("1"), Marker("2")]}, [Marker("2"), Marker("1")]],
         [
