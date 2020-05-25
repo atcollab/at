@@ -292,10 +292,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         G = numpy.diag((g, g))
         C = -H * numpy.sign(t) / (g * sqrt(t2h))
         A = G.dot(G.dot(M)) - numpy.dot(G, (
-                m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(
+            m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(
             N.dot(_jmt.dot(C.T.dot(_jmt.T))))
         B = G.dot(G.dot(N)) + numpy.dot(G, (
-                _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(
+            _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(
             C.T.dot(_jmt.T.dot(M.dot(C))))
     else:
         A = M
@@ -366,9 +366,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
 
 # noinspection PyPep8Naming
 @check_radiation(False)
-
-def avlinopt(ring, dp=0.0, refpts=None, orbit=None,
-             keep_lattice=False, ddp=DDP, coupled=True):
+def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
     """
     Perform linear analysis of a lattice and returns average beta, dispersion
     and phase advance
@@ -414,66 +412,70 @@ def avlinopt(ring, dp=0.0, refpts=None, orbit=None,
     See also get_twiss,linopt
 
     """
-  
-    def betadrift(beta0,beta1,alpha0,L):
-        gamma0=(alpha0*alpha0+1)/beta0
-        return 0.5*(beta0+beta1)-gamma0*L*L/6
+    def get_strength(elem):
+        try:
+            k = elem.PolynomB[1]
+        except (AttributeError, IndexError):
+            k = 0.0
+        return k
 
-    def betafoc(beta1,alpha0,alpha1,K,L):
-        gamma1=(alpha1*alpha1+1)/beta1
-        return 0.5*((gamma1+K*beta1)*L+alpha1-alpha0)/K/L
+    def betadrift(beta0, beta1, alpha0, lg):
+        gamma0 = (alpha0 * alpha0 + 1) / beta0
+        return 0.5 * (beta0 + beta1) - gamma0 * lg * lg / 6
 
-    def dispfoc(dispp0,dispp1,K,L):
-        return (dispp0-dispp1)/K/L
+    def betafoc(beta1, alpha0, alpha1, k2, lg):
+        gamma1 = (alpha1 * alpha1 + 1) / beta1
+        return 0.5 * ((gamma1 + k2 * beta1) * lg + alpha1 - alpha0) / k2 / lg
 
-    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))  
-    longi_refpts = [i for i in uintrefs if ring[i].Length>0]
-    longf_refpts = [i+1 for i in uintrefs if ring[i].Length>0]
-    shorti_refpts = [i for i in uintrefs if ring[i].Length==0]
-    all_refpts = sorted(numpy.unique(longi_refpts+longf_refpts+shorti_refpts))
-    uintrefs_i = [all_refpts.index(i) for i in uintrefs]
-    longf_i = [all_refpts.index(i) for i in longf_refpts]
-    longi_i = [all_refpts.index(i) for i in longi_refpts]                
-    lindata0,tune,chrom,lindata_all = linopt(ring,dp=dp, refpts=all_refpts,get_chrom=True, 
-                                             orbit=orbit,keep_lattice=keep_lattice,ddp=ddp,
-                                             coupled=coupled)        
-    lindata=lindata_all[uintrefs_i]
-    avebeta=lindata.beta.copy()
-    avemu=lindata.mu.copy()
-    avedisp=lindata.dispersion.copy()
+    def dispfoc(dispp0, dispp1, k2, lg):
+        return (dispp0 - dispp1) / k2 / lg
+
+    boolrefs = bool_refpts([] if refpts is None else refpts, len(ring))
+    length = numpy.array([el.Length for el in ring[boolrefs]])
+    strength = numpy.array([get_strength(el) for el in ring[boolrefs]])
+    longelem = bool_refpts([], len(ring))
+    longelem[boolrefs] = (length != 0)
+
+    shorti_refpts = (~longelem) & boolrefs
+    longi_refpts = longelem & boolrefs
+    longf_refpts = numpy.roll(longi_refpts, 1)
+
+    all_refs = shorti_refpts | longi_refpts | longf_refpts
+    _, tune, chrom, d_all = linopt(ring, dp=dp, refpts=all_refs,
+                                   get_chrom=True, **kwargs)
+    lindata = d_all[boolrefs[all_refs]]
+
+    avebeta = lindata.beta.copy()
+    avemu = lindata.mu.copy()
+    avedisp = lindata.dispersion.copy()
     aves = lindata.s_pos.copy()
-    if len(longi_refpts)>0:
-        lindatai = lindata_all[longi_i]
-        lindataf = lindata_all[longf_i]
-        for i,ii in enumerate(longi_refpts):
-            si = lindatai[i].s_pos
-            sf = lindataf[i].s_pos
-            betai = lindatai[i].beta
-            betaf = lindataf[i].beta
-            alphai = lindatai[i].alpha
-            alphaf = lindataf[i].alpha
-            mui = lindatai[i].mu
-            muf = lindataf[i].mu   
-            dispi = lindatai[i].dispersion
-            dispf = lindataf[i].dispersion
-            avedispi=numpy.zeros(4)
-            avedispi[[0,2]]=(dispf[[0,2]]+dispi[[0,2]])*0.5
-            l = ring[ii].Length            
-            k = getattr(ring[ii],'PolynomB',None)
-            if k is not None and numpy.absolute(k[1])>0:
-                k2 = numpy.array([k[1],-k[1]])
-                avebetai=betafoc(betaf,alphai,alphaf,k2,l)
-                avedispi[[0,2]]=dispfoc(dispi[[1,3]],dispf[[1,3]],k2,l)
-            else:
-                avebetai=betadrift(betai,betaf,alphai,l);
-            avedispi[[1,3]]=(dispf[[0,2]]-dispi[[0,2]])/l;
-            ind = numpy.squeeze(numpy.where(uintrefs==ii))
-            avebeta[ind]=avebetai
-            avemu[ind]= 0.5*(mui+muf)
-            aves[ind] = 0.5*(si+sf)
-            avedisp[ind]=avedispi
-    return lindata,avebeta,avemu,avedisp,aves,tune,chrom
 
+    di = d_all[longi_refpts[all_refs]]
+    df = d_all[longf_refpts[all_refs]]
+
+    long = (length != 0.0)
+    kfoc = (strength != 0.0)
+    foc = long & kfoc
+    nofoc = long & (~kfoc)
+    K2 = numpy.stack((strength[foc], -strength[foc]), axis=1)
+    fff = foc[long]
+    length = length.reshape((-1, 1))
+
+    avemu[long] = 0.5 * (di.mu + df.mu)
+    aves[long] = 0.5 * (df.s_pos + di.s_pos)
+    avebeta[nofoc] = \
+        betadrift(di.beta[~fff], df.beta[~fff], di.alpha[~fff], length[nofoc])
+    avebeta[foc] = \
+        betafoc(df.beta[fff], di.alpha[fff], df.alpha[fff], K2, length[foc])
+    avedisp[numpy.ix_(long, [1, 3])] = \
+        (df.dispersion[:, [0, 2]] - di.dispersion[:, [0, 2]]) / length[long]
+    idx = numpy.ix_(~fff, [0, 2])
+    avedisp[numpy.ix_(nofoc, [0, 2])] = (di.dispersion[idx] +
+                                         df.dispersion[idx]) * 0.5
+    idx = numpy.ix_(fff, [1, 3])
+    avedisp[numpy.ix_(foc, [0, 2])] = \
+        dispfoc(di.dispersion[idx], df.dispersion[idx], K2, length[foc])
+    return lindata, avebeta, avemu, avedisp, aves, tune, chrom
 
 
 @check_radiation(False)
