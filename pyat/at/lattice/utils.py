@@ -219,8 +219,6 @@ def get_refpts(ring, key, quiet=True):
                 shell-style wildcards, e.g. key='BPM_*1'
         quiet: if false print information about matched elements for FamName
                matches, defaults to True.
-        return_refpts: if True returns also the refpts of the elements.
-               Default is False
 
     Returns:
         elems: a list of elems refpts matching key
@@ -261,8 +259,6 @@ def get_elements(ring, key, quiet=True):
                 shell-style wildcards, e.g. key='BPM_*1'
         quiet: if false print information about matched elements for FamName
                matches, defaults to True.
-        return_refpts: if True returns also the refpts of the elements.
-               Default is False
 
     Returns:
         a list of elems matching key
