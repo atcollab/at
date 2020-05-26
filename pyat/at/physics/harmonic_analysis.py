@@ -110,6 +110,7 @@ class HarmonicAnalysis(object):
         exponents = np.exp(-PI2I * freq * np.arange(n))
         coef = np.sum(exponents * samples)
         return coef
+
     @staticmethod
     def _compute_coef_goertzel(samples, kprime):
         """
