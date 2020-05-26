@@ -21,8 +21,9 @@ from at.lattice import elements
 
 __all__ = ['AtError', 'AtWarning', 'check_radiation', 'uint32_refpts',
            'bool_refpts', 'checkattr', 'checktype', 'get_cells',
-           'get_elements', 'refpts_iterator', 'get_s_pos', 'set_shift',
-           'set_tilt', 'tilt_elem', 'shift_elem']
+           'get_elements', 'get_refpts', 'refpts_iterator', 'get_s_pos',
+           'set_shift', 'set_tilt', 'tilt_elem', 'shift_elem',
+           'get_value_refpts', 'set_value_refpts']
 
 
 class AtError(Exception):
@@ -204,6 +205,46 @@ def refpts_iterator(ring, refpts):
             yield ring[i]
 
 
+def get_refpts(ring, key, quiet=True):
+    """Get the elements refpts of a family or class (type) from the lattice.
+
+    Args:
+        ring: lattice from which to retrieve the elements.
+        key: can be:
+             1) an element instance, will return all elements of the same type
+                in the lattice, e.g. key=Drift('d1', 1.0)
+             2) an element type, will return all elements of that type in the
+                lattice, e.g. key=at.elements.Sextupole
+             3) a string to match against elements' FamName, supports Unix
+                shell-style wildcards, e.g. key='BPM_*1'
+        quiet: if false print information about matched elements for FamName
+               matches, defaults to True.
+
+    Returns:
+        elems: a list of elems refpts matching key
+    """
+    if isinstance(key, elements.Element):
+        elems = [i for i, elem in enumerate(ring) if isinstance(elem,
+                 type(key))]
+    elif isinstance(key, type):
+        elems = [i for i, elem in enumerate(ring) if isinstance(elem,
+                 key)]
+    elif numpy.issubdtype(type(key), numpy.str_):
+        elems = [i for i, elem in enumerate(ring) if fnmatch(elem.FamName,
+                 key)]
+        if not quiet:
+            matched_fams = set(ring[elem].FamName for elem in elems)
+            ending = 'y' if len(matched_fams) == 1 else 'ies'
+            print("String '{0}' matched {1} famil{2}: {3}\n"
+                  "all corresponding elements have been "
+                  "returned.".format(key, len(matched_fams), ending,
+                                     ', '.join(matched_fams)))
+    else:
+        raise TypeError("Invalid key type {0}; please enter a string, element"
+                        " type, or element instance.".format(type(key)))
+    return numpy.array(elems)
+
+
 def get_elements(ring, key, quiet=True):
     """Get the elements of a family or class (type) from the lattice.
 
@@ -218,24 +259,55 @@ def get_elements(ring, key, quiet=True):
                 shell-style wildcards, e.g. key='BPM_*1'
         quiet: if false print information about matched elements for FamName
                matches, defaults to True.
+
+    Returns:
+        a list of elems matching key
     """
-    if isinstance(key, elements.Element):
-        elems = [elem for elem in ring if isinstance(elem, type(key))]
-    elif isinstance(key, type):
-        elems = [elem for elem in ring if isinstance(elem, key)]
-    elif numpy.issubdtype(type(key), numpy.str_):
-        elems = [elem for elem in ring if fnmatch(elem.FamName, key)]
-        if not quiet:
-            matched_fams = set(elem.FamName for elem in elems)
-            ending = 'y' if len(matched_fams) == 1 else 'ies'
-            print("String '{0}' matched {1} famil{2}: {3}\n"
-                  "all corresponding elements have been "
-                  "returned.".format(key, len(matched_fams), ending,
-                                     ', '.join(matched_fams)))
+    return [ring[i] for i in get_refpts(ring, key, quiet=quiet)]
+
+
+def get_value_refpts(ring, refpts, var, order=None):
+    """Get the values of an attribute of an array of elements based on
+       their refpts
+
+    Args:
+        ring: lattice from which to retrieve the elements.
+        refpts: integer or array of integer or booleans
+        var: attribute name
+        order (optional): index of the value to change in case var is
+        an array, if None the full array is returned (Default)
+    """
+    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
+    if order is None:
+        return numpy.array(list(map(lambda x: getattr(ring[x], var),
+                           uintrefs)))
     else:
-        raise TypeError("Invalid key type {0}; please enter a string, element"
-                        " type, or element instance.".format(type(key)))
-    return elems
+        return numpy.array(list(map(lambda x: getattr(ring[x], var)[order],
+                           uintrefs)))
+
+
+def set_value_refpts(ring, refpts, var, value, order=None, increment=False):
+    """Set the values of an attribute of an array of elements based on their refpts
+
+    Args:
+        ring: lattice from which to retrieve the elements.
+        refpts: integer or array of integer or booleans
+        var: attribute name
+        value: desired value for the attribute
+        order (optional): index of the value to change in case var is an
+        array, if None the full array is replaced by value (Default)
+        increment (optional): adds value to the initial value, if False
+        the initial value is replaced (Default)
+    """
+    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
+    if increment:
+        value = value + get_value_refpts(ring, uintrefs, var, order=order)
+    if order is None:
+        for i, ii in enumerate(uintrefs):
+            setattr(ring[ii], var, value[i])
+    else:
+        for i, ii in enumerate(uintrefs):
+            getattr(ring[ii], var)[order] = value[i]
 
 
 def get_s_pos(ring, refpts=None):

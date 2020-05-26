@@ -291,10 +291,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         G = numpy.diag((g, g))
         C = -H * numpy.sign(t) / (g * sqrt(t2h))
         A = G.dot(G.dot(M)) - numpy.dot(G, (
-                m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(
+            m.dot(_jmt.dot(C.T.dot(_jmt.T))) + C.dot(n))) + C.dot(
             N.dot(_jmt.dot(C.T.dot(_jmt.T))))
         B = G.dot(G.dot(N)) + numpy.dot(G, (
-                _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(
+            _jmt.dot(C.T.dot(_jmt.T.dot(m))) + n.dot(C))) + _jmt.dot(
             C.T.dot(_jmt.T.dot(M.dot(C))))
     else:
         A = M
@@ -441,8 +441,8 @@ def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
     longf_refpts = numpy.roll(longi_refpts, 1)
 
     all_refs = shorti_refpts | longi_refpts | longf_refpts
-    _, tune, chrom, d_all = linopt(ring, dp=dp, refpts=all_refs, get_chrom=True,
-                                   **kwargs)
+    _, tune, chrom, d_all = linopt(ring, dp=dp, refpts=all_refs,
+                                   get_chrom=True, **kwargs)
     lindata = d_all[boolrefs[all_refs]]
 
     avebeta = lindata.beta.copy()
