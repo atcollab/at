@@ -62,7 +62,7 @@ def _fit_tune_chrom(ring, order, func, key1, key2, newval, tol=1.0e-12,
 
 
 def fit_tune(ring, key1, key2, newval, tol=1.0e-12, dp=0, niter=3):
-    '''
+    """
     Function to fit the tune of the ring, using 2 families famname1
     and famname2 are used to select elements based on wildcards
     compared to FamName
@@ -83,13 +83,13 @@ def fit_tune(ring, key1, key2, newval, tol=1.0e-12, dp=0, niter=3):
 
     Typical usage:
     at.matching.fit_tune(ring, 'QF1*', 'QD2*', [0.1,0.25])
-    '''
+    """
     _fit_tune_chrom(ring, 1, _get_tune, key1, key2, newval, tol=tol, dp=dp,
                     niter=niter)
 
 
 def fit_chrom(ring, key1, key2, newval, tol=1.0e-12, dp=0, niter=3):
-    '''
+    """
     Function to fit the chromaticity of the ring, using 2 families
     famname1 and famname2 are used to select elements based on wildcards
     compared to FamName
@@ -110,6 +110,6 @@ def fit_chrom(ring, key1, key2, newval, tol=1.0e-12, dp=0, niter=3):
 
     Typical usage:
     at.matching.fit_chrom(ring, 'SD*', 'SF*', [10,5])
-    '''
+    """
     _fit_tune_chrom(ring, 2, _get_chrom, key1, key2, newval, tol=tol, dp=dp,
                     niter=niter)
