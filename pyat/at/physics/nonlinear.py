@@ -42,7 +42,6 @@ def tune_amplitude(ring, ampl, pl, orbit, tunes, betas):
             p1[ii,i,0,:] -= orbit[ii]
 
 
-
     tunetrack_h = numpy.zeros((len(ampl)))
     tunetrack_v = numpy.zeros((len(ampl)))
     for i in numpy.arange(len(ampl)):

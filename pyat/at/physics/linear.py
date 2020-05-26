@@ -4,12 +4,12 @@ Coupled or non-coupled 4x4 linear motion
 import numpy
 from math import sqrt, atan2, pi
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
-    bool_refpts
+    bool_refpts, Bend, M66
 from at.tracking import lattice_pass
-from at.physics import find_orbit4, find_m44, jmat
+from at.physics import find_orbit4, find_m44, jmat, find_m66
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune']
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune', 'gen_lin_elem']
 
 DDP = 1e-8
 
@@ -566,8 +566,37 @@ def get_tune(ring, method='linopt', **kwargs):
     return tunes
 
 
+def gen_lin_elem(ring):
+    """
+    generates linear 6x6 matrix
+    """
+    [orb04, orb4] = find_orbit4(ring, refpts=[0,len(ring)])   
+    o4b = orb4[0]
+    o4e = orb4[-1]
+
+    dip_inds = numpy.array([ring.index(el) for el in ring.get_elements(Bend)])  
+    theta = numpy.array([ring[ind].BendingAngle for ind in dip_inds])
+    lendp = numpy.array([ring[ind].Length for ind in dip_inds])
+    allS = ring.get_s_pos()
+    s=numpy.diff(numpy.array([allS[0], allS[-1]]))[0]
+    I2=numpy.sum(numpy.abs(theta*theta/lendp))
+    
+    m66tmp, _ = find_m66(ring, [], o4b)
+    #m66norad=symplectify(m66tmp)
+    m66norad = m66tmp
+
+    lin_elem = M66('Linear', 
+                    m66norad,
+                    T1=-o4b,
+                    T2=o4e,
+                    Length=s,
+                    I2=I2)
+    return lin_elem
+
+
 Lattice.linopt = linopt
 Lattice.avlinopt = avlinopt
 Lattice.get_mcf = get_mcf
 Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
+Lattice.gen_lin_elem = gen_lin_elem
