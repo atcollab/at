@@ -1,4 +1,4 @@
-'''
+"""
 Original author of HarmonicAnalysis class
 Jaime Maria Coello De Portugal - Martinez Vazquez
 
@@ -7,7 +7,7 @@ Written while at CERN circa 2016
 This is a reduced version keeping only the key components.
 Full code can be found at: https://github.com/pylhc/harpy
 
-'''
+"""
 
 import numpy as np
 
@@ -110,7 +110,7 @@ class HarmonicAnalysis(object):
         exponents = np.exp(-PI2I * freq * np.arange(n))
         coef = np.sum(exponents * samples)
         return coef
-
+    @staticmethod
     def _compute_coef_goertzel(samples, kprime):
         """
         Computes the coefficient of the Discrete Time Fourier
