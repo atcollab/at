@@ -89,8 +89,8 @@ def detuning(ring, xm, zm, orbit):
 
     x2=numpy.linspace(0,xm*xm,11)
     z2=numpy.linspace(0,zm*zm,11)
-    [nuxx,nuzx]=tune_amplitude(ring,numpy.sqrt(x2),0, orbit, tunes, betas)
-    [nuxz,nuzz]=tune_amplitude(ring,numpy.sqrt(z2),2, orbit, tunes, betas)
+    [nuxx,nuzx]=tune_amplitude(ring,numpy.sqrt(x2),0, orbit[0], tunes, betas)
+    [nuxz,nuzz]=tune_amplitude(ring,numpy.sqrt(z2),2, orbit[0], tunes, betas)
 
     rx1 = numpy.ones((2,len(nuxx)))
     rx1[0,:] = nuxx-nuxx[0]
@@ -114,11 +114,9 @@ def detuning(ring, xm, zm, orbit):
     r=2*numpy.concatenate((rx,rz),axis=1)
     return r
 
-def gen_nonlin_elem(ring, r1):
+def gen_nonlin_elem(ring, r1, orbit):
     [lindata0, tunes, xsi, lindata] = ring.linopt(dp=0, refpts=len(ring), get_chrom=True)
-    [orb04, orb4] = ring.find_orbit4(refpts=[0,len(ring)])   
-
-
+  
     nonlin_elem = Element(  'NonLinear',
                             PassMethod='DeltaQPass',
                             Betax=lindata.beta[0][0],
@@ -130,8 +128,8 @@ def gen_nonlin_elem(ring, r1):
                             A1=r1[0][0], 
                             A2=r1[0][1], 
                             A3=r1[0][3], 
-                            T1=-orb4[-1],
-                            T2= orb4[-1])
+                            T1=-orbit[-1],
+                            T2= orbit[-1])
 
     return nonlin_elem
 

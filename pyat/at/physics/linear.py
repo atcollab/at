@@ -4,9 +4,9 @@ Coupled or non-coupled 4x4 linear motion
 import numpy
 from math import sqrt, atan2, pi
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
-    bool_refpts, Bend, M66
+    bool_refpts, Bend, M66, get_refpts
 from at.tracking import lattice_pass
-from at.physics import find_orbit4, find_m44, jmat, find_m66
+from at.physics import find_orbit4, find_orbit6, find_m44, jmat, find_m66
 from .harmonic_analysis import get_tunes_harmonic
 
 __all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune', 'gen_lin_elem']
@@ -566,29 +566,30 @@ def get_tune(ring, method='linopt', **kwargs):
     return tunes
 
 
-def gen_lin_elem(ring):
+def gen_lin_elem(ring, orbit, radiation=False):
     """
     generates linear 6x6 matrix
     """
-    [orb04, orb4] = find_orbit4(ring, refpts=[0,len(ring)])   
-    o4b = orb4[0]
-    o4e = orb4[-1]
+    if radiation:
+        ring.radiation_on(quadrupole_pass='auto')  
+    else:
+        ring.radiation_off(quadrupole_pass='auto')
 
-    dip_inds = numpy.array([ring.index(el) for el in ring.get_elements(Bend)])  
+    dip_inds = get_refpts(ring, Bend)
     theta = numpy.array([ring[ind].BendingAngle for ind in dip_inds])
     lendp = numpy.array([ring[ind].Length for ind in dip_inds])
     allS = ring.get_s_pos()
     s=numpy.diff(numpy.array([allS[0], allS[-1]]))[0]
     I2=numpy.sum(numpy.abs(theta*theta/lendp))
     
-    m66tmp, _ = find_m66(ring, [], o4b)
+    m66_mat, _ = find_m66(ring, [], orbit[0])
     #m66norad=symplectify(m66tmp)
-    m66norad = m66tmp
+    m66_elem = m66_mat
 
     lin_elem = M66('Linear', 
-                    m66norad,
-                    T1=-o4b,
-                    T2=o4e,
+                    m66_mat,
+                    T1=-orbit[0],
+                    T2=orbit[-1],
                     Length=s,
                     I2=I2)
     return lin_elem
