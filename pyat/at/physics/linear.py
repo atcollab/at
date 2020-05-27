@@ -7,8 +7,9 @@ from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
+from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf']
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune']
 
 DDP = 1e-8
 
@@ -411,7 +412,6 @@ def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
     See also get_twiss,linopt
 
     """
-
     def get_strength(elem):
         try:
             k = elem.PolynomB[1]
@@ -500,7 +500,74 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
 
 
+def get_tune(ring, method='linopt', **kwargs):
+    """
+    gets the tune using several available methods
+
+    method can be 'linopt', 'fft' or 'harmonic'
+    linopt: returns the tune from the linopt function
+    fft: tracks a single particle (one for x and one for y)
+    and computes the tune from the fft
+    harmonic: tracks a single particle (one for x and one for y)
+    and computes the harmonic components
+
+
+    INPUT
+    for linopt:
+        no input needed
+
+    for harmonic:
+        nturns: number of turn
+        amplitude: amplitude of oscillation
+        method: laskar or fft
+        num_harmonics: number of harmonic components to compute
+        (before mask applied, default=20)
+        fmin/fmax: determine the boundaries within which the tune is
+        located [default 0->1]
+        hann: flag to turn on hanning window [default-> False]
+
+
+    OUTPUT
+        tunes = np.array([Qx,Qy])
+    """
+
+    def gen_centroid(ring, ampl, nturns):
+        p0 = numpy.zeros((6, 2))
+        p0[0, 0] = ampl
+        p0[2, 1] = ampl
+        p1 = lattice_pass(ring, p0, refpts=len(ring), nturns=nturns)
+        cent_x = p1[0, 0, 0, :]
+        cent_y = p1[2, 1, 0, :]
+        return cent_x, cent_y
+
+    if method == 'linopt':
+        dp = kwargs.pop('dp', 0)
+        _, tunes, _, _ = linopt(ring, dp=dp)
+    else:
+        num_harmonics = kwargs.pop('num_harmonics', 20)
+        hann = kwargs.pop('hann', False)
+        fmin = kwargs.pop('fmin', 0)
+        fmax = kwargs.pop('fmax', 1)
+        nturns = kwargs.pop('nturns', None)
+        ampl = kwargs.pop('ampl', None)
+        try:
+            assert nturns is not None
+            assert ampl is not None
+        except AssertionError:
+            raise ValueError('The number of turns and amplitude '
+                             'have to be defined for ' + method)
+        cent_x, cent_y = gen_centroid(ring, ampl, nturns)
+        cents = numpy.vstack((cent_x, cent_y))
+        tunes = get_tunes_harmonic(cents, method,
+                                   num_harmonics=num_harmonics,
+                                   hann=hann,
+                                   fmin=fmin,
+                                   fmax=fmax)
+    return tunes
+
+
 Lattice.linopt = linopt
 Lattice.avlinopt = avlinopt
 Lattice.get_mcf = get_mcf
 Lattice.avlinopt = avlinopt
+Lattice.get_tune = get_tune
