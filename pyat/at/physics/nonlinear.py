@@ -114,7 +114,6 @@ def detuning(ring, xm, zm, orbit):
     r=2*numpy.concatenate((rx,rz),axis=1)
     return r
 
-<<<<<<< HEAD
 
 def tunes_vs_amp(ring, xamp=None, yamp=None, zamp=None, dp=0, window=0.1, nturns=512):
 
