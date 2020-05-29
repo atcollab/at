@@ -221,8 +221,10 @@ def get_spectrum_harmonic(cent, num_harmonics=20, method='laskar', hann=False):
 def get_tunes_harmonic(cents, method,
                        num_harmonics=20,
                        hann=False,
-                       fmin=0,
-                       fmax=1):
+                       fmin_x=0,
+                       fmax_x=1,
+                       fmin_y=0,
+                       fmax_y=1):
     """
     INPUT
     cents: are the centroid motions of the particles
@@ -252,11 +254,13 @@ def get_tunes_harmonic(cents, method,
         npart = 1
     tunes = np.zeros(npart)
 
+    frg = [[fmin_x, fmax_x],[fmin_y, fmax_y]]
     for i in range(npart):
         freq, amp = get_spectrum_harmonic(cents[i],
                                           num_harmonics=num_harmonics,
                                           method=method,
                                           hann=hann)
+        fmin, fmax = frg[i]
         tunes[i] = get_max_spectrum(freq, amp, fmin, fmax)
 
     return tunes
