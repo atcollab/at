@@ -172,6 +172,8 @@ def fast_ring(ring):
     rg.append(lin_elem)
     rgrad.append(lin_elem_rad)
 
+    xm = 1e-4
+    zm = 1e-4
     r1 = detuning(ring, xm, zm, orb4)
     nonlin_elem = gen_nonlin_elem(ring, r1, orb4)
     nonlin_elem_rad = gen_nonlin_elem(ring, r1, orb6)
