@@ -72,8 +72,8 @@ static double* atGetDoubleArraySz(const mxArray *ElemData, const char *fieldname
 {
     mxArray *field=mxGetField(ElemData,0,fieldname);
     if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
-    *msz = mxGetM(field);
-    *nsz = mxGetN(field);
+    *msz = mxGetM(field);  /*Number of rows in the 2-D array*/
+    *nsz = mxGetN(field);  /*Number of columns in the 2-D array.*/
     return mxGetDoubles(field);
 }
 

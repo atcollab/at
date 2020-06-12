@@ -53,9 +53,7 @@ if naddvar==0
 end
 
 
-indDQSO=findcells(ring,'Class','Bend','Quadrupole','Sextupole','Octupole');
-% allInd= sort([ indDQSO, index ]);
-%[LINDATA,AVEBETA,AVEMU,AVEDISP,TUNES,CHROMS]=atavedata(ring,0,indDQSO);
+indDQSO=findcells(ring,'Class','Bend','Quadrupole','Sextupole','Octupole','Multipole');
 
 [~,AVEBETA,AVEMU,AVEDISP,~,~]=atavedata(ring,0,1:length(ring));
 

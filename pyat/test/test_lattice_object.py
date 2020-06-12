@@ -117,7 +117,7 @@ def test_property_values_against_known(hmba_lattice):
     assert hmba_lattice.harmonic_number == 992
     assert hmba_lattice.radiation is False
     numpy.testing.assert_almost_equal(hmba_lattice.energy_loss,
-                                      2526188.713461808)
+                                      2526188.658758993, decimal=1)
 
 
 def test_radiation_change(hmba_lattice):

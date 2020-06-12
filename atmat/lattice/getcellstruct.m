@@ -1,4 +1,4 @@
-function values = getcellstruct(CELLARRAY,field,index,varargin)
+function values = getcellstruct(CELLARRAY,field,varargin)
 %GETCELLSTRUCT retrieves the field values MATLAB cell array of structures
 %
 % VALUES = GETCELLSTRUCT(CELLARRAY,'field',INDEX,M,N)
@@ -15,5 +15,5 @@ function values = getcellstruct(CELLARRAY,field,index,varargin)
 %
 % See also ATGETFIELDVALUES SETCELLSTRUCT FINDCELLS
 
-values=atgetfieldvalues(CELLARRAY(index),field,varargin);
+values=atgetfieldvalues(CELLARRAY(varargin{1}),field,varargin(2:end));
 end

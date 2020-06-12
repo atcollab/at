@@ -1,14 +1,15 @@
 """
 Radiation and equilibrium emittances
 """
+from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import Lattice, check_radiation, uint32_refpts
+from at.lattice import elements, Lattice, check_radiation, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-from at.physics import find_mpole_raddiff_matrix
+from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix
 
-__all__ = ['ohmi_envelope']
+__all__ = ['ohmi_envelope', 'get_radiation_integrals']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -60,7 +61,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         emitXY              (2,) betatron emittance projected on xxp and yyp
         emitXYZ             (3,) 6x6 emittance projected on xxp, yyp, ldp
 
-        beamdata is a redord array with fields:
+        beamdata is a record array with fields:
         tunes               tunes of the 3 normal modes
         damping_rates       damping rates of the 3 normal modes
         mode_matrices       R-matrices of the 3 normal modes
@@ -160,4 +161,109 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     return data0, r66data, data
 
 
+@check_radiation(False)
+def get_radiation_integrals(ring, dp=0.0, twiss=None):
+    """
+    Compute the 5 radiation integrals for uncoupled lattices. No RF cavity or
+    radiating element is allowed.
+
+    PARAMETERS
+        ring            lattice description.
+        dp=0.0          momentum deviation
+
+    KEYWORDS
+        twiss=None      linear optics at all points (from linopt). If None,
+                        it will be computed.
+
+    OUTPUT
+        i1, i2, i3, i4, i5
+    """
+    i1 = 0.0
+    i2 = 0.0
+    i3 = 0.0
+    i4 = 0.0
+    i5 = 0.0
+
+    if twiss is None:
+        _, _, _, twiss = linopt(ring, dp, range(len(ring) + 1),
+                                get_chrom=True, coupled=False)
+    elif len(twiss) != len(ring)+1:
+        raise ValueError('length of Twiss data should be {0}'
+                         .format(len(ring)+1))
+    for (elem, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
+        if isinstance(elem, elements.Dipole) and elem.BendingAngle != 0.0:
+            beta0 = vini.beta[0]
+            alpha0 = vini.alpha[0]
+            gamma0 = (1.0 + alpha0 * alpha0) / beta0
+            eta0 = vini.dispersion[0]
+            etap0 = vini.dispersion[1]
+
+            ll = elem.Length
+            theta = elem.BendingAngle
+            rho = ll / theta
+            rho2 = rho * rho
+            k2 = elem.K + 1.0/rho2
+            eps1 = tan(elem.EntranceAngle) / rho
+            eps2 = tan(elem.ExitAngle) / rho
+
+            eta3 = vend.dispersion[0]
+            alpha1 = alpha0 - beta0*eps1
+            etap1 = etap0 + eta0*eps1
+            etap2 = vend.dispersion[1] - eta3*eps2
+
+            h0 = gamma0*eta0*eta0 + 2.0*alpha1*eta0*etap1 + beta0*etap1*etap1
+
+            if k2 != 0.0:
+                if k2 > 0.0:        # Focusing
+                    kl = ll * sqrt(k2)
+                    ss = sin(kl) / kl
+                    cc = cos(kl)
+                else:               # Defocusing
+                    kl = ll * sqrt(-k2)
+                    ss = sinh(kl) / kl
+                    cc = cosh(kl)
+                eta_ave = (theta - (etap2 - etap1)) / k2 / ll
+                bb = 2.0 * (alpha1*eta0 + beta0*etap1) * rho
+                aa = -2.0 * (alpha1*etap1 + gamma0*eta0) * rho
+                h_ave = h0 + (aa * (1.0-ss) + bb * (1.0-cc) / ll
+                              + gamma0 * (3.0-4.0*ss+ss*cc) / 2.0 / k2
+                              - alpha1 * (1.0-cc)**2 / k2 / ll
+                              + beta0 * (1.0-ss*cc) / 2.0
+                              ) / k2 / rho2
+            else:
+                eta_ave = 0.5 * (eta0 + eta3) - ll*ll / 12.0 / rho
+                hp0 = 2.0 * (alpha1 * eta0 + beta0 * etap1) / rho
+                h2p0 = 2.0 * (-alpha1*etap1 + beta0/rho - gamma0*eta0) / rho
+                h_ave = h0 + hp0*ll/2.0 + h2p0*ll*ll/6.0 \
+                    - alpha1*ll**3/4.0/rho2 \
+                    + gamma0*ll**4/20.0/rho2
+
+            i1 += eta_ave * ll / rho
+            i2 += ll / rho2
+            i3 += ll / abs(rho) / rho2
+            i4 += eta_ave * ll * (2.0*elem.K+1.0/rho2) / rho \
+                - (eta0*eps1 + eta3*eps2)/rho
+            i5 += h_ave * ll / abs(rho) / rho2
+
+    return i1, i2, i3, i4, i5
+
+
+def get_energy_loss(ring):
+    """Energy loss per turn [eV]
+
+    Losses = Cgamma / 2pi * EGeV^4 * i2
+    """
+    lenthe = numpy.array(
+        [(elem.Length, elem.BendingAngle) for elem in ring if
+         isinstance(elem, elements.Dipole)])
+    lendp = lenthe[:, 0]
+    theta = lenthe[:, 1]
+
+    i2 = ring.periodicity * (numpy.sum(theta * theta / lendp))
+    e_loss = Cgamma / 2.0 / pi * ring.energy**4 * i2
+    return e_loss
+
+
 Lattice.ohmi_envelope = ohmi_envelope
+Lattice.get_radiation_integrals = get_radiation_integrals
+Lattice.energy_loss = property(get_energy_loss)

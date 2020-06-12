@@ -23,28 +23,30 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
 
     PARAMETERS
         lattice:    iterable of AT elements
-        r_in:       6xN array: input coordinates of N particles
+        r_in:       (6, N) array: input coordinates of N particles.
+                    r_in is modified in-place and reports the coordinates at
+                    the end of the tracking. For the the best efficiency, r_in
+                    should be given as F_CONTIGUOUS numpy array.
         nturns:     number of passes through the lattice line
-        refpts          elements at which data is returned. It can be:
-                        1) an integer in the range [-len(ring), len(ring)-1]
-                           selecting the element according to python indexing
-                           rules. As a special case, len(ring) is allowed and
-                           refers to the end of the last element,
-                        2) an ordered list of such integers without duplicates,
-                        3) a numpy array of booleans of maximum length
-                           len(ring)+1, where selected elements are True.
-                        Defaults to None, meaning no refpts, equivelent to
-                        passing an empty array for calculation purposes.
+        refpts      elements at which data is returned. It can be:
+                    1) an integer in the range [-len(ring), len(ring)-1]
+                       selecting the element according to python indexing
+                       rules. As a special case, len(ring) is allowed and
+                       refers to the end of the last element,
+                    2) an ordered list of such integers without duplicates,
+                    3) a numpy array of booleans of maximum length
+                       len(ring)+1, where selected elements are True.
+                    Defaults to None, meaning no refpts, equivelent to
+                    passing an empty array for calculation purposes.
         keep_lattice: use elements persisted from a previous call to at.atpass.
                     If True, assume that the lattice has not changed since
                     that previous call.
 
     OUTPUT
-        (6, A, B, C) array containing output coordinates of A particles
-        at B selected indices for C turns.
+        (6, N, R, T) array containing output coordinates of N particles
+        at R reference points for T turns.
     """
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
-    r_in = numpy.asfortranarray(r_in)
     if not isinstance(lattice, list):
         lattice = list(lattice)
     nelems = len(lattice)
@@ -55,7 +57,13 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
     # * A is number of particles;
     # * B is number of refpts
     # * C is the number of turns
-    return atpass(lattice, r_in, nturns, refs, int(keep_lattice))
+    if r_in.flags.f_contiguous:
+        return atpass(lattice, r_in, nturns, refs, int(keep_lattice))
+    else:
+        r_fin = numpy.asfortranarray(r_in)
+        r_out = atpass(lattice, r_fin, nturns, refs, int(keep_lattice))
+        r_in[:] = r_fin[:]
+        return r_out
 
 
 def element_pass(element, r_in):

@@ -57,14 +57,15 @@ end
 
 indSext=findcells(ring,'Class','Sextupole');
 indSext=unique(sort([ 1, length(ring),indSext+1]));
-indOct=findcells(ring,'Class','Octupole');
+indOct=findcells(ring,'Class','Octupole','Multipole');
 indOct=unique(sort([1,length(ring),indOct+1]));
-indSO=unique(sort([indSext,indOct]));
+indSO=unique(sort([1,indSext,indOct,length(ring)]));
 indQuad=findcells(ring,'Class','Quadrupole');
 indQuad=unique(sort([1,length(ring),indQuad+1]));
 indDip=findcells(ring,'Class','Bend');
 indDip=unique(sort([1,length(ring),indDip+1]));
-indTot=unique(sort([ indSext, indOct, indQuad, indDip ]));
+indTot=unique(sort([1, indSext, indOct, indQuad, indDip, length(ring)]));
+
 if(geometric1 || geometric2 || tuneshifts)
     if(geometric1)
         RDT=computeRDT(ring,indSO,'geometric1');

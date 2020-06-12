@@ -8,7 +8,8 @@ dist: xenial
 language: python
 env:
   global:
-    - CIBW_BEFORE_BUILD='pip install numpy'
+    # Build against the oldest supported version of numpy.
+    - CIBW_BEFORE_BUILD='python -m pip install numpy==1.14.3'
 matrix:
   include:
     - os: linux
@@ -21,6 +22,8 @@ matrix:
       python: 3.6
     - os: linux
       python: 3.7
+    - os: linux
+      python: 3.8
     - os: osx
       language: generic
       env: PYTHON=2
@@ -40,9 +43,10 @@ install: |
   fi
   cd pyat
   pip install --only-binary=numpy,scipy -r requirements.txt
-  python setup.py build
 
 before_script:
+    # Use develop as we will be running the tests from the directory
+    # containing the at package.
   - python setup.py develop
 
 script: |

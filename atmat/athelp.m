@@ -1,5 +1,5 @@
-function athelp
-%ATHELP generates the list of Accelerator Toolbox functions
+function athelp(varargin)
+%ATHELP generate the list of Accelerator Toolbox functions
 %
 %  EXAMPLES
 %  1. athelp: full help.
@@ -32,16 +32,28 @@ function athelp
 
 % Generate help file (Contents) use command atupdateContents
 
+NEWFLAG=getflag(varargin,'new');
+
 ATROOT = atroot;
 
 DIR_old = pwd;
 cd(fileparts(ATROOT))
 
-%for comaptbility with previous Matlab version 2013b for example
+%for compatibility with previous Matlab version 2013b for example
 %folder should not include full path
 [~, folder] = fileparts(cd);
-doc(folder);
+
+if ~isfile('atdoc.mat') || NEWFLAG
+    fprintf('** Generating doc for a few seconds **\n');
+    html = help2html(folder,'AT DOC','-doc');
+    save('helpdoc.mat','html')
+else
+    d = dir('atdoc.mat');
+    fprintf('Last version of the file %s \n To update the doc issue athelp(''new'')\n', d.date);
+    load('atdoc.mat');
+end
+
+% Display documentation
+web(['text://' html], '-helpbrowser');
 
 cd(DIR_old)
-
-%help(fileparts(ATROOT));

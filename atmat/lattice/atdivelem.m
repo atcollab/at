@@ -34,6 +34,10 @@ if isfield(elem,'BendingAngle')
     line=atsetfieldvalues(line,'EntranceAngle',0.0);
     line=atsetfieldvalues(line,'ExitAngle',0.0);
 end
+if isfield(elem,'KickAngle')
+    line=atsetfieldvalues(line,'KickAngle',{1,1},el.KickAngle(1,1)*frac(:)/sum(frac));
+    line=atsetfieldvalues(line,'KickAngle',{1,2},el.KickAngle(1,2)*frac(:)/sum(frac));
+end
 
 line{1}=mvfield(line{1},entrancef);     % Set back entrance fields
 line{end}=mvfield(line{end},exitf);     % Set back exit fields

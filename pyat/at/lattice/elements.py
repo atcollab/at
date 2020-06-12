@@ -5,6 +5,7 @@ Each element has a default PassMethod attribute for which it should have the
 appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
+import re
 import numpy
 import copy
 from inspect import getmembers, isdatadescriptor
@@ -34,6 +35,10 @@ class Element(object):
                         T2=lambda v: _array(v, (6,)),
                         RApertures=lambda v: _array(v, (4,)),
                         EApertures=lambda v: _array(v, (2,)),
+                        KickAngle=lambda v: _array(v, (2,)),
+                        PolynomB=_array, PolynomA=_array,
+                        BendingAngle=float,
+                        MaxOrder=int, NumIntSteps=int,
                         Energy=float,
                         )
 
@@ -68,9 +73,19 @@ class Element(object):
                      self.REQUIRED_ATTRIBUTES]
         defelem = self.__class__(*arguments)
         keywords = ['{0!r}'.format(arg) for arg in arguments]
-        keywords += ['{0}={1!r}'.format(k, v) for k, v in attrs.items()
+        keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
                      if not numpy.array_equal(v, getattr(defelem, k, None))]
-        return '{0}({1})'.format(self.__class__.__name__, ', '.join(keywords))
+        args = re.sub('\n\s*', ' ', ', '.join(keywords))
+        return '{0}({1})'.format(self.__class__.__name__, args)
+
+    def equals(self, other):
+        """Whether an element is equivalent to another.
+
+        This implementation was found to be too slow for the generic
+        __eq__ method when comparing lattices.
+
+        """
+        return repr(self) == repr(other)
 
     def divide(self, frac):
         """split the element in len(frac) pieces whose length
@@ -248,8 +263,6 @@ class ThinMultipole(Element):
     """pyAT thin multipole element"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['PolynomA',
                                                          'PolynomB']
-    _conversions = dict(Element._conversions, BendingAngle=float, MaxOrder=int,
-                        PolynomB=_array, PolynomA=_array)
 
     def __init__(self, family_name, poly_a, poly_b, **kwargs):
         """ThinMultipole(FamName, PolynomA, PolynomB, **keywords)
@@ -305,8 +318,7 @@ class Multipole(LongElement, ThinMultipole):
     """pyAT multipole element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['PolynomA',
                                                              'PolynomB']
-    _conversions = dict(ThinMultipole._conversions, NumIntSteps=int,
-                        K=float, KickAngle=lambda v: _array(v, (2,)))
+    _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name, length, poly_a, poly_b, **kwargs):
         """Multipole(FamName, Length, PolynomA, PolynomB, **keywords)
@@ -526,7 +538,6 @@ class M66(Element):
 class Corrector(LongElement):
     """pyAT corrector element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['KickAngle']
-    _conversions = dict(LongElement._conversions, KickAngle=_array)
 
     def __init__(self, family_name, length, kick_angle, **kwargs):
         kwargs.setdefault('PassMethod', 'CorrectorPass')

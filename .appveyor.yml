@@ -7,13 +7,14 @@
 image: Visual Studio 2015
 platform: x64
 environment:
-  CIBW_BEFORE_BUILD: "pip install numpy"
+  # Build against the oldest supported version of numpy.
+  CIBW_BEFORE_BUILD: "python -m pip install numpy==1.14.3"
   matrix:
    - PYTHON: 27
-   - PYTHON: 34
    - PYTHON: 35
    - PYTHON: 36
    - PYTHON: 37
+   - PYTHON: 38
 
 install:
   - set "PATH=C:\Python%PYTHON%-x64;C:\Python%PYTHON%-x64\Scripts;%PATH%"
@@ -21,7 +22,6 @@ install:
   - venv\Scripts\activate
   - cd pyat
   - pip install --only-binary=numpy,scipy -r requirements.txt
-  - python setup.py build
 
 before_build:
   - python setup.py develop
