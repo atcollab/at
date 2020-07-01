@@ -525,7 +525,7 @@ def get_tune(ring, method='linopt', **kwargs):
         fmin/fmax: determine the boundaries within which the tune is
         located [default 0->1]
         hann: flag to turn on hanning window [default-> False]
-
+        remove_dc: Removes the mean offset of oscillation data
 
     OUTPUT
         tunes = np.array([Qx,Qy])
@@ -555,6 +555,7 @@ def get_tune(ring, method='linopt', **kwargs):
         fmax_y = kwargs.pop('fmax_y', 1)
         nturns = kwargs.pop('nturns', None)
         ampl = kwargs.pop('ampl', None)
+        remove_dc = kwargs.pop('remove_dc', False)
         try:
             assert nturns is not None
             assert ampl is not None
@@ -562,6 +563,11 @@ def get_tune(ring, method='linopt', **kwargs):
             raise ValueError('The number of turns and amplitude '
                              'have to be defined for ' + method)
         cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp)
+
+        if remove_dc:
+            cent_x -= numpy.mean(cent_x)
+            cent_y -= numpy.mean(cent_y)
+
         cents = numpy.vstack((cent_x, cent_y))
         tunes = get_tunes_harmonic(cents, method,
                                    num_harmonics=num_harmonics,
@@ -601,7 +607,8 @@ def get_chrom(ring, method='linopt', **kwargs):
         fmax_y = kwargs.pop('fmax_y', 1)
         nturns = kwargs.pop('nturns', None)
         ampl = kwargs.pop('ampl', None)
-        
+        remove_dc = kwargs.pop('remove_dc', False)
+
     dp = kwargs.pop('dp', DDP)
     if method == 'linopt':
         _, _, xsi, _ = linopt(ring, dp=dp, get_chrom=True)
@@ -614,7 +621,8 @@ def get_chrom(ring, method='linopt', **kwargs):
             if tune_method == 'linopt':
                 qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp)
             else:
-                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl)
+                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl,
+remove_dc=remove_dc)
 
         fit_x = numpy.polyfit(dp_range, qxs, 1)[::-1]
         fit_y = numpy.polyfit(dp_range, qys, 1)[::-1]
@@ -652,6 +660,7 @@ def get_chrom_nonlinear(ring, **kwargs):
         fmax_y = kwargs.pop('fmax_y', 1)
         nturns = kwargs.pop('nturns', None)
         ampl = kwargs.pop('ampl', None)
+        remove_dx = kwargs.pop('remove_dc', False)
 
     fit_order = kwargs.pop('fit_order', None)
     dp_range = kwargs.pop('dp_range', None)
@@ -676,12 +685,12 @@ def get_chrom_nonlinear(ring, **kwargs):
             qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp)
         else:
             if not track_tune:
-                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl)
+                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl, remove_dc=remove_dc)
             else:
                 if i==0:
-                    qtx, qty = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl)
+                    qtx, qty = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl, remove_dc=remove_dc)
                 else:
-                    qtx, qty = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=qtx - window, fmax_x=qtx + window, fmin_y=qty - window, fmax_y=qty + window, nturns=nturns, ampl=ampl)     
+                    qtx, qty = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=qtx - window, fmax_x=qtx + window, fmin_y=qty - window, fmax_y=qty + window, nturns=nturns, ampl=ampl, remove_dc=remove_dc)     
                 if (qtx < 0.01) or (qty < 0.01):
                     raise ValueError('Calculated tune too close to zero. Possibly too large dp so harmonic_analysis not working.') 
                 qxs[i] = qtx
