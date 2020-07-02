@@ -9,7 +9,8 @@ from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_orbit6, find_m44, jmat, find_m66
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune', 'gen_lin_elem']
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune',
+           'gen_lin_elem']
 
 DDP = 1e-8
 
@@ -566,32 +567,28 @@ def get_tune(ring, method='linopt', **kwargs):
     return tunes
 
 
-def gen_lin_elem(ring, orbit, radiation=False):
+def gen_lin_elem(ring, radiation=False):
     """
     generates linear 6x6 matrix
     """
     if radiation:
-        ring.radiation_on(quadrupole_pass='auto')  
+        ring.radiation_on(quadrupole_pass='auto')
     else:
         ring.radiation_off(quadrupole_pass='auto')
 
+    orbit, _ = find_orbit4(ring)
     dip_inds = get_refpts(ring, Bend)
     theta = numpy.array([ring[ind].BendingAngle for ind in dip_inds])
     lendp = numpy.array([ring[ind].Length for ind in dip_inds])
     allS = ring.get_s_pos()
-    s=numpy.diff(numpy.array([allS[0], allS[-1]]))[0]
-    I2=numpy.sum(numpy.abs(theta*theta/lendp))
-    
-    m66_mat, _ = find_m66(ring, [], orbit[0])
-    #m66norad=symplectify(m66tmp)
+    s = numpy.diff(numpy.array([allS[0], allS[-1]]))[0]
+    I2 = numpy.sum(numpy.abs(theta * theta / lendp))
+
+    m66_mat, _ = find_m66(ring, [], orbit)
+#   m66norad=symplectify(m66tmp)
     m66_elem = m66_mat
 
-    lin_elem = M66('Linear', 
-                    m66_mat,
-                    T1=-orbit[0],
-                    T2=orbit[-1],
-                    Length=s,
-                    I2=I2)
+    lin_elem = M66('Linear', m66_mat, T1=-orbit, T2=orbit, Length=s, I2=I2)
     return lin_elem
 
 
