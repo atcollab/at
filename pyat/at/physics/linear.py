@@ -634,7 +634,7 @@ remove_dc=remove_dc)
 
 def get_chrom_nonlinear(ring, **kwargs):
     """
-    gets the chromaticty using several available methods
+    gets the full chromaticty using several available methods
 
     method can be 'linopt' or 'scan'
     linopt: returns the chromaticity from the linopt function
@@ -645,11 +645,24 @@ def get_chrom_nonlinear(ring, **kwargs):
     INPUT
     for linopt:
         no input needed
-
-
+    for scan:
+        a tune_method must be specified (either linopt or laskar)
+        all of the relevant kwargs can be passed for these two 
+        fit_order: numpy.polyfit package is used for the fitting
+        fmin_x, fmin_y, fmax_x, fmax_y can be used to specify ranges
+        nturns
+        ampl
+        dp_range: numpy array of dp values for the scan
+        track_tune: if True then a 'window' must be specified
+        this always searches for the next tune in the scan close
+        to the tune before. Can be useful with high chromaticity.
     OUTPUT
-        tunes = np.array([Qx,Qy])
+        [xr, yr] = get_chrom_nonlinear()
+        xr = Qx, Q'x, Q''x, Q'''x -> up to specified order
+        for the computation of the Q'' and higher, the factorial is
+        taken into account
     """
+
     tune_method = kwargs.pop('tune_method', 'linopt')
     if tune_method != 'linopt':
         num_harmonics = kwargs.pop('num_harmonics', 20)
@@ -660,7 +673,7 @@ def get_chrom_nonlinear(ring, **kwargs):
         fmax_y = kwargs.pop('fmax_y', 1)
         nturns = kwargs.pop('nturns', None)
         ampl = kwargs.pop('ampl', None)
-        remove_dx = kwargs.pop('remove_dc', False)
+        remove_dc = kwargs.pop('remove_dc', False)
 
     fit_order = kwargs.pop('fit_order', None)
     dp_range = kwargs.pop('dp_range', None)
