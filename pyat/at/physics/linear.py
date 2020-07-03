@@ -9,7 +9,8 @@ from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune','get_chrom', 'get_chrom_nonlinear']
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune',
+           'get_chrom']
 
 DDP = 1e-8
 
@@ -504,11 +505,11 @@ def get_tune(ring, method='linopt', **kwargs):
     """
     gets the tune using several available methods
 
-    method can be 'linopt', 'fft' or 'harmonic'
+    method can be 'linopt', 'fft' or 'laskar'
     linopt: returns the tune from the linopt function
     fft: tracks a single particle (one for x and one for y)
     and computes the tune from the fft
-    harmonic: tracks a single particle (one for x and one for y)
+    laskar: tracks a single particle (one for x and one for y)
     and computes the harmonic components
 
 
@@ -549,19 +550,11 @@ def get_tune(ring, method='linopt', **kwargs):
     else:
         num_harmonics = kwargs.pop('num_harmonics', 20)
         hann = kwargs.pop('hann', False)
-        fmin_x = kwargs.pop('fmin_x', 0)
-        fmax_x = kwargs.pop('fmax_x', 1)
-        fmin_y = kwargs.pop('fmin_y', 0)
-        fmax_y = kwargs.pop('fmax_y', 1)
-        nturns = kwargs.pop('nturns', None)
-        ampl = kwargs.pop('ampl', None)
+        fmin = kwargs.pop('fmin', 0)
+        fmax = kwargs.pop('fmax', 1)
+        nturns = kwargs.pop('nturns', 512)
+        ampl = kwargs.pop('ampl', 1.0e-6)
         remove_dc = kwargs.pop('remove_dc', False)
-        try:
-            assert nturns is not None
-            assert ampl is not None
-        except AssertionError:
-            raise ValueError('The number of turns and amplitude '
-                             'have to be defined for ' + method)
         cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp)
 
         if remove_dc:
@@ -572,154 +565,38 @@ def get_tune(ring, method='linopt', **kwargs):
         tunes = get_tunes_harmonic(cents, method,
                                    num_harmonics=num_harmonics,
                                    hann=hann,
-                                   fmin_x=fmin_x,
-                                   fmax_x=fmax_x,
-                                   fmin_y=fmin_y,
-                                   fmax_y=fmax_y)
+                                   fmin=fmin,
+                                   fmax=fmax)
     return tunes
+
 
 def get_chrom(ring, method='linopt', **kwargs):
     """
     gets the chromaticty using several available methods
 
-    method can be 'linopt' or 'scan'
+    method can be 'linopt', 'fft' or 'laskar'
     linopt: returns the chromaticity from the linopt function
-    scan: computes the tune vs several dps and fits to a spec-
-    ified order
+    fft: tracks a single particle (one for x and one for y)
+    and computes the tune from the fft
+    harmonic: tracks a single particle (one for x and one for y)
+    and computes the harmonic components
 
-
-    INPUT
-    for linopt:
-        no input needed
-
+    see get_tune for kwargs inputs
 
     OUTPUT
-        tunes = np.array([Qx,Qy])
+        chromaticities = np.array([Q'x,Q'y])
     """
 
-    tune_method = kwargs.pop('tune_method', 'linopt')
-    if tune_method != 'linopt':
-        num_harmonics = kwargs.pop('num_harmonics', 20)
-        hann = kwargs.pop('hann', False)
-        fmin_x = kwargs.pop('fmin_x', 0)
-        fmax_x = kwargs.pop('fmax_x', 1)
-        fmin_y = kwargs.pop('fmin_y', 0)
-        fmax_y = kwargs.pop('fmax_y', 1)
-        nturns = kwargs.pop('nturns', None)
-        ampl = kwargs.pop('ampl', None)
-        remove_dc = kwargs.pop('remove_dc', False)
+    if method=='fft':
+        print('Warning fft method not accurate to get the '+ 
+              'chromaticity, please use laskar')
 
-    dp = kwargs.pop('dp', DDP)
-    if method == 'linopt':
-        _, _, xsi, _ = linopt(ring, dp=dp, get_chrom=True)
-    elif method == 'scan':
-        dp_range = kwargs.pop('dp_range', numpy.linspace(-dp,dp,7))
-
-        qxs = numpy.zeros(len(dp_range))
-        qys = numpy.zeros(len(dp_range))
-        for i, dp in enumerate(dp_range):
-            if tune_method == 'linopt':
-                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp)
-            else:
-                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl,
-remove_dc=remove_dc)
-
-        fit_x = numpy.polyfit(dp_range, qxs, 1)[::-1]
-        fit_y = numpy.polyfit(dp_range, qys, 1)[::-1]
-        xsi = numpy.array([fit_x[1],fit_y[1]])
-    else:
-        raise ValueError('Method must be linopt or scan!')
-
-    return xsi
-
-def get_chrom_nonlinear(ring, **kwargs):
-    """
-    gets the full chromaticty using several available methods
-
-    method can be 'linopt' or 'scan'
-    linopt: returns the chromaticity from the linopt function
-    scan: computes the tune vs several dps and fits to a spec-
-    ified order
-
-
-    INPUT
-    for linopt:
-        no input needed
-    for scan:
-        a tune_method must be specified (either linopt or laskar)
-        all of the relevant kwargs can be passed for these two 
-        fit_order: numpy.polyfit package is used for the fitting
-        fmin_x, fmin_y, fmax_x, fmax_y can be used to specify ranges
-        nturns
-        ampl
-        dp_range: numpy array of dp values for the scan
-        track_tune: if True then a 'window' must be specified
-        this always searches for the next tune in the scan close
-        to the tune before. Can be useful with high chromaticity.
-    OUTPUT
-        [xr, yr] = get_chrom_nonlinear()
-        xr = Qx, Q'x, Q''x, Q'''x -> up to specified order
-        for the computation of the Q'' and higher, the factorial is
-        taken into account
-    """
-
-    tune_method = kwargs.pop('tune_method', 'linopt')
-    if tune_method != 'linopt':
-        num_harmonics = kwargs.pop('num_harmonics', 20)
-        hann = kwargs.pop('hann', False)
-        fmin_x = kwargs.pop('fmin_x', 0)
-        fmax_x = kwargs.pop('fmax_x', 1)
-        fmin_y = kwargs.pop('fmin_y', 0)
-        fmax_y = kwargs.pop('fmax_y', 1)
-        nturns = kwargs.pop('nturns', None)
-        ampl = kwargs.pop('ampl', None)
-        remove_dc = kwargs.pop('remove_dc', False)
-
-    fit_order = kwargs.pop('fit_order', None)
-    dp_range = kwargs.pop('dp_range', None)
-    track_tune = kwargs.pop('track_tune', False)
-    if track_tune:
-        window = kwargs.pop('window',None)
-        try:
-            assert window is not None
-        except AssertionError:
-            raise ValueError('Please specify window size!')
-    try:
-        assert fit_order is not None
-        assert dp_range is not None
-    except AssertionError:
-        raise ValueError('Please specify a fit_order (int) and dp_range')
-
-    qxs = numpy.zeros(len(dp_range))
-    qys = numpy.zeros(len(dp_range))
-    for i, dp in enumerate(dp_range):
-        
-        if tune_method == 'linopt':
-            qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp)
-        else:
-            if not track_tune:
-                qxs[i], qys[i] = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl, remove_dc=remove_dc)
-            else:
-                if i==0:
-                    qtx, qty = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=fmin_x, fmax_x=fmax_x, fmin_y=fmin_y, fmax_y=fmax_y, nturns=nturns, ampl=ampl, remove_dc=remove_dc)
-                else:
-                    qtx, qty = get_tune(ring, method=tune_method, dp=dp, hann=hann, fmin_x=qtx - window, fmax_x=qtx + window, fmin_y=qty - window, fmax_y=qty + window, nturns=nturns, ampl=ampl, remove_dc=remove_dc)     
-                if (qtx < 0.01) or (qty < 0.01):
-                    raise ValueError('Calculated tune too close to zero. Possibly too large dp so harmonic_analysis not working.') 
-                qxs[i] = qtx
-                qys[i] = qty
-
-
-
-    fit_x = numpy.polyfit(dp_range, qxs, fit_order)[::-1]
-    fit_y = numpy.polyfit(dp_range, qys, fit_order)[::-1]
-
-    for i in numpy.arange(fit_order+1):
-        fit_x[i] /= factorial(i)
-        fit_y[i] /= factorial(i)
-
-    return (fit_x, fit_y)
-  
+    dp = kwargs.pop('dp', 0)
+    ddp = kwargs.pop('ddp', DDP)
+    tune_up = get_tune(ring, method=method, dp=dp + 0.5 * ddp, **kwargs)
+    tune_down = get_tune(ring, method=method, dp=dp - 0.5 * ddp, **kwargs)
+    chrom = (tune_up - tune_down) / ddp
+    return numpy.array(chrom)
 
 
 Lattice.linopt = linopt
@@ -728,4 +605,3 @@ Lattice.get_mcf = get_mcf
 Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
 Lattice.get_chrom = get_chrom
-Lattice.get_chrom_nonlinear = get_chrom_nonlinear
