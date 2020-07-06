@@ -28,12 +28,12 @@ def tunes_vs_amp(ring, amp=None, dim=0,
         partxp = numpy.reshape(part[1, :], (sh[1], sh[3]))
         party = numpy.reshape(part[2, :], (sh[1], sh[3]))
         partyp = numpy.reshape(part[3, :], (sh[1], sh[3]))
-        return partx+1j*partxp, party+1j*partyp
+        return partx + 1j*partxp, party + 1j*partyp
 
-    orbit, _ = find_orbit4(ring,dp)
+    orbit, _ = find_orbit4(ring, dp)
     q0 = get_tune(ring)
-    fmin = numpy.maximum([0,0],q0-window)
-    fmax = numpy.minimum([1,1],q0+window)
+    fmin = numpy.maximum([0, 0], q0 - window)
+    fmax = numpy.minimum([1, 1], q0 + window)
     tunes = []
 
     if amp is not None:
@@ -47,7 +47,8 @@ def tunes_vs_amp(ring, amp=None, dim=0,
     return numpy.array(tunes)
 
 
-def detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0, window=1, nturns=512):
+def detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0, window=1,
+             nturns=512):
     """
     This function uses tunes_vs_amp to compute the tunes for
     the specified amplitudes. Then it fits this data and returns
@@ -61,41 +62,41 @@ def detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0, window=1, nturns=512):
     x2 = x * x
     y2 = y * y
 
-    q_dx =  tunes_vs_amp(ring, amp=x, dim=0, dp=dp, window=window, nturns=nturns)
-    q_dy =  tunes_vs_amp(ring, amp=y, dim=2, dp=dp, window=window, nturns=nturns)
+    q_dx = tunes_vs_amp(ring, amp=x, dim=0, dp=dp, window=window,
+                        nturns=nturns)
+    q_dy = tunes_vs_amp(ring, amp=y, dim=2, dp=dp, window=window,
+                        nturns=nturns)
 
     fx = numpy.polyfit(x2, q_dx, 1)
     fy = numpy.polyfit(y2, q_dy, 1)
 
-    q0 = [[fx[1, 0], fx[1, 1]], 
+    q0 = [[fx[1, 0], fx[1, 1]],
           [fy[1, 0], fy[1, 1]]]
-    q1 = [[2 * fx[0, 0] / gamma[0],2 * fx[0, 1] / gamma[0]],
-          [2 * fy[0, 0] / gamma[1],2 * fy[0, 1] / gamma[1]]]
+    q1 = [[2 * fx[0, 0] / gamma[0], 2 * fx[0, 1] / gamma[0]],
+          [2 * fy[0, 0] / gamma[1], 2 * fy[0, 1] / gamma[1]]]
 
     return numpy.array(q0), numpy.array(q1), x, q_dx, y, q_dy
 
 
-def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,**kwargs):
+def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
+                 **kwargs):
     """
     This function uses tunes_vs_amp to compute the tune for
     the specified amplitudes. Then it fits this data and returns
     the chromaticity up to the given order (npoints>order)
     Q'n = 1/n!*dQ/ddp
     """
-    if order ==0:
-       return get_chrom(ring,dp=dp,**kwargs)
-    elif order>npoints-1:
-       raise ValueError('order should be smaller than npoints-1')
-    else:    
+    if order == 0:
+        return get_chrom(ring, dp=dp, **kwargs)
+    elif order > npoints - 1:
+        raise ValueError('order should be smaller than npoints-1')
+    else:
         dpa = numpy.linspace(-dpm, dpm, npoints)
         qz = []
         for dpi in dpa:
-            qz.append(get_tune(ring,method=method,dp=dp+dpi,remove_dc=True,**kwargs))
+            qz.append(get_tune(ring, method=method, dp=dp+dpi, remove_dc=True,
+                      **kwargs))
         fit = numpy.polyfit(dpa, qz, order)[::-1]
-        fitx = fit[:,0]/factorial(numpy.arange(order+1))
-        fity = fit[:,1]/factorial(numpy.arange(order+1)) 
-        return numpy.array([fitx,fity]), dpa, numpy.array(qz)
-
-
-
-
+        fitx = fit[:, 0]/factorial(numpy.arange(order + 1))
+        fity = fit[:, 1]/factorial(numpy.arange(order + 1))
+        return numpy.array([fitx, fity]), dpa, numpy.array(qz)

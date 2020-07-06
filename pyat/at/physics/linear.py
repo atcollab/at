@@ -534,8 +534,8 @@ def get_tune(ring, method='linopt', dp=0, **kwargs):
     """
 
     def gen_centroid(ring, ampl, nturns, dp, remove_dc):
-        orbit, _ = find_orbit4(ring,dp)
-        p0 = numpy.array([orbit,]*2).T
+        orbit, _ = find_orbit4(ring, dp)
+        p0 = numpy.array([orbit, ]*2).T
         p0[0, 0] += ampl
         p0[2, 1] += ampl
         p1 = lattice_pass(ring, p0, refpts=len(ring), nturns=nturns)
@@ -558,7 +558,7 @@ def get_tune(ring, method='linopt', dp=0, **kwargs):
         remove_dc = kwargs.pop('remove_dc', True)
         cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp, remove_dc)
         cents = numpy.vstack((cent_x, cent_y))
-        tunes = get_tunes_harmonic(cents, method,**kwargs)
+        tunes = get_tunes_harmonic(cents, method, **kwargs)
     return tunes
 
 
@@ -580,8 +580,8 @@ def get_chrom(ring, method='linopt', dp=0, ddp=DDP, **kwargs):
         chromaticities = np.array([Q'x,Q'y])
     """
 
-    if method=='fft':
-        print('Warning fft method not accurate to get the '+ 
+    if method == 'fft':
+        print('Warning fft method not accurate to get the ' +
               'chromaticity')
 
     tune_up = get_tune(ring, method=method, dp=dp + 0.5 * ddp, **kwargs)
