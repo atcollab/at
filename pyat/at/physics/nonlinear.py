@@ -81,8 +81,8 @@ def detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0, window=1,
 def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
                  **kwargs):
     """
-    This function uses tunes_vs_amp to compute the tune for
-    the specified amplitudes. Then it fits this data and returns
+    This function uses computes the tunes to compute the tune for
+    the specified momentum offsets. Then it fits this data and returns
     the chromaticity up to the given order (npoints>order)
     Q'n = 1/n!*dQ/ddp
     """
