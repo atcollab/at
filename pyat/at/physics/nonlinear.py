@@ -84,7 +84,8 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
     This function uses computes the tunes to compute the tune for
     the specified momentum offsets. Then it fits this data and returns
     the chromaticity up to the given order (npoints>order)
-    Q'n = 1/n!*dQ/ddp
+    OUTPUT
+        (fitx, fity), dpa, qz
     """
     if order == 0:
         return get_chrom(ring, dp=dp, **kwargs)
