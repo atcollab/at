@@ -563,7 +563,7 @@ def get_tune(ring, method='linopt', dp=0, **kwargs):
 
 
 @check_radiation(False)
-def get_chrom(ring, method='linopt', **kwargs):
+def get_chrom(ring, method='linopt', dp=0, **kwargs):
     """
     gets the chromaticty using several available methods
 
@@ -584,8 +584,6 @@ def get_chrom(ring, method='linopt', **kwargs):
         print('Warning fft method not accurate to get the '+ 
               'chromaticity')
 
-
-    dp = kwargs.pop('dp', 0)
     ddp = kwargs.pop('ddp', DDP)
     tune_up = get_tune(ring, method=method, dp=dp + 0.5 * ddp, **kwargs)
     tune_down = get_tune(ring, method=method, dp=dp - 0.5 * ddp, **kwargs)

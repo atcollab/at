@@ -25,10 +25,12 @@ def tunes_vs_amp(ring, amp=None, dim=0,
         part = lattice_pass(ring, part, nturns=nturns)
         sh = part.shape
         partx = numpy.reshape(part[0, :], (sh[1], sh[3]))
+        partxp = numpy.reshape(part[1, :], (sh[1], sh[3]))
         party = numpy.reshape(part[2, :], (sh[1], sh[3]))
-        return partx, party
+        partyp = numpy.reshape(part[3, :], (sh[1], sh[3]))
+        return partx+1j*partxp, party+1j*partyp
 
-    orbit, _ = find_orbit4(ring)
+    orbit, _ = find_orbit4(ring,dp)
     q0 = get_tune(ring)
     fmin = numpy.maximum([0,0],q0-window)
     fmax = numpy.minimum([1,1],q0+window)
@@ -88,7 +90,7 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,**kw
         dpa = numpy.linspace(-dpm, dpm, npoints)
         qz = []
         for dpi in dpa:
-            qz.append(get_tune(ring,method=method,dp=dp+dpi,**kwargs))
+            qz.append(get_tune(ring,method=method,dp=dp+dpi,remove_dc=True,**kwargs))
         fit = numpy.polyfit(dpa, qz, order)[::-1]
         fitx = fit[:,0]/factorial(numpy.arange(order+1))
         fity = fit[:,1]/factorial(numpy.arange(order+1)) 
