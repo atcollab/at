@@ -501,7 +501,8 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
 
 
-def get_tune(ring, method='linopt', **kwargs):
+@check_radiation(False)
+def get_tune(ring, method='linopt', dp=0, **kwargs):
     """
     gets the tune using several available methods
 
@@ -532,44 +533,36 @@ def get_tune(ring, method='linopt', **kwargs):
         tunes = np.array([Qx,Qy])
     """
 
-    dp = kwargs.pop('dp', 0)
-
-    def gen_centroid(ring, ampl, nturns, dp):
-        p0 = numpy.zeros((6, 2))
-        p0[0, 0] = ampl
-        p0[2, 1] = ampl
-        p0[4, 0] = dp
-        p0[4, 1] = dp
+    def gen_centroid(ring, ampl, nturns, dp, remove_dc):
+        orbit, _ = find_orbit4(ring,dp)
+        p0 = numpy.array([orbit,]*2).T
+        p0[0, 0] += ampl
+        p0[2, 1] += ampl
         p1 = lattice_pass(ring, p0, refpts=len(ring), nturns=nturns)
         cent_x = p1[0, 0, 0, :]
+        cent_xp = p1[1, 0, 0, :]
         cent_y = p1[2, 1, 0, :]
-        return cent_x, cent_y
+        cent_yp = p1[3, 1, 0, :]
+        if remove_dc:
+            cent_x -= numpy.mean(cent_x)
+            cent_y -= numpy.mean(cent_y)
+            cent_xp -= numpy.mean(cent_xp)
+            cent_yp -= numpy.mean(cent_yp)
+        return cent_x - 1j*cent_xp, cent_y - 1j*cent_yp
 
     if method == 'linopt':
         _, tunes, _, _ = linopt(ring, dp=dp)
     else:
-        num_harmonics = kwargs.pop('num_harmonics', 20)
-        hann = kwargs.pop('hann', False)
-        fmin = kwargs.pop('fmin', 0)
-        fmax = kwargs.pop('fmax', 1)
         nturns = kwargs.pop('nturns', 512)
         ampl = kwargs.pop('ampl', 1.0e-6)
-        remove_dc = kwargs.pop('remove_dc', False)
-        cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp)
-
-        if remove_dc:
-            cent_x -= numpy.mean(cent_x)
-            cent_y -= numpy.mean(cent_y)
-
+        remove_dc = kwargs.pop('remove_dc', True)
+        cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp, remove_dc)
         cents = numpy.vstack((cent_x, cent_y))
-        tunes = get_tunes_harmonic(cents, method,
-                                   num_harmonics=num_harmonics,
-                                   hann=hann,
-                                   fmin=fmin,
-                                   fmax=fmax)
+        tunes = get_tunes_harmonic(cents, method,**kwargs)
     return tunes
 
 
+@check_radiation(False)
 def get_chrom(ring, method='linopt', **kwargs):
     """
     gets the chromaticty using several available methods
@@ -589,7 +582,8 @@ def get_chrom(ring, method='linopt', **kwargs):
 
     if method=='fft':
         print('Warning fft method not accurate to get the '+ 
-              'chromaticity, please use laskar')
+              'chromaticity')
+
 
     dp = kwargs.pop('dp', 0)
     ddp = kwargs.pop('ddp', DDP)
