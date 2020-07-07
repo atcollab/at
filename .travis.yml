@@ -60,4 +60,5 @@ script: |
   else
     python -m pip install pytest-cov
     python -m pytest test --cov-report term-missing --cov=at
+    flake8 at
   fi

@@ -1,0 +1,8 @@
+[flake8]
+
+max-line-length = 88
+# Allow importing * for package managment.
+ignore = 
+    F401
+    F403
+    W503  # no longer recommended
