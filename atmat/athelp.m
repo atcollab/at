@@ -43,14 +43,14 @@ cd(fileparts(ATROOT))
 %folder should not include full path
 [~, folder] = fileparts(cd);
 
-if ~isfile('atdoc.mat') || NEWFLAG
+if ~isfile('helpdoc.mat') || NEWFLAG
     fprintf('** Generating doc for a few seconds **\n');
     html = help2html(folder,'AT DOC','-doc');
     save('helpdoc.mat','html')
 else
-    d = dir('atdoc.mat');
+    d = dir('helpdoc.mat');
     fprintf('Last version of the file %s \n To update the doc issue athelp(''new'')\n', d.date);
-    load('atdoc.mat');
+    load('helpdoc.mat', 'html');
 end
 
 % Display documentation
