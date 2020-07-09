@@ -30,10 +30,11 @@ def tunes_vs_amp(ring, amp=None, dim=0,
         partyp = numpy.reshape(part[3, :], (sh[1], sh[3]))
         return partx + 1j*partxp, party + 1j*partyp
 
-    orbit, _ = find_orbit4(ring, dp)
-    q0 = get_tune(ring)
+    l0, q0, _, _ = linopt(ring, dp=dp)
+    orbit = l0['closed_orbit']
     fmin = numpy.maximum([0, 0], q0 - window)
     fmax = numpy.minimum([1, 1], q0 + window)
+
     tunes = []
 
     if amp is not None:
