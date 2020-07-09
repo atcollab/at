@@ -536,6 +536,15 @@ def get_tune(ring, method='linopt', dp=0, **kwargs):
     def gen_centroid(ring, ampl, nturns, dp, remove_dc):
         orbit, _ = find_orbit4(ring, dp)
         ld, _, _, _ = linopt(ring, dp)
+
+        invx = numpy.array([[1/numpy.sqrt(ld['beta'][0]), 0],
+                            [ld['alpha'][0]/numpy.sqrt(ld['beta'][0]),
+                            numpy.sqrt(ld['beta'][0])]])
+
+        invy = numpy.array([[1/numpy.sqrt(ld['beta'][1]), 0],
+                            [ld['alpha'][1]/numpy.sqrt(ld['beta'][1]),
+                            numpy.sqrt(ld['beta'][1])]])
+
         p0 = numpy.array([orbit, ]*2).T
         p0[0, 0] += ampl
         p0[2, 1] += ampl
@@ -549,8 +558,11 @@ def get_tune(ring, method='linopt', dp=0, **kwargs):
             cent_y -= numpy.mean(cent_y)
             cent_xp -= numpy.mean(cent_xp)
             cent_yp -= numpy.mean(cent_yp)
-        return (cent_x - 1j * ld['beta'][0] * cent_xp,
-                cent_y - 1j * ld['beta'][1] * cent_yp)
+
+        cent_x, cent_xp = numpy.matmul(invx, [cent_x, cent_xp])
+        cent_y, cent_yp = numpy.matmul(invy, [cent_y, cent_yp])
+        return (cent_x - 1j * cent_xp,
+                cent_y - 1j * cent_yp)
 
     if method == 'linopt':
         _, tunes, _, _ = linopt(ring, dp=dp)
