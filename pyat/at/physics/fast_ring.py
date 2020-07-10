@@ -1,18 +1,16 @@
 """
-Functions relating to fast_ring. To be redistributed
+Functions relating to fast_ring
 """
 import numpy
 from math import sqrt, atan2, pi
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts, get_refpts
 from at.tracking import lattice_pass
-from at.physics.harmonic_analysis import HarmonicAnalysis
-from at.lattice.elements import Element, RFCavity, Marker, Drift, Bend, M66
-from at.physics.nonlinear import detuning, gen_nonlin_elem
-from at.physics.matrix import find_elem_m66
-from at.physics.orbit import find_orbit6, find_orbit4
-from .diffmatrix import find_mpole_raddiff_matrix
-from .linear import gen_lin_elem, linopt
+from at.lattice import Element, RFCavity, Marker, Drift, Bend, M66
+from at.physics import HarmonicAnalysis, detuning
+from at.physics import find_elem_m66, find_orbit6, find_orbit4
+from at.physics import find_mpole_raddiff_matrix, linopt
+from at.physics import jmat
 
 __all__ = ['fast_ring']
 
@@ -41,25 +39,20 @@ def rearrange(ring):
     ring_temp.insert(len(ring_temp)+1, Marker('xend'))
     return ring_temp
 
-def symplectify(M):
-    J = jmat()
 
+def symplectify(M):
+    '''
+    symplectify makes a matrix more symplectic
+    follow Healy algorithm as described by McKay
+    BNL-75461-2006-CP
+    '''
+    J = jmat(3)
     V=J*(numpy.identity(6)-M)*numpy.linalg.inv(numpy.identity(6)+M)
     #V should be almost symmetric.  Replace with symmetrized version.
-
     W=(V+V.T)/2
     #Now reconstruct M from W
     MS=(numpy.identity(6)+J*W)*numpy.linalg.inv(numpy.identity(6)-J*W)
     return MS
-
-def jmat():
-    arr = numpy.array([[0, 1, 0, 0, 0, 0], 
-                    [-1, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 1, 0, 0], 
-                    [0, 0, -1, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 1],
-                    [0, 0, 0, 0, -1, 0]])
-    return arr
 
 
 def gen_quantdiff_elem(ring_slice):
