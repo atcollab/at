@@ -9,7 +9,7 @@ from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix
 
-__all__ = ['ohmi_envelope', 'get_radiation_integrals']
+__all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -262,6 +262,70 @@ def get_energy_loss(ring):
     i2 = ring.periodicity * (numpy.sum(theta * theta / lendp))
     e_loss = Cgamma / 2.0 / pi * ring.energy**4 * i2
     return e_loss
+
+
+@check_radiation(True)
+def quantdiffmat(ring, orbit=None):
+
+    def cumulb(it):
+        """accumulate diffusion matrices"""
+        cumul = numpy.zeros((6, 6))
+        yield cumul
+        for el, orbin, b in it:
+            m = find_elem_m66(el, orbin)
+            cumul = m.dot(cumul).dot(m.T) + b
+            yield cumul
+
+    keep_lattice=False
+    refpts = numpy.arange(len(ring))
+    energy = ring.energy
+
+    if orbit is None:
+        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
+        keep_lattice = True
+
+    orbs = numpy.squeeze(
+        lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
+                     keep_lattice=keep_lattice), axis=(1, 3)).T
+       
+    zr = numpy.zeros((6,6))
+    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
+         if elem.PassMethod.endswith('RadPass') else zr 
+         for i,elem in enumerate(ring)]
+    bbcum = numpy.stack(list(cumulb(zip(ring, orbs, bb))), axis=0)
+    diffmat=[(bbc + bbc.T)/2 for bbc in bbcum] 
+    return numpy.array(diffmat)[-1]
+
+
+@check_radiation(True)
+def gen_quantdiff_elem(ring_slice):
+
+    rad_inds = get_rad_indexes(ring_slice)
+    quantumDiffMatrix = quantumDiff(ring_slice,rad_inds)
+
+    '''
+    #lmat does Cholesky decomp of dmat unless diffusion is 0 in
+    #vertical.  Then do chol on 4x4 hor-long matrix and put 0's
+    #in vertical
+    dmat = quantumDiffMatrix
+    try:
+        lmat66 = numpy.linalg.cholesky(dmat)
+    except:
+        lmc = numpy.array([numpy.concatenate((dmat[0][0:2], dmat[0][4:])), 
+                        numpy.concatenate((dmat[1][0:2], dmat[1][4:])),
+                        numpy.concatenate((dmat[4][0:2], dmat[4][4:])),
+                        numpy.concatenate((dmat[5][0:2], dmat[5][4:]))])
+        lm=[chol(dmat([1 2 5 6],[1 2 5 6])) zeros(4,2);zeros(2,6)];
+        lmat66=lm([1 2 5 6 3 4],[1 2 5 6 3 4]);
+    
+    lmatp=lmat66';
+    '''
+    diff_elem = Element('Diffusion',
+                        Lmatp=numpy.asfortranarray(quantumDiffMatrix),
+                        PassMethod='QuantDiffPass')
+
+    return diff_elem
+
 
 
 Lattice.ohmi_envelope = ohmi_envelope
