@@ -22,6 +22,16 @@ ENVELOPE_DTYPE = [('r66', numpy.float64, (6, 6)),
                   ('emitXYZ', numpy.float64, (3,))]
 
 
+def _cumulb(it):
+    """accumulate diffusion matrices"""
+    cumul = numpy.zeros((6, 6))
+    yield cumul
+    for el, orbin, b in it:
+        m = find_elem_m66(el, orbin)
+        cumul = m.dot(cumul).dot(m.T) + b
+        yield cumul
+
+
 @check_radiation(True)
 def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
@@ -75,15 +85,6 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
         [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
     """
 
-    def cumulb(it):
-        """accumulate diffusion matrices"""
-        cumul = numpy.zeros((6, 6))
-        yield cumul
-        for el, orbin, b in it:
-            m = find_elem_m66(el, orbin)
-            cumul = m.dot(cumul).dot(m.T) + b
-            yield cumul
-
     def process(r66):
         # projections on xx', zz', ldp
         emit3sq = numpy.array([det(r66[s, s]) for s in _submat])
@@ -126,9 +127,10 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
                      keep_lattice=keep_lattice), axis=(1, 3)).T
     mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbit, energy)
-          if elem.PassMethod.endswith('RadPass') else b0 for elem in ring]
-    bbcum = numpy.stack(list(cumulb(zip(ring, orbs, bb))), axis=0)
+    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
+          if elem.PassMethod.endswith('RadPass') else b0 
+          for i,elem in enumerate(ring)]
+    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     # ------------------------------------------------------------------------
     # Equation for the moment matrix R is
     #         R = MRING*R*MRING' + BCUM;
@@ -266,16 +268,16 @@ def get_energy_loss(ring):
 
 @check_radiation(True)
 def quantdiffmat(ring, orbit=None):
+    '''
+    This function computes the diffusion matrix of the whole ring
 
-    def cumulb(it):
-        """accumulate diffusion matrices"""
-        cumul = numpy.zeros((6, 6))
-        yield cumul
-        for el, orbin, b in it:
-            m = find_elem_m66(el, orbin)
-            cumul = m.dot(cumul).dot(m.T) + b
-            yield cumul
+    PARAMETERS
+        ring            lattice description.
+        orbit=None      initial orbit
 
+    OUTPUT
+        diffusion matrix (6,6)
+    '''
     keep_lattice=False
     refpts = numpy.arange(len(ring))
     energy = ring.energy
@@ -292,7 +294,7 @@ def quantdiffmat(ring, orbit=None):
     bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
          if elem.PassMethod.endswith('RadPass') else zr 
          for i,elem in enumerate(ring)]
-    bbcum = numpy.stack(list(cumulb(zip(ring, orbs, bb))), axis=0)
+    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     diffmat=[(bbc + bbc.T)/2 for bbc in bbcum] 
     return numpy.array(diffmat)[-1]
 
