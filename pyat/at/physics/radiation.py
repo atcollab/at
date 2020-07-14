@@ -4,12 +4,12 @@ Radiation and equilibrium emittances
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import elements, Lattice, check_radiation, uint32_refpts
+from at.lattice import elements, Lattice, check_radiation, uint32_refpts,Element
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix
 
-__all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat']
+__all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat', 'gen_quantdiff_elem']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -55,6 +55,23 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)   
     return bbcum, orbs
 
+
+def _lmat(dmat):
+    '''
+    lmat is Cholesky decomp of dmat unless diffusion is 0 in
+    vertical.  Then do chol on 4x4 hor-long matrix and put 0's
+    in vertical
+    '''
+    lmat = numpy.zeros((6,6))
+    try:
+        lmat = numpy.linalg.cholesky(dmat)
+    except numpy.linalg.LinAlgError:
+        nz = numpy.where(dmat!=0)
+        cmat = numpy.reshape(dmat[nz],(4,4))
+        cmat = numpy.linalg.cholesky(cmat)
+        lmat[nz] = numpy.reshape(cmat,(16,))
+    return lmat
+    
 
 @check_radiation(True)
 def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
@@ -290,36 +307,19 @@ def quantdiffmat(ring, orbit=None):
     '''
     bbcum, _ = _dmatr(ring, orbit=orbit)
     diffmat = [(bbc + bbc.T)/2 for bbc in bbcum] 
-    return numpy.array(diffmat)[-1]
+    return numpy.round(diffmat[-1],24)
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring_slice):
-
-    rad_inds = get_rad_indexes(ring_slice)
-    quantumDiffMatrix = quantumDiff(ring_slice,rad_inds)
-
+def gen_quantdiff_elem(ring):
     '''
-    #lmat does Cholesky decomp of dmat unless diffusion is 0 in
-    #vertical.  Then do chol on 4x4 hor-long matrix and put 0's
-    #in vertical
-    dmat = quantumDiffMatrix
-    try:
-        lmat66 = numpy.linalg.cholesky(dmat)
-    except:
-        lmc = numpy.array([numpy.concatenate((dmat[0][0:2], dmat[0][4:])), 
-                        numpy.concatenate((dmat[1][0:2], dmat[1][4:])),
-                        numpy.concatenate((dmat[4][0:2], dmat[4][4:])),
-                        numpy.concatenate((dmat[5][0:2], dmat[5][4:]))])
-        lm=[chol(dmat([1 2 5 6],[1 2 5 6])) zeros(4,2);zeros(2,6)];
-        lmat66=lm([1 2 5 6 3 4],[1 2 5 6 3 4]);
-    
-    lmatp=lmat66';
+    Generates a quantum diffusion element
     '''
+    dmat = quantdiffmat(ring)
+    lmat = _lmat(dmat)
     diff_elem = Element('Diffusion',
-                        Lmatp=numpy.asfortranarray(quantumDiffMatrix),
+                        Lmatp=lmat,
                         PassMethod='QuantDiffPass')
-
     return diff_elem
 
 
