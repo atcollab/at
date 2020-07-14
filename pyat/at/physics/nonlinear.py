@@ -7,13 +7,8 @@ from scipy.special import factorial
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts
 from at.tracking import lattice_pass
-from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, get_tunes_harmonic, \
-    get_chrom
-from at.lattice import Element
-
-__all__ = ['tunes_vs_amp', 'detuning', 'chromaticity', 'gen_nonlin_elem']
-
-
+from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, \
+    get_tunes_harmonic, get_chrom
 from at.lattice import Element
 
 __all__ = ['detuning', 'chromaticity']
