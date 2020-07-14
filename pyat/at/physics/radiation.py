@@ -4,12 +4,14 @@ Radiation and equilibrium emittances
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import elements, Lattice, check_radiation, uint32_refpts,Element
+from at.lattice import Lattice, check_radiation, uint32_refpts
+from at.lattice import Element, elements
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix
 
-__all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat', 'gen_quantdiff_elem']
+__all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
+           'gen_quantdiff_elem']
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -33,9 +35,9 @@ def _cumulb(it):
 
 
 def _dmatr(ring, orbit=None, keep_lattice=False):
-    """ 
-    compute the cumulative diffusion and orbit 
-    matrices over the ring 
+    """
+    compute the cumulative diffusion and orbit
+    matrices over the ring
     """
     nelems = len(ring)
     energy = ring.energy
@@ -50,9 +52,9 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
                      keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
-          if elem.PassMethod.endswith('RadPass') else b0 
-          for i,elem in enumerate(ring)]
-    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)   
+          if elem.PassMethod.endswith('RadPass') else b0
+          for i, elem in enumerate(ring)]
+    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
 
@@ -62,16 +64,16 @@ def _lmat(dmat):
     vertical.  Then do chol on 4x4 hor-long matrix and put 0's
     in vertical
     '''
-    lmat = numpy.zeros((6,6))
+    lmat = numpy.zeros((6, 6))
     try:
         lmat = numpy.linalg.cholesky(dmat)
     except numpy.linalg.LinAlgError:
-        nz = numpy.where(dmat!=0)
-        cmat = numpy.reshape(dmat[nz],(4,4))
+        nz = numpy.where(dmat != 0)
+        cmat = numpy.reshape(dmat[nz], (4, 4))
         cmat = numpy.linalg.cholesky(cmat)
-        lmat[nz] = numpy.reshape(cmat,(16,))
+        lmat[nz] = numpy.reshape(cmat, (16, ))
     return lmat
-    
+
 
 @check_radiation(True)
 def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
@@ -306,8 +308,8 @@ def quantdiffmat(ring, orbit=None):
         diffusion matrix (6,6)
     '''
     bbcum, _ = _dmatr(ring, orbit=orbit)
-    diffmat = [(bbc + bbc.T)/2 for bbc in bbcum] 
-    return numpy.round(diffmat[-1],24)
+    diffmat = [(bbc + bbc.T)/2 for bbc in bbcum]
+    return numpy.round(diffmat[-1], 24)
 
 
 @check_radiation(True)
@@ -321,7 +323,6 @@ def gen_quantdiff_elem(ring):
                         Lmatp=lmat,
                         PassMethod='QuantDiffPass')
     return diff_elem
-
 
 
 Lattice.ohmi_envelope = ohmi_envelope
