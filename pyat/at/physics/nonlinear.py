@@ -4,9 +4,11 @@ Function to compute quantities related to non-linear optics
 import numpy
 from math import sqrt, atan2
 from scipy.special import factorial
-from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, bool_refpts
+from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
+    bool_refpts
 from at.tracking import lattice_pass
-from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, get_tunes_harmonic, get_chrom
+from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, get_tunes_harmonic, \
+    get_chrom
 from at.lattice import Element
 
 __all__ = ['tunes_vs_amp', 'detuning', 'chromaticity', 'gen_nonlin_elem']
@@ -106,26 +108,6 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
         fity = fit[:, 1]/factorial(numpy.arange(order + 1))
         return numpy.array([fitx, fity]), dpa, numpy.array(qz)
 
-def gen_nonlin_elem(ring):
-    """
-    Generates an element that for detuning with amplitude
-    """
-    [lindata0, tunes, xsi, lindata] = ring.linopt(dp=0,
-                                                  refpts=len(ring),
-                                                  get_chrom=True)
-
-    r0, r1 = detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0)
-    orbit, _ = find_orbit4(ring)
-
-    nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
-                          Betax=lindata.beta[0][0], Betay=lindata.beta[0][1],
-                          Alphax=lindata.alpha[0][0],
-                          Alphay=lindata.alpha[0][1],
-                          Qpx=xsi[0], Qpy=xsi[1], A1=r1[0], A2=r1[1],
-                          A3=r1[3], T1=-orbit, T2=orbit)
-
-    return nonlin_elem
 
 Lattice.tunes_vs_amp = tunes_vs_amp
 Lattice.detuning = detuning
-Lattice.gen_nonlin_elem = gen_nonlin_elem
