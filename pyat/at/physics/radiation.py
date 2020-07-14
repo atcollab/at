@@ -32,6 +32,30 @@ def _cumulb(it):
         yield cumul
 
 
+def _dmatr(ring, orbit=None, keep_lattice=False):
+    """ 
+    compute the cumulative diffusion and orbit 
+    matrices over the ring 
+    """
+    nelems = len(ring)
+    energy = ring.energy
+    allrefs = uint32_refpts(range(nelems + 1), nelems)
+
+    if orbit is None:
+        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
+        keep_lattice = True
+
+    orbs = numpy.squeeze(
+        lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
+                     keep_lattice=keep_lattice), axis=(1, 3)).T
+    b0 = numpy.zeros((6, 6))
+    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
+          if elem.PassMethod.endswith('RadPass') else b0 
+          for i,elem in enumerate(ring)]
+    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)   
+    return bbcum, orbs
+
+
 @check_radiation(True)
 def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     """
@@ -115,22 +139,8 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
 
     nelems = len(ring)
     uint32refs = uint32_refpts(refpts, nelems)
-    allrefs = uint32_refpts(range(nelems + 1), nelems)
-    energy = ring.energy
-
-    if orbit is None:
-        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
-        keep_lattice = True
-
-    orbs = numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
-    mring, ms = find_m66(ring, uint32refs, orbit=orbit, keep_lattice=True)
-    b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
-          if elem.PassMethod.endswith('RadPass') else b0 
-          for i,elem in enumerate(ring)]
-    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
+    bbcum, orbs = _dmatr(ring, orbit=orbit, keep_lattice=keep_lattice)
+    mring, ms = find_m66(ring, uint32refs, orbit=orbs[0], keep_lattice=True)
     # ------------------------------------------------------------------------
     # Equation for the moment matrix R is
     #         R = MRING*R*MRING' + BCUM;
@@ -151,7 +161,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     r66data = get_tunes_damp(mring, rr)
 
     data0 = numpy.rec.fromarrays(
-        (rr, rr4, mring, orbit, emitxy, emitxyz),
+        (rr, rr4, mring, orbs[0], emitxy, emitxyz),
         dtype=ENVELOPE_DTYPE)
     if uint32refs.shape == (0,):
         data = numpy.recarray((0,), dtype=ENVELOPE_DTYPE)
@@ -278,24 +288,8 @@ def quantdiffmat(ring, orbit=None):
     OUTPUT
         diffusion matrix (6,6)
     '''
-    keep_lattice=False
-    refpts = numpy.arange(len(ring))
-    energy = ring.energy
-
-    if orbit is None:
-        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
-        keep_lattice = True
-
-    orbs = numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
-       
-    zr = numpy.zeros((6,6))
-    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
-         if elem.PassMethod.endswith('RadPass') else zr 
-         for i,elem in enumerate(ring)]
-    bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
-    diffmat=[(bbc + bbc.T)/2 for bbc in bbcum] 
+    bbcum, _ = _dmatr(ring, orbit=orbit)
+    diffmat = [(bbc + bbc.T)/2 for bbc in bbcum] 
     return numpy.array(diffmat)[-1]
 
 
