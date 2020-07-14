@@ -102,7 +102,3 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
         fitx = fit[:, 0]/factorial(numpy.arange(order + 1))
         fity = fit[:, 1]/factorial(numpy.arange(order + 1))
         return numpy.array([fitx, fity]), dpa, numpy.array(qz)
-
-
-Lattice.tunes_vs_amp = tunes_vs_amp
-Lattice.detuning = detuning
