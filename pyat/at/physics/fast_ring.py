@@ -11,6 +11,7 @@ from at.physics import HarmonicAnalysis, detuning
 from at.physics import find_elem_m66, find_orbit6, find_orbit4
 from at.physics import find_mpole_raddiff_matrix, linopt
 from at.physics import jmat
+from at.physics.linear import gen_lin_elem
 
 __all__ = ['fast_ring']
 
