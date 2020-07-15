@@ -318,7 +318,7 @@ def gen_quantdiff_elem(ring):
     Generates a quantum diffusion element
     '''
     dmat = quantdiffmat(ring)
-    lmat = _lmat(dmat)
+    lmat = numpy.asfortranarray(_lmat(dmat))
     diff_elem = Element('Diffusion',
                         Lmatp=lmat,
                         PassMethod='QuantDiffPass')
