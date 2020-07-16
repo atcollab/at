@@ -11,7 +11,7 @@ from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, \
     get_tunes_harmonic, get_chrom
 from at.lattice import Element
 
-__all__ = ['detuning', 'chromaticity']
+__all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
 
 
 def tunes_vs_amp(ring, amp=None, dim=0,
@@ -102,3 +102,24 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
         fitx = fit[:, 0]/factorial(numpy.arange(order + 1))
         fity = fit[:, 1]/factorial(numpy.arange(order + 1))
         return numpy.array([fitx, fity]), dpa, numpy.array(qz)
+
+def gen_detuning_elem(ring, orbit=None):
+    """
+    Generates an element that for detuning with amplitude
+    """
+    if orbit is None:
+        orbit, _ = find_orbit4(ring)
+    [lindata0, tunes, xsi, lindata] = ring.linopt(dp=0,
+                                                  get_chrom=True,
+                                                  orbit=orbit)
+
+    r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0)
+    nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
+                          Betax=lindata0.beta[0], Betay=lindata0.beta[1],
+                          Alphax=lindata0.alpha[0],
+                          Alphay=lindata0.alpha[1],
+                          Qpx=xsi[0], Qpy=xsi[1], A1=r1[0][0], A2=r1[0][1],
+                          A3=r1[1][1], T1=-orbit, T2=orbit)
+    return nonlin_elem
+
+
