@@ -54,6 +54,7 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
     bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
           if elem.PassMethod.endswith('RadPass') else b0
           for i, elem in enumerate(ring)]
+
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
@@ -313,11 +314,11 @@ def quantdiffmat(ring, orbit=None):
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring):
+def gen_quantdiff_elem(ring, orbit=None):
     '''
     Generates a quantum diffusion element
     '''
-    dmat = quantdiffmat(ring)
+    dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
     diff_elem = Element('Diffusion',
                         Lmatp=lmat,
