@@ -3,7 +3,7 @@ import numpy
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
 
-__all__ = ['amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices']
+__all__ = ['amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices', 'symplectify']
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 
@@ -75,6 +75,23 @@ def amat(tt):
     aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
         (nv, nv), order='F')
     return aa
+
+def symplectify(M):
+    """
+    symplectify makes a matrix more symplectic
+    follow Healy algorithm as described by McKay
+    BNL-75461-2006-CP
+    """
+    J = jmat(3)
+
+    V = numpy.dot(numpy.dot(J, numpy.identity(6) - M), numpy.linalg.inv(numpy.identity(6)+M))
+    #V should be almost symmetric.  Replace with symmetrized version.
+
+    W= ( V + V.T ) / 2
+    #Now reconstruct M from W
+    JW  = numpy.dot(J,W)
+    MS=numpy.dot(numpy.identity(6) + JW, numpy.linalg.inv(numpy.identity(6)-JW))
+    return MS
 
 
 def get_mode_matrices(a):
