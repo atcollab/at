@@ -92,7 +92,7 @@ def fast_ring(ring, split_inds):
         iend = get_refpts(ring_slice, 'xend')[0]
 
         cavs = ring_slice[:ibeg]
-        lin_elem = gen_m66_elem(ring_slice[ibeg:iend], orbit4[2*counter], orbit4[2*counter+1])
+        lin_elem = gen_m66_elem(ring_slice[ibeg:iend], orbit4[2*counter], orbit4[2*counter+1], radiation=False)
         lin_elem.FamName = lin_elem.FamName + '_' + str(counter)
         [ring_rg.append(cav) for cav in cavs]
         ring_rg.append(lin_elem)
@@ -103,9 +103,9 @@ def fast_ring(ring, split_inds):
         cavs = ring_slice_rad[:ibeg]
         
 
-        qd_elem = gen_quantdiff_elem(ring_slice_rad, orbit=orbit6[counter])
+        qd_elem = gen_quantdiff_elem(ring_slice_rad, orbit=orbit6[2*counter])
         qd_elem.FamName = qd_elem.FamName + '_' + str(counter)
-        lin_elem_rad = gen_m66_elem(ring_slice_rad[ibeg:iend], orbit6[2*counter], orbit6[2*counter+1])
+        lin_elem_rad = gen_m66_elem(ring_slice_rad[ibeg:iend], orbit6[2*counter], orbit6[2*counter+1], radiation=True)
         lin_elem_rad.FamName = lin_elem_rad.FamName + '_' + str(counter)
 
         [ring_rg_rad.append(cav) for cav in cavs]
