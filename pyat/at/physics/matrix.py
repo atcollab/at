@@ -200,7 +200,7 @@ def find_elem_m66(elem, orbit=None, **kwargs):
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
     return m66
 
-def gen_m66_elem(ring, o4b, o4e):
+def gen_m66_elem(ring, o4b, o4e, radiation=False):
     """
     converts a ring to a linear 6x6 matrix tracking elemtn
     """
@@ -212,9 +212,9 @@ def gen_m66_elem(ring, o4b, o4e):
     s = numpy.diff(numpy.array([allS[0], allS[-1]]))[0]
     I2 = numpy.sum(numpy.abs(theta * theta / lendp))
     m66_mat, _ = find_m66(ring, [], o4b)
-    m66norad = symplectify(m66_mat)
-    m66_elem = m66norad
-    lin_elem = M66('Linear', m66_elem, T1=-o4b, T2=o4e, Length=s, I2=I2)
+    if not radiation:
+        m66_mat = symplectify(m66_mat) #remove for damping
+    lin_elem = M66('Linear', m66_mat, T1=-o4b, T2=o4e, Length=s, I2=I2)
     return lin_elem
 
 Lattice.find_m44 = find_m44
