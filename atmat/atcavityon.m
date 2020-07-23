@@ -1,5 +1,5 @@
 function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
-%ATRADON switches RF cavities on
+%ATCAVITYON switches RF cavities on
 %
 %  [RING2,CAVINDEX,ENERGY]=ATCAVITYON(RING,CAVIPASS)
 %    Changes passmethods to get RF cavity acceleration and radiation
@@ -25,7 +25,7 @@ function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
 %% Written by Laurent S. Nadolski
 
 
-[cavipass]=parseargs({'CavityPass','auto',''},varargin);
+[cavipass]=parseargs({'CavityPass'},varargin);
 
 ring_output=ring_input;
 

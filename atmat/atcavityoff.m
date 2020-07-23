@@ -19,7 +19,7 @@ function [ring_output,cavitiesIndex]=atcavityoff(ring_input,varargin)
 %
 %% Written by Laurent S. Nadolski
 
-[cavipass] = parseargs({'IdentityPass','auto',''},varargin);
+[cavipass] = parseargs({'IdentityPass'},varargin);
 
 ring_output = ring_input;
 
