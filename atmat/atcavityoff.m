@@ -1,4 +1,4 @@
-function [ring_output,cavitiesIndex]=atcavityoff(ring_input,varargin)
+function [ring, ATCavityIndex]=atcavityoff(ring)
 %ATCAVITYOFF	switches cavities off
 %
 %  [RING2, CAVITIESINDEX] = ATCAVITYOFF(RING,CAVIPASS)
@@ -8,49 +8,36 @@ function [ring_output,cavitiesIndex]=atcavityoff(ring_input,varargin)
 %  INPUTS:
 %  1. RING      initial AT structure
 %  2. CAVIPASS  pass method for cavities (default IdentityPass)
-%                 '' makes no change,
 %
 %  OUPUTS
-%  1. RING2          output ring with cavities off
-%  2. CAVITIESINDEX  indices of radiative elements and cavities
+%  1. RING2          output ring with cavities switched off
+%  2. CAVITIESINDEX  indices cavities
 %
 %  See also ATCAVITYON, ATRADON, ATRADOFF
 
 %
 %% Written by Laurent S. Nadolski
 
-[cavipass] = parseargs({'IdentityPass'},varargin);
+% Look for cavities
+ATCavityIndex = findcells(ring, 'Frequency');
 
-ring_output = ring_input;
-
-if ~isempty(cavipass)
-    cavitiesIndex=atgetcells(ring_output,'Frequency');
-    if ~any(cavitiesIndex)
-        warning('AT:atradon:NoCavity', 'No cavity found in the structure');
-    end
-    ring_output(cavitiesIndex)=changepass(ring_output(cavitiesIndex),cavipass);
-else
-    cavitiesIndex=false(size(ring_output));
+% Return if no cavity found
+if isempty(ATCavityIndex)
+    atdisplay(1,'AT:atcavityoff: No cavities were found in the lattice.');
+    return
 end
 
-if any(cavitiesIndex)
-    atdisplay(1,['Cavities located at position ' num2str(find(cavitiesIndex)')]);
-else
-    atdisplay(1,'No cavity');
-end
+% Make column vector 
+ATCavityIndex =ATCavityIndex(:)';
 
-    function newline=changepass(line,newpass)
-        if strcmp(newpass,'auto')
-            passlist=strrep(atgetfieldvalues(line,'PassMethod'),'RadPass','Pass');
-        else
-            passlist=repmat({newpass},size(line));
-        end
-        newline=cellfun(@newelem,line,passlist,'UniformOutput',false);
-        
-        function elem=newelem(elem,newpass)
-            elem.PassMethod=newpass;
-            %elem=rmfield(elem,'Energy');
-        end
+% Loops over cavity elements
+for iCavity =ATCavityIndex        
+    % Based on cavity length, decide of the passmethod to switch off the cavities
+    if ring{iCavity}.Length == 0
+        ring{iCavity}.PassMethod = 'IdentityPass';
+    else
+        ring{iCavity}.PassMethod = 'DriftPass';
     end
+end
 
 end
