@@ -1,5 +1,5 @@
-function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
-%ATCAVITYON switches RF cavities on
+function [ring, ATCavityIndex]=atcavityon(ring,cavityPass)
+%ATRADON switches RF cavities on
 %
 %  [RING2,CAVINDEX,ENERGY]=ATCAVITYON(RING,CAVIPASS)
 %    Changes passmethods to get RF cavity acceleration and radiation
@@ -10,9 +10,8 @@ function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
 %       3) field "E0" of the global variable "GLOBVAL"
 %
 %  INPUTS
-%  1. RING		initial AT structure
-%  2. CAVIPASS	pass method for cavities (default CavityPass)
-%               '' makes no change
+%  1. RING	     	initial AT structure
+%  2. CAVITYPASS	pass method for cavities (default CavityPass)%              
 %
 %  OUPUTS
 %  1. RING2          output ring with cavities off
@@ -24,40 +23,39 @@ function [ring_output,cavitiesIndex,energy]=atcavityon(ring_input,varargin)
 %
 %% Written by Laurent S. Nadolski
 
-
-[cavipass]=parseargs({'CavityPass'},varargin);
-
-ring_output=ring_input;
-
-energy=atenergy(ring_output);
-if ~isempty(cavipass)
-    cavitiesIndex=atgetcells(ring_output,'Frequency');
-    if any(cavitiesIndex)
-        ring_output(cavitiesIndex)=changepass(ring_output(cavitiesIndex),cavipass,energy);
-    end
-else
-    cavitiesIndex=false(size(ring_output));
+if nargin == 1 
+    cavityPass = 'On';
 end
 
-if any(cavitiesIndex)
-    atdisplay(1,['Cavities located at position ' num2str(find(cavitiesIndex)')]);
-else
-    atdisplay(1,'No cavity');
+% Look for cavity location
+ATCavityIndex = findcells(ring, 'Frequency');
+
+% Return if no cavity found
+if isempty(ATCavityIndex)
+    atdisplay(1,'AT:atcavityon: No cavities were found in the lattice.');
+    return
 end
 
-    function newline=changepass(line,newpass,nrj)
-        if strcmp(newpass,'auto')
-            passlist=atgetfieldvalues(line,'PassMethod');
-            ok=cellfun(@(psm) isempty(strfind(psm,'RadPass')),passlist);
-            passlist(ok)=strrep(passlist(ok),'Pass','RadPass');
-        else
-            passlist=repmat({newpass},size(line));
-        end
-        newline=cellfun(@newelem,line,passlist,'UniformOutput',false);
-        
-        function elem=newelem(elem,newpass)
-            elem.PassMethod=newpass;
-            elem.Energy=nrj;
-        end
+% Make column vector 
+ATCavityIndex =ATCavityIndex(:)';
+
+% Loops over cavity elements
+for iCavity =ATCavityIndex
+    
+    if size(cavityPass,1) == 1
+        CavityString = deblank(cavityPass);
+    elseif size(cavityPass,1) == length(ATCavityIndex)
+        CavityString = deblank(cavityPass(iCavity,:));
+    else
+        error('AT:atcavityoff: Number of rows in the input string must be 1 row or equal to the number of cavities.');
     end
+    
+    % Set cavity pass method    
+    if strcmpi(CavityString,'On')
+        ring{iCavity}.PassMethod = 'CavityPass';        
+    else % Custom passmethod
+        ring{iCavity}.PassMethod = CavityString;
+    end
+end
+
 end
