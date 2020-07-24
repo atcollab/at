@@ -1,5 +1,5 @@
 function [ring, ATCavityIndex]=atcavityoff(ring)
-%ATCAVITYOFF	switches cavities off
+%ATCAVITYOFF switches RF cavities off
 %
 %  [RING2, CAVITIESINDEX] = ATCAVITYOFF(RING,CAVIPASS)
 %    Changes passmethods to turn off radiation
