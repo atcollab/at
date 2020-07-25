@@ -1,17 +1,13 @@
 function [ring, ATCavityIndex]=atcavityon(ring,cavityPass)
 %ATRADON switches RF cavities on
 %
-%  [RING2,CAVINDEX,ENERGY]=ATCAVITYON(RING,CAVIPASS)
+%  [RING2,CAVINDEX]=ATCAVITYON(RING,CAVITYPASS)
 %    Changes passmethods to get RF cavity acceleration and radiation
-%    damping. ATRADON also sets the "Energy" field on the modified elements,
-%    looking for the machine energy in:
-%       1) 1st 'RingParam' element
-%       2) 1st 'RFCavity' element
-%       3) field "E0" of the global variable "GLOBVAL"
+%    damping. 
 %
 %  INPUTS
 %  1. RING	     	initial AT structure
-%  2. CAVITYPASS	pass method for cavities (default CavityPass)%              
+%  2. CAVITYPASS	customed passmethod for cavities (default CavityPass)      
 %
 %  OUPUTS
 %  1. RING2          output ring with cavities off
