@@ -1,13 +1,12 @@
 function [ring, ATCavityIndex]=atcavityoff(ring)
 %ATCAVITYOFF switches RF cavities off
 %
-%  [RING2, CAVITIESINDEX] = ATCAVITYOFF(RING,CAVIPASS)
+%  [RING2, CAVITIESINDEX] = ATCAVITYOFF(RING)
 %    Changes passmethods to turn off radiation
 %   damping.
 %
 %  INPUTS:
 %  1. RING      initial AT structure
-%  2. CAVIPASS  pass method for cavities (default IdentityPass)
 %
 %  OUPUTS
 %  1. RING2          output ring with cavities switched off
