@@ -107,7 +107,7 @@ end
         if (elem.Length == 0)
             newpass='IdentityPass';
         else
-            newpass='DriftPassPass';
+            newpass='DriftPass';
         end
     end
     
