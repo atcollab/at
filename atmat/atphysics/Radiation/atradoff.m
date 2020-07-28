@@ -1,4 +1,4 @@
-function [ring2,radelemIndex,cavitiesIndex]=atradoff(ring1,varargin)
+function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %ATRADOFF  switches radiation and cavity off
 %
 %   [RING2,RADINDEX,CAVINDEX] = ATRADOFF(RING,CAVIPASS,BENDPASS,QUADPASS)
@@ -6,16 +6,26 @@ function [ring2,radelemIndex,cavitiesIndex]=atradoff(ring1,varargin)
 %
 %  INPUTS
 %  1. RING      initial AT structure
-%  2. CAVIPASS  pass method for cavities (default IdentityPass)
+%  2. CAVIPASS  pass method for cavities
 %               '' makes no change,
-%  3. BENDPASS  pass method for bending magnets. Special values:
+%               'auto' sets'IdentityPass' or 'DriftPass' depending of cavity length)
+%               (default: 'auto')
+%  3. BENDPASS  pass method for bending magnets
 %               '' makes no change,
-%               'auto' wille substitute 'RadPass' with 'Pass' in any method
+%               'auto' substitutes 'RadPass' with 'Pass' in any method
 %               (default: 'auto')
 %  4. QUADPASS  pass method for quadrupoles
 %               '' makes no change,
-%               'auto' wille substitute 'RadPass' with 'Pass' in any method
-%               (default: '')
+%               'auto' substitutes 'RadPass' with 'Pass' in any method
+%               (default: 'auto')
+%  5. SEXTUPASS pass method for sextupoles
+%               '' makes no change,
+%               'auto' substitutes 'RadPass' with 'Pass' in any method
+%               (default: 'auto')
+%  6. OCTUPASS  pass method for octupoles
+%               '' makes no change,
+%               'auto' substitutes 'RadPass' with 'Pass' in any method
+%               (default: 'auto')
 %
 %   OUPUTS
 %   1. RING2     Output ring
@@ -24,59 +34,81 @@ function [ring2,radelemIndex,cavitiesIndex]=atradoff(ring1,varargin)
 %
 %  See also ATRADON, ATCAVITYON, ATCAVITYOFF
 
-[cavipass,bendpass,quadpass]=parseargs({'IdentityPass','auto',''},varargin);
+[cavipass,bendpass,quadpass,sextupass,octupass]=getargs(varargin,'auto','auto','auto','auto','auto');
 
-ring2=ring1;
+[ring,cavities]=changepass(ring,cavipass,@(rg) atgetcells(rg,'Frequency'),@autoCavityPass,'Cavity');
 
-if ~isempty(cavipass)
-    cavitiesIndex=atgetcells(ring2,'Frequency');
-    if ~any(cavitiesIndex)
-        warning('AT:atradon:NoCavity', 'No cavity found in the structure');
-    end
-    ring2(cavitiesIndex)=changepass(ring2(cavitiesIndex),cavipass);
-else
-    cavitiesIndex=false(size(ring2));
+[ring,dipoles]=changepass(ring,bendpass,@(rg) atgetcells(ring,'BendingAngle',@(elem,bangle) bangle~=0),@autoMultiPolePass,'Bend');
+
+[ring,quadrupoles]=changepass(ring,quadpass,@(rg) selmpole(rg,2),@autoMultiPolePass,'Quad');
+
+[ring,sextupoles]=changepass(ring,sextupass,@(rg) selmpole(rg,3),@autoMultiPolePass,'Sextu');
+
+[ring,octupoles]=changepass(ring,octupass,@(rg) selmpole(rg,4),@autoMultiPolePass,'Octu');
+
+cavitiesIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'CavityPass'));
+radelemIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));
+
+if any(cavities)
+    atdisplay(1,['Cavities modified at position ' num2str(find(cavities)')]);
 end
 
-if ~isempty(bendpass)
-    isdipole=@(elem,bangle) bangle~=0;
-    dipoles=atgetcells(ring2,'BendingAngle',isdipole);
-    if sum(dipoles) <= 0
-        warning('AT:atradon:NoBend', 'No dipole in the structure');
-    end
-    ring2(dipoles)=changepass(ring2(dipoles),bendpass);
-else
-    dipoles=false(size(ring2));
+radnum=sum(dipoles|quadrupoles|sextupoles|octupoles);
+if radnum > 0
+    atdisplay(1,[num2str(radnum) ' elements switched to include radiation']);
 end
 
-if ~isempty(quadpass)
-    isquadrupole=@(elem,polyb) length(polyb) >= 2 && polyb(2)~=0;
-    quadrupoles=atgetcells(ring2,'PolynomB',isquadrupole) & ~dipoles;
-    if sum(quadrupoles) <= 0
-        warning('AT:atradon:NoQuad', 'No quadrupole in the structure');
-    end
-    ring2(quadrupoles)=changepass(ring2(quadrupoles),quadpass);
-else
-    quadrupoles=false(size(ring2));
-end
-
-radelemIndex=dipoles|quadrupoles;
-
-disp(['Cavities located at position ' num2str(find(cavitiesIndex)')]);
-disp([num2str(sum(radelemIndex)) ' elements with radiation switched off']);
-
-    function newline=changepass(line,newpass)
-    if strcmp(newpass,'auto')
-        passlist=strrep(atgetfieldvalues(line,'PassMethod'),'RadPass','Pass');
-    else
-        passlist=repmat({newpass},size(line));
-    end
-    newline=cellfun(@newelem,line,passlist,'UniformOutput',false);
-
+    function [ring,mask]=changepass(ring,newpass,selfunc,autopass,code)
+        if isempty(newpass)
+            mask=false(size(ring));
+        else
+            mask=selfunc(ring);
+            if any(mask)
+                passlist(1:sum(mask),1)=cellstr(newpass);
+                ok=~cellfun(@isempty,passlist);
+                mask(mask)=ok;
+            end
+            if any(mask)
+                ring(mask)=cellfun(@newelem,ring(mask),passlist(ok),'UniformOutput',false);
+            else
+                warning(['AT:atradoff:NO' code], ['no ' code ' modified']),
+            end
+        end
+        
         function elem=newelem(elem,newpass)
+            % Return the modified element
+            if strcmp(newpass,'auto')
+                newpass=autopass(elem);
+            end
             elem.PassMethod=newpass;
             %elem=rmfield(elem,'Energy');
         end
+        
     end
 
+    function mask=selmpole(ring,order)
+        % Select multipoles of order "order"
+        mask=atgetcells(ring,'PolynomB',@ismpole);
+        
+        function ok=ismpole(elem,polyb)
+            om1=order-1;
+            ok = ~(isfield(elem,'BendingAngle') && elem.BendingAngle~=0);
+            ok=ok && elem.MaxOrder >= om1 && all(polyb(1:om1) == 0) && polyb(order) ~= 0;
+        end
+    end
+
+    function newpass=autoMultiPolePass(elem)
+        % Default PassMethod for multipoles
+        newpass=strrep(elem.PassMethod,'RadPass','Pass');
+    end
+
+    function newpass=autoCavityPass(elem)
+        % Default PassMethod for cavities
+        if (elem.Length == 0)
+            newpass='IdentityPass';
+        else
+            newpass='DriftPassPass';
+        end
+    end
+    
 end
