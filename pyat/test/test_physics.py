@@ -270,8 +270,8 @@ def test_nl_detuning_chromaticity(hmba_lattice):
                                    [0.38156263, 0.85437553]],
                                   rtol=1e-5)
     numpy.testing.assert_allclose(q1,
-                                  [[3005.87694885, -3256.61063654],
-                                   [-3259.0625278, 1615.46553512]],
+                                  [[3005.87815534, -3256.60645218],
+                                   [-3258.03046557, 1615.46919681]],
                                   rtol=1e-5)
 
 def test_quantdiff(hmba_lattice):

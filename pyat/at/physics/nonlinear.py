@@ -19,7 +19,15 @@ def tunes_vs_amp(ring, amp=None, dim=0,
     """
     Generates a range of tunes for varying x, y, or z amplitudes
     """
-    def _gen_part(ring, amp, dim, orbit, nturns):
+
+    def _gen_part(ring, amp, dim, orbit, ld, nturns):
+        invx = numpy.array([[1/numpy.sqrt(ld['beta'][0]), 0],
+                            [ld['alpha'][0]/numpy.sqrt(ld['beta'][0]),
+                            numpy.sqrt(ld['beta'][0])]])
+
+        invy = numpy.array([[1/numpy.sqrt(ld['beta'][1]), 0],
+                            [ld['alpha'][1]/numpy.sqrt(ld['beta'][1]),
+                            numpy.sqrt(ld['beta'][1])]])
         part = numpy.array([orbit, ] * len(amp)).T + 1.0e-6
         part[dim, :] += amp
         part = lattice_pass(ring, part, nturns=nturns)
@@ -28,21 +36,21 @@ def tunes_vs_amp(ring, amp=None, dim=0,
         partxp = numpy.reshape(part[1, :], (sh[1], sh[3]))
         party = numpy.reshape(part[2, :], (sh[1], sh[3]))
         partyp = numpy.reshape(part[3, :], (sh[1], sh[3]))
-        return partx + 1j*partxp, party + 1j*partyp
+        px = numpy.array([numpy.matmul(invx, [partx[i], partxp[i]])
+                          for i in range(len(amp))])
+        py = numpy.array([numpy.matmul(invy, [party[i], partyp[i]])
+                          for i in range(len(amp))])
+        return px[:,0,:] - 1j*px[:,1,:], py[:,0,:] - 1j*py[:,1,:]
+
 
     l0, q0, _, _ = linopt(ring, dp=dp)
     orbit = l0['closed_orbit']
-    fmin = numpy.maximum([0, 0], q0 - window)
-    fmax = numpy.minimum([1, 1], q0 + window)
-
     tunes = []
 
     if amp is not None:
-        partx, party = _gen_part(ring, amp, dim, orbit, nturns)
-        qx = get_tunes_harmonic(partx, 'laskar',
-                                fmin=fmin[0], fmax=fmax[0])
-        qy = get_tunes_harmonic(party, 'laskar',
-                                fmin=fmin[1], fmax=fmax[1])
+        partx, party = _gen_part(ring, amp, dim, orbit, l0, nturns)
+        qx = get_tunes_harmonic(partx, 'laskar')
+        qy = get_tunes_harmonic(party, 'laskar')
         tunes = numpy.vstack((qx, qy)).T
 
     return numpy.array(tunes)
