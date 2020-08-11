@@ -56,7 +56,7 @@ def tunes_vs_amp(ring, amp=None, dim=0,
     return numpy.array(tunes)
 
 
-def detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0, window=1,
+def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
              nturns=512):
     """
     This function uses tunes_vs_amp to compute the tunes for
