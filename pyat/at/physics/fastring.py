@@ -10,13 +10,13 @@ from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 
 __all__ = ['fast_ring']
 
+
 def rearrange(ring, split_inds=[]):
-    
     iends = numpy.concatenate((split_inds, [len(ring)+1]))
     ibegs = numpy.concatenate(([0], iends[:-1]))
-    iends = iends[iends!=0]
-    ibegs = ibegs[ibegs!=len(ring)+1]
-    all_rings = [ring[int(ibeg):int(iend)] 
+    iends = iends[iends != 0]
+    ibegs = ibegs[ibegs != len(ring) + 1]
+    all_rings = [ring[int(ibeg):int(iend)]
                  for ibeg, iend in zip(ibegs, iends)]
 
     for ring_slice in all_rings:
@@ -24,10 +24,10 @@ def rearrange(ring, split_inds=[]):
         for i in numpy.arange(len(icav)):
             cav_elem = ring_slice.pop(int(icav[i]))
             if cav_elem.Length != 0:
-                cavdrift = Drift('CavDrift',cav_elem.Length)
-                ring_slice.insert(icav[i],CavDrift)
-                icav= icav+1
-            ring_slice.insert(0,cav_elem)
+                cavdrift = Drift('CavDrift', cav_elem.Length)
+                ring_slice.insert(icav[i], cavdrift)
+                icav = icav + 1
+            ring_slice.insert(0, cav_elem)
         ring_slice.insert(len(icav), Marker('xbeg'))
         ring_slice.append(Marker('xend'))
 
@@ -36,9 +36,9 @@ def rearrange(ring, split_inds=[]):
 
 def merge_rings(all_rings):
     ringnorad = all_rings[0]
-    if len(all_rings)>1:
+    if len(all_rings) > 1:
         for ringi in all_rings[1:]:
-          ringnorad+=ringi
+            ringnorad += ringi
     ringrad = ringnorad.deepcopy()
     if ringnorad.radiation:
         ringnorad.radiation_off(quadrupole_pass='auto')
@@ -53,7 +53,7 @@ def fast_ring(ring, split_inds=[]):
 
     ibegs = get_refpts(ringnorad, 'xbeg')
     iends = get_refpts(ringnorad, 'xend')
-    markers = numpy.sort(numpy.concatenate((ibegs, iends))) 
+    markers = numpy.sort(numpy.concatenate((ibegs, iends)))
 
     _, orbit4 = ringnorad.find_sync_orbit(dct=0.0, refpts=markers)
     _, orbit6 = ringrad.find_orbit6(refpts=markers)
@@ -76,12 +76,14 @@ def fast_ring(ring, split_inds=[]):
         else:
             ring_slice_rad.radiation_on(quadrupole_pass='auto')
 
-        lin_elem = gen_m66_elem(ring_slice, orbit4[2*counter], orbit4[2*counter+1])
+        lin_elem = gen_m66_elem(ring_slice, orbit4[2*counter],
+                                orbit4[2*counter+1])
         lin_elem.FamName = lin_elem.FamName + '_' + str(counter)
-        
+
         qd_elem = gen_quantdiff_elem(ring_slice_rad, orbit=orbit6[2*counter])
         qd_elem.FamName = qd_elem.FamName + '_' + str(counter)
-        lin_elem_rad = gen_m66_elem(ring_slice_rad, orbit6[2*counter], orbit6[2*counter+1])
+        lin_elem_rad = gen_m66_elem(ring_slice_rad, orbit6[2*counter],
+                                    orbit6[2*counter+1])
         lin_elem_rad.FamName = lin_elem_rad.FamName + '_' + str(counter)
 
         [ringnorad.append(cav) for cav in cavs]
@@ -96,5 +98,3 @@ def fast_ring(ring, split_inds=[]):
     del ringrad[:markers[-1]+1]
 
     return ringnorad, ringrad
-
-

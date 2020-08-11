@@ -40,8 +40,7 @@ def tunes_vs_amp(ring, amp=None, dim=0,
                           for i in range(len(amp))])
         py = numpy.array([numpy.matmul(invy, [party[i], partyp[i]])
                           for i in range(len(amp))])
-        return px[:,0,:] - 1j*px[:,1,:], py[:,0,:] - 1j*py[:,1,:]
-
+        return px[:, 0, :] - 1j*px[:, 1, :], py[:, 0, :] - 1j*py[:, 1, :]
 
     l0, q0, _, _ = linopt(ring, dp=dp)
     orbit = l0['closed_orbit']
@@ -111,6 +110,7 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
         fity = fit[:, 1]/factorial(numpy.arange(order + 1))
         return numpy.array([fitx, fity]), dpa, numpy.array(qz)
 
+
 def gen_detuning_elem(ring, orbit=None):
     """
     Generates an element that for detuning with amplitude
@@ -121,7 +121,8 @@ def gen_detuning_elem(ring, orbit=None):
                                                   get_chrom=True,
                                                   orbit=orbit)
 
-    r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0)
+    r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4,
+                                        ym=1.0e-4, npoints=3, dp=0)
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
                           Betax=lindata0.beta[0], Betay=lindata0.beta[1],
                           Alphax=lindata0.alpha[0],
@@ -129,5 +130,3 @@ def gen_detuning_elem(ring, orbit=None):
                           Qpx=xsi[0], Qpy=xsi[1], A1=r1[0][0], A2=r1[0][1],
                           A3=r1[1][1], T1=-orbit, T2=orbit)
     return nonlin_elem
-
-
