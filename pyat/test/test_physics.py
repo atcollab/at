@@ -252,7 +252,7 @@ def test_nl_detuning_chromaticity(hmba_lattice):
     nlqpharm, _, _ = at.nonlinear.chromaticity(hmba_lattice,
                                                method='laskar', npoints=11)
     q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
-                                               npoints=11, window=0.1)
+                                               npoints=11, window=1)
     numpy.testing.assert_allclose(nlqplin,
                                   [[0.38156741, 0.17908186,
                                     1.18655795, -16.47368184],
@@ -270,8 +270,8 @@ def test_nl_detuning_chromaticity(hmba_lattice):
                                    [0.38156263, 0.85437553]],
                                   rtol=1e-5)
     numpy.testing.assert_allclose(q1,
-                                  [[3005.87815534, -3256.60645218],
-                                   [-3258.03046557, 1615.46919681]],
+                                  [[3005.74776344, -3256.81838517],
+                                   [-3258.24669916,  1615.13729938]],
                                   rtol=1e-5)
 
 def test_quantdiff(hmba_lattice):
