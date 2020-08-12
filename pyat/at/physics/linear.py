@@ -303,8 +303,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     else:
         A = M
         B = N
-        C = numpy.NaN
-        g = numpy.NaN
+        C = numpy.zeros((2, 2))
+        g = 1.0
 
     # Get initial twiss parameters
     a0_a, b0_a, tune_a = _closure(A)
