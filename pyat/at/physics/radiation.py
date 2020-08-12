@@ -59,11 +59,11 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
 
 
 def _lmat(dmat):
-    '''
+    """
     lmat is Cholesky decomp of dmat unless diffusion is 0 in
     vertical.  Then do chol on 4x4 hor-long matrix and put 0's
     in vertical
-    '''
+    """
     lmat = numpy.zeros((6, 6))
     try:
         lmat = numpy.linalg.cholesky(dmat)
@@ -297,7 +297,7 @@ def get_energy_loss(ring):
 
 @check_radiation(True)
 def quantdiffmat(ring, orbit=None):
-    '''
+    """
     This function computes the diffusion matrix of the whole ring
 
     PARAMETERS
@@ -306,7 +306,7 @@ def quantdiffmat(ring, orbit=None):
 
     OUTPUT
         diffusion matrix (6,6)
-    '''
+    """
     bbcum, _ = _dmatr(ring, orbit=orbit)
     diffmat = [(bbc + bbc.T)/2 for bbc in bbcum]
     return numpy.round(diffmat[-1], 24)
@@ -314,9 +314,9 @@ def quantdiffmat(ring, orbit=None):
 
 @check_radiation(True)
 def gen_quantdiff_elem(ring):
-    '''
+    """
     Generates a quantum diffusion element
-    '''
+    """
     dmat = quantdiffmat(ring)
     lmat = numpy.asfortranarray(_lmat(dmat))
     diff_elem = Element('Diffusion',
