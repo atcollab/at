@@ -180,7 +180,7 @@ def get_twiss(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
 # noinspection PyPep8Naming
 @check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
-           keep_lattice=False, ddp=DDP, coupled=True):
+           keep_lattice=False, ddp=DDP, coupled=True, twiin=None):
     """
     Perform linear analysis of a lattice
 
@@ -269,13 +269,40 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
+    if twiin is not None:
+        print(twiin['dispersion'])
+        tune = numpy.zeros((2,))
+        try:
+            orbit = twiin['closed_orbit'] 
+        except KeyError:
+            print('Orbit not found in twiin, setting to zero, dp')
+            orbit = numpy.zeros((6,))
+        try:
+            a0_a, a0_b = twiin['alpha'][0], twiin['alpha'][1]
+        except KeyError:
+            raise ValueError('Initial alpha required for transfer line')
+        try:
+            b0_a, b0_b = twiin['beta'][0], twiin['beta'][1]
+        except KeyError:
+            raise ValueError('Initial beta required for transfer line')  
+        try:
+            m0_a, m0_b = twiin['mu'][0], twiin['mu'][1]
+        except KeyError: 
+            print('Mu not found in twiin, setting to zero')
+            m0_a, m0_b = 0, 0   
+        try:      
+            disp0 = twiin['dispersion']
+        except KeyError: 
+            print('Dispersion not found in twiin, setting to zero')
+            disp0 = numpy.zeros((4,))
+
     if orbit is None:
         orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
-        keep_lattice = True
+        keep_lattice = True 
+
     orbs = numpy.squeeze(
         lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
-                     keep_lattice=keep_lattice),
-        axis=(1, 3)).T
+                     keep_lattice=keep_lattice), axis=(1, 3)).T
     m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
     nrefs = uintrefs.size
 
@@ -307,21 +334,35 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         g = 1.0
 
     # Get initial twiss parameters
-    a0_a, b0_a, tune_a = _closure(A)
-    a0_b, b0_b, tune_b = _closure(B)
-    tune = numpy.array([tune_a, tune_b])
+    if twiin is None:
+        a0_a, b0_a, tune_a = _closure(A)
+        a0_b, b0_b, tune_b = _closure(B)
+        tune = numpy.array([tune_a, tune_b])
 
     if get_chrom:
+       
+        if twiin is not None:
+            orbit[0:5] += numpy.append(disp0*0.5*ddp, 0.5 * ddp)
+
         d0_up, tune_up, _, l_up = linopt(ring, dp + 0.5 * ddp, uintrefs,
                                          keep_lattice=True,
-                                         coupled=coupled)
+                                         coupled=coupled, twiin=twiin)
+        if twiin is not None:
+            orbit[0:5] -= numpy.append(disp0*ddp, ddp)
+
         d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs,
                                                keep_lattice=True,
-                                               coupled=coupled)
+                                               coupled=coupled, twiin=twiin)
+        if twiin is not None:
+            orbit[0:5] += numpy.append(disp0*0.5*ddp, 0.5*ddp) 
+
+        print('get_chrom')
+        print('%.16f' % (tune_up[0]),'%.16f' % (tune_down[0]))
         chrom = (tune_up - tune_down) / ddp
         dispersion = (l_up['closed_orbit'] -
                       l_down['closed_orbit'])[:, :4] / ddp
-        disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
+        if twiin is None:
+            disp0 = (d0_up['closed_orbit'] - d0_down['closed_orbit'])[:4] / ddp
     else:
         chrom = numpy.array([numpy.NaN, numpy.NaN])
         dispersion = numpy.NaN
@@ -367,6 +408,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         lindata['B'] = BL
         lindata['C'] = CL
         lindata['gamma'] = gamma
+
+        if twiin is not None:
+            tune = lindata['mu'][-1,:]/(2*numpy.pi)
+            tune -= numpy.floor(tune)
 
     return lindata0, tune, chrom, lindata
 
