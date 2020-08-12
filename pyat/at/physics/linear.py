@@ -228,14 +228,16 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         Only computed if 'get_chrom' is True
         m44             (4, 4) transfer matrix M from the beginning of ring
                         to the entrance of the element [2]
-        A               (2, 2) matrix A in [3]
-        B               (2, 2) matrix B in [3]
-        C               (2, 2) matrix C in [3]
-        gamma           gamma parameter of the transformation to eigenmodes
         mu              [mux, muy], betatron phase (modulo 2*pi)
         beta            [betax, betay] vector
         alpha           [alphax, alphay] vector
         All values given at the entrance of each element specified in refpts.
+
+        In case coupled = True additional outputs are available:
+        A               (2, 2) matrix A in [3]
+        B               (2, 2) matrix B in [3]
+        C               (2, 2) matrix C in [3]
+        gamma           gamma parameter of the transformation to eigenmodes
 
         Field values can be obtained with either
         lindata['idx']    or
@@ -301,8 +303,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     else:
         A = M
         B = N
-        C = numpy.zeros((2, 2))
-        g = 1.0
+        C = numpy.NaN
+        g = numpy.NaN
 
     # Get initial twiss parameters
     a0_a, b0_a, tune_a = _closure(A)
@@ -338,11 +340,17 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             MSA, MSB, gamma, CL = zip(*[analyze(ms44) for ms44 in mstack])
             msa = numpy.stack(MSA, axis=0)
             msb = numpy.stack(MSB, axis=0)
+            AL = [ms.dot(A.dot(_jmt.dot(ms.T.dot(_jmt.T))))
+                  for ms in msa]
+            BL = [ms.dot(B.dot(_jmt.dot(ms.T.dot(_jmt.T))))
+                  for ms in msb]
         else:
             msa = mstack[:, :2, :2]
             msb = mstack[:, 2:, 2:]
-            gamma = 1.0
-            CL = numpy.zeros((1, 2, 2))
+            AL = numpy.NaN
+            BL = numpy.NaN
+            CL = numpy.NaN
+            gamma = numpy.NaN
 
         alpha_a, beta_a, mu_a = _twiss22(msa, a0_a, b0_a)
         alpha_b, beta_b, mu_b = _twiss22(msb, a0_b, b0_b)
@@ -353,14 +361,12 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         lindata['m44'] = mstack
         lindata['alpha'] = numpy.stack((alpha_a, alpha_b), axis=1)
         lindata['beta'] = numpy.stack((beta_a, beta_b), axis=1)
+        lindata['dispersion'] = dispersion
         lindata['mu'] = numpy.stack((mu_a, mu_b), axis=1)
-        lindata['A'] = [ms.dot(A.dot(_jmt.dot(ms.T.dot(_jmt.T))))
-                        for ms in msa]
-        lindata['B'] = [ms.dot(B.dot(_jmt.dot(ms.T.dot(_jmt.T))))
-                        for ms in msb]
+        lindata['A'] = AL
+        lindata['B'] = BL
         lindata['C'] = CL
         lindata['gamma'] = gamma
-        lindata['dispersion'] = dispersion
 
     return lindata0, tune, chrom, lindata
 
