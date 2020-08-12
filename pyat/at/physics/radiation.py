@@ -51,9 +51,9 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
         lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
                      keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
+    bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
           if elem.PassMethod.endswith('RadPass') else b0
-          for i, elem in enumerate(ring)]
+          for elem, elemorb in zip(ring,orbs)]
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
