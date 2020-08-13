@@ -169,10 +169,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         except KeyError:
             raise ValueError('Initial beta required for transfer line')  
         try:
-            q0 = numpy.array([twiin['mu'][0], twiin['mu'][1]])/(2*pi)
+            tune = numpy.array([twiin['mu'][0], twiin['mu'][1]])/(2*pi)
         except KeyError: 
             print('Mu not found in twiin, setting to zero')
-            q0 = numpy.zeros((2,))   
+            tune = numpy.zeros((2,))   
         try:      
             disp0 = twiin['dispersion']
         except KeyError: 
@@ -220,7 +220,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     if twiin is None:
         a0_a, b0_a, tune_a = _closure(A)
         a0_b, b0_b, tune_b = _closure(B)
-        q0 = numpy.array([tune_a, tune_b])
+        tune = numpy.array([tune_a, tune_b])
 
     if get_chrom:      
         if twiin is not None:
@@ -245,10 +245,11 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         dispersion = numpy.NaN
         disp0 = numpy.NaN
 
+
     lindata0 = numpy.rec.fromarrays(
         (len(ring), get_s_pos(ring, len(ring))[0], orbit, disp0,
          numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]),
-         2.0 * pi * q0, m44, A, B, C, g),
+         2.0 * pi * tune, m44, A, B, C, g),
         dtype=LINDATA_DTYPE)
 
     # Propagate to reference points
@@ -274,12 +275,11 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         alpha_b, beta_b, mu_b = _twiss22(msb, a0_b, b0_b)
 
         if twiin is not None:
-            tune = numpy.array([mu_a[-1],mu_b[-1]])/(2*numpy.pi)
-            tune -= numpy.floor(tune)
-            mu_a += q0[0]*2*pi
-            mu_b += q0[1]*2*pi
-        else:
-            tune = q0
+            qtmp = numpy.array([mu_a[-1],mu_b[-1]])/(2*numpy.pi)
+            qtmp -= numpy.floor(qtmp)
+            mu_a += tune[0]*2*pi
+            mu_b += tune[1]*2*pi
+            tune = qtmp
 
         lindata['idx'] = uintrefs
         lindata['s_pos'] = get_s_pos(ring, uintrefs)
