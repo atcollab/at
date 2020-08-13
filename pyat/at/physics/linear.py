@@ -65,8 +65,7 @@ def _closure(m22):
 # noinspection PyPep8Naming
 @check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
-           keep_lattice=False, ddp=DDP, coupled=True, twiin=None,
-           unwrap=True):
+           keep_lattice=False, ddp=DDP, coupled=True, twiin=None):
     """
     Perform linear analysis of a lattice
 
