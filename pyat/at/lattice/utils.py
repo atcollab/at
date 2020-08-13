@@ -302,6 +302,8 @@ def set_value_refpts(ring, refpts, var, value, order=None, increment=False):
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
     if increment:
         value = value + get_value_refpts(ring, uintrefs, var, order=order)
+    else:
+        value = value + numpy.zeros(len(refpts))
     if order is None:
         for i, ii in enumerate(uintrefs):
             setattr(ring[ii], var, value[i])
