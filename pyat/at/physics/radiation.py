@@ -51,20 +51,19 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
         lattice_pass(ring, orbit.copy(order='K'), refpts=allrefs,
                      keep_lattice=keep_lattice), axis=(1, 3)).T
     b0 = numpy.zeros((6, 6))
-    bb = [find_mpole_raddiff_matrix(elem, orbs[i], energy)
+    bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
           if elem.PassMethod.endswith('RadPass') else b0
-          for i, elem in enumerate(ring)]
-
+          for elem, elemorb in zip(ring,orbs)]
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
 
 def _lmat(dmat):
-    '''
+    """
     lmat is Cholesky decomp of dmat unless diffusion is 0 in
     vertical.  Then do chol on 4x4 hor-long matrix and put 0's
     in vertical
-    '''
+    """
     lmat = numpy.zeros((6, 6))
     try:
         lmat = numpy.linalg.cholesky(dmat)
@@ -298,7 +297,7 @@ def get_energy_loss(ring):
 
 @check_radiation(True)
 def quantdiffmat(ring, orbit=None):
-    '''
+    """
     This function computes the diffusion matrix of the whole ring
 
     PARAMETERS
@@ -307,18 +306,18 @@ def quantdiffmat(ring, orbit=None):
 
     OUTPUT
         diffusion matrix (6,6)
-    '''
+    """
     bbcum, _ = _dmatr(ring, orbit=orbit)
     diffmat = [(bbc + bbc.T)/2 for bbc in bbcum]
     return numpy.round(diffmat[-1], 24)
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring, orbit=None):
-    '''
+def gen_quantdiff_elem(ring):
+    """
     Generates a quantum diffusion element
-    '''
-    dmat = quantdiffmat(ring, orbit=orbit)
+    """
+    dmat = quantdiffmat(ring)
     lmat = numpy.asfortranarray(_lmat(dmat))
     diff_elem = Element('Diffusion',
                         Lmatp=lmat,
