@@ -535,7 +535,7 @@ def get_tune(ring, method='linopt', dp=0, **kwargs):
 
     def gen_centroid(ring, ampl, nturns, dp, remove_dc):
         orbit, _ = find_orbit4(ring, dp)
-        ld, _, _, _ = linopt(ring, dp)
+        ld, _, _, _ = linopt(ring, dp, orbit=orbit)
 
         invx = numpy.array([[1/numpy.sqrt(ld['beta'][0]), 0],
                             [ld['alpha'][0]/numpy.sqrt(ld['beta'][0]),
