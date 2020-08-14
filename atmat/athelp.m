@@ -1,6 +1,10 @@
 function athelp(varargin)
 %ATHELP generate the list of Accelerator Toolbox functions
 %
+%  INPUTS
+%    No argument - open the help file in Matlab browser
+%    'new'       - force the update of the documentation, which requires a few more seconds
+%
 %  EXAMPLES
 %  1. athelp: full help.
 %  2. for selected help, use help directory where directory is
@@ -36,6 +40,8 @@ NEWFLAG=getflag(varargin,'new');
 
 ATROOT = atroot;
 
+fileName = 'athelp.mat';
+
 DIR_old = pwd;
 cd(fileparts(ATROOT))
 
@@ -43,14 +49,14 @@ cd(fileparts(ATROOT))
 %folder should not include full path
 [~, folder] = fileparts(cd);
 
-if ~isfile('helpdoc.mat') || NEWFLAG
+if ~isfile(fileName) || NEWFLAG
     fprintf('** Generating doc for a few seconds **\n');
     html = help2html(folder,'AT DOC','-doc');
-    save('helpdoc.mat','html')
+    save(fileName,'html')
 else
-    d = dir('helpdoc.mat');
+    d = dir(fileName);
     fprintf('Last version of the file %s \n To update the doc issue athelp(''new'')\n', d.date);
-    load('helpdoc.mat', 'html');
+    load(fileName, 'html');
 end
 
 % Display documentation

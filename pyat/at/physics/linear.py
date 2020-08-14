@@ -2,14 +2,15 @@
 Coupled or non-coupled 4x4 linear motion
 """
 import numpy
-from math import sqrt, atan2, pi
+from math import sqrt, atan2, pi, factorial
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune']
+__all__ = ['get_twiss', 'linopt', 'avlinopt', 'get_mcf', 'get_tune',
+           'get_chrom']
 
 DDP = 1e-8
 
@@ -500,15 +501,16 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
     return (b[5, 1] - b[5, 0]) / ddp / ring_length[0]
 
 
-def get_tune(ring, method='linopt', **kwargs):
+@check_radiation(False)
+def get_tune(ring, method='linopt', dp=0, **kwargs):
     """
     gets the tune using several available methods
 
-    method can be 'linopt', 'fft' or 'harmonic'
+    method can be 'linopt', 'fft' or 'laskar'
     linopt: returns the tune from the linopt function
     fft: tracks a single particle (one for x and one for y)
     and computes the tune from the fft
-    harmonic: tracks a single particle (one for x and one for y)
+    laskar: tracks a single particle (one for x and one for y)
     and computes the harmonic components
 
 
@@ -525,45 +527,81 @@ def get_tune(ring, method='linopt', **kwargs):
         fmin/fmax: determine the boundaries within which the tune is
         located [default 0->1]
         hann: flag to turn on hanning window [default-> False]
-
+        remove_dc: Removes the mean offset of oscillation data
 
     OUTPUT
         tunes = np.array([Qx,Qy])
     """
 
-    def gen_centroid(ring, ampl, nturns):
-        p0 = numpy.zeros((6, 2))
-        p0[0, 0] = ampl
-        p0[2, 1] = ampl
+    def gen_centroid(ring, ampl, nturns, dp, remove_dc):
+        orbit, _ = find_orbit4(ring, dp)
+        ld, _, _, _ = linopt(ring, dp, orbit=orbit)
+
+        invx = numpy.array([[1/numpy.sqrt(ld['beta'][0]), 0],
+                            [ld['alpha'][0]/numpy.sqrt(ld['beta'][0]),
+                            numpy.sqrt(ld['beta'][0])]])
+
+        invy = numpy.array([[1/numpy.sqrt(ld['beta'][1]), 0],
+                            [ld['alpha'][1]/numpy.sqrt(ld['beta'][1]),
+                            numpy.sqrt(ld['beta'][1])]])
+
+        p0 = numpy.array([orbit, ]*2).T
+        p0[0, 0] += ampl
+        p0[2, 1] += ampl
         p1 = lattice_pass(ring, p0, refpts=len(ring), nturns=nturns)
         cent_x = p1[0, 0, 0, :]
+        cent_xp = p1[1, 0, 0, :]
         cent_y = p1[2, 1, 0, :]
-        return cent_x, cent_y
+        cent_yp = p1[3, 1, 0, :]
+        if remove_dc:
+            cent_x -= numpy.mean(cent_x)
+            cent_y -= numpy.mean(cent_y)
+            cent_xp -= numpy.mean(cent_xp)
+            cent_yp -= numpy.mean(cent_yp)
+
+        cent_x, cent_xp = numpy.matmul(invx, [cent_x, cent_xp])
+        cent_y, cent_yp = numpy.matmul(invy, [cent_y, cent_yp])
+        return (cent_x - 1j * cent_xp,
+                cent_y - 1j * cent_yp)
 
     if method == 'linopt':
-        dp = kwargs.pop('dp', 0)
         _, tunes, _, _ = linopt(ring, dp=dp)
     else:
-        num_harmonics = kwargs.pop('num_harmonics', 20)
-        hann = kwargs.pop('hann', False)
-        fmin = kwargs.pop('fmin', 0)
-        fmax = kwargs.pop('fmax', 1)
-        nturns = kwargs.pop('nturns', None)
-        ampl = kwargs.pop('ampl', None)
-        try:
-            assert nturns is not None
-            assert ampl is not None
-        except AssertionError:
-            raise ValueError('The number of turns and amplitude '
-                             'have to be defined for ' + method)
-        cent_x, cent_y = gen_centroid(ring, ampl, nturns)
+        nturns = kwargs.pop('nturns', 512)
+        ampl = kwargs.pop('ampl', 1.0e-6)
+        remove_dc = kwargs.pop('remove_dc', True)
+        cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp, remove_dc)
         cents = numpy.vstack((cent_x, cent_y))
-        tunes = get_tunes_harmonic(cents, method,
-                                   num_harmonics=num_harmonics,
-                                   hann=hann,
-                                   fmin=fmin,
-                                   fmax=fmax)
+        tunes = get_tunes_harmonic(cents, method, **kwargs)
     return tunes
+
+
+@check_radiation(False)
+def get_chrom(ring, method='linopt', dp=0, ddp=DDP, **kwargs):
+    """
+    gets the chromaticty using several available methods
+
+    method can be 'linopt', 'fft' or 'laskar'
+    linopt: returns the chromaticity from the linopt function
+    fft: tracks a single particle (one for x and one for y)
+    and computes the tune from the fft
+    harmonic: tracks a single particle (one for x and one for y)
+    and computes the harmonic components
+
+    see get_tune for kwargs inputs
+
+    OUTPUT
+        chromaticities = np.array([Q'x,Q'y])
+    """
+
+    if method == 'fft':
+        print('Warning fft method not accurate to get the ' +
+              'chromaticity')
+
+    tune_up = get_tune(ring, method=method, dp=dp + 0.5 * ddp, **kwargs)
+    tune_down = get_tune(ring, method=method, dp=dp - 0.5 * ddp, **kwargs)
+    chrom = (tune_up - tune_down) / ddp
+    return numpy.array(chrom)
 
 
 Lattice.linopt = linopt
@@ -571,3 +609,4 @@ Lattice.avlinopt = avlinopt
 Lattice.get_mcf = get_mcf
 Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
+Lattice.get_chrom = get_chrom

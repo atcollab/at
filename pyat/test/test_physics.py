@@ -232,6 +232,83 @@ def test_linopt_no_refpts(dba_lattice):
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
 
+def test_get_tune_chrom(hmba_lattice):
+    hmba_lattice.radiation_off(cavity_pass='IdentityPass',
+                               quadrupole_pass='auto')
+    qlin = hmba_lattice.get_tune()
+    qplin = hmba_lattice.get_chrom()
+    qharm = hmba_lattice.get_tune(method='laskar')
+    qpharm = hmba_lattice.get_chrom(method='laskar')
+    numpy.testing.assert_allclose(qlin, [0.38156245, 0.85437543], rtol=1e-5)
+    numpy.testing.assert_allclose(qharm, [0.38156245, 0.85437541], rtol=1e-5)
+    numpy.testing.assert_allclose(qplin, [0.17919002, 0.12242263], rtol=1e-5)
+    numpy.testing.assert_allclose(qpharm, [0.17919144, 0.12242624], rtol=1e-5)
+
+
+def test_nl_detuning_chromaticity(hmba_lattice):
+    hmba_lattice.radiation_off(cavity_pass='IdentityPass',
+                               quadrupole_pass='auto')
+    nlqplin, _, _ = at.nonlinear.chromaticity(hmba_lattice, npoints=11)
+    nlqpharm, _, _ = at.nonlinear.chromaticity(hmba_lattice,
+                                               method='laskar', npoints=11)
+    q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
+                                               npoints=11, window=0.1)
+    numpy.testing.assert_allclose(nlqplin,
+                                  [[0.38156741, 0.17908186,
+                                    1.18655795, -16.47368184],
+                                   [0.8543741, 0.12240385,
+                                    2.01744297, -3.064094]],
+                                  rtol=1e-5)
+    numpy.testing.assert_allclose(nlqpharm,
+                                  [[0.38156741, 0.17908228,
+                                    1.18656178, -16.47370342],
+                                   [0.85437409, 0.12240619,
+                                   2.01744051, -3.06407046]],
+                                  rtol=1e-5)
+    numpy.testing.assert_allclose(q0,
+                                  [[0.38156263, 0.85437553],
+                                   [0.38156263, 0.85437553]],
+                                  rtol=1e-5)
+    numpy.testing.assert_allclose(q1,
+                                  [[3005.87694885, -3256.61063654],
+                                   [-3259.0625278, 1615.46553512]],
+                                  rtol=1e-5)
+
+def test_quantdiff(hmba_lattice):
+    hmba_lattice.radiation_on(cavity_pass='CavityPass',quadrupole_pass='auto')
+    dmat = physics.radiation.quantdiffmat(hmba_lattice)
+    lmat = physics.radiation._lmat(dmat)
+    numpy.testing.assert_almost_equal(
+        lmat,
+        [[1.45502934e-07, 0.00000000e+00, 0.00000000e+00,
+          0.00000000e+00, 0.00000000e+00, 0.00000000e+00],
+        [2.40963396e-09, 1.79735260e-08, 0.00000000e+00,
+          0.00000000e+00, 0.00000000e+00, 0.00000000e+00],
+        [0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+          0.00000000e+00, 0.00000000e+00, 0.00000000e+00],
+        [0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+          0.00000000e+00, 0.00000000e+00, 0.00000000e+00],
+        [3.72874832e-07, 2.37718999e-07, 0.00000000e+00,
+          0.00000000e+00, 5.78954180e-06, 0.00000000e+00],
+        [-1.72955964e-09, -5.42857509e-11, 0.00000000e+00,
+          0.00000000e+00, 6.52385922e-09, 3.25943528e-09]])
+    numpy.testing.assert_almost_equal(
+        dmat,
+        [[2.11711037e-14, 3.50608810e-16, 0.00000000e+00,
+          0.00000000e+00, 5.42543819e-14, -2.51656002e-16],
+        [3.50608810e-16, 3.28853971e-16, -0.00000000e+00,
+          0.00000000e+00, 5.17114045e-15, -5.14331200e-18],
+        [0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+          0.00000000e+00, 0.00000000e+00, 0.00000000e+00],
+        [0.00000000e+00, 0.00000000e+00, 0.00000000e+00,
+          0.00000000e+00, 0.00000000e+00, 0.00000000e+00],
+        [5.42543819e-14, 5.17114045e-15, 0.00000000e+00,
+          0.00000000e+00, 3.37143402e-11, 3.71123417e-14],
+        [-2.51656002e-16, -5.14331200e-18, 0.00000000e+00,  
+          0.00000000e+00, 3.71123417e-14, 5.61789810e-17]])  
+   
+
+
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 def test_ohmi_envelope(hmba_lattice, refpts):
     hmba_lattice.radiation_on()
