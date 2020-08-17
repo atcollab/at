@@ -18,14 +18,14 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %               '' makes no change,
 %               'auto' substitutes 'RadPass' with 'Pass' in any method
 %               (default: 'auto')
-%  5. SEXTUPASS pass method for sextupoles
-%               '' makes no change,
-%               'auto' substitutes 'RadPass' with 'Pass' in any method
-%               (default: 'auto')
-%  6. OCTUPASS  pass method for octupoles
-%               '' makes no change,
-%               'auto' substitutes 'RadPass' with 'Pass' in any method
-%               (default: 'auto')
+%
+%  [...] = ATRADOFF(...,keyword,value)
+%   The following keywords trigger the processing of the following elements:
+%
+%   'bendpass'      pass method for bending magnets. Default 'auto'
+%   'quadpass'      pass method for quadrupoles. Default 'auto'
+%   'sextupass'     pass method for sextupoles. Default 'auto'
+%   'octupass'      pass method for bending magnets. Default 'auto'
 %
 %   OUPUTS
 %   1. RING2     Output ring
@@ -34,7 +34,13 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %
 %  See also ATRADON, ATCAVITYON, ATCAVITYOFF
 
-[cavipass,bendpass,quadpass,sextupass,octupass]=getargs(varargin,'auto','auto','auto','auto','auto');
+[octupass,varargs]=getoption(varargin,'octupass','auto');
+[sextupass,varargs]=getoption(varargs,'sextupass','auto');
+[quadpass,varargs]=getoption(varargs,'quadpass','auto');
+%[wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
+[bendpass,varargs]=getoption(varargs,'bendpass','auto');
+[cavipass,varargs]=getoption(varargs,'cavipass','auto');
+[cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
 [ring,cavities]=changepass(ring,cavipass,@(rg) atgetcells(rg,'Frequency'),@autoCavityPass,'Cavity');
 
@@ -45,6 +51,8 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 [ring,sextupoles]=changepass(ring,sextupass,@(rg) selmpole(rg,3),@autoMultiPolePass,'Sextu');
 
 [ring,octupoles]=changepass(ring,octupass,@(rg) selmpole(rg,4),@autoMultiPolePass,'Octu');
+
+%[ring,wigglers]=changepass(ring,wigglerpass,@selwiggler,@autoMultiPolePass,'Wiggler');
 
 cavitiesIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'CavityPass'));
 radelemIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));

@@ -22,24 +22,40 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %               '' makes no change,
 %               'auto' substitutes 'Pass' with 'RadPass' in any method
 %               (default: '')
-%  5. SEXTUPASS pass method for sextupoles
-%               '' makes no change,
-%               'auto' substitutes 'RadPass' with 'Pass' in any method
-%               (default: '')
-%  6. OCTUPASS  pass method for octupoles
-%               '' makes no change,
-%               'auto' substitutes 'RadPass' with 'Pass' in any method
-%               (default: '')
+%
+%  [...] = ATRADON(...,keyword,value)
+%   The following keywords trigger the processing of the following elements:
+%
+%   'bendpass'      pass method for bending magnets. Default 'auto'
+%   'quadpass'      pass method for quadrupoles. Default ''
+%   'sextupass'     pass method for sextupoles. Default ''
+%   'octupass'      pass method for bending magnets. Default ''
 %
 %  OUPUTS
 %  1. RING2     Output ring
 %  2. RADINDEX  Indices of elements with radiation
 %  3. CAVINDEX  Indices of cavities
 %
+%  EXAMPLES
+%
+%>> ringrad=atradon(ring);
+%   Turns cavities on and sets radiation in bending magnets (default)
+%
+%>> ringrad=atradon(ring,'CavityPass','auto','auto');
+%   Turns cavities on and sets radiation in bending magnets and quadrupoles
+%
+%>> ringrad=atradon(ring,'quadpass','auto');
+%   Turns cavities on and sets radiation in bending magnets and quadrupoles
+%
 %  See also ATRADOFF, ATCAVITYON, ATCAVITYOFF
 
-
-[cavipass,bendpass,quadpass,sextupass,octupass]=getargs(varargin,'CavityPass','auto','','','');
+[octupass,varargs]=getoption(varargin,'octupass','');
+[sextupass,varargs]=getoption(varargs,'sextupass','');
+[quadpass,varargs]=getoption(varargs,'quadpass','');
+%[wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
+[bendpass,varargs]=getoption(varargs,'bendpass','auto');
+[cavipass,varargs]=getoption(varargs,'cavipass','CavityPass');
+[cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
 energy=atenergy(ring);
 
@@ -52,6 +68,8 @@ energy=atenergy(ring);
 [ring,sextupoles]=changepass(ring,sextupass,@(rg) selmpole(rg,3),'Sextu');
 
 [ring,octupoles]=changepass(ring,octupass,@(rg) selmpole(rg,4),'Octu');
+
+%[ring,wigglers]=changepass(ring,wigglerpass,@selwiggler,'Wiggler');
 
 cavitiesIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'CavityPass'));
 radelemIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));
