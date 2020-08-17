@@ -155,10 +155,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     if twiin is not None:
-        try:
-            orbit = twiin['closed_orbit'] 
-        except KeyError:
-            print('Orbit not found in twiin, setting to zero')
+        if orbit is None:
             orbit = numpy.zeros((6,))
         try:
             a0_a, a0_b = twiin['alpha'][0], twiin['alpha'][1]
@@ -173,11 +170,6 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         except KeyError: 
             print('Mu not found in twiin, setting to zero')
             tune = numpy.zeros((2,))   
-        try:      
-            disp0 = twiin['dispersion']
-        except KeyError: 
-            print('Dispersion not found in twiin, setting to zero')
-            disp0 = numpy.zeros((4,))
 
     if orbit is None:
         orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
@@ -222,20 +214,24 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         a0_b, b0_b, tune_b = _closure(B)
         tune = numpy.array([tune_a, tune_b])
 
-    if get_chrom:      
+    if get_chrom: 
+        kwup = {}
+        kwdown = {}
         if twiin is not None:
-            orbit[0:5] += numpy.append(disp0*0.5*ddp, 0.5 * ddp)
-        d0_up, tune_up, _, l_up = linopt(ring, dp + 0.5 * ddp, uintrefs,
-                                         keep_lattice=True,
-                                         coupled=coupled, twiin=twiin)
-        if twiin is not None:
-            orbit[0:5] -= numpy.append(disp0*ddp, ddp)
-        d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, uintrefs,
-                                               keep_lattice=True,
-                                               coupled=coupled, twiin=twiin)
-        if twiin is not None:
-            orbit[0:5] += numpy.append(disp0*0.5*ddp, 0.5*ddp) 
+            try:      
+                dorbit = numpy.hstack((0.5 * ddp * twiin['dispersion'], numpy.array([0.5 * ddp, 0])))
+            except KeyError: 
+                print('Dispersion not found in twiin, setting to zero')
+                dorbit = numpy.hstack((numpy.zeros((4, )), numpy.array([0.5 * ddp, 0])))
+            kwup = dict(orbit=orbit+dorbit, twiin=twiin)
+            kwdown = dict(orbit=orbit-dorbit, twiin=twiin)
 
+        d0_up, tune_up, _, l_up = linopt(ring, dp=dp + 0.5 * ddp, refpts=uintrefs,
+                                         keep_lattice=True,
+                                         coupled=coupled, **kwup)
+        d0_down, tune_down, _, l_down = linopt(ring, dp - 0.5 * ddp, refpts=uintrefs,
+                                               keep_lattice=True,
+                                               coupled=coupled, **kwdown)
         chrom = (tune_up - tune_down) / ddp
         dispersion = (l_up['closed_orbit'] -
                       l_down['closed_orbit'])[:, :4] / ddp
