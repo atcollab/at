@@ -64,7 +64,7 @@ def _closure(m22):
 # noinspection PyPep8Naming
 @check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
-           keep_lattice=False, ddp=DDP, coupled=True, twiin=None):
+           keep_lattice=False, ddp=DDP, coupled=True, twiss_in=None):
     """
     Perform linear analysis of a lattice
 
@@ -94,8 +94,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         chromaticities and dispersion
         coupled=True    if False, simplify the calculations by assuming
                         no H/V coupling
-        twiin=None      Initial twiss to compute transfer line optics of the type
-                        lindata, the initial orbit in twiin is ignored, only the
+        twiss_in=None      Initial twiss to compute transfer line optics of the type
+                        lindata, the initial orbit in twiss_in is ignored, only the
                         beta and alpha are required other quatities set to 0 if
                         absent
 
@@ -157,21 +157,21 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
 
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
-    if twiin is not None:
+    if twiss_in is not None:
         if orbit is None:
             orbit = numpy.zeros((6,))
         try:
-            a0_a, a0_b = twiin['alpha'][0], twiin['alpha'][1]
+            a0_a, a0_b = twiss_in['alpha'][0], twiss_in['alpha'][1]
         except KeyError:
             raise ValueError('Initial alpha required for transfer line')
         try:
-            b0_a, b0_b = twiin['beta'][0], twiin['beta'][1]
+            b0_a, b0_b = twiss_in['beta'][0], twiss_in['beta'][1]
         except KeyError:
             raise ValueError('Initial beta required for transfer line')
         try:
-            tune = numpy.array([twiin['mu'][0], twiin['mu'][1]])/(2*pi)
+            tune = numpy.array([twiss_in['mu'][0], twiss_in['mu'][1]])/(2*pi)
         except KeyError:
-            print('Mu not found in twiin, setting to zero')
+            print('Mu not found in twiss_in, setting to zero')
             tune = numpy.zeros((2,))
 
     if orbit is None:
@@ -212,7 +212,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         g = 1.0
 
     # Get initial twiss parameters
-    if twiin is None:
+    if twiss_in is None:
         a0_a, b0_a, tune_a = _closure(A)
         a0_b, b0_b, tune_b = _closure(B)
         tune = numpy.array([tune_a, tune_b])
@@ -220,16 +220,16 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     if get_chrom:
         kwup = {}
         kwdown = {}
-        if twiin is not None:
+        if twiss_in is not None:
             try:
-                dorbit = numpy.hstack((0.5 * ddp * twiin['dispersion'],
+                dorbit = numpy.hstack((0.5 * ddp * twiss_in['dispersion'],
                                        numpy.array([0.5 * ddp, 0])))
             except KeyError:
-                print('Dispersion not found in twiin, setting to zero')
+                print('Dispersion not found in twiss_in, setting to zero')
                 dorbit = numpy.hstack((numpy.zeros((4, )),
                                        numpy.array([0.5 * ddp, 0])))
-            kwup = dict(orbit=orbit+dorbit, twiin=twiin)
-            kwdown = dict(orbit=orbit-dorbit, twiin=twiin)
+            kwup = dict(orbit=orbit+dorbit, twiss_in=twiss_in)
+            kwdown = dict(orbit=orbit-dorbit, twiss_in=twiss_in)
 
         d0_up, tune_up, _, l_up = linopt(ring, dp=dp + 0.5 * ddp,
                                          refpts=uintrefs,
@@ -276,7 +276,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         alpha_a, beta_a, mu_a = _twiss22(msa, a0_a, b0_a)
         alpha_b, beta_b, mu_b = _twiss22(msb, a0_b, b0_b)
 
-        if twiin is not None:
+        if twiss_in is not None:
             qtmp = numpy.array([mu_a[-1], mu_b[-1]])/(2 * numpy.pi)
             qtmp -= numpy.floor(qtmp)
             mu_a += tune[0]*2*pi
