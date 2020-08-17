@@ -158,7 +158,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         try:
             orbit = twiin['closed_orbit'] 
         except KeyError:
-            print('Orbit not found in twiin, setting to zero, dp')
+            print('Orbit not found in twiin, setting to zero')
             orbit = numpy.zeros((6,))
         try:
             a0_a, a0_b = twiin['alpha'][0], twiin['alpha'][1]
