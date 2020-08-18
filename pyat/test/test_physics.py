@@ -214,15 +214,6 @@ def test_linopt_uncoupled(dba_lattice, refpts):
                                       decimal=4)
     numpy.testing.assert_almost_equal(lindata['mu'][-1], [2.296687, 3.102088],
                                       decimal=4)
-    numpy.testing.assert_almost_equal(lindata['gamma'][-1], 1)
-    numpy.testing.assert_allclose(lindata['A'][-1],
-                                  [[-0.6638, 2.23415],
-                                   [-0.25037, -0.6638]], rtol=1e-5, atol=1e-7)
-    numpy.testing.assert_allclose(lindata['B'][-1],
-                                  [[-0.99922, 0.262171],
-                                   [-0.00595, -0.99922]], rtol=1e-4, atol=1e-7)
-    numpy.testing.assert_allclose(lindata['C'][-1], [[0., 0.], [0., 0.]],
-                                  rtol=1e-5, atol=1e-7)
 
 
 def test_linopt_no_refpts(dba_lattice):
