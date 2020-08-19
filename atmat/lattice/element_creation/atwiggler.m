@@ -1,6 +1,5 @@
-function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
-%ATWIGGLER Create a WIGGLER element 
-% atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+function [z] = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+% wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % FamName	family name
 % Ltot		total length of the wiggle
@@ -12,11 +11,14 @@ function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 % Bx		wiggler harmonics for vertical wigglers
 % method        name of the function to use for tracking
 %
-% returns a wiggler structure with class 'Wiggler'
+% returns assigned address in the FAMLIST that is uniquely identifies
+% the family
 
 %---------------------------------------------------------------------------
 % Modification Log:
 % -----------------
+% .04  2018-07-30   A.Mash'al, Iranian Light Source Facility 
+%                               Add energy to ElemData
 % .03  2003-06-19	YK Wu, Duke University, wu@fel.duke.edu
 %                               Add checks for input arguments
 % .02  2003-06-18	YK Wu, Duke University
@@ -29,53 +31,57 @@ function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
 
-global GLOBVAL;
-global MaxOrder;
-global NumIntSteps;
-
+global GLOBVAL
 GWIG_EPS = 1e-6;
 dNw = abs(mod(Ltot/Lw, 1));
 if dNw > GWIG_EPS
   error(' Wiggler: Ltot/Lw is not an integter.');
 end
 
-Elem.FamName        = fname;  % add check for identical family names
-Elem.Energy         = GLOBVAL.E0
-Elem.Length		    = Ltot;
-Elem.Lw             = Lw;
-Elem.Bmax           = Bmax;
-Elem.Nstep    	    = Nstep;
-Elem.Nmeth      	= Nmeth;
+ElemData.FamName    = fname;  % add check for identical family names
+ElemData.Energy     = GLOBVAL.E0;
+ElemData.Length	    = Ltot;
+ElemData.Lw         = Lw;
+ElemData.Bmax       = Bmax;
+ElemData.Nstep      = Nstep;
+ElemData.Nmeth      = Nmeth;
 if ~isempty(By)
-  Elem.NHharm       = length(By(1,:));
-  for i=1:Elem.NHharm
+  ElemData.NHharm   = length(By(1,:));
+  for i=1:ElemData.NHharm
     kx = By(3,i); ky = By(4,i); kz = By(5,i);
     dk = sqrt(abs(ky*ky - kz*kz - kx*kx))/abs(kz);
-    if ( dk > GWIG_EPS ) then
+    if ( dk > GWIG_EPS ) 
       error([' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = ', num2str(i,3)]);
     end;
   end
 else
-  Elem.NHharm         = 0;
+  ElemData.NHharm   = 0;
 end
 
 if ~isempty(Bx)
-  Elem.NVharm         = length(Bx(1,:));
-  for i=1:Elem.NVharm
+  ElemData.NVharm   = length(Bx(1,:));
+  for i=1:ElemData.NVharm
     kx = Bx(3,i); ky = Bx(4,i); kz = Bx(5,i);
     dk = sqrt(abs(kx*kx - kz*kz - ky*ky))/abs(kz);
-    if ( dk > GWIG_EPS ) then
+    if ( dk > GWIG_EPS ) 
       error([' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = ', num2str(i,3)]);
     end;
   end
 else
-  Elem.NVharm         = 0;
+  ElemData.NVharm   = 0;
 end
-Elem.By             = By;
-Elem.Bx             = Bx;
-Elem.R1             = diag(ones(6,1));
-Elem.R2             = diag(ones(6,1));
-Elem.T1             = zeros(1,6);
-Elem.T2             = zeros(1,6);
-Elem.PassMethod 	= method;
-Elem.Class          = 'Wiggler';
+ElemData.By         = By;
+ElemData.Bx         = Bx;
+ElemData.R1         = diag(ones(6,1));
+ElemData.R2         = diag(ones(6,1));
+ElemData.T1         = zeros(1,6);
+ElemData.T2         = zeros(1,6);
+ElemData.PassMethod = method;
+
+
+global FAMLIST
+z = length(FAMLIST)+1; % number of declare families including this one
+FAMLIST{z}.FamName = fname;
+FAMLIST{z}.NumKids = 0;
+FAMLIST{z}.KidsList= [];
+FAMLIST{z}.ElemData= ElemData;
