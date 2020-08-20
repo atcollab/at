@@ -120,6 +120,8 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
     int c;
     double *r6;
     struct gwig Wig;
+    /* Energy is defined in the lattice in eV but GeV is used by the gwig code. */
+    Energy = Energy / 1e9;
 
     GWigInit(&Wig, Energy, Ltot, Lw, Bmax, Nstep, Nmeth, NHharm, NVharm, By, Bx, T1, T2, R1, R2);
 
@@ -134,7 +136,7 @@ void GWigSymplecticPass(double *r, double Energy, double Ltot, double Lw,
                     GWigPass_4th(&Wig, r6);
                     break;
                 default:
-                    printf("Invalid method ...\n");
+                    printf("Invalid wiggler integration method %d.\n", Nmeth);
                     break;
             }
         }
