@@ -29,7 +29,7 @@ def rearrange(ring, split_inds=[]):
                 cavdrift = Drift('CavDrift', cav_elem.Length)
                 ring_slice.insert(icav[i], cavdrift)
                 icav = icav + 1
-            cav_elem.Length = 1e-10 
+                cav_elem.Length = 0.0 
             ring_slice.insert(0, cav_elem)
 
         #merge all cavities with the same frequency
@@ -53,11 +53,6 @@ def rearrange(ring, split_inds=[]):
  
     return all_rings
 
-def merge_cavities(ring_slice):
-
-
-    ring_slice = numpy.delete(ring_slice, msk)
-    return ring_slice
 
 def merge_rings(all_rings):
     ringnorad = all_rings[0]
