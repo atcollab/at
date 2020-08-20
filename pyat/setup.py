@@ -43,6 +43,7 @@ diffmatrix_source = abspath(
 if exists(integrator_src_orig):
     # Copy files into pyat for distribution.
     source_files = glob.glob(join(integrator_src_orig, '*.[ch]'))
+    source_files.extend(glob.glob(join(integrator_src_orig, '*.cc')))
     source_files.extend(
         glob.glob(join(diffmatrix_source, 'findmpoleraddiffmatrix.c'))
     )
@@ -52,6 +53,7 @@ if exists(integrator_src_orig):
         shutil.copy2(f, integrator_src)
 
 pass_methods = glob.glob(join(integrator_src, '*Pass.c'))
+pass_methods.extend(glob.glob(join(integrator_src, '*Pass.cc')))
 diffmatrix_method = join(integrator_src, 'findmpoleraddiffmatrix.c')
 
 

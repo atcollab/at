@@ -396,7 +396,7 @@ class Lattice(list):
             cavity_pass='CavityPass'    PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
-            wiggler_pass=None           PassMethod set on wigglers
+            wiggler_pass='auto'         PassMethod set on wigglers
             copy=False                  Return a shallow copy of the lattice and
                                         replace only the modified attributes
                                         Otherwise modify the lattice in-place.
@@ -445,7 +445,7 @@ class Lattice(list):
             cavity_pass='IdentityPass'  PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
-            wiggler_pass=None           PassMethod set on wigglers
+            wiggler_pass='auto'         PassMethod set on wigglers
             copy=False                  Return a shallow copy of the lattice and
                                         replace only the modified attributes
                                         Otherwise modify the lattice in-place.

@@ -1,6 +1,5 @@
-function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
-%ATWIGGLER Create a WIGGLER element 
-% atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+function elem=atwiggler(fname,varargin)
+% wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %
 % FamName	family name
 % Ltot		total length of the wiggle
@@ -12,11 +11,14 @@ function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 % Bx		wiggler harmonics for vertical wigglers
 % method        name of the function to use for tracking
 %
-% returns a wiggler structure with class 'Wiggler'
+% returns assigned address in the FAMLIST that is uniquely identifies
+% the family
 
 %---------------------------------------------------------------------------
 % Modification Log:
 % -----------------
+% .04  2018-07-30   A.Mash'al, Iranian Light Source Facility 
+%                               Add energy to ElemData
 % .03  2003-06-19	YK Wu, Duke University, wu@fel.duke.edu
 %                               Add checks for input arguments
 % .02  2003-06-18	YK Wu, Duke University
@@ -28,52 +30,50 @@ function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %---------------------------------------------------------------------------
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
-
-global MaxOrder;
-global NumIntSteps;
-
+[rsrc,Ltot,Lw,Bmax,Nstep,Nmeth,By,Bx,method] = decodeatargs({0,0,0,0,0,zeros(6,1),zeros(6,1),'WiggLinearPass'},varargin);
+[Ltot,rsrc] = getoption(rsrc,'Ltot',Ltot);
+[Lw,rsrc] = getoption(rsrc,'Lw',Lw);
+[Bmax,rsrc] = getoption(rsrc,'Bmax',Bmax);
+[Nstep,rsrc] = getoption(rsrc,'Nstep',Nstep);
+[Nmeth,rsrc] = getoption(rsrc,'Nmeth',Nmeth);
+[Bx,rsrc] = getoption(rsrc,'Bx',Bx);
+[By,rsrc] = getoption(rsrc,'By',By);
+[method,rsrc] = getoption(rsrc,'PassMethod',method);
+[cl,rsrc] = getoption(rsrc,'Class','Wiggler');
 GWIG_EPS = 1e-6;
 dNw = abs(mod(Ltot/Lw, 1));
 if dNw > GWIG_EPS
-  error(' Wiggler: Ltot/Lw is not an integter.');
+  error(' Wiggler: Ltot/Lw is not an integer.');
 end
 
-Elem.FamName        = fname;  % add check for identical family names
-Elem.Length		= Ltot;
-Elem.Lw             = Lw;
-Elem.Bmax           = Bmax;
-Elem.Nstep    	= Nstep;
-Elem.Nmeth      	= Nmeth;
 if ~isempty(By)
-  Elem.NHharm       = length(By(1,:));
-  for i=1:Elem.NHharm
+  NHharm = length(By(1,:));
+  for i=1:NHharm
     kx = By(3,i); ky = By(4,i); kz = By(5,i);
     dk = sqrt(abs(ky*ky - kz*kz - kx*kx))/abs(kz);
-    if ( dk > GWIG_EPS ) then
+    if ( dk > GWIG_EPS ) 
       error([' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = ', num2str(i,3)]);
-    end;
+    end
   end
 else
-  Elem.NHharm         = 0;
+  NHharm = 0;
 end
 
 if ~isempty(Bx)
-  Elem.NVharm         = length(Bx(1,:));
-  for i=1:Elem.NVharm
+  NVharm = length(Bx(1,:));
+  for i=1:NVharm
     kx = Bx(3,i); ky = Bx(4,i); kz = Bx(5,i);
     dk = sqrt(abs(kx*kx - kz*kz - ky*ky))/abs(kz);
-    if ( dk > GWIG_EPS ) then
+    if ( dk > GWIG_EPS ) 
       error([' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = ', num2str(i,3)]);
-    end;
+    end
   end
 else
-  Elem.NVharm         = 0;
+  NVharm = 0;
 end
-Elem.By             = By;
-Elem.Bx             = Bx;
-Elem.R1             = diag(ones(6,1));
-Elem.R2             = diag(ones(6,1));
-Elem.T1             = zeros(1,6);
-Elem.T2             = zeros(1,6);
-Elem.PassMethod 	= method;
-Elem.Class          = 'Wiggler';
+
+
+elem = atbaselem(fname,method,'Class',cl,'Ltot',Ltot,'Lw',Lw,...
+    'Bmax',Bmax,'Nstep',Nstep,'Nmeth',Nmeth,'Bx',Bx,'By',By,...
+    'NHharm',NHharm','NVharm',NVharm,rsrc{:});
+end

@@ -1,31 +1,23 @@
 function rp = ringpara(THERING,varargin)
-%RINGPARA Calculates various ring parameters
+%rp = ringpara, use global THERING
+%rp = ringpara(THERING)
+%rp = ringpara(THERING,U0), supply total radiation loss in MeV
+%calculate various ring parameters
 %(1) The calculation of emittance, mcf, momentum spread, bunch length, damping time, etc 
 %is more accurate than atsummary.m because detailed
 %calculation of dispersion function and curly H function inside dipoles is performed. 
 %(2) calculate contribution of dispersion to vertical emittance.
 %
-% rp = ringpara, use global THERING
-% rp = ringpara(THERING)
-% rp = ringpara(THERING,U0), supply total radiation loss in MeV
-%
-%  INPUTS
-%  1. THERING - AT structure
-%  2. DP - Energy offset
-%
-%  OUPUTS
-%  1. RP - Structure with ring parameters
-%
-%  See also atx atsummary
-
-%
-%%Written by Xiaobiao Huang
+%Author: Xiaobiao Huang
 %created on 12/17/2007
 %Part of this code was modified from atsummary.m
 %
 %Modified by Peace Chang (check if theta(ii) ~= 0.0)
 %Modified by S.Liuzzo and B.Nash (Dipole gradient may be in PolynomB(2),
 %also coupled damping added) 7/24/2014
+%
+%Modified by A.Mash'al, Iranian Light Source Facility, 2018-07-30
+%radiation effects of IDs added 
 
 if nargin==0
     global THERING; %#ok<TLEV>
@@ -61,7 +53,6 @@ I2 = 0;
 I3 = 0;
 I4 = 0;
 I5 = 0;
-
 len = length(dpindex);
 curHavg1 = 1:len;
 for ii=1:len
@@ -76,8 +67,7 @@ for ii=1:len
           Kp = THERING{dpindex(ii)}.PolynomB(2);
       end
       if Kk~=Kp && (Kk~=0 && Kp~=0)
-          Kk=0;
-          warning('Values in K and PolynomB(2) are different and both not zero. Using PolynomB(2).'); 
+          warning('Values in K and PolynomB(2) are different. Using larger absolute value'); 
       end
       Ks=[Kk,Kp];
       [~,i]=max(abs(Ks));
@@ -93,6 +83,22 @@ for ii=1:len
     I4 = I4 + dI4;
     I5 = I5 + dI5;
   end
+end
+Wig=atgetcells(THERING,'Bmax');
+Wigidx=find(Wig(:)==1);
+if ~isempty(Wigidx)
+betaB = cat(1, tmptw.beta);
+alphaB = cat(1, tmptw.alpha);
+AlphaW=alphaB(Wigidx);
+BetaW=betaB(Wigidx);
+for i=1:length(Wigidx)
+    [dI1,dI2,dI3,dI4,dI5] =RadIntegrals(THERING,Wigidx(i),AlphaW(i),BetaW(i));
+    I1 = I1 + dI1;
+    I2 = I2 + dI2;
+    I3 = I3 + dI3;
+    I4 = I4 + dI4;
+    I5 = I5 + dI5;
+end
 end
 % curHavg = sum(curHavg1.*lendp./abs(rho))/sum(lendp);
 % %emittx =  Cq*gamma^2*curHavg/Jx/rho*1e9; %nm-rad

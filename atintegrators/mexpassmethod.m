@@ -109,23 +109,28 @@ end
 if ischar(PASSMETHODS) % one file name - convert to a cell array
     if strcmpi(PASSMETHODS,'all')
         % Find all files matching '*Pass.c' wildcard
-        D = dir(fullfile(pdir,'*Pass.c'));
-        ok=cellfun(@(nm) nm(1)~='.',{D.name});  % Eliminate invisible files
-        PASSMETHODS=cellfun(@(nm) strrep(nm,'.c',''),{D(ok).name},'UniformOutput',false);
+        cfiles = dir(fullfile(pdir,'*Pass.c'));
+        passmethods = {cfiles.name};
+        % Find all files matching '*Pass.cc' wildcard
+        ccfiles = dir(fullfile(pdir, '*Pass.cc'));
+        passmethods = [passmethods ccfiles.name];
+        % Eliminate invisible files
+        ok=cellfun(@(nm) nm(1)~='.',passmethods,'UniformOutput',false);
+        passmethods = passmethods(cell2mat(ok));
         try
-            generate_passlist(pdir,PASSMETHODS);
+            generate_passlist(pdir,passmethods);
         catch err
             fprintf(2,'\nCannot generate the list of passmethods: %s\n\n', err.message);
         end
+        PASSMETHODS=passmethods;
     else % Mex a single specifie pass-method
         PASSMETHODS={PASSMETHODS};
     end
 end
 
 for i = 1:length(PASSMETHODS)
-    PM = fullfile(pdir,[PASSMETHODS{i} '.c']);
-    evalin('base',['clear ',PASSMETHODS{i}]);
-    if exist(PM,'file')
+    PM = fullfile(pdir,[PASSMETHODS{i}]);
+    if exist(PM,'file') || exist(PM2, 'file')
         try
             if exist('map2','var')
                 try
@@ -151,6 +156,10 @@ for i = 1:length(PASSMETHODS)
 end
 
     function generate_passlist(pdir,passmethods)
+        % Remove trailing '.c' or '.cc' from each passmethod using regexp
+        % Literally, replace dot plus any number of cs at the end of a
+        % passmethod with an empty string.
+        passmethodnames = cellfun(@(pass) regexprep(pass, '\.c*$', ''),passmethods, 'UniformOutput', false);
         [fid,msg]=fopen(fullfile(pdir,'passmethodlist.m'),'wt');
         if ~isempty(msg)
             error(msg);
@@ -159,7 +168,8 @@ end
         fprintf(fid,'%%PASSMETHODLIST\tUtility function for MATLAB Compiler\n%%\n');
         fprintf(fid,'%%Since passmethods are loaded at run time, the compiler will not include them\n');
         fprintf(fid,'%%unless this function is included in the list of functions to be compiled.\n\n');
-        nbytes=cellfun(@(pass) fprintf(fid,'%s\n',pass),passmethods); %#ok<NASGU>
+
+        nbytes=cellfun(@(pass) fprintf(fid,'%s\n',pass),passmethodnames); %#ok<NASGU>
         fprintf(fid,'\nend\n');
         fclose(fid);
     end
