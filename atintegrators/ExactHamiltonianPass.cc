@@ -1,3 +1,4 @@
+/* See ExactHamiltonianPass.m for further notes. */
 #include "atelem.c"
 #include <string.h>
 #include "atlalib.c"
