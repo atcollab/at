@@ -30,7 +30,7 @@ function elem=atwiggler(fname,varargin)
 %---------------------------------------------------------------------------
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
-[rsrc,Ltot,Lw,Bmax,Nstep,Nmeth,By,Bx,method] = decodeatargs({0,0,0,0,0,zeros(6,1),zeros(6,1),'WiggLinearPass'},varargin);
+[rsrc,Ltot,Lw,Bmax,Nstep,Nmeth,By,Bx,method] = decodeatargs({0,0,0,5,4,[],[],'WiggLinearPass'},varargin);
 [Ltot,rsrc] = getoption(rsrc,'Ltot',Ltot);
 [Lw,rsrc] = getoption(rsrc,'Lw',Lw);
 [Bmax,rsrc] = getoption(rsrc,'Bmax',Bmax);
@@ -73,7 +73,7 @@ else
 end
 
 
-elem = atbaselem(fname,method,'Class',cl,'Ltot',Ltot,'Lw',Lw,...
+elem = atbaselem(fname,method,'Class',cl,'Length',Ltot,'Lw',Lw,...
     'Bmax',Bmax,'Nstep',Nstep,'Nmeth',Nmeth,'Bx',Bx,'By',By,...
     'NHharm',NHharm','NVharm',NVharm,rsrc{:});
 end

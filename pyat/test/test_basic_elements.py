@@ -337,3 +337,19 @@ def test_corrector(rin):
     rin_orig[3] = 0.5
     atpass(lattice, rin, 1)
     numpy.testing.assert_equal(rin, rin_orig)
+
+
+def test_wiggler(rin):
+    period = 0.05
+    periods = 23
+    bmax = 1
+    by = numpy.array([1, 1, 0, 1, 1, 0], dtype=numpy.float64)
+    bx = numpy.array([])
+    c = elements.Wiggler('wiggler', period * periods, period, bmax, 5, 4, by, bx, 3e9)
+    assert abs(c.Length - 1.15) < 1e-10
+    lattice = [c]
+    # Expected value from Matlab AT.
+    expected = numpy.array(rin, copy=True)
+    expected[5] = 0.000000181809691064259
+    atpass(lattice, rin, 1)
+    numpy.testing.assert_allclose(rin, expected, atol=1e-12)
