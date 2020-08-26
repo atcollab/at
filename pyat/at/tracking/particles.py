@@ -35,6 +35,7 @@ def sigma_matrix(argin, twiss=False):
 
     """
     if not twiss:
+        cflag = False
         if not argin.radiation:
             argin.radiation_on()
             cflag = True
