@@ -102,7 +102,7 @@ def beam(np, sigma, orbit=None):
         particle_dist   a matrix of shape (M, np) where M is shape of
                         sigma matrix
     """
-    v = numpy.random.random(size=(sigma.shape[0], np))
+    v = numpy.random.normal(size=(sigma.shape[0], np))
 
     try:
         lmat = numpy.linalg.cholesky(sigma).T
