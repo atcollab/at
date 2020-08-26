@@ -33,7 +33,7 @@ with open(join(here, 'README.rst'), encoding='utf-8') as f:
 # this file is executed each time any setup.py command is run.
 # It appears that only copying the files when they are available is
 # sufficient.
-at_source = abspath(join(here,'at.c'))
+at_source = abspath(join(here, 'at.c'))
 integrator_src_orig = abspath(join(here, '..', 'atintegrators'))
 integrator_src = abspath(join(here, 'integrator-src'))
 diffmatrix_source = abspath(
@@ -87,7 +87,7 @@ diffmatrix = Extension(
 
 setup(
     name='accelerator-toolbox',
-    version='0.0.3',
+    version='0.0.4',
     description='Accelerator Toolbox',
     long_description=long_description,
     author='The AT collaboration',
@@ -98,5 +98,16 @@ setup(
     packages=find_packages(),
     ext_modules=[at, diffmatrix] + [integrator_ext(pm) for pm in pass_methods],
     zip_safe=False,
-    python_requires='>=2.7.4'
+    python_requires='>=2.7.4',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+    ]
 )
