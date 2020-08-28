@@ -6,6 +6,7 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %       1) the 1st 'RingParam' element
 %       2) the 1st 'RFCavity' element
 %       3) the field "E0" of the global variable "GLOBVAL"
+%       4) The field "Energy" in any element
 %  
 %  INPUTS
 %    1. ring  Ring structure
@@ -18,8 +19,7 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %    5. U0         Energy loss per turn in eV
 %
 %  NOTES
-%    1. Cavities in the ring must have the Class RFCavity.
-%    2. Check for 2 pi phase advance if more than 2 ouput arguments
+%    1. Check for 2 pi phase advance if more than 2 ouput arguments
 %
 %  EXAMPLES
 %    1. [ENERGY,PERIODS]=atenergy(ring) also outputs the number of periods
@@ -48,11 +48,10 @@ else % else look for energy in cavity or GLOBVAL
         energy=ring{find(cavities,1)}.Energy;
     elseif isfield(GLOBVAL,'E0')
         energy=GLOBVAL.E0;
-    elseif length(unique(E0s)) ==1
-        
-           energy = unique(E0s);
-    elseif length(unique(E0s)) >1
-        error('Energy field not equal for all elements')
+    elseif length(unique(E0s)) == 1
+        energy = unique(E0s);
+    elseif length(unique(E0s)) > 1
+        error('AT:NoEnergy','Energy field not equal for all elements')
     else
         error('AT:NoEnergy',...
             ['Energy not defined (searched in '...
