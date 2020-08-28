@@ -26,7 +26,11 @@ function varargout = getargs(args,default,varargin)
 %
 %See also GETFLAG, GETOPTION
 
-default_values=[default varargin];
+if iscell(default)
+    default_values=[default varargin];
+else
+    default_values=[{default} varargin];
+end
 na=length(default_values);
 valid=~cellfun(@(arg) isempty(arg)&&isnumeric(arg),args);
 default_values(valid)=args(valid);
