@@ -1,9 +1,5 @@
 function rp = ringpara(varargin)
 %RINGPARA Calculates various ring parameters
-%(1) The calculation of emittance, mcf, momentum spread, bunch length, damping time, etc 
-%is more accurate than atsummary.m because detailed
-%calculation of dispersion function and curly H function inside dipoles is performed. 
-%(2) calculate contribution of dispersion to vertical emittance.
 %
 % rp = ringpara, use global THERING
 % rp = ringpara(THERING)
@@ -32,6 +28,7 @@ function rp = ringpara(varargin)
 
 %Modified by Laurent Farvacque, 2020-08-27
 %radiation effects removed until repaired...
+%Analytical computation of radiation integrals
 
 global THERING
 
