@@ -18,6 +18,10 @@ environment:
 
 install:
   - set "PATH=C:\Python%PYTHON%-x64;C:\Python%PYTHON%-x64\Scripts;%PATH%"
+  # This reverts a change made in setuptools v50.0.0, to continue to use
+  # distutils instead of setuptools for building extensions.
+  # Unfortunately I don't know what the correct fix is.
+  - set "SETUPTOOLS_USE_DISTUTILS=stdlib"
   - python -m virtualenv venv
   - venv\Scripts\activate
   - cd pyat
