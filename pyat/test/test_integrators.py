@@ -32,7 +32,7 @@ def test_exact_hamiltonian_pass_with_dls_dipole(rin):
 @pytest.mark.parametrize('passmethod', ('GWigSymplecticPass', 'GWigSymplecticRadPass'))
 def test_gwig_symplectic_pass(rin, passmethod):
     # Parameters copied from one of the Diamond wigglers.
-    wiggler = elements.Wiggler('w', 1.15, 0.05, 0, 5, 4, [1, 1, 0, 1, 1, 0], [], 3e9)
+    wiggler = elements.Wiggler('w', 1.15, 0.05, 0.8, 3e9)
     wiggler.PassMethod = passmethod
     l = Lattice([wiggler], name='lat', energy=3e9)
     atpass(l, rin, 1)
