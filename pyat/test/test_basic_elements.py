@@ -344,8 +344,7 @@ def test_wiggler(rin):
     periods = 23
     bmax = 1
     by = numpy.array([1, 1, 0, 1, 1, 0], dtype=numpy.float64)
-    bx = numpy.array([])
-    c = elements.Wiggler('wiggler', period * periods, period, bmax, 3e9, by=by)
+    c = elements.Wiggler('wiggler', period * periods, period, bmax, 3e9, By=by)
     assert abs(c.Length - 1.15) < 1e-10
     lattice = [c]
     # Expected value from Matlab AT.

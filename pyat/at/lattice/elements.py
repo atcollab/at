@@ -102,7 +102,7 @@ class Element(object):
         >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
         [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
-        # by default, the element is indivisible
+        # Bx default, the element is indivisible
         return [self]
 
     def update(self, *args, **kwargs):
@@ -559,17 +559,17 @@ class Wiggler(LongElement):
                         Nstep=int, Nmeth=int, NHharm=int, NVharm=int)
 
     def __init__(self, family_name, length, wiggle_period, b_max, energy,
-                 n_step=5, n_meth=4, by=(1, 1, 0, 1, 1, 0), bx=(), **kwargs):
+                 Nstep=5, Nmeth=4, By=(1, 1, 0, 1, 1, 0), Bx=(), **kwargs):
         """
         Args:
             length: total length of the wiggler
             wiggle_period: length must be a multiple of this
             b_max: peak wiggler field [Tesla]
         Available keywords:
-            n_step: number of integration steps.
-            n_meth: symplectic integration order: 2 or 4
-            by: harmonics for horizontal wiggler: (6,nHharm) array-like object
-            bx: harmonics for vertical wiggler (6,nHharm) array-like object
+            Nstep: number of integration steps.
+            Nmeth: symplectic integration order: 2 or 4
+            Bx: harmonics for horizontal wiggler: (6,nHharm) array-like object
+            By: harmonics for vertical wiggler (6,nHharm) array-like object
 
         """
         kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
@@ -580,8 +580,8 @@ class Wiggler(LongElement):
                                                              wiggle_period,
                                                              n_wiggles))
         super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
-                                      Bmax=b_max, Nstep=n_step, Nmeth=n_meth,
-                                      By=by, Bx=bx, Energy=energy, **kwargs)
+                                      Bmax=b_max, Nstep=Nstep, Nmeth=Nmeth,
+                                      By=By, Bx=Bx, Energy=energy, **kwargs)
 
         for i, b in enumerate(self.By.T):
             dk = abs(b[3]**2 - b[4]**2 - b[2]**2) / abs(b[4])
