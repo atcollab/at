@@ -565,6 +565,8 @@ class Wiggler(LongElement):
             length: total length of the wiggler
             wiggle_period: length must be a multiple of this
             b_max: peak wiggler field [Tesla]
+            energy: beam energy [eV]
+
         Available keywords:
             Nstep: number of integration steps.
             Nmeth: symplectic integration order: 2 or 4
