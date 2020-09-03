@@ -11,7 +11,7 @@ from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, \
     get_tunes_harmonic, get_chrom
 from at.lattice import Element
 
-__all__ = ['detuning', 'chromaticity']
+__all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
 
 
 def tunes_vs_amp(ring, amp=None, dim=0,
@@ -19,7 +19,15 @@ def tunes_vs_amp(ring, amp=None, dim=0,
     """
     Generates a range of tunes for varying x, y, or z amplitudes
     """
-    def _gen_part(ring, amp, dim, orbit, nturns):
+
+    def _gen_part(ring, amp, dim, orbit, ld, nturns):
+        invx = numpy.array([[1/numpy.sqrt(ld['beta'][0]), 0],
+                            [ld['alpha'][0]/numpy.sqrt(ld['beta'][0]),
+                            numpy.sqrt(ld['beta'][0])]])
+
+        invy = numpy.array([[1/numpy.sqrt(ld['beta'][1]), 0],
+                            [ld['alpha'][1]/numpy.sqrt(ld['beta'][1]),
+                            numpy.sqrt(ld['beta'][1])]])
         part = numpy.array([orbit, ] * len(amp)).T + 1.0e-6
         part[dim, :] += amp
         part = lattice_pass(ring, part, nturns=nturns)
@@ -28,27 +36,26 @@ def tunes_vs_amp(ring, amp=None, dim=0,
         partxp = numpy.reshape(part[1, :], (sh[1], sh[3]))
         party = numpy.reshape(part[2, :], (sh[1], sh[3]))
         partyp = numpy.reshape(part[3, :], (sh[1], sh[3]))
-        return partx + 1j*partxp, party + 1j*partyp
+        px = numpy.array([numpy.matmul(invx, [partx[i], partxp[i]])
+                          for i in range(len(amp))])
+        py = numpy.array([numpy.matmul(invy, [party[i], partyp[i]])
+                          for i in range(len(amp))])
+        return px[:, 0, :] - 1j*px[:, 1, :], py[:, 0, :] - 1j*py[:, 1, :]
 
     l0, q0, _, _ = linopt(ring, dp=dp)
     orbit = l0['closed_orbit']
-    fmin = numpy.maximum([0, 0], q0 - window)
-    fmax = numpy.minimum([1, 1], q0 + window)
-
     tunes = []
 
     if amp is not None:
-        partx, party = _gen_part(ring, amp, dim, orbit, nturns)
-        qx = get_tunes_harmonic(partx, 'laskar',
-                                fmin=fmin[0], fmax=fmax[0])
-        qy = get_tunes_harmonic(party, 'laskar',
-                                fmin=fmin[1], fmax=fmax[1])
+        partx, party = _gen_part(ring, amp, dim, orbit, l0, nturns)
+        qx = get_tunes_harmonic(partx, 'laskar')
+        qy = get_tunes_harmonic(party, 'laskar')
         tunes = numpy.vstack((qx, qy)).T
 
     return numpy.array(tunes)
 
 
-def detuning(ring, xm=1.0e-4, ym=1.0e-4, npoints=3, dp=0, window=1,
+def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
              nturns=512):
     """
     This function uses tunes_vs_amp to compute the tunes for
@@ -102,3 +109,24 @@ def chromaticity(ring, method='linopt', dpm=0.02, npoints=11, order=3, dp=0,
         fitx = fit[:, 0]/factorial(numpy.arange(order + 1))
         fity = fit[:, 1]/factorial(numpy.arange(order + 1))
         return numpy.array([fitx, fity]), dpa, numpy.array(qz)
+
+
+def gen_detuning_elem(ring, orbit=None):
+    """
+    Generates an element that for detuning with amplitude
+    """
+    if orbit is None:
+        orbit, _ = find_orbit4(ring)
+    [lindata0, tunes, xsi, lindata] = ring.linopt(dp=0,
+                                                  get_chrom=True,
+                                                  orbit=orbit)
+
+    r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4,
+                                        ym=1.0e-4, npoints=3, dp=0)
+    nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
+                          Betax=lindata0.beta[0], Betay=lindata0.beta[1],
+                          Alphax=lindata0.alpha[0],
+                          Alphay=lindata0.alpha[1],
+                          Qpx=xsi[0], Qpy=xsi[1], A1=r1[0][0], A2=r1[0][1],
+                          A3=r1[1][1], T1=-orbit, T2=orbit)
+    return nonlin_elem
