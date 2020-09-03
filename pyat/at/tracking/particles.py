@@ -3,11 +3,12 @@ Functions relating to particle generation
 """
 import numpy
 from at.physics import ohmi_envelope
+from at.lattice.lattice_object import Lattice
 
 __all__ = ['beam', 'sigma_matrix']
 
 
-def sigma_matrix(argin, twiss=False):
+def sigma_matrix(argin):
     """
     Calculate the correlation matrix to be used for particle generation
 
@@ -34,7 +35,7 @@ def sigma_matrix(argin, twiss=False):
         sigma_matrix    correlation matrix (either 2x2, 4x4 or 6x6)
 
     """
-    if not twiss:
+    if isinstance(argin, Lattice):
         argin = argin.radiation_on(copy=True)
 
         emit0, beamdata, emit = ohmi_envelope(argin, refpts=[0])
@@ -59,22 +60,22 @@ def sigma_matrix(argin, twiss=False):
         elif len(argin) == 6:
             [bx, ax, epsx, by, ay, epsy] = argin
             sig_matrix = numpy.block([
-                            [sigma_matrix([bx, ax, epsx], twiss=True),
+                            [sigma_matrix([bx, ax, epsx]),
                                 numpy.zeros((2, 2))],
                             [numpy.zeros((2, 2)),
-                                sigma_matrix([by, ay, epsy], twiss=True)]
+                                sigma_matrix([by, ay, epsy])]
                                     ])
 
         elif len(argin) == 8:
             [bx, ax, epsx, by, ay, epsy, espread, blength] = argin
             sig_matrix = numpy.block([
-                            [sigma_matrix([bx, ax, epsx], twiss=True),
+                            [sigma_matrix([bx, ax, epsx]),
                                 numpy.zeros((2, 4))],
                             [numpy.zeros((2, 2)),
-                                sigma_matrix([by, ay, epsy], twiss=True),
+                                sigma_matrix([by, ay, epsy]),
                                 numpy.zeros((2, 2))],
                             [numpy.zeros((2, 4)),
-                                sigma_matrix([espread, blength], twiss=True)]
+                                sigma_matrix([espread, blength])]
                                     ])
 
     return sig_matrix
