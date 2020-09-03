@@ -28,11 +28,11 @@ def test_avlinopt(engine, ml_lattice, py_lattice, dp):
 
     # Python call
     lindata, avebeta, avemu, avedisp, aves, tune, chrom = \
-        at.avlinopt(py_lattice, dp, refpts=refpts, ddp=1.E-6)
+        at.avlinopt(py_lattice, dp, refpts=refpts, ddp=1.e-6)
     # Matlab call
     ml_data, ml_avebeta, ml_avemu, ml_avedisp, ml_tune, ml_chrom = \
         engine.pyproxy('atavedata', ml_lattice, dp, mlrefs, nargout=6)
     # Comparison
-    numpy.testing.assert_allclose(avebeta, numpy.asarray(ml_avebeta), rtol=1.0e-12, atol=1.0e-20)
-    numpy.testing.assert_allclose(avemu, numpy.asarray(ml_avemu), rtol=1.0e-12, atol=1.0e-20)
-    numpy.testing.assert_allclose(avedisp, numpy.asarray(ml_avedisp), rtol=1.0e-12, atol=1.0e-10)
+    numpy.testing.assert_allclose(avebeta, numpy.asarray(ml_avebeta), rtol=1.0e-11, atol=1.0e-20)
+    numpy.testing.assert_allclose(avemu, numpy.asarray(ml_avemu), rtol=1.0e-11, atol=1.0e-20)
+    numpy.testing.assert_allclose(avedisp, numpy.asarray(ml_avedisp), rtol=1.0e-11, atol=1.0e-10)
