@@ -5,11 +5,12 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 
 import numpy
-from at.lattice import Lattice, uint32_refpts
+from at.lattice import Lattice, uint32_refpts, get_refpts, check_radiation
+from at.lattice.elements import Bend, M66
 from at.tracking import lattice_pass, element_pass
-from at.physics import find_orbit4, find_orbit6, jmat
+from at.physics import find_orbit4, find_orbit6, jmat, symplectify
 
-__all__ = ['find_m44', 'find_m66', 'find_elem_m66']
+__all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 
 XYDEFSTEP = 6.055454452393343e-006  # Optimal delta?
 DPSTEP = 6.055454452393343e-006  # Optimal delta?
@@ -199,6 +200,23 @@ def find_elem_m66(elem, orbit=None, **kwargs):
     m66 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling.reshape((1, 6))
     return m66
 
+
+def gen_m66_elem(ring, o4b, o4e):
+    """
+    converts a ring to a linear 6x6 matrix tracking elemtn
+    """
+
+    dip_inds = get_refpts(ring, Bend)
+    theta = numpy.array([ring[ind].BendingAngle for ind in dip_inds])
+    lendp = numpy.array([ring[ind].Length for ind in dip_inds])
+    allS = ring.get_s_pos()
+    s = numpy.diff(numpy.array([allS[0], allS[-1]]))[0]
+    I2 = numpy.sum(numpy.abs(theta * theta / lendp))
+    m66_mat, _ = find_m66(ring, [], o4b)
+    if ring.radiation is False:
+        m66_mat = symplectify(m66_mat)  # remove for damping
+    lin_elem = M66('Linear', m66_mat, T1=-o4b, T2=o4e, Length=s, I2=I2)
+    return lin_elem
 
 Lattice.find_m44 = find_m44
 Lattice.find_m66 = find_m66

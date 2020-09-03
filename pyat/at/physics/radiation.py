@@ -313,11 +313,11 @@ def quantdiffmat(ring, orbit=None):
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring):
+def gen_quantdiff_elem(ring, orbit=None):
     """
     Generates a quantum diffusion element
     """
-    dmat = quantdiffmat(ring)
+    dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
     diff_elem = Element('Diffusion',
                         Lmatp=lmat,
