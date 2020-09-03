@@ -35,16 +35,10 @@ def sigma_matrix(argin, twiss=False):
 
     """
     if not twiss:
-        cflag = False
-        if not argin.radiation:
-            argin.radiation_on()
-            cflag = True
+        argin = argin.radiation_on(copy=True)
 
         emit0, beamdata, emit = ohmi_envelope(argin, refpts=[0])
         sig_matrix = emit.r66[0]
-
-        if cflag:
-            argin.radiation_off()
 
 
     else:
@@ -64,7 +58,7 @@ def sigma_matrix(argin, twiss=False):
 
         elif len(argin) == 6:
             [bx, ax, epsx, by, ay, epsy] = argin
-            sig_matrix = numpy.bmat([
+            sig_matrix = numpy.block([
                             [sigma_matrix([bx, ax, epsx], twiss=True),
                                 numpy.zeros((2, 2))],
                             [numpy.zeros((2, 2)),
@@ -73,7 +67,7 @@ def sigma_matrix(argin, twiss=False):
 
         elif len(argin) == 8:
             [bx, ax, epsx, by, ay, epsy, espread, blength] = argin
-            sig_matrix = numpy.bmat([
+            sig_matrix = numpy.block([
                             [sigma_matrix([bx, ax, epsx], twiss=True),
                                 numpy.zeros((2, 4))],
                             [numpy.zeros((2, 2)),
@@ -107,16 +101,15 @@ def beam(np, sigma, orbit=None):
 
     try:
         lmat = numpy.linalg.cholesky(sigma)
-#        needs the .T to be the same as matlab
 
     except numpy.linalg.LinAlgError:
         row_idx = numpy.array([0, 1, 4, 5])
         a1 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
-        a = numpy.bmat([[a1, numpy.zeros((4, 2))], [numpy.zeros((2, 6))]])
+        a = numpy.block([[a1, numpy.zeros((4, 2))], [numpy.zeros((2, 6))]])
         row_idx = numpy.array([0, 1, 4, 5, 2, 3])
         lmat = a[row_idx[:, None], row_idx]
 
-    particle_dist = numpy.squeeze(numpy.asarray(numpy.dot(lmat, v)))
+    particle_dist = numpy.squeeze(numpy.dot(lmat, v))
 
     if orbit is not None:
         if (not isinstance(orbit, (numpy.ndarray, list)) or
