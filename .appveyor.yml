@@ -18,6 +18,10 @@ environment:
 
 install:
   - set "PATH=C:\Python%PYTHON%-x64;C:\Python%PYTHON%-x64\Scripts;%PATH%"
+  # This reverts a change made in setuptools v50.0.0, to continue to use
+  # distutils instead of setuptools for building extensions.
+  # Unfortunately I don't know what the correct fix is.
+  - set "SETUPTOOLS_USE_DISTUTILS=stdlib"
   - python -m virtualenv venv
   - venv\Scripts\activate
   - cd pyat
@@ -31,7 +35,7 @@ build_script:
       if ($env:APPVEYOR_REPO_TAG_NAME -eq $null) {
         $env:APPVEYOR_REPO_TAG_NAME = "None"
       }
-      if ($env:APPVEYOR_REPO_TAG_NAME.StartsWith("pyat") -And ($env:PYTHON -eq 36)) {
+      if ($env:APPVEYOR_REPO_TAG_NAME.StartsWith("pyat") -And ($env:PYTHON -eq 37)) {
         rm "build" -r -fo
         python -m pip install --upgrade cibuildwheel
         & cmd /c 'cibuildwheel 2>&1' --output-dir wheelhouse

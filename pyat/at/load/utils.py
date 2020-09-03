@@ -34,7 +34,8 @@ _alias_map = {'rbend': elt.Dipole,
               'rf': elt.RFCavity,
               'bpm': elt.Monitor,
               'ap': elt.Aperture,
-              'ringparam': RingParam}
+              'ringparam': RingParam,
+              'wig': elt.Wiggler}
 
 
 # Matlab to Python class translation
@@ -50,7 +51,8 @@ _PASS_MAP = {'DriftPass': elt.Drift,
              'CavityPass': elt.RFCavity, 'RFCavityPass': elt.RFCavity,
              'ThinMPolePass': elt.ThinMultipole,
              'Matrix66Pass': elt.M66,
-             'AperturePass': elt.Aperture}
+             'AperturePass': elt.Aperture,
+             'GWigSymplecticPass': elt.Wiggler}
 
 # Matlab to Python attribute translation
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',

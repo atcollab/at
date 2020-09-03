@@ -90,7 +90,15 @@ pushed to Github, wheels for each of the different platforms will be built
 and automatically uploaded to
 https://test.pypi.org/project/accelerator-toolbox/. Once there, someone
 should manually test that the wheels are working correctly, then they can
-manually download the files and upload them to PyPI itself.
+manually download the files and upload them to PyPI itself. Note that this
+was 46 different files for pyat-0.0.4 covering different platforms and
+architectures.
+
+The configuration for this is in .travis.yml and .appveyor.yml, where for tags
+of the correct format the wheels are built using only one of the builds for
+each platform (MacOS, Linux and Windows). This logic may need updating from time
+to time - for example, the wheels are being built and uploaded using the Python
+3.7 build at present.
 
 For Travis to be authenticated to Test PyPI, someone must set the variables
 TWINE_USERNAME and TWINE_PASSWORD in the Travis CI project settings. These

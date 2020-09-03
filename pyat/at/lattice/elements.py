@@ -102,7 +102,7 @@ class Element(object):
         >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
         [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
-        # by default, the element is indivisible
+        # Bx default, the element is indivisible
         return [self]
 
     def update(self, *args, **kwargs):
@@ -546,13 +546,59 @@ class Corrector(LongElement):
 
 
 class Wiggler(LongElement):
+    """pyAT wiggler element
+
+    See atwiggler.m
     """
-    place holder for a Wiggler element, acts as a drift
-    """
-    # noinspection PyUnusedLocal
-    def __init__(self, family_name, length, *args, **kwargs):
-        kwargs.setdefault('PassMethod', 'DriftPass')
-        super(Wiggler, self).__init__(family_name, length, **kwargs)
+    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
+                                                             'Energy']
+    _conversions = dict(Element._conversions, Lw=float, Bmax=float,
+                        Energy=float,
+                        Bx=lambda v: _array(v, (6, -1)),
+                        By=lambda v: _array(v, (6, -1)),
+                        Nstep=int, Nmeth=int, NHharm=int, NVharm=int)
+
+    def __init__(self, family_name, length, wiggle_period, b_max, energy,
+                 Nstep=5, Nmeth=4, By=(1, 1, 0, 1, 1, 0), Bx=(), **kwargs):
+        """
+        Args:
+            length: total length of the wiggler
+            wiggle_period: length must be a multiple of this
+            b_max: peak wiggler field [Tesla]
+            energy: beam energy [eV]
+
+        Available keywords:
+            Nstep: number of integration steps.
+            Nmeth: symplectic integration order: 2 or 4
+            Bx: harmonics for horizontal wiggler: (6,nHharm) array-like object
+            By: harmonics for vertical wiggler (6,nHharm) array-like object
+
+        """
+        kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
+        n_wiggles = length / wiggle_period
+        if abs(round(n_wiggles) - n_wiggles) > 1e-6:
+            raise ValueError("Wiggler: length / wiggle_period is not an "
+                             "integer. ({0}/{1}={2})".format(length,
+                                                             wiggle_period,
+                                                             n_wiggles))
+        super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
+                                      Bmax=b_max, Nstep=Nstep, Nmeth=Nmeth,
+                                      By=By, Bx=Bx, Energy=energy, **kwargs)
+
+        for i, b in enumerate(self.By.T):
+            dk = abs(b[3]**2 - b[4]**2 - b[2]**2) / abs(b[4])
+            if dk > 1e-6:
+                raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
+                                 "{0}".format(i))
+
+        for i, b in enumerate(self.Bx.T):
+            dk = abs(b[2]**2 - b[4]**2 - b[3]**2) / abs(b[4])
+            if dk > 1e-6:
+                raise ValueError("Wiggler(V): ky^2 + kz^2 -kx^2 !=0, i = "
+                                 "{0}".format(i))
+
+        self.NHharm = self.By.shape[1]
+        self.NVharm = self.Bx.shape[1]
 
 
 CLASS_MAP = dict((k, v) for k, v in locals().items()

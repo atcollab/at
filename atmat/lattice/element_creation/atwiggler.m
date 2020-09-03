@@ -1,79 +1,80 @@
-function Elem = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
-%ATWIGGLER Create a WIGGLER element 
-% atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
+function elem=atwiggler(fname,varargin)
+% ATWIGGLER Creates a wiggler
 %
-% FamName	family name
-% Ltot		total length of the wiggle
-% Lw		total length of the wiggle
-% Bmax	 	peak wiggler field [Tesla]
-% Nstep		num of integration steps per period
-% Nmeth		symplectic integration method, 2nd or 4th order: 2 or 4
-% By		wiggler harmonics for horizontal wigglers
-% Bx		wiggler harmonics for vertical wigglers
-% method        name of the function to use for tracking
+%ELEM=ATWIGGLER(FAMNAME, LENGTH, LW, BMAX, ENERGY, PASSMETHOD)
 %
-% returns a wiggler structure with class 'Wiggler'
+% FAMNAME       family name
+% LENGTH        total length
+% LW            Period length
+% BMAX          Peak magnetic field [T]
+% ENERGY        Beam energy [eV]
+% PASSMETHOD    Tracking function. Default 'GWigSymplecticPass'
+%
+%ELEM=ATWIGGLER(...,'keyword',value...)
+%
+% Keywords:
+% Nstep		number of integration steps per period (default 5)
+% Nmeth		symplectic integration method, 2nd or 4th order: 2 or 4 (default 4)
+% By		harmonics of the horizontal wiggler. Default [1;1;0;1;1;0]
+%               6xNH matrix, with NH number of harmonics
+% Bx		harmonics of the vertical wigglers. Default []
+%               6xNV matrix, with NV number of harmonics
+%
+%see also: GWigSymplecticPass
 
 %---------------------------------------------------------------------------
 % Modification Log:
 % -----------------
+% .04  2018-07-30   A.Mash'al, Iranian Light Source Facility
+%                               Add energy to ElemData
 % .03  2003-06-19	YK Wu, Duke University, wu@fel.duke.edu
 %                               Add checks for input arguments
 % .02  2003-06-18	YK Wu, Duke University
 %				Add checks for inputs, add comments
 %
-% .01  2003-04-20	YK Wu, J. Li, Duke University  
+% .01  2003-04-20	YK Wu, J. Li, Duke University
 %				Define a wiggler element
 %
 %---------------------------------------------------------------------------
 %  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 %
-
-global MaxOrder;
-global NumIntSteps;
-
+[rsrc,Ltot,Lw,Bmax,energy,method] = decodeatargs({0,0,0,0,'GWigSymplecticPass'},varargin);
+[Ltot,rsrc] = getoption(rsrc,'Ltot',Ltot);
+[Lw,rsrc] = getoption(rsrc,'Lw',Lw);
+[Bmax,rsrc] = getoption(rsrc,'Bmax',Bmax);
+[Nstep,rsrc] = getoption(rsrc,'Nstep',5);
+[Nmeth,rsrc] = getoption(rsrc,'Nmeth',4);
+[Bx,rsrc] = getoption(rsrc,'Bx',[]);
+[By,rsrc] = getoption(rsrc,'By',[1;1;0;1;1;0]);
+[method,rsrc] = getoption(rsrc,'PassMethod',method);
+[cl,rsrc] = getoption(rsrc,'Class','Wiggler');
 GWIG_EPS = 1e-6;
 dNw = abs(mod(Ltot/Lw, 1));
 if dNw > GWIG_EPS
-  error(' Wiggler: Ltot/Lw is not an integter.');
+    error(' Wiggler: Ltot/Lw is not an integer.');
 end
 
-Elem.FamName        = fname;  % add check for identical family names
-Elem.Length		= Ltot;
-Elem.Lw             = Lw;
-Elem.Bmax           = Bmax;
-Elem.Nstep    	= Nstep;
-Elem.Nmeth      	= Nmeth;
-if ~isempty(By)
-  Elem.NHharm       = length(By(1,:));
-  for i=1:Elem.NHharm
+By=reshape(By,6,[]);
+NHharm = size(By,2);
+for i=1:NHharm
     kx = By(3,i); ky = By(4,i); kz = By(5,i);
     dk = sqrt(abs(ky*ky - kz*kz - kx*kx))/abs(kz);
-    if ( dk > GWIG_EPS ) then
-      error([' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = ', num2str(i,3)]);
-    end;
-  end
-else
-  Elem.NHharm         = 0;
+    if ( dk > GWIG_EPS )
+        error([' Wiggler (H): kx^2 + kz^2 - ky^2 != 0!, i = ', num2str(i,3)]);
+    end
 end
 
-if ~isempty(Bx)
-  Elem.NVharm         = length(Bx(1,:));
-  for i=1:Elem.NVharm
+Bx=reshape(Bx,6,[]);
+NVharm = size(Bx,2);
+for i=1:NVharm
     kx = Bx(3,i); ky = Bx(4,i); kz = Bx(5,i);
     dk = sqrt(abs(kx*kx - kz*kz - ky*ky))/abs(kz);
-    if ( dk > GWIG_EPS ) then
-      error([' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = ', num2str(i,3)]);
-    end;
-  end
-else
-  Elem.NVharm         = 0;
+    if ( dk > GWIG_EPS )
+        error([' Wiggler (V): ky^2 + kz^2 - kx^2 != 0!, i = ', num2str(i,3)]);
+    end
 end
-Elem.By             = By;
-Elem.Bx             = Bx;
-Elem.R1             = diag(ones(6,1));
-Elem.R2             = diag(ones(6,1));
-Elem.T1             = zeros(1,6);
-Elem.T2             = zeros(1,6);
-Elem.PassMethod 	= method;
-Elem.Class          = 'Wiggler';
+
+elem = atbaselem(fname,method,'Class',cl,'Length',Ltot,'Lw',Lw,...
+    'Bmax',Bmax,'Energy',energy,'Nstep',Nstep,'Nmeth',Nmeth,'Bx',Bx,'By',By,...
+    'NHharm',NHharm','NVharm',NVharm,rsrc{:});
+end

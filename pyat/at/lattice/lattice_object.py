@@ -364,7 +364,8 @@ class Lattice(list):
 
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
-                         quadrupole_func, wiggler_func):
+                         quadrupole_func, wiggler_func,
+                         sextupole_func, octupole_func):
         """Create a function returning the modified attributes"""
 
         def elem_func(elem):
@@ -381,6 +382,10 @@ class Lattice(list):
                 return quadrupole_func(elem)
             elif isinstance(elem, elements.Wiggler):
                 return wiggler_func(elem)
+            elif isinstance(elem, elements.Sextupole):
+                return sextupole_func(elem)
+            elif isinstance(elem, elements.Octupole):
+                return octupole_func(elem)
             else:
                 return None
 
@@ -388,7 +393,8 @@ class Lattice(list):
 
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
-                     quadrupole_pass=None, wiggler_pass='auto', copy=False):
+                     quadrupole_pass=None, wiggler_pass='auto',
+                     sextupole_pass=None, octupole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
 
@@ -396,7 +402,7 @@ class Lattice(list):
             cavity_pass='CavityPass'    PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
-            wiggler_pass=None           PassMethod set on wigglers
+            wiggler_pass='auto'         PassMethod set on wigglers
             copy=False                  Return a shallow copy of the lattice and
                                         replace only the modified attributes
                                         Otherwise modify the lattice in-place.
@@ -432,12 +438,15 @@ class Lattice(list):
         elem_func = self._radiation_attrs(repfunc(cavity_pass),
                                           repfunc(dipole_pass),
                                           repfunc(quadrupole_pass),
-                                          repfunc(wiggler_pass))
+                                          repfunc(wiggler_pass),
+                                          repfunc(sextupole_pass),
+                                          repfunc(octupole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     # noinspection PyShadowingNames
-    def radiation_off(self, cavity_pass='IdentityPass', dipole_pass='auto',
-                      quadrupole_pass=None, wiggler_pass='auto', copy=False):
+    def radiation_off(self, cavity_pass='auto', dipole_pass='auto',
+                      quadrupole_pass='auto', wiggler_pass='auto',
+                      sextupole_pass='auto', octupole_pass='auto', copy=False):
         """
         Turn acceleration and radiation off and return the lattice
 
@@ -445,7 +454,7 @@ class Lattice(list):
             cavity_pass='IdentityPass'  PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
-            wiggler_pass=None           PassMethod set on wigglers
+            wiggler_pass='auto'         PassMethod set on wigglers
             copy=False                  Return a shallow copy of the lattice and
                                         replace only the modified attributes
                                         Otherwise modify the lattice in-place.
@@ -456,18 +465,27 @@ class Lattice(list):
                 anything else   set as it is
         """
 
-        def repfunc(pass_method):
+        def auto_cavity_pass(elem):
+            newpass = 'IdentityPass' if elem.Length == 0 else 'DriftPass'
+            if elem.PassMethod != newpass:
+                return {'PassMethod': newpass}
+            else:
+                return None
+
+        def auto_multipole_pass(elem):
+            if elem.PassMethod.endswith('RadPass'):
+                newpass = ''.join((elem.PassMethod[:-7], 'Pass'))
+                return {'PassMethod': newpass}
+            else:
+                return None
+
+        def repfunc(pass_method, auto_method):
             if pass_method is None:
                 # noinspection PyUnusedLocal
                 def ff(elem):
                     return None
             elif pass_method == 'auto':
-                def ff(elem):
-                    if elem.PassMethod.endswith('RadPass'):
-                        pass_m = ''.join((elem.PassMethod[:-7], 'Pass'))
-                        return {'PassMethod': pass_m}
-                    else:
-                        return None
+                ff = auto_method
             else:
                 def ff(elem):
                     if elem.PassMethod != pass_method:
@@ -476,10 +494,13 @@ class Lattice(list):
                         return None
             return ff
 
-        elem_func = self._radiation_attrs(repfunc(cavity_pass),
-                                          repfunc(dipole_pass),
-                                          repfunc(quadrupole_pass),
-                                          repfunc(wiggler_pass))
+        elem_func = self._radiation_attrs(
+            repfunc(cavity_pass, auto_cavity_pass),
+            repfunc(dipole_pass, auto_multipole_pass),
+            repfunc(quadrupole_pass, auto_multipole_pass),
+            repfunc(wiggler_pass, auto_multipole_pass),
+            repfunc(sextupole_pass, auto_multipole_pass),
+            repfunc(octupole_pass, auto_multipole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     def sbreak(self, break_s, break_elems=None):
