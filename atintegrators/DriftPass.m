@@ -1,5 +1,5 @@
-% DriftPass.m Help file for DriftPass.c
-%  DriftPass.c - Integrator for Drift spaces
+function varargout=DriftPass(varargin)
+%  DriftPass - Integrator for Drift spaces
 % 
 %  The transformation performed is:
 % 
@@ -60,4 +60,8 @@
 %   >> ELEMENT=atdrift('DRIFT',L);
 %   >> outcoord=DriftPass(ELEMENT,[0 0 0 0 0 0]')
 %
-%see also: atdrift, ringpass, linepass, DriftPass.c  
+%see also: atdrift, ringpass, linepass, DriftPass.c
+
+error('AT:MissingMexFile','"%s.%s" is missing. Did you run "atmexall" ?',...
+    mfilename,mexext);
+end

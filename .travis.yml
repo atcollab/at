@@ -51,7 +51,8 @@ before_script:
 
 script: |
   PYTHON_VERSION=$(python -V 2>&1 | cut -d ' ' -f 2 | cut -d '.' -f 1,2)
-  if [[ $TRAVIS_TAG == pyat* ]] && [[ $PYTHON_VERSION == 3.6 ]]; then
+  if [[ $TRAVIS_TAG == pyat* ]] && [[ $PYTHON_VERSION == 3.7 ]]; then
+    # Use cibuildwheel to build all wheels for the current platform.
     rm -rf build
     python -m pip install --upgrade cibuildwheel
     cibuildwheel --output-dir wheelhouse
