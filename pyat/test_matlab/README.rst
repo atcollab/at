@@ -22,11 +22,11 @@ you to run.
 
 Set up a virtualenv using a supported Python version:
 
-* ``cd $AT_ROOT``
-* ``virtualenv --no-site-packages -p $PYTHON_EXECUTABLE venv``
-* ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
+* ``cd $AT_ROOT/pyat``
+* ``python3 -m venv matlab_venv``
+* ``source matlab_venv/bin/activate  # or matlab_venv\Scripts\activate on Windows``
 * ``pip install -r requirements.txt``
-* ``python setup.py install  # install pyAT into the virtualenv``
+* ``pip install -e .  # install pyAT into the virtualenv``
 
 Install the Matlab engine for Python, ensuring your virtualenv is still active:
 
@@ -48,6 +48,12 @@ Footnotes
    +----------------+--------------------------+
    | Matlab Release | Supported Python Version |
    +================+==========================+
+   |  2020a         |  2.7, 3.6, 3.7           |
+   +----------------+--------------------------+
+   |  2019b         |  2.7, 3.6, 3.7           |
+   +----------------+--------------------------+
+   |  2019a         |  2.7, 3.5, 3.6, 3.7      |
+   +----------------+--------------------------+
    |  2018b         |  2.7, 3.5, 3.6           |
    +----------------+--------------------------+
    |  2018a         |  2.7, 3.5, 3.6           |
