@@ -102,7 +102,7 @@ class Element(object):
         >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
         [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
-        # by default, the element is indivisible
+        # Bx default, the element is indivisible
         return [self]
 
     def update(self, *args, **kwargs):
@@ -551,72 +551,54 @@ class Wiggler(LongElement):
     See atwiggler.m
     """
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
-                                                             'Nstep', 'Nmeth',
-                                                             'By', 'Bx',
                                                              'Energy']
-    _conversions = dict(Element._conversions, Lw=float, Bmax=float, Nstep=int,
-                        Nmeth=int, NHharm=int, NVharm=int, By=_array,
-                        Bx=_array, Energy=float)
+    _conversions = dict(Element._conversions, Lw=float, Bmax=float,
+                        Energy=float,
+                        Bx=lambda v: _array(v, (6, -1)),
+                        By=lambda v: _array(v, (6, -1)),
+                        Nstep=int, Nmeth=int, NHharm=int, NVharm=int)
 
-    def __init__(self, family_name, length, wiggle_period, b_max, n_step,
-                 n_meth, by, bx, energy, **kwargs):
+    def __init__(self, family_name, length, wiggle_period, b_max, energy,
+                 Nstep=5, Nmeth=4, By=(1, 1, 0, 1, 1, 0), Bx=(), **kwargs):
         """
-
         Args:
             length: total length of the wiggler
             wiggle_period: length must be a multiple of this
             b_max: peak wiggler field [Tesla]
-            n_step: number of integration steps.
-            n_meth: symplectic integration order: 2 or 4
-            by: harmonics for horizontal wiggler: example [1, 1, 0, 1, 1, 0]
-            bx: harmonics for vertical wiggler: example []
+            energy: beam energy [eV]
+
         Available keywords:
-            NHharm    Number of horizontal harmonics
-            NVharm    Number of vertical harmonics
+            Nstep: number of integration steps.
+            Nmeth: symplectic integration order: 2 or 4
+            Bx: harmonics for horizontal wiggler: (6,nHharm) array-like object
+            By: harmonics for vertical wiggler (6,nHharm) array-like object
+
         """
+        kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
         n_wiggles = length / wiggle_period
         if abs(round(n_wiggles) - n_wiggles) > 1e-6:
             raise ValueError("Wiggler: length / wiggle_period is not an "
                              "integer. ({0}/{1}={2})".format(length,
                                                              wiggle_period,
                                                              n_wiggles))
-        nh = kwargs.pop('NHharm', None)
-        nv = kwargs.pop('NVharm', None)
-        if nh is None:
-            try:
-                nh = len(by[0])
-            except TypeError:
-                nh = 1
-            except IndexError:
-                nh = 0
-        if nv is None:
-            try:
-                nv = len(bx[0])
-            except TypeError:
-                nv = 1
-            except IndexError:
-                nv = 0
-        for i in range(nh):
-            if i == 0:
-                dk = abs(by[3]**2 - by[4]**2 - by[2]**2) / abs(by[4])
-            else:
-                dk = abs(by[3, i]**2 - by[4, i]**2 - by[2, i]**2) / abs(by[4])
+        super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
+                                      Bmax=b_max, Nstep=Nstep, Nmeth=Nmeth,
+                                      By=By, Bx=Bx, Energy=energy, **kwargs)
+
+        for i, b in enumerate(self.By.T):
+            dk = abs(b[3]**2 - b[4]**2 - b[2]**2) / abs(b[4])
             if dk > 1e-6:
                 raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
                                  "{0}".format(i))
-        for i in range(nv):
-            if i == 0:
-                dk = abs(bx[2]**2 - bx[4]**2 - bx[3]**2) / abs(bx[4])
-            else:
-                dk = abs(bx[2, i]**2 - bx[4, i]**2 - bx[3, i]**2) / abs(bx[4])
+
+        for i, b in enumerate(self.Bx.T):
+            dk = abs(b[2]**2 - b[4]**2 - b[3]**2) / abs(b[4])
             if dk > 1e-6:
-                raise ValueError("Wiggler(H): ky^2 + kz^2 -kx^2 !=0, i = "
+                raise ValueError("Wiggler(V): ky^2 + kz^2 -kx^2 !=0, i = "
                                  "{0}".format(i))
-        kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
-        super(Wiggler, self).__init__(family_name, length, Lw=wiggle_period,
-                                      Bmax=b_max, Nstep=n_step, Nmeth=n_meth,
-                                      NHharm=nh, NVharm=nv, By=by, Bx=bx,
-                                      Energy=energy, **kwargs)
+
+        self.NHharm = self.By.shape[1]
+        self.NVharm = self.Bx.shape[1]
 
 
 CLASS_MAP = dict((k, v) for k, v in locals().items()
