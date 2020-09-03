@@ -35,7 +35,7 @@ build_script:
       if ($env:APPVEYOR_REPO_TAG_NAME -eq $null) {
         $env:APPVEYOR_REPO_TAG_NAME = "None"
       }
-      if ($env:APPVEYOR_REPO_TAG_NAME.StartsWith("pyat") -And ($env:PYTHON -eq 36)) {
+      if ($env:APPVEYOR_REPO_TAG_NAME.StartsWith("pyat") -And ($env:PYTHON -eq 37)) {
         rm "build" -r -fo
         python -m pip install --upgrade cibuildwheel
         & cmd /c 'cibuildwheel 2>&1' --output-dir wheelhouse
