@@ -106,17 +106,17 @@ def beam(np, sigma, orbit=None):
     v = numpy.random.normal(size=(sigma.shape[0], np))
 
     try:
-        lmat = numpy.linalg.cholesky(sigma).T
+        lmat = numpy.linalg.cholesky(sigma)
 #        needs the .T to be the same as matlab
 
     except numpy.linalg.LinAlgError:
         row_idx = numpy.array([0, 1, 4, 5])
-        a1 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx]).T
+        a1 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
         a = numpy.bmat([[a1, numpy.zeros((4, 2))], [numpy.zeros((2, 6))]])
         row_idx = numpy.array([0, 1, 4, 5, 2, 3])
         lmat = a[row_idx[:, None], row_idx]
 
-    particle_dist = numpy.squeeze(numpy.asarray(numpy.dot(lmat.T, v)))
+    particle_dist = numpy.squeeze(numpy.asarray(numpy.dot(lmat, v)))
 
     if orbit is not None:
         if (not isinstance(orbit, (numpy.ndarray, list)) or
