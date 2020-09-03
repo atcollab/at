@@ -98,22 +98,14 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts, func_data):
     """
     nelems = len(py_lattice)
     refpts = range(nelems + 1) if refpts is None else refpts
-
-    # Python call
-    if func_data[0] == 'twissring':
-        py_data0, py_tune, py_chrom, py_data = physics.get_twiss(py_lattice,
-                                                                 dp, refpts,
-                                                                 True,
-                                                                 ddp=1.E-6)
-    else:
-        py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp,
-                                                              refpts, True,
-                                                              ddp=1.E-6)
+    py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp,
+                                                          refpts, True,
+                                                          ddp=1.E-6)
     # Matlab call
-    ml_data, ml_tune, ml_chrom = engine.pyproxy(func_data[0], ml_lattice, dp,
+    ml_data, ml_tune, ml_chrom = engine.pyproxy('atlinopt', ml_lattice, dp,
                                                 _ml_refs(refpts, nelems),
                                                 nargout=3)
-    ml_data0 = engine.pyproxy(func_data[0], ml_lattice, dp,
+    ml_data0 = engine.pyproxy('atlinopt', ml_lattice, dp,
                               _ml_refs(nelems, nelems), nargout=3)[0]
     # Comparison
     numpy.testing.assert_almost_equal(py_tune, _py_data(ml_tune), decimal=6)
