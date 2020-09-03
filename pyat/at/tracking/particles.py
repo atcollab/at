@@ -77,6 +77,8 @@ def sigma_matrix(argin):
                             [numpy.zeros((2, 4)),
                                 sigma_matrix([espread, blength])]
                                     ])
+        else:
+            raise AttributeError('Wrong number of inputs provided')
 
     return sig_matrix
 
