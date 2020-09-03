@@ -130,30 +130,6 @@ def test_find_m44_no_refpts(dba_lattice):
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-def test_get_twiss(dba_lattice, refpts):
-    twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP, refpts,
-                                                   get_chrom=True)
-    numpy.testing.assert_allclose(twiss['s_pos'][-1], 56.209377216, atol=1e-9)
-    numpy.testing.assert_allclose(twiss['closed_orbit'][0][:5],
-                                  [1.0916359e-7, 0, 0, 0, DP], atol=1e-12)
-    numpy.testing.assert_allclose(twiss['m44'][-1, :, :], M44_MATLAB,
-                                  rtol=1e-5, atol=1e-7)
-    numpy.testing.assert_almost_equal(twiss['beta'][-1, :], [2.9872, 6.6381],
-                                      decimal=4)
-    numpy.testing.assert_allclose(tune, [0.3655291, 0.4937126], rtol=1e-5,
-                                  atol=1e-7)
-    numpy.testing.assert_allclose(chrom, [-0.30903657, -0.4418593], rtol=1e-5,
-                                  atol=1e-7)
-
-
-def test_get_twiss_no_refpts(dba_lattice):
-    twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP,
-                                                   get_chrom=True)
-    assert list(twiss) == []
-    assert len(physics.get_twiss(dba_lattice, DP, get_chrom=True)) == 4
-
-
-@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 def test_linopt(dba_lattice, refpts):
     lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, refpts,
                                                     get_chrom=True)
@@ -221,6 +197,21 @@ def test_linopt_no_refpts(dba_lattice):
                                                     get_chrom=True)
     assert list(lindata) == []
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
+
+
+@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
+def test_linopt_line(hmba_lattice, refpts):
+    refpts.append(len(hmba_lattice))
+    hmba_lattice.radiation_off(cavity_pass='IdentityPass',
+                               quadrupole_pass='auto')
+    l0, q, qp, ld = at.linopt(hmba_lattice,refpts=refpts,get_chrom=True)
+    lt0, qt, qpt, ltd = at.linopt(hmba_lattice,refpts=refpts,twiss_in=l0,get_chrom=True)
+    numpy.testing.assert_allclose(ld['beta'],ltd['beta'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['s_pos'],ltd['s_pos'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['closed_orbit'],ltd['closed_orbit'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['alpha'],ltd['alpha'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['dispersion'],ltd['dispersion'],atol=1e-15)
+    numpy.testing.assert_allclose(q,qt,rtol=1e-12)
 
 
 def test_get_tune_chrom(hmba_lattice):
