@@ -144,6 +144,22 @@ def test_ohmi_envelope(engine, ml_lattice, py_lattice, refpts):
     _compare_physdata(py_emit, ml_emit, fields)
 
 
+@pytest.mark.parametrize('ml_lattice, py_lattice',
+                         [(pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
+def test_quantdiff(engine, ml_lattice, py_lattice):
+    py_lattice = py_lattice.radiation_on(copy=True)
+    # Python call
+    dmat = physics.radiation.quantdiffmat(py_lattice)
+    lmat = physics.radiation._lmat(dmat)
+    # Matlab call
+    radring,ind = engine.pyproxy('atradon',ml_lattice,nargout=2)
+    dmat_ml=engine.pyproxy('quantumDiff',radring,ind);  
+    # Comparison  
+    numpy.testing.assert_allclose(dmat,dmat_ml)
+    
+
+
 @pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
 @pytest.mark.parametrize('ml_lattice, py_lattice',
                          [(pytest.lazy_fixture('ml_hmba'),
