@@ -246,8 +246,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                           keep_lattice=True, coupled=coupled, **kwup)
         param_down = linopt(ring, dp - 0.5 * ddp, refpts=uintrefs,
                             keep_lattice=True, coupled=coupled, **kwdown)
-        chrom, dispersion, _, _, _, _ = _chromfunc(ddp, *param_up,
-                                                   *param_down)
+        param_up_down = param_up+param_down
+        chrom, dispersion, _, _, _, _ = _chromfunc(ddp, *param_up_down)
     else:
         chrom = numpy.array([numpy.NaN, numpy.NaN])
         dispersion = numpy.NaN
