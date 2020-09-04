@@ -130,30 +130,6 @@ def test_find_m44_no_refpts(dba_lattice):
 
 
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
-def test_get_twiss(dba_lattice, refpts):
-    twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP, refpts,
-                                                   get_chrom=True)
-    numpy.testing.assert_allclose(twiss['s_pos'][-1], 56.209377216, atol=1e-9)
-    numpy.testing.assert_allclose(twiss['closed_orbit'][0][:5],
-                                  [1.0916359e-7, 0, 0, 0, DP], atol=1e-12)
-    numpy.testing.assert_allclose(twiss['m44'][-1, :, :], M44_MATLAB,
-                                  rtol=1e-5, atol=1e-7)
-    numpy.testing.assert_almost_equal(twiss['beta'][-1, :], [2.9872, 6.6381],
-                                      decimal=4)
-    numpy.testing.assert_allclose(tune, [0.3655291, 0.4937126], rtol=1e-5,
-                                  atol=1e-7)
-    numpy.testing.assert_allclose(chrom, [-0.30903657, -0.4418593], rtol=1e-5,
-                                  atol=1e-7)
-
-
-def test_get_twiss_no_refpts(dba_lattice):
-    twiss0, tune, chrom, twiss = physics.get_twiss(dba_lattice, DP,
-                                                   get_chrom=True)
-    assert list(twiss) == []
-    assert len(physics.get_twiss(dba_lattice, DP, get_chrom=True)) == 4
-
-
-@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 def test_linopt(dba_lattice, refpts):
     lindata0, tune, chrom, lindata = physics.linopt(dba_lattice, DP, refpts,
                                                     get_chrom=True)
@@ -214,15 +190,6 @@ def test_linopt_uncoupled(dba_lattice, refpts):
                                       decimal=4)
     numpy.testing.assert_almost_equal(lindata['mu'][-1], [2.296687, 3.102088],
                                       decimal=4)
-    numpy.testing.assert_almost_equal(lindata['gamma'][-1], 1)
-    numpy.testing.assert_allclose(lindata['A'][-1],
-                                  [[-0.6638, 2.23415],
-                                   [-0.25037, -0.6638]], rtol=1e-5, atol=1e-7)
-    numpy.testing.assert_allclose(lindata['B'][-1],
-                                  [[-0.99922, 0.262171],
-                                   [-0.00595, -0.99922]], rtol=1e-4, atol=1e-7)
-    numpy.testing.assert_allclose(lindata['C'][-1], [[0., 0.], [0., 0.]],
-                                  rtol=1e-5, atol=1e-7)
 
 
 def test_linopt_no_refpts(dba_lattice):
@@ -230,6 +197,21 @@ def test_linopt_no_refpts(dba_lattice):
                                                     get_chrom=True)
     assert list(lindata) == []
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
+
+
+@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
+def test_linopt_line(hmba_lattice, refpts):
+    refpts.append(len(hmba_lattice))
+    hmba_lattice.radiation_off(cavity_pass='IdentityPass',
+                               quadrupole_pass='auto')
+    l0, q, qp, ld = at.linopt(hmba_lattice,refpts=refpts,get_chrom=True)
+    lt0, qt, qpt, ltd = at.linopt(hmba_lattice,refpts=refpts,twiss_in=l0,get_chrom=True)
+    numpy.testing.assert_allclose(ld['beta'],ltd['beta'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['s_pos'],ltd['s_pos'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['closed_orbit'],ltd['closed_orbit'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['alpha'],ltd['alpha'],rtol=1e-12)
+    numpy.testing.assert_allclose(ld['dispersion'],ltd['dispersion'],atol=1e-15)
+    numpy.testing.assert_allclose(q,qt,rtol=1e-12)
 
 
 def test_get_tune_chrom(hmba_lattice):
@@ -252,7 +234,7 @@ def test_nl_detuning_chromaticity(hmba_lattice):
     nlqpharm, _, _ = at.nonlinear.chromaticity(hmba_lattice,
                                                method='laskar', npoints=11)
     q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
-                                               npoints=11, window=0.1)
+                                               npoints=11, window=1)
     numpy.testing.assert_allclose(nlqplin,
                                   [[0.38156741, 0.17908186,
                                     1.18655795, -16.47368184],
@@ -270,8 +252,8 @@ def test_nl_detuning_chromaticity(hmba_lattice):
                                    [0.38156263, 0.85437553]],
                                   rtol=1e-5)
     numpy.testing.assert_allclose(q1,
-                                  [[3005.87694885, -3256.61063654],
-                                   [-3259.0625278, 1615.46553512]],
+                                  [[3005.74776344, -3256.81838517],
+                                   [-3258.24669916,  1615.13729938]],
                                   rtol=1e-5)
 
 def test_quantdiff(hmba_lattice):
