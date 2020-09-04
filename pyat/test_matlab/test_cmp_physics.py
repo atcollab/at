@@ -154,7 +154,6 @@ def test_quantdiff(engine, ml_lattice, py_lattice):
                          [(pytest.lazy_fixture('ml_hmba'),
                            pytest.lazy_fixture('py_hmba'))])
 def test_fastring(engine, ml_lattice, py_lattice):
-    ml_lattice[0]['Periodicity'] = 1.0
     # Python call
     ring, ringrad = physics.fastring.fast_ring(py_lattice)
     # Matlab call
@@ -206,7 +205,6 @@ def test_fastring(engine, ml_lattice, py_lattice):
             numpy.testing.assert_allclose(r[2].Lmatp,
                                           rml[3]['Lmatp'],
                                           rtol=0.02, atol=1.0e-10)
-    ml_lattice[0]['Periodicity'] = 32.0
 
 
 @pytest.mark.parametrize('dp', (0.00, 0.01, -0.01))
