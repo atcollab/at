@@ -98,7 +98,7 @@ def radiation_parameters(ring, dp=0.0, params=None):
     E0 = ring.energy
     gamma = E0 / e_mass
     gamma2 = gamma * gamma
-    beta2 = 1.0 - 1.0/gamma2
+    beta = sqrt(1.0 - 1.0/gamma2)
     U0 = Cgamma / 2.0 / pi * E0**4 * rp.i2
     Jx = 1.0 - rp.i4/rp.i2
     Jz = 1.0
@@ -107,19 +107,19 @@ def radiation_parameters(ring, dp=0.0, params=None):
     ct = 2.0 * E0 / U0 * revolution_period
     rp.E0 = E0
     rp.U0 = U0
-    emitx = Cq * gamma * gamma * rp.i5 / Jx / rp.i2
+    emitx = Cq * gamma2 * rp.i5 / Jx / rp.i2
     rp.emittances = numpy.array([emitx, nan, nan])
     alphac = rp.i1 / circumference
-    etac = 1.0/gamma/gamma - alphac
+    etac = 1.0/gamma2 - alphac
     rp.phi_s = pi - asin(U0 / voltage)
     nus = sqrt(abs(etac) * ring.harmonic_number *
-               sqrt(voltage*voltage - U0*U0) / beta2 / E0 / 2.0 / pi)
+               sqrt(voltage*voltage - U0*U0) / E0 / 2.0 / pi) / beta
     rp.voltage = voltage
     rp.f_s = nus / revolution_period
     rp.Tau = ct / damping_partition_numbers
     rp.J = damping_partition_numbers
-    rp.sigma_e = sqrt(Cq * gamma * gamma * rp.i3 / Je / rp.i2)
-    rp.sigma_l = alphac * circumference / 2.0 / pi / nus * rp.sigma_e
+    rp.sigma_e = sqrt(Cq * gamma2 * rp.i3 / Je / rp.i2)
+    rp.sigma_l = beta * abs(etac) * circumference / 2.0 / pi / nus * rp.sigma_e
     ringtunes, _ = numpy.modf(ring.periodicity * tunes)
     rp.fulltunes = ring.periodicity * twiss[-1].mu / 2.0 / pi
     rp.tunes = numpy.concatenate((ringtunes, (nus,)))

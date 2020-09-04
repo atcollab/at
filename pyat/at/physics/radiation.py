@@ -225,7 +225,6 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
         if isinstance(elem, elements.Dipole) and elem.BendingAngle != 0.0:
             beta0 = vini.beta[0]
             alpha0 = vini.alpha[0]
-            gamma0 = (1.0 + alpha0 * alpha0) / beta0
             eta0 = vini.dispersion[0]
             etap0 = vini.dispersion[1]
 
@@ -239,10 +238,11 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
 
             eta3 = vend.dispersion[0]
             alpha1 = alpha0 - beta0*eps1
+            gamma1 = (1.0 + alpha1 * alpha1) / beta0
             etap1 = etap0 + eta0*eps1
             etap2 = vend.dispersion[1] - eta3*eps2
 
-            h0 = gamma0*eta0*eta0 + 2.0*alpha1*eta0*etap1 + beta0*etap1*etap1
+            h0 = gamma1*eta0*eta0 + 2.0*alpha1*eta0*etap1 + beta0*etap1*etap1
 
             if k2 != 0.0:
                 if k2 > 0.0:        # Focusing
@@ -255,19 +255,19 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
                     cc = cosh(kl)
                 eta_ave = (theta - (etap2 - etap1)) / k2 / ll
                 bb = 2.0 * (alpha1*eta0 + beta0*etap1) * rho
-                aa = -2.0 * (alpha1*etap1 + gamma0*eta0) * rho
+                aa = -2.0 * (alpha1*etap1 + gamma1*eta0) * rho
                 h_ave = h0 + (aa * (1.0-ss) + bb * (1.0-cc) / ll
-                              + gamma0 * (3.0-4.0*ss+ss*cc) / 2.0 / k2
+                              + gamma1 * (3.0-4.0*ss+ss*cc) / 2.0 / k2
                               - alpha1 * (1.0-cc)**2 / k2 / ll
                               + beta0 * (1.0-ss*cc) / 2.0
                               ) / k2 / rho2
             else:
                 eta_ave = 0.5 * (eta0 + eta3) - ll*ll / 12.0 / rho
                 hp0 = 2.0 * (alpha1 * eta0 + beta0 * etap1) / rho
-                h2p0 = 2.0 * (-alpha1*etap1 + beta0/rho - gamma0*eta0) / rho
+                h2p0 = 2.0 * (-alpha1*etap1 + beta0/rho - gamma1*eta0) / rho
                 h_ave = h0 + hp0*ll/2.0 + h2p0*ll*ll/6.0 \
                     - alpha1*ll**3/4.0/rho2 \
-                    + gamma0*ll**4/20.0/rho2
+                    + gamma1*ll**4/20.0/rho2
 
             i1 += eta_ave * ll / rho
             i2 += ll / rho2
