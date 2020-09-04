@@ -10,8 +10,10 @@ def r_in(engine):
 
 
 @pytest.mark.parametrize('ml_lattice, py_lattice',
-                         [(pytest.lazy_fixture('ml_dba'), pytest.lazy_fixture('py_dba')),
-                          (pytest.lazy_fixture('ml_hmba'), pytest.lazy_fixture('py_hmba'))])
+                         [(pytest.lazy_fixture('ml_dba'),
+                           pytest.lazy_fixture('py_dba')),
+                          (pytest.lazy_fixture('ml_hmba'),
+                           pytest.lazy_fixture('py_hmba'))])
 def test_one_turn_for_demo_lattice(r_in, engine, ml_lattice, py_lattice):
     for i in range(6):
         # Change each item in r_in before calling.

@@ -28,7 +28,9 @@ def test_avlinopt(engine, ml_lattice, py_lattice, dp):
     ml_data, ml_avebeta, ml_avemu, ml_avedisp, ml_tune, ml_chrom = \
         engine.pyproxy('atavedata', ml_lattice, dp, mlrefs, nargout=6)
     # Comparison
-    numpy.testing.assert_allclose(avebeta, numpy.asarray(ml_avebeta), rtol=1.0e-11, atol=1.0e-20)
-    numpy.testing.assert_allclose(avemu, numpy.asarray(ml_avemu), rtol=1.0e-11, atol=1.0e-20)
-    numpy.testing.assert_allclose(avedisp, numpy.asarray(ml_avedisp), rtol=1.0e-11, atol=1.0e-10)
-    
+    numpy.testing.assert_allclose(avebeta, numpy.asarray(ml_avebeta),
+                                  rtol=1.0e-11, atol=1.0e-20)
+    numpy.testing.assert_allclose(avemu, numpy.asarray(ml_avemu),
+                                  rtol=1.0e-12, atol=1.0e-20)
+    numpy.testing.assert_allclose(avedisp, numpy.asarray(ml_avedisp),
+                                  rtol=1.0e-12, atol=1.0e-10)

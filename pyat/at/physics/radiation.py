@@ -53,7 +53,7 @@ def _dmatr(ring, orbit=None, keep_lattice=False):
     b0 = numpy.zeros((6, 6))
     bb = [find_mpole_raddiff_matrix(elem, elemorb, energy)
           if elem.PassMethod.endswith('RadPass') else b0
-          for elem, elemorb in zip(ring,orbs)]
+          for elem, elemorb in zip(ring, orbs)]
     bbcum = numpy.stack(list(_cumulb(zip(ring, orbs, bb))), axis=0)
     return bbcum, orbs
 
@@ -96,7 +96,7 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
 
     KEYWORDS
         orbit=None          Avoids looking for the closed orbit if it is
-                            already known                           (6,) array)
+                            already known ((6,) array)
         keep_lattice=False  Assume no lattice change since the previous
                             tracking
 
