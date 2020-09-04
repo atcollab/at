@@ -17,6 +17,7 @@ def _ml_refs(refpts, nelems):
 
 
 def _compare_physdata(py_data, ml_data, fields, decimal=8):
+    print(fields)
     for (ml_key, py_key) in fields:
         ml_val = _py_data(ml_data[ml_key])
         if py_key == 'closed_orbit':
@@ -77,10 +78,15 @@ def test_find_m44(engine, ml_lattice, py_lattice, dp, refpts):
 @pytest.mark.parametrize('ml_lattice, py_lattice',
                          [(pytest.lazy_fixture('ml_hmba'),
                            pytest.lazy_fixture('py_hmba'))])
-def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts,
-                         func_data):
-
+def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts):
     nelems = len(py_lattice)
+    fields = [('SPos', 's_pos'),
+              ('ClosedOrbit', 'closed_orbit'),
+              ('Dispersion', 'dispersion'),
+              ('alpha', 'alpha'), ('beta', 'beta'),
+              ('mu', 'mu'), ('M44', 'm44'),
+              ('A', 'A'), ('B', 'B'), ('C', 'C'),
+              ('gamma', 'gamma')]
     refpts = range(nelems + 1) if refpts is None else refpts
     py_data0, py_tune, py_chrom, py_data = physics.linopt(py_lattice, dp,
                                                           refpts, True,
@@ -94,9 +100,9 @@ def test_linear_analysis(engine, ml_lattice, py_lattice, dp, refpts,
     # Comparison
     numpy.testing.assert_almost_equal(py_tune, _py_data(ml_tune), decimal=6)
     numpy.testing.assert_almost_equal(py_chrom, _py_data(ml_chrom), decimal=4)
-    _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, func_data[1],
+    _compare_physdata(numpy.expand_dims(py_data0, 0), ml_data0, fields,
                       decimal=5)
-    _compare_physdata(py_data, ml_data, func_data[1], decimal=6)
+    _compare_physdata(py_data, ml_data, fields, decimal=6)
 
 
 @pytest.mark.parametrize('refpts', (0, [0, 1, 2, -1], None))
