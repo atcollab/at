@@ -49,7 +49,7 @@ function elem=atwiggler(fname,varargin)
 [method,rsrc] = getoption(rsrc,'PassMethod',method);
 [cl,rsrc] = getoption(rsrc,'Class','Wiggler');
 GWIG_EPS = 1e-6;
-dNw = abs(mod(Ltot/Lw, 1));
+dNw = Ltot/Lw-round(Ltot/Lw);
 if dNw > GWIG_EPS
     error(' Wiggler: Ltot/Lw is not an integer.');
 end
