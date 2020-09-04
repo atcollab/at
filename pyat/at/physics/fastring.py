@@ -20,8 +20,8 @@ def rearrange(ring, split_inds=[]):
                  for ibeg, iend in zip(ibegs, iends)]
 
     for ring_slice in all_rings:
-        #replace cavity with length > 0 with drift
-        #set cavity length to 0 and move to start
+        # replace cavity with length > 0 with drift
+        # set cavity length to 0 and move to start
         icav = get_refpts(ring_slice, RFCavity)
         for i in numpy.arange(len(icav)):
             cav_elem = ring_slice.pop(int(icav[i]))
@@ -29,15 +29,15 @@ def rearrange(ring, split_inds=[]):
                 cavdrift = Drift('CavDrift', cav_elem.Length)
                 ring_slice.insert(icav[i], cavdrift)
                 icav = icav + 1
-                cav_elem.Length = 0.0 
+                cav_elem.Length = 0.0
             ring_slice.insert(0, cav_elem)
 
-        #merge all cavities with the same frequency
+        # merge all cavities with the same frequency
         icav = get_refpts(ring_slice, RFCavity)
         all_freq = numpy.array([ring_slice[ic].Frequency for ic in icav])
         all_volt = numpy.array([ring_slice[ic].Voltage for ic in icav])
         uni_freq = numpy.unique(all_freq)
-        
+
         for ii in numpy.arange(len(uni_freq)):
             fr = uni_freq[ii]
             cavmsk = all_freq == fr
@@ -50,7 +50,6 @@ def rearrange(ring, split_inds=[]):
 
         ring_slice.insert(len(uni_freq), Marker('xbeg'))
         ring_slice.append(Marker('xend'))
- 
     return all_rings
 
 

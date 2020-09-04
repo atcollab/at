@@ -94,10 +94,10 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         chromaticities and dispersion
         coupled=True    if False, simplify the calculations by assuming
                         no H/V coupling
-        twiss_in=None      Initial twiss to compute transfer line optics of the type
-                        lindata, the initial orbit in twiss_in is ignored, only the
-                        beta and alpha are required other quatities set to 0 if
-                        absent
+        twiss_in=None   Initial twiss to compute transfer line optics of
+                        the type lindata, the initial orbit in twiss_in is
+                        ignored, only the beta and alpha are required other
+                        quatities set to 0 if absent
 
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
