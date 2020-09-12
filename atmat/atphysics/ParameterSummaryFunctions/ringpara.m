@@ -30,6 +30,9 @@ function rp = ringpara(varargin)
 %radiation effects removed until repaired...
 %Analytical computation of radiation integrals
 
+%Modified by A.Mash'al, 2020-09-03
+%add dispersion to RadIntegrals
+
 global THERING
 
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
@@ -61,13 +64,26 @@ gamma = energy/e_mass;
 [lindata,tune,chrom]=atlinopt(ring,0.0,1:length(ring)+1);
 [I1,I2,I3,I4,I5,I6,Iv] = DipoleRadiation(ring,lindata);
 
-% [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
-% I1=I1+I1w;
-% I2=I2+I2w;
-% I3=I3+I3w;
-% I4=I4+I4w;
-% I5=I5+I5w;
-
+%Wiggler Radiaito effect--------------------
+Wig=atgetcells(THERING,'Bmax');
+Wigidx=find(Wig(:)==1);
+if ~isempty(Wigidx)
+betaB = cat(1, lindata.beta);
+alphaB = cat(1, lindata.alpha);
+AlphaW=alphaB(Wigidx);
+BetaW=betaB(Wigidx);
+disperW = cat(2, lindata.Dispersion);
+DxW=disperW(1,Wigidx);
+for i=1:length(Wigidx)
+    [dI1,dI2,dI3,dI4,dI5] =RadIntegrals(THERING,Wigidx(i),AlphaW(i,:),BetaW(i,:),DxW(i));
+    I1 = I1 + dI1;
+    I2 = I2 + dI2;
+    I3 = I3 + dI3;
+    I4 = I4 + dI4;
+    I5 = I5 + dI5;
+end
+end
+%--------------------------------------------
 spos=findspos(ring,1:length(ring)+1);
 circ=spos(end);
 
