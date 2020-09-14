@@ -70,12 +70,12 @@ Wigidx=find(Wig(:)==1);
 if ~isempty(Wigidx)
 betaB = cat(1, lindata.beta);
 alphaB = cat(1, lindata.alpha);
-AlphaW=alphaB(Wigidx);
-BetaW=betaB(Wigidx);
+AlphaW=alphaB(Wigidx,:);
+BetaW=betaB(Wigidx,:);
 disperW = cat(2, lindata.Dispersion);
-DxW=disperW(1,Wigidx);
+DxW=[disperW(1,Wigidx),disperW(3,Wigidx)];
 for i=1:length(Wigidx)
-    [dI1,dI2,dI3,dI4,dI5] =RadIntegrals(THERING,Wigidx(i),AlphaW(i,:),BetaW(i,:),DxW(i));
+    [dI1,dI2,dI3,dI4,dI5] =RadIntegrals(THERING,Wigidx(i),AlphaW(i,:),BetaW(i,:),DxW(i,:));
     I1 = I1 + dI1;
     I2 = I2 + dI2;
     I3 = I3 + dI3;

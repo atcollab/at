@@ -11,112 +11,149 @@ B0=ring{Wigidx(1),1}.Bmax;
 LT=ring{Wigidx(1),1}.Length;
 Lw=ring{Wigidx(1),1}.Lw;
 kw=2*pi/Lw;
-poles=LT/Lw;
+Npole=LT/Lw;
+%------------ On-axis Magnetic Field B(0,0,z)----------
+% Y. Wu,"SYMPLECTIC MODELS FOR GENERAL INSERTION DEVICES", Eq (8) 
+% M. Borland, GWigB function @ gwigR.c
+
+% Horizontal wiggler , Bx=[] 
 if isempty(ring{Wigidx(1)}.Bx) 
+    
+WMode='Horz';    
+    
 pBy=ring{Wigidx(1),1}.By;
-nB=size(pBy,2);
-kz=kw*pBy(5,1);
-By=@(x) -B0*pBy(2,1)*sin(kz*x+pBy(6,1));
-if nB>1
-for i=1:nB
-    kz=kw*pBy(5,i);
-    By0=@(x) -B0*pBy(2,i)*sin(kz*x+pBy(6,i));
-    By=By+By0;
-    clear('By0')
+nHarm=size(pBy,2);
+By=@(x) 0;
+for i=1:nHarm
+    kz=kw*pBy(5,i);     %k_zn= n*k_w  , n=pBy(5,i)
+    tz=pBy(6,i);
+    C_mn=pBy(2,i);
+    By0=@(x) -B0*C_mn*cos(kz*x+tz);
+    By=@(x) By(x)+By0(x);
 end
-end
+BT=By;
 end
 
-if isempty(ring{Wigidx(1)}.By)
+
+% Vertical wiggler , By=[] 
+if isempty(ring{Wigidx(1)}.By) 
+    
+WMode='Vert';
+    
 pBx=ring{Wigidx(1),1}.Bx;
-nB=size(pBx,2);
-kz=kw*pBx(5,1);
-By=@(x) B0*pBx(2,1)*sin(kz*x+pBx(6,1));
-if nB>1
-for i=1:nB
-    kz=kw*pBx(5,i);
-    By0=@(x) B0*pBx(2,i)*sin(kz*x+pBx(6,i));
-    By=By+By0;
-    clear('By0')
+nHarm=size(pBx,2);
+Bx=@(x) 0;
+for i=1:nHarm
+    kz=kw*pBx(5,i);     %k_zn= n*k_w  , n=pBx(5,i)
+    tz=pBx(6,i);
+    C_mn=pBx(2,i);
+    Bx0=@(x) B0*C_mn*cos(kz*x+tz);
+    Bx=@(x) Bx(x)+Bx0(x);
 end
+BT=Bx;
 end
-end
-helical=0;
+
+% Elliptical Polarized Wiggler
+
 if ~isempty(ring{Wigidx(1)}.By) && ~isempty(ring{Wigidx(1)}.Bx)
-helical=1;
+
+WMode='Ellip';
+
+pBy=ring{Wigidx(1),1}.By;
 pBx=ring{Wigidx(1),1}.Bx;
-nB=size(pBx,2);
-kz=kw*pBx(5,1);
-By=@(x) B0*pBx(2,1)*sin(kz*x+pBx(6,1));
-if nB>1
-for i=1:nB
-    kz=kw*pBx(5,i);
-    By0=@(x) B0*pBx(2,i)*sin(kz*x+pBx(6,i));
-    By=By+By0;
-    clear('By0')
+nHarmH=size(pBy,2);
+nHarmV=size(pBx,2);
+By=@(x) 0;
+Bx=@(x) 0;
+for i=1:nHarmH
+    kz=kw*pBy(5,i);     
+    tz=pBy(6,i);
+    C_mn=pBy(2,i);
+    By0=@(x) -B0*C_mn*cos(kz*x+tz);
+    By=@(x) By(x)+By0(x);
 end
+for i=1:nHarmV
+    kz=kw*pBx(5,i);     
+    tz=pBx(6,i);
+    C_mn=pBx(2,i);
+    Bx0=@(x) B0*C_mn*cos(kz*x+tz);
+    Bx=@(x) Bx(x)+Bx0(x);
 end
-end
+BT=@(x) sqrt((Bx(x).^2)+(By(x).^2));
+end   
+
+%------------- Radiation Integrals------------------------
 E0=GLOBVAL.E0/1e9;
-rho2=@(x) (By(x).^2)*((0.2998/E0)^2);
+rho2=@(x) (BT(x).^2)*((0.2998/E0)^2);
 I2=integral(rho2,0,LT);
-rho3=@(x) abs(By(x).^3)*((0.2998/E0)^3);
+rho3=@(x) abs(BT(x).^3)*((0.2998/E0)^3);
 I3=integral(rho3,0,LT);
-RHO=@(x) By(x)*0.2998/E0;
-close all
-[Ds,Dsp,sp]= Dispwig (RHO,Lw,Dis0);
-Ds=Ds';
-Dsp=Dsp';
-fI1=Ds.*By(sp)*0.2998/E0;
-I1=poles*trapz(sp,fI1);
-disp(I1)
-fI4=Ds.*By(sp).*(By(sp).^2)*((0.2998/E0)^3);
-I4=poles*trapz(sp,fI4);
-alphax=Alph(1)*ones(1,length(sp));
-betax=Bta(1)*ones(1,length(sp));
-gammax=(1+alphax.^2)./betax;
-H=gammax.*(Ds.^2)+2*alphax.*(Dsp.^2)+betax.*(Ds.*Dsp);
-fI5=H.*rho3(sp);
-I5=poles*trapz(sp,fI5);
 
 
-if helical==1
-    clear('By')
-    pBy=ring{Wigidx(1),1}.By;
-nB=size(pBy,2);
-kz=kw*pBy(5,1);
-By=@(x) -B0*pBy(2,1)*sin(kz*x+pBy(6,1));
-if nB>1
-for i=1:nB
-    kz=kw*pBy(5,i);
-    By0=@(x) -B0*pBy(2,i)*sin(kz*x+pBy(6,i));
-    By=By+By0;
-    clear('By0')
-end
-end
-rho2=@(x) (By(x).^2)*((0.2998/E0)^2);
-I22=integral(rho2,0,LT);
-rho3=@(x) abs(By(x).^3)*((0.2998/E0)^3);
-I32=integral(rho3,0,LT);
-RHO=@(x) By(x)*0.2998/E0;
-[Ds,Dsp,sp]= Dispwig (RHO,Lw,0);
-Ds=Ds';
-Dsp=Dsp';
-fI1=Ds.*By(sp)*0.2998/E0;
-I12=poles*trapz(sp,fI1);
-disp(I12)
-fI4=Ds.*By(sp).*(By(sp).^2)*((0.2998/E0)^3);
-I42=poles*trapz(sp,fI4);
-alphax=Alph(2)*ones(1,length(sp));
-betax=Bta(2)*ones(1,length(sp));
-gammax=(1+alphax.^2)./betax;
-H=gammax.*(Ds.^2)+2*alphax.*(Dsp.^2)+betax.*(Ds.*Dsp);
-fI5=H.*rho3(sp);
-I52=poles*trapz(sp,fI5);
-    I1=I1+I12;
-    I2=I2+I22;
-    I3=I3+I32;
-    I4=I4+I42;
-    I5=I5+I52;
+switch WMode
+    case 'Horz'
+        RHOy=@(x) By(x)*0.2998/E0;
+        [Ds,Dsp,sp]= Dispwig (RHOy,Lw,Dis0(1));
+        Ds=Ds';
+        Dsp=Dsp';
+        fI1=Ds.*RHOy(sp);
+        I1=Npole*trapz(sp,fI1);
+        fI4=Ds.*By(sp).*(By(sp).^2)*((0.2998/E0)^3);
+        I4=Npole*trapz(sp,fI4);
+        alphax=Alph(1)*ones(1,length(sp));
+        betax=Bta(1)*ones(1,length(sp));
+        gammax=(1+alphax.^2)./betax;
+        H=gammax.*(Ds.^2)+2*alphax.*(Dsp.^2)+betax.*(Ds.*Dsp);
+        fI5=H.*abs(By(sp).^3)*((0.2998/E0)^3);
+        I5=Npole*trapz(sp,fI5);
+    case 'Vert'
+        RHOx=@(x) Bx(x)*0.2998/E0;
+        [Ds,Dsp,sp]= Dispwig (RHOx,Lw,Dis0(2));
+        Ds=Ds';
+        Dsp=Dsp';
+        fI1=Ds.*RHOx(sp);
+        I1=Npole*trapz(sp,fI1);
+        fI4=Ds.*Bx(sp).*(Bx(sp).^2)*((0.2998/E0)^3);
+        I4=Npole*trapz(sp,fI4);
+        alphax=Alph(2)*ones(1,length(sp));
+        betax=Bta(2)*ones(1,length(sp));
+        gammax=(1+alphax.^2)./betax;
+        H=gammax.*(Ds.^2)+2*alphax.*(Dsp.^2)+betax.*(Ds.*Dsp);
+        fI5=H.*abs(Bx(sp).^3)*((0.2998/E0)^3);
+        I5=Npole*trapz(sp,fI5);
+    case 'Ellip'
+        RHOy=@(x) By(x)*0.2998/E0;
+        [Ds,Dsp,sp]= Dispwig (RHOy,Lw,Dis0(1));
+        Ds=Ds';
+        Dsp=Dsp';
+        fI1=Ds.*RHOy(sp);
+        I1y=Npole*trapz(sp,fI1);
+        fI4=Ds.*By(sp).*(By(sp).^2)*((0.2998/E0)^3);
+        I4y=Npole*trapz(sp,fI4);
+        alphax=Alph(1)*ones(1,length(sp));
+        betax=Bta(1)*ones(1,length(sp));
+        gammax=(1+alphax.^2)./betax;
+        H=gammax.*(Ds.^2)+2*alphax.*(Dsp.^2)+betax.*(Ds.*Dsp);
+        fI5=H.*abs(By(sp).^3)*((0.2998/E0)^3);
+        I5y=Npole*trapz(sp,fI5);
+        
+        RHOx=@(x) Bx(x)*0.2998/E0;
+        [Ds,Dsp,sp]= Dispwig (RHOx,Lw,Dis0(2));
+        Ds=Ds';
+        Dsp=Dsp';
+        fI1=Ds.*RHOx(sp);
+        I1x=Npole*trapz(sp,fI1);
+        fI4=Ds.*Bx(sp).*(Bx(sp).^2)*((0.2998/E0)^3);
+        I4x=Npole*trapz(sp,fI4);
+        alphax=Alph(2)*ones(1,length(sp));
+        betax=Bta(2)*ones(1,length(sp));
+        gammax=(1+alphax.^2)./betax;
+        H=gammax.*(Ds.^2)+2*alphax.*(Dsp.^2)+betax.*(Ds.*Dsp);
+        fI5=H.*abs(Bx(sp).^3)*((0.2998/E0)^3);
+        I5x=Npole*trapz(sp,fI5);
+        
+        I1=I1y+I1x;
+        I4=I4y+I4x;
+        I5=I5y+I5x;
 end
 end

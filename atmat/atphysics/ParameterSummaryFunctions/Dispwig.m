@@ -28,7 +28,6 @@ end
     end
     D_old=D_new;
 end
-fprintf('Iteration = %d , Error= %e\n',count,Err)
 Ds=D_new;
 Dsp=zeros(N,1);
 for i=2:length(x)
