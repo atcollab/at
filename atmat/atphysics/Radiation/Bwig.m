@@ -1,4 +1,20 @@
 function [bx,bz,bs] = Bwig(wig,x,z,s)
+%Bwig   Compute the field of a geeric wiggler
+%
+%The field of an horizontal wiggler is represented by a sum of harmonics,
+%each being described by a 6x1 column in a matrix By such as:
+%
+%   Bx/Bmax =  B2 * B3/B4 * sin(B3*kw*x) sinh(B4*kw*z) cos(B5*kw*s + B6)
+%   Bz/Bmax = -B2 * cos(B3*kw*x) cosh(B4*kw*z) cos(B5*kw*s + B6)
+%   Bs/Bmax =  B2 * B5/B4 * cos(B3*kw*x) sinh(B4*kw*z) sin(B5*kw*s + B6)
+%
+%The field of an vertical wiggler is represented by a sum of harmonics,
+%each being described by a 6x1 column in a matrix Bx such as:
+%
+%   Bx/Bmax =  B2 * cos(B4*kw*z) cosh(B3*kw*x) cos(B5*kw*s + B6)
+%   Bz/Bmax = -B2 * B4/B3 * sin(B4*kw*z) sinh(B3*kw*x) cos(B5*kw*s + B6)
+%   Bs/Bmax = -B2 * B5/B3 * cos(B3*kw*z) sinh(B3*kw*x) sin(B5*kw*s + B6)
+
 kw=2*pi/wig.Lw;
 Bmax=wig.Bmax;
 kwx=kw*x;
@@ -32,7 +48,9 @@ bs=squeeze(sum(cat(4,bsh{:},bsv{:}),4));
         [bx,bz,bs]=harm(pb,kwx,kwz,kws);
     end
     function [bx,bz,bs]=harmv(pb)
-        [bz,bb,bs]=harm(pb,kwz,-kwx,kws);
-        bx=-bb;
+        [fx,fz,fs]=harm(pb([1 2 4 3 5 6]),kwz,-kwx,kws);
+        bx=-permute(fz,[2 1 3]);
+        bz=permute(fx,[2 1 3]);
+        bs=permute(fs,[2 1 3]);
     end
 end
