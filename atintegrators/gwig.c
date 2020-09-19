@@ -79,7 +79,7 @@ void GWigPass_4th(struct gwig *pWig, double *X)
 
   const double x1 = 1.3512071919596576340476878089715e0;
   const double x0 =-1.7024143839193152680953756179429e0;
-
+  FILE *fptr;
   int    i, Nstep;
   double dl, dl1, dl0;
  
@@ -88,12 +88,19 @@ void GWigPass_4th(struct gwig *pWig, double *X)
 
   dl1 = x1*dl;
   dl0 = x0*dl;
-
+  fptr = fopen("Diswig.DAT", "w") ;
+  scanf("%g %g %g %g %g", &X[0], &X[1], &X[2], &X[3], &pWig->Zw) ;
+  fprintf(fptr, "%g %g %g %g %g\n", X[0], X[1], X[2], X[3], pWig->Zw) ;
+ 
   for (i = 1; i <= Nstep; i++ ) {
     GWigMap_2nd(pWig, X, dl1);
     GWigMap_2nd(pWig, X, dl0);
     GWigMap_2nd(pWig, X, dl1);
+    scanf("%g %g %g %g %g", &X[0], &X[1], &X[2], &X[3], &pWig->Zw) ;
+	fprintf(fptr, "%g %g %g %g %g\n", X[0], X[1], X[2], X[3], pWig->Zw) ;
   }
+   fclose(fptr);
+ 
 }
 
 
