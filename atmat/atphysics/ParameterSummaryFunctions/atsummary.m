@@ -31,7 +31,7 @@ energy=atenergy(ring);
 params   = atgetcells(ring,'Class','RingParam');
 if any(params)
     LatticeName=ring{find(params,1)}.FamName;
-elseif isfield(E0,'LatticeFile')
+elseif isfield(GLOBVAL,'LatticeFile')
     LatticeName=GLOBVAL.LatticeFile;
 else
     LatticeName='';
