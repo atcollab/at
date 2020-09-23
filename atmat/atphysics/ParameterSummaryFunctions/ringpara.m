@@ -65,7 +65,7 @@ gamma = energy/e_mass;
 [I1,I2,I3,I4,I5,I6,Iv] = DipoleRadiation(ring,lindata);
 
 %Wiggler Radiaito effect--------------------
-Wig=atgetcells(THERING,'Bmax');
+Wig=atgetcells(ring,'Bmax');
 Wigidx=find(Wig(:)==1);
 if ~isempty(Wigidx)
 betaB = cat(1, lindata.beta);
@@ -75,7 +75,7 @@ BetaW=betaB(Wigidx,:);
 disperW = cat(2, lindata.Dispersion);
 DxW=disperW(:,Wigidx)';
 for i=1:length(Wigidx)
-    [dI1,dI2,dI3,dI4,dI5] =RadIntegrals(THERING,Wigidx(i),AlphaW(i,:),BetaW(i,:),DxW(i,:));
+    [dI1,dI2,dI3,dI4,dI5] =RadIntegrals(ring,Wigidx(i),AlphaW(i,:),BetaW(i,:),DxW(i,:));
     I1 = I1 + dI1;
     I2 = I2 + dI2;
     I3 = I3 + dI3;
