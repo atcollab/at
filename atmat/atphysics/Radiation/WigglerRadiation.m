@@ -1,10 +1,11 @@
 function [I1,I2,I3,I4,I5] = WigglerRadiation(ring,lindata)
 %DIPOLERADIATION	Compute the radiation integrals in dipoles
 
+nstep=60;
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
 cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
 
-iswiggler=atgetfieldvalues(ring,'Class','Wiggler');
+iswiggler=atgetcells(ring,'Class','Wiggler');
 if any(iswiggler)
     energy=unique(atgetfieldvalues(ring(iswiggler),'Energy'));
     if length(energy) > 1
@@ -29,14 +30,22 @@ else
 end
 
     function [di1,di2,di3,di4,di5]=wigrad(elem,dini)
+        le=elem.Length;
+        alpha0=dini.alpha(1);
+        beta0=dini.beta(1);
+        gamma0=(alpha0.*alpha0+1)./beta0;
+        avebeta=beta0+alpha0*le+gamma0*le*le/3;
+
+        k0=2*pi/elem.Lw;
         rhoinv=elem.Bmax/Brho;
+        d1lim=elem.Length*rhoinv*rhoinv/2/k0/k0;
+        d5lim=4*avebeta*le*rhoinv^5/15/pi/k0/k0;
         coefh=elem.By(2,:);
         coefv=elem.Bx(2,:);
-        [bx,bz,~]=Bwig(elem,0,0,linspace(0,elem.Lw,61));
+        [bx,bz]=Baxis(elem,linspace(0,elem.Lw,nstep+1));
         B2=bx.*bx+bz.*bz;
         rinv=sqrt(B2)/Brho;
-        di2=trapz(B2)*elem.Length/Brho;
-        di3=trapz(rinv.^3)*elem.Length;
+        di3=trapz(rinv.^3)*elem.Length/nstep;
         di2=elem.Length*(coefh*coefh'+coefv*coefv')*rhoinv*rhoinv/2;
         betax0 = dini.beta(1);
         alphax0 = dini.alpha(1);
@@ -44,9 +53,45 @@ end
         eta0 = dini.Dispersion(1);
         etap0 = dini.Dispersion(2);
         H0=gammax0*eta0*eta0 + 2*alphax0*eta0*etap0 + betax0*etap0*etap0;
-        di1=0;
+        di1=d1lim;
         di4=0;
-        di5=H0*di2;
+        di5=max(H0*di3,d5lim);
+        fprintf('%s\t%e\t%e\t%e\t%e\t%e\t\n',elem.FamName,di1,di2,di3,di4,di5);
     end
+
+    function [bx,bz] = Baxis(wig,s)
+        %Bwig   Compute the field on the axis of a generic wiggler
+        %
+        %The field of an horizontal wiggler is represented by a sum of harmonics,
+        %each being described by a 6x1 column in a matrix By such as:
+        %
+        %   Bz/Bmax = -B2 * cos(B5*kw*s + B6)
+        %
+        %The field of an vertical wiggler is represented by a sum of harmonics,
+        %each being described by a 6x1 column in a matrix Bx such as:
+        %
+        %   Bx/Bmax =  B2 * cos(B5*kw*s + B6)
+        
+        kw=2*pi/wig.Lw;
+        Bmax=wig.Bmax;
+        kws=kw*s;
+        [bxh,bzh]=cellfun(@harmh,num2cell(wig.By,1),'UniformOutput',false);
+        [bxv,bzv]=cellfun(@harmv,num2cell(wig.Bx,1),'UniformOutput',false);
+        bx=sum(cat(3,bxh{:},bxv{:}),3);
+        bz=sum(cat(3,bzh{:},bzv{:}),3);
+        
+        function [bx,bz]=harm(pb)
+            bz=-Bmax*pb(2)*cos(pb(5)*kws+pb(6));
+            bx=zeros(size(kws));
+        end
+        function [bx,bz]=harmh(pb)
+            [bx,bz]=harm(pb);
+        end
+        function [bx,bz]=harmv(pb)
+            [bz,fz]=harm(pb);
+            bx=-fz;
+        end
+    end
+
 end
 
