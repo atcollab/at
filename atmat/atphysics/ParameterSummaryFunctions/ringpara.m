@@ -59,14 +59,13 @@ end
 
 gamma = energy/e_mass;
 [lindata,tune,chrom]=atlinopt(ring,0.0,1:length(ring)+1);
-[I1,I2,I3,I4,I5,I6,Iv] = DipoleRadiation(ring,lindata);
-
+[I1d,I2d,I3d,I4d,I5d,I6,Iv] = DipoleRadiation(ring,lindata);
 [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
-I1=I1+I1w;
-I2=I2+I2w;
-I3=I3+I3w;
-I4=I4+I4w;
-I5=I5+I5w;
+I1=I1d+I1w;
+I2=I2d+I2w;
+I3=I3d+I3w;
+I4=I4d+I4w;
+I5=I5d+I5w;
 
 spos=findspos(ring,1:length(ring)+1);
 circ=spos(end);

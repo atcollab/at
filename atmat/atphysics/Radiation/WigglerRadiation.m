@@ -36,10 +36,9 @@ end
         gamma0=(alpha0.*alpha0+1)./beta0;
         avebeta=beta0+alpha0*le+gamma0*le*le/3;
 
-        k0=2*pi/elem.Lw;
+        kw=2*pi/elem.Lw;
         rhoinv=elem.Bmax/Brho;
-        d1lim=elem.Length*rhoinv*rhoinv/2/k0/k0;
-        d5lim=4*avebeta*le*rhoinv^5/15/pi/k0/k0;
+        d5lim=4*avebeta*le*rhoinv^5/15/pi/kw/kw;
         coefh=elem.By(2,:);
         coefv=elem.Bx(2,:);
         [bx,bz]=Baxis(elem,linspace(0,elem.Lw,nstep+1));
@@ -53,7 +52,7 @@ end
         eta0 = dini.Dispersion(1);
         etap0 = dini.Dispersion(2);
         H0=gammax0*eta0*eta0 + 2*alphax0*eta0*etap0 + betax0*etap0*etap0;
-        di1=d1lim;
+        di1=-di2/kw/kw;
         di4=0;
         di5=max(H0*di3,d5lim);
         fprintf('%s\t%e\t%e\t%e\t%e\t%e\t\n',elem.FamName,di1,di2,di3,di4,di5);
