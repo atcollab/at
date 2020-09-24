@@ -59,8 +59,9 @@ smm.beta          = sqrt(1 - 1/smm.gamma);
 smm.compactionFactor = mcf(ring);
 
 % For calculating the synchrotron integrals
-[I1,I2,I3,I4,I5,I6,~] = DipoleRadiation(ring,TD);
-smm.integrals=[I1,I2,I3,I4,I5,I6];
+[I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
+[I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
+smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
 
 % Damping numbers
 % Use Robinson's Theorem

@@ -55,7 +55,7 @@ end
         di1=-di2/kw/kw;
         di4=0;
         di5=max(H0*di3,d5lim);
-        fprintf('%s\t%e\t%e\t%e\t%e\t%e\t\n',elem.FamName,di1,di2,di3,di4,di5);
+%         fprintf('%s\t%e\t%e\t%e\t%e\t%e\t(%e,%e,%e)\n',elem.FamName,di1,di2,di3,di4,di5,d5lim,H0*di3,dini.Dispersion(1));
     end
 
     function [bx,bz] = Baxis(wig,s)
