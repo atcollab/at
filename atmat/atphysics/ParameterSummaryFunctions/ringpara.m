@@ -30,6 +30,9 @@ function rp = ringpara(varargin)
 %radiation effects removed until repaired...
 %Analytical computation of radiation integrals
 
+%Modified by Laurent Farvacque, 2020-09-24
+%wiggler radiation effect reintroduced
+
 global THERING
 
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
@@ -159,7 +162,7 @@ rp.emitty_d = emitty_d;
 
 if nargout == 0
     fprintf('\n');
-    fprintf('   ******** AT Ring Parmater Summary ********\n');
+    fprintf('   ******** AT Ring Parameter Summary ********\n');
     fprintf('   Energy: \t\t\t%4.5f [GeV]\n', rp.E0/1E9);
     fprintf('   Circumference: \t\t%4.5f [m]\n', rp.R*2*pi);
     fprintf('   Revolution time: \t\t%4.5f [ns] (%4.5f [MHz]) \n', rp.T0*1e9,1./rp.T0*1e-6);

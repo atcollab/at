@@ -1,5 +1,19 @@
 function [I1,I2,I3,I4,I5] = WigglerRadiation(ring,lindata)
-%DIPOLERADIATION	Compute the radiation integrals in dipoles
+%WIGGLERRADIATION	Compute the radiation integrals in wigglers
+%
+%[I1,I2,I3,I4,I5] = WIGGLERRADIATION(RING,LINDATA)
+%
+%RING       Lattice structure
+%LINDATA    Output of atlinopt for all lattice elements
+%
+%WigglerRadiation computes the radiation integrals for all wigglers with
+%the following approximations:
+%
+%- The self-induced dispersion is neglected in I4 and I5, but is is used as
+%  a lower limit for the I5 contribution
+%
+% I1, I2 are integrated analytically
+% I3 is integrated analytically for a single harmonic, numerically otherwise
 
 nstep=60;
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
@@ -22,38 +36,36 @@ if any(iswiggler)
     I4=sum(di4);
     I5=sum(di5);
 else
-    I1=0;
-    I2=0;
-    I3=0;
-    I4=0;
-    I5=0;
+    [I1,I2,I3,I4,I5]=deal(0);
 end
 
     function [di1,di2,di3,di4,di5]=wigrad(elem,dini)
         le=elem.Length;
-        alpha0=dini.alpha(1);
-        beta0=dini.beta(1);
-        gamma0=(alpha0.*alpha0+1)./beta0;
-        avebeta=beta0+alpha0*le+gamma0*le*le/3;
-
-        kw=2*pi/elem.Lw;
-        rhoinv=elem.Bmax/Brho;
-        d5lim=4*avebeta*le*rhoinv^5/15/pi/kw/kw;
-        coefh=elem.By(2,:);
-        coefv=elem.Bx(2,:);
-        [bx,bz]=Baxis(elem,linspace(0,elem.Lw,nstep+1));
-        B2=bx.*bx+bz.*bz;
-        rinv=sqrt(B2)/Brho;
-        di3=trapz(rinv.^3)*elem.Length/nstep;
-        di2=elem.Length*(coefh*coefh'+coefv*coefv')*rhoinv*rhoinv/2;
-        betax0 = dini.beta(1);
-        alphax0 = dini.alpha(1);
-        gammax0 = (1+alphax0*alphax0)/betax0;
+        alphax0=dini.alpha(1);
+        betax0=dini.beta(1);
+        gammax0=(alphax0.*alphax0+1)./betax0;
         eta0 = dini.Dispersion(1);
         etap0 = dini.Dispersion(2);
         H0=gammax0*eta0*eta0 + 2*alphax0*eta0*etap0 + betax0*etap0*etap0;
+        avebetax=betax0+alphax0*le+gammax0*le*le/3;
+
+        kw=2*pi/elem.Lw;
+        rhoinv=elem.Bmax/Brho;
+        coefh=elem.By(2,:);
+        coefv=elem.Bx(2,:);
+        coef2=[coefh coefv];
+        if length(coef2)==1     % Analytical I3
+            di3=(rhoinv*coef2)^3*4*le/3/pi;
+        else                    % Numerical I3
+            [bx,bz]=Baxis(elem,linspace(0,elem.Lw,nstep+1));
+            B2=bx.*bx+bz.*bz;
+            rinv=sqrt(B2)/Brho;
+            di3=trapz(rinv.^3)*le/nstep;
+        end
+        di2=elem.Length*(coefh*coefh'+coefv*coefv')*rhoinv*rhoinv/2;
         di1=-di2/kw/kw;
         di4=0;
+        d5lim=4*avebetax*le*rhoinv^5/15/pi/kw/kw;
         di5=max(H0*di3,d5lim);
 %         fprintf('%s\t%e\t%e\t%e\t%e\t%e\t(%e,%e,%e)\n',elem.FamName,di1,di2,di3,di4,di5,d5lim,H0*di3,dini.Dispersion(1));
     end
@@ -64,12 +76,12 @@ end
         %The field of an horizontal wiggler is represented by a sum of harmonics,
         %each being described by a 6x1 column in a matrix By such as:
         %
-        %   Bz/Bmax = -B2 * cos(B5*kw*s + B6)
+        %   Bz/Bmax = -By2 * cos(By5*kw*s + By6)
         %
         %The field of an vertical wiggler is represented by a sum of harmonics,
         %each being described by a 6x1 column in a matrix Bx such as:
         %
-        %   Bx/Bmax =  B2 * cos(B5*kw*s + B6)
+        %   Bx/Bmax =  Bx2 * cos(Bx5*kw*s + Bx6)
         
         kw=2*pi/wig.Lw;
         Bmax=wig.Bmax;
