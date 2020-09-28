@@ -52,7 +52,7 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 [octupass,varargs]=getoption(varargin,'octupass','');
 [sextupass,varargs]=getoption(varargs,'sextupass','');
 [quadpass,varargs]=getoption(varargs,'quadpass','');
-%[wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
+[wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
 [bendpass,varargs]=getoption(varargs,'bendpass','auto');
 [cavipass,varargs]=getoption(varargs,'cavipass','CavityPass');
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
@@ -69,7 +69,7 @@ energy=atenergy(ring);
 
 [ring,octupoles]=changepass(ring,octupass,@(rg) selmpole(rg,4),'Octu');
 
-%[ring,wigglers]=changepass(ring,wigglerpass,@selwiggler,'Wiggler');
+[ring,wigglers]=changepass(ring,wigglerpass,@(rg) atgetcells(rg,'Class','Wiggler'));
 
 cavitiesIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'CavityPass'));
 radelemIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));
@@ -78,7 +78,7 @@ if any(cavities)
     atdisplay(1,['Cavities modified at position ' num2str(find(cavities)')]);
 end
 
-radnum=sum(dipoles|quadrupoles|sextupoles|octupoles);
+radnum=sum(dipoles|quadrupoles|sextupoles|octupoles|wigglers);
 if radnum > 0
     atdisplay(1,[num2str(radnum) ' elements switched to include radiation']);
 end
@@ -95,7 +95,7 @@ end
             end
             if any(mask)
                 ring(mask)=cellfun(@newelem,ring(mask),passlist(ok),'UniformOutput',false);
-            else
+            elseif nargin >= 4
                 warning(['AT:atradon:NO' code], ['no ' code ' modified']),
             end
         end

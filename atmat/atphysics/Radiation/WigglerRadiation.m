@@ -51,23 +51,30 @@ end
 
         kw=2*pi/elem.Lw;
         rhoinv=elem.Bmax/Brho;
-        coefh=elem.By(2,:);
-        coefv=elem.Bx(2,:);
+        coefh=elem.By(2,:)*rhoinv;
+        coefv=elem.Bx(2,:)*rhoinv;
         coef2=[coefh coefv];
         if length(coef2)==1     % Analytical I3
-            di3=(rhoinv*coef2)^3*4*le/3/pi;
+            di3=coef2^3*4*le/3/pi;
         else                    % Numerical I3
             [bx,bz]=Baxis(elem,linspace(0,elem.Lw,nstep+1));
             B2=bx.*bx+bz.*bz;
             rinv=sqrt(B2)/Brho;
             di3=trapz(rinv.^3)*le/nstep;
         end
-        di2=elem.Length*(coefh*coefh'+coefv*coefv')*rhoinv*rhoinv/2;
+        di2=elem.Length*(coefh*coefh'+coefv*coefv')/2;
         di1=-di2/kw/kw;
         di4=0;
-        d5lim=4*avebetax*le*rhoinv^5/15/pi/kw/kw;
+        if ~isempty(coefh)
+            d5lim=4*avebetax*le*coefh(1)^5/15/pi/kw/kw;
+        else
+            d5lim = 0;
+        end
         di5=max(H0*di3,d5lim);
 %         fprintf('%s\t%e\t%e\t%e\t%e\t%e\t(%e,%e,%e)\n',elem.FamName,di1,di2,di3,di4,di5,d5lim,H0*di3,dini.Dispersion(1));
+%         avebetaz=dini.beta(2)+dini.alpha(2)*le+(1+dini.alpha(2)^2)/dini.beta(2)*le*le/3;
+%         dnuz=avebetaz*di2/8/pi;
+%         fprintf('%s\t%e\t%e\n',elem.FamName,dnuz,avebetaz)
     end
 
     function [bx,bz] = Baxis(wig,s)
