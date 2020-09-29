@@ -81,7 +81,7 @@ end
     function [linusr,pm]=atx2(ring,energy,periods,voltage,eloss,varargin)
         
         c = PhysConstant.speed_of_light_in_vacuum.value;
-        [dpp,refusr]=getargs(varargin,0,1:length(ring));
+        [dpp,refusr]=parseargs({0,1:length(ring)},varargin);
         if islogical(refusr)
             refusr(end+1,length(ring)+1)=false;
         else
@@ -252,12 +252,14 @@ end
             
             function [chi,nu]=decode(range)
                 matr=Rmat(range,range);
-%                 nu=abs(atan2(matr(1,2)-matr(2,1),matr(1,1)+matr(2,2)))/2/pi;
-%                 chi=-log(sqrt(det(matr)));
+                tic;
+                nu0=atan2(matr(1,2)-matr(2,1),matr(1,1)+matr(2,2))/2/pi;
+                chi0=-log(sqrt(det(matr)));
                 ev=eig(matr);
                 ev1log=log(ev(1));
-                chi=-real(ev1log);
+                chi=real(ev1log);
                 nu=abs(imag(ev1log))/2/pi;
+                fprintf('%e\t%e\t%e\t%e\n',nu0,nu,chi0,chi);
             end
         end
         
