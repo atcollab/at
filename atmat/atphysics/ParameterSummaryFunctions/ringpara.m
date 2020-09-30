@@ -122,7 +122,11 @@ else
     freq_rf = 476.314e6;
 end
 
-phi_s = pi-asin(rp.U0/Vrf);
+if rp.U0 <= Vrf
+    phi_s = pi-asin(rp.U0/Vrf);
+else
+    phi_s = NaN;
+end
 nus = sqrt(harm*Vrf*abs(rp.etac*cos(phi_s))/2/pi/rp.E0)/betar;
 rp.nus = nus;
 rp.phi_s = phi_s;

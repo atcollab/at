@@ -89,7 +89,11 @@ smm.overvoltage = v_cav/(smm.radiation*1e9);
 % references:  H. Winick, "Synchrotron Radiation Sources: A Primer",
 % World Scientific Publishing, Singapore, pp92-95. (1995)
 % Wiedemann, pp290,350. Chao, pp189.
-smm.syncphase = pi - asin(1/smm.overvoltage);
+if smm.overvoltage > 1
+    smm.syncphase = pi - asin(1/smm.overvoltage);
+else
+    smm.syncphase = NaN;
+end
 smm.energyacceptance = sqrt(v_cav*sin(smm.syncphase)*2*(sqrt(smm.overvoltage^2-1) - acos(1/smm.overvoltage))/(pi*smm.harmon*abs(smm.etac)*smm.e0*1e9));
 smm.synctune = sqrt((smm.etac*smm.harmon*v_cav*cos(smm.syncphase))/(2*pi*smm.e0*1e9))/smm.beta;
 bunchtime = abs(smm.etac)*smm.naturalEnergySpread/(smm.synctune*smm.revFreq*2*pi);
