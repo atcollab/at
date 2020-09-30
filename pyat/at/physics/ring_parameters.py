@@ -1,4 +1,4 @@
-from math import pi, sqrt, asin
+from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
 from scipy.constants import c
@@ -111,9 +111,9 @@ def radiation_parameters(ring, dp=0.0, params=None):
     rp.emittances = numpy.array([emitx, nan, nan])
     alphac = rp.i1 / circumference
     etac = 1.0/gamma2 - alphac
-    rp.phi_s = pi - asin(U0 / voltage)
+    rp.phi_s = (pi - asin(U0 / voltage)) if U0 <= voltage else nan
     nus = sqrt(abs(etac) * ring.harmonic_number *
-               sqrt(voltage*voltage - U0*U0) / E0 / 2.0 / pi) / beta
+               voltage * cos(rp.phi_s) / E0 / 2.0 / pi) / beta
     rp.voltage = voltage
     rp.f_s = nus / revolution_period
     rp.Tau = ct / damping_partition_numbers
