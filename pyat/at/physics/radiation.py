@@ -14,7 +14,7 @@ from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
            'gen_quantdiff_elem']
 
-_NSTEP = 60     # nb slices in a wiggler period
+_NSTEP = 60  # nb slices in a wiggler period
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -74,7 +74,7 @@ def _lmat(dmat):
         nz = numpy.where(dmat != 0)
         cmat = numpy.reshape(dmat[nz], (4, 4))
         cmat = numpy.linalg.cholesky(cmat)
-        lmat[nz] = numpy.reshape(cmat, (16, ))
+        lmat[nz] = numpy.reshape(cmat, (16,))
     return lmat
 
 
@@ -214,6 +214,7 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     """
 
     def dipole_radiation(elem, vini, vend):
+        """Analytically compute the radiation integrals in dipoles"""
         beta0 = vini.beta[0]
         alpha0 = vini.alpha[0]
         eta0 = vini.dispersion[0]
@@ -233,7 +234,7 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
         etap1 = etap0 + eta0 * eps1
         etap2 = vend.dispersion[1] - eta3 * eps2
 
-        h0 = gamma1 * eta0 * eta0 + 2.0 * alpha1 * eta0 * etap1 + beta0 * etap1 * etap1
+        h0 = gamma1*eta0*eta0 + 2.0*alpha1*eta0*etap1 + beta0*etap1*etap1
 
         if k2 != 0.0:
             if k2 > 0.0:  # Focusing
@@ -269,7 +270,19 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
         return numpy.array([di1, di2, di3, di4, di5])
 
     def wiggler_radiation(elem, dini):
+        """Compute the radiation integrals in wigglers with the following
+        approximations:
+
+        - The wiggler is aligned with the closed orbit
+        - The self-induced dispersion is neglected in I4 and I5, but is is used
+          as a lower limit for the I5 contribution
+        - I1, I2 are integrated analytically
+        - I3 is integrated analytically for a single harmonic, numerically
+          otherwise
+        """
+
         def b_on_axis(wig, s):
+            """On-axis wiggler field"""
             def harm(coef, h, phi):
                 return -Bmax * coef * numpy.cos(h*kws + phi)
 
@@ -298,32 +311,32 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
         coefv = elem.Bx[1, :] * rhoinv
         coef2 = numpy.concatenate((coefh, coefv))
         if len(coef2) == 1:
-            di3 = le * coef2[0]**3 * 4 / 3 / pi
+            di3 = le * coef2[0] ** 3 * 4 / 3 / pi
         else:
-            bx, bz = b_on_axis(elem, numpy.linspace(0, elem.Lw, _NSTEP+1))
+            bx, bz = b_on_axis(elem, numpy.linspace(0, elem.Lw, _NSTEP + 1))
             rinv = numpy.sqrt(bx*bx + bz*bz) / Brho
-            di3 = numpy.trapz(rinv**3) * le / _NSTEP
-        di2 = le * (numpy.sum(coefh * coefh)+numpy.sum(coefv * coefv)) / 2
+            di3 = numpy.trapz(rinv ** 3) * le / _NSTEP
+        di2 = le * (numpy.sum(coefh * coefh) + numpy.sum(coefv * coefv)) / 2
         di1 = -di2 / kw / kw
         di4 = 0
         if len(coefh) > 0:
-            d5lim = 4 * avebetax * le * coefh[0]**5 / 15 / pi / kw/ kw
+            d5lim = 4 * avebetax * le * coefh[0] ** 5 / 15 / pi / kw / kw
         else:
             d5lim = 0
         di5 = max(H0 * di3, d5lim)
         return numpy.array([di1, di2, di3, di4, di5])
 
     gamma = ring.energy / e_mass
-    beta = sqrt(1.0-1.0/gamma/gamma)
+    beta = sqrt(1.0 - 1.0/gamma/gamma)
     Brho = beta * ring.energy / clight
-    integrals =numpy.zeros((5,))
+    integrals = numpy.zeros((5,))
 
     if twiss is None:
         _, _, _, twiss = linopt(ring, dp, range(len(ring) + 1),
                                 get_chrom=True, coupled=False)
-    elif len(twiss) != len(ring)+1:
+    elif len(twiss) != len(ring) + 1:
         raise ValueError('length of Twiss data should be {0}'
-                         .format(len(ring)+1))
+                         .format(len(ring) + 1))
     for (elem, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
         if isinstance(elem, elements.Dipole) and elem.BendingAngle != 0.0:
             integrals += dipole_radiation(elem, vini, vend)
@@ -344,7 +357,7 @@ def get_energy_loss(ring):
     theta = lenthe[:, 1]
 
     i2 = ring.periodicity * (numpy.sum(theta * theta / lendp))
-    e_loss = Cgamma / 2.0 / pi * ring.energy**4 * i2
+    e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
     return e_loss
 
 
@@ -361,7 +374,7 @@ def quantdiffmat(ring, orbit=None):
         diffusion matrix (6,6)
     """
     bbcum, _ = _dmatr(ring, orbit=orbit)
-    diffmat = [(bbc + bbc.T)/2 for bbc in bbcum]
+    diffmat = [(bbc + bbc.T) / 2 for bbc in bbcum]
     return numpy.round(diffmat[-1], 24)
 
 
