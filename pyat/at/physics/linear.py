@@ -2,7 +2,7 @@
 Coupled or non-coupled 4x4 linear motion
 """
 import numpy
-from math import sqrt, atan2, pi, factorial
+from math import sqrt, atan2, pi
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts
 from at.tracking import lattice_pass
@@ -179,7 +179,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                 disp0 = twiss_in['dispersion']
             except KeyError:
                 print('Dispersion not found in twiss_in, setting to zero')
-                disp0 = np.zeros((4,))
+                disp0 = numpy.zeros((4,))
             dorbit = numpy.hstack((0.5 * ddp * disp0,
                                    numpy.array([0.5 * ddp, 0])))
             orbit_up = orbit+dorbit
@@ -240,7 +240,9 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             tune = numpy.zeros((2,))
 
     if get_chrom:
+        # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
+        # noinspection PyUnboundLocalVariable
         kwdown = dict(orbit=orbit_down, twiss_in=twiss_in)
         param_up = linopt(ring, dp=dp + 0.5 * ddp, refpts=uintrefs,
                           keep_lattice=True, coupled=coupled, **kwup)
@@ -440,7 +442,7 @@ def get_mcf(ring, dp=0.0, ddp=DDP, keep_lattice=False):
 
 
 @check_radiation(False)
-def get_tune(ring, method='linopt', dp=0, **kwargs):
+def get_tune(ring, method='linopt', dp=0.0, **kwargs):
     """
     gets the tune using several available methods
 
