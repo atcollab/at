@@ -70,8 +70,13 @@ def amat(tt):
     #  n2x n2y n2z
     #  n3x n3y n3z
     nn = 0.5 * abs(numpy.sqrt(-1.j * vn.conj().T.dot(jmt).dot(_vxyz[dms - 1])))
-    ind = numpy.argmax(nn[select, :][:, select], axis=0)
-    v_ordered = vn[:, 2 * ind]
+    rows = list(select)
+    ord=[]
+    for ixz in select:
+        ind=numpy.argmax(nn[rows,ixz])
+        ord.append(rows[ind])
+        del rows[ind]
+    v_ordered = vn[:,ord]
     aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
         (nv, nv), order='F')
     return aa

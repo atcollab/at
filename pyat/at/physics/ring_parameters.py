@@ -112,8 +112,8 @@ def radiation_parameters(ring, dp=0.0, params=None):
     alphac = rp.i1 / circumference
     etac = 1.0/gamma2 - alphac
     rp.phi_s = (pi - asin(U0 / voltage)) if U0 <= voltage else nan
-    nus = sqrt(abs(etac) * ring.harmonic_number *
-               voltage * cos(rp.phi_s) / E0 / 2.0 / pi) / beta
+    nus = sqrt(abs(etac * ring.harmonic_number *
+               voltage * cos(rp.phi_s) / E0 / 2.0 / pi)) / beta
     rp.voltage = voltage
     rp.f_s = nus / revolution_period
     rp.Tau = ct / damping_partition_numbers
