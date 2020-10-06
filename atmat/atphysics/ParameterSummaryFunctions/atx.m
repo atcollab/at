@@ -252,12 +252,12 @@ end
             
             function [chi,nu]=decode(range)
                 matr=Rmat(range,range);
-%                 nu=abs(atan2(matr(1,2)-matr(2,1),matr(1,1)+matr(2,2)))/2/pi;
+%                 nu=mod(atan2(matr(1,2)-matr(2,1),matr(1,1)+matr(2,2))/2/pi,1);
 %                 chi=-log(sqrt(det(matr)));
                 ev=eig(matr);
                 ev1log=log(ev(1));
                 chi=-real(ev1log);
-                nu=abs(imag(ev1log))/2/pi;
+                nu=mod(imag(ev1log)/2/pi,1);
             end
         end
         
