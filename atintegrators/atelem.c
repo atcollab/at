@@ -83,6 +83,13 @@ static double* atGetDoubleArray(const mxArray *ElemData, const char *fieldname)
     return atGetDoubleArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
+static double _Complex * atGetComplexArray(const mxArray *ElemData, const char *fieldname)
+{
+    mxArray *field=mxGetField(ElemData,0,fieldname);
+    if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    return (double _Complex *)mxGetComplexDoubles(field);
+}
+
 static long atGetOptionalLong(const mxArray *ElemData, const char *fieldname, long default_value)
 {
     mxArray *field=mxGetField(ElemData,0,fieldname);
