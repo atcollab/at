@@ -607,7 +607,7 @@ def params_filter(params, elem_iterator, *args):
     thetas = []
 
     for idx, elem in enumerate(elem_iterator(params, *args)):
-        if (isinstance(elem, elements.RFCavity) or
+        if (isinstance(elem, (elements.RFCavity, elements.Wiggler)) or
                 elem.PassMethod.endswith('RadPass')):
             rad_energies.append(elem.Energy)
             try:

@@ -53,14 +53,16 @@ smm.circumference = findspos(ring, length(ring)+1);
 smm.revTime       = smm.circumference / cspeed;
 smm.revFreq       = cspeed / smm.circumference;
 smm.gamma         = 1.e9 * smm.e0 / e_mass;
-smm.beta          = sqrt(1 - 1/smm.gamma);
+smm.beta          = sqrt(1 - 1/smm.gamma/smm.gamma);
+beta_c            = smm.beta * cspeed;
 
 [TD, smm.tunes, smm.chromaticity] = twissring(ring, 0, 1:length(ring)+1, 'chrom', 1e-8);
 smm.compactionFactor = mcf(ring);
 
 % For calculating the synchrotron integrals
-[I1,I2,I3,I4,I5,I6,~] = DipoleRadiation(ring,TD);
-smm.integrals=[I1,I2,I3,I4,I5,I6];
+[I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
+[I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
+smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
 
 % Damping numbers
 % Use Robinson's Theorem
@@ -87,11 +89,15 @@ smm.overvoltage = v_cav/(smm.radiation*1e9);
 % references:  H. Winick, "Synchrotron Radiation Sources: A Primer",
 % World Scientific Publishing, Singapore, pp92-95. (1995)
 % Wiedemann, pp290,350. Chao, pp189.
-smm.syncphase = pi - asin(1/smm.overvoltage);
+if smm.overvoltage > 1
+    smm.syncphase = pi - asin(1/smm.overvoltage);
+else
+    smm.syncphase = NaN;
+end
 smm.energyacceptance = sqrt(v_cav*sin(smm.syncphase)*2*(sqrt(smm.overvoltage^2-1) - acos(1/smm.overvoltage))/(pi*smm.harmon*abs(smm.etac)*smm.e0*1e9));
-smm.synctune = sqrt((smm.etac*smm.harmon*v_cav*cos(smm.syncphase))/(2*pi*smm.e0*1e9));
-smm.bunchlength = smm.beta*cspeed*abs(smm.etac)*smm.naturalEnergySpread/(smm.synctune*smm.revFreq*2*pi);
-
+smm.synctune = sqrt((smm.etac*smm.harmon*v_cav*cos(smm.syncphase))/(2*pi*smm.e0*1e9))/smm.beta;
+bunchtime = abs(smm.etac)*smm.naturalEnergySpread/(smm.synctune*smm.revFreq*2*pi);
+smm.bunchlength = beta_c * bunchtime;
 % optics
 % [bx by] = modelbeta;
 % [ax ay] = modelalpha;
@@ -146,7 +152,7 @@ if DisplayFlag
     fprintf('   Synchronous Phase:  \t\t% 4.5f [rad] (%4.5f [deg])\n', smm.syncphase, smm.syncphase*180/pi);
     fprintf('   Linear Energy Acceptance:  \t% 4.3f %%\n', smm.energyacceptance*100);
     fprintf('   Synchrotron Tune:   \t\t% 4.5f (%4.5f kHz or %4.2f turns) \n', smm.synctune, smm.synctune/smm.revTime*1e-3, 1/smm.synctune);
-    fprintf('   Bunch Length:       \t\t% 4.5f [mm] (%4.5f ps)\n', smm.bunchlength*1e3, smm.bunchlength/3e8*1e12);
+    fprintf('   Bunch Length:       \t\t% 4.5f [mm] (%4.5f ps)\n', smm.bunchlength*1e3, bunchtime*1e12);
     fprintf(SeparatorString);
     fprintf('   Injection:\n');
     fprintf('   H: beta = %06.3f [m] alpha = %+04.1e eta = %+04.3f [m] eta'' = %+04.1e \n', bx(1), ax(1), etax(1), etaprimex(1));

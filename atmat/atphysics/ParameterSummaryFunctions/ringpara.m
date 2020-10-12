@@ -30,6 +30,9 @@ function rp = ringpara(varargin)
 %radiation effects removed until repaired...
 %Analytical computation of radiation integrals
 
+%Modified by Laurent Farvacque, 2020-09-24
+%wiggler radiation effect reintroduced
+
 global THERING
 
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
@@ -58,15 +61,16 @@ if ~isempty(Ux)
 end
 
 gamma = energy/e_mass;
+betar = sqrt(1-1/gamma/gamma);
+beta_c = betar*cspeed;
 [lindata,tune,chrom]=atlinopt(ring,0.0,1:length(ring)+1);
-[I1,I2,I3,I4,I5,I6,Iv] = DipoleRadiation(ring,lindata);
-
-% [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
-% I1=I1+I1w;
-% I2=I2+I2w;
-% I3=I3+I3w;
-% I4=I4+I4w;
-% I5=I5+I5w;
+[I1d,I2d,I3d,I4d,I5d,~,Iv] = DipoleRadiation(ring,lindata);
+[I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
+I1=I1d+I1w;
+I2=I2d+I2w;
+I3=I3d+I3w;
+I4=I4d+I4w;
+I5=I5d+I5w;
 
 spos=findspos(ring,1:length(ring)+1);
 circ=spos(end);
@@ -100,16 +104,8 @@ rp.dampingalpha = [alphax, alphay, alphaE];
 rp.dampingtime = 1./[alphax, alphay, alphaE];
 
 
-%compute coupled damping times
-%[nu,chi]=atTunesAndDampingRatesFromMat(findm66(atradon(ring)));
-try
-    [~,chi]=atTunesAndDampingRatesFromMat(findm66((ring)));
-catch
-    warning('failed coupled damping times computation');
-    chi=[NaN,NaN,NaN];
-end
-
-rp.coupleddampingtime=T0./chi;
+%computation of coupled damping time removed since radiation must be off
+%coupled damping times are available in atx
 
 rp.dampingJ = [Jx,Jy,Je];
 
@@ -126,12 +122,17 @@ else
     freq_rf = 476.314e6;
 end
 
-phi_s = pi-asin(rp.U0/Vrf);
-nus = sqrt(harm*Vrf*abs(rp.etac*cos(phi_s))/2/pi/rp.E0);
+if rp.U0 <= Vrf
+    phi_s = pi-asin(rp.U0/Vrf);
+else
+    phi_s = NaN;
+end
+nus = sqrt(harm*Vrf*abs(rp.etac*cos(phi_s))/2/pi/rp.E0)/betar;
 rp.nus = nus;
 rp.phi_s = phi_s;
 rp.harm = harm;
-rp.bunchlength = rp.sigma_E*harm*abs(rp.etac)/nus/2/pi/freq_rf*cspeed; % rms bunchlength in meter
+bunchtime=rp.sigma_E*harm*abs(rp.etac)/nus/2/pi/freq_rf;    % [s]
+rp.bunchlength = beta_c*bunchtime;                          % [m]
 delta_max = sqrt(2*U0/pi/alphac/harm/rp.E0)*sqrt( sqrt((Vrf/U0).^2-1) - acos(U0./Vrf));
 rp.delta_max = delta_max;
 
@@ -160,7 +161,7 @@ rp.emitty_d = emitty_d;
 
 if nargout == 0
     fprintf('\n');
-    fprintf('   ******** AT Ring Parmater Summary ********\n');
+    fprintf('   ******** AT Ring Parameter Summary ********\n');
     fprintf('   Energy: \t\t\t%4.5f [GeV]\n', rp.E0/1E9);
     fprintf('   Circumference: \t\t%4.5f [m]\n', rp.R*2*pi);
     fprintf('   Revolution time: \t\t%4.5f [ns] (%4.5f [MHz]) \n', rp.T0*1e9,1./rp.T0*1e-6);
@@ -191,7 +192,7 @@ if nargout == 0
     fprintf('   Synchronous Phase:  %4.5f [rad] (%4.5f [deg])\n', rp.phi_s, rp.phi_s*180/pi);
     fprintf('   Linear Energy Acceptance:  %4.5f %%\n', rp.delta_max*100);
     fprintf('   Synchrotron Tune:   %4.5f (%4.5f kHz or %4.2f turns) \n', rp.nus, rp.nus/rp.T0*1e-3, 1/rp.nus);
-    fprintf('   Bunch Length:       %4.5f [mm], %4.5f [ps]\n', rp.bunchlength*1e3, rp.bunchlength/cspeed*1e12);
+    fprintf('   Bunch Length:       %4.5f [mm], %4.5f [ps]\n', rp.bunchlength*1e3, bunchtime*1e12);
     fprintf('\n');
 %     fprintf('   Vertical Emittance:  %4.5f [nm]\n', rp.emitty*1e9);
 %     fprintf('   Emitty from Dy:  %4.5f [nm], from linear coupling: %4.5f\n', rp.emitty_d*1e9,rp.emitty_c*1e9);

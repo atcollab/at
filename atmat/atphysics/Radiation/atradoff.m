@@ -4,6 +4,8 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %   [RING2,RADINDEX,CAVINDEX] = ATRADOFF(RING,CAVIPASS,BENDPASS,QUADPASS)
 %    Changes passmethods to turn off radiation damping. 
 %
+%   The default is to turn cavities OFF and remove radiation in all magnets.
+%
 %  INPUTS
 %  1. RING      initial AT structure
 %  2. CAVIPASS  pass method for cavities
@@ -26,6 +28,7 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %   'quadpass'      pass method for quadrupoles. Default 'auto'
 %   'sextupass'     pass method for sextupoles. Default 'auto'
 %   'octupass'      pass method for bending magnets. Default 'auto'
+%   'wigglerpass'	pass method for wigglers. Default 'auto'
 %
 %   OUPUTS
 %   1. RING2     Output ring
@@ -37,7 +40,7 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 [octupass,varargs]=getoption(varargin,'octupass','auto');
 [sextupass,varargs]=getoption(varargs,'sextupass','auto');
 [quadpass,varargs]=getoption(varargs,'quadpass','auto');
-%[wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
+[wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
 [bendpass,varargs]=getoption(varargs,'bendpass','auto');
 [cavipass,varargs]=getoption(varargs,'cavipass','auto');
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
@@ -52,7 +55,7 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 
 [ring,octupoles]=changepass(ring,octupass,@(rg) selmpole(rg,4),@autoMultiPolePass,'Octu');
 
-%[ring,wigglers]=changepass(ring,wigglerpass,@selwiggler,@autoMultiPolePass,'Wiggler');
+[ring,wigglers]=changepass(ring,wigglerpass,@(rg) atgetcells(rg,'Class','Wiggler'),@autoMultiPolePass,'Wiggler');
 
 cavitiesIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'CavityPass'));
 radelemIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));
@@ -61,7 +64,7 @@ if any(cavities)
     atdisplay(1,['Cavities modified at position ' num2str(find(cavities)')]);
 end
 
-radnum=sum(dipoles|quadrupoles|sextupoles|octupoles);
+radnum=sum(dipoles|quadrupoles|sextupoles|octupoles|wigglers);
 if radnum > 0
     atdisplay(1,[num2str(radnum) ' elements switched to include radiation']);
 end

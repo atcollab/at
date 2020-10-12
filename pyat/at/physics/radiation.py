@@ -4,14 +4,17 @@ Radiation and equilibrium emittances
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
+from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.lattice import Element, elements
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix
+from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
            'gen_quantdiff_elem']
+
+_NSTEP = 60  # nb slices in a wiggler period
 
 _submat = [slice(0, 2), slice(2, 4), slice(6, 3, -1)]
 
@@ -71,7 +74,7 @@ def _lmat(dmat):
         nz = numpy.where(dmat != 0)
         cmat = numpy.reshape(dmat[nz], (4, 4))
         cmat = numpy.linalg.cholesky(cmat)
-        lmat[nz] = numpy.reshape(cmat, (16, ))
+        lmat[nz] = numpy.reshape(cmat, (16,))
     return lmat
 
 
@@ -209,74 +212,136 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     OUTPUT
         i1, i2, i3, i4, i5
     """
-    i1 = 0.0
-    i2 = 0.0
-    i3 = 0.0
-    i4 = 0.0
-    i5 = 0.0
+
+    def dipole_radiation(elem, vini, vend):
+        """Analytically compute the radiation integrals in dipoles"""
+        beta0 = vini.beta[0]
+        alpha0 = vini.alpha[0]
+        eta0 = vini.dispersion[0]
+        etap0 = vini.dispersion[1]
+
+        ll = elem.Length
+        theta = elem.BendingAngle
+        rho = ll / theta
+        rho2 = rho * rho
+        k2 = elem.K + 1.0 / rho2
+        eps1 = tan(elem.EntranceAngle) / rho
+        eps2 = tan(elem.ExitAngle) / rho
+
+        eta3 = vend.dispersion[0]
+        alpha1 = alpha0 - beta0 * eps1
+        gamma1 = (1.0 + alpha1 * alpha1) / beta0
+        etap1 = etap0 + eta0 * eps1
+        etap2 = vend.dispersion[1] - eta3 * eps2
+
+        h0 = gamma1*eta0*eta0 + 2.0*alpha1*eta0*etap1 + beta0*etap1*etap1
+
+        if k2 != 0.0:
+            if k2 > 0.0:  # Focusing
+                kl = ll * sqrt(k2)
+                ss = sin(kl) / kl
+                cc = cos(kl)
+            else:  # Defocusing
+                kl = ll * sqrt(-k2)
+                ss = sinh(kl) / kl
+                cc = cosh(kl)
+            eta_ave = (theta - (etap2 - etap1)) / k2 / ll
+            bb = 2.0 * (alpha1 * eta0 + beta0 * etap1) * rho
+            aa = -2.0 * (alpha1 * etap1 + gamma1 * eta0) * rho
+            h_ave = h0 + (aa * (1.0 - ss) + bb * (1.0 - cc) / ll
+                          + gamma1 * (3.0 - 4.0 * ss + ss * cc) / 2.0 / k2
+                          - alpha1 * (1.0 - cc) ** 2 / k2 / ll
+                          + beta0 * (1.0 - ss * cc) / 2.0
+                          ) / k2 / rho2
+        else:
+            eta_ave = 0.5 * (eta0 + eta3) - ll * ll / 12.0 / rho
+            hp0 = 2.0 * (alpha1 * eta0 + beta0 * etap1) / rho
+            h2p0 = 2.0 * (-alpha1 * etap1 + beta0 / rho - gamma1 * eta0) / rho
+            h_ave = h0 + hp0 * ll / 2.0 + h2p0 * ll * ll / 6.0 \
+                    - alpha1 * ll ** 3 / 4.0 / rho2 \
+                    + gamma1 * ll ** 4 / 20.0 / rho2
+
+        di1 = eta_ave * ll / rho
+        di2 = ll / rho2
+        di3 = ll / abs(rho) / rho2
+        di4 = eta_ave * ll * (2.0 * elem.K + 1.0 / rho2) / rho \
+              - (eta0 * eps1 + eta3 * eps2) / rho
+        di5 = h_ave * ll / abs(rho) / rho2
+        return numpy.array([di1, di2, di3, di4, di5])
+
+    def wiggler_radiation(elem, dini):
+        """Compute the radiation integrals in wigglers with the following
+        approximations:
+
+        - The wiggler is aligned with the closed orbit
+        - The self-induced dispersion is neglected in I4 and I5, but is is used
+          as a lower limit for the I5 contribution
+        - I1, I2 are integrated analytically
+        - I3 is integrated analytically for a single harmonic, numerically
+          otherwise
+        """
+
+        def b_on_axis(wig, s):
+            """On-axis wiggler field"""
+
+            def harm(coef, h, phi):
+                return -Bmax * coef * numpy.cos(h*kws + phi)
+
+            kw = 2 * pi / wig.Lw
+            Bmax = wig.Bmax
+            kws = kw * s
+            zz = [numpy.zeros(kws.shape)]
+            vh = zz + [harm(pb[1], pb[4], pb[5]) for pb in wig.By.T]
+            vv = zz + [-harm(pb[1], pb[4], pb[5]) for pb in wig.Bx.T]
+            bys = numpy.sum(numpy.stack(vh), axis=0)
+            bxs = numpy.sum(numpy.stack(vv), axis=0)
+            return bxs, bys
+
+        le = elem.Length
+        alphax0 = dini.alpha[0]
+        betax0 = dini.beta[0]
+        gammax0 = (alphax0 * alphax0 + 1) / betax0
+        eta0 = dini.dispersion[0]
+        etap0 = dini.dispersion[1]
+        H0 = gammax0*eta0*eta0 + 2*alphax0*eta0*etap0 + betax0*etap0*etap0
+        avebetax = betax0 + alphax0*le + gammax0*le*le/3
+
+        kw = 2 * pi / elem.Lw
+        rhoinv = elem.Bmax / Brho
+        coefh = elem.By[1, :] * rhoinv
+        coefv = elem.Bx[1, :] * rhoinv
+        coef2 = numpy.concatenate((coefh, coefv))
+        if len(coef2) == 1:
+            di3 = le * coef2[0] ** 3 * 4 / 3 / pi
+        else:
+            bx, bz = b_on_axis(elem, numpy.linspace(0, elem.Lw, _NSTEP + 1))
+            rinv = numpy.sqrt(bx*bx + bz*bz) / Brho
+            di3 = numpy.trapz(rinv ** 3) * le / _NSTEP
+        di2 = le * (numpy.sum(coefh * coefh) + numpy.sum(coefv * coefv)) / 2
+        di1 = -di2 / kw / kw
+        di4 = 0
+        if len(coefh) > 0:
+            d5lim = 4 * avebetax * le * coefh[0] ** 5 / 15 / pi / kw / kw
+        else:
+            d5lim = 0
+        di5 = max(H0 * di3, d5lim)
+        return numpy.array([di1, di2, di3, di4, di5])
+
+    Brho = sqrt(ring.energy**2 - e_mass**2) / clight
+    integrals = numpy.zeros((5,))
 
     if twiss is None:
         _, _, _, twiss = linopt(ring, dp, range(len(ring) + 1),
                                 get_chrom=True, coupled=False)
-    elif len(twiss) != len(ring)+1:
+    elif len(twiss) != len(ring) + 1:
         raise ValueError('length of Twiss data should be {0}'
-                         .format(len(ring)+1))
-    for (elem, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
-        if isinstance(elem, elements.Dipole) and elem.BendingAngle != 0.0:
-            beta0 = vini.beta[0]
-            alpha0 = vini.alpha[0]
-            eta0 = vini.dispersion[0]
-            etap0 = vini.dispersion[1]
-
-            ll = elem.Length
-            theta = elem.BendingAngle
-            rho = ll / theta
-            rho2 = rho * rho
-            k2 = elem.K + 1.0/rho2
-            eps1 = tan(elem.EntranceAngle) / rho
-            eps2 = tan(elem.ExitAngle) / rho
-
-            eta3 = vend.dispersion[0]
-            alpha1 = alpha0 - beta0*eps1
-            gamma1 = (1.0 + alpha1 * alpha1) / beta0
-            etap1 = etap0 + eta0*eps1
-            etap2 = vend.dispersion[1] - eta3*eps2
-
-            h0 = gamma1*eta0*eta0 + 2.0*alpha1*eta0*etap1 + beta0*etap1*etap1
-
-            if k2 != 0.0:
-                if k2 > 0.0:        # Focusing
-                    kl = ll * sqrt(k2)
-                    ss = sin(kl) / kl
-                    cc = cos(kl)
-                else:               # Defocusing
-                    kl = ll * sqrt(-k2)
-                    ss = sinh(kl) / kl
-                    cc = cosh(kl)
-                eta_ave = (theta - (etap2 - etap1)) / k2 / ll
-                bb = 2.0 * (alpha1*eta0 + beta0*etap1) * rho
-                aa = -2.0 * (alpha1*etap1 + gamma1*eta0) * rho
-                h_ave = h0 + (aa * (1.0-ss) + bb * (1.0-cc) / ll
-                              + gamma1 * (3.0-4.0*ss+ss*cc) / 2.0 / k2
-                              - alpha1 * (1.0-cc)**2 / k2 / ll
-                              + beta0 * (1.0-ss*cc) / 2.0
-                              ) / k2 / rho2
-            else:
-                eta_ave = 0.5 * (eta0 + eta3) - ll*ll / 12.0 / rho
-                hp0 = 2.0 * (alpha1 * eta0 + beta0 * etap1) / rho
-                h2p0 = 2.0 * (-alpha1*etap1 + beta0/rho - gamma1*eta0) / rho
-                h_ave = h0 + hp0*ll/2.0 + h2p0*ll*ll/6.0 \
-                    - alpha1*ll**3/4.0/rho2 \
-                    + gamma1*ll**4/20.0/rho2
-
-            i1 += eta_ave * ll / rho
-            i2 += ll / rho2
-            i3 += ll / abs(rho) / rho2
-            i4 += eta_ave * ll * (2.0*elem.K+1.0/rho2) / rho \
-                - (eta0*eps1 + eta3*eps2)/rho
-            i5 += h_ave * ll / abs(rho) / rho2
-
-    return i1, i2, i3, i4, i5
+                         .format(len(ring) + 1))
+    for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
+        if isinstance(el, elements.Dipole) and el.BendingAngle != 0.0:
+            integrals += dipole_radiation(el, vini, vend)
+        elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
+            integrals += wiggler_radiation(el, vini)
+    return tuple(integrals)
 
 
 def get_energy_loss(ring):
@@ -284,14 +349,26 @@ def get_energy_loss(ring):
 
     Losses = Cgamma / 2pi * EGeV^4 * i2
     """
-    lenthe = numpy.array(
-        [(elem.Length, elem.BendingAngle) for elem in ring if
-         isinstance(elem, elements.Dipole)])
-    lendp = lenthe[:, 0]
-    theta = lenthe[:, 1]
 
-    i2 = ring.periodicity * (numpy.sum(theta * theta / lendp))
-    e_loss = Cgamma / 2.0 / pi * ring.energy**4 * i2
+    def wiggler_i2(el):
+        rhoinv = el.Bmax / Brho
+        coefh = el.By[1, :]
+        coefv = el.Bx[1, :]
+        return el.Length * (numpy.sum(coefh * coefh) + numpy.sum(
+            coefv*coefv)) * rhoinv ** 2 / 2
+
+    def dipole_i2(el):
+        return el.BendingAngle ** 2 / el.Length
+
+    Brho = sqrt(ring.energy**2 - e_mass**2) / clight
+    i2 = 0.0
+    for el in ring:
+        if isinstance(el, elements.Dipole):
+            i2 += dipole_i2(el)
+        elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
+            i2 += wiggler_i2(el)
+    i2 = ring.periodicity * i2
+    e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
     return e_loss
 
 
@@ -308,7 +385,7 @@ def quantdiffmat(ring, orbit=None):
         diffusion matrix (6,6)
     """
     bbcum, _ = _dmatr(ring, orbit=orbit)
-    diffmat = [(bbc + bbc.T)/2 for bbc in bbcum]
+    diffmat = [(bbc + bbc.T) / 2 for bbc in bbcum]
     return numpy.round(diffmat[-1], 24)
 
 
