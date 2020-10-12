@@ -94,15 +94,14 @@ if nargout >= 5
     cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
     e_radius=PhysConstant.classical_electron_radius.value;                  % m
     Cgamma=4.0E27*pi*e_radius/3/e_mass^3;                       % [m/GeV^3]
-    gm=energy/e_mass;
-    bt=sqrt(1.0-1.0/gm/gm);
-    Brho=bt*energy/cspeed;
+    Brho=sqrt(energy*energy - e_mass*e_mass)/cspeed;
     
     % Dipole radiation
     lendp=atgetfieldvalues(ring(dipoles),'Length');
     I2d=sum(abs(theta.*theta./lendp));
     % Wiggler radiation
-    wigglers=atgetcells(ring,'Class','Wiggler');
+    iswiggler=@(elem) strcmp(elem.Class,'Wiggler') && ~strcmp(elem.PassMethod,'DriftPass');
+    wigglers=cellfun(iswiggler, ring);
     I2w=sum(cellfun(@wiggler_i2,ring(wigglers)));
     % Additional radiation
     I2x=sum(atgetfieldvalues(ring(atgetcells(ring,'I2')),'I2'));

@@ -283,6 +283,7 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
 
         def b_on_axis(wig, s):
             """On-axis wiggler field"""
+
             def harm(coef, h, phi):
                 return -Bmax * coef * numpy.cos(h*kws + phi)
 
@@ -326,9 +327,7 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
         di5 = max(H0 * di3, d5lim)
         return numpy.array([di1, di2, di3, di4, di5])
 
-    gamma = ring.energy / e_mass
-    beta = sqrt(1.0 - 1.0/gamma/gamma)
-    Brho = beta * ring.energy / clight
+    Brho = sqrt(ring.energy**2 - e_mass**2) / clight
     integrals = numpy.zeros((5,))
 
     if twiss is None:
@@ -337,11 +336,11 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     elif len(twiss) != len(ring) + 1:
         raise ValueError('length of Twiss data should be {0}'
                          .format(len(ring) + 1))
-    for (elem, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
-        if isinstance(elem, elements.Dipole) and elem.BendingAngle != 0.0:
-            integrals += dipole_radiation(elem, vini, vend)
-        elif isinstance(elem, elements.Wiggler):
-            integrals += wiggler_radiation(elem, vini)
+    for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
+        if isinstance(el, elements.Dipole) and el.BendingAngle != 0.0:
+            integrals += dipole_radiation(el, vini, vend)
+        elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
+            integrals += wiggler_radiation(el, vini)
     return tuple(integrals)
 
 
@@ -350,13 +349,25 @@ def get_energy_loss(ring):
 
     Losses = Cgamma / 2pi * EGeV^4 * i2
     """
-    lenthe = numpy.array(
-        [(elem.Length, elem.BendingAngle) for elem in ring if
-         isinstance(elem, elements.Dipole)])
-    lendp = lenthe[:, 0]
-    theta = lenthe[:, 1]
 
-    i2 = ring.periodicity * (numpy.sum(theta * theta / lendp))
+    def wiggler_i2(el):
+        rhoinv = el.Bmax / Brho
+        coefh = el.By[1, :]
+        coefv = el.Bx[1, :]
+        return el.Length * (numpy.sum(coefh * coefh) + numpy.sum(
+            coefv*coefv)) * rhoinv ** 2 / 2
+
+    def dipole_i2(el):
+        return el.BendingAngle ** 2 / el.Length
+
+    Brho = sqrt(ring.energy**2 - e_mass**2) / clight
+    i2 = 0.0
+    for el in ring:
+        if isinstance(el, elements.Dipole):
+            i2 += dipole_i2(el)
+        elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
+            i2 += wiggler_i2(el)
+    i2 = ring.periodicity * i2
     e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
     return e_loss
 
