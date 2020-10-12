@@ -9,6 +9,8 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %       2) 1st 'RFCavity' element
 %       3) field "E0" of the global variable "GLOBVAL"
 %
+%   The default is to turn cavities ON and set radiation in dipoles and wigglers.
+%
 %  INPUTS
 %  1. RING      initial AT structure
 %  2. CAVIPASS	pass method for cavities
@@ -30,22 +32,24 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %   'quadpass'      pass method for quadrupoles. Default ''
 %   'sextupass'     pass method for sextupoles. Default ''
 %   'octupass'      pass method for bending magnets. Default ''
+%   'wigglerpass'   pass method for wigglers. Default ''
 %
 %  OUPUTS
 %  1. RING2     Output ring
 %  2. RADINDEX  Indices of elements with radiation
 %  3. CAVINDEX  Indices of cavities
+%  4. ENERGY	Ring energy
 %
 %  EXAMPLES
 %
 %>> ringrad=atradon(ring);
-%   Turns cavities on and sets radiation in bending magnets (default)
+%   Turns cavities on and sets radiation in bending magnets and wigglers (default)
 %
 %>> ringrad=atradon(ring,'CavityPass','auto','auto');
-%   Turns cavities on and sets radiation in bending magnets and quadrupoles
+%   Turns cavities on and sets radiation in bending magnets, wigglers and quadrupoles
 %
 %>> ringrad=atradon(ring,'quadpass','auto');
-%   Turns cavities on and sets radiation in bending magnets and quadrupoles
+%   Turns cavities on and sets radiation in bending magnets, wigglers and quadrupoles
 %
 %  See also ATRADOFF, ATCAVITYON, ATCAVITYOFF
 
@@ -106,8 +110,11 @@ end
                 if strcmp(newpass,'auto')
                     newpass=strrep(elem.PassMethod,'Pass','RadPass');
                 end
-                elem.PassMethod=newpass;
-                elem.Energy=energy;
+                % Check the existence of the new PassMethod
+                if ~isempty(which(newpass))
+                    elem.PassMethod=newpass;
+                    elem.Energy=energy;
+                end
             end
         end
     end

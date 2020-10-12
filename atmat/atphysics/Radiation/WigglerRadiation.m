@@ -19,17 +19,16 @@ nstep=60;
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
 cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
 
-iswiggler=atgetcells(ring,'Class','Wiggler');
-if any(iswiggler)
-    energy=unique(atgetfieldvalues(ring(iswiggler),'Energy'));
+iswiggler=@(elem) strcmp(elem.Class,'Wiggler') && ~strcmp(elem.PassMethod,'DriftPass');
+wigglers=cellfun(iswiggler, ring);
+if any(wigglers)
+    energy=unique(atgetfieldvalues(ring(wigglers),'Energy'));
     if length(energy) > 1
         error('AT:NoEnergy','Energy field not equal for all elements');
     end
-    gm=energy/e_mass;
-    bt=sqrt(1.0-1.0/gm/gm);
-    Brho=bt*energy/cspeed;
-    vini=lindata([iswiggler;false])';
-    [di1,di2,di3,di4,di5]=cellfun(@wigrad,ring(iswiggler),num2cell(vini));
+    Brho=sqrt(energy*energy - e_mass*e_mass)/cspeed;
+    vini=lindata([wigglers;false])';
+    [di1,di2,di3,di4,di5]=cellfun(@wigrad,ring(wigglers),num2cell(vini));
     I1=sum(di1);
     I2=sum(di2);
     I3=sum(di3);
