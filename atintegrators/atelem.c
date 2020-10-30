@@ -83,11 +83,26 @@ static double* atGetDoubleArray(const mxArray *ElemData, const char *fieldname)
     return atGetDoubleArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
-static double _Complex * atGetComplexArray(const mxArray *ElemData, const char *fieldname)
+static double _Complex atGetComplex(const mxArray *ElemData, const char *fieldname)
 {
     mxArray *field=mxGetField(ElemData,0,fieldname);
     if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    return *(double _Complex *) mxGetComplexDoubles(field);
+}
+
+static double _Complex* atGetComplexArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
+{
+    mxArray *field=mxGetField(ElemData,0,fieldname);
+    if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
+    *msz = mxGetM(field);  /*Number of rows in the 2-D array*/
+    *nsz = mxGetN(field);  /*Number of columns in the 2-D array.*/
     return (double _Complex *)mxGetComplexDoubles(field);
+}
+
+static double _Complex* atGetComplexArray(const mxArray *ElemData, const char *fieldname)
+{
+    int msz, nsz;
+    return atGetComplexArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
 static long atGetOptionalLong(const mxArray *ElemData, const char *fieldname, long default_value)
@@ -118,6 +133,30 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
 {
     int msz, nsz;
     return atGetOptionalDoubleArraySz(ElemData, fieldname, &msz, &nsz);
+}
+
+static double _Complex atGetOptionalComplex(const mxArray *ElemData, const char *fieldname, double _Complex default_value)
+{
+    mxArray *field=mxGetField(ElemData,0,fieldname);
+    return (field) ? *(double _Complex *) mxGetComplexDoubles(field) : default_value;
+}
+
+static double _Complex* atGetOptionalComplexArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
+{
+    mxComplexDouble *ptr = NULL;
+    mxArray *field=mxGetField(ElemData,0,fieldname);
+    if (field) {
+        *msz = mxGetM(field);
+        *nsz = mxGetN(field);
+        ptr = mxGetComplexDoubles(field);
+    }
+    return (double _Complex *) ptr;
+}
+
+static double _Complex* atGetOptionalComplexArray(const mxArray *ElemData, const char *fieldname)
+{
+    int msz, nsz;
+    return atGetOptionalComplexArraySz(ElemData, fieldname, &msz, &nsz);
 }
 
 #endif /* MATLAB_MEX_FILE */
@@ -173,7 +212,9 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+static void *atGetAnyArraySz(const PyObject *element, char *name,
+int type_num, const char *type_str,
+int *msz, int *nsz)
 {
     char errmessage[60];
     int ndims;
@@ -192,8 +233,8 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
-    if (PyArray_TYPE(array) != NPY_DOUBLE) {
-        snprintf(errmessage, 60, "The attribute %s is not a double array.", name);
+    if (PyArray_TYPE(array) != type_num) {
+        snprintf(errmessage, 60, "The attribute %s is not a %s array.", name, type_str);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
@@ -206,7 +247,12 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
     dims = PyArray_SHAPE(array);
     *nsz = (ndims >= 2) ? dims[1] : 0;
     *msz = (ndims >= 1) ? dims[0] : 0;
-    return (double *) PyArray_DATA(array);
+    return PyArray_DATA(array);
+}
+
+static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+{
+    return (double *) atGetAnyArraySz(element, name, NPY_DOUBLE, "double", msz, nsz);
 }
 
 static double *atGetDoubleArray(const PyObject *element, char *name)
@@ -229,6 +275,33 @@ static double *atGetOptionalDoubleArray(const PyObject *element, char *name)
 {
     int msz, nsz;
     return atGetOptionalDoubleArraySz(element, name, &msz, &nsz);
+}
+
+static double _Complex *atGetComplexArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+{
+    return (double _Complex *) atGetAnyArraySz(element, name, NPY_CDOUBLE, "complex", msz, nsz);
+}
+
+static double _Complex *atGetComplexArray(const PyObject *element, char *name)
+{
+    int msz, nsz;
+    return atGetComplexArraySz(element, name, &msz, &nsz);
+}
+
+static double _Complex *atGetOptionalComplexArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+{
+    PyObject *obj = PyObject_GetAttrString((PyObject *)element, name);
+    if (obj == NULL) {
+        PyErr_Clear();
+        return NULL;
+    }
+    return atGetComplexArraySz(element, name, msz, nsz);
+}
+
+static double _Complex *atGetOptionalComplexArray(const PyObject *element, char *name)
+{
+    int msz, nsz;
+    return atGetOptionalComplexArraySz(element, name, &msz, &nsz);
 }
 
 #endif /* defined(PYAT) */

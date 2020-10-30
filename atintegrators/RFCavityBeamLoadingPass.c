@@ -28,7 +28,6 @@ struct elem
     double f_res;
     double Q;
     double R;
-    double TotalCurrent;
     double TotalCharge;
     /* optional fields */
     double TimeLag;
@@ -47,7 +46,6 @@ void RFCavityBeamLoadingPass(double *r_in, double le, double nv,
          */
 {
     int c, c6;
-    int i;
     double halflength , p_norm, NormL, k, psi;
     double ct_ave_new=0.0;
     double _Complex volt_beam_old = *VoltBeam;
@@ -62,7 +60,7 @@ void RFCavityBeamLoadingPass(double *r_in, double le, double nv,
     for(c = 0;c<num_particles;c++)
     {
         c6 = c*6;
-        if(!mxIsNaN(r_in[c6]))
+        if(!atIsNaN(r_in[c6]))
             ct_ave_new += r_in[c6+5];
     }
     ct_ave_new = ct_ave_new/num_particles;
@@ -80,10 +78,12 @@ void RFCavityBeamLoadingPass(double *r_in, double le, double nv,
     
     *VoltBeam = creal(volt_beam_new) + cimag(volt_beam_new) * _Complex_I;
     
+#if defined(MATLAB_MEX_FILE)
     if(debug)
     {
         mxArray *Vbeam_8k, *Vgen_8k, *Vtot_8k, *ct_8k;
         mxArray *Vbeam_16k, *Vgen_16k, *Vtot_16k, *ct_16k;
+        int i;
         if (nturn==8000)
         {
             Vbeam_8k=mxCreateDoubleMatrix(850,1,mxREAL);
@@ -149,11 +149,12 @@ void RFCavityBeamLoadingPass(double *r_in, double le, double nv,
             mexPutVariable("base",name4,ct_16k);
         }
     }
+#endif /* MATLAB_MEX_FILE */
     if(le == 0)
     {
         for(c = 0;c<num_particles;c++)
         {	c6 = c*6;
-            if(!mxIsNaN(r_in[c6]))
+            if(!atIsNaN(r_in[c6]))
             {
                 r_in[c6+4] += nv*sin(psi+TWOPI*freq*((r_in[c6+5]-lag)/C0 /*- (h/freq-T0)*nturn */))
                 + (cabs(volt_beam_kick)/energy)*cos(TWOPI*freq*(r_in[c6+5] - ct_ave_new)/C0 + carg(volt_beam_kick));
@@ -164,7 +165,7 @@ void RFCavityBeamLoadingPass(double *r_in, double le, double nv,
     {	halflength = le/2;
         for(c = 0;c<num_particles;c++)
         {	c6 = c*6;
-            if(!mxIsNaN(r_in[c6]))
+            if(!atIsNaN(r_in[c6]))
             {   p_norm = 1/(1+r_in[c6+4]);
                 NormL  = halflength*p_norm;
                 /* Propagate through a drift equal to half cavity length */
@@ -195,8 +196,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     double T0=Param->T0;
     if (!Elem) {
         double Length, Voltage, Energy, Frequency, HarmNumber, TimeLag, 
-                f_res, Q, R, TotalCurrent, TotalCharge;
-        double *volt_beam_real_p, *volt_beam_imag_p, *ct_ave_p;
+                f_res, Q, R, TotalCurrent;
+        double *ct_ave_p;
         double _Complex *Volt_beam;
         Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
@@ -224,7 +225,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->f_res=f_res;
         Elem->Q=Q;
         Elem->R=R;
-        Elem->TotalCurrent=TotalCurrent;
         Elem->TotalCharge=TotalCurrent*T0;
         Elem->ct_ave_p=ct_ave_p;
         Elem->VoltBeam=Volt_beam;
@@ -239,6 +239,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     return Elem;
 }
 
+MODULE_DEF(RFCavityBeamLoadingPass)        /* Dummy module initialisation */
+
+#endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
+#if defined(MATLAB_MEX_FILE)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if(nrhs == 2)
@@ -264,6 +269,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         ct_ave_p=atGetDoubleArray(ElemData,"ct_ave"); check_error();
         
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        TotalCharge=TotalCurrent*T0;
         
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -301,4 +307,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
     }
 }
-#endif
+#endif /* MATLAB_MEX_FILE */
