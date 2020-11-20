@@ -1,31 +1,44 @@
 import at
 import numpy
+import matlab
+from numpy.testing import assert_allclose as assert_close
 import pytest
 
 
-@pytest.fixture
-def r_in(engine):
-    r_in = engine.zeros(6, 1)
-    return r_in
+@pytest.mark.parametrize('lattices',
+                         [pytest.lazy_fixture('dba'),
+                          pytest.lazy_fixture('hmba'),
+                          pytest.lazy_fixture('hmba_cav'),
+                          pytest.lazy_fixture('hmba_rad')])
+def test_atpass(engine, lattices):
+    py_lattice, ml_lattice, _ = lattices
+    xy_step = 1.e-8
+    scaling = [xy_step, xy_step, xy_step, xy_step, xy_step, xy_step]
+
+    ml_rin = engine.diag(matlab.double(scaling))
+    ml_rout = engine.atpass(ml_lattice, ml_rin, 1, 1)
+
+    py_rin = numpy.asfortranarray(numpy.diag(scaling))
+    at.atpass(py_lattice, py_rin, 1)
+
+    assert_close(py_rin, ml_rout, rtol=0, atol=1.e-30)
 
 
-@pytest.mark.parametrize('ml_lattice, py_lattice',
-                         [(pytest.lazy_fixture('ml_dba'),
-                           pytest.lazy_fixture('py_dba')),
-                          (pytest.lazy_fixture('ml_hmba'),
-                           pytest.lazy_fixture('py_hmba'))])
-def test_one_turn_for_demo_lattice(r_in, engine, ml_lattice, py_lattice):
-    for i in range(6):
-        # Change each item in r_in before calling.
-        r_in[i][0] = 1e-5
-        # Matlab call
-        r_out = engine.atpass(ml_lattice, r_in, 1, 1)
+@pytest.mark.parametrize('lattices',
+                         [pytest.lazy_fixture('dba'),
+                          pytest.lazy_fixture('hmba'),
+                          pytest.lazy_fixture('hmba_cav'),
+                          pytest.lazy_fixture('hmba_rad')])
+def test_linepass(engine, lattices):
+    py_lattice, ml_lattice, _ = lattices
+    xy_step = 1.e-8
+    scaling = [xy_step, xy_step, xy_step, xy_step, xy_step, xy_step]
 
-        # Python setup
-        py_r_in = numpy.asfortranarray(r_in).reshape(6, 1)
-        py_r_out = numpy.asfortranarray(r_out).reshape(6, 1)
+    ml_rin = engine.diag(matlab.double(scaling))
+    ml_rout = numpy.array(engine.linepass(ml_lattice, ml_rin))
 
-        # Python call; py_r_in modified in place
-        at.atpass(py_lattice, py_r_in, 1)
+    py_rin = numpy.asfortranarray(numpy.diag(scaling))
+    py_rout = numpy.squeeze(at.lattice_pass(py_lattice, py_rin,
+                                            refpts=len(py_lattice)))
 
-        numpy.testing.assert_almost_equal(py_r_in, py_r_out)
+    assert_close(py_rout, ml_rout, rtol=0, atol=1.e-30)

@@ -1,36 +1,33 @@
 import at
 import matlab
 import numpy
+from numpy.testing import assert_allclose as assert_close
 import pytest
 
 
 def _ml_refs(refpts, nelems):
     """Convert refpoints to Matlab"""
     uintrefs = at.uint32_refpts(refpts, nelems)
-    # noinspection PyUnresolvedReferences
     return matlab.double([ref+1 for ref in uintrefs])
 
 
-# noinspection PyUnresolvedReferences
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
-@pytest.mark.parametrize('ml_lattice, py_lattice',
-                         [(pytest.lazy_fixture('ml_hmba'),
-                           pytest.lazy_fixture('py_hmba'))])
-def test_avlinopt(engine, ml_lattice, py_lattice, dp):
+@pytest.mark.parametrize('lattices',
+                         [pytest.lazy_fixture('dba'),
+                          pytest.lazy_fixture('hmba')])
+def test_avlinopt(engine, lattices, dp):
+    py_lattice, ml_lattice, _ = lattices
     nelems = len(py_lattice)
     refpts = range(nelems)
     mlrefs = _ml_refs(refpts, nelems)
 
     # Python call
     lindata, avebeta, avemu, avedisp, aves, tune, chrom = \
-        at.avlinopt(py_lattice, dp, refpts=refpts, ddp=1.e-6)
+        at.avlinopt(py_lattice, dp, refpts=refpts)
     # Matlab call
     ml_data, ml_avebeta, ml_avemu, ml_avedisp, ml_tune, ml_chrom = \
         engine.pyproxy('atavedata', ml_lattice, dp, mlrefs, nargout=6)
     # Comparison
-    numpy.testing.assert_allclose(avebeta, numpy.asarray(ml_avebeta),
-                                  rtol=1.0e-11, atol=1.0e-20)
-    numpy.testing.assert_allclose(avemu, numpy.asarray(ml_avemu),
-                                  rtol=1.0e-12, atol=1.0e-20)
-    numpy.testing.assert_allclose(avedisp, numpy.asarray(ml_avedisp),
-                                  rtol=1.0e-12, atol=1.0e-10)
+    assert_close(avebeta, numpy.asarray(ml_avebeta), rtol=1e-7)
+    assert_close(avemu, numpy.asarray(ml_avemu), rtol=0, atol=1e-7)
+    assert_close(avedisp, numpy.asarray(ml_avedisp), rtol=0, atol=1e-8)
