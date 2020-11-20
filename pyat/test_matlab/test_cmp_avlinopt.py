@@ -30,4 +30,4 @@ def test_avlinopt(engine, lattices, dp):
     # Comparison
     assert_close(avebeta, numpy.asarray(ml_avebeta), rtol=1e-7)
     assert_close(avemu, numpy.asarray(ml_avemu), rtol=0, atol=1e-7)
-    assert_close(avedisp, numpy.asarray(ml_avedisp), rtol=0, atol=1e-8)
+    assert_close(avedisp, numpy.asarray(ml_avedisp), rtol=0, atol=2e-7) # 1e-8
