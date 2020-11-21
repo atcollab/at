@@ -8,11 +8,11 @@ function [tune, varargout] = tunechrom(RING,DP,varargin)
 %    chromaticity by numerical differentiation from the difference between tune
 %    values at momentums DP+0.5*DPStep and DP-0.5*DPStep
 %
-% [...]=TUNECHROM(..., 'coupling')
-% [...]=TUNECHROM(..., 'coupled',boolflag) - Tunes and chromaticities are
+% [...]=TUNECHROM(..., 'coupling')          (Deprecated syntax)
+% [...]=TUNECHROM(..., 'coupled',boolflag)	Tunes and chromaticities are
 %   calculated assuming COUPLED lattice for two transverse eigenmodes.
 %
-% [...] = TUNECHROM(...,'orbit',ORBITIN - do not search for closed orbit.
+% [...] = TUNECHROM(...,'orbit',ORBITIN     Do not search for closed orbit.
 %   Instead ORBITIN,a 6x1 vector of initial conditions is used:
 %   [x0; px0; y0; py0; DP; 0]. The sixth component is ignored.
 %   This syntax is useful to specify the entrance orbit

@@ -5,8 +5,8 @@ function M44 = findelemm44(ELEM, varargin)
 %     METHODNAME    - name of the pass-method function
 %                   (default:  ELEM.PassMethod)
 %
+%  M66=FINDELEMM44(...,'orbit',ORBITIN)  (Deprecated syntax)
 %  M66=FINDELEMM44(ELEM, METHODNAME, ORBITIN)
-%  M66=FINDELEMM44(...,'orbit',ORBITIN)
 %     ORBITIN       - 6x1 phase space coordinates at the entrance
 %                   (default: zeros(6,1))
 %                   The transverse matrix is momentum-dependent,

@@ -8,7 +8,7 @@ function [M44, varargout]  = findm44(LATTICE,dp,varargin)
 %     (cavities , magnets with radiation, ...)
 %   2.have any time dependence (localized impedance, fast kickers, ...)
 %
-% M44 = FINDM44(LATTICE,DP) finds a full one-turn
+% M44 = FINDM44(LATTICE,DP) finds the full one-turn
 %    matrix at the entrance of the first element
 %    !!! With this syntax FINDM44 assumes that the LATTICE
 %    is a ring and first finds the closed orbit
@@ -32,26 +32,26 @@ function [M44, varargout]  = findm44(LATTICE,dp,varargin)
 %    it is also the entrance of the first element
 %    after 1 turn: T(:,:,end) = M
 %
-% [...] = FINDM44(LATTICE,DP,REFPTS,ORBITIN)
-% [...] = FINDM44(...,'orbit',ORBITIN)    Do not search for closed orbit
-%   Instead ORBITIN,a 6x1 vector of initial conditions is used:
-%   [x0; px0; y0; py0; DP; 0]. The sixth component is ignored.
-%   This syntax is useful to specify the entrance orbit
-%   if LATTICE is not a ring or to avoid recomputing the
-%   closed orbit if is already known.
+% [...] = FINDM44(...,'orbit',ORBITIN)
+% [...] = FINDM44(RING,DP,REFPTS,ORBITIN)  (Deprecated syntax)
+%   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
+%   of initial conditions is used: [x0; px0; y0; py0; DP; 0].
+%   The sixth component is ignored.
+%   This syntax is useful to specify the entrance orbit if RING is not a
+%   ring or to avoid recomputing the closed orbit if is already known.
 %
-% [...] = FINDM44(...,'full') - same as above except
-%    matrices returned in T are full 1-turn matrixes at the entrance of each
-%    element indexed by REFPTS.
+% [...] = FINDM44(...,'full')
+%   Same as above except that matrices returned in T are full 1-turn
+%   matrices at the entrance of each element indexed by REFPTS.
 %
-% [...] = ATLINOPT(...,'ct',CT)	Instead of computing transfer matrices for
-%                               the specified DP, computes for the path
-%                               lenghening specified by CT. The DP argument
-%                               is ignored
+% [...] = FINDM44(...,'ct',CT)
+%   Instead of computing the linear optics for  the specified DP/P,
+%   computes for the path lenghening specified by CT.
+%   The DP argument is ignored.
 %
-% [M44,T,orbit] = FINDM44(...) in addition returns
-%    at REFPTS the closed orbit calculated along the
-%    way with findorbit4
+% [M44,T,orbit] = FINDM44(...)
+%   In addition returns the closed orbit at the entrance of each element
+%   indexed by REFPTS.
 %
 % See also FINDM66, FINDORBIT4
 

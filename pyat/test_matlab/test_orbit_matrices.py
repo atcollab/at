@@ -1,4 +1,4 @@
-from at import uint32_refpts, find_m44, find_m66, DConstant
+from at import uint32_refpts, find_m44, find_m66
 from at import find_orbit4, find_sync_orbit, find_orbit6
 import numpy
 import matlab
@@ -48,7 +48,6 @@ def test_find_orbit4(engine, lattices, dp):
     nelems = len(py_lattice)
     nrefs = nelems+1
     refpts = range(nrefs)
-    DConstant.OrbConvergence = 1e-16
 
     # Python call
     py_orb4, py_orbit4 = find_orbit4(py_lattice, dp, refpts)
@@ -57,8 +56,8 @@ def test_find_orbit4(engine, lattices, dp):
                                            _ml_refs(refpts, nelems), nargout=2)
     ml_orbit4 = numpy.rollaxis(numpy.asarray(ml_orbit4), -1)
     # Comparison
-    assert_close(py_orb4, _py_data(ml_orb4), atol=1.e-15, rtol=0)
-    assert_close(py_orbit4[:, :4], ml_orbit4, atol=1.e-15, rtol=0)
+    assert_close(py_orb4, _py_data(ml_orb4), atol=1e-15, rtol=0)
+    assert_close(py_orbit4[:, :4], ml_orbit4, atol=1.5e-15, rtol=0)
 
 
 @pytest.mark.parametrize('lattices',

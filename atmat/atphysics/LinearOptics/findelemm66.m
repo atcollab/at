@@ -5,7 +5,7 @@ function M66 = findelemm66(ELEM, varargin)
 %     METHODNAME    - name of the pass-method function
 %                   (default:  ELEM.PassMethod)
 %
-%  M66=FINDELEMM66(ELEM, METHODNAME, ORBITIN)
+%  M66=FINDELEMM66(ELEM, METHODNAME, ORBITIN)  (Deprecated syntax)
 %  M66=FINDELEMM66(...,'orbit',ORBITIN)
 %     ORBITIN       - 6-by-1 phase space coordinates at the entrance
 %                   (default: zeros(6,1))

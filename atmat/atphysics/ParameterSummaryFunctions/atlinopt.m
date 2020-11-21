@@ -30,24 +30,25 @@ function [lindata, varargout] = atlinopt(RING,dp,varargin)
 % [LinData,NU, KSI] = ATLINOPT() returns a vector of chromaticities ksi = d(nu)/(dP/P)
 %   [ksi_u , ksi_v] - derivatives of [nu_u , nu_v]
 %
-% [...] = ATLINOPT(RING,DP,REFPTS,ORBITIN)  do not search for closed orbit.
 % [...] = ATLINOPT(...,'orbit',ORBITIN)
-%   Instead ORBITIN,a 6x1 vector of initial conditions is used:
-%   [x0; px0; y0; py0; DP; 0]. The sixth component is ignored.
-%   This syntax is useful to specify the entrance orbit
-%   if RING is not a ring or to avoid recomputing the
-%   closed orbit if is already known.
+% [...] = ATLINOPT(RING,DP,REFPTS,ORBITIN)  (Deprecated syntax)
+%   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
+%   of initial conditions is used: [x0; px0; y0; py0; DP; 0].
+%   The sixth component is ignored.
+%   This syntax is useful to specify the entrance orbit if RING is not a
+%   ring or to avoid recomputing the closed orbit if is already known.
 %
-% [...] = ATLINOPT(...,'coupled',flag)      If flag is false, a faster computation
-%                                           is performed assuming no coupling
-%                                           in the lattice. Default: true
+% [...] = ATLINOPT(...,'coupled',flag)
+%   If flag is false, a faster computation is performed
+%   assuming no coupling in the lattice. Default: true
 %
-% [...] = ATLINOPT(...,'ct',CT)	Instead of computing the linear optics for
-%                               the specified DP/P, computes for the path
-%                               lenghening specified by CT. The DP argument
-%                               is ignored
+% [...] = ATLINOPT(...,'ct',CT)
+%   Instead of computing the linear optics for  the specified DP/P,
+%   computes for the path lenghening specified by CT.
+%   The DP argument is ignored.
 %
-% [...] = ATLINOPT(...,'twiss_in',TWISSIN)	Computes the optics for a transfer line.
+% [...] = ATLINOPT(...,'twiss_in',TWISSIN)
+%   Computes the optics for a transfer line.
 %
 % TWISSIN is a scalar structure with fields:
 %   ClosedOrbit - 4x1 initial closed orbit. Default: zeros(4,1)

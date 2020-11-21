@@ -4,7 +4,7 @@ function [M66, varargout] = findm66(LATTICE, varargin)
 %  FINDM66 uses FINDORBIT6 to search for the closed orbit in 6-d
 %  In order for this to work the ring MUST have a CAVITY element
 %
-% M66 = FINDM66(RING)finds full one-turn 6-by-6
+% M66 = FINDM66(RING) finds the full one-turn 6-by-6
 %    matrix at the entrance of the first element
 %
 % [M66,T] = FINDM66(RING,REFPTS) in addition to M finds
@@ -17,18 +17,20 @@ function [M66, varargout] = findm66(LATTICE, varargin)
 %    See further explanation of REFPTS in the 'help' for FINDSPOS
 %
 %    Note:
-%    When REFPTS= [ 1 2 .. ] the fist point is the entrance of the first element
+%    When REFPTS= [ 1 2 .. ] the first point is the entrance of the first element
 %    and T(:,:,1) - identity matrix
 %    When REFPTS= [  .. length(RING)+1] the last point is the exit of the last element
 %    and the entrance of the first element after 1 turn: T(:,:, ) = M
 %
-% [M66,T] = FINDM66(RING,REFPTS,ORBITIN) - Does not search for closed orbit.
-% [...]   = FINDM66(...,'orbit',ORBITIN)
-%   This syntax is useful to avoid recomputing the closed orbit if it is
-%   already known.
+% [...] = FINDM66(RING,REFPTS,ORBITIN)    (Deprecated syntax)
+% [...] = FINDM66(...,'orbit',ORBITIN)
+%   Do not search for closed orbit. This syntax is useful to avoid
+%   recomputing the closed orbit if it is already known.
 %
-% [M66,T,orbit] = FINDM66(RING, REFPTS) in addition returns the closed orbit
-%    found in the process of lenearization
+% [M66,T,orbit] = FINDM66(...)
+%   In addition returns the closed orbit at the entrance of each element
+%   indexed by REFPTS.
+%
 %
 % See also FINDM44, FINDORBIT6
 
