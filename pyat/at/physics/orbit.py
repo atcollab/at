@@ -7,13 +7,10 @@ import scipy.constants as constants
 from at.lattice import AtWarning, AtError, check_radiation
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
+from at.physics import DConstant
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
-
-STEP_SIZE = 1e-6
-MAX_ITERATIONS = 20
-CONVERGENCE = 1e-12
 
 
 @check_radiation(False)
@@ -67,7 +64,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-6
+        step_size       Step size. Default: 1.e-8
 
     See also find_sync_orbit, find_orbit6.
     """
@@ -85,9 +82,9 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     # f'(r_n) is the 4x4 jacobian, denoted j4
 
     keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', CONVERGENCE)
-    max_iterations = kwargs.pop('max_iterations', MAX_ITERATIONS)
-    step_size = kwargs.pop('step_size', STEP_SIZE)
+    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
+    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
+    step_size = kwargs.pop('step_size', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
     ref_in[4] = dp
 
@@ -179,14 +176,14 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-6
+        step_size       Step size. Default: 1.e-8
 
     See also find_orbit4, find_orbit6.
     """
     keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', CONVERGENCE)
-    max_iterations = kwargs.pop('max_iterations', MAX_ITERATIONS)
-    step_size = kwargs.pop('step_size', STEP_SIZE)
+    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
+    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
+    step_size = kwargs.pop('step_size', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
     delta_matrix = numpy.zeros((6, 6), order='F')
@@ -286,14 +283,14 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-6
+        step_size       Step size. Default: 1.e-8
 
     See also find_orbit4, find_sync_orbit.
     """
     keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', CONVERGENCE)
-    max_iterations = kwargs.pop('max_iterations', MAX_ITERATIONS)
-    step_size = kwargs.pop('step_size', STEP_SIZE)
+    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
+    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
+    step_size = kwargs.pop('step_size', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
     # Get evolution period
