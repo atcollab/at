@@ -171,10 +171,7 @@ template<typename T> void multipole_fringe(element * e,
     x[ct_]      = x[ct_] - (x[px_] * FX + x[py_] * FY) * DEL * DEL;
 }
 
-template<typename T> T pow2(T x)
-{
-    return x * x;
-}
+#define pow2(x) x * x
 
 /* this is the z momentum */
 template<typename T> T get_pz(T * x)
@@ -273,11 +270,7 @@ template<typename T> void fr4(T * x, double L, double * F, int nF, int slices)
 
 #define ArcTan atan
 #define Power pow
-
-template <typename T> T Sec(T x)
-{
-    return 1.0 / cos(x);
-}
+#define Sec(x) 1.0 / cos(x)
 
 template<typename T> void bend_fringe(T * x, double irho, double gK)
 {
