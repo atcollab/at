@@ -5,6 +5,7 @@ function setoption(varargin)
 %   Set the default value for the given KEY to DEFAULT. It is an error to set
 %   a default for a non-existing KEY. See ATINIPREFS for the list of
 %   predefined keys.
+%
 % KEY:      Key name
 % DEFAULT:  New default value for the key
 %
@@ -12,7 +13,7 @@ function setoption(varargin)
 %
 %SETOPTION() Resets all predefined keys to their initial setting.
 %
-%See also GETOPTION, ATINIPREFS
+%See also GETOPTION, INITOPTIONS
 
 atprefutil('set',varargin{:});
 end
