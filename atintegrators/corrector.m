@@ -31,6 +31,7 @@ ElemData.PolynomA=[kickangle(2)];
 ElemData.PolynomB=[kickangle(1)];
 ElemData.NumIntSteps=1;
 ElemData.MaxOrder=1;
+ElemData.Class='Corrector';
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declared families including this one

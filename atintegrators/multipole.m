@@ -39,6 +39,7 @@ ElemData.PolynomA= PolynomA;
 ElemData.PolynomB= PolynomB;
 ElemData.BendingAngle  	= PolynomB(1);
 ElemData.PassMethod=method;
+ElemData.Class='Multipole';
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one

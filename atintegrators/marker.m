@@ -20,7 +20,7 @@ function z = marker(fname,method)
 ElemData.FamName = fname;  % add check for identical family names
 ElemData.Length=0;
 ElemData.PassMethod=method;
-
+ElemData.Class='Marker';
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
 FAMLIST{z}.FamName = fname;
