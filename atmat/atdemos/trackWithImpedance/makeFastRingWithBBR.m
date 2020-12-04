@@ -36,7 +36,7 @@ rz = .01;
 betax_obs = 1; %get from lattice
 betay_obs = 1;
 
-imp_tab_elem=atbaselem('imp_tab','impedance_tablePass');
+imp_tab_elem=atbaselem('imp_tab','ImpedanceTablePass');
 imp_tab_elem.Nslice = nslice; %101
 imp_tab_elem.Intensity = intensity;% (number of charges/bunch 7.0e10 - MW_th @ esrf)
 imp_tab_elem.Wakefact = wakefact;

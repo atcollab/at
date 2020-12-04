@@ -44,3 +44,22 @@ Installation process:
     You can now use `athelp` to list all main functions.
 
 6. Update html doc - not yet documented.
+
+### Notes on Octave ###
+
+For the most part AT code works with [Octave](https://www.gnu.org/software/octave/).
+At least version 6 is required.
+
+In order to prepare octave environment you'll need to run `atoctave/bootstrap.m` function.
+It will install required Octave modules (Internet connection is needed), compile C sources and add
+paths.
+
+When in `at` folder, you may start an Octave CLI session with command:
+```bash
+> octave --eval 'cd atoctave;bootstrap;cd ..;' --persist
+```
+For GUI session, run command:
+```bash
+> octave --gui --eval 'cd atoctave;bootstrap;cd ..;' --persist
+```
+These commands will run `atoctave/bootstrap.m` for you.

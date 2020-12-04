@@ -131,7 +131,7 @@ dpp = p.Results.dpp;
 usepar = p.Results.UseParallel;
 
 
-options=optimset(minimizer);
+options=optimset(func2str(minimizer)); % NOTE: func2str is needed for Octave compatability
 
 IniVals=atGetVariableValue(Ring,Variables);
 splitvar=@(varvec) reshape(mat2cell(varvec,cellfun(@length,IniVals),1),size(Variables));
