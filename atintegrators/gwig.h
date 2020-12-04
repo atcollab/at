@@ -13,6 +13,9 @@
  *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu
 */
 
+#ifndef GWIG_H
+#define GWIG_H
+
 #define WHmax 200
 #define GWIG_EPS (1e-6)
 
@@ -88,3 +91,5 @@ struct gwigR{
   double Vkz[WHmax];
   double Vtz[WHmax];
 };
+
+#endif

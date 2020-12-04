@@ -117,7 +117,7 @@ ELIST =  [SWSE NENW AP];
 ELIST = reverse(ELIST);
 
 buildlat(ELIST);
-evalin('caller','global THERING FAMLIST GLOBVAL');
+evalin('base','global THERING FAMLIST GLOBVAL');
 disp('** Done **');
 
 

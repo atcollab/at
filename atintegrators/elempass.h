@@ -21,6 +21,8 @@
 #define ExportMode
 #elif defined(MACI64)
 #define ExportMode
+#elif defined(__GNUC__)
+#define ExportMode
 #else 
 /* Default - Windows */
 #define ExportMode __declspec(dllexport)

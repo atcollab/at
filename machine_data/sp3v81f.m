@@ -219,6 +219,6 @@ ELIST	=	[CAV MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB) ];
 buildlat(ELIST);
 
 % evalin does not compile so it would be nice to remove this line (G. Portmann)
-evalin('caller','global THERING FAMLIST GLOBVAL');
+evalin('base','global THERING FAMLIST GLOBVAL');
 
 disp('** Finished loading lattice in Accelerator Toolbox');

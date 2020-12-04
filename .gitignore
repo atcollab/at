@@ -46,3 +46,9 @@ Contents.m
 #Local documentation
 doc_html/
 athelp.mat
+
+# C LSP server cache
+.ccls-cache
+
+# octave files
+octave-workspace

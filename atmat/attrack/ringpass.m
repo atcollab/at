@@ -53,7 +53,7 @@ function [Rout, varargout] = ringpass(ring, Rin, nturns, varargin)
 %
 % ROUT=RINGPASS(...,PREFUNC)
 % ROUT=RINGPASS(...,PREFUNC,POSTFUNC)
-% ROUT=RINGPASS(...,function_handle.empty,POSTFUNC)
+% ROUT=RINGPASS(...,cell(),POSTFUNC)
 %   PREFUNC and POSTFUNC are function handles, PREFUNC is called
 %   immediately before tracking each element, POSTFUNC is called
 %   immediately after each element. Functions are called as:
@@ -86,7 +86,7 @@ else
     refpts=length(ring)+1;
 end
 
-[prefunc,postfunc]=parseargs({function_handle.empty,function_handle.empty},...
+[prefunc,postfunc]=parseargs({cell(),cell()},...
     args(funcargs));
 
 try
