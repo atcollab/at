@@ -33,7 +33,7 @@ FROM base AS at
 # TODO: after merge this should clone master at https://github.com/atcollab/at.git
 RUN git clone --depth 1 -b octave_compatibilty https://github.com/atcollab/at.git /opt/at \
 	&& cd /opt/at/atoctave \
-	&& cd /opt/at/atoctave \
+	&& cp -r /opt/at/jupyter/demos $HOME/ \
 	&& octave --eval 'bootstrap'
 
 USER jovyan
