@@ -66,7 +66,7 @@ reqs=REFPTS(refs);
 
 % Build a diagonal matrix of initial conditions
 %scaling=2*XYStep*[1 0.1 1 0.1 1 1];
-scaling=2*XYStep*[1 1 1 1 1 1];
+scaling=XYStep*[1 1 1 1 1 1];
 D6 = 0.5*diag(scaling);
 % Add to the orbit_in. First 12 columns for derivative
 % 13-th column is for closed orbit
