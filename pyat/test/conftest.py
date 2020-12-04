@@ -6,6 +6,11 @@ import numpy
 import pytest
 from at import elements, load, lattice
 
+def pytest_report_header(config):
+    a = os.uname()
+    sysinfo = "system: {} {}".format(a.sysname, a.release)
+    numpyinfo = "numpy version: {}".format(numpy.__version__)
+    return [sysinfo, numpyinfo]
 
 @pytest.fixture
 def rin():
