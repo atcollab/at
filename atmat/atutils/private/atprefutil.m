@@ -1,6 +1,5 @@
 function varargout = atprefutil(action,varargin)
-%UNTITLED5 Summary of this function goes here
-%   Detailed explanation goes here
+%ATPREFUTIL	Utility function for handling AT default values
 
 persistent prefs
 
