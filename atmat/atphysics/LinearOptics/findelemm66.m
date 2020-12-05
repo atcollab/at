@@ -18,7 +18,7 @@ function M66 = findelemm66(ELEM, varargin)
 
 % Build a diagonal matrix of initial conditions
 %scaling=2*XYStep*[1 0.1 1 0.1 1 1];
-scaling=2*XYStep*[1 1 1 1 1 1];
+scaling=XYStep*[1 1 1 1 1 1];
 D6 = 0.5*diag(scaling);
 % Add to the orbit_in
 RIN = R0 + [D6, -D6];
