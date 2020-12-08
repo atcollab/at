@@ -77,7 +77,7 @@ def test_invalid_class_warns_correctly():
         find_class(elem_kwargs, quiet=False)
     with pytest.warns(None) as record:
         find_class(elem_kwargs, quiet=True)
-    assert len(record) is 0
+    assert len(record) == 0
 
 
 def test_no_pass_method_warns_correctly():
@@ -86,7 +86,7 @@ def test_no_pass_method_warns_correctly():
         find_class(elem_kwargs, quiet=False)
     with pytest.warns(None) as record:
         find_class(elem_kwargs, quiet=True)
-    assert len(record) is 0
+    assert len(record) == 0
 
 
 def test_invalid_pass_method_warns_correctly():
@@ -95,7 +95,7 @@ def test_invalid_pass_method_warns_correctly():
         find_class(elem_kwargs, quiet=False)
     with pytest.warns(None) as record:
         find_class(elem_kwargs, quiet=True)
-    assert len(record) is 0
+    assert len(record) == 0
 
 
 def test_class_mapping():
