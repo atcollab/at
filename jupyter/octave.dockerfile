@@ -19,7 +19,7 @@ RUN cd /tmp \
 	&& wget https://ftpmirror.gnu.org/octave/octave-6.1.0.tar.gz -O octave.tar.gz \
 	&& tar -xvf octave.tar.gz \
 	&& cd /tmp/octave-6.1.0 \
-	&& ./configure --prefix=/opt/octave CPPFLAGS=-I/usr/include/suitesparse \
+	&& JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 ./configure --prefix=/opt/octave CPPFLAGS=-I/usr/include/suitesparse \
 	&& cd /tmp/octave-6.1.0 \
 	&& make -j$(nproc) \
 	&& make install \
