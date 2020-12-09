@@ -91,7 +91,8 @@ Frf = cavity1.Frequency;
 HarmNumber = cavity1.HarmNumber;
 theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
 
-D = [XYStep*eye(6) zeros(6,1)];
+scaling=XYStep*[1 1 1 1 1 1];
+D = [diag(scaling) zeros(6,1)];
 %D = [0.5*d*eye(6) -0.5*d*eye(6) zeros(6,1)];
 
 args={};
@@ -102,7 +103,7 @@ while (change > dps) && (itercount < max_iterations)
     %RMATi= Ri(:,ones(1,13)) + D;
     RMATf = linepass(RING,RMATi,args{:});
     % compute the transverse part of the Jacobian 
-    J6 = (RMATf(:,1:6)-RMATf(:,7*ones(1,6)))/XYStep;
+    J6 = (RMATf(:,1:6)-RMATf(:,7))./scaling;
     %J6 = (RMATf(:,1:6)-RMATf(:,7:12))/d;
     Rf = RMATf(:,end);
     Ri_next = Ri + (eye(6)-J6)\(Rf-Ri-theta);

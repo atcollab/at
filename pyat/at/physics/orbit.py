@@ -290,7 +290,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     keep_lattice = kwargs.pop('keep_lattice', False)
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    step_size = kwargs.pop('step_size', DConstant.XYStep)
+    xy_step = kwargs.pop('step_size', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
     # Get evolution period
@@ -305,9 +305,9 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
 
-    delta_matrix = numpy.zeros((6, 7), order='F')
-    for i in range(6):
-        delta_matrix[i, i] = step_size
+    scaling = xy_step*numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    delta_matrix = numpy.asfortranarray(
+        numpy.concatenate((numpy.diag(scaling), numpy.zeros((6, 1))), axis=1))
 
     id6 = numpy.asfortranarray(numpy.identity(6))
     change = 1
@@ -319,7 +319,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
         ref_out = in_mat[:, 6]
         # 6x6 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j6 = (in_mat[:, :6] - in_mat[:, 6:]) / step_size
+        j6 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
         a = j6 - id6  # f'(r_n) - 1
         b = ref_out[:] - ref_in[:] - theta
         b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
