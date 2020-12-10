@@ -70,9 +70,9 @@ function [lindata, varargout] = atlinopt(RING,dp,varargin)
 %  See also atx atmodl findspos twissring tunechrom
 
 NE = length(RING);
-[twiss_in,varargs]=getoption(varargin,'twiss_in',missing);
-[orbitin,varargs]=getoption(varargs,'orbit',missing);
-[ct,varargs]=getoption(varargs,'ct',missing);
+[twiss_in,varargs]=getoption(varargin,'twiss_in',[]);
+[orbitin,varargs]=getoption(varargs,'orbit',[]);
+[ct,varargs]=getoption(varargs,'ct',NaN);
 [coupled,varargs]=getoption(varargs,'coupled',true);
 [DPStep,varargs]=getoption(varargs,'DPStep');
 [XYStep,varargs]=getoption(varargs,'XYStep');
@@ -93,22 +93,22 @@ else
     REFPTS=setelems(false(NE+1,1),1);
 end
 
-if ismissing(twiss_in)        % Circular machine
-    if ~ismissing(orbitin)
+if isempty(twiss_in)        % Circular machine
+    if ~isempty(orbitin)
         if length(orbitin) >= 5
             dp=orbitin(5);
         end
         orbitin=[orbitin(1:4);dp;0];
-    elseif ~ismissing(ct)
+    elseif isnan(ct)
+        [~,orbitin]=findorbit4(RING,dp,REFPTS);
+    else
         [~,orbitin]=findsyncorbit(RING,ct,REFPTS);
         dp=orbitin(5);
-    else
-        [~,orbitin]=findorbit4(RING,dp,REFPTS);
     end
     [orbitP,o1P]=findorbit4(RING,dp+0.5*DPStep,REFPTS,orbitin);
     [orbitM,o1M]=findorbit4(RING,dp-0.5*DPStep,REFPTS,orbitin);
 else                        % Transfer line
-    if ismissing(orbitin)
+    if ~isempty(orbitin)
         orbitin=zeros(6,1);
     end
     try
@@ -161,7 +161,7 @@ else
     BL=NaN(2,2);
 end
 
-if ismissing(twiss_in)            % Circular machine
+if isempty(twiss_in)            % Circular machine
     [beta0_a,alpha0_a,tune_a]=closure(A);
     [beta0_b,alpha0_b,tune_b]=closure(B);
 else                            % Transfer line

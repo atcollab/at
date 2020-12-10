@@ -73,22 +73,22 @@ end
 NE = length(LATTICE);
 [fullflag,varargs]=getflag(varargin,'full');
 [XYStep,varargs]=getoption(varargs,'XYStep');
-[R0,varargs]=getoption(varargs,'orbit',missing);
-[ct,varargs]=getoption(varargs,'ct',missing);
+[R0,varargs]=getoption(varargs,'orbit',[]);
+[ct,varargs]=getoption(varargs,'ct',NaN);
 
 if length(varargs) >= 2     % FINDM44(LATTICE,DP,REFPTS,ORBITIN)
     R0=varargs{2};
 end
 
-if ~ismissing(R0)
+if ~isempty(R0)
     if length(R0) >= 5
         dp=R0(5);
     end
     R0 = [R0(1:4);dp;0];
-elseif ~ismissing(ct)
-    [~,R0]=findsyncorbit(RING,ct);
-else
+elseif isnan(ct)
     [~,R0] = findorbit4(LATTICE,dp);
+else
+    [~,R0]=findsyncorbit(RING,ct);
 end
 
 if length(varargs) >= 1     % FINDM44(LATTICE,DP,REFPTS)

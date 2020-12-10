@@ -39,13 +39,13 @@ if ~iscell(LATTICE)
 end
 NE = length(LATTICE);
 [XYStep,varargs]=getoption(varargin,'XYStep');
-[R0,varargs]=getoption(varargs,'orbit',missing);
+[R0,varargs]=getoption(varargs,'orbit',[]);
 
 if length(varargs) >= 2	% FINDM66(RING,REFPTS,ORBITIN)
     R0 = varargs{2};
 end
 
-if  ismissing(R0)
+if  isempty(R0)
     R0 = findorbit6(LATTICE);
 end
 

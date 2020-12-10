@@ -35,10 +35,10 @@ function [tune, varargout] = tunechrom(RING,DP,varargin)
 
 [COUPLINGFLAG,varargs]=getflag(varargin,'coupling');
 [CHROMFLAG,varargs]=getflag(varargs,'chrom');
-[orbitin,varargs]=getoption(varargs,'orbit',missing);
+[orbitin,varargs]=getoption(varargs,'orbit',[]);
 [COUPLINGFLAG,varargs]=getoption(varargs,'coupled',COUPLINGFLAG);
 [DPStep,varargs]=getoption(varargs,'DPStep');
-[XYStep,varargs]=getoption(varargs,'XYStep');
+[XYStep,varargs]=getoption(varargs,'XYStep'); %#ok<ASGLU>
 
 M44 = findm44(RING,DP,'orbit',orbitin,'XYStep',XYStep);
 
