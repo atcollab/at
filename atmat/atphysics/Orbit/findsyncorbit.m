@@ -67,8 +67,8 @@ else
     Ri = zeros(6,1);
 end
 
-D5 = [XYStep*eye(5) zeros(5,1); zeros(1,6)];
-%D5 = [0.5*d*eye(5) -0.5*d*eye(5) zeros(5,1); zeros(1,11)];
+scaling=XYStep*[1 1 1 1 1];
+D5 = [diag(scaling) zeros(5,1); zeros(1,6)];
 theta5 = [0 0 0 0  dCT]';
 
 args={};
@@ -76,12 +76,10 @@ change=Inf;
 itercount = 0;
 while (change > dps) && (itercount < max_iterations)
     RMATi= Ri(:,ones(1,6)) + D5;
-    %RMATi= Ri(:,ones(1,11)) + D5;
     RMATf = linepass(RING,RMATi,args{:});
     Rf = RMATf(:,end);
     % compute the transverse part of the Jacobian
-    J5 =  (RMATf([1:4,6],1:5)-RMATf([1:4,6],6*ones(1,5)))/XYStep;
-    %J5 =  (RMATf([1:4,6],1:5)-RMATf([1:4,6],6:10))/d;
+    J5 =  (RMATf([1:4,6],1:5)-RMATf([1:4,6],6*ones(1,5)))./scaling;
     Ri_next = Ri +  [(diag([1 1 1 1 0]) - J5)\(Rf([1:4,6])-[Ri(1:4);0]-theta5);0];
     change = norm(Ri_next - Ri);
     Ri = Ri_next;

@@ -7,6 +7,8 @@ import numpy
 import pytest
 from at import elements, load, lattice
 
+
+# noinspection PyUnusedLocal
 def pytest_report_header(config):
     try:
         a = platform.uname()
@@ -15,6 +17,7 @@ def pytest_report_header(config):
         sysinfo = ''
     numpyinfo = "numpy version: {}".format(numpy.__version__)
     return [sysinfo, numpyinfo]
+
 
 @pytest.fixture
 def rin():

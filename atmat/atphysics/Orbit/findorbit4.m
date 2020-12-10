@@ -70,20 +70,18 @@ end
 
 % Set the momentum component of Ri to the specified dP
 Ri(5) = dP;
-D = [XYStep*eye(4) zeros(4,1);zeros(2,5)];
-%D = [0.5*d*eye(4) -0.5*d*eye(4) zeros(4,1);zeros(2,9)];
+scaling=XYStep*[1 1 1 1];
+D = [diag(scaling) zeros(4,1);zeros(2,5)];
 
 args={};
 change=Inf;
 itercount = 0;
 while (change > dps) && (itercount < max_iterations)
     RMATi = Ri(:,ones(1,5)) + D;
-    %RMATi = Ri(:,ones(1,9)) + D;
     RMATf = linepass(RING,RMATi,args{:});
     Rf = RMATf(:,end);
     % compute the transverse part of the Jacobian
-    J4 = (RMATf(1:4,1:4)-RMATf(1:4,5*ones(1,4)))/XYStep;
-    %J4 = (RMATf(1:4,1:4)-RMATf(1:4,5:8))/d;
+    J4 = (RMATf(1:4,1:4)-RMATf(1:4,5))./scaling;
     Ri_next = Ri +  [(eye(4) - J4)\(Rf(1:4)-Ri(1:4)); 0; 0];
     change = norm(Ri_next - Ri);
     Ri = Ri_next;

@@ -88,9 +88,10 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
     ref_in[4] = dp
 
+    scaling = step_size*numpy.array([1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 5), order='F')
     for i in range(4):
-        delta_matrix[i, i] = step_size
+        delta_matrix[i, i] = scaling[i]
     id4 = numpy.asfortranarray(numpy.identity(4))
     change = 1
     itercount = 0
@@ -101,10 +102,10 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
         ref_out = in_mat[:, 4]
         # 4x4 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j4 = (in_mat[:4, :4] - in_mat[:4, 4:]) / step_size
+        j4 = (in_mat[:4, :4] - in_mat[:4, 4:]) / scaling
         a = j4 - id4  # f'(r_n) - 1
         b = ref_out[:4] - ref_in[:4]
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - numpy.append(b_over_a, numpy.zeros((2,)))
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
@@ -186,9 +187,10 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     step_size = kwargs.pop('step_size', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
+    scaling = step_size*numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 6), order='F')
     for i in range(5):
-        delta_matrix[i, i] = step_size
+        delta_matrix[i, i] = scaling[i]
     theta5 = numpy.zeros((5,), order='F')
     theta5[4] = dct
     id5 = numpy.zeros((5, 5), order='F')
@@ -204,10 +206,10 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
         ref_out = in_mat[:, -1]
         # 5x5 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j5 = (in_mat[idx, :5] - in_mat[idx, 5:]) / step_size
+        j5 = (in_mat[idx, :5] - in_mat[idx, 5:]) / scaling
         a = j5 - id5  # f'(r_n) - 1
         b = ref_out[idx] - numpy.append(ref_in[:4], 0.0) - theta5
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - numpy.append(b_over_a, 0.0)
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
@@ -322,7 +324,8 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
         j6 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
         a = j6 - id6  # f'(r_n) - 1
         b = ref_out[:] - ref_in[:] - theta
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        # b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - b_over_a
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
