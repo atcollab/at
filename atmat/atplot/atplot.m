@@ -91,7 +91,7 @@ end
 
 if (comment & curve.left)
     ax=get(curve.left(1),'Parent');
-    set(ax,'Position',[.13 .11 .775 .775]);
+    set(ax,'Position',[.13 .11 .75 .75]);
     tuneper=lindata(end).mu/2/pi;
     tunes=curve.periodicity*tuneper;
     circumference=curve.periodicity*curve.length;
