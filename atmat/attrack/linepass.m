@@ -60,7 +60,7 @@ function [Rout,varargout] = linepass(line,Rin,refpts,varargin)
 %
 % Rfin=LINEPASS(...,PREFUNC)
 % Rfin=LINEPASS(...,PREFUNC,POSTFUNC)
-% Rfin=LINEPASS(...,cell(),POSTFUNC)
+% Rfin=LINEPASS(...,cell(0),POSTFUNC)
 %    PREFUNC and POSTFUNC are function handles, PREFUNC is called
 %    immediately before tracking each element, POSTFUNC is called
 %    immediately after each element. Functions are called as:
@@ -90,7 +90,7 @@ nhist=getoption(struct(args{~funcargs}), 'nhist',1);
 
 newlattice = double(~keeplattice);
 
-[prefunc,postfunc]=parseargs({cell(),cell()},...
+[prefunc,postfunc]=parseargs({cell(0),cell(0)},...
     args(funcargs));
 
 try

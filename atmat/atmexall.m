@@ -7,7 +7,7 @@ function atmexall(varargin)
 
 if isOctave
   error('atmexall does not work in Octave, use atoctave/bootstrap instead')
-endif
+end
 
 PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
 LIBDL='';

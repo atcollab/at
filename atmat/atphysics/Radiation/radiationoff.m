@@ -10,8 +10,6 @@
 %   See also RADIATIONON, CAVITYON, CAVITYOFF, ATRADON, ATRADOFF
 
 
-warning('This function is deprecated, use atradoff instead')
-
 if ~evalin('base','exist(''THERING'')') || ~evalin('base','~isempty(whos(''global'',''THERING''))')
    error('Global variable THERING could not be found');
 end

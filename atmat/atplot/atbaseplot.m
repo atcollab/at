@@ -135,7 +135,6 @@ end
 lines=[curve.left;curve.right];
 if ~isempty(lines)
     legend(lines,[outp.labels]);
-    legend boxoff;
 end
 
     function newelems=splitelem(elem)
