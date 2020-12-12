@@ -89,7 +89,7 @@ else                % openline plot
         @lineplot,[{intwi} varargin(funcarg:end)],options{:});
 end
 
-if (comment && curve.left)
+if comment && ~isempty(curve.left)
     ax=get(curve.left(1),'Parent');
     set(ax,'Position',[.13 .11 .75 .75]);
     tuneper=lindata(end).mu/2/pi;
