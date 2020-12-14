@@ -20,7 +20,7 @@ function [z] = wiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method)
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector
 
-ElemData = atwiggler(fname, Ltot, Lw, Bmax, Nstep, Nmeth, By, Bx, method);
+ElemData = atwiggler(fname, Ltot, Lw, Bmax, getenergy, method,'Nstep',Nstep, 'Nmeth',Nmeth, 'By',By, 'Bx', Bx);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
