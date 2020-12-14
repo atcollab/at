@@ -36,6 +36,7 @@ cavities = atgetcells(ring(:,1),'Frequency');
 dipoles  = atgetcells(ring(:,1),'BendingAngle');
 theta    = atgetfieldvalues(ring(dipoles),'BendingAngle');
 E0s = atgetfieldvalues(ring,'Energy');
+E0s = E0s(finite(E0s));         % Discard undefined values
         
 if any(params) % case RingParam is defined in the lattice
     parmelem=ring{find(params,1)};
