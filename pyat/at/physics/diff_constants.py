@@ -3,8 +3,8 @@
 
 class _Dst(object):
     """Set of constants for AT numerical analysis"""
-    XYStep = 1.e-8           # Coordinate step for differentiation
-    DPStep = 1.e-6           # Momentum step for dispersion and chromaticity
+    XYStep = 3.e-8           # Coordinate step for differentiation
+    DPStep = 3.e-6           # Momentum step for dispersion and chromaticity
     OrbConvergence = 1.e-12  # Convergence criterion for orbit
     OrbMaxIter = 20          # Max. number of iterations for orbit
 
