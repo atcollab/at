@@ -64,7 +64,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-8
+        XYStep          Step size. Default: DConstant.XYStep
 
     See also find_sync_orbit, find_orbit6.
     """
@@ -84,11 +84,11 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     keep_lattice = kwargs.pop('keep_lattice', False)
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    step_size = kwargs.pop('step_size', DConstant.XYStep)
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
     ref_in[4] = dp
 
-    scaling = step_size*numpy.array([1.0, 1.0, 1.0, 1.0])
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 5), order='F')
     for i in range(4):
         delta_matrix[i, i] = scaling[i]
@@ -177,17 +177,17 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-8
+        XYStep          Step size. Default: DConstant.XYStep
 
     See also find_orbit4, find_orbit6.
     """
     keep_lattice = kwargs.pop('keep_lattice', False)
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    step_size = kwargs.pop('step_size', DConstant.XYStep)
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
-    scaling = step_size*numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 6), order='F')
     for i in range(5):
         delta_matrix[i, i] = scaling[i]
@@ -285,14 +285,16 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-8
+        XYStep          Step size. Default: DConstant.XYStep
+        DPStep          Step size. Default: DConstant.XYStep
 
     See also find_orbit4, find_sync_orbit.
     """
     keep_lattice = kwargs.pop('keep_lattice', False)
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
-    xy_step = kwargs.pop('step_size', DConstant.XYStep)
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
     # Get evolution period
@@ -307,7 +309,8 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
 
-    scaling = xy_step*numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
+              dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
     delta_matrix = numpy.asfortranarray(
         numpy.concatenate((numpy.diag(scaling), numpy.zeros((6, 1))), axis=1))
 

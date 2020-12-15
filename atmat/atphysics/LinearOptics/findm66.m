@@ -38,7 +38,8 @@ if ~iscell(LATTICE)
     error('First argument must be a cell array');
 end
 NE = length(LATTICE);
-[XYStep,varargs]=getoption(varargin,'XYStep');
+[XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
+[DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
 [R0,varargs]=getoption(varargs,'orbit',[]);
 
 if length(varargs) >= 2	% FINDM66(RING,REFPTS,ORBITIN)
@@ -46,7 +47,7 @@ if length(varargs) >= 2	% FINDM66(RING,REFPTS,ORBITIN)
 end
 
 if  isempty(R0)
-    R0 = findorbit6(LATTICE);
+    R0 = findorbit6(LATTICE,'XYStep',XYStep,'DPStep',DPStep);
 end
 
 if length(varargs) >= 1	% FINDM66(RING,REFPTS)
@@ -66,7 +67,7 @@ reqs=REFPTS(refs);
 
 % Build a diagonal matrix of initial conditions
 %scaling=2*XYStep*[1 0.1 1 0.1 1 1];
-scaling=XYStep*[1 1 1 1 1 1];
+scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];
 D6 = 0.5*diag(scaling);
 % Add to the orbit_in. First 12 columns for derivative
 % 13-th column is for closed orbit

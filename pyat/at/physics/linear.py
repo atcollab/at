@@ -99,6 +99,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
+        XYStep=1.0e-8   transverse step for numerical computation
         DPStep=1.0E-6   momentum deviation used for computation of
                         chromaticities and dispersion
         coupled=True    if False, simplify the calculations by assuming
@@ -115,6 +116,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         Only computed if 'get_chrom' is True
         lindata         linear optics at the points refered to by refpts, if
                         refpts is None an empty lindata structure is returned.
+
         lindata is a record array with fields:
         idx             element index in the ring
         s_pos           longitudinal position [m]
@@ -156,19 +158,21 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             _jmt.dot(msb.T.dot(_jmt.T)))
         return msa, msb, gamma, cc
 
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     # Get initial orbit
     if twiss_in is None:
         if orbit is None:
-            orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
+            orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice,
+                                   XYStep=xy_step)
             keep_lattice = True
         disp0 = numpy.NaN
         if get_chrom:
-            orbit_up, _ = find_orbit4(ring, dp + 0.5 * dp_step,
+            orbit_up, _ = find_orbit4(ring, dp + 0.5*dp_step, XYStep=xy_step,
                                       keep_lattice=keep_lattice)
-            orbit_down, _ = find_orbit4(ring, dp - 0.5 * dp_step,
+            orbit_down, _ = find_orbit4(ring, dp - 0.5*dp_step, XYStep=xy_step,
                                         keep_lattice=keep_lattice)
             disp0 = numpy.array(orbit_up - orbit_down)[:4] / dp_step
     else:
@@ -189,7 +193,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     orbs = numpy.squeeze(
         lattice_pass(ring, orbit.copy(order='K'), refpts=uintrefs,
                      keep_lattice=keep_lattice), axis=(1, 3)).T
-    m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True)
+    m44, mstack = find_m44(ring, dp, uintrefs, orbit=orbit, keep_lattice=True,
+                           XYStep=xy_step)
 
     nrefs = uintrefs.size
 
@@ -245,10 +250,12 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
         # noinspection PyUnboundLocalVariable
         kwdown = dict(orbit=orbit_down, twiss_in=twiss_in)
-        param_up = linopt(ring, dp=dp + 0.5 * dp_step, refpts=uintrefs,
-                          keep_lattice=True, coupled=coupled, **kwup)
-        param_down = linopt(ring, dp - 0.5 * dp_step, refpts=uintrefs,
-                            keep_lattice=True, coupled=coupled, **kwdown)
+        param_up = linopt(ring, dp=dp + 0.5*dp_step, refpts=uintrefs,
+                          keep_lattice=True, coupled=coupled,
+                          XYStep=xy_step, **kwup)
+        param_down = linopt(ring, dp - 0.5*dp_step, refpts=uintrefs,
+                            keep_lattice=True, coupled=coupled,
+                            XYStep=xy_step, **kwdown)
         param_up_down = param_up+param_down
         chrom, dispersion, _, _, _, _ = _chromfunc(dp_step, *param_up_down)
     else:
@@ -332,6 +339,7 @@ def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
                         ((6,) array)
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
+        XYStep=1.0e-8   transverse step for numerical computation
         DPStep=1.0E-8   momentum deviation used for computation of
                         chromaticities and dispersion
         coupled=True    if False, simplify the calculations by assuming
@@ -431,11 +439,11 @@ def get_mcf(ring, dp=0.0, keep_lattice=False, **kwargs):
     KEYWORDS
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
-        dp_step=1.0E-8      momentum deviation used for differentiation
+        dp_step=1.0E-6  momentum deviation used for differentiation
     """
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    fp_a, _ = find_orbit4(ring, dp=dp - 0.5 * dp_step, keep_lattice=keep_lattice)
-    fp_b, _ = find_orbit4(ring, dp=dp + 0.5 * dp_step, keep_lattice=True)
+    fp_a, _ = find_orbit4(ring, dp=dp - 0.5*dp_step, keep_lattice=keep_lattice)
+    fp_b, _ = find_orbit4(ring, dp=dp + 0.5*dp_step, keep_lattice=True)
     fp = numpy.stack((fp_a, fp_b),
                      axis=0).T  # generate a Fortran contiguous array
     b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
@@ -521,7 +529,7 @@ def get_tune(ring, method='linopt', dp=0.0, **kwargs):
 @check_radiation(False)
 def get_chrom(ring, method='linopt', dp=0, **kwargs):
     """
-    gets the chromaticty using several available methods
+    gets the chromaticity using several available methods
 
     method can be 'linopt', 'fft' or 'laskar'
     linopt: returns the chromaticity from the linopt function

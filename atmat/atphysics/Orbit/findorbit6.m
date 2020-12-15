@@ -52,7 +52,8 @@ function [orb6,fixedpoint] = findorbit6(RING,varargin)
 if ~iscell(RING)
     error('First argument must be a cell array');
 end
-[XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-6
+[XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
+[DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
 [dps,varargs]=getoption(varargs,'OrbConvergence');	% Convergence threshold                 %1.e-12
 [max_iterations,varargs]=getoption(varargs,'OrbMaxIter');	% Max. iterations               %20
 
@@ -91,7 +92,7 @@ Frf = cavity1.Frequency;
 HarmNumber = cavity1.HarmNumber;
 theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
 
-scaling=XYStep*[1 1 1 1 1 1];
+scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];
 D = [diag(scaling) zeros(6,1)];
 
 args={};

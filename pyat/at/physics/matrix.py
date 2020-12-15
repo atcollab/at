@@ -71,13 +71,14 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     full = kwargs.pop('full', False)
     if orbit is None:
-        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice,
+                               XYStep=xy_step)
         keep_lattice = True
     # Construct matrix of plus and minus deltas
     # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1])
-    scaling = xy_step*numpy.array([1.0, 1.0, 1.0, 1.0])
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0])
     dg = numpy.asfortranarray(
-        numpy.concatenate((0.5 * numpy.diag(scaling),numpy.zeros((2,4)))))
+        numpy.concatenate((0.5 * numpy.diag(scaling), numpy.zeros((2, 4)))))
     dmat = numpy.concatenate((dg, -dg), axis=1)
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
@@ -137,13 +138,16 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     See also find_m44, find_orbit6
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     if orbit is None:
-        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice)
+        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice,
+                               XYStep=xy_step, DPStep=dp_step)
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas
     # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1, 1.0, 1.0])
-    scaling = xy_step*numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
+              dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
     dg = numpy.asfortranarray(0.5 * numpy.diag(scaling))
     dmat = numpy.concatenate((dg, -dg), axis=1)
 
@@ -187,7 +191,7 @@ def find_elem_m66(elem, orbit=None, **kwargs):
 
     # Construct matrix of plus and minus deltas
     # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1, 1.0, 1.0])
-    scaling = xy_step*numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
     dg = numpy.asfortranarray(0.5 * numpy.diag(scaling))
     dmat = numpy.concatenate((dg, -dg), axis=1)
 

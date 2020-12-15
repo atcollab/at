@@ -100,13 +100,13 @@ if isempty(twiss_in)        % Circular machine
         end
         orbitin=[orbitin(1:4);dp;0];
     elseif isnan(ct)
-        [~,orbitin]=findorbit4(RING,dp,REFPTS);
+        [~,orbitin]=findorbit4(RING,dp,REFPTS,'XYStep',XYStep);
     else
-        [~,orbitin]=findsyncorbit(RING,ct,REFPTS);
+        [~,orbitin]=findsyncorbit(RING,ct,REFPTS,'XYStep',XYStep);
         dp=orbitin(5);
     end
-    [orbitP,o1P]=findorbit4(RING,dp+0.5*DPStep,REFPTS,orbitin);
-    [orbitM,o1M]=findorbit4(RING,dp-0.5*DPStep,REFPTS,orbitin);
+    [orbitP,o1P]=findorbit4(RING,dp+0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep);
+    [orbitM,o1M]=findorbit4(RING,dp-0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep);
 else                        % Transfer line
     if ~isempty(orbitin)
         orbitin=zeros(6,1);
