@@ -2,8 +2,9 @@
 % 1. Phase-Space tracking variables
 % 2. Tracking through individual elements
 % 3. Method - Element consistency
-clear all
+clear
 clc
+global THERING
 echo on
 % The term 'tracking' in Accelerator Physics refers to numerical simulation
 % of particle motion in phase-space as it passes through an accelerator 
@@ -29,13 +30,13 @@ spear2
 % Second element in spear2 lattice is a drift space
 SOMEDRIFT = THERING{2}
 whos SOMEDRIFT
-% D is a MATLAB structure
+% SOMEDRIFT is a MATLAB structure
 % Now use function DRIFTPASS to track through SOMEDRIFT
 pause % Press any key to continue 
 clc
 DriftPass(SOMEDRIFT,R)
 % or simultaneously for 3 particles  
-DriftPass(SOMEDRIFT,R)  
+DriftPass(SOMEDRIFT,RRR)  
 % Obviously in a drift space particle momentums don't change
 %
 % Try this
