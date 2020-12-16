@@ -1,6 +1,6 @@
 function ring=FODO()
-QF=atquadrupole('QF',0.5,1.2,'PassMethod','QuadMPoleFringePass','Energy',3e9);
-QD=atquadrupole('QD',0.5,-1.2,'PassMethod','QuadMPoleFringePass','Energy',3e9);
+QF=atquadrupole('QF',0.5,1.2,'PassMethod','StrMPoleSymplectic4Pass','Energy',3e9);
+QD=atquadrupole('QD',0.5,-1.2,'PassMethod','StrMPoleSymplectic4Pass','Energy',3e9);
 Bend=atsbend('Bend',1,2*pi/40,'PassMethod','BndMPoleSymplectic4Pass','Energy',3e9);
 RFC=atrfcavity('RFCav');
 Dr=atdrift('Dr',0.5);
