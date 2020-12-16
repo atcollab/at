@@ -16,22 +16,7 @@ function z = corrector(fname,L,kickangle, method)
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector
 
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Length = L;
-if length(kickangle) == 2
-    ElemData.KickAngle = reshape(kickangle,1,2);
-else
-    ElemData.KickAngle = [0, 0];
-    warning(['Family: ',fname,' - KickAngle is not a 2-vector. Set both components to 0']);
-end
-    
-ElemData.PassMethod = method;
-
-ElemData.PolynomA=[kickangle(2)];
-ElemData.PolynomB=[kickangle(1)];
-ElemData.NumIntSteps=1;
-ElemData.MaxOrder=1;
-ElemData.Class='Corrector';
+ElemData = atcorrector(fname,L,kickangle,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declared families including this one
