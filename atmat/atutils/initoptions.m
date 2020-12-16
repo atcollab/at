@@ -1,3 +1,4 @@
+
 function opts = initoptions()
 %INITOPTIONS	Set initial values for AT constants
 %
@@ -12,6 +13,10 @@ function opts = initoptions()
 %see also GETOPTION, SETOPTION
 
 %opts.XYStep = 6.055454452393343e-006
+%
+%Optimized values:
+%see https://github.com/atcollab/at/pull/199#issuecomment-745420443
+%
 opts.XYStep = 3.0E-8;   % Transverse step (for findorbitx, findmxx,...)
 opts.DPStep = 3.0E-6;   % Momentum step (for dispersion and chromaticity)
 opts.OrbConvergence = 1.0E-12;  % Convergence of findorbitx
