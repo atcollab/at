@@ -148,8 +148,8 @@ if coupled
     [MSA,MSB,gamma,CL,AL,BL]=cellfun(@analyze,T12,'UniformOutput',false);
     MSA=cat(3,MSA{:});
     MSB=cat(3,MSB{:});
-%   [BX,AX,~]=cellfun(@closure,AL);
-%   [BY,AY,~]=cellfun(@closure,BL);
+    %   [BX,AX,~]=cellfun(@closure,AL);
+    %   [BY,AY,~]=cellfun(@closure,BL);
 else
     A = M;
     B = N;
@@ -186,8 +186,8 @@ if nargout >= 3
     % Calculate tunes for DP+dDP
     [LD, tunesP] = atlinopt(RING,dp+0.5*DPStep,[],'orbit',o1P,'coupled',coupled); %#ok<ASGLU>
     [LD, tunesM] = atlinopt(RING,dp-0.5*DPStep,[],'orbit',o1M,'coupled',coupled); %#ok<ASGLU>
-%     tunesP=tunechrom(RING,dp+0.5*DPStep,'orbit',o1P,'coupled',coupled);
-%     tunesM=tunechrom(RING,dp-0.5*DPStep,'orbit',o1M,'coupled',coupled);
+    %     tunesP=tunechrom(RING,dp+0.5*DPStep,'orbit',o1P,'coupled',coupled);
+    %     tunesM=tunechrom(RING,dp-0.5*DPStep,'orbit',o1M,'coupled',coupled);
     varargout{2} = (tunesP - tunesM)/DPStep;
 end
 
@@ -235,7 +235,7 @@ lindata = struct('ElemIndex',num2cell(find(REFPTS))',...
         alpha = -(aaa.*squeeze(MS(2,1,:)*beta0-MS(2,2,:)*alpha0) + bbb.*squeeze(MS(2,2,:)))/beta0;
         try
             phase = atan2(bbb,aaa);
-        catch %#ok<CTCH>
+        catch
             phase=NaN(size(beta));
         end
         phase = BetatronPhaseUnwrap(phase);
@@ -245,9 +245,15 @@ lindata = struct('ElemIndex',num2cell(find(REFPTS))',...
         cosmu = (AB(1,1) + AB(2,2))/2;
         diff  = (AB(1,1) - AB(2,2))/2;
         sinmu = sign(AB(1,2))*sqrt(-AB(1,2)*AB(2,1)-diff*diff);
-        alpha = (AB(1,1)-AB(2,2))/2/sinmu;
-        beta = AB(1,2)/sinmu;
-        tune = mod(atan2(sinmu,cosmu)/2/pi,1);
-    end        
+        try
+            alpha = (AB(1,1)-AB(2,2))/2/sinmu;
+            beta = AB(1,2)/sinmu;
+            tune = mod(atan2(sinmu,cosmu)/2/pi,1);
+        catch           % Unstable ring
+            alpha = NaN;
+            beta = NaN;
+            tune = NaN;
+        end
+    end
 
 end
