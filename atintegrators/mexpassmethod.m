@@ -33,7 +33,7 @@ PLATFORMOPTION=[varargin{:}];
 
 if isOctave
   error('mexpassmethod does not work in Octave')
-endif
+end
 
 %Additional platform-specific options for mex
 pdir=fileparts(mfilename('fullpath'));
