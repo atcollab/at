@@ -26,19 +26,7 @@ function z=multipole(fname,L,PolynomA,PolynomB,method)
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector
 
-
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Length = L;
-ElemData.MaxOrder = 3;
-ElemData.NumIntSteps = 10;
-ElemData.R1 = diag(ones(6,1));
-ElemData.R2 = diag(ones(6,1));
-ElemData.T1 = zeros(1,6);
-ElemData.T2 = zeros(1,6);
-ElemData.PolynomA= PolynomA;	 
-ElemData.PolynomB= PolynomB;
-ElemData.BendingAngle  	= PolynomB(1);
-ElemData.PassMethod=method;
+ElemData = atmultipole(fname,L,PolynomA,PolynomB,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one

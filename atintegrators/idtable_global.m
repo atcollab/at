@@ -132,6 +132,7 @@ ElemData.PolynomB= [0 0 0 0];
 % set(h2,'position',p2);
 % SetPlotSize(20,10);
 % print('-djpeg ','KickMap');
+ElemData.Class='KickMap';
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one
