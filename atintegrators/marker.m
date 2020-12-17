@@ -17,9 +17,7 @@ function z = marker(fname,method)
 %  See also atdrift, atquadrupole, atsextupole, atsbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector
 
-ElemData.FamName = fname;  % add check for identical family names
-ElemData.Length=0;
-ElemData.PassMethod=method;
+ElemData = atmarker(fname,method);
 
 global FAMLIST
 z = length(FAMLIST)+1; % number of declare families including this one

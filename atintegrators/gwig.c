@@ -283,8 +283,8 @@ void GWigAy(struct gwig *pWig, double *Xvec, double *pay, double *paypx)
       syky  = sin(ky * y)/ky;
     } else {
       syky = y * sinc(ky * y);
-      aypx = aypx + (pWig->VCw[i])*(kw/kz)* kx*shx*syky*sz;
     }
+    aypx = aypx + (pWig->VCw[i])*(kw/kz)* kx*shx*syky*sz;
   }
 
   *pay = ay;

@@ -144,7 +144,7 @@ end
         if any(cavindex)
             try
                 [envelope,espread,blength,m,T]=ohmienvelope(ring2,radindex,refpts);
-                [chi,tns]=atdampingrates(m);
+                [tns,chi]=atdampingrates(m);
                 fs=abs(tns(3))/revperiod;
                 dampingtime=revperiod./chi;
                 alpha=1.0./dampingtime;
@@ -240,25 +240,6 @@ end
         function lind=deflt(lind)
             lind.modemit=NaN(1,3);
             lind.emit44=NaN(1,2);
-        end
-        
-        function [chi,nu]=atdampingrates(m66)
-            %find tunes and damping rates from one map matrix with radiation
-            aa=amat(m66);
-            
-            Rmat=aa\m66*aa;
-            
-            [chi,nu]=cellfun(@decode,num2cell(reshape(1:size(m66,1),2,[]),1));
-            
-            function [chi,nu]=decode(range)
-                matr=Rmat(range,range);
-%                 nu=mod(atan2(matr(1,2)-matr(2,1),matr(1,1)+matr(2,2))/2/pi,1);
-%                 chi=-log(sqrt(det(matr)));
-                ev=eig(matr);
-                ev1log=log(ev(1));
-                chi=-real(ev1log);
-                nu=mod(imag(ev1log)/2/pi,1);
-            end
         end
         
         function mask=setelems(mask,idx)

@@ -56,8 +56,8 @@ def test_find_orbit4(engine, lattices, dp):
                                            _ml_refs(refpts, nelems), nargout=2)
     ml_orbit4 = numpy.rollaxis(numpy.asarray(ml_orbit4), -1)
     # Comparison
-    assert_close(py_orb4, _py_data(ml_orb4), atol=1.e-15, rtol=0)
-    assert_close(py_orbit4[:, :4], ml_orbit4, atol=1.e-15, rtol=0)
+    assert_close(py_orb4, _py_data(ml_orb4), atol=1e-15, rtol=0)
+    assert_close(py_orbit4[:, :4], ml_orbit4, atol=1.5e-15, rtol=0)
 
 
 @pytest.mark.parametrize('lattices',
@@ -75,11 +75,11 @@ def test_find_orbit6(engine, lattices):
                                            nargout=2)
     ml_orbit6 = numpy.rollaxis(numpy.asarray(ml_orbit6), -1)
     # Comparison
-    assert_close(py_orb6, _py_data(ml_orb6), atol=2e-14, rtol=0)    # 5e-15
-    assert_close(py_orbit6, ml_orbit6, atol=2e-14, rtol=0)  # 5e-15
+    assert_close(py_orb6, _py_data(ml_orb6), atol=5e-15, rtol=0)
+    assert_close(py_orbit6, ml_orbit6, atol=5e-15, rtol=0)
 
 
-@pytest.mark.parametrize('dp', (0.0,))  # (-0.01, 0.0, 0.01)
+@pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
 @pytest.mark.parametrize('lattices',
                          [pytest.lazy_fixture('dba'),
                           pytest.lazy_fixture('hmba')])
@@ -96,7 +96,7 @@ def test_find_m44(engine, lattices, dp):
     # Matlab call
     ml_m44, ml_mstack = engine.findm44(ml_lattice, dp,
                                        _ml_refs(refpts, nelems),
-                                       morbit, nargout=2)   # 'orbit'
+                                       'orbit', morbit, nargout=2)
     ml_mstack = numpy.rollaxis(numpy.asarray(ml_mstack).reshape((4, 4,
                                                                  nrefs)), -1)
     # Comparison
@@ -118,7 +118,7 @@ def test_find_m66_orb(engine, lattices):
     py_m66, py_mstack = find_m66(py_lattice, refpts, orbit=porbit)
     # Matlab call
     ml_m66, ml_mstack = engine.findm66(ml_lattice, _ml_refs(refpts, nelems),
-                                       morbit, nargout=2)  # 'orbit'
+                                       'orbit', morbit, nargout=2)
     assert_close(py_m66, numpy.asarray(ml_m66), atol=1.e-11, rtol=0)
 
     ml_mstack = numpy.rollaxis(numpy.asarray(ml_mstack).reshape((6, 6,
