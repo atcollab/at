@@ -12,6 +12,7 @@ e_mass = 1.0e+06 * cst['electron mass energy equivalent in MeV'][0]  # eV
 Cgamma = 4.0 * pi * _e_radius / 3.0 / pow(e_mass, 3)                 # m/eV^3
 Cq = 55 / 32 / sqrt(3) * _hbar / e_mass * 1.0e-9                     # m
 
+from .diff_constants import *
 from .orbit import *
 from .amat import *
 from .matrix import *

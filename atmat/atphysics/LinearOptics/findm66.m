@@ -4,7 +4,7 @@ function [M66, varargout] = findm66(LATTICE, varargin)
 %  FINDM66 uses FINDORBIT6 to search for the closed orbit in 6-d
 %  In order for this to work the ring MUST have a CAVITY element
 %
-% M66 = FINDM66(RING)finds full one-turn 6-by-6
+% M66 = FINDM66(RING) finds the full one-turn 6-by-6
 %    matrix at the entrance of the first element
 %
 % [M66,T] = FINDM66(RING,REFPTS) in addition to M finds
@@ -17,37 +17,45 @@ function [M66, varargout] = findm66(LATTICE, varargin)
 %    See further explanation of REFPTS in the 'help' for FINDSPOS
 %
 %    Note:
-%    When REFPTS= [ 1 2 .. ] the fist point is the entrance of the first element
+%    When REFPTS= [ 1 2 .. ] the first point is the entrance of the first element
 %    and T(:,:,1) - identity matrix
 %    When REFPTS= [  .. length(RING)+1] the last point is the exit of the last element
 %    and the entrance of the first element after 1 turn: T(:,:, ) = M
 %
-% [M66,T] = FINDM66(RING,REFPTS,ORBITIN) - Does not search for closed orbit.
-%   This syntax is useful to avoid recomputing the closed orbit if it is
-%   already known.
+% [...] = FINDM66(RING,REFPTS,ORBITIN)    (Deprecated syntax)
+% [...] = FINDM66(...,'orbit',ORBITIN)
+%   Do not search for closed orbit. This syntax is useful to avoid
+%   recomputing the closed orbit if it is already known.
 %
-% [M66,T,orbit] = FINDM66(RING, REFPTS) in addition returns the closed orbit
-%    found in the process of lenearization
+% [M66,T,orbit] = FINDM66(...)
+%   In addition returns the closed orbit at the entrance of each element
+%   indexed by REFPTS.
+%
 %
 % See also FINDM44, FINDORBIT6
 
 if ~iscell(LATTICE)
     error('First argument must be a cell array');
 end
-
 NE = length(LATTICE);
+[XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
+[DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
+[R0,varargs]=getoption(varargs,'orbit',[]);
 
-if nargin >= 3 && ~isempty(varargin{2}) % FINDM66(RING,REFPTS,ORBITIN)
-    R0 = varargin{2};
-else
-    R0 = findorbit6(LATTICE);
+if length(varargs) >= 2	% FINDM66(RING,REFPTS,ORBITIN)
+    R0 = varargs{2};
 end
-if nargin >= 2  % FINDM66(RING,REFPTS)
-    if islogical(varargin{1})
-        REFPTS=varargin{1};
+
+if  isempty(R0)
+    R0 = findorbit6(LATTICE,'XYStep',XYStep,'DPStep',DPStep);
+end
+
+if length(varargs) >= 1	% FINDM66(RING,REFPTS)
+    if islogical(varargs{1})
+        REFPTS=varargs{1};
         REFPTS(end+1:NE+1)=false;
-    elseif isnumeric(varargin{1})
-        REFPTS=setelems(false(1,NE+1),varargin{1});
+    elseif isnumeric(varargs{1})
+        REFPTS=setelems(false(1,NE+1),varargs{1});
     else
         error('REFPTS must be numeric or logical');
     end
@@ -57,36 +65,19 @@ end
 refs=setelems(REFPTS,NE+1);
 reqs=REFPTS(refs);
 
-% Determine step size to use for numerical differentiation
-global NUMDIFPARAMS
-% Transverse
-if isfield(NUMDIFPARAMS,'XYStep')
-    dt = NUMDIFPARAMS.XYStep';
-else
-    % optimal differentiation step - Numerical Recipes
-    dt =  6.055454452393343e-006;
-end
-% Longitudinal
-if isfield(NUMDIFPARAMS,'DPStep')
-    dl = NUMDIFPARAMS.DPStep';
-else
-    % optimal differentiation step - Numerical Recipes
-    dl =  6.055454452393343e-006;
-end
-
 % Build a diagonal matrix of initial conditions
-D6 = [0.5*dt*eye(4),zeros(4,2);zeros(2,4),0.5*dl*eye(2)];
+%scaling=2*XYStep*[1 0.1 1 0.1 1 1];
+scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];
+D6 = 0.5*diag(scaling);
 % Add to the orbit_in. First 12 columns for derivative
 % 13-th column is for closed orbit
-RIN = R0(:,ones(1,13)) + [D6 -D6 zeros(6,1)];
+RIN = R0 + [D6 -D6 zeros(6,1)];
 ROUT = linepass(LATTICE,RIN,refs);
 TMAT3 = reshape(ROUT,6,13,[]);
-M66 = [(TMAT3(:,1:4,end)-TMAT3(:,7:10,end))./dt,...
-    (TMAT3(:,5:6,end)-TMAT3(:,11:12,end))./dl];
+M66 = (TMAT3(:,1:6,end)-TMAT3(:,7:12,end))./scaling;
 
-if nargout >= 2 % Calculate matrixes at all REFPTS.
-    varargout{1} = [(TMAT3(:,1:4,reqs)-TMAT3(:,7:10,reqs))./dt,...
-        (TMAT3(:,5:6,reqs)-TMAT3(:,11:12,reqs))./dl];
+if nargout >= 2 % Calculate matrices at all REFPTS.
+    varargout{1} = (TMAT3(:,1:6,reqs)-TMAT3(:,7:12,reqs))./scaling;
     % Return closed orbit if requested
     if nargout >= 3
         varargout{2}=squeeze(TMAT3(:,13,reqs));

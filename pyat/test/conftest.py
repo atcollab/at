@@ -2,9 +2,21 @@
 A special file that contains test fixtures for the other test files to use.
 """
 import os
+import platform
 import numpy
 import pytest
 from at import elements, load, lattice
+
+
+# noinspection PyUnusedLocal
+def pytest_report_header(config):
+    try:
+        a = platform.uname()
+        sysinfo = "system: {} {}".format(a[0], a[2])
+    except AttributeError:
+        sysinfo = ''
+    numpyinfo = "numpy version: {}".format(numpy.__version__)
+    return [sysinfo, numpyinfo]
 
 
 @pytest.fixture

@@ -5,6 +5,8 @@ between other modules.
 import pytest
 import os
 import sys
+import platform
+import numpy
 from at.load import load_mat
 try:
     from matlab.engine import connect_matlab, start_matlab, EngineError
@@ -17,6 +19,17 @@ ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '../..'))
 dba_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/dba.mat')
 hmba_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/hmba.mat')
 err_ring = os.path.join(ROOT_DIR, 'pyat/test_matlab/err.mat')
+
+
+# noinspection PyUnusedLocal
+def pytest_report_header(config):
+    try:
+        a = platform.uname()
+        sysinfo = "system: {} {}".format(a[0], a[2])
+    except AttributeError:
+        sysinfo = ''
+    numpyinfo = "numpy version: {}".format(numpy.__version__)
+    return [sysinfo, numpyinfo]
 
 
 @pytest.fixture(scope='session')

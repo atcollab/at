@@ -7,13 +7,10 @@ import scipy.constants as constants
 from at.lattice import AtWarning, AtError, check_radiation
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
+from at.physics import DConstant
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
-
-STEP_SIZE = 1e-6
-MAX_ITERATIONS = 20
-CONVERGENCE = 1e-12
 
 
 @check_radiation(False)
@@ -67,7 +64,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-6
+        XYStep          Step size. Default: DConstant.XYStep
 
     See also find_sync_orbit, find_orbit6.
     """
@@ -85,15 +82,16 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
     # f'(r_n) is the 4x4 jacobian, denoted j4
 
     keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', CONVERGENCE)
-    max_iterations = kwargs.pop('max_iterations', MAX_ITERATIONS)
-    step_size = kwargs.pop('step_size', STEP_SIZE)
+    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
+    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
     ref_in[4] = dp
 
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 5), order='F')
     for i in range(4):
-        delta_matrix[i, i] = step_size
+        delta_matrix[i, i] = scaling[i]
     id4 = numpy.asfortranarray(numpy.identity(4))
     change = 1
     itercount = 0
@@ -104,10 +102,10 @@ def find_orbit4(ring, dp=0.0, refpts=None, guess=None, **kwargs):
         ref_out = in_mat[:, 4]
         # 4x4 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j4 = (in_mat[:4, :4] - in_mat[:4, 4:]) / step_size
+        j4 = (in_mat[:4, :4] - in_mat[:4, 4:]) / scaling
         a = j4 - id4  # f'(r_n) - 1
         b = ref_out[:4] - ref_in[:4]
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - numpy.append(b_over_a, numpy.zeros((2,)))
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
@@ -179,19 +177,20 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-6
+        XYStep          Step size. Default: DConstant.XYStep
 
     See also find_orbit4, find_orbit6.
     """
     keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', CONVERGENCE)
-    max_iterations = kwargs.pop('max_iterations', MAX_ITERATIONS)
-    step_size = kwargs.pop('step_size', STEP_SIZE)
+    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
+    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 6), order='F')
     for i in range(5):
-        delta_matrix[i, i] = step_size
+        delta_matrix[i, i] = scaling[i]
     theta5 = numpy.zeros((5,), order='F')
     theta5[4] = dct
     id5 = numpy.zeros((5, 5), order='F')
@@ -207,10 +206,10 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
         ref_out = in_mat[:, -1]
         # 5x5 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j5 = (in_mat[idx, :5] - in_mat[idx, 5:]) / step_size
+        j5 = (in_mat[idx, :5] - in_mat[idx, 5:]) / scaling
         a = j5 - id5  # f'(r_n) - 1
         b = ref_out[idx] - numpy.append(ref_in[:4], 0.0) - theta5
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - numpy.append(b_over_a, 0.0)
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
@@ -286,14 +285,16 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
                         convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
-        step_size       Step size. Default: 1.e-6
+        XYStep          Step size. Default: DConstant.XYStep
+        DPStep          Step size. Default: DConstant.XYStep
 
     See also find_orbit4, find_sync_orbit.
     """
     keep_lattice = kwargs.pop('keep_lattice', False)
-    convergence = kwargs.pop('convergence', CONVERGENCE)
-    max_iterations = kwargs.pop('max_iterations', MAX_ITERATIONS)
-    step_size = kwargs.pop('step_size', STEP_SIZE)
+    convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
+    max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     ref_in = numpy.zeros((6,), order='F') if guess is None else guess
 
     # Get evolution period
@@ -308,9 +309,10 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
 
-    delta_matrix = numpy.zeros((6, 7), order='F')
-    for i in range(6):
-        delta_matrix[i, i] = step_size
+    scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
+              dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+    delta_matrix = numpy.asfortranarray(
+        numpy.concatenate((numpy.diag(scaling), numpy.zeros((6, 1))), axis=1))
 
     id6 = numpy.asfortranarray(numpy.identity(6))
     change = 1
@@ -322,10 +324,11 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
         ref_out = in_mat[:, 6]
         # 6x6 jacobian matrix from numerical differentiation:
         # f(x+d) - f(x) / d
-        j6 = (in_mat[:, :6] - in_mat[:, 6:]) / step_size
+        j6 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
         a = j6 - id6  # f'(r_n) - 1
         b = ref_out[:] - ref_in[:] - theta
-        b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        # b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
+        b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - b_over_a
         # determine if we are close enough
         change = numpy.linalg.norm(r_next - ref_in)
