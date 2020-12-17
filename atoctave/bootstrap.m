@@ -1,11 +1,11 @@
-function bootstrap(debug=false)
+function bootstrap(debugMode=false)
 %bootstrap prepare Octave for AT
 %
-%  ISOCTAVE(DEBUG)
+%  ISOCTAVE(DEBUGMODE)
 %    Prepare Octave for AT
 %
 %  INPUTS
-%  1. DEBUG          build debug versions of mex files. defaults to false
+%  1. DEBUGMODE          build debug versions of mex files. defaults to false
 %
 
   %% {{{ Constants
@@ -13,13 +13,12 @@ function bootstrap(debug=false)
   %% for debugging use flags -O0 -ggdb3
   INCLUDES=strjoin({'-I../atintegrators'}, ' ');
   CFLAGS=strjoin({'-DOCTAVE', ...
-                  '-DAT_MODE', ...
                   '-DMATLAB_MEX_FILE', ...
                   '-Wall', ...
                   '-Wextra', ...
                   '-Wno-unused-function', ...
                   '-Wno-unused-parameter'}, ' ');
-  if debug
+  if debugMode
     CFLAGS=strjoin({CFLAGS, ...
                     '-ggdb3', ...
                     '-O0'}, ' ');
@@ -69,33 +68,54 @@ function bootstrap(debug=false)
 
   %% {{{ Compile MEX files
   %% get source files
+
+  %% search for all *Pass.c and *Pass.cpp in atintegrators folder
   atintegrators = glob(fullfile(atroot, '..', 'atintegrators', '*Pass.c*'));
-  nonlineardynamics = glob(fullfile(atroot, 'atphysics', 'NonLinearDynamics', '*.c'));
-  radiation = glob(fullfile(atroot, 'atphysics', 'Radiation', '*.c'));
+  for i = 1:length(atintegrators)
+    source = atintegrators{i};
+    target = replaceext(source, '.mex');
+    atcompilemex(target, CFLAGS, INCLUDES, {source});
+  endfor
+
+  nonlineardynamics = glob(fullfile(atroot, 'atphysics', 'NonLinearDynamics', '*.c*'));
+  atcompilemex(replaceext(nonlineardynamics{1}, '.mex'), CFLAGS, "", nonlineardynamics);
+
+  radiation = glob(fullfile(atroot, 'atphysics', 'Radiation', '*.c*'));
+  atcompilemex(replaceext(radiation{1}, '.mex'), CFLAGS, INCLUDES, radiation);
+
   attrack = glob(fullfile(atroot, 'attrack', '*.c'));
+  atcompilemex(replaceext(attrack{1}, '.mex'), CFLAGS, INCLUDES, attrack);
+
   nafflib = glob(fullfile(atroot, 'atphysics', 'nafflib', '*.c'));
   nafflib = nafflib(~strcmp(nafflib, fullfile(atroot, 'atphysics', 'nafflib', 'example.c')));
+  atcompilemex(fullfile(atroot, 'atphysics', 'nafflib', 'nafflib.mex'), CFLAGS, INCLUDES, nafflib);
 
-  sources = [atintegrators; nonlineardynamics; nafflib; radiation; attrack];
+  %% }}}
 
-  for i = 1:length(sources)
-    source = sources{i};
-    if endsWith(source, '.cc')
-      target = strrep(source, '.cc', '.mex');
-    else
-      target = strrep(source, '.c', '.mex');
-    endif
-    if ~exist(target, 'file')
+  %% {{{ Functions
+  function atcompilemex(target, CFLAGS, INCLUDES,sources)
+    %% if file does not exist or is older then sources
+    if ~exist(target, 'file') || ...
+      any(arrayfun(@(f) stat(f{1}).mtime, sources) > stat(target).mtime)
       mexcommand = strjoin({'mex', ...
                             CFLAGS, ...
                             INCLUDES, ...
                             '-o', ...
                             target, ...
-                            source}, ' ');
+                            strjoin(sources, ' ')},
+                           ' ');
       disp(mexcommand);
       eval(mexcommand);
     endif
-  endfor
-  %% }}}
+  end
 
+  function output=replaceext(string, ext)
+    [~, ~, ~, m] = regexp(string, "(?i)\\.[a-z0-9]+$");
+    if length(m) > 0
+      output = strrep(string, m{1}, ext);
+    else
+      output = string;
+    end
+  end
+  %% }}}
 end
