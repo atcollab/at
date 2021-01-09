@@ -36,6 +36,16 @@ class Variable(object):
     def get(self, ring):
         return self.getfun(ring, *self.args)
 
+    @staticmethod
+    def header():
+        return '{:s}\t{:s}\t\t{:s}\t\t{:s}'.format('Name', 'Initial', 'Final',
+                                                   'Variation')
+
+    def status(self, ring, vini=np.NaN):
+        vnow = self.get(ring)
+        return '{:s}\t{:e}\t{:e}\t{:e}'.format(self.name, vini, vnow,
+                                               (vnow - vini) / vini)
+
 
 class ElementVariable(Variable):
     """An ElementVariable is:
@@ -186,10 +196,7 @@ def match(ring, variables, constraints):
         print('{:s}\t{:e}\t{:e}\t{:e}\t{:e}'.format(name, iv, fv, target,
                                                     (fv - target)))
     print(' ')
-    print('{:s}\t{:s}\t\t{:s}\t\t{:s}'.format('Name', 'Initial', 'Final',
-                                              'Variation'))
-    for i, var in enumerate(variables):
-        v0 = init[i]
-        v = var.get(ring)
-        print('{:s}\t{:e}\t{:e}\t{:e}'.format(var.name, v0, v, (v - v0) / v0))
+    print(Variable.header())
+    for var, vini in zip(variables, init):
+        print(var.status(ring, vini=vini))
     print(' ')
