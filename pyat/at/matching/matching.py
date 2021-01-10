@@ -364,15 +364,15 @@ def match(ring, variables, constraints):
     print('Using method', method)
     print(' ')
 
-    initvals = constraints.values(ring)
+    initvals = [cst.values(ring) for cst in constraints]
     least_squares(fun, init, bounds=bounds, verbose=2, max_nfev=1000,
                   method=method, diff_step=1.0e-10)
 
     print()
     print(Constraints.header())
     print()
-    for cst in constraints:
-        print(cst.status(ring, initial=initvals))
+    for cst, ini in zip(constraints, initvals):
+        print(cst.status(ring, initial=ini))
     print()
     print(Variable.header())
     for var, vini in zip(variables, init):
