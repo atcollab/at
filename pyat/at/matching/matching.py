@@ -247,6 +247,14 @@ class LinoptConstraints(_RefConstraints):
 
           # Add a chromaticity constraint (both planes)
           cnstrs.add('chrom', [0.0 0.0])
+
+          # define a constraint of phase advance between 2 points
+          def mu_diff(lindata, tune, chrom):
+              delta_mu = (lindata[1].mu[0] - lindata[0].mu[0])/(2*np.pi)
+              return delta_mu % 1.0
+
+          # Add a phase advance constraint, giving the desired locations
+          cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1])
     """
     def __init__(self, ring, *args, **kwargs):
         """Build a LinoptConstraints container
@@ -276,10 +284,11 @@ class LinoptConstraints(_RefConstraints):
                             available parameters. In addition to local optical
                             parameters, 'tune' and 'chrom' are allowed.
                           - user-supplied parameter evaluation function:
-                            value = param(lindata, tune, chrom)
-                            lindata contains the
+                                value = param(lindata, tune, chrom)
+                            lindata contains the optics parameters at all the
+                              specified refpoints
                             value is the constrained parameter value
-                            value may be a scalar or an array.
+                              value may be a scalar or an array.
             target        desired value.
 
         KEYWORDS
