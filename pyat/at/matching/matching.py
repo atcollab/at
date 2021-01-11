@@ -159,12 +159,13 @@ class Constraints(object):
         """Return a flattened array of weighted residuals"""
 
         def res(value, target, weight, lbound, ubound):
+            weight = np.broadcast_to(weight, value.shape)
             diff = value - target
-            lb = diff - lbound
-            ub = diff - ubound
+            lb = np.ravel(diff - lbound)
+            ub = np.ravel(diff - ubound)
             lb[lb >= 0] = 0
             ub[ub <= 0] = 0
-            return np.maximum(abs(lb), abs(ub)) / weight
+            return np.maximum(abs(lb), abs(ub)) / np.ravel(weight)
 
         return np.concatenate([res(v, t, w, lb, ib) for v, t, w, lb, ib
                                in zip(self.values(ring), self.target,
@@ -255,21 +256,25 @@ class LinoptConstraints(_RefConstraints):
         self.get_chrom = False
         super(LinoptConstraints, self).__init__(ring, *args, **kwargs)
 
-    def add(self, name, attrname, target, refpts=None, order=None, weight=1.0,
+    def add(self, param, target, refpts=None, order=None, name=None, weight=1.0,
             bounds=(0, 0)):
         """Add a target to the LinoptConstraints container
 
         PARAMETERS
-            name          name of the constraint
-            attrname      parameter name: see at.linopt for the name of
-                          available parameters. In addition to local optical
-                          parameters, 'tune' and 'chrom' are allowed.
+            param         2 possibilities:
+                          - parameter name: see at.linopt for the name of
+                            available parameters. In addition to local optical
+                            parameters, 'tune' and 'chrom' are allowed.
+                          - user-supplied parameter evaluation function:
+                            value = param(lindata, tune, chrom)
             target        desired value.
 
         KEYWORDS
             refpts=None   location of the constraint
             order=None    index in the parameter array. If None, the full array
                           is used.
+            name=None     name of the constraint. If None, name is generated
+                          from param and order
             weight=1.0    weight factor: the residual is (value-target)/weight
             bounds=(0,0)  lower and upper bounds with respect to target
 
@@ -288,19 +293,25 @@ class LinoptConstraints(_RefConstraints):
 
         # noinspection PyUnusedLocal
         def attrfun(refdata, tune, chrom):
-            return getf(refdata, attrname)
+            return getf(refdata, param)
 
-        if attrname == 'tune':
+        if callable(param):
+            fun = param
+            self.refpts[:] = True       # necessary not to miss 2*pi jumps
+            self.get_chrom = True       # fun may use dispersion or chroma
+        elif param == 'tune':
             fun = tunefun
             refpts = []
-        elif attrname == 'chrom':
+        elif param == 'chrom':
             fun = chromfun
             refpts = []
-            self.get_chrom = True
+            self.get_chrom = True       # slower but necessary
         else:
             fun = attrfun
-            if attrname == 'dispersion':
-                self.get_chrom = True
+            if param == 'dispersion':
+                self.get_chrom = True   # slower but necessary
+            elif param == 'mu':
+                self.refpts[:] = True   # necessary not to miss 2*pi jumps
 
         super(LinoptConstraints, self).add(name, refpts, fun, target, weight,
                                            bounds)
@@ -310,35 +321,6 @@ class LinoptConstraints(_RefConstraints):
         ld0, tune, chrom, ld = linopt(ring, refpts=self.refpts,
                                       get_chrom=self.get_chrom, **kwargs)
         return (ld[ref[self.refpts]] for ref in self.refs), (tune, chrom)
-
-
-class oldConstraints(object):
-    # noinspection PyUnusedLocal
-    def __init__(self, ring, fun, constraints, args=()):
-        self.fun = fun
-        self.constraints = constraints
-        self.args = args
-        self.name = np.array([ci['name'] for ci in self.constraints])
-        self.target = np.array([ci['target'] for ci in self.constraints])
-        self.bounds = np.array([ci['bounds'] for ci in self.constraints]).T
-        self.weights = np.array([ci['weight'] for ci in self.constraints])
-
-    @staticmethod
-    def build(varname, target, bounds=(0, 0), weight=1):
-        return {'name': varname, 'target': target,
-                'bounds': bounds, 'weight': weight}
-
-    def get_vals(self, ring):
-        return self.fun(ring, *self.args)
-
-    def evaluate(self, ring):
-        diff = self.get_vals(ring) - self.target
-        lb = diff - self.bounds[0, :]
-        ub = diff - self.bounds[1, :]
-        lb[lb >= 0] = 0
-        ub[ub <= 0] = 0
-        diff = np.maximum(abs(lb), abs(ub)) * self.weights
-        return diff
 
 
 def match(ring, variables, constraints):
