@@ -105,8 +105,8 @@ class Constraints(object):
           cnstrs = Constraints()
 
           # Add the two constraints:
-          cnstrs.add('circ', circ_fun, 850.0)
-          cnstrs.add('mcf', mcf_fun, 1.0e-4, weight=0.1)
+          cnstrs.add(circ_fun, 850.0)
+          cnstrs.add(mcf_fun, 1.0e-4, weight=0.1)
     """
     def __init__(self, *args, **kwargs):
         """Constraints(*args, **kwargs)
@@ -124,11 +124,10 @@ class Constraints(object):
         self.args = args
         self.kwargs = kwargs
 
-    def add(self, name, fun, target, weight=1.0, bounds=(0, 0)):
+    def add(self, fun, target, name=None, weight=1.0, bounds=(0, 0)):
         """Add a target to the Constraints container
 
         PARAMETERS
-            name          name of the constraint
             fun           evaluation function. Called as:
                           value = fun(ring, *args, **kwargs)
                             value is the constrained parameter value
@@ -138,12 +137,17 @@ class Constraints(object):
             target        desired value.
 
         KEYWORDS
+            name=None     name of the constraint. If None, name is generated
+                          from the name of the evaluation function
             weight=1.0    weight factor: the residual is (value-target)/weight
-            bounds=(0,0)  lower and upper bounds with respect to target
+            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+                          in the interval [target-low_bound target+up_bound]
 
-        The target, weight and bounds values must be broadcastable to the shape
-        of value.
+        The "target", "weight" and "bounds" input must be broadcastable to the
+        shape of "value".
         """
+        if name is None:                # Generate the constraint name
+            name = fun.__name__
         self.name.append(name)
         self.fun.append(fun)
         self.target.append(target)
@@ -175,9 +179,9 @@ class Constraints(object):
     @staticmethod
     def header():
         """Header for the display of constraint residuals"""
-        return '{:s}\t{:s}\t\t{:s}\t\t{:s}\t\t{:s}'.format('Name', 'Initial',
-                                                           'Final', 'Target',
-                                                           'Residual')
+        return '{:>12s}\t{:s}\t\t{:s}\t\t{:s}\t\t{:s}'.format('Name', 'Initial',
+                                                              'Final', 'Target',
+                                                              'Residual')
 
     def status(self, ring, initial=None):
         """Return a string giving the actual state of constraints"""
@@ -189,31 +193,38 @@ class Constraints(object):
             for vi, vn, vt in zip(np.broadcast_to(ini, now.shape).flat,
                                   now.flat,
                                   np.broadcast_to(target, now.shape).flat):
-                strs.append('{:s}\t{:e}\t{:e}\t{:e}\t{:e}'.
+                strs.append('{:>12s}\t{: e}\t{: e}\t{: e}\t{: e}'.
                             format(name, vi, vn, vt, vn - vt))
         return '\n'.join(strs)
 
 
 class _RefConstraints(Constraints):
-    """Base class for position-related constraints"""
+    """Base class for position-related constraints: handle the refpoints
+    of each target"""
     def __init__(self, ring, *args, **kwargs):
         self.nelems = len(ring)
         self.refs = []
         self.refpts = bool_refpts([], self.nelems)
         super(_RefConstraints, self).__init__(*args, **kwargs)
 
-    # noinspection PyMethodOverriding
-    def add(self, name, refpts, fun, target, weight=1.0, bounds=(0, 0)):
+    def add(self, fun, target, refpts=None, **kwargs):
         ref = bool_refpts(refpts, self.nelems)
+        # Store the new refpoint
         self.refs.append(ref)
+        # Update the union of all refpoints
         self.refpts = np.stack((self.refpts, ref), axis=0).any(axis=0)
-        super(_RefConstraints, self).add(name, fun, target, weight, bounds)
+        super(_RefConstraints, self).add(fun, target, **kwargs)
 
     def values(self, ring):
+        # Single optics computation
         vloc, vglob = self.compute(ring, *self.args, **self.kwargs)
+        # Evaluate all constraints
         return [fun(loc, *vglob) for fun, loc in zip(self.fun, vloc)]
 
     def compute(self, ring, *args, **kwargs):
+        """Dummy computation. Compute must return:
+        - an iterator over local data for each target
+        - a tuple of global data"""
         return repeat(None), ()
 
 
@@ -232,10 +243,10 @@ class LinoptConstraints(_RefConstraints):
           cnstrs.add('beta_x_inj', 'beta', 18.0, refpts=ref_inj, order=0)
 
           # Add a tune constraint
-          cnstrs.add('tune_x', 'tune', 0.44, order=0, weight=0.01)
+          cnstrs.add('tune', 0.44, order=0, weight=0.01)
 
-          # Add a chromaticity constraint 9both planes
-          cnstrs.add('chromaticity', 'chrom', [0.0 0.0])
+          # Add a chromaticity constraint (both planes)
+          cnstrs.add('chrom', [0.0 0.0])
     """
     def __init__(self, ring, *args, **kwargs):
         """Build a LinoptConstraints container
@@ -256,8 +267,7 @@ class LinoptConstraints(_RefConstraints):
         self.get_chrom = False
         super(LinoptConstraints, self).__init__(ring, *args, **kwargs)
 
-    def add(self, param, target, refpts=None, order=None, name=None, weight=1.0,
-            bounds=(0, 0)):
+    def add(self, param, target, refpts=None, order=None, name=None, **kwargs):
         """Add a target to the LinoptConstraints container
 
         PARAMETERS
@@ -267,22 +277,25 @@ class LinoptConstraints(_RefConstraints):
                             parameters, 'tune' and 'chrom' are allowed.
                           - user-supplied parameter evaluation function:
                             value = param(lindata, tune, chrom)
+                            lindata contains the
+                            value is the constrained parameter value
+                            value may be a scalar or an array.
             target        desired value.
 
         KEYWORDS
-            refpts=None   location of the constraint
+            refpts=None   location of the constraint. Several locations may be
+                          given to apply the same constraint at several points.
             order=None    index in the parameter array. If None, the full array
                           is used.
             name=None     name of the constraint. If None, name is generated
-                          from param and order
-            weight=1.0    weight factor: the residual is (value-target)/weight
-            bounds=(0,0)  lower and upper bounds with respect to target
+                          from param and order.
+            weight=1.0    weight factor: the residual is (value-target)/weight.
+            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+                          in the interval [target-low_bound target+up_bound]
 
         The target, weight and bounds values must be broadcastable to the shape
         of value.
         """
-        getf, getv = _dataaccess(order)
-
         # noinspection PyUnusedLocal
         def tunefun(refdata, tune, chrom):
             return getv(tune)
@@ -295,9 +308,19 @@ class LinoptConstraints(_RefConstraints):
         def attrfun(refdata, tune, chrom):
             return getf(refdata, param)
 
+        getf, getv = _dataaccess(order)
+
+        if name is None:                # Generate the constraint name
+            if callable(param):
+                name = param.__name__
+            elif order is None:
+                name = param
+            else:
+                name = '{}_{}'.format(param, order)
+
         if callable(param):
             fun = param
-            self.refpts[:] = True       # necessary not to miss 2*pi jumps
+            # self.refpts[:] = True     # necessary not to miss 2*pi jumps
             self.get_chrom = True       # fun may use dispersion or chroma
         elif param == 'tune':
             fun = tunefun
@@ -310,14 +333,14 @@ class LinoptConstraints(_RefConstraints):
             fun = attrfun
             if param == 'dispersion':
                 self.get_chrom = True   # slower but necessary
-            elif param == 'mu':
-                self.refpts[:] = True   # necessary not to miss 2*pi jumps
+            # elif param == 'mu':
+            #     self.refpts[:] = True # necessary not to miss 2*pi jumps
 
-        super(LinoptConstraints, self).add(name, refpts, fun, target, weight,
-                                           bounds)
+        super(LinoptConstraints, self).add(fun, target, refpts, name=name,
+                                           **kwargs)
 
     def compute(self, ring, *args, **kwargs):
-        """Optics computation before evaluation on all constraints"""
+        """Optics computation before evaluation of all constraints"""
         ld0, tune, chrom, ld = linopt(ring, refpts=self.refpts,
                                       get_chrom=self.get_chrom, **kwargs)
         return (ld[ref[self.refpts]] for ref in self.refs), (tune, chrom)
