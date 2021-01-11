@@ -32,8 +32,9 @@ Iv=sum(div);
             theta = elem.BendingAngle;
             rho = ll / theta;
             rho2 = rho * rho;
-            kx2 = elem.K + 1.0/rho2;
-            kz2 = -elem.K;
+            K = getfoc(elem);
+            kx2 = K + 1.0/rho2;
+            kz2 = -K;
             eps1 = tan(elem.EntranceAngle) / rho;
             eps2 = tan(elem.ExitAngle) / rho;
 
@@ -83,11 +84,24 @@ Iv=sum(div);
             di1 = eta_ave * ll / rho;
             di2 = ll / rho2;
             di3 = ll / abs(rho) / rho2;
-            di4 = eta_ave * ll * (2.0*elem.K+1.0/rho2) / rho ...
+            di4 = eta_ave * ll * (2.0*K+1.0/rho2) / rho ...
                 - (eta0*eps1 + eta3*eps2)/rho;
             di5 = h_ave * ll / abs(rho) / rho2;
             di6 = kz2^2*eta_ave^2*ll;
             div = abs(theta)/rho2*bz_ave;
+    end
+
+    function K=getfoc(elem)
+        if isfield(elem,'PolynomB') && length(elem.PolynomB) >= 2
+            K = elem.PolynomB(2);
+            if isfield(elem,'K') && elem.K ~= K
+                warning('AT:InconsistentK', 'Values in K and PolynomB(2). Using PolynomB(2)');
+            end
+        elseif isfield(elem,'K')
+            K = elem.K;
+        else
+            K = 0;
+        end
     end
 end
 
