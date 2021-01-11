@@ -95,7 +95,8 @@ Iv=sum(div);
         if isfield(elem,'PolynomB') && length(elem.PolynomB) >= 2
             K = elem.PolynomB(2);
             if isfield(elem,'K') && elem.K ~= K
-                warning('AT:InconsistentK', 'Values in K and PolynomB(2). Using PolynomB(2)');
+                warning('AT:InconsistentK',...
+                'Values in K and PolynomB(2) are different. Using PolynomB(2)');
             end
         elseif isfield(elem,'K')
             K = elem.K;
