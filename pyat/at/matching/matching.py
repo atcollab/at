@@ -27,8 +27,8 @@ def _dataaccess(index):
         def getv(x):
             return x
     else:
-        def getf(elem, attrname):
-            return getattr(elem, attrname)[:, index]
+        def getf(lindata, attrname):
+            return getattr(lindata, attrname)[:, index]
 
         def getv(x):
             return x[index]
@@ -124,7 +124,7 @@ class Constraints(object):
         self.args = args
         self.kwargs = kwargs
 
-    def add(self, fun, target, name=None, weight=1.0, bounds=(0, 0)):
+    def add(self, fun, target, name=None, weight=1.0, bounds=(0.0, 0.0)):
         """Add a target to the Constraints container
 
         PARAMETERS
@@ -150,10 +150,11 @@ class Constraints(object):
             name = fun.__name__
         self.name.append(name)
         self.fun.append(fun)
+        target, lbound, ubound = np.atleast_1d(target, *bounds)
         self.target.append(target)
         self.weight.append(weight)
-        self.lbound.append(bounds[0])
-        self.ubound.append(bounds[1])
+        self.lbound.append(lbound)
+        self.ubound.append(ubound)
 
     def values(self, ring):
         """Return the list of actual parameter values"""
@@ -163,13 +164,12 @@ class Constraints(object):
         """Return a flattened array of weighted residuals"""
 
         def res(value, target, weight, lbound, ubound):
-            weight = np.broadcast_to(weight, value.shape)
-            diff = value - target
-            lb = np.ravel(diff - lbound)
-            ub = np.ravel(diff - ubound)
-            lb[lb >= 0] = 0
+            diff = value - target   # broadcast here => at least 1 dimension
+            lb = diff - lbound
+            ub = diff - ubound
+            lb[lb >= 0] = 0         # needs at least 1 dimension
             ub[ub <= 0] = 0
-            return np.maximum(abs(lb), abs(ub)) / np.ravel(weight)
+            return np.maximum(abs(lb), abs(ub)) / weight
 
         return np.concatenate([res(v, t, w, lb, ib) for v, t, w, lb, ib
                                in zip(self.values(ring), self.target,
@@ -189,6 +189,7 @@ class Constraints(object):
         strs = []
         for name, ini, now, target in zip(self.name, initial,
                                           self.values(ring), self.target):
+            now, target = np.broadcast_arrays(now, target)
             for vi, vn, vt in zip(np.broadcast_to(ini, now.shape).flat,
                                   now.flat,
                                   np.broadcast_to(target, now.shape).flat):
@@ -327,7 +328,8 @@ class LinoptConstraints(_RefConstraints):
                 name = '{}_{}'.format(param, order)
 
         if callable(param):
-            fun = param
+            def fun(refdata, tune, chrom):
+                return getv(param(refdata, tune, chrom))
             # self.refpts[:] = True     # necessary not to miss 2*pi jumps
             self.get_chrom = True       # fun may use dispersion or chroma
         elif param == 'tune':
@@ -355,7 +357,7 @@ class LinoptConstraints(_RefConstraints):
 
 
 def match(ring, variables, constraints, verbose=2, max_nfev=1000,
-                  diff_step=1.0e-10):
+          diff_step=1.0e-10):
     """Perform matching of constraints by varying variables
 
     PARAMETERS
