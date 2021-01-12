@@ -56,13 +56,13 @@ class Variable(object):
 
     @staticmethod
     def header():
-        return '{:s}\t{:s}\t\t{:s}\t\t{:s}'.format('Name', 'Initial', 'Final',
-                                                   'Variation')
+        return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
+            'Name', 'Initial', 'Final ', 'Variation')
 
     def status(self, ring, vini=np.NaN):
         vnow = self.get(ring)
-        return '{:s}\t{:e}\t{:e}\t{:e}'.format(self.name, vini, vnow,
-                                               (vnow - vini) / vini)
+        return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
+            self.name, vini, vnow, (vnow - vini) / vini)
 
 
 class ElementVariable(Variable):
@@ -178,10 +178,9 @@ class Constraints(object):
 
     @staticmethod
     def header():
-        """Header for the display of constraint residuals"""
-        return '{:>12s}\t{:s}\t\t{:s}\t\t{:s}\t\t{:s}'.format('Name', 'Initial',
-                                                              'Final', 'Target',
-                                                              'Residual')
+        """Header for the display of constraint values and residuals"""
+        return '\n{:>12s}{:>13s}{:>16s}{:>16s}{:>16s}\n'.format(
+            'Name', 'Initial', 'Final ', 'Target', 'Residual')
 
     def status(self, ring, initial=None):
         """Return a string giving the actual state of constraints"""
@@ -193,8 +192,8 @@ class Constraints(object):
             for vi, vn, vt in zip(np.broadcast_to(ini, now.shape).flat,
                                   now.flat,
                                   np.broadcast_to(target, now.shape).flat):
-                strs.append('{:>12s}\t{: e}\t{: e}\t{: e}\t{: e}'.
-                            format(name, vi, vn, vt, vn - vt))
+                strs.append('{:>12s}{: 16e}{: 16e}{: 16e}{: 16e}'.format(
+                    name, vi, vn, vt, vn - vt))
         return '\n'.join(strs)
 
 
@@ -355,7 +354,20 @@ class LinoptConstraints(_RefConstraints):
         return (ld[ref[self.refpts]] for ref in self.refs), (tune, chrom)
 
 
-def match(ring, variables, constraints):
+def match(ring, variables, constraints, verbose=2, max_nfev=1000,
+                  diff_step=1.0e-10):
+    """Perform matching of constraints by varying variables
+
+    PARAMETERS
+        ring                ring lattice or transfer line
+        variables           sequence of Variable objects
+        constraints         sequance of Constraints objects
+
+    KEYWORDS
+        verbose=2           See scipy.optimize.least_squares
+        max_nfev=1000           "
+        diff_step=1.0e-10       "
+    """
     def fun(vals):
         for value, variable in zip(vals, variables):
             variable.set(ring, value)
@@ -379,15 +391,13 @@ def match(ring, variables, constraints):
     print(' ')
 
     initvals = [cst.values(ring) for cst in constraints]
-    least_squares(fun, init, bounds=bounds, verbose=2, max_nfev=1000,
-                  method=method, diff_step=1.0e-10)
+    least_squares(fun, init, bounds=bounds, verbose=verbose, max_nfev=max_nfev,
+                  method=method, diff_step=diff_step)
 
-    print()
     print(Constraints.header())
-    print()
     for cst, ini in zip(constraints, initvals):
         print(cst.status(ring, initial=ini))
-    print()
+
     print(Variable.header())
     for var, vini in zip(variables, init):
         print(var.status(ring, vini=vini))
