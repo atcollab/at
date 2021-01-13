@@ -192,13 +192,21 @@ class ElementConstraints(Constraints):
         super(ElementConstraints, self).__init__(*args, **kwargs)
 
     @staticmethod
-    def _access(index):
+    def _arrayaccess(index):
+        """Access to array elements"""
+        if index is None:
+            def getv(x):
+                return x
+        else:
+            def getv(x):
+                return x[index]
+        return getv
+
+    @staticmethod
+    def _recordaccess(index):
         """Access to optics parameters"""
         if index is None:
             getf = getattr
-
-            def getv(x):
-                return x
         else:
             if isinstance(index, tuple):
                 idx = (Ellipsis,)+index
@@ -207,10 +215,7 @@ class ElementConstraints(Constraints):
 
             def getf(lindata, attrname):
                 return getattr(lindata, attrname)[idx]
-
-            def getv(x):
-                return x[index]
-        return getf, getv
+        return getf
 
     def add(self, fun, target, refpts=None, **kwargs):
         ref = bool_refpts(refpts, self.nelems)
@@ -310,27 +315,18 @@ class LinoptConstraints(ElementConstraints):
         The target, weight and bounds values must be broadcastable to the shape
         of value.
         """
-        # noinspection PyUnusedLocal
-        def tunefun(refdata, tune, chrom):
-            return getv(tune)
-
-        # noinspection PyUnusedLocal
-        def chromfun(refdata, tune, chrom):
-            return getv(chrom)
 
         # noinspection PyUnusedLocal
         def attrfun(refdata, tune, chrom):
             return getf(refdata, param)
 
-        getf, getv = self._access(order)
+        getf = self._recordaccess(order)
+        getv = self._arrayaccess(order)
 
         if name is None:                # Generate the constraint name
-            if callable(param):
-                name = param.__name__
-            elif order is None:
-                name = param
-            else:
-                name = '{}_{}'.format(param, order)
+            name = param.__name__ if callable(param) else param
+            if order is not None:
+                name = '{}_{}'.format(name, order)
 
         if callable(param):
             def fun(refdata, tune, chrom):
@@ -338,14 +334,20 @@ class LinoptConstraints(ElementConstraints):
             # self.refpts[:] = True     # necessary not to miss 2*pi jumps
             self.get_chrom = True       # fun may use dispersion or chroma
         elif param == 'tune':
-            fun = tunefun
+            # noinspection PyUnusedLocal
+            def fun(refdata, tune, chrom):
+                return getv(tune)
             refpts = []
         elif param == 'chrom':
-            fun = chromfun
+            # noinspection PyUnusedLocal
+            def fun(refdata, tune, chrom):
+                return getv(chrom)
             refpts = []
             self.get_chrom = True       # slower but necessary
         else:
-            fun = attrfun
+            # noinspection PyUnusedLocal
+            def fun(refdata, tune, chrom):
+                return getf(refdata, param)
             if param == 'dispersion':
                 self.get_chrom = True   # slower but necessary
             # elif param == 'mu':
