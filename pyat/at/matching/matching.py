@@ -5,36 +5,6 @@ from at.lattice import refpts_iterator, bool_refpts
 from at.physics import linopt
 
 
-def _access(index):
-    """Access to element attributes"""
-    if index is None:
-        setf = setattr
-        getf = getattr
-    else:
-        def setf(elem, attrname, value):
-            getattr(elem, attrname)[index] = value
-
-        def getf(elem, attrname):
-            return getattr(elem, attrname)[index]
-    return setf, getf
-
-
-def _dataaccess(index):
-    """Access to optics parameters"""
-    if index is None:
-        getf = getattr
-
-        def getv(x):
-            return x
-    else:
-        def getf(lindata, attrname):
-            return getattr(lindata, attrname)[:, index]
-
-        def getv(x):
-            return x[index]
-    return getf, getv
-
-
 class Variable(object):
     """A Variable is a scalar value acting on a lattice through the
     user-defined functions setfun and getfun
@@ -73,7 +43,7 @@ class ElementVariable(Variable):
 
     def __init__(self, refpts, attname, name='', order=None,
                  bounds=(-np.inf, np.inf)):
-        setf, getf = _access(order)
+        setf, getf = self._access(order)
 
         def setfun(ring, value):
             for elem in refpts_iterator(ring, refpts):
@@ -85,6 +55,20 @@ class ElementVariable(Variable):
             return np.average(values)
 
         super(ElementVariable, self).__init__(setfun, getfun, name, bounds)
+
+    @staticmethod
+    def _access(index):
+        """Access to element attributes"""
+        if index is None:
+            setf = setattr
+            getf = getattr
+        else:
+            def setf(elem, attrname, value):
+                getattr(elem, attrname)[index] = value
+
+            def getf(elem, attrname):
+                return getattr(elem, attrname)[index]
+        return setf, getf
 
 
 class Constraints(object):
@@ -198,14 +182,35 @@ class Constraints(object):
         return '\n'.join(strs)
 
 
-class _RefConstraints(Constraints):
+class ElementConstraints(Constraints):
     """Base class for position-related constraints: handle the refpoints
     of each target"""
     def __init__(self, ring, *args, **kwargs):
         self.nelems = len(ring)
         self.refs = []
         self.refpts = bool_refpts([], self.nelems)
-        super(_RefConstraints, self).__init__(*args, **kwargs)
+        super(ElementConstraints, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def _access(index):
+        """Access to optics parameters"""
+        if index is None:
+            getf = getattr
+
+            def getv(x):
+                return x
+        else:
+            if isinstance(index, tuple):
+                idx = (Ellipsis,)+index
+            else:
+                idx = (Ellipsis, index)
+
+            def getf(lindata, attrname):
+                return getattr(lindata, attrname)[idx]
+
+            def getv(x):
+                return x[index]
+        return getf, getv
 
     def add(self, fun, target, refpts=None, **kwargs):
         ref = bool_refpts(refpts, self.nelems)
@@ -213,7 +218,7 @@ class _RefConstraints(Constraints):
         self.refs.append(ref)
         # Update the union of all refpoints
         self.refpts = np.stack((self.refpts, ref), axis=0).any(axis=0)
-        super(_RefConstraints, self).add(fun, target, **kwargs)
+        super(ElementConstraints, self).add(fun, target, **kwargs)
 
     def values(self, ring):
         # Single optics computation
@@ -228,7 +233,7 @@ class _RefConstraints(Constraints):
         return repeat(None), ()
 
 
-class LinoptConstraints(_RefConstraints):
+class LinoptConstraints(ElementConstraints):
     """Container for linear optics constraints:
       - a constraint can be set on any result of at.linopt
       - constraints are added to the container with the LinoptConstraints.add
@@ -317,7 +322,7 @@ class LinoptConstraints(_RefConstraints):
         def attrfun(refdata, tune, chrom):
             return getf(refdata, param)
 
-        getf, getv = _dataaccess(order)
+        getf, getv = self._access(order)
 
         if name is None:                # Generate the constraint name
             if callable(param):
