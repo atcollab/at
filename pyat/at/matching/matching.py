@@ -1,7 +1,8 @@
+from itertools import chain
 import numpy as np
 from scipy.optimize import least_squares
 from itertools import repeat
-from at.lattice import refpts_iterator, bool_refpts
+from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
 from at.physics import linopt
 
 
@@ -10,19 +11,20 @@ class Variable(object):
     user-defined functions setfun and getfun
     """
     def __init__(self, setfun, getfun, name='', bounds=(-np.inf, np.inf),
-                 args=()):
+                 *args, **kwargs):
         self.setfun = setfun
         self.getfun = getfun
         self.name = name
         self.bounds = bounds
         self.args = args
+        self.kwargs = kwargs
         super(Variable, self).__init__()
 
     def set(self, ring, value):
-        self.setfun(ring, value, *self.args)
+        self.setfun(ring, value, *self.args, **self.kwargs)
 
     def get(self, ring):
-        return self.getfun(ring, *self.args)
+        return self.getfun(ring, *self.args, **self.kwargs)
 
     @staticmethod
     def header():
@@ -41,8 +43,7 @@ class ElementVariable(Variable):
     - an element of an array attribute
     of one or several elements of a lattice"""
 
-    def __init__(self, refpts, attname, name='', index=None,
-                 bounds=(-np.inf, np.inf)):
+    def __init__(self, refpts, attname, index=None, **kwargs):
         setf, getf = self._access(index)
 
         def setfun(ring, value):
@@ -54,7 +55,8 @@ class ElementVariable(Variable):
                                refpts_iterator(ring, refpts)])
             return np.average(values)
 
-        super(ElementVariable, self).__init__(setfun, getfun, name, bounds)
+        super(ElementVariable, self).__init__(setfun, getfun, **kwargs)
+        self.refpts = refpts
 
     @staticmethod
     def _access(index):
@@ -92,7 +94,7 @@ class Constraints(object):
           cnstrs.add(circ_fun, 850.0)
           cnstrs.add(mcf_fun, 1.0e-4, weight=0.1)
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, rad=False, **kwargs):
         """Constraints(*args, **kwargs)
         build a generic constraints container.
 
@@ -107,6 +109,7 @@ class Constraints(object):
         self.ubound = []
         self.args = args
         self.kwargs = kwargs
+        self.rad = rad
 
     def add(self, fun, target, name=None, weight=1.0, bounds=(0.0, 0.0)):
         """Add a target to the Constraints container
@@ -361,7 +364,7 @@ class LinoptConstraints(ElementConstraints):
 
 
 def match(ring, variables, constraints, verbose=2, max_nfev=1000,
-          diff_step=1.0e-10):
+          diff_step=1.0e-10, method=None):
     """Perform matching of constraints by varying variables
 
     PARAMETERS
@@ -376,35 +379,50 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
     """
     def fun(vals):
         for value, variable in zip(vals, variables):
-            variable.set(ring, value)
-        return np.concatenate([cons.evaluate(ring) for cons in constraints],
-                              axis=None)
+            variable.set(ring1, value)
+            variable.set(ring2, value)
 
-    init = []
-    bounds = []
-    for var in variables:
-        init.append(var.get(ring))
-        bounds.append(var.bounds)
-    bounds = np.squeeze(bounds).T
+        c1 = [cons.evaluate(ring1) for cons in cst1]
+        c2 = [cons.evaluate(ring2) for cons in cst2]
+        return np.concatenate(c1 + c2, axis=None)
 
-    if np.all(bounds == np.inf) and np.size(constraints.target) >= np.size(
-            variables):
-        method = 'lm'
-    else:
-        method = 'trf'
-    print(' ')
-    print('Using method', method)
-    print(' ')
+    cst1 = [cons for cons in constraints if not cons.rad]
+    cst2 = [cons for cons in constraints if cons.rad]
 
-    initvals = [cst.values(ring) for cst in constraints]
-    least_squares(fun, init, bounds=bounds, verbose=verbose, max_nfev=max_nfev,
+    ring1 = ring.copy()         # Make a shallow copy of ring
+    for var in variables:       # Make a deep copy of varying elements
+        for ref in uint32_refpts(var.refpts, len(ring1)):
+            ring1[ref] = ring1[ref].deepcopy()
+
+    ring2 = ring1.radiation_on(copy=True)
+
+    aaa = [(var.get(ring1), var.bounds) for var in variables]
+    vini, bounds = zip(*aaa)
+    bounds = np.array(bounds).T
+
+    cini1 = [cst.values(ring1) for cst in cst1]
+    cini2 = [cst.values(ring2) for cst in cst2]
+    ntargets = sum(np.size(a) for a in chain.from_iterable(cini1 + cini2))
+
+    if method is None:
+        if np.all(abs(bounds) == np.inf) and ntargets >= len(variables):
+            method = 'lm'
+        else:
+            method = 'trf'
+    print('\n{} constraints, {} variables, using method {}\n'.
+          format(ntargets,len(variables), method))
+
+    least_squares(fun, vini, bounds=bounds, verbose=verbose, max_nfev=max_nfev,
                   method=method, diff_step=diff_step)
 
     print(Constraints.header())
-    for cst, ini in zip(constraints, initvals):
-        print(cst.status(ring, initial=ini))
+    for cst, ini in zip(cst1, cini1):
+        print(cst.status(ring1, initial=ini))
+    for cst, ini in zip(cst2, cini2):
+        print(cst.status(ring2, initial=ini))
 
     print(Variable.header())
-    for var, vini in zip(variables, init):
-        print(var.status(ring, vini=vini))
-    print()
+    for var, vini in zip(variables, vini):
+        print(var.status(ring1, vini=vini))
+
+    return ring1
