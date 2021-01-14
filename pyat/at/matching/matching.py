@@ -41,9 +41,9 @@ class ElementVariable(Variable):
     - an element of an array attribute
     of one or several elements of a lattice"""
 
-    def __init__(self, refpts, attname, name='', order=None,
+    def __init__(self, refpts, attname, name='', index=None,
                  bounds=(-np.inf, np.inf)):
-        setf, getf = self._access(order)
+        setf, getf = self._access(index)
 
         def setfun(ring, value):
             for elem in refpts_iterator(ring, refpts):
@@ -250,30 +250,27 @@ class LinoptConstraints(ElementConstraints):
           cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)
 
           # Add a beta H (beta[0]) constraint at location ref_inj
-          cnstrs.add('beta_x_inj', 'beta', 18.0, refpts=ref_inj, order=0)
+          cnstrs.add('beta_x_inj', 'beta', 18.0, refpts=ref_inj, index=0)
 
           # Add a tune constraint
-          cnstrs.add('tune', 0.44, order=0, weight=0.01)
+          cnstrs.add('tune', 0.44, index=0, weight=0.01)
 
           # Add a chromaticity constraint (both planes)
           cnstrs.add('chrom', [0.0 0.0])
 
-          # define a constraint of phase advance between 2 points
+          # define a constraint of phase advances between 2 points
           def mu_diff(lindata, tune, chrom):
-              delta_mu = (lindata[1].mu[0] - lindata[0].mu[0])/(2*np.pi)
+              delta_mu = (lindata[1].mu - lindata[0].mu)/(2*np.pi)
               return delta_mu % 1.0
 
-          # Add a phase advance constraint, giving the desired locations
-          cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1])
+          # Add a H phase advance constraint, giving the desired locations
+          cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1], index=0)
     """
     def __init__(self, ring, *args, **kwargs):
         """Build a LinoptConstraints container
 
         KEYWORDS
         dp=0.0          momentum deviation.
-        XYStep=1.0e-8   transverse step for numerical computation
-        DPStep=1.0E-6   momentum deviation used for computation of
-                        chromaticities and dispersion
         coupled=True    if False, simplify the calculations by assuming
                         no H/V coupling
         twiss_in=None   Initial twiss parameters for transfer line optics.
@@ -285,7 +282,7 @@ class LinoptConstraints(ElementConstraints):
         self.get_chrom = False
         super(LinoptConstraints, self).__init__(ring, *args, **kwargs)
 
-    def add(self, param, target, refpts=None, order=None, name=None, **kwargs):
+    def add(self, param, target, refpts=None, index=None, name=None, **kwargs):
         """Add a target to the LinoptConstraints container
 
         PARAMETERS
@@ -298,16 +295,16 @@ class LinoptConstraints(ElementConstraints):
                             lindata contains the optics parameters at all the
                               specified refpoints
                             value is the constrained parameter value
-                              value may be a scalar or an array.
+                              (scalar or array).
             target        desired value.
 
         KEYWORDS
             refpts=None   location of the constraint. Several locations may be
                           given to apply the same constraint at several points.
-            order=None    index in the parameter array. If None, the full array
+            index=None    index in the parameter array. If None, the full array
                           is used.
             name=None     name of the constraint. If None, name is generated
-                          from param and order.
+                          from param and index.
             weight=1.0    weight factor: the residual is (value-target)/weight.
             bounds=(0,0)  lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
@@ -320,13 +317,13 @@ class LinoptConstraints(ElementConstraints):
         def attrfun(refdata, tune, chrom):
             return getf(refdata, param)
 
-        getf = self._recordaccess(order)
-        getv = self._arrayaccess(order)
+        getf = self._recordaccess(index)
+        getv = self._arrayaccess(index)
 
         if name is None:                # Generate the constraint name
             name = param.__name__ if callable(param) else param
-            if order is not None:
-                name = '{}_{}'.format(name, order)
+            if index is not None:
+                name = '{}_{}'.format(name, index)
 
         if callable(param):
             def fun(refdata, tune, chrom):
