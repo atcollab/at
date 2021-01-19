@@ -94,7 +94,7 @@ class Constraints(object):
           cnstrs.add(circ_fun, 850.0)
           cnstrs.add(mcf_fun, 1.0e-4, weight=0.1)
     """
-    def __init__(self, *args, rad=False, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Constraints(*args, **kwargs)
         build a generic constraints container.
 
@@ -107,9 +107,9 @@ class Constraints(object):
         self.weight = []
         self.lbound = []
         self.ubound = []
+        self.rad = kwargs.pop('rad', False)
         self.args = args
         self.kwargs = kwargs
-        self.rad = rad
 
     def add(self, fun, target, name=None, weight=1.0, bounds=(0.0, 0.0)):
         """Add a target to the Constraints container
