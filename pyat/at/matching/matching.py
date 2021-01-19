@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from itertools import repeat
 from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
-from at.physics import linopt
+from at.physics import linopt, ohmi_envelope, find_orbit4
 
 
 class Variable(object):
@@ -269,7 +269,7 @@ class LinoptConstraints(ElementConstraints):
           # Add a H phase advance constraint, giving the desired locations
           cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1], index=0)
     """
-    def __init__(self, ring, *args, **kwargs):
+    def __init__(self, ring, **kwargs):
         """Build a LinoptConstraints container
 
         KEYWORDS
@@ -283,7 +283,7 @@ class LinoptConstraints(ElementConstraints):
                         ((6,) array)
         """
         self.get_chrom = False
-        super(LinoptConstraints, self).__init__(ring, *args, **kwargs)
+        super(LinoptConstraints, self).__init__(ring, **kwargs)
 
     def add(self, param, target, refpts=None, index=None, name=None, **kwargs):
         """Add a target to the LinoptConstraints container
@@ -292,7 +292,7 @@ class LinoptConstraints(ElementConstraints):
             param         2 possibilities:
                           - parameter name: see at.linopt for the name of
                             available parameters. In addition to local optical
-                            parameters, 'tune' and 'chrom' are allowed.
+                            parameters, 'tunes' and 'chroms' are allowed.
                           - user-supplied parameter evaluation function:
                                 value = param(lindata, tune, chrom)
                             lindata contains the optics parameters at all the
@@ -315,11 +315,6 @@ class LinoptConstraints(ElementConstraints):
         The target, weight and bounds values must be broadcastable to the shape
         of value.
         """
-
-        # noinspection PyUnusedLocal
-        def attrfun(refdata, tune, chrom):
-            return getf(refdata, param)
-
         getf = self._recordaccess(index)
         getv = self._arrayaccess(index)
 
@@ -333,12 +328,12 @@ class LinoptConstraints(ElementConstraints):
                 return getv(param(refdata, tune, chrom))
             # self.refpts[:] = True     # necessary not to miss 2*pi jumps
             self.get_chrom = True       # fun may use dispersion or chroma
-        elif param == 'tune':
+        elif param == 'tunes':
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):
                 return getv(tune)
             refpts = []
-        elif param == 'chrom':
+        elif param == 'chroms':
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):
                 return getv(chrom)
@@ -361,6 +356,146 @@ class LinoptConstraints(ElementConstraints):
         ld0, tune, chrom, ld = linopt(ring, refpts=self.refpts,
                                       get_chrom=self.get_chrom, **kwargs)
         return (ld[ref[self.refpts]] for ref in self.refs), (tune, chrom)
+
+
+class Orbit4Constraints(ElementConstraints):
+    """Container for orbit constraints:
+    The closed orbit can be handled with LinoptConstraints, but for problems
+    which do not involve parameters other than orbit, like steering or
+    orbit bumps, Orbit4Constraints is much faster.
+
+      at.find_orbit4 is called once before the evaluation of all constraints
+
+    Example:
+        cnstrs = Orbit4Constraints(ring, dp=0.01)
+
+        # Add a bump (x=-0.004, x'=0) constraint at location ref_inj
+        cnstrs.add([-0.004, 0.0], refpts=ref_inj, index=slice(2))
+    """
+    def __init__(self, ring, *args, **kwargs):
+        """Build a Orbit4Constraints container
+
+        KEYWORDS
+        dp=0.0              momentum deviation.
+        orbit=None          Initial trajectory for transfer line: (6,) array
+        """
+        super(Orbit4Constraints, self).__init__(ring, *args, **kwargs)
+
+    def add(self, target, refpts=None, index=None, name=None, **kwargs):
+        """Add a target to the Orbit4Constraints container
+
+        PARAMETERS
+            target        desired value.
+
+        KEYWORDS
+            refpts=None   location of the constraint. Several locations may be
+                          given to apply the same constraint at several points.
+            index=None    index in the orbit vector. If None, the full orbit
+                          is used. Example:
+                            index=0         # x
+                            index=2         # z
+                            index=slice(4)  # x, x', z, z'
+            name='orbit4' name of the constraint.
+            weight=1.0    weight factor: the residual is (value-target)/weight.
+            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+                          in the interval [target-low_bound target+up_bound]
+
+        The target, weight and bounds values must be broadcastable to the shape
+        of value.
+        """
+
+        if name is None:                # Generate the constraint name
+            name = 'orbit4' if index is None else 'orbit4_{}'.format(index)
+
+        fun = self._arrayaccess(index)
+        super(Orbit4Constraints, self).add(fun, target, refpts, name=name,
+                                           **kwargs)
+
+    def compute(self, ring, *args, **kwargs):
+        """Orbit computation before evaluation of all constraints"""
+        orbit0, orbit = find_orbit4(ring, refpts=self.refpts, **kwargs)
+        return (orbit[ref[self.refpts]].T for ref in self.refs), ()
+
+
+class EnvelopeConstraints(ElementConstraints):
+    """Container for envelope constraints:
+      - a constraint can be set on any result of at.ohmi_envelope
+      - constraints are added to the container with the EnvelopeConstraints.add
+        method.
+
+      at.ohmi_envelope is called once before the evaluation of all constraints
+
+      Example:
+          cnstrs = EnvelopeConstraints(ring)
+    """
+    def __init__(self, ring):
+        """Build a EnvelopeConstraints container"""
+        super(EnvelopeConstraints, self).__init__(ring, rad=True)
+
+    def add(self, param, target, refpts=None, index=None, name=None, **kwargs):
+        """Add a target to the EnvelopeConstraints container
+
+        PARAMETERS
+            param         2 possibilities:
+                          - parameter name: see at.ohmi_envelope for the name of
+                            available parameters. In addition to local
+                            parameters, 'tunes', 'damping_rates',
+                            'mode_matrices' and 'mode_emittance' are allowed.
+                          - user-supplied parameter evaluation function:
+                                value = prm(emit_data, beam_data)
+                            emit_data contains the emittance data at all the
+                              specified refpoints
+                            value is the constrained parameter value
+                              (scalar or array).
+            target        desired value.
+
+        KEYWORDS
+            refpts=None   location of the constraint. Several locations may be
+                          given to apply the same constraint at several points.
+            index=None    index in the parameter array. If None, the full array
+                          is used.
+            name=None     name of the constraint. If None, name is generated
+                          from param and index.
+            weight=1.0    weight factor: the residual is (value-target)/weight.
+            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+                          in the interval [target-low_bound target+up_bound]
+
+        The target, weight and bounds values must be broadcastable to the shape
+        of value.
+        """
+        def beam_constraint(prm):
+            # noinspection PyUnusedLocal
+            def beamfunc(refdata, beam_data):
+                return getv(beam_data[prm])
+            return beamfunc
+
+        getf = self._recordaccess(index)
+        getv = self._arrayaccess(index)
+
+        if name is None:                # Generate the constraint name
+            name = param.__name__ if callable(param) else param
+            if index is not None:
+                name = '{}_{}'.format(name, index)
+
+        if callable(param):
+            def fun(refdata, beam_data):
+                return getv(param(refdata, beam_data))
+        elif param in ['tunes', 'damping_rates', 'mode_matrices',
+                       'mode_emittances']:
+            fun = beam_constraint(param)
+            refpts = []
+        else:
+            # noinspection PyUnusedLocal
+            def fun(refdata, beam_data):
+                return getf(refdata, param)
+
+        super(EnvelopeConstraints, self).add(fun, target, refpts, name=name,
+                                             **kwargs)
+
+    def compute(self, ring, *args, **kwargs):
+        """Optics computation before evaluation of all constraints"""
+        em0, beamdata, em = ohmi_envelope(ring, refpts=self.refpts, **kwargs)
+        return (em[ref[self.refpts]] for ref in self.refs), (beamdata,)
 
 
 def match(ring, variables, constraints, verbose=2, max_nfev=1000,
@@ -409,20 +544,22 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
             method = 'lm'
         else:
             method = 'trf'
-    print('\n{} constraints, {} variables, using method {}\n'.
-          format(ntargets,len(variables), method))
+    if verbose >= 1:
+        print('\n{} constraints, {} variables, using method {}\n'.
+              format(ntargets, len(variables), method))
 
     least_squares(fun, vini, bounds=bounds, verbose=verbose, max_nfev=max_nfev,
                   method=method, diff_step=diff_step)
 
-    print(Constraints.header())
-    for cst, ini in zip(cst1, cini1):
-        print(cst.status(ring1, initial=ini))
-    for cst, ini in zip(cst2, cini2):
-        print(cst.status(ring2, initial=ini))
+    if verbose >= 1:
+        print(Constraints.header())
+        for cst, ini in zip(cst1, cini1):
+            print(cst.status(ring1, initial=ini))
+        for cst, ini in zip(cst2, cini2):
+            print(cst.status(ring2, initial=ini))
 
-    print(Variable.header())
-    for var, vini in zip(variables, vini):
-        print(var.status(ring1, vini=vini))
+        print(Variable.header())
+        for var, vini in zip(variables, vini):
+            print(var.status(ring1, vini=vini))
 
     return ring1
