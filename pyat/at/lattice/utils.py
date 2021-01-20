@@ -59,11 +59,9 @@ def uint32_refpts(refpts, n_elements):
     Return a uint32 numpy array with contents as the indices of the selected
     elements.  This is used for indexing a lattice using explicit indices.
     """
-    refs = numpy.asarray(refpts).reshape(-1)
+    refs = numpy.ravel(refpts)
     if (refpts is None) or (refs.size == 0):
         return numpy.array([], dtype=numpy.uint32)
-    elif refs.size > n_elements+1:
-        raise ValueError('too many reftps given')
     elif numpy.issubdtype(refs.dtype, numpy.bool_):
         return numpy.flatnonzero(refs).astype(numpy.uint32)
 
@@ -91,8 +89,11 @@ def bool_refpts(refpts, n_elements):
     are selected. This is used for indexing a lattice using True or False
     values.
     """
-    if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        diff = 1 + n_elements - refpts.size
+    refs = numpy.ravel(refpts)
+    if (refpts is None) or (refs.size == 0):
+        return numpy.zeros(n_elements + 1, dtype=bool)
+    elif refs.dtype == bool:
+        diff = 1 + n_elements - refs.size
         if diff == 0:
             return refpts
         elif diff > 0:
@@ -101,7 +102,7 @@ def bool_refpts(refpts, n_elements):
             return refpts[:n_elements+1]
     else:
         brefpts = numpy.zeros(n_elements + 1, dtype=bool)
-        brefpts[refpts] = True
+        brefpts[refs] = True
         return brefpts
 
 
@@ -196,12 +197,15 @@ def refpts_iterator(ring, refpts):
     2) a numpy array of booleans as long as ring where selected elements
        are true
     """
-    if isinstance(refpts, numpy.ndarray) and refpts.dtype == bool:
-        for el, tst in zip(ring, refpts):
+    refs = numpy.ravel(refpts)
+    if (refpts is None) or (refs.size == 0):
+        return
+    elif refs.dtype == bool:
+        for el, tst in zip(ring, refs):
             if tst:
                 yield el
     else:
-        for i in refpts:
+        for i in refs:
             yield ring[i]
 
 
