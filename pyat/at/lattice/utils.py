@@ -157,6 +157,23 @@ def checktype(eltype):
     return lambda el: isinstance(el, eltype)
 
 
+def checkname(pattern):
+    """Return a function to be used as a filter. Check the name of an element.
+    This function can be used to extract from a ring all elements have a
+    given FamName attribute.
+
+    filtfunc = checkname(pattern)
+        returns the function filtfunc such that ok=filtfunc(element) is True
+        if the element's FamName matches pattern.
+
+    Example:
+
+    qps = filter(checkname('QF.*'), ring)
+        returns an iterator over all elements
+    """
+    return lambda el: fnmatch(el.FamName, pattern)
+
+
 def get_cells(ring, *args):
     """Return a numpy array of booleans, with the same length as ring,
     marking all elements satisfying a given condition.
@@ -228,16 +245,13 @@ def get_refpts(ring, key, quiet=True):
         elems: a list of elems refpts matching key
     """
     if isinstance(key, elements.Element):
-        elems = [i for i, elem in enumerate(ring) if isinstance(elem,
-                 type(key))]
+        checkfun = checktype(type(key))
     elif isinstance(key, type):
-        elems = [i for i, elem in enumerate(ring) if isinstance(elem,
-                 key)]
+        checkfun = checktype(key)
     elif numpy.issubdtype(type(key), numpy.str_):
-        elems = [i for i, elem in enumerate(ring) if fnmatch(elem.FamName,
-                 key)]
+        checkfun = checkname(key)
         if not quiet:
-            matched_fams = set(ring[elem].FamName for elem in elems)
+            matched_fams = set(elem.FamName for elem in filter(checkfun, ring))
             ending = 'y' if len(matched_fams) == 1 else 'ies'
             print("String '{0}' matched {1} famil{2}: {3}\n"
                   "all corresponding elements have been "
@@ -246,7 +260,7 @@ def get_refpts(ring, key, quiet=True):
     else:
         raise TypeError("Invalid key type {0}; please enter a string, element"
                         " type, or element instance.".format(type(key)))
-    return numpy.array(elems)
+    return uint32_refpts(list(map(checkfun, ring)), len(ring))
 
 
 def get_elements(ring, key, quiet=True):
@@ -267,12 +281,28 @@ def get_elements(ring, key, quiet=True):
     Returns:
         a list of elems matching key
     """
-    return [ring[i] for i in get_refpts(ring, key, quiet=quiet)]
+    if isinstance(key, elements.Element):
+        checkfun = checktype(type(key))
+    elif isinstance(key, type):
+        checkfun = checktype(key)
+    elif numpy.issubdtype(type(key), numpy.str_):
+        checkfun = checkname(key)
+        if not quiet:
+            matched_fams = set(elem.FamName for elem in filter(checkfun, ring))
+            ending = 'y' if len(matched_fams) == 1 else 'ies'
+            print("String '{0}' matched {1} famil{2}: {3}\n"
+                  "all corresponding elements have been "
+                  "returned.".format(key, len(matched_fams), ending,
+                                     ', '.join(matched_fams)))
+    else:
+        raise TypeError("Invalid key type {0}; please enter a string, element"
+                        " type, or element instance.".format(type(key)))
+    return list(filter(checkfun, ring))
 
 
 def get_value_refpts(ring, refpts, var, order=None):
     """Get the values of an attribute of an array of elements based on
-       their refpts
+    their refpts
 
     Args:
         ring: lattice from which to retrieve the elements.
@@ -281,39 +311,44 @@ def get_value_refpts(ring, refpts, var, order=None):
         order (optional): index of the value to change in case var is
         an array, if None the full array is returned (Default)
     """
-    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
     if order is None:
-        return numpy.array(list(map(lambda x: getattr(ring[x], var),
-                           uintrefs)))
+        def getf(elem):
+            return getattr(elem, var)
     else:
-        return numpy.array(list(map(lambda x: getattr(ring[x], var)[order],
-                           uintrefs)))
+        def getf(elem):
+            return getattr(elem, var)[order]
+
+    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts)])
 
 
-def set_value_refpts(ring, refpts, var, value, order=None, increment=False):
-    """Set the values of an attribute of an array of elements based on their refpts
+def set_value_refpts(ring, refpts, var, values, order=None, increment=False):
+    """Set the values of an attribute of an array of elements based on
+    their refpts
 
     Args:
         ring: lattice from which to retrieve the elements.
         refpts: integer or array of integer or booleans
         var: attribute name
-        value: desired value for the attribute
+        values: desired value for the attribute
         order (optional): index of the value to change in case var is an
         array, if None the full array is replaced by value (Default)
         increment (optional): adds value to the initial value, if False
         the initial value is replaced (Default)
     """
-    uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
-    if increment:
-        value = value + get_value_refpts(ring, uintrefs, var, order=order)
-    else:
-        value = value + numpy.zeros(len(refpts))
     if order is None:
-        for i, ii in enumerate(uintrefs):
-            setattr(ring[ii], var, value[i])
+        def setf(elem, value):
+            setattr(elem, var, value)
     else:
-        for i, ii in enumerate(uintrefs):
-            getattr(ring[ii], var)[order] = value[i]
+        def setf(elem, value):
+            getattr(elem, var)[order] = value
+
+    if increment:
+        values = values + get_value_refpts(ring, refpts, var, order=order)
+    else:
+        values = values + numpy.zeros(len(refpts))
+
+    for elm, val in zip(refpts_iterator(ring, refpts), values):
+        setf(elm, val)
 
 
 def get_s_pos(ring, refpts=None):
