@@ -87,12 +87,12 @@ diffmatrix = Extension(
 
 setup(
     name='accelerator-toolbox',
-    version='0.0.4',
+    version='0.1.0',
     description='Accelerator Toolbox',
     long_description=long_description,
     author='The AT collaboration',
     author_email='atcollab-general@lists.sourceforge.net',
-    url='https://pypi.org/project/accelerator-toolbox/',
+    url='https://github.com/atcollab/at',
     # Numpy 1.14.3 is the oldest version that builds with Python 3.7.
     install_requires=['numpy>=1.14.3', 'scipy>=0.16'],
     packages=find_packages(),
