@@ -225,6 +225,15 @@ def refpts_iterator(ring, refpts):
         for i in refs:
             yield ring[i]
 
+def refpts_count(refpts):
+    refs = numpy.ravel(refpts)
+    if (refpts is None) or (refs.size == 0):
+        return 0
+    elif refs.dtype == bool:
+        return numpy.count_nonzero(refs)
+    else:
+        return len(refs)
+
 
 def get_refpts(ring, key, quiet=True):
     """Get the elements refpts of a family or class (type) from the lattice.
@@ -345,7 +354,7 @@ def set_value_refpts(ring, refpts, var, values, order=None, increment=False):
     if increment:
         values = values + get_value_refpts(ring, refpts, var, order=order)
     else:
-        values = values + numpy.zeros(len(refpts))
+        values = values + numpy.zeros(refpts_count(refpts))
 
     for elm, val in zip(refpts_iterator(ring, refpts), values):
         setf(elm, val)
