@@ -38,3 +38,10 @@ CMD jupyter notebook \
 	--port=8888 \
 	--port-retries=0 \
 	--notebook-dir=/home/atuser/workdir
+CMD jupyter notebook \
+	--no-browser \
+	--ip=0.0.0.0 \
+	--port=8888 \
+	--port-retries=0 \
+	--notebook-dir=/home/atuser/workdir \
+	--NotebookApp.token=""
