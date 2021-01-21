@@ -99,4 +99,4 @@ def test_envelope_matching(test_ring):
     linresidual = lincst.evaluate(newring)
     lopresidual = lopcst.evaluate(newring.radiation_on(copy=True))
     assert_close(linresidual, 0, rtol=0.0, atol=2e-9)
-    assert_close(lopresidual, 0, rtol=0.0, atol=2e-9)
+    assert_close(lopresidual, 0, rtol=0.0, atol=5e-9)
