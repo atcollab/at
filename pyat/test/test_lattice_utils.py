@@ -49,18 +49,20 @@ def test_uint32_refpts_throws_ValueError_correctly(ref_in):
         uint32_refpts(ref_in, 2)
 
 
-def test_bool_refpts():
-    bool_rps1 = numpy.ones(5, dtype=bool)
-    bool_rps1[3] = False
-    numpy.testing.assert_equal(bool_rps1, bool_refpts(bool_rps1, 4))
-    numpy.testing.assert_equal(bool_refpts([0, 1, 2, 4], 4), bool_rps1)
-    bool_rps3 = numpy.ones(12, dtype=bool)
-    bool_rps3[3] = False
-    numpy.testing.assert_equal(bool_rps1, bool_refpts(bool_rps3, 4))
-    bool_rps2 = numpy.ones(4, dtype=bool)
-    numpy.testing.assert_equal(numpy.array([True, True, True, True, False]),
-                               bool_refpts(bool_rps2, 4))
+@pytest.mark.parametrize('ref_in, expected', (
+    [[True], numpy.array([True, False, False, False], dtype=numpy.bool)],
+    [[], numpy.array([False, False, False, False], dtype=numpy.bool)],
+    [None, numpy.array([False, False, False, False], dtype=numpy.bool)],
+    [2, numpy.array([False, False, True, False], dtype=numpy.bool)],
+    [[1, 2], numpy.array([False, True, True, False], dtype=numpy.bool)],
+))
+def test_bool_refpts(ref_in, expected):
+    numpy.testing.assert_equal(bool_refpts(ref_in, 3), expected)
 
+@pytest.mark.parametrize('ref_in', (10, range(100)))
+def test_bool_refpts_throws_IndexErrorrs(ref_in):
+    with pytest.raises(IndexError):
+        bool_refpts(ref_in, 3)
 
 def test_checkattr(simple_ring):
     assert checkattr('Length')(simple_ring[0]) is True
