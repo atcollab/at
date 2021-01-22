@@ -94,15 +94,13 @@ def bool_refpts(refpts, n_elements):
         return numpy.zeros(n_elements + 1, dtype=bool)
     elif refs.dtype == bool:
         diff = 1 + n_elements - refs.size
-        if diff == 0:
-            return refpts
-        elif diff > 0:
-            return numpy.append(refpts, numpy.zeros(diff, dtype=bool))
+        if diff <= 0:
+            return refs[:n_elements + 1]
         else:
-            return refpts[:n_elements + 1]
+            return numpy.append(refs, numpy.zeros(diff, dtype=bool))
     else:
         brefpts = numpy.zeros(n_elements + 1, dtype=bool)
-        brefpts[refs[:n_elements + 1]] = True
+        brefpts[refs] = True
         return brefpts
 
 
@@ -225,7 +223,8 @@ def refpts_iterator(ring, refpts):
         for i in refs:
             yield ring[i]
 
-def refpts_count(refpts):
+
+def refpts_count(refpts, n_elements):
     refs = numpy.ravel(refpts)
     if (refpts is None) or (refs.size == 0):
         return 0
@@ -309,7 +308,7 @@ def get_elements(ring, key, quiet=True):
     return list(filter(checkfun, ring))
 
 
-def get_value_refpts(ring, refpts, var, order=None):
+def get_value_refpts(ring, refpts, var, index=None, order=None):
     """Get the values of an attribute of an array of elements based on
     their refpts
 
@@ -317,20 +316,24 @@ def get_value_refpts(ring, refpts, var, order=None):
         ring: lattice from which to retrieve the elements.
         refpts: integer or array of integer or booleans
         var: attribute name
-        order (optional): index of the value to change in case var is
+        index (optional): index of the value to change in case var is
         an array, if None the full array is returned (Default)
     """
-    if order is None:
+    if order is not None:   # for backward compatibility with the
+        index = order       # obsolete keyword 'order'
+
+    if index is None:
         def getf(elem):
             return getattr(elem, var)
     else:
         def getf(elem):
-            return getattr(elem, var)[order]
+            return getattr(elem, var)[index]
 
     return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts)])
 
 
-def set_value_refpts(ring, refpts, var, values, order=None, increment=False):
+def set_value_refpts(ring, refpts, var, values, index=None, order=None,
+                     increment=False):
     """Set the values of an attribute of an array of elements based on
     their refpts
 
@@ -339,22 +342,25 @@ def set_value_refpts(ring, refpts, var, values, order=None, increment=False):
         refpts: integer or array of integer or booleans
         var: attribute name
         values: desired value for the attribute
-        order (optional): index of the value to change in case var is an
+        index (optional): index of the value to change in case var is an
         array, if None the full array is replaced by value (Default)
         increment (optional): adds value to the initial value, if False
         the initial value is replaced (Default)
     """
-    if order is None:
+    if order is not None:   # for backward compatibility with the
+        index = order       # obsolete keyword 'order'
+
+    if index is None:
         def setf(elem, value):
             setattr(elem, var, value)
     else:
         def setf(elem, value):
-            getattr(elem, var)[order] = value
+            getattr(elem, var)[index] = value
 
     if increment:
-        values = values + get_value_refpts(ring, refpts, var, order=order)
+        values = values + get_value_refpts(ring, refpts, var, index=index)
     else:
-        values = values + numpy.zeros(refpts_count(refpts))
+        values = values + numpy.zeros(refpts_count(refpts, len(ring)))
 
     for elm, val in zip(refpts_iterator(ring, refpts), values):
         setf(elm, val)

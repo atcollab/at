@@ -55,12 +55,14 @@ def test_uint32_refpts_throws_ValueError_correctly(ref_in):
     [None, numpy.array([False, False, False, False], dtype=numpy.bool)],
     [2, numpy.array([False, False, True, False], dtype=numpy.bool)],
     [[1, 2], numpy.array([False, True, True, False], dtype=numpy.bool)],
-    [numpy.arange(0, 100, 1), numpy.array([True, True, True, True], dtype=numpy.bool)],
-    [range(100), numpy.array([True, True, True, True], dtype=numpy.bool)],
 ))
 def test_bool_refpts(ref_in, expected):
     numpy.testing.assert_equal(bool_refpts(ref_in, 3), expected)
 
+@pytest.mark.parametrize('ref_in', (10, range(100)))
+def test_bool_refpts_throws_IndexErrorrs(ref_in):
+    with pytest.raises(IndexError):
+        bool_refpts(ref_in, 3)
 
 def test_checkattr(simple_ring):
     assert checkattr('Length')(simple_ring[0]) is True
