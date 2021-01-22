@@ -41,7 +41,7 @@ def test_no_bending_in_the_cell_warns_correctly():
         assert params['periodicity'] == 1
 
 
-def test__non_integer_number_of_cells_warns_correctly():
+def test_non_integer_number_of_cells_warns_correctly():
     d = elements.Dipole('d1', 1, BendingAngle=0.195)
     with pytest.warns(AtWarning):
         params = _matlab_scanner([d], energy=3.e+9)

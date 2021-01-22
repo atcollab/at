@@ -99,10 +99,10 @@ def bool_refpts(refpts, n_elements):
         elif diff > 0:
             return numpy.append(refpts, numpy.zeros(diff, dtype=bool))
         else:
-            return refpts[:n_elements+1]
+            return refpts[:n_elements + 1]
     else:
         brefpts = numpy.zeros(n_elements + 1, dtype=bool)
-        brefpts[refs] = True
+        brefpts[refs[:n_elements + 1]] = True
         return brefpts
 
 
