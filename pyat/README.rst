@@ -27,7 +27,7 @@ Usage
 
 Example usage::
 
-    >>> from at.load import loadmat
+    >>> from at.load import load_mat
     >>> from at.physics import linopt
     >>> ring = load_mat('test_matlab/hmba.mat')
     >>> linopt(ring, refpts=range(5))

@@ -36,11 +36,11 @@ Basic Use:
 - Viewing the first element in the ring::
 
     >>> ring[0]
-    RingParam('S28d', 6000000000.0, Periodicity=32)
+    RFCavity('RFC', 0.0, 187500.0, 352372212.4670127, 31, 6000000000.0, PassMethod='IdentityPass')
 
 - Changing the pass method of an element::
 
-    >>> ring[1].PassMethod = "CavityPass"
+    >>> ring[0].PassMethod = "CavityPass"
 
 - Get the s position of the 10th element in the ring::
 
