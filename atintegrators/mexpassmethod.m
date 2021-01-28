@@ -26,24 +26,21 @@ function mexpassmethod(PASSMETHODS, varargin)
 % OMP_PARTICLE_THRESHOLD (defined in atcommon.h) then only a single thread
 % is used. The number of threads used can be manually set using the
 % environment variable OMP_NUM_THREADS.
-% Originally introduced by Xiabiao Huang (7/12/2010).
+% Originally intriduced by Xiabiao Huang (7/12/2010).
 
-if isOctave
-  error('mexpassmethod does not work in Octave')
-end
+[opt_parallel,varargs]=getflag(varargin,'-fopenmp');
+PLATFORMOPTION=sprintf('%s ',varargs{:});
 
-[opt_parallel,varargs]=getflag(varargin,'-openmp');
+%Additional platform-specific options for mex
 pdir=fileparts(mfilename('fullpath'));
-
 if ispc()
+    X_FLAGS=' %s';
     map1='';
     if opt_parallel
         C_FLAGS=' COMPFLAGS=''$COMPFLAGS /openmp''';
     else
         C_FLAGS='';
     end
-    LD_FLAGS='';
-    XP_FLAGS=' %s';
 else
     % Starting from R2016b, Matlab introduced a new entry point in MEX-files
     % The "*.mapext" files define this new entry point
@@ -71,17 +68,14 @@ else
         switch computer
             case {'SOL2','SOL64'}
                 cflags=' -xopenmp';
-                ldflags=' -xopenmp';
             case {'MAC','MACI','MACI64'}
                 cflags=' -Xpreprocessor -fopenmp';
-                ldflags='';
-                varargs=[varargs,{sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),'-liomp5'}];
             otherwise
                 cflags=' -fopenmp';
-                ldflags=' -fopenmp';
         end
         % Add library flags to enable openmp
-        C_FLAGS=sprintf(' CFLAGS=''$CFLAGS%s''',cflags);
+        ldflags=sprintf('-L''%s'' -liomp5',fullfile(matlabroot,'sys','os',lower(computer)));
+        C_FLAGS=sprintf(' CFLAGS=''$CFLAGS%s''', cflags);
     else
         C_FLAGS='';
         ldflags='';
@@ -89,26 +83,23 @@ else
     
     if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> < R2008a
         LD_FLAGS='';
-        XP_FLAGS=sprintf(' LDFLAGS=''%s"%s"%s''',ldxflags,fullfile(pdir,'%s'),ldflags);
+        X_FLAGS=[' LDFLAGS=''',ldxflags,fullfile(pdir,'%s'),ldflags,''' '];
     elseif verLessThan('matlab','8.3')                      %           < R2014a
         LD_FLAGS='';
-        ldxflags=[regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg ')([^\s,]+)'],''),exportarg];
-        XP_FLAGS=sprintf(' LDFLAGS=''%s"%s"%s''',ldxflags,fullfile(pdir,'%s'),ldflags);
+        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',fullfile(pdir,'%s')]);
+        X_FLAGS=[' LDFLAGS=''',strrep(ldf,'$','\\$'),ldflags,''' '];
     elseif verLessThan('matlab','9.1')                      %           < R2016b
-        LD_FLAGS=sprintf(' LDFLAGS=''$LDFLAGS%s''',ldflags);
-        XP_FLAGS=sprintf(' LINKEXPORT=''%s"%s"''',exportarg,fullfile(pdir,'%s'));
-    else                                                    %           >= R2016b
+        LD_FLAGS=sprintf(' LDFLAGS=''$LDFLAGS %s''',ldflags);
+        X_FLAGS=sprintf(' LINKEXPORT=''%s"%s"'' ',exportarg,fullfile(pdir,'%s'));
+    else
 %         if ismac()  % Correct a bug in Mac setup which uses both LINKEXPORT and LINKEXPORTVER
 %             PLATFORMOPTION=[PLATFORMOPTION ...
 %                 'LDFLAGS=''-Wl,-twolevel_namespace -undefined error -arch x86_64 -mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET -Wl,-syslibroot,$ISYSROOT'' ' ...
 %                 'CMDLINE200=''$LD $LDFLAGS $LDBUNDLE $LINKOPTIM $LINKEXPORTVER $OBJS $CLIBS $LINKLIBS -o $EXE'' '...
 %                 ];
 %         end
-        LD_FLAGS=sprintf(' LDFLAGS=''$LDFLAGS%s''',ldflags);
-        XP_FLAGS=sprintf(' LINKEXPORTVER=''%s"%s"''',exportarg,fullfile(pdir,'%sext'));
-        if ismac()  % Correct a bug in Mac setup which uses both LINKEXPORT and LINKEXPORTVER
-            XP_FLAGS=[' LINKEXPORT=""' XP_FLAGS];
-        end
+        LD_FLAGS=sprintf(' LDFLAGS=''$LDFLAGS %s''',ldflags);
+        X_FLAGS=sprintf(' LINKEXPORTVER=''%s"%s"'' ',exportarg,fullfile(pdir,'%sext'));
     end
 end    
 
@@ -134,24 +125,23 @@ if ischar(PASSMETHODS) % one file name - convert to a cell array
     end
 end
 
-PLATFORMOPTION=sprintf(' %s',varargs{:});
-ALL_FLAGS=[C_FLAGS,LD_FLAGS,XP_FLAGS];
+ALL_FLAGS=[C_FLAGS,LD_FLAGS,X_FLAGS];
 for i = 1:length(PASSMETHODS)
     PM = fullfile(pdir,[PASSMETHODS{i}]);
     if exist(PM,'file')
         try
             if exist('map2','var')
                 try
-                    MEXSTRING = ['mex',PLATFORMOPTION,' -outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
+                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
                     disp(MEXSTRING);
                     evalin('base',MEXSTRING);
                 catch
-                    MEXSTRING = ['mex',PLATFORMOPTION,' -outdir ',pdir,sprintf(ALL_FLAGS,map2),' ',PM];
+                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(ALL_FLAGS,map2),' ',PM];
                     disp(MEXSTRING);
                     evalin('base',MEXSTRING);
                 end
             else
-                MEXSTRING = ['mex',PLATFORMOPTION,' -outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
+                MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
                 disp(MEXSTRING);
                 evalin('base',MEXSTRING);
             end

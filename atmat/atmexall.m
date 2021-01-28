@@ -5,11 +5,7 @@ function atmexall(varargin)
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
-if isOctave
-  error('atmexall does not work in Octave, use atoctave/bootstrap instead')
-end
-
-[~,varargs]=getflag(varargin,'-openmp');
+[~,varargs]=getflag(varargin,'-fopenmp');
 
 atoptions={['-D',computer]};
 
@@ -36,7 +32,7 @@ end
 % Navigate to the directory that contains tracking functions
 lastwarn('');
 
-PLATFORMOPTION=sprintf('%s ',atoptions{:},varargs{:});
+PLATFORMOPTION=sprintf('%s ',varargs{:},atoptions{:});
 PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
 cdir=fullfile(atroot,'attrack','');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'atpass.c'),LIBDL];
