@@ -5,7 +5,10 @@ function atmexall(varargin)
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
-PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
+[~,varargs]=getflag(varargin,'-fopenmp');
+
+atoptions={['-D',computer]};
+
 LIBDL='';
 switch computer
     case'GLNX86'
@@ -15,13 +18,13 @@ switch computer
 end
 
 try
-    if ~verLessThan('matlab','9.4')
-        PLATFORMOPTION = [PLATFORMOPTION '-R2018a '];
-    elseif ~verLessThan('matlab','7.11') %R2010b
-        PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
+    if ~verLessThan('matlab','9.4')         % >= R2018a
+        atoptions = [atoptions,{'-R2018a'}];
+    elseif ~verLessThan('matlab','7.11')	% >= R2010b
+        atoptions = [atoptions,{'-largeArrayDims'}];
     end
-    if ~verLessThan('matlab','8.3') %R2014a
-        PLATFORMOPTION = [PLATFORMOPTION ' -silent '];
+    if ~verLessThan('matlab','8.3')         % >= R2014a
+        atoptions = [atoptions,{'-silent'}];
     end
 catch
 end
@@ -29,6 +32,7 @@ end
 % Navigate to the directory that contains tracking functions
 lastwarn('');
 
+PLATFORMOPTION=sprintf('%s ',varargs{:},atoptions{:});
 PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
 cdir=fullfile(atroot,'attrack','');
 MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'atpass.c'),LIBDL];
@@ -61,7 +65,7 @@ eval(MEXCOMMAND);
 
 
 % Navigate to the directory that contains pass-methods 
-mexpassmethod('all',PLATFORMOPTION);
+mexpassmethod('all',atoptions{:},varargin{:});
 warning(oldwarns.state,oldwarns.identifier);
 
 % ADD 'MEXING' instructions for other C files
