@@ -32,13 +32,14 @@ function mexpassmethod(PASSMETHODS, varargin)
 pdir=fileparts(mfilename('fullpath'));
 
 if ispc()
-    XP_FLAGS=' %s';
     map1='';
     if opt_parallel
         C_FLAGS=' COMPFLAGS=''$COMPFLAGS /openmp''';
     else
         C_FLAGS='';
     end
+    LD_FLAGS='';
+    XP_FLAGS=' %s';
 else
     % Starting from R2016b, Matlab introduced a new entry point in MEX-files
     % The "*.mapext" files define this new entry point

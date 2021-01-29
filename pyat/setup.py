@@ -19,14 +19,14 @@ with_openMP = False
 
 cflags = []
 
-aa = os.environ.get('OMP_PARTICLE_THRESHOLD', None)
-if aa is None:
+omp = os.environ.get('OMP_PARTICLE_THRESHOLD', None)
+if omp is None:
     openMP_cflags = []
     openMP_lflags = []
     openMP_macros = []
 else:
     try:
-        omp_threshold = int(aa)
+        omp_threshold = int(omp)
     except ValueError:
         omp_threshold = 10
     openMP_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
@@ -36,6 +36,9 @@ else:
     elif sys.platform.startswith('linux'):
         openMP_cflags = ['-fopenmp']
         openMP_lflags = ['-fopenmp']
+    elif sys.platform.startswith('win'):
+        openMP_cflags = ['/openmp']
+        openMP_lflags = []
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
