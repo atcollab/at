@@ -5,7 +5,7 @@ function atmexall(varargin)
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
-[~,varargs]=getflag(varargin,'-fopenmp');
+[~,varargs]=getflag(varargin,'-openmp');
 
 atoptions={['-D',computer]};
 
