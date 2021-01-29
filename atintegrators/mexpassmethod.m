@@ -28,7 +28,7 @@ function mexpassmethod(PASSMETHODS, varargin)
 % environment variable OMP_NUM_THREADS.
 % Originally introduced by Xiabiao Huang (7/12/2010).
 
-[opt_parallel,varargs]=getflag(varargin,'-fopenmp');
+[opt_parallel,varargs]=getflag(varargin,'-openmp');
 pdir=fileparts(mfilename('fullpath'));
 
 if ispc()
@@ -87,7 +87,7 @@ else
         XP_FLAGS=sprintf(' LDFLAGS=''%s"%s"%s''',ldxflags,fullfile(pdir,'%s'),ldflags);
     elseif verLessThan('matlab','8.3')                      %           < R2014a
         LD_FLAGS='';
-        ldxflags=[regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(\s+' exportarg ')([^\s,]+)'],''),' ',exportarg];
+        ldxflags=[regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg ')([^\s,]+)'],''),exportarg];
         XP_FLAGS=sprintf(' LDFLAGS=''%s"%s"%s''',ldxflags,fullfile(pdir,'%s'),ldflags);
     elseif verLessThan('matlab','9.1')                      %           < R2016b
         LD_FLAGS=sprintf(' LDFLAGS=''$LDFLAGS%s''',ldflags);
@@ -101,6 +101,9 @@ else
 %         end
         LD_FLAGS=sprintf(' LDFLAGS=''$LDFLAGS%s''',ldflags);
         XP_FLAGS=sprintf(' LINKEXPORTVER=''%s"%s"''',exportarg,fullfile(pdir,'%sext'));
+        if ismac()  % Correct a bug in Mac setup which uses both LINKEXPORT and LINKEXPORTVER
+            XP_FLAGS=[' LINKEXPORT=""' XP_FLAGS];
+        end
     end
 end    
 
@@ -126,7 +129,7 @@ if ischar(PASSMETHODS) % one file name - convert to a cell array
     end
 end
 
-PLATFORMOPTION=sprintf('%s ',varargs{:});
+PLATFORMOPTION=sprintf(' %s',varargs{:});
 ALL_FLAGS=[C_FLAGS,LD_FLAGS,XP_FLAGS];
 for i = 1:length(PASSMETHODS)
     PM = fullfile(pdir,[PASSMETHODS{i}]);
@@ -134,16 +137,16 @@ for i = 1:length(PASSMETHODS)
         try
             if exist('map2','var')
                 try
-                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
+                    MEXSTRING = ['mex',PLATFORMOPTION,' -outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
                     disp(MEXSTRING);
                     evalin('base',MEXSTRING);
                 catch
-                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(ALL_FLAGS,map2),' ',PM];
+                    MEXSTRING = ['mex',PLATFORMOPTION,' -outdir ',pdir,sprintf(ALL_FLAGS,map2),' ',PM];
                     disp(MEXSTRING);
                     evalin('base',MEXSTRING);
                 end
             else
-                MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
+                MEXSTRING = ['mex',PLATFORMOPTION,' -outdir ',pdir,sprintf(ALL_FLAGS,map1),' ',PM];
                 disp(MEXSTRING);
                 evalin('base',MEXSTRING);
             end
