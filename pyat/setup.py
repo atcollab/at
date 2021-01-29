@@ -19,16 +19,23 @@ with_openMP = False
 
 cflags = []
 
-if with_openMP:
+aa = os.environ.get('OMP_PARTICLE_THRESHOLD', None)
+if aa is None:
+    openMP_cflags = []
+    openMP_lflags = []
+    openMP_macros = []
+else:
+    try:
+        omp_threshold = int(aa)
+    except ValueError:
+        omp_threshold = 10
+    openMP_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
     if sys.platform.startswith('darwin'):
         openMP_cflags = ['-Xpreprocessor', '-fopenmp']
-        openMP_libraries = ['omp']
+        openMP_lflags = ['-lomp']
     elif sys.platform.startswith('linux'):
         openMP_cflags = ['-fopenmp']
-        openMP_libraries = ['gomp']
-else:
-    openMP_cflags = []
-    openMP_libraries = []
+        openMP_lflags = ['-fopenmp']
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
@@ -76,9 +83,9 @@ def integrator_ext(pass_method):
         name=name,
         sources=[pass_method],
         include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
-        define_macros=macros + [('OMP_PARTICLE_THRESHOLD', 10)],
-        libraries=openMP_libraries,
-        extra_compile_args=cflags + openMP_cflags
+        define_macros=macros + openMP_macros,
+        extra_compile_args=cflags + openMP_cflags,
+        extra_link_args=openMP_lflags
     )
 
 
