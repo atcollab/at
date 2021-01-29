@@ -19,14 +19,15 @@ with_openMP = False
 
 cflags = []
 
-omp = os.environ.get('OMP_PARTICLE_THRESHOLD', None)
+omt = os.environ.get('OMP_PARTICLE_THRESHOLD', None)
+omp = os.environ.get('OPENMP', omt)
 if omp is None:
     openMP_cflags = []
     openMP_lflags = []
     openMP_macros = []
 else:
     try:
-        omp_threshold = int(omp)
+        omp_threshold = int(omt)
     except ValueError:
         omp_threshold = 10
     openMP_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
