@@ -6,7 +6,7 @@ version: "2"
 
 services:
   hub-db:
-    image: postgres:9.5
+    image: postgres:13.1
     container_name: jupyterhub-db
     restart: always
     environment:
