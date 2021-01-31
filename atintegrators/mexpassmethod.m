@@ -28,6 +28,10 @@ function mexpassmethod(PASSMETHODS, varargin)
 % environment variable OMP_NUM_THREADS.
 % Originally introduced by Xiabiao Huang (7/12/2010).
 
+if isOctave
+  error('mexpassmethod does not work in Octave')
+end
+
 [opt_parallel,varargs]=getflag(varargin,'-openmp');
 pdir=fileparts(mfilename('fullpath'));
 
