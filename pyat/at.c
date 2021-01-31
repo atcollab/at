@@ -396,7 +396,7 @@ static PyMethodDef AtMethods[] = {
 MOD_INIT(atpass)
 {
     PyObject *integ_path_obj, *ext_suffix_obj;
-    char *ext_suffix, *integ_path;
+    const char *ext_suffix, *integ_path;
 
 #if PY_MAJOR_VERSION >= 3
     static struct PyModuleDef moduledef = {
