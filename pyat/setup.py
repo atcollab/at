@@ -19,17 +19,13 @@ with_openMP = False
 
 cflags = []
 
-omt = os.environ.get('OMP_PARTICLE_THRESHOLD', None)
 omp = os.environ.get('OPENMP', omt)
 if omp is None:
     openMP_cflags = []
     openMP_lflags = []
     openMP_macros = []
 else:
-    try:
-        omp_threshold = int(omt)
-    except ValueError:
-        omp_threshold = 10
+    omp_threshold = int(os.environ.get('OMP_PARTICLE_THRESHOLD', 10))
     openMP_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
     if sys.platform.startswith('darwin'):
         openMP_cflags = ['-Xpreprocessor', '-fopenmp']
