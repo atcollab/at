@@ -32,8 +32,7 @@ RUN pip3 install octave_kernel \
 	&& export OCTAVE_EXECUTABLE=$(which octave)
 
 ARG DOCKER_NOTEBOOK_DIR
-# TODO: after merge this should clone master at https://github.com/atcollab/at.git
-RUN git clone --depth 1 -b octave_compatibilty https://github.com/atcollab/at.git /home/$USERNAME/at \
+RUN git clone --depth 1 -b master https://github.com/atcollab/at.git /home/$USERNAME/at \
 	&& mkdir -p $DOCKER_NOTEBOOK_DIR \
 	&& cp -r /home/$USERNAME/at/jupyter/demos $DOCKER_NOTEBOOK_DIR \
 	&& cd /home/$USERNAME/at/atoctave \
