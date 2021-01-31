@@ -1,4 +1,4 @@
-function bootstrap(debugMode=false)
+function bootstrap(debugMode=false,useOpenMP=true)
 %bootstrap prepare Octave for AT
 %
 %  ISOCTAVE(DEBUGMODE)
@@ -6,6 +6,7 @@ function bootstrap(debugMode=false)
 %
 %  INPUTS
 %  1. DEBUGMODE          build debug versions of mex files. defaults to false
+%  1. USEOPENMP          parallelize C loops in intergrators. defaults to true
 %
 
   %% {{{ Constants
@@ -25,6 +26,10 @@ function bootstrap(debugMode=false)
   else
     CFLAGS=strjoin({CFLAGS, ...
                     '-O3'}, ' ');
+  endif
+  if useOpenMP
+    CFLAGS=strjoin({CFLAGS, ...
+                    '-fopenmp'}, ' ');
   endif
 
   %% }}}
