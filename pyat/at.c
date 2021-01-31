@@ -145,7 +145,7 @@ static PyObject *get_ext_suffix(void) {
 /*
  * Find the correct track function by name.
  */
-static track_function get_track_function(char *fn_name) {
+static track_function get_track_function(const char *fn_name) {
     track_function fn_handle = NULL;
     struct LibraryListElement *LibraryListPtr = SearchLibraryList(LibraryList, fn_name);
 
