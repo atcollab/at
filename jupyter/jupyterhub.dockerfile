@@ -19,7 +19,7 @@ RUN npm install -g configurable-http-proxy
 # Install dockerspawner, authentificators
 ARG JUPYTERHUB_VERSION
 RUN pip3 install jupyterhub==$JUPYTERHUB_VERSION \
-	jupyterlab==3.0.5 \
+	jupyterlab==3.0.6 \
         jupyterhub-nativeauthenticator==0.0.7 \
         jupyterhub-dummyauthenticator==0.3.1 \
         dockerspawner==0.11.1

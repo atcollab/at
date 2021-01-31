@@ -23,9 +23,10 @@ ENV PATH="/home/$USERNAME/.local/bin:$PATH" \
 ARG JUPYTERHUB_VERSION
 RUN pip3 install jedi==0.17.2 \
 	notebook==6.2.0 \
-	jupyterlab==3.0.5 \
+	jupyterlab==3.0.6 \
 	jupyterhub==$JUPYTERHUB_VERSION \
-	&& jupyter notebook --generate-config
+	&& jupyter notebook --generate-config \
+	&& jupyter lab --generate-config
 
 RUN pip3 install octave_kernel \
 	&& export OCTAVE_EXECUTABLE=$(which octave)
