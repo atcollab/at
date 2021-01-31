@@ -22,6 +22,7 @@ You may connect to it form browser using one of the lines below:
 
 - <https://127.0.0.1> -- for local installations
 - <https://1.1.1.1> -- where `1.1.1.1` is your real IP. Use this when you have a real IP address but
+  don't have a domain name
 - <https://my-domain.org> -- where `my-domain.org` is your domain name
 
 Note that browsers will complain if your certificate was not verified by [Certificate
