@@ -19,7 +19,7 @@ with_openMP = False
 
 cflags = []
 
-omp = os.environ.get('OPENMP', omt)
+omp = os.environ.get('OPENMP', None)
 if omp is None:
     openMP_cflags = []
     openMP_lflags = []
