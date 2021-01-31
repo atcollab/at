@@ -116,7 +116,7 @@ buildlat(ELIST);
 THERING = setcellstruct(THERING,'Energy',1:length(THERING),GLOBVAL.E0);
 
 
-evalin('caller','global THERING FAMLIST GLOBVAL');
+evalin('base','global THERING FAMLIST GLOBVAL');
 disp('** Done **');
 
 

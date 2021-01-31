@@ -5,6 +5,10 @@ function atmexall(varargin)
 % properly configured.
 % On Windows, Microsoft Visual C++ is required
 
+if isOctave
+  error('atmexall does not work in Octave, use atoctave/bootstrap instead')
+end
+
 PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
 LIBDL='';
 switch computer

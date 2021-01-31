@@ -23,12 +23,10 @@
  *  Accelerator Physics Group, Duke FEL Lab, www.fel.duke.edu  
  */
 
-#ifndef  GWIG
 #include "gwig.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-#endif
 
 void GWigGauge(struct gwig *pWig, double *X, int flag);
 void GWigPass_2nd(struct gwig *pWig, double *X);

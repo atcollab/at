@@ -39,8 +39,12 @@ indx=indx(sok);
 ampl=0.05*tlim;     % Dipoles
 [xplot,yplot]=setxpl(sl(dipoles),ll(dipoles),[0;0;1;1;0],ampl*[0;1;1;0;0]);
 %[xplot,yplot]=setxpl(sl(dipoles),ll(dipoles),[0;0;1;1;0],ampl*[-1;1;1;-1;-1]);
-p1=patch(xplot,yplot,[0.5 0.5 1],'DisplayName','Dipoles');
-%p1=patch(ax,xplot,yplot,[0.5 0.5 1],'DisplayName','Dipoles');
+if (~isempty(xplot) && ~isempty(yplot))
+  p1=patch(xplot,yplot,[0.5 0.5 1],'DisplayName','Dipoles');
+  %p1=patch(ax,xplot,yplot,[0.5 0.5 1],'DisplayName','Dipoles');
+else
+  p1={};
+end
 
 ampl=0.05*tlim;     % Quadrupoles
 foc=reshape(0.4*ampl*sign(atgetfieldvalues(rok(qpoles),'PolynomB',{2})),1,[]);
@@ -48,8 +52,12 @@ foc=reshape(0.4*ampl*sign(atgetfieldvalues(rok(qpoles),'PolynomB',{2})),1,[]);
 yplot(3,:)=yplot(3,:)+foc;
 %[xplot,yplot]=setxpl(sl(qpoles),ll(qpoles),[0;0;0.5;1;1;0.5;0],ampl*[-1;1;1;1;-1;-1;-1]);
 %yplot(6,:)=yplot(6,:)-foc;
-p2=patch(xplot,yplot,[1 0.5 0.5],'DisplayName','Quadrupoles');
-%p2=patch(ax,xplot,yplot,[1 0.5 0.5],'DisplayName','Quadrupoles');
+if (~isempty(xplot) && ~isempty(yplot))
+  p2=patch(xplot,yplot,[1 0.5 0.5],'DisplayName','Quadrupoles');
+  %p2=patch(ax,xplot,yplot,[1 0.5 0.5],'DisplayName','Quadrupoles');
+else
+  p2={};
+end
 
 ampl=0.04*tlim;     % Sextupoles
 foc=reshape(0.25*ampl*sign(atgetfieldvalues(rok(spoles),'PolynomB',{3})),1,[]);
@@ -57,20 +65,32 @@ foc=reshape(0.25*ampl*sign(atgetfieldvalues(rok(spoles),'PolynomB',{3})),1,[]);
 yplot(3:4,:)=yplot(3:4,:)+foc([1;1],:);
 %[xplot,yplot]=setxpl(sl(spoles),ll(spoles),[0;0;0.33;0.66;1;1;0.66;0.33;0],ampl*[-1;1;1;1;1;-1;-1;-1;-1]);
 %yplot(7:8,:)=yplot(7:8,:)-foc([1;1],:);
-p3=patch(xplot,yplot,[0.5 1 0.5],'DisplayName','Sextupoles');
-%p3=patch(ax,xplot,yplot,[0.5 1 0.5],'DisplayName','Sextupoles');
+if (~isempty(xplot) && ~isempty(yplot))
+  p3=patch(xplot,yplot,[0.5 1 0.5],'DisplayName','Sextupoles');
+  %p3=patch(ax,xplot,yplot,[0.5 1 0.5],'DisplayName','Sextupoles');
+else
+  p3={};
+end
 
 ampl=0.03*tlim;     % Other multipoles
 [xplot,yplot]=setxpl(sl(mpoles),ll(mpoles),[0;0;1;1;0],ampl*[0;1;1;0;0]);
-%[xplot,yplot]=setxpl(sl(mpoles),ll(mpoles),[0;0;1;1;0],ampl*[-1;1;1;-1;-1]);
-p4=patch(xplot,yplot,[0 0.5 0]);
-%p4=patch(ax,xplot,yplot,[0 0.5 0]);
+   %[xplot,yplot]=setxpl(sl(mpoles),ll(mpoles),[0;0;1;1;0],ampl*[-1;1;1;-1;-1]);
+if (~isempty(xplot) && ~isempty(yplot))
+  p4=patch(xplot,yplot,[0 0.5 0]);
+  %p4=patch(ax,xplot,yplot,[0 0.5 0]);
+else
+  p4={};
+end
 
 ampl=0.015*tlim;    % BPMs
 amplx=0.005*slim;
 [xplot,yplot]=setxpl(sl(bpms),ones(1,sum(bpms)),[-amplx;0;amplx;0;-amplx],[0;-ampl;0;ampl;0]);
-p5=patch(xplot,yplot,[0 0 0],'DisplayName','BPM');
-%p5=patch(ax,xplot,yplot,[0 0 0],'clipping','off');
+if (~isempty(xplot) && ~isempty(yplot))
+  p5=patch(xplot,yplot,[0 0.5 0],'DisplayName','BPM');
+  %p5=patch(ax,xplot,yplot,[0 0 0],'clipping','off');
+else
+  p5={};
+end
 
 if any(labs)
     slabs=sl(labs)+0.5*ll(labs);

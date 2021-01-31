@@ -57,7 +57,9 @@
 #ifdef MATLAB_MEX_FILE
 /* Matlab only */
 #include <mex.h>
+#ifndef OCTAVE
 #include <matrix.h>
+#endif
 
 /* Get ready for R2018a C matrix API */
 #ifndef mxGetDoubles

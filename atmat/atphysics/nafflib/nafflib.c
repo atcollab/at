@@ -12,7 +12,9 @@
 #include <string.h>
 #include <math.h>
 #include "mex.h"
+#ifndef OCTAVE
 #include "matrix.h"
+#endif
 /* #include "gpfunc.h" */
 #include "modnaff.h"
 #include "complexe.h"
