@@ -47,13 +47,13 @@ Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 % We rewrite it in the form of Sylvester-Lyapunov equation to use MATLAB's LYAP function
 %            AA*R + R*BB = CC
 % where
-%				AA =  inv(MRING)
+%				AA = inv(MRING)
 %				BB = -MRING'
 %				CC = inv(MRING)*BCUM
 % -----------------------------------------------------------------------
-AA =  inv(mring);
+AA = inv(mring);
 BB = -mring';
-CC = inv(mring)*BCUM;
+CC = AA*BCUM;
 
 R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
