@@ -44,7 +44,8 @@ Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
-% We rewrite it in the form of Sylvester-Lyapunov equation to use MATLAB's LYAP function
+% We rewrite it in the form of Sylvester-Lyapunov equation
+% to use MATLAB's SYLVERTER function:
 %            AA*R + R*BB = CC
 % where
 %				AA = inv(MRING)
