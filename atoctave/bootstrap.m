@@ -1,4 +1,4 @@
-function bootstrap(debugMode=false,useOpenMP=true)
+function bootstrap(debugMode=false,useOpenMP=false)
 %bootstrap prepare Octave for AT
 %
 %  ISOCTAVE(DEBUGMODE)
@@ -28,8 +28,13 @@ function bootstrap(debugMode=false,useOpenMP=true)
                     '-O3'}, ' ');
   endif
   if useOpenMP
-    CFLAGS=strjoin({CFLAGS, ...
-                    '-fopenmp'}, ' ');
+    if ismac
+      CPASSFLAGS='-Xpreprocessor -fopenmp -lomp';
+    else
+      CPASSFLAGS='-fopenmp';
+    endif
+  else
+    CPASSFLAGS='';
   endif
 
   %% }}}
@@ -79,7 +84,7 @@ function bootstrap(debugMode=false,useOpenMP=true)
   for i = 1:length(atintegrators)
     source = atintegrators{i};
     target = replaceext(source, '.mex');
-    atcompilemex(target, CFLAGS, INCLUDES, {source});
+    atcompilemex(target, strjoin({CFLAGS, CPASSFLAGS}), INCLUDES, {source});
   endfor
 
   nonlineardynamics = glob(fullfile(atroot, 'atphysics', 'NonLinearDynamics', '*.c*'));
