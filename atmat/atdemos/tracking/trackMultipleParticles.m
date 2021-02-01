@@ -30,13 +30,17 @@ figure(1);
 plot(rin(1,:),rin(2,:),'o'); hold on
 
 % track without longitudinal motion
+tic; rout=ringpass(mring,rin,nturns,'silent'); t=toc;
+fprintf('%i particles, %i turns, without longitudinal motion: %f s\n', nparticles, nturns, t);
 
-tic;rout=ringpass(mring,rin,nturns,'silent');toc
 plot(rout(1,:),rout(2,:),'ro'); hold off
+xlabel('x [m]');
+ylabel('x'' [rd]');
+legend('Initial distribution', sprintf('After %i turns',nturns));
 
 % track with longitudinal motion
 
-tic;rout=ringpass(mring2,rin,nturns,'silent');toc
-% 
+tic; rout=ringpass(mring2,rin,nturns,'silent'); t=toc;
+fprintf('%i particles, %i turns,    with longitudinal motion: %f s\n', nparticles, nturns, t);
 
 end
