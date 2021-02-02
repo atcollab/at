@@ -13,12 +13,10 @@ end
 
 atoptions={['-D',computer]};
 
-LIBDL='';
-switch computer
-    case'GLNX86'
-        LIBDL=' -ldl';
-    case 'GLNXA64'
-        LIBDL=' -ldl';
+if isunix && ~ismac
+    LIBDL={'-ldl'};
+else
+    LIBDL={};
 end
 
 try
@@ -33,39 +31,42 @@ try
 catch
 end
 
-% Navigate to the directory that contains tracking functions
 lastwarn('');
 
-PLATFORMOPTION=sprintf('%s ',atoptions{:},varargs{:});
-PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
+passinclude = ['-I' fullfile(atroot,'..','atintegrators','')];
+alloptions=[atoptions varargs];
+
+% atpass
 cdir=fullfile(atroot,'attrack','');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'atpass.c'),LIBDL];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions, {passinclude, '-outdir'}, LIBDL, {cdir, fullfile(cdir,'atpass.c')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
+
 [warnmess,warnid]=lastwarn; %#ok<ASGLU>
 if strcmp(warnid,'MATLAB:mex:GccVersion_link')
     warning('Disabling the compiler warning');
 end
-
-% Navigate to the directory that contains some accelerator physics functions
 oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
+
+% Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'findmpoleraddiffmatrix.c')];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions,{passinclude, '-outdir', cdir, fullfile(cdir,'findmpoleraddiffmatrix.c')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
+
+% RDTs
 cdir=fullfile(atroot,'atphysics','NonLinearDynamics');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'RDTelegantAT.cpp')];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions,{'-outdir', cdir, fullfile(cdir,'RDTelegantAT.cpp')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
 
 % NAFF
 cdir=fullfile(atroot,'atphysics','nafflib');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'nafflib.c'),' ',...
-    fullfile(cdir,'modnaff.c'),' ',...
-    fullfile(cdir,'complexe.c'),' ',...
-    ];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions,{'-outdir', cdir, fullfile(cdir,'nafflib.c'),...
+                                      fullfile(cdir,'modnaff.c'),...
+                                      fullfile(cdir,'complexe.c')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
 
 
 % Navigate to the directory that contains pass-methods 
