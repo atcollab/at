@@ -38,7 +38,7 @@ alloptions=[atoptions varargs];
 
 % atpass
 cdir=fullfile(atroot,'attrack','');
-mexargs=[alloptions, {passinclude, '-outdir'}, LIBDL, {cdir, fullfile(cdir,'atpass.c')}];
+mexargs=[alloptions, {passinclude}, LIBDL, {'-outdir', cdir, fullfile(cdir,'atpass.c')}];
 disp(['mex ',strjoin(mexargs)]);
 mex(mexargs{:});
 
