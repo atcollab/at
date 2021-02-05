@@ -9,63 +9,68 @@ if isOctave
   error('atmexall does not work in Octave, use atoctave/bootstrap instead')
 end
 
-PLATFORMOPTION = ['-D',computer,' ',sprintf('%s ',varargin{:})];
-LIBDL='';
-switch computer
-    case'GLNX86'
-        LIBDL=' -ldl';
-    case 'GLNXA64'
-        LIBDL=' -ldl';
+[~,varargs]=getflag(varargin,'-openmp');
+
+atoptions={['-D',computer]};
+
+if isunix && ~ismac
+    LIBDL={'-ldl'};
+else
+    LIBDL={};
 end
 
 try
-    if ~verLessThan('matlab','9.4')
-        PLATFORMOPTION = [PLATFORMOPTION '-R2018a '];
-    elseif ~verLessThan('matlab','7.11') %R2010b
-        PLATFORMOPTION = [PLATFORMOPTION '-largeArrayDims '];
+    if ~verLessThan('matlab','9.4')         % >= R2018a
+        atoptions = [atoptions,{'-R2018a'}];
+    elseif ~verLessThan('matlab','7.11')	% >= R2010b
+        atoptions = [atoptions,{'-largeArrayDims'}];
     end
-    if ~verLessThan('matlab','8.3') %R2014a
-        PLATFORMOPTION = [PLATFORMOPTION ' -silent '];
+    if ~verLessThan('matlab','8.3')         % >= R2014a
+        atoptions = [atoptions,{'-silent'}];
     end
 catch
 end
 
-% Navigate to the directory that contains tracking functions
 lastwarn('');
 
-PASSMETHODDIR = fullfile(atroot,'..','atintegrators','');
+passinclude = ['-I' fullfile(atroot,'..','atintegrators','')];
+alloptions=[atoptions varargs];
+
+% atpass
 cdir=fullfile(atroot,'attrack','');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'atpass.c'),LIBDL];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions, {passinclude}, LIBDL, {'-outdir', cdir, fullfile(cdir,'atpass.c')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
+
 [warnmess,warnid]=lastwarn; %#ok<ASGLU>
 if strcmp(warnid,'MATLAB:mex:GccVersion_link')
     warning('Disabling the compiler warning');
 end
-
-% Navigate to the directory that contains some accelerator physics functions
 oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
+
+% Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' -I''',PASSMETHODDIR,''' ',fullfile(cdir,'findmpoleraddiffmatrix.c')];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions,{passinclude, '-outdir', cdir, fullfile(cdir,'findmpoleraddiffmatrix.c')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
+
+% RDTs
 cdir=fullfile(atroot,'atphysics','NonLinearDynamics');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'RDTelegantAT.cpp')];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions,{'-outdir', cdir, fullfile(cdir,'RDTelegantAT.cpp')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
 
 % NAFF
 cdir=fullfile(atroot,'atphysics','nafflib');
-MEXCOMMAND = ['mex ',PLATFORMOPTION,'-outdir ',cdir,' ',fullfile(cdir,'nafflib.c'),' ',...
-    fullfile(cdir,'modnaff.c'),' ',...
-    fullfile(cdir,'complexe.c'),' ',...
-    ];
-disp(MEXCOMMAND);
-eval(MEXCOMMAND);
+mexargs=[alloptions,{'-outdir', cdir, fullfile(cdir,'nafflib.c'),...
+                                      fullfile(cdir,'modnaff.c'),...
+                                      fullfile(cdir,'complexe.c')}];
+disp(['mex ',strjoin(mexargs)]);
+mex(mexargs{:});
 
 
 % Navigate to the directory that contains pass-methods 
-mexpassmethod('all',PLATFORMOPTION);
+mexpassmethod('all',atoptions{:},varargin{:});
 warning(oldwarns.state,oldwarns.identifier);
 
 % ADD 'MEXING' instructions for other C files

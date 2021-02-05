@@ -26,42 +26,39 @@ function mexpassmethod(PASSMETHODS, varargin)
 % OMP_PARTICLE_THRESHOLD (defined in atcommon.h) then only a single thread
 % is used. The number of threads used can be manually set using the
 % environment variable OMP_NUM_THREADS.
-% Originally intriduced by Xiabiao Huang (7/12/2010).
-opt_parallel = false;
-
-PLATFORMOPTION=[varargin{:}];
+% Originally introduced by Xiabiao Huang (7/12/2010).
 
 if isOctave
-  error('mexpassmethod does not work in Octave')
+    error('mexpassmethod does not work in Octave')
 end
 
-%Additional platform-specific options for mex
+[opt_parallel,varargs]=getflag(varargin,'-openmp');
 pdir=fileparts(mfilename('fullpath'));
+
 if ispc()
-    EXPORT=' %s';
     map1='';
+    exportarg='';
+    ldflags={};
+    if opt_parallel
+        varargs=[varargs {'COMPFLAGS="$COMPFLAGS /openmp"'}];
+    end
 else
     % Starting from R2016b, Matlab introduced a new entry point in MEX-files
     % The "*.mapext" files define this new entry point
-    if ~exist('verLessThan') || verLessThan('matlab','9.1') %#ok<EXIST>
-        mapformat=fullfile(pdir,'%s');
-    else
-        mapformat=fullfile(pdir,'%sext');
-    end
     
     switch computer
         case {'SOL2','SOL64'}
-            exportarg='-M';
+            exportarg='-M ';
             map1='mexFunctionSOL2.map';
-            ldflags=['-G -mt ',exportarg,' '];
+            default_ldflags='-G -mt';
         case 'GLNX86'
             exportarg='-Wl,--version-script,';
             map1='mexFunctionGLNX86.map';
-            ldflags=['-pthread -shared -m32 -Wl,--no-undefined ',exportarg];
+            default_ldflags='-pthread -shared -m32 -Wl,--no-undefined';
         case 'GLNXA64'
             exportarg='-Wl,--version-script,';
             map1='mexFunctionGLNX86.map';
-            ldflags=['-pthread -shared -Wl,--no-undefined ',exportarg];
+            default_ldflags='-pthread -shared -Wl,--no-undefined';
         case {'MAC','MACI','MACI64'}
             exportarg='-Wl,-exported_symbols_list,';
             map1='trackFunctionMAC.map';
@@ -69,46 +66,24 @@ else
     end
     
     if opt_parallel
-        % Add library flags to enable openmp
-        exportarg = [' -fopenmp ', exportarg];
-    end
-    
-    if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> R2008a
-        EXPORT=[' LDFLAGS=''',ldflags,mapformat,''' '];
-    elseif verLessThan('matlab','8.3')                      % R2014a
-        ldf=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['(' exportarg '\s?)([^\s,]+)'],['$1',mapformat]);
-        EXPORT=[' LDFLAGS=''',strrep(ldf,'$','\\$'),''' '];
-    elseif verLessThan('matlab','9.1')                      % R2016b
-        EXPORT=[' LINKEXPORT=''',exportarg,mapformat,''' '];
-    else
-        if ismac()  % Correct a bug in Mac setup which uses both LINKEXPORT and LINKEXPORTVER
-            PLATFORMOPTION=[PLATFORMOPTION ...
-                'LDFLAGS=''-Wl,-twolevel_namespace -undefined error -arch x86_64 -mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET -Wl,-syslibroot,$ISYSROOT'' ' ...
-                'CMDLINE200=''$LD $LDFLAGS $LDBUNDLE $LINKOPTIM $LINKEXPORTVER $OBJS $CLIBS $LINKLIBS -o $EXE'' '...
-                ];
-        end
-        EXPORT=[' LINKEXPORTVER=''',exportarg,mapformat,''' '];
-    end
-end
-
-if opt_parallel
-    % Add compiler flags to enable openmp
-    if ispc()
-        warning('OpenMP available with MSVC or V Studio compilers.');
-        EXPORT = [' COMPFLAGS=''$COMPFLAGS /openmp'' ', EXPORT];
-    else
         switch computer
             case {'SOL2','SOL64'}
-                EXPORT = [' CFLAGS=''$CFLAGS -xopenmp'' ', EXPORT];
+                cflags='-xopenmp';
+                ldflags={'-xopenmp'};
             case {'MAC','MACI','MACI64'}
-                warning('OpenMP may not be supportded on MAC. *Untested*');
-                EXPORT = [' CFLAGS=''$CFLAGS -fopenmp'' ', EXPORT];
+                cflags='-Xpreprocessor -fopenmp';
+                ldflags={};
+                varargs=[varargs,{sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),'-liomp5'}];
             otherwise
-                EXPORT = [' CFLAGS=''$CFLAGS -fopenmp'' ', EXPORT];
+                cflags='-fopenmp';
+                ldflags={'-fopenmp'};
         end
+        % Add library flags to enable openmp
+        varargs=[varargs,{sprintf('CFLAGS="$CFLAGS %s"',cflags)}];
+    else
+        ldflags={};
     end
 end
-    
 
 if ischar(PASSMETHODS) % one file name - convert to a cell array
     if strcmpi(PASSMETHODS,'all')
@@ -134,22 +109,22 @@ end
 
 for i = 1:length(PASSMETHODS)
     PM = fullfile(pdir,[PASSMETHODS{i}]);
-    if exist(PM,'file') || exist(PM2, 'file')
+    if exist(PM,'file')
         try
             if exist('map2','var')
                 try
-                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(EXPORT,map1),PM];
-                    disp(MEXSTRING);
-                    evalin('base',MEXSTRING);
+                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg,ldflags), PM];
+                    disp(['mex ',strjoin(mexargs)]);
+                    mex(mexargs{:});
                 catch
-                    MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(EXPORT,map2),PM];
-                    disp(MEXSTRING);
-                    evalin('base',MEXSTRING);
+                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map2,exportarg,ldflags), PM];
+                    disp(['mex ',strjoin(mexargs)]);
+                    mex(mexargs{:});
                 end
             else
-                MEXSTRING = ['mex ',PLATFORMOPTION,'-outdir ',pdir,sprintf(EXPORT,map1),PM];
-                disp(MEXSTRING);
-                evalin('base',MEXSTRING);
+                mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg,ldflags), PM];
+                disp(['mex ',strjoin(mexargs)]);
+                mex(mexargs{:});
             end
         catch err
             fprintf(2,'Could not compile %s: %s\n',PM,err.message);
@@ -172,9 +147,34 @@ end
         fprintf(fid,'%%PASSMETHODLIST\tUtility function for MATLAB Compiler\n%%\n');
         fprintf(fid,'%%Since passmethods are loaded at run time, the compiler will not include them\n');
         fprintf(fid,'%%unless this function is included in the list of functions to be compiled.\n\n');
-
+        
         nbytes=cellfun(@(pass) fprintf(fid,'%s\n',pass),passmethodnames); %#ok<NASGU>
         fprintf(fid,'\nend\n');
         fclose(fid);
     end
+
+    function ldf=generate_flags(map, exportarg, ldflags)
+        if ispc
+            ldf={};
+            % ldf={sprintf('LINKFLAGS="$LINKFLAGS %s"',strjoin(ldflags))};
+        else
+            mapfile=fullfile(pdir, map);
+            if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> < R2008a
+                exp=sprintf([exportarg '"%s"'], mapfile);
+                ldf={sprintf('LDFLAGS="%s"',strjoin([{default_ldflags}, ldflags, {exp}]))};
+            elseif verLessThan('matlab','8.3')                      %           < R2014a
+                exp=sprintf([exportarg '"%s"'], mapfile);
+                def_ldflags=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['\s(' exportarg ')([^\s,]+)'],'');
+                ldf={sprintf('LDFLAGS="%s"',strjoin([{def_ldflags}, ldflags, {exp}]))};
+            elseif verLessThan('matlab','9.1')                      %           < R2016b
+                ldf={sprintf('LDFLAGS="$LDFLAGS %s"',strjoin(ldflags)),...
+                    sprintf('LINKEXPORT=''%s"%s"''',exportarg,mapfile)};
+            else                                                    %           >= R2016b
+                ldf={sprintf('LDFLAGS="$LDFLAGS %s"',strjoin(ldflags)),...
+                    sprintf('VERSIONMAP="%sext"',mapfile),...
+                    sprintf('FUNCTIONMAP="%s"',mapfile)};
+            end
+        end
+    end
+
 end

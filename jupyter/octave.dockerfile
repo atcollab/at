@@ -36,7 +36,7 @@ RUN git clone --depth 1 -b master https://github.com/atcollab/at.git /home/$USER
 	&& mkdir -p $DOCKER_NOTEBOOK_DIR \
 	&& cp -r /home/$USERNAME/at/jupyter/demos $DOCKER_NOTEBOOK_DIR \
 	&& cd /home/$USERNAME/at/atoctave \
-	&& octave --eval 'bootstrap;savepath'
+	&& octave --eval 'bootstrap(:,true);savepath'
 
 WORKDIR $DOCKER_NOTEBOOK_DIR
 EXPOSE 8888

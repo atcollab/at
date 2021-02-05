@@ -15,8 +15,27 @@ except ImportError:
 
 here = abspath(dirname(__file__))
 macros = [('PYAT', None)]
+with_openMP = False
 
 cflags = []
+
+omp = os.environ.get('OPENMP', None)
+if omp is None:
+    openMP_cflags = []
+    openMP_lflags = []
+    openMP_macros = []
+else:
+    omp_threshold = int(os.environ.get('OMP_PARTICLE_THRESHOLD', 10))
+    openMP_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
+    if sys.platform.startswith('darwin'):
+        openMP_cflags = ['-Xpreprocessor', '-fopenmp']
+        openMP_lflags = ['-lomp']
+    elif sys.platform.startswith('linux'):
+        openMP_cflags = ['-fopenmp']
+        openMP_lflags = ['-fopenmp']
+    elif sys.platform.startswith('win'):
+        openMP_cflags = ['/openmp']
+        openMP_lflags = []
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
@@ -64,8 +83,9 @@ def integrator_ext(pass_method):
         name=name,
         sources=[pass_method],
         include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
-        define_macros=macros,
-        extra_compile_args=cflags
+        define_macros=macros + openMP_macros,
+        extra_compile_args=cflags + openMP_cflags,
+        extra_link_args=openMP_lflags
     )
 
 

@@ -1,4 +1,4 @@
-function bootstrap(debugMode=false)
+function bootstrap(debugMode=false,useOpenMP=false)
 %bootstrap prepare Octave for AT
 %
 %  ISOCTAVE(DEBUGMODE)
@@ -6,6 +6,7 @@ function bootstrap(debugMode=false)
 %
 %  INPUTS
 %  1. DEBUGMODE          build debug versions of mex files. defaults to false
+%  1. USEOPENMP          parallelize C loops in intergrators. defaults to true
 %
 
   %% {{{ Constants
@@ -25,6 +26,15 @@ function bootstrap(debugMode=false)
   else
     CFLAGS=strjoin({CFLAGS, ...
                     '-O3'}, ' ');
+  endif
+  if useOpenMP
+    if ismac
+      CPASSFLAGS='-Xpreprocessor -fopenmp -lomp';
+    else
+      CPASSFLAGS='-fopenmp';
+    endif
+  else
+    CPASSFLAGS='';
   endif
 
   %% }}}
@@ -74,7 +84,7 @@ function bootstrap(debugMode=false)
   for i = 1:length(atintegrators)
     source = atintegrators{i};
     target = replaceext(source, '.mex');
-    atcompilemex(target, CFLAGS, INCLUDES, {source});
+    atcompilemex(target, strjoin({CFLAGS, CPASSFLAGS}), INCLUDES, {source});
   endfor
 
   nonlineardynamics = glob(fullfile(atroot, 'atphysics', 'NonLinearDynamics', '*.c*'));
