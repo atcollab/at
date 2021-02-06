@@ -3,13 +3,15 @@ FROM debian:bullseye-backports
 USER root
 RUN apt-get update -q \
 	&& DEBIAN_FRONTEND=noninteractive \
-	apt-get install -qy --no-install-recommends \
+	apt install -qy --no-install-recommends \
 	git wget build-essential fonts-liberation \
-	python3-pip \
+	python3-pip zip unzip \
 	&& DEBIAN_FRONTEND=noninteractive \
-	apt-get install -qy --install-recommends \
-	octave liboctave-dev \
-	&& apt-get clean \
+	apt install -qy \
+	--install-recommends \
+	octave liboctave-dev octave-optim octave-parallel \
+	&& apt autoremove \
+	&& apt autoclean \
 	&& rm -rf /var/lib/apt/lists/*
 
 ARG USERNAME
@@ -18,7 +20,8 @@ RUN useradd --create-home --shell /bin/bash $USERNAME
 USER $USERNAME
 
 ENV PATH="/home/$USERNAME/.local/bin:$PATH" \
-	LC_ALL=C.UTF-8
+	LC_ALL=C.UTF-8 \
+	SHELL=/bin/bash
 
 ARG JUPYTERHUB_VERSION
 RUN pip3 install jedi==0.17.2 \
