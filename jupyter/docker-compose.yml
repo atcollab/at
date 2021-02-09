@@ -48,6 +48,8 @@ services:
       # Postgres db info
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: hub-db
+      # Ask for email on signup
+      ASK_EMAIL: ${ASK_EMAIL}
       # Additional configs from .env
       JUPYTER_ENABLE_LAB: ${JUPYTER_ENABLE_LAB}
       USE_TWO_FACTOR: ${USE_TWO_FACTOR}

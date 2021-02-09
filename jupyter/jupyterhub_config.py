@@ -59,6 +59,8 @@ c.Authenticator.check_common_password = True
 c.Authenticator.minimum_password_length = 10
 c.Authenticator.allowed_failed_logins = 5
 c.Authenticator.seconds_before_next_try = 1200
+# Ask for email on signup
+c.Authenticator.ask_email_on_signup = False if os.environ['ASK_EMAIL'] == "" else True
 # Use 2 factor authentication
 c.Authenticator.allow_2fa = False if os.environ['USE_TWO_FACTOR'] == "" else True
 c.Authenticator.enable_signup = True if os.environ['DISABLE_SIGNUP'] == "" else False
