@@ -152,7 +152,7 @@ class Constraints(object):
 
         def res(value, target, weight, lbound, ubound):
             diff = value - target   # broadcast here => at least 1 dimension
-            lb = diff - lbound
+            lb = diff + lbound
             ub = diff - ubound
             lb[lb >= 0] = 0         # needs at least 1 dimension
             ub[ub <= 0] = 0
