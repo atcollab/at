@@ -44,18 +44,19 @@ Batbeg=[zr;cellfun(@cumulb,ring,orb(1:end-1),B,'UniformOutput',false)];
 % ------------------------------------------------------------------------
 % Equation for the moment matrix R is
 %         R = MRING*R*MRING' + BCUM;
-% We rewrite it in the form of Lyapunov equation to use MATLAB's LYAP function
-%            AA*R + R*BB = -CC
+% We rewrite it in the form of Sylvester-Lyapunov equation
+% to use MATLAB's SYLVERTER function:
+%            AA*R + R*BB = CC
 % where
-%				AA =  inv(MRING)
+%				AA = inv(MRING)
 %				BB = -MRING'
-%				CC = -inv(MRING)*BCUM
+%				CC = inv(MRING)*BCUM
 % -----------------------------------------------------------------------
-AA =  inv(mring);
+AA = inv(mring);
 BB = -mring';
-CC = -inv(mring)*BCUM;
+CC = AA*BCUM;
 
-R = lyap(AA,BB,CC);     % Envelope matrix at the ring entrance
+R = sylvester(AA,BB,CC);     % Envelope matrix at the ring entrance
 
 rmsdp = sqrt(R(5,5));   % R.M.S. energy spread
 rmsbl = sqrt(R(6,6));   % R.M.S. bunch lenght
