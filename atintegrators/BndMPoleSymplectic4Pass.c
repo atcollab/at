@@ -54,9 +54,8 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         double *RApertures, double *EApertures,
         double *KickAngle, int num_particles)
 {	
-    int c, m;
-    double *r6;
-    double SL, L1, L2, K1, K2, p_norm, NormL1, NormL2;
+    int c;
+    double SL, L1, L2, K1, K2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
     SL = le/num_int_steps;
@@ -69,13 +68,16 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         B[0] -= sin(KickAngle[0])/le; 
         A[0] += sin(KickAngle[1])/le;
     }
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c)
     for(c = 0;c<num_particles;c++)	/* Loop over particles  */
     {
-        r6 = r+c*6;
-        if(!atIsNaN(r6[0]))
-        {
-            /*  misalignment at entrance  */
+        double *r6 = r+c*6;
+        if (!atIsNaN(r6[0])) {
+            int m;
+            double p_norm = 1.0/(1.0+r6[4]);
+            double NormL1 = L1*p_norm;
+            double NormL2 = L2*p_norm;
+           /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
@@ -91,9 +93,6 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
                     QuadFringePassP(r6, B[1]);
             }    
             /* integrator */
-            p_norm = 1/(1+r6[4]);
-            NormL1 = L1*p_norm;
-            NormL2 = L2*p_norm;
             for(m=0; m < num_int_steps; m++) /* Loop over slices*/
             {
                 fastdrift(r6, NormL1);

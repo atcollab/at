@@ -44,12 +44,8 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
         double *KickAngle, double E0,
         int num_particles)
 {
-    double *r6;
     double SL, L1, L2, K1, K2;
-    double dpp0, ng, ec, de, energy, gamma, cstec, cstng;
-    double s0, ds, rho, dxp, dyp, xp0, yp0;
-    int c,m,i;
-    int nph;
+    int c;
     double  qe = 1.60217733e-19;
     double  epsilon0 = 8.854187817e-12;
     double  clight = 2.99792458e8;
@@ -69,10 +65,11 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
         B[0] -= sin(KickAngle[0])/le;
         A[0] += sin(KickAngle[1])/le;
     }
-#pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c,r6,m)
+#pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c)
     for (c = 0;c<num_particles;c++)	{   /* Loop over particles  */
-        r6 = r+c*6;
+        double *r6 = r+c*6;
         if(!atIsNaN(r6[0])) {
+            int m;
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
@@ -87,11 +84,14 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
             }
             /* integrator */
             for (m=0; m < num_int_steps; m++) { /* Loop over slices */
-                r6 = r+c*6;
-                dpp0 = r6[4];
-                xp0 = r6[1]/(1+r6[4]);
-                yp0 = r6[3]/(1+r6[4]);
-                s0 = r6[5];
+                int i;
+                double ng, ec, de, energy, gamma, cstec, cstng;
+                double ds, rho, dxp, dyp;
+                int nph;
+                double dpp0 = r6[4];
+                double xp0 = r6[1]/(1+r6[4]);
+                double yp0 = r6[3]/(1+r6[4]);
+                double s0 = r6[5];
                 
                 ATdrift6(r6,L1);
                 strthinkickrad(r6, A, B, K1, E0, max_order);

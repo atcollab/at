@@ -53,12 +53,7 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
         double *RApertures, double *EApertures,
         double E0, int num_particles)
 {
-    double *r6;
-    double dpp0, ng, ec, de, energy, gamma, cstec, cstng;
-    double s0, ds, rho, dxp, dyp, xp0, yp0;
-    int nph;
-    int i, c, m;
-    double p_norm, NormL1, NormL2;
+    int c;
     bool useT1 = (T1 != NULL);
     bool useT2 = (T2 != NULL);
     bool useR1 = (R1 != NULL);
@@ -78,9 +73,14 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
     double  pi = 3.14159265358979;
     double  alpha0 = qe*qe/(4*pi*epsilon0*hbar*clight);
     
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c)
     for (c = 0; c<num_particles; c++) {	/* Loop over particles  */
-        r6 = r+c*6;
-        if(!atIsNaN(r6[0])) {
+        double *r6 = r+c*6;
+        if (!atIsNaN(r6[0])) {
+            int m;
+            double p_norm = 1/(1+r6[4]);
+            double NormL1 = L1*p_norm;
+            double NormL2 = L2*p_norm;
             /*  misalignment at entrance  */
             if(useT1) ATaddvv(r6,T1);
             if(useR1) ATmultmv(r6,R1);
@@ -97,15 +97,15 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                     QuadFringePassP(r6, B[1]);
             }
             /* integrator */
-            p_norm = 1/(1+r6[4]);
-            NormL1 = L1*p_norm;
-            NormL2 = L2*p_norm;
             for (m=0; m < num_int_steps; m++) {/* Loop over slices*/
-                r6 = r+c*6;
-                dpp0 = r6[4];
-                xp0 = r6[1]/(1+r6[4]);
-                yp0 = r6[3]/(1+r6[4]);
-                s0 = r6[5];
+                int i;
+                double ng, ec, de, energy, gamma, cstec, cstng;
+                double ds, rho, dxp, dyp;
+                int nph;
+                double dpp0 = r6[4];
+                double xp0 = r6[1]/(1+r6[4]);
+                double yp0 = r6[3]/(1+r6[4]);
+                double s0 = r6[5];
                 
                 fastdrift(r6, NormL1);
                 bndthinkick(r6, A, B, K1, irho, max_order);
@@ -114,9 +114,9 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                 fastdrift(r6, NormL2);
                 bndthinkick(r6, A, B,  K1, irho, max_order);
                 fastdrift(r6, NormL1);
-                
+
                 energy = dpp0*E0+E0;
-                
+
                 gamma = energy/emass;/* emass in eV */
                 cstec = 3.0*gamma*gamma*gamma*clight/(2.0)*hbar/qe;
                 cstng = 5.0*sqrt(3.0)*alpha0*gamma/(6.0);
