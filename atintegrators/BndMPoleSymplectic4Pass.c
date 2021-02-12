@@ -55,20 +55,24 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
         double *KickAngle, int num_particles)
 {	
     int c;
-    double SL, L1, L2, K1, K2;
+    double SL = le/num_int_steps;
+    double L1 = SL*DRIFT1;
+    double L2 = SL*DRIFT2;
+    double K1 = SL*KICK1;
+    double K2 = SL*KICK2;
     bool useLinFrEleEntrance = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadEntrance==2);
     bool useLinFrEleExit = (fringeIntM0 != NULL && fringeIntP0 != NULL  && FringeQuadExit==2);
-    SL = le/num_int_steps;
-    L1 = SL*DRIFT1;
-    L2 = SL*DRIFT2;
-    K1 = SL*KICK1;
-    K2 = SL*KICK2;
 
     if (KickAngle) {   /* Convert corrector component to polynomial coefficients */
         B[0] -= sin(KickAngle[0])/le; 
         A[0] += sin(KickAngle[1])/le;
     }
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(shared) shared(r,num_particles) private(c)
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
+    irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,\
+    FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
+    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0) \
+    private(c)
     for(c = 0;c<num_particles;c++)	/* Loop over particles  */
     {
         double *r6 = r+c*6;
