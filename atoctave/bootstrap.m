@@ -29,12 +29,12 @@ function bootstrap(debugMode=false,useOpenMP=false)
   endif
   if useOpenMP
     if ismac
-      CPASSFLAGS='-Xpreprocessor -fopenmp -lomp';
+      OMPFLAGS='-Xpreprocessor -fopenmp -lomp';
     else
-      CPASSFLAGS='-fopenmp';
+      OMPFLAGS='-fopenmp';
     endif
   else
-    CPASSFLAGS='';
+    OMPFLAGS='';
   endif
 
   %% }}}
@@ -84,7 +84,7 @@ function bootstrap(debugMode=false,useOpenMP=false)
   for i = 1:length(atintegrators)
     source = atintegrators{i};
     target = replaceext(source, '.mex');
-    atcompilemex(target, strjoin({CFLAGS, CPASSFLAGS}), INCLUDES, {source});
+    atcompilemex(target, strjoin({CFLAGS, OMPFLAGS}), INCLUDES, {source});
   endfor
 
   nonlineardynamics = glob(fullfile(atroot, 'atphysics', 'NonLinearDynamics', '*.c*'));
@@ -94,7 +94,7 @@ function bootstrap(debugMode=false,useOpenMP=false)
   atcompilemex(replaceext(radiation{1}, '.mex'), CFLAGS, INCLUDES, radiation);
 
   attrack = glob(fullfile(atroot, 'attrack', '*.c'));
-  atcompilemex(replaceext(attrack{1}, '.mex'), CFLAGS, INCLUDES, attrack);
+  atcompilemex(replaceext(attrack{1}, '.mex'), strjoin({CFLAGS, OMPFLAGS}), INCLUDES, attrack);
 
   nafflib = glob(fullfile(atroot, 'atphysics', 'nafflib', '*.c'));
   nafflib = nafflib(~strcmp(nafflib, fullfile(atroot, 'atphysics', 'nafflib', 'example.c')));

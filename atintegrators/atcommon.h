@@ -42,10 +42,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifndef OMP_PARTICLE_THRESHOLD
-#define OMP_PARTICLE_THRESHOLD (10)
-#endif
-
 /* All Windows builds */
 #if defined(PCWIN) || defined(_WIN32)
 #define ExportMode __declspec(dllexport)

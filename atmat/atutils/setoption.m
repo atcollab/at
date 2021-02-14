@@ -1,4 +1,4 @@
-function setoption(varargin)
+function setoption(name,value)
 %SETOPTION	Set AT preference values
 %
 %SETOPTION('KEY',DEFAULT)
@@ -11,9 +11,15 @@ function setoption(varargin)
 %
 %SETOPTION('KEY') Resets the default value for KEY to its inital setting
 %
-%SETOPTION() Resets all predefined keys to their initial setting.
+%SETOPTION()      Resets all values to the initial setting
 %
 %See also GETOPTION, INITOPTIONS
 
-atprefutil('set',varargin{:});
+opt=atoptions.instance();
+if nargin >= 2
+    opt.(name)=value;
+elseif nargin >= 1
+    opt.reset(name);
+else
+    opt.instance('reset');
 end
