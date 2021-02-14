@@ -53,16 +53,7 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
         double *RApertures, double *EApertures,
         double E0, int num_particles)
 {
-    double *r6;
-    double dpp0, ng, ec, de, energy, gamma, cstec, cstng;
-    double s0, ds, rho, dxp, dyp, xp0, yp0;
-    int nph;
-    int i, c, m;
-    double p_norm, NormL1, NormL2;
-    bool useT1 = (T1 != NULL);
-    bool useT2 = (T2 != NULL);
-    bool useR1 = (R1 != NULL);
-    bool useR2 = (R2 != NULL);
+    int c;
     double SL = le/num_int_steps;
     double L1 = SL*DRIFT1;
     double L2 = SL*DRIFT2;
@@ -78,12 +69,23 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
     double  pi = 3.14159265358979;
     double  alpha0 = qe*qe/(4*pi*epsilon0*hbar*clight);
     
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+    shared(r,num_particles,R1,T1,R2,T2,RApertures,EApertures,\
+    irho,gap,A,B,L1,L2,K1,K2,max_order,num_int_steps,\
+    FringeBendEntrance,entrance_angle,fint1,FringeBendExit,exit_angle,fint2,\
+    FringeQuadEntrance,useLinFrEleEntrance,FringeQuadExit,useLinFrEleExit,fringeIntM0,fringeIntP0,\
+    emass,E0,hbar,clight,alpha0,qe,SL) \
+    private(c)
     for (c = 0; c<num_particles; c++) {	/* Loop over particles  */
-        r6 = r+c*6;
-        if(!atIsNaN(r6[0])) {
+        double *r6 = r+c*6;
+        if (!atIsNaN(r6[0])) {
+            int m;
+            double p_norm = 1/(1+r6[4]);
+            double NormL1 = L1*p_norm;
+            double NormL2 = L2*p_norm;
             /*  misalignment at entrance  */
-            if(useT1) ATaddvv(r6,T1);
-            if(useR1) ATmultmv(r6,R1);
+            if (T1) ATaddvv(r6,T1);
+            if (R1) ATmultmv(r6,R1);
             /* Check physical apertures at the entrance of the magnet */
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
@@ -97,15 +99,15 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                     QuadFringePassP(r6, B[1]);
             }
             /* integrator */
-            p_norm = 1/(1+r6[4]);
-            NormL1 = L1*p_norm;
-            NormL2 = L2*p_norm;
             for (m=0; m < num_int_steps; m++) {/* Loop over slices*/
-                r6 = r+c*6;
-                dpp0 = r6[4];
-                xp0 = r6[1]/(1+r6[4]);
-                yp0 = r6[3]/(1+r6[4]);
-                s0 = r6[5];
+                int i;
+                double ng, ec, de, energy, gamma, cstec, cstng;
+                double ds, rho, dxp, dyp;
+                int nph;
+                double dpp0 = r6[4];
+                double xp0 = r6[1]/(1+r6[4]);
+                double yp0 = r6[3]/(1+r6[4]);
+                double s0 = r6[5];
                 
                 fastdrift(r6, NormL1);
                 bndthinkick(r6, A, B, K1, irho, max_order);
@@ -114,9 +116,9 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                 fastdrift(r6, NormL2);
                 bndthinkick(r6, A, B,  K1, irho, max_order);
                 fastdrift(r6, NormL1);
-                
+
                 energy = dpp0*E0+E0;
-                
+
                 gamma = energy/emass;/* emass in eV */
                 cstec = 3.0*gamma*gamma*gamma*clight/(2.0)*hbar/qe;
                 cstng = 5.0*sqrt(3.0)*alpha0*gamma/(6.0);
@@ -157,8 +159,8 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
             if (RApertures) checkiflostRectangularAp(r6,RApertures);
             if (EApertures) checkiflostEllipticalAp(r6,EApertures);
             /* Misalignment at exit */
-            if(useR2) ATmultmv(r6,R2);
-            if(useT2) ATaddvv(r6,T2);
+            if(R2) ATmultmv(r6,R2);
+            if(T2) ATaddvv(r6,T2);
         }
     }
 }

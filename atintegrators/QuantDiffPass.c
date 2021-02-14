@@ -24,10 +24,7 @@ void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_pa
  * 1-d array of 6*N elements
  */
 {
-  double *r6;
-  int c, i, j;
-  double randnorm[6];
-  double diffusion[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+  int c;
   static int initSeed = 1;	/* 	If this variable is 1, then I initialize the seed
 				 * 	to the clock and I change the variable to 0*/
   
@@ -49,25 +46,28 @@ void QuantDiffPass(double *r_in, double* Lmatp , int Seed, int nturn, int num_pa
 #endif
       initSeed = 0;
   }
-  for (c = 0; c<num_particles; c++)
-  { /*Loop over particles  */
-      r6 = r_in+c*6;
-      for (i=0;i<6;i++)
-      {
+
+  #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+  shared(r_in,num_particles,Lmatp) \
+  private(c)
+  for (c = 0; c<num_particles; c++) {
+      /*Loop over particles  */
+      int i, j;
+      double randnorm[6];
+      double diffusion[6];
+      double *r6 = r_in+c*6;
+      for (i=0;i<6;i++) {
           diffusion[i]=0.0;
           /*randnorm[i]=random_normal();*/
           randnorm[i]= generateGaussian(0.0,1.0);
       }
       
-      for (i=0;i<6;i++)
-      {
-          for (j=0;j<=i;j++)
-          {
+      for (i=0;i<6;i++) {
+          for (j=0;j<=i;j++) {
               diffusion[i]+=randnorm[j]*Lmatp[i+6*j];
           }
       }
-      if(!atIsNaN(r6[0]))
-      {
+      if (!atIsNaN(r6[0])) {
           r6[0] += diffusion[0];
           r6[1] += diffusion[1];
           r6[2] += diffusion[2];
