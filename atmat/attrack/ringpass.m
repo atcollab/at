@@ -1,4 +1,4 @@
-function [Rout, varargout] = ringpass(ring, Rin, nturns, varargin)
+function [Rout, varargout] = ringpass(ring, Rin, varargin)
 %RINGPASS tracks particles through each element of the cell array RING
 % calling the element-specific tracking function specified in the
 % RING{i}.PassMethod field.
@@ -69,14 +69,14 @@ if size(Rin,1)~=6
     error('Matrix of initial conditions, the second argument, must have 6 rows');
 end
 
-if nargin < 3
-    nturns = 1;
-end
 [keeplattice,args]=getflag(varargin, 'KeepLattice');
 [dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
 [silent,args]=getflag(args, 'silent');
+[nhist,args]=getoption(args,'nhist',1);
+[omp_num_threads,args]=getoption(args,'omp_num_threads');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
-nhist=getoption(struct(args{~funcargs}), 'nhist',1);
+nturns=getargs(args(~funcargs),1);
+[prefunc,postfunc]=getargs(args(funcargs),cell(0),cell(0));
 
 newlattice = double(~keeplattice);
 
@@ -86,11 +86,8 @@ else
     refpts=length(ring)+1;
 end
 
-[prefunc,postfunc]=parseargs({cell(0),cell(0)},...
-    args(funcargs));
-
 try
-    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,prefunc,postfunc,nhist);
+    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,prefunc,postfunc,nhist,omp_num_threads);
     
     if nargout>1
         if nargout>3, varargout{3}=lossinfo; end

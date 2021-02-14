@@ -5,6 +5,9 @@
 #include <limits.h>
 #include <math.h>
 #include <mex.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif /*_OPENMP*/
 #include "attypes.h"
 #include "elempass.h"
 
@@ -37,6 +40,13 @@ typedef double mxDouble;
 
 #define LATTICE prhs[0]
 #define INITCONDITIONS prhs[1]
+#define NEWLATTICE prhs[2]
+#define NTURNS prhs[3]
+#define REFPTS prhs[4]
+#define PREHOOK prhs[5]
+#define POSTHOOK prhs[6]
+#define LHIST prhs[7]
+#define NUMTHREADS prhs[8]
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
 									exceeds this limit it is marked as lost */
@@ -233,30 +243,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxArray *mxPassArg1[5], *mxPassArg2[2], *mxPre, *mxPost;
     mwSize outsize;
     int pass_mode;
-    
+
     mxDouble *DblPtrDataOut ,*DblPtrDataIn, *DblBuffer;
     
     struct LibraryListElement *LibraryListPtr;
-    int numel;
-    int *dummy;
-    struct elem *dummy2;
-    /* reuse set to false causes
-     * rebuilding of the persistent data structures
-     * and reloading function libraries
-     */
-    
-    /* check if in 'new' or 'reuse' mode */
-    static bool new_lattice = true;
-    bool reuse = (mxGetScalar(prhs[2]) == 0);
-    int num_turns = (int)mxGetScalar(prhs[3]);
+    int numel  = mxGetNumberOfElements(LATTICE);
+
+    int new_lattice = (mxGetScalar(NEWLATTICE) == 0) ? 0 : 1;
+    int num_turns = (int)mxGetScalar(NTURNS);
     int num_particles = mxGetN(INITCONDITIONS);
     int np6 = num_particles*6;
     int ihist, lhist;
     mxDouble *histbuf = NULL;
     struct parameters paramStruct;
-	
+
+    #ifdef _OPENMP
+    int maxthreads;
+    int omp_num_threads = (nrhs >= 9) ? (int)mxGetScalar(NUMTHREADS) : 0;
+    if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
+        int nthreads = omp_get_num_procs();
+        maxthreads = omp_get_max_threads();
+        if (omp_num_threads < nthreads) nthreads = omp_num_threads;
+        if (num_particles < nthreads) nthreads = num_particles;
+        omp_set_num_threads(nthreads);
+    }
+    #endif /*_OPENMP*/
+
     if (nlhs >= 2) {
-        lhist = (nrhs >= 8) ? (int)mxGetScalar(prhs[7]) : 1;
+        lhist = (nrhs >= 8) ? (int)mxGetScalar(LHIST) : 1;
         if (lhist < 0) {
             mexErrMsgIdAndTxt("Atpass:WrongParameter","History length must be non-negative");
         }
@@ -270,10 +284,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     mexAtExit(cleanup);
 
-    /* Pointer to Element data in MATLAB */
-    numel  = mxGetNumberOfElements(LATTICE);
-
-    if (!reuse) new_lattice=true;
     if (new_lattice) {
         mxArray **element;
         MYPASS *pass_elem;
@@ -323,7 +333,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             *element++=mxElem;
         }
         pass_mode = MAKE_LOCAL_COPY;
-        new_lattice = false;
+        new_lattice = 0;
     }
     else {
         pass_mode = USE_LOCAL_COPY;
@@ -332,8 +342,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	paramStruct.T0 = lattice_length/299792458;
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */
         int nref;
-        mxDouble *dblrefpts = mxGetDoubles(prhs[4]);
-        num_refpts = (int)mxGetNumberOfElements(prhs[4]);
+        mxDouble *dblrefpts = mxGetDoubles(REFPTS);
+        num_refpts = (int)mxGetNumberOfElements(REFPTS);
         refpts = mxCalloc(num_refpts,sizeof(int));
         for (nref=0; nref<num_refpts; nref++) refpts[nref] = ((int)dblrefpts[nref])-1;
         if (num_refpts == 0)
@@ -400,8 +410,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxPassArg1[3] = mxTurn;
     mxPassArg1[4] = mxElmn;
     mxPassArg2[1] = mxBuffer;
-    mxPre  = ((nrhs >= 6) && !mxIsEmpty(prhs[5])) ? (mxArray *) prhs[5] : NULL;
-    mxPost = ((nrhs >= 7) && !mxIsEmpty(prhs[6])) ? (mxArray *) prhs[6] : NULL;
+    mxPre  = ((nrhs >= 6) && !mxIsEmpty(PREHOOK)) ? (mxArray *) PREHOOK : NULL;
+    mxPost = ((nrhs >= 7) && !mxIsEmpty(POSTHOOK)) ? (mxArray *) POSTHOOK : NULL;
     
     /* start tracking */
     ihist = 0;
@@ -467,6 +477,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         DblPtrDataOut += np6; /*  shift the location to write to in the output array */
     }
     
+    #ifdef _OPENMP
+    if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
+        omp_set_num_threads(maxthreads);
+    }
+    #endif /*_OPENMP*/
+
+
     mxFree(refpts);
     if (lhist > 0) mxFree(histbuf);
     

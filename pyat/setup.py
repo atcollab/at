@@ -94,7 +94,8 @@ at = Extension(
     sources=[at_source],
     define_macros=macros,
     include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
-    extra_compile_args=cflags
+    extra_compile_args=cflags + openMP_cflags,
+    extra_link_args=openMP_lflags
 )
 
 diffmatrix = Extension(

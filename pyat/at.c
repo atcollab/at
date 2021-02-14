@@ -4,6 +4,9 @@
  */
 #include <stdarg.h>
 #include <Python.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif /*_OPENMP*/
 #include "attypes.h"
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -190,9 +193,9 @@ static track_function get_track_function(const char *fn_name) {
  *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts","reuse", NULL};
-    static int new_lattice = 1;
+    static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads", NULL};
     static double lattice_length = 0.0;
+    int new_lattice;
 
     PyObject *lattice;
     PyArrayObject *rin;
@@ -200,19 +203,21 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     PyObject *rout;
     double *drin, *drout;
     int num_turns;
+    npy_uint32 omp_num_threads=0;
     npy_uint32 num_particles, np6;
     npy_uint32 elem_index;
     npy_uint32 *refpts = NULL;
     npy_uint32 nextref;
     unsigned int nextrefindex;
     unsigned int num_refpts;
-    unsigned int reuse=0;
+    npy_uint32 reuse=0;
     npy_intp outdims[4];
     int turn;
+    int maxthreads;
     struct parameters param;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!I", kwlist, &PyList_Type, &lattice,
-        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!II", kwlist, &PyList_Type, &lattice,
+        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse, &omp_num_threads)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -231,6 +236,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
     drin = PyArray_DATA(rin);
+    new_lattice = (reuse == 0) ? 1 : 0;
 
     if (refs) {
         if (PyArray_TYPE(refs) != NPY_UINT32) {
@@ -251,7 +257,16 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
-    if (!reuse) new_lattice = 1;
+    #ifdef _OPENMP
+    if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
+        unsigned int nthreads = omp_get_num_procs();
+        maxthreads = omp_get_max_threads();
+        if (omp_num_threads < nthreads) nthreads = omp_num_threads;
+        if (num_particles < nthreads) nthreads = num_particles;
+        omp_set_num_threads(nthreads);
+    }
+    #endif /*_OPENMP*/
+
     if (new_lattice) {
         PyObject **element;
         track_function *integrator;
@@ -319,6 +334,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             drout += np6; /*  shift the location to write to in the output array */
         }
     }
+
+    #ifdef _OPENMP
+    if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
+        omp_set_num_threads(maxthreads);
+    }
+    #endif /*_OPENMP*/
+
     return rout;
 }
 
@@ -369,7 +391,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False)\n\n"
+    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)\n\n"
               "Track input particles rin along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
               "line:    list of elements\n"
