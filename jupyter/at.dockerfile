@@ -5,7 +5,7 @@ RUN apt-get update -q \
 	&& DEBIAN_FRONTEND=noninteractive \
 	apt install -qy --no-install-recommends \
 	git wget build-essential fonts-liberation \
-	python3-pip zip unzip \
+	libpython3-dev python3-pip zip unzip \
 	&& DEBIAN_FRONTEND=noninteractive \
 	apt install -qy \
 	--install-recommends \
@@ -34,12 +34,17 @@ RUN pip3 install jedi==0.17.2 \
 RUN pip3 install octave_kernel \
 	&& export OCTAVE_EXECUTABLE=$(which octave)
 
-ARG DOCKER_NOTEBOOK_DIR
-RUN git clone --depth 1 -b master https://github.com/atcollab/at.git /home/$USERNAME/at \
+ARG DOCKER_NOTEBOOK_DIR AT_REPO AT_BRANCH
+RUN git clone --depth 1 -b $AT_BRANCH $AT_REPO /home/$USERNAME/at \
 	&& mkdir -p $DOCKER_NOTEBOOK_DIR \
 	&& cp -r /home/$USERNAME/at/jupyter/demos $DOCKER_NOTEBOOK_DIR \
 	&& cd /home/$USERNAME/at/atoctave \
 	&& octave --eval 'bootstrap(:,true);savepath'
+
+RUN cd /home/$USERNAME/at/pyat \
+	&& pip3 install -r requirements.txt \
+	&& pip3 install matplotlib \
+	&& python3 setup.py install --user
 
 WORKDIR $DOCKER_NOTEBOOK_DIR
 EXPOSE 8888

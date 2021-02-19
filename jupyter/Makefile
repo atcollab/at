@@ -27,10 +27,12 @@ secrets/jupyterhub.crt:
 	secrets/jupyterhub.key -out secrets/jupyterhub.crt
 
 .PHONY: notebook_image
-notebook_image: octave.dockerfile
+notebook_image: at.dockerfile
 	docker build --build-arg USERNAME=$(USERNAME) \
 		--build-arg JUPYTERHUB_VERSION=$(JUPYTERHUB_VERSION) \
 		--build-arg DOCKER_NOTEBOOK_DIR=$(DOCKER_NOTEBOOK_DIR) \
+		--build-arg AT_BRANCH=$(AT_BRANCH) \
+		--build-arg AT_REPO=$(AT_REPO) \
 		-t $(DOCKER_NOTEBOOK_IMAGE) -f $^ .
 
 .PHONY: build
