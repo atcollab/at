@@ -240,7 +240,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxDouble *xnturn, *xnelem, *xcoord, *xlostcoord;
     mxArray *mxTurn, *mxElmn;
     mxDouble *xturn, *xelmn;
-    mxArray *mxPassArg1[5], *mxPassArg2[2], *mxPre, *mxPost;
+    mxArray *mxPassArg1[5], *mxPre, *mxPost;
     mwSize outsize;
     int pass_mode;
 
@@ -409,7 +409,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mxPassArg1[2] = mxBuffer;
     mxPassArg1[3] = mxTurn;
     mxPassArg1[4] = mxElmn;
-    mxPassArg2[1] = mxBuffer;
     mxPre  = ((nrhs >= 6) && !mxIsEmpty(PREHOOK)) ? (mxArray *) PREHOOK : NULL;
     mxPost = ((nrhs >= 7) && !mxIsEmpty(POSTHOOK)) ? (mxArray *) POSTHOOK : NULL;
     
