@@ -9,7 +9,7 @@ class _Dst(object):
     DPStep = 3.e-6           # Momentum step for dispersion and chromaticity
     OrbConvergence = 1.e-12  # Convergence criterion for orbit
     OrbMaxIter = 20          # Max. number of iterations for orbit
-    omp_num_threads = int(os.environ.get('ORM_NUM_THREADS',str(0)))
+    omp_num_threads = int(os.environ.get('ORM_NUM_THREADS','0'))
 
     def __setattr__(self, name, value):
         _ = getattr(self, name)     # make sure attribute exists
