@@ -23,7 +23,7 @@ function mexpassmethod(PASSMETHODS, varargin)
 % Optional flag to turn on multi-threading feature (openmp) in some of the
 % pass methods to decrease the tracking time for multi-particle
 % simulations. The if the number of particle is less than
-% OMP_PARTICLE_THRESHOLD (defined in atcommon.h) then only a single thread
+% OMP_PARTICLE_THRESHOLD (defined in attypes.h) then only a single thread
 % is used. The number of threads used can be manually set using the
 % environment variable OMP_NUM_THREADS.
 % Originally introduced by Xiabiao Huang (7/12/2010).
@@ -32,56 +32,34 @@ if isOctave
     error('mexpassmethod does not work in Octave')
 end
 
-[opt_parallel,varargs]=getflag(varargin,'-openmp');
+[openmp,varargs]=getflag(varargin,'-openmp');
 pdir=fileparts(mfilename('fullpath'));
 
 if ispc()
-    map1='';
     exportarg='';
-    ldflags={};
-    if opt_parallel
-        varargs=[varargs {'COMPFLAGS="$COMPFLAGS /openmp"'}];
-    end
+    map1='';
+elseif ismac()
+    exportarg='-Wl,-exported_symbols_list,';
+    map1='trackFunctionMAC.map';
+    map2='passFunctionMAC.map';
 else
-    % Starting from R2016b, Matlab introduced a new entry point in MEX-files
-    % The "*.mapext" files define this new entry point
-    
-    switch computer
-        case {'SOL2','SOL64'}
-            exportarg='-M ';
-            map1='mexFunctionSOL2.map';
-            default_ldflags='-G -mt';
-        case 'GLNX86'
-            exportarg='-Wl,--version-script,';
-            map1='mexFunctionGLNX86.map';
-            default_ldflags='-pthread -shared -m32 -Wl,--no-undefined';
-        case 'GLNXA64'
-            exportarg='-Wl,--version-script,';
-            map1='mexFunctionGLNX86.map';
-            default_ldflags='-pthread -shared -Wl,--no-undefined';
-        case {'MAC','MACI','MACI64'}
-            exportarg='-Wl,-exported_symbols_list,';
-            map1='trackFunctionMAC.map';
-            map2='passFunctionMAC.map';
-    end
-    
-    if opt_parallel
-        switch computer
-            case {'SOL2','SOL64'}
-                cflags='-xopenmp';
-                ldflags={'-xopenmp'};
-            case {'MAC','MACI','MACI64'}
-                cflags='-Xpreprocessor -fopenmp';
-                ldflags={};
-                varargs=[varargs,{sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),'-liomp5'}];
-            otherwise
-                cflags='-fopenmp';
-                ldflags={'-fopenmp'};
-        end
-        % Add library flags to enable openmp
-        varargs=[varargs,{sprintf('CFLAGS="$CFLAGS %s"',cflags)}];
+    exportarg='-Wl,--version-script,';
+    map1='mexFunctionGLNX86.map';
+end
+
+if openmp
+    if ispc()
+        varargs=[varargs,{'COMPFLAGS="$COMPFLAGS /openmp"'}];
+    elseif ismac()
+        varargs=[varargs,...
+            {'CFLAGS="$CFLAGS -Xpreprocessor -fopenmp"',...
+            sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),...
+            '-liomp5'}];
     else
-        ldflags={};
+        varargs=[varargs,...
+            {'CFLAGS="$CFLAGS -fopenmp"',...
+            sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),...
+            '-liomp5'}];
     end
 end
 
@@ -113,16 +91,16 @@ for i = 1:length(PASSMETHODS)
         try
             if exist('map2','var')
                 try
-                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg,ldflags), PM];
+                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg), PM];
                     disp(['mex ',strjoin(mexargs)]);
                     mex(mexargs{:});
                 catch
-                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map2,exportarg,ldflags), PM];
+                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map2,exportarg), PM];
                     disp(['mex ',strjoin(mexargs)]);
                     mex(mexargs{:});
                 end
             else
-                mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg,ldflags), PM];
+                mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg), PM];
                 disp(['mex ',strjoin(mexargs)]);
                 mex(mexargs{:});
             end
@@ -153,25 +131,22 @@ end
         fclose(fid);
     end
 
-    function ldf=generate_flags(map, exportarg, ldflags)
+    function ldf=generate_flags(map, exportarg)
         if ispc
             ldf={};
             % ldf={sprintf('LINKFLAGS="$LINKFLAGS %s"',strjoin(ldflags))};
         else
             mapfile=fullfile(pdir, map);
-            if ~exist('verLessThan') || verLessThan('matlab','7.6') %#ok<EXIST> < R2008a
-                exp=sprintf([exportarg '"%s"'], mapfile);
-                ldf={sprintf('LDFLAGS="%s"',strjoin([{default_ldflags}, ldflags, {exp}]))};
-            elseif verLessThan('matlab','8.3')                      %           < R2014a
+            if verLessThan('matlab','8.3')                          %           < R2014a
                 exp=sprintf([exportarg '"%s"'], mapfile);
                 def_ldflags=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['\s(' exportarg ')([^\s,]+)'],'');
-                ldf={sprintf('LDFLAGS="%s"',strjoin([{def_ldflags}, ldflags, {exp}]))};
+                ldf={sprintf('LDFLAGS="%s"',strjoin({def_ldflags,exp}))};
             elseif verLessThan('matlab','9.1')                      %           < R2016b
-                ldf={sprintf('LDFLAGS="$LDFLAGS %s"',strjoin(ldflags)),...
-                    sprintf('LINKEXPORT=''%s"%s"''',exportarg,mapfile)};
+                ldf={sprintf('LINKEXPORT=''%s"%s"''',exportarg,mapfile)};
             else                                                    %           >= R2016b
-                ldf={sprintf('LDFLAGS="$LDFLAGS %s"',strjoin(ldflags)),...
-                    sprintf('VERSIONMAP="%sext"',mapfile),...
+%               Starting from R2016b, Matlab introduced a new entry point in MEX-files
+%               The "*.mapext" files defines this new entry point
+                ldf={sprintf('VERSIONMAP="%sext"',mapfile),...
                     sprintf('FUNCTIONMAP="%s"',mapfile)};
             end
         end
