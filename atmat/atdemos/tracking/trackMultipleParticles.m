@@ -1,17 +1,21 @@
 function varargout=trackMultipleParticles(varargin)
 %TRACKMULTIPLEPARTICLES     Time the tracking of multiple particles
 %
-%TRACKMULTIPLEPARTICLES()   Track with default options, with and without
-%                           longitudinal motion and display the elapsed time
+%[TNORAD,TRAD]=TRACKMULTIPLEPARTICLES()
+%   Track with default options, with and without longitudinal motion
+%   and display the elapsed times.
 %
-%TRACKMULTIPLEPARTICLES(...,'nparticles',nparticles)
+%[...]=TRACKMULTIPLEPARTICLES(...,'nparticles',nparticles)
 %   Set the number of particles (default 500)
 %
-%TRACKMULTIPLEPARTICLES(...,'nturns',nturns)
+%[...]=TRACKMULTIPLEPARTICLES(...,'nturns',nturns)
 %   Set the number of turns (default 500)
+%
+%[...]=TRACKMULTIPLEPARTICLES(...,'omp_num_threads',nthreads)
+%   Set the number of threads (Default: 0 (automatic) )
 
 [nparticles,varargs]=getoption(varargin,'nparticles',500);
-[nturns,~]=getoption(varargin,'nturns',500);
+[nturns,varargs]=getoption(varargin,'nturns',500);
 % Load the hmba lattice
 
 a=load(fullfile(atroot,'../pyat/test_matlab/hmba.mat'));
@@ -28,13 +32,13 @@ dp=0.0;
 rin=[atbeam(nparticles,beamdata.beam44(1:2,1:2));zeros(4,nparticles)];
 
 % track without longitudinal motion
-tic; rout1=ringpass(mring,rin,nturns,'silent'); t1=toc;
+tic; rout1=ringpass(mring,rin,nturns,'silent',varargs{:}); t1=toc;
 fprintf('%i particles, %i turns, without longitudinal motion: %f s\n', nparticles, nturns, t1);
 
 
 % track with longitudinal motion
 
-tic; rout2=ringpass(mring2,rin,nturns,'silent'); t2=toc;
+tic; rout2=ringpass(mring2,rin,nturns,'silent',varargs{:}); t2=toc;
 fprintf('%i particles, %i turns,    with longitudinal motion: %f s\n', nparticles, nturns, t2);
 
 if nargout == 0

@@ -1,4 +1,4 @@
-function [Rout,varargout] = linepass(line,Rin,refpts,varargin)
+function [Rout,varargout] = linepass(line,Rin,varargin)
 %LINEPASS tracks particles through each element of the cell array LINE
 % calling the element-specific tracking function specified in the
 % LINE{i}.PassMethod field.
@@ -75,26 +75,21 @@ function [Rout,varargout] = linepass(line,Rin,refpts,varargin)
 if size(Rin,1)~=6
     error('Matrix of initial conditions, the second argument, must have 6 rows');
 end
-
-if (nargin < 3)
-    refpts = length(line)+1;
-elseif islogical(refpts)
-    refpts = find(refpts);
-elseif ~isnumeric(refpts)
-    refpts = length(line)+1;
-end
 [keeplattice,args]=getflag(varargin, 'KeepLattice');
 [dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
+[nhist,args]=getoption(args,'nhist',1);
+[omp_num_threads,args]=getoption(args,'omp_num_threads');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
-nhist=getoption(struct(args{~funcargs}), 'nhist',1);
+refpts=getargs(args(~funcargs),length(line)+1);
+[prefunc,postfunc]=getargs(args(funcargs),cell(0),cell(0));
 
+if islogical(refpts)
+    refpts=find(refpts);
+end
 newlattice = double(~keeplattice);
 
-[prefunc,postfunc]=parseargs({cell(0),cell(0)},...
-    args(funcargs));
-
 try
-    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,nhist);
+    [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts,prefunc,postfunc,nhist,omp_num_threads);
     
     if nargout>1
         if nargout>2, varargout{2}=lossinfo; end
@@ -107,7 +102,7 @@ try
 catch err
     if strcmp(err.identifier,'MATLAB:unassignedOutputs')
         error('Atpass:obsolete',['linepass is now expecting 2 output arguments from atpass.\n',...
-            'You may need to call "atmexall" to install the new version']);
+            'You should call "atmexall" to install the new version']);
     else
         rethrow(err)
     end

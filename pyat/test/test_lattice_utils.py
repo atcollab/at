@@ -50,11 +50,11 @@ def test_uint32_refpts_throws_ValueError_correctly(ref_in):
 
 
 @pytest.mark.parametrize('ref_in, expected', (
-    [[True], numpy.array([True, False, False, False], dtype=numpy.bool)],
-    [[], numpy.array([False, False, False, False], dtype=numpy.bool)],
-    [None, numpy.array([False, False, False, False], dtype=numpy.bool)],
-    [2, numpy.array([False, False, True, False], dtype=numpy.bool)],
-    [[1, 2], numpy.array([False, True, True, False], dtype=numpy.bool)],
+    [[True], numpy.array([True, False, False, False], dtype=bool)],
+    [[], numpy.array([False, False, False, False], dtype=bool)],
+    [None, numpy.array([False, False, False, False], dtype=bool)],
+    [2, numpy.array([False, False, True, False], dtype=bool)],
+    [[1, 2], numpy.array([False, True, True, False], dtype=bool)],
 ))
 def test_bool_refpts(ref_in, expected):
     numpy.testing.assert_equal(bool_refpts(ref_in, 3), expected)

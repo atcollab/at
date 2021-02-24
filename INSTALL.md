@@ -7,6 +7,12 @@ different research institutes.
 
 The latest release can be found [on Github](https://github.com/atcollab/at/releases).
 
+Requirements:
+-------------
+AT is compatible with:
+- **Matlab** release >= R2016b (Matlab 9.1)
+- **Octave** >= 6.0
+
 Installation process:
 ---------------------
 

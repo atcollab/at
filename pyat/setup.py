@@ -21,21 +21,31 @@ cflags = []
 
 omp = os.environ.get('OPENMP', None)
 if omp is None:
-    openMP_cflags = []
-    openMP_lflags = []
-    openMP_macros = []
+    omp_cflags = []
+    omp_lflags = []
+    omp_macros = []
 else:
+    # Get the location of an alternate OpenMP library
+    # Example: OMP_MATLAB=$MATLABROOT/sys/os/glnx64
+    omp_path = os.environ.get('OMP_MATLAB', None)
+    # Get the threshold on the number of particles
     omp_threshold = int(os.environ.get('OMP_PARTICLE_THRESHOLD', 10))
-    openMP_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
-    if sys.platform.startswith('darwin'):
-        openMP_cflags = ['-Xpreprocessor', '-fopenmp']
-        openMP_lflags = ['-lomp']
-    elif sys.platform.startswith('linux'):
-        openMP_cflags = ['-fopenmp']
-        openMP_lflags = ['-fopenmp']
-    elif sys.platform.startswith('win'):
-        openMP_cflags = ['/openmp']
-        openMP_lflags = []
+    omp_macros = [('OMP_PARTICLE_THRESHOLD', omp_threshold)]
+    if sys.platform.startswith('win'):
+        omp_cflags = ['/openmp']
+        omp_lflags = []
+    elif sys.platform.startswith('darwin'):
+        omp_cflags = ['-Xpreprocessor', '-fopenmp']
+        if omp_path is None:
+            omp_lflags = ['-lomp']
+        else:
+            omp_lflags = ['-L' + omp_path, '-Wl,-rpath,' + omp_path, '-liomp5']
+    else:
+        omp_cflags = ['-fopenmp']
+        if omp_path is None:
+            omp_lflags = ['-lgomp']
+        else:
+            omp_lflags = ['-L' + omp_path, '-Wl,-rpath,' + omp_path, '-liomp5']
 
 if not sys.platform.startswith('win32'):
     cflags += ['-Wno-unused-function']
@@ -83,18 +93,19 @@ def integrator_ext(pass_method):
         name=name,
         sources=[pass_method],
         include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
-        define_macros=macros + openMP_macros,
-        extra_compile_args=cflags + openMP_cflags,
-        extra_link_args=openMP_lflags
+        define_macros=macros + omp_macros,
+        extra_compile_args=cflags + omp_cflags,
+        extra_link_args=omp_lflags
     )
 
 
 at = Extension(
     'at.tracking.atpass',
     sources=[at_source],
-    define_macros=macros,
+    define_macros=macros + omp_macros,
     include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
-    extra_compile_args=cflags
+    extra_compile_args=cflags + omp_cflags,
+    extra_link_args=omp_lflags
 )
 
 diffmatrix = Extension(

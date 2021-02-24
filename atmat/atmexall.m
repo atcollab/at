@@ -9,7 +9,7 @@ if isOctave
   error('atmexall does not work in Octave, use atoctave/bootstrap instead')
 end
 
-[~,varargs]=getflag(varargin,'-openmp');
+[openmp,varargs]=getflag(varargin,'-openmp');
 
 atoptions={['-D',computer]};
 
@@ -17,6 +17,22 @@ if isunix && ~ismac
     LIBDL={'-ldl'};
 else
     LIBDL={};
+end
+
+if openmp
+    if ispc()
+        ompoptions={'COMPFLAGS="$COMPFLAGS /openmp"'};
+    elseif ismac()
+        ompoptions={'-I/usr/local/include','CFLAGS="$CFLAGS -Xpreprocessor -fopenmp"',...
+            sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),...
+            '-liomp5'};
+    else
+        ompoptions={'CFLAGS="$CFLAGS -fopenmp"',...
+            sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),...
+            '-liomp5'};
+    end
+else
+    ompoptions={};
 end
 
 try
@@ -38,7 +54,7 @@ alloptions=[atoptions varargs];
 
 % atpass
 cdir=fullfile(atroot,'attrack','');
-mexargs=[alloptions, {passinclude}, LIBDL, {'-outdir', cdir, fullfile(cdir,'atpass.c')}];
+mexargs=[alloptions, {passinclude}, ompoptions, LIBDL, {'-outdir', cdir, fullfile(cdir,'atpass.c')}];
 disp(['mex ',strjoin(mexargs)]);
 mex(mexargs{:});
 

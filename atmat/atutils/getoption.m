@@ -30,11 +30,13 @@ function [value,opts] = getoption(opts,key,value)
 %
 %See also GETFLAG, GETARGS, SETOPTION, INITOPTIONS
 
-if nargin < 2
-    value=atprefutil('get',opts);
+if nargin < 1
+    value=atoptions.instance();
+elseif nargin < 2
+    value=atoptions.instance().(opts);
 else
     if nargin < 3
-        value = atprefutil('get',key);
+        value=atoptions.instance().(key);
     end
     if iscell(opts)
         ok=[strcmpi(key,opts(1:end-1)) false];  % option name cannot be the last argument
