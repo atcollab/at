@@ -32,35 +32,30 @@ if isOctave
     error('mexpassmethod does not work in Octave')
 end
 
+ldflags = {};
+cflags = {};
 [openmp,varargs]=getflag(varargin,'-openmp');
 pdir=fileparts(mfilename('fullpath'));
 
-if ispc()
-    exportarg='';
-    map1='';
-elseif ismac()
-    exportarg='-Wl,-exported_symbols_list,';
-    map1='trackFunctionMAC.map';
-    map2='passFunctionMAC.map';
-else
-    exportarg='-Wl,--version-script,';
-    map1='mexFunctionGLNX86.map';
-end
-
 if openmp
     if ispc()
-        varargs=[varargs,{'COMPFLAGS="$COMPFLAGS /openmp"'}];
+        cflags = [cflags, {'/openmp'}];
     elseif ismac()
-        varargs=[varargs,...
-            {'CFLAGS="$CFLAGS -Xpreprocessor -fopenmp"',...
-            sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),...
-            '-liomp5'}];
+        cflags = [cflags, {'-Xpreprocessor', '-fopenmp'}];
+        varargs=[varargs, {sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))), '-liomp5'}];
     else
-        varargs=[varargs,...
-            {'CFLAGS="$CFLAGS -fopenmp"',...
-            sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))),...
-            '-liomp5'}];
+        cflags = [cflags, {'-fopenmp'}];
+        varargs=[varargs, {sprintf('-L"%s"',fullfile(matlabroot,'sys','os',lower(computer))), '-liomp5'}];
     end
+end
+
+if ispc()
+    map1=pc_flags(cflags, ldflags);
+elseif ismac()
+    map1=unix_flags(cflags, ldflags, '-Wl,-exported_symbols_list,', 'trackFunctionMAC.map');
+    map2=unix_flags(cflags, ldflags, '-Wl,-exported_symbols_list,', 'passFunctionMAC.map');
+else
+    map1=unix_flags(cflags, ldflags, '-Wl,--version-script,', 'mexFunctionGLNX86.map');
 end
 
 if ischar(PASSMETHODS) % one file name - convert to a cell array
@@ -91,24 +86,24 @@ for i = 1:length(PASSMETHODS)
         try
             if exist('map2','var')
                 try
-                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg), PM];
+                    mexargs=[map1, varargs, {'-outdir',pdir}, PM];
                     disp(['mex ',strjoin(mexargs)]);
                     mex(mexargs{:});
                 catch
-                    mexargs=[varargs, {'-outdir',pdir}, generate_flags(map2,exportarg), PM];
+                    mexargs=[map2, varargs, {'-outdir',pdir}, PM];
                     disp(['mex ',strjoin(mexargs)]);
                     mex(mexargs{:});
                 end
             else
-                mexargs=[varargs, {'-outdir',pdir}, generate_flags(map1,exportarg), PM];
+                mexargs=[map1, varargs, {'-outdir',pdir}, PM];
                 disp(['mex ',strjoin(mexargs)]);
                 mex(mexargs{:});
             end
         catch err
-            fprintf(2,'Could not compile %s: %s\n',PM,err.message);
+            fprintf(2, 'Could not compile %s: %s\n', PM, err.message);
         end
     else
-        fprintf(2,'%s not found, skip to next\n',PM);
+        fprintf(2,'%s not found, skip to next\n', PM);
     end
 end
 
@@ -131,24 +126,37 @@ end
         fclose(fid);
     end
 
-    function ldf=generate_flags(map, exportarg)
-        if ispc
-            ldf={};
-            % ldf={sprintf('LINKFLAGS="$LINKFLAGS %s"',strjoin(ldflags))};
-        else
-            mapfile=fullfile(pdir, map);
-            if verLessThan('matlab','8.3')                          %           < R2014a
-                exp=sprintf([exportarg '"%s"'], mapfile);
-                def_ldflags=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['\s(' exportarg ')([^\s,]+)'],'');
-                ldf={sprintf('LDFLAGS="%s"',strjoin({def_ldflags,exp}))};
-            elseif verLessThan('matlab','9.1')                      %           < R2016b
-                ldf={sprintf('LINKEXPORT=''%s"%s"''',exportarg,mapfile)};
-            else                                                    %           >= R2016b
-%               Starting from R2016b, Matlab introduced a new entry point in MEX-files
-%               The "*.mapext" files defines this new entry point
-                ldf={sprintf('VERSIONMAP="%sext"',mapfile),...
-                    sprintf('FUNCTIONMAP="%s"',mapfile)};
-            end
+	function ldf=pc_flags(cflags,ldflags)
+        ldf={};
+        if ~isempty(ldflags)
+            ldf=[{sprintf('LINKFLAGS="$LINKFLAGS %s"',strjoin(ldflags))}, ldf];
+        end
+        if ~isempty(cflags)
+            ldf=[{sprintf('COMPFLAGS="$COMPFLAGS %s"',strjoin(cflags))}, ldf];
+        end
+    end
+        
+
+    function ldf=unix_flags(cflags, ldflags, exportarg, map)
+        mapfile=fullfile(pdir, map);
+        if verLessThan('matlab','8.3')                          %  R2008a < < R2014a
+            exp=sprintf([exportarg '"%s"'], mapfile);
+            def_ldflags=regexprep(mex.getCompilerConfigurations('C').Details.LinkerFlags,['\s(' exportarg ')([^\s,]+)'],'');
+            ldf={sprintf('LDFLAGS=%s',strjoin([{def_ldflags}, ldflags, {exp}]))};
+            ldflags = {};
+        elseif verLessThan('matlab','9.1')                      %           < R2016b
+            ldf={sprintf('LINKEXPORT=%s"%s"',exportarg,mapfile)};
+        else                                                    %           >= R2016b
+%           Starting from R2016b, Matlab introduced a new entry point in MEX-files
+%           The "*.mapext" files defines this new entry point
+            ldf={sprintf('VERSIONMAP="%sext"',mapfile),...
+                sprintf('FUNCTIONMAP="%s"',mapfile)};
+        end
+        if ~isempty(ldflags)
+            ldf = [{sprintf('LDFLAGS="$LDFLAGS %s"',strjoin(ldflags))} ldf];
+        end
+        if ~isempty(cflags)
+            ldf=[{sprintf('CFLAGS="$CFLAGS %s"',strjoin(cflags))}, ldf];
         end
     end
 
