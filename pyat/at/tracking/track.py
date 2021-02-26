@@ -1,6 +1,6 @@
 import numpy
 from at.tracking import atpass, elempass
-from at.lattice import uint32_refpts
+from at.lattice import uint32_refpts, DConstant
 
 
 __all__ = ['lattice_pass', 'element_pass']
@@ -8,7 +8,8 @@ __all__ = ['lattice_pass', 'element_pass']
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
-def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
+def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
+                 omp_num_threads=None):
     """lattice_pass tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the
     lattice[i].PassMethod field.
@@ -52,16 +53,22 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False):
     nelems = len(lattice)
     if refpts is None:
         refpts = nelems
+    if omp_num_threads is None:
+        omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, nelems)
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
     # * C is the number of turns
     if r_in.flags.f_contiguous:
-        return atpass(lattice, r_in, nturns, refs, int(keep_lattice))
+        return atpass(lattice, r_in, nturns, refpts=refs,
+                      reuse=int(keep_lattice),
+                      omp_num_threads=omp_num_threads)
     else:
         r_fin = numpy.asfortranarray(r_in)
-        r_out = atpass(lattice, r_fin, nturns, refs, int(keep_lattice))
+        r_out = atpass(lattice, r_fin, nturns, refpts=refs,
+                       reuse=int(keep_lattice),
+                       omp_num_threads=omp_num_threads)
         r_in[:] = r_fin[:]
         return r_out
 
