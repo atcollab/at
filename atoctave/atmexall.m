@@ -1,15 +1,24 @@
 function atmexall(varargin)
 %ATMEXALL build all AT platform dependent mex-files from C-sources
 %
-%ATMEXALL -openmp       Build the integrators for OpenMP parallelisation
+%ATMEXALL option1 ... optionN
 %
-%ATMEXALL -only_new     Build only the outdated components
+% AT Options:
 %
-%ATMEXALL [options]     Other options are transmitted to the mex command
+%	-missing	Build only the outdated components
+%	-openmp     Build the integrators for OpenMP parallelisation
+%   -DOMP_PARTICLE_THRESHOLD=n
+%               Set the parallelisation threshold to n particles
+%               (Default 10)
 %
-% On UNIX platform, the GNU gcc compiler must be installed and
-% properly configured.
-% On Windows, Microsoft Visual C++ is required
+% Options forwarded to the mex command:
+%
+%   -v          Verbose output
+%   -g          Compile with debug options
+%   -O          Optimize the object code (Default)
+%   -n          Display the generated command without executing
+%   ...
+%
 
 pdir=fullfile(fileparts(atroot),'atintegrators');
 [openmp,varargs]=getflag(varargin,'-openmp');
