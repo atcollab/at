@@ -30,7 +30,7 @@ def worker(arg, **kwargs):
     # kwargs['rank']  # rank (id) of the node
     # kwargs['size']  # total number of nodes
     qf.K = arg[0]
-    qd.K = arg[0]
+    qd.K = arg[1]
     return at.find_m44(thering)[0]
 
 def collector(args):
@@ -39,8 +39,8 @@ def collector(args):
     This function will only be executed on node 0.
     """
     with open('output.csv', 'w') as f:
-        f.write('Kqf,Kdf')
-        [f.write(f',m{i}{j}') for i in range(0, 5) for j in range(0, 5)]
+        f.write('Kqf,Kqd')
+        [f.write(f',m{i}{j}') for i in range(0, 4) for j in range(0, 4)]
         f.write('\n')
         for case in args:
             params, output = case
