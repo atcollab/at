@@ -13,8 +13,9 @@ function atmexall(varargin)
 
 pdir=fullfile(fileparts(atroot),'atintegrators');
 [openmp,varargs]=getflag(varargin,'-openmp');
-[only_new,varargs]=getflag(varargs,'-only_new');
-force=~only_new;
+[miss_only,varargs]=getflag(varargs,'-missing');
+[debug,varargs]=getflag(varargs,'-g');
+force=~miss_only;
 
 cpt = computer('arch');
 if ispc()
@@ -27,16 +28,19 @@ else
     computer = 'UNKNOWN';
 end
 
-atoptions={['-D',computer]'-DOCTAVE', ...
+atoptions={'-DOCTAVE', ...
     '-DMATLAB_MEX_FILE', ...
-    '-Wall', ...
-    '-Wextra', ...
-    '-Wno-unused-function', ...
-    '-Wno-unused-parameter'};
+    ['-D' computer]};
+
+if debug
+    atoptions=[atoptions {'-ggdb3', '-O0'}];
+else
+    atoptions=[atoptions {'-O3'}];
+end
 
 if openmp
     if ispc()
-        ompoptions={'COMPFLAGS="$COMPFLAGS /openmp"'};
+        ompoptions={'/openmp'};
     elseif ismac()
         ompoptions={'-I/usr/local/include','-Xpreprocessor','-fopenmp','-lomp'};
     else
@@ -51,19 +55,19 @@ alloptions=[atoptions varargs];
 
 % atpass
 cdir=fullfile(atroot,'attrack','');
-compile(force, [alloptions, {passinclude}, ompoptions], fullfile(cdir,'atpass.c'));
+compile([alloptions, {passinclude}, ompoptions], fullfile(cdir,'atpass.c'));
 
 % Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');
-compile(force, [alloptions, {passinclude}], fullfile(cdir,'findmpoleraddiffmatrix.c'));
+compile([alloptions, {passinclude}], fullfile(cdir,'findmpoleraddiffmatrix.c'));
 
 % RDTs
 cdir=fullfile(atroot,'atphysics','NonLinearDynamics');
-compile(force, alloptions, fullfile(cdir,'RDTelegantAT.cpp'));
+compile(alloptions, fullfile(cdir,'RDTelegantAT.cpp'));
 
 % NAFF
 cdir=fullfile(atroot,'atphysics','nafflib');
-compile(force, alloptions, fullfile(cdir,'nafflib.c'),...
+compile(alloptions, fullfile(cdir,'nafflib.c'),...
                     fullfile(cdir,'modnaff.c'),...
                     fullfile(cdir,'complexe.c'));
 
@@ -86,7 +90,7 @@ for i = 1:length(passmethods)
     PM = fullfile(pdir,[passmethods{i}]);
     if exist(PM,'file')
         try
-            compile(force,[alloptions, ompoptions], PM);
+            compile([alloptions, ompoptions], PM);
         catch err
             fprintf(2, 'Could not compile %s: %s\n', PM, err.message);
         end
@@ -95,7 +99,7 @@ for i = 1:length(passmethods)
     end
 end
 
-    function compile(force,mexargs, varargin)
+    function compile(mexargs, varargin)
         [fpath, fname, ~] = fileparts(varargin{1});
         target = strjoin({fullfile(fpath, fname), mexext}, '.');
         if force || ~exist(target, 'file') || ...

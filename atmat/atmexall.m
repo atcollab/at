@@ -13,8 +13,8 @@ function atmexall(varargin)
 
 pdir=fullfile(fileparts(atroot),'atintegrators');
 [openmp,varargs]=getflag(varargin,'-openmp');
-[only_new,varargs]=getflag(varargs,'-only_new');
-force=~only_new;
+[miss_only,varargs]=getflag(varargs,'-missing');
+force=~miss_only;
 
 atoptions={['-D',computer]};
 
@@ -74,7 +74,7 @@ alloptions=[atoptions varargs];
 
 % atpass
 cdir=fullfile(atroot,'attrack','');
-compile(force, [alloptions, {passinclude}, LIBDL, ompoptions], fullfile(cdir,'atpass.c'));
+compile([alloptions, {passinclude}, LIBDL, ompoptions], fullfile(cdir,'atpass.c'));
 
 [warnmess,warnid]=lastwarn; %#ok<ASGLU>
 if strcmp(warnid,'MATLAB:mex:GccVersion_link')
@@ -84,15 +84,15 @@ oldwarns=warning('OFF','MATLAB:mex:GccVersion_link');
 
 % Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');
-compile(force, [alloptions, {passinclude}], fullfile(cdir,'findmpoleraddiffmatrix.c'));
+compile([alloptions, {passinclude}], fullfile(cdir,'findmpoleraddiffmatrix.c'));
 
 % RDTs
 cdir=fullfile(atroot,'atphysics','NonLinearDynamics');
-compile(force, alloptions, fullfile(cdir,'RDTelegantAT.cpp'));
+compile(alloptions, fullfile(cdir,'RDTelegantAT.cpp'));
 
 % NAFF
 cdir=fullfile(atroot,'atphysics','nafflib');
-compile(force, alloptions, fullfile(cdir,'nafflib.c'),...
+compile(alloptions, fullfile(cdir,'nafflib.c'),...
                     fullfile(cdir,'modnaff.c'),...
                     fullfile(cdir,'complexe.c'));
 
@@ -117,12 +117,12 @@ for i = 1:length(passmethods)
         try
             if exist('map2','var')
                 try
-                    compile(force, [map1, alloptions], PM);
+                    compile([map1, alloptions], PM);
                 catch
-                    compile(force, [map2, alloptions], PM);
+                    compile([map2, alloptions], PM);
                 end
             else
-                compile(force, [map1, alloptions], PM);
+                compile([map1, alloptions], PM);
             end
         catch err
             fprintf(2, 'Could not compile %s: %s\n', PM, err.message);
@@ -188,7 +188,7 @@ warning(oldwarns.state,oldwarns.identifier);
         end
     end
 
-    function compile(force, mexargs, varargin)
+    function compile(mexargs, varargin)
         [fpath, fname, ~] = fileparts(varargin{1});
         target = strjoin({fullfile(fpath, fname), mexext}, '.');
         if force || ~exist(target, 'file') || ...
