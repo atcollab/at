@@ -201,9 +201,15 @@ warning(oldwarns.state,oldwarns.identifier);
         [fpath, fname, ~] = fileparts(varargin{1});
         target = strjoin({fullfile(fpath, fname), mexext}, '.');
         if force || ~exist(target, 'file') || ...
-                any(cellfun(@(f) dir(f).datenum >  dir(target).datenum, varargin))
+                any(cellfun(@(f) getdate(f) >  getdate(target), varargin))
+%               any(cellfun(@(f) dir(f).datenum >  dir(target).datenum, varargin))  % Not accepted in R2016b
             disp(['mex ',strjoin([mexargs, {'-outdir', fpath}, varargin])]);
             mex(mexargs{:},'-outdir', fpath, varargin{:});
+        end
+        
+        function d=getdate(f)
+            dt=dir(f);
+            d=dt.datenum;
         end
     end
 end
