@@ -49,11 +49,11 @@ end
 
 if openmp
     if ispc()
-        ompoptions={'/openmp'};
+        ompoptions={'-fopenmp'};
     elseif ismac()
         ompoptions={'-I/usr/local/include','-Xpreprocessor','-fopenmp','-lomp'};
     else
-        ompoptions={'-fopenmp','-lgomp'};
+        ompoptions={'-fopenmp'};
     end
 else
     ompoptions={};
@@ -112,7 +112,7 @@ end
         [fpath, fname, ~] = fileparts(varargin{1});
         target = strjoin({fullfile(fpath, fname), mexext}, '.');
         if force || ~exist(target, 'file') || ...
-                any(cellfun(@(f) stat(f).mtime > stat(target).mtime, varargin));
+                any(cellfun(@(f) stat(f).mtime > stat(target).mtime, varargin))
             disp(['mex ',strjoin([mexargs, {'-o', target}, varargin])]);
             mex(mexargs{:},'-o', target, varargin{:});
         end
