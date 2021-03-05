@@ -4,9 +4,9 @@ Coupled or non-coupled 4x4 linear motion
 import numpy
 from math import sqrt, atan2, pi
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
-    bool_refpts
+    bool_refpts, DConstant
 from at.tracking import lattice_pass
-from at.physics import find_orbit4, find_m44, jmat, DConstant
+from at.physics import find_orbit4, find_m44, jmat
 from .harmonic_analysis import get_tunes_harmonic
 
 __all__ = ['linopt', 'avlinopt', 'get_mcf', 'get_tune',

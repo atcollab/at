@@ -1,4 +1,4 @@
-"""Global set of constants for numerical differentiation"""
+"""Global set of constants"""
 import os
 
 class _Dst(object):
