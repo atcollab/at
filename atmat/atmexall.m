@@ -5,7 +5,7 @@ function atmexall(varargin)
 %
 % AT Options:
 %
-%	-missing	Build only the outdated components
+%	-missing    Build only the outdated components
 %	-openmp     Build the integrators for OpenMP parallelisation
 %   -DOMP_PARTICLE_THRESHOLD=n
 %               Set the parallelisation threshold to n particles
