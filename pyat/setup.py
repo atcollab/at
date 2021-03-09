@@ -12,6 +12,8 @@ except ImportError:
           'Please install numpy: "pip install numpy"\n')
     sys.exit()
 
+if sys.version_info[0] < 3:
+    FileNotFoundError = IOError
 
 def select_omp():
     if exists('/usr/local/include/omp.h'):
