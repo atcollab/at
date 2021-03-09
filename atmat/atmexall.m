@@ -41,8 +41,9 @@ if openmp
         cflags={'/openmp'};
         ompflags={};
     elseif ismac()
+        ompinc = select_omp();
         cflags={'-Xpreprocessor', '-fopenmp'};
-        ompflags={'-I/usr/local/include',...
+        ompflags={ompinc,...
             sprintf('-L"%s"',fullfile(matlabroot,'sys','os',computer('arch'))),...
             '-liomp5'};
     else
@@ -210,6 +211,20 @@ warning(oldwarns.state,oldwarns.identifier);
         function d=getdate(f)
             dt=dir(f);
             d=dt.datenum;
+        end
+    end
+
+    function include=select_omp()
+        if exist('/usr/local/include/omp.h', 'file')
+            include='-I/usr/local/include';
+        elseif exist('/opt/local/include/omp.h', 'file')
+            include='-I/opt/local/include';
+        else
+            error('AT:MissingLibrary', strjoin({'', ...
+                'libomp.dylib must be installed with your favourite package manager:', '', ...
+                'Use "$ brew install libomp"', ...
+                'Or  "$ sudo port install libomp"'...
+                }, '\n'));
         end
     end
 end
