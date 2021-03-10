@@ -16,9 +16,9 @@ if sys.version_info[0] < 3:
     FileNotFoundError = IOError
 
 def select_omp():
-    if exists('/usr/local/include/omp.h'):
+    if exists('/usr/local/include/omp.h'):              # Homebrew
         return '-I/usr/local/include', '/usr/local/lib'
-    elif exists('/opt/local/include/libomp/omp.h'):
+    elif exists('/opt/local/include/libomp/omp.h'):     # MacPorts
         return '-I/opt/local/include/libomp', '/opt/local/lib/libomp'
     else:
         raise FileNotFoundError('\n'.join(('',
