@@ -12,12 +12,14 @@ except ImportError:
           'Please install numpy: "pip install numpy"\n')
     sys.exit()
 
+if sys.version_info[0] < 3:
+    FileNotFoundError = IOError
 
 def select_omp():
-    if exists('/usr/local/include/omp.h'):      # Homebrew
+    if exists('/usr/local/include/omp.h'):
         return '-I/usr/local/include', '/usr/local/lib'
-    elif exists('/opt/local/include/omp.h'):    # MacPorts
-        return '-I/opt/local/include', '/opt/local/lib'
+    elif exists('/opt/local/include/libomp/omp.h'):
+        return '-I/opt/local/include/libomp', '/opt/local/lib/libomp'
     else:
         raise FileNotFoundError('\n'.join(('',
           'libomp.dylib must be installed with your favourite package manager:',
@@ -53,7 +55,7 @@ else:
         omp_inc, omp_lib = select_omp()
         omp_cflags = ['-Xpreprocessor', '-fopenmp', omp_inc]
         if omp_path is None:
-            omp_lflags = ['-L' + omp_lib, '-Wl,-rpath,' + omp_lib, '-lomp']
+            omp_lflags = ['-L' + omp_lib, '-lomp']
         else:
             omp_lflags = ['-L' + omp_path, '-Wl,-rpath,' + omp_path, '-liomp5']
     else:
