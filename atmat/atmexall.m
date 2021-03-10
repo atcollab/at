@@ -215,9 +215,9 @@ warning(oldwarns.state,oldwarns.identifier);
     end
 
     function include=select_omp()
-        if exist('/usr/local/include/omp.h', 'file')
+        if exist('/usr/local/include/omp.h', 'file')        % Homebrew
             include='-I/usr/local/include';
-        elseif exist('/opt/local/include/omp.h', 'file')
+        elseif exist('/opt/local/include/omp.h', 'file')    % MacPorts
             include='-I/opt/local/include';
         else
             error('AT:MissingLibrary', strjoin({'', ...

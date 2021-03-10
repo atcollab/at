@@ -14,9 +14,9 @@ except ImportError:
 
 
 def select_omp():
-    if exists('/usr/local/include/omp.h'):
+    if exists('/usr/local/include/omp.h'):      # Homebrew
         return '-I/usr/local/include', '/usr/local/lib'
-    elif exists('/opt/local/include/omp.h'):
+    elif exists('/opt/local/include/omp.h'):    # MacPorts
         return '-I/opt/local/include', '/opt/local/lib'
     else:
         raise FileNotFoundError('\n'.join(('',
