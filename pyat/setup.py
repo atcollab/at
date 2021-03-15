@@ -147,12 +147,10 @@ setup(
     packages=find_packages(),
     ext_modules=[at, diffmatrix] + [integrator_ext(pm) for pm in pass_methods],
     zip_safe=False,
-    python_requires='>=2.7.4',
+    python_requires='>=3.5.0',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
