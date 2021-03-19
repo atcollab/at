@@ -61,16 +61,32 @@ def _closure(m22):
     return alpha, beta, tune
 
 
-def _chromfunc(ddp, *param_up_down):
+def _chromfunc(ddp, *param_up_down):    
     l0_up, tune_up, _, l_up, l0_down, tune_down, _, l_down = param_up_down
+    ddp_ring = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, 4]
+    dorb = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4]
     db0 = (l0_up['beta'] - l0_down['beta']) / ddp
-    db = (l_up['beta'] - l_down['beta']) / ddp
-    da0 = (l0_up['alpha'] - l0_down['alpha']) / ddp
-    da = (l_up['alpha'] - l_down['alpha']) / ddp
+    db = ((l_up['beta'] - l_down['beta']).T / ddp_ring).T
+    da0 = (l0_up['alpha'] - l0_down['alpha'])/ ddp
+    da = ((l_up['alpha'] - l_down['alpha']).T / ddp_ring).T
     chrom = (tune_up - tune_down) / ddp
-    dispersion = (l_up['closed_orbit'] -
-                  l_down['closed_orbit'])[:, :4] / ddp
+    dispersion = (dorb.T / ddp_ring).T
     return chrom, dispersion, db0, da0, db, da
+
+
+# noinspection PyShadowingNames
+def _analyze(r44):
+    t44 = r44.reshape((4, 4))
+    mm = t44[:2, :2]
+    nn = t44[2:, 2:]
+    m = t44[:2, 2:]
+    n = t44[2:, :2]
+    gamma = sqrt(numpy.linalg.det(numpy.dot(n, C) + numpy.dot(G, nn)))
+    msa = (G.dot(mm) - m.dot(_jmt.dot(C.T.dot(_jmt.T)))) / gamma
+    msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
+    cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(
+        _jmt.dot(msb.T.dot(_jmt.T)))
+    return msa, msb, gamma, cc
 
 
 # noinspection PyPep8Naming
@@ -144,22 +160,9 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             vol.2 (1999)
     """
 
-    # noinspection PyShadowingNames
-    def analyze(r44):
-        t44 = r44.reshape((4, 4))
-        mm = t44[:2, :2]
-        nn = t44[2:, 2:]
-        m = t44[:2, 2:]
-        n = t44[2:, :2]
-        gamma = sqrt(numpy.linalg.det(numpy.dot(n, C) + numpy.dot(G, nn)))
-        msa = (G.dot(mm) - m.dot(_jmt.dot(C.T.dot(_jmt.T)))) / gamma
-        msb = (numpy.dot(n, C) + numpy.dot(G, nn)) / gamma
-        cc = (numpy.dot(mm, C) + numpy.dot(G, m)).dot(
-            _jmt.dot(msb.T.dot(_jmt.T)))
-        return msa, msb, gamma, cc
-
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
+    get_w = kwargs.pop('get_w', False)
     uintrefs = uint32_refpts([] if refpts is None else refpts, len(ring))
 
     # Get initial orbit
@@ -169,7 +172,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                                    XYStep=xy_step)
             keep_lattice = True
         disp0 = numpy.NaN
-        if get_chrom:
+        if get_chrom or get_w:
             orbit_up, _ = find_orbit4(ring, dp + 0.5*dp_step, XYStep=xy_step,
                                       keep_lattice=keep_lattice)
             orbit_down, _ = find_orbit4(ring, dp - 0.5*dp_step, XYStep=xy_step,
@@ -179,7 +182,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         if orbit is None:
             orbit = numpy.zeros((6,))
         disp0 = numpy.NaN
-        if get_chrom:
+        if get_chrom or get_w:
             try:
                 disp0 = twiss_in['dispersion']
             except KeyError:
@@ -245,7 +248,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             print('Mu not found in twiss_in, setting to zero')
             tune = numpy.zeros((2,))
 
-    if get_chrom:
+    if get_w:
         # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
         # noinspection PyUnboundLocalVariable
@@ -258,6 +261,21 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                             XYStep=xy_step, **kwdown)
         param_up_down = param_up+param_down
         chrom, dispersion, _, _, _, _ = _chromfunc(dp_step, *param_up_down)
+    elif get_chrom:
+        # noinspection PyUnboundLocalVariable
+        kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
+        # noinspection PyUnboundLocalVariable
+        kwdown = dict(orbit=orbit_down, twiss_in=twiss_in)
+        _,tune_up,_,_ = linopt(ring, dp=dp + 0.5*dp_step,coupled=coupled,
+                               keep_lattice=True, XYStep=xy_step, DPStep=dp_step, **kwup)
+        orb_up = numpy.squeeze(lattice_pass(ring, kwup['orbit'].copy(order='K'), 
+                               refpts=uintrefs, keep_lattice=True), axis=(1, 3)).T
+        _,tune_down,_,_ = linopt(ring, dp - 0.5*dp_step, coupled=coupled,
+                                 keep_lattice=True, XYStep=xy_step, DPStep=dp_step, **kwdown)
+        orb_down = numpy.squeeze(lattice_pass(ring, kwdown['orbit'].copy(order='K'), 
+                               refpts=uintrefs, keep_lattice=True), axis=(1, 3)).T
+        chrom = (tune_up-tune_down)/dp_step
+        dispersion = (orb_up - orb_down)[:,:4] / dp_step
     else:
         chrom = numpy.array([numpy.NaN, numpy.NaN])
         dispersion = numpy.NaN
