@@ -30,7 +30,9 @@ TWISS_DTYPE = [('idx', numpy.uint32),
 LINDATA_DTYPE = TWISS_DTYPE + [('A', numpy.float64, (2, 2)),
                                ('B', numpy.float64, (2, 2)),
                                ('C', numpy.float64, (2, 2)),
-                               ('gamma', numpy.float64)]
+                               ('gamma', numpy.float64),
+                               ('dbeta', numpy.float64, (2,)),
+                               ('dalpha', numpy.float64, (2,))]
 
 
 def _twiss22(ms, alpha0, beta0):
@@ -260,7 +262,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                             keep_lattice=True, coupled=coupled,
                             XYStep=xy_step, **kwdown)
         param_up_down = param_up+param_down
-        chrom, dispersion, _, _, _, _ = _chromfunc(dp_step, *param_up_down)
+        chrom, dispersion, dbeta0, dalpha0, dbeta, dalpha = \
+                           _chromfunc(dp_step, *param_up_down)
     elif get_chrom:
         # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
@@ -276,15 +279,23 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                                refpts=uintrefs, keep_lattice=True), axis=(1, 3)).T
         chrom = (tune_up-tune_down)/dp_step
         dispersion = (orb_up - orb_down)[:,:4] / dp_step
+        dbeta0 = numpy.NaN
+        dalpha0 = numpy.NaN
+        dbeta = numpy.array([numpy.NaN, numpy.NaN])
+        dalpha = numpy.array([numpy.NaN, numpy.NaN])
     else:
         chrom = numpy.array([numpy.NaN, numpy.NaN])
         dispersion = numpy.NaN
+        dbeta0 = numpy.NaN
+        dalpha0 = numpy.NaN
+        dbeta = numpy.array([numpy.NaN, numpy.NaN])
+        dalpha = numpy.array([numpy.NaN, numpy.NaN])
 
     lindata0 = numpy.rec.fromarrays(
         (len(ring), get_s_pos(ring, len(ring))[0], orbit, disp0,
          numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]),
-         2.0 * pi * tune, m44, A, B, C, g),
-        dtype=LINDATA_DTYPE)
+         2.0 * pi * tune, m44, A, B, C, g, dbeta0, dalpha0),
+         dtype=LINDATA_DTYPE)
 
     # Propagate to reference points
     lindata = numpy.rec.array(numpy.zeros(nrefs, dtype=LINDATA_DTYPE))
@@ -327,6 +338,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         lindata['B'] = BL
         lindata['C'] = CL
         lindata['gamma'] = gamma
+        lindata['dbeta'] = dbeta
+        lindata['dalpha'] = dalpha
 
     return lindata0, tune, chrom, lindata
 
