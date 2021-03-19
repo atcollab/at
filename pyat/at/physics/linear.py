@@ -63,13 +63,13 @@ def _closure(m22):
     return alpha, beta, tune
 
 
-def _chromfunc(ddp, *param_up_down):    
+def _chromfunc(ddp, *param_up_down):
     l0_up, tune_up, _, l_up, l0_down, tune_down, _, l_down = param_up_down
     ddp_ring = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, 4]
     dorb = (l_up['closed_orbit'] - l_down['closed_orbit'])[:, :4]
     db0 = (l0_up['beta'] - l0_down['beta']) / ddp
     db = ((l_up['beta'] - l_down['beta']).T / ddp_ring).T
-    da0 = (l0_up['alpha'] - l0_down['alpha'])/ ddp
+    da0 = (l0_up['alpha'] - l0_down['alpha']) / ddp
     da = ((l_up['alpha'] - l_down['alpha']).T / ddp_ring).T
     chrom = (tune_up - tune_down) / ddp
     dispersion = (dorb.T / ddp_ring).T
@@ -113,8 +113,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute dispersion and chromaticities. Needs computing
-                        the optics at 2 different momentum deviations around
-                        the central one.
+                        the tune and orbit at 2 different momentum deviations
+                        around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         XYStep=1.0e-8   transverse step for numerical computation
@@ -126,6 +126,9 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         type lindata, the initial orbit in twiss_in is ignored,
                         only the beta and alpha are required other quatities
                         set to 0 if absent
+        get_w=False     compute the w functions, need to compute the optics at
+                        2 different momentum deviations around the central one.
+
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
         tune            [tune_A, tune_B], linear tunes for the two normal modes
@@ -263,22 +266,27 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                             XYStep=xy_step, **kwdown)
         param_up_down = param_up+param_down
         chrom, dispersion, dbeta0, dalpha0, dbeta, dalpha = \
-                           _chromfunc(dp_step, *param_up_down)
+            _chromfunc(dp_step, *param_up_down)
     elif get_chrom:
         # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
         # noinspection PyUnboundLocalVariable
         kwdown = dict(orbit=orbit_down, twiss_in=twiss_in)
-        _,tune_up,_,_ = linopt(ring, dp=dp + 0.5*dp_step,coupled=coupled,
-                               keep_lattice=True, XYStep=xy_step, DPStep=dp_step, **kwup)
-        orb_up = numpy.squeeze(lattice_pass(ring, kwup['orbit'].copy(order='K'), 
-                               refpts=uintrefs, keep_lattice=True), axis=(1, 3)).T
-        _,tune_down,_,_ = linopt(ring, dp - 0.5*dp_step, coupled=coupled,
-                                 keep_lattice=True, XYStep=xy_step, DPStep=dp_step, **kwdown)
-        orb_down = numpy.squeeze(lattice_pass(ring, kwdown['orbit'].copy(order='K'), 
-                               refpts=uintrefs, keep_lattice=True), axis=(1, 3)).T
+        _, tune_up, _, _ = linopt(ring, dp=dp + 0.5*dp_step, coupled=coupled,
+                                  keep_lattice=True, XYStep=xy_step,
+                                  DPStep=dp_step, **kwup)
+        orb_up = numpy.squeeze(lattice_pass(ring,
+                               kwup['orbit'].copy(order='K'), refpts=uintrefs,
+                               keep_lattice=True), axis=(1, 3)).T
+        _, tune_down, _, _ = linopt(ring, dp - 0.5*dp_step, coupled=coupled,
+                                    keep_lattice=True, XYStep=xy_step,
+                                    DPStep=dp_step, **kwdown)
+        orb_down = numpy.squeeze(lattice_pass(ring,
+                                 kwdown['orbit'].copy(order='K'),
+                                 refpts=uintrefs, keep_lattice=True),
+                                 axis=(1, 3)).T
         chrom = (tune_up-tune_down)/dp_step
-        dispersion = (orb_up - orb_down)[:,:4] / dp_step
+        dispersion = (orb_up - orb_down)[:, :4] / dp_step
         dbeta0 = numpy.NaN
         dalpha0 = numpy.NaN
         dbeta = numpy.array([numpy.NaN, numpy.NaN])
@@ -295,7 +303,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         (len(ring), get_s_pos(ring, len(ring))[0], orbit, disp0,
          numpy.array([a0_a, a0_b]), numpy.array([b0_a, b0_b]),
          2.0 * pi * tune, m44, A, B, C, g, dbeta0, dalpha0),
-         dtype=LINDATA_DTYPE)
+        dtype=LINDATA_DTYPE)
 
     # Propagate to reference points
     lindata = numpy.rec.array(numpy.zeros(nrefs, dtype=LINDATA_DTYPE))
