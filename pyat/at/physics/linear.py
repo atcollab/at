@@ -76,8 +76,7 @@ def _chromfunc(ddp, *param_up_down):
     return chrom, dispersion, db0, da0, db, da
 
 
-# noinspection PyShadowingNames
-def _analyze(r44):
+def _analyze(r44, C, G):
     t44 = r44.reshape((4, 4))
     mm = t44[:2, :2]
     nn = t44[2:, 2:]
@@ -309,7 +308,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
     lindata = numpy.rec.array(numpy.zeros(nrefs, dtype=LINDATA_DTYPE))
     if nrefs > 0:
         if coupled:
-            MSA, MSB, gamma, CL = zip(*[analyze(ms44) for ms44 in mstack])
+            MSA, MSB, gamma, CL = zip(*[_analyze(ms44, C, G)
+                                        for ms44 in mstack])
             msa = numpy.stack(MSA, axis=0)
             msb = numpy.stack(MSB, axis=0)
             AL = [ms.dot(A.dot(_jmt.dot(ms.T.dot(_jmt.T))))
