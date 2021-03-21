@@ -352,19 +352,19 @@ def get_u0(ring, **kwargs):
 
     PARAMETERS
         ring            lattice description
-    
+
     KEYWORDS
     quadrupole_pass=auto        PassMethod set on quadrupoles
     wiggler_pass=auto           PassMethod set on wigglers
     sextupole_pass=None         PassMethod set on sextupoles
     octupole_pass=None          PassMethod set on octupoles
     """
-    quadrupole_pass = kwargs.pop('quadrupole_pass','auto')
-    wiggler_pass = kwargs.pop('wiggler_pass','auto')
-    sextupole_pass = kwargs.pop('sextupole_pass','None')
-    octupole_pass = kwargs.pop('octupole_pass','None')
+    quadrupole_pass = kwargs.pop('quadrupole_pass', 'auto')
+    wiggler_pass = kwargs.pop('wiggler_pass', 'auto')
+    sextupole_pass = kwargs.pop('sextupole_pass', 'None')
+    octupole_pass = kwargs.pop('octupole_pass', 'None')
     o0 = numpy.zeros(6)
-    ringtmp = ring.radiation_on(cavity_pass='IdentityPass', 
+    ringtmp = ring.radiation_on(cavity_pass='IdentityPass',
                                 quadrupole_pass='auto',
                                 wiggler_pass='auto',
                                 sextupole_pass=None,
