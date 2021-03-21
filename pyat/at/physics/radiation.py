@@ -344,16 +344,24 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     return tuple(integrals)
 
 
-def get_u0(ring):
+def get_u0(ring, **kwargs):
     """
     Computes the energy loss per turn using find_orbit6
 
     PARAMETERS
         ring            lattice description
+    
+    KEYWORDS
+    quadrupole_pass=auto        PassMethod set on quadrupoles
+    wiggler_pass=auto           PassMethod set on wigglers
     """
+    quadrupole_pass = kwargs.pop('quadrupole_pass','auto')
+    wiggler_pass = kwargs.pop('wiggler_pass','auto')
     o0 = numpy.zeros(6)
-    ringtmp = ring.radiation_on(cavity_pass='IdentityPass',
-                                quadrupole_pass='auto', copy=True)
+    ringtmp = ring.radiation_on(cavity_pass='IdentityPass', 
+                                quadrupole_pass='auto',
+                                wiggler_pass='auto',
+                                copy=True)
     o6 = numpy.squeeze(lattice_pass(ringtmp, o0, refpts=len(ringtmp)))
     return -o6[4]*ring.energy
 
