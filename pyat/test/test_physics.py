@@ -60,7 +60,8 @@ def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_lattice):
 
 
 def test_orbit_maxiter_warnings(hmba_lattice):
-    hmba_lattice_rad = hmba_lattice.radiation_on(copy=True)
+    hmba_lattice_rad = hmba_lattice.radiation_on(copy=True,
+                                                 quadrupole_pass=None)
     with pytest.warns(AtWarning):
         physics.find_orbit4(hmba_lattice, max_iterations=1)
     with pytest.warns(AtWarning):
@@ -82,7 +83,8 @@ def test_find_m44_returns_same_answer_as_matlab(dba_lattice, refpts):
 
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
 def test_find_m66(hmba_lattice, refpts):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
+    hmba_lattice = hmba_lattice.radiation_on(copy=True,
+                                             quadrupole_pass=None)
     m66, mstack = physics.find_m66(hmba_lattice, refpts=refpts)
     assert_close(m66, M66_MATLAB, rtol=0, atol=1e-8)
     stack_size = 0 if refpts is None else len(refpts)
@@ -119,7 +121,8 @@ def test_find_sync_orbit_finds_zeros(dba_lattice):
 
 
 def test_find_orbit6(hmba_lattice):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
+    hmba_lattice = hmba_lattice.radiation_on(copy=True,
+                                             quadrupole_pass=None)
     refpts = numpy.ones(len(hmba_lattice), dtype=bool)
     orbit6, all_points = physics.find_orbit6(hmba_lattice, refpts)
     assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-12)
@@ -286,7 +289,8 @@ def test_quantdiff(hmba_lattice):
 
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
 def test_ohmi_envelope(hmba_lattice, refpts):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
+    hmba_lattice = hmba_lattice.radiation_on(copy=True,
+                                             quadrupole_pass=None)
     emit0, beamdata, emit = hmba_lattice.ohmi_envelope(refpts)
     obs = emit[-1]
     assert_close(beamdata['tunes'], [3.81563019e-01, 8.54376397e-01, 1.09060761e-04], rtol=2e-6)
