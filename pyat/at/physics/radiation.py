@@ -6,7 +6,8 @@ import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, elements
+from at.lattice import Element, elements, RFCavity
+from at.lattice import get_refpts, get_value_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
@@ -430,6 +431,27 @@ def gen_quantdiff_elem(ring, orbit=None):
     return diff_elem
 
 
+@check_radiation(True)
+def set_cavity_phase(ring):
+    """
+    Adjusts the cavities phases based on frequency, RF voltage
+    and energy loss per turn. Will not work in the presence of
+    cavity with different frequencies. Modifies ring
+    set_cavity_phase(ring)
+
+    PARAMETERS
+        ring            lattice description
+    """
+    cavs = get_refpts(ring, RFCavity)
+    rfv = get_value_refpts(ring, cavs, 'Voltage')
+    freq = get_value_refpts(ring, cavs, 'Frequency')
+    u0 = get_u0(ring)
+    timelag = clight/(2 * pi * freq) * \
+        numpy.arcsin(u0/numpy.sum(rfv))
+    set_value_refpts(ring, cavs, 'TimeLag', timelag)
+
+
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
 Lattice.energy_loss = property(get_energy_loss)
+Lattice.set_cavity_phase = set_cavity_phase
