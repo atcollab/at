@@ -39,7 +39,8 @@ else
         value=atoptions.instance().(key);
     end
     if iscell(opts)
-        ok=[strcmpi(key,opts(1:end-1)) false];  % option name cannot be the last argument
+        ok=[cellfun(@(v) (ischar(v) || isstring(v)) && strcmpi(v, key), ...
+            opts(1:end-1)) false];  % option name cannot be the last argument
         if any(ok)
             okval=circshift(ok,[0,1]);
             value=opts{find(okval,1,'last')};
