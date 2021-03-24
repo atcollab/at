@@ -5,7 +5,7 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 
 import numpy
-from at.lattice import Lattice, uint32_refpts, get_refpts, DConstant
+from at.lattice import Lattice, uint32_refpts, get_cells, get_refpts, DConstant
 from at.lattice.elements import Bend, M66
 from at.tracking import lattice_pass, element_pass
 from at.physics import find_orbit4, find_orbit6, jmat, symplectify
@@ -137,11 +137,19 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
 
     See also find_m44, find_orbit6
     """
+    def iscavity(elem):
+        return elem.PassMethod.endswith('CavityPass')
+
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     if orbit is None:
-        orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice,
-                               XYStep=xy_step, DPStep=dp_step)
+        cavities = get_cells(ring, iscavity)
+        if numpy.any(cavities):
+            orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice,
+                                   XYStep=xy_step, DPStep=dp_step)
+        else:
+            orbit, _ = find_orbit4(ring, 0.0, keep_lattice=keep_lattice,
+                                   XYStep=xy_step)
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas
