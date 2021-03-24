@@ -1,4 +1,4 @@
-function [flag,opts] = getflag(opts,optname)
+function [flag,opts] = getflag(opts,key)
 %GETFLAG Check the presence of a flag in an argument list
 %
 %OPTION=GETFLAG(ARGS,OPTNAME)
@@ -21,8 +21,7 @@ function [flag,opts] = getflag(opts,optname)
 %
 %Dee also GETOPTION, GETARGS
 
-ok=strcmpi(optname,opts);
-flag=any(ok);
+ok = cellfun(@(v) (ischar(v) || isstring(v)) && strcmpi(v, key),opts);
+flag = any(ok);
 opts=opts(~ok);
 end
-
