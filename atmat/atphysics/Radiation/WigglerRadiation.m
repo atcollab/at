@@ -19,7 +19,8 @@ nstep=60;
 e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
 cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
 
-iswiggler=@(elem) strcmp(elem.Class,'Wiggler') && ~strcmp(elem.PassMethod,'DriftPass');
+iswiggler=@(elem) isfield(elem,'Class') && strcmp(elem.Class,'Wiggler') ...
+              && ~strcmp(elem.PassMethod,'DriftPass');
 wigglers=cellfun(iswiggler, ring);
 if any(wigglers)
     energy=unique(atgetfieldvalues(ring(wigglers),'Energy'));
