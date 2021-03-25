@@ -7,6 +7,7 @@ from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.lattice import Element, elements
+from at.lattice import get_refpts, get_value_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
@@ -281,18 +282,18 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
           otherwise
         """
 
-        def b_on_axis(wig, s):
+        def b_on_axis(wiggler, s):
             """On-axis wiggler field"""
 
             def harm(coef, h, phi):
                 return -Bmax * coef * numpy.cos(h*kws + phi)
 
-            kw = 2 * pi / wig.Lw
-            Bmax = wig.Bmax
+            kw = 2 * pi / wiggler.Lw
+            Bmax = wiggler.Bmax
             kws = kw * s
             zz = [numpy.zeros(kws.shape)]
-            vh = zz + [harm(pb[1], pb[4], pb[5]) for pb in wig.By.T]
-            vv = zz + [-harm(pb[1], pb[4], pb[5]) for pb in wig.Bx.T]
+            vh = zz + [harm(pb[1], pb[4], pb[5]) for pb in wiggler.By.T]
+            vv = zz + [-harm(pb[1], pb[4], pb[5]) for pb in wiggler.Bx.T]
             bys = numpy.sum(numpy.stack(vh), axis=0)
             bxs = numpy.sum(numpy.stack(vv), axis=0)
             return bxs, bys
@@ -350,15 +351,15 @@ def get_energy_loss(ring):
     Losses = Cgamma / 2pi * EGeV^4 * i2
     """
 
-    def wiggler_i2(el):
-        rhoinv = el.Bmax / Brho
-        coefh = el.By[1, :]
-        coefv = el.Bx[1, :]
-        return el.Length * (numpy.sum(coefh * coefh) + numpy.sum(
+    def wiggler_i2(wiggler):
+        rhoinv = wiggler.Bmax / Brho
+        coefh = wiggler.By[1, :]
+        coefv = wiggler.Bx[1, :]
+        return wiggler.Length * (numpy.sum(coefh * coefh) + numpy.sum(
             coefv*coefv)) * rhoinv ** 2 / 2
 
-    def dipole_i2(el):
-        return el.BendingAngle ** 2 / el.Length
+    def dipole_i2(dipole):
+        return dipole.BendingAngle ** 2 / dipole.Length
 
     Brho = sqrt(ring.energy**2 - e_mass**2) / clight
     i2 = 0.0
@@ -400,6 +401,25 @@ def gen_quantdiff_elem(ring, orbit=None):
                         Lmatp=lmat,
                         PassMethod='QuantDiffPass')
     return diff_elem
+
+
+@check_radiation(True)
+def set_cavity_phase(ring):
+    """
+    Adjusts the cavities phases based on frequency, RF voltage
+    and energy loss per turn. Will not work in the presence of
+    cavity with different frequencies. Modifies ring
+    set_cavity_phase(ring)
+
+    PARAMETERS
+        ring            lattice description
+    """
+    cavs = get_refpts(ring, elements.RFCavity)
+    rfv = get_value_refpts(ring, cavs, 'Voltage')
+    freq = get_value_refpts(ring, cavs, 'Frequency')
+    u0 = ring.energy_loss
+    timelag = clight / (2*pi*freq) * numpy.arcsin(u0/numpy.sum(rfv))
+    set_value_refpts(ring, cavs, 'TimeLag', timelag)
 
 
 Lattice.ohmi_envelope = ohmi_envelope
