@@ -403,7 +403,6 @@ def gen_quantdiff_elem(ring, orbit=None):
     return diff_elem
 
 
-@check_radiation(True)
 def set_cavity_phase(ring):
     """
     Adjusts the cavities phases based on frequency, RF voltage
