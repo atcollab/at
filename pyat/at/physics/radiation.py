@@ -13,7 +13,7 @@ from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
-           'gen_quantdiff_elem']
+           'gen_quantdiff_elem', 'set_cavity_phase']
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -424,3 +424,4 @@ def set_cavity_phase(ring):
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
 Lattice.energy_loss = property(get_energy_loss)
+Lattice.set_cavity_phase = set_cavity_phase
