@@ -143,8 +143,7 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     if orbit is None:
-        cavities = get_cells(ring, iscavity)
-        if numpy.any(cavities):
+        if ring.radiation:
             orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice,
                                    XYStep=xy_step, DPStep=dp_step)
         else:

@@ -47,8 +47,7 @@ if length(varargs) >= 2	% FINDM66(RING,REFPTS,ORBITIN)
 end
 
 if  isempty(R0)
-    cavities = atgetcells(LATTICE, 'PassMethod', @(elem,pass) endsWith(pass, 'CavityPass'));
-    if any(cavities)
+    if check_radiation(LATTICE)
         R0 = findorbit6(LATTICE,'XYStep',XYStep,'DPStep',DPStep);
     else
         [~, R0] = findorbit4(LATTICE,0.0,'XYStep',XYStep);
