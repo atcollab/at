@@ -2,12 +2,12 @@
 Radiation and equilibrium emittances
 """
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
+from warnings import warn
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
-from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, elements
-from at.lattice import get_refpts, get_value_refpts, set_value_refpts
+from at.lattice import Lattice, check_radiation, uint32_refpts, AtWarning
+from at.lattice import elements
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
@@ -397,28 +397,40 @@ def gen_quantdiff_elem(ring, orbit=None):
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
-    diff_elem = Element('Diffusion',
-                        Lmatp=lmat,
-                        PassMethod='QuantDiffPass')
+    diff_elem = elements.Element('Diffusion', Lmatp=lmat,
+                                 PassMethod='QuantDiffPass')
     return diff_elem
 
 
-def set_cavity_phase(ring):
+def set_cavity_phase(ring, copy=False):
     """
     Adjusts the cavities phases based on frequency, RF voltage
     and energy loss per turn. Will not work in the presence of
-    cavity with different frequencies. Modifies ring
-    set_cavity_phase(ring)
+    cavity with different frequencies.
 
     PARAMETERS
         ring            lattice description
+
+    KEYWORDS
+        copy=False      if True, return a shallow copy of the lattice and
+                        replace only the modified cavities.
+                        Otherwise modify the lattice in-place.
     """
-    cavs = get_refpts(ring, elements.RFCavity)
-    rfv = get_value_refpts(ring, cavs, 'Voltage')
-    freq = get_value_refpts(ring, cavs, 'Frequency')
-    u0 = ring.energy_loss
-    timelag = clight / (2*pi*freq) * numpy.arcsin(u0/numpy.sum(rfv))
-    set_value_refpts(ring, cavs, 'TimeLag', timelag)
+    if copy:
+        newring = ring.copy()
+        set_cavity_phase(newring, copy=False)
+        return newring
+    else:
+        warn("This function modifies the time reference\n"
+                       "This should be avoided, you have been warned",
+             AtWarning)
+        cavities=[elem for elem in ring if isinstance(elem,elements.RFCavity)]
+        rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
+        freq = numpy.array([elem.Frequency for elem in cavities])
+        u0 = ring.energy_loss
+        timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
+        for elem in cavities:
+            elem.TimeLag = timelag
 
 
 Lattice.ohmi_envelope = ohmi_envelope
