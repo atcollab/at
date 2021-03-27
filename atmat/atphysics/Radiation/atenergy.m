@@ -101,7 +101,8 @@ if nargout >= 5
     lendp=atgetfieldvalues(ring(dipoles),'Length');
     I2d=sum(abs(theta.*theta./lendp));
     % Wiggler radiation
-    iswiggler=@(elem) strcmp(elem.Class,'Wiggler') && ~strcmp(elem.PassMethod,'DriftPass');
+    iswiggler=@(elem) isfield(elem,'Class') && strcmp(elem.Class,'Wiggler') ...
+                   && ~strcmp(elem.PassMethod,'DriftPass');
     wigglers=cellfun(iswiggler, ring);
     I2w=sum(cellfun(@wiggler_i2,ring(wigglers)));
     % Additional radiation
