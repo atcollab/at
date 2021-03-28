@@ -1,23 +1,28 @@
 function U0 = atgetU0(ring,varargin)
 %ATGETU0 Computes Energy loss per turn in eV .
 %
-%U0=ATGETU0(RING)   Return the energy loss/turn in eV
+%U0=ATGETU0(RING)   Return the energy loss/turn in eV for the full ring.
 %
 % RING:     Ring structure
 % U0:       Energy loss per turn in eV
 %
-%U0=ATGETU0(RING, METHOD)	Choose the method
+%U0=ATGETU0(...,'periods',PERIODS) Select the number of periods
+%
+% PERIODS if the number of periods to take into account (Default: full ring)
+%
+%U0=ATGETU0(...,'method',METHOD)	Choose the method
 %
 % METHOD:   'integral': (default) The losses are obtained from
-%                       Losses = Cgamma / 2pi * EGeV^4 * i2
+%                       Losses = Cgamma / 2pi * EGeV^4 * I2
 %                       Takes into account bending magnets and wigglers.
 %           'tracking': The losses are obtained by  tracking without cavities.
 %                       Needs radiation ON, takes into account all radiating elements.
 %
 % See also RINGPARA ATSETCAVITY ATENERGY
 
-[method, varargs]=getoption(varargin,'method','integral'); %#ok<ASGLU>
 [energy, nper]=atenergy(ring);
+[nper,varargs]=getoption(varargin,'periods',nper);
+[method, varargs]=getoption(varargs,'method','integral'); %#ok<ASGLU>
 if strcmpi(method, 'integral')
     U0=nper*integral(ring);
 elseif strcmpi(method, 'tracking')
@@ -40,7 +45,8 @@ end
         lendp    = atgetfieldvalues(ring(dipoles),'Length');
         I2d=sum(abs(theta.*theta./lendp));
         % Wiggler radiation
-        iswiggler=@(elem) isfield(elem, 'Class') && strcmp(elem.Class,'Wiggler') && ~strcmp(elem.PassMethod,'DriftPass');
+        iswiggler=@(elem) isfield(elem,'Class') && strcmp(elem.Class,'Wiggler') ...
+            && ~strcmp(elem.PassMethod,'DriftPass');
         wigglers=cellfun(iswiggler, ring);
         I2w=sum(cellfun(@wiggler_i2,ring(wigglers)));
         % Additional radiation

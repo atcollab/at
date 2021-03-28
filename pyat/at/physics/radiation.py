@@ -1,13 +1,13 @@
 """
 Radiation and equilibrium emittances
 """
+import sys
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
-from warnings import warn
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import elements, AtWarning, AtError
+from at.lattice import elements, AtError
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
@@ -346,14 +346,17 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
 
 
 def get_energy_loss(ring, method='integral'):
-    """Return the nergy loss per turn [eV]
+    """Compute the energy loss per turn [eV]
+
+    PARAMETERS
+        ring                        lattice description
 
     KEYWORDS
-        method='integral'
+        method='integral'           method for energy loss computation
             'integral': The losses are obtained from
                 Losses = Cgamma / 2pi * EGeV^4 * i2
                 Takes into account bending magnets and wigglers.
-            'tracking': The losses are obtained by  tracking without cavities.
+            'tracking': The losses are obtained by tracking without cavities.
                 Needs radiation ON, takes into account all radiating elements.
     """
     def integral(ring):
@@ -431,35 +434,34 @@ def gen_quantdiff_elem(ring, orbit=None):
     return diff_elem
 
 
-def set_cavity_phase(ring, method='integral', copy=False):
+def set_cavity_phase(ring, method='integral', refpts=None):
     """
-    Adjusts the cavities phases based on frequency, RF voltage
-    and energy loss per turn. Will not work in the presence of
-    cavity with different frequencies.
+   Adjust the TimeLag attribute of RF cavities based on frequency,
+   voltage and energy loss per turn, so that the synchronous phase is zero.
+   An error occurs if all cavities do not have the same frequency.
 
     PARAMETERS
-        ring            lattice description
+        ring        lattice description
 
     KEYWORDS
-        copy=False      if True, return a shallow copy of the lattice and
-                        replace only the modified cavities.
-                        Otherwise modify the lattice in-place.
+        refpts=None Cavity location. This allows to ignore harmonic cavities
     """
-    if copy:
-        newring = ring.copy()
-        set_cavity_phase(newring, copy=False)
-        return newring
+    if refpts is None:
+        cavities = [elem for elem in ring if
+                    isinstance(elem, elements.RFCavity)]
     else:
-        warn("This function modifies the time reference\n"
-                       "This should be avoided, you have been warned",
-             AtWarning)
-        cavities=[elem for elem in ring if isinstance(elem,elements.RFCavity)]
-        rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
-        freq = numpy.array([elem.Frequency for elem in cavities])
-        u0 = get_energy_loss(ring, method=method)
-        timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
-        for elem in cavities:
-            elem.TimeLag = timelag
+        cavities=ring[refpts]
+    rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
+    freq = numpy.unique(numpy.array([elem.Frequency for elem in cavities]))
+    if len(freq) > 1:
+        raise AtError('RF frequency not equal for all cavities')
+    print("\nThis function modifies the time reference\n"
+          "This should be avoided, you have been warned!\n",
+          file=sys.stderr)
+    u0 = get_energy_loss(ring, method=method)
+    timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
+    for elem in cavities:
+        elem.TimeLag = timelag
 
 
 Lattice.ohmi_envelope = ohmi_envelope
