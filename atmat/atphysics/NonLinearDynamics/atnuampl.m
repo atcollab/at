@@ -37,7 +37,7 @@ if ~isempty(varargs) && isnumeric(varargs{1})	% ATNUAMPL(RING,AMPLITUDE,XZ,ORBIT
 end
 
 if isempty(orbit)
-    cavities = atgetcells(LATTICE, 'PassMethod', @(elem,pass) endsWith(pass, 'CavityPass'));
+    cavities = atgetcells(ring, 'PassMethod', @(elem,pass) endsWith(pass, 'CavityPass'));
     if any(cavities)
         orbit=findorbit6(ring);
         dp=orbit(5);
