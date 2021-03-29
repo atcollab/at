@@ -63,6 +63,7 @@ end
     end
 
     function U0=tracking(ring)
+        check_radiation(ring,true);
         ringtmp=atradoff(ring, 'bendpass', '', 'quadpass', '',...
             'sextupass', '', 'octupass', '', 'wigglerpass','');
         o0=zeros(6,1);
