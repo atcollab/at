@@ -393,7 +393,7 @@ class Lattice(list):
 
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
-                     quadrupole_pass='auto', wiggler_pass='auto',
+                     quadrupole_pass=None, wiggler_pass='auto',
                      sextupole_pass=None, octupole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
