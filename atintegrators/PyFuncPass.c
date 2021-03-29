@@ -3,6 +3,10 @@
 #include "atelem.c"
 #include "numpy/arrayobject.h"
 
+#if PY_MAJOR_VERSION < 3
+  #define PyUnicode_AsUTF8 PyString_AsString
+#endif
+
 struct elem
 {
     double Length;
@@ -29,6 +33,10 @@ static PyObject *GetFunction(const atElem *ElemData)
   if (!PyCallable_Check(function)){
       printf("PyFuncPass: pyFun %s in %s not callable \n", s3, s1);
     }
+  Py_DECREF(eName);
+  Py_DECREF(pName);
+  Py_DECREF(fName);
+  Py_DECREF(pModule);
   return function;
 }
 
@@ -57,6 +65,7 @@ void PyFuncPass(double *r_in, PyObject *function, PyObject *kwargs, int num_part
 {   
   PyObject *args = Buildargs(r_in, num_particles);
   PyObject_Call(function, args, kwargs);
+  Py_DECREF(args);
 }
 
 
