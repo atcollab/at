@@ -4,7 +4,6 @@
 #include "attypes.h"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
-
 #include "atelem.c"
 
 #if PY_MAJOR_VERSION >= 3
@@ -27,17 +26,26 @@ struct elem
 
 static PyObject *GetFunction(const atElem *ElemData)
 {
-  PyObject *eName = PyObject_GetAttrString((PyObject *)ElemData, "FamName");
-  PyObject *pName = PyObject_GetAttrString((PyObject *)ElemData, "pyModule");
-  PyObject *fName = PyObject_GetAttrString((PyObject *)ElemData, "pyFun");
-  const char *s1 = PyUnicode_AsUTF8(eName);
-  const char *s2 = PyUnicode_AsUTF8(pName);
-  const char *s3 = PyUnicode_AsUTF8(fName);
-  PyObject *pModule = PyImport_Import(pName);
+  PyObject *eName;
+  PyObject *pName;
+  PyObject *fName;
+  PyObject *pModule;
+  PyObject *pyfunction;
+  const char *s1;
+  const char *s2;
+  const char *s3;
+
+  eName = PyObject_GetAttrString((PyObject *)ElemData, "FamName");
+  pName = PyObject_GetAttrString((PyObject *)ElemData, "pyModule");
+  fName = PyObject_GetAttrString((PyObject *)ElemData, "pyFun");
+  s1 = PyUnicode_AsUTF8(eName);
+  s2 = PyUnicode_AsUTF8(pName);
+  s3 = PyUnicode_AsUTF8(fName);
+  pModule = PyImport_Import(pName);
   if (!pModule){
       printf("PyFuncPass: could not import pyModule %s in %s \n", s2, s1);
     }
-  PyObject *pyfunction = PyObject_GetAttrString(pModule, PyUnicode_AsUTF8(fName));
+  pyfunction = PyObject_GetAttrString(pModule, PyUnicode_AsUTF8(fName));
   if (!pyfunction){
       printf("PyFuncPass: could not import pyFun %s in %s \n", s3, s1);
     }
@@ -54,7 +62,8 @@ static PyObject *GetFunction(const atElem *ElemData)
 
 static PyObject *Buildkwargs(const atElem *ElemData)
 {
-  PyObject *kwargs = PyDict_New();
+  PyObject *kwargs;
+  kwargs = PyDict_New();
   PyDict_SetItemString(kwargs,(char *)"elem",(PyObject *)ElemData);
   return kwargs;  
 }
@@ -64,7 +73,8 @@ static PyObject *Buildargs(double *r_in, int num_particles)
 {
   npy_intp outdims[1];
   outdims[0] = 6*num_particles;
-  PyObject *rin = PyArray_SimpleNewFromData(1, outdims, NPY_DOUBLE, r_in);
+  PyObject *rin;
+  rin = PyArray_SimpleNewFromData(1, outdims, NPY_DOUBLE, r_in);
   if (!rin){
       printf("PyFuncPass: could not generate pyArray rin");
     }
@@ -74,7 +84,8 @@ static PyObject *Buildargs(double *r_in, int num_particles)
 
 void PyFuncPass(double *r_in, PyObject *function, PyObject *kwargs, int num_particles)
 {   
-  PyObject *args = Buildargs(r_in, num_particles);
+  PyObject *args;
+  args = Buildargs(r_in, num_particles);
   PyObject_Call(function, args, kwargs);
   Py_DECREF(args);
 }
