@@ -21,7 +21,7 @@
 struct elem
 {
     double Length;
-    PyObject *function;
+    PyObject *pyfunction;
     PyObject *kwargs;
 };
 
@@ -37,18 +37,18 @@ static PyObject *GetFunction(const atElem *ElemData)
   if (!pModule){
       printf("PyFuncPass: could not import pyModule %s in %s \n", s2, s1);
     }
-  PyObject *function = PyObject_GetAttrString(pModule, PyUnicode_AsUTF8(fName));
-  if (!function){
+  PyObject *pyfunction = PyObject_GetAttrString(pModule, PyUnicode_AsUTF8(fName));
+  if (!pyfunction){
       printf("PyFuncPass: could not import pyFun %s in %s \n", s3, s1);
     }
-  if (!PyCallable_Check(function)){
+  if (!PyCallable_Check(pyfunction)){
       printf("PyFuncPass: pyFun %s in %s not callable \n", s3, s1);
     }
   Py_DECREF(eName);
   Py_DECREF(pName);
   Py_DECREF(fName);
   Py_DECREF(pModule);
-  return function;
+  return pyfunction;
 }
 
 
@@ -87,15 +87,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         _import_array();
         double Length;
+        PyObject *pyfunction;
+        PyObject *kwargs;
         Length=atGetDouble(ElemData,"Length"); check_error();  
-        PyObject *function = GetFunction(ElemData); check_error();
-        PyObject *kwargs = Buildkwargs(ElemData); check_error();      
+        pyfunction = GetFunction(ElemData);
+        kwargs = Buildkwargs(ElemData);      
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
-        Elem->function=function;
+        Elem->pyfunction=pyfunction;
         Elem->kwargs=kwargs;
     } 
-    PyFuncPass(r_in, Elem->function, Elem->kwargs, num_particles);
+    PyFuncPass(r_in, Elem->pyfunction, Elem->kwargs, num_particles);
     return Elem;
 }
 
