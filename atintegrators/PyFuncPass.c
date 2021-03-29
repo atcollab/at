@@ -1,11 +1,22 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python.h> 
-#include "atelem.c"
-#include "numpy/arrayobject.h"
+#include <stdarg.h>
+#include <Python.h>
+#include "attypes.h"
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarrayobject.h>
 
-#if PY_MAJOR_VERSION < 3
-  #define PyUnicode_AsUTF8 PyString_AsString
+#include "atelem.c"
+
+#if PY_MAJOR_VERSION >= 3
+#define NUMPY_IMPORT_ARRAY_RETVAL NULL
+#define NUMPY_IMPORT_ARRAY_TYPE void *
+#else
+#define NUMPY_IMPORT_ARRAY_RETVAL
+#define NUMPY_IMPORT_ARRAY_TYPE void
+#define PyLong_AsLong PyInt_AsLong
+#define PyUnicode_AsUTF8 PyString_AsString
 #endif
+
 
 struct elem
 {
