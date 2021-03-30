@@ -15,6 +15,7 @@ function varargout=atnuampl(ring,ampl,xz,varargin)
 %ATNUAMPL(...,Name,Value)
 %   Uses additional options specified by one or more Name,Value pairs.
 %   Possible values are:
+%       orbit:  initial closed orbit
 %       nturns: specify the number of turns for tracking (default 256)
 %       method: specify the method for tune determination
 %               1: Highest peak in fft
@@ -26,23 +27,28 @@ function varargout=atnuampl(ring,ampl,xz,varargin)
 
 lab={'x^2','p_x^2','z^2','p_z^2'};
 if nargin < 3, xz=1; end
-if ~isempty(varargin) && isnumeric(varargin{1})
-    orbit=varargin{1};
-    varargin(1)=[];
-else
-    warning off MATLAB:singularMatrix
-    orbit=findorbit6(ring);
-    warning on MATLAB:singularMatrix
-    if ~all(isfinite(orbit))
-        orbit=zeros(6,1);
-        orbit(1:5)=findsyncorbit(ring,0);
+[nturns,varargs]=getoption(varargin,'nturns',256);
+[method,varargs]=getoption(varargs,'method',3);
+[orbit,varargs]=getoption(varargs,'orbit',[]);
+
+if ~isempty(varargs) && isnumeric(varargs{1})	% ATNUAMPL(RING,AMPLITUDE,XZ,ORBIT)
+    orbit = varargs{1};
+    varargs(1)=[];
+end
+
+if isempty(orbit)
+    cavities = atgetcells(ring, 'PassMethod', @(elem,pass) endsWith(pass, 'CavityPass'));
+    if any(cavities)
+        orbit=findorbit6(ring);
+        dp=orbit(5);
+    else
+        dp=0.0;
+        [~, orbit]=findorbit4(ring, dp);
     end
 end
-[nturns,varargin]=getoption(varargin,'nturns',256);
-[method,varargin]=getoption(varargin,'method',3);
 
 [~,nbper]=atenergy(ring);
-[lindata,fractune0]=atlinopt(ring,0,1:length(ring)+1);
+[lindata,fractune0]=atlinopt(ring,dp,1:length(ring)+1, 'orbit', orbit);
 tune0=nbper*lindata(end).mu/2/pi;
 offs=[nbper -nbper];
 siza=size(ampl);
@@ -61,7 +67,7 @@ if nargout > 0
     varargout={reshape(tunetrack(:,1),siza),reshape(tunetrack(:,2),siza)};
 else
     inttunes=floor(tune0);
-    plot((ampl.*ampl)',tunetrack-inttunes(ones(nampl,1),:),'o-',varargin{:});
+    plot((ampl.*ampl)',tunetrack-inttunes(ones(nampl,1),:),'o-',varargs{:});
     legend('\nu_x','\nu_z');
     xlabel(lab{xz});
     ylabel('\nu');
