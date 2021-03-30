@@ -1,6 +1,6 @@
 /*
- * This file contains the Python interface to AT, compatible with Python
- * 2 and 3. It provides a module 'atpass' containing one method 'atpass'.
+ * This file contains the Python interface to AT, compatible with
+ * Python 3 only. It provides a module 'atpass' containing one method 'atpass'.
  */
 #include <stdarg.h>
 #include <Python.h>
@@ -12,14 +12,8 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
 
-#if PY_MAJOR_VERSION >= 3
 #define NUMPY_IMPORT_ARRAY_RETVAL NULL
 #define NUMPY_IMPORT_ARRAY_TYPE void *
-#else
-#define NUMPY_IMPORT_ARRAY_RETVAL
-#define NUMPY_IMPORT_ARRAY_TYPE void
-#define PyLong_AsLong PyInt_AsLong
-#endif
 
 typedef PyObject atElem;
 
@@ -43,16 +37,9 @@ typedef PyObject atElem;
 #define OBJECTEXT ".so"
 #endif
 
-#if PY_MAJOR_VERSION >= 3
-  #define MOD_ERROR_VAL NULL
-  #define MOD_SUCCESS_VAL(val) val
-  #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
-#else
-  #define MOD_ERROR_VAL
-  #define MOD_SUCCESS_VAL(val)
-  #define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
-  #define PyUnicode_AsUTF8 PyString_AsString
-#endif
+#define MOD_ERROR_VAL NULL
+#define MOD_SUCCESS_VAL(val) val
+#define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
 
 /* define the general signature of a pass function */
 typedef struct elem *(*track_function)(const PyObject *element,
@@ -420,7 +407,6 @@ MOD_INIT(atpass)
     PyObject *integ_path_obj, *ext_suffix_obj;
     const char *ext_suffix, *integ_path;
 
-#if PY_MAJOR_VERSION >= 3
     static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
     "at",         /* m_name */
@@ -433,10 +419,7 @@ MOD_INIT(atpass)
     NULL,         /* m_free */
     };
     PyObject *m = PyModule_Create(&moduledef);
-#else
-    PyObject *m = Py_InitModule3("atpass", AtMethods,
-        "Clone of atpass in Accelerator Toolbox");
-#endif
+
     if (m == NULL) return MOD_ERROR_VAL;
     import_array();
 
