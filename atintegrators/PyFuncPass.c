@@ -4,10 +4,8 @@
 #include <numpy/ndarrayobject.h>
 #include "atelem.c"
 
-#if PY_MAJOR_VERSION < 3
-#define PyUnicode_AsUTF8 PyString_AsString
-#endif
-
+#define NUMPY_IMPORT_ARRAY_RETVAL NULL
+#define NUMPY_IMPORT_ARRAY_TYPE void *
 
 struct elem
 {
