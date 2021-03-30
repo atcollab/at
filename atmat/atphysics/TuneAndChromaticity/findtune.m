@@ -63,14 +63,13 @@ tune=(rmax-back-1 +((2*v2-v1)./(v1+v2)))/nturns;
 
 end
 tune(wrong)=NaN;
-errmax=2.5*std(tune');
-keep=(abs(tune-mean(tune'))<=errmax);
+errmax=2.5*std(tune,0,2);
+keep=(abs(tune-mean(tune,2))<=errmax);
 reject=find(~(keep | wrong));
 for bpm=reject
-    [bname,kdx]=sr.bpmname(bpm);
-    disp(['reject ' bname ' (' num2str(kdx) ')']);
+    fprintf('rejected BPM %d\n', bpm);
 end
-fprintf('%20s tune:%g (rms:%g)\n',methname, mean(tune(keep)'),std(tune(keep)'));
+fprintf('%20s tune:%g (rms:%g)\n',methname, mean(tune(keep),2),std(tune(keep),0,2));
 
 function vv=phi(a,b,c) %#ok<DEFNU>
 d1=c*(a+b);

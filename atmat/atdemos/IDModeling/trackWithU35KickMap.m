@@ -1,5 +1,5 @@
 %read in ESRF lattice
-r=esrf;
+r=atradoff(esrf);
 
 %create element from kick map and plot kick map
 U35elem=atidtable('U35',1,'U35.mat',6.04,'IdTablePass');

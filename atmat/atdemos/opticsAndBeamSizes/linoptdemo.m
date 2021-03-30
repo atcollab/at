@@ -11,6 +11,8 @@
 % elements (RF cavity). Elements should NOT use pass-methods with radiation
 % (StrMPoleSymplectic4Pass)
 % load spear2 lattice
+global THERING
+
 spear2;
 
 % Find  indexes of elements in QF quadrupole family
