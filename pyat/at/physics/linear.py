@@ -9,9 +9,8 @@ from at.lattice import RFCavity
 from at.lattice import get_refpts, get_value_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_m44, jmat
-from at.physics import find_orbit6, find_m66, symplectify_6d
+from at.physics import find_orbit6, find_m66, symplectify
 from .harmonic_analysis import get_tunes_harmonic
-
 __all__ = ['linopt', 'avlinopt', 'get_mcf', 'get_tune',
            'get_chrom', 'linopt_rad']
 
@@ -584,8 +583,8 @@ def linopt_rad(ring, refpts=None, get_chrom=False, orbit=None,
     m66, mstack66 = find_m66(ring, uintrefs, orbit=orbit,
                              keep_lattice=True, XYStep=xy_step,
                              DPStep=dp_step)
-    m66, mstack66 = symplectify_6d(m66)[:4, :4], \
-        [symplectify_6d(m)[:4, :4] for m in mstack66]
+    m66, mstack66 = symplectify(m66)[:4, :4], \
+        [symplectify(m)[:4, :4] for m in mstack66]
     m44, mstack = m66, numpy.array(mstack66)
 
     nrefs = uintrefs.size

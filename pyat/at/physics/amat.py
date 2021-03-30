@@ -4,7 +4,7 @@ from scipy.linalg import block_diag, eig, inv, det
 from math import pi
 
 __all__ = ['amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices', 
-           'symplectify', 'symplectify_6d']
+           'symplectify']
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 
@@ -92,35 +92,14 @@ def symplectify(M):
     dim = int(M.shape[0]/2)
     J = jmat(dim)
     idmat = numpy.identity(dim*2)
-    V = numpy.dot(numpy.dot(J, idmat - M), numpy.linalg.inv(idmat+M))
-    #V should be almost symmetric.  Replace with symmetrized version.
-    W= ( V + V.T ) / 2
-    #Now reconstruct M from W
-    JW  = numpy.dot(J,W)
-    MS=numpy.dot(idmat + JW, numpy.linalg.inv(idmat-JW))
-    return MS
-
-
-_J3 = jmat(3).T
-_idmat6 = numpy.identity(6)
-
-
-def symplectify_6d(M):
-    """
-    symplectify makes a matrix more symplectic
-    follow Healy algorithm as described by McKay
-    BNL-75461-2006-CP
-    This is a faster implementation of symplectify
-    for 6x6 matrices
-    """
     Mt = M.copy().T
-    V1 = numpy.dot(_idmat6 - Mt, _J3)
-    V2 = _idmat6 + Mt
+    V1 = numpy.dot(idmat - Mt, J)
+    V2 = idmat + Mt
     V = numpy.linalg.solve(V2, V1)
     W = ( V + V.T ) / 2
-    JW  = numpy.dot(W,_J3)
-    W1 = _idmat6 + JW
-    W2 = _idmat6 - JW
+    JW  = numpy.dot(W, J)
+    W1 = idmat + JW
+    W2 = idmat - JW
     MS = numpy.linalg.solve(W2, W1).T
     return MS
 
