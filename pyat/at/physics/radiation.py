@@ -1,18 +1,19 @@
 """
 Radiation and equilibrium emittances
 """
+import sys
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, elements
+from at.lattice import elements, AtError
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
-           'gen_quantdiff_elem']
+           'get_energy_loss', 'gen_quantdiff_elem', 'set_cavity_phase']
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -281,18 +282,18 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
           otherwise
         """
 
-        def b_on_axis(wig, s):
+        def b_on_axis(wiggler, s):
             """On-axis wiggler field"""
 
             def harm(coef, h, phi):
                 return -Bmax * coef * numpy.cos(h*kws + phi)
 
-            kw = 2 * pi / wig.Lw
-            Bmax = wig.Bmax
+            kw = 2 * pi / wiggler.Lw
+            Bmax = wiggler.Bmax
             kws = kw * s
             zz = [numpy.zeros(kws.shape)]
-            vh = zz + [harm(pb[1], pb[4], pb[5]) for pb in wig.By.T]
-            vv = zz + [-harm(pb[1], pb[4], pb[5]) for pb in wig.Bx.T]
+            vh = zz + [harm(pb[1], pb[4], pb[5]) for pb in wiggler.By.T]
+            vv = zz + [-harm(pb[1], pb[4], pb[5]) for pb in wiggler.Bx.T]
             bys = numpy.sum(numpy.stack(vh), axis=0)
             bxs = numpy.sum(numpy.stack(vv), axis=0)
             return bxs, bys
@@ -344,32 +345,64 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     return tuple(integrals)
 
 
-def get_energy_loss(ring):
-    """Energy loss per turn [eV]
+def get_energy_loss(ring, method='integral'):
+    """Compute the energy loss per turn [eV]
 
-    Losses = Cgamma / 2pi * EGeV^4 * i2
+    PARAMETERS
+        ring                        lattice description
+
+    KEYWORDS
+        method='integral'           method for energy loss computation
+            'integral': The losses are obtained from
+                Losses = Cgamma / 2pi * EGeV^4 * i2
+                Takes into account bending magnets and wigglers.
+            'tracking': The losses are obtained by tracking without cavities.
+                Needs radiation ON, takes into account all radiating elements.
     """
+    def integral(ring):
+        """Losses = Cgamma / 2pi * EGeV^4 * i2
+        """
 
-    def wiggler_i2(el):
-        rhoinv = el.Bmax / Brho
-        coefh = el.By[1, :]
-        coefv = el.Bx[1, :]
-        return el.Length * (numpy.sum(coefh * coefh) + numpy.sum(
-            coefv*coefv)) * rhoinv ** 2 / 2
+        def wiggler_i2(wiggler):
+            rhoinv = wiggler.Bmax / Brho
+            coefh = wiggler.By[1, :]
+            coefv = wiggler.Bx[1, :]
+            return wiggler.Length * (numpy.sum(coefh * coefh) + numpy.sum(
+                coefv*coefv)) * rhoinv ** 2 / 2
 
-    def dipole_i2(el):
-        return el.BendingAngle ** 2 / el.Length
+        def dipole_i2(dipole):
+            return dipole.BendingAngle ** 2 / dipole.Length
 
-    Brho = sqrt(ring.energy**2 - e_mass**2) / clight
-    i2 = 0.0
-    for el in ring:
-        if isinstance(el, elements.Dipole):
-            i2 += dipole_i2(el)
-        elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
-            i2 += wiggler_i2(el)
-    i2 = ring.periodicity * i2
-    e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
-    return e_loss
+        Brho = sqrt(ring.energy**2 - e_mass**2) / clight
+        i2 = 0.0
+        for el in ring:
+            if isinstance(el, elements.Dipole):
+                i2 += dipole_i2(el)
+            elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
+                i2 += wiggler_i2(el)
+        e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
+        return e_loss
+
+    @check_radiation(True)
+    def tracking(ring):
+        """Losses from tracking
+        """
+        ringtmp = ring.radiation_off(dipole_pass=None,
+                                     quadrupole_pass=None,
+                                     wiggler_pass=None,
+                                     sextupole_pass=None,
+                                     octupole_pass=None,
+                                     copy=True)
+        o0 = numpy.zeros(6)
+        o6 = numpy.squeeze(lattice_pass(ringtmp, o0, refpts=len(ringtmp)))
+        return -o6[4] * ring.energy
+
+    if method == 'integral':
+        return ring.periodicity * integral(ring)
+    elif method == 'tracking':
+        return ring.periodicity * tracking(ring)
+    else:
+        raise AtError('Invalid method: {}'.format(method))
 
 
 @check_radiation(True)
@@ -396,12 +429,43 @@ def gen_quantdiff_elem(ring, orbit=None):
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
-    diff_elem = Element('Diffusion',
-                        Lmatp=lmat,
-                        PassMethod='QuantDiffPass')
+    diff_elem = elements.Element('Diffusion', Lmatp=lmat,
+                                 PassMethod='QuantDiffPass')
     return diff_elem
+
+
+def set_cavity_phase(ring, method='integral', refpts=None):
+    """
+   Adjust the TimeLag attribute of RF cavities based on frequency,
+   voltage and energy loss per turn, so that the synchronous phase is zero.
+   An error occurs if all cavities do not have the same frequency.
+
+    PARAMETERS
+        ring        lattice description
+
+    KEYWORDS
+        refpts=None Cavity location. This allows to ignore harmonic cavities
+    """
+    if refpts is None:
+        cavities = [elem for elem in ring if
+                    isinstance(elem, elements.RFCavity)]
+    else:
+        cavities=ring[refpts]
+    rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
+    freq = numpy.unique(numpy.array([elem.Frequency for elem in cavities]))
+    if len(freq) > 1:
+        raise AtError('RF frequency not equal for all cavities')
+    print("\nThis function modifies the time reference\n"
+          "This should be avoided, you have been warned!\n",
+          file=sys.stderr)
+    u0 = get_energy_loss(ring, method=method)
+    timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
+    for elem in cavities:
+        elem.TimeLag = timelag
 
 
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
+Lattice.get_energy_loss = get_energy_loss
 Lattice.energy_loss = property(get_energy_loss)
+Lattice.set_cavity_phase = set_cavity_phase
