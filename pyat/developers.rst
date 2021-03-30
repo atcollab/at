@@ -7,11 +7,7 @@ See also README.rst.
 Installation preparation (Windows)
 ----------------------------------
 
-Download Microsoft Visual C++ Compiler for Python 2.7 (`here
-<https://www.microsoft.com/en-us/download/details.aspx?id=44266>`_), and use
-the Visual C++ Command Prompt of the correct architecture to build pyat.
-
-For newer versions of Python you need the appropriate version of Visual C++.
+Download the appropriate version of Visual C++.
 
 
 Installation (all platforms)
@@ -20,13 +16,6 @@ Installation (all platforms)
 All the binaries should be built when building the Python extension.
 
 It is easiest to do this using a virtualenv. inside pyat:
-
-Python 2 support will be removed soon. If you are still using Python 2, you
-need virtualenv installed:
-
-* ``virtualenv --no-site-packages venv``
-
-If you are using Python 3, you can use the built-in venv module:
 
 * ``python3 -m venv venv``
 
