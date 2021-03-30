@@ -200,7 +200,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_uint32 reuse=0;
     npy_intp outdims[4];
     int turn;
+    #ifdef _OPENMP
     int maxthreads;
+    #endif /*_OPENMP*/
+    
     struct parameters param;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!II", kwlist, &PyList_Type, &lattice,
