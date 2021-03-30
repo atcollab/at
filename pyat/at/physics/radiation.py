@@ -6,7 +6,9 @@ import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, elements
+from at.lattice import Element, elements, DConstant
+from at.lattice import RFCavity, Dipole, Quadrupole, Sextupole
+from at.lattice import get_refpts, get_value_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
@@ -344,6 +346,34 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     return tuple(integrals)
 
 
+def get_u0(ring, **kwargs):
+    """
+    Computes the energy loss per turn using find_orbit6
+
+    PARAMETERS
+        ring            lattice description
+
+    KEYWORDS
+    quadrupole_pass=auto        PassMethod set on quadrupoles
+    wiggler_pass=auto           PassMethod set on wigglers
+    sextupole_pass=None         PassMethod set on sextupoles
+    octupole_pass=None          PassMethod set on octupoles
+    """
+    quadrupole_pass = kwargs.pop('quadrupole_pass', 'auto')
+    wiggler_pass = kwargs.pop('wiggler_pass', 'auto')
+    sextupole_pass = kwargs.pop('sextupole_pass', 'None')
+    octupole_pass = kwargs.pop('octupole_pass', 'None')
+    o0 = numpy.zeros(6)
+    ringtmp = ring.radiation_on(cavity_pass='IdentityPass',
+                                quadrupole_pass='auto',
+                                wiggler_pass='auto',
+                                sextupole_pass=None,
+                                octupole_pass=None,
+                                copy=True)
+    o6 = numpy.squeeze(lattice_pass(ringtmp, o0, refpts=len(ringtmp)))
+    return -o6[4]*ring.energy
+
+
 def get_energy_loss(ring):
     """Energy loss per turn [eV]
 
@@ -402,6 +432,90 @@ def gen_quantdiff_elem(ring, orbit=None):
     return diff_elem
 
 
+@check_radiation(True)
+def set_cavity_phase(ring):
+    """
+    Adjusts the cavities phases based on frequency, RF voltage
+    and energy loss per turn. Will not work in the presence of
+    cavity with different frequencies. Modifies ring
+    set_cavity_phase(ring)
+
+    PARAMETERS
+        ring            lattice description
+    """
+    cavs = get_refpts(ring, RFCavity)
+    rfv = get_value_refpts(ring, cavs, 'Voltage')
+    freq = get_value_refpts(ring, cavs, 'Frequency')
+    u0 = get_u0(ring)
+    timelag = clight/(2 * pi * freq) * \
+        numpy.arcsin(u0/numpy.sum(rfv))
+    set_value_refpts(ring, cavs, 'TimeLag', timelag)
+
+
+@check_radiation(True)
+def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
+    """
+    Scales magnet strength with local energy to cancel the closed orbit
+    and optics errors due to synchrotron radiations. PolynomB is used for
+    dipoles such that the machine geometry is maintained, does not work
+    for combined function magnets. Modifies ring
+    tapering(ring)
+    PARAMETERS
+        ring            lattice description.
+
+    KEYWORDS
+        qadrupole=True  scale quadrupole fields
+        sextupole=True  scale sextupole fields
+        niter=1         number of iteration
+        XYStep=1.0e-8   transverse step for numerical computation
+        DPStep=1.0E-6   momentum deviation used for computation of
+    """
+
+    def _get_dpp(ring, refpts=None):
+        o0 = numpy.zeros(6)
+        if refpts is None:
+            refpts = range(len(ring))
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=refpts))
+        return -o6[4, :]
+
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
+
+    cavities = get_refpts(ring, RFCavity)
+    dipoles = get_refpts(ring, Dipole)
+    b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
+    ld = get_value_refpts(ring, dipoles, 'Length')
+
+    dpps = _get_dpp(ring, refpts=dipoles)
+    set_value_refpts(ring, dipoles, 'PolynomB', -b0 / ld * dpps, index=0)
+
+    for i in range(niter):
+        _, orbit0 = find_orbit6(ring, refpts=dipoles, XYStep=xy_step,
+                                DPStep=dp_step)
+        _, orbit1 = find_orbit6(ring, refpts=dipoles+1, XYStep=xy_step,
+                                DPStep=dp_step)
+        dxp = orbit1[:, 1]/(1+orbit1[:, 4])-orbit0[:, 1]/(1+orbit0[:, 4])
+        set_value_refpts(ring, dipoles, 'PolynomB', dxp/ld, index=0,
+                         increment=True)
+
+    if quadrupole:
+        quadrupoles = get_refpts(ring, Quadrupole)
+        _, orbit0 = find_orbit6(ring, refpts=quadrupoles, XYStep=xy_step,
+                                DPStep=dp_step)
+        k1 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
+        set_value_refpts(ring, quadrupoles, 'PolynomB', k1*(1+orbit0[:, 4]),
+                         index=1)
+    if sextupole:
+        sextupoles = get_refpts(ring, Sextupole)
+        _, orbit0 = find_orbit6(ring, refpts=sextupoles, XYStep=xy_step,
+                                DPStep=dp_step)
+        k2 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
+        set_value_refpts(ring, sextupoles, 'PolynomB', k2*(1+orbit0[:, 4]),
+                         index=2)
+
+
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
 Lattice.energy_loss = property(get_energy_loss)
+Lattice.set_cavity_phase = set_cavity_phase
+Lattice.tapering = tapering
