@@ -10,7 +10,7 @@ function DiffMat = quantumDiff(elems, varargin)
 %   RADINDEX:   Indices of elements where diffusion occurs, typically dipoles
 %               and quadrupoles.
 %
-%DIFFMAT=QUANTUMDIFF(LINE,RADINDEX,ORBIT0)    (Deprecated syntax)
+%DIFFMAT=QUANTUMDIFF(LINE,RADINDEX,ORBITIN)    (Deprecated syntax)
 %DIFFMAT=QUANTUMDIFF(...,'orbit',ORBITIN)
 %   ORBITIN:    Initial 6-D closed orbit.
 %               In this mode, LINE may be a section of a ring.
@@ -18,7 +18,7 @@ function DiffMat = quantumDiff(elems, varargin)
 NumElements=length(elems);
 
 [orb0,varargs]=getoption(varargin, 'orbit', []);
-if length(varargs) >= 2	% QUANTUMDIFF(RING,RADINDEX,ORBIT0)
+if length(varargs) >= 2	% QUANTUMDIFF(RING,RADINDEX,ORBITIN)
     orb0 = varargs{2};
 end
 if length(varargs) >= 1 % QUANTUMDIFF(RING,RADINDEX,...)
