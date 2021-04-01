@@ -8,7 +8,7 @@ from scipy.linalg import inv, det, solve_sylvester
 from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.lattice import elements, AtError, DConstant
-from at.lattice import get_refpts, get_value_refpts, set_value_refpts
+from at.lattice import get_refpts, get_value_refpts, set_value_refpts, get_cells
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
 from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
@@ -482,50 +482,37 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
         sextupole=True  scale sextupole fields
         niter=1         number of iteration
         XYStep=1.0e-8   transverse step for numerical computation
-        DPStep=1.0E-6   momentum deviation used for computation of
+        DPStep=1.0E-6   momentum deviation used for computation of orbit6
     """
-
-    def _get_dpp(ring, refpts=None):
-        o0 = numpy.zeros(6)
-        if refpts is None:
-            refpts = range(len(ring))
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=refpts))
-        return -o6[4, :]
 
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-
-    cavities = get_refpts(ring, elements.RFCavity)
-    dipoles = get_refpts(ring, elements.Dipole)
+    dipoles = get_refpts(ring, elements.Dipole)   
     b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
-    ld = get_value_refpts(ring, dipoles, 'Length')
-
-    dpps = _get_dpp(ring, refpts=dipoles)
-    set_value_refpts(ring, dipoles, 'PolynomB', -b0 / ld * dpps, index=0)
+    ld = get_value_refpts(ring, dipoles, 'Length')   
 
     for i in range(niter):
-        _, orbit0 = find_orbit6(ring, refpts=dipoles, XYStep=xy_step,
-                                DPStep=dp_step)
-        _, orbit1 = find_orbit6(ring, refpts=dipoles+1, XYStep=xy_step,
-                                DPStep=dp_step)
-        dxp = orbit1[:, 1]/(1+orbit1[:, 4])-orbit0[:, 1]/(1+orbit0[:, 4])
-        set_value_refpts(ring, dipoles, 'PolynomB', dxp/ld, index=0,
-                         increment=True)
-
+        _, o60 = find_orbit6(ring, refpts=dipoles, XYStep=xy_step, DPStep=dp_step)
+        _, o61 = find_orbit6(ring, refpts=dipoles+1, XYStep=xy_step, DPStep=dp_step)
+        dpps = (o60[:, 4]+o61[:, 4])/2
+        set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)        
+        
     if quadrupole:
         quadrupoles = get_refpts(ring, elements.Quadrupole)
-        _, orbit0 = find_orbit6(ring, refpts=quadrupoles, XYStep=xy_step,
-                                DPStep=dp_step)
-        k1 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
-        set_value_refpts(ring, quadrupoles, 'PolynomB', k1*(1+orbit0[:, 4]),
-                         index=1)
+        k01 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
+        _, o60 = find_orbit6(ring, refpts=quadrupoles, XYStep=xy_step, DPStep=dp_step)
+        _, o61 = find_orbit6(ring, refpts=quadrupoles+1, XYStep=xy_step, DPStep=dp_step)
+        dpps = (o60[:, 4]+o61[:, 4])/2
+        set_value_refpts(ring, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
+
     if sextupole:
         sextupoles = get_refpts(ring, elements.Sextupole)
-        _, orbit0 = find_orbit6(ring, refpts=sextupoles, XYStep=xy_step,
-                                DPStep=dp_step)
-        k2 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
-        set_value_refpts(ring, sextupoles, 'PolynomB', k2*(1+orbit0[:, 4]),
-                         index=2)
+        k02 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
+        _, o60 = find_orbit6(ring, refpts=sextupoles, XYStep=xy_step, DPStep=dp_step)
+        _, o61 = find_orbit6(ring, refpts=sextupoles+1, XYStep=xy_step, DPStep=dp_step)
+        dpps = (o60[:, 4]+o61[:, 4])/2
+        set_value_refpts(ring, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
+    
 
 
 Lattice.ohmi_envelope = ohmi_envelope
