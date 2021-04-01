@@ -56,6 +56,17 @@ end
 [DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
 [dps,varargs]=getoption(varargs,'OrbConvergence');	% Convergence threshold                 %1.e-12
 [max_iterations,varargs]=getoption(varargs,'OrbMaxIter');	% Max. iterations               %20
+[method,varargs]=getoption(varargs,'method','tracking');    % Method for Eloss computation
+cavities=RING(atgetcells(RING,'Frequency'));
+
+if isempty(cavities)
+    error('AT:NoFrequency', 'The lattice has no Cavity element')
+end
+
+L0 = findspos(RING,length(RING)+1); % design length [m]
+C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
+
+T0 = L0/C0;
 
 if length(varargs) >= 1 && ~isequal(varargs{1},length(RING)+1)
     refpts=varargs{1};
@@ -65,31 +76,29 @@ if length(varargs) >= 1 && ~isequal(varargs{1},length(RING)+1)
 else
     refpts=[];
 end
+
+Frf = unique(atgetfieldvalues(cavities,'Frequency'));
+HarmNumber = unique(atgetfieldvalues(cavities,'HarmNumber'));
+if length(Frf) > 1 || length(HarmNumber) > 1
+    error('AT:NoFrequency','RF cavities are not identical');
+end
+
 if length(varargs) >= 2	% Check if guess argument was supplied
     if isnumeric(varargs{2}) && isequal(size(varargs{2}),[6,1])
         Ri=varargs{2};
     else
-        error('The last argument GUESS must be a 6-by-1 vector');
+        error('AT:WrongSize','The last argument GUESS must be a 6-by-1 vector');
     end
 else
+    Vcell=sum(atgetfieldvalues(cavities,'Voltage'));
+    U0cell=atgetU0(RING,'periods',1,'method',method);
+    if U0cell > Vcell
+        error('AT:MissingVoltage','Missing RF voltage: unstable ring');
+    end
     Ri = zeros(6,1);
+    Ri(6) = -L0/(2*pi*HarmNumber) * asin(U0cell/Vcell);
 end
 
-L0 = findspos(RING,length(RING)+1); % design length [m]
-C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
-
-T0 = L0/C0;
-
-CavityIndex = find(atgetcells(RING,'Frequency'),1);
-
-if isempty(CavityIndex)
-    error('findorbit6: The lattice does not have Cavity element')
-end
-
-cavity1=RING{CavityIndex};
-
-Frf = cavity1.Frequency;
-HarmNumber = cavity1.HarmNumber;
 theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
 
 scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];

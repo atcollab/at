@@ -2,11 +2,13 @@
 Closed orbit related functions
 """
 
+from math import pi, asin
 import numpy
 import scipy.constants as constants
 from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
+from at.physics import get_energy_loss
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -294,7 +296,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    ref_in = numpy.zeros((6,), order='F') if guess is None else guess
+    method = kwargs.pop('method', 'tracking')
 
     # Get evolution period
     l0 = get_s_pos(ring, len(ring))
@@ -304,6 +306,16 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
 
     f_rf = cavities[0].Frequency
     harm_number = cavities[0].HarmNumber
+
+    if guess is None:
+        rfv = ring.periodicity * sum(elem.Voltage for elem in cavities)
+        u0 = get_energy_loss(ring, method=method)
+        if u0 > rfv:
+            raise AtError('Missing RF voltage: unstable ring')
+        ref_in = numpy.zeros((6,), order='F')
+        ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
+    else:
+        ref_in = guess
 
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
