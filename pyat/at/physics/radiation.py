@@ -472,7 +472,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
     Scales magnet strength with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. PolynomB is used for
     dipoles such that the machine geometry is maintained. Modifies ring.
-    tapering(ring)
+    tapering(ring) or ring.tapering()
     PARAMETERS
         ring            lattice description.
 
