@@ -489,28 +489,28 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     dipoles = get_refpts(ring, elements.Dipole)   
     b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
-    ld = get_value_refpts(ring, dipoles, 'Length')   
+    ld = get_value_refpts(ring, dipoles, 'Length')  
 
     for i in range(niter):
-        _, o60 = find_orbit6(ring, refpts=dipoles, XYStep=xy_step, DPStep=dp_step)
-        _, o61 = find_orbit6(ring, refpts=dipoles+1, XYStep=xy_step, DPStep=dp_step)
-        dpps = (o60[:, 4]+o61[:, 4])/2
+        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
+        dpps = (o6[4, dipoles]+o6[4, dipoles+1])/2
         set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)        
         
     if quadrupole:
         quadrupoles = get_refpts(ring, elements.Quadrupole)
         k01 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
-        _, o60 = find_orbit6(ring, refpts=quadrupoles, XYStep=xy_step, DPStep=dp_step)
-        _, o61 = find_orbit6(ring, refpts=quadrupoles+1, XYStep=xy_step, DPStep=dp_step)
-        dpps = (o60[:, 4]+o61[:, 4])/2
+        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
+        dpps = (o6[4, quadrupoles]+o6[4, quadrupoles+1])/2
         set_value_refpts(ring, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
 
     if sextupole:
         sextupoles = get_refpts(ring, elements.Sextupole)
         k02 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
-        _, o60 = find_orbit6(ring, refpts=sextupoles, XYStep=xy_step, DPStep=dp_step)
-        _, o61 = find_orbit6(ring, refpts=sextupoles+1, XYStep=xy_step, DPStep=dp_step)
-        dpps = (o60[:, 4]+o61[:, 4])/2
+        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
+        dpps = (o6[4, sextupoles]+o6[4, sextupoles+1])/2
         set_value_refpts(ring, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
     
 
