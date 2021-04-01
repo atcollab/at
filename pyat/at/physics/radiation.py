@@ -471,8 +471,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
     """
     Scales magnet strength with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. PolynomB is used for
-    dipoles such that the machine geometry is maintained, does not work
-    for combined function magnets. Modifies ring
+    dipoles such that the machine geometry is maintained. Modifies ring.
     tapering(ring)
     PARAMETERS
         ring            lattice description.
@@ -494,7 +493,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
     for i in range(niter):
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
         o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
-        dpps = (o6[4, dipoles]+o6[4, dipoles+1])/2
+        dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
         set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)        
         
     if quadrupole:
@@ -502,7 +501,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
         k01 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
         o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
-        dpps = (o6[4, quadrupoles]+o6[4, quadrupoles+1])/2
+        dpps = (o6[4, quadrupoles] + o6[4, quadrupoles+1]) / 2
         set_value_refpts(ring, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
 
     if sextupole:
@@ -510,7 +509,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
         k02 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
         o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
-        dpps = (o6[4, sextupoles]+o6[4, sextupoles+1])/2
+        dpps = (o6[4, sextupoles] + o6[4, sextupoles+1]) / 2
         set_value_refpts(ring, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
     
 
