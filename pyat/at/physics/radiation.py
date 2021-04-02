@@ -488,14 +488,14 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, **kwargs):
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     dipoles = get_refpts(ring, elements.Dipole)   
     b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
-    ld = get_value_refpts(ring, dipoles, 'Length')  
+    ld = get_value_refpts(ring, dipoles, 'Length')   
 
     for i in range(niter):
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
         o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
         dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
-        set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)        
-        
+        set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)  
+            
     if quadrupole:
         quadrupoles = get_refpts(ring, elements.Quadrupole)
         k01 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
