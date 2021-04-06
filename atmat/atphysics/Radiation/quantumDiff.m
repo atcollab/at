@@ -1,29 +1,37 @@
-function DiffMat = quantumDiff(elems,radindex,orb0)
+function DiffMat = quantumDiff(elems, varargin)
 %quantumDiff    Compute the radiation-diffusion matrix
 %
-%DIFFMAT=QUANTUMDIFF(RING,RADINDEX)
-%
+%DIFFMAT=QUANTUMDIFF(RING)
 %   RING:       Closed ring AT structure, containing radiative elements and
-%               RF cavity
+%               RF cavity. Radiative elements are identified by a
+%               PassMethod ending with 'RadPass'.
+%
+%DIFFMAT=QUANTUMDIFF(RING,RADINDEX)
 %   RADINDEX:   Indices of elements where diffusion occurs, typically dipoles
 %               and quadrupoles.
 %
-%DIFFMAT=QUANTUMDIFF(ELEMS,RADINDEX,ORBIT0)
-%
-%   ELEMS:      AT structure
-%   RADINDEX:   Indices of elements where diffusion occurs, typically dipoles
-%               and quadrupoles.
-%   ORBIT0:     Initial 6-D closed orbit
-%
-% In this mode, ELEMS may be a section of a ring
+%DIFFMAT=QUANTUMDIFF(LINE,RADINDEX,ORBITIN)    (Deprecated syntax)
+%DIFFMAT=QUANTUMDIFF(...,'orbit',ORBITIN)
+%   ORBITIN:    Initial 6-D closed orbit.
+%               In this mode, LINE may be a section of a ring.
 
 NumElements=length(elems);
 
+[orb0,varargs]=getoption(varargin, 'orbit', []);
+if length(varargs) >= 2	% QUANTUMDIFF(RING,RADINDEX,ORBITIN)
+    orb0 = varargs{2};
+end
+if length(varargs) >= 1 % QUANTUMDIFF(RING,RADINDEX,...)
+    radindex=varargs{1};
+else                    % QUANTUMDIFF(RING)
+    radindex=atgetcells(elems,'PassMethod',@(elem, pass) endsWith(pass,'RadPass'));
+end
+
 %[mring, ms, orbit] = findm66(ring,1:NumElements+1);
-if (nargin >= 3)
-    orb=num2cell(linepass(elems, orb0, 1:NumElements),1)';
-else
+if isempty(orb0)
     orb=num2cell(findorbit6(elems, 1:NumElements),1)';
+else
+    orb=num2cell(linepass(elems, orb0, 1:NumElements),1)';
 end
 
 zr={zeros(6,6)};
@@ -45,13 +53,13 @@ DiffMat=(DiffCum+DiffCum')/2;
 
 %Lmat=chol((DiffCum+DiffCum')/2);
 
- function btx=cumulb(elem,orbit,b)
+    function btx=cumulb(elem,orbit,b)
         % Calculate 6-by-6 linear transfer matrix in each element
         % near the equilibrium orbit
         m=findelemm66(elem,elem.PassMethod,orbit);
         % Cumulative diffusion matrix of the entire ring
         BCUM = m*BCUM*m' + b;
         btx=BCUM;
- end
+    end
 end
 
