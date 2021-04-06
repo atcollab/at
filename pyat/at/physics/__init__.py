@@ -2,6 +2,8 @@
 Accelerator physics functions
 """
 from math import sqrt, pi
+# noinspection PyUnresolvedReferences
+from scipy.constants import c as clight
 from scipy.constants import physical_constants as cst
 
 _e_radius = cst['classical electron radius'][0]
@@ -13,8 +15,9 @@ Cq = 55 / 32 / sqrt(3) * _hbar / e_mass * 1.0e-9                     # m
 
 # noinspection PyUnresolvedReferences
 from ..lattice import DConstant     # For backward compatibility
-from .orbit import *
 from .amat import *
+from .energy_loss import *
+from .orbit import *
 from .matrix import *
 from .linear import *
 from .ring_parameters import *

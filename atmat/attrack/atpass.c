@@ -281,7 +281,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     else {
         lhist=0;
     }
-
+    if (!mxIsDouble(INITCONDITIONS) || mxIsComplex(INITCONDITIONS)) {
+        mexErrMsgIdAndTxt("Atpass:WrongType","RIN must be real");
+    }
+    if (mxGetM(INITCONDITIONS) != 6) {
+        mexErrMsgIdAndTxt("Atpass:WrongSize","RIN must have 6 rows");
+    }
+    
     mexAtExit(cleanup);
 
     if (new_lattice) {

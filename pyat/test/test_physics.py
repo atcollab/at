@@ -351,5 +351,6 @@ def test_ohmi_envelope(hmba_lattice, refpts):
                  atol=1E-8)
     assert_close(obs['orbit6'], [-2.63520320e-09, -1.45845186e-10, 0.00000000e+00, 0.00000000e+00, -6.69677955e-06, -5.88436653e-02],
                  atol=1E-20)
-    assert_close(obs['emitXY'], [1.320388928842210e-10, 0.0], atol=1e-20)
-    assert_close(obs['emitXYZ'], [1.322274370195967e-10, 0.0, 2.858474905044153e-06], atol=1e-20)
+    # Matlab results:
+    assert_close(obs['emitXY'], [1.320388935445164e-10, 0.0], atol=1e-20)
+    assert_close(obs['emitXYZ'], [1.322274374826649e-10, 0.0, 2.858473194929233e-06], atol=1e-20)

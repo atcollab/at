@@ -71,10 +71,6 @@ function [Rout,varargout] = linepass(line,Rin,varargin)
 %
 % See also: RINGPASS
 
-% Check input arguments
-if size(Rin,1)~=6
-    error('Matrix of initial conditions, the second argument, must have 6 rows');
-end
 [keeplattice,args]=getflag(varargin, 'KeepLattice');
 [dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
 [nhist,args]=getoption(args,'nhist',1);
