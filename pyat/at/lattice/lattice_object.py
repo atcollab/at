@@ -20,6 +20,8 @@ from at.lattice import AtError, AtWarning
 from at.lattice import uint32_refpts as uint32_refs, bool_refpts as bool_refs
 from at.lattice import refpts_iterator, refpts_len
 from at.lattice import elements, get_s_pos, get_elements
+# noinspection PyProtectedMember
+from .utils import _uint32_refs, _bool_refs
 
 TWO_PI_ERROR = 1.E-4
 
@@ -663,6 +665,8 @@ def params_filter(params, elem_iterator, *args):
         params['periodicity'] = periodicity
 
 
+Lattice.uint32_refpts = _uint32_refs
+Lattice.bool_refpts = _bool_refs
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.select = refpts_iterator

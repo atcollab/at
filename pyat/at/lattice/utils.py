@@ -99,6 +99,20 @@ def uint32_refpts(refpts, n_elements):
     return refs
 
 
+# Private function accepting a callable for refpts
+def _uint32_refs(ring, refpts):
+    """"Return a uint32 numpy array containing the indices of the selected
+    elements. refpts may be:
+
+    1) a integer or a sequence of integers (0 indicating the first element)
+    2) a sequence of booleans marking the selected elements
+    3) a callable f such that f(elem) is True for selected elements
+    """
+    if callable(refpts):
+        refpts = [refpts(el) for el in ring]
+    return uint32_refpts(refpts, len(ring))
+
+
 def bool_refpts(refpts, n_elements):
     """
     Return a boolean numpy array of length n_elements + 1 where True elements
@@ -118,6 +132,20 @@ def bool_refpts(refpts, n_elements):
         brefpts = numpy.zeros(n_elements + 1, dtype=bool)
         brefpts[refs] = True
         return brefpts
+
+
+# Private function accepting a callable for refpts
+def _bool_refs(ring, refpts):
+    """Return a boolean numpy array of length n_elements + 1 where True elements
+    are selected. refpts may be:
+
+    1) a integer or a sequence of integers (0 indicating the first element)
+    2) a sequence of booleans marking the selected elements
+    3) a callable f such that f(elem) is True for selected elements
+    """
+    if callable(refpts):
+        refpts = [refpts(el) for el in ring]
+    return bool_refpts(refpts, len(ring))
 
 
 def checkattr(*args):
@@ -420,7 +448,7 @@ def get_s_pos(ring, refpts=None):
     s_pos = numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
-    refpts = uint32_refpts(refpts, len(ring))
+    refpts = _uint32_refs(ring, refpts)
     return s_pos[refpts]
 
 
