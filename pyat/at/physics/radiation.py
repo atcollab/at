@@ -6,13 +6,15 @@ import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, uint32_refpts
 from at.lattice import Element, Dipole, Wiggler
+from at.lattice import Quadrupole, Sextupole, DConstant
+from at.lattice import get_refpts, get_value_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import clight, e_mass, get_tunes_damp
 from at.physics import find_orbit6, find_m66, find_elem_m66
 from at.physics import linopt, find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
-           'gen_quantdiff_elem']
+           'gen_quantdiff_elem', 'tapering']
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -372,5 +374,67 @@ def gen_quantdiff_elem(ring, orbit=None):
     return diff_elem
 
 
+@check_radiation(True)
+def tapering(ring, quadrupole=True, sextupole=True, niter=1, copy= False, **kwargs):
+    """
+    Scales magnet strength with local energy to cancel the closed orbit
+    and optics errors due to synchrotron radiations. PolynomB is used for
+    dipoles such that the machine geometry is maintained.
+    tapering(ring) or ring.tapering()
+    PARAMETERS
+        ring            lattice description.
+
+    KEYWORDS
+        qadrupole=True  scale quadrupole fields
+        sextupole=True  scale sextupole fields
+        niter=1         number of iteration
+        XYStep=1.0e-8   transverse step for numerical computation
+        DPStep=1.0E-6   momentum deviation used for computation of orbit6
+        copy=False      If True a deepcopy is created, the original ring
+                        is unchanged, otherwise changes are applied in-place
+
+    RETURN
+        None if copy=False (default)
+        ring.deepcopy() in copy=True (ring unchanged)
+    """
+
+    if copy:
+        ringt = ring.deepcopy()
+    else:
+        ringt = ring
+
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
+    dipoles = get_refpts(ringt, Dipole)   
+    b0 = get_value_refpts(ringt, dipoles, 'BendingAngle')
+    ld = get_value_refpts(ringt, dipoles, 'Length')   
+
+    for i in range(niter):
+        o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
+        dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
+        set_value_refpts(ringt, dipoles, 'PolynomB', b0 / ld * dpps, index=0)  
+            
+    if quadrupole:
+        quadrupoles = get_refpts(ringt, Quadrupole)
+        k01 = get_value_refpts(ringt, quadrupoles, 'PolynomB', index=1)
+        o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
+        dpps = (o6[4, quadrupoles] + o6[4, quadrupoles+1]) / 2
+        set_value_refpts(ringt, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
+
+    if sextupole:
+        sextupoles = get_refpts(ringt, Sextupole)
+        k02 = get_value_refpts(ringt, sextupoles, 'PolynomB', index=2)
+        o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
+        dpps = (o6[4, sextupoles] + o6[4, sextupoles+1]) / 2
+        set_value_refpts(ringt, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
+
+    if copy:
+        return ringt
+
+
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
+Lattice.tapering = tapering
