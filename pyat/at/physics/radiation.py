@@ -375,7 +375,8 @@ def gen_quantdiff_elem(ring, orbit=None):
 
 
 @check_radiation(True)
-def tapering(ring, quadrupole=True, sextupole=True, niter=1, copy= False, **kwargs):
+def tapering(ring, quadrupole=True, sextupole=True, niter=1, copy=False,
+             **kwargs):
     """
     Scales magnet strength with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. PolynomB is used for
@@ -405,16 +406,16 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, copy= False, **kwar
 
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    dipoles = get_refpts(ringt, Dipole)   
+    dipoles = get_refpts(ringt, Dipole)
     b0 = get_value_refpts(ringt, dipoles, 'BendingAngle')
-    ld = get_value_refpts(ringt, dipoles, 'Length')   
+    ld = get_value_refpts(ringt, dipoles, 'Length')
 
     for i in range(niter):
         o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
         o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
         dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
-        set_value_refpts(ringt, dipoles, 'PolynomB', b0 / ld * dpps, index=0)  
-            
+        set_value_refpts(ringt, dipoles, 'PolynomB', b0 / ld * dpps, index=0)
+
     if quadrupole:
         quadrupoles = get_refpts(ringt, Quadrupole)
         k01 = get_value_refpts(ringt, quadrupoles, 'PolynomB', index=1)
