@@ -603,12 +603,12 @@ class Wiggler(LongElement):
 
 class PyElement(Element):
     """pyAT aperture element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['pyModule', 'pyFun']
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['pyModule']
 
-    def __init__(self, family_name, pyModule, pyFun, **kwargs):
+    def __init__(self, family_name, pyModule, **kwargs):
         kwargs.setdefault('PassMethod', 'PyFuncPass')
         super(PyElement, self).__init__(family_name, pyModule=pyModule, 
-                                        pyFun=pyFun, **kwargs)
+                                        **kwargs)
 
 
 CLASS_MAP = dict((k, v) for k, v in locals().items()

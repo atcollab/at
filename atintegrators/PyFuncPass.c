@@ -18,33 +18,31 @@ static PyObject *GetFunction(const atElem *ElemData)
 {
   PyObject *eName;
   PyObject *pName;
-  PyObject *fName;
   PyObject *pModule;
   PyObject *pyfunction;
   const char *s1;
   const char *s2;
-  const char *s3;
 
   eName = PyObject_GetAttrString((PyObject *)ElemData, "FamName");
   pName = PyObject_GetAttrString((PyObject *)ElemData, "pyModule");
-  fName = PyObject_GetAttrString((PyObject *)ElemData, "pyFun");
   s1 = PyUnicode_AsUTF8(eName);
   s2 = PyUnicode_AsUTF8(pName);
-  s3 = PyUnicode_AsUTF8(fName);
   pModule = PyImport_Import(pName);
   if (!pModule){
       printf("PyFuncPass: could not import pyModule %s in %s \n", s2, s1);
+      return NULL;
     }
-  pyfunction = PyObject_GetAttrString(pModule, PyUnicode_AsUTF8(fName));
+  pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
   if (!pyfunction){
-      printf("PyFuncPass: could not import pyFun %s in %s \n", s3, s1);
+      printf("PyFuncPass: could not import trackFunction in %s \n", s1);
+      return NULL;
     }
   if (!PyCallable_Check(pyfunction)){
-      printf("PyFuncPass: pyFun %s in %s not callable \n", s3, s1);
+      printf("PyFuncPass: trackFunction in %s not callable \n", s1);
+      return NULL;
     }
   Py_DECREF(eName);
   Py_DECREF(pName);
-  Py_DECREF(fName);
   Py_DECREF(pModule);
   return pyfunction;
 }
