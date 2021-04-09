@@ -375,7 +375,7 @@ def gen_quantdiff_elem(ring, orbit=None):
 
 
 @check_radiation(True)
-def tapering(ring, quadrupole=True, sextupole=True, niter=1, copy=False,
+def tapering(ring, quadrupole=True, sextupole=True, niter=1,
              **kwargs):
     """
     Scales magnet strength with local energy to cancel the closed orbit
@@ -391,49 +391,35 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1, copy=False,
         niter=1         number of iteration
         XYStep=1.0e-8   transverse step for numerical computation
         DPStep=1.0E-6   momentum deviation used for computation of orbit6
-        copy=False      If True a deepcopy is created, the original ring
-                        is unchanged, otherwise changes are applied in-place
-
-    RETURN
-        None if copy=False (default)
-        ring.deepcopy() in copy=True (ring unchanged)
     """
-
-    if copy:
-        ringt = ring.deepcopy()
-    else:
-        ringt = ring
 
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    dipoles = get_refpts(ringt, Dipole)
-    b0 = get_value_refpts(ringt, dipoles, 'BendingAngle')
-    ld = get_value_refpts(ringt, dipoles, 'Length')
+    dipoles = get_refpts(ring, Dipole)
+    b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
+    ld = get_value_refpts(ring, dipoles, 'Length')
 
     for i in range(niter):
-        o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
+        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
         dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
-        set_value_refpts(ringt, dipoles, 'PolynomB', b0 / ld * dpps, index=0)
+        set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)
 
     if quadrupole:
-        quadrupoles = get_refpts(ringt, Quadrupole)
-        k01 = get_value_refpts(ringt, quadrupoles, 'PolynomB', index=1)
-        o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
+        quadrupoles = get_refpts(ring, Quadrupole)
+        k01 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
+        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
         dpps = (o6[4, quadrupoles] + o6[4, quadrupoles+1]) / 2
-        set_value_refpts(ringt, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
+        set_value_refpts(ring, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
 
     if sextupole:
-        sextupoles = get_refpts(ringt, Sextupole)
-        k02 = get_value_refpts(ringt, sextupoles, 'PolynomB', index=2)
-        o0, _ = find_orbit6(ringt, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ringt, o0, refpts=range(len(ringt))))
+        sextupoles = get_refpts(ring, Sextupole)
+        k02 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
+        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
         dpps = (o6[4, sextupoles] + o6[4, sextupoles+1]) / 2
-        set_value_refpts(ringt, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
-
-    if copy:
-        return ringt
+        set_value_refpts(ring, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
 
 
 Lattice.ohmi_envelope = ohmi_envelope
