@@ -272,8 +272,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     int turn;
     #ifdef _OPENMP
     int maxthreads;
-    #endif /*_OPENMP*/
-    
+    #endif /*_OPENMP*/   
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
@@ -475,7 +474,6 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     }       
     if ((!elem_data) && (!kwargs)) return NULL;
     free(elem_data);
-    free(LibraryListPtr);
     if(pyfn_handle) Py_DECREF(pyfn_handle);
     if(kwargs) Py_DECREF(kwargs);
     Py_INCREF(Py_None);
