@@ -277,6 +277,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
+
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!II", kwlist, &PyList_Type, &lattice,
         &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse, &omp_num_threads)) {
         return NULL;
@@ -317,6 +318,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     outdims[3] = num_turns;
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
+
 
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
@@ -423,7 +425,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         omp_set_num_threads(maxthreads);
     }
     #endif /*_OPENMP*/
-
     return rout;
 }
 
@@ -435,7 +436,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     npy_uint32 num_particles;
     track_function fn_handle;
     PyObject *pyfn_handle;
-    PyObject *kwargs;
+    PyObject *kwargs = NULL;
     double *drin;
     struct parameters param;
     struct elem *elem_data = NULL;
@@ -465,18 +466,18 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
     fn_handle = LibraryListPtr->FunctionHandle;
     pyfn_handle = LibraryListPtr->PyFunctionHandle;
-    kwargs = Buildkwargs(element);
     if (fn_handle) {
         elem_data = fn_handle(element, elem_data, drin, num_particles, &param);
     }
-    else {        
+    else {    
+        kwargs = Buildkwargs(element);    
         kwargs = PyIntegratorPass(drin, pyfn_handle, kwargs, num_particles);
     }       
     if ((!elem_data) && (!kwargs)) return NULL;
     free(elem_data);
     free(LibraryListPtr);
-    Py_DECREF(pyfn_handle);
-    Py_DECREF(kwargs);
+    if(pyfn_handle) Py_DECREF(pyfn_handle);
+    if(kwargs) Py_DECREF(kwargs);
     Py_INCREF(Py_None);
     return Py_None;
 }
