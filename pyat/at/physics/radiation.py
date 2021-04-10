@@ -401,7 +401,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1,
 
     for i in range(niter):
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
         dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
         set_value_refpts(ring, dipoles, 'PolynomB', b0 / ld * dpps, index=0)
 
@@ -409,7 +409,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1,
         quadrupoles = get_refpts(ring, Quadrupole)
         k01 = get_value_refpts(ring, quadrupoles, 'PolynomB', index=1)
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
         dpps = (o6[4, quadrupoles] + o6[4, quadrupoles+1]) / 2
         set_value_refpts(ring, quadrupoles, 'PolynomB', k01*(1+dpps), index=1)
 
@@ -417,7 +417,7 @@ def tapering(ring, quadrupole=True, sextupole=True, niter=1,
         sextupoles = get_refpts(ring, Sextupole)
         k02 = get_value_refpts(ring, sextupoles, 'PolynomB', index=2)
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring))))
+        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
         dpps = (o6[4, sextupoles] + o6[4, sextupoles+1]) / 2
         set_value_refpts(ring, sextupoles, 'PolynomB', k02*(1+dpps), index=2)
 
