@@ -21,7 +21,8 @@ from fnmatch import fnmatch
 from at.lattice import elements
 
 __all__ = ['AtError', 'AtWarning', 'check_radiation', 'make_copy',
-           'uint32_refpts', 'bool_refpts', 'checkattr', 'checktype',
+           'uint32_refpts', 'bool_refpts',
+           'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
            'refpts_count', 'refpts_len', 'refpts_iterator',
            'set_shift', 'set_tilt', 'tilt_elem', 'shift_elem',
