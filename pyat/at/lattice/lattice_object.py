@@ -17,7 +17,11 @@ import math
 import itertools
 from warnings import warn
 from at.lattice import AtError, AtWarning
-from at.lattice import elements, get_s_pos, get_elements, uint32_refpts
+from at.lattice import uint32_refpts as uint32_refs, bool_refpts as bool_refs
+from at.lattice import refpts_iterator, refpts_len
+from at.lattice import elements, get_s_pos, get_elements
+# noinspection PyProtectedMember
+from .utils import _uint32_refs, _bool_refs
 
 TWO_PI_ERROR = 1.E-4
 
@@ -125,32 +129,30 @@ class Lattice(list):
         self.update(kwargs)
 
     def __getitem__(self, key):
-        try:
+        try:                                # Integer
             return super(Lattice, self).__getitem__(key.__index__())
         except (AttributeError, TypeError):
-            return Lattice(self.iterator(key), iterator=no_filter, **vars(self))
-
-    if sys.version_info < (3, 0):
-        # This won't be defined if version is at least 3.0
-        # Called for slices with step != 1
-        # noinspection PyTypeChecker
-        def __getslice__(self, i, j):
-            return self.__getitem__(slice(i, j))
+            if isinstance(key, slice):      # Slice
+                rg = range(*key.indices(len(self)))
+            else:                           # Array of integers or boolean
+                rg = self.uint32_refpts(key)
+            return Lattice((super(Lattice, self).__getitem__(i) for i in rg),
+                           iterator=no_filter, **vars(self))
 
     def __setitem__(self, key, values):
-        try:
+        try:                                # Integer or slice
             super(Lattice, self).__setitem__(key, values)
-        except TypeError:
-            key = uint32_refpts(key, len(self))
-            for i, v in zip(*numpy.broadcast_arrays(key, values)):
+        except TypeError:                   # Array of integers or boolean
+            rg = self.uint32_refpts(key)
+            for i, v in zip(*numpy.broadcast_arrays(rg, values)):
                 super(Lattice, self).__setitem__(i, v)
 
     def __delitem__(self, key):
-        try:
+        try:                                # Integer or slice
             super(Lattice, self).__delitem__(key)
-        except TypeError:
-            key = uint32_refpts(key, len(self))
-            for i in reversed(key):
+        except TypeError:                   # Array of integers or boolean
+            rg = self.uint32_refpts(key)
+            for i in reversed(rg):
                 super(Lattice, self).__delitem__(i)
 
     def __repr__(self):
@@ -174,14 +176,28 @@ class Lattice(list):
         return Lattice(itertools.chain(*itertools.repeat(self, times)),
                        **vars(self))
 
-    def iterator(self, key):
-        """Iterates over the indices selected by a slice or an array"""
-        if isinstance(key, slice):
-            indices = key.indices(len(self))
-            rg = range(*indices)
-        else:
-            rg = uint32_refpts(key, len(self))
-        return (super(Lattice, self).__getitem__(i) for i in rg)
+    def uint32_refpts(self, refpts):
+        """"Return a uint32 numpy array containing the indices of the selected
+        elements
+        """
+        if callable(refpts):
+            refpts = [refpts(el) for el in self]
+        return uint32_refs(refpts, len(self))
+
+    def bool_refpts(self, refpts):
+        """Return a boolean numpy array of length n_elements + 1 where
+        True elements are selected.
+        """
+        if callable(refpts):
+            refpts = [refpts(el) for el in self]
+        return bool_refs(refpts, len(self))
+
+    def rotate(self, n):
+        """Return a new lattice rotated left by n elements"""
+        if len(self) == 0:
+            return self.copy()
+        n = n % len(self)      # works for n<0
+        return self[n:] + self[:n]
 
     def update(self, *args, **kwargs):
         """Update the element attributes with the given arguments
@@ -273,7 +289,7 @@ class Lattice(list):
         except AttributeError:
             self.s_range = None
             i_range = self._i_range
-        return uint32_refpts(i_range, len(self))
+        return self.uint32_refpts(i_range)
 
     @property
     def circumference(self):
@@ -326,9 +342,9 @@ class Lattice(list):
             None if copy == False
 
         KEYWORDS
-            copy=True           Return a shallow copy of the lattice. Only the
-                                modified attributes are replaced. Otherwise
-                                modify the lattice in-place.
+            copy=True   If True, return a shallow copy of the lattice. Only the
+                        modified elements are copied.
+                        If False, the modification is done in-place
         """
 
         def lattice_modify():
@@ -403,9 +419,12 @@ class Lattice(list):
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
             wiggler_pass='auto'         PassMethod set on wigglers
-            copy=False                  Return a shallow copy of the lattice and
-                                        replace only the modified attributes
-                                        Otherwise modify the lattice in-place.
+            copy=False  If False, the modification is done in-place,
+                        If True, return a shallow copy of the lattice. Only the
+                        radiating elements are copied with PassMethod modified.
+                        CAUTION: a shallow copy means that all non-radiating
+                        elements are shared with the original lattice.
+                        Any further modification will affect in both lattices.
 
             For PassMethod names, the convention is:
                 None            no change
@@ -455,9 +474,12 @@ class Lattice(list):
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
             wiggler_pass='auto'         PassMethod set on wigglers
-            copy=False                  Return a shallow copy of the lattice and
-                                        replace only the modified attributes
-                                        Otherwise modify the lattice in-place.
+            copy=False  If False, the modification is done in-place,
+                        If True, return a shallow copy of the lattice. Only the
+                        radiating elements are copied with PassMethod modified.
+                        CAUTION: a shallow copy means that all non-radiating
+                        elements are shared with the original lattice.
+                        Any further modification will affect in both lattices.
 
             For PassMethod names, the convention is:
                 None            no change
@@ -549,7 +571,7 @@ class Lattice(list):
             break_elems = elements.Marker('sbreak')
         break_elems = numpy.reshape(break_elems, -1)
         # Check element lengths
-        if not all(e.Length==0 for e in break_elems):
+        if not all(e.Length == 0 for e in break_elems):
             warn(AtWarning(
                  "Inserting elements with length!=0 may change the lattice"))
         # broadcast break_s and break_elems to arrays of same size
@@ -558,12 +580,22 @@ class Lattice(list):
 
         return Lattice(sbreak_iterator(self, iter_mk), **vars(self))
 
+    def replace(self, refpts):
+        """Return a shallow copy of the lattice replacing the selected
+        elements by a deep copy"""
+        if callable(refpts):
+            check = map(refpts, self)
+        else:
+            check = iter(self.bool_refpts(refpts))
+        elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
+        return Lattice(elems, iterator=no_filter, **vars(self))
 
-def lattice_filter(params, elems):
-    """Copy lattice parameters an run through all lattice elements"""
-    for key, value in vars(elems).items():
+
+def lattice_filter(params, lattice):
+    """Copy lattice parameters and run through all lattice elements"""
+    for key, value in vars(lattice).items():
         params.setdefault(key, value)
-    return iter(elems)
+    return iter(lattice)
 
 
 # noinspection PyUnusedLocal
@@ -572,12 +604,12 @@ def no_filter(params, elems):
     return iter(elems)
 
 
-def type_filter(params, elems):
+def type_filter(params, elem_iterator):
     """Run through all elements and check element validity.
-    Analyses elements for radiation state
+    Analyse elements for radiation state
     """
     radiate = False
-    for idx, elem in enumerate(elems):
+    for idx, elem in enumerate(elem_iterator):
         if isinstance(elem, elements.Element):
             if (elem.PassMethod.endswith('RadPass') or
                     elem.PassMethod.endswith('CavityPass')):
@@ -646,5 +678,9 @@ def params_filter(params, elem_iterator, *args):
         params['periodicity'] = periodicity
 
 
+Lattice.uint32_refpts = _uint32_refs
+Lattice.bool_refpts = _bool_refs
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
+Lattice.select = refpts_iterator
+Lattice.refcount = refpts_len
