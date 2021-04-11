@@ -185,12 +185,19 @@ class Lattice(list):
         return uint32_refs(refpts, len(self))
 
     def bool_refpts(self, refpts):
-        """Return a boolean numpy array of length n_elements + 1 where True elements
-        are selected.
+        """Return a boolean numpy array of length n_elements + 1 where
+        True elements are selected.
         """
         if callable(refpts):
             refpts = [refpts(el) for el in self]
         return bool_refs(refpts, len(self))
+
+    def rotate(self, n):
+        """Return a new lattice rotated left by n elements"""
+        if len(self) == 0:
+            return self.copy()
+        n = n % len(self)      # works for n<0
+        return self[n:] + self[:n]
 
     def update(self, *args, **kwargs):
         """Update the element attributes with the given arguments
@@ -335,9 +342,9 @@ class Lattice(list):
             None if copy == False
 
         KEYWORDS
-            copy=True           Return a shallow copy of the lattice. Only the
-                                modified attributes are replaced. Otherwise
-                                modify the lattice in-place.
+            copy=True   If True, return a shallow copy of the lattice. Only the
+                        modified elements are copied.
+                        If False, the modification is done in-place
         """
 
         def lattice_modify():
@@ -412,9 +419,12 @@ class Lattice(list):
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
             wiggler_pass='auto'         PassMethod set on wigglers
-            copy=False                  Return a shallow copy of the lattice and
-                                        replace only the modified attributes
-                                        Otherwise modify the lattice in-place.
+            copy=False  If False, the modification is done in-place,
+                        If True, return a shallow copy of the lattice. Only the
+                        radiating elements are copied with PassMethod modified.
+                        CAUTION: a shallow copy means that all non-radiating
+                        elements are shared with the original lattice.
+                        Any further modification will affect in both lattices.
 
             For PassMethod names, the convention is:
                 None            no change
@@ -464,9 +474,12 @@ class Lattice(list):
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass=None        PassMethod set on quadrupoles
             wiggler_pass='auto'         PassMethod set on wigglers
-            copy=False                  Return a shallow copy of the lattice and
-                                        replace only the modified attributes
-                                        Otherwise modify the lattice in-place.
+            copy=False  If False, the modification is done in-place,
+                        If True, return a shallow copy of the lattice. Only the
+                        radiating elements are copied with PassMethod modified.
+                        CAUTION: a shallow copy means that all non-radiating
+                        elements are shared with the original lattice.
+                        Any further modification will affect in both lattices.
 
             For PassMethod names, the convention is:
                 None            no change
@@ -670,4 +683,4 @@ Lattice.bool_refpts = _bool_refs
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.select = refpts_iterator
-Lattice.count = refpts_len
+Lattice.refcount = refpts_len

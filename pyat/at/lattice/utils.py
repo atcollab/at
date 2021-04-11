@@ -16,7 +16,7 @@ refpts can be:
 """
 import numpy
 import functools
-from itertools import repeat, compress
+from itertools import compress
 from fnmatch import fnmatch
 from at.lattice import elements
 
@@ -58,6 +58,16 @@ def check_radiation(rad):
 
 def make_copy(copy):
     """Function to be used as a decorator for optics functions
+    The decorated function must be defined as:
+
+    def func(ring, refpts, *args, **kwargs):
+        ...
+        return
+
+    If copy is False, the function is not modified,
+    If copy is True, a shallow copy of ring is done, then the elements selected
+    by refpts are deep-copied, then func is applied to the copy, and the new
+    ring is returned.
     """
     def copy_decorator(func):
         @functools.wraps(func)
@@ -405,8 +415,12 @@ def set_value_refpts(ring, refpts, var, values, index=None,
                         If None the full array is replaced by value (Default)
         increment=False Add values to the initial values.
                         If False the initial value is replaced (Default)
-        copy=False      If True, returns a shallow copy of ring with new
-                        modified elements. Otherwise, modify the ring in-place.
+        copy=False      If False, do the modification in-place.
+                        If True, returns a shallow copy of ring with new
+                        modified elements.
+                        CAUTION: a shallow copy means that all non-affected
+                        elements are shared with the original lattice.
+                        Any further modification will affect in both lattices.
     """
     if index is None:
         def setf(elem, value):
@@ -416,12 +430,9 @@ def set_value_refpts(ring, refpts, var, values, index=None,
             getattr(elem, var)[index] = value
 
     if increment:
-        values = iter(values + get_value_refpts(ring, refpts, var, index=index))
+        values = values + get_value_refpts(ring, refpts, var, index=index)
     else:
-        try:
-            values = iter(values)
-        except TypeError:
-            values = repeat(values)
+        values = numpy.broadcast_to(values, (refpts_len(ring, refpts),))
 
     # noinspection PyShadowingNames
     @make_copy(copy)
