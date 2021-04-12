@@ -5,8 +5,7 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, Dipole, Wiggler
-from at.lattice import Quadrupole, Sextupole, DConstant
+from at.lattice import Element, Dipole, Wiggler, DConstant
 from at.lattice import get_refpts, get_cells, get_value_refpts
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
