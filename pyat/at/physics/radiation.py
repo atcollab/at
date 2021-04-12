@@ -1,21 +1,20 @@
 """
 Radiation and equilibrium emittances
 """
-import sys
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
-from scipy.constants import c as clight
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import elements, AtError, DConstant, Dipole
-from at.lattice import get_refpts, get_value_refpts, set_value_refpts, get_cells
+from at.lattice import Element, Dipole, Wiggler, DConstant
+from at.lattice import get_refpts, get_cells, get_value_refpts
+from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
-from at.physics import find_orbit6, find_m66, find_elem_m66, get_tunes_damp
-from at.physics import Cgamma, linopt, find_mpole_raddiff_matrix, e_mass
+from at.physics import clight, e_mass, get_tunes_damp
+from at.physics import find_orbit6, find_m66, find_elem_m66
+from at.physics import linopt, find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
-           'get_energy_loss', 'gen_quantdiff_elem', 'set_cavity_phase',
-           'tapering']
+           'gen_quantdiff_elem', 'tapering']
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -340,71 +339,11 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
         raise ValueError('length of Twiss data should be {0}'
                          .format(len(ring) + 1))
     for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
-        if isinstance(el, elements.Dipole) and el.BendingAngle != 0.0:
+        if isinstance(el, Dipole) and el.BendingAngle != 0.0:
             integrals += dipole_radiation(el, vini, vend)
-        elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
+        elif isinstance(el, Wiggler) and el.PassMethod != 'DriftPass':
             integrals += wiggler_radiation(el, vini)
     return tuple(integrals)
-
-
-def get_energy_loss(ring, method='integral'):
-    """Compute the energy loss per turn [eV]
-
-    PARAMETERS
-        ring                        lattice description
-
-    KEYWORDS
-        method='integral'           method for energy loss computation
-            'integral': The losses are obtained from
-                Losses = Cgamma / 2pi * EGeV^4 * i2
-                Takes into account bending magnets and wigglers.
-            'tracking': The losses are obtained by tracking without cavities.
-                Needs radiation ON, takes into account all radiating elements.
-    """
-    def integral(ring):
-        """Losses = Cgamma / 2pi * EGeV^4 * i2
-        """
-
-        def wiggler_i2(wiggler):
-            rhoinv = wiggler.Bmax / Brho
-            coefh = wiggler.By[1, :]
-            coefv = wiggler.Bx[1, :]
-            return wiggler.Length * (numpy.sum(coefh * coefh) + numpy.sum(
-                coefv*coefv)) * rhoinv ** 2 / 2
-
-        def dipole_i2(dipole):
-            return dipole.BendingAngle ** 2 / dipole.Length
-
-        Brho = sqrt(ring.energy**2 - e_mass**2) / clight
-        i2 = 0.0
-        for el in ring:
-            if isinstance(el, elements.Dipole):
-                i2 += dipole_i2(el)
-            elif isinstance(el, elements.Wiggler) and el.PassMethod != 'DriftPass':
-                i2 += wiggler_i2(el)
-        e_loss = Cgamma / 2.0 / pi * ring.energy ** 4 * i2
-        return e_loss
-
-    @check_radiation(True)
-    def tracking(ring):
-        """Losses from tracking
-        """
-        ringtmp = ring.radiation_off(dipole_pass=None,
-                                     quadrupole_pass=None,
-                                     wiggler_pass=None,
-                                     sextupole_pass=None,
-                                     octupole_pass=None,
-                                     copy=True)
-        o0 = numpy.zeros(6)
-        o6 = numpy.squeeze(lattice_pass(ringtmp, o0, refpts=len(ringtmp)))
-        return -o6[4] * ring.energy
-
-    if method == 'integral':
-        return ring.periodicity * integral(ring)
-    elif method == 'tracking':
-        return ring.periodicity * tracking(ring)
-    else:
-        raise AtError('Invalid method: {}'.format(method))
 
 
 @check_radiation(True)
@@ -431,39 +370,8 @@ def gen_quantdiff_elem(ring, orbit=None):
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
-    diff_elem = elements.Element('Diffusion', Lmatp=lmat,
-                                 PassMethod='QuantDiffPass')
+    diff_elem = Element('Diffusion', Lmatp=lmat, PassMethod='QuantDiffPass')
     return diff_elem
-
-
-def set_cavity_phase(ring, method='integral', refpts=None):
-    """
-   Adjust the TimeLag attribute of RF cavities based on frequency,
-   voltage and energy loss per turn, so that the synchronous phase is zero.
-   An error occurs if all cavities do not have the same frequency.
-
-    PARAMETERS
-        ring        lattice description
-
-    KEYWORDS
-        refpts=None Cavity location. This allows to ignore harmonic cavities
-    """
-    if refpts is None:
-        cavities = [elem for elem in ring if
-                    isinstance(elem, elements.RFCavity)]
-    else:
-        cavities=ring[refpts]
-    rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
-    freq = numpy.unique(numpy.array([elem.Frequency for elem in cavities]))
-    if len(freq) > 1:
-        raise AtError('RF frequency not equal for all cavities')
-    print("\nThis function modifies the time reference\n"
-          "This should be avoided, you have been warned!\n",
-          file=sys.stderr)
-    u0 = get_energy_loss(ring, method=method)
-    timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
-    for elem in cavities:
-        elem.TimeLag = timelag
 
 
 @check_radiation(True)
@@ -496,35 +404,26 @@ def tapering(ring, multipoles=True, niter=1, **kwargs):
     ld = get_value_refpts(ring, dipoles, 'Length')
 
     for i in range(niter):
-        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
-        dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step)
+        dpps = (o6[dipoles, 4] + o6[dipoles+1, 4]) / 2
         set_value_refpts(ring, dipoles, 'PolynomB', b0/ld*dpps+k0*(1+dpps),
                          index=0)
 
     if multipoles:
-        multipolesB = numpy.array([i for i, el in enumerate(ring) if
-                                   hasattr(el, 'PolynomB')],
-                                  dtype=numpy.uint32)
-        multipolesA = numpy.array([i for i, el in enumerate(ring) if
-                                   hasattr(el, 'PolynomA')],
-                                  dtype=numpy.uint32)
+        mults = numpy.array([i for i, el in enumerate(ring) if
+                             hasattr(el, 'PolynomB') and
+                             hasattr(el, 'PolynomA')])
         k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
-        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
-        dppsb = (o6[4, multipolesB] + o6[4, multipolesB+1]) / 2
-        dppsa = (o6[4, multipolesA] + o6[4, multipolesA+1]) / 2
-        for i,el in enumerate(ring[multipolesB]):
-            el.PolynomB *= 1+dppsb[i]
-        for i,el in enumerate(ring[multipolesA]):
-            el.PolynomA *= 1+dppsa[i]
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step)
+        dpps = (o6[mults, 4] + o6[mults+1, 4]) / 2
+        for dpp, el in zip(dpps, ring[mults]):
+            el.PolynomB *= 1+dpp
+            el.PolynomA *= 1+dpp
         set_value_refpts(ring, dipoles, 'PolynomB', k0, index=0)
-    
 
 
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
-Lattice.get_energy_loss = get_energy_loss
-Lattice.energy_loss = property(get_energy_loss)
-Lattice.set_cavity_phase = set_cavity_phase
 Lattice.tapering = tapering
