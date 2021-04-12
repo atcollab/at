@@ -329,7 +329,8 @@ def get_value_refpts(ring, refpts, var, index=None, order=None):
         def getf(elem):
             return getattr(elem, var)[index]
 
-    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts)])
+    return numpy.array([getf(elem) for elem in refpts_iterator(ring, refpts)],
+                       dtype=object)
 
 
 def set_value_refpts(ring, refpts, var, values, index=None, order=None,
