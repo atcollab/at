@@ -405,28 +405,23 @@ def tapering(ring, multipoles=True, niter=1, **kwargs):
     ld = get_value_refpts(ring, dipoles, 'Length')
 
     for i in range(niter):
-        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
-        dpps = (o6[4, dipoles] + o6[4, dipoles+1]) / 2
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step)
+        dpps = (o6[dipoles, 4] + o6[dipoles+1, 4]) / 2
         set_value_refpts(ring, dipoles, 'PolynomB', b0/ld*dpps+k0*(1+dpps),
                          index=0)
 
     if multipoles:
-        multipolesB = numpy.array([i for i, el in enumerate(ring) if
-                                   hasattr(el, 'PolynomB')],
-                                  dtype=numpy.uint32)
-        multipolesA = numpy.array([i for i, el in enumerate(ring) if
-                                   hasattr(el, 'PolynomA')],
-                                  dtype=numpy.uint32)
+        mults = numpy.array([i for i, el in enumerate(ring) if
+                             hasattr(el, 'PolynomB') and
+                             hasattr(el, 'PolynomA')])
         k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
-        o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
-        o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
-        dppsb = (o6[4, multipolesB] + o6[4, multipolesB+1]) / 2
-        dppsa = (o6[4, multipolesA] + o6[4, multipolesA+1]) / 2
-        for i,el in enumerate(ring[multipolesB]):
-            el.PolynomB *= 1+dppsb[i]
-        for i,el in enumerate(ring[multipolesA]):
-            el.PolynomA *= 1+dppsa[i]
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step)
+        dpps = (o6[mults, 4] + o6[mults+1, 4]) / 2
+        for dpp, el in zip(dpps, ring[mults]):
+            el.PolynomB *= 1+dpp
+            el.PolynomA *= 1+dpp
         set_value_refpts(ring, dipoles, 'PolynomB', k0, index=0)
 
 
