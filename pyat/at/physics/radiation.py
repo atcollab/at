@@ -5,7 +5,7 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, Dipole, Wiggler, DConstant
+from at.lattice import Element, Dipole, Wiggler, DConstant, Multipole
 from at.lattice import get_refpts, get_cells, get_value_refpts
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
@@ -411,9 +411,7 @@ def tapering(ring, multipoles=True, niter=1, **kwargs):
                          index=0)
 
     if multipoles:
-        mults = numpy.array([i for i, el in enumerate(ring) if
-                             hasattr(el, 'PolynomB') and
-                             hasattr(el, 'PolynomA')])
+        mults = get_refpts(ring, Multipole)
         k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
                             XYStep=xy_step, DPStep=dp_step)
