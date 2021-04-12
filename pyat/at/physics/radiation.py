@@ -381,9 +381,12 @@ def tapering(ring, multipoles=True, niter=1,
     """
     Scales magnet strength with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. PolynomB is used for
-    dipoles such that the machine geometry is maintained.
-    This is the ideal tapering scheme where magnets and multipoles components
-    are scaled individually
+    dipoles such that the machine geometry is maintained. This is the ideal
+    tapering scheme where magnets and multipoles components (PolynomB and
+    PolynomA) are scaled individually.
+    !!! WARNING: This method works only for lattices without errors and
+    corrections: if not all corrections and field errors will also be
+    scaled !!!
     tapering(ring) or ring.tapering()
     PARAMETERS
         ring            lattice description.
