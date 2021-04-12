@@ -376,8 +376,7 @@ def gen_quantdiff_elem(ring, orbit=None):
 
 
 @check_radiation(True)
-def tapering(ring, multipoles=True, niter=1,
-             **kwargs):
+def tapering(ring, multipoles=True, niter=1, **kwargs):
     """
     Scales magnet strength with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. PolynomB is used for
