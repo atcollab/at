@@ -419,14 +419,14 @@ def tapering(ring, multipoles=True, niter=1, **kwargs):
                                    hasattr(el, 'PolynomA')],
                                   dtype=numpy.uint32)
         k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
-        kb = get_value_refpts(ring, multipolesB, 'PolynomB')
-        ka = get_value_refpts(ring, multipolesA, 'PolynomA')
         o0, _ = find_orbit6(ring, XYStep=xy_step, DPStep=dp_step)
         o6 = numpy.squeeze(lattice_pass(ring, o0, refpts=range(len(ring)+1)))
         dppsb = (o6[4, multipolesB] + o6[4, multipolesB+1]) / 2
         dppsa = (o6[4, multipolesA] + o6[4, multipolesA+1]) / 2
-        set_value_refpts(ring, multipolesB, 'PolynomB', kb*(1+dppsb))
-        set_value_refpts(ring, multipolesA, 'PolynomA', ka*(1+dppsa))
+        for i,el in enumerate(ring[multipolesB]):
+            el.PolynomB *= 1+dppsb[i]
+        for i,el in enumerate(ring[multipolesA]):
+            el.PolynomA *= 1+dppsa[i]
         set_value_refpts(ring, dipoles, 'PolynomB', k0, index=0)
 
 
