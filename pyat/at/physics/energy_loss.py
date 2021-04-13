@@ -1,8 +1,8 @@
 import sys
 from math import sqrt, pi
 import numpy
-from at.lattice import Lattice, Dipole, Wiggler, RFCavity
-from at.lattice import check_radiation, AtError
+from at.lattice import Lattice, Dipole, Wiggler
+from at.lattice import check_radiation, set_cavity, AtError
 from at.tracking import lattice_pass
 from at.physics import clight, Cgamma, e_mass
 
@@ -69,7 +69,7 @@ def get_energy_loss(ring, method='integral'):
         raise AtError('Invalid method: {}'.format(method))
 
 
-def set_cavity_phase(ring, method='integral', refpts=None):
+def set_cavity_phase(ring, method='integral', refpts=None, copy=False):
     """
    Adjust the TimeLag attribute of RF cavities based on frequency,
    voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -79,23 +79,21 @@ def set_cavity_phase(ring, method='integral', refpts=None):
         ring        lattice description
 
     KEYWORDS
-        refpts=None Cavity location. This allows to ignore harmonic cavities
+        method='integral'   method for energy loss computation.
+                            See "get_energy_loss".
+        refpts=None         Cavity location. If None, use all cavities.
+                            This allows to ignore harmonic cavities.
+        copy=False          If True, returns a shallow copy of ring with new
+                            cavity elements. Otherwise, modify ring in-place.
     """
-    if refpts is None:
-        cavities = [elem for elem in ring if isinstance(elem, RFCavity)]
-    else:
-        cavities = ring[refpts]
-    rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
-    freq = numpy.unique(numpy.array([elem.Frequency for elem in cavities]))
-    if len(freq) > 1:
-        raise AtError('RF frequency not equal for all cavities')
+    rfv = ring.get_rf_voltage(refpts=refpts)
+    freq = ring.get_rf_frequency(refpts=refpts)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
           file=sys.stderr)
     u0 = get_energy_loss(ring, method=method)
     timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
-    for elem in cavities:
-        elem.TimeLag = timelag
+    set_cavity(ring, TimeLag=timelag, refpts=refpts, copy=copy)
 
 
 Lattice.get_energy_loss = get_energy_loss

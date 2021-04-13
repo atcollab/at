@@ -297,20 +297,6 @@ class Lattice(list):
         return self.periodicity * self.get_s_pos(len(self))[0]
 
     @property
-    def voltage(self):
-        """Total accelerating voltage"""
-        volts = [elem.Voltage for elem in self if
-                 isinstance(elem, elements.RFCavity)]
-        return self.periodicity * sum(volts)
-
-    @property
-    def harmonic_number(self):
-        """Harmonic number"""
-        harms = [elem.HarmNumber for elem in self if
-                 isinstance(elem, elements.RFCavity)]
-        return self.periodicity * harms[0] if harms else None
-
-    @property
     def radiation(self):
         """If True, at least one element modifies the beam energy"""
         try:
