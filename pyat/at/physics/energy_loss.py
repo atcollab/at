@@ -92,6 +92,8 @@ def set_cavity_phase(ring, method='integral', refpts=None, copy=False):
           "This should be avoided, you have been warned!\n",
           file=sys.stderr)
     u0 = get_energy_loss(ring, method=method)
+    if u0 > rfv:
+        raise AtError('Nor enough RF voltage: unstable ring')
     timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
     set_cavity(ring, TimeLag=timelag, refpts=refpts, copy=copy)
 

@@ -31,6 +31,9 @@ warning('AT:CavityTimeLag',...
     ['\nThis function modifies the time reference\n',...
        'This should be avoided, you have been warned\n']);
 U0=atgetU0(ring,'periods',1,varargs);
+if U0 > rfv
+    error('AT:NoEnoughRFVoltage','Not enough RF voltage, unstable ring.');
+end
 timelag=clight / (2*pi*freq) * asin(U0/rfv);
 newring=atsetfieldvalues(ring,cavities,'TimeLag',timelag);
 end
