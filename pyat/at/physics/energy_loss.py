@@ -1,4 +1,5 @@
 import sys
+from warnings import warn
 from math import sqrt, pi
 import numpy
 from at.lattice import Lattice, Dipole, Wiggler
@@ -69,7 +70,7 @@ def get_energy_loss(ring, method='integral'):
         raise AtError('Invalid method: {}'.format(method))
 
 
-def set_cavity_phase(ring, method='integral', refpts=None, copy=False):
+def set_cavity_phase(ring, method='integral', refpts=None, cavpts=None, copy=False):
     """
    Adjust the TimeLag attribute of RF cavities based on frequency,
    voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -81,21 +82,25 @@ def set_cavity_phase(ring, method='integral', refpts=None, copy=False):
     KEYWORDS
         method='integral'   method for energy loss computation.
                             See "get_energy_loss".
-        refpts=None         Cavity location. If None, use all cavities.
+        cavpts=None         Cavity location. If None, use all cavities.
                             This allows to ignore harmonic cavities.
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place.
     """
-    rfv = ring.get_rf_voltage(refpts=refpts)
-    freq = ring.get_rf_frequency(refpts=refpts)
+    # refpts is kept for backward compatibility
+    if cavpts is None and refpts is not None:
+        warn(FutureWarning('You should use "cavpts" instead of "refpts"'))
+        cavpts = refpts
+    rfv = ring.get_rf_voltage(cavpts=cavpts)
+    freq = ring.get_rf_frequency(cavpts=cavpts)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
           file=sys.stderr)
     u0 = get_energy_loss(ring, method=method)
     if u0 > rfv:
-        raise AtError('Nor enough RF voltage: unstable ring')
+        raise AtError('Not enough RF voltage: unstable ring')
     timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
-    set_cavity(ring, TimeLag=timelag, refpts=refpts, copy=copy)
+    set_cavity(ring, TimeLag=timelag, cavpts=cavpts, copy=copy)
 
 
 Lattice.get_energy_loss = get_energy_loss
