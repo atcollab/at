@@ -86,16 +86,17 @@ def set_cavity_phase(ring, method='integral', refpts=None):
     else:
         cavities = ring[refpts]
     rfv = ring.periodicity*sum(elem.Voltage for elem in cavities)
-    freq = numpy.unique(numpy.array([elem.Frequency for elem in cavities]))
-    if len(freq) > 1:
-        raise AtError('RF frequency not equal for all cavities')
+    freq = numpy.array([elem.Frequency for elem in cavities])
+    #freq = numpy.unique(numpy.array([elem.Frequency for elem in cavities]))
+    #if len(freq) > 1:
+    #    raise AtError('RF frequency not equal for all cavities')
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
           file=sys.stderr)
     u0 = get_energy_loss(ring, method=method)
     timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
-    for elem in cavities:
-        elem.TimeLag = timelag
+    for elem, tl in zip(cavities,timelag):
+        elem.TimeLag = tl
 
 
 Lattice.get_energy_loss = get_energy_loss

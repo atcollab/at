@@ -232,7 +232,7 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     return ref_in, all_points
 
 
-def find_orbit6(ring, refpts=None, guess=None, **kwargs):
+def find_orbit6(ring, refpts=None, guess=numpy.zeros(6), **kwargs):
     """find_orbit6 finds the closed orbit in the full 6-D phase space
     by numerically solving  for a fixed point of the one turn
     map M calculated with lattice_pass
