@@ -27,14 +27,7 @@ CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 
 newring = ring;
 
-% Indices of all cavity
-indrfc=findcells(ring,'Class','RFCavity');
-
-if radflag
-    [~,ncells,~,~,U0]=atenergy(ring);
-else
-    [~,ncells]=atenergy(ring);
-end
+[~,ncells]=atenergy(ring);
 % gamma0=E0/me_EV;
 % beta0=sqrt(gamma0^2-1)/gamma0;
 
@@ -44,6 +37,7 @@ circ=L*ncells;
 freq=(CLIGHT/circ)*HarmNumber;
 
 %now set cavity frequencies, Harmonic Number and RF Voltage
+indrfc=findcells(ring,'Class','RFCavity');
 for j=indrfc
     newring{j}.Frequency=freq;
     newring{j}.HarmNumber=HarmNumber;
@@ -52,6 +46,7 @@ end
 
 %now set phaselags in cavities
 if radflag
+    U0=atgetU0(ring);
     timelag= (circ/(2*pi*HarmNumber))*asin(U0/(rfv));
     newring=atradon(newring);  % set radiation on. nothing if radiation is already on    
 else

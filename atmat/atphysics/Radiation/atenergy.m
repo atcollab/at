@@ -90,32 +90,7 @@ end
 
 % get energy loss per turn
 if nargout >= 5
-    % Losses = Cgamma/2/pi*EGeV^4*I2
-    e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
-    cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
-    e_radius=PhysConstant.classical_electron_radius.value;                  % m
-    Cgamma=4.0E27*pi*e_radius/3/e_mass^3;                       % [m/GeV^3]
-    Brho=sqrt(energy*energy - e_mass*e_mass)/cspeed;
-    
-    % Dipole radiation
-    lendp=atgetfieldvalues(ring(dipoles),'Length');
-    I2d=sum(abs(theta.*theta./lendp));
-    % Wiggler radiation
-    iswiggler=@(elem) isfield(elem,'Class') && strcmp(elem.Class,'Wiggler') ...
-                   && ~strcmp(elem.PassMethod,'DriftPass');
-    wigglers=cellfun(iswiggler, ring);
-    I2w=sum(cellfun(@wiggler_i2,ring(wigglers)));
-    % Additional radiation
-    I2x=sum(atgetfieldvalues(ring(atgetcells(ring,'I2')),'I2'));
-    I2=nbper*(I2d+I2w+I2x);                                     % [m-1]
-    U0=Cgamma/2/pi*(energy*1.e-9)^4*I2*1e9;                     % [eV]
+    U0 = atgetU0(ring);
 end
-
-    function i2=wiggler_i2(elem)
-        rhoinv=elem.Bmax/Brho;
-        coefh=elem.By(2,:);
-        coefv=elem.Bx(2,:);
-        i2=elem.Length*(coefh*coefh'+coefv*coefv')*rhoinv*rhoinv/2;
-    end
 
 end

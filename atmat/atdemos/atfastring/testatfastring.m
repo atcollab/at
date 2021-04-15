@@ -4,7 +4,7 @@
 % An electron is tracked through the full lattice and fast ring and
 % the tracking time and tracking results are compared. 
 
-clear all
+clear
 clc
 echo on
 
@@ -17,7 +17,7 @@ ring=esrf;
 % ring=[cav;ring];
 
 % set RF cavity
-ring=atsetcavity(ring,8e6,0,992);
+ring=atradoff(atsetcavity(ring,8e6,0,992));
 
 %Now, create fastring and fastringrad from ring.
 [fastring,fastringrad]=atfastring(ring);
