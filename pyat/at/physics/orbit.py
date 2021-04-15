@@ -232,7 +232,7 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, guess=None, **kwargs):
     return ref_in, all_points
 
 
-def find_orbit6(ring, refpts=None, guess=None, **kwargs):
+def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
     """find_orbit6 finds the closed orbit in the full 6-D phase space
     by numerically solving  for a fixed point of the one turn
     map M calculated with lattice_pass
@@ -298,7 +298,7 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', 'tracking')
 
-    # Get evolution period
+    # Get revolution period
     l0 = get_s_pos(ring, len(ring))
     cavities = [elem for elem in ring if isinstance(elem, elements.RFCavity)]
     if len(cavities) == 0:
@@ -308,12 +308,16 @@ def find_orbit6(ring, refpts=None, guess=None, **kwargs):
     harm_number = cavities[0].HarmNumber
 
     if guess is None:
-        rfv = ring.periodicity * sum(elem.Voltage for elem in cavities)
-        u0 = get_energy_loss(ring, method=method)
-        if u0 > rfv:
-            raise AtError('Missing RF voltage: unstable ring')
         ref_in = numpy.zeros((6,), order='F')
-        ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
+        try:
+            rfv = ring.get_rf_voltage(cavpts=cavpts)
+        except AtError:
+            pass
+        else:
+            u0 = get_energy_loss(ring, method=method)
+            if u0 > rfv:
+                raise AtError('Missing RF voltage: unstable ring')
+            ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
     else:
         ref_in = guess
 

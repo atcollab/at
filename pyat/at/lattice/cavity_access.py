@@ -50,6 +50,7 @@ def get_rf_voltage(ring, cavpts=None):
         cavpts=None     location of RF cavities. If None, take all cavities.
                         This allows to ignore harmonic cavities
     """
+    _ = get_rf_frequency(ring, cavpts=cavpts)   # check single frequency
     vcell = sum(_get_rf_attr(ring, 'Voltage', cavpts=cavpts))
     return ring.periodicity * vcell
 
