@@ -5,14 +5,16 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, uint32_refpts
-from at.lattice import Element, Dipole, Wiggler
+from at.lattice import Element, Dipole, Wiggler, DConstant, Multipole
+from at.lattice import get_refpts, get_cells, get_value_refpts
+from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import clight, e_mass, get_tunes_damp
 from at.physics import find_orbit6, find_m66, find_elem_m66
 from at.physics import linopt, find_mpole_raddiff_matrix
 
 __all__ = ['ohmi_envelope', 'get_radiation_integrals', 'quantdiffmat',
-           'gen_quantdiff_elem']
+           'gen_quantdiff_elem', 'tapering']
 
 _NSTEP = 60  # nb slices in a wiggler period
 
@@ -372,5 +374,54 @@ def gen_quantdiff_elem(ring, orbit=None):
     return diff_elem
 
 
+@check_radiation(True)
+def tapering(ring, multipoles=True, niter=1, **kwargs):
+    """
+    Scales magnet strength with local energy to cancel the closed orbit
+    and optics errors due to synchrotron radiations. PolynomB is used for
+    dipoles such that the machine geometry is maintained. This is the ideal
+    tapering scheme where magnets and multipoles components (PolynomB and
+    PolynomA) are scaled individually.
+    !!! WARNING: This method works only for lattices without errors and
+    corrections: if not all corrections and field errors will also be
+    scaled !!!
+    tapering(ring) or ring.tapering()
+    PARAMETERS
+        ring            lattice description.
+
+    KEYWORDS
+        multipoles=True scale all multipoles
+        niter=1         number of iteration
+        XYStep=1.0e-8   transverse step for numerical computation
+        DPStep=1.0E-6   momentum deviation used for computation of orbit6
+    """
+
+    xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
+    dipoles = get_refpts(ring, Dipole)
+    b0 = get_value_refpts(ring, dipoles, 'BendingAngle')
+    k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
+    ld = get_value_refpts(ring, dipoles, 'Length')
+
+    for i in range(niter):
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step)
+        dpps = (o6[dipoles, 4] + o6[dipoles+1, 4]) / 2
+        set_value_refpts(ring, dipoles, 'PolynomB', b0/ld*dpps+k0*(1+dpps),
+                         index=0)
+
+    if multipoles:
+        mults = get_refpts(ring, Multipole)
+        k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
+        _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
+                            XYStep=xy_step, DPStep=dp_step)
+        dpps = (o6[mults, 4] + o6[mults+1, 4]) / 2
+        for dpp, el in zip(dpps, ring[mults]):
+            el.PolynomB *= 1+dpp
+            el.PolynomA *= 1+dpp
+        set_value_refpts(ring, dipoles, 'PolynomB', k0, index=0)
+
+
 Lattice.ohmi_envelope = ohmi_envelope
 Lattice.get_radiation_integrals = get_radiation_integrals
+Lattice.tapering = tapering
