@@ -8,7 +8,7 @@ import scipy.constants as constants
 from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
-from at.physics import get_energy_loss
+from at.physics import get_energy_loss, ELossMethod
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -283,7 +283,10 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
         keep_lattice    Assume no lattice change since the previous tracking.
                         Default: False
         guess           Initial value for the closed orbit. It may help
-                        convergence. Default: (0, 0, 0, 0)
+                        convergence. The default is computed from the energy
+                        loss of the ring
+        method          Method for energy loss computation (see get_energy_loss)
+                        default: ELossMethod.TRACKING
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
         XYStep          Step size. Default: DConstant.XYStep
@@ -296,7 +299,7 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    method = kwargs.pop('method', 'tracking')
+    method = kwargs.pop('method', ELossMethod.TRACKING)
 
     # Get revolution period
     l0 = get_s_pos(ring, len(ring))

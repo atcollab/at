@@ -1,4 +1,5 @@
 import sys
+from enum import Enum
 from warnings import warn
 from math import sqrt, pi
 import numpy
@@ -7,21 +8,28 @@ from at.lattice import check_radiation, set_cavity, AtError
 from at.tracking import lattice_pass
 from at.physics import clight, Cgamma, e_mass
 
-__all__ = ['get_energy_loss', 'set_cavity_phase']
+__all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod']
 
 
-def get_energy_loss(ring, method='integral'):
+class ELossMethod(Enum):
+    """Enum class for energy loss methods"""
+    INTEGRAL = 1
+    TRACKING = 2
+
+
+def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
     """Compute the energy loss per turn [eV]
 
     PARAMETERS
         ring                        lattice description
 
     KEYWORDS
-        method='integral'           method for energy loss computation
-            'integral': The losses are obtained from
+        method=ELossMethod.INTEGRAL method for energy loss computation
+            The enum class ELossMethod declares 2 values
+            INTEGRAL: The losses are obtained from
                 Losses = Cgamma / 2pi * EGeV^4 * i2
                 Takes into account bending magnets and wigglers.
-            'tracking': The losses are obtained by tracking without cavities.
+            TRACKING: The losses are obtained by tracking without cavities.
                 Needs radiation ON, takes into account all radiating elements.
     """
     def integral(ring):
@@ -62,15 +70,19 @@ def get_energy_loss(ring, method='integral'):
         o6 = numpy.squeeze(lattice_pass(ringtmp, o0, refpts=len(ringtmp)))
         return -o6[4] * ring.energy
 
-    if method == 'integral':
+    if isinstance(method, str):
+        method = ELossMethod[method.upper()]
+        warn(FutureWarning('You should use {0!s}'.format(method)))
+    if method is ELossMethod.INTEGRAL:
         return ring.periodicity * integral(ring)
-    elif method == 'tracking':
+    elif method == ELossMethod.TRACKING:
         return ring.periodicity * tracking(ring)
     else:
         raise AtError('Invalid method: {}'.format(method))
 
 
-def set_cavity_phase(ring, method='integral', refpts=None, cavpts=None, copy=False):
+def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
+                     refpts=None, cavpts=None, copy=False):
     """
    Adjust the TimeLag attribute of RF cavities based on frequency,
    voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -80,7 +92,8 @@ def set_cavity_phase(ring, method='integral', refpts=None, cavpts=None, copy=Fal
         ring        lattice description
 
     KEYWORDS
-        method='integral'   method for energy loss computation.
+        method=ELossMethod.INTEGRAL
+                            method for energy loss computation.
                             See "get_energy_loss".
         cavpts=None         Cavity location. If None, use all cavities.
                             This allows to ignore harmonic cavities.

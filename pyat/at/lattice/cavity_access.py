@@ -1,3 +1,4 @@
+from enum import Enum
 import numpy
 from scipy.constants import c as clight
 from at.lattice import elements, AtError, checktype, make_copy, get_cells
@@ -5,7 +6,12 @@ from at.lattice import Lattice
 
 __all__ = ['get_rf_frequency', 'get_rf_harmonic_number', 'get_rf_voltage',
            'set_rf_frequency', 'set_rf_harmonic_number', 'set_rf_voltage',
-           'get_rf_timelag', 'set_rf_timelag', 'set_cavity']
+           'get_rf_timelag', 'set_rf_timelag', 'set_cavity', 'Frf']
+
+
+class Frf(Enum):
+    """Enum class for frequency setting"""
+    NOMINAL = 1
 
 
 def _get_rf_attr(ring, attr, cavpts=None):
@@ -69,9 +75,9 @@ def set_rf_frequency(ring, frequency, cavpts=None, copy=False):
 
     PARAMETERS
         ring                lattice description
-        frequency           RF frequency. The special value 'nominal' sets the
-                            frequency to the nominal value, given ring length
-                            and harmonic number.
+        frequency           RF frequency. The special enum value Frf.NOMINAL
+                            sets the frequency to the nominal value, given
+                            ring length and harmonic number.
 
     KEYWORDS
         cavpts=None         Cavity location. If None, use all cavities.
@@ -138,9 +144,9 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
         ring                lattice description
 
     KEYWORDS
-        Frequency=None      RF frequency. The special value 'nominal' sets the
-                            frequency to the nominal value, given ring length
-                            and harmonic number.
+        Frequency=None      RF frequency. The special enum value Frf.NOMINAL
+                            sets the frequency to the nominal value, given
+                            ring length and harmonic number.
         Voltage=None        RF voltage for the full ring.
         HarmNumber=None     Harmonic number for the full ring.
         TimeLag=None
@@ -157,14 +163,14 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
 
     if cavpts is None:
         cavpts = get_cells(ring, checktype(elements.RFCavity))
-    n_cavities = ring.count(cavpts)
+    n_cavities = ring.refcount(cavpts)
     if n_cavities < 1:
         raise AtError('No cavity found in the lattice')
     n_periods = ring.periodicity
 
     modif = {}
     if Frequency is not None:
-        if Frequency == 'nominal':
+        if Frequency is Frf.NOMINAL:
             Frequency = (clight / ring.circumference) * get_harm(HarmNumber)
         modif['Frequency'] = Frequency
     if HarmNumber is not None:
