@@ -11,7 +11,7 @@ __all__ = ['get_rf_frequency', 'get_rf_harmonic_number', 'get_rf_voltage',
 
 class Frf(Enum):
     """Enum class for frequency setting"""
-    NOMINAL = 1
+    NOMINAL = 'nominal'
 
 
 def _get_rf_attr(ring, attr, cavpts=None):

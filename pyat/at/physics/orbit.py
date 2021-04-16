@@ -315,6 +315,7 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
         try:
             rfv = ring.get_rf_voltage(cavpts=cavpts)
         except AtError:
+            # Cannot compute synchronous phase: keep zeros(6,)
             pass
         else:
             u0 = get_energy_loss(ring, method=method)
