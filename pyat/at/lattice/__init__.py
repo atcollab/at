@@ -8,3 +8,4 @@ from .options import DConstant
 from .elements import *
 from .utils import *
 from .lattice_object import *
+from .cavity_access import *
