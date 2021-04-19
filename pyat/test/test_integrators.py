@@ -47,25 +47,25 @@ def test_bndstrmpole_symplectic_4_pass(rin):
     atpass(l, rin, 1)
 
 
-def test_pydrift(rin):
+def test_pydrift():
     pydrift = [elements.Drift('drift', 1.0, 
                PassMethod='pyDriftPass')]
     cdrift = [elements.Drift('drift', 1.0,
                PassMethod='DriftPass')]
-    pyout = lattice_pass(pydrift, rin, nturns=1)
-    cout = lattice_pass(cdrift, rin, nturns=1)
+    pyout = lattice_pass(pydrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    cout = lattice_pass(cdrift, numpy.zeros(6)+1.0e-6, nturns=1)
     numpy.testing.assert_equal(pyout, cout)
 
     set_shift(pydrift, [1.0e-3], [1.0e-3], relative=False)
     set_shift(cdrift, [1.0e-3], [1.0e-3], relative=False)
-    pyout = lattice_pass(pydrift, rin, nturns=1)
-    cout = lattice_pass(cdrift, rin, nturns=1)
+    pyout = lattice_pass(pydrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    cout = lattice_pass(cdrift, numpy.zeros(6)+1.0e-6, nturns=1)
     numpy.testing.assert_equal(pyout, cout)
 
     set_tilt(pydrift, [1.0e-3], relative=False)
     set_tilt(cdrift, [1.0e-3], relative=False)
-    pyout = lattice_pass(pydrift, rin, nturns=1)
-    cout = lattice_pass(cdrift, rin, nturns=1)
+    pyout = lattice_pass(pydrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    cout = lattice_pass(cdrift, numpy.zeros(6)+1.0e-6, nturns=1)
     numpy.testing.assert_equal(pyout, cout)
 
 
