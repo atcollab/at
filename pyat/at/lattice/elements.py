@@ -601,15 +601,5 @@ class Wiggler(LongElement):
         self.NVharm = self.Bx.shape[1]
 
 
-class PyElement(Element):
-    """pyAT aperture element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['pyModule']
-
-    def __init__(self, family_name, pyModule, **kwargs):
-        kwargs.setdefault('PassMethod', 'PyFuncPass')
-        super(PyElement, self).__init__(family_name, pyModule=pyModule, 
-                                        **kwargs)
-
-
 CLASS_MAP = dict((k, v) for k, v in locals().items()
                  if isinstance(v, type) and issubclass(v, Element))
