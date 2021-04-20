@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <Python.h>
 #ifdef _OPENMP
+#include <string.h>
 #include <omp.h>
 #endif /*_OPENMP*/
 #include "attypes.h"
@@ -135,28 +136,34 @@ static PyObject *get_ext_suffix(void) {
     return ext_suffix;
 }
 
+
 /*
  * Import the python module for python integrators
  * and return the function object
  */
 static PyObject *GetpyFunction(const char *fn_name)
 {
-  PyObject *name = PyUnicode_FromString(fn_name);
-  PyObject *pModule = PyImport_Import(name);
+  char dest[300];
+  strcpy(dest,"at.integrators.");
+  strcat(dest,fn_name);
+  PyObject *pModule;
+  pModule = PyImport_ImportModule(dest);
   if (!pModule){
-      Py_DECREF(name);
+      PyErr_Clear();
+      pModule = PyImport_ImportModule(fn_name);
+  }
+  if(!pModule){
+      Py_DECREF(pModule);
       return NULL;
   }
   PyObject *pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
   if ((!pyfunction) || !PyCallable_Check(pyfunction)) {
-      Py_DECREF(name);
       Py_DECREF(pModule);
       if(pyfunction){
           Py_DECREF(pyfunction);
       }
       return NULL;
   }
-  Py_DECREF(name);
   Py_DECREF(pModule);
   return pyfunction;
 }
@@ -210,6 +217,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
         LIBRARYHANDLETYPE dl_handle;
         track_function fn_handle = NULL;
         char lib_file[300], buffer[200];
+        PyObject *pyfunction = NULL;
 
         snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
         dl_handle = LOADLIBFCN(lib_file);
@@ -217,8 +225,9 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
         if (dl_handle) {
             fn_handle = (track_function) GETTRACKFCN(dl_handle);
         }
-
-        PyObject *pyfunction = GetpyFunction(fn_name);
+        else {
+            pyfunction = GetpyFunction(fn_name);
+        }
 
         if((fn_handle==NULL) && (pyfunction==NULL)){
             snprintf(buffer, sizeof(buffer), "PassMethod %s: library, module or trackFunction not found", fn_name);
