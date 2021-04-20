@@ -4,8 +4,11 @@ import numpy
 This is an example of a python passmethod, here the Drift
 passmethod. This is a simplified version that does not check
 aperture.
-The python passmethods has to be in the python path and contain
-a function trackFunction, the element creation is as follows:
+
+The python passmethods has to be in the python path or in 
+at.integratorsand contain a function trackFunction()
+
+The element creation is as follows:
 
 drift = elements.Drift('drift', 1.0, PassMethod='pyDriftPass')
 
@@ -14,9 +17,8 @@ The particles are described by a one dimensional vector
 6*num_particles in the C tracking engine.
 In case a python passmethod and a c passmethod with the same name
 are found, the c passmethod is used
-
-
 '''
+
 def drift6(r, L):
     p_norm = 1/(1+r[4])
     NormL  = L*p_norm   

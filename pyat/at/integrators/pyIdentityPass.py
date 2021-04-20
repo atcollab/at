@@ -3,8 +3,11 @@ import numpy
 '''
 This is an example of a python passmethod, here the Identity
 passmethod.
-The python passmethods has to be in the python path and contain
-a function trackFunction, the element creation is as follows:
+
+The python passmethods has to be in the python path or in 
+at.integratorsand contain a function trackFunction()
+
+The element creation is as follows:
 
 params = {'Length':0,
           'PassMethod':'pyIdentityPass',
