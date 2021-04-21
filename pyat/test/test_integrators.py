@@ -4,6 +4,8 @@ import pytest
 
 from at import atpass, elements
 from at.lattice import Lattice
+from at import Element, lattice_pass
+from at import set_shift, set_tilt
 
 
 def test_exact_hamiltonian_pass(rin):
@@ -43,3 +45,38 @@ def test_bndstrmpole_symplectic_4_pass(rin):
     bend.PassMethod = 'BndStrMPoleSymplectic4Pass'
     l = Lattice([bend], name='lat', energy=3e9)
     atpass(l, rin, 1)
+
+
+def test_pydrift():
+    pydrift = [elements.Drift('drift', 1.0, 
+               PassMethod='pyDriftPass')]
+    cdrift = [elements.Drift('drift', 1.0,
+               PassMethod='DriftPass')]
+    pyout = lattice_pass(pydrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    cout = lattice_pass(cdrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    numpy.testing.assert_equal(pyout, cout)
+
+    set_shift(pydrift, [1.0e-3], [1.0e-3], relative=False)
+    set_shift(cdrift, [1.0e-3], [1.0e-3], relative=False)
+    pyout = lattice_pass(pydrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    cout = lattice_pass(cdrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    numpy.testing.assert_equal(pyout, cout)
+
+    set_tilt(pydrift, [1.0e-3], relative=False)
+    set_tilt(cdrift, [1.0e-3], relative=False)
+    pyout = lattice_pass(pydrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    cout = lattice_pass(cdrift, numpy.zeros(6)+1.0e-6, nturns=1)
+    numpy.testing.assert_equal(pyout, cout)
+
+
+def test_pyintegrator(hmba_lattice):
+    params = {'Length': 0,
+              'PassMethod': 'pyIdentityPass',
+              }
+    id_elem = Element('py_id', **params)
+    pin = numpy.zeros(6)+1.0e-6
+    pout1 = lattice_pass(hmba_lattice, pin.copy(), nturns=1)
+    pin = numpy.zeros(6)+1.0e-6
+    hmba_lattice = hmba_lattice + [id_elem]
+    pout2 = lattice_pass(hmba_lattice, pin, nturns=1)
+    numpy.testing.assert_equal(pout1, pout2)
