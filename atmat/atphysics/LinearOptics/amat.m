@@ -12,6 +12,7 @@ function [a,lambda]=amat(transmat)
 %we order and normalize the vectors via
 % v_j' jmat(3) v_k = i sgn(j) delta(j,k)
 
+swap=[1:4 6 5];
 nv=size(transmat,1);
 dms=nv/2;
 slices=num2cell(reshape(1:nv,2,dms),1);
@@ -19,9 +20,9 @@ Vxyz=makeVxyz(slices);
 S=jmat(dms);
 select=1:2:nv;
 
-[V,lambda]=eig(transmat);
-lambda=diag(lambda).';
-
+[V,lambda]=eig(transmat(swap,swap));    % Swap delta and ct coordinates
+lambda=diag(lambda).';                  % to get rotation correct in the
+                                        % longitudinal plane
 %compute norms of each:
 Vp=V'*S;
 n=-0.5i*sum(Vp.'.*V);
@@ -51,7 +52,7 @@ for ixz=select
     order=[order rows(ind)]; %#ok<AGROW>
     rows(ind)=[];
 end
-V_ordered=Vn(:,order);
+V_ordered=Vn(swap,order);           % Swap back delta and ct to AT order
 lambda=lambda(order);
 
 %build the a-matrix
