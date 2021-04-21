@@ -144,7 +144,7 @@ static PyObject *get_ext_suffix(void) {
 static PyObject *GetpyFunction(const char *fn_name)
 {
   char dest[300];
-  strcpy(dest,"at.integrators.");
+  strcpy(dest,"atintegrators.");
   strcat(dest,fn_name);
   PyObject *pModule;
   pModule = PyImport_ImportModule(dest);
@@ -153,7 +153,6 @@ static PyObject *GetpyFunction(const char *fn_name)
       pModule = PyImport_ImportModule(fn_name);
   }
   if(!pModule){
-      Py_DECREF(pModule);
       return NULL;
   }
   PyObject *pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
@@ -214,25 +213,28 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
     struct LibraryListElement *LibraryListPtr = SearchLibraryList(LibraryList, fn_name);
 
     if (!LibraryListPtr) {
-        LIBRARYHANDLETYPE dl_handle;
+        LIBRARYHANDLETYPE dl_handle=NULL;
         track_function fn_handle = NULL;
         char lib_file[300], buffer[200];
         PyObject *pyfunction = NULL;
 
-        snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
-        dl_handle = LOADLIBFCN(lib_file);
+        pyfunction = GetpyFunction(fn_name);
 
-        if (dl_handle) {
-            fn_handle = (track_function) GETTRACKFCN(dl_handle);
+        if(!pyfunction){
+            snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
+            dl_handle = LOADLIBFCN(lib_file);
+            if (dl_handle) {
+                fn_handle = (track_function) GETTRACKFCN(dl_handle);
+            }
         }
-        else {
-            pyfunction = GetpyFunction(fn_name);
-        }
-
+        
         if((fn_handle==NULL) && (pyfunction==NULL)){
             snprintf(buffer, sizeof(buffer), "PassMethod %s: library, module or trackFunction not found", fn_name);
             if(dl_handle){
                 FREELIBFCN(dl_handle);
+            }
+            if(pyfunction){
+                Py_DECREF(pyfunction);
             }
             PyErr_SetString(PyExc_RuntimeError, buffer);
             return NULL;
