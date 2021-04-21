@@ -144,13 +144,13 @@ static PyObject *get_ext_suffix(void) {
 static PyObject *GetpyFunction(const char *fn_name)
 {
   char dest[300];
-  strcpy(dest,"atintegrators.");
+  strcpy(dest,"at.integrators.");
   strcat(dest,fn_name);
   PyObject *pModule;
-  pModule = PyImport_ImportModule(dest);
+  pModule = PyImport_ImportModule(fn_name);
   if (!pModule){
       PyErr_Clear();
-      pModule = PyImport_ImportModule(fn_name);
+      pModule = PyImport_ImportModule(dest);
   }
   if(!pModule){
       return NULL;
@@ -409,13 +409,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
             /* the actual integrator call */
-            if(*integrator) {
-                *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
-                if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
-            }else {
+            if(*pyintegrator) {
                 if(!*kwargs) *kwargs = Buildkwargs(*element);
                 *kwargs = PyIntegratorPass(drin, *pyintegrator, *kwargs, num_particles);
                 if (!*kwargs) return print_error(elem_index, rout);       /* trackFunction failed */
+            }else {
+                *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
+                if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             }
             element++;
             integrator++;
