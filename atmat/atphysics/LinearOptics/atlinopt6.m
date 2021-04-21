@@ -43,7 +43,7 @@ lindata=struct(...
         alpha=[b1(2,1) b2(4,3)];
         beta=[b1(1,1) b2(3,3)];
         dispersion=b3(1:4,5)/b3(5,5);
-        mu=mu3(1:2);
+        mu=mu3(1:3);
     end
 
     function up = unwrap(p)

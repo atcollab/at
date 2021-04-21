@@ -3,7 +3,8 @@ import numpy
 from scipy.linalg import block_diag, eig, inv, det
 from math import pi
 
-__all__ = ['amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices', 'symplectify']
+__all__ = ['a_matrix', 'amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices',
+           'symplectify']
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 
@@ -28,7 +29,7 @@ def jmat(ind):
     return _jm[ind - 1]
 
 
-def amat(tt):
+def a_matrix(tt):
     """
     find A matrix from one turn map matrix T such that:
 
@@ -54,7 +55,7 @@ def amat(tt):
     select = numpy.arange(0, nv, 2)
     rbase = numpy.stack((select, select), axis=1).flatten()
     # noinspection PyTupleAssignmentBalance
-    _, vv = eig(tt)
+    lmbd, vv = eig(tt)
     # Compute the norms
     vp = numpy.dot(vv.conj().T, jmt)
     n = -0.5j * numpy.sum(vp.T * vv, axis=0)
@@ -62,6 +63,7 @@ def amat(tt):
     order = rbase + (n < 0)
     vv = vv[:, order]
     n = n[order]
+    lmbd = lmbd[order]
     # Normalize vectors
     vn = vv / numpy.sqrt(abs(n)).reshape((1, nv))
     # find the vectors that project most onto x,y,z, and reorder
@@ -71,37 +73,46 @@ def amat(tt):
     #  n3x n3y n3z
     nn = 0.5 * abs(numpy.sqrt(-1.j * vn.conj().T.dot(jmt).dot(_vxyz[dms - 1])))
     rows = list(select)
-    ord=[]
+    order = []
     for ixz in select:
-        ind=numpy.argmax(nn[rows,ixz])
-        ord.append(rows[ind])
+        ind = numpy.argmax(nn[rows, ixz])
+        order.append(rows[ind])
         del rows[ind]
-    v_ordered = vn[:,ord]
+    v_ordered = vn[:, order]
+    lmbd = lmbd[order]
     aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
         (nv, nv), order='F')
-    return aa
+    return aa, lmbd
 
+
+def amat(tt):
+    _, lmbd = a_matrix(tt)
+    return lmbd
+
+
+# noinspection PyPep8Naming
 def symplectify(M):
     """
     symplectify makes a matrix more symplectic
     follow Healy algorithm as described by McKay
     BNL-75461-2006-CP
     """
-    J = jmat(3)
+    nv = M.shape[0]
+    J = jmat(nv // 2)
 
-    V = numpy.dot(numpy.dot(J, numpy.identity(6) - M), numpy.linalg.inv(numpy.identity(6)+M))
-    #V should be almost symmetric.  Replace with symmetrized version.
+    V = numpy.dot(J.dot(numpy.identity(nv) - M), inv(numpy.identity(nv) + M))
+    # V should be almost symmetric.  Replace with symmetrized version.
 
-    W= ( V + V.T ) / 2
-    #Now reconstruct M from W
-    JW  = numpy.dot(J,W)
-    MS=numpy.dot(numpy.identity(6) + JW, numpy.linalg.inv(numpy.identity(6)-JW))
+    W = (V + V.T) / 2
+    # Now reconstruct M from W
+    JW = numpy.dot(J, W)
+    MS = numpy.dot(numpy.identity(nv) + JW, inv(numpy.identity(nv) - JW))
     return MS
 
 
 def get_mode_matrices(a):
     """Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes"""
-    dms = int(a.shape[0] / 2)
+    dms = a.shape[0] // 2
     return numpy.stack([numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]],
                        axis=0)
 
@@ -134,7 +145,7 @@ def get_tunes_damp(tt, rr=None):
     nv = tt.shape[0]
     dms = int(nv / 2)
     jmt = jmat(dms)
-    aa = amat(tt)
+    aa, _ = a_matrix(tt)
     rmat = inv(aa).dot(tt.dot(aa))
     damping_rates, tunes = zip(*(decode(rmat[s, s]) for s in _submat[:dms]))
     if rr is None:
