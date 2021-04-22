@@ -1,15 +1,23 @@
 from math import sin, cos, atan2, pi
 import numpy
 from at.lattice import check_radiation
-from at.physics import a_matrix, find_m66
+from at.physics import a_matrix, find_m44, find_m66
 
-W_DTYPE = [('R1', numpy.float64, (6, 6)),
-           ('R2', numpy.float64, (6, 6)),
-           ('alpha', numpy.float64, (2,)),
-           ('beta', numpy.float64, (2,)),
-           ('dispersion', numpy.float64, (4,)),
-           ('mu', numpy.float64, (3,)),
-           ]
+W_DTYPE6 = [('R1', numpy.float64, (6, 6)),
+            ('R2', numpy.float64, (6, 6)),
+            ('R3', numpy.float64, (6, 6)),
+            ('alpha', numpy.float64, (2,)),
+            ('beta', numpy.float64, (2,)),
+            ('dispersion', numpy.float64, (4,)),
+            ('mu', numpy.float64, (3,)),
+            ]
+
+W_DTYPE4 = [('R1', numpy.float64, (4, 4)),
+            ('R2', numpy.float64, (4, 4)),
+            ('alpha', numpy.float64, (2,)),
+            ('beta', numpy.float64, (2,)),
+            ('mu', numpy.float64, (2,)),
+            ]
 
 __all__ = ['linopt6']
 
@@ -55,8 +63,7 @@ def _r_analysis(a0, mstack):
     return R0, (propagate(mi.dot(astd), slices) for mi in mstack)
 
 
-@check_radiation(True)
-def linopt6(ring, refpts=None, twiss_in=None, **kwargs):
+def linopt6(ring, dp=None, refpts=None, twiss_in=None, **kwargs):
     """Perform linear analysis of a lattice
     elemdata0, beamdata, elemdata = linopt6(lattice)
 
@@ -103,12 +110,18 @@ def linopt6(ring, refpts=None, twiss_in=None, **kwargs):
         [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
             Published 3 February 2006
     """
-    def output(mu, r1, r2, r3):
+    def output6(mu, r1, r2, r3):
         """Extract output parameters from Bk matrices"""
         beta = numpy.array([r1[0, 0], r2[2, 2]])
         alpha = numpy.array([r1[1, 0], r2[3, 2]])
         dispersion = r3[:4, 4] / r3[4, 4]
-        return r1, r2, alpha, beta, dispersion, mu
+        return r1, r2, r3, alpha, beta, dispersion, mu
+
+    def output4(mu, r1, r2):
+        """Extract output parameters from Bk matrices"""
+        beta = numpy.array([r1[0, 0], r2[2, 2]])
+        alpha = numpy.array([r1[1, 0], r2[3, 2]])
+        return r1, r2, alpha, beta, mu
 
     def unwrap(mu):
         """Remove the phase jumps"""
@@ -116,7 +129,15 @@ def linopt6(ring, refpts=None, twiss_in=None, **kwargs):
         jumps = dmu < 0
         mu += numpy.cumsum(jumps, axis=0) * 2.0 * numpy.pi
 
-    mxx, mstack = find_m66(ring, refpts=refpts, **kwargs)
+    if ring.radiation:
+        mxx, mstack = find_m66(ring, refpts=refpts, **kwargs)
+        dtype = W_DTYPE6
+        output = output6
+    else:
+        mxx, mstack = find_m44(ring, ddp=dp, refpts=refpts, **kwargs)
+        dtype = W_DTYPE4
+        output = output4
+
     dms = mxx.shape[0] // 2
     a0, vps = a_matrix(mxx)
     tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
@@ -124,9 +145,9 @@ def linopt6(ring, refpts=None, twiss_in=None, **kwargs):
 
     r0, phi_rr = _r_analysis(a0, mstack)
     elemdata0 = numpy.array(output(0.0, *r0),
-                            dtype=W_DTYPE).view(numpy.recarray)
+                            dtype=dtype).view(numpy.recarray)
     elemdata = numpy.array([output(phi, *ri) for phi, ri in phi_rr],
-                           dtype=W_DTYPE).view(numpy.recarray)
+                           dtype=dtype).view(numpy.recarray)
     beamdata = numpy.array((tunes, damping_rates),
                            dtype=[('tunes', numpy.float64, (dms,)),
                                   ('damping_rates', numpy.float64, (dms,))

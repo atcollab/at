@@ -19,6 +19,7 @@ slices=num2cell(reshape(1:nv,2,dms),1);
 Vxyz=makeVxyz(slices);
 S=jmat(dms);
 select=1:2:nv;
+swap=swap(1:nv);
 
 [V,lambda]=eig(transmat(swap,swap));    % Swap delta and ct coordinates
 lambda=diag(lambda).';                  % to get rotation correct in the

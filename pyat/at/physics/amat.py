@@ -59,7 +59,8 @@ def a_matrix(tt):
     # noinspection PyTupleAssignmentBalance
     # swap delta and ct coordinates to get the correct rotation in the
     # longitudinal plane
-    lmbd, vv = eig(tt[_swap, :][:, _swap])  # Swap delta and ct
+    swap=_swap[:nv]
+    lmbd, vv = eig(tt[swap, :][:, swap])  # Swap delta and ct
     # Compute the norms
     vp = numpy.dot(vv.conj().T, jmt)
     n = -0.5j * numpy.sum(vp.T * vv, axis=0)
@@ -82,7 +83,7 @@ def a_matrix(tt):
         ind = numpy.argmax(nn[rows, ixz])
         order.append(rows[ind])
         del rows[ind]
-    v_ordered = vn[:, order][_swap, :]      # Restore the coordinate order
+    v_ordered = vn[:, order][swap, :]      # Restore the coordinate order
     lmbd = lmbd[order]
     aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
         (nv, nv), order='F')
