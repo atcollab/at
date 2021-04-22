@@ -1,21 +1,15 @@
-function varargout=bk_analysis(m66,ms)
+function [bk0,varargout]=r_analysis(a0,ms)
 
-nv=size(m66,1);
+nv=size(a0,1);
 dms=nv/2;
 slices=num2cell(reshape(1:nv,2,dms),1);
-Tk=cellfun(@makeTk,slices,'UniformOutput',false);
 
-astd=standardize(amat(m66));
+astd=standardize(a0);
 
 mms=squeeze(num2cell(ms,[1 2]));
 
+[~,bk0{1:dms}]=propagate(astd);
 [varargout{1:dms+1}]=cellfun(@(mi) propagate(mi*astd),mms,'UniformOutput',false);
-
-    function tk=makeTk(slc)
-        % Build the Tk selection matrices
-        tk=zeros(nv,nv);
-        tk(slc,slc)=eye(2);
-    end
 
     function phi=getphase(a22)
         % Return the phase for A standardization
@@ -38,7 +32,7 @@ mms=squeeze(num2cell(ms,[1 2]));
 
     function varargout=propagate(ai)
         % Propagate the A matrices
-        bk=cellfun(@(ik) ai*ik*ai',Tk,'UniformOutput',false);
+        bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);
         phi=cellfun(@(slc) getphase(ai(slc,slc)),slices);
         varargout=[{phi} bk];
     end

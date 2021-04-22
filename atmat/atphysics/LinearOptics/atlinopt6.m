@@ -1,11 +1,11 @@
-function lindata = atlinopt6(ring, varargin)
+function [elemdata0,ringdata,elemdata] = atlinopt6(ring, varargin)
 %ATLINOPT6 Performs linear analysis of the lattice
 %
 % LinData = ATLINOPT6(RING,REFPTS) is a MATLAB structure array with fields
 %
-%   B1          - 6x6 lattice functions for x motion
-%   B2          - 6x6 lattice functions for z motion
-%   B3          - 6x6 lattice functions for s motion
+%   R1          - 6x6 lattice functions for x motion
+%   R2          - 6x6 lattice functions for z motion
+%   R3          - 6x6 lattice functions for s motion
 %   Dispersion  - [eta_x; eta'_x; eta_y; eta'_y] 4x1 dispersion vector
 %   mu          - [mux, muy] 	betatron phase advances
 %   beta        - [betax, betay]                 1x2 beta vector
@@ -24,30 +24,38 @@ else                        % Transfer line
 end
 
 [m66,ms]=findm66(ring,refpts,'orbit',orbitin,'XYStep',XYStep,'DPStep',DPStep);
+[a0,vps]=amat(m66);
+tunes=mod(angle(vps)/2/pi,1);
+damping_rates=-log(abs(vps));
 
-[mu, b1, b2, b3]=bk_analysis(m66, ms);
+[r0,mu,r1,r2,r3]=r_analysis(a0, ms);
 
-[alpha,beta,dispersion,mu]=cellfun(@output,mu,b1,b2,b3,'UniformOutput',false);
+[alpha0,beta0,disp0]=output(r0{:});
+[alpha,beta,dispersion]=cellfun(@output,r1,r2,r3,'UniformOutput',false);
 
-lindata=struct(...
-    'B1', b1,...
-    'B2', b2,...
-    'B3', b3,...
-    'alpha', alpha,...
-    'beta', beta,...
+elemdata0=struct(...
+    'R1',r0{1},'R2',r0{2},'R3',r0{3},...
+    'alpha', alpha0,'beta', beta0,...
+    'Dispersion', disp0,...
+    'mu', zeros(1,3));
+
+ringdata=struct('tunes',tunes,'damping_rates',damping_rates);
+
+elemdata=struct(...
+    'R1',r1,'R2',r2,'R3',r3,...
+    'alpha', alpha,'beta', beta,...
     'Dispersion', dispersion,...
     'mu', num2cell(unwrap(cat(1,mu{:})),2));
 
-    function [alpha,beta,dispersion,mu]=output(mu3,b1,b2,b3)
-        % Extract output parameters from Bk matrices
-        alpha=[b1(2,1) b2(4,3)];
-        beta=[b1(1,1) b2(3,3)];
-        dispersion=b3(1:4,5)/b3(5,5);
-        mu=mu3(1:3);
+    function [alpha,beta,dispersion]=output(r1,r2,r3)
+        % Extract output parameters from R matrices
+        alpha=[r1(2,1) r2(4,3)];
+        beta=[r1(1,1) r2(3,3)];
+        dispersion=r3(1:4,5)/r3(5,5);
     end
 
     function up = unwrap(p)
-        % unwrap negative jumps in betatron
+        % Unwrap negative jumps in betatron
         jumps = diff([zeros(1,size(p,2));p],1,1) < -1.e-3;
         up = p+cumsum(jumps)*2*pi;
     end
