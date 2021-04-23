@@ -1,5 +1,6 @@
 from math import sin, cos, atan2, pi
 import numpy
+from scipy.constants import c as clight
 from at.physics import a_matrix, jmat, find_m44, find_m66
 
 W_DTYPE6 = [('R', numpy.float64, (3, 6, 6)),
@@ -62,7 +63,7 @@ def _r_analysis(a0, mstack):
 
 
 def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
-    """Perform linear analysis of a lattice
+    """Perform linear analysis of a fully coupled lattice
     elemdata0, beamdata, elemdata = linopt6(lattice)
 
     For circular machines, linopt6 analyses
@@ -71,7 +72,7 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
 
     For a transfer line, The "twiss_in" intput must contain either:
      - a field 'R', as provided by ATLINOPT6, or
-      - the fields 'beta' and 'alpha', as provided by ATLINOPT and ATLINOPT6
+      - the fields 'beta' and 'alpha', as provided by linopt and linopt6
 
     PARAMETERS
         ring            lattice description.
@@ -109,8 +110,8 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
         elemdata.beta
 
         beamdata is a record with fields:
-        tunes           fractional tunes
-        damping_rates   damping rates
+        tunes           Fractional tunes
+        damping_times   Damping times [s]
 
     REFERENCES
         [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
@@ -176,8 +177,10 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
         output = output4
 
     a0, vps = a_matrix(mxx)
+    length = ring.get_s_pos(len(ring))[0]
     tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
     damping_rates = -numpy.log(numpy.absolute(vps))
+    damping_times = length / clight / damping_rates
 
     r0, phi_rr = _r_analysis(a0, mstack)
     elemdata0 = numpy.array(output(numpy.identity(2*dms), 0.0, r0),
@@ -185,9 +188,9 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
     elemdata = numpy.array([output(ms, phi, ri) for ms, (phi, ri)
                             in zip(mstack, phi_rr)],
                            dtype=dtype).view(numpy.recarray)
-    beamdata = numpy.array((tunes, damping_rates),
+    beamdata = numpy.array((tunes, damping_times),
                            dtype=[('tunes', numpy.float64, (dms,)),
-                                  ('damping_rates', numpy.float64, (dms,))
+                                  ('damping_times', numpy.float64, (dms,))
                                   ]).view(numpy.recarray)
     unwrap(elemdata.mu)
     return elemdata0, beamdata, elemdata

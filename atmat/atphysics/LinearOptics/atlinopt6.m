@@ -20,8 +20,8 @@ function [elemdata,ringdata] = atlinopt6(ring, varargin)
 %   alpha       - [alphax, alphay]               1x2 alpha vector
 %
 %RINGDATA is a structure array with fields:
-%   TUNES
-%   DAMPING_RATES
+%   TUNES           Fractional tunes
+%   DAMPING_TIMES   Damping times [s]
 %
 % [...] = ATLINOPT6(...,'orbit',ORBITIN)
 %   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
@@ -39,6 +39,7 @@ function [elemdata,ringdata] = atlinopt6(ring, varargin)
 %           alpha	[alphax0, alphay0] vector
 %
 %  See also atx atlinopt
+clight = PhysConstant.speed_of_light_in_vacuum.value;   % m/s
 
 [twiss_in,varargs]=getoption(varargin,'twiss_in',[]);
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
@@ -48,6 +49,7 @@ function [elemdata,ringdata] = atlinopt6(ring, varargin)
 %[ct,varargs]=getoption(varargs,'ct',[]);
 [refpts,~]=getargs(varargs,1);
 
+lgth = findspos(ring,length(ring)+1);
 if isempty(twiss_in)        % Circular machine
     [mxx,ms]=build_1turn_map(ring,refpts,check_radiation(ring));
     nv=size(mxx,1);
@@ -70,12 +72,13 @@ end
 [a0,vps]=amat(mxx);
 tunes=mod(angle(vps)/2/pi,1);
 damping_rates=-log(abs(vps));
+damping_times=lgth / clight ./ damping_rates;
 
 ms=squeeze(num2cell(ms,[1 2]));
 [~,mu,ri]=r_analysis(a0, ms);
 mu=num2cell(unwrap(cat(1,mu{:})),2);
 
-ringdata=struct('tunes',tunes,'damping_rates',damping_rates);
+ringdata=struct('tunes',tunes,'damping_times',damping_times);
 
 % elemdata0=output(zeros(1,3),r0{:});
 elemdata=cellfun(output,ms,mu,ri);
