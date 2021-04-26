@@ -75,25 +75,25 @@ damping_rates=-log(abs(vps));
 damping_times=lgth / clight ./ damping_rates;
 
 ms=squeeze(num2cell(ms,[1 2]));
-[~,mu,ri]=r_analysis(a0, ms);
+[~,mu,ri,ai]=r_analysis(a0, ms);
 mu=num2cell(unwrap(cat(1,mu{:})),2);
 
 ringdata=struct('tunes',tunes,'damping_times',damping_times);
 
 % elemdata0=output(zeros(1,3),r0{:});
-elemdata=cellfun(output,ms,mu,ri);
+elemdata=cellfun(output,ms,mu,ri,ai);
 
-    function elemdata=output6(ms,mu,ri)
+    function elemdata=output6(ms,mu,ri,ai)
         % Extract output parameters from R matrices
-        elemdata=struct('R',ri,'M',ms,...
-        'alpha', [ri(2,1,1) ri(4,3,2)],'beta', [ri(1,1,1) ri(3,3,2)],...
+        elemdata=struct('R',ri,'M',ms,'A',ai,...
+        'alpha', -[ri(2,1,1) ri(4,3,2)],'beta', [ri(1,1,1) ri(3,3,2)],...
         'Dispersion',ri(1:4,5,3)/ri(5,5,3),...
         'mu', mu);
     end
 
-    function elemdata=output4(ms,mu,ri)
+    function elemdata=output4(ms,mu,ri,ai)
         % Extract output parameters from R matrices
-        elemdata=struct('R',ri,'M',ms,...
+        elemdata=struct('R',ri,'M',ms,'A',ai,...
         'alpha', [ri(2,1,1) ri(4,3,2)],'beta', [ri(1,1,1) ri(3,3,2)],...
         'mu', mu);
     end

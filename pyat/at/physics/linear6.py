@@ -1,9 +1,11 @@
 from math import sin, cos, atan2, pi
 import numpy
 from scipy.constants import c as clight
+from scipy.linalg import solve
 from at.physics import a_matrix, jmat, find_m44, find_m66
 
-W_DTYPE6 = [('R', numpy.float64, (3, 6, 6)),
+W_DTYPE6 = [('A', numpy.float64, (6, 6)),
+            ('R', numpy.float64, (3, 6, 6)),
             ('M', numpy.float64, (6, 6)),
             ('alpha', numpy.float64, (2,)),
             ('beta', numpy.float64, (2,)),
@@ -11,7 +13,8 @@ W_DTYPE6 = [('R', numpy.float64, (3, 6, 6)),
             ('mu', numpy.float64, (3,)),
             ]
 
-W_DTYPE4 = [('R', numpy.float64, (2, 4, 4)),
+W_DTYPE4 = [('A', numpy.float64, (4, 4)),
+            ('R', numpy.float64, (2, 4, 4)),
             ('M', numpy.float64, (4, 4)),
             ('alpha', numpy.float64, (2,)),
             ('beta', numpy.float64, (2,)),
@@ -49,16 +52,21 @@ def _r_analysis(a0, mstack):
         return numpy.dot(aa, rotmat)
 
     def propagate(ai, slcs):
-        """Propagate the phase and mode matrices"""
-        ri = numpy.array([numpy.dot(ai[:, s], ai.T[s, :]) for s in slcs])
+        """Propagate the phase and mode matrices
+        Rk = A * S * Ik * inv(A) * S.T
+        """
+        ais = ai.dot(s)
+        invai = solve(ai, s.T)
+        ri = numpy.array([numpy.dot(ais[:, s], invai[s, :]) for s in slcs])
         phi = numpy.array([get_phase(ai[slc, slc]) for slc in slcs])
-        return phi, ri
+        return ai, ri, phi
 
     nv = a0.shape[0]
     slices = [slice(2*i, 2*(i+1)) for i in range(nv // 2)]
+    s = jmat(nv // 2)
 
     astd = standardize(a0, slices)
-    r0 = numpy.array([numpy.dot(astd[:, s], astd.T[s, :]) for s in slices])
+    _, r0, _ = propagate(astd, slices)
     return r0, (propagate(mi.dot(astd), slices) for mi in mstack)
 
 
@@ -139,18 +147,18 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
                 sigm[slc, slc] = numpy.array([[beta, -alpha], [-alpha, gamma]])
         return sigm
 
-    def output6(ms, mu, r123):
+    def output6(ms, mu, r123, a):
         """Extract output parameters from Bk matrices"""
         beta = numpy.array([r123[0, 0, 0], r123[1, 2, 2]])
         alpha = numpy.array([r123[0, 1, 0], r123[1, 3, 2]])
         dispersion = r123[2, :4, 4] / r123[2, 4, 4]
-        return r123, ms, alpha, beta, dispersion, mu
+        return a, r123, ms, alpha, beta, dispersion, mu
 
-    def output4(ms, mu, r12):
+    def output4(ms, mu, r12, a):
         """Extract output parameters from Bk matrices"""
         beta = numpy.array([r12[0, 0, 0], r12[1, 2, 2]])
         alpha = numpy.array([r12[0, 1, 0], r12[1, 3, 2]])
-        return r12, ms, alpha, beta, mu
+        return a, r12, ms, alpha, beta, mu
 
     def unwrap(mu):
         """Remove the phase jumps"""
@@ -183,9 +191,9 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, twiss_in=None, **kwargs):
     damping_times = length / clight / damping_rates
 
     r0, phi_rr = _r_analysis(a0, mstack)
-    elemdata0 = numpy.array(output(numpy.identity(2*dms), 0.0, r0),
+    elemdata0 = numpy.array(output(numpy.identity(2*dms), 0.0, r0, a0),
                             dtype=dtype).view(numpy.recarray)
-    elemdata = numpy.array([output(ms, phi, ri) for ms, (phi, ri)
+    elemdata = numpy.array([output(ms, phi, ri, ai) for ms, (ai, ri, phi)
                             in zip(mstack, phi_rr)],
                            dtype=dtype).view(numpy.recarray)
     beamdata = numpy.array((tunes, damping_times),

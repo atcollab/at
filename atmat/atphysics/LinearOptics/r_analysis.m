@@ -1,14 +1,15 @@
-function [bk0,phi,bks]=r_analysis(a0,ms)
+function [bk0,phi,bks,as]=r_analysis(a0,ms)
 
 nv=size(a0,1);
 dms=nv/2;
 slices=num2cell(reshape(1:nv,2,dms),1);
+s=jmat(dms);
 
 astd=standardize(a0);
 
 bk0=cellfun(@(slc) astd(:,slc)*astd(:,slc)',slices,'UniformOutput',false);
 bk0=cat(3,bk0{:});
-[phi,bks]=cellfun(@(mi) propagate(mi*astd),ms,'UniformOutput',false);
+[phi,bks,as]=cellfun(@(mi) propagate(mi*astd),ms,'UniformOutput',false);
 
     function phi=getphase(a22)
         % Return the phase for A standardization
@@ -29,9 +30,12 @@ bk0=cat(3,bk0{:});
         end
     end
 
-    function [phi,bk]=propagate(ai)
+    function [phi,bk,ai]=propagate(ai)
         % Propagate the A matrices
-        bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);
+        ais=ai*s;
+        invai=ai\s';
+        bk=cellfun(@(slc) ais(:,slc)*invai(slc,:),slices,'UniformOutput',false);
+%         bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);
         bk=cat(3,bk{:});
         phi=cellfun(@(slc) getphase(ai(slc,slc)),slices);
     end
