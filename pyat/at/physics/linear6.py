@@ -1,8 +1,11 @@
 from math import sin, cos, atan2, pi
 import numpy
 from scipy.constants import c as clight
-from scipy.linalg import solve
+from scipy.linalg import solve, block_diag
 from at.physics import a_matrix, jmat, find_m44, find_m66
+
+_S2 = numpy.array([[0, 1], [-1, 0]], dtype=numpy.float64)
+_Tn = [_S2, _S2, _S2.T]
 
 W_DTYPE6 = [('A', numpy.float64, (6, 6)),
             ('R', numpy.float64, (3, 6, 6)),
@@ -55,15 +58,17 @@ def _r_analysis(a0, mstack):
         """Propagate the phase and mode matrices
         Rk = A * S * Ik * inv(A) * S.T
         """
-        ais = ai.dot(s)
-        invai = solve(ai, s.T)
+        ais = ai.dot(tt)            # Longitudinal swap
+        invai = solve(ai, ss.T)
         ri = numpy.array([numpy.dot(ais[:, s], invai[s, :]) for s in slcs])
         phi = numpy.array([get_phase(ai[slc, slc]) for slc in slcs])
         return ai, ri, phi
 
     nv = a0.shape[0]
-    slices = [slice(2*i, 2*(i+1)) for i in range(nv // 2)]
-    s = jmat(nv // 2)
+    dms = nv // 2
+    slices = [slice(2*i, 2*(i+1)) for i in range(dms)]
+    ss = jmat(dms)
+    tt = block_diag(*_Tn[:dms])     # Used instead of ss for longitudinal swap
 
     astd = standardize(a0, slices)
     _, r0, _ = propagate(astd, slices)

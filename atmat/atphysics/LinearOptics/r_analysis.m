@@ -1,9 +1,13 @@
 function [bk0,phi,bks,as]=r_analysis(a0,ms)
 
+S2=[0 1; -1 0];
+Un={S2, S2, S2'};
+
 nv=size(a0,1);
 dms=nv/2;
 slices=num2cell(reshape(1:nv,2,dms),1);
-s=jmat(dms);
+s=blkdiag(Un{ones(1,dms)});
+u=blkdiag(Un{1:dms});
 
 astd=standardize(a0);
 
@@ -32,7 +36,7 @@ bk0=cat(3,bk0{:});
 
     function [phi,bk,ai]=propagate(ai)
         % Propagate the A matrices
-        ais=ai*s;
+        ais=ai*u;
         invai=ai\s';
         bk=cellfun(@(slc) ais(:,slc)*invai(slc,:),slices,'UniformOutput',false);
 %         bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);
