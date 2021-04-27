@@ -258,7 +258,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             print('Mu not found in twiss_in, setting to zero')
             tune = numpy.zeros((2,))
 
-    if get_w:
+    if get_chrom:
         # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
         # noinspection PyUnboundLocalVariable
