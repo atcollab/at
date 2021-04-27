@@ -103,7 +103,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
         orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         get_chrom=False compute dispersion and chromaticities. Needs computing
-                        the tune and orbit at 2 different momentum deviations 
+                        the tune and orbit at 2 different momentum deviations
                         around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
@@ -117,8 +117,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                         only the beta and alpha are required other quatities
                         set to 0 if absent
         get_w=False     computes chromatic amplitude functions (W) [4], need to
-                        compute the optics at 2 different momentum deviations around
-                        the central one.
+                        compute the optics at 2 different momentum deviations
+                        around the central one.
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
         tune            [tune_A, tune_B], linear tunes for the two normal modes
