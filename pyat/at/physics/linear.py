@@ -258,7 +258,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
             print('Mu not found in twiss_in, setting to zero')
             tune = numpy.zeros((2,))
 
-    if get_chrom:
+    # Get initial chromatic functions and dispersion
+    if get_w:
         # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
         # noinspection PyUnboundLocalVariable
@@ -271,7 +272,7 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, orbit=None,
                             XYStep=xy_step, **kwdown)
         param_up_down = param_up+param_down
         chrom, dispersion, w0, w = _chromfunc(dp_step, *param_up_down)
-    elif get_w:
+    elif get_chrom:
         # noinspection PyUnboundLocalVariable
         kwup = dict(orbit=orbit_up, twiss_in=twiss_in)
         # noinspection PyUnboundLocalVariable
