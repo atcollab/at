@@ -119,7 +119,7 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
             raise AtError('Not enough RF voltage: unstable ring')
         ctmax = 1/numpy.amin(freq)*clight
         eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*x/clight))-u0
-        tl = least_squares(eq,0,bounds=(-ctmax,ctmax)).x[0]
+        tl = least_squares(eq, 0, bounds=(-ctmax, ctmax)).x[0]
         set_cavity(ring, TimeLag=tl, cavpts=cavpts, copy=copy)
     else:
         if u0 > rfv:

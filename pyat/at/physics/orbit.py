@@ -285,7 +285,8 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
         guess           Initial value for the closed orbit. It may help
                         convergence. The default is computed from the energy
                         loss of the ring
-        method          Method for energy loss computation (see get_energy_loss)
+        method          Method for energy loss computation
+                        (see get_energy_loss)
                         default: ELossMethod.TRACKING
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
@@ -308,13 +309,14 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
         raise AtError('No cavity found in the lattice.')
 
     try:
-        harm_number = ring.get_rf_harmonic_number(cavpts=cavpts)
+        harm_number = ring.get_rf_harmonic_number(cavpts=cavpts) / \
+                      ring.periodicity
         f_rf = ring.get_rf_frequency(cavpts=cavpts)
     except:
         f_rfs = [cav.Frequency for cav in cavities]
         f_rf = numpy.amin(f_rfs)
         harm_number = cavities[numpy.argmin(f_rfs)].HarmNumber
-        
+
     timelags = [cav.TimeLag for cav in cavities]
     if numpy.count_nonzero(timelags) > 0:
         guess = numpy.zeros((6,), order='F')
@@ -333,10 +335,6 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
             ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
     else:
         ref_in = guess
-
-    print(ref_in)
-    print(f_rf)
-    print(harm_number)
 
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
