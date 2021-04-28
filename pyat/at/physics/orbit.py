@@ -307,8 +307,17 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
 
-    f_rf = cavities[0].Frequency
-    harm_number = cavities[0].HarmNumber
+    try:
+        harm_number = ring.get_rf_harmonic_number(cavpts=cavpts)
+        f_rf = ring.get_rf_frequency(cavpts=cavpts)
+    except:
+        f_rfs = [cav.Frequency for cav in cavities]
+        f_rf = numpy.amin(f_rfs)
+        harm_number = cavities[numpy.argmin(f_rfs)].HarmNumber
+        
+    timelags = [cav.TimeLag for cav in cavities]
+    if numpy.count_nonzero(timelags) > 0:
+        guess = numpy.zeros((6,), order='F')
 
     if guess is None:
         ref_in = numpy.zeros((6,), order='F')
@@ -324,6 +333,10 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
             ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
     else:
         ref_in = guess
+
+    print(ref_in)
+    print(f_rf)
+    print(harm_number)
 
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
