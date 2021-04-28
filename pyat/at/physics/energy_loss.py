@@ -3,8 +3,10 @@ from enum import Enum
 from warnings import warn
 from math import sqrt, pi
 import numpy
-from at.lattice import Lattice, Dipole, Wiggler
+from scipy.optimize import least_squares
+from at.lattice import Lattice, Dipole, Wiggler, RFCavity
 from at.lattice import check_radiation, set_cavity, AtError
+from at.lattice import checktype, get_refpts
 from at.tracking import lattice_pass
 from at.physics import clight, Cgamma, e_mass
 
@@ -104,16 +106,29 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
     if cavpts is None and refpts is not None:
         warn(FutureWarning('You should use "cavpts" instead of "refpts"'))
         cavpts = refpts
-    rfv = ring.get_rf_voltage(cavpts=cavpts)
-    freq = ring.get_rf_frequency(cavpts=cavpts)
+    u0 = get_energy_loss(ring, method=method)
+    try:
+        rfv = ring.get_rf_voltage(cavpts=cavpts)
+        freq = ring.get_rf_frequency(cavpts=cavpts)
+    except AtError:
+        if cavpts is None:
+            cavpts = get_refpts(ring, RFCavity)
+        freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
+        rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
+        if u0 > numpy.sum(rfv):
+            raise AtError('Not enough RF voltage: unstable ring')
+        ctmax = 1/numpy.amin(freq)*clight
+        eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*x/clight))-u0
+        tl = least_squares(eq,0,bounds=(-ctmax,ctmax)).x[0]
+        set_cavity(ring, TimeLag=tl, cavpts=cavpts, copy=copy)
+    else:
+        if u0 > rfv:
+            raise AtError('Not enough RF voltage: unstable ring')
+        timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
+        set_cavity(ring, TimeLag=timelag, cavpts=cavpts, copy=copy)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
           file=sys.stderr)
-    u0 = get_energy_loss(ring, method=method)
-    if u0 > rfv:
-        raise AtError('Not enough RF voltage: unstable ring')
-    timelag = clight / (2*pi*freq) * numpy.arcsin(u0/rfv)
-    set_cavity(ring, TimeLag=timelag, cavpts=cavpts, copy=copy)
 
 
 Lattice.get_energy_loss = get_energy_loss
