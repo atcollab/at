@@ -180,11 +180,11 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
     """
     def get_alphabeta(r):
         beta = numpy.array([r[0, 0, 0], r[1, 2, 2]])
-        alpha = numpy.array([r[0, 1, 0], r[1, 3, 2]])
+        alpha = -numpy.array([r[0, 1, 0], r[1, 3, 2]])
         return alpha, beta
 
     # noinspection PyShadowingNames
-    def _lin6(ring, dp, orbit, refpts=None, mxx=None, **kwargs):
+    def build_r(ring, dp, orbit, refpts=None, mxx=None, **kwargs):
         """"""
         if ring.radiation:
             mt, ms = find_m66(ring, refpts=refpts, orbit=orbit, **kwargs)
@@ -226,8 +226,8 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
             orb0, orbs = _find_orbit(ring, dp, refpts=refpts,
                                      keep_lattice=keep_lattice, **kwargs)
             dp = orb0[4]      # in 6D, dp comes out of find_orbit6
-            _, vps, el0, els = _lin6(rng, dp, orb0, refpts=matpts,
-                                     keep_lattice=True, **kwargs)
+            _, vps, el0, els = build_r(rng, dp, orb0, refpts=matpts,
+                                       keep_lattice=True, **kwargs)
             tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
             return dp, tunes, orb0, orbs, el0, els
 
@@ -269,8 +269,8 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
 
     orb0, orbs = _find_orbit(ring, dp, refpts=refpts, orbit=orbit, **kwargs)
     dp = orb0[4]
-    ms, vps, el0, els = _lin6(ring, dp, orb0, refpts=refpts, mxx=mxx,
-                              keep_lattice=keep_lattice, **kwargs)
+    ms, vps, el0, els = build_r(ring, dp, orb0, refpts=refpts, mxx=mxx,
+                                keep_lattice=keep_lattice, **kwargs)
 
     dms = vps.size
     length = ring.get_s_pos(len(ring))[0]
