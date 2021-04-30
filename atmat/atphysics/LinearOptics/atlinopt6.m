@@ -16,16 +16,18 @@ function [elemdata,ringdata] = atlinopt6(ring, varargin)
 %   ClosedOrbit - 6x1 closed orbit vector with components
 %                 x, px, y, py, dp/d, ct (momentums, NOT angles)
 %   R           - DxDx(D/2) R-matrices
-%   M           - DxD transfer matrix M from the beginning of RING
 %   A           - DxD A-matrix
-%   Dispersion  - [eta_x; eta'_x; eta_y; eta'_y] 4x1 dispersion vector
-%   mu          - [mux, muy] 	betatron phase advances
+%   M           - DxD transfer matrix M from the beginning of RING
 %   beta        - [betax, betay]                 1x2 beta vector
 %   alpha       - [alphax, alphay]               1x2 alpha vector
+%   Dispersion  - [eta_x; eta'_x; eta_y; eta'_y] 4x1 dispersion vector
+%   mu          - [mux, muy] 	Betatron phase advances
+%   W           - [Wx, Wy]      Chromatic amplitude function [3]
 %
 %RINGDATA is a structure array with fields:
-%   TUNES           Fractional tunes
-%   DAMPING_TIMES   Damping times [s]
+%   tune            Fractional tunes
+%   damping_time    Damping times [s]
+%   chromaticity    Chromaticities
 %
 % [...] = ATLINOPT6(...,'orbit',ORBITIN)
 %   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
@@ -41,6 +43,12 @@ function [elemdata,ringdata] = atlinopt6(ring, varargin)
 %                   or
 %           beta    [betax0, betay0] vector
 %           alpha	[alphax0, alphay0] vector
+%
+%  REFERENCES
+%   [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
+%   [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
+%       Published 3 February 2006
+%   [3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %
 %  See also atx atlinopt
 clight = PhysConstant.speed_of_light_in_vacuum.value;   % m/s
@@ -68,54 +76,48 @@ else                        % Transfer line
     [vps,ms,orbs,mu,ri,ai]=build_1turn_map(ring,dp,refpts,orbitin,'mxx',sigma*jmat(dms));
 end
 
-dp=orbitin(5);
 tunes=mod(angle(vps)/2/pi,1);
 damping_rates=-log(abs(vps));
 damping_times=lgth / clight ./ damping_rates;
 
-mu=num2cell(unwrap(cat(1,mu{:})),2);
-
-spos = findspos(ring,refpts);
-elemdata=struct('R',ri,'M',ms,'A',ai,'mu',mu,...
-    'SPos',num2cell(spos)',...
-    'closed_orbit',num2cell(orbs,1)'...
+elemdata=struct('R',ri,'M',ms,'A',ai,...
+    'mu',num2cell(unwrap(cat(1,mu{:})),2),...
+    'SPos',num2cell(findspos(ring,refpts))',...
+    'ClosedOrbit',num2cell(orbs,1)'...
     );
-ringdata=struct('tunes',tunes,'damping_times',damping_times);
+ringdata=struct('tune',tunes,'damping_time',damping_times);
 
-if is6d
+if is6d                     % 6D processing
     [alpha,beta,disp]=cellfun(@output6,ri,'UniformOutput',false);
     [elemdata.alpha]=deal(alpha{:});
     [elemdata.beta]=deal(beta{:});
-    [elemdata.disp]=deal(disp{:});
+    [elemdata.Dispersion]=deal(disp{:});
     if get_w || get_chrom
         frf=get_rf_frequency(ring);
         DFStep=-DPStep*mcf(atradoff(ring))*frf;
         rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep);
         rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep);
         if get_w
-            [ringdata.chrom,~,w]=get_disp(rgup,rgdn,NaN,NaN,refpts);
+            [ringdata.chromaticity,~,w]=get_disp(rgup,rgdn,NaN,NaN,refpts);
             [elemdata.W]=deal(w{:});
         else
-            [ringdata.chrom,~,~]=get_disp(rgup,rgdn,NaN,NaN,[]);
+            [ringdata.chromaticity,~,~]=get_disp(rgup,rgdn,NaN,NaN,[]);
         end
     end
-    %elemdata=cellfun(@output6,ms,mu,ri,ai);
-else
+else                        % 4D processing
+    dp=orbitin(5);
     [alpha,beta]=cellfun(@output4,ri,'UniformOutput',false);
     [elemdata.alpha]=deal(alpha{:});
     [elemdata.beta]=deal(beta{:});
     if get_w
-            [ringdata.chrom,disp,w]=get_disp(ring,ring,dp+0.5*DPStep,dp-0.5*DPStep,refpts);
-            [elemdata.disp]=deal(disp{:});
+            [ringdata.chromaticity,disp,w]=get_disp(ring,ring,dp+0.5*DPStep,dp-0.5*DPStep,refpts);
+            [elemdata.Dispersion]=deal(disp{:});
             [elemdata.W]=deal(w{:});
     elseif get_chrom
-            [ringdata.chrom,disp,~]=get_disp(ring,ring,dp+0.5*DPStep,dp-0.5*DPStep,refpts);
-            [elemdata.disp]=deal(disp{:});
+            [ringdata.chromaticity,disp,~]=get_disp(ring,ring,dp+0.5*DPStep,dp-0.5*DPStep,refpts);
+            [elemdata.Dispersion]=deal(disp{:});
     end
-    %elemdata=cellfun(@output4,ms,mu,ri,ai);
 end
-
-% elemdata0=output(zeros(1,3),r0{:});
 
     function [alpha,beta,disp]=output6(ri)
         % Extract output parameters from R matrices
@@ -137,6 +139,7 @@ end
     end
 
     function orbitin=find_orbit(ring,dp,varargin)
+        % Find  the closed orbit in 4D or 6D
         [orbitin,vargs]=getoption(varargin,'orbit',[]);
         [ct,~]=getoption(vargs,'ct',NaN);
         if is6d
@@ -173,7 +176,7 @@ end
     end
 
     function sigma=build_sigma(twiss_in)
-        % build the sigma matrix = R1 + R2
+        % build the initial conditions for a transfer line: sigma = R1 + R2
         if isfield(twiss_in,'R')
             sigma=sum(twiss_in.R,3);
         else
@@ -191,12 +194,14 @@ end
     end
     
     function f=get_rf_frequency(ring)
+        % Get the initial RF frequency
         cavities=ring(atgetcells(ring, 'Frequency'));
         freqs=atgetfieldvalues(cavities,'Frequency');
         f=freqs(1);
     end
 
     function w=chromfunc(ddp,rup,rdn)
+        % Compute the chromatic W function
         [aup,bup]=output4(rup);
         [adn,bdn]=output4(rdn);
         db = (bup - bdn) / ddp;
@@ -207,6 +212,7 @@ end
     end
 
     function [chrom,disp,w]=get_disp(ringup,ringdn,dpup,dpdn,refpts)
+        % Compute chromaticity, dispersion and W
         [dpup,tuneup,orbup,rup]=offmom(ringup,dpup,refpts);
         [dpdn,tunedn,orbdn,rdn]=offmom(ringdn,dpdn,refpts);
         deltap=dpup-dpdn;

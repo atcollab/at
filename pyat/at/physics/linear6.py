@@ -5,7 +5,7 @@ import numpy
 from scipy.constants import c as clight
 from scipy.linalg import solve, block_diag
 from at.lattice import get_rf_frequency, set_rf_frequency, DConstant, get_s_pos
-from at.lattice import AtWarning
+from at.lattice import Lattice, AtWarning
 from at.physics import a_matrix, jmat, get_mcf, find_m44, find_m66
 from at.physics import find_orbit4, find_sync_orbit, find_orbit6
 from at.tracking import lattice_pass
@@ -115,7 +115,7 @@ def _find_orbit(ring, dp=None, refpts=None, orbit=None, ct=None, **kwargs):
     return orbit, orbs
 
 
-def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
+def linopt6(ring, refpts=None, dp=None, orbit=None, cavpts=None, twiss_in=None,
             get_chrom=False, get_w=False, keep_lattice=False, **kwargs):
     """Perform linear analysis of a fully coupled lattice
     elemdata0, beamdata, elemdata = linopt6(lattice)
@@ -163,6 +163,7 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
         mu              [mux, muy], betatron phases
         s_pos           longitudinal position [m]
         closed_orbit    (6,) closed orbit vector
+        W               (2,) chromatic amplitude function
 
         All values given at the entrance of each element specified in refpts.
         Field values can be obtained with either
@@ -170,13 +171,15 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
         elemdata.beta
 
         beamdata is a record with fields:
-        tunes           Fractional tunes
-        damping_times   Damping times [s]
+        tune            Fractional tunes
+        damping_time    Damping times [s]
+        chromaticity    Chromaticities
 
     REFERENCES
         [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
         [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
             Published 3 February 2006
+        [3] Brian W. Montague Report LEP Note 165, CERN, 1979
     """
     def get_alphabeta(r):
         beta = numpy.array([r[0, 0, 0], r[1, 2, 2]])
@@ -223,7 +226,7 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
                  keep_lattice=False, **kwargs):
 
         def off_momentum(rng, dp):
-            orb0, orbs = _find_orbit(ring, dp, refpts=refpts,
+            orb0, orbs = _find_orbit(rng, dp, refpts=refpts,
                                      keep_lattice=keep_lattice, **kwargs)
             dp = orb0[4]      # in 6D, dp comes out of find_orbit6
             _, vps, el0, els = build_r(rng, dp, orb0, refpts=matpts,
@@ -254,7 +257,7 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
     def unwrap(mu):
         """Remove the phase jumps"""
         dmu = numpy.diff(numpy.concatenate((numpy.zeros((1, dms)), mu)), axis=0)
-        jumps = dmu < 0
+        jumps = dmu < -1.e-3
         mu += numpy.cumsum(jumps, axis=0) * 2.0 * numpy.pi
 
     dp_step = kwargs.get('DPStep', DConstant.DPStep)
@@ -316,11 +319,11 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
             chrom, d0, ds, w0, ws = get_disp(ring, ring, dp + 0.5*dp_step,
                                              dp - 0.5*dp_step, refpts=refpts,
                                              keep_lattice=True, **kwargs)
-            data0 += [d0, numpy.identity(6, 6), 0.0, orb0]
+            data0 += [d0, numpy.identity(2*dms), 0.0, orb0]
             datas += [ds, iter(ms), iter(spos), iter(orbs)]
         else:
             chrom = numpy.NaN
-            data0 += [numpy.NaN, numpy.identity(6, 6), 0.0, orb0]
+            data0 += [numpy.NaN, numpy.identity(2*dms), 0.0, orb0]
             datas += [repeat(numpy.NaN), iter(ms), iter(spos), iter(orbs)]
 
     elemdata0 = numpy.array(output(*data0), dtype=dtype).view(numpy.recarray)
@@ -329,10 +332,13 @@ def linopt6(ring, dp=None, refpts=None, orbit=None, cavpts=None, twiss_in=None,
                               ).view(numpy.recarray)
 
     beamdata = numpy.array((tunes, chrom, damping_times),
-                           dtype=[('tunes', numpy.float64, (dms,)),
-                                  ('chromaticities', numpy.float64, (dms,)),
-                                  ('damping_times', numpy.float64, (dms,))
+                           dtype=[('tune', numpy.float64, (dms,)),
+                                  ('chromaticity', numpy.float64, (dms,)),
+                                  ('damping_time', numpy.float64, (dms,))
                                   ]).view(numpy.recarray)
 
     unwrap(elemdata.mu)
     return elemdata0, beamdata, elemdata
+
+
+Lattice.linopt6 = linopt6
