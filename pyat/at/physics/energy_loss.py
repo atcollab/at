@@ -119,18 +119,18 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
         eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*(x)/clight))-u0
         deq = lambda x: numpy.sum(rfv*numpy.cos(2*pi*freq*(x)/clight))
         zero_diff = least_squares(deq, ctmax/2, bounds=(0, ctmax)).x[0]
-        if numpy.sign(deq(zero_diff-1.0e-6))>0:
-            phis = least_squares(eq, zero_diff/2, 
+        if numpy.sign(deq(zero_diff-1.0e-6)) > 0:
+            phis = least_squares(eq, zero_diff/2,
                                  bounds=(0, zero_diff)).x[0]
         else:
             phis = least_squares(eq, (ctmax-zero_diff)/2,
-                                 bounds=(zero_cross,ctmax)).x[0]
-        timelag = phis + tl0- tl0[numpy.argmin(freq)]      
+                                 bounds=(zero_cross, ctmax)).x[0]
+        timelag = phis+tl0-tl0[numpy.argmin(freq)]
     else:
         if u0 > rfv:
             raise AtError('Not enough RF voltage: unstable ring')
-        timelag = clight/(2*pi*freq) * numpy.arcsin(u0/rfv)*np.ones(len(cavpts))
-    return timelag  
+        timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv)*np.ones(len(cavpts))
+    return timelag
 
 
 def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
@@ -157,9 +157,8 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
         warn(FutureWarning('You should use "cavpts" instead of "refpts"'))
         cavpts = refpts
     elif cavpts is None:
-        cavpts = get_refpts(ring,RFCavity)
+        cavpts = get_refpts(ring, RFCavity)
     timelag = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
-    print(len(timelag),len(cavpts))
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
