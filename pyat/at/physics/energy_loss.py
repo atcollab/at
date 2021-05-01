@@ -109,6 +109,7 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
     try:
         rfv = ring.get_rf_voltage(cavpts=cavpts)
         freq = ring.get_rf_frequency(cavpts=cavpts)
+        tl0 = ring.get_rf_timelag(cavpts=cavpts)
     except AtError:
         freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
         rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
@@ -117,23 +118,23 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
             raise AtError('Not enough RF voltage: unstable ring')
         ctmax = 1/numpy.amin(freq)*clight/2
         tt0 = tl0[numpy.argmin(freq)]
-        eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*(x-tl0)/clight))-u0
-        deq = lambda x: numpy.sum(rfv*numpy.cos(2*pi*freq*(x-tl0)/clight))
-        zero_diff = least_squares(deq, tt0+ctmax/2,
-                                  bounds=(tt0, ctmax+tt0)).x[0]
+        eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*(x+tl0)/clight))-u0
+        deq = lambda x: numpy.sum(rfv*numpy.cos(2*pi*freq*(x+tl0)/clight))
+        zero_diff = least_squares(deq, -tt0+ctmax/2,
+                                  bounds=(-tt0, ctmax-tt0)).x[0]
         if numpy.sign(deq(zero_diff-1.0e-6)) > 0:
-            phis = least_squares(eq, (zero_diff+tt0)/2,
-                                 bounds=(tt0, zero_diff)).x[0]
+            ts = least_squares(eq, (zero_diff-tt0)/2,
+                                 bounds=(-tt0, zero_diff)).x[0]
         else:
-            phis = least_squares(eq, (ctmax+tt0+zero_diff)/2,
-                                 bounds=(zero_diff, ctmax+tt0)).x[0]
-        timelag = phis-tl0
+            ts = least_squares(eq, (ctmax-tt0+zero_diff)/2,
+                                 bounds=(zero_diff, ctmax-tt0)).x[0]
+        timelag = ts+tl0
     else:
         if u0 > rfv:
             raise AtError('Not enough RF voltage: unstable ring')
         timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv) * \
                   numpy.ones(len(cavpts))
-    return timelag
+    return timelag, numpy.squeeze(numpy.unique(timelag-tl0))
 
 
 def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
@@ -161,7 +162,7 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
         cavpts = refpts
     elif cavpts is None:
         cavpts = get_refpts(ring, RFCavity)
-    timelag = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+    timelag, _ = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",

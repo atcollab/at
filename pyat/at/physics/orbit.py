@@ -318,11 +318,9 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
         harm_number = cavities[numpy.argmin(f_rfs)].HarmNumber
 
     if guess is None:
-        tl0 = [cav.TimeLag for cav in cavities]
-        tl = get_timelag_fromU0(ring)
-        phis = tl-tl0
+        _, dt = get_timelag_fromU0(ring)
         ref_in = numpy.zeros((6,), order='F')
-        ref_in[5] = -numpy.amin(phis)
+        ref_in[5] = -dt
     else:
         ref_in = guess
 
