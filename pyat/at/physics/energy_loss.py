@@ -103,33 +103,36 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
     RETURN
         timelag
     """
+    if cavpts is None:
+        cavpts = get_refpts(ring, RFCavity)
     u0 = get_energy_loss(ring, method=method)
     try:
         rfv = ring.get_rf_voltage(cavpts=cavpts)
         freq = ring.get_rf_frequency(cavpts=cavpts)
     except AtError:
-        if cavpts is None:
-            cavpts = get_refpts(ring, RFCavity)
         freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
         rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
         tl0 = numpy.array([cav.TimeLag for cav in ring.select(cavpts)])
         if u0 > numpy.sum(rfv):
             raise AtError('Not enough RF voltage: unstable ring')
         ctmax = 1/numpy.amin(freq)*clight/2
-        eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*(x)/clight))-u0
-        deq = lambda x: numpy.sum(rfv*numpy.cos(2*pi*freq*(x)/clight))
-        zero_diff = least_squares(deq, ctmax/2, bounds=(0, ctmax)).x[0]
+        tt0 = tl0[numpy.argmin(freq)]
+        eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*(x-tl0)/clight))-u0
+        deq = lambda x: numpy.sum(rfv*numpy.cos(2*pi*freq*(x-tl0)/clight))
+        zero_diff = least_squares(deq, tt0+ctmax/2,
+                                  bounds=(tt0, ctmax+tt0)).x[0]
         if numpy.sign(deq(zero_diff-1.0e-6)) > 0:
-            phis = least_squares(eq, zero_diff/2,
-                                 bounds=(0, zero_diff)).x[0]
+            phis = least_squares(eq, (zero_diff+tt0)/2,
+                                 bounds=(tt0, zero_diff)).x[0]
         else:
-            phis = least_squares(eq, (ctmax-zero_diff)/2,
-                                 bounds=(zero_cross, ctmax)).x[0]
-        timelag = phis+tl0-tl0[numpy.argmin(freq)]
+            phis = least_squares(eq, (ctmax+tt0+zero_diff)/2,
+                                 bounds=(zero_diff, ctmax+tt0)).x[0]
+        timelag = phis-tl0
     else:
         if u0 > rfv:
             raise AtError('Not enough RF voltage: unstable ring')
-        timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv)*np.ones(len(cavpts))
+        timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv) * \
+                  numpy.ones(len(cavpts))
     return timelag
 
 
