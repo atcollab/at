@@ -308,14 +308,9 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
 
-    try:
-        harm_number = ring.get_rf_harmonic_number(cavpts=cavpts) / \
-                      ring.periodicity
-        f_rf = ring.get_rf_frequency(cavpts=cavpts)
-    except:
-        f_rfs = [cav.Frequency for cav in cavities]
-        f_rf = numpy.amin(f_rfs)
-        harm_number = cavities[numpy.argmin(f_rfs)].HarmNumber
+    f_rfs = [cav.Frequency for cav in cavities]
+    f_rf = numpy.amin(f_rfs)
+    harm_number = cavities[numpy.argmin(f_rfs)].HarmNumber
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring)
