@@ -3,7 +3,7 @@ function setoption(name,value)
 %
 %SETOPTION('KEY',DEFAULT)
 %   Set the default value for the given KEY to DEFAULT. It is an error to set
-%   a default for a non-existing KEY. See ATINIPREFS for the list of
+%   a default for a non-existing KEY. Use GETOPTION() for the list of
 %   predefined keys.
 %
 % KEY:      Key name
@@ -11,9 +11,9 @@ function setoption(name,value)
 %
 %SETOPTION('KEY') Resets the default value for KEY to its inital setting
 %
-%SETOPTION()      Resets all values to the initial setting
+%SETOPTION()      Resets all values to their initial setting
 %
-%See also GETOPTION, INITOPTIONS
+%See also GETOPTION, ATOPTIONS
 
 opt=atoptions.instance();
 if nargin >= 2

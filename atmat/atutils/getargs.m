@@ -1,19 +1,32 @@
 function varargout = getargs(args,varargin)
 %GETARGS Process positional arguments from the input arguments
 %
-%Processes input arguments (typically from VARARGIN), by replacing default values
-%by valid ARGIN items (items different from [], the empty numeric array)
+%Process input arguments (typically from VARARGIN), replacing missing
+%arguments by default values. The default values is also used when an
+%argument is "[]" (empty numeric array).
 %
-%[V1,V2,...,REMARGS]=GETARGS(ARGIN,DEF1,DEF2,...) returns as many variables
-% as default values plus a cell array of remaining arguments.
+%[V1,V2,...,REMARGS]=GETARGS(ARGIN,DEF1,DEF2,...)
+%   Return as many variables as default values, plus a cell array of
+%   remaining arguments.
 %
-%Example:
+%[...]=GETARGS(ARGIN,...,'check',checkfun)
+%   Check each input arguments using checkfun(arg) and stops processing
+%   at the first failing argument. Remaining arguments are available in
+%   REMARGS.
 %
-%function testfunc(varargin)
+%Example 1:
 %
-%[optflag,args]=getflag(varargin,'option');     % Extract an optional flag
-%[range,args]=getoption(args,'Range', 1:10);	% Extract a keyword argument
+%[optflag,args]=getflag(varargin,'option');   % Extract an optional flag
+%[range,args]=getoption(args,'Range', 1:10);  % Extract a keyword argument
 %[dname,dvalue]=getargs(args,'abcd',297);     % Extract positional arguments
+%
+%Example 2:
+%
+%global THERING
+%[ring,args]=getargs(varargin,THERING,'check',@iscell)
+%   if the 1st argument is a cell array, it will be used as "ring",
+%   otherwise, THERING will be used. In any case, the remaining
+%   arguments are availble in "args".
 %
 %See also GETFLAG, GETOPTION
 
