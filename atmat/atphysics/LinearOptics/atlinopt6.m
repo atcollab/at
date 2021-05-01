@@ -114,7 +114,7 @@ else                        % 4D processing
             [elemdata.Dispersion]=deal(disp{:});
             [elemdata.W]=deal(w{:});
     elseif get_chrom
-            [ringdata.chromaticity,disp,~]=get_disp(ring,ring,dp+0.5*DPStep,dp-0.5*DPStep,refpts);
+            [ringdata.chromaticity,disp,~]=get_disp(ring,ring,dp+0.5*DPStep,dp-0.5*DPStep,refpts,'skip');
             [elemdata.Dispersion]=deal(disp{:});
     end
 end
@@ -164,13 +164,24 @@ end
 
     function [vals,ms,orbs,phis,rmats,as]=build_1turn_map(ring,dp,refpts,orbit,varargin)
         % Build the initial distribution at entrance of the transfer line
-        if is6d
-            [mt,ms,orbs]=findm66(ring,refpts,'orbit',orbit,'XYStep',XYStep,'DPStep',DPStep);
+        [skip,vargs]=getflag(varargin,'skip');
+        if skip
+            if is6d
+                [mt,ms]=findm66(ring,[],'orbit',orbit,'XYStep',XYStep,'DPStep',DPStep);
+            else
+                [mt,ms]=findm44(ring,dp,[],'orbit',orbit,'XYStep',XYStep);
+            end
+            orbs=linepass(ring,orbit,refpts,'KeepLattice');
+            orbs=orbs(1:4,:);
         else
-            [mt,ms,orbs]=findm44(ring,dp,refpts,'orbit',orbit,'XYStep',XYStep);
+            if is6d
+                [mt,ms,orbs]=findm66(ring,refpts,'orbit',orbit,'XYStep',XYStep,'DPStep',DPStep);
+            else
+                [mt,ms,orbs]=findm44(ring,dp,refpts,'orbit',orbit,'XYStep',XYStep);
+            end
         end
         ms=squeeze(num2cell(ms,[1 2]));
-        [mxx,~]=getoption(varargin,'mxx',mt);
+        [mxx,~]=getoption(vargs,'mxx',mt);
         [amat0,vals]=amat(mxx);
         [~,phis,rmats,as]=r_analysis(amat0,ms);
     end
@@ -211,7 +222,7 @@ end
         w = sqrt((da - ma ./ mb .* db).^2 + (db ./ mb).^2);
     end
 
-    function [chrom,disp,w]=get_disp(ringup,ringdn,dpup,dpdn,refpts)
+    function [chrom,disp,w]=get_disp(ringup,ringdn,dpup,dpdn,refpts,varargin)
         % Compute chromaticity, dispersion and W
         [dpup,tuneup,orbup,rup]=offmom(ringup,dpup,refpts);
         [dpdn,tunedn,orbdn,rdn]=offmom(ringdn,dpdn,refpts);
@@ -222,7 +233,7 @@ end
         
         function [dp,tunes,orbs,rmats]=offmom(ring,dp,refpts)
             orbit=find_orbit(ring,dp);
-            [vals,~,orbs,~,rmats,~]=build_1turn_map(ring,dp,refpts,orbit);
+            [vals,~,orbs,~,rmats,~]=build_1turn_map(ring,dp,refpts,orbit,varargin{:});
             tunes=mod(angle(vals)/2/pi,1);
             dp=orbit(5);
         end
