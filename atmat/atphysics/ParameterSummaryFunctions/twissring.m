@@ -53,7 +53,7 @@ function [TD, varargout] = twissring(RING,DP,varargin)
 NE=length(RING);
 % Process input arguments
 [CHROMFLAG,args]=getflag(varargin,'chrom');
-[REFPTS,DDP]=getargs(args,{NE+1,1.e-8});
+[REFPTS,DDP]=getargs(args,NE+1,1.e-8);
 CHROMFLAG=CHROMFLAG || (nargout == 3);
 
 % Include the endpoint if it is not already in REFPTS

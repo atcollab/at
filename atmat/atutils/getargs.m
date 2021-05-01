@@ -12,7 +12,14 @@ function varargout = getargs(args,varargin)
 %[...]=GETARGS(ARGIN,...,'check',checkfun)
 %   Check each input arguments using checkfun(arg) and stops processing
 %   at the first failing argument. Remaining arguments are available in
-%   REMARGS.
+%   REMARGS. "checkfun" may either:
+%      - return "false": the function continues using the default value,
+%      - throw an exception: the function aborts, control is returned to
+%        the keyboard or an enclosing try/catch block. The default value
+%        is never used but must be specified.
+%
+%        Matlab R2020b introduces a series of function "mustBe*" that can
+%        be used for checkfun.
 %
 %Example 1:
 %
@@ -24,9 +31,21 @@ function varargout = getargs(args,varargin)
 %
 %global THERING
 %[ring,args]=getargs(varargin,THERING,'check',@iscell)
-%   if the 1st argument is a cell array, it will be used as "ring",
-%   otherwise, THERING will be used. In any case, the remaining
-%   arguments are availble in "args".
+%   If the 1st argument is a cell array, it will be used as "ring",
+%   otherwise, THERING will be used. In both cases, the remaining
+%   arguments are available in "args".
+%
+%Example 3:
+%
+%function checkcell(arg)
+%if ~iscell(A)
+%    throwAsCaller(MException('AT:WrongType','Argument must be a cell array'));
+%end
+%
+%[ring,args]=getargs(varargin,{},'check',@checkcell)
+%   If the 1st argument is a cell array, it will be used as "ring" and the
+%   remaining arguments are available in "args". Otherwise, the function
+%   aborts with an error message.
 %
 %See also GETFLAG, GETOPTION
 
