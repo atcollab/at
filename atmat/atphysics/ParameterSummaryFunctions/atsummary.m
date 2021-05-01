@@ -24,7 +24,7 @@ Cgamma=4.0E27*pi*e_radius/3/e_mass^3;                                   % [m/GeV
 
 [nodisp,varargs]=getflag(varargin,'NoDisplay');
 [disp,varargs]=getflag(varargs,'Display');
-ring=getargs(varargs,{THERING});
+ring=getargs(varargs,THERING);
 DisplayFlag=(~nodisp) || disp;
 
 energy=atenergy(ring);

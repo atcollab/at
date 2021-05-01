@@ -5,5 +5,5 @@ function varargout = parseargs(default_values,args)
 %
 % obsolete: see GETARGS
 
-[varargout{1:nargout}]=getargs(args,default_values);
+[varargout{1:nargout}]=getargs(args,default_values{:});
 end

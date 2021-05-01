@@ -41,7 +41,7 @@ cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
 
 Cq=55/32/sqrt(3)*hbar/e_mass*1E-9;   % m
 
-[ring,Ux]=getargs(varargin,{THERING},[]);
+[ring,Ux]=getargs(varargin,THERING,[]);
 try
     % Set values for 1 superperiod
     [energy,periods,Vrf0,harm0,U00]=atenergy(ring);
