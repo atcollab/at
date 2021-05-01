@@ -296,7 +296,7 @@ def linopt6(ring, refpts=None, dp=None, orbit=None, cavpts=None, twiss_in=None,
                 dtype = W_DTYPE6 + W_DTYPEW
                 chrom, _, _, w0, ws = get_disp(rgup, rgdn, None, None,
                                                matpts=refpts, **kwargs)
-                data0 = data0.append(w0)
+                data0.append(w0)
                 datas.append(ws)
             else:
                 chrom, _, _, _, _ = get_disp(rgup, rgdn, None, None)
