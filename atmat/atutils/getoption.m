@@ -5,17 +5,24 @@ function [value,opts] = getoption(opts,key,value)
 %   Extract a keyword argument, in the form of a pair "key,value" from
 %   input arguments ARGS (typically from VARARGIN).
 %   Return DEFAULT value if the keyword is absent
+%
+%VALUE=GETOPTION(ARGS,KEY=DEFAULT)
+%   Alternative syntax available in Matlab >= R2021a
+%
 % ARGS:     Argument list: cell array (usually VARARGIN) or structure
 % KEY:      Key name
 % DEFAULT:  Value used if "key,value" is absent from the argument list
 %
 %VALUE=GETOPTION(ARGS,'KEY')
-%   The default value is taken from a list of predefined keys. See
-%   INITOPTIONS for the list of predefined keys
+%   The default value is taken from a list of predefined keys. Use
+%   GETOPTION() for the list of predefined keys
 %
 %VALUE=GETOPTION('KEY')
-%   Return the default value of a predefined key. See INITOPTIONS for
+%   Return the default value of a predefined key. Use GETOPTION() for
 %   the list of predefined keys
+%
+%VALUE=GETOPTION()
+%   Return all the default values
 %
 %[VALUE,REMARGS]=GETOPTION(ARGS,...)
 %  Return the remaining arguments after removing the processed ones
@@ -28,7 +35,7 @@ function [value,opts] = getoption(opts,key,value)
 %[range,args] = getoption(args, 'Range', 1:10); % Extract a keyword argument
 %[width, height] = getargs(args, 210, 297});    % Extract positional arguments
 %
-%See also GETFLAG, GETARGS, SETOPTION, INITOPTIONS
+%See also GETFLAG, GETARGS, SETOPTION, ATOPTIONS
 
 if nargin < 1
     value=atoptions.instance();

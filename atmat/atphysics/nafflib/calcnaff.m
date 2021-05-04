@@ -55,7 +55,7 @@ nitermax = 10;
 [whann,args]=getflag(args,'Hanning');
 [dbg,args]=getflag(args,'Debug');
 [DisplayFlag,args]=getflag(args,'Display');
-[WindowType,nfreq,DebugFlag]=getargs(args,{0,10,double(dbg)});
+[WindowType,nfreq,DebugFlag]=getargs(args,0,10,double(dbg));
 if whann, WindowType=1; end
 
 

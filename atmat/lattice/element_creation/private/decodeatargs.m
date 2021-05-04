@@ -4,26 +4,16 @@ function [rsrc,varargout] = decodeatargs(default_values,args)
 %  [RSRC,ARGS]=decodeatargs(DEFARGS,ARGLIST)
 %
 %  INPUTS
-%    1. DEFARGS - Values per default if not specify for mandatory
-%                 argument
-%    2. ARGS    - Other arugments
+%    1. DEFARGS - Default values for mandatory argument
+%    2. ARGLIST - Arguments
 %
 %  OUPUTS
-%    1. rsrc      - Mandatory arguments
-%    2. varargout - Optional arguments
-%
-%  NOTES
-%    1. DEFARGS must have length >= 2
+%    1. RSRC    - Optional arguments (all remaining arguments)
+%    2. ARGS    - Mandatory arguments
 %
 %  See also getoption, getflag
 
-% function to get the first string which is after the PassMethod
-nopass    = @(arg) ischar(arg) && ~isempty(arg) && isempty(regexp(arg,'.*Pass$','once'));
-% get index of first optional char Argument
-chararg   = find(cellfun(nopass,[args {'x'}]),1); 
-% get all optional argument (ressources)
-rsrc      = args(chararg:end);
-% output mandatory argument
-varargout = parseargs(default_values,args(1:chararg-1));
-
+na=length(default_values);
+mandatory = @(arg) ~ischar(arg) || endsWith(arg, 'Pass');
+[varargout{1:na},rsrc]=getargs(args,default_values{:},'check',mandatory);
 end

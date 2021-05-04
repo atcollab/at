@@ -43,11 +43,8 @@ for i = 1:length(I_cav)
 end
 ring0 = ring_temp;
 
-[doplot,varargin]=getflag(varargin,'Plot');
-split=getargs(varargin,{[]});
-if nargin < 2
-    split=[];
-end
+[doplot,varargs]=getflag(varargin,'Plot');
+split=getargs(varargs,[]);
 if islogical(split)
     iend=[find(split) length(ring0)+1];
 else

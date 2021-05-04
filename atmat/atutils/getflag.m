@@ -17,7 +17,7 @@ function [flag,opts] = getflag(opts,key)
 %
 %[optflag,args]=getflag(varargin,'option');     % Extract an optional flag
 %[range,args]=getoption(args,'Range', 1:10);	% Extract a keyword argument
-%[width, height]=getargs(args,{210,297});       % Extract positional arguments
+%[width, height]=getargs(args, 210, 297);       % Extract positional arguments
 %
 %Dee also GETOPTION, GETARGS
 
