@@ -1,4 +1,4 @@
-function a=amat(transmat)
+function [a,lambda]=amat(transmat)
 %find A matrix from one turn map matrix T such that:
 %
 %           [Rotx  0    0  ]
@@ -12,54 +12,61 @@ function a=amat(transmat)
 %we order and normalize the vectors via
 % v_j' jmat(3) v_k = i sgn(j) delta(j,k)
 
-persistent Vxyz jm
-if isempty(Vxyz)
-    Vxyz={...
-        1/sqrt(2)*[-1i -1;1 1i;],...
-        1/sqrt(2)*[-1i -1 0 0;1 1i 0 0;0 0 -1i -1;0 0 1 1i;],...
-        1/sqrt(2)*[-1i -1 0 0 0 0;1 1i 0 0 0 0;0 0 -1i -1 0 0;...
-        0 0 1 1i 0 0; 0 0 0 0 -1i -1;0 0 0 0 1 1i;]...
-        };
-    jm={jmat(1),jmat(2),jmat(3)};
-end
-
+swap=[1:4 6 5];
 nv=size(transmat,1);
 dms=nv/2;
-idx=reshape(1:nv,2,dms);
-select=idx(1,:);
+slices=num2cell(reshape(1:nv,2,dms),1);
+Vxyz=makeVxyz(slices);
+S=jmat(dms);
+select=1:2:nv;
+swap=swap(1:nv);
 
-[V,~]=eig(transmat);
-
+[V,lambda]=eig(transmat(swap,swap));    % Swap delta and ct coordinates
+lambda=diag(lambda).';                  % to get rotation correct in the
+                                        % longitudinal plane
 %compute norms of each:
-Vp=V'*jm{dms};
+Vp=V'*S;
 n=-0.5i*sum(Vp.'.*V);
 
 %put positive modes before negative modes (swap columns if first n in pair
 %is negative)
-order=reshape(idx([1 1],:),1,nv) + (n<0);
+order=reshape([select;select],1,nv) + (n<0);
 V=V(:,order);
 n=n(order);
+lambda=lambda(order);
 
 %now normalize each vector
-Vn=V./repmat(sqrt(abs(n)),nv,1);
+%Vn=V./repmat(sqrt(abs(n)),nv,1);
+Vn=V./sqrt(abs(n));
 
 %find the vecs that project most onto x,y,z, and reorder
 %nn will have structure
 % n1x n1y n1z
 % n2x n2y n2z
 % n3x n3y n3z
-nn=0.5*abs(sqrt(-1i*Vn'*jm{dms}*Vxyz{dms}));
+nn=0.5*abs(sqrt(-1i*Vn'*S*Vxyz));
 
 rows=select;
-V_ordered=[];
+order=[];
 for ixz=select
     [~,ind]=max(nn(rows,ixz));
-    V_ordered=[V_ordered Vn(:,rows(ind))]; %#ok<AGROW>
+    order=[order rows(ind)]; %#ok<AGROW>
     rows(ind)=[];
 end
+V_ordered=Vn(swap,order);           % Swap back delta and ct to AT order
+lambda=lambda(order);
 
-%build a matrix
+%build the a-matrix
 a=reshape([real(V_ordered);imag(V_ordered)],nv,nv);
+
+    function Vxyz=makeVxyz(slices)
+        Vxyz=zeros(nv,nv);
+        cellfun(@s22, slices)
+        
+        function s22(slc)
+            Vxyz(slc,slc)=[-1i -1;1 1i];
+        end
+    end
 
 end
 

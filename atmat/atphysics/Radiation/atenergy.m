@@ -33,10 +33,6 @@ TWO_PI_ERROR = 1.e-4;
  
 params   = atgetcells(ring(:,1),'Class','RingParam');
 cavities = atgetcells(ring(:,1),'Frequency');
-dipoles  = atgetcells(ring(:,1),'BendingAngle');
-theta    = atgetfieldvalues(ring(dipoles),'BendingAngle');
-E0s = atgetfieldvalues(ring,'Energy');
-E0s = E0s(isfinite(E0s));         % Discard undefined values
         
 if any(params) % case RingParam is defined in the lattice
     parmelem=ring{find(params,1)};
@@ -45,6 +41,8 @@ if any(params) % case RingParam is defined in the lattice
         nbper=parmelem.Periodicity;
     end
 else % else look for energy in cavity or GLOBVAL
+    E0s = atgetfieldvalues(ring,'Energy');
+    E0s = E0s(isfinite(E0s));         % Discard undefined values
     if any(cavities) && isfield(ring{find(cavities,1)},'Energy')
         energy=ring{find(cavities,1)}.Energy;
     elseif isfield(GLOBVAL,'E0')
@@ -60,6 +58,8 @@ else % else look for energy in cavity or GLOBVAL
             ' field ''Energy'' of each element)']);
     end
     if nargout >= 2 % get number of periods
+        dipoles  = atgetcells(ring(:,1),'BendingAngle');
+        theta    = atgetfieldvalues(ring(dipoles),'BendingAngle');
         if size(ring,2) > 1
             nbper=size(ring,2);
         else % Guess number of periods based on the total bending angle
