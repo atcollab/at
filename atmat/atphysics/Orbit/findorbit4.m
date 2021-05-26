@@ -1,4 +1,4 @@
-function [orb4,fixedpoint] = findorbit4(RING,dP,varargin)
+function [orb4,orbitin] = findorbit4(ring,dp,varargin)
 %FINDORBIT4 finds closed orbit in the 4-d transverse phase
 % space by numerically solving  for a fixed point of the one turn
 % map M calculated with LINEPASS
@@ -24,84 +24,48 @@ function [orb4,fixedpoint] = findorbit4(RING,dP,varargin)
 % FINDORBIT4(RING,dP) is 4x1 vector - fixed point at the
 %    entrance of the 1-st element of the RING (x,px,y,py)
 %
-% FINDORBIT4(RING,dP,REFPTS) is 4-by-Length(REFPTS)
-%     array of column vectors - fixed points (x,px,y,py)
-%     at the entrance of each element indexed  REFPTS array.
-%     REFPTS is an array of increasing indexes that  select elements
-%     from the range 1 to length(RING)+1.
-%     See further explanation of REFPTS in the 'help' for FINDSPOS
+% FINDORBIT4(RING,dP,REFPTS) is 4xLength(REFPTS)
+%   array of column vectors - fixed points (x,px,y,py)
+%   at the entrance of each element indexed by the REFPTS array.
+%   REFPTS is an array of increasing indexes that  select elements
+%   from the range 1 to length(RING)+1.
+%   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
-% FINDORBIT4(RING,dP,REFPTS,GUESS) - same as above but the search
-%     for the fixed point starts at the initial condition GUESS
-%     Otherwise the search starts from [0 0 0 0 0 0]'.
-%     GUESS must be a 6-by-1 vector;
+% FINDORBIT4(RING,dP,REFPTS,GUESS)
+% FINDORBIT4(...,'guess',GUESS)     The search for the fixed point
+%   starts from initial condition GUESS. Otherwise the search starts from
+%   [0; 0; 0; 0; 0; 0]. GUESS must be a 6x1 vector.
+%
+% FINDORBIT4(...,'orbit',ORBIT)     Specify the orbit at the entrance
+%   of the ring, if known. FINDORBIT4 will then transfer it to the
+%   reference points. ORBIT must be a 6x1 vector.
 %
 % [ORBIT, FIXEDPOINT] = FINDORBIT4( ... )
-%     The optional second return parameter is
-%     a 6-by-1 vector of initial conditions
-%     on the closed orbit at the entrance to the RING.
+%	The optional second return parameter is a 6x1 vector:
+%   closed orbit at the entrance of the RING.
 %
 % See also FINDSYNCORBIT, FINDORBIT6.
 
-if ~iscell(RING)
+if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation
-[dps,varargs]=getoption(varargs,'OrbConvergence');	% Convergence threshold
-[max_iterations,varargs]=getoption(varargs,'OrbMaxIter');	% Max. iterations
-
-if length(varargs) >= 1 && ~isequal(varargs{1},length(RING)+1)
-    refpts=varargs{1};
-    if islogical(refpts)
-        refpts=find(refpts);
-    end
-else
-    refpts=[];
-end
-if length(varargs) >= 2	% Check if guess argument was supplied
-    if isnumeric(varargs{2}) && isequal(size(varargs{2}),[6,1])
-        Ri=varargs{2};
-    else
-        error('The last argument GUESS must be a 6-by-1 vector');
-    end
-else
-    Ri = zeros(6,1);
-end
-
-% Set the momentum component of Ri to the specified dP
-Ri(5) = dP;
-scaling=XYStep*[1 1 1 1];
-D = [diag(scaling) zeros(4,1);zeros(2,5)];
-
-args={};
-change=Inf;
-itercount = 0;
-while (change > dps) && (itercount < max_iterations)
-    RMATi = Ri(:,ones(1,5)) + D;
-    RMATf = linepass(RING,RMATi,args{:});
-    Rf = RMATf(:,end);
-    % compute the transverse part of the Jacobian
-    J4 = (RMATf(1:4,1:4)-RMATf(1:4,5))./scaling;
-    Ri_next = Ri +  [(eye(4) - J4)\(Rf(1:4)-Ri(1:4)); 0; 0];
-    change = norm(Ri_next - Ri);
-    Ri = Ri_next;
-    itercount = itercount+1;
+[orbitin,varargs]=getoption(varargin,'orbit',[]);
+[refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+if isempty(orbitin)
+    orbitin=xorbit_dp(ring,dp,varargs);
     args={'KeepLattice'};
+else
+    args={};
 end
 
-if itercount == max_iterations
-    warning('Maximum number of iterations reached. Possible non-convergence')
+if islogical(refpts)
+    refpts=find(refpts);
 end
-
 if isempty(refpts)
     % return only the fixed point at the entrance of RING{1}
-    orb4=Ri(1:4,1);
-else	% 3-rd input argument - vector of reference points along the RING
-    % is supplied - return orbit
-    orb6 = linepass(RING,Ri,refpts,'KeepLattice');
+    orb4=orbitin(1:4,1);
+else
+    orb6 = linepass(ring,orbitin,refpts,args{:});
     orb4 = orb6(1:4,:);
 end
-
-if nargout >= 2
-    fixedpoint=Ri;
 end
