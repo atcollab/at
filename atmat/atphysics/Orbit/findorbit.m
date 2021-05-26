@@ -36,7 +36,7 @@ if isempty(orbitin)
         if isfinite(dp) || isfinite(ct)
             warning('AT:linopt','In 6D, "dp" and "dct" are ignored');
         end
-        orbitin=x_orbit6(ring,varargs{:});
+        orbitin=xorbit_6(ring,varargs{:});
     else                        % Radiation OFF: 4D orbit
         [~,varargs]=getoption(varargs,'DPStep');   % Take it out because findorbit4 does not accept it
         [dp,varargs]=getoption(varargs,'dp',0);
