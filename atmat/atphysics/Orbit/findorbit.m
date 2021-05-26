@@ -54,6 +54,6 @@ if isempty(refpts)
     % return only the fixed point at the entrance of RING{1}
     orbs=orbitin;
 else
-    orbs=linepass(RING,orbitin,refpts,args{:});
+    orbs=linepass(ring,orbitin,refpts,args{:});
 end
 end
