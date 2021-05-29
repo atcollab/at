@@ -14,7 +14,7 @@ __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6', 'find_orbit']
 
 
 @check_radiation(False)
-def _orbit_dp(ring, dp=0.0, guess=None, **kwargs):
+def _orbit_dp(ring, dp=None, guess=None, **kwargs):
     """Solver for fixed energy deviation"""
     # We seek
     #  - f(x) = x
@@ -32,8 +32,8 @@ def _orbit_dp(ring, dp=0.0, guess=None, **kwargs):
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
-    ref_in = numpy.zeros((6,), order='F') if guess is None else guess
-    ref_in[4] = dp
+    ref_in = numpy.zeros((6,)) if guess is None else numpy.copy(guess)
+    ref_in[4] = 0.0 if dp is None else dp
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 5), order='F')
@@ -67,20 +67,20 @@ def _orbit_dp(ring, dp=0.0, guess=None, **kwargs):
 
 
 @check_radiation(False)
-def _orbit_dct(ring, dct=0.0, guess=None, **kwargs):
+def _orbit_dct(ring, dct=None, guess=None, **kwargs):
     """Solver for fixed path lengthening"""
     keep_lattice = kwargs.pop('keep_lattice', False)
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
-    ref_in = numpy.zeros((6,), order='F') if guess is None else guess
+    ref_in = numpy.zeros((6,)) if guess is None else numpy.copy(guess)
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
     delta_matrix = numpy.zeros((6, 6), order='F')
     for i in range(5):
         delta_matrix[i, i] = scaling[i]
     theta5 = numpy.zeros((5,), order='F')
-    theta5[4] = dct
+    theta5[4] = 0.0 if dct is None else dct
     id5 = numpy.zeros((5, 5), order='F')
     for i in range(4):
         id5[i, i] = 1.0
@@ -282,7 +282,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
                 raise AtError('Missing RF voltage: unstable ring')
             ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
     else:
-        ref_in = guess
+        ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
     theta[5] = constants.speed_of_light * harm_number / f_rf - l0
@@ -433,8 +433,6 @@ def find_orbit(ring, refpts=None, dp=None, dct=None, **kwargs):
             warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
         return find_orbit6(ring, refpts, **kwargs)
     else:
-        if dp is None:
-            dp = 0.0
         return find_orbit4(ring, dp, refpts, dct=dct, **kwargs)
 
 
