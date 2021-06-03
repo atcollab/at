@@ -34,7 +34,7 @@ class Variable(object):
     def status(self, ring, vini=np.NaN):
         vnow = self.get(ring)
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
-            self.name, vini, vnow, (vnow - vini) / vini)
+            self.name, vini, vnow, (vnow - vini))
 
 
 class ElementVariable(Variable):
@@ -342,7 +342,10 @@ class LinoptConstraints(ElementConstraints):
         else:
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):
-                return getf(refdata, param)
+                if param == 'mu':
+                    return getf(refdata, param)%(2*np.pi)
+                else:
+                    return getf(refdata, param)
             if param == 'dispersion':
                 self.get_chrom = True   # slower but necessary
             # elif param == 'mu':
