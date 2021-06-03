@@ -347,7 +347,7 @@ class LinoptConstraints(ElementConstraints):
             def fun(refdata, tune, chrom):
                 if param == 'mu':
                     return getf(refdata, param)%(2*np.pi)
-                elif param == 'mu' and UseInteger:
+                elif param == 'mu' and use_integer:
                     self.refpts[:] = True # necessary not to miss 2*pi jumps
                 return getf(refdata, param)
             if param == 'dispersion':
