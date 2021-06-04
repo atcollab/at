@@ -63,8 +63,7 @@ _matclass_map = {'Dipole': 'Bend'}
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
-                numpy.ndarray: lambda attr: numpy.asanyarray(attr,
-                                                             dtype=float)}
+                numpy.ndarray: lambda attr: numpy.asanyarray(attr)}
 
 _class_to_matfunc = {
     elt.Dipole: 'atsbend',
