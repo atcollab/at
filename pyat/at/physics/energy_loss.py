@@ -6,7 +6,7 @@ import numpy
 from scipy.optimize import least_squares
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity
 from at.lattice import check_radiation, AtError
-from at.lattice import checktype, get_refpts, set_value_refpts
+from at.lattice import checktype, set_value_refpts, get_cells
 from at.tracking import lattice_pass
 from at.physics import clight, Cgamma, e_mass
 
@@ -104,7 +104,7 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
         timelag
     """
     if cavpts is None:
-        cavpts = get_refpts(ring, RFCavity)
+        cavpts = get_cells(ring, checktype(RFCavity))
     u0 = get_energy_loss(ring, method=method)
     try:
         rfv = ring.get_rf_voltage(cavpts=cavpts)
@@ -132,9 +132,10 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
     else:
         if u0 > rfv:
             raise AtError('Not enough RF voltage: unstable ring')
-        timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv) * \
-                  numpy.ones(len(cavpts))
-    return timelag, numpy.squeeze(numpy.unique(timelag-tl0))
+        timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv)                  
+        ts = timelag - tl0
+        timelag*= numpy.ones(len(cavpts))
+    return timelag, ts
 
 
 def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
@@ -161,8 +162,9 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
         warn(FutureWarning('You should use "cavpts" instead of "refpts"'))
         cavpts = refpts
     elif cavpts is None:
-        cavpts = get_refpts(ring, RFCavity)
-    timelag, _ = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+        cavpts = get_cells(ring, checktype(RFCavity))
+    timelag, ts = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+    print(timelag, ts)
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
