@@ -194,7 +194,7 @@ def save_mat(ring, filename, mat_key='RING'):
         mat_key='RING'  Name of the Matlab variable representing the lattice
     """
     lring = tuple((element_to_dict(elem),) for elem in matlab_ring(ring))
-    scipy.io.savemat(filename, {mat_key: lring})
+    scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
 
 
 def save_m(ring, filename=None):
