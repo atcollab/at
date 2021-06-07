@@ -8,7 +8,7 @@ import scipy.constants as constants
 from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
-from at.physics import get_energy_loss, ELossMethod
+from at.physics import get_energy_loss, ELossMethod, get_timelag_fromU0
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6']
@@ -285,7 +285,8 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
         guess           Initial value for the closed orbit. It may help
                         convergence. The default is computed from the energy
                         loss of the ring
-        method          Method for energy loss computation (see get_energy_loss)
+        method          Method for energy loss computation
+                        (see get_energy_loss)
                         default: ELossMethod.TRACKING
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
@@ -307,21 +308,14 @@ def find_orbit6(ring, refpts=None, cavpts=None, guess=None, **kwargs):
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
 
-    f_rf = cavities[0].Frequency
-    harm_number = cavities[0].HarmNumber
+    f_rfs = [cav.Frequency for cav in cavities]
+    f_rf = numpy.amin(f_rfs)
+    harm_number = cavities[numpy.argmin(f_rfs)].HarmNumber
 
     if guess is None:
+        _, dt = get_timelag_fromU0(ring)
         ref_in = numpy.zeros((6,), order='F')
-        try:
-            rfv = ring.get_rf_voltage(cavpts=cavpts)
-        except AtError:
-            # Cannot compute synchronous phase: keep zeros(6,)
-            pass
-        else:
-            u0 = get_energy_loss(ring, method=method)
-            if u0 > rfv:
-                raise AtError('Missing RF voltage: unstable ring')
-            ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
+        ref_in[5] = -dt
     else:
         ref_in = guess
 
