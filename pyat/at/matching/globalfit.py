@@ -19,36 +19,36 @@ def _get_chrom(ring, dp=0):
     return chrom
 
 
-def _fit_tune_chrom(ring, order, func, refpts1, refpts2, newval, tol=1.0e-12,
+def _fit_tune_chrom(ring, index, func, refpts1, refpts2, newval, tol=1.0e-12,
                     dp=0, niter=3):
 
-    def _get_resp(ring, order, func, refpts, attname, delta, dp=0):
-        set_value_refpts(ring, refpts, attname, delta, order=order,
+    def _get_resp(ring, index, func, refpts, attname, delta, dp=0):
+        set_value_refpts(ring, refpts, attname, delta, index=index,
                          increment=True)
         datap = func(ring, dp=dp)
-        set_value_refpts(ring, refpts, attname, -2*delta, order=order,
+        set_value_refpts(ring, refpts, attname, -2*delta, index=index,
                          increment=True)
         datan = func(ring, dp=dp)
-        set_value_refpts(ring, refpts, attname, delta, order=order,
+        set_value_refpts(ring, refpts, attname, delta, index=index,
                          increment=True)
         data = numpy.subtract(datap, datan)/(2*delta)
         return data
 
-    delta = 1e-6*10**(order)
+    delta = 1e-6*10**(index)
     val = func(ring, dp=dp)
-    dq1 = _get_resp(ring, order, func, refpts1, 'PolynomB', delta, dp=dp)
-    dq2 = _get_resp(ring, order, func, refpts2, 'PolynomB', delta, dp=dp)
+    dq1 = _get_resp(ring, index, func, refpts1, 'PolynomB', delta, dp=dp)
+    dq2 = _get_resp(ring, index, func, refpts2, 'PolynomB', delta, dp=dp)
     J = [[dq1[0], dq2[0]], [dq1[1], dq2[1]]]
     dk = numpy.linalg.solve(J, numpy.subtract(newval, val))
-    set_value_refpts(ring, refpts1, 'PolynomB', dk[0], order=order,
+    set_value_refpts(ring, refpts1, 'PolynomB', dk[0], index=index,
                      increment=True)
-    set_value_refpts(ring, refpts2, 'PolynomB', dk[1], order=order,
+    set_value_refpts(ring, refpts2, 'PolynomB', dk[1], index=index,
                      increment=True)
 
     val = func(ring, dp=dp)
     sumsq = numpy.sum(numpy.square(numpy.subtract(val, newval)))
     if sumsq > tol and niter > 0:
-        _fit_tune_chrom(ring, order, func, refpts1, refpts2, newval, tol=tol,
+        _fit_tune_chrom(ring, index, func, refpts1, refpts2, newval, tol=tol,
                         dp=dp, niter=niter-1)
     else:
         return

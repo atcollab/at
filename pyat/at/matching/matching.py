@@ -34,7 +34,7 @@ class Variable(object):
     def status(self, ring, vini=np.NaN):
         vnow = self.get(ring)
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
-            self.name, vini, vnow, (vnow - vini) / vini)
+            self.name, vini, vnow, (vnow - vini))
 
 
 class ElementVariable(Variable):
@@ -311,12 +311,15 @@ class LinoptConstraints(ElementConstraints):
             weight=1.0    weight factor: the residual is (value-target)/weight.
             bounds=(0,0)  lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
+            UseInteger    Match integer part of mu, much slower as the optics
+                          calculation is done for all refpts
 
         The target, weight and bounds values must be broadcastable to the shape
         of value.
         """
         getf = self._recordaccess(index)
         getv = self._arrayaccess(index)
+        use_integer = kwargs.pop('UseInteger', False)
 
         if name is None:                # Generate the constraint name
             name = param.__name__ if callable(param) else param
@@ -342,11 +345,13 @@ class LinoptConstraints(ElementConstraints):
         else:
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):
+                if param == 'mu':
+                    return getf(refdata, param)%(2*np.pi)
+                elif param == 'mu' and use_integer:
+                    self.refpts[:] = True # necessary not to miss 2*pi jumps
                 return getf(refdata, param)
             if param == 'dispersion':
                 self.get_chrom = True   # slower but necessary
-            # elif param == 'mu':
-            #     self.refpts[:] = True # necessary not to miss 2*pi jumps
 
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,
                                            **kwargs)
