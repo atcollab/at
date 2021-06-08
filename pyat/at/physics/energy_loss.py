@@ -164,7 +164,6 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
     elif cavpts is None:
         cavpts = get_refpts(ring, RFCavity)
     timelag, ts = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
-    print(timelag, ts)
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
     print("\nThis function modifies the time reference\n"
           "This should be avoided, you have been warned!\n",
