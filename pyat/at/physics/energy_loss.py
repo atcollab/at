@@ -144,7 +144,6 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
    Adjust the TimeLag attribute of RF cavities based on frequency,
    voltage and energy loss per turn, so that the synchronous phase is zero.
    An error occurs if all cavities do not have the same frequency.
-   !!!Warning!!! : This function modifies the time reference
 
     PARAMETERS
         ring        lattice description
@@ -165,8 +164,10 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
     elif cavpts is None:
         cavpts = get_cells(ring, checktype(RFCavity))
     timelag, ts = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
-    print(len(timelag),ts,len(cavpts))
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
+    print("\nThis function modifies the time reference\n"
+          "This should be avoided, you have been warned!\n",
+          file=sys.stderr)
 
 
 Lattice.get_energy_loss = get_energy_loss
