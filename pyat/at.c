@@ -71,6 +71,7 @@ static struct LibraryListElement {
     struct LibraryListElement *Next;
 } *LibraryList = NULL;
 
+
 static PyObject *print_error(int elem_number, PyObject *rout)
 {
     printf("Error in tracking element %d.\n", elem_number);
@@ -104,23 +105,17 @@ static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *h
 
 
 static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn, 
-        double *xnturn, double *xnelem, double *xcoord, double *xlostcoord, 
-        bool *xlost, double *histbuf, npy_uint32 ihist, npy_uint32 lhist)
+        int *xnturn, int *xnelem, bool *xlost, double *xlostcoord)
 {
-    int n, c;
+    unsigned int n, c;
     for (c=0; c<np; c++) {/* Loop over particles */
         if (!xlost[c]) {  /* No change if already marked */
            double *r6 = drin+c*6;
-           for (n=0; n<6; n++) {	/* I remove the check on the sixth coordinate N.C. */
-                if (!isfinite(r6[n]) || (fabs(r6[n])>LIMIT_AMPLITUDE)) {
-                    int h, k=ihist;
+           for (n=0; n<6; n++) {
+                if (!isfinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
                     xlost[c] = 1;
                     xnturn[c] = num_turn;
                     xnelem[c] = num_elem;
-                    for (h=0; h<lhist; h++) {
-                        if (++k >= lhist) k=0;
-                        memcpy(xcoord+6*(np*h+c),histbuf+6*(np*k+c),6*sizeof(double));
-                    }
                     memcpy(xlostcoord+6*c,r6,6*sizeof(double));
                     r6[0] = NAN;
                     r6[1] = 0;
@@ -134,6 +129,29 @@ static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn,
         }
     }
 }
+
+
+static void setlost(double *drin, npy_uint32 np)
+{
+    unsigned int n, c;
+    for (c=0; c<np; c++) {/* Loop over particles */
+        double *r6 = drin+c*6;
+        if (isfinite(r6[0])) {  /* No change if already marked */
+           for (n=0; n<6; n++) {
+                if (!isfinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
+                    r6[0] = NAN;
+                    r6[1] = 0;
+                    r6[2] = 0;
+                    r6[3] = 0;
+                    r6[4] = 0;
+                    r6[5] = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+
 
 /*
  * Use Python calls to establish the location of the at integrators
@@ -299,15 +317,23 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
  *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads", NULL};
+    static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
     int new_lattice;
 
     PyObject *lattice;
     PyArrayObject *rin;
     PyArrayObject *refs = NULL;
-    PyObject *rout;
+    PyObject *rout = NULL;
     double *drin, *drout;
+    PyObject *xnturn = NULL;
+    PyObject *xnelem = NULL;
+    PyObject *xlost = NULL;
+    PyObject *xlostcoord = NULL;
+    int *ixnturn = NULL;
+    int *ixnelem = NULL;
+    bool *bxlost = NULL;
+    double *dxlostcoord = NULL;
     int num_turns;
     npy_uint32 omp_num_threads=0;
     npy_uint32 num_particles, np6;
@@ -317,7 +343,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     unsigned int nextrefindex;
     unsigned int num_refpts;
     npy_uint32 reuse=0;
+    npy_uint32 losses=0;
     npy_intp outdims[4];
+    npy_intp pdims[1];
+    npy_intp lxdims[2];
     int turn;
     #ifdef _OPENMP
     int maxthreads;
@@ -326,8 +355,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct LibraryListElement *LibraryListPtr;
 
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!II", kwlist, &PyList_Type, &lattice,
-        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse, &omp_num_threads)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!III", kwlist, &PyList_Type, &lattice,
+        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse, &omp_num_threads, &losses)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -366,6 +395,28 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     outdims[3] = num_turns;
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
+
+    if(losses){
+        pdims[0]= num_particles;
+        lxdims[0]= 6;
+        lxdims[1]= num_particles;
+        xnturn = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
+        xnelem = PyArray_EMPTY(1, pdims, NPY_UINT32, 1);
+        xlost = PyArray_EMPTY(1, pdims, NPY_BOOL, 1);
+        xlostcoord = PyArray_EMPTY(2, lxdims, NPY_DOUBLE, 1);
+        ixnturn = PyArray_DATA((PyArrayObject *)xnturn);
+        ixnelem = PyArray_DATA((PyArrayObject *)xnelem);
+        bxlost = PyArray_DATA((PyArrayObject *)xlost);
+        dxlostcoord = PyArray_DATA((PyArrayObject *)xlostcoord);
+        unsigned int i;
+        static double r0[6];
+        for(i=0;i<num_particles;i++){
+            bxlost[i]=0;
+            ixnturn[i]=0;
+            ixnelem[i]=0;
+            memcpy(dxlostcoord+6*i,r0,6*sizeof(double));
+        }
+    }
 
 
     #ifdef _OPENMP
@@ -455,6 +506,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             }
+            if(losses){
+                checkiflost(drin, num_particles, elem_index, turn, ixnturn, ixnelem, bxlost, dxlostcoord);
+            }else{
+                setlost(drin, num_particles);
+            }
             element++;
             integrator++;
             pyintegrator++;
@@ -473,7 +529,24 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         omp_set_num_threads(maxthreads);
     }
     #endif /*_OPENMP*/
-    return rout;
+
+    if(losses){
+        PyObject *tout = PyTuple_New(2);
+        PyObject *dict = PyDict_New();
+        PyDict_SetItemString(dict,(char *)"islost",(PyObject *)xlost);
+        PyDict_SetItemString(dict,(char *)"turn",(PyObject *)xnturn); 
+        PyDict_SetItemString(dict,(char *)"elem",(PyObject *)xnelem);
+        PyDict_SetItemString(dict,(char *)"coord",(PyObject *)xlostcoord);
+        PyTuple_SetItem(tout, 0, rout);  
+        PyTuple_SetItem(tout, 1, dict);
+        Py_DECREF(xlost);
+        Py_DECREF(xnturn);
+        Py_DECREF(xnelem);
+        Py_DECREF(xlostcoord);
+        return tout;          
+    }else{
+        return rout;
+    }
 }
 
 static PyObject *at_elempass(PyObject *self, PyObject *args)
