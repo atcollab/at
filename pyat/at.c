@@ -324,7 +324,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     PyObject *lattice;
     PyArrayObject *rin;
     PyArrayObject *refs = NULL;
-    PyObject *rout = NULL;
+    PyObject *rout;
     double *drin, *drout;
     PyObject *xnturn = NULL;
     PyObject *xnelem = NULL;
