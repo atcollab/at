@@ -240,8 +240,8 @@ def test_aperture_outside_limits(rin):
     rin[0, 0] = 1e-2
     rin[2, 0] = -1e-2
     atpass(lattice, rin, 1)
-    assert numpy.isinf(rin[5, 0])
-    assert rin[2, 0] == -1e-2  # Only the 6th coordinate is marked as infinity
+    assert numpy.isnan(rin[0, 0])
+    assert rin[2, 0] == 0.0  # Only the 1st coordinate is nan, the rest is zero
 
 
 def test_drift_offset(rin):
