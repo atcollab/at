@@ -429,7 +429,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
     #endif /*_OPENMP*/
 
-    if (new_lattice) {
+    if (new_lattice | !element_list) {
         PyObject **element;
         track_function *integrator;
         PyObject **pyintegrator;
