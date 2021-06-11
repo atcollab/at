@@ -11,20 +11,16 @@ __all__ = ['patpass']
 
 
 def _atpass_one(args):
-    rin, turns, refpts = args
-    return atpass(ringg, rin, turns, refpts)
+    return atpass(ringg, *args)
 
 
-def _patpass(ring, r_in, nturns, refpts, pool_size):
-    global ringg
-    ringg = ring
+def _patpass(r_in, nturns, refpts, pool_size):
     pool = multiprocessing.Pool(pool_size)
     args = [(r_in[:, i], nturns, refpts) for i in range(r_in.shape[1])]
     results = pool.map(_atpass_one, args)
     pool.terminate()
     pool.join()
     pool.close()
-    del ringg
     return numpy.concatenate(results, axis=1)
 
 
@@ -54,4 +50,8 @@ def patpass(ring, r_in, nturns, refpts=None, pool_size=None):
     refs = uint32_refpts(refpts, len(ring))
     if pool_size is None:
         pool_size = min(len(r_in[0]),multiprocessing.cpu_count())
-    return _patpass(ring, r_in, nturns, refs, pool_size)
+    global ringg
+    ringg = ring
+    results = _patpass(r_in, nturns, refs, pool_size)
+    del ringg
+    return results
