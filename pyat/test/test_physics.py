@@ -55,7 +55,7 @@ def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_lattice):
     _, all_points = physics.find_orbit4(dba_lattice, DP, [49, 99])
     assert_close(all_points, expected, atol=1e-12)
     _, all_points = physics.find_orbit4(dba_lattice, DP, [49, 99],
-                                        numpy.array([0., 0., 0., 0., DP, 0.]))
+                                        guess=numpy.array([0., 0., 0., 0., DP, 0.]))
     assert_close(all_points, expected, atol=1e-12)
 
 
