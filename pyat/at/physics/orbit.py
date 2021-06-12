@@ -1,13 +1,12 @@
 """
 Closed orbit related functions
 """
-from math import pi, asin
 import numpy
 import scipy.constants as constants
 from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
-from at.physics import get_energy_loss, ELossMethod
+from at.physics import ELossMethod, get_timelag_fromU0
 import warnings
 
 __all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6', 'find_orbit']
@@ -270,17 +269,9 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     harm_number = cavities[0].HarmNumber
 
     if guess is None:
+        _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
         ref_in = numpy.zeros((6,), order='F')
-        try:
-            rfv = ring.get_rf_voltage(cavpts=cavpts)
-        except AtError:
-            # Cannot compute synchronous phase: keep zeros(6,)
-            pass
-        else:
-            u0 = get_energy_loss(ring, method=method)
-            if u0 > rfv:
-                raise AtError('Missing RF voltage: unstable ring')
-            ref_in[5] = -constants.c / (2 * pi * f_rf) * asin(u0 / rfv)
+        ref_in[5] = -dt
     else:
         ref_in = numpy.copy(guess)
 
