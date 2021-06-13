@@ -14,14 +14,15 @@
 
 static void edge_fringe_entrance(double* r, double inv_rho, double edge_angle,
         double fint, double gap, int method)
-{
-    /*     method 1 legacy version Brown First Order
+{  
+    /*     method 0 no fringe field
+     *     method 1 legacy version Brown First Order
      *     method 2 SOLEIL close to second order of Brown
      *     method 3 THOMX
      */
     double fringecorr, fx, fy;
     /* Fringe field correction */
-    if ((fint==0.0) || (gap==0.0))
+    if ((fint==0.0) || (gap==0.0) || (method==0))
         fringecorr = 0.0;
     else {
         register double sedge = sin(edge_angle);
@@ -47,13 +48,14 @@ static void edge_fringe_entrance(double* r, double inv_rho, double edge_angle,
 static void edge_fringe_exit(double* r, double inv_rho, double edge_angle,
         double fint, double gap, int method)
 {
-    /*     method 1 legacy version Brown First Order
+    /*     method 0 no fringe field
+     *     method 1 legacy version Brown First Order
      *     method 2 SOLEIL close to second order of Brown
      *     method 3 THOMX
      */
     /* Fringe field correction */
     double fringecorr, fx, fy;
-    if ((fint==0.0) || (gap==0.0))
+    if ((fint==0.0) || (gap==0.0) || (method==0))
         fringecorr = 0.0;
     else {
         register double sedge = sin(edge_angle);
