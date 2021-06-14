@@ -18,20 +18,19 @@ def _atpass_one(args):
         return atpass(*args)
 
 
-def _patpass(r_in, nturns, refpts, pool_size,ring=None):
+def _patpass(r_in, nturns, refpts, pool_size, ring=None):
     pool = multiprocessing.Pool(pool_size)
     if ring is None:
         args = [(r_in[:, i], nturns, refpts) for i in range(r_in.shape[1])]
     else:
         args = [(ring, r_in[:, i], nturns, refpts) for i in range(r_in.shape[1])]
     results = pool.map(_atpass_one, args)
-    pool.terminate()
-    pool.join()
     pool.close()
+    pool.join()
     return numpy.concatenate(results, axis=1)
 
 
-def patpass(ring, r_in, nturns, refpts=None, pool_size=None):
+def patpass(ring, r_in, nturns, refpts=None, pool_size=None, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -55,13 +54,18 @@ def patpass(ring, r_in, nturns, refpts=None, pool_size=None):
     if refpts is None:
         refpts = len(ring)
     refs = uint32_refpts(refpts, len(ring))
-    if pool_size is None:
-        pool_size = min(len(r_in[0]),multiprocessing.cpu_count())
-    if platform == "linux" or platform == "linux2":
-        global ringg
-        ringg = ring
-        results = _patpass(r_in, nturns, refs, pool_size)
-        del ringg
+    if len(numpy.atleast_1d(r_in[0]))>1:
+        if pool_size is None:
+            pool_size = min(len(r_in[0]),multiprocessing.cpu_count())
+        if platform == "linux" or platform == "linux2":
+            global ringg
+            ringg = ring
+            results = _patpass(r_in, nturns, refs, pool_size)
+            r_in[:] = numpy.squeeze(results[:,:,-1,-1])
+            del ringg
+        else:
+            results = _patpass(r_in, nturns, refs, pool_size,ring=ring) 
+            r_in[:] = numpy.squeeze(results[:,:,-1,-1])   
     else:
-        results = _patpass(r_in, nturns, refs, pool_size,ring=ring)
+            results = atpass(ring, r_in, nturns, refs) 
     return results
