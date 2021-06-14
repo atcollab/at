@@ -9,6 +9,9 @@
 #include <omp.h>
 #endif /*_OPENMP*/
 #include "attypes.h"
+#include <stdbool.h> 
+#include <math.h>
+#include <float.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
@@ -41,6 +44,8 @@ typedef PyObject atElem;
 #define MOD_ERROR_VAL NULL
 #define MOD_SUCCESS_VAL(val) val
 #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+
+#define LIMIT_AMPLITUDE		1
 
 /* define the general signature of a pass function */
 typedef struct elem *(*track_function)(const PyObject *element,
@@ -95,6 +100,39 @@ static struct LibraryListElement* SearchLibraryList(struct LibraryListElement *h
             SearchLibraryList(head->Next, method_name);
     else
         return NULL;
+}
+
+
+static void checkiflost(double *drin, npy_uint32 np, int num_elem, int num_turn, 
+        double *xnturn, double *xnelem, double *xcoord, double *xlostcoord, 
+        bool *xlost, double *histbuf, npy_uint32 ihist, npy_uint32 lhist)
+{
+    int n, c;
+    for (c=0; c<np; c++) {/* Loop over particles */
+        if (!xlost[c]) {  /* No change if already marked */
+           double *r6 = drin+c*6;
+           for (n=0; n<6; n++) {	/* I remove the check on the sixth coordinate N.C. */
+                if (!isfinite(r6[n]) || (fabs(r6[n])>LIMIT_AMPLITUDE)) {
+                    int h, k=ihist;
+                    xlost[c] = 1;
+                    xnturn[c] = num_turn;
+                    xnelem[c] = num_elem;
+                    for (h=0; h<lhist; h++) {
+                        if (++k >= lhist) k=0;
+                        memcpy(xcoord+6*(np*h+c),histbuf+6*(np*k+c),6*sizeof(double));
+                    }
+                    memcpy(xlostcoord+6*c,r6,6*sizeof(double));
+                    r6[0] = NAN;
+                    r6[1] = 0;
+                    r6[2] = 0;
+                    r6[3] = 0;
+                    r6[4] = 0;
+                    r6[5] = 0;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 /*
