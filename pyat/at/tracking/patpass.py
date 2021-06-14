@@ -4,7 +4,6 @@ Simple parallelisation of atpass() using multiprocessing.
 import multiprocessing
 from at.tracking import atpass
 from at.lattice import uint32_refpts
-from sys import platform
 import numpy
 
 
@@ -12,25 +11,18 @@ __all__ = ['patpass']
 
 
 def _atpass_one(args):
-    if len(args)==3:
-        return atpass(ringg, *args)
-    else:
-        return atpass(*args)
+    ring, rin, turns, refpts = args
+    return atpass(ring, rin, turns, refpts)
 
 
-def _patpass(r_in, nturns, refpts, pool_size, ring=None):
+def _patpass(ring, r_in, nturns, refpts, pool_size):
     pool = multiprocessing.Pool(pool_size)
-    if ring is None:
-        args = [(r_in[:, i], nturns, refpts) for i in range(r_in.shape[1])]
-    else:
-        args = [(ring, r_in[:, i], nturns, refpts) for i in range(r_in.shape[1])]
+    args = [(ring, r_in[:, i], nturns, refpts) for i in range(r_in.shape[1])]
     results = pool.map(_atpass_one, args)
-    pool.close()
-    pool.join()
     return numpy.concatenate(results, axis=1)
 
 
-def patpass(ring, r_in, nturns, refpts=None, pool_size=None, **kwargs):
+def patpass(ring, r_in, nturns, refpts=None, reuse=True, pool_size=None):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -51,21 +43,11 @@ def patpass(ring, r_in, nturns, refpts=None, pool_size=None, **kwargs):
                         Defaults to None, meaning no refpts, equivelent to
                         passing an empty array for calculation purposes.
     """
+    if not reuse:
+        raise ValueError('patpass does not support altering lattices')
     if refpts is None:
         refpts = len(ring)
     refs = uint32_refpts(refpts, len(ring))
-    if len(numpy.atleast_1d(r_in[0]))>1:
-        if pool_size is None:
-            pool_size = min(len(r_in[0]),multiprocessing.cpu_count())
-        if platform == "linux" or platform == "linux2":
-            global ringg
-            ringg = ring
-            results = _patpass(r_in, nturns, refs, pool_size)
-            r_in[:] = numpy.squeeze(results[:,:,-1,-1])
-            del ringg
-        else:
-            results = _patpass(r_in, nturns, refs, pool_size,ring=ring) 
-            r_in[:] = numpy.squeeze(results[:,:,-1,-1])   
-    else:
-            results = atpass(ring, r_in, nturns, refs) 
-    return results
+    if pool_size is None:
+        pool_size = multiprocessing.cpu_count()
+    return _patpass(ring, r_in, nturns, refs, pool_size)

@@ -3,6 +3,10 @@ import numpy
 import pytest
 
 
+def test_patpass_raises_ValueError_if_reuse_False(rin):
+    with pytest.raises(ValueError):
+        patpass([], rin, 1, reuse=False)
+
 
 def test_patpass_multiple_particles_and_turns():
     nturns = 10
