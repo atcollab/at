@@ -12,8 +12,8 @@ def test_linopt6(lattice, dp):
     lindata0, tune, chrom, lindata = linopt(lattice, dp, refpts,
                                                     get_chrom=True)
     ld0, rd, ld = linopt6(lattice, refpts, dp=dp, get_chrom=True)
-    assert_close(tune, rd.tune, rtol=1e-8)
-    assert_close(chrom, rd.chromaticity, rtol=1e-8)
+    assert_close(tune, rd.tune, atol=1e-12)
+    assert_close(chrom, rd.chromaticity, atol=1e-8)
 
     assert_close(ld.beta, lindata.beta,  rtol=1e-6)
     assert_close(ld.alpha, lindata.alpha,  atol=1e-6, rtol=1e-6)

@@ -40,31 +40,29 @@ def _compare_6d(py_data, ml_data, fields, atol=1.e-12, rtol=1.e-7):
 def test_4d_analysis(engine, lattices, dp):
     """Compare linopt6 in 4D"""
     py_lattice, ml_lattice, _ = lattices
-    fields = [('SPos', 's_pos'),
-              ('ClosedOrbit', 'closed_orbit'),
-              ('M', 'M'), ('A', 'A'),
-              ('Dispersion', 'dispersion'),
-              ('alpha', 'alpha'), ('beta', 'beta'),
-              ('mu', 'mu'),
+    fields = [('SPos', 's_pos'), ('ClosedOrbit', 'closed_orbit'),
+              ('M', 'M'), ('A', 'A'), ('Dispersion', 'dispersion'),
+              ('alpha', 'alpha'), ('beta', 'beta'), ('mu', 'mu'),
               ]
     pypts = range(10)
     mlpts = _ml_refs(py_lattice, pypts)
 
     # python call
     py_data0, py_ringdata, py_data = linopt6(py_lattice, refpts=pypts,
-                                             dp=dp, get_chrom=True)
+                                             dp=dp, get_w=True)
     # Matlab call
-    ml_data, ml_ringdata = engine.pyproxy('atlinopt6', ml_lattice, mlpts,
-                                          'dp', dp, 'get_chrom', nargout=2)
+    ml_ringdata, ml_data = engine.pyproxy('atlinopt6', ml_lattice, mlpts,
+                                          'dp', dp, 'get_w', nargout=2)
     # Comparison
     assert_close(py_ringdata.tune,
                  _py_data(ml_ringdata['tune']),
                  atol=1.e-8, rtol=0)
     assert_close(py_ringdata.chromaticity,
                  _py_data(ml_ringdata['chromaticity']),
-                 atol=1.e-8, rtol=0)
+                 atol=5.e-4, rtol=0)
 
-    _compare_4d(py_data, ml_data, fields, atol=1.e-6, rtol=1e-8)
+    _compare_6d(py_data, ml_data, fields, atol=1.e-6, rtol=1e-8)
+    _compare_6d(py_data, ml_data, [('W', 'W')], atol=1.e-6, rtol=1e-4)
 
 
 @pytest.mark.parametrize('lattices',
@@ -72,12 +70,10 @@ def test_4d_analysis(engine, lattices, dp):
 def test_6d_analysis(engine, lattices):
     """Compare linopt6 in 6D"""
     py_lattice, ml_lattice, _ = lattices
-    fields = [('SPos', 's_pos'),
-              ('ClosedOrbit', 'closed_orbit'),
-              ('M', 'M'), ('A', 'A'),
-              ('Dispersion', 'dispersion'),
-              ('alpha', 'alpha'), ('beta', 'beta'),
-              # ('mu', 'mu'),
+    fields = [('SPos', 's_pos'), ('ClosedOrbit', 'closed_orbit'),
+              ('M', 'M'), ('A', 'A'), ('Dispersion', 'dispersion'),
+              ('alpha', 'alpha'), ('beta', 'beta'), ('mu', 'mu'),
+              ('W', 'W')
               ]
     ml_lattice = engine.pyproxy('atradon', ml_lattice)
     py_lattice = py_lattice.radiation_on(copy=True)
@@ -86,14 +82,14 @@ def test_6d_analysis(engine, lattices):
 
     # python call
     py_data0, py_ringdata, py_data = linopt6(py_lattice, refpts=pypts,
-                                             get_chrom=True)
+                                             get_w=True)
     # Matlab call
-    ml_data, ml_ringdata = engine.pyproxy('atlinopt6', ml_lattice, mlpts,
-                                          'get_chrom', nargout=2)
+    ml_ringdata, ml_data = engine.pyproxy('atlinopt6', ml_lattice, mlpts,
+                                          'get_w', nargout=2)
     # Comparison
     assert_close(py_ringdata.tune,
                  _py_data(ml_ringdata['tune']),
-                 atol=1.e-8, rtol=0)
+                 atol=1.e-12, rtol=0)
     assert_close(py_ringdata.chromaticity,
                  _py_data(ml_ringdata['chromaticity']),
                  atol=1.e-5, rtol=0)
