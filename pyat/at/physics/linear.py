@@ -70,9 +70,9 @@ def _twiss22(t12, alpha0, beta0):
               bbb * t12[:, 1, 1]) / beta0
     mu = numpy.arctan2(bbb, aaa)
     # Unwrap negative jumps in betatron phase advance
-    dmu = numpy.diff(numpy.append([0], mu))
-    jumps = dmu < -1.0e-3
-    mu += numpy.cumsum(jumps) * 2.0 * numpy.pi
+    # dmu = numpy.diff(numpy.append([0], mu))
+    # jumps = dmu < -1.0e-3
+    # mu += numpy.cumsum(jumps) * 2.0 * numpy.pi
     return alpha, beta, mu
 
 
@@ -154,6 +154,12 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         w0 = wget(deltap, el0up, el0dn)
         ws = wget(deltap, elsup, elsdn)
         return chrom, w0, ws
+
+    def unwrap(mu):
+        """Remove the phase jumps"""
+        dmu = numpy.diff(numpy.concatenate((numpy.zeros((1, dms)), mu)), axis=0)
+        jumps = dmu < -1.e-3
+        mu += numpy.cumsum(jumps, axis=0) * 2.0 * numpy.pi
 
     dp_step = kwargs.get('DPStep', DConstant.DPStep)
     add0 = kwargs.pop('add0', ())
@@ -267,6 +273,7 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
     if nrefs > 0:
         for name, value in zip(numpy.dtype(dtype).names, els+datas+adds):
             elemdata[name] = value
+        unwrap(elemdata.mu)
     return elemdata0, beamdata, elemdata
 
 
