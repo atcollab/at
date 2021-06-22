@@ -18,22 +18,25 @@ globring = None
 
 
 def format_results(results, r_in, losses):
-    if not losses:
-        results = numpy.concatenate(results, axis=1)
-        r_in[:] = numpy.squeeze(results[:, :, -1, -1])
-        return results
     rin = [r[0] for r in results]
-    lin = [r[1] for r in results]
-    rout = numpy.concatenate(rin, axis=1)
-    lout = {}
-    for k in lin[0].keys():
-        lout[k] = numpy.hstack([l[k] for l in lin])
-    r_in[:] = numpy.squeeze(rout[:, :, -1, -1])
+    rout =  [r[1] for r in results]
+    rout = numpy.concatenate(rout, axis=1)
+    rin = numpy.vstack(rin).T
+    if losses:
+        lin = [r[2] for r in results]
+        lout = {}
+        for k in lin[0].keys():
+            lout[k] = numpy.hstack([l[k] for l in lin])
+    r_in[:] = rin
     return rout, lout
 
 
-def _atpass_one(rin, **kwargs):
-    return atpass(globring, rin, **kwargs)
+def _atpass_one(rin, **kwargs):   
+    if globring is None:
+        result = atpass(ring, rin, **kwargs)
+    else:
+        result = atpass(globring, rin, **kwargs)
+    return (rin,*result)
 
 
 def _atpass(ring, r_in, pool_size, globvar, **kwargs):
@@ -47,7 +50,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
-            results = pool.starmap(partial(atpass, **kwargs), args)
+            results = pool.starmap(partial(atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
 
