@@ -18,37 +18,38 @@ globring = None
 
 
 def format_results(results, r_in, losses):
-    rin = [r[0] for r in results]
-    rout =  [r[1] for r in results]
-    rout = numpy.concatenate(rout, axis=1)
+    rin = [r['rin'] for r in results]
     rin = numpy.vstack(rin).T
     r_in[:] = rin
     if losses:
-        lin = [r[2] for r in results]
+        rout = [r['results'][0] for r in results]
+        rout = numpy.concatenate(rout, axis=1)
+        lin = [r['results'][1] for r in results]
         lout = {}
         for k in lin[0].keys():
             lout[k] = numpy.hstack([l[k] for l in lin])
         return rout, lout
     else:
+        rout = [r['results'] for r in results]
+        rout = numpy.concatenate(rout, axis=1)
         return rout
 
 
-def _atpass_one(ring, rin, **kwargs):   
-    result = atpass(ring, rin, **kwargs)
-    return (rin,*result)
-
-def _atpass_oneg(rin, **kwargs):   
-    result = atpass(globring, rin, **kwargs)
-    return (rin,*result)
+def _atpass_one(ring, rin, **kwargs):
+    if ring is None:
+        result = atpass(globring, rin, **kwargs)
+    else:
+        result = atpass(ring, rin, **kwargs)
+    return {'rin': rin, 'results': result}
 
 
 def _atpass(ring, r_in, pool_size, globvar, **kwargs):
     if platform.startswith('linux') and globvar:
         global globring
         globring = ring
-        args = [r_in[:, i] for i in range(r_in.shape[1])]
+        args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
-            results = pool.map(partial(_atpass_oneg, **kwargs), args)
+            results = pool.starmap(partial(_atpass_one, **kwargs), args)
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
@@ -59,7 +60,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
 
 
 def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
-            globvar=True):
+            globvar=True, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
