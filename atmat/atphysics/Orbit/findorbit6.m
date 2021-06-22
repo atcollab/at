@@ -1,4 +1,4 @@
-function [orb6,fixedpoint] = findorbit6(RING,varargin)
+function [orb6,orbitin] = findorbit6(ring,varargin)
 %FINDORBIT6 finds closed orbit in the full 6-d phase space
 % by numerically solving  for a fixed point of the one turn
 % map M calculated with RINGPASS
@@ -31,107 +31,47 @@ function [orb6,fixedpoint] = findorbit6(RING,varargin)
 % FINDORBIT6(RING) is 6x1 vector - fixed point at the
 %		entrance of the 1-st element of the RING (x,px,y,py,dp,ct)
 %
-% FINDORBIT6(RING,REFPTS) is 6-by-Length(REFPTS)
-%     array of column vectors - fixed points (x,px,y,py,dp,ct)
-%     at the entrance of each element indexed  REFPTS array.
-%     REFPTS is an array of increasing indexes that  select elements
-%     from the range 1 to length(RING)+1.
-%     See further explanation of REFPTS in the 'help' for FINDSPO
+% FINDORBIT6(RING,REFPTS) is 6xLength(REFPTS)
+%   array of column vectors - fixed points (x,px,y,py,dp,ct)
+%   at the entrance of each element indexed by the REFPTS array.
+%   REFPTS is an array of increasing indexes that  select elements
+%   from the range 1 to length(RING)+1.
+%   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
-% FINDORBIT6(RING,REFPTS,GUESS) - same as above but the search
-%     for the fixed point starts at the initial condition GUESS
-%     GUESS must be a 6-by-1 vector;
+% FINDORBIT6(RING,REFPTS,GUESS)
+% FINDORBIT6(...,'guess',GUESS)     The search for the fixed point
+%	starts from initial condition GUESS. Otherwise the search starts from
+%   the synchronous phase. GUESS must be a 6x1 vector.
+%
+% FINDORBIT6(...,'orbit',ORBIT)     Specify the orbit at the entrance
+%   of the ring, if known. FINDORBIT6 will then transfer it to the
+%   reference points. ORBIT must be a 6x1 vector.
 %
 % [ORBIT, FIXEDPOINT] = FINDORBIT6( ... )
-%     The optional second return parameter is
-%     a 6-by-1 vector of initial conditions
-%     on the close orbit at the entrance to the RING.
+%	The optional second return parameter is a 6x1 vector:
+%   closed orbit at the entrance of the RING.
 %
 % See also FINDORBIT4, FINDSYNCORBIT.
 
-if ~iscell(RING)
+if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
-[DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
-[dps,varargs]=getoption(varargs,'OrbConvergence');	% Convergence threshold                 %1.e-12
-[max_iterations,varargs]=getoption(varargs,'OrbMaxIter');	% Max. iterations               %20
-[method,varargs]=getoption(varargs,'method','tracking');    % Method for Eloss computation
-cavities=RING(atgetcells(RING,'Frequency'));
-
-if isempty(cavities)
-    error('AT:NoFrequency', 'The lattice has no Cavity element')
-end
-
-L0 = findspos(RING,length(RING)+1); % design length [m]
-C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
-
-T0 = L0/C0;
-
-if length(varargs) >= 1 && ~isequal(varargs{1},length(RING)+1)
-    refpts=varargs{1};
-    if islogical(refpts)
-        refpts=find(refpts);
-    end
-else
-    refpts=[];
-end
-
-Frf = unique(atgetfieldvalues(cavities,'Frequency'));
-HarmNumber = unique(atgetfieldvalues(cavities,'HarmNumber'));
-if length(Frf) > 1 || length(HarmNumber) > 1
-    error('AT:NoFrequency','RF cavities are not identical');
-end
-
-if length(varargs) >= 2	% Check if guess argument was supplied
-    if isnumeric(varargs{2}) && isequal(size(varargs{2}),[6,1])
-        Ri=varargs{2};
-    else
-        error('AT:WrongSize','The last argument GUESS must be a 6-by-1 vector');
-    end
-else
-    Vcell=sum(atgetfieldvalues(cavities,'Voltage'));
-    U0cell=atgetU0(RING,'periods',1,'method',method);
-    if U0cell > Vcell
-        error('AT:MissingVoltage','Missing RF voltage: unstable ring');
-    end
-    Ri = zeros(6,1);
-    Ri(6) = -L0/(2*pi*HarmNumber) * asin(U0cell/Vcell);
-end
-
-theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
-
-scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];
-D = [diag(scaling) zeros(6,1)];
-
-args={};
-change=Inf;
-itercount = 0;
-while (change > dps) && (itercount < max_iterations)
-    RMATi= Ri(:,ones(1,7)) + D;
-    RMATf = linepass(RING,RMATi,args{:});
-    % compute the transverse part of the Jacobian 
-    J6 = (RMATf(:,1:6)-RMATf(:,7))./scaling;
-    Rf = RMATf(:,end);
-    Ri_next = Ri + (eye(6)-J6)\(Rf-Ri-theta);
-    change = norm(Ri_next - Ri);
-    Ri = Ri_next;
-    itercount = itercount+1;
+[orbitin,varargs]=getoption(varargin,'orbit',[]);
+[refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+if isempty(orbitin)
+    orbitin=xorbit_6(ring,varargs{:});
     args={'KeepLattice'};
+else
+    args={};
 end
 
-if itercount == max_iterations
-    warning('Maximum number of iterations reached. Possible non-convergence')
+if islogical(refpts)
+    refpts=find(refpts);
 end
-
 if isempty(refpts)
     % return only the fixed point at the entrance of RING{1}
-    orb6=Ri;
-else	% 2-nd input argument - vector of reference points along the Ring
-        % is supplied - return orbit
-    orb6 = linepass(RING,Ri,refpts,'KeepLattice');
+    orb6=orbitin;
+else
+    orb6 = linepass(ring,orbitin,refpts,args{:});
 end
-
-if nargout >= 2
-    fixedpoint=Ri;
 end
