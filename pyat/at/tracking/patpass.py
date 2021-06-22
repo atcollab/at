@@ -1,11 +1,13 @@
 """
 Simple parallelisation of atpass() using multiprocessing.
 """
-from warnings import warn
+from functools import partial
 import multiprocessing
 from at.tracking import atpass
 from at.lattice import uint32_refpts
 from sys import platform
+from warnings import warn
+from at.lattice import AtWarning
 import numpy
 
 
@@ -15,26 +17,43 @@ __all__ = ['patpass']
 globring = None
 
 
-def _atpass_one(args):
-    return atpass(globring, *args)
+def format_results(results, r_in, losses):
+    if not losses:
+        results = numpy.concatenate(results, axis=1)
+        r_in[:] = numpy.squeeze(results[:,:,-1,-1]) 
+        return results
+    rin = [r[0] for r in results]
+    lin = [r[1] for r in results]
+    rout = numpy.concatenate(rin,axis=1)
+    lout = {}
+    for k in lin[0].keys():
+         lout[k] = numpy.hstack([l[k] for l in lin])  
+    r_in[:] = numpy.squeeze(rout[:,:,-1,-1]) 
+    return rout, lout
+
+    
+def _atpass_one(rin, **kwargs):
+    return atpass(globring, rin, **kwargs)
 
 
-def _atpass(ring, r_in, nturns, refs, pool_size=None, globvar=True):
+def _atpass(ring, r_in, pool_size, globvar, **kwargs):
     if platform.startswith('linux') and globvar:
         global globring
         globring = ring
-        args = [(r_in[:, i], nturns, refs) for i in range(r_in.shape[1])]
+        args = [r_in[:, i] for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
-            results = pool.map(_atpass_one, args)
+            results = pool.map(partial(_atpass_one, **kwargs), args)
         globring = None
     else:
-        args = [(ring, r_in[:, i], nturns, refs) for i in range(r_in.shape[1])]
+        args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
-            results = pool.starmap(atpass, args)
-    return numpy.concatenate(results, axis=1)
+            results = pool.starmap(partial(atpass, **kwargs), args)
+    losses = kwargs.pop('losses',False)
+    return format_results(results, r_in, losses)
 
 
-def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None, globvar=True):
+def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
+            globvar=True):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -55,17 +74,29 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None, globvar=True):
                            len(ring)+1, where selected elements are True.
                         Defaults to None, meaning no refpts, equivelent to
                         passing an empty array for calculation purposes.
+        losses          Activate loss maps
         pool_size       number of processes, if None the min(npart,nproc) is used
         globvar         For linux machines speed-up is achieved by defining a global
                         ring variable, this can be disabled using globvar=False
+
+      OUTPUT:
+        (6, N, R, T) array containing output coordinates of N particles
+        at R reference points for T turns.
+        If losses ==True: {islost,turn,elem,coord} dictionnary containing
+        flag for particles lost (True -> particle lost), turn, element and
+        coordinates at which the particle is lost. Set to zero for particles
+        that survived
     """
     if refpts is None:
         refpts = len(ring)
-    refs = uint32_refpts(refpts,len(ring))
+    refpts = uint32_refpts(refpts,len(ring))
     pm_ok = [e.PassMethod=='ImpedanceTablePass' for e in ring]
-    if len(numpy.atleast_1d(r_in[0]))>1 or any(pm_ok):
+    if len(numpy.atleast_1d(r_in[0]))>1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]),multiprocessing.cpu_count())
-        return _atpass(ring, r_in, nturns, refs, pool_size=pool_size, globvar=globvar)
+        return _atpass(ring, r_in, pool_size, globvar, nturns=nturns, refpts=refpts,
+                       losses=losses)
     else:
-        return atpass(ring, r_in, nturns, refs)
+        if any(pm_ok):
+            warn(AtWarning('ImpedandeTablePass found: switch to single process'))
+        return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
