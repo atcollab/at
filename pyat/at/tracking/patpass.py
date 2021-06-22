@@ -20,18 +20,18 @@ globring = None
 def format_results(results, r_in, losses):
     if not losses:
         results = numpy.concatenate(results, axis=1)
-        r_in[:] = numpy.squeeze(results[:,:,-1,-1]) 
+        r_in[:] = numpy.squeeze(results[:, :, -1, -1])
         return results
     rin = [r[0] for r in results]
     lin = [r[1] for r in results]
-    rout = numpy.concatenate(rin,axis=1)
+    rout = numpy.concatenate(rin, axis=1)
     lout = {}
     for k in lin[0].keys():
-         lout[k] = numpy.hstack([l[k] for l in lin])  
-    r_in[:] = numpy.squeeze(rout[:,:,-1,-1]) 
+        lout[k] = numpy.hstack([l[k] for l in lin])
+    r_in[:] = numpy.squeeze(rout[:, :, -1, -1])
     return rout, lout
 
-    
+
 def _atpass_one(rin, **kwargs):
     return atpass(globring, rin, **kwargs)
 
@@ -48,7 +48,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
             results = pool.starmap(partial(atpass, **kwargs), args)
-    losses = kwargs.pop('losses',False)
+    losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
 
 
@@ -79,7 +79,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         globvar         For linux machines speed-up is achieved by defining a global
                         ring variable, this can be disabled using globvar=False
 
-      OUTPUT:
+     OUTPUT:
         (6, N, R, T) array containing output coordinates of N particles
         at R reference points for T turns.
         If losses ==True: {islost,turn,elem,coord} dictionnary containing
@@ -89,14 +89,14 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     """
     if refpts is None:
         refpts = len(ring)
-    refpts = uint32_refpts(refpts,len(ring))
-    pm_ok = [e.PassMethod=='ImpedanceTablePass' for e in ring]
-    if len(numpy.atleast_1d(r_in[0]))>1 and not any(pm_ok):
+    refpts = uint32_refpts(refpts, len(ring))
+    pm_ok = [e.PassMethod == 'ImpedanceTablePass' for e in ring]
+    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
-            pool_size = min(len(r_in[0]),multiprocessing.cpu_count())
-        return _atpass(ring, r_in, pool_size, globvar, nturns=nturns, refpts=refpts,
-                       losses=losses)
+            pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
+        return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
+                       refpts=refpts, losses=losses)
     else:
         if any(pm_ok):
-            warn(AtWarning('ImpedandeTablePass found: switch to single process'))
+            warn(AtWarning('ImpedandeTablePass found: use single process'))
         return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
