@@ -50,7 +50,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
-            results = pool.starmap(partial(atpass_one, **kwargs), args)
+            results = pool.starmap(partial(_atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
 
