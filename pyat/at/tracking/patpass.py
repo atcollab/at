@@ -22,13 +22,15 @@ def format_results(results, r_in, losses):
     rout =  [r[1] for r in results]
     rout = numpy.concatenate(rout, axis=1)
     rin = numpy.vstack(rin).T
+    r_in[:] = rin
     if losses:
         lin = [r[2] for r in results]
         lout = {}
         for k in lin[0].keys():
             lout[k] = numpy.hstack([l[k] for l in lin])
-    r_in[:] = rin
-    return rout, lout
+        return rout, lout
+    else:
+        return rout
 
 
 def _atpass_one(ring, rin, **kwargs):   
