@@ -4,6 +4,7 @@ Simple parallelisation of atpass() using multiprocessing.
 from warnings import warn
 import multiprocessing
 from at.tracking import atpass
+from at.lattice import uint32_refpts
 from sys import platform
 import numpy
 
@@ -60,7 +61,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None, globvar=True):
     """
     if refpts is None:
         refpts = len(ring)
-    refs = ring.uint32_refpts(refpts)
+    refs = uint32_refpts(refpts,len(ring))
     pm_ok = [e.PassMethod=='ImpedanceTablePass' for e in ring]
     if len(numpy.atleast_1d(r_in[0]))>1 or any(pm_ok):
         if pool_size is None:
