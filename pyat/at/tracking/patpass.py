@@ -31,11 +31,12 @@ def format_results(results, r_in, losses):
     return rout, lout
 
 
-def _atpass_one(rin, **kwargs):   
-    if globring is None:
-        result = atpass(ring, rin, **kwargs)
-    else:
-        result = atpass(globring, rin, **kwargs)
+def _atpass_one(ring, rin, **kwargs):   
+    result = atpass(ring, rin, **kwargs)
+    return (rin,*result)
+
+def _atpass_oneg(rin, **kwargs):   
+    result = atpass(globring, rin, **kwargs)
     return (rin,*result)
 
 
@@ -45,7 +46,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
         globring = ring
         args = [r_in[:, i] for i in range(r_in.shape[1])]
         with multiprocessing.Pool(pool_size) as pool:
-            results = pool.map(partial(_atpass_one, **kwargs), args)
+            results = pool.map(partial(_atpass_oneg, **kwargs), args)
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
