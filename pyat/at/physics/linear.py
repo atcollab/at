@@ -107,7 +107,7 @@ def _analyze2(mt, ms, mxx=None):
 # noinspection PyShadowingNames,PyPep8Naming
 def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
             twiss_in=None, get_chrom=False, get_w=False, keep_lattice=False,
-            cavpts=None, **kwargs):
+            mname='M', add0=(), adds=(), cavpts=None, **kwargs):
     """"""
     def build_sigma(twin):
         """Build the initial distribution at entrance of the transfer line"""
@@ -162,10 +162,7 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         mu += numpy.cumsum(jumps, axis=0) * 2.0 * numpy.pi
 
     dp_step = kwargs.get('DPStep', DConstant.DPStep)
-    add0 = kwargs.pop('add0', ())
-    adds = kwargs.pop('adds', ())
     addtype = kwargs.pop('addtype', [])
-    mname = kwargs.pop('mname', 'M')
 
     if twiss_in is None:
         o0up = None
@@ -279,7 +276,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
 @check_radiation(False)
 def linopt4(ring, *args, **kwargs):
-    """Perform linear analysis of a H/V coupled lattice
+    """Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
+    4D-analysis of coupled motion
 
     elemdata0, beamdata, elemdata = linopt4(lattice, refpts, **kwargs)
 
@@ -317,29 +315,21 @@ def linopt4(ring, *args, **kwargs):
                         set to 0 if absent
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
-        tune            [tune_A, tune_B], linear tunes for the two normal modes
-                        of linear motion [1]
-        chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
-                        Only computed if 'get_chrom' is True
+        beamdata        lattice properties
         lindata         linear optics at the points refered to by refpts, if
                         refpts is None an empty lindata structure is returned.
 
         lindata is a record array with fields:
-        idx             element index in the ring
         s_pos           longitudinal position [m]
-        closed_orbit    (6,) closed orbit vector
-        dispersion      (4,) dispersion vector
-        W               (2,) chromatic amplitude function
-                        Only computed if 'get_chrom' is True
         M               (4, 4) transfer matrix M from the beginning of ring
                         to the entrance of the element [2]
-        mu              [mux, muy], betatron phase (modulo 2*pi)
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
         beta            [betax, betay] vector
         alpha           [alphax, alphay] vector
-        A               (2, 2) matrix A in [3]
-        B               (2, 2) matrix B in [3]
-        C               (2, 2) matrix C in [3]
-        gamma           gamma parameter of the transformation to eigenmodes
+        mu              [mux, muy], betatron phase (modulo 2*pi)
+        gamma           gamma parameter of the transformation to eigenmodes [3]
+        W               (2,) chromatic amplitude function (only if get_w==True)
         All values given at the entrance of each element specified in refpts.
         Field values can be obtained with either
         lindata['idx']    or
@@ -347,7 +337,7 @@ def linopt4(ring, *args, **kwargs):
 
         beamdata is a record with fields:
         tune            Fractional tunes
-        chromaticity    Chromaticities
+        chromaticity    Chromaticities, only computed if get_chrom==True
 
     REFERENCES
         [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
@@ -451,25 +441,20 @@ def linopt2(ring, *args, **kwargs):
                         set to 0 if absent
     OUTPUT
         lindata0        linear optics data at the entrance/end of the ring
-        tune            [tune_A, tune_B], linear tunes for the two normal modes
-                        of linear motion [1]
-        chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
-                        Only computed if 'get_chrom' is True
+        beamdata        lattice properties
         lindata         linear optics at the points refered to by refpts, if
                         refpts is None an empty lindata structure is returned.
 
         lindata is a record array with fields:
-        idx             element index in the ring
         s_pos           longitudinal position [m]
-        closed_orbit    (6,) closed orbit vector
-        dispersion      (4,) dispersion vector
-        W               (2,) chromatic amplitude function
-                        Only computed if 'get_chrom' is True
         M               (4, 4) transfer matrix M from the beginning of ring
                         to the entrance of the element [2]
-        mu              [mux, muy], betatron phase (modulo 2*pi)
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
         beta            [betax, betay] vector
         alpha           [alphax, alphay] vector
+        mu              [mux, muy], betatron phase (modulo 2*pi)
+        W               (2,) chromatic amplitude function (only if get_w==True)
         All values given at the entrance of each element specified in refpts.
         Field values can be obtained with either
         lindata['idx']    or
@@ -477,7 +462,7 @@ def linopt2(ring, *args, **kwargs):
 
         beamdata is a record with fields:
         tune            Fractional tunes
-        chromaticity    Chromaticities
+        chromaticity    Chromaticities, only computed if get_chrom=True
 
     REFERENCES
         [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
@@ -490,7 +475,7 @@ def linopt2(ring, *args, **kwargs):
 
 
 def linopt6(ring, *args, **kwargs):
-    """Perform linear analysis of a fully coupled lattice
+    """Perform linear analysis of a fully coupled lattice using normal modes
 
     elemdata0, beamdata, elemdata = linopt6(lattice, refpts, **kwargs)
 
@@ -537,16 +522,16 @@ def linopt6(ring, *args, **kwargs):
                         refpts is None an empty elemdata structure is returned.
 
         elemdata is a record array with fields:
-        R               R-matrices (3, 6, 6)
-        A               A-matrix (6, 6)
+        s_pos           longitudinal position [m]
         M               Transfer matrix from the entrance of the line (6, 6)
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
+        A               A-matrix (6, 6)
+        R               R-matrices (3, 6, 6)
         beta            [betax, betay] vector
         alpha           [alphax, alphay] vector
-        dispersion      (4,) dispersion vector
         mu              [mux, muy], betatron phases
-        s_pos           longitudinal position [m]
-        closed_orbit    (6,) closed orbit vector
-        W               (2,) chromatic amplitude function
+        W               (2,) chromatic amplitude function (only if get_w==True)
 
         All values given at the entrance of each element specified in refpts.
         Field values can be obtained with either
@@ -555,7 +540,7 @@ def linopt6(ring, *args, **kwargs):
 
         beamdata is a record with fields:
         tune            Fractional tunes
-        chromaticity    Chromaticities
+        chromaticity    Chromaticities, only computed if get_chrom==True
         damping_time    Damping times [s] (only if radiation is ON)
 
     REFERENCES
@@ -651,6 +636,11 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
     KEYWORDS
         method=linopt6  Method used for the analysis of the transfer matrix.
                         Can be at.linopt2, at.linopt4, at.linopt6
+                        linopt2:    no longitudinal motion, no H/V coupling,
+                        linopt4:    no longitudinal motion, Sagan/Rubin
+                                    4D-analysis of coupled motion,
+                        minopt6:    with or without longitudinal motion, normal
+                                    mode analysis
         dp=None         Ignored if radiation is ON. Momentum deviation.
         dct=None        Ignored if radiation is ON. Path lengthening.
                         If specified, dp is ignored and the off-momentum is
@@ -688,7 +678,8 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
 # noinspection PyPep8Naming
 @check_radiation(False)
 def linopt(ring, dp=0.0, refpts=None, get_chrom=False, **kwargs):
-    """Perform linear analysis of a lattice
+    """Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
+    4D-analysis of coupled motion
 
     lindata0, tune, chrom, lindata = linopt(lattice, dp, refpts, **kwargs)
 
@@ -734,21 +725,20 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, **kwargs):
         lindata is a record array with fields:
         idx             element index in the ring
         s_pos           longitudinal position [m]
-        closed_orbit    (6,) closed orbit vector
-        dispersion      (4,) dispersion vector
-        W               (2,) chromatic amplitude function
-                        Only computed if 'get_chrom' is True
         m44             (4, 4) transfer matrix M from the beginning of ring
                         to the entrance of the element [2]
-        mu              [mux, muy], betatron phase (modulo 2*pi)
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
         beta            [betax, betay] vector
         alpha           [alphax, alphay] vector
+        mu              [mux, muy], betatron phase (modulo 2*pi)
+        W               (2,) chromatic amplitude function (only if get_w==True)
         All values given at the entrance of each element specified in refpts.
-        In case coupled = True additional outputs are available:
+        In case coupled == True additional outputs are available:
+        gamma           gamma parameter of the transformation to eigenmodes
         A               (2, 2) matrix A in [3]
         B               (2, 2) matrix B in [3]
         C               (2, 2) matrix C in [3]
-        gamma           gamma parameter of the transformation to eigenmodes
         Field values can be obtained with either
         lindata['idx']    or
         lindata.idx
