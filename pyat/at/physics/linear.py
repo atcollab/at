@@ -1,13 +1,12 @@
 """
 Coupled or non-coupled 4x4 linear motion
 """
-import warnings
 import numpy
 from math import sqrt, pi, sin, cos, atan2
 from scipy.constants import c as clight
 from scipy.linalg import solve, block_diag
 from at.lattice import get_rf_frequency, set_rf_frequency, DConstant, get_s_pos
-from at.lattice import AtWarning, Lattice, check_radiation
+from at.lattice import Lattice, check_radiation
 from at.tracking import lattice_pass
 from at.physics import find_orbit4, find_orbit6, find_m44, find_m66
 from at.physics import a_matrix, jmat
@@ -131,7 +130,7 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         """Compute the chromaticity and W-functions"""
         # noinspection PyShadowingNames
         def off_momentum(rng, orb0):
-            mt, ms = get_matrix(rng, refpts, dp=orb0[4], orbit=orb0, **kwargs)
+            mt, ms = get_matrix(rng, refpts=refpts, orbit=orb0, **kwargs)
             vps, _, el0, els = analyze(mt, ms)
             tunes = numpy.mod(numpy.angle(vps)/2.0/pi, 1.0)
             return tunes, el0, els
@@ -179,23 +178,18 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         o0dn = orbit-dorbit
 
     if ring.radiation:
-        if not (dp is None and dct is None):
-            warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
         get_matrix = find_m66
         get_orbit = find_orbit6
     else:
-        def get_matrix(rg, *args, dp=0.0, **kwargs):
-            return find_m44(rg, dp, *args, **kwargs)
-
-        def get_orbit(rg, *args, dp=0.0, **kwargs):
-            return find_orbit4(rg, dp, *args, **kwargs)
+        get_matrix = find_m44
+        get_orbit = find_orbit4
 
     # Get initial orbit
-    orb0, orbs = get_orbit(ring, refpts, dp=dp, dct=dct, orbit=orbit,
+    orb0, orbs = get_orbit(ring, refpts=refpts, dp=dp, dct=dct, orbit=orbit,
                            keep_lattice=keep_lattice, **kwargs)
     nrefs = orbs.shape[0]
     # Get 1-turn transfer matrix
-    mt, ms = get_matrix(ring, refpts, dp=orb0[4], orbit=orb0, **kwargs)
+    mt, ms = get_matrix(ring, refpts=refpts, orbit=orb0, **kwargs)
     # Perform analysis
     vps, dtype, el0, els = analyze(mt, ms, mxx=mxx)
 
@@ -238,10 +232,10 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         kwargs['keep_lattice'] = True
         dpup = orb0[4] + 0.5*dp_step
         dpdn = orb0[4] - 0.5*dp_step
-        o0up, oup = get_orbit(ring, refpts, guess=orb0, dp=dpup, orbit=o0up,
-                              **kwargs)
-        o0dn, odn = get_orbit(ring, refpts, guess=orb0, dp=dpdn, orbit=o0dn,
-                              **kwargs)
+        o0up, oup = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpup,
+                              orbit=o0up, **kwargs)
+        o0dn, odn = get_orbit(ring, refpts=refpts, guess=orb0, dp=dpdn,
+                              orbit=o0dn, **kwargs)
         d0 = (o0up - o0dn)[:4] / dp_step
         ds = numpy.array([(up - dn)[:4] / dp_step for up, dn in zip(oup, odn)])
         dtype = dtype + [('dispersion', numpy.float64, (4,)),
