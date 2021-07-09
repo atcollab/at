@@ -27,7 +27,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %   beta        - [betax, betay]                 1x2 beta vector
 %   alpha       - [alphax, alphay]               1x2 alpha vector
 %   mu          - [mux, muy] 	Betatron phase advances
-%   W           - [Wx, Wy]      Chromatic amplitude function [3]
+%   W           - [Wx, Wy]  Chromatic amplitude function [3] (only with the
+%                           get_w flag)
 % 
 %   Use the Matlab function "cat" to get the data from fields of ELEMDATA as MATLAB arrays.
 %   Example: 
@@ -35,6 +36,17 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %   >> beta = cat(1,elemdata.beta);
 %   >> s = cat(1,elemdata.SPos);
 %   >> plot(S,beta)
+%
+%   All values are specified at the entrance of each element specified in REFPTS.
+%   REFPTS is an array of increasing indexes that  select elements
+%   from the range 1 to length(LINE)+1. Defaults to 1 (initial point)
+%   See further explanation of REFPTS in the 'help' for FINDSPOS
+%
+% [...] = ATLINOPT6(...,'get_chrom')
+%   Trigger the computation of chromaticities
+%
+% [...] = ATLINOPT6(...,'get_w')
+%   Trigger the computation of chromatic amplitude functions (time consuming)
 %
 % [...] = ATLINOPT6(...,'orbit',ORBITIN)
 %   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
@@ -102,30 +114,32 @@ if is6d                     % 6D processing
         DFStep=-DPStep*mcf(atradoff(ring))*frf;
         rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep);
         rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep);
-        [~,o1P]=findorbit(rgup,[],orbitin,varargs{:});
-        [~,o1M]=findorbit(rgdn,[],orbitin,varargs{:});
+        [~,o1P]=findorbit(rgup,[],'guess',orbitin,varargs{:});
+        [~,o1M]=findorbit(rgdn,[],'guess',orbitin,varargs{:});
         if get_w
             [ringdata.chromaticity,w]=chrom_w(rgup,rgdn,o1P,o1M,refpts);
             [elemdata.W]=deal(w{:});
         else
+            tuneP=findtune6(rgup,'orbit',o1P,varargs{:});
+            tuneM=findtune6(rgdn,'orbit',o1M,varargs{:});
+            deltap=o1P(5)-o1M(5);
             [ringdata.chromaticity,~]=chrom_w(rgup,rgdn,o1P,o1M,[]);
+            ringdata.chromaticity = (tuneP - tuneM)/deltap;
         end
     end
 else                        % 4D processing
     dp=orbitin(5);
     [alpha,beta]=cellfun(@output4,ri,'UniformOutput',false);
-%   [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,varargs{:});
-%   [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,varargs{:});
-    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,orbitin,varargs{:});
-    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,orbitin,varargs{:});
-%     [orbitP,o1P]=findorbit(ring,refpts,'dp',dp+0.5*DPStep,varargs{:});
-%     [orbitM,o1M]=findorbit(ring,refpts,'dp',dp-0.5*DPStep,varargs{:});
+    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'guess',orbitin,varargs{:});
+    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'guess',orbitin,varargs{:});
     disp = num2cell((orbitP-orbitM)/DPStep,1);
     if get_w
             [ringdata.chromaticity,w]=chrom_w(ring,ring,o1P,o1M,refpts);
             [elemdata.W]=deal(w{:});
     elseif get_chrom
-            [ringdata.chromaticity,~]=chrom_w(ring,ring,o1P,o1M,[]);
+        tuneP=findtune6(ring,'dp',dp + 0.5*DPStep,varargs{:});
+        tuneM=findtune6(ring,'dp',dp - 0.5*DPStep,varargs{:});
+        ringdata.chromaticity = (tuneP - tuneM)/DPStep;
     end
 end
 
@@ -190,31 +204,30 @@ end
         f=freqs(1);
     end
 
-    function w=chromfunc(ddp,rup,rdn)
-        % Compute the chromatic W function
-        [aup,bup]=output4(rup);
-        [adn,bdn]=output4(rdn);
-        db = (bup - bdn) / ddp;
-        mb = (bup + bdn) / 2;
-        da = (aup - adn) / ddp;
-        ma = (aup + adn) / 2;
-        w = sqrt((da - ma ./ mb .* db).^2 + (db ./ mb).^2);
-    end
-
     function [chrom,w]=chrom_w(ringup,ringdn,orbup,orbdn,refpts)
         % Compute chromaticity, dispersion and W
         [dpup,tuneup,rup]=offmom(ringup,orbup,refpts);
         [dpdn,tunedn,rdn]=offmom(ringdn,orbdn,refpts);
-        deltap=dpup-dpdn;
-        chrom=(tuneup-tunedn)./deltap;
-        w=cellfun(@(r1,r2) chromfunc(deltap,r1,r2),rup,rdn,'UniformOutput',false);
+        delp=dpup-dpdn;
+        chrom=(tuneup-tunedn)./delp;
+        w=cellfun(@(r1,r2) chromfunc(delp,r1,r2),rup,rdn,'UniformOutput',false);
         
         function [dp,tunes,rmats]=offmom(ring,orbit,refpts)
             dp=orbit(5);
             [vals,~,~,rmats,~]=build_1turn_map(ring,dp,refpts,orbit);
             tunes=mod(angle(vals)/2/pi,1);
         end
+
+        function w=chromfunc(ddp,rup,rdn)
+            % Compute the chromatic W function
+            [aup,bup]=output4(rup);
+            [adn,bdn]=output4(rdn);
+            db = (bup - bdn) / ddp;
+            mb = (bup + bdn) / 2;
+            da = (aup - adn) / ddp;
+            ma = (aup + adn) / 2;
+            w = sqrt((da - ma ./ mb .* db).^2 + (db ./ mb).^2);
+        end
     end
 
 end
-

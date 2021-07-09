@@ -80,7 +80,7 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %	[3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %	[4] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
 %
-%  See also atlinopt2, atlinopt6
+%  See also atlinopt atlinopt2 atlinopt6 tunechrom
 
 % [...] = ATLINOPT4(...,'coupled',flag)
 %   Private keyword for computation without coupling (used for atlinopt2)
@@ -88,7 +88,6 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 % [...] = ATLINOPT4(...,'mkey',MKEY)
 %   Private keyword for the generation of the legacy atlinopt output
 %
-%  See also atlinopt atlinopt2 atlinopt6 tunechrom
 
 %check_radiation(ring,false);
 NE = length(ring);
@@ -210,9 +209,9 @@ if get_w
     ringdata.chromaticity=(rp.tune - rm.tune)/DPStep;
 elseif get_chrom
     % Calculate tunes for DP +/- DDP
-    tunep=tunechrom(ring,dp+0.5*DPStep,'orbit',o1P,'coupled',coupled);
-    tunem=tunechrom(ring,dp-0.5*DPStep,'orbit',o1M,'coupled',coupled);
-    ringdata.chromaticity=(tunep-tunem)/DPStep;
+    tunep=tunechrom(ring,dp+0.5*DPStep,'orbit',o1P);
+    tunem=tunechrom(ring,dp-0.5*DPStep,'orbit',o1M);
+    ringdata.chromaticity=(tunep - tunem)/DPStep;
 end
 
     function [E12,F12,gamma,CL,AL,BL]=analyze(MS)
