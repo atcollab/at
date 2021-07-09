@@ -87,6 +87,8 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %
 % [...] = ATLINOPT4(...,'mkey',MKEY)
 %   Private keyword for the generation of the legacy atlinopt output
+%
+%  See also atlinopt atlinopt2 atlinopt6 tunechrom
 
 %check_radiation(ring,false);
 NE = length(ring);

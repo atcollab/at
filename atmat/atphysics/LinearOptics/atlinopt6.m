@@ -57,7 +57,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %       Published 3 February 2006
 %   [3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %
-%  See also atx atlinopt
+%  See also atlinopt atlinopt2 atlinopt4 tunechrom
+
 clight = PhysConstant.speed_of_light_in_vacuum.value;   % m/s
 
 [get_chrom, varargs]=getflag(varargin, 'get_chrom');

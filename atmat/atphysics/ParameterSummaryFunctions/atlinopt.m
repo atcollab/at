@@ -67,7 +67,7 @@ function [lindata, varargout] = atlinopt(RING,dp,varargin)
 %    [2] E.Courant, H.Snyder
 %    [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
 %
-%  See also atx atmodl findspos twissring tunechrom
+%  See also atlinopt2 atlinopt4 atlinopt6 atx tunechrom
 
 NE = length(RING);
 [twiss_in,varargs]=getoption(varargin,'twiss_in',[]);

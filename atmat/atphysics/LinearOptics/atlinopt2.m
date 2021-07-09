@@ -75,7 +75,7 @@ function varargout = atlinopt2(ring,varargin)
 %	[2] E.Courant, H.Snyder
 %	[3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %
-%  See also atlinopt4, atlinopt6
+%  See also atlinopt atlinopt4 atlinopt6 tunechrom
 
 [varargout{1:nargout}]=atlinopt4(ring,varargin{:},'coupled',false);
 end
