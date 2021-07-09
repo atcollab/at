@@ -8,7 +8,7 @@ from scipy.linalg import solve, block_diag
 from at.lattice import get_rf_frequency, set_rf_frequency, DConstant, get_s_pos
 from at.lattice import Lattice, check_radiation
 from at.tracking import lattice_pass
-from at.physics import find_orbit4, find_orbit6, find_m44, find_m66
+from at.physics import find_orbit, find_orbit4, find_orbit6, find_m44, find_m66
 from at.physics import a_matrix, jmat
 from .harmonic_analysis import get_tunes_harmonic
 
@@ -101,6 +101,18 @@ def _analyze2(mt, ms, mxx=None):
            numpy.stack((beta_a, beta_b), axis=1),
            numpy.stack((mu_a, mu_b), axis=1))
     return vps, _DATA2_DTYPE, el0, els
+
+
+# noinspection PyShadowingNames,PyPep8Naming
+def _tunes(ring, **kwargs):
+    """"""
+    if ring.radiation:
+        mt, _ = find_m66(ring, **kwargs)
+    else:
+        mt, _ = find_m44(ring, **kwargs)
+    _, vps = a_matrix(mt)
+    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+    return tunes
 
 
 # noinspection PyShadowingNames,PyPep8Naming
@@ -217,7 +229,10 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
                 data0 = data0 + (w0,)
                 datas = datas + (ws,)
             else:
-                chrom, _, _ = chrom_w(rgup, rgdn, o0up, o0dn, **kwargs)
+                tunesup = _tunes(rgup, orbit=o0up)
+                tunesdn = _tunes(rgdn, orbit=o0dn)
+                deltap = o0up[4] - o0dn[4]
+                chrom = (tunesup - tunesdn) / deltap
         else:
             chrom = numpy.NaN
         length = ring.get_s_pos(len(ring))[0]
@@ -250,7 +265,9 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
             data0 = data0 + (w0,)
             datas = datas + (ws,)
         elif get_chrom:
-            chrom, _, _ = chrom_w(ring, ring, o0up, o0dn, **kwargs)
+            tunesup = _tunes(ring, orbit=o0up)
+            tunesdn = _tunes(ring, orbit=o0dn)
+            chrom = (tunesup - tunesdn) / dp_step
         else:
             chrom = numpy.NaN
         beamdata = numpy.array((tunes, chrom),
@@ -944,8 +961,7 @@ def get_mcf(ring, dp=0.0, keep_lattice=False, **kwargs):
     return (b[5, 1] - b[5, 0]) / dp_step / ring_length[0]
 
 
-@check_radiation(False)
-def get_tune(ring, method='linopt', dp=0.0, **kwargs):
+def get_tune(ring, method='linopt', dp=None, dct=None, orbit=None, **kwargs):
     """
     gets the tune using several available methods
 
@@ -975,54 +991,37 @@ def get_tune(ring, method='linopt', dp=0.0, **kwargs):
     OUTPUT
         tunes = np.array([Qx,Qy])
     """
-
     # noinspection PyShadowingNames
-    def gen_centroid(ring, ampl, nturns, dp, remove_dc):
-        orbit, _ = find_orbit4(ring, dp)
-        ld, _, _ = linopt4(ring, dp=dp, orbit=orbit)
-
-        invx = numpy.array([[1/numpy.sqrt(ld['beta'][0]), 0],
-                            [ld['alpha'][0]/numpy.sqrt(ld['beta'][0]),
-                            numpy.sqrt(ld['beta'][0])]])
-
-        invy = numpy.array([[1/numpy.sqrt(ld['beta'][1]), 0],
-                            [ld['alpha'][1]/numpy.sqrt(ld['beta'][1]),
-                            numpy.sqrt(ld['beta'][1])]])
-
-        p0 = numpy.array([orbit, ]*2).T
-        p0[0, 0] += ampl
-        p0[2, 1] += ampl
-        p1 = lattice_pass(ring, p0, refpts=len(ring), nturns=nturns)
-        cent_x = p1[0, 0, 0, :]
-        cent_xp = p1[1, 0, 0, :]
-        cent_y = p1[2, 1, 0, :]
-        cent_yp = p1[3, 1, 0, :]
+    def gen_centroid(ring, ampl, nturns, remove_dc, ld):
+        nv = ld.A.shape[0]
+        p0=ld.closed_orbit.copy()
+        p0[0] += ampl
+        p0[2] += ampl
+        if nv >= 6:
+            p0[4] += ampl
+        p1 = numpy.squeeze(lattice_pass(ring, p0, nturns, len(ring)))
         if remove_dc:
-            cent_x -= numpy.mean(cent_x)
-            cent_y -= numpy.mean(cent_y)
-            cent_xp -= numpy.mean(cent_xp)
-            cent_yp -= numpy.mean(cent_yp)
+            p1 -= ld.closed_orbit.reshape((6, -1))
 
-        cent_x, cent_xp = numpy.matmul(invx, [cent_x, cent_xp])
-        cent_y, cent_yp = numpy.matmul(invy, [cent_y, cent_yp])
-        return (cent_x - 1j * cent_xp,
-                cent_y - 1j * cent_yp)
+        p2 = solve(ld.A, p1[:nv,:])
+        return numpy.conjugate(p2.T.view(dtype=complex).T)
+
 
     if method == 'linopt':
-        _, bd, _ = linopt4(ring, dp=dp)
-        tunes = bd.tune
+        tunes = _tunes(ring, dp=dp, dct=dct, orbit=orbit)
     else:
         nturns = kwargs.pop('nturns', 512)
         ampl = kwargs.pop('ampl', 1.0e-6)
         remove_dc = kwargs.pop('remove_dc', True)
-        cent_x, cent_y = gen_centroid(ring, ampl, nturns, dp, remove_dc)
-        cents = numpy.vstack((cent_x, cent_y))
+        if orbit is None:
+            orbit, _ = find_orbit(ring, dp=dp, dct=dct)
+        ld, _, _ = linopt6(ring, orbit=orbit)
+        cents = gen_centroid(ring, ampl, nturns, remove_dc, ld)
         tunes = get_tunes_harmonic(cents, method, **kwargs)
     return tunes
 
 
-@check_radiation(False)
-def get_chrom(ring, method='linopt', dp=0, **kwargs):
+def get_chrom(ring, method='linopt', dp=0, dct=None, cavpts=None, **kwargs):
     """gets the chromaticity using several available methods
 
     method can be 'linopt', 'fft' or 'laskar'
@@ -1043,8 +1042,22 @@ def get_chrom(ring, method='linopt', dp=0, **kwargs):
         print('Warning fft method not accurate to get the ' +
               'chromaticity')
 
-    tune_up = get_tune(ring, method=method, dp=dp + 0.5 * dp_step, **kwargs)
-    tune_down = get_tune(ring, method=method, dp=dp - 0.5 * dp_step, **kwargs)
+    if ring.radiation:
+        f0 = get_rf_frequency(ring, cavpts=cavpts)
+        df = -dp_step * get_mcf(ring.radiation_off(copy=True)) * f0
+        rgup = set_rf_frequency(ring, f0 + 0.5 * df, cavpts=cavpts, copy=True)
+        o0up, _ = find_orbit6(rgup, **kwargs)
+        tune_up = get_tune(rgup,  method=method, orbit=o0up, **kwargs)
+        rgdn = set_rf_frequency(ring, f0 - 0.5 * df, cavpts=cavpts, copy=True)
+        o0dn, _ = find_orbit6(rgdn, **kwargs)
+        tune_down = get_tune(rgdn,  method=method, orbit=o0dn, **kwargs)
+        dp_step = o0up[4] - o0dn[4]
+    else:
+        if dct is not None:
+            orbit = find_orbit4(ring, dct=dct)
+            dp = orbit[4]
+        tune_up = get_tune(ring, method=method, dp=dp + 0.5*dp_step, **kwargs)
+        tune_down = get_tune(ring, method=method, dp=dp - 0.5*dp_step, **kwargs)
     chrom = (tune_up - tune_down) / dp_step
     return numpy.array(chrom)
 
