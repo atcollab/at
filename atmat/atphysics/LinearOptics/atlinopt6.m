@@ -176,7 +176,7 @@ end
         ms=squeeze(num2cell(ms,[1 2]));
         [mxx,~]=getoption(varargin,'mxx',mt);
         [amat0,vals]=amat(mxx);
-        [~,phis,rmats,as]=r_analysis(amat0,ms);
+        [phis,rmats,as]=r_analysis(amat0,ms);
     end
 
     function sigma=build_sigma(twiss_in)

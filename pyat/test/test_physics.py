@@ -210,14 +210,13 @@ def test_linopt_no_refpts(dba_lattice):
 @pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
 def test_linopt_line(hmba_lattice, refpts):
     refpts.append(len(hmba_lattice))
-    l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts, get_chrom=True)
-    lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0, get_chrom=True)
+    l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts)
+    lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
     assert_close(ld['beta'], ltd['beta'], rtol=1e-12)
     assert_close(ld['s_pos'], ltd['s_pos'], rtol=1e-12)
     assert_close(ld['closed_orbit'], ltd['closed_orbit'], rtol=1e-12)
     assert_close(ld['alpha'], ltd['alpha'], rtol=1e-12)
     assert_close(ld['dispersion'], ltd['dispersion'], rtol=1e-7, atol=1e-12)
-    # assert_close(q, qt, rtol=1e-12)
 
 
 def test_get_tune_chrom(hmba_lattice):
@@ -314,7 +313,7 @@ def test_ohmi_envelope(hmba_lattice, refpts):
          ],
         rtol=1e-5, atol=1e-5)
     assert_close(beamdata['mode_emittances'], [1.320573957833556e-10, 0.0, 2.858758561755633e-06], atol=1e-9)
-    assert_close(obs['r66'],[
+    assert_close(obs['r66'], [
         [9.136741971381e-10, -3.482498346543e-15, -3.540695039195e-27,
          2.549996268446e-27, 1.507800991407e-09, -1.435701289711e-15],
         [-3.482510157944e-15, 1.913602810243e-11, 3.793679939809e-29,
@@ -328,7 +327,7 @@ def test_ohmi_envelope(hmba_lattice, refpts):
         [-1.435546867844e-15, -1.287082075586e-13, -3.973151364541e-21,
          -2.471963980361e-21, 9.793419918932e-10, 9.358003801197e-06]
     ], atol=1E-10)
-    assert_close(obs['r44'],[
+    assert_close(obs['r44'], [
         [9.110704278582e-10, -3.048890798332e-15, 0.000000000000e+00, 0.000000000000e+00],
         [-3.048902609732e-15, 1.913602802845e-11, 0.000000000000e+00, 0.000000000000e+00],
         [0.000000000000e+00, 0.000000000000e+00, 0.000000000000e+00, 0.000000000000e+00],
