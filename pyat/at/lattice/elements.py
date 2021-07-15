@@ -11,6 +11,9 @@ import copy
 from inspect import getmembers, isdatadescriptor
 
 
+_collective = ['ImpedanceTablePass','IdentityPass']
+
+
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
     return numpy.require(value, dtype=dtype, requirements=['F', 'A']).reshape(

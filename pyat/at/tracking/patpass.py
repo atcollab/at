@@ -7,7 +7,7 @@ from at.tracking import atpass
 from at.lattice import uint32_refpts
 from sys import platform
 from warnings import warn
-from at.lattice import AtWarning
+from at.lattice import AtWarning, elements
 import numpy
 
 
@@ -19,8 +19,7 @@ globring = None
 
 def format_results(results, r_in, losses):
     rin = [r['rin'] for r in results]
-    rin = numpy.vstack(rin).T
-    r_in[:] = rin
+    r_in = numpy.vstack(rin).T
     if losses:
         rout = [r['results'][0] for r in results]
         rout = numpy.concatenate(rout, axis=1)
@@ -97,7 +96,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
-    pm_ok = [e.PassMethod == 'ImpedanceTablePass' for e in ring]
+    pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
@@ -105,5 +104,5 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
                        refpts=refpts, losses=losses)
     else:
         if any(pm_ok):
-            warn(AtWarning('ImpedandeTablePass found: use single process'))
+            warn(AtWarning('Collective PassMethod found: use single process'))
         return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
