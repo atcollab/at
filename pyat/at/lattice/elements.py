@@ -11,7 +11,7 @@ import copy
 from inspect import getmembers, isdatadescriptor
 
 
-_collective = ['ImpedanceTablePass','IdentityPass']
+_collective = ['ImpedanceTablePass']
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
