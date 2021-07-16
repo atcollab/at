@@ -82,9 +82,10 @@ def fast_ring(ring, split_inds=[]):
     for counter, ring_slice, ring_slicer in zip(cnts, all_rings, all_ringsr):
 
         ring_slice.radiation_off(cavity_pass='CavityPass')
-
         cavs = get_elements(ring_slice, RFCavity)
         cavs_rad = get_elements(ring_slicer, RFCavity)
+        [ring_slice.remove(c) for c in cavs]
+        [ring_slicer.remove(c) for c in cavs_rad]
 
         lin_elem = gen_m66_elem(ring_slice, orbit4[2*counter],
                                 orbit4[2*counter+1])
