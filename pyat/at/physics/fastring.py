@@ -66,6 +66,10 @@ def fast_ring(ring, split_inds=[]):
     iends = get_refpts(merged_ring, 'xend')
     markers = numpy.sort(numpy.concatenate((ibegs, iends)))
     _, orbit4 = merged_ring.find_sync_orbit(dct=0.0, refpts=markers)
+
+    ibegs = get_refpts(merged_ringr, 'xbeg')
+    iends = get_refpts(merged_ringr, 'xend')
+    markers = numpy.sort(numpy.concatenate((ibegs, iends)))
     _, orbit6 = merged_ringr.find_orbit6(refpts=markers)
 
     detuning_elem = gen_detuning_elem(merged_ring, orbit4[-1])   
