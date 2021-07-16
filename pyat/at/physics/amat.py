@@ -1,6 +1,6 @@
 """"""
 import numpy
-from scipy.linalg import block_diag, eig, inv
+from scipy.linalg import block_diag, eig, inv, solve
 from math import pi
 from at.lattice import AtError
 
@@ -133,9 +133,20 @@ def symplectify(M):
 
 def get_mode_matrices(a):
     """Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes"""
+
+    def mul2(slc):
+        return a[:, slc] @ tt[slc, slc]
+
     dms = a.shape[0] // 2
-    return numpy.stack([numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]],
-                       axis=0)
+    # Rk = A * Ik * A.T                     Only for symplectic
+    # modelist = [numpy.dot(a[:, sl], a.T[sl, :]) for sl in _submat[:dms]]
+    # Rk = A * S * Ik * inv(A) * S.T        Even for non-symplectic
+    ss = jmat(dms)
+    tt = jmatswap(dms)
+    a_s = numpy.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
+    inva = solve(a, ss.T)
+    modelist = [a_s[:, sl] @ inva[sl, :] for sl in _submat[:dms]]
+    return numpy.stack(modelist, axis=0)
 
 
 def get_tunes_damp(tt, rr=None):

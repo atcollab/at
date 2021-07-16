@@ -604,7 +604,7 @@ def linopt6(ring, *args, **kwargs):
         def r_matrices(ai):
             # Rk = A * S * Ik * inv(A) * S.T
             def mul2(slc):
-                return ai[:,slc] @ ss[slc, slc]
+                return ai[:,slc] @ tt[slc, slc]
 
             ais = numpy.concatenate([mul2(slc) for slc in slices], axis=1)
             invai = solve(ai, ss.T)
@@ -626,7 +626,8 @@ def linopt6(ring, *args, **kwargs):
         nv = mt.shape[0]
         dms = nv // 2
         slices = [slice(2 * i, 2 * (i + 1)) for i in range(dms)]
-        ss = jmatswap(dms)
+        ss = jmat(dms)
+        tt = jmatswap(dms)
         if dms >= 3:
             propagate = propagate6
             dtype = _DATA6_DTYPE
