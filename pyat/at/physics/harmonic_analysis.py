@@ -248,7 +248,7 @@ def get_tunes_harmonic(cents, method,
     if cents.ndim > 1:
         npart = cents.shape[0]
     else:
-        cents = np.asarray(cents)
+        cents = [cents]
         npart = 1
     tunes = np.zeros(npart)
 
