@@ -67,7 +67,7 @@ function [lindata, varargout] = atlinopt(RING,dp,varargin)
 %    [2] E.Courant, H.Snyder
 %    [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
 %
-%  See also atx atmodl findspos twissring tunechrom
+%  See also atlinopt2 atlinopt4 atlinopt6 atx tunechrom
 
 NE = length(RING);
 [twiss_in,varargs]=getoption(varargin,'twiss_in',[]);
@@ -108,9 +108,6 @@ if isempty(twiss_in)        % Circular machine
     [orbitP,o1P]=findorbit4(RING,dp+0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep);
     [orbitM,o1M]=findorbit4(RING,dp-0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep);
 else                        % Transfer line
-    
-    
-    
     if ~isempty(orbitin)
         orbitin=zeros(6,1);
     end

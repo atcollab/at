@@ -1,78 +1,85 @@
-function [tune, varargout] = tunechrom(RING,DP,varargin)
-%TUNECHROM computes linear tunes and chromaticities for COUPLED or UNCOUPLED lattice
+function [tune, varargout] = tunechrom(ring,varargin)
+%TUNECHROM computes linear tunes and chromaticities
 %
-% TUNE = TUNECHROM(RING,DP) - quick calculation of fractional part of the tune 
-%    from numerically computed transfer matrix, assuming NO X-Y coupling.
+%TUNE=TUNECHROM(RING)	Quick calculation of the fractional part of the tune
+%	from numerically computed transfer matrix.
 %   
-% [TUNE, CHROM] = TUNECHROM(RINGD,DP,'chrom') - optionally computes
-%    chromaticity by numerical differentiation from the difference between tune
-%    values at momentums DP+0.5*DPStep and DP-0.5*DPStep
+% [TUNE, CHROM] = TUNECHROM(RINGD,DP,'get_chrom') - optionally computes the
+%    chromaticities by numerical differentiation from the difference between
+%   tune values at momentums DP+0.5*DPStep and DP-0.5*DPStep
 %
-% [...]=TUNECHROM(..., 'coupling')          (Deprecated syntax)
-% [...]=TUNECHROM(..., 'coupled',boolflag)	Tunes and chromaticities are
-%   calculated assuming COUPLED lattice for two transverse eigenmodes.
-%
-% [...] = TUNECHROM(...,'orbit',ORBITIN     Do not search for closed orbit.
+%[...]=TUNECHROM(...,'orbit',ORBITIN	Do not search for closed orbit.
 %   Instead ORBITIN,a 6x1 vector of initial conditions is used:
-%   [x0; px0; y0; py0; DP; 0]. The sixth component is ignored.
-%   This syntax is useful to specify the entrance orbit
-%   if RING is not a ring or to avoid recomputing the
-%   closed orbit if is already known.
+%   This syntax is useful to avoid recomputing the closed orbit if is
+%   already known;
 %
-% Note: TUNECHROM computes tunes and chromaticities from the 4-by-4
-%   transfer matrix. The transfer matrix is found in FINDM44 using
+%[...]=TUNECHROM(RING,DP)       (obsolete)
+%[...]=TUNECHROM(...,'dp',DP)	Specify the momentum deviation when
+%   radiation is OFF (default: 0)
+%
+%[...]=TUNECHROM(...,'dct',DCT) Specify the path lengthening when
+%   radiation is OFF (default: 0)
+%
+% Note: TUNECHROM computes tunes and chromaticities from the one-turn
+%   transfer matrix. The transfer matrix is computed from tracking using
 %   numerical differentiation. The error of numerical differentiation 
 %   is sensitive to the step size. (Reference: Numerical Recipes)
-%   Calculation of tunes in TUNECHROM involves one numerical differentiation
-%   to find the 4-by-4 transfer matrix.
-%   Calculation of chromaticity in TUNECHROM involves TWO!!! numerical differentiations.
+%   The calculation of tunes involves one numerical differentiation.
+%   The calculation of chromaticity involves TWO!!! numerical differentiations.
 %   The error in calculated chromaticity from may be substantial (~ 1e-5).
-%   Use the DDP argument to control the step size in chromaticity calculations
-%   Another  way to control the step size is NUMDIFPARAMS structure
-%   
-%   
-% See also LINOPT, TWISSRING, TWISSLINE, NUMDIFPARAMS
+%   Use the XYStep and DPStep keyword arguments to control the step size
+%   in chromaticity calculations
+%
+% See also ATLINOPT6
 
-[COUPLINGFLAG,varargs]=getflag(varargin,'coupling');
-[CHROMFLAG,varargs]=getflag(varargs,'chrom');
+[oldchrom,varargs]=getflag(varargin,'chrom');   
+[chrom,varargs]=getflag(varargs,'get_chrom');
+[cpl1,varargs]=getflag(varargs,'coupling');	% ignored, kept for compatibility
+[cpl2,varargs]=getoption(varargs,'coupled',true);	% ignored, kept for compatibility
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
-[COUPLINGFLAG,varargs]=getoption(varargs,'coupled',COUPLINGFLAG);
-[DPStep,varargs]=getoption(varargs,'DPStep');
-[XYStep,varargs]=getoption(varargs,'XYStep'); %#ok<ASGLU>
+[dp,varargs]=getoption(varargs,'dp',NaN);
+[dp,varargs]=getargs(varargs,dp,'check',@(arg) isscalar(arg) || isnumeric(arg));
+[DPStep,~]=getoption(varargs,'DPStep');
 
-M44 = findm44(RING,DP,'orbit',orbitin,'XYStep',XYStep);
+if cpl1 || ~cpl2
+    warning('AT:ObsoleteParameter','The "coupled" flag is ignored: coupling is always assumed');
+end
 
-M =M44(1:2,1:2);
-N =M44(3:4,3:4);
-if COUPLINGFLAG
-    m =M44(1:2,3:4);
-    n =M44(3:4,1:2);
-    
-    % 2-by-2 symplectic matrix
-    S = [0 1; -1 0];
-    H = m + S*n'*S';
-    t = trace(M-N);
-    
-    g = sqrt(1 + sqrt(t*t/(t*t+4*det(H))))/sqrt(2);
-    G = diag([g g]);
-    C = -H*sign(t)/(g*sqrt(t*t+4*det(H)));
-    A = G*G*M  -  G*(m*S*C'*S' + C*n) + C*N*S*C'*S';
-    B = G*G*N  +  G*(S*C'*S'*m + n*C) + S*C'*S'*M*C;
-    tune = [closure(A) closure(B)];
+[~,orbitin]=findorbit(ring,'dp',dp,'orbit',orbitin,varargs{:});
+is6d=check_radiation(ring);
+if is6d
+    mm=findm66(ring,'orbit',orbitin,varargs{:});
 else
-    tune = [closure(M) closure(N)];
+    dp=orbitin(5);
+    mm=findm44(ring,dp,'orbit',orbitin,varargs{:});
 end
+[~,vals]=amat(mm);
+tune=mod(angle(vals)/2/pi,1);
 
-if CHROMFLAG
-    tune_P = tunechrom(RING,DP+0.5*DPStep,'coupled',COUPLINGFLAG);
-    tune_M = tunechrom(RING,DP-0.5*DPStep,'coupled',COUPLINGFLAG);
-    varargout{1} = (tune_P - tune_M)/DPStep;
+if chrom || oldchrom
+    if is6d
+        frf=get_rf_frequency(ring);
+        DFStep=-DPStep*mcf(atradoff(ring))*frf;
+        rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep);
+        rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep);
+        [~,o1P]=findorbit(rgup,[],'guess',orbitin,varargs{:});
+        [~,o1M]=findorbit(rgdn,[],'guess',orbitin,varargs{:});
+        tuneP=tunechrom(rgup,'orbit',o1P,varargs{:});
+        tuneM=tunechrom(rgdn,'orbit',o1M,varargs{:});
+        deltap=o1P(5)-o1M(5);
+    else
+        dp=orbitin(5);
+        tuneP=tunechrom(ring,'dp',dp + 0.5*DPStep,varargs{:});
+        tuneM=tunechrom(ring,'dp',dp - 0.5*DPStep,varargs{:});
+        deltap=DPStep;
+    end
+    varargout{1} = (tuneP - tuneM)/deltap;
 end
-
-    function tune = closure(AB)
-        cosmu = (AB(1,1) + AB(2,2))/2;
-        diff  = (AB(1,1) - AB(2,2))/2;
-        sinmu = sign(AB(1,2))*sqrt(-AB(1,2)*AB(2,1)-diff*diff);
-        tune = mod(atan2(sinmu,cosmu)/2/pi,1);
-    end        
+    
+    function f=get_rf_frequency(ring)
+        % Get the initial RF frequency
+        cavities=ring(atgetcells(ring, 'Frequency'));
+        freqs=atgetfieldvalues(cavities,'Frequency');
+        f=freqs(1);
+    end
 end

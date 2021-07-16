@@ -2,19 +2,20 @@
 import numpy
 from scipy.linalg import block_diag, eig, inv, solve
 from math import pi
+from at.lattice import AtError
 
-__all__ = ['a_matrix', 'amat', 'jmat', 'get_tunes_damp', 'get_mode_matrices',
-           'symplectify']
+__all__ = ['a_matrix', 'amat', 'jmat', 'jmatswap',
+           'get_tunes_damp', 'get_mode_matrices', 'symplectify']
 
 _i2 = numpy.array([[-1.j, -1.], [1., 1.j]])
 
 # Prepare symplectic identity matrix
 _j2 = numpy.array([[0., 1.], [-1., 0.]])
 _jm = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2)]
+_jmswap = [_j2, block_diag(_j2, _j2), block_diag(_j2, _j2, _j2.T)]
 
 _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
 _submat = [slice(0, 2), slice(2, 4), slice(4, 6)]
-_swap = numpy.array([0, 1, 2, 3, 5, 4])
 
 
 def jmat(ind):
@@ -28,6 +29,12 @@ def jmat(ind):
         jm      block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
     """
     return _jm[ind - 1]
+
+
+def jmatswap(ind):
+    """Modified version of jmat to deal with the swap of the
+    longitudinal coordinates"""
+    return _jmswap[ind - 1]
 
 
 def a_matrix(tt):
@@ -52,18 +59,17 @@ def a_matrix(tt):
     """
     nv = tt.shape[0]
     dms = int(nv / 2)
-    jmt = jmat(dms)
+    jmt = jmatswap(dms)
     select = numpy.arange(0, nv, 2)
     rbase = numpy.stack((select, select), axis=1).flatten()
 
     # noinspection PyTupleAssignmentBalance
-    # swap delta and ct coordinates to get the correct rotation in the
-    # longitudinal plane
-    swap=_swap[:nv]
-    lmbd, vv = eig(tt[swap, :][:, swap])  # Swap delta and ct
+    lmbd, vv = eig(tt)
     # Compute the norms
     vp = numpy.dot(vv.conj().T, jmt)
     n = -0.5j * numpy.sum(vp.T * vv, axis=0)
+    if any(abs(n) < 1.0E-12):
+        raise AtError('Unstable ring')
     # Move positive before negatives
     order = rbase + (n < 0)
     vv = vv[:, order]
@@ -83,7 +89,7 @@ def a_matrix(tt):
         ind = numpy.argmax(nn[rows, ixz])
         order.append(rows[ind])
         del rows[ind]
-    v_ordered = vn[:, order][swap, :]      # Restore the coordinate order
+    v_ordered = vn[:, order]
     lmbd = lmbd[order]
     aa = numpy.vstack((numpy.real(v_ordered), numpy.imag(v_ordered))).reshape(
         (nv, nv), order='F')
@@ -127,9 +133,20 @@ def symplectify(M):
 
 def get_mode_matrices(a):
     """Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes"""
+
+    def mul2(slc):
+        return a[:, slc] @ tt[slc, slc]
+
     dms = a.shape[0] // 2
-    return numpy.stack([numpy.dot(a[:, s], a.T[s, :]) for s in _submat[:dms]],
-                       axis=0)
+    # Rk = A * Ik * A.T                     Only for symplectic
+    # modelist = [numpy.dot(a[:, sl], a.T[sl, :]) for sl in _submat[:dms]]
+    # Rk = A * S * Ik * inv(A) * S.T        Even for non-symplectic
+    ss = jmat(dms)
+    tt = jmatswap(dms)
+    a_s = numpy.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
+    inva = solve(a, ss.T)
+    modelist = [a_s[:, sl] @ inva[sl, :] for sl in _submat[:dms]]
+    return numpy.stack(modelist, axis=0)
 
 
 def get_tunes_damp(tt, rr=None):

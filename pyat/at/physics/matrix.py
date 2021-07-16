@@ -3,9 +3,8 @@ transfer matrix related functions
 
 A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
-
 import numpy
-from at.lattice import Lattice, uint32_refpts, get_cells, get_refpts, DConstant
+from at.lattice import Lattice, uint32_refpts, get_refpts, DConstant
 from at.lattice.elements import Bend, M66
 from at.tracking import lattice_pass, element_pass
 from at.physics import find_orbit4, find_orbit6, jmat, symplectify
@@ -15,8 +14,8 @@ __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 _jmt = jmat(2)
 
 
-def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False,
-             **kwargs):
+def find_m44(ring, dp=0.0, refpts=None, dct=None, orbit=None,
+             keep_lattice=False, **kwargs):
     """find_m44 numerically finds the 4x4 transfer matrix of an accelerator
     lattice for a particle with relative momentum deviation DP
 
@@ -52,14 +51,18 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False,
                         returned for mstack.
 
     KEYWORDS
+        dct=None        path lengthening. If specified, dp is ignored and
+                        the off-momentum is deduced from the path lengthening.
+        orbit=None      avoids looking for the closed orbit if is already known
+                        ((6,) array)
         keep_lattice=False  When True, assume no lattice change since the
-                            previous tracking.
-        full=False          When True, matrices are full 1-turn matrices at
-                            the entrance of each
-                            element indexed by refpts.
-        orbit=None          Avoids looking for the closed orbit if is already
-                            known (6,) array
-        XYStep=1.e-8        transverse step for numerical computation
+                        previous tracking.
+        full=False      When True, matrices are full 1-turn matrices at
+                        the entrance of each
+                        element indexed by refpts.
+        orbit=None      Avoids looking for the closed orbit if is already
+                        known (6,) array
+        XYStep=1.e-8    transverse step for numerical computation
 
     See also find_m66, find_orbit4
     """
@@ -71,7 +74,7 @@ def find_m44(ring, dp=0.0, refpts=None, orbit=None, keep_lattice=False,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     full = kwargs.pop('full', False)
     if orbit is None:
-        orbit, _ = find_orbit4(ring, dp, keep_lattice=keep_lattice,
+        orbit, _ = find_orbit4(ring, dp, dct=dct, keep_lattice=keep_lattice,
                                XYStep=xy_step)
         keep_lattice = True
     # Construct matrix of plus and minus deltas
@@ -137,18 +140,15 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
 
     See also find_m44, find_orbit6
     """
-    def iscavity(elem):
-        return elem.PassMethod.endswith('CavityPass')
-
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     if orbit is None:
         if ring.radiation:
             orbit, _ = find_orbit6(ring, keep_lattice=keep_lattice,
-                                   XYStep=xy_step, DPStep=dp_step)
+                                   XYStep=xy_step, DPStep=dp_step, **kwargs)
         else:
-            orbit, _ = find_orbit4(ring, 0.0, keep_lattice=keep_lattice,
-                                   XYStep=xy_step)
+            orbit, _ = find_orbit4(ring, keep_lattice=keep_lattice,
+                                   XYStep=xy_step, **kwargs)
         keep_lattice = True
 
     # Construct matrix of plus and minus deltas

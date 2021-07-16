@@ -225,8 +225,9 @@ end
             %   beamB       - 2x2 beam matrix for mode B
             % Eigen emittances: Solve bm44 = modemit(1)*beamA + modemit(2)*beamB;
             % lindata(i).modemit=([beamA(:) beamB(:)]\bm44(:))';
-            % aa=amat(T(:,:,i)*m*inv(T(:,:,i))); %#ok<MINV>
-            aa=amat(T*m*jmt'*T'*jmt);
+            
+            % aa=amat(T*m*jmt'*T'*jmt);     % symplectic only
+            aa=amat(T*m/T);                 % even for non-symplectic
             nn=-aa'*jmt*bm66*jmt*aa;
             lind.modemit=0.5*[nn(1,1)+nn(2,2) nn(3,3)+nn(4,4) nn(5,5)+nn(6,6)];
             lind.beam66=bm66;

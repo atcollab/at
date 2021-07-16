@@ -12,21 +12,22 @@ function [a,lambda]=amat(transmat)
 %we order and normalize the vectors via
 % v_j' jmat(3) v_k = i sgn(j) delta(j,k)
 
-swap=[1:4 6 5];
 nv=size(transmat,1);
 dms=nv/2;
 slices=num2cell(reshape(1:nv,2,dms),1);
 Vxyz=makeVxyz(slices);
-S=jmat(dms);
+S=kmat(dms);
 select=1:2:nv;
-swap=swap(1:nv);
 
-[V,lambda]=eig(transmat(swap,swap));    % Swap delta and ct coordinates
-lambda=diag(lambda).';                  % to get rotation correct in the
-                                        % longitudinal plane
+[V,lambda]=eig(transmat);
+lambda=diag(lambda).';
+
 %compute norms of each:
 Vp=V'*S;
 n=-0.5i*sum(Vp.'.*V);
+if any(abs(n) < 1.0E-12)
+    error('AT:Unstable','Unstable machine');
+end
 
 %put positive modes before negative modes (swap columns if first n in pair
 %is negative)
@@ -53,7 +54,7 @@ for ixz=select
     order=[order rows(ind)]; %#ok<AGROW>
     rows(ind)=[];
 end
-V_ordered=Vn(swap,order);           % Swap back delta and ct to AT order
+V_ordered=Vn(:,order);
 lambda=lambda(order);
 
 %build the a-matrix
@@ -65,6 +66,22 @@ a=reshape([real(V_ordered);imag(V_ordered)],nv,nv);
         
         function s22(slc)
             Vxyz(slc,slc)=[-1i -1;1 1i];
+        end
+    end
+
+    function mat=kmat(dim)
+        % Modified version of jmat to deal with the swap of the
+        % longitudinal coordinates
+        S2 = [0 1; -1 0];
+        
+        if(dim==1)
+            mat=S2;
+        elseif(dim==2)
+            mat = blkdiag(S2,S2);
+        elseif(dim==3)
+            mat = blkdiag(S2,S2,S2');
+        else
+            Error('Dim is 1, 2 or 3')
         end
     end
 
