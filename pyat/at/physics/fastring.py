@@ -3,8 +3,8 @@ Functions relating to fast_ring
 """
 import numpy
 from math import sqrt, atan2, pi
-from at.lattice import uint32_refpts, get_refpts
-from at.lattice import Element, RFCavity, Marker, Drift
+from at.lattice import uint32_refpts, get_refpts, get_elements
+from at.lattice import Element, RFCavity, Marker, Drift, Lattice
 from at.physics import find_orbit6, find_orbit4
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 
@@ -12,9 +12,19 @@ __all__ = ['fast_ring']
 
 
 def rearrange(ring, split_inds=[]):
+
+
+    def merge_rings(all_rings):
+        ring = all_rings[0]
+        if len(all_rings) > 1:
+            for ringi in all_rings[1:]:
+                ring += ringi
+        return ring
+
+
     iends = numpy.concatenate((split_inds, [len(ring)+1]))
-    ibegs = numpy.concatenate(([0], iends[:-1]))
     iends = iends[iends != 0]
+    ibegs = numpy.concatenate(([0], iends[:-1]))
     ibegs = ibegs[ibegs != len(ring) + 1]
     all_rings = [ring[int(ibeg):int(iend)]
                  for ibeg, iend in zip(ibegs, iends)]
@@ -23,97 +33,76 @@ def rearrange(ring, split_inds=[]):
         # replace cavity with length > 0 with drift
         # set cavity length to 0 and move to start
         icav = get_refpts(ring_slice, RFCavity)
-        for i in numpy.arange(len(icav)):
-            cav_elem = ring_slice.pop(int(icav[i]))
-            if cav_elem.Length != 0:
-                cavdrift = Drift('CavDrift', cav_elem.Length)
-                ring_slice.insert(icav[i], cavdrift)
-                icav = icav + 1
-                cav_elem.Length = 0.0
-            ring_slice.insert(0, cav_elem)
+        allcavs= [ring_slice[i] for i in icav]
+        for i,c in zip(icav,allcavs):
+            if c.Length != 0:
+                cavdrift = Drift('CavDrift', c.Length)
+                ring_slice[i] = cavdrift
+                c.Length = 0.0
 
         # merge all cavities with the same frequency
-        icav = get_refpts(ring_slice, RFCavity)
-        all_freq = numpy.array([ring_slice[ic].Frequency for ic in icav])
-        all_volt = numpy.array([ring_slice[ic].Voltage for ic in icav])
+        all_freq = numpy.array([e.Frequency for e in allcavs])
         uni_freq = numpy.unique(all_freq)
-
-        for ii in numpy.arange(len(uni_freq)):
-            fr = uni_freq[ii]
-            cavmsk = all_freq == fr
-            vol = numpy.sum(all_volt[cavmsk])
-            ring_slice[ii].Frequency = fr
-            ring_slice[ii].Voltage = vol
-
-        for pp in numpy.arange(len(icav)-len(uni_freq)):
-            ring_slice.pop(len(uni_freq))
+        for fr in numpy.atleast_1d(uni_freq):
+            cavf = [c for c in allcavs if c.Frequency==fr]
+            vol = numpy.sum([c.Voltage for c in cavf])
+            cavf[0].Voltage=vol
+            ring_slice.insert(0,cavf[0])
 
         ring_slice.insert(len(uni_freq), Marker('xbeg'))
         ring_slice.append(Marker('xend'))
-    return all_rings
-
-
-def merge_rings(all_rings):
-    ringnorad = all_rings[0]
-    if len(all_rings) > 1:
-        for ringi in all_rings[1:]:
-            ringnorad += ringi
-    ringrad = ringnorad.deepcopy()
-    if ringnorad.radiation:
-        ringnorad.radiation_off(quadrupole_pass='auto')
-    else:
-        ringrad.radiation_on(quadrupole_pass='auto')
-    return ringnorad, ringrad
+    return all_rings, merge_rings(all_rings)
 
 
 def fast_ring(ring, split_inds=[]):
-    all_rings = rearrange(ring, split_inds=split_inds)
-    ringnorad, ringrad = merge_rings(all_rings)
+    ring = ring.deepcopy()
+    ringr = ring.deepcopy()
+    ring.radiation_off()
+    ringr.radiation_on(quadrupole_pass='auto')
+    all_rings, merged_ring = rearrange(ring, split_inds=split_inds)
+    all_ringsr, merged_ringr = rearrange(ringr, split_inds=split_inds)
 
-    ibegs = get_refpts(ringnorad, 'xbeg')
-    iends = get_refpts(ringnorad, 'xend')
+    ibegs = get_refpts(merged_ring, 'xbeg')
+    iends = get_refpts(merged_ring, 'xend')
     markers = numpy.sort(numpy.concatenate((ibegs, iends)))
+    _, orbit4 = merged_ring.find_sync_orbit(dct=0.0, refpts=markers)
+    _, orbit6 = merged_ringr.find_orbit6(refpts=markers)
 
-    _, orbit4 = ringnorad.find_sync_orbit(dct=0.0, refpts=markers)
-    _, orbit6 = ringrad.find_orbit6(refpts=markers)
-
-    detuning_elem = gen_detuning_elem(ringnorad, orbit4[-1])
+    detuning_elem = gen_detuning_elem(merged_ring, orbit4[-1])   
     detuning_elem_rad = detuning_elem.deepcopy()
     detuning_elem_rad.T1 = -orbit6[-1]
     detuning_elem_rad.T2 = orbit6[-1]
 
-    for counter, ring_slice in enumerate(all_rings):
+    qd_elem = gen_quantdiff_elem(merged_ringr)
 
-        ibeg = get_refpts(ring_slice, 'xbeg')[0]
-        iend = get_refpts(ring_slice, 'xend')[0]
-        cavs = ring_slice[:ibeg]
-        ring_slice = ring_slice[ibeg:iend]
-        ring_slice_rad = ring_slice.deepcopy()
+    fastringnorad, fastringrad= [], []
 
-        if ring_slice.radiation:
-            ring_slice.radiation_off(quadrupole_pass='auto')
-        else:
-            ring_slice_rad.radiation_on(quadrupole_pass='auto')
+    cnts = range(len(all_rings))
+
+    for counter, ring_slice, ring_slicer in zip(cnts, all_rings, all_ringsr):
+
+        ring_slice.radiation_off(cavity_pass='CavityPass')
+
+        cavs = get_elements(ring_slice, RFCavity)
+        cavs_rad = get_elements(ring_slicer, RFCavity)
 
         lin_elem = gen_m66_elem(ring_slice, orbit4[2*counter],
                                 orbit4[2*counter+1])
         lin_elem.FamName = lin_elem.FamName + '_' + str(counter)
-
-        qd_elem = gen_quantdiff_elem(ring_slice_rad, orbit=orbit6[2*counter])
-        qd_elem.FamName = qd_elem.FamName + '_' + str(counter)
-        lin_elem_rad = gen_m66_elem(ring_slice_rad, orbit6[2*counter],
+        lin_elem_rad = gen_m66_elem(ring_slicer, orbit6[2*counter],
                                     orbit6[2*counter+1])
         lin_elem_rad.FamName = lin_elem_rad.FamName + '_' + str(counter)
 
-        [ringnorad.append(cav) for cav in cavs]
-        ringnorad.append(lin_elem)
-        [ringrad.append(cav) for cav in cavs]
-        ringrad.append(lin_elem_rad)
-        ringrad.append(qd_elem)
+        [fastringnorad.append(cav) for cav in cavs]
+        fastringnorad.append(lin_elem)
+        [fastringrad.append(cav) for cav in cavs_rad]
+        fastringrad.append(lin_elem_rad)
 
-    ringnorad.append(detuning_elem)
-    ringrad.append(detuning_elem_rad)
-    del ringnorad[:markers[-1]+1]
-    del ringrad[:markers[-1]+1]
+    fastringnorad.append(detuning_elem)
+    fastringrad.append(qd_elem)
+    fastringrad.append(detuning_elem_rad)
 
-    return ringnorad, ringrad
+    fastringnorad = Lattice(fastringnorad, energy=ring.energy)
+    fastringrad = Lattice(fastringrad, energy=ring.energy)
+    fastringrad._radiation = True
+    return fastringnorad, fastringrad
