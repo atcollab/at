@@ -166,7 +166,9 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+static void *atGetAnyArraySz(const PyObject *element, char *name,
+int type_num, const char *type_str,
+int *msz, int *nsz)
 {
     char errmessage[60];
     int ndims;
@@ -185,8 +187,8 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
-    if (PyArray_TYPE(array) != NPY_DOUBLE) {
-        snprintf(errmessage, 60, "The attribute %s is not a double array.", name);
+    if (PyArray_TYPE(array) != type_num) {
+        snprintf(errmessage, 60, "The attribute %s is not a %s array.", name, type_str);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
@@ -199,7 +201,12 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
     dims = PyArray_SHAPE(array);
     *nsz = (ndims >= 2) ? dims[1] : 0;
     *msz = (ndims >= 1) ? dims[0] : 0;
-    return (double *) PyArray_DATA(array);
+    return PyArray_DATA(array);
+}
+
+static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+{
+    return (double *) atGetAnyArraySz(element, name, NPY_DOUBLE, "double", msz, nsz);
 }
 
 static double *atGetDoubleArray(const PyObject *element, char *name)
