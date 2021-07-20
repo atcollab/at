@@ -251,7 +251,7 @@ def test_nl_detuning_chromaticity(hmba_lattice):
 
 
 def test_quantdiff(hmba_lattice):
-    hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass='auto', copy=True)
+    hmba_lattice = hmba_lattice.radiation_on(copy=True)
     dmat = physics.radiation.quantdiffmat(hmba_lattice)
     lmat = physics.radiation._lmat(dmat)
     assert_close(lmat,
@@ -286,7 +286,7 @@ def test_quantdiff(hmba_lattice):
 
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
 def test_ohmi_envelope(hmba_lattice, refpts):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True)
+    hmba_lattice = hmba_lattice.radiation_on(copy=True, quadrupole_pass='')
     emit0, beamdata, emit = hmba_lattice.ohmi_envelope(refpts)
     obs = emit[-1]
     assert_close(beamdata['tunes'], [3.81563019e-01, 8.54376397e-01, 1.09060761e-04], rtol=2e-6)
