@@ -8,6 +8,7 @@ from at.lattice import Element, RFCavity, Marker, Drift, Lattice
 from at.physics import find_orbit6, find_orbit4
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 
+
 __all__ = ['fast_ring']
 
 
@@ -78,22 +79,18 @@ def fast_ring(ring, split_inds=[]):
     fastringnorad, fastringrad= [], []
 
     cnts = range(len(all_rings))
-
     for counter, ring_slice, ring_slicer in zip(cnts, all_rings, all_ringsr):
-
         ring_slice.radiation_off(cavity_pass='CavityPass')
         cavs = get_elements(ring_slice, RFCavity)
         cavs_rad = get_elements(ring_slicer, RFCavity)
         [ring_slice.remove(c) for c in cavs]
         [ring_slicer.remove(c) for c in cavs_rad]
-
         lin_elem = gen_m66_elem(ring_slice, orbit4[2*counter],
                                 orbit4[2*counter+1])
         lin_elem.FamName = lin_elem.FamName + '_' + str(counter)
         lin_elem_rad = gen_m66_elem(ring_slicer, orbit6[2*counter],
                                     orbit6[2*counter+1])
         lin_elem_rad.FamName = lin_elem_rad.FamName + '_' + str(counter)
-
         [fastringnorad.append(cav) for cav in cavs]
         fastringnorad.append(lin_elem)
         [fastringrad.append(cav) for cav in cavs_rad]
