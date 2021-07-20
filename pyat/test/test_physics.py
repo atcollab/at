@@ -286,7 +286,7 @@ def test_quantdiff(hmba_lattice):
 
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
 def test_ohmi_envelope(hmba_lattice, refpts):
-    hmba_lattice = hmba_lattice.radiation_on(copy=True, quadrupole_pass='')
+    hmba_lattice = hmba_lattice.radiation_on(copy=True)
     emit0, beamdata, emit = hmba_lattice.ohmi_envelope(refpts)
     obs = emit[-1]
     assert_close(beamdata['tunes'], [3.81563019e-01, 8.54376397e-01, 1.09060761e-04], rtol=2e-6)
