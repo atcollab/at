@@ -389,7 +389,7 @@ class Dipole(Multipole):
         kwargs.setdefault('BendingAngle', bending_angle)
         kwargs.setdefault('EntranceAngle', 0.0)
         kwargs.setdefault('ExitAngle', 0.0)
-        kwargs.setdefault('PassMethod', 'BendLinearPass')
+        kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
     def _part(self, fr, sumfr):
@@ -442,7 +442,7 @@ class Quadrupole(Multipole):
         KickAngle       Correction deviation angles (H, V)
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
-        kwargs.setdefault('PassMethod', 'QuadLinearPass')
+        kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
 

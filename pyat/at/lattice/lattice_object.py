@@ -395,7 +395,7 @@ class Lattice(list):
 
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
-                     quadrupole_pass=None, wiggler_pass='auto',
+                     quadrupole_pass='auto', wiggler_pass='auto',
                      sextupole_pass=None, octupole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
@@ -403,7 +403,7 @@ class Lattice(list):
         KEYWORDS
             cavity_pass='CavityPass'    PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
-            quadrupole_pass=None        PassMethod set on quadrupoles
+            quadrupole_pass='auto'      PassMethod set on quadrupoles
             wiggler_pass='auto'         PassMethod set on wigglers
             copy=False  If False, the modification is done in-place,
                         If True, return a shallow copy of the lattice. Only the

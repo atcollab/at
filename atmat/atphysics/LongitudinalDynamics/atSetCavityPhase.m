@@ -10,6 +10,9 @@ function newring=atSetCavityPhase(ring,varargin)
 %   CAVPTS is the location of RF cavities. This allows to ignore harmonic
 %   cavities.
 %
+%WARNING: This function modifies the time reference,
+%this should be avoided
+%
 %NEWRING=SETCAVITYPHASE(...,'method',METHOD)
 %   Choose the method for computing the energy loss per turn
 %
@@ -27,9 +30,6 @@ freq=unique(atgetfieldvalues(ring(cavities),'Frequency'));
 if length(freq) > 1
     error('AT:NoFrequency','RF frequency not equal for all cavities');
 end
-warning('AT:CavityTimeLag',...
-    ['\nThis function modifies the time reference\n',...
-       'This should be avoided, you have been warned\n']);
 U0=atgetU0(ring,'periods',1,varargs);
 if U0 > rfv
     error('AT:NoEnoughRFVoltage','Not enough RF voltage, unstable ring.');

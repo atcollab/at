@@ -10,7 +10,7 @@ function elem=atsbend(fname,varargin)
 %                     	[m], default to 0
 %  3. BENDINGANGLE	Total bending angle [rad], defaults to 0 
 %  4. K				Focusing strength, defaults to 0
-%  5. PASSMETHOD    Tracking function, defaults to 'BendLinearPass'
+%  5. PASSMETHOD    Tracking function, defaults to 'BndMPoleSymplectic4Pass'
 %
 %  OPTIONS (order does not matter)
 %    R1				6 x 6 rotation matrix at the entrance
@@ -55,12 +55,13 @@ function elem=atsbend(fname,varargin)
 %          atmultipole, atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
-[rsrc,L,A,K,method]  = decodeatargs({0,0,[],'BendLinearPass'},varargin);
+[rsrc,L,A,K,method]  = decodeatargs({0,0,[],'BndMPoleSymplectic4Pass'},varargin);
 [L,rsrc]             = getoption(rsrc,'Length',L);
 [A,rsrc]             = getoption(rsrc,'BendingAngle',A);
 [K,rsrc]             = getoption(rsrc,'K',K);
 [method,rsrc]        = getoption(rsrc,'PassMethod',method);
 [PolynomB,rsrc]      = getoption(rsrc,'PolynomB',[0 0]);
+[PolynomA,rsrc]      = getoption(rsrc,'PolynomA',[0 0]);
 [cl,rsrc]            = getoption(rsrc,'Class','Bend');
 [EntranceAngle,rsrc] = getoption(rsrc,'EntranceAngle',0);
 [ExitAngle,rsrc]     = getoption(rsrc,'ExitAngle',0);
@@ -70,5 +71,5 @@ if ~isempty(K), PolynomB(2)=K; end
 
 elem=atbaselem(fname,method,'Class',cl,'Length',L,...
     'BendingAngle',A,'EntranceAngle',EntranceAngle,'ExitAngle',ExitAngle,...
-    'K',PolynomB(2),'PolynomB',PolynomB,rsrc{:});
+    'K',PolynomB(2),'PolynomB',PolynomB,'PolynomA',PolynomA,rsrc{:});
 end

@@ -1,6 +1,9 @@
 function ring = atsetcavity(ring,varargin)
 %ATSECAVITY Set the cavity parameters
 %
+%WARNING: This function modifies the time reference,
+%this should be avoided
+%
 %ATSETCAVITY may be used in two modes:
 %
 %Upgrade mode
@@ -112,9 +115,6 @@ else                            % Old syntax, for compatibility
     
     %now set phaselags in cavities
     if radflag
-        warning('AT:CavityTimeLag',...
-            ['\nThis function modifies the time reference\n',...
-            'This should be avoided, you have been warned\n']);
         U0=atgetU0(ring);
         timelag= (circ/(2*pi*HarmNumber))*asin(U0/(rfv));
         ring=atradon(ring);  % set radiation on. nothing if radiation is already on
