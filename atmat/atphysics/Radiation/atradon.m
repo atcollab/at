@@ -29,10 +29,10 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %   The following keywords trigger the processing of the following elements:
 %
 %   'bendpass'      pass method for bending magnets. Default 'auto'
-%   'quadpass'      pass method for quadrupoles. Default ''
+%   'quadpass'      pass method for quadrupoles. Default 'auto'
 %   'sextupass'     pass method for sextupoles. Default ''
-%   'octupass'      pass method for bending magnets. Default ''
-%   'wigglerpass'   pass method for wigglers. Default ''
+%   'octupass'      pass method for octupoles. Default ''
+%   'wigglerpass'   pass method for wigglers. Default 'auto'
 %
 %  OUPUTS
 %  1. RING2     Output ring
@@ -43,19 +43,19 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %  EXAMPLES
 %
 %>> ringrad=atradon(ring);
-%   Turns cavities on and sets radiation in bending magnets and wigglers (default)
+%   Turns cavities on and sets radiation in bending magnets, quadrupoles and wigglers (default)
 %
 %>> ringrad=atradon(ring,'CavityPass','auto','auto');
 %   Turns cavities on and sets radiation in bending magnets, wigglers and quadrupoles
 %
-%>> ringrad=atradon(ring,'quadpass','auto');
-%   Turns cavities on and sets radiation in bending magnets, wigglers and quadrupoles
+%>> ringrad=atradon(ring,'quadpass','');
+%   Turns cavities on and sets radiation in bending magnets, wigglers
 %
 %  See also ATRADOFF, ATCAVITYON, ATCAVITYOFF
 
 [octupass,varargs]=getoption(varargin,'octupass','');
 [sextupass,varargs]=getoption(varargs,'sextupass','');
-[quadpass,varargs]=getoption(varargs,'quadpass','');
+[quadpass,varargs]=getoption(varargs,'quadpass','auto');
 [wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
 [bendpass,varargs]=getoption(varargs,'bendpass','auto');
 [cavipass,varargs]=getoption(varargs,'cavipass','CavityPass');
