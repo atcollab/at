@@ -49,9 +49,14 @@ if ~iscell(ring)
     error('First argument must be a cell array');
 end
 [orbitin,varargs]=getoption(varargin,'orbit',[]);
+[dp,varargs]=getoption(varargs,'dp',NaN);
 [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
 if isempty(orbitin)
-    orbitin=xorbit_ct(ring,dct,varargs);
+    if isfinite(dp)
+        orbitin=xorbit_dp(ring,dp,varargs);
+    else
+        orbitin=xorbit_ct(ring,dct,varargs);
+    end
     args={'KeepLattice'};
 else
     args={};

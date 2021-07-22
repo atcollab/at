@@ -155,10 +155,15 @@ def find_orbit4(ring, dp=0.0, refpts=None, dct=None, orbit=None,
                         specified in refpts
 
     KEYWORDS
-        keep_lattice    Assume no lattice change since the previous tracking.
-                        Default: False
+        dct=None        path lengthening. If specified, dp is ignored and
+                        the off-momentum is deduced from the path lengthening.
+        orbit=None      avoids looking for initial the closed orbit if is
+                        already known ((6,) array). find_orbit4 propagates it
+                        to the specified refpts.
         guess           (6,) initial value for the closed orbit. It may help
                         convergence. Default: (0, 0, 0, 0, 0, 0)
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Default: False
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
         XYStep          Step size. Default: DConstant.XYStep
@@ -225,10 +230,13 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, dp=None, orbit=None,
                         specified in refpts
 
     KEYWORDS
+        orbit=None      avoids looking for initial the closed orbit if is
+                        already known ((6,) array). find_sync_orbit propagates
+                        it to the specified refpts.
+        guess           (6,) initial value for the closed orbit. It may help
+                        convergence. Default: (0, 0, 0, 0, 0, 0)
         keep_lattice    Assume no lattice change since the previous tracking.
                         Default: False
-        guess           Initial value for the closed orbit. It may help
-                        convergence. Default: (0, 0, 0, 0)
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
         XYStep          Step size. Default: DConstant.XYStep
@@ -311,7 +319,8 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     return ref_in
 
 
-def find_orbit6(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
+def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
+                keep_lattice=False, **kwargs):
     """find_orbit6 finds the closed orbit in the full 6-D phase space
     by numerically solving  for a fixed point of the one turn
     map M calculated with lattice_pass
@@ -359,20 +368,27 @@ def find_orbit6(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
                         specified in refpts
 
     KEYWORDS
-        keep_lattice    Assume no lattice change since the previous tracking.
-                        Default: False
+        orbit=None      avoids looking for initial the closed orbit if is
+                        already known ((6,) array). find_orbit6 propagates it
+                        to the specified refpts.
         guess           Initial value for the closed orbit. It may help
                         convergence. The default is computed from the energy
                         loss of the ring
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Default: False
         method          Method for energy loss computation (see get_energy_loss)
                         default: ELossMethod.TRACKING
+        cavpts=None     Cavity location. If None, use all cavities. This is used
+                        to compute the initial synchronous phase.
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
         XYStep          Step size. Default: DConstant.XYStep
-        DPStep          Step size. Default: DConstant.XYStep
+        DPStep          Step size. Default: DConstant.DPStep
 
     See also find_orbit4, find_sync_orbit.
     """
+    if not (dp is None and dct is None):
+        warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
     if orbit is None:
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
@@ -386,7 +402,7 @@ def find_orbit6(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     return orbit, all_points
 
 
-def find_orbit(ring, refpts=None, dp=None, dct=None, **kwargs):
+def find_orbit(ring, refpts=None, **kwargs):
     """find_orbit finds the closed orbit by numerically getting the fixed point
     of the one turn map M calculated with lattice_pass.
 
@@ -407,24 +423,21 @@ def find_orbit(ring, refpts=None, dp=None, dct=None, **kwargs):
 
     KEYWORDS
         dp=0            Momentum deviation, when radiation is OFF
-        ct=0            Path lengthening, when radiation ids OFF
+        dct=0            Path lengthening, when radiation ids OFF
         keep_lattice    Assume no lattice change since the previous tracking.
                         Default: False
         guess=None      Initial guess for the closed orbit. It may help
-                        convergence. The default is computed from the energy
-                        loss of the ring
+                        convergence.
         orbit=None      Orbit at entrance of the lattice, if known. find_orbit
-                        will then transfer it to the selected reference points
+                        will then propagate it to the selected reference points
         For other keywords, refer to the underlying methods
 
     See also find_orbit4, find_sync_orbit, find_orbit6
     """
     if ring.radiation:
-        if not (dp is None and dct is None):
-            warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
-        return find_orbit6(ring, refpts, **kwargs)
+        return find_orbit6(ring, refpts=refpts, **kwargs)
     else:
-        return find_orbit4(ring, dp, refpts, dct=dct, **kwargs)
+        return find_orbit4(ring, refpts=refpts, **kwargs)
 
 
 Lattice.find_orbit4 = find_orbit4

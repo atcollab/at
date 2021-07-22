@@ -20,7 +20,6 @@ from .energy_loss import *
 from .orbit import *
 from .matrix import *
 from .linear import *
-from .linear6 import *
 from .ring_parameters import *
 # noinspection PyUnresolvedReferences
 from .diffmatrix import find_mpole_raddiff_matrix

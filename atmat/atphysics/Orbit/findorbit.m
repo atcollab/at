@@ -29,17 +29,17 @@ function [orbs,orbitin]  = findorbit(ring,varargin)
 
 [orbitin,varargs]=getoption(varargin,'orbit',[]);
 [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+[dp,varargs]=getoption(varargs,'dp',NaN);
+[dct,varargs]=getoption(varargs,'dct',NaN);
 if isempty(orbitin)
     if check_radiation(ring)    % Radiation ON: 6D orbit
-        dp=getoption(varargs,'dp',NaN);
-        ct=getoption(varargs,'dct',NaN);
-        if isfinite(dp) || isfinite(ct)
+        if isfinite(dp) || isfinite(dct)
             warning('AT:linopt','In 6D, "dp" and "dct" are ignored');
         end
         orbitin=xorbit_6(ring,varargs{:});
-    else                        % Radiation OFF: 4D orbit
-        [~,varargs]=getoption(varargs,'DPStep');   % Take it out because findorbit4 does not accept it
-        [dp,varargs]=getoption(varargs,'dp',0);
+    elseif isfinite(dct)
+        orbitin=xorbit_ct(ring,dct,varargs{:});
+    else
         orbitin=xorbit_dp(ring,dp,varargs{:});
     end
     args={'KeepLattice'};
