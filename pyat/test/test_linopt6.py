@@ -34,7 +34,7 @@ def test_linopt6_rad(lattice):
     for field in ['s_pos', 'closed_orbit', 'dispersion', 'alpha', 'beta']:
         assert_close(ld4[field], ld6[field], atol=1.e-8, rtol=0, err_msg=field)
     assert_close(ld4.mu, ld6.mu[:, :2], atol=1.e-8, rtol=0)
-    assert_close(ld4.W, ld6.W, atol=1e-6, rtol=0)
+    assert_close(ld4.W, ld6.W, atol=1e-6, rtol=2e-5)
 
 
 @pytest.mark.parametrize('dp', (-0.005, 0.0, 0.005))
