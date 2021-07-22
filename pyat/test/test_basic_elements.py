@@ -293,8 +293,8 @@ def test_quad(rin):
     lattice = [q]
     rin[0, 0] = 1e-6
     atpass(lattice, rin, 1)
-    expected = numpy.array([0.921060994002885, -0.389418342308651, 0,
-                            0, 0, 0.000000010330489]).reshape(6, 1) * 1e-6
+    expected = numpy.array([0.9210610203854122, -0.3894182419439, 0,
+                            0, 0, 0.0000000103303797478]).reshape(6, 1) * 1e-6
     numpy.testing.assert_allclose(rin, expected)
     assert q.K == 1
     q.PolynomB[1] = 0.2

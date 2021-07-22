@@ -7,7 +7,7 @@ function elem=atquadrupole(fname,varargin)
 %  1. FAMNAME    - Family name
 %  2. LENGTH     - Length [m]
 %  3. K          - Strength [m-2]
-%  4. PASSMETHOD - Tracking function, defaults to 'QuadLinearPass'
+%  4. PASSMETHOD - Tracking function, defaults to 'StrMPoleSymplectic4Pass'
 %
 %  OPTIONS (order does not matter)
 %    R1			 -	6 x 6 rotation matrix at the entrance
@@ -37,11 +37,12 @@ function elem=atquadrupole(fname,varargin)
 %  See also atdrift, atsextupole, atsbend, atrbend, atskewquad,
 %          atmultipole, atthinmultipole, atmarker, atcorrector, atringparam
 
-[rsrc,L,K,method] = decodeatargs({0,[],'QuadLinearPass'},varargin);
+[rsrc,L,K,method] = decodeatargs({0,[],'StrMPoleSymplectic4Pass'},varargin);
 [L,rsrc]          = getoption(rsrc,'Length',L);
 [K,rsrc]          = getoption(rsrc,'K',K);
 [method,rsrc]     = getoption(rsrc,'PassMethod',method);
 [PolynomB,rsrc]   = getoption(rsrc,'PolynomB',[0 0]);
+[PolynomA,rsrc]   = getoption(rsrc,'PolynomA',[0 0]);
 [cl,rsrc]         = getoption(rsrc,'Class','Quadrupole');
 
 % Gradient setting if not specified explicitly
@@ -49,5 +50,5 @@ if ~isempty(K), PolynomB(2)=K; end
 
 % Build the element
 elem=atbaselem(fname,method,'Class',cl,'Length',L,'K',PolynomB(2),...
-    'PolynomB',PolynomB,'DefaultMaxOrder',1,rsrc{:});
+    'PolynomB',PolynomB,'PolynomA',PolynomA,'DefaultMaxOrder',1,rsrc{:});
 end
