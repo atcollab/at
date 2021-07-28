@@ -67,7 +67,12 @@ static void ATdrift6(double* r, double L)
 	r[5]+= NormL*p_norm*(r[1]*r[1]+r[3]*r[3])/2;
 }
 
-
+static void ATChangePRef(double* r, double scaling)
+{
+    r[1] /= scaling;
+    r[3] /= scaling;
+    r[4] = (r[4] + 1.0 - scaling) / scaling;
+}
 
 static void ATtranspm(double *M)
 {	/* Transpose matrix M	
