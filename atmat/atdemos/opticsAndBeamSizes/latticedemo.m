@@ -1,32 +1,19 @@
 %LATTICEDEMO self-running tutorial
-% demonstrates 
+% demonstrates:
 % 1. ELEMENT, family of ELEMENTS, sequence of ELEMENTS 
 % 2. Lattice representation
 % 3. Creating a lattice 
 % 4. Creating and editing lattice files
-clear all
+clear
 clc
 echo on
-% An element in Accelerator Toolbox is a 1-by-1 MATLAB STRUCTURE
-% The folowing code creates a structure D1 for a drift space
+% An element in Accelerator Toolbox is a 1-by-1 MATLAB STRUCTURE.
+% Functions are provided to easuly create such structures with adequate fields.
+% The following code creates a structure D1 for a drift space
 % and a structure QF for a quadrupole.
 
-D1.FamName = 'DR01';
-D1.Length  = 3;
-D1.PassMethod = 'DriftPass';
-
-QF.FamName = 'QF';
-QF.Length = 1;
-QF.K = 0.2;
-QF.MaxOrder = 3;
-QF.NumIntSteps = 1;
-QF.PolynomA= [0 0 0];
-QF.PolynomB= [0 0.2 0];
-QF.R1= eye(6);
-QF.R2= eye(6);
-QF.T1= [0 0 0 0 0 0];
-QF.T2= [0 0 0 0 0 0];
-QF.PassMethod= 'QuadLinearPass';
+D1 = atdrift('DR01', 3.0);
+QF = atquadrupole('QF', 1.0, 0.2);
 
 pause % Press any key to continue 
 clc
@@ -80,41 +67,41 @@ clc
 % The following commad creates a simple FODO cell by copying previously 
 % created element structures for drifts and quadrupole magnets to a cell array FODOCELL:
 
-FODOCELL = {QF D1 QD D2 QF};
+fodocell = {QF D1 QD D2 QF};
 
-whos FODOCELL
+whos fodocell
 % LENGTH is useful to find the number of elements in a sequence
 
-L = length(FODOCELL) 
+L = length(fodocell) 
 pause % Press any key to continue;
 clc
 % Use {:} cell array syntax to print some or all elements
-FODOCELL{1}
+fodocell{1}
 pause % FODOCELL{:} will print a long list of all elements. Press any key to continue
 clc
-FODOCELL{:}
+fodocell{:}
 pause % Press any key to continue;
 clc
-% Let's build a cell array THERING that represents a closed ring 
+% Let's build a cell array FODORING that represents a closed ring 
 % with 10 periods of FODOCELL the same way we would build 
 % any other array in MATLAB from the comman dline
 
-THERING = [FODOCELL FODOCELL FODOCELL FODOCELL FODOCELL...
-           FODOCELL FODOCELL FODOCELL FODOCELL FODOCELL]; 
+fodoring = [fodocell fodocell fodocell fodocell fodocell...
+           fodocell fodocell fodocell fodocell fodocell]; 
         
-whos THERING
+whos fodoring
 pause % Press any key to continue;
 clc
 % The first element in THERING is 
-THERING{1}
+fodoring{1}
 
 % To inspect or change the value of a specific field we can use MATLAB syntax
 % for accessing cells in cell arrays and field in structures
-oldK = THERING{1}.K
+oldK = fodoring{1}.K
 
-THERING{1}.K = 0.25;
+fodoring{1}.K = 0.25;
 
-newK = THERING{1}.K
+newK = fodoring{1}.K
 
 pause % Press any key to continue;
 clc
@@ -122,7 +109,7 @@ clc
 % We can use it in accelerator physics functions and scripts
 %
 % For example: function FindM44 finds 4-by-4 transverse transfer matrix
-M = findm44(THERING,0)
+M = findm44(fodoring,0)
 pause % Press any key to continue;
 clc
 % -----------------------------------------------------------------------
