@@ -80,7 +80,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             int m;
             double p_norm, NormL1, NormL2;
             /* Check for change of reference momentum */
-            if (!atIsNaN(scaling)) ATChangePRef(r6, scaling);
+            if (scaling != 1.0) ATChangePRef(r6, scaling);
             p_norm = 1.0/(1.0+r6[4]);
             NormL1 = L1*p_norm;
             NormL2 = L2*p_norm;
@@ -125,7 +125,7 @@ void BndMPoleSymplectic4Pass(double *r, double le, double irho, double *A, doubl
             if (R2) ATmultmv(r6,R2);
             if (T2) ATaddvv(r6,T2);
             /* Check for change of reference momentum */
-            if (!atIsNaN(scaling)) ATChangePRef(r6, 1.0/scaling);
+            if (scaling != 1.0) ATChangePRef(r6, 1.0/scaling);
         }
     }
     if (KickAngle) {  /* Remove corrector component in polynomial coefficients */
@@ -242,7 +242,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
-        Scaling=atGetOptionalDouble(ElemData,"Scaling",atGetNaN()); check_error();
+        Scaling=atGetOptionalDouble(ElemData,"Scaling",1.0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
         FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
