@@ -31,7 +31,7 @@
             image="HelpIcon.USER_GUIDE">AT User Guide
             <tocitem target="mytbx_ch_1.html">Setting Up AT
             </tocitem>
-            <tocitem target="mytbx_ch_2.html">Processing Data
+            <tocitem target="at_loadsave.html">Loading ans saving lattices
             </tocitem>
             <tocitem target="mytbx_ch_3.html">Verifying AT outputs
                 <tocitem target="mytbx_ch_3a.html">Handling Test Failures
