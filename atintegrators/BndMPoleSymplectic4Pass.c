@@ -158,7 +158,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         FringeBendEntrance=atGetOptionalLong(ElemData,"FringeBendEntrance",1); check_error();
         FringeBendExit=atGetOptionalLong(ElemData,"FringeBendExit",1); check_error();
         FullGap=atGetOptionalDouble(ElemData,"FullGap",0); check_error();
-        Scaling=atGetOptionalDouble(ElemData,"Scaling",atGetNaN()); check_error();
+        Scaling=atGetOptionalDouble(ElemData,"Scaling",1.0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
         FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();
         FringeQuadEntrance=atGetOptionalLong(ElemData,"FringeQuadEntrance",0); check_error();
