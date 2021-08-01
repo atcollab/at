@@ -67,13 +67,16 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Lattice manipulation</h1><!--introduction--><!--/introduction--><p><a href="matlab:doc('isatlattice')">isatlattice</a> - Tests if an input argument is a valid AT lattice</p><p><a href="matlab:doc('atindex')">atindex</a> - Extracts the information about element families and</p><p><a href="matlab:doc('atgetcells')">atgetcells</a> - Performs a search on MATLAB cell arrays of structures</p><p><a href="matlab:doc('atgetfieldvalues')">atgetfieldvalues</a> - Retrieves the field values AT cell array of elements</p><p><a href="matlab:doc('atsetfieldvalues')">atsetfieldvalues</a> - Sets the field values of MATLAB cell array of structures</p><p><a href="matlab:doc('atinsertelems')">atinsertelems</a> - Insert elements at given locations in a line</p><p><a href="matlab:doc('atloadfielderrs')">atloadfielderrs</a> - Will load a field error structure into a ring</p><p><a href="matlab:doc('atreduce')">atreduce</a> - Remove useless elements from an AT structure</p><p><a href="matlab:doc('atsbreak')">atsbreak</a> - Insert markers at given s positions in a lattice</p><p><a href="matlab:doc('atsetRFCavity')">atsetRFCavity</a> - - sets the RF Cavity with the passmethod RFCavityPass</p><p><a href="matlab:doc('atdivelem')">atdivelem</a> - LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces</p><p><a href="matlab:doc('atsplitelem')">atsplitelem</a> - Creates a line by inserting one or more elements into a base element</p><p><a href="matlab:doc('atsetshift')">atsetshift</a> - Sets the misalignment vectors</p><p><a href="matlab:doc('atsettilt')">atsettilt</a> - Sets the entrance and exit rotation matrices</p><p><a href="matlab:doc('combinebypassmethod')">combinebypassmethod</a> - Combines adjacent elements that have the same specified pass method</p><p><a href="matlab:doc('combinelinear45')">combinelinear45</a> - Combines adjacent  elements that use 4-by-5 PassMethods</p><p><a href="matlab:doc('settags')">settags</a> - Sets the 'Tag' field in AT lattice elements</p><p><a href="matlab:doc('findtags')">findtags</a> - Looks for string matches in 'Tag' field of AT lattice elements</p><p><a href="matlab:doc('insertindrift')">insertindrift</a> - Inserts one or more elements into a drift element</p><p><a href="matlab:doc('mergedrift')">mergedrift</a> - Removes a lattice element and merges the two adjacent drift spaces</p><p><a href="matlab:doc('mvelem')">mvelem</a> - (ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING</p><p><a href="matlab:doc('mvfield')">mvfield</a> - Move fields from one structure to another</p><p><a href="matlab:doc('reverse')">reverse</a> - Reverses the order of elements in a one-dimensional MATLAB ARRAY</p><p><a href="matlab:doc('splitdrift')">splitdrift</a> - Inserts an element into a drift space</p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
+  </style></head><body><div class="content"><h1>Lattice manipulation</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#2">Access elements</a></li><li><a href="#4">Insert elements</a></li><li><a href="#6">Join elements</a></li><li><a href="#8">Other</a></li></ul></div><p><a href="matlab:doc('isatlattice')">isatlattice</a> - Tests if an input argument is a valid AT lattice</p><h2 id="2">Access elements</h2><p><a href="matlab:doc('atindex')">atindex</a> - Extracts the information about element families and</p><p><a href="matlab:doc('atgetcells')">atgetcells</a> - Performs a search on MATLAB cell arrays of structures</p><p><a href="matlab:doc('atgetfieldvalues')">atgetfieldvalues</a> - Retrieves the field values AT cell array of elements</p><p><a href="matlab:doc('atsetfieldvalues')">atsetfieldvalues</a> - Sets the field values of MATLAB cell array of structures</p><h2 id="4">Insert elements</h2><p><a href="matlab:doc('atinsertelems')">atinsertelems</a> - Insert elements at given locations in a line</p><p><a href="matlab:doc('atdivelem')">atdivelem</a> - LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces</p><p><a href="matlab:doc('atsplitelem')">atsplitelem</a> - Creates a line by inserting one or more elements into a base element</p><p><a href="matlab:doc('insertindrift')">insertindrift</a> - Inserts one or more elements into a drift element</p><p><a href="matlab:doc('atsbreak')">atsbreak</a> - Insert markers at given s positions in a lattice</p><h2 id="6">Join elements</h2><p><a href="matlab:doc('atreduce')">atreduce</a> - Remove useless elements from an AT structure</p><p><a href="matlab:doc('mergedrift')">mergedrift</a> - Removes a lattice element and merges the two adjacent drift spaces</p><p><a href="matlab:doc('combinebypassmethod')">combinebypassmethod</a> - Combines adjacent elements that have the same specified pass method</p><p><a href="matlab:doc('combinelinear45')">combinelinear45</a> - Combines adjacent  elements that use 4-by-5 PassMethods</p><h2 id="8">Other</h2><p><a href="matlab:doc('atloadfielderrs')">atloadfielderrs</a> - Will load a field error structure into a ring</p><p><a href="matlab:doc('atsetRFCavity')">atsetRFCavity</a> - - sets the RF Cavity with the passmethod RFCavityPass</p><p><a href="matlab:doc('atsetshift')">atsetshift</a> - Sets the misalignment vectors</p><p><a href="matlab:doc('atsettilt')">atsettilt</a> - Sets the entrance and exit rotation matrices</p><p><a href="matlab:doc('settags')">settags</a> - Sets the 'Tag' field in AT lattice elements</p><p><a href="matlab:doc('findtags')">findtags</a> - Looks for string matches in 'Tag' field of AT lattice elements</p><p><a href="matlab:doc('mvelem')">mvelem</a> - (ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING</p><p><a href="matlab:doc('mvfield')">mvfield</a> - Move fields from one structure to another</p><p><a href="matlab:doc('reverse')">reverse</a> - Reverses the order of elements in a one-dimensional MATLAB ARRAY</p><p><a href="matlab:doc('splitdrift')">splitdrift</a> - Inserts an element into a drift space</p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Lattice manipulation
 % 
 %%
 % <matlab:doc('isatlattice') isatlattice> - Tests if an input argument is a valid AT lattice
 %
+%% Access elements
+% 
+%%
 % <matlab:doc('atindex') atindex> - Extracts the information about element families and
 %
 % <matlab:doc('atgetcells') atgetcells> - Performs a search on MATLAB cell arrays of structures
@@ -82,35 +85,44 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 %
 % <matlab:doc('atsetfieldvalues') atsetfieldvalues> - Sets the field values of MATLAB cell array of structures
 %
+%% Insert elements
+% 
+%%
 % <matlab:doc('atinsertelems') atinsertelems> - Insert elements at given locations in a line
-%
-% <matlab:doc('atloadfielderrs') atloadfielderrs> - Will load a field error structure into a ring
-%
-% <matlab:doc('atreduce') atreduce> - Remove useless elements from an AT structure
-%
-% <matlab:doc('atsbreak') atsbreak> - Insert markers at given s positions in a lattice
-%
-% <matlab:doc('atsetRFCavity') atsetRFCavity> - - sets the RF Cavity with the passmethod RFCavityPass
 %
 % <matlab:doc('atdivelem') atdivelem> - LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces
 %
 % <matlab:doc('atsplitelem') atsplitelem> - Creates a line by inserting one or more elements into a base element
 %
-% <matlab:doc('atsetshift') atsetshift> - Sets the misalignment vectors
+% <matlab:doc('insertindrift') insertindrift> - Inserts one or more elements into a drift element
 %
-% <matlab:doc('atsettilt') atsettilt> - Sets the entrance and exit rotation matrices
+% <matlab:doc('atsbreak') atsbreak> - Insert markers at given s positions in a lattice
+%
+%% Join elements
+% 
+%%
+% <matlab:doc('atreduce') atreduce> - Remove useless elements from an AT structure
+%
+% <matlab:doc('mergedrift') mergedrift> - Removes a lattice element and merges the two adjacent drift spaces
 %
 % <matlab:doc('combinebypassmethod') combinebypassmethod> - Combines adjacent elements that have the same specified pass method
 %
 % <matlab:doc('combinelinear45') combinelinear45> - Combines adjacent  elements that use 4-by-5 PassMethods
 %
+%% Other
+% 
+%%
+% <matlab:doc('atloadfielderrs') atloadfielderrs> - Will load a field error structure into a ring
+%
+% <matlab:doc('atsetRFCavity') atsetRFCavity> - - sets the RF Cavity with the passmethod RFCavityPass
+%
+% <matlab:doc('atsetshift') atsetshift> - Sets the misalignment vectors
+%
+% <matlab:doc('atsettilt') atsettilt> - Sets the entrance and exit rotation matrices
+%
 % <matlab:doc('settags') settags> - Sets the 'Tag' field in AT lattice elements
 %
 % <matlab:doc('findtags') findtags> - Looks for string matches in 'Tag' field of AT lattice elements
-%
-% <matlab:doc('insertindrift') insertindrift> - Inserts one or more elements into a drift element
-%
-% <matlab:doc('mergedrift') mergedrift> - Removes a lattice element and merges the two adjacent drift spaces
 %
 % <matlab:doc('mvelem') mvelem> - (ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING
 %
