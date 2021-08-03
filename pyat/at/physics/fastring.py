@@ -16,11 +16,11 @@ def rearrange(ring, split_inds=[]):
 
 
     def merge_rings(all_rings):
-        ring = all_rings[0]
+        ring0 = all_rings[0].deepcopy()
         if len(all_rings) > 1:
             for ringi in all_rings[1:]:
-                ring += ringi
-        return ring
+                ring0 += ringi.deepcopy()
+        return ring0
 
 
     iends = numpy.concatenate((split_inds, [len(ring)+1]))
