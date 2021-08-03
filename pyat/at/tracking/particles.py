@@ -113,6 +113,8 @@ def beam(np, sigma, orbit=None):
         lmat = a[row_idx[:, None], row_idx]
 
     particle_dist = numpy.squeeze(numpy.dot(lmat, v))
+    if particle_dist.ndim == 1:
+        particle_dist = numpy.array([particle_dist]).T
 
     if orbit is not None:
         if (not isinstance(orbit, (numpy.ndarray, list)) or
@@ -121,6 +123,7 @@ def beam(np, sigma, orbit=None):
                                  ' with a length the same as sigma' +
                                  ' matrix')
         else:
+            shp = particle_dist.shape
             for i, orb in enumerate(orbit):
                 particle_dist[i, :] += orb
 
