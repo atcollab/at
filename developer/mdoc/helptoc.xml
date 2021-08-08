@@ -28,18 +28,3 @@
             -->
         </tocitem>
         <!-- User Guide comes next -->
-        <tocitem target="mytbx_ug_intro.html "
-            image="HelpIcon.USER_GUIDE">AT User Guide
-            <tocitem target="atelemcreate.html">Element creation</tocitem>
-            <tocitem target="atelemfuncs.html">Element manipulation</tocitem>
-            <tocitem target="atlatticefuncs.html">Lattice manipulation</tocitem>
-            <tocitem target="atloadsave.html">Loading and Saving lattices</tocitem>
-            <tocitem target="atlinearoptics.html">Linear optics</tocitem>
-            <tocitem target="atphysics.html">Physics</tocitem>
-        </tocitem>
-        <tocitem target="https://atcollab.github.io/at/" 
-                 image="$toolbox/matlab/icons/webicon.gif">
-        AT Web Site
-        </tocitem>
-    </tocitem>
-</toc>
