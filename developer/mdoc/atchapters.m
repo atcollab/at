@@ -25,7 +25,9 @@ k.list=["isatlattice",...
 
 a.id = "atloadsave";
 a.title = "Loading and Saving lattices";
-a.list = ["atwritem", "atwritepy"];
+a.list = ["-Binary files", "0Lattices can be saved as binary mat-files using the standard load and save commands", ...
+    "-Text Files", ...
+    "atwritem", "atwritepy"];
 
 b.id = "atlinearoptics";
 b.title = "Linear optics";

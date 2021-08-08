@@ -20,21 +20,27 @@ fprintf(fid,'%% Example lattice files are located in machine_data.\n');
 desc=atchapters();
 for m=desc
     fprintf(fid,'%%\n%% *%s*\n%%\n',m.title);
-    for l=m.list
-        if startsWith(l,"-")
-            fprintf(fid,'%%      %s\n', eraseBetween(l,1,1));
-        else
-            try
-                h1=h1_line(which(l));
-                line=sprintf('%-30s - %s',h1.name,h1.h1);
-                %                 link=sprintf('<matlab:help(''%s'') %s>', h1.name,h1.name);
-                %                 fprintf(fid,'%% %s\n',replace(line,h1.name,link));
-                fprintf(fid,'%% %s\n',line);
-            catch err
-                disp(err.message)
+    mloop(fid,m.list);
+end
+fclose(fid);
+
+    function mloop(fid,mlist)
+        for item=mlist
+            if startsWith(item,"-")
+                fprintf(fid,'%%      %s\n', eraseBetween(item,1,1));
+            elseif startsWith(item,"0")
+                fprintf(fid,'%% %s\n',eraseBetween(item,1,1));
+            else
+                try
+                    h1=h1_line(which(item));
+                    line=sprintf('%-30s - %s',h1.name,h1.h1);
+                    % link=sprintf('<matlab:help(''%s'') %s>', h1.name,h1.name);
+                    % fprintf(fid,'%% %s\n',replace(line,h1.name,link));
+                    fprintf(fid,'%% %s\n',line);
+                catch err
+                    disp(err.message)
+                end
             end
         end
     end
-end
-fclose(fid);
 end
