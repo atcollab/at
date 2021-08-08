@@ -29,7 +29,7 @@ fclose(fid);
             if startsWith(item,"-")
                 fprintf(fid,'%%      %s\n', eraseBetween(item,1,1));
             elseif startsWith(item,"0")
-                fprintf(fid,'%% %s\n',eraseBetween(item,1,1));
+                fprintf(fid,'%% %s\n%%\n',eraseBetween(item,1,1));
             else
                 try
                     h1=h1_line(which(item));

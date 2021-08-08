@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Linear optics</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-08-08"><meta name="DC.source" content="atlinearoptics.m"><style type="text/css">
+      --><title>Radiation</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-08-08"><meta name="DC.source" content="atradiation.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -67,45 +67,30 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Linear optics</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Closed orbit</a></li><li><a href="#3">Transfer matrices</a></li><li><a href="#5">Optical functions</a></li></ul></div><h2 id="1">Closed orbit</h2><p><a href="matlab:doc('findorbit')">findorbit</a> - Find the closed orbit</p><p><a href="matlab:doc('findorbit4')">findorbit4</a> - Finds closed orbit in the 4-d transverse phase</p><p><a href="matlab:doc('findorbit6')">findorbit6</a> - Finds closed orbit in the full 6-d phase space</p><p><a href="matlab:doc('findsyncorbit')">findsyncorbit</a> - Finds closed orbit, synchronous with the RF cavity</p><h2 id="3">Transfer matrices</h2><p><a href="matlab:doc('findm44')">findm44</a> - Numerically finds the 4x4 transfer matrix of an accelerator lattice</p><p><a href="matlab:doc('findm66')">findm66</a> - Numerically finds the 6x6 transfer matrix of an accelerator lattice</p><p><a href="matlab:doc('findelemm44')">findelemm44</a> - Numerically finds the 4x4 transfer matrix of an element</p><p><a href="matlab:doc('findelemm66')">findelemm66</a> - Numerically finds the 6x6 transfer matrix of an element</p><h2 id="5">Optical functions</h2><p><a href="matlab:doc('atlinopt2')">atlinopt2</a> - Performs the linear analysis of UNCOUPLED lattices</p><p><a href="matlab:doc('atlinopt4')">atlinopt4</a> - Performs the 4D linear analysis of COUPLED lattices</p><p><a href="matlab:doc('atlinopt6')">atlinopt6</a> - Performs linear analysis of the lattice</p><p><a href="matlab:doc('beam22')">beam22</a> - Computes the beam matrix from the 1-turn transfer matrix</p><p><a href="matlab:doc('beam44')">beam44</a> - Computes the coupled beam matrices</p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
+  </style></head><body><div class="content"><h1>Radiation</h1><!--introduction--><!--/introduction--><p><a href="matlab:doc('check_radiation')">check_radiation</a> - Check the radiation state of a ring</p><p><a href="matlab:doc('atenergy')">atenergy</a> - Gets the lattice energy</p><p><a href="matlab:doc('atgetU0')">atgetU0</a> - Computes Energy loss per turn in eV</p><p><a href="matlab:doc('atdampingrates')">atdampingrates</a> - Find tunes and damping rates from one map matrix with radiation</p><p><a href="matlab:doc('atradon')">atradon</a> - Switches RF and radiation on</p><p><a href="matlab:doc('atradoff')">atradoff</a> - Switches radiation and cavity off</p><p><a href="matlab:doc('quantumDiff')">quantumDiff</a> - Compute the radiation-diffusion matrix</p><p><a href="matlab:doc('ohmienvelope')">ohmienvelope</a> - Calculates equilibrium beam envelope in a</p><p><a href="matlab:doc('DipoleRadiation')">DipoleRadiation</a> - Compute the radiation integrals in dipoles</p><p><a href="matlab:doc('WigglerRadiation')">WigglerRadiation</a> - Compute the radiation integrals in wigglers</p><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
-%% Linear optics
+%% Radiation
 % 
 %%
-%% Closed orbit
-% 
-%%
-% <matlab:doc('findorbit') findorbit> - Find the closed orbit
+% <matlab:doc('check_radiation') check_radiation> - Check the radiation state of a ring
 %
-% <matlab:doc('findorbit4') findorbit4> - Finds closed orbit in the 4-d transverse phase
+% <matlab:doc('atenergy') atenergy> - Gets the lattice energy
 %
-% <matlab:doc('findorbit6') findorbit6> - Finds closed orbit in the full 6-d phase space
+% <matlab:doc('atgetU0') atgetU0> - Computes Energy loss per turn in eV 
 %
-% <matlab:doc('findsyncorbit') findsyncorbit> - Finds closed orbit, synchronous with the RF cavity
+% <matlab:doc('atdampingrates') atdampingrates> - Find tunes and damping rates from one map matrix with radiation
 %
-%% Transfer matrices
-% 
-%%
-% <matlab:doc('findm44') findm44> - Numerically finds the 4x4 transfer matrix of an accelerator lattice
+% <matlab:doc('atradon') atradon> - Switches RF and radiation on
 %
-% <matlab:doc('findm66') findm66> - Numerically finds the 6x6 transfer matrix of an accelerator lattice
+% <matlab:doc('atradoff') atradoff> - Switches radiation and cavity off
 %
-% <matlab:doc('findelemm44') findelemm44> - Numerically finds the 4x4 transfer matrix of an element
+% <matlab:doc('quantumDiff') quantumDiff> - Compute the radiation-diffusion matrix
 %
-% <matlab:doc('findelemm66') findelemm66> - Numerically finds the 6x6 transfer matrix of an element
+% <matlab:doc('ohmienvelope') ohmienvelope> - Calculates equilibrium beam envelope in a
 %
-%% Optical functions
-% 
-%%
-% <matlab:doc('atlinopt2') atlinopt2> - Performs the linear analysis of UNCOUPLED lattices
+% <matlab:doc('DipoleRadiation') DipoleRadiation> - Compute the radiation integrals in dipoles
 %
-% <matlab:doc('atlinopt4') atlinopt4> - Performs the 4D linear analysis of COUPLED lattices
-%
-% <matlab:doc('atlinopt6') atlinopt6> - Performs linear analysis of the lattice
-%
-% <matlab:doc('beam22') beam22> - Computes the beam matrix from the 1-turn transfer matrix
-%
-% <matlab:doc('beam44') beam44> - Computes the coupled beam matrices
+% <matlab:doc('WigglerRadiation') WigglerRadiation> - Compute the radiation integrals in wigglers
 %
 
 ##### SOURCE END #####

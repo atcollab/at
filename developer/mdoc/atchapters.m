@@ -31,12 +31,18 @@ a.list = ["-Binary files", "0Lattices can be saved as binary mat-files using the
 
 b.id = "atlinearoptics";
 b.title = "Linear optics";
-b.list = ["atlinopt2", "atlinopt4", "atlinopt6", "beam22", "beam44", ...
-    "findm44", "findm66", "findelemm44", "findelemm66"];
+b.list = ["-Closed orbit" "findorbit", "findorbit4", "findorbit6", "findsyncorbit", ...
+    "-Transfer matrices", "findm44", "findm66", "findelemm44", "findelemm66", ...
+    "-Optical functions", "atlinopt2", "atlinopt4", "atlinopt6", "beam22", "beam44"];
+
+c.id = "atradiation";
+c.title = "Radiation";
+c.list = ["check_radiation", "atenergy", "atgetU0", "atdampingrates", "atradon", "atradoff", ...
+    "quantumDiff", "ohmienvelope", "DipoleRadiation", "WigglerRadiation"];
 
 l.id = "atphysics";
 l.title = "Physics";
 l.list = ["symplectify"];
 
-res=[m n k a b l];
+res=[m n k a b c l];
 end

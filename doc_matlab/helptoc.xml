@@ -35,6 +35,7 @@
             <tocitem target="atlatticefuncs.html">Lattice manipulation</tocitem>
             <tocitem target="atloadsave.html">Loading and Saving lattices</tocitem>
             <tocitem target="atlinearoptics.html">Linear optics</tocitem>
+            <tocitem target="atradiation.html">Radiation</tocitem>
             <tocitem target="atphysics.html">Physics</tocitem>
         </tocitem>
         <tocitem target="https://atcollab.github.io/at/" 
