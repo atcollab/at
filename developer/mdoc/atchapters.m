@@ -40,9 +40,14 @@ c.title = "Radiation";
 c.list = ["check_radiation", "atenergy", "atgetU0", "atdampingrates", "atradon", "atradoff", ...
     "quantumDiff", "ohmienvelope", "DipoleRadiation", "WigglerRadiation"];
 
+d.id = "atsummary";
+d.title = "Parameter summary";
+d.list = ["atx", "atsummary", "ringpara"];
+
+
 l.id = "atphysics";
 l.title = "Physics";
 l.list = ["symplectify"];
 
-res=[m n k a b c l];
+res=[m n k a b c d l];
 end
