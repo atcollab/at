@@ -1,9 +1,8 @@
 function pp = gen_list(pth)
-%UNTITLED6 Summary of this function goes here
-%   Detailed explanation goes here
+%GEN_LIST	Display a list of still non-documented AT functions
 
 chapters=atchapters();
-known=[chapters.list];
+known=[chapters.contents];
 p=[];
 folders=split(string(genpath(pth)),pathsep)';
 for d=folders(1:end-1)

@@ -1,6 +1,8 @@
-function gen_contents()
-%UNTITLED5 Summary of this function goes here
-%   Detailed explanation goes here
+function gen_help()
+%GEN_HELP	Build the "help" infrastructure
+%
+%GEN_HELP()     builds the atmat/Contents.m file used by the "help" and "ver"
+%               commands
 
 helpfile = fullfile(atroot,'Contents.m');
 [fid,fmess]=fopen(helpfile,'wt');
@@ -17,20 +19,20 @@ fprintf(fid,'%% the command atmexall.\n%%\n');
 fprintf(fid,'%% For getting started, one may look at the examples in atmat/atdemos.\n');
 fprintf(fid,'%% Example lattice files are located in machine_data.\n');
 
-desc=atchapters();
-for m=desc
+for m=atchapters()
     fprintf(fid,'%%\n%% *%s*\n%%\n',m.title);
-    mloop(fid,m.list);
+    mloop(fid,m.contents);
 end
+
 fclose(fid);
 
     function mloop(fid,mlist)
         for item=mlist
-            if startsWith(item,"-")
+            if startsWith(item,"-")     % Section header
                 fprintf(fid,'%%      %s\n', eraseBetween(item,1,1));
-            elseif startsWith(item,"0")
+            elseif startsWith(item,"0") % Plain text
                 fprintf(fid,'%% %s\n%%\n',eraseBetween(item,1,1));
-            else
+            else                        % AT function name
                 try
                     h1=h1_line(which(item));
                     line=sprintf('%-30s - %s',h1.name,h1.h1);
