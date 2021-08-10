@@ -7,7 +7,7 @@ from scipy.special import factorial
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts
 from at.tracking import lattice_pass
-from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, \
+from at.physics import HarmonicAnalysis, get_tune, linopt6, find_orbit, \
     get_tunes_harmonic, get_chrom
 from at.lattice import Element
 
@@ -42,9 +42,9 @@ def tunes_vs_amp(ring, amp=None, dim=0,
                           for i in range(len(amp))])
         return px[:, 0, :] - 1j*px[:, 1, :], py[:, 0, :] - 1j*py[:, 1, :]
 
-    l0, q0, _, _ = linopt(ring, dp=dp)
+    l0, bd, _ = linopt6(ring, dp=dp)
     orbit = l0['closed_orbit']
-    tunes = []
+    tunes = bd['tune']
 
     if amp is not None:
         partx, party = _gen_part(ring, amp, dim, orbit, l0, nturns)
@@ -62,7 +62,7 @@ def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
     the specified amplitudes. Then it fits this data and returns
     result for dQx/dx, dQy/dx, dQx/dy, dQy/dy
     """
-    lindata0, _, _, _ = linopt(ring, dp=dp)
+    lindata0, _, _ = linopt6(ring, dp=dp)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
     x = numpy.linspace(-xm, xm, npoints)
@@ -116,13 +116,12 @@ def gen_detuning_elem(ring, orbit=None):
     Generates an element that for detuning with amplitude
     """
     if orbit is None:
-        orbit, _ = find_orbit4(ring)
-    [lindata0, tunes, xsi, lindata] = ring.linopt(dp=0,
-                                                  get_chrom=True,
-                                                  orbit=orbit)
+        orbit, _ = find_orbit(ring)
+    lindata0, bd, lindata = ring.linopt6(get_chrom=True, orbit=orbit)
 
+    xsi = bd['chromaticity']
     r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4,
-                                        ym=1.0e-4, npoints=3, dp=0)
+                                        ym=1.0e-4, npoints=3, dp=None)
     rp = ring.periodicity
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
                           Betax=lindata0.beta[0], Betay=lindata0.beta[1],
