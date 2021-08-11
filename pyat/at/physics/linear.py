@@ -37,7 +37,10 @@ _DATA2_DTYPE = [('alpha', numpy.float64, (2,)),
 _DATA4_DTYPE = [('alpha', numpy.float64, (2,)),
                 ('beta', numpy.float64, (2,)),
                 ('mu', numpy.float64, (2,)),
-                ('gamma', numpy.float64)
+                ('gamma', numpy.float64),
+                ('A', numpy.float64, (2, 2)),
+                ('B', numpy.float64, (2, 2)),
+                ('C', numpy.float64, (2, 2))
                 ]
 
 _DATA6_DTYPE = [('alpha', numpy.float64, (2,)),
@@ -120,15 +123,18 @@ def _analyze2(mt, ms):
 def _analyze4(mt, ms):
     """Analysis of a 4D 1-turn transfer matrix according to Sagan, Rubin"""
     def propagate(t12):
-        mm = t12[:2, :2]
-        nn = t12[2:, 2:]
+        M = t12[:2, :2]
+        N = t12[2:, 2:]
         m = t12[:2, 2:]
         n = t12[2:, :2]
-        ff = n @ C + g * nn
+        ff = n @ C + g * N
         gamma = sqrt(numpy.linalg.det(ff))
-        e12 = (g * mm - m @ _jmt @ C.T @ _jmt.T) / gamma
+        e12 = (g * M - m @ _jmt @ C.T @ _jmt.T) / gamma
         f12 = ff / gamma
-        return e12, f12, gamma
+        a12 = e12 @ A @ _jmt @ e12.T @ _jmt.T
+        b12 = f12 @ B @ _jmt @ f12.T @ _jmt.T
+        c12 = M @ C + g*m @ _jmt @ f12.T @ _jmt.T
+        return e12, f12, gamma, a12, b12, c12
 
     M = mt[:2, :2]
     N = mt[2:, 2:]
@@ -157,17 +163,21 @@ def _analyze4(mt, ms):
     vps = numpy.array([vp_a, vp_b])
     el0 = (numpy.array([alp0_a, alp0_b]),
            numpy.array([bet0_a, bet0_b]),
-           0.0, g)
+           0.0, g, A, B, C)
     if ms.shape[0] > 0:
-        e, f, g = zip(*[propagate(mi) for mi in ms])
+        e, f, g, ai, bi, ci = zip(*[propagate(mi) for mi in ms])
         alp_a, bet_a, mu_a = _twiss22(numpy.array(e), alp0_a, bet0_a)
         alp_b, bet_b, mu_b = _twiss22(numpy.array(f), alp0_b, bet0_b)
         els = (numpy.stack((alp_a, alp_b), axis=1),
                numpy.stack((bet_a, bet_b), axis=1),
-               numpy.stack((mu_a, mu_b), axis=1), numpy.array(g))
+               numpy.stack((mu_a, mu_b), axis=1), numpy.array(g),
+               numpy.stack(ai, axis=0), numpy.stack(bi, axis=0),
+               numpy.stack(ci, axis=0))
     else:
         els = (numpy.empty((0, 2)), numpy.empty((0, 2)),
-               numpy.empty((0, 2)), numpy.empty((0,)))
+               numpy.empty((0, 2)), numpy.empty((0,)),
+               numpy.empty((0, 2, 2)), numpy.empty((0, 2, 2)),
+               numpy.empty((0, 2, 2)))
     return vps, _DATA4_DTYPE, el0, els
 
 
@@ -653,7 +663,7 @@ def linopt6(ring, *args, **kwargs):
             Published 3 February 2006
         [3] Brian W. Montague Report LEP Note 165, CERN, 1979
     """
-    return _linopt(ring, analyze, *args, **kwargs)
+    return _linopt(ring, _analyze6, *args, **kwargs)
 
 
 def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
@@ -719,9 +729,9 @@ def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
         damping_time    Damping times [s] (only if radiation is ON)
     """
     if method is None:
-        if ring.radiation
+        if ring.radiation:
             method = linopt6
-        elif kwargs.pop('coupled', True)
+        elif kwargs.pop('coupled', True):
             method = linopt4
         else:
             method = linopt2
