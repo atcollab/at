@@ -20,15 +20,6 @@ _jmt = jmatswap(1)
 _S2 = numpy.array([[0, 1], [-1, 0]], dtype=numpy.float64)
 
 # dtype for structured array containing linopt parameters
-_DATA1_DTYPE = [('alpha', numpy.float64, (2,)),
-                ('beta', numpy.float64, (2,)),
-                ('mu', numpy.float64, (2,)),
-                ('gamma', numpy.float64),
-                ('A', numpy.float64, (2, 2)),
-                ('B', numpy.float64, (2, 2)),
-                ('C', numpy.float64, (2, 2))
-                ]
-
 _DATA2_DTYPE = [('alpha', numpy.float64, (2,)),
                 ('beta', numpy.float64, (2,)),
                 ('mu', numpy.float64, (2,))
