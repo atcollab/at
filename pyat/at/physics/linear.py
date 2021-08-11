@@ -656,7 +656,7 @@ def linopt6(ring, *args, **kwargs):
     return _linopt(ring, analyze, *args, **kwargs)
 
 
-def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
+def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
     """Perform linear analysis of a fully coupled lattice
 
     elemdata0, beamdata, elemdata = get_optics(lattice, refpts, **kwargs)
@@ -672,8 +672,10 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
     KEYWORDS
-        method=linopt6  Method used for the analysis of the transfer matrix.
-                        Can be at.linopt2, at.linopt4, at.linopt6
+        method=None     Method used for the analysis of the transfer matrix.
+                        Can be None at.linopt2, at.linopt4, at.linopt6
+                        None:       automatically selected depending on radation
+                                    and coupled flags
                         linopt2:    no longitudinal motion, no H/V coupling,
                         linopt4:    no longitudinal motion, Sagan/Rubin
                                     4D-analysis of coupled motion,
@@ -716,6 +718,13 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
         chromaticity    Chromaticities
         damping_time    Damping times [s] (only if radiation is ON)
     """
+    if method is None:
+        if ring.radiation
+            method = linopt6
+        elif kwargs.pop('coupled', True)
+            method = linopt4
+        else:
+            method = linopt2
     return method(ring, refpts=refpts, dp=dp, **kwargs)
 
 
