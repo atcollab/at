@@ -69,6 +69,7 @@ def test_linopt_matching(test_ring):
 
 def test_envelope_matching(test_ring):
     # Define the variables
+    test_ring.radiation_on()
     names = ['QF1*', 'QD2*']
     variables = [at.ElementVariable(at.get_refpts(test_ring, nm), 'PolynomB',
                                     index=1, name=nm) for nm in names]
