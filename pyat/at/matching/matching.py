@@ -546,10 +546,6 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
     else:
         ring1 = ring  
 
-    if any([cons.rad for cons in constraints]) and not ring.radiation:
-        'Envelop constraint found: turning on radiations'
-        ring1.radiation_on()
-
     aaa = [(var.get(ring1), var.bounds) for var in variables]
     vini, bounds = zip(*aaa)
     bounds = np.array(bounds).T
