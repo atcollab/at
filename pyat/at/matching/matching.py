@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from itertools import repeat
 from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
-from at.physics import linopt, ohmi_envelope, find_orbit4
+from at.physics import get_optics, ohmi_envelope, find_orbit4
 
 
 class Variable(object):
@@ -243,11 +243,11 @@ class ElementConstraints(Constraints):
 
 class LinoptConstraints(ElementConstraints):
     """Container for linear optics constraints:
-      - a constraint can be set on any result of at.linopt
+      - a constraint can be set on any result of at.get_optics
       - constraints are added to the container with the LinoptConstraints.add
         method.
 
-      at.linopt is called once before the evaluation of all constraints
+      at.get_optics is called once before the evaluation of all constraints
 
       Example:
           cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)
@@ -256,10 +256,10 @@ class LinoptConstraints(ElementConstraints):
           cnstrs.add('beta_x_inj', 'beta', 18.0, refpts=ref_inj, index=0)
 
           # Add a tune constraint
-          cnstrs.add('tune', 0.44, index=0, weight=0.01)
+          cnstrs.add('tunes', 0.44, index=0, weight=0.01)
 
           # Add a chromaticity constraint (both planes)
-          cnstrs.add('chrom', [0.0 0.0])
+          cnstrs.add('chroms', [0.0 0.0])
 
           # define a constraint of phase advances between 2 points
           def mu_diff(lindata, tune, chrom):
@@ -281,6 +281,15 @@ class LinoptConstraints(ElementConstraints):
                         required and used.
         orbit=None      Initial trajectory for transfer line
                         ((6,) array)
+        method=None     Method used for the analysis of the transfer matrix.  
+                        Can be None, at.linopt2, at.linopt4, at.linopt6
+                        None: automated selection depending on coupled and
+                        radiation flags
+                        linopt2:    no longitudinal motion, no H/V coupling,
+                        linopt4:    no longitudinal motion, Sagan/Rubin
+                                    4D-analysis of coupled motion,
+                        linopt6:    with or without longitudinal motion, normal
+                                    mode analysis
         """
         self.get_chrom = False
         super(LinoptConstraints, self).__init__(ring, **kwargs)
@@ -358,9 +367,10 @@ class LinoptConstraints(ElementConstraints):
 
     def compute(self, ring, *args, **kwargs):
         """Optics computation before evaluation of all constraints"""
-        ld0, tune, chrom, ld = linopt(ring, refpts=self.refpts,
+        ld0, bd, ld = get_optics(ring, refpts=self.refpts,
                                       get_chrom=self.get_chrom, **kwargs)
-        return (ld[ref[self.refpts]] for ref in self.refs), (tune, chrom)
+        return (ld[ref[self.refpts]] for ref in self.refs), \
+               (bd.tune, bd.chromaticity)
 
 
 class Orbit4Constraints(ElementConstraints):
