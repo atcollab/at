@@ -41,7 +41,7 @@ def test_linopt_matching(test_ring):
         return delta_mu % 1.0
 
     # Define the constraints
-    cst1 = at.LinoptConstraints(test_ring)
+    cst1 = at.LinoptConstraints(test_ring, method=at.linopt2)
     cst1.add('tunes', [0.38, 0.85], name='tunes')
     # Start of the ring
     cst1.add('alpha', [0.0, 0.0], refpts=0, name='alpha_0')
