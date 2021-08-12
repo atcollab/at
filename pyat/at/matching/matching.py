@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from itertools import repeat
 from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
-from at.physics import get_optics, ohmi_envelope, find_orbit4
+from at.physics import get_optics, ohmi_envelope, find_orbit
 
 
 class Variable(object):
