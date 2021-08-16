@@ -39,7 +39,7 @@ def _rearrange(ring, split_inds=[]):
     return all_rings, Lattice(ringm, energy=ring.energy)
 
 
-def _fring(ring, split_inds=[],detuning_elem=None):
+def _fring(ring, split_inds=[], detuning_elem=None):
     all_rings, merged_ring = _rearrange(ring, split_inds=split_inds)
     ibegs = get_refpts(merged_ring, 'xbeg')
     iends = get_refpts(merged_ring, 'xend')
@@ -50,8 +50,8 @@ def _fring(ring, split_inds=[],detuning_elem=None):
     if detuning_elem is None:
         detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
     else:
-        detuning_elem.T1=-orbit[-1]
-        detuning_elem.T2=orbit[-1]
+        detuning_elem.T1 = -orbit[-1]
+        detuning_elem.T2 = orbit[-1]
 
     fastring = []
     for counter, r in enumerate(all_rings):
@@ -99,6 +99,6 @@ def fast_ring(ring, split_inds=[]):
     detuning_elem = copy.deepcopy(get_elements(fastringnorad,
                                                'NonLinear')[0])
     fastringrad = _fring(ringi.radiation_on(copy=True),
-                         split_inds=split_inds, 
+                         split_inds=split_inds,
                          detuning_elem=detuning_elem)
     return fastringnorad, fastringrad
