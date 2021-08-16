@@ -657,7 +657,35 @@ def linopt6(ring, *args, **kwargs):
     return _linopt(ring, _analyze6, *args, **kwargs)
 
 
-def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
+def linopt_auto(ring, *args, **kwargs):
+    """
+    This is a convenience function to automatically switch to the faster
+    linopt2 in case coupled=False and ring.radiation=False otherwise the
+    default linopt6 is used
+
+    PARAMETERS
+        Same as linopt2 or linopt6
+
+    KEYWORDS
+        coupled = True  If set to False H/V coupling will be ingnored to 
+                        simplify the calculation, needs radiation OFF
+
+    OUTPUT
+        elemdata0       linear optics data at the entrance of the ring
+        beamdata        lattice properties
+        elemdata        linear optics at the points refered to by refpts, if
+                        refpts is None an empty elemdata structure is returned.
+
+    !!!WARNING!!!       Output varies depending whether linopt2 or linopt6 is
+                        called to be used with care                     
+    """
+    if not (kwargs.pop('coupled', True) or ring.radiation):
+        return linopt2(ring, *args, **kwargs)
+    else:
+        return linopt6(ring, *args, **kwargs)  
+
+
+def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
     """Perform linear analysis of a fully coupled lattice
 
     elemdata0, beamdata, elemdata = get_optics(lattice, refpts, **kwargs)
@@ -673,14 +701,12 @@ def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
                         3) a numpy array of booleans of maximum length
                            len(ring)+1, where selected elements are True.
     KEYWORDS
-        method=None     Method used for the analysis of the transfer matrix.
+        method=linopt6  Method used for the analysis of the transfer matrix.
                         Can be None at.linopt2, at.linopt4, at.linopt6
-                        None:       automatically selected depending on radation
-                                    and coupled flags
                         linopt2:    no longitudinal motion, no H/V coupling,
                         linopt4:    no longitudinal motion, Sagan/Rubin
                                     4D-analysis of coupled motion,
-                        minopt6:    with or without longitudinal motion, normal
+                        linopt6:    with or without longitudinal motion, normal
                                     mode analysis
         dp=None         Ignored if radiation is ON. Momentum deviation.
         dct=None        Ignored if radiation is ON. Path lengthening.
@@ -695,8 +721,6 @@ def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
                         around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
-        coupled=True    if False, simplify the calculations by assuming
-                        no H/V coupling
         twiss_in=None   Initial conditions for transfer line optics. Record
                         array as output by linopt, or dictionary. Keys:
                         'R' or 'alpha' and 'beta'   (mandatory)
@@ -712,20 +736,13 @@ def get_optics(ring, refpts=None, dp=None, method=None, **kwargs):
                         refpts is None an empty elemdata structure is returned.
 
         elemdata is a record array with fields depending on the selected method.
-        See the help for linopt6, linopt4, linopt2.
+        See the help for linopt6, linopt4, linopt2, linopt_auto.
 
         beamdata is a record with fields:
         tune            Fractional tunes
         chromaticity    Chromaticities
         damping_time    Damping times [s] (only if radiation is ON)
     """
-    if method is None:
-        if ring.radiation:
-            method = linopt6
-        elif kwargs.pop('coupled', True):
-            method = linopt4
-        else:
-            method = linopt2
     return method(ring, refpts=refpts, dp=dp, **kwargs)
 
 
