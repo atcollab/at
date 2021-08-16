@@ -119,7 +119,7 @@ def gen_detuning_elem(ring, orbit=None):
         orbit, _ = find_orbit(ring)
     lindata0, bd, lindata = ring.linopt6(get_chrom=False, orbit=orbit)
 
-    xsi = at.get_chrom(ring.radiation_off(copy=True))
+    xsi = get_chrom(ring.radiation_off(copy=True))
     r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4,
                                         ym=1.0e-4, npoints=3, dp=None)
     rp = ring.periodicity
