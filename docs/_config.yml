@@ -28,8 +28,8 @@ url: "" # the base hostname & protocol for your site, e.g. http://example.com
 # github_username:  jekyll
 
 # Build settings
-theme: minima
-# theme: jekyll-theme-cayman
+# theme: minima
+theme: jekyll-theme-cayman
 plugins:
   - jekyll-mentions
   - jemoji
@@ -48,13 +48,13 @@ defaults:
       path: "" # an empty string here means all files in the project
       type: "posts"
     values:
-      layout: "post"
+      layout: "default"
   -
     scope:
       path: "" # an empty string here means all files in the project
       type: "pages"
     values:
-      layout: "page"
+      layout: "default"
 
 kramdown:
   math_engine: mathjax
