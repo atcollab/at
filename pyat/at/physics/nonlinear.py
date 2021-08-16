@@ -14,8 +14,7 @@ from at.lattice import Element
 __all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
 
 
-def tunes_vs_amp(ring, amp=None, dim=0,
-                 dp=0, window=1, nturns=512):
+def tunes_vs_amp(ring, amp=None, dim=0, window=1, nturns=512):
     """
     Generates a range of tunes for varying x, y, or z amplitudes
     """
@@ -42,7 +41,7 @@ def tunes_vs_amp(ring, amp=None, dim=0,
                           for i in range(len(amp))])
         return px[:, 0, :] - 1j*px[:, 1, :], py[:, 0, :] - 1j*py[:, 1, :]
 
-    l0, bd, _ = linopt6(ring, dp=dp)
+    l0, bd, _ = linopt6(ring)
     orbit = l0['closed_orbit']
     tunes = bd['tune']
 
@@ -55,14 +54,14 @@ def tunes_vs_amp(ring, amp=None, dim=0,
     return numpy.array(tunes)
 
 
-def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
+def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, window=1,
              nturns=512):
     """
     This function uses tunes_vs_amp to compute the tunes for
     the specified amplitudes. Then it fits this data and returns
     result for dQx/dx, dQy/dx, dQx/dy, dQy/dy
     """
-    lindata0, _, _ = linopt6(ring, dp=dp)
+    lindata0, _, _ = linopt6(ring)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
     x = numpy.linspace(-xm, xm, npoints)
@@ -70,9 +69,9 @@ def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
     x2 = x * x
     y2 = y * y
 
-    q_dx = tunes_vs_amp(ring, amp=x, dim=0, dp=dp, window=window,
+    q_dx = tunes_vs_amp(ring, amp=x, dim=0, window=window,
                         nturns=nturns)
-    q_dy = tunes_vs_amp(ring, amp=y, dim=2, dp=dp, window=window,
+    q_dy = tunes_vs_amp(ring, amp=y, dim=2, window=window,
                         nturns=nturns)
 
     fx = numpy.polyfit(x2, q_dx, 1)
@@ -117,11 +116,10 @@ def gen_detuning_elem(ring, orbit=None):
     """
     if orbit is None:
         orbit, _ = find_orbit(ring)
-    lindata0, bd, lindata = ring.linopt6(get_chrom=False, orbit=orbit)
-
+    lindata0, _, _ = ring.linopt6(get_chrom=False, orbit=orbit)
     xsi = get_chrom(ring.radiation_off(copy=True))
-    r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4,
-                                        ym=1.0e-4, npoints=3, dp=None)
+    r0, r1, x, q_dx, y, q_dy = detuning(ring.radiation_off(copy=True), xm=1.0e-4,
+                                        ym=1.0e-4, npoints=3)
     rp = ring.periodicity
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
                           Betax=lindata0.beta[0], Betay=lindata0.beta[1],

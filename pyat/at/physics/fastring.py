@@ -4,8 +4,10 @@ Functions relating to fast_ring
 import numpy
 import warnings
 from at.lattice import RFCavity, Marker, Drift, Lattice, get_refpts
+from at.lattice import get_elements
 from at.physics import find_orbit
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
+import copy
 
 
 __all__ = ['fast_ring']
@@ -37,7 +39,7 @@ def _rearrange(ring, split_inds=[]):
     return all_rings, Lattice(ringm, energy=ring.energy)
 
 
-def _fring(ring, split_inds=[]):
+def _fring(ring, split_inds=[],detuning_elem=None):
     all_rings, merged_ring = _rearrange(ring, split_inds=split_inds)
     ibegs = get_refpts(merged_ring, 'xbeg')
     iends = get_refpts(merged_ring, 'xend')
@@ -45,7 +47,11 @@ def _fring(ring, split_inds=[]):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         _, orbit = merged_ring.find_orbit(dct=0.0, refpts=markers)
-    detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
+    if detuning_elem is None:
+        detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
+    else:
+        detuning_elem.T1=-orbit[-1]
+        detuning_elem.T2=orbit[-1]
 
     fastring = []
     for counter, r in enumerate(all_rings):
@@ -90,6 +96,9 @@ def fast_ring(ring, split_inds=[]):
     ringi = ring.deepcopy()
     fastringnorad = _fring(ringi.radiation_off(copy=True),
                            split_inds=split_inds)
+    detuning_elem = copy.deepcopy(get_elements(fastringnorad,
+                                               'NonLinear')[0])
     fastringrad = _fring(ringi.radiation_on(copy=True),
-                         split_inds=split_inds)
+                         split_inds=split_inds, 
+                         detuning_elem=detuning_elem)
     return fastringnorad, fastringrad
