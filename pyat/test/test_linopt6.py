@@ -41,7 +41,7 @@ def test_linopt6_rad(lattice):
 @pytest.mark.parametrize('lattice',
                          [pytest.lazy_fixture('dba_lattice'),
                           pytest.lazy_fixture('hmba_lattice')])
-@pytest.mark.parametrize('method', [None, linopt2, linopt4, linopt6])
+@pytest.mark.parametrize('method', [linopt2, linopt4, linopt6])
 def test_linopt6_line(lattice, dp, method):
     """Run a ring as a transfer line and compare with the ring results"""
     refpts = lattice.uint32_refpts(range(len(lattice)+1))
