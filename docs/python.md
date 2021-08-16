@@ -1,5 +1,4 @@
 ---
-layout: page
 title: Python
 # permalink: /about/
 ---
@@ -27,8 +26,9 @@ $ pip install accelerator-toolbox
    ```
 4. Build and install
    ```shell
-   $ python setup.py install
+   $ pip install .
    ```
+
 ## Usage
 Example usage::
 ```python

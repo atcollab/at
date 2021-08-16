@@ -1,5 +1,4 @@
 ---
-layout: page
 title: Matlab
 # permalink: /about/
 ---
@@ -14,6 +13,7 @@ AT is compatible with:
 
 ## Installation:
 ### From Matlab Central
+Available soon…
 ### From GitHub
 1. Install git on your computer.
 

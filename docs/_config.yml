@@ -19,7 +19,7 @@
 # in the templates via {{ site.myvariable }}.
 
 title: Accelerator Toolbox
-email: your-email@example.com
+# email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   A toolbox for modelling particle accelerators in Matlab or python
 baseurl: "" # the subpath of your site, e.g. /blog
@@ -31,16 +31,33 @@ url: "" # the base hostname & protocol for your site, e.g. http://example.com
 theme: minima
 # theme: jekyll-theme-cayman
 plugins:
-   - jekyll-mentions
-   - jemoji
-   - jekyll-redirect-from
-   - jekyll-sitemap
-   - jekyll-feed
+  - jekyll-mentions
+  - jemoji
+  - jekyll-redirect-from
+  - jekyll-sitemap
+  - jekyll-feed
 
 header_pages:
-   - matlab.md
-   - python.md
-   - about.md
+  - matlab.md
+  - python.md
+  - about.md
+
+defaults:
+  -
+    scope:
+      path: "" # an empty string here means all files in the project
+      type: "posts"
+    values:
+      layout: "post"
+  -
+    scope:
+      path: "" # an empty string here means all files in the project
+      type: "pages"
+    values:
+      layout: "page"
+
+kramdown:
+  math_engine: mathjax
 
 # Exclude from processing.
 # The following items will not be processed, by default.
