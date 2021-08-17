@@ -1,38 +1,41 @@
-# [Accelerator Toolbox WEB Pages](https://atcollab.github.io/at/)
-Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
+---
+title: Welcome to AT
+---
+## Introduction
 
-**[Online documentation of all functions](https://cdn.rawgit.com/atcollab/atdoc/aa9b9f58/doc_html/index.html)**
+Accelerator Toolbox (AT) is a collection of tools to model storage rings and beam transport lines.
 
+With AT, it is possible to:
 
-Introduction
-============
-
-Accelerator Toolbox (AT) is a collection of tools to model storage rings and beam transport lines in Matlab.
-
-With AT it is possible to:
-
-- **create and manipulate accelerator lattice elements**, which are stored in Matlab structures
+- **create and manipulate accelerator lattice elements**,
 - **track particles through the lattice**, selecting the appropriate integrator to represent the physics
 - **compute accelerator parameters and beam properties**, generating new scripts or taking advantage of the existing ones
 
-Examples of things AT enables are: create a lattice structure that links to the integrators, and then to track through the lattice 
-including non-linear elements, analyze the non-linear motion, change settings to affect parameters, compute equilibrium beam sizes 
-with radiation, and so on.
+AT is based on a 6-D modular tracking engine written in C/C++ for efficiency.
+Lattice manipulation and computation of accelerator physics parameters are provided
+by two interfaces:
+- a [Matlab interface][1], available as a Matlab toolbox,
+- a [python interface][2], available as a python package.
 
-History
--------
+## Coordinate system
+The 6-d phase space coordinates used in AT are as follows
 
-The core of AT was developed at SLAC by Andrei Terebilo and a webpage is hosted `here <http://www.slac.stanford.edu/grp/ssrl/spear/at/>`.
+$$
+\begin{equation}
+\vec Z = \pmatrix{x\cr \frac{p_x}{P_0} \cr y \cr \frac{p_y}{P_0} \cr \delta \cr c\tau}
+\end{equation}
+$$
 
-The AT code in this repository evolved from version 1.3 of the original code and is now maintained by the 'atcollab' collaboration, 
-involving people from different research institutes. The latest release can be found `here <https://github.com/atcollab/at/releases>`_.
+The momenta are defined as
 
-Other main developpers and maintainers: 
-Gregory Portmann (ALS), Laurent S. Nadolski (SOLEIL), Eugene Tan (AS), Xiabio Huang (SLAC), C. Steier (ALS)
+$$
+\begin{equation}
+p_x = x' P_z  \ \ p_y =  y' P_z
+\end{equation}
+$$
 
-From version 2.0: 
-Laurent Farvacque (ESRF), Simone Liuzzo (ESRF), Nicola Carminani (ESRF), Boaz Nash (ESRF), 
-G. Campogiani (LNF),Laurent S. Nadolski (SOLEIL), Aurelien Bence (SOLEIL), Peace Chang (TLS), 
-M. Munoz (ALBA), Z. Marti ALBA), Will Rogers (Diamond)
+with $$P_z = P_0 (1+\delta)$$.  $$P_0$$ is the reference momentum.  $$\tau$$ is the time lag relative to
+the ideal particle.
 
-
+[1]: matlab.html "Matlab interface"
+[2]: python.html "python interfqce"
