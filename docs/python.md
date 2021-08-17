@@ -1,6 +1,5 @@
 ---
-title: Python
-# permalink: /about/
+title: PyAT
 ---
 pyAT is a Python interface to Accelerator Toolbox. It uses the 'pass methods' defined in Accelerator Toolbox, implemented by compiling the C code used in the AT 'integrators' into a Python extension. These pass methods are used by higher-level functions to provide physics results.
 
@@ -20,7 +19,7 @@ $ pip install accelerator-toolbox
     ```shell
    $ git clone https://github.com/atcollab/at.git
     ```
-3. Go to the pyAT installation director
+3. Go to the pyAT installation directory
    ```shell
    $ cd at/pyat
    ```

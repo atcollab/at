@@ -1,15 +1,11 @@
 ---
-# Feel free to add content and custom Front Matter to this file.
-# To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
-# layout: home
-layout: default
-# title: Home
+title: Welcome to AT
 ---
 ## Introduction
 
 Accelerator Toolbox (AT) is a collection of tools to model storage rings and beam transport lines.
 
-With AT it is possible to:
+With AT, it is possible to:
 
 - **create and manipulate accelerator lattice elements**,
 - **track particles through the lattice**, selecting the appropriate integrator to represent the physics
@@ -41,5 +37,5 @@ $$
 with $$P_z = P_0 (1+\delta)$$.  $$P_0$$ is the reference momentum.  $$\tau$$ is the time lag relative to
 the ideal particle.
 
-[1]: matlab/ "Matlab interface"
-[2]: python/ "python interfqce"
+[1]: matlab.html "Matlab interface"
+[2]: python.html "python interfqce"

@@ -1,6 +1,5 @@
 ---
 title: Matlab
-# permalink: /about/
 ---
 Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
 
