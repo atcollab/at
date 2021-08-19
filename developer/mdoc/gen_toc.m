@@ -2,7 +2,7 @@ function gen_toc()
 %GEN_TOC	Build the HTML files used by the Matlab help browser
 
 [here,~, ~]=fileparts(mfilename('fullpath'));
-docdir = fullfile(atroot,'..','doc_matlab');
+docdir = fullfile(atroot,'..','docs','matlab');
 tocfile = fullfile(docdir,'helptoc.xml');
 [fid,fmess,fmid] = copyfile(fullfile(here,'helptoc.xml'),tocfile);
 if fid <= 0

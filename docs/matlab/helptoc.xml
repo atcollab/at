@@ -28,7 +28,7 @@
             -->
         </tocitem>
         <!-- User Guide comes next -->
-        <tocitem target="AT_ug.html"
+        <tocitem target="mytbx_ug_intro.html "
             image="HelpIcon.USER_GUIDE">AT User Guide
             <tocitem target="atelemcreate.html">Element creation</tocitem>
             <tocitem target="atelemfuncs.html">Element manipulation</tocitem>
