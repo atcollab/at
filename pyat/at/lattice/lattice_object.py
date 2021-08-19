@@ -367,7 +367,8 @@ class Lattice(list):
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
                          quadrupole_func, wiggler_func,
-                         sextupole_func, octupole_func):
+                         sextupole_func, octupole_func, 
+                         multipole_func):
         """Create a function returning the modified attributes"""
 
         def elem_func(elem):
@@ -388,6 +389,8 @@ class Lattice(list):
                 return sextupole_func(elem)
             elif isinstance(elem, elements.Octupole):
                 return octupole_func(elem)
+            elif isinstance(elem, elements.Multipole):
+                return multipole_func(elem)
             else:
                 return None
 
@@ -396,7 +399,8 @@ class Lattice(list):
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
                      quadrupole_pass='auto', wiggler_pass='auto',
-                     sextupole_pass=None, octupole_pass=None, copy=False):
+                     sextupole_pass=None, octupole_pass=None, 
+                     multipole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
 
@@ -445,13 +449,15 @@ class Lattice(list):
                                           repfunc(quadrupole_pass),
                                           repfunc(wiggler_pass),
                                           repfunc(sextupole_pass),
-                                          repfunc(octupole_pass))
+                                          repfunc(octupole_pass),
+                                          repfunc(multipole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     # noinspection PyShadowingNames
     def radiation_off(self, cavity_pass='auto', dipole_pass='auto',
                       quadrupole_pass='auto', wiggler_pass='auto',
-                      sextupole_pass='auto', octupole_pass='auto', copy=False):
+                      sextupole_pass='auto', octupole_pass='auto', 
+                      multipole_pass='auto', copy=False):
         """
         Turn acceleration and radiation off and return the lattice
 
@@ -508,7 +514,8 @@ class Lattice(list):
             repfunc(quadrupole_pass, auto_multipole_pass),
             repfunc(wiggler_pass, auto_multipole_pass),
             repfunc(sextupole_pass, auto_multipole_pass),
-            repfunc(octupole_pass, auto_multipole_pass))
+            repfunc(octupole_pass, auto_multipole_pass),
+            repfunc(multipole_pass, auto_multipole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     def sbreak(self, break_s, break_elems=None):
