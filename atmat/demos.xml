@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<demos>
+    <name>Accelerator</name>
+    <type>toolbox</type>
+    <icon>HelpIcon.DEMOS</icon>
+    <description>Examples and demos of AT features.</description>
+    <website><a href="https://atcollab.github.io/at/">AT Web site</a></website>
+
+    <demosection>
+        <label>Basics</label>
+        <demoitem>
+            <label>Lattice definition</label>
+            <type>other</type>
+            <callback>latticedemo</callback>
+        </demoitem>
+        <!--
+        <demoitem>
+            <label>Lattice</label>
+            <type>M-file</type>
+            <source>latticedemo</source>
+        </demoitem>
+        -->
+    </demosection>
+    <demosection>
+        <label>Matching</label>
+       <!--
+        <demoitem>
+            <label>Lattice definition</label>
+            <type>other</type>
+            <callback>latticedemo</callback>
+        </demoitem>
+         <demoitem>
+            <label>Lattice</label>
+            <type>M-file</type>
+            <source>latticedemo</source>
+        </demoitem>
+        -->
+    </demosection>
+
+</demos>
