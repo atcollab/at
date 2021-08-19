@@ -40,6 +40,7 @@ AT is based on a 6-D modular tracking engine written in C/C++ for efficiency. La
 %
 % All files matching a pattern in all subfolders of the toolbox folder:
 % **/*.bak
+.*
 **/.*
 atoctave
 developer
@@ -49,7 +50,9 @@ pyat
 resources
 utils
 *.md
-athelp.mat</param.exclude.filters>
+**/*.md
+athelp.mat
+docs/_*</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;examples&gt;
@@ -78,13 +81,13 @@ athelp.mat</param.exclude.filters>
     </param.required.addons>
     <param.matlab.project.id />
     <param.matlab.project.name />
-    <param.release.start />
-    <param.release.end />
+    <param.release.start>R2016b</param.release.start>
+    <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
     <param.compatiblity.windows>true</param.compatiblity.windows>
     <param.compatiblity.macos>true</param.compatiblity.macos>
     <param.compatiblity.linux>true</param.compatiblity.linux>
-    <param.compatiblity.matlabonline>true</param.compatiblity.matlabonline>
+    <param.compatiblity.matlabonline>false</param.compatiblity.matlabonline>
     <param.installation.map />
     <param.additional.sw.names />
     <param.additional.sw.licenses />
@@ -110,13 +113,10 @@ athelp.mat</param.exclude.filters>
       <param.exported.on.package />
       <param.matlab.project.id />
       <param.matlab.project.name />
-      <param.release.start />
-      <param.release.end />
       <param.release.current.only />
       <param.compatiblity.windows />
       <param.compatiblity.macos />
       <param.compatiblity.linux />
-      <param.compatiblity.matlabonline />
       <param.installation.map />
       <param.additional.sw.names />
       <param.additional.sw.licenses />
@@ -130,14 +130,11 @@ athelp.mat</param.exclude.filters>
     <fileset.rootfiles>
       <file>${PROJECT_ROOT}/atintegrators</file>
       <file>${PROJECT_ROOT}/atmat</file>
-      <file>${PROJECT_ROOT}/doc_matlab</file>
       <file>${PROJECT_ROOT}/docs</file>
       <file>${PROJECT_ROOT}/machine_data</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
-    <fileset.depfun.excluded>
-      <file>/Users/famille/Documents/MATLAB/Contents.m</file>
-    </fileset.depfun.excluded>
+    <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
       <file location="${PROJECT_ROOT}" name="accelerator-toolbox.mltbx" optional="false">/Users/famille/dev/libraries/at/accelerator-toolbox.mltbx</file>
