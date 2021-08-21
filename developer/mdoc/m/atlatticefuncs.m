@@ -32,8 +32,6 @@
 %%
 % <matlab:doc('atreduce') atreduce> - Remove useless elements from an AT structure
 %
-% <matlab:doc('mergedrift') mergedrift> - Removes a lattice element and merges the two adjacent drift spaces
-%
 % <matlab:doc('combinebypassmethod') combinebypassmethod> - Combines adjacent elements that have the same specified pass method
 %
 % <matlab:doc('combinelinear45') combinelinear45> - Combines adjacent  elements that use 4-by-5 PassMethods
@@ -56,8 +54,4 @@
 % <matlab:doc('mvelem') mvelem> - (ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING
 %
 % <matlab:doc('mvfield') mvfield> - Move fields from one structure to another
-%
-% <matlab:doc('reverse') reverse> - Reverses the order of elements in a one-dimensional MATLAB ARRAY
-%
-% <matlab:doc('splitdrift') splitdrift> - Inserts an element into a drift space
 %
