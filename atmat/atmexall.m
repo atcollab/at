@@ -186,8 +186,8 @@ warning(oldwarns.state,oldwarns.identifier);
             else                                                    %           >= R2016b
                 %           Starting from R2016b, Matlab introduced a new entry point in MEX-files
                 %           The "*.mapext" files defines this new entry point
-                flags=[{sprintf('VERSIONMAP="%sext"',mapfile),...
-                    sprintf('FUNCTIONMAP="%s"',mapfile)}, flags];
+                flags=[{sprintf('VERSIONMAP="''%sext''"',mapfile),...
+                    sprintf('FUNCTIONMAP="''%s''"',mapfile)}, flags];
             end
         end
         if ~isempty(ldflags)

@@ -1,4 +1,4 @@
-function sp3v81f
+function varargout=sp3v81f
 % All the dipole and quadrupole lengths are effective lengths
 % Compiled from spear3 deck 'sp3v81newcor'
 % 06/02/02: include correctors and BPMs from engineering drawings
@@ -18,7 +18,7 @@ AP       =  aperture('AP',  [-0.1, 0.1, -0.1, 0.1],'AperturePass');
 L0 = 2.341440122400003e+002;	% design length [m]
 C0 =   299792458; 				% speed of light [m/s]
 HarmNumber = 372;
-CAV	= rfcavity('RF' , 0 , 3.2e+6 , HarmNumber*C0/L0, HarmNumber ,'ThinCavityPass');  
+CAV	= rfcavity('RF' , 0 , 3.2e+6 , HarmNumber*C0/L0, HarmNumber ,'CavityPass');  
 
 COR =  corrector('COR',0.15,[0 0],'CorrectorPass');
 BPM  =  marker('BPM','IdentityPass');
@@ -216,9 +216,8 @@ NORTH	=	[CEL2 CEL3 CEL4 CEL5 ACEL ACEL ACEL];
 SOUTH	=	[ACEL ACEL ACEL ACEL ACEL ACEL ACEL];
 
 ELIST	=	[CAV MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB) ]; 
-buildlat(ELIST);
+buildlat(ELIST');
 
-% evalin does not compile so it would be nice to remove this line (G. Portmann)
-evalin('base','global THERING FAMLIST GLOBVAL');
-
-disp('** Finished loading lattice in Accelerator Toolbox');
+if nargout > 0
+    varargout{1} = THERING;
+end

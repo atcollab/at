@@ -26,7 +26,7 @@ if (SPLIT < 0 | SPLIT >1)
 	error('Second argument must be (0..1)');
 else	
 	if nargin == 2
-        for i = reverse(DRIFTPOS:N0)
+        for i = N0:-1:DRIFTPOS
 	        THERING{i+2} = THERING{i};
         end
         THERING{DRIFTPOS}.Length = L0*SPLIT;
@@ -35,7 +35,7 @@ else
     elseif isstruct(varargin{1})
          % Check if a new element will fit
         if L0*(1-SPLIT) >= varargin{1}.Length
-            for i = reverse(DRIFTPOS:N0)
+            for i = N0:-1:DRIFTPOS
 	            THERING{i+2} = THERING{i};
             end
             THERING{DRIFTPOS}.Length = L0*SPLIT;
