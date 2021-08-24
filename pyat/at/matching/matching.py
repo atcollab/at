@@ -274,17 +274,13 @@ class LinoptConstraints(ElementConstraints):
 
         KEYWORDS
         dp=0.0          momentum deviation.
-        coupled=True    if False, simplify the calculations by assuming
-                        no H/V coupling
         twiss_in=None   Initial twiss parameters for transfer line optics.
                         "lindata" stucture, where only the beta and alpha are
                         required and used.
         orbit=None      Initial trajectory for transfer line
                         ((6,) array)
-        method=None     Method used for the analysis of the transfer matrix.  
+        method=linopt6  Method used for the analysis of the transfer matrix.  
                         Can be None, at.linopt2, at.linopt4, at.linopt6
-                        None: automated selection depending on coupled and
-                        radiation flags
                         linopt2:    no longitudinal motion, no H/V coupling,
                         linopt4:    no longitudinal motion, Sagan/Rubin
                                     4D-analysis of coupled motion,
@@ -359,8 +355,6 @@ class LinoptConstraints(ElementConstraints):
                 elif param == 'mu' and use_integer:
                     self.refpts[:] = True # necessary not to miss 2*pi jumps
                 return getf(refdata, param)
-            if param == 'dispersion':
-                self.get_chrom = True   # slower but necessary
 
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,
                                            **kwargs)
@@ -368,7 +362,7 @@ class LinoptConstraints(ElementConstraints):
     def compute(self, ring, *args, **kwargs):
         """Optics computation before evaluation of all constraints"""
         ld0, bd, ld = get_optics(ring, refpts=self.refpts,
-                                      get_chrom=self.get_chrom, **kwargs)
+                                 get_chrom=self.get_chrom, **kwargs)
         return (ld[ref[self.refpts]] for ref in self.refs), \
                (bd.tune[:2], bd.chromaticity)
 
