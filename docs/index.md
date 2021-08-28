@@ -42,4 +42,4 @@ with $$P_z = P_0 (1+\delta)$$.  $$P_0$$ is the reference momentum.  $$\tau$$ is 
 the ideal particle.
 
 [1]: matlab.html "Matlab interface"
-[2]: python.html "python interfqce"
+[2]: python.html "python interface"
