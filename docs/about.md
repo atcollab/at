@@ -1,5 +1,8 @@
 ---
 title: About
+layout: page
+permalink: about.html
+hide_sidebar: true
 ---
 
 ## History

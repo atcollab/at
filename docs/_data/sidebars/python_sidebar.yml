@@ -1,0 +1,11 @@
+entries:
+- title: sidebar
+  product: pyAT
+  version: 0.2
+  folders:
+  - title: Getting Started
+    output: web
+    folderitems:
+    - title: Installation
+      url: /python.html
+      output: web

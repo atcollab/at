@@ -1,5 +1,8 @@
 ---
 title: Matlab
+layout: page
+permalink: /matlab.html
+sidebar: matlab_sidebar
 ---
 Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.
 
@@ -21,14 +24,14 @@ Available soon…
     $ git clone https://github.com/atcollab/at.git
     ```
 
-3. Insert recursively the directories `at_installation/atmat` and
-`at_installation/atintegrators` in the Matlab path. This can be done by:
+3. Insert recursively the directories `<at_installation>/atmat` and
+`<at_installation>/atintegrators` in the Matlab path. This can be done by:
     - Using the GUI:
         Open the "Set Path" window, press "Add with subfolders", select
-        `at_installation/atmat`; repeat the operation for
-        `at_installation/atintegrators`.
+        `<at_installation>/atmat`; repeat the operation for
+        `<at_installation>/atintegrators`.
     - Using the `startup.m` file:
-        Insert a line `addpath(genpath(at_installation/atmat)` and a similar
+        Insert a line `addpath(genpath(<at_installation>/atmat))` and a similar
         one for atintegrators.
     - Temporarily modifying the path by running:
       ```matlab
