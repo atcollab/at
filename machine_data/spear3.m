@@ -260,17 +260,15 @@ DB8A BPM DB8B QDZ DB9A COR DB9B QFZ DB10A BPM DB10B};
 % Begin Lattice
 NORTH   =	[CEL2 CEL3 CEL4 CEL5 ACEL ACEL ACEL];
 SOUTH	=	[ACEL ACEL ACEL ACEL ACEL ACEL ACEL];
-RING    =   [{CAV} MCA NORTH reverse(MCB) MCA SOUTH reverse(MCB)];
+RING    =   [{CAV} MCA NORTH flip(MCB) MCA SOUTH flip(MCB)];
 
-
-if nargout
-    varargout{1} = RING';
+if nargout > 0
+    varargout{1} = RING(:);
 else % If no output arguments - greate global variable THERING
     global THERING
-    THERING = RING;
-    
-    if evalin('base','exist(''THERING'')') & evalin('base','isempty(whos(''global'',''THERING''))')
+    if ~isempty(THERING)
         warning('Global variable THERING was overridden');
     end
+    THERING = RING(:);
     evalin('base','global THERING');
 end
