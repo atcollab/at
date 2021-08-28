@@ -9,6 +9,6 @@ entries:
     - title: Installation
       url: /matlab.html
       output: web
-    - title: 1st step
-      url: /mgetting_started.html
+    - title: Example
+      url: /mdemo1.html
       output: web

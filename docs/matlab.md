@@ -1,7 +1,7 @@
 ---
 title: Matlab
-layout: page
 permalink: /matlab.html
+layout: page
 sidebar: matlab_sidebar
 ---
 Automatic HTML documentation is generated from mfile using the [m2html package](https://www.artefact.tk/software/matlab/m2html/) by Guillaume Flandin.

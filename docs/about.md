@@ -2,6 +2,7 @@
 title: About
 layout: page
 permalink: about.html
+toc: false
 hide_sidebar: true
 ---
 
