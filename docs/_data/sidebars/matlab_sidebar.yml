@@ -7,7 +7,7 @@ entries:
     output: web
     folderitems:
     - title: Installation
-      url: /matlab.html
+      url: /minstallation.html
       output: web
     - title: Example
       url: /mdemo1.html
