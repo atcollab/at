@@ -1,5 +1,9 @@
 ---
 title: Welcome to AT
+layout: page
+permalink: /
+toc: false
+hide_sidebar: true
 ---
 ## Introduction
 
