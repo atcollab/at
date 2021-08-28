@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
-  <configuration file="/Users/famille/dev/libraries/at/accelerator-toolbox.prj" location="/Users/famille/dev/libraries/at" name="accelerator-toolbox" target="target.toolbox" target-name="Package Toolbox">
+  <configuration file="/Users/famille/dev/libraries/at/ToolboxPackagingConfiguration.prj" location="/Users/famille/dev/libraries/at" name="ToolboxPackagingConfiguration" target="target.toolbox" target-name="Package Toolbox">
     <param.appname>accelerator-toolbox</param.appname>
     <param.authnamewatermark>atcollab</param.authnamewatermark>
     <param.email />
@@ -12,8 +12,7 @@ With AT, it is possible to:
 create and manipulate accelerator lattice elements,
 track particles through the lattice,
 compute accelerator parameters and beam properties.
-
-AT is based on a 6-D modular tracking engine written in C/C++ for efficiency. Lattice manipulation and computation of accelerator physics parameters are perfomed by a MATLAB front-end.</param.description>
+AT is based on a 6-D modular tracking engine written in C/C++ for efficiency. Lattice manipulation and computation of accelerator physics parameters are performed in MATLAB</param.description>
     <param.screenshot />
     <param.version>1.0</param.version>
     <param.output>${PROJECT_ROOT}/accelerator-toolbox.mltbx</param.output>
@@ -79,11 +78,9 @@ docs/p</param.exclude.filters>
     </param.matlabpath.excludes>
     <param.javaclasspath.excludes />
     <param.exported.on.package>false</param.exported.on.package>
-    <param.required.addons>
-      <requiredaddons />
-    </param.required.addons>
-    <param.matlab.project.id />
-    <param.matlab.project.name />
+    <param.required.addons />
+    <param.matlab.project.id>25a6ccb8-d1d3-4459-847b-7335e59e8646</param.matlab.project.id>
+    <param.matlab.project.name>at</param.matlab.project.name>
     <param.release.start>R2016b</param.release.start>
     <param.release.end>latest</param.release.end>
     <param.release.current.only>false</param.release.current.only>
@@ -114,8 +111,7 @@ docs/p</param.exclude.filters>
       <param.getting.started.guide />
       <param.javaclasspath.excludes />
       <param.exported.on.package />
-      <param.matlab.project.id />
-      <param.matlab.project.name />
+      <param.required.addons />
       <param.release.current.only />
       <param.compatiblity.windows />
       <param.compatiblity.macos />
