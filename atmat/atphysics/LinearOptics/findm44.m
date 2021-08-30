@@ -88,7 +88,7 @@ if ~isempty(R0)
 elseif isnan(ct)
     [~,R0] = findorbit4(LATTICE,dp);
 else
-    [~,R0]=findsyncorbit(RING,ct);
+    [~,R0]=findsyncorbit(LATTICE,ct);
 end
 
 if length(varargs) >= 1     % FINDM44(LATTICE,DP,REFPTS)

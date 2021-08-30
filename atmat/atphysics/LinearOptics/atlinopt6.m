@@ -120,10 +120,9 @@ if is6d                     % 6D processing
             [ringdata.chromaticity,w]=chrom_w(rgup,rgdn,o1P,o1M,refpts);
             [elemdata.W]=deal(w{:});
         else
-            tuneP=findtune6(rgup,'orbit',o1P,varargs{:});
-            tuneM=findtune6(rgdn,'orbit',o1M,varargs{:});
+            tuneP=tune6(rgup,'orbit',o1P,varargs{:});
+            tuneM=tune6(rgdn,'orbit',o1M,varargs{:});
             deltap=o1P(5)-o1M(5);
-            [ringdata.chromaticity,~]=chrom_w(rgup,rgdn,o1P,o1M,[]);
             ringdata.chromaticity = (tuneP - tuneM)/deltap;
         end
     end
@@ -137,8 +136,8 @@ else                        % 4D processing
             [ringdata.chromaticity,w]=chrom_w(ring,ring,o1P,o1M,refpts);
             [elemdata.W]=deal(w{:});
     elseif get_chrom
-        tuneP=findtune6(ring,'dp',dp + 0.5*DPStep,varargs{:});
-        tuneM=findtune6(ring,'dp',dp - 0.5*DPStep,varargs{:});
+        tuneP=tune4(ring,dp + 0.5*DPStep,'orbit',o1P,varargs{:});
+        tuneM=tune4(ring,dp - 0.5*DPStep,'orbit',o1M,varargs{:});
         ringdata.chromaticity = (tuneP - tuneM)/DPStep;
     end
 end
@@ -228,6 +227,18 @@ end
             ma = (aup + adn) / 2;
             w = sqrt((da - ma ./ mb .* db).^2 + (db ./ mb).^2);
         end
+    end
+
+    function tune=tune4(ring,dp,varargin)
+        mm=findm44(ring,dp,varargin{:});
+        [~,vals]=amat(mm);
+        tune=mod(angle(vals)/2/pi,1);
+    end
+
+    function tune=tune6(ring,varargin)
+        mm=findm66(ring,varargin{:});
+        [~,vals]=amat(mm);
+        tune=mod(angle(vals)/2/pi,1);
     end
 
 end
