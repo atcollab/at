@@ -81,7 +81,7 @@ a=reshape([real(V_ordered);imag(V_ordered)],nv,nv);
         elseif(dim==3)
             mat = blkdiag(S2,S2,S2');
         else
-            Error('Dim is 1, 2 or 3')
+            error('Dim is 1, 2 or 3')
         end
     end
 

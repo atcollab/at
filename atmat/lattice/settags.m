@@ -9,7 +9,7 @@ function LATTICE = settags(LATTICE,INDEX,tag,varargin)
 if ischar(INDEX)
     INDEX = findcells(LATTICE,'FamName',INDEX);
     if isempty(INDEX)
-        error(['Family ''',fname,''' is not found']);  
+        error(['Family ''',INDEX,''' is not found']);  
     end
 end
 
