@@ -16,9 +16,9 @@
         <!-- A Getting Started Guide usually comes first -->
         <tocitem target="AT_gs_top.html" image="HelpIcon.GETTING_STARTED">
             Getting Started with the Accelerator Toolbox
+            <tocitem target="Installation.html">Installation</tocitem>
+            <tocitem target="latticedemo.html">Example</tocitem>
             <!--
-            <tocitem target="mytbx_reqts_example.html">System Requirements
-            </tocitem>
             <tocitem target="mytbx_features_example.html">Features
                 <tocitem target="mytbx_feature1_example.htm#10187">Feature 1
                 </tocitem>
@@ -28,7 +28,7 @@
             -->
         </tocitem>
         <!-- User Guide comes next -->
-        <tocitem target="ugsummary.html "
+        <tocitem target="ugsummary.html"
             image="HelpIcon.USER_GUIDE">AT User Guide
             <tocitem target="atelemcreate.html">Element creation</tocitem>
             <tocitem target="atelemfuncs.html">Element manipulation</tocitem>

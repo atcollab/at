@@ -11,7 +11,7 @@ if fid < 0
 end
 
 fprintf(fid,'%% Accelerator toolbox\n');
-fprintf(fid,'%% Version 2.1.001 (atcollab) 01-Aug-2021\n%%\n');
+fprintf(fid,'%% Version 2.1.002 (atcollab) 01-Aug-2021\n%%\n');
 fprintf(fid,'%% The Accelerator Toolbox was originally created by Andrei Terebilo.\n');
 fprintf(fid,'%% Development is now continued by a multi-laboratory collaboration, atcollab\n%%\n');
 fprintf(fid,'%% The integrators used for tracking particles may be compiled with\n');

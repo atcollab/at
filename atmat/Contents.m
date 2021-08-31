@@ -1,5 +1,5 @@
 % Accelerator toolbox
-% Version 2.1.001 (atcollab) 01-Aug-2021
+% Version 2.1.002 (atcollab) 01-Aug-2021
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, atcollab
@@ -26,7 +26,7 @@
 %       atmonitor                - Creates a Beam Position Monitor element with Class 'Monitor'
 %       ataperture               - Creates a aperture element
 %       atcorrector              - Creates a drift space element with class 'Corrector'
-%       atidtable                - Create an ID element
+%       atidtable                - Creates an ID element
 %       atwiggler                - Creates a wiggler
 %       atdampMatElem            - Creates an element that applies the global damping matrix
 %       atsolenoid               - Creates a new solenoid element with Class 'Solenoid'

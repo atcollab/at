@@ -31,7 +31,7 @@
 %
 % <matlab:doc('atcorrector') atcorrector> - Creates a drift space element with class 'Corrector'
 %
-% <matlab:doc('atidtable') atidtable> - Create an ID element
+% <matlab:doc('atidtable') atidtable> - Creates an ID element
 %
 % <matlab:doc('atwiggler') atwiggler> - Creates a wiggler
 %

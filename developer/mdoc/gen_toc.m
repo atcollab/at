@@ -12,7 +12,7 @@ ugname=fullfile('m','ugsummary.m');
 fid=openmfile(tocfile,'at');
 hid=openmfile(ugname,'wt');
 
-fprintf(fid,'        <tocitem target="ugsummary.html "\n');
+fprintf(fid,'        <tocitem target="ugsummary.html"\n');
 fprintf(fid,'            image="HelpIcon.USER_GUIDE">AT User Guide\n');
 fprintf(hid,'%%%% AT User Guide\n%%\n%%%%\n');
 for m=atchapters()
