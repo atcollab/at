@@ -8,11 +8,11 @@ atclass=atguessclass(elem, 'UseClass');
 switch atclass
     case 'Drift'
         create=@atdrift;
-        pycreate=@py.at.elements.Drift;
+        pycreate=@py.at.Drift;
         [args,options]=doptions(elem,create,{'Length'});
     case 'Quadrupole'
         create=@atquadrupole;
-        pycreate=@py.at.elements.Quadrupole;
+        pycreate=@py.at.Quadrupole;
         args={elem.Length,elem.PolynomB(2)};
         [args,options]=doptions(elem,create,{'Length','K'},{'PolynomB','PolynomA'},args);
         if ~any(abs(getfield2(elem,'PolynomA',0))>0)
@@ -25,7 +25,7 @@ switch atclass
         end
     case 'Sextupole'
         create=@atsextupole;
-        pycreate=@py.at.elements.Sextupole;
+        pycreate=@py.at.Sextupole;
         args={elem.Length,elem.PolynomB(3)};
         [args,options]=doptions(elem,create,{'Length'},{'PolynomB','PolynomA'},args);
         if ~any(abs(getfield2(elem,'PolynomA',0))>0)
@@ -38,7 +38,7 @@ switch atclass
         end
     case 'Bend'
         create=@atsbend;
-        pycreate=@py.at.elements.Dipole;
+        pycreate=@py.at.Dipole;
         args={elem.Length,elem.BendingAngle,elem.PolynomB(2)};
         [args,options]=doptions(elem,create,{'Length','BendingAngle','K'},...
             {'EntranceAngle','ExitAngle','PolynomB','PolynomA'},args);
@@ -60,47 +60,47 @@ switch atclass
         end
     case 'Corrector'
         create=@atcorrector;
-        pycreate=@py.at.elements.Drift;
+        pycreate=@py.at.Drift;
         [args,options]=doptions(elem,create,{'Length','KickAngle'});
     case 'Multipole'
         create=@atmultipole;
-        pycreate=@py.at.elements.Multipole;
+        pycreate=@py.at.Multipole;
         [args,options]=doptions(elem,create,{'Length','PolynomA','PolynomB'});
     case 'ThinMultipole'
         create=@atthinmultipole;
-        pycreate=@py.at.elements.ThinMultipole;
+        pycreate=@py.at.ThinMultipole;
         [args,options]=doptions(elem,create,{'PolynomA','PolynomB'});
     case 'RFCavity'
         create=@atrfcavity;
-        pycreate=@py.at.elements.RFCavity;
+        pycreate=@py.at.RFCavity;
         [args,options]=doptions(elem,create,{'Length','Voltage','Frequency','HarmNumber','Energy'});
     case 'RingParam'
         create=@atringparam;
-        pycreate=@py.at.elements.RingParam;
+        pycreate=@py.at.RingParam;
         [args,options]=doptions(elem,create,{'Energy','Periodicity'});
     case 'Aperture'
         create=@ataperture;
-        pycreate=@py.at.elements.Aperture;
+        pycreate=@py.at.Aperture;
         [args,options]=doptions(elem,create,{'Limits'});
     case 'QuantDiff'
         create=@atQuantDiff;
-        pycreate=@py.at.elements.Marker;
+        pycreate=@py.at.Marker;
         [args,options]=doptions(elem,create,{'Lmatp'});
     case 'Matrix66'
         create=@atM66;
-        pycreate=@py.at.elements.Marker;
+        pycreate=@py.at.Marker;
         [args,options]=doptions(elem,create,{'M66'});
     case 'MatrixTijkPass'
         create=@atM66Tijk;
-        pycreate=@py.at.elements.Marker;
+        pycreate=@py.at.Marker;
         [args,options]=doptions(elem,create,{'M66','Tijk'});
     case 'Monitor'
         create=@atmonitor;
-        pycreate=@py.at.elements.Monitor;
+        pycreate=@py.at.Monitor;
         [args,options]=doptions(elem,create);
     otherwise %'Marker'
         create=@atmarker;
-        pycreate=@py.at.elements.Marker;
+        pycreate=@py.at.Marker;
         [args,options]=doptions(elem,create);
         if isfield(options,'Energy')
             options=rmfield(options,'Energy');
@@ -119,7 +119,7 @@ v=reshape([keys vals]',1,[]);
 try
     elstr=pycreate(args{:},pyargs(v{:}));
 catch
-    elstr=py.at.elements.Marker(args{1},pyargs(v{:}));
+    elstr=py.at.Marker(args{1},pyargs(v{:}));
 end
 
     function s2 = rmfield2(s1,fieldnames)

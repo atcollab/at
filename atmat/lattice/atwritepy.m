@@ -1,19 +1,23 @@
 function pyring=atwritepy(ring,filename)
-%ATWRITEPY Creates a .m file to store an AT structure
+%ATWRITEPY Creates pyAT lattice from a Matlab lattice
 %
-%ATWRITEPY(RING)
-%   Prints the result in the command window
-%ATWRITEPY(RING,FILENAME)
-%   Prints the result in a file
+%PYRING=ATWRITEPY(RING)
+%   return the python lattice object
+%
+%PYRING=ATWRITEPY(RING,FILENAME)
+%   In addition, store the python lattice object in FILENAME. The ring can
+%   be retrieved in python with the commands:
+%
+%   >>> with open(<filename>,'rb') as fid:
+%   ...  ring=pickle.load(fid)
 
 if nargin>=2
     fid=py.open(filename,'wb');
-    if fid==-1
-        error('AT:FileErr','Cannot Create file %s<.\n',filename);
-    end
 end
 
-pyring=py.list(reshape(cellfun(@(elem) at2py(elem), ring, 'UniformOutput', false),1,[]));
+[energy,periods]=atenergy(ring);
+mlist=cellfun(@(elem) at2py(elem), ring, 'UniformOutput', false);
+pyring=py.at.Lattice(reshape(mlist,1,[]),pyargs('energy',energy,'periodicity',periods));
 
 if nargin>=2
     py.pickle.dump(pyring, fid, 2);

@@ -1,5 +1,5 @@
 function Elem = atidtable(fname, Nslice, filename, Energy, method)
-% atidtable(FAMNAME,Nslice,filename,Energy,method)
+% ATIDTABLE Creates an ID element
 %
 % FamName	family name
 % Nslice	number of slices (1 means the wiggler is represented by a

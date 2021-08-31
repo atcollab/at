@@ -1,5 +1,7 @@
-function mergedrift(ELEMPOS, DIST) 
-%MVELEM(ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING
+function mvelem(ELEMPOS, DIST) 
+%MVELEM Move an element
+%
+%MVELEM(ELEMPOS, DIST) Move an element located at ELEMPOS in THERING
 % surrounded by two DRIFT spaces 
 % 
 %  0   < DIST  < LD move downstream

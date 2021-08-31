@@ -1,6 +1,6 @@
 <deployment-project plugin="plugin.toolbox" plugin-version="1.0">
   <configuration file="/Users/famille/dev/libraries/at/ToolboxPackagingConfiguration.prj" location="/Users/famille/dev/libraries/at" name="ToolboxPackagingConfiguration" target="target.toolbox" target-name="Package Toolbox">
-    <param.appname>accelerator-toolbox</param.appname>
+    <param.appname>Accelerator Toolbox</param.appname>
     <param.authnamewatermark>atcollab</param.authnamewatermark>
     <param.email />
     <param.company />
@@ -13,9 +13,9 @@ create and manipulate accelerator lattice elements,
 track particles through the lattice,
 compute accelerator parameters and beam properties.
 AT is based on a 6-D modular tracking engine written in C/C++ for efficiency. Lattice manipulation and computation of accelerator physics parameters are performed in MATLAB</param.description>
-    <param.screenshot />
-    <param.version>1.0</param.version>
-    <param.output>${PROJECT_ROOT}/accelerator-toolbox.mltbx</param.output>
+    <param.screenshot>${PROJECT_ROOT}/developer/mdoc/AT.png</param.screenshot>
+    <param.version>2.1.001</param.version>
+    <param.output>${PROJECT_ROOT}/Accelerator Toolbox.mltbx</param.output>
     <param.products.name />
     <param.products.id />
     <param.products.version />
@@ -45,6 +45,7 @@ atoctave
 developer
 doc
 jupyter
+matlab_releases
 pyat
 resources
 utils
@@ -97,8 +98,6 @@ docs/p</param.exclude.filters>
     <unset>
       <param.email />
       <param.company />
-      <param.screenshot />
-      <param.version />
       <param.output />
       <param.products.name />
       <param.products.id />
@@ -131,13 +130,12 @@ docs/p</param.exclude.filters>
       <file>${PROJECT_ROOT}/atmat</file>
       <file>${PROJECT_ROOT}/docs</file>
       <file>${PROJECT_ROOT}/machine_data</file>
-      <file>${PROJECT_ROOT}/matlab_releases</file>
     </fileset.rootfiles>
     <fileset.depfun.included />
     <fileset.depfun.excluded />
     <fileset.package />
     <build-deliverables>
-      <file location="${PROJECT_ROOT}" name="accelerator-toolbox.mltbx" optional="false">/Users/famille/dev/libraries/at/accelerator-toolbox.mltbx</file>
+      <file location="${PROJECT_ROOT}" name="Accelerator Toolbox.mltbx" optional="false">/Users/famille/dev/libraries/at/Accelerator Toolbox.mltbx</file>
     </build-deliverables>
     <workflow />
     <matlab>
