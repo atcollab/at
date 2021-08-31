@@ -2,7 +2,7 @@ from itertools import chain
 import numpy as np
 from scipy.optimize import least_squares
 from itertools import repeat
-from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
+from at.lattice import refpts_iterator, bool_refpts, uint32_refpts, AtError
 from at.physics import linopt, ohmi_envelope, find_orbit4
 
 
@@ -522,8 +522,20 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
             variable.set(ring1, value)
             variable.set(ring2, value)
 
-        c1 = [cons.evaluate(ring1) for cons in cst1]
-        c2 = [cons.evaluate(ring2) for cons in cst2]
+        c1 = []
+        for cons in cst1:
+            try:
+                c1.append(cons.evaluate(ring1))
+            except AtError:
+                c1.append(1e5)
+        
+        c2 = []
+        for cons in cst2:
+            try:
+                c2.append(cons.evaluate(ring2))
+            except AtError:
+                c2.append(1e5)
+
         return np.concatenate(c1 + c2, axis=None)
 
     cst1 = [cons for cons in constraints if not cons.rad]
@@ -552,7 +564,7 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
     if verbose >= 1:
         print('\n{} constraints, {} variables, using method {}\n'.
               format(ntargets, len(variables), method))
-
+    
     least_squares(fun, vini, bounds=bounds, verbose=verbose, max_nfev=max_nfev,
                   method=method, diff_step=diff_step)
 
