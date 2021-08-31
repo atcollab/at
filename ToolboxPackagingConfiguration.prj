@@ -51,6 +51,8 @@ resources
 utils
 *.md
 **/*.md
+**/*.tar
+**/*.mex*
 athelp.mat
 docs/_*
 docs/css
