@@ -9,7 +9,7 @@ function pyring=atwritepy(ring,filename)
 if nargin>=2
     fid=py.open(filename,'wb');
     if fid==-1
-        error('AT:FileErr','Cannot Create file %s\n%s',fn,mess);
+        error('AT:FileErr','Cannot Create file %s<.\n',filename);
     end
 end
 
@@ -20,4 +20,3 @@ if nargin>=2
     fid.close();
 end
 end
-

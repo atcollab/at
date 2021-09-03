@@ -1,4 +1,4 @@
-function spear2
+function varargout=spear2
 %SPEAR2 example lattice definition file
 % Created 11/21/99 
 % Simplified SPEAR-II lattice
@@ -110,19 +110,11 @@ NENW =  [ DR01 Q3 DR02 Q2 DR03...
       
 ELIST =  [SWSE NENW AP]; 
 
-ELIST = reverse(ELIST);
+ELIST = flip(ELIST);
 
-buildlat(ELIST);
+buildlat(ELIST');
 THERING = setcellstruct(THERING,'Energy',1:length(THERING),GLOBVAL.E0);
 
-
-evalin('base','global THERING FAMLIST GLOBVAL');
-disp('** Done **');
-
-
-
-
-
-
-
-
+if nargout > 0
+    varargout{1} = THERING;
+end

@@ -1,0 +1,14 @@
+entries:
+- title: sidebar
+  product: Matlab AT
+  version: 2.1
+  folders:
+  - title: Getting Started
+    output: web
+    folderitems:
+    - title: Installation
+      url: /minstallation.html
+      output: web
+    - title: Example
+      url: /mdemo1.html
+      output: web

@@ -7,15 +7,14 @@ from scipy.special import factorial
 from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
     bool_refpts
 from at.tracking import lattice_pass
-from at.physics import HarmonicAnalysis, get_tune, linopt, find_orbit4, \
+from at.physics import HarmonicAnalysis, get_tune, linopt6, find_orbit, \
     get_tunes_harmonic, get_chrom
 from at.lattice import Element
 
 __all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
 
 
-def tunes_vs_amp(ring, amp=None, dim=0,
-                 dp=0, window=1, nturns=512):
+def tunes_vs_amp(ring, amp=None, dim=0, window=1, nturns=512):
     """
     Generates a range of tunes for varying x, y, or z amplitudes
     """
@@ -42,9 +41,9 @@ def tunes_vs_amp(ring, amp=None, dim=0,
                           for i in range(len(amp))])
         return px[:, 0, :] - 1j*px[:, 1, :], py[:, 0, :] - 1j*py[:, 1, :]
 
-    l0, q0, _, _ = linopt(ring, dp=dp)
+    l0, bd, _ = linopt6(ring)
     orbit = l0['closed_orbit']
-    tunes = []
+    tunes = bd['tune']
 
     if amp is not None:
         partx, party = _gen_part(ring, amp, dim, orbit, l0, nturns)
@@ -55,14 +54,14 @@ def tunes_vs_amp(ring, amp=None, dim=0,
     return numpy.array(tunes)
 
 
-def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
+def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, window=1,
              nturns=512):
     """
     This function uses tunes_vs_amp to compute the tunes for
     the specified amplitudes. Then it fits this data and returns
     result for dQx/dx, dQy/dx, dQx/dy, dQy/dy
     """
-    lindata0, _, _, _ = linopt(ring, dp=dp)
+    lindata0, _, _ = linopt6(ring)
     gamma = (1 + lindata0.alpha * lindata0.alpha) / lindata0.beta
 
     x = numpy.linspace(-xm, xm, npoints)
@@ -70,9 +69,9 @@ def detuning(ring, xm=0.3e-4, ym=0.3e-4, npoints=3, dp=0, window=1,
     x2 = x * x
     y2 = y * y
 
-    q_dx = tunes_vs_amp(ring, amp=x, dim=0, dp=dp, window=window,
+    q_dx = tunes_vs_amp(ring, amp=x, dim=0, window=window,
                         nturns=nturns)
-    q_dy = tunes_vs_amp(ring, amp=y, dim=2, dp=dp, window=window,
+    q_dy = tunes_vs_amp(ring, amp=y, dim=2, window=window,
                         nturns=nturns)
 
     fx = numpy.polyfit(x2, q_dx, 1)
@@ -116,18 +115,16 @@ def gen_detuning_elem(ring, orbit=None):
     Generates an element that for detuning with amplitude
     """
     if orbit is None:
-        orbit, _ = find_orbit4(ring)
-    [lindata0, tunes, xsi, lindata] = ring.linopt(dp=0,
-                                                  get_chrom=True,
-                                                  orbit=orbit)
-
-    r0, r1, x, q_dx, y, q_dy = detuning(ring, xm=1.0e-4,
-                                        ym=1.0e-4, npoints=3, dp=0)
+        orbit, _ = find_orbit(ring)
+    lindata0, _, _ = ring.linopt6(get_chrom=False, orbit=orbit)
+    xsi = get_chrom(ring.radiation_off(copy=True))
+    r0, r1, x, q_dx, y, q_dy = detuning(ring.radiation_off(copy=True),
+                                        xm=1.0e-4, ym=1.0e-4, npoints=3)
     rp = ring.periodicity
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
                           Betax=lindata0.beta[0], Betay=lindata0.beta[1],
-                          Alphax=lindata0.alpha[0],
-                          Alphay=lindata0.alpha[1],
-                          Qpx=xsi[0], Qpy=xsi[1], A1=r1[0][0]*rp, A2=r1[0][1]*rp,
-                          A3=r1[1][1]*rp, T1=-orbit, T2=orbit)
+                          Alphax=lindata0.alpha[0], Alphay=lindata0.alpha[1],
+                          Qpx=xsi[0], Qpy=xsi[1],
+                          A1=r1[0][0]*rp, A2=r1[0][1]*rp, A3=r1[1][1]*rp,
+                          T1=-orbit, T2=orbit)
     return nonlin_elem
