@@ -13,6 +13,8 @@ nkickperL=40; % kicks per meter
 elelat=[elelat '! DEFINITIONS \n\n'];
 
 form='%8.16f';
+C = findspos(AT_ring,length(AT_ring)+1);
+[~,~,V_rf,~,U0] = atenergy(AT_ring);
 
 %% loop families for definitions
 for i=1:length(families)
@@ -127,10 +129,10 @@ for i=1:length(families)
             dr=[el.('FamName') ' : EDRIFT, L= ' num2str(el.('Length'),form) ' \n'];
             elelat=[elelat dr '\n']; 	
          case 'RFCavity' % drift
-            rfc=[el.('FamName') ' : RFCA, L=' num2str(el.('Length'),form)...
-                ',VOLT='  num2str(el.('Voltage'),form) ' &\n'...
-                ',phase="180 2.278145 4 / dasin -",' ' &\n'...
-                ' freq="c_mks 844.8112 / ' num2str(el.('HarmNumber'),form) ' *" ' ' \n'];
+            rfc=[el.('FamName') ' : RFCA, L=' num2str(el.('Length'),'%8.12f')...
+                ',VOLT='  num2str(el.('Voltage'),'%8.6f') ' &\n'...
+                ',phase="180 ' num2str(U0) ' ' num2str(V_rf) ' / dasin -",' ' &\n'...
+                ' freq="c_mks ' num2str(C,form) ' / ' num2str(el.('HarmNumber'),'%d') ' *" ' ' \n'];
       
             elelat=[elelat rfc '\n'];
            
