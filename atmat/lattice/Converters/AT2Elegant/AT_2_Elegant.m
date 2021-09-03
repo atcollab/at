@@ -1,8 +1,10 @@
 function AT_2_Elegant(AT_ring,linename)
 % this functions converts the AT lattice AT_ring in elegant form.
 %
-% FringeQuadEntranceExit are ignored. For EBS they have small impact
-% EDRIFT is used instead of DRIFT. Also here the effect is small.
+% FringeQuadEntranceExit are ignored.
+% apertures defined in elements are ignored.
+% EDRIFT is used instead of DRIFT. 
+% if radiation is on in dipoles, cavity phase is set as in atsetcavity
 
 
 outfile='elegantconvertedlattice.lte';
