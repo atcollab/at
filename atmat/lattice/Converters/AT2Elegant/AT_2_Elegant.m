@@ -1,5 +1,8 @@
 function AT_2_Elegant(AT_ring,linename)
 % this functions converts the AT lattice AT_ring in elegant form.
+%
+% FringeQuadEntranceExit are ignored. For EBS they have small impact
+% EDRIFT is used instead of DRIFT. Also here the effect is small.
 
 
 outfile='elegantconvertedlattice.lte';
@@ -101,7 +104,7 @@ for i=1:length(families)
                 mp=[el.('FamName')   ': &\n'...
                     ' MULT,  L= ' num2str(el.('Length'),form)  ', &\n'...
                     'ORDER= ' num2str(ord(1)-1) ', &\n' ... 
-                   'KNL= ' num2str(factorial(ord-1)*el.('PolynomB')(ord(1)),form) ', \n'];
+                   'KNL= ' num2str(factorial(ord-1)*el.('Length')*el.('PolynomB')(ord(1)),form) ', &\n'];
  ...%                   'KNL= ' num2str(factorial(ord(1)-1)*el.('PolynomB')(ord(1)),form) ', \n'...
                 if(isfield(el,'T1'))
                     mp=[mp ' DX= ' num2str(-1*el.('T1')(1),form) ', &\n'...
