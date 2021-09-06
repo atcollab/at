@@ -28,7 +28,8 @@
             -->
         </tocitem>
         <!-- User Guide comes next -->
-        <tocitem target="AT_ug.html" image="HelpIcon.USER_GUIDE">AT User Guide
+        <tocitem target="ugsummary.html"
+            image="HelpIcon.USER_GUIDE">AT User Guide
             <tocitem target="atelemcreate.html">Element creation</tocitem>
             <tocitem target="atelemfuncs.html">Element manipulation</tocitem>
             <tocitem target="atlatticefuncs.html">Lattice manipulation</tocitem>

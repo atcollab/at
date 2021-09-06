@@ -19,7 +19,7 @@
 %%
 % <matlab:doc('atinsertelems') atinsertelems> - Insert elements at given locations in a line
 %
-% <matlab:doc('atdivelem') atdivelem> - LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces
+% <matlab:doc('atdivelem') atdivelem> - Divide an element into pieces
 %
 % <matlab:doc('atsplitelem') atsplitelem> - Creates a line by inserting one or more elements into a base element
 %
@@ -41,7 +41,7 @@
 %%
 % <matlab:doc('atloadfielderrs') atloadfielderrs> - Will load a field error structure into a ring
 %
-% <matlab:doc('atsetRFCavity') atsetRFCavity> - - sets the RF Cavity with the passmethod RFCavityPass
+% <matlab:doc('atsetRFCavity') atsetRFCavity> - Set the RF Cavity with the passmethod RFCavityPass
 %
 % <matlab:doc('atsetshift') atsetshift> - Sets the misalignment vectors
 %
@@ -51,7 +51,7 @@
 %
 % <matlab:doc('findtags') findtags> - Looks for string matches in 'Tag' field of AT lattice elements
 %
-% <matlab:doc('mvelem') mvelem> - (ELEMPOS, DIST) moves an element  located at ELEMPOS in THERING
+% <matlab:doc('mvelem') mvelem> - Move an element
 %
 % <matlab:doc('mvfield') mvfield> - Move fields from one structure to another
 %

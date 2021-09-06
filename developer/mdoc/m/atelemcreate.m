@@ -31,7 +31,7 @@
 %
 % <matlab:doc('atcorrector') atcorrector> - Creates a drift space element with class 'Corrector'
 %
-% <matlab:doc('atidtable') atidtable> - (FAMNAME,Nslice,filename,Energy,method)
+% <matlab:doc('atidtable') atidtable> - Creates an ID element
 %
 % <matlab:doc('atwiggler') atwiggler> - Creates a wiggler
 %
@@ -41,7 +41,7 @@
 %
 % <matlab:doc('atthinmultipole') atthinmultipole> - Creates a thin multipole element
 %
-% <matlab:doc('atM66') atM66> - (FAMNAME,M66,PASSMETHOD)
+% <matlab:doc('atM66') atM66> - Create an element applying an arbitrary 6x6 transfer matrix
 %
 % <matlab:doc('atQuantDiff') atQuantDiff> - Creates a quantum diffusion element
 %

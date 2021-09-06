@@ -1,5 +1,7 @@
 function line = atdivelem(elem,frac,varargin)
-%LINE=ATDIVELEM(ELEM,FRAC) divide an element into pieces
+%ATDIVELEM  Divide an element into pieces
+%
+%LINE=ATDIVELEM(ELEM,FRAC)
 %
 %ELEM:  Element to be divided
 %FRAC:  Length of each piece, as a fraction of the total length
