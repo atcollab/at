@@ -20,15 +20,6 @@ _jmt = jmatswap(1)
 _S2 = numpy.array([[0, 1], [-1, 0]], dtype=numpy.float64)
 
 # dtype for structured array containing linopt parameters
-_DATA1_DTYPE = [('alpha', numpy.float64, (2,)),
-                ('beta', numpy.float64, (2,)),
-                ('mu', numpy.float64, (2,)),
-                ('gamma', numpy.float64),
-                ('A', numpy.float64, (2, 2)),
-                ('B', numpy.float64, (2, 2)),
-                ('C', numpy.float64, (2, 2))
-                ]
-
 _DATA2_DTYPE = [('alpha', numpy.float64, (2,)),
                 ('beta', numpy.float64, (2,)),
                 ('mu', numpy.float64, (2,))
@@ -37,7 +28,10 @@ _DATA2_DTYPE = [('alpha', numpy.float64, (2,)),
 _DATA4_DTYPE = [('alpha', numpy.float64, (2,)),
                 ('beta', numpy.float64, (2,)),
                 ('mu', numpy.float64, (2,)),
-                ('gamma', numpy.float64)
+                ('gamma', numpy.float64),
+                ('A', numpy.float64, (2, 2)),
+                ('B', numpy.float64, (2, 2)),
+                ('C', numpy.float64, (2, 2))
                 ]
 
 _DATA6_DTYPE = [('alpha', numpy.float64, (2,)),
@@ -87,6 +81,18 @@ def _closure(m22):
         return numpy.NaN, numpy.NaN, numpy.NaN
 
 
+# noinspection PyShadowingNames,PyPep8Naming
+def _tunes(ring, **kwargs):
+    """"""
+    if ring.radiation:
+        mt, _ = find_m66(ring, **kwargs)
+    else:
+        mt, _ = find_m44(ring, **kwargs)
+    _, vps = a_matrix(mt)
+    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
+    return tunes
+
+
 def _analyze2(mt, ms):
     """Analysis of a 2D 1-turn transfer matrix"""
     A = mt[:2, :2]
@@ -105,16 +111,135 @@ def _analyze2(mt, ms):
     return vps, _DATA2_DTYPE, el0, els
 
 
-# noinspection PyShadowingNames,PyPep8Naming
-def _tunes(ring, **kwargs):
-    """"""
-    if ring.radiation:
-        mt, _ = find_m66(ring, **kwargs)
+def _analyze4(mt, ms):
+    """Analysis of a 4D 1-turn transfer matrix according to Sagan, Rubin"""
+    def propagate(t12):
+        M = t12[:2, :2]
+        N = t12[2:, 2:]
+        m = t12[:2, 2:]
+        n = t12[2:, :2]
+        ff = n @ C + g * N
+        gamma = sqrt(numpy.linalg.det(ff))
+        e12 = (g * M - m @ _jmt @ C.T @ _jmt.T) / gamma
+        f12 = ff / gamma
+        a12 = e12 @ A @ _jmt @ e12.T @ _jmt.T
+        b12 = f12 @ B @ _jmt @ f12.T @ _jmt.T
+        c12 = M @ C + g*m @ _jmt @ f12.T @ _jmt.T
+        return e12, f12, gamma, a12, b12, c12
+
+    M = mt[:2, :2]
+    N = mt[2:, 2:]
+    m = mt[:2, 2:]
+    n = mt[2:, :2]
+    H = m + _jmt @ n.T @ _jmt.T
+    detH = numpy.linalg.det(H)
+    if detH == 0.0:
+        g = 1.0
+        C = -H
+        A = M
+        B = N
     else:
-        mt, _ = find_m44(ring, **kwargs)
-    _, vps = a_matrix(mt)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
-    return tunes
+        t = numpy.trace(M - N)
+        t2 = t * t
+        t2h = t2 + 4.0 * detH
+        g2 = (1.0 + sqrt(t2 / t2h)) / 2
+        g = sqrt(g2)
+        C = -H * numpy.sign(t) / (g * sqrt(t2h))
+        A = g2*M - g*(m @ _jmt @ C.T @ _jmt.T + C @ n) + \
+            C @ N @ _jmt @ C.T @ _jmt.T
+        B = g2*N + g*(_jmt @ C.T @ _jmt.T @ m + n @ C) + \
+            _jmt @ C.T @ _jmt.T @ M @ C
+    alp0_a, bet0_a, vp_a = _closure(A)
+    alp0_b, bet0_b, vp_b = _closure(B)
+    vps = numpy.array([vp_a, vp_b])
+    el0 = (numpy.array([alp0_a, alp0_b]),
+           numpy.array([bet0_a, bet0_b]),
+           0.0, g, A, B, C)
+    if ms.shape[0] > 0:
+        e, f, g, ai, bi, ci = zip(*[propagate(mi) for mi in ms])
+        alp_a, bet_a, mu_a = _twiss22(numpy.array(e), alp0_a, bet0_a)
+        alp_b, bet_b, mu_b = _twiss22(numpy.array(f), alp0_b, bet0_b)
+        els = (numpy.stack((alp_a, alp_b), axis=1),
+               numpy.stack((bet_a, bet_b), axis=1),
+               numpy.stack((mu_a, mu_b), axis=1), numpy.array(g),
+               numpy.stack(ai, axis=0), numpy.stack(bi, axis=0),
+               numpy.stack(ci, axis=0))
+    else:
+        els = (numpy.empty((0, 2)), numpy.empty((0, 2)),
+               numpy.empty((0, 2)), numpy.empty((0,)),
+               numpy.empty((0, 2, 2)), numpy.empty((0, 2, 2)),
+               numpy.empty((0, 2, 2)))
+    return vps, _DATA4_DTYPE, el0, els
+
+
+def _analyze6(mt, ms):
+    """Analysis of a 2D, 4D, 6D 1-turn transfer matrix
+    according to Wolski"""
+    def get_phase(a22):
+        """Return the phase for A standardization"""
+        return atan2(a22[0, 1], a22[0, 0])
+
+    def standardize(aa, slcs):
+        """Apply rotation to put A in std form"""
+        def rot2(slc):
+            rot = -get_phase(aa[slc, slc])
+            cs = cos(rot)
+            sn = sin(rot)
+            return aa[:,slc] @ numpy.array([[cs, sn], [-sn, cs]])
+
+        return numpy.concatenate([rot2(slc) for slc in slcs], axis=1)
+
+    def r_matrices(ai):
+        # Rk = A * S * Ik * inv(A) * S.T
+        def mul2(slc):
+            return ai[:,slc] @ tt[slc, slc]
+
+        ais = numpy.concatenate([mul2(slc) for slc in slices], axis=1)
+        invai = solve(ai, ss.T)
+        ri = numpy.array(
+            [ais[:, sl] @ invai[sl, :] for sl in slices])
+        mui = numpy.array([get_phase(ai[sl, sl]) for sl in slices])
+        return mui, ri, ai
+
+    def propagate4(ri, phi, ai):
+        betai = numpy.stack((ri[..., 0, 0, 0], ri[..., 1, 2, 2]), axis=-1)
+        alphai = -numpy.stack((ri[..., 0, 1, 0], ri[..., 1, 3, 2]), axis=-1)
+        return alphai, betai, phi, ri, ai
+
+    def propagate6(ri, phi, ai):
+        alphai, betai, phi, ri, ai = propagate4(ri, phi, ai)
+        dispersion = ri[..., 2, :4, 4] / ri[..., 2, 4, 4, numpy.newaxis]
+        return alphai, betai, phi, ri, ai, dispersion
+
+    nv = mt.shape[0]
+    dms = nv // 2
+    slices = [slice(2 * i, 2 * (i + 1)) for i in range(dms)]
+    ss = jmat(dms)
+    tt = jmatswap(dms)
+    if dms >= 3:
+        propagate = propagate6
+        dtype = _DATA6_DTYPE
+    else:
+        propagate = propagate4
+        dtype = _DATAX_DTYPE
+    a0, vps = a_matrix(mt)
+
+    astd = standardize(a0, slices)
+    phi0, r0, _ = r_matrices(astd)
+    el0 = propagate(r0, phi0, astd)
+    if ms.shape[0] > 0:
+        ps, rs, aas = zip(*[r_matrices(mi @ astd) for mi in ms])
+        els = propagate(numpy.array(rs), numpy.array(ps), numpy.array(aas))
+    elif dms >= 3:
+        els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
+               numpy.empty((0, dms)),
+               numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)),
+               numpy.empty((0, 4)))
+    else:
+        els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
+               numpy.empty((0, dms)),
+               numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)))
+    return vps, dtype, el0, els
 
 
 # noinspection PyShadowingNames,PyPep8Naming
@@ -300,140 +425,6 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
 
 @check_radiation(False)
-def linopt4(ring, *args, **kwargs):
-    """Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
-    4D-analysis of coupled motion
-
-    elemdata0, beamdata, elemdata = linopt4(lattice, refpts, **kwargs)
-
-    PARAMETERS
-        lattice         lattice description.
-        refpts=None     elements at which data is returned. It can be:
-                        1) an integer in the range [-len(ring), len(ring)-1]
-                           selecting the element according to python indexing
-                           rules. As a special case, len(ring) is allowed and
-                           refers to the end of the last element,
-                        2) an ordered list of such integers without duplicates,
-                        3) a numpy array of booleans of maximum length
-                           len(ring)+1, where selected elements are True.
-    KEYWORDS
-        dp=0.0          momentum deviation.
-        dct=None        path lengthening. If specified, dp is ignored and the
-                        off-momentum is deduced from the path lengthening.
-        orbit           avoids looking for the closed orbit if is already known
-                        ((6,) array)
-        get_chrom=False compute chromaticities. Needs computing the tune at
-                        2 different momentum deviations around the central one.
-        get_w=False     computes chromatic amplitude functions (W) [4]. Needs to
-                        compute the optics at 2 different momentum deviations
-                        around the central one.
-        keep_lattice    Assume no lattice change since the previous tracking.
-                        Defaults to False
-        XYStep=1.0e-8   transverse step for numerical computation
-        DPStep=1.0E-6   momentum deviation used for computation of
-                        chromaticities and dispersion
-        coupled=True    if False, simplify the calculations by assuming
-                        no H/V coupling
-        twiss_in=None   Initial twiss to compute transfer line optics of the
-                        type lindata, the initial orbit in twiss_in is ignored,
-                        only the beta and alpha are required other quatities
-                        set to 0 if absent
-        twiss_in=None   Initial conditions for transfer line optics. Record
-                        array as output by linopt, or dictionary. Keys:
-                        'alpha' and 'beta'  (mandatory)
-                        'closed_orbit',     (default 0)
-                        'dispersion'        (default 0)
-                        All other attributes are ignored.
-    OUTPUT
-        lindata0        linear optics data at the entrance of the ring
-        beamdata        lattice properties
-        lindata         linear optics at the points refered to by refpts, if
-                        refpts is None an empty lindata structure is returned.
-
-        lindata is a record array with fields:
-        s_pos           longitudinal position [m]
-        M               (4, 4) transfer matrix M from the beginning of ring
-                        to the entrance of the element [2]
-        closed_orbit    (6,) closed orbit vector
-        dispersion      (4,) dispersion vector
-        beta            [betax, betay] vector
-        alpha           [alphax, alphay] vector
-        mu              [mux, muy], betatron phase (modulo 2*pi)
-        gamma           gamma parameter of the transformation to eigenmodes [3]
-        W               (2,) chromatic amplitude function (only if get_w==True)
-        All values given at the entrance of each element specified in refpts.
-        Field values can be obtained with either
-        lindata['idx']    or
-        lindata.idx
-
-        beamdata is a record with fields:
-        tune            Fractional tunes
-        chromaticity    Chromaticities, only computed if get_chrom==True
-
-    REFERENCES
-        [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
-        [2] E.Courant, H.Snyder
-        [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
-            vol.2 (1999)
-        [4] Brian W. Montague Report LEP Note 165, CERN, 1979
-    """
-    def _analyze4(mt, ms):
-        """Analysis of a 4D 1-turn transfer matrix according to Sagan, Rubin"""
-        def propagate(t12):
-            mm = t12[:2, :2]
-            nn = t12[2:, 2:]
-            m = t12[:2, 2:]
-            n = t12[2:, :2]
-            ff = n @ C + g * nn
-            gamma = sqrt(numpy.linalg.det(ff))
-            e12 = (g * mm - m @ _jmt @ C.T @ _jmt.T) / gamma
-            f12 = ff / gamma
-            return e12, f12, gamma
-
-        M = mt[:2, :2]
-        N = mt[2:, 2:]
-        m = mt[:2, 2:]
-        n = mt[2:, :2]
-        H = m + _jmt @ n.T @ _jmt.T
-        detH = numpy.linalg.det(H)
-        if detH == 0.0:
-            g = 1.0
-            C = -H
-            A = M
-            B = N
-        else:
-            t = numpy.trace(M - N)
-            t2 = t * t
-            t2h = t2 + 4.0 * detH
-            g2 = (1.0 + sqrt(t2 / t2h)) / 2
-            g = sqrt(g2)
-            C = -H * numpy.sign(t) / (g * sqrt(t2h))
-            A = g2*M - g*(m @ _jmt @ C.T @ _jmt.T + C @ n) + \
-                C @ N @ _jmt @ C.T @ _jmt.T
-            B = g2*N + g*(_jmt @ C.T @ _jmt.T @ m + n @ C) + \
-                _jmt @ C.T @ _jmt.T @ M @ C
-        alp0_a, bet0_a, vp_a = _closure(A)
-        alp0_b, bet0_b, vp_b = _closure(B)
-        vps = numpy.array([vp_a, vp_b])
-        el0 = (numpy.array([alp0_a, alp0_b]),
-               numpy.array([bet0_a, bet0_b]),
-               0.0, g)
-        if ms.shape[0] > 0:
-            e, f, g = zip(*[propagate(mi) for mi in ms])
-            alp_a, bet_a, mu_a = _twiss22(numpy.array(e), alp0_a, bet0_a)
-            alp_b, bet_b, mu_b = _twiss22(numpy.array(f), alp0_b, bet0_b)
-            els = (numpy.stack((alp_a, alp_b), axis=1),
-                   numpy.stack((bet_a, bet_b), axis=1),
-                   numpy.stack((mu_a, mu_b), axis=1), numpy.array(g))
-        else:
-            els = (numpy.empty((0, 2)), numpy.empty((0, 2)),
-                   numpy.empty((0, 2)), numpy.empty((0,)))
-        return vps, _DATA4_DTYPE, el0, els
-
-    return _linopt(ring, _analyze4, *args, **kwargs)
-
-
-@check_radiation(False)
 def linopt2(ring, *args, **kwargs):
     """Perform linear analysis of an uncoupled lattice
 
@@ -504,6 +495,85 @@ def linopt2(ring, *args, **kwargs):
         [4] Brian W. Montague Report LEP Note 165, CERN, 1979
     """
     return _linopt(ring, _analyze2, *args, **kwargs)
+
+
+@check_radiation(False)
+def linopt4(ring, *args, **kwargs):
+    """Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
+    4D-analysis of coupled motion
+
+    elemdata0, beamdata, elemdata = linopt4(lattice, refpts, **kwargs)
+
+    PARAMETERS
+        lattice         lattice description.
+        refpts=None     elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+    KEYWORDS
+        dp=0.0          momentum deviation.
+        dct=None        path lengthening. If specified, dp is ignored and the
+                        off-momentum is deduced from the path lengthening.
+        orbit           avoids looking for the closed orbit if is already known
+                        ((6,) array)
+        get_chrom=False compute chromaticities. Needs computing the tune at
+                        2 different momentum deviations around the central one.
+        get_w=False     computes chromatic amplitude functions (W) [4]. Needs to
+                        compute the optics at 2 different momentum deviations
+                        around the central one.
+        keep_lattice    Assume no lattice change since the previous tracking.
+                        Defaults to False
+        XYStep=1.0e-8   transverse step for numerical computation
+        DPStep=1.0E-6   momentum deviation used for computation of
+                        chromaticities and dispersion
+        twiss_in=None   Initial twiss to compute transfer line optics of the
+                        type lindata, the initial orbit in twiss_in is ignored,
+                        only the beta and alpha are required other quatities
+                        set to 0 if absent
+        twiss_in=None   Initial conditions for transfer line optics. Record
+                        array as output by linopt, or dictionary. Keys:
+                        'alpha' and 'beta'  (mandatory)
+                        'closed_orbit',     (default 0)
+                        'dispersion'        (default 0)
+                        All other attributes are ignored.
+    OUTPUT
+        lindata0        linear optics data at the entrance of the ring
+        beamdata        lattice properties
+        lindata         linear optics at the points refered to by refpts, if
+                        refpts is None an empty lindata structure is returned.
+
+        lindata is a record array with fields:
+        s_pos           longitudinal position [m]
+        M               (4, 4) transfer matrix M from the beginning of ring
+                        to the entrance of the element [2]
+        closed_orbit    (6,) closed orbit vector
+        dispersion      (4,) dispersion vector
+        beta            [betax, betay] vector
+        alpha           [alphax, alphay] vector
+        mu              [mux, muy], betatron phase (modulo 2*pi)
+        gamma           gamma parameter of the transformation to eigenmodes [3]
+        W               (2,) chromatic amplitude function (only if get_w==True)
+        All values given at the entrance of each element specified in refpts.
+        Field values can be obtained with either
+        lindata['idx']    or
+        lindata.idx
+
+        beamdata is a record with fields:
+        tune            Fractional tunes
+        chromaticity    Chromaticities, only computed if get_chrom==True
+
+    REFERENCES
+        [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+        [2] E.Courant, H.Snyder
+        [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
+            vol.2 (1999)
+        [4] Brian W. Montague Report LEP Note 165, CERN, 1979
+    """
+    return _linopt(ring, _analyze4, *args, **kwargs)
 
 
 def linopt6(ring, *args, **kwargs):
@@ -584,76 +654,35 @@ def linopt6(ring, *args, **kwargs):
             Published 3 February 2006
         [3] Brian W. Montague Report LEP Note 165, CERN, 1979
     """
-    def analyze(mt, ms):
-        """Analysis of a 2D, 4D, 6D 1-turn transfer matrix
-        according to Wolski"""
-        def get_phase(a22):
-            """Return the phase for A standardization"""
-            return atan2(a22[0, 1], a22[0, 0])
+    return _linopt(ring, _analyze6, *args, **kwargs)
 
-        def standardize(aa, slcs):
-            """Apply rotation to put A in std form"""
-            def rot2(slc):
-                rot = -get_phase(aa[slc, slc])
-                cs = cos(rot)
-                sn = sin(rot)
-                return aa[:,slc] @ numpy.array([[cs, sn], [-sn, cs]])
 
-            return numpy.concatenate([rot2(slc) for slc in slcs], axis=1)
+def linopt_auto(ring, *args, **kwargs):
+    """
+    This is a convenience function to automatically switch to the faster
+    linopt2 in case coupled=False and ring.radiation=False otherwise the
+    default linopt6 is used
 
-        def r_matrices(ai):
-            # Rk = A * S * Ik * inv(A) * S.T
-            def mul2(slc):
-                return ai[:,slc] @ tt[slc, slc]
+    PARAMETERS
+        Same as linopt2 or linopt6
 
-            ais = numpy.concatenate([mul2(slc) for slc in slices], axis=1)
-            invai = solve(ai, ss.T)
-            ri = numpy.array(
-                [ais[:, sl] @ invai[sl, :] for sl in slices])
-            mui = numpy.array([get_phase(ai[sl, sl]) for sl in slices])
-            return mui, ri, ai
+    KEYWORDS
+        coupled = True  If set to False H/V coupling will be ingnored to 
+                        simplify the calculation, needs radiation OFF
 
-        def propagate4(ri, phi, ai):
-            betai = numpy.stack((ri[..., 0, 0, 0], ri[..., 1, 2, 2]), axis=-1)
-            alphai = -numpy.stack((ri[..., 0, 1, 0], ri[..., 1, 3, 2]), axis=-1)
-            return alphai, betai, phi, ri, ai
+    OUTPUT
+        elemdata0       linear optics data at the entrance of the ring
+        beamdata        lattice properties
+        elemdata        linear optics at the points refered to by refpts, if
+                        refpts is None an empty elemdata structure is returned.
 
-        def propagate6(ri, phi, ai):
-            alphai, betai, phi, ri, ai = propagate4(ri, phi, ai)
-            dispersion = ri[..., 2, :4, 4] / ri[..., 2, 4, 4, numpy.newaxis]
-            return alphai, betai, phi, ri, ai, dispersion
-
-        nv = mt.shape[0]
-        dms = nv // 2
-        slices = [slice(2 * i, 2 * (i + 1)) for i in range(dms)]
-        ss = jmat(dms)
-        tt = jmatswap(dms)
-        if dms >= 3:
-            propagate = propagate6
-            dtype = _DATA6_DTYPE
-        else:
-            propagate = propagate4
-            dtype = _DATAX_DTYPE
-        a0, vps = a_matrix(mt)
-
-        astd = standardize(a0, slices)
-        phi0, r0, _ = r_matrices(astd)
-        el0 = propagate(r0, phi0, astd)
-        if ms.shape[0] > 0:
-            ps, rs, aas = zip(*[r_matrices(mi @ astd) for mi in ms])
-            els = propagate(numpy.array(rs), numpy.array(ps), numpy.array(aas))
-        elif dms >= 3:
-            els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
-                   numpy.empty((0, dms)),
-                   numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)),
-                   numpy.empty((0, 4)))
-        else:
-            els = (numpy.empty((0, dms)), numpy.empty((0, dms)),
-                   numpy.empty((0, dms)),
-                   numpy.empty((0, dms, nv, nv)), numpy.empty((0, nv, nv)))
-        return vps, dtype, el0, els
-
-    return _linopt(ring, analyze, *args, **kwargs)
+    !!!WARNING!!!       Output varies depending whether linopt2 or linopt6 is
+                        called to be used with care                     
+    """
+    if not (kwargs.pop('coupled', True) or ring.radiation):
+        return linopt2(ring, *args, **kwargs)
+    else:
+        return linopt6(ring, *args, **kwargs)  
 
 
 def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
@@ -673,11 +702,11 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
                            len(ring)+1, where selected elements are True.
     KEYWORDS
         method=linopt6  Method used for the analysis of the transfer matrix.
-                        Can be at.linopt2, at.linopt4, at.linopt6
+                        Can be None at.linopt2, at.linopt4, at.linopt6
                         linopt2:    no longitudinal motion, no H/V coupling,
                         linopt4:    no longitudinal motion, Sagan/Rubin
                                     4D-analysis of coupled motion,
-                        minopt6:    with or without longitudinal motion, normal
+                        linopt6:    with or without longitudinal motion, normal
                                     mode analysis
         dp=None         Ignored if radiation is ON. Momentum deviation.
         dct=None        Ignored if radiation is ON. Path lengthening.
@@ -707,7 +736,7 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
                         refpts is None an empty elemdata structure is returned.
 
         elemdata is a record array with fields depending on the selected method.
-        See the help for linopt6, linopt4, linopt2.
+        See the help for linopt6, linopt4, linopt2, linopt_auto.
 
         beamdata is a record with fields:
         tune            Fractional tunes
@@ -793,66 +822,6 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, **kwargs):
             vol.2 (1999)
         [4] Brian W. Montague Report LEP Note 165, CERN, 1979
     """
-    def _analyze4(mt, ms):
-        """Analysis of a 4D 1-turn transfer matrix according to Sagan, Rubin"""
-        def propagate(t12):
-            M = t12[:2, :2]
-            N = t12[2:, 2:]
-            m = t12[:2, 2:]
-            n = t12[2:, :2]
-            ff = n @ C + g * N
-            gamma = sqrt(numpy.linalg.det(ff))
-            e12 = (g * M - m @ _jmt @ C.T @ _jmt.T) / gamma
-            f12 = ff / gamma
-            a12 = e12 @ A @ _jmt @ e12.T @ _jmt.T
-            b12 = f12 @ B @ _jmt @ f12.T @ _jmt.T
-            c12 = M @ C + g*m @ _jmt @ f12.T @ _jmt.T
-            return e12, f12, gamma, a12, b12, c12
-
-        M = mt[:2, :2]
-        N = mt[2:, 2:]
-        m = mt[:2, 2:]
-        n = mt[2:, :2]
-        H = m + _jmt @ n.T @ _jmt.T
-        detH = numpy.linalg.det(H)
-        if detH == 0.0:
-            g = 1.0
-            C = -H
-            A = M
-            B = N
-        else:
-            t = numpy.trace(M - N)
-            t2 = t * t
-            t2h = t2 + 4.0 * detH
-            g2 = (1.0 + sqrt(t2 / t2h)) / 2
-            g = sqrt(g2)
-            C = -H * numpy.sign(t) / (g * sqrt(t2h))
-            A = g2*M - g*(m @ _jmt @ C.T @ _jmt.T + C @ n) + \
-                C @ N @ _jmt @ C.T @ _jmt.T
-            B = g2*N + g*(_jmt @ C.T @ _jmt.T @ m + n @ C) + \
-                _jmt @ C.T @ _jmt.T @ M @ C
-        alp0_a, bet0_a, vp_a = _closure(A)
-        alp0_b, bet0_b, vp_b = _closure(B)
-        vps = numpy.array([vp_a, vp_b])
-        el0 = (numpy.array([alp0_a, alp0_b]),
-               numpy.array([bet0_a, bet0_b]),
-               numpy.mod(numpy.angle(vps), 2.0*pi), g, A, B, C)
-        if ms.shape[0] > 0:
-            e, f, g, ai, bi, ci = zip(*[propagate(mi) for mi in ms])
-            alp_a, bet_a, mu_a = _twiss22(numpy.array(e), alp0_a, bet0_a)
-            alp_b, bet_b, mu_b = _twiss22(numpy.array(f), alp0_b, bet0_b)
-            els = (numpy.stack((alp_a, alp_b), axis=1),
-                   numpy.stack((bet_a, bet_b), axis=1),
-                   numpy.stack((mu_a, mu_b), axis=1), numpy.array(g),
-                   numpy.stack(ai, axis=0), numpy.stack(bi, axis=0),
-                   numpy.stack(ci, axis=0))
-        else:
-            els = (numpy.empty((0, 2)), numpy.empty((0, 2)),
-                   numpy.empty((0, 2)), numpy.empty((0,)),
-                   numpy.empty((0, 2, 2)), numpy.empty((0, 2, 2)),
-                   numpy.empty((0, 2, 2)))
-        return vps, _DATA1_DTYPE, el0, els
-
     analyze = _analyze4 if kwargs.pop('coupled', True) else _analyze2
     eld0, bd, eld = _linopt(ring, analyze, refpts, dp=dp, get_chrom=get_chrom,
                             add0=(0,), adds=(ring.uint32_refpts(refpts),),
