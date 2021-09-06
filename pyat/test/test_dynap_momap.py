@@ -28,14 +28,14 @@ def test_dynamic_aperture():
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    dynamic_aperture(sr_ring, n_turns=2**10, n_radii=14, file_name_save='on_en_da', num_recursions=5)
+    dynamic_aperture(sr_ring, n_turns=2**5, n_radii=14, file_name_save='on_en_da', num_recursions=5)
     elapsed = time.time() - t
     print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 
     # off-en DA
     t = time.time()
     print('Off-energy DA')
-    off_energy_dynamic_aperture(sr_ring, n_turns=2**10,
+    off_energy_dynamic_aperture(sr_ring, n_turns=2**5,
                                 file_name_save='off_en_da_inside',
                                 inject_from_inside=True,
                                 num_recursions=3)
@@ -45,7 +45,7 @@ def test_dynamic_aperture():
     # momentum acceptance
     t = time.time()
     print('Momentum acceptance')
-    momentum_acceptance(sr_ring, n_turns=2**10,
+    momentum_acceptance(sr_ring, n_turns=2**5,
                         file_name_save='mom_acc',
                         ref_pts=range(0, 100, 10), num_recursions=3)
     elapsed = time.time() - t
