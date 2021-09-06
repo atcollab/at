@@ -27,3 +27,4 @@ from .radiation import *
 from .harmonic_analysis import *
 from .nonlinear import *
 from .fastring import *
+from .dynamic_aperture import *
