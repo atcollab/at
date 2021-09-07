@@ -1,6 +1,5 @@
 import at
 import at.plot
-import matplotlib.pyplot as plt
 from scipy.io import savemat
 import numpy as np
 from itertools import compress
@@ -8,17 +7,12 @@ import copy
 import math
 import pickle
 import time
+import matplotlib.pyplot as plt
+
+__all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'momentum_acceptance']
 
 
 class Acceptance6D(object):
-    """ Acceptance6D provides common methods and data structures for 6D Acceptance tracking
-    
-    :param planes: list of the dimensions considered 'x', 'xp', 'y', 'yp', 'delta', 'ct'
-    :param mode: string . Either '6D' or a string describing the 2 dimensions H-V to scan for acceptanace
-                 among: 'x-y', 'delta-x', 'xp-yp', 'x-xp', 'y-yp' or 'ct-delta'.
-    :param dict_units: dictionary dimension: [float scale factor to multiply m, rad or 1, 'name of units']
-    :param dict_def_range: dictionary of default range for each dimension
-    """
 
     verbose = True
 
@@ -775,7 +769,10 @@ class Acceptance6D(object):
         v_s = []
 
         h, v, sel = self.select_test_points_based_on_mode()
-
+        # h = np.append(h, 0.0005)
+        # v = np.append(v, 0.0005)
+        # sel = np.append(sel, True)
+        time.sleep(10)
         fig, ax = plt.subplots()
         cs = ax.tricontour(h, v, sel, linewidths=2)
 
@@ -998,7 +995,7 @@ def dynamic_aperture(sr_ring,
     da.number_of_turns = n_turns
     da.dpp = dpp
     da.verbose = False
-
+    da.search_divider = 30
     if grid_mode == 'radial':
 
         da.compute_range()  # implement an init at change of mode, npoint, or range.
@@ -1077,7 +1074,3 @@ def dynamic_aperture(sr_ring,
             ax = da.plot(file_name_save=file_name_save)
 
     return h, v
-
-
-
-

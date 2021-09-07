@@ -3,17 +3,21 @@ from at.physics.dynamic_aperture import Acceptance6D, dynamic_aperture, off_ener
 import time
 import copy
 import pytest
+import matplotlib.pyplot as plt
 
 
-def test_dynamic_aperture():
+def test_dynamic_aperture(hmba_lattice):
 
     # load and display optics
-    sr_lattice_file = '../test_matlab/hmba.mat'
-    sr_lattice_variable = 'ring'
-    sr_ring = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
+    # sr_lattice_file = '../test_matlab/hmba.mat'
+    # sr_lattice_variable = 'ring'
+    # sr_ring = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
+
+    sr_ring = at.Lattice(hmba_lattice*32)
 
     sr_ring.radiation_off()
     # sr_ring.plot_beta()
+    # plt.show()
     # plt.savefig('./optics.png', dpi=600)
 
     # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
@@ -21,14 +25,31 @@ def test_dynamic_aperture():
     da = Acceptance6D(copy.deepcopy(sr_ring),
                       mode='x-xp', start_index=120, n_turns=2**5, dpp=-0.005)
     da.verbose = False
+    da.dict_def_range = {'x': [-2e-2, 2e-2],
+                      'xp': [-1e-3, 1e-3],
+                      'y': [-5e-3, 5e-3],
+                      'yp': [-1e-3, 1e-3],
+                      'delta': [-2e-1, 2e-1],
+                      'ct': [-1e-1, 1e-1],
+                      }
+    da.n_points = {'x': 17,
+                     'xp': 1,
+                     'y': 17,
+                     'yp': 1,
+                     'delta': 1,
+                     'ct': 1
+                     }
+    da.search_divider = 20
     da.compute_range()
+    da.test_points_grid()  # define grid of test particles
+    plt.show()
     h, v = da.compute()
-    da.plot(file_name_save='test')
+    plt.show()
 
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    dynamic_aperture(sr_ring, n_turns=2**5, n_radii=14, file_name_save='on_en_da', num_recursions=5)
+    h, v = dynamic_aperture(sr_ring, n_turns=2**9, n_radii=14, num_recursions=5, file_name_save='on_en_da')
     elapsed = time.time() - t
     print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 
@@ -56,11 +77,18 @@ def test_dynamic_aperture():
     pass
 
 
-def test_search(n_turns=100, dpp=0.0, start_index=0, num_recursions=5):
+def test_search(hmba_lattice):
 
-    sr_lattice_file = '../test_matlab/hmba.mat'
-    sr_lattice_variable = 'ring'
-    sr_ring = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
+    n_turns = 100
+    dpp = 0.0
+    start_index = 0
+    num_recursions = 5
+
+    sr_ring = hmba_lattice
+
+    # sr_lattice_file = '../test_matlab/hmba.mat'
+    # sr_lattice_variable = 'ring'
+    # sr_ring = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
 
     sr_ring.radiation_off()
 
