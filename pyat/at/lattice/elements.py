@@ -117,7 +117,10 @@ class Element(object):
         """
         attrs = dict(*args, **kwargs)
         for (key, value) in attrs.items():
-            setattr(self, key, value)
+            if isinstance(value, str):
+                 getattr(self,key).replace(getattr(self,key),value)
+            else:
+                 setattr(self, key, value)
 
     def copy(self):
         """Return a shallow copy of the element"""
