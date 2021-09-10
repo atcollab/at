@@ -17,7 +17,7 @@ serving as an introduction for someone just starting AT.
 The 6-d phase space coordinates used in AT are as follows
 $$\vec Z = \pmatrix{x\cr \frac{p_x}{p_0}=x'(1+\delta) \cr y \cr \frac{p_y}{p_0}=y'(1+\delta) \cr \delta=\frac{\left(p_z-p_0\right)}{p_0} \cr c\tau}$$
 
-$$p_0$$ is the reference momentum. $$\tau$$ is the
+\$$p_0$$ is the reference momentum. $$\tau$$ is the
 time lag relative to the ideal particle.
 
 ## Creation of Elements and Lattices
@@ -30,8 +30,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import pi
 plt.rcParams["figure.figsize"] = (9.0, 6.0)
-#plt.rcParams["figure.figsize"] = (6.0, 4.0)
-#plt.rcParams["figure.dpi"] = 120
 ```
 
 A lattice in AT is a object of the **Lattice** class containing the lattice elements. These elements may be created using element creation functions. These functions output objects inheriting from the **Element** base class. For example, a quadrupole may be created with the function **Quadrupole**
