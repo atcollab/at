@@ -1,7 +1,5 @@
 ---
 permalink: /mprimer.html
-layout: page
-sidebar: matlab_sidebar
-toc: false
+oc: false
 ---
-{% include frame.html src="matlab/mprimer.html" title="test" %}
+{% include frame.html src="matlab/primer.html" title="test" %}
