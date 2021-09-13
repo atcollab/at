@@ -17,6 +17,7 @@
         <tocitem target="AT_gs_top.html" image="HelpIcon.GETTING_STARTED">
             Getting Started with the Accelerator Toolbox
             <tocitem target="Installation.html">Installation</tocitem>
+            <tocitem target="primer.html">AT Primer</tocitem>
             <tocitem target="latticedemo.html">Example</tocitem>
             <!--
             <tocitem target="mytbx_features_example.html">Features

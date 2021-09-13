@@ -9,6 +9,9 @@ entries:
     - title: Installation
       url: /minstallation.html
       output: web
+    - title: AT Primer
+      url: /mprimer.html
+      output: web
     - title: Example
       url: /mdemo1.html
       output: web
