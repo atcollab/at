@@ -27,4 +27,6 @@ from .radiation import *
 from .harmonic_analysis import *
 from .nonlinear import *
 from .fastring import *
-from .dynamic_aperture import *
+
+# do NOT import DA by default (includes matplotlib).
+# from .dynamic_aperture import dynamic_aperture, momentum_acceptance, off_energy_dynamic_aperture
