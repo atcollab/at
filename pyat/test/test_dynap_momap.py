@@ -42,22 +42,23 @@ def test_dynamic_aperture(hmba_lattice):
     da.search_divider = 20
     da.compute_range()
     da.test_points_grid()  # define grid of test particles
-    plt.show()
+    # plt.show()
     h, v = da.compute()
-    plt.show()
+    # plt.show()
 
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    h, v = dynamic_aperture(sr_ring, n_turns=2**5, n_radii=14, num_recursions=5, file_name_save='on_en_da')
+    h, v = dynamic_aperture(sr_ring, n_turns=2**4, n_radii=15, num_recursions=4,
+                            file_name_save='') # 'on_en_da')
     elapsed = time.time() - t
     print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 
     # off-en DA
     t = time.time()
     print('Off-energy DA')
-    off_energy_dynamic_aperture(sr_ring, n_turns=2**5,
-                                file_name_save='off_en_da_inside',
+    off_energy_dynamic_aperture(sr_ring, n_turns=2**4,
+                                file_name_save='', # 'off_en_da_inside',
                                 inject_from_inside=True,
                                 num_recursions=3)
     elapsed = time.time() - t
@@ -66,8 +67,8 @@ def test_dynamic_aperture(hmba_lattice):
     # momentum acceptance
     t = time.time()
     print('Momentum acceptance')
-    momentum_acceptance(sr_ring, n_turns=2**5,
-                        file_name_save='mom_acc',
+    momentum_acceptance(sr_ring, n_turns=2**4,
+                        file_name_save='', # 'mom_acc',
                         ref_pts=range(0, 100, 10), num_recursions=3)
     elapsed = time.time() - t
     print('Momentum acceptance took {s:2.1f}s'.format(s=elapsed))
