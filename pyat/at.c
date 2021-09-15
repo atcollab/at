@@ -476,6 +476,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             *pyintegrator++ = LibraryListPtr->PyFunctionHandle;
             *element++ = el;
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
+            Py_DECREF(PyPassMethod);
         }
         new_lattice = 0;
     }

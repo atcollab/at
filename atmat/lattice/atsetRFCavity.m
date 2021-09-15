@@ -1,5 +1,5 @@
 function newring = atsetRFCavity(ring, rfv, radflag, HarmNumber, DeltaFreq )
-%  ATSETRFCAVITY - sets the RF Cavity with the passmethod RFCavityPass.
+%  ATSETRFCAVITY Set the RF Cavity with the passmethod RFCavityPass.
 %  RFCavityPass allows to change the energy of the beam changing the
 %  frequency of the cavity.
 %

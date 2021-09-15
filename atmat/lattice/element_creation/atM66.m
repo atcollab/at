@@ -1,6 +1,5 @@
 function elem=atM66(fname,varargin)
-%ATM66(FAMNAME,M66,PASSMETHOD)
-%   atM66 creates an element that applies an arbitrary matrix m66
+%ATM66  Create an element applying an arbitrary 6x6 transfer matrix
 %
 %FAMNAME	family name
 %M66        transfer matrix, defaults to Identity(6)]

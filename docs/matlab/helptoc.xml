@@ -17,6 +17,7 @@
         <tocitem target="AT_gs_top.html" image="HelpIcon.GETTING_STARTED">
             Getting Started with the Accelerator Toolbox
             <tocitem target="Installation.html">Installation</tocitem>
+            <tocitem target="primer.html">AT Primer</tocitem>
             <tocitem target="latticedemo.html">Example</tocitem>
             <!--
             <tocitem target="mytbx_features_example.html">Features
@@ -28,7 +29,8 @@
             -->
         </tocitem>
         <!-- User Guide comes next -->
-        <tocitem target="AT_ug.html" image="HelpIcon.USER_GUIDE">AT User Guide
+        <tocitem target="ugsummary.html"
+            image="HelpIcon.USER_GUIDE">AT User Guide
             <tocitem target="atelemcreate.html">Element creation</tocitem>
             <tocitem target="atelemfuncs.html">Element manipulation</tocitem>
             <tocitem target="atlatticefuncs.html">Lattice manipulation</tocitem>

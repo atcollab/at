@@ -1,5 +1,5 @@
 function varargout = atsummary(varargin)
-%ATSUMMARY - Prints out the paramters of the current AT lattice
+%ATSUMMARY  Print out the parameters of the current AT lattice
 %  The parameters that come after the Synchrotron Integrals are
 %  parameters that depend on the Integrals themselves. The equations to
 %  calculate them were taken from [1].

@@ -9,3 +9,6 @@ entries:
     - title: Installation
       url: /python.html
       output: web
+    - title: AT Primer
+      url: /pprimer.html
+      output: web
