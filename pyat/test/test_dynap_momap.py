@@ -1,10 +1,9 @@
 import at
+import matplotlib.pyplot as plt
 from at.physics.dynamic_aperture import Acceptance6D, dynamic_aperture, off_energy_dynamic_aperture, momentum_acceptance
 import time
 import copy
 import pytest
-import matplotlib.pyplot as plt
-
 
 def test_dynamic_aperture(hmba_lattice):
 
