@@ -33,8 +33,8 @@ def test_dynamic_aperture(hmba_lattice):
                       'ct': [-1e-1, 1e-1],
                       }
     da.n_points = {'x': 17,
-                     'xp': 1,
-                     'y': 17,
+                     'xp': 17,
+                     'y': 1,
                      'yp': 1,
                      'delta': 1,
                      'ct': 1
@@ -49,7 +49,7 @@ def test_dynamic_aperture(hmba_lattice):
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    h, v = dynamic_aperture(sr_ring, n_turns=2**9, n_radii=14, num_recursions=5, file_name_save='on_en_da')
+    h, v = dynamic_aperture(sr_ring, n_turns=2**5, n_radii=14, num_recursions=5, file_name_save='on_en_da')
     elapsed = time.time() - t
     print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 

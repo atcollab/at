@@ -1,13 +1,13 @@
 import at
-import at.plot
-from scipy.io import savemat
-import numpy as np
-from itertools import compress
+import matplotlib.pyplot as plt
 import copy
+import at.plot
+from itertools import compress
+import numpy as np
 import math
 import pickle
+from scipy.io import savemat
 import time
-import matplotlib.pyplot as plt
 
 __all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'momentum_acceptance']
 
@@ -769,10 +769,7 @@ class Acceptance6D(object):
         v_s = []
 
         h, v, sel = self.select_test_points_based_on_mode()
-        # h = np.append(h, 0.0005)
-        # v = np.append(v, 0.0005)
-        # sel = np.append(sel, True)
-        time.sleep(10)
+
         fig, ax = plt.subplots()
         cs = ax.tricontour(h, v, sel, linewidths=2)
 
@@ -995,7 +992,7 @@ def dynamic_aperture(sr_ring,
     da.number_of_turns = n_turns
     da.dpp = dpp
     da.verbose = False
-    da.search_divider = 30
+
     if grid_mode == 'radial':
 
         da.compute_range()  # implement an init at change of mode, npoint, or range.
