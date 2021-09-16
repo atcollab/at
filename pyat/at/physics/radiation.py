@@ -197,19 +197,25 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     return data0, r66data, data
 
 
-@check_radiation(False)
-def get_radiation_integrals(ring, dp=0.0, twiss=None):
+def get_radiation_integrals(ring, dp=None, twiss=None, **kwargs):
     """
-    Compute the 5 radiation integrals for uncoupled lattices. No RF cavity or
-    radiating element is allowed.
+    Compute the 5 radiation integrals for uncoupled lattices.
 
     PARAMETERS
         ring            lattice description.
-        dp=0.0          momentum deviation
 
     KEYWORDS
         twiss=None      linear optics at all points (from linopt). If None,
                         it will be computed.
+        dp=0.0          Ignored if radiation is ON. Momentum deviation.
+        dct=None        Ignored if radiation is ON. Path lengthening.
+                        If specified, dp is ignored and the off-momentum is
+                        deduced from the path lengthening.
+        method=linopt6  Method used for the analysis of the transfer matrix.
+                        See get_optics.
+                        linopt6: default
+                        linopt2: faster if no longitudinal motion and
+                                 no H/V coupling,
 
     OUTPUT
         i1, i2, i3, i4, i5
@@ -333,8 +339,8 @@ def get_radiation_integrals(ring, dp=0.0, twiss=None):
     integrals = numpy.zeros((5,))
 
     if twiss is None:
-        _, _, _, twiss = linopt(ring, dp, range(len(ring) + 1),
-                                get_chrom=True, coupled=False)
+        _, _, twiss = ring.get_optics(refpts=range(len(ring) + 1), dp=dp,
+                                      get_chrom=True, **kwargs)
     elif len(twiss) != len(ring) + 1:
         raise ValueError('length of Twiss data should be {0}'
                          .format(len(ring) + 1))
