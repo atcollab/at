@@ -1,14 +1,14 @@
 """AT plotting functions"""
 from at.lattice import Lattice
 from at.tracking import lattice_pass
-from at.physics import linopt6
+from at.physics import get_optics
 from at.plot import baseplot
 
 # --------- Example 1 --------
 
 # The specific data generating functions do not depend on any graphics-related
 # function. So they could be located in any module, for instance
-# in lattice/linear.py where the linopt6 function is.
+# in lattice/linear.py where the get_optics function is.
 
 
 # data generating function
@@ -16,7 +16,7 @@ def pldata_beta_disp(ring, refpts, **kwargs):
     """Generates data for plotting beta functions and dispersion"""
 
     # compute linear optics at the required locations
-    data0, _, data = linopt6(ring, refpts=refpts, get_chrom=True, **kwargs)
+    data0, _, data = get_optics(ring, refpts=refpts, get_chrom=True, **kwargs)
 
     # Extract the plot data
     s_pos = data['s_pos']
@@ -41,16 +41,30 @@ def plot_beta(ring, **kwargs):
         ring            Lattice object
 
     KEYWORDS
-        dp=0.0          momentum deviation.
+        dp=0.0          Ignored if radiation is ON. Momentum deviation.
+        dct=None        Ignored if radiation is ON. Path lengthening.
+                        If specified, dp is ignored and the off-momentum is
+                        deduced from the path lengthening.
+        method=linopt6  Method used for the analysis of the transfer matrix.
+                        See get_optics.
+                        linopt6: default
+                        linopt2: faster if no longitudinal motion and
+                                 no H/V coupling,
         orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         ddp=1.0E-8      momentum deviation used for computation of
                         chromaticities and dispersion
-        coupled=True    if False, simplify the calculations by assuming
-                        no H/V coupling
-    """
+        twiss_in=None   Initial conditions for transfer line optics. Record
+                        array as output by linopt, or dictionary. Keys:
+                        'R' or 'alpha' and 'beta'   (mandatory)
+                        'closed_orbit',             (default 0)
+                        'dispersion'                (default 0)
+                        If present, the attribute 'R' will be used, otherwise
+                        the attributes 'alpha' and 'beta' will be used. All
+                        other attributes are ignored.
+   """
     return baseplot(ring, pldata_beta_disp, **kwargs)
 
 # --------- Example 2 --------
@@ -58,7 +72,7 @@ def plot_beta(ring, **kwargs):
 
 # data generating function
 def pldata_linear(ring, refpts, *keys, **kwargs):
-    """data extraction function for plotting results of linopt6"""
+    """data extraction function for plotting results of get_optics"""
 
     class Lind(object):
         """helper class for lindata extraction"""
@@ -91,7 +105,7 @@ def pldata_linear(ring, refpts, *keys, **kwargs):
             return axis_title, lindata['s_pos'], datay, labels
 
     title = kwargs.pop('title', 'Linear optics')
-    data0, _, data = linopt6(ring, refpts=refpts, get_chrom=True, **kwargs)
+    data0, _, data = get_optics(ring, refpts=refpts, get_chrom=True, **kwargs)
     return (title,) + tuple(Lind.extract(data, *key) for key in keys)
 
 
@@ -99,7 +113,7 @@ def pldata_linear(ring, refpts, *keys, **kwargs):
 def plot_linear(ring, *keys, **kwargs):
     """
     axleft, axright = plot_linear(ring, left[, right], **keywords
-    Plot linear optical functions returned by linopt6
+    Plot linear optical functions returned by get_optics
 
     PARAMETERS
         ring            Lattice object
@@ -125,15 +139,29 @@ def plot_linear(ring, *keys, **kwargs):
 
     KEYWORDS
         title           Plot title, defaults to "Linear optics"
-        dp=0.0          momentum deviation.
+        dp=0.0          Ignored if radiation is ON. Momentum deviation.
+        dct=None        Ignored if radiation is ON. Path lengthening.
+                        If specified, dp is ignored and the off-momentum is
+                        deduced from the path lengthening.
+        method=linopt6  Method used for the analysis of the transfer matrix.
+                        See get_optics.
+                        linopt6: default
+                        linopt2: faster if no longitudinal motion and
+                                 no H/V coupling,
         orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         ddp=1.0E-8      momentum deviation used for computation of
                         chromaticities and dispersion
-        coupled=True    if False, simplify the calculations by assuming
-                        no H/V coupling
+        twiss_in=None   Initial conditions for transfer line optics. Record
+                        array as output by linopt, or dictionary. Keys:
+                        'R' or 'alpha' and 'beta'   (mandatory)
+                        'closed_orbit',             (default 0)
+                        'dispersion'                (default 0)
+                        If present, the attribute 'R' will be used, otherwise
+                        the attributes 'alpha' and 'beta' will be used. All
+                        other attributes are ignored.
     """
     return baseplot(ring, pldata_linear, *keys, **kwargs)
 
