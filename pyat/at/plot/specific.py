@@ -1,14 +1,14 @@
 """AT plotting functions"""
 from at.lattice import Lattice
 from at.tracking import lattice_pass
-from at.physics import linopt
+from at.physics import linopt6
 from at.plot import baseplot
 
 # --------- Example 1 --------
 
 # The specific data generating functions do not depend on any graphics-related
 # function. So they could be located in any module, for instance
-# in lattice/linear.py where the linopt function is.
+# in lattice/linear.py where the linopt6 function is.
 
 
 # data generating function
@@ -16,7 +16,7 @@ def pldata_beta_disp(ring, refpts, **kwargs):
     """Generates data for plotting beta functions and dispersion"""
 
     # compute linear optics at the required locations
-    data0, _, _, data = linopt(ring, refpts=refpts, get_chrom=True, **kwargs)
+    data0, _, data = linopt6(ring, refpts=refpts, get_chrom=True, **kwargs)
 
     # Extract the plot data
     s_pos = data['s_pos']
@@ -58,7 +58,7 @@ def plot_beta(ring, **kwargs):
 
 # data generating function
 def pldata_linear(ring, refpts, *keys, **kwargs):
-    """data extraction function for plotting results of linopt"""
+    """data extraction function for plotting results of linopt6"""
 
     class Lind(object):
         """helper class for lindata extraction"""
@@ -72,10 +72,7 @@ def pldata_linear(ring, refpts, *keys, **kwargs):
             alpha=(r'$\alpha$', r'$\alpha_{0}$', lab2),
             mu=(r'Phase advance', r'$\mu_{0}$', lab2),
             gamma=('Gamma', 'Gamma', None),
-            A=('A', r'$A_{{{0}{1}}}$', id6),
-            B=('B', r'$B_{{{0}{1}}}$', id6),
-            C=('C', r'$C_{{{0}{1}}}$', id6),
-            m44=('Transfert', r'$T_{{{0},{1}}}$', id6)
+            M=('Transfert', r'$T_{{{0},{1}}}$', id6)
         )
 
         @classmethod
@@ -94,7 +91,7 @@ def pldata_linear(ring, refpts, *keys, **kwargs):
             return axis_title, lindata['s_pos'], datay, labels
 
     title = kwargs.pop('title', 'Linear optics')
-    data0, _, _, data = linopt(ring, refpts=refpts, get_chrom=True, **kwargs)
+    data0, _, data = linopt6(ring, refpts=refpts, get_chrom=True, **kwargs)
     return (title,) + tuple(Lind.extract(data, *key) for key in keys)
 
 
@@ -102,7 +99,7 @@ def pldata_linear(ring, refpts, *keys, **kwargs):
 def plot_linear(ring, *keys, **kwargs):
     """
     axleft, axright = plot_linear(ring, left[, right], **keywords
-    Plot linear optical functions returned by linopt
+    Plot linear optical functions returned by linopt6
 
     PARAMETERS
         ring            Lattice object

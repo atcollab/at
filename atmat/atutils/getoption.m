@@ -2,12 +2,10 @@ function [value,opts] = getoption(opts,key,value)
 %GETOPTION Extract a keyword argument from an argument list
 %
 %VALUE=GETOPTION(ARGS,'KEY',DEFAULT)
+%VALUE=GETOPTION(ARGS,KEY=DEFAULT)  in Matlab >= R2021a
 %   Extract a keyword argument, in the form of a pair "key,value" from
 %   input arguments ARGS (typically from VARARGIN).
 %   Return DEFAULT value if the keyword is absent
-%
-%VALUE=GETOPTION(ARGS,KEY=DEFAULT)
-%   Alternative syntax available in Matlab >= R2021a
 %
 % ARGS:     Argument list: cell array (usually VARARGIN) or structure
 % KEY:      Key name
@@ -16,6 +14,9 @@ function [value,opts] = getoption(opts,key,value)
 %VALUE=GETOPTION(ARGS,'KEY')
 %   The default value is taken from a list of predefined keys. Use
 %   GETOPTION() for the list of predefined keys
+%
+%VALUE=GETOPTION(ARGS,{'KEY1','KEY2',...)
+%   Value is the list of key/value pairs matching KEY1 or KEY2 or...
 %
 %VALUE=GETOPTION('KEY')
 %   Return the default value of a predefined key. Use GETOPTION() for
@@ -37,11 +38,20 @@ function [value,opts] = getoption(opts,key,value)
 %
 %See also GETFLAG, GETARGS, SETOPTION, ATOPTIONS
 
-if nargin < 1
+if nargin < 1           % list of all available predefined keys
     value=atoptions.instance();
-elseif nargin < 2
+elseif nargin < 2       % value of the predefined key
     value=atoptions.instance().(opts);
-else
+elseif iscell(key)      % extract a subset of key/value pairs
+    oksel=false(size(opts));
+    for k=key
+        ok=[cellfun(@(v) (ischar(v) || isstring(v)) && strcmpi(v, k{1}), ...
+            opts(1:end-1)) false];  % option name cannot be the last argument
+        oksel=oksel | ok | circshift(ok,[0,1]);
+    end
+    value=opts(oksel);
+    opts(oksel)=[];
+else                    % return the value for the given key
     if nargin < 3
         value=atoptions.instance().(key);
     end
