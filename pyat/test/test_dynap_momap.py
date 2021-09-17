@@ -48,7 +48,7 @@ def test_dynamic_aperture(hmba_lattice):
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    h, v = dynamic_aperture(sr_ring, n_turns=2**4, n_radii=15, num_recursions=4,
+    h, v, _, _= dynamic_aperture(sr_ring, n_turns=2**4, n_radii=15, num_recursions=4,
                             file_name_save='') # 'on_en_da')
     elapsed = time.time() - t
     print('On-energy DA took {s:2.1f}s'.format(s=elapsed))

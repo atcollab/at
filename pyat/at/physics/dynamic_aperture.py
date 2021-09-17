@@ -1,5 +1,4 @@
 import at
-import matplotlib.pyplot as plt
 import copy
 import at.plot
 from itertools import compress
@@ -113,6 +112,9 @@ class Acceptance6D(object):
 
         self.number_of_turns = n_turns
         self.search_divider = search_divider
+
+        self.grid_modes = ['grid', 'radial']
+        self.grid_mode = self.grid_modes[0]
 
         # point to scan in each dimension
         if mode == 'x-y':
@@ -315,6 +317,8 @@ class Acceptance6D(object):
         :return:
         """
 
+        self.grid_mode = grid_mode
+
         if compute_limits:
             self.compute_range()
 
@@ -410,201 +414,6 @@ class Acceptance6D(object):
 
         pass
 
-    def plot(self, ax=None, file_name_save=None):
-        """
-        plots a figure of the acceptance for one of the defined modes
-        :param ax: figure axes
-        :param file_name_save: if given, save figure to file
-        :return figure axes
-        """
-
-        if self.mode:
-            print('auto plot {m}'.format(m=self.mode))
-
-            h, v, sel = self.select_test_points_based_on_mode()
-            ax = self.plot_base(h, v, sel, self.mode.split('-', 2), ax=ax, file_name_save=file_name_save)
-        else:
-            print('mode is None')
-
-        return ax
-
-    def plot_base(self, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None):
-        """
-        plots results of acceptance scan in a given 2D plane
-
-        :param h: list of x coordinates of test points
-        :param v: list of y coordinates of test points
-        :param sel: boolean array to mark if the specified coordinate is lost or not
-        :param pl: 2 element tuple of planes default ('x', 'y')
-        :param ax: figure axes
-        :param file_name_save: if given, save figure to file
-        :return figure axes
-        """
-        if ax is None:
-            fig, ax = plt.subplots()
-
-        cols = []
-        for s in self.survived:
-            if s:
-                cols.append('deepskyblue')
-            else:
-                cols.append('gainsboro')
-
-        if not self.mode:
-            if type(pl[0]) != str:
-                pl_h = self.planes[pl[0]]
-            else:
-                pl_h = pl[0]
-
-            if type(pl[1]) != str:
-                pl_v = self.planes[pl[1]]
-            else:
-                pl_h = pl[1]
-        else:
-            # get planes from mode
-            pl_h, pl_v = self.mode.split('-', 2)
-
-        if not sel:
-            sel = range(len(h))
-
-        num_sel = [int(s) for s in sel]
-
-        # apply scale factors for plot
-        hs = np.array([h_*self.dict_units[pl_h][0] for h_ in h])
-        vs = np.array([v_*self.dict_units[pl_v][0] for v_ in v])
-
-        ax.scatter(hs, vs, s=20, c=cols, label='tested', facecolors='none')
-        ax.plot(hs[sel], vs[sel], 'x', color='royalblue', markersize=3, label='survived')
-
-        cs = ax.tricontour(hs, vs, sel, linewidths=2)
-        for c in cs.collections:
-            c.set_edgecolor("face")
-
-        if len(cs.allsegs) > 3:
-            dat0 = cs.allsegs[-2][0]
-            ax.plot(dat0[:, 0], dat0[:, 1], ':', label='limit')
-        else:
-            print('DA limit could not be computed (probably no closed contour)')
-
-        ax.set_xlabel(pl_h + ' [' + self.dict_units[pl_h][1] + ']', fontsize=14)
-        ax.set_ylabel(pl_v + ' [' + self.dict_units[pl_v][1] + ']', fontsize=14)
-        ax.set_xlim([r*self.dict_units[pl_h][0] for r in self.dict_def_range[pl_h]])
-        ax.set_ylim([r*self.dict_units[pl_v][0] for r in self.dict_def_range[pl_v]])
-
-        ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%'.format(
-            m=self.mode, t=self.number_of_turns, ll=self.ring[0].FamName, dpp=self.dpp*100))
-
-        ax.legend()
-        plt.tight_layout()
-
-        if file_name_save:
-            plt.savefig(file_name_save + '_' + self.mode.replace('-', '_'), dpi=600)
-
-        return ax
-
-    def plot6d(self, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
-        """
-        plot DA
-
-        :return:
-        """
-
-        if not axs_top:
-            fig, (axs_top, axs_bottom) = plt.subplots(2, 3)
-
-        cols = []
-        for s in self.survived:
-            if s:
-                cols.append('royalblue')
-            else:
-                cols.append('white')
-
-        # plot X - Y
-        axnum = 0
-        h = self.coordinates['x']
-        v = self.coordinates['y']
-
-        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-            self.survived,
-            self.coordinates['delta'],
-            self.coordinates['xp'],
-            self.coordinates['yp'],
-            self.coordinates['ct'])]
-
-        axs_top[axnum] = self.plot_base(h, v, sel, ['x', 'y'], ax=axs_top[axnum])
-
-        # plot xp yp
-        axnum = 1
-        h = self.coordinates['xp']
-        v = self.coordinates['yp']
-        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-            self.survived,
-            self.coordinates['delta'],
-            self.coordinates['x'],
-            self.coordinates['y'],
-            self.coordinates['ct'])]
-
-        axs_top[axnum] = self.plot_base(h, v, sel, ['xp', 'yp'], ax=axs_top[axnum])
-
-        # plot ct delta
-        axnum = 2
-        h = self.coordinates['ct']
-        v = self.coordinates['delta']
-        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-            self.survived,
-            self.coordinates['xp'],
-            self.coordinates['x'],
-            self.coordinates['y'],
-            self.coordinates['yp'])]
-
-        axs_top[axnum] = self.plot_base(h, v, sel, ['ct', 'delta'], ax=axs_top[axnum])
-
-        # plot x xp
-        axnum = 0
-        h = self.coordinates['x']
-        v = self.coordinates['xp']
-        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-            self.survived,
-            self.coordinates['delta'],
-            self.coordinates['ct'],
-            self.coordinates['y'],
-            self.coordinates['yp'])]
-
-        axs_bottom[axnum] = self.plot_base(h, v, sel, ['x', 'xp'], ax=axs_bottom[axnum])
-
-        # plot y yp
-        axnum = 1
-        h = self.coordinates['y']
-        v = self.coordinates['yp']
-        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-            self.survived,
-            self.coordinates['delta'],
-            self.coordinates['ct'],
-            self.coordinates['x'],
-            self.coordinates['xp'])]
-
-        axs_bottom[axnum] = self.plot_base(h, v, sel, ['y', 'yp'], ax=axs_bottom[axnum])
-
-        # plot delta x
-        axnum = 2
-        h = self.coordinates['delta']
-        v = self.coordinates['x']
-        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-            self.survived,
-            self.coordinates['y'],
-            self.coordinates['ct'],
-            self.coordinates['yp'],
-            self.coordinates['xp'])]
-
-        axs_bottom[axnum] = self.plot_base(h, v, sel, ['delta', 'x'], ax=axs_bottom[axnum])
-
-        plt.tight_layout()
-
-        if file_name_save:
-            plt.savefig(file_name_save + '_6D', dpi=600)
-
-        return axs_top, axs_bottom
-
     def test_survived(self, coordinates):
         """
         test if a particle coordinate set survived
@@ -667,6 +476,10 @@ class Acceptance6D(object):
         return not np.isnan(t[0][0][0][-1])
 
     def select_test_points_based_on_mode(self):
+        """
+        reduces the 6D coordinated according to the mode to 3 lists for plotting:
+        horizontal, vertical and boolean array of survival.
+        """
 
         if self.mode == 'x-y':
             h = self.coordinates['x']
@@ -765,26 +578,47 @@ class Acceptance6D(object):
                       )
             ii += 1
 
-        h_s = []
-        v_s = []
-
         h, v, sel = self.select_test_points_based_on_mode()
 
-        fig, ax = plt.subplots()
-        cs = ax.tricontour(h, v, sel, linewidths=2)
-
-        if len(cs.allsegs) > 3:
-            dat0 = cs.allsegs[-2][0]
-            h_s = dat0[:, 0]
-            v_s = dat0[:, 1]
-        else:
+        # find maximum of each column and return as border
+        try:
+            h_s, v_s = self.get_border(h, v, sel)
+        except Exception:
+            h_s = []
+            v_s = []
             print('DA limit could not be computed (probably no closed contour)')
-
-        plt.close(fig)
 
         return h_s, v_s
 
+    def get_border(self, h, v, sel):
+        """
+        find border of list of points.
+        works only for grid mode.
+        """
+        h_border = []
+        v_border = []
+
+        # loop columns of grid
+        if self.grid_mode == 'grid':
+            for hc in h:
+                col = [v[i] for h_, i in enumerate(h) if h_ == hc ]
+                h_border.append(hc)
+                v_border.append(np.max(col))
+                h_border.insert(0,hc)
+                v_border.insert(0,np.min(col))
+        elif self.grid_mode == 'radial':
+            # find radial grid extremes.  not implemented
+            print('radial mode, no border computed')
+            pass
+        else:
+            print('grid_mode must be grid or radial')
+
+        # remove bottom line if any. not implemented
+
+        return h_border, v_border
+
     pass
+
 
 
 def off_energy_dynamic_aperture(sr_ring,
@@ -809,6 +643,7 @@ def off_energy_dynamic_aperture(sr_ring,
     :param start_index: index where to compute off-energy DA
     :param file_name_save: if given, save to file
     :return: max_neg_x list of maximum negative da for each deltap/p required
+    :return: da, for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
     da = Acceptance6D(copy.deepcopy(sr_ring), start_index=start_index, n_turns=n_turns)
     da.verbose = False
@@ -864,30 +699,8 @@ def off_energy_dynamic_aperture(sr_ring,
         m_dict = {'max_neg_x': max_neg_x, 'deltaps': deltaps, 'n_turns': n_turns, 'start_index': start_index}
         savemat(file_name_save + '.mat', m_dict)
 
-        # make figure
-        fig, ax = plt.subplots()
-        fig.set_size_inches(8.0, 5.0)
-        ll, bb, ww, hh = ax.get_position().bounds
-        ax.set_position([ll+0.05, bb + 0.05, ww-0.05, hh - 0.05])
-        ax.plot([dp*100 for dp in deltaps], [_mx*1e3 for _mx in max_neg_x])
-        ax.set_xlabel('dpp [%]', fontsize=16)
-        if inject_from_inside:
-            ax.set_ylabel('max(x<0) [mm]', fontsize=16)
-            ax.set_ylim([1.1*min(max_neg_x)*1e3, 0.0])
-        else:
-            ax.set_ylabel('max(x>0) [mm]', fontsize=16)
-            ax.set_ylim([0.0, 1.1 * max(max_neg_x) * 1e3])
-        plt.rcParams['font.size'] = '16'
-        # Set tick font size
-        for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-            label.set_fontsize(16)
 
-        ax.set_title('{t} turns at {ll}'.format(t=da.number_of_turns, ll=da.ring[0].FamName))
-
-        plt.grid()
-        plt.savefig(file_name_save, dpi=600)
-
-    return max_neg_x
+    return max_neg_x, da
 
 
 def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=None, num_recursions=5):
@@ -900,6 +713,7 @@ def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=Non
     :param file_name_save: if given, save figure
 
     :return: [[max deltap/p], [min deltap/p]], s locations
+    :return: da, for use with plotting function in at.plot.dynamic_aperture.plot_momentum_acceptance
     """
 
     mom_acc = [[], []]
@@ -940,23 +754,7 @@ def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=Non
         m_dict = {'mom_ac': mom_acc, 's': s, 'n_turns': n_turns, 'ref_pts': ref_pts}
         savemat(file_name_save + '.mat', m_dict)
 
-        # make figure
-        fig, ax = plt.subplots()
-        fig.set_size_inches(8.0, 5.0)
-        ll, bb, ww, hh = ax.get_position().bounds
-        ax.set_position([ll+0.05, bb+0.05, ww-0.05, hh - 0.05])
-        ax.plot(s, [dp * 100 for dp in mom_acc[0]])
-        ax.plot(s, [dp * 100 for dp in mom_acc[1]])
-        plt.rcParams['font.size'] = '16'
-        # Set tick font size
-        for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-            label.set_fontsize(16)
-        ax.set_xlabel('s [m]', fontsize=16)
-        ax.set_ylabel('delta p/p [%]', fontsize=16)
-
-        plt.savefig(file_name_save, dpi=600)
-
-    return mom_acc, s
+    return mom_acc, s, da
 
 
 def dynamic_aperture(sr_ring,
@@ -984,6 +782,7 @@ def dynamic_aperture(sr_ring,
     :param file_name_save: if given, save to file
 
     :return: h,v horizontal and vertical coordinates of DA limit
+    :return: da, search : for use with plotting function in at.plot.dynamic_aperture.plot_dynamic_aperture
     """
     h = []
     v = []
@@ -1047,27 +846,4 @@ def dynamic_aperture(sr_ring,
         m_dict = {'h': h, 'v': v, 'n_turns': n_turns, 'start_index': start_index}
         savemat(file_name_save + '.mat', m_dict)
 
-        if search:
-            #fig, ax = plt.subplots()
-            ax = da.plot()
-            fig = plt.gcf()
-            fig.set_size_inches(8.0, 5.0)
-            ll, bb, ww, hh = ax.get_position().bounds
-            ax.set_position([ll+0.05, bb+0.05, ww-0.05, hh - 0.1])
-            ax.plot([_h * da.dict_units['x'][0] for _h in h],
-                    [_v * da.dict_units['y'][0] for _v in v],
-                    color='darkgray', label='DA limit')
-            ax.set_xlabel('x [' + da.dict_units['x'][1] + ']', fontsize=16)
-            ax.set_ylabel('y [' + da.dict_units['y'][1] + ']', fontsize=16)
-            plt.rcParams['font.size'] = '16'
-            # Set tick font size
-            for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-                label.set_fontsize(16)
-            ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%\n'.format(
-                m=da.mode, t=da.number_of_turns, ll=da.ring[0].FamName, dpp=da.dpp * 100))
-            ax.legend()
-            plt.savefig(file_name_save, dpi=600)
-        else:
-            ax = da.plot(file_name_save=file_name_save)
-
-    return h, v
+    return h, v, da, search
