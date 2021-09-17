@@ -643,7 +643,7 @@ def off_energy_dynamic_aperture(sr_ring,
     :param start_index: index where to compute off-energy DA
     :param file_name_save: if given, save to file
     :return: max_neg_x list of maximum negative da for each deltap/p required
-    :return: da, for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
+    :return: deltaps, da: for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
     da = Acceptance6D(copy.deepcopy(sr_ring), start_index=start_index, n_turns=n_turns)
     da.verbose = False
@@ -700,7 +700,7 @@ def off_energy_dynamic_aperture(sr_ring,
         savemat(file_name_save + '.mat', m_dict)
 
 
-    return max_neg_x, da
+    return max_neg_x, deltaps, da
 
 
 def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=None, num_recursions=5):

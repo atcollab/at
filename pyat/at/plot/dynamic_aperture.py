@@ -225,7 +225,7 @@ def get_border(h, v, sel):
     return h_s, v_s
 
 
-def plot_off_energy_dynamic_aperture(max_neg, da, inject_from_inside = True, file_name_save = ''):
+def plot_off_energy_dynamic_aperture(max_neg, deltaps, da, inject_from_inside = True, file_name_save = ''):
     """
     use output of dynamic_aperture.off_energy_dynamic_aperture to produce a figure
     """
