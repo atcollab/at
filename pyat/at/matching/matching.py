@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from itertools import repeat
 from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
-from at.physics import linopt, ohmi_envelope, find_orbit4
+from at.physics import get_optics, ohmi_envelope, find_orbit
 
 
 class Variable(object):
@@ -243,11 +243,11 @@ class ElementConstraints(Constraints):
 
 class LinoptConstraints(ElementConstraints):
     """Container for linear optics constraints:
-      - a constraint can be set on any result of at.linopt
+      - a constraint can be set on any result of at.get_optics
       - constraints are added to the container with the LinoptConstraints.add
         method.
 
-      at.linopt is called once before the evaluation of all constraints
+      at.get_optics is called once before the evaluation of all constraints
 
       Example:
           cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)
@@ -256,10 +256,10 @@ class LinoptConstraints(ElementConstraints):
           cnstrs.add('beta_x_inj', 'beta', 18.0, refpts=ref_inj, index=0)
 
           # Add a tune constraint
-          cnstrs.add('tune', 0.44, index=0, weight=0.01)
+          cnstrs.add('tunes', 0.44, index=0, weight=0.01)
 
           # Add a chromaticity constraint (both planes)
-          cnstrs.add('chrom', [0.0 0.0])
+          cnstrs.add('chroms', [0.0 0.0])
 
           # define a constraint of phase advances between 2 points
           def mu_diff(lindata, tune, chrom):
@@ -274,13 +274,18 @@ class LinoptConstraints(ElementConstraints):
 
         KEYWORDS
         dp=0.0          momentum deviation.
-        coupled=True    if False, simplify the calculations by assuming
-                        no H/V coupling
         twiss_in=None   Initial twiss parameters for transfer line optics.
                         "lindata" stucture, where only the beta and alpha are
                         required and used.
         orbit=None      Initial trajectory for transfer line
                         ((6,) array)
+        method=linopt6  Method used for the analysis of the transfer matrix.  
+                        Can be None, at.linopt2, at.linopt4, at.linopt6
+                        linopt2:    no longitudinal motion, no H/V coupling,
+                        linopt4:    no longitudinal motion, Sagan/Rubin
+                                    4D-analysis of coupled motion,
+                        linopt6:    with or without longitudinal motion, normal
+                                    mode analysis
         """
         self.get_chrom = False
         super(LinoptConstraints, self).__init__(ring, **kwargs)
@@ -350,44 +355,47 @@ class LinoptConstraints(ElementConstraints):
                 elif param == 'mu' and use_integer:
                     self.refpts[:] = True # necessary not to miss 2*pi jumps
                 return getf(refdata, param)
-            if param == 'dispersion':
-                self.get_chrom = True   # slower but necessary
 
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,
                                            **kwargs)
 
     def compute(self, ring, *args, **kwargs):
         """Optics computation before evaluation of all constraints"""
-        ld0, tune, chrom, ld = linopt(ring, refpts=self.refpts,
-                                      get_chrom=self.get_chrom, **kwargs)
-        return (ld[ref[self.refpts]] for ref in self.refs), (tune, chrom)
+        ld0, bd, ld = get_optics(ring, refpts=self.refpts,
+                                 get_chrom=self.get_chrom, **kwargs)
+        return (ld[ref[self.refpts]] for ref in self.refs), \
+               (bd.tune[:2], bd.chromaticity)
 
 
-class Orbit4Constraints(ElementConstraints):
+class OrbitConstraints(ElementConstraints):
     """Container for orbit constraints:
     The closed orbit can be handled with LinoptConstraints, but for problems
     which do not involve parameters other than orbit, like steering or
-    orbit bumps, Orbit4Constraints is much faster.
+    orbit bumps, OrbitConstraints is much faster.
 
-      at.find_orbit4 is called once before the evaluation of all constraints
+      at.find_orbit is called once before the evaluation of all constraints
 
     Example:
-        cnstrs = Orbit4Constraints(ring, dp=0.01)
+        cnstrs = OrbitConstraints(ring, dp=0.01)
 
         # Add a bump (x=-0.004, x'=0) constraint at location ref_inj
         cnstrs.add([-0.004, 0.0], refpts=ref_inj, index=slice(2))
     """
     def __init__(self, ring, *args, **kwargs):
-        """Build a Orbit4Constraints container
+        """Build a OrbitConstraints container
 
         KEYWORDS
-        dp=0.0              momentum deviation.
+        dp=0            Momentum deviation, when radiation is OFF
+        dct=0            Path lengthening, when radiation ids OFF
         orbit=None          Initial trajectory for transfer line: (6,) array
         """
-        super(Orbit4Constraints, self).__init__(ring, *args, **kwargs)
+        if ring.radiation:
+            args.pop('dp',0.0)
+            args.pop('dct',0.0)
+        super(OrbitConstraints, self).__init__(ring, *args, **kwargs)
 
     def add(self, target, refpts=None, index=None, name=None, **kwargs):
-        """Add a target to the Orbit4Constraints container
+        """Add a target to the OrbitConstraints container
 
         PARAMETERS
             target        desired value.
@@ -400,7 +408,7 @@ class Orbit4Constraints(ElementConstraints):
                             index=0         # x
                             index=2         # z
                             index=slice(4)  # x, x', z, z'
-            name='orbit4' name of the constraint.
+            name='orbit'  name of the constraint.
             weight=1.0    weight factor: the residual is (value-target)/weight.
             bounds=(0,0)  lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
@@ -410,15 +418,15 @@ class Orbit4Constraints(ElementConstraints):
         """
 
         if name is None:                # Generate the constraint name
-            name = 'orbit4' if index is None else 'orbit4_{}'.format(index)
+            name = 'orbit' if index is None else 'orbit_{}'.format(index)
 
         fun = self._arrayaccess(index)
-        super(Orbit4Constraints, self).add(fun, target, refpts, name=name,
+        super(OrbitConstraints, self).add(fun, target, refpts, name=name,
                                            **kwargs)
 
     def compute(self, ring, *args, **kwargs):
         """Orbit computation before evaluation of all constraints"""
-        orbit0, orbit = find_orbit4(ring, refpts=self.refpts, **kwargs)
+        orbit0, orbit = find_orbit(ring, refpts=self.refpts, **kwargs)
         return (orbit[ref[self.refpts]].T for ref in self.refs), ()
 
 
@@ -504,13 +512,13 @@ class EnvelopeConstraints(ElementConstraints):
 
 
 def match(ring, variables, constraints, verbose=2, max_nfev=1000,
-          diff_step=1.0e-10, method=None):
+          diff_step=1.0e-10, method=None, copy=True):
     """Perform matching of constraints by varying variables
 
     PARAMETERS
         ring                ring lattice or transfer line
         variables           sequence of Variable objects
-        constraints         sequance of Constraints objects
+        constraints         sequence of Constraints objects
 
     KEYWORDS
         verbose=2           See scipy.optimize.least_squares
@@ -520,29 +528,24 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
     def fun(vals):
         for value, variable in zip(vals, variables):
             variable.set(ring1, value)
-            variable.set(ring2, value)
 
-        c1 = [cons.evaluate(ring1) for cons in cst1]
-        c2 = [cons.evaluate(ring2) for cons in cst2]
-        return np.concatenate(c1 + c2, axis=None)
+        c = [cons.evaluate(ring1) for cons in constraints]
+        return np.concatenate(c, axis=None)
 
-    cst1 = [cons for cons in constraints if not cons.rad]
-    cst2 = [cons for cons in constraints if cons.rad]
-
-    ring1 = ring.copy()         # Make a shallow copy of ring
-    for var in variables:       # Make a deep copy of varying elements
-        for ref in uint32_refpts(var.refpts, len(ring1)):
-            ring1[ref] = ring1[ref].deepcopy()
-
-    ring2 = ring1.radiation_on(copy=True)
+    if copy:
+        ring1 = ring.copy()         # Make a shallow copy of ring
+        for var in variables:       # Make a deep copy of varying elements
+            for ref in uint32_refpts(var.refpts, len(ring1)):
+                ring1[ref] = ring1[ref].deepcopy()
+    else:
+        ring1 = ring  
 
     aaa = [(var.get(ring1), var.bounds) for var in variables]
     vini, bounds = zip(*aaa)
     bounds = np.array(bounds).T
 
-    cini1 = [cst.values(ring1) for cst in cst1]
-    cini2 = [cst.values(ring2) for cst in cst2]
-    ntargets = sum(np.size(a) for a in chain.from_iterable(cini1 + cini2))
+    cini = [cst.values(ring1) for cst in constraints]
+    ntargets = sum(np.size(a) for a in chain.from_iterable(cini))
 
     if method is None:
         if np.all(abs(bounds) == np.inf) and ntargets >= len(variables):
@@ -558,10 +561,9 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
 
     if verbose >= 1:
         print(Constraints.header())
-        for cst, ini in zip(cst1, cini1):
+        for cst, ini in zip(constraints, cini):
             print(cst.status(ring1, initial=ini))
-        for cst, ini in zip(cst2, cini2):
-            print(cst.status(ring2, initial=ini))
+
 
         print(Variable.header())
         for var, vini in zip(variables, vini):

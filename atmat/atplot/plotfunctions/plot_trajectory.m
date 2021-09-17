@@ -4,9 +4,11 @@ function varargout=plot_trajectory(varargin)
 %Helper function for atplot: plot
 %- H and V trajectories on the left axis
 %
-%PLOTDATA=PLOT_TRAJECTORY(LINDATA,RING,DPP,IN)
+% USAGE:
+% >> atbaseplot(ring,@PLOT_TRAJECTORY,{INPUT_COORDS);
+% >> atplot(ring,@PLOT_TRAJECTORY,INPUT_COORDS);     (obsolete)
 %
-%[S,PLOTDATA]=PLOT_TRAJECTORY(RING,DPP,IN)
+%  See also atbaseplot
 
 if nargout == 1     % From atplot
     nparts=size(varargin{4},2);

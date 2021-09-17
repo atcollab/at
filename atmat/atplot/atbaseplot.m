@@ -45,64 +45,47 @@ function curve = atbaseplot(varargin)
 %          Dipole,Quadrupole,Sextupole,Multipole,BPM,Label
 %
 
-global THERING
+global THERING %#ok<GVMIS> 
 
 npts=400; % number of point
-narg=1;
+
 % Select axes for the plot
-if narg<=length(varargin) && isscalar(varargin{narg}) && ishandle(varargin{narg})
-    ax=varargin{narg};
-    narg=narg+1;
-else
-    ax=gca;
-end
+[ax,varargs]=getargs(varargin,[],'check',@(x) isscalar(x) && ishandle(x));
+if isempty(ax), ax=gca; end
+
 % Select the lattice
-if narg<=length(varargin) && iscell(varargin{narg})
-    [elt0,curve.periodicity,ring0]=get1cell(varargin{narg});
-    narg=narg+1;
-else
-    [elt0,curve.periodicity,ring0]=get1cell(THERING);
-end
+[rg,varargs]=getargs(varargs,THERING,'check',@iscell);
+[elt0,curve.periodicity,ring0]=get1cell(rg);
+
+
+% Select the momentum deviation
+[curve.dpp,varargs]=getargs(varargs,0.0,'check',@(x) isnumeric(x) && isscalar(x));
+
+% Select the plotting range
 s0=findspos(ring0,1:elt0+1);
 curve.length=s0(end);
-% Select the momentum deviation
-if narg<=length(varargin) && isscalar(varargin{narg}) && isnumeric(varargin{narg})
-    curve.dpp=varargin{narg};
-    narg=narg+1;
-else
-    curve.dpp=0;
-end
-% Select the plotting range
 el1=1;
 el2=elt0+1;
-if narg<=length(varargin) && isnumeric(varargin{narg}) && (numel(varargin{narg})==2)
-    srange=varargin{narg};
+[srange,varargs]=getargs(varargs,[],'check',@(x) isnumeric(x) && numel(x)==2);
+if isempty(srange)
+    srange=[0 curve.length];
+else
     els=find(srange(1)>s0,1,'last');
     if ~isempty(els), el1=els; end
     els=find(s0>srange(2),1,'first');
     if ~isempty(els), el2=els; end
-    narg=narg+1;
-else
-    srange=[0 curve.length];
 end
+
 % select the plotting function
-plotargs={};
-if narg<=length(varargin) && isa(varargin{narg},'function_handle')
-    plotfun=varargin{narg};
-    narg=narg+1;
-    if narg<=length(varargin) && iscell(varargin{narg})
-        plotargs=varargin{narg};
-        narg=narg+1;
-    end
-else
-    plotfun=@defaultplot;
-end
+[plotfun,varargs]=getargs(varargs, @defaultplot,'check', @(x) isa(x,'function_handle'));
+[plotargs,varargs]=getargs(varargs,{},'check', @iscell);
+
 % Get options
-rsrc=varargin(narg:end);
-[synopt,rsrc]=getoption(rsrc,'synopt',true);
-[leftargs,rsrc]=getoption(rsrc,'leftargs',{});
-[rightargs,rsrc]=getoption(rsrc,'rightargs',{});
-[KeepAxis,rsrc]=getflag(rsrc,'KeepAxis');
+[synopt,varargs]=getoption(varargs,'synopt',true);
+[leftargs,varargs]=getoption(varargs,'leftargs',{});
+[rightargs,varargs]=getoption(varargs,'rightargs',{});
+[KeepAxis,varargs]=getflag(varargs,'KeepAxis');
+
 % Split the ring
 elmlength=findspos(ring0(el1:el2-1),el2-el1+1)/npts;
 r2=cellfun(@splitelem,ring0(el1:el2-1),'UniformOutput',false);
@@ -111,6 +94,7 @@ plrange=el1:el2+length(ring)-elt0;
 
 [s,outp]=plotfun(ring,curve.dpp,plotargs{:});
 if numel(outp) >= 2
+    % plotyy kept instead of yyaxis for octave compatibility...
     [ax2,curve.left,curve.right]=plotyy(ax,...
         s(plrange),outp(1).values(plrange,:),...
         s(plrange),outp(2).values(plrange,:));
@@ -130,7 +114,7 @@ end
 set(ax,'XLim',srange,'XGrid','on','YGrid','on',leftargs{:});
 xlabel(ax,'s [m]');
 if synopt
-    curve.lattice=atplotsyn(ax,ring0,rsrc{:});  % Plot lattice elements
+    curve.lattice=atplotsyn(ax,ring0,varargs{:});  % Plot lattice elements
 end
 lines=[curve.left;curve.right];
 if ~isempty(lines)
