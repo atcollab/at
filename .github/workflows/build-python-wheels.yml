@@ -41,8 +41,8 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          # Skip Python 3.9 since it won't compile with numpy 1.14.3.
-          CIBW_SKIP: 'cp39-*'
+          # Skip Python 2.7 and 3.9 (since it won't compile with numpy 1.14.3).
+          CIBW_SKIP: cp27-* cp39-* pp27-*
           CIBW_BEFORE_BUILD: pip install numpy==1.14.3
           CIBW_BUILD_VERBOSITY: 1
 
