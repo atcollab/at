@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from at.physics.dynamic_aperture import Acceptance6D
-
+import numpy as np
 
 def plot(Acc6D, ax=None, file_name_save=None):
     """
