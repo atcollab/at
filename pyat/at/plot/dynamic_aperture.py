@@ -286,7 +286,7 @@ def plot_dynamic_aperture(h, v, da, search, file_name_save=''):
 
     if search:
         # fig, ax = plt.subplots()
-        ax = da.plot()
+        ax = plot(da)
         fig = plt.gcf()
         fig.set_size_inches(8.0, 5.0)
         ll, bb, ww, hh = ax.get_position().bounds
