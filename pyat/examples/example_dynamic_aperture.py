@@ -25,6 +25,22 @@ daplot.plot_dynamic_aperture(h0, v0, da_, search, file_name_save=folder_data + '
 elapsed = time.time() - t
 print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 
+
+print('On-energy DA grid (parallel computation)')
+h0, v0, da_, _ = da.dynamic_aperture(sr_ring,
+                    n_turns=N,
+                    n_radii=21,
+                    n_theta=21,
+                    grid_mode='grid',  # grid mode also allows parallel computation
+                    file_name_save=folder_data + '/on_en_da_grid',
+                    num_recursions=5)
+# daplot.plot_dynamic_aperture(h0, v0, da_, search, file_name_save=folder_data + '/on_en_da_grid')
+
+elapsed = time.time() - t
+print('On-energy DA grid (parallel) took {s:2.1f}s'.format(s=elapsed))
+
+
+
 # off-en DA
 t = time.time()
 print('Off-energy DA')

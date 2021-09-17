@@ -81,6 +81,9 @@ class Acceptance6D(object):
         : dict_unit:  default units for each dimension
 
         """
+
+        self.parallel_computation = True
+
         # rotate lattice to given element
         self.ring = at.Lattice(ring[start_index:] + ring[:start_index])
 
@@ -212,7 +215,7 @@ class Acceptance6D(object):
             #else:
             #    coord = copy.deepcopy(coord0)
             if ir == 0:
-                coord = copy.deepcopy(coord0)
+                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
 
             if self.verbose:
                 print(coord)
@@ -290,12 +293,12 @@ class Acceptance6D(object):
 
                 step = (self.dict_def_range[p][1] - self.dict_def_range[p][0]) / self.search_divider
 
-                coord = copy.deepcopy(coord0)
+                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0} # copy.deepcopy(coord0)
                 while self.test_survived(coord):
                     coord[p] += step
                 self.dict_def_range[p][1] = coord[p]+step
 
-                coord = copy.deepcopy(coord0)
+                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0} # copy.deepcopy(coord0)
                 while self.test_survived(coord):
                     coord[p] -= step
                 self.dict_def_range[p][0] = coord[p]-step
@@ -475,6 +478,92 @@ class Acceptance6D(object):
 
         return not np.isnan(t[0][0][0][-1])
 
+    def compute(self):
+        """
+        compute DA
+
+        :return:
+        """
+
+        print('Computing DA {m}'.format(m=self.mode))
+
+        [print('test {np:02d} points in {pl}'.format(np=self.n_points[p], pl=p))
+         for ip, p in enumerate(self.planes)]
+
+        ii = 0
+
+        if not self.parallel_computation:
+            for x, xp, y, yp, delta, ct in zip(self.coordinates['x'],
+                                               self.coordinates['xp'],
+                                               self.coordinates['y'],
+                                               self.coordinates['yp'],
+                                               self.coordinates['delta'],
+                                               self.coordinates['ct']):
+                coord = {'x': x, 'xp': xp, 'y': y, 'yp': yp, 'delta': delta, 'ct': ct}
+                self.survived[ii] = self.test_survived(coord)
+                if self.verbose:
+                    print('[{x:2.2g}, {xp:2.2g}, {y:2.2g}, {yp:2.2g}, {delta:2.2g}, {ct:2.2g}] '
+                          '| {ind:02d} / {tot:02d}: {surv} for {nt} turns'.format(
+                            ind=ii, tot=len(self.coordinates['x']), surv=self.survived[ii], nt=self.number_of_turns,
+                            x=x, y=y, xp=xp, ct=ct, yp=yp, delta=delta)
+                          )
+                ii += 1
+        else:
+            print('parallel computation')
+            rin = np.concatenate(([self.coordinates['x']],
+                                  [self.coordinates['xp']],
+                                  [self.coordinates['y']],
+                                  [self.coordinates['yp']],
+                                  [self.coordinates['delta']],
+                                  [self.coordinates['ct']]), axis=0)
+
+            t, losses = at.patpass(self.ring,
+                          copy.deepcopy(rin),
+                          self.number_of_turns,
+                          refpts=np.array(np.uint32(0)), # np.array(np.uint32([len(self.ring)])))
+                          losses=True)
+
+            self.survived = [not s for s in losses['islost']]
+
+        h, v, sel = self.select_test_points_based_on_mode()
+
+        # find maximum of each column and return as border
+        try:
+            h_s, v_s = self.get_border(h, v, sel)
+        except Exception:
+            h_s = []
+            v_s = []
+            print('DA limit could not be computed (probably no closed contour)')
+
+        return h_s, v_s
+
+    def get_border(self, h, v, sel):
+        """
+        find border of list of points.
+        works only for grid mode.
+        """
+        h_border = []
+        v_border = []
+
+        # loop columns of grid
+        if self.grid_mode == 'grid':
+            for hc in h:
+                col = [v[i] for h_, i in enumerate(h) if h_ == hc ]
+                h_border.append(hc)
+                v_border.append(np.max(col))
+                h_border.insert(0,hc)
+                v_border.insert(0,np.min(col))
+        elif self.grid_mode == 'radial':
+            # find radial grid extremes.  not implemented
+            print('radial mode, no border computed')
+            pass
+        else:
+            print('grid_mode must be grid or radial')
+
+        # remove bottom line if any. not implemented
+
+        return h_border, v_border
+
     def select_test_points_based_on_mode(self):
         """
         reduces the 6D coordinated according to the mode to 3 lists for plotting:
@@ -548,74 +637,6 @@ class Acceptance6D(object):
                 self.coordinates['xp'])]
 
         return h, v, sel
-
-    def compute(self):
-        """
-        compute DA
-
-        :return:
-        """
-
-        print('Computing DA {m}'.format(m=self.mode))
-
-        [print('test {np:02d} points in {pl}'.format(np=self.n_points[p], pl=p))
-         for ip, p in enumerate(self.planes)]
-
-        ii = 0
-        for x, xp, y, yp, delta, ct in zip(self.coordinates['x'],
-                                           self.coordinates['xp'],
-                                           self.coordinates['y'],
-                                           self.coordinates['yp'],
-                                           self.coordinates['delta'],
-                                           self.coordinates['ct']):
-            coord = {'x': x, 'xp': xp, 'y': y, 'yp': yp, 'delta': delta, 'ct': ct}
-            self.survived[ii] = self.test_survived(coord)
-            if self.verbose:
-                print('[{x:2.2g}, {xp:2.2g}, {y:2.2g}, {yp:2.2g}, {delta:2.2g}, {ct:2.2g}] '
-                      '| {ind:02d} / {tot:02d}: {surv} for {nt} turns'.format(
-                        ind=ii, tot=len(self.coordinates['x']), surv=self.survived[ii], nt=self.number_of_turns,
-                        x=x, y=y, xp=xp, ct=ct, yp=yp, delta=delta)
-                      )
-            ii += 1
-
-        h, v, sel = self.select_test_points_based_on_mode()
-
-        # find maximum of each column and return as border
-        try:
-            h_s, v_s = self.get_border(h, v, sel)
-        except Exception:
-            h_s = []
-            v_s = []
-            print('DA limit could not be computed (probably no closed contour)')
-
-        return h_s, v_s
-
-    def get_border(self, h, v, sel):
-        """
-        find border of list of points.
-        works only for grid mode.
-        """
-        h_border = []
-        v_border = []
-
-        # loop columns of grid
-        if self.grid_mode == 'grid':
-            for hc in h:
-                col = [v[i] for h_, i in enumerate(h) if h_ == hc ]
-                h_border.append(hc)
-                v_border.append(np.max(col))
-                h_border.insert(0,hc)
-                v_border.insert(0,np.min(col))
-        elif self.grid_mode == 'radial':
-            # find radial grid extremes.  not implemented
-            print('radial mode, no border computed')
-            pass
-        else:
-            print('grid_mode must be grid or radial')
-
-        # remove bottom line if any. not implemented
-
-        return h_border, v_border
 
     pass
 
@@ -798,7 +819,7 @@ def dynamic_aperture(sr_ring,
 
         da.n_points['x'] = n_theta  # used as theta, if grid radial
         da.n_points['y'] = n_radii  # used as radii, if grid radial
-        da.dict_def_range['y'][0] = 0.0   # make y single sided
+        da.dict_def_range['y'][0] = 0.0  # make y single sided
 
         if search:
             theta = np.linspace(0, math.pi, da.n_points['x'])
@@ -821,6 +842,12 @@ def dynamic_aperture(sr_ring,
             #     v = np.array(v)
 
         else:
+            da.compute_range()  # implement an init at change of mode, npoint, or range.
+
+            da.n_points['x'] = n_theta  # used as theta, if grid radial
+            da.n_points['y'] = n_radii  # used as radii, if grid radial
+            da.dict_def_range['y'][0] = 0.0  # make y single sided
+
             da.test_points_grid(grid_mode=grid_mode)
             h, v = da.compute()
 
