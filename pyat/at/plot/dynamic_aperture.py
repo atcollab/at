@@ -279,7 +279,7 @@ def plot_momentum_acceptance(mom_acc, s, da=None, file_name_save=''):
 
     pass
 
-def plot_dynamic_aperture(da, file_name_save=''):
+def plot_dynamic_aperture(h, v, da, search, file_name_save=''):
     """
     use output of dynamic_aperture.dynamic_aperture to produce a figure
     """
