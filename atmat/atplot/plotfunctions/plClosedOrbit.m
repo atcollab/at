@@ -6,8 +6,8 @@ function varargout=plClosedOrbit(varargin)
 %- Dispersion on right axis
 %
 %  EXAMPLEs
-%  1. PLOTDATA=plClosedOrbit(LINDATA,RING,DPP)
-%  2. [S,PLOTDATA]=plClosedOrbit(RING,DPP)
+% >> atbaseplot(ring,@plClosedOrbit,{'dp',0.01});
+% >> atplot(ring,@plClosedOrbit,'dp',0.01);     (obsolete)
 %
 %  See also atplot atbaseplot
 
@@ -15,18 +15,18 @@ if nargout == 1 % From atplot
     lindata=varargin{1};
     CoD=cat(2,lindata.ClosedOrbit)';
     [xref,zref]=atreforbit(varargin{2});
-    xref(5)
-    plotdata(1).values=CoD(:,[1 3])+[xref zref];
+    plotdata(1).values=CoD(:,[1 3])+[xref zref];    % left axis
     plotdata(1).labels={'x_{co}','z_{co}'};
     plotdata(1).axislabel='x,z [m]';
     dispersion=cat(2,lindata.Dispersion)';
-    plotdata(2).values=dispersion(:,3);
+    plotdata(2).values=dispersion(:,3);             % right axis
     plotdata(2).labels={'\eta_y'};
     plotdata(2).axislabel='Vertical dispersion [m]';
     varargout={plotdata};
 else % From atbaseplot
-    refpts=1:length(varargin{1})+1;
-    [lindata,tune,chrom]=atlinopt(varargin{1:2},refpts); %#ok<ASGLU>
-    varargout={cat(1,lindata.SPos),plClosedOrbit(lindata,varargin{:})};
+    ring=varargin{1};
+    [linargs,vargs]=linoptions(varargin(3:end),varargin{2});
+    [~,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:});
+    varargout={cat(1,lindata.SPos),plClosedOrbit(lindata,ring,vargs{:})};
 end
 end

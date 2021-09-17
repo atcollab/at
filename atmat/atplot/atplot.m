@@ -12,9 +12,9 @@ function curve = atplot(varargin)
 %ATPLOT(...,[SMIN SMAX])  Zoom on the specified range
 %
 %ATPLOT(...,'OptionName',OptionValue,...) Available options:
-%   'inputtwiss',structure of optics   transferline optics 
+%   'twiss_in',structure of optics   transferline optics
 %               (ex: [optics_struct,~,~]=atlinopt(ring,0,1);
-%              atplot(ring,[0 10],@plBeamSize,'inputtwiss',optics_struct);)
+%              atplot(ring,[0 10],@plBeamSize,'twiss_in',optics_struct);)
 %   'comment',true|false        Prints lattice information (default:true)
 %   'synopt',true|false         Plots the lattice elements
 %   'labels',REFPTS             Display the names of selected element names
@@ -69,25 +69,23 @@ function curve = atplot(varargin)
 funcarg=find(cellfun(@(arg) isa(arg,'function_handle'),varargin),1);
 if isempty(funcarg)
     funcarg=nargin+1;
+    options={@defaultplot};
+else
+    options=varargin(funcarg:end);
 end
 resarg=find(cellfun(@(arg) ischar(arg),varargin(1:funcarg-1)),1);
 if isempty(resarg)
     resarg=funcarg;
 end
-options=varargin(resarg:funcarg-1);
-[comment,options]=getoption(options,'comment',true);
-[intwi,options]=getoption(options,'inputtwiss',[]);
-%openline=find(strcmp(options(cellfun(@ischar,options)),'inputtwiss'));
+
+varargs=cellfun(@correct, varargin(resarg:funcarg-1), 'UniformOutput',false);
+[largs,varargs]=linoptions(varargs);
+[comment,varargs]=getoption(varargs,'comment',true);
 
 lindata=[];
 
-if isempty(intwi)	% closed ring, DEFAULT
-    curve=atbaseplot(varargin{1:resarg-1},...
-        @ringplot,varargin(funcarg:end),options{:});
-else                % openline plot
-    curve=atbaseplot(varargin{1:resarg-1},...
-        @lineplot,[{intwi} varargin(funcarg:end)],options{:});
-end
+curve=atbaseplot(varargin{1:resarg-1},...
+    @ringplot,[options largs],varargs{:});
 
 if comment && ~isempty(curve.left)
     ax=get(curve.left(1),'Parent');
@@ -95,7 +93,7 @@ if comment && ~isempty(curve.left)
     tuneper=lindata(end).mu/2/pi;
     tunes=curve.periodicity*tuneper;
     circumference=curve.periodicity*curve.length;
-    if curve.periodicity > 1, plural='s'; else plural=''; end
+    if curve.periodicity > 1, plural='s'; else plural=''; end %#ok<SEPEX>
     line1=sprintf('\\nu_x=%8.3f      \\deltap/p=%.3f%i %s',tunes(1),curve.dpp);
     line2=sprintf('\\nu_z=%8.3f      %2i %s, C=%10.3f',tunes(2),...
         curve.periodicity,['period' plural],circumference);
@@ -103,28 +101,19 @@ if comment && ~isempty(curve.left)
         'VerticalAlignment','top');
 end
 
-    % RING
     function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
-        [lindata,tune,chrom]=atlinopt(ring,dpp,1:length(ring)+1); %#ok<ASGLU>
+        [linargs,vargs] = linoptions(varargin,dpp);
+        [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
         s=cat(1,lindata.SPos);
-        if nargin < 3
-            plotdata=defaultplot(lindata,ring,dpp);
-        else
-            plotdata=plotfun(lindata,ring,dpp,varargin{:});
-        end
+        plotdata=plotfun(lindata,ring,dpp,vargs{:});
     end
 
-    % OPEN LINE
-    function [s,plotdata]=lineplot(ring,dpp,inputtwiss,plotfun,varargin)
-        lindata=twissline(ring,dpp,inputtwiss,1:length(ring)+1,'chrom'); 
-        s=cat(1,lindata.SPos);
-        if nargin < 4
-            plotdata=defaultplot(lindata,ring,dpp);
-        else
-            plotdata=plotfun(lindata,ring,dpp,varargin{:});
+    function opt=correct(opt)
+        % Replace the obsolete 'inputtwiss' keyword with 'twiss_in'
+        if strcmp(opt, 'inputtwiss')
+            opt='twiss_in';
         end
     end
-
 
 end
 
