@@ -25,7 +25,7 @@ daplot.plot_dynamic_aperture(h0, v0, da_, search, file_name_save=folder_data + '
 elapsed = time.time() - t
 print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 
-
+"""
 print('On-energy DA grid (parallel computation)')
 h0, v0, da_, _ = da.dynamic_aperture(sr_ring,
                     n_turns=N,
@@ -38,6 +38,8 @@ h0, v0, da_, _ = da.dynamic_aperture(sr_ring,
 
 elapsed = time.time() - t
 print('On-energy DA grid (parallel) took {s:2.1f}s'.format(s=elapsed))
+
+"""
 
 
 

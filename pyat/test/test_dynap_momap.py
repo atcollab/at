@@ -51,7 +51,7 @@ def test_dynamic_aperture(hmba_lattice):
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    h, v, _, _= dynamic_aperture(sr_ring, n_turns=2**6, n_radii=15, num_recursions=4,
+    h, v, _, _= dynamic_aperture(sr_ring, n_turns=2**5, n_radii=15, num_recursions=4,
                             file_name_save='') # 'on_en_da')
     [print(h_,v_) for h_, v_ in zip(h,v)]
     elapsed = time.time() - t
@@ -68,7 +68,7 @@ def test_dynamic_aperture_grid(hmba_lattice):
     t = time.time()
     print('On-energy DA grid')
     h, v, da, _= dynamic_aperture(sr_ring, grid_mode='grid',
-                                 n_turns=2**6, n_radii=21, num_recursions=4,
+                                 n_turns=2**7, n_radii=25, n_theta=25, num_recursions=4,
                             file_name_save='') # 'on_en_da')
     [print(h_,v_) for h_, v_ in zip(h,v)]
     print(da.survived)

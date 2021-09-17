@@ -510,13 +510,18 @@ class Acceptance6D(object):
                 ii += 1
         else:
             print('parallel computation')
-            rin = np.concatenate(([self.coordinates['x']],
-                                  [self.coordinates['xp']],
-                                  [self.coordinates['y']],
-                                  [self.coordinates['yp']],
-                                  [self.coordinates['delta']],
-                                  [self.coordinates['ct']]), axis=0)
 
+            # create 6xN matrix add orbit (with dpp) to each coordinate
+
+            rin = np.concatenate(([self.coordinates['x'] + self.orbit[0][0]],
+                                  [self.coordinates['xp'] + self.orbit[0][1]],
+                                  [self.coordinates['y'] + self.orbit[0][2]],
+                                  [self.coordinates['yp'] + self.orbit[0][3]],
+                                  [self.coordinates['delta'] + self.orbit[0][4]],
+                                  [self.coordinates['ct'] + self.orbit[0][5]]),
+                                 axis=0)
+
+            # track coordinates
             t, losses = at.patpass(self.ring,
                           copy.deepcopy(rin),
                           self.number_of_turns,
@@ -528,6 +533,8 @@ class Acceptance6D(object):
         h, v, sel = self.select_test_points_based_on_mode()
 
         # find maximum of each column and return as border
+        h_s, v_s = self.get_border(h, v, sel)
+
         try:
             h_s, v_s = self.get_border(h, v, sel)
         except Exception:
@@ -545,14 +552,21 @@ class Acceptance6D(object):
         h_border = []
         v_border = []
 
+        # [print(h_, v_, s_) for h_, v_, s_ in zip(h, v, sel)]
+
         # loop columns of grid
         if self.grid_mode == 'grid':
-            for hc in h:
-                col = [v[i] for h_, i in enumerate(h) if h_ == hc ]
-                h_border.append(hc)
-                v_border.append(np.max(col))
-                h_border.insert(0,hc)
-                v_border.insert(0,np.min(col))
+
+            for hc in np.unique(h):
+                col=[]
+                for i, h_ in enumerate(h):
+                    if h_ == hc and sel[i]:
+                        col.append(v[i])
+                if len(col) > 0:
+                    h_border.append(hc)
+                    v_border.append(np.max(col))
+                    h_border.insert(0,hc)
+                    v_border.insert(0,np.min(col))
         elif self.grid_mode == 'radial':
             # find radial grid extremes.  not implemented
             print('radial mode, no border computed')
@@ -678,16 +692,21 @@ def off_energy_dynamic_aperture(sr_ring,
         da.survived = []
 
     ring_rad = da.ring.radiation
+
     for deltap in deltaps:
         print('{d:2.1f}%'.format(d=deltap*100))
         da.dpp = deltap
-
+        """
+        L.F.
+        you have to change the RF frequency by alpha * f0 * dpp, 
+        compute the 6D closed orbit
+        """
         da.ring.radiation_off()
         da.orbit = da.ring.find_orbit4(dp=da.dpp)  # dpp is added to orbit here
 
         # restore radiation state
         if ring_rad:
-            da.ring.radiation_on()
+           da.ring.radiation_on()
 
         if search:
             if inject_from_inside:
