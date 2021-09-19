@@ -142,8 +142,8 @@ setup(
     author='The AT collaboration',
     author_email='atcollab-general@lists.sourceforge.net',
     url='https://github.com/atcollab/at',
-    # Numpy 1.14.3 is the oldest version that builds with Python 3.7.
-    install_requires=['numpy>=1.14.3', 'scipy>=0.16'],
+    # Numpy 1.16.6 is the oldest version that builds with Python 3.9.
+    install_requires=['numpy>=1.16.6', 'scipy>=0.16'],
     packages=find_packages(),
     ext_modules=[at, diffmatrix] + [integrator_ext(pm) for pm in pass_methods],
     zip_safe=False,
@@ -156,5 +156,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ]
 )
