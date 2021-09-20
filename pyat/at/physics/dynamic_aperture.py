@@ -105,16 +105,10 @@ class Acceptance6D(object):
 
         use_radiation = ring.radiation
 
-        # if self.dp != 0.0:
-        self.orbit = self.ring.find_orbit(dp=self.dp)  # dpp is added to orbit here
-        #else:
-        #    self.orbit = self.ring.find_orbit6()
+        # define orbit about wich to compute DA
+        self.compute_orbit()
 
-        if use_radiation:
-            self.ring.radiation_on()
-        else:
-            self.ring.radiation_off()
-
+        # define coordinates dictionary structure
         self.coordinates = {'x': [],
                             'xp': [],
                             'y': [],
@@ -127,6 +121,7 @@ class Acceptance6D(object):
         self.number_of_turns = n_turns
         self.search_divider = search_divider
 
+        # define grid modes for later use
         self.grid_modes = ['grid', 'radial']
         self.grid_mode = grid_mode
         if not (self.grid_mode in self.grid_modes):
@@ -207,7 +202,13 @@ class Acceptance6D(object):
         computes orbit for given dp
         """
 
-        self.orbit, _ = at.find_orbit(self.ring, dp=self.dp)
+        """
+        L.F.
+        you have to change the RF frequency by alpha * f0 * dpp, 
+        compute the 6D closed orbit
+        """
+
+        self.orbit, _ = self.ring.find_orbit(dp=self.dp)  # dpp is added to orbit here
 
         return self.orbit
 
@@ -770,18 +771,12 @@ def off_energy_dynamic_aperture(sr_ring,
 
     for deltap in deltaps:
         print('{d:2.1f}%'.format(d=deltap*100))
-        da.dp = deltap
-        """
-        L.F.
-        you have to change the RF frequency by alpha * f0 * dpp, 
-        compute the 6D closed orbit
-        """
-        da.ring.radiation_off()
-        da.orbit = da.ring.find_orbit4(dp=da.dp)  # dpp is added to orbit here
 
-        # restore radiation state
-        if ring_rad:
-           da.ring.radiation_on()
+        # change dp
+        da.dp = deltap
+
+        # refresh reference orbit with new dp
+        da.compute_orbit()
 
         if search:
             if inject_from_inside:
@@ -904,7 +899,7 @@ def dynamic_aperture(sr_ring,
     h = []
     v = []
 
-    da = Acceptance6D(copy.deepcopy(sr_ring), mode='x-y', start_index=start_index)
+    da = Acceptance6D(copy.deepcopy(sr_ring), mode='x-y', grid_mode=grid_mode, start_index=start_index)
     da.number_of_turns = n_turns
     da.dp = dp
     da.verbose = False
@@ -945,7 +940,7 @@ def dynamic_aperture(sr_ring,
             da.n_points['y'] = n_radii  # used as radii, if grid radial
             da.dict_def_range['y'][0] = 0.0  # make y single sided
 
-            da.test_points_grid(grid_mode=grid_mode)
+            da.test_points_grid()
             h, v = da.compute()
 
     if grid_mode == 'grid':

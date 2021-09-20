@@ -32,7 +32,7 @@ print('x-xp Acceptance took {s:2.1f}s'.format(s=elapsed))
 
 print('5D acceptance, using class directly')
 DA = da.Acceptance6D(sr_ring,
-                  mode='6D', start_index=120, n_turns=2**9, dp=-0.0)
+                  mode='6D', start_index=120, n_turns=2**5, dp=-0.0)
 DA.n_points['ct'] = 1 # do not scan ct coordinate
 DA.verbose = True
 DA.parallel_computation = False
