@@ -44,7 +44,7 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
         else:
             cols.append('gainsboro')
 
-    if not Acc6D.mode:
+    if (Acc6D.mode is None) or (Acc6D.mode == '6D'):
         if type(pl[0]) != str:
             pl_h = Acc6D.planes[pl[0]]
         else:
@@ -53,7 +53,7 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
         if type(pl[1]) != str:
             pl_v = Acc6D.planes[pl[1]]
         else:
-            pl_h = pl[1]
+            pl_v = pl[1]
     else:
         # get planes from mode
         pl_h, pl_v = Acc6D.mode.split('-', 2)
@@ -69,16 +69,18 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
 
     ax.scatter(hs, vs, s=20, c=cols, label='tested', facecolors='none')
     ax.plot(hs[sel], vs[sel], 'x', color='royalblue', markersize=3, label='survived')
+    try:
+        cs = ax.tricontour(hs, vs, sel, linewidths=2)
+        for c in cs.collections:
+            c.set_edgecolor("face")
 
-    cs = ax.tricontour(hs, vs, sel, linewidths=2)
-    for c in cs.collections:
-        c.set_edgecolor("face")
-
-    if len(cs.allsegs) > 3:
-        dat0 = cs.allsegs[-2][0]
-        ax.plot(dat0[:, 0], dat0[:, 1], ':', label='limit')
-    else:
-        print('DA limit could not be computed (probably no closed contour)')
+        if len(cs.allsegs) > 3:
+            dat0 = cs.allsegs[-2][0]
+            ax.plot(dat0[:, 0], dat0[:, 1], ':', label='limit')
+        else:
+            print('DA limit could not be computed (probably no closed contour)')
+    except Exception:
+        print(' limits not computed ')
 
     ax.set_xlabel(pl_h + ' [' + Acc6D.dict_units[pl_h][1] + ']', fontsize=14)
     ax.set_ylabel(pl_v + ' [' + Acc6D.dict_units[pl_v][1] + ']', fontsize=14)
@@ -86,13 +88,17 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
     ax.set_ylim([r * Acc6D.dict_units[pl_v][0] for r in Acc6D.dict_def_range[pl_v]])
 
     ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%'.format(
-        m=Acc6D.mode, t=Acc6D.number_of_turns, ll=Acc6D.ring[0].FamName, dpp=Acc6D.dpp * 100))
+        m=Acc6D.mode, t=Acc6D.number_of_turns, ll=Acc6D.ring[0].FamName, dpp=Acc6D.dp * 100))
 
     ax.legend()
     plt.tight_layout()
 
     if file_name_save:
-        plt.savefig(file_name_save + '_' + Acc6D.mode.replace('-', '_'), dpi=600)
+        fns = file_name_save.split('.', 2)
+        if fns[1]:
+            plt.savefig(fns[0] + '_' + Acc6D.mode.replace('-', '_') + '.' + fns[1], dpi=600)
+        else:
+            plt.savefig(file_name_save + '_' + Acc6D.mode.replace('-', '_'), dpi=600)
 
     return ax
 
@@ -301,7 +307,7 @@ def plot_dynamic_aperture(h, v, da, search, file_name_save=''):
         for label in (ax.get_xticklabels() + ax.get_yticklabels()):
             label.set_fontsize(16)
         ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%\n'.format(
-            m=da.mode, t=da.number_of_turns, ll=da.ring[0].FamName, dpp=da.dpp * 100))
+            m=da.mode, t=da.number_of_turns, ll=da.ring[0].FamName, dpp=da.dp * 100))
         ax.legend()
         plt.savefig(file_name_save, dpi=600)
     else:

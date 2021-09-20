@@ -12,6 +12,9 @@ __all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'm
 
 
 class Acceptance6D(object):
+    """
+    Compute acceptance
+    """
 
     verbose = True
 
@@ -21,11 +24,11 @@ class Acceptance6D(object):
     # 2D combination of planes
     modes = ('x-y',
              'delta-x',
-             '6D',
              'xp-yp',
              'x-xp',
              'y-yp',
-             'ct-delta')
+             'ct-delta',
+             '6D')
 
     dict_units = {'x': [1e3, 'mm'],
                   'xp': [1e3, 'mrad'],
@@ -55,47 +58,55 @@ class Acceptance6D(object):
 
     def __init__(self,
                  ring,
-                 dpp=0.0,
-                 mode=None,
+                 dp=0.0,
+                 mode='x-y',
                  start_index=0,
                  grid_mode='grid',
                  compute_range=False,
                  n_turns=2**10,
                  search_divider=10,
-                 use_radiation=True
-                 ):
+                 use_radiation=True,
+                 parallel = False
+                ):
         """
         Acceptance6D computes the 6D acceptance for a pyAT lattice
 
         :param ring: pyAT lattice
-        :param dpp: momentum deviation
-        :param mode: mode for computation. None = 6D (default), 'x-y', 'delta-x'. 'x-xp',...
+        :param dp: momentum deviation
+        :param mode: mode for computation. None = 6D, '6D', 'x-y' (default), 'delta-x'. 'x-xp',...
         :param start_index: index in ring where to start the computation
         :param grid_mode: 'grid' or 'radial' set of test points to compute Acceptance
         :param compute_range: compute range for each plane with more than 1 point to scan
         :param nturns: number of turns that a particle must survive
         :param search_divider: division of range used by recursive range
         :param use_radiation: default true (turn on radiation, in future version, use radiation state of input lattice)
+        :param parallel: default False if True, use patpass when usefull
         : n_point: dictionary to determine the # points to scan in each dimension
         : dict_def_range: default range for each dimension
         : dict_unit:  default units for each dimension
 
         """
 
-        self.parallel_computation = True
+        self.parallel_computation = parallel
 
         # rotate lattice to given element
         self.ring = at.Lattice(ring[start_index:] + ring[:start_index])
 
-        self.dpp = dpp
+        self.dp = dp
         self.mode = mode
+
+        # if explicit input, turn off radiation
+        if not use_radiation:
+            self.ring.radiation_off()
+        else:
+            # if no input use state of radiation of the input lattice
+            if self.verbose:
+                print('using input lattice radiation state: {}'.format(ring.radiation))
 
         use_radiation = ring.radiation
 
-        self.ring.radiation_off()
-
-        # if self.dpp != 0.0:
-        self.orbit = self.ring.find_orbit4(dp=self.dpp)  # dpp is added to orbit here
+        # if self.dp != 0.0:
+        self.orbit = self.ring.find_orbit(dp=self.dp)  # dpp is added to orbit here
         #else:
         #    self.orbit = self.ring.find_orbit6()
 
@@ -117,7 +128,9 @@ class Acceptance6D(object):
         self.search_divider = search_divider
 
         self.grid_modes = ['grid', 'radial']
-        self.grid_mode = self.grid_modes[0]
+        self.grid_mode = grid_mode
+        if not (self.grid_mode in self.grid_modes):
+            raise('grid mode must be: grid or radial')
 
         # point to scan in each dimension
         if mode == 'x-y':
@@ -168,7 +181,14 @@ class Acceptance6D(object):
                              'delta': 1,
                              'ct': 1
                              }
-
+        elif mode == '6D':
+            self.n_points = {'x': 5,
+                             'xp': 5,
+                             'y': 5,
+                             'yp': 5,
+                             'delta': 5,
+                             'ct': 5
+                             }
         else:  # default for no mode = x-y
             self.n_points = {'x': 13,
                              'xp': 1,
@@ -178,10 +198,18 @@ class Acceptance6D(object):
                              'ct': 1
                              }
 
-        self.test_points_grid(grid_mode=grid_mode,
-                              compute_limits=compute_range)
+        self.test_points_grid(compute_limits=compute_range)
 
         pass
+
+    def compute_orbit(self):
+        """
+        computes orbit for given dp
+        """
+
+        self.orbit, _ = at.find_orbit(self.ring, dp=self.dp)
+
+        return self.orbit
 
     def recursive_search_of_directional_limit(self, direction=(1, 0, 0, 0, 0, 0),
                                               number_of_recursions=3,
@@ -195,6 +223,12 @@ class Acceptance6D(object):
         :param back_step:  number of steps to decrement to start with next search.
         :return: 6D coordinates array of last surviving particle
         """
+
+        # disable parallel computation
+        init_parcomp = self.parallel_computation
+        self.parallel_computation = False
+
+        # define initial coordinate
         coord0 = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
 
         # define step in each plane
@@ -229,7 +263,7 @@ class Acceptance6D(object):
                     coord[pl] += step[pl]  # go back by one of the previous size steps.
 
             # search limit
-            while self.test_survived(coord):
+            while self.test_survived(coord)[0]:
                 for pl in self.planes:
                     coord[pl] += step[pl]
                     # update tested points
@@ -274,14 +308,21 @@ class Acceptance6D(object):
             if self.verbose:
                 print('present limit: {l}'.format(l=limit))
 
+        # restore initial parallel computation value
+        self.parallel_computation = init_parcomp
+
         return limit
 
     def compute_range(self):
         """
         computes maximum +/- range for all dimensions with more than 1 point to scan
         result is stored in dict_def_range
+        ranges are limited to [-1 1] in any case without notice.
         :return:
         """
+        # disable parallel computation
+        init_parcomp = self.parallel_computation
+        self.parallel_computation = False
 
         # relevant_planes = []
         # if self.mode:
@@ -294,12 +335,12 @@ class Acceptance6D(object):
                 step = (self.dict_def_range[p][1] - self.dict_def_range[p][0]) / self.search_divider
 
                 coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0} # copy.deepcopy(coord0)
-                while self.test_survived(coord):
+                while self.test_survived(coord)[0] and coord[p]< 1.0:
                     coord[p] += step
                 self.dict_def_range[p][1] = coord[p]+step
 
                 coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0} # copy.deepcopy(coord0)
-                while self.test_survived(coord):
+                while self.test_survived(coord)[0] and coord[p]> -1.0:
                     coord[p] -= step
                 self.dict_def_range[p][0] = coord[p]-step
                 if self.verbose:
@@ -307,26 +348,26 @@ class Acceptance6D(object):
                                                                          mi=self.dict_def_range[p][0],
                                                                          ma=self.dict_def_range[p][1]))
 
+        # restore initial parallel computation value
+        self.parallel_computation = init_parcomp
+
         pass
 
-    def test_points_grid(self, grid_mode='grid', compute_limits=False):
+    def test_points_grid(self, compute_limits=False):
         """
         define fixed grid of test points
         the grid of points is stored in a dictionary of coordinates, one array for each dimension
 
-        :param grid_mode may be 'grid' or 'radial' (only 2D allowed)
         :param compute_limits calls compute_range to deterine the maximum ranges before defining the grid
 
         :return:
         """
 
-        self.grid_mode = grid_mode
-
         if compute_limits:
             self.compute_range()
 
         # define grid
-        if grid_mode == 'radial':
+        if self.grid_mode == 'radial':
 
             d_ = {'x': [], 'xp': [], 'y': [], 'yp': [], 'delta': [], 'ct': []}
 
@@ -419,8 +460,8 @@ class Acceptance6D(object):
 
     def test_survived(self, coordinates):
         """
-        test if a particle coordinate set survived
-        :param coordinates : dictionaty {'x': 0.0, 'xp': 0.0, 'y': 0.0, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
+        test if a set of particle coordinates survived
+        returns a boolean if the coordinates survived
         """
 
         """
@@ -435,10 +476,67 @@ class Acceptance6D(object):
             test_coord = list(self.orbit[0])
         """
 
+        # nothing to do if no coordinate to test
+        if len(coordinates) == 0:
+            return []
+
+        # if coordinates to test:
+
+        # create 6xN matrix add orbit (with dpp) to each coordinate
+        rin = np.concatenate(([coordinates['x'] + self.orbit[0][0]],
+                              [coordinates['xp'] + self.orbit[0][1]],
+                              [coordinates['y'] + self.orbit[0][2]],
+                              [coordinates['yp'] + self.orbit[0][3]],
+                              [coordinates['delta'] + self.orbit[0][4]],
+                              [coordinates['ct'] + self.orbit[0][5]]),
+                              axis=0)
+
+        # track coordinates for N turns
+        if not self.parallel_computation:
+
+            t, losses = at.atpass(self.ring,
+                                  copy.deepcopy(np.asfortranarray(rin)),
+                                  self.number_of_turns,
+                                  refpts=np.array(np.uint32(0)),  # np.array(np.uint32([len(self.ring)])))
+                                  losses=True)
+
+        else:
+            print('parallel computation')
+
+            # track coordinates
+            t, losses = at.patpass(self.ring,
+                                   copy.deepcopy(rin),
+                                   self.number_of_turns,
+                                   refpts=np.array(np.uint32(0)),  # np.array(np.uint32([len(self.ring)])))
+                                   losses=True)
+
+        survived = [not s for s in losses['islost']]
+
+        # print if survived for each test particle
+        if self.verbose:
+            if type(coordinates['x']) is float:
+                print('[{x:2.2g}, {xp:2.2g}, {y:2.2g}, {yp:2.2g}, {delta:2.2g}, {ct:2.2g}] '
+                      '| {tot:02d} coord: {surv} for {nt} turns'.format(
+                    tot=1, surv=survived, nt=self.number_of_turns,
+                    x=coordinates['x'], y=coordinates['y'], xp=coordinates['xp'],
+                    ct=coordinates['ct'], yp=coordinates['yp'], delta=coordinates['delta']))
+            else:
+                for x, xp, y, yp, delta, ct, s in zip(coordinates['x'],
+                                                      coordinates['xp'],
+                                                      coordinates['y'],
+                                                      coordinates['yp'],
+                                                      coordinates['delta'],
+                                                      coordinates['ct'], survived):
+                    print('[{x:2.2g}, {xp:2.2g}, {y:2.2g}, {yp:2.2g}, {delta:2.2g}, {ct:2.2g}] '
+                          '| {tot:02d} coord: {surv} for {nt} turns'.format(
+                        tot=len(coordinates['x']), surv=s, nt=self.number_of_turns,
+                        x=x, y=y, xp=xp, ct=ct, yp=yp, delta=delta))
+
+        """
         test_coord = copy.deepcopy(list(self.orbit[0]))
         # print(test_coord[4])
-        # print(self.dpp)
-        # test_coord[4] = test_coord[4] + self.dpp
+        # print(self.dp)
+        # test_coord[4] = test_coord[4] + self.dp
 
         rin = np.asfortranarray(np.zeros((6, 1)))
 
@@ -475,72 +573,44 @@ class Acceptance6D(object):
         if self.verbose:
             print('test if {r} survives {n} turns: {s}'.format(
                 r=rin.T, n=self.number_of_turns, s=not(np.isnan(t[0][0][0][-1]))))
+        """
 
-        return not np.isnan(t[0][0][0][-1])
+        return survived
 
     def compute(self):
         """
-        compute DA
+        compute 2D DA limits
 
-        :return:
+        fills the self.survived property with booleans corresponding to each coordinate in coordinates
+
+        :return: h_s, v_s lists of dim1 and dim2 coordinates defining the 2D limit of Acceptance
         """
 
-        print('Computing DA {m}'.format(m=self.mode))
+        # display summary of work to do
+        print('Computing acceptance {m}'.format(m=self.mode))
 
         [print('test {np:02d} points in {pl}'.format(np=self.n_points[p], pl=p))
          for ip, p in enumerate(self.planes)]
 
-        ii = 0
+        # test all coordinates at once
+        self.survived = self.test_survived(self.coordinates)
 
-        if not self.parallel_computation:
-            for x, xp, y, yp, delta, ct in zip(self.coordinates['x'],
-                                               self.coordinates['xp'],
-                                               self.coordinates['y'],
-                                               self.coordinates['yp'],
-                                               self.coordinates['delta'],
-                                               self.coordinates['ct']):
-                coord = {'x': x, 'xp': xp, 'y': y, 'yp': yp, 'delta': delta, 'ct': ct}
-                self.survived[ii] = self.test_survived(coord)
-                if self.verbose:
-                    print('[{x:2.2g}, {xp:2.2g}, {y:2.2g}, {yp:2.2g}, {delta:2.2g}, {ct:2.2g}] '
-                          '| {ind:02d} / {tot:02d}: {surv} for {nt} turns'.format(
-                            ind=ii, tot=len(self.coordinates['x']), surv=self.survived[ii], nt=self.number_of_turns,
-                            x=x, y=y, xp=xp, ct=ct, yp=yp, delta=delta)
-                          )
-                ii += 1
-        else:
-            print('parallel computation')
+        h_s = []
+        v_s = []
 
-            # create 6xN matrix add orbit (with dpp) to each coordinate
+        if self.mode in self.modes[0:-1]:
+            # simplify 6D structure to 2D
+            h, v, sel = self.select_test_points_based_on_mode()
 
-            rin = np.concatenate(([self.coordinates['x'] + self.orbit[0][0]],
-                                  [self.coordinates['xp'] + self.orbit[0][1]],
-                                  [self.coordinates['y'] + self.orbit[0][2]],
-                                  [self.coordinates['yp'] + self.orbit[0][3]],
-                                  [self.coordinates['delta'] + self.orbit[0][4]],
-                                  [self.coordinates['ct'] + self.orbit[0][5]]),
-                                 axis=0)
-
-            # track coordinates
-            t, losses = at.patpass(self.ring,
-                          copy.deepcopy(rin),
-                          self.number_of_turns,
-                          refpts=np.array(np.uint32(0)), # np.array(np.uint32([len(self.ring)])))
-                          losses=True)
-
-            self.survived = [not s for s in losses['islost']]
-
-        h, v, sel = self.select_test_points_based_on_mode()
-
-        # find maximum of each column and return as border
-        h_s, v_s = self.get_border(h, v, sel)
-
-        try:
+            # find maximum of each column and return as border
             h_s, v_s = self.get_border(h, v, sel)
-        except Exception:
-            h_s = []
-            v_s = []
-            print('DA limit could not be computed (probably no closed contour)')
+
+            try:
+                h_s, v_s = self.get_border(h, v, sel)
+            except Exception:
+                print('DA limit could not be computed (probably no closed contour)')
+        else:
+            print('DA limit could not be computed for this mode')
 
         return h_s, v_s
 
@@ -583,6 +653,11 @@ class Acceptance6D(object):
         reduces the 6D coordinated according to the mode to 3 lists for plotting:
         horizontal, vertical and boolean array of survival.
         """
+
+        if self.mode == None or self.mode=='6D':
+            if self.verbose:
+                print('no selection of test points for modes None and 6D')
+            return [], [], []
 
         if self.mode == 'x-y':
             h = self.coordinates['x']
@@ -695,14 +770,14 @@ def off_energy_dynamic_aperture(sr_ring,
 
     for deltap in deltaps:
         print('{d:2.1f}%'.format(d=deltap*100))
-        da.dpp = deltap
+        da.dp = deltap
         """
         L.F.
         you have to change the RF frequency by alpha * f0 * dpp, 
         compute the 6D closed orbit
         """
         da.ring.radiation_off()
-        da.orbit = da.ring.find_orbit4(dp=da.dpp)  # dpp is added to orbit here
+        da.orbit = da.ring.find_orbit4(dp=da.dp)  # dpp is added to orbit here
 
         # restore radiation state
         if ring_rad:
@@ -720,7 +795,7 @@ def off_energy_dynamic_aperture(sr_ring,
             max_neg_x.append(lim[0])
         else:
             coord = copy.deepcopy(coord0)
-            while da.test_survived(coord):
+            while da.test_survived(coord)[0]:
                 if inject_from_inside:
                     coord['x'] -= step_size
                 else:
@@ -798,12 +873,13 @@ def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=Non
 
 
 def dynamic_aperture(sr_ring,
-                     dpp=0.0,
+                     dp=0.0,
                      n_turns=2**10,
                      start_index=0,
                      n_radii=13,
                      n_theta=13,
                      grid_mode='radial',
+                     parallel=False,
                      search=True,
                      file_name_save=None,
                      num_recursions=5):
@@ -811,7 +887,7 @@ def dynamic_aperture(sr_ring,
     compute Dynamic aperture x-y searching recursively
 
     :param sr_ring: pyAT lattice
-    :param dpp: momentum deviation
+    :param dp: momentum deviation
     :param n_turns: number of turns to survive
     :param start_index: index in sr_ring where to start the tracking
     :param n_radii: number of radial points to test  (not used if search = True)
@@ -819,6 +895,7 @@ def dynamic_aperture(sr_ring,
     :param grid_mode: 'grid' or 'radial' fixed test points grid
     :param search: True (default), ignore grid and search recursively for maximum along given radial direction
     :param num_recursions: number of recursion for search
+    :param parallel : uses patpass rather than atpass
     :param file_name_save: if given, save to file
 
     :return: h,v horizontal and vertical coordinates of DA limit
@@ -829,9 +906,10 @@ def dynamic_aperture(sr_ring,
 
     da = Acceptance6D(copy.deepcopy(sr_ring), mode='x-y', start_index=start_index)
     da.number_of_turns = n_turns
-    da.dpp = dpp
+    da.dp = dp
     da.verbose = False
-
+    da.parallel_computation = parallel
+    
     if grid_mode == 'radial':
 
         da.compute_range()  # implement an init at change of mode, npoint, or range.
@@ -887,9 +965,10 @@ def dynamic_aperture(sr_ring,
         pickle.dump(v, file_to_store)
         pickle.dump(n_turns, file_to_store)
         pickle.dump(start_index, file_to_store)
+        pickle.dump(dp, file_to_store)
         file_to_store.close()
 
-        m_dict = {'h': h, 'v': v, 'n_turns': n_turns, 'start_index': start_index}
+        m_dict = {'h': h, 'v': v, 'n_turns': n_turns, 'start_index': start_index, 'dp': dp}
         savemat(file_name_save + '.mat', m_dict)
 
     return h, v, da, search

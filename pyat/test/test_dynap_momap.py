@@ -11,12 +11,14 @@ def test_acceptance_x_xp(hmba_lattice):
 
     sr_ring.radiation_off()
 
-
     # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
     print('x-xp acceptance, using class directly')
     da = Acceptance6D(copy.deepcopy(sr_ring),
-                      mode='x-xp', start_index=120, n_turns=2**5, dpp=-0.005)
-    da.verbose = False
+                      mode='x-xp', start_index=120, n_turns=2**5, dp=-0.005)
+
+    da.verbose = True
+    da.parallel_computation = True
+
     da.dict_def_range = {'x': [-2e-3, 2e-3],
                       'xp': [-1e-4, 1e-4],
                       'y': [-5e-3, 5e-3],
@@ -24,8 +26,8 @@ def test_acceptance_x_xp(hmba_lattice):
                       'delta': [-2e-1, 2e-1],
                       'ct': [-1e-1, 1e-1],
                       }
-    da.n_points = {'x': 17,
-                     'xp': 17,
+    da.n_points = {'x': 7,
+                     'xp': 7,
                      'y': 1,
                      'yp': 1,
                      'delta': 1,
