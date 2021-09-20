@@ -207,6 +207,15 @@ class Acceptance6D(object):
         you have to change the RF frequency by alpha * f0 * dpp, 
         compute the 6D closed orbit
         """
+        elems = self.ring.get_elements('CAV*')
+        ind_rf = [self.ring.index(elem) for elem in elems]
+        # set RF frequency
+        self.ligth_speed = 2.99792458e08
+        self.Circumference = self.ring.s_range[-1]
+        self.harm = self.ring[self.ind_rf[0]].HarmNumber
+        self.rf_frequency = self.ring[self.ind_rf[0]].Frequency
+
+
         rad = self.ring.radiation
         self.ring.radiation_off()
 
@@ -953,7 +962,7 @@ def dynamic_aperture(sr_ring,
         da.n_points['x'] = n_theta  # used as theta, if grid radial
         da.n_points['y'] = n_radii  # used as radii, if grid radial
         da.dict_def_range['y'][0] = 0.0  # make y single sided
-        da.test_points_grid(grid_mode=grid_mode)
+        da.test_points_grid()
         h, v = da.compute()
 
     # plot
