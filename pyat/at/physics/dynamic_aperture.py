@@ -472,10 +472,16 @@ class Acceptance6D(object):
                                           self.dict_def_range[p][1],
                                           self.n_points[p])
                               )
+                    # make sure 0.0 is in the scan
+                    # if 0.0 not in d_[-1]:
+                    #    d_[-1].append(0.0);
                 else:  # this dimension is not part of the scan
                     d_.append((self.dict_def_range[p][0] +
                                self.dict_def_range[p][1])/2
                               )
+                    # make sure 0.0 is in the scan
+                    # if d_ is not 0.0:
+                    #    d_.append(0.0);
 
             # define mesh of points
             xx, xpxp, yy, ypyp, deltadelta, ctct = np.meshgrid(d_[0],

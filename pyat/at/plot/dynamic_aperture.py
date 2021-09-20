@@ -85,14 +85,14 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
     except Exception:
         print(' limits not computed ')
 
-    ax.set_xlabel(pl_h + ' [' + Acc6D.dict_units[pl_h][1] + ']', fontsize=14)
-    ax.set_ylabel(pl_v + ' [' + Acc6D.dict_units[pl_v][1] + ']', fontsize=14)
+    ax.set_xlabel(pl_h + ' [' + Acc6D.dict_units[pl_h][1] + ']', fontsize=12)
+    ax.set_ylabel(pl_v + ' [' + Acc6D.dict_units[pl_v][1] + ']', fontsize=12)
     ax.set_xlim([r * Acc6D.dict_units[pl_h][0] for r in Acc6D.dict_def_range[pl_h]])
     ax.set_ylim([r * Acc6D.dict_units[pl_v][0] for r in Acc6D.dict_def_range[pl_v]])
 
     ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%, rad: {rad}'.format(
         m=Acc6D.mode, t=Acc6D.number_of_turns, ll=Acc6D.ring[0].FamName, dpp=Acc6D.dp * 100,
-        rad=Acc6D.ring.radiation))
+        rad=Acc6D.ring.radiation), fontsize=12)
 
     ax.legend()
     plt.tight_layout()
@@ -114,6 +114,18 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
     :return:
     """
 
+    # get 6D space center
+    min_pl = {'x': 0.0,
+              'xp': 0.0,
+              'y': 0.0,
+              'yp': 0.0,
+              'delta': 0.0,
+              'ct': 0.0,
+              }
+
+    for p in Acc6D.planes:
+        min_pl[p]=min(abs(Acc6D.coordinates[p]))
+
     if not axs_top:
         fig, (axs_top, axs_bottom) = plt.subplots(2, 3)
 
@@ -129,7 +141,8 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
     h = Acc6D.coordinates['x']
     v = Acc6D.coordinates['y']
 
-    sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+    sel = [a and b == min_pl['delta'] and c == min_pl['xp'] and d == min_pl['yp'] and e == min_pl['ct']
+           for a, b, c, d, e in zip(
         Acc6D.survived,
         Acc6D.coordinates['delta'],
         Acc6D.coordinates['xp'],
@@ -142,7 +155,8 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
     axnum = 1
     h = Acc6D.coordinates['xp']
     v = Acc6D.coordinates['yp']
-    sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+    sel = [a and b == min_pl['delta'] and c == min_pl['x'] and d == min_pl['y'] and e == min_pl['ct']
+           for a, b, c, d, e in zip(
         Acc6D.survived,
         Acc6D.coordinates['delta'],
         Acc6D.coordinates['x'],
@@ -150,12 +164,14 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
         Acc6D.coordinates['ct'])]
 
     axs_top[axnum] = plot_base(Acc6D, h, v, sel, ['xp', 'yp'], ax=axs_top[axnum])
+    axs_top[axnum].set_title('')
 
     # plot ct delta
     axnum = 2
     h = Acc6D.coordinates['ct']
     v = Acc6D.coordinates['delta']
-    sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+    sel = [a and b == min_pl['xp'] and c == min_pl['x'] and d == min_pl['y'] and e == min_pl['yp']
+           for a, b, c, d, e in zip(
         Acc6D.survived,
         Acc6D.coordinates['xp'],
         Acc6D.coordinates['x'],
@@ -163,12 +179,14 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
         Acc6D.coordinates['yp'])]
 
     axs_top[axnum] = plot_base(Acc6D, h, v, sel, ['ct', 'delta'], ax=axs_top[axnum])
+    axs_top[axnum].set_title('')
 
     # plot x xp
     axnum = 0
     h = Acc6D.coordinates['x']
     v = Acc6D.coordinates['xp']
-    sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+    sel = [a and b == min_pl['delta'] and c == min_pl['ct'] and d == min_pl['y'] and e == min_pl['yp']
+           for a, b, c, d, e in zip(
         Acc6D.survived,
         Acc6D.coordinates['delta'],
         Acc6D.coordinates['ct'],
@@ -176,12 +194,14 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
         Acc6D.coordinates['yp'])]
 
     axs_bottom[axnum] = plot_base(Acc6D, h, v, sel, ['x', 'xp'], ax=axs_bottom[axnum])
+    axs_bottom[axnum].set_title('')
 
     # plot y yp
     axnum = 1
     h = Acc6D.coordinates['y']
     v = Acc6D.coordinates['yp']
-    sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+    sel = [a and b == min_pl['delta'] and c == min_pl['ct'] and d == min_pl['x'] and e == min_pl['xp']
+           for a, b, c, d, e in zip(
         Acc6D.survived,
         Acc6D.coordinates['delta'],
         Acc6D.coordinates['ct'],
@@ -189,12 +209,14 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
         Acc6D.coordinates['xp'])]
 
     axs_bottom[axnum] = plot_base(Acc6D,h, v, sel, ['y', 'yp'], ax=axs_bottom[axnum])
+    axs_bottom[axnum].set_title('')
 
     # plot delta x
     axnum = 2
     h = Acc6D.coordinates['delta']
     v = Acc6D.coordinates['x']
-    sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+    sel = [a and b == min_pl['y'] and c == min_pl['ct'] and d == min_pl['yp'] and e == min_pl['xp']
+           for a, b, c, d, e in zip(
         Acc6D.survived,
         Acc6D.coordinates['y'],
         Acc6D.coordinates['ct'],
@@ -202,6 +224,7 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
         Acc6D.coordinates['xp'])]
 
     axs_bottom[axnum] = plot_base(Acc6D, h, v, sel, ['delta', 'x'], ax=axs_bottom[axnum])
+    axs_bottom[axnum].set_title('')
 
     plt.tight_layout()
 
