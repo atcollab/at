@@ -183,12 +183,12 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *PolynomB, *R1, *R2, *T1, *T2;
         Length=atGetDouble(ElemData,"Length"); check_error();
         /*optional fields*/
-        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
         R1=atGetOptionalDoubleArray(ElemData,"R1"); check_error();
         R2=atGetOptionalDoubleArray(ElemData,"R2"); check_error();
         T1=atGetOptionalDoubleArray(ElemData,"T1"); check_error();
         T2=atGetOptionalDoubleArray(ElemData,"T2"); check_error();
-        K=atGetOptionalDouble(ElemData,"K", PolynomB ? PolynomB[1] : 0.0); check_error();
+        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
+        K=PolynomB ? PolynomB[1] : atGetOptionalDouble(ElemData,"K",0); check_error();
         I1a = atGetOptionalDouble(ElemData, "I1a", 0.0);
         I1b = atGetOptionalDouble(ElemData, "I1b", 0.0);
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
