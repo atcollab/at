@@ -28,9 +28,9 @@ Usage
 Example usage::
 
     >>> from at.load import load_mat
-    >>> from at.physics import linopt
+    >>> from at.physics import get_optics
     >>> ring = load_mat('test_matlab/hmba.mat')
-    >>> linopt(ring, refpts=range(5))
+    >>> get_optics(ring, refpts=range(5))
 
 For more examples of how to use pyAT, see ``pyat_examples.rst``.
 

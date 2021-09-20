@@ -69,12 +69,46 @@ Because pyAT compiles C code, releasing a version is not simple. The code
 must be compiled for different operating systems and Python versions.
 
 To do this, we use the continuous integration service Github Actions.
-When a tag of the form pyat-x.y.z is pushed to Github, wheels for each
+When a tag of the form pyat-* is pushed to Github, wheels for each
 supported platform will be built and automatically uploaded as an 'artifact'.
 
-Once there, someone should manually test that the wheels are working correctly,
-then they can manually download the files and upload them to PyPI itself.
-Note that this was 46 different files for pyat-0.0.4 covering different platforms and
-architectures.
+Release procedure
+=================
 
-The configuration for this is in .github/workflows/build-wheels.yml.
+To upload a release to PyPI, you will need to be a 'maintainer' of
+`Accelerator Toolbox on PyPI <https://pypi.org/project/accelerator-toolbox/>`_.
+
+For testing any version that you have installed, the simple snippet in
+``README.rst`` is sufficient.
+
+* Decide the Python versions that should be supported in the release
+   * Set these Python versions in setup.py
+   * Set at least these Python versions as python-version in .github/workflows/python-tests.yml
+* Determine the minimum Numpy version that is required for those Python versions
+   * Set this numpy version in install_requires in setup.py
+   * Set this numpy version in requirements.txt
+* Update the pyat version in setup.py to x.y.z
+* Push a tag ``pyat-x.y.z`` to Github
+
+If all goes well, there will be a build of "Build and upload wheels and sdist"
+associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://github.com/atcollab/at/actions/workflows/build-python-wheels.yml>`_. This build will have
+'tar.gz' and 'wheels' downloads available.
+
+* Download the tar.gz and wheels files and unzip them into a directory ``<dir>``
+* Manually install at least one wheel to make sure that it has built correctly
+* Install Twine for uploading the files to PyPI. One way to do this is to
+  create a new virtualenv:
+   * ``python3 -m venv venv``
+   * ``source venv/bin/activate``
+   * ``pip install twine``
+* Use Twine to upload the files to PyPI. You will be prompted for your PyPI credentials:
+   * ``twine upload <dir>/*.whl``
+   * ``twine upload <dir>/*.tar.gz``
+* Finally, check that the wheels are uploaded properly. You can use the same virtualenv:
+   * ``pip install accelerator-toolbox``
+
+
+Note that 46 different files were uploaded for pyat-0.0.4 covering different
+platforms and architectures.
+
+The configuration for this is in .github/workflows/build-python-wheels.yml.
