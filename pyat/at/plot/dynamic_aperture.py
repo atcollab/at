@@ -90,8 +90,9 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
     ax.set_xlim([r * Acc6D.dict_units[pl_h][0] for r in Acc6D.dict_def_range[pl_h]])
     ax.set_ylim([r * Acc6D.dict_units[pl_v][0] for r in Acc6D.dict_def_range[pl_v]])
 
-    ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%'.format(
-        m=Acc6D.mode, t=Acc6D.number_of_turns, ll=Acc6D.ring[0].FamName, dpp=Acc6D.dp * 100))
+    ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%, rad: {rad}'.format(
+        m=Acc6D.mode, t=Acc6D.number_of_turns, ll=Acc6D.ring[0].FamName, dpp=Acc6D.dp * 100,
+        rad=Acc6D.ring.radiation))
 
     ax.legend()
     plt.tight_layout()
@@ -309,8 +310,8 @@ def plot_dynamic_aperture(h, v, da, search, file_name_save=''):
         # Set tick font size
         for label in (ax.get_xticklabels() + ax.get_yticklabels()):
             label.set_fontsize(16)
-        ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%\n'.format(
-            m=da.mode, t=da.number_of_turns, ll=da.ring[0].FamName, dpp=da.dp * 100))
+        ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%, rad: {rad}\n'.format(
+            m=da.mode, t=da.number_of_turns, ll=da.ring[0].FamName, dpp=da.dp * 100, rad=da.ring.radiation))
         ax.legend()
         plt.savefig(file_name_save, dpi=600)
     else:

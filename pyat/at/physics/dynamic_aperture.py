@@ -16,7 +16,7 @@ class Acceptance6D(object):
     Compute acceptance
     """
 
-    verbose = True
+    verbose = False
 
     # possible acceptance planes
     planes = ('x', 'xp', 'y', 'yp', 'delta', 'ct')
@@ -100,8 +100,7 @@ class Acceptance6D(object):
             self.ring.radiation_off()
         else:
             # if no input use state of radiation of the input lattice
-            if self.verbose:
-                print('using input lattice radiation state: {}'.format(ring.radiation))
+            print('using input lattice radiation state: {}'.format(ring.radiation))
 
         use_radiation = self.ring.radiation
 
@@ -111,6 +110,19 @@ class Acceptance6D(object):
             self.ring.radiation_on()
         else:
             self.mcf = self.ring.get_mcf()
+
+        # get RF indexes in lattice
+        elems = self.ring.get_elements(key=at.RFCavity('', 0.0, 0.0, 0.0, 0.0, 0.0))
+        self.ind_rf = [self.ring.index(elem) for elem in elems]
+        ligth_speed = 2.99792458e08
+        Circumference = self.ring.s_range[-1]
+        harm = self.ring[self.ind_rf[0]].HarmNumber
+        rf_frequency_0  = harm * ligth_speed / Circumference
+        self.rf_frequency = self.ring[self.ind_rf[0]].Frequency  # lattice RF
+
+        if abs(self.rf_frequency-rf_frequency_0) > 1e6:
+            print('set frequency to ideal one. more than 1MHz difference')
+            self.rf_frequency = rf_frequency_0  # if RF not nominal, set to nominal
 
         # define orbit about wich to compute DA
         self.compute_orbit()
@@ -209,24 +221,17 @@ class Acceptance6D(object):
         computes orbit for given dp
         """
 
-        # get RF indexes in lattice
-        elems = self.ring.get_elements(key=at.RFCavity('', 0.0, 0.0, 0.0, 0.0, 0.0))
-        ind_rf = [self.ring.index(elem) for elem in elems]
-
-        if len(ind_rf)>0:
+        if len(self.ind_rf)>0:
             # set RF frequency
-            ligth_speed = 2.99792458e08
-            Circumference = self.ring.s_range[-1]
-            harm = self.ring[ind_rf[0]].HarmNumber
-            rf_frequency = harm * ligth_speed/Circumference
-            drf = - rf_frequency * self.mcf * self.dp
+            drf = - self.rf_frequency * self.mcf * self.dp
 
-            new_rf_frequency = self.ring[ind_rf[0]].Frequency + drf
+            new_rf_frequency = self.rf_frequency + drf
             if self.verbose:
-                print('dp = {dp}, rf set to initial + {rf} Hz'.format(dp=self.dp, rf=drf))
-                print('new RF = {rf:3.8f} MHz'.format(rf=new_rf_frequency*1e-6))
+                print('dp = {dp}, rf set to f_RF0 + {rf} Hz'.format(dp=self.dp, rf=drf))
+                print('new RF = {rf:3.6f} MHz'.format(rf=new_rf_frequency*1e-6))
 
-            for ir in ind_rf:
+            # set RF frequency to all cavities
+            for ir in self.ind_rf:
                 self.ring[ir].Frequency = new_rf_frequency
 
             # compute orbit
@@ -792,7 +797,7 @@ def off_energy_dynamic_aperture(sr_ring,
     :return: deltaps, da: for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
     da = Acceptance6D(copy.deepcopy(sr_ring), start_index=start_index, n_turns=n_turns)
-    da.verbose = True
+    da.verbose = False
 
     max_neg_x = []
 
