@@ -2,8 +2,9 @@
  * This file contains the Python interface to AT, compatible with
  * Python 3 only. It provides a module 'atpass' containing one method 'atpass'.
  */
-#include <stdarg.h>
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <stdarg.h>
 #ifdef _OPENMP
 #include <string.h>
 #include <omp.h>
@@ -40,10 +41,6 @@ typedef PyObject atElem;
 #define SEPARATOR "/"
 #define OBJECTEXT ".so"
 #endif
-
-#define MOD_ERROR_VAL NULL
-#define MOD_SUCCESS_VAL(val) val
-#define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
 
 #define LIMIT_AMPLITUDE		1
 
@@ -252,7 +249,7 @@ static PyObject *Buildargs(double *r_in, int num_particles)
 /*
  * Call python integrators
  */
-static PyObject *PyIntegratorPass(double *r_in, PyObject *function, PyObject *kwargs, int num_particles)
+static PyObject *pyIntegratorPass(double *r_in, PyObject *function, PyObject *kwargs, int num_particles)
 {
   PyObject *args;
   args = Buildargs(r_in, num_particles);
@@ -319,7 +316,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
-    int new_lattice;
+    static int valid = 0;
 
     PyObject *lattice;
     PyArrayObject *rin;
@@ -342,7 +339,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_uint32 nextref;
     unsigned int nextrefindex;
     unsigned int num_refpts;
-    npy_uint32 reuse=0;
+    npy_uint32 keep_lattice=0;
     npy_uint32 losses=0;
     npy_intp outdims[4];
     npy_intp pdims[1];
@@ -356,7 +353,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!III", kwlist, &PyList_Type, &lattice,
-        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &reuse, &omp_num_threads, &losses)) {
+        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -375,7 +372,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
     drin = PyArray_DATA(rin);
-    new_lattice = (reuse == 0) ? 1 : 0;
 
     if (refs) {
         if (PyArray_TYPE(refs) != NPY_UINT32) {
@@ -429,13 +425,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
     #endif /*_OPENMP*/
 
-    if (new_lattice | !element_list) {
+    if (!(keep_lattice && valid)) {
         PyObject **element;
         track_function *integrator;
         PyObject **pyintegrator;
+        /* Release the stored elements */
         for (elem_index=0; elem_index < num_elements; elem_index++) {
             free(elemdata_list[elem_index]);
-            Py_XDECREF(element_list[elem_index]);        /* Release the stored elements, may be NULL if */
+            Py_XDECREF(element_list[elem_index]);   /* Release the stored elements, may be NULL if */
         }                                           /* a previous call was interrupted by an error */
         num_elements = PyList_Size(lattice);
 
@@ -478,7 +475,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
             Py_DECREF(PyPassMethod);
         }
-        new_lattice = 0;
+        valid = 0;
     }
 
     param.RingLength = lattice_length;
@@ -499,17 +496,17 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
             /* the actual integrator call */
-            if(*pyintegrator) {
-                if(!*kwargs) *kwargs = Buildkwargs(*element);
-                *kwargs = PyIntegratorPass(drin, *pyintegrator, *kwargs, num_particles);
+            if (*pyintegrator) {
+                if (!*kwargs) *kwargs = Buildkwargs(*element);
+                *kwargs = pyIntegratorPass(drin, *pyintegrator, *kwargs, num_particles);
                 if (!*kwargs) return print_error(elem_index, rout);       /* trackFunction failed */
-            }else {
+            } else {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             }
-            if(losses){
+            if (losses) {
                 checkiflost(drin, num_particles, elem_index, turn, ixnturn, ixnelem, bxlost, dxlostcoord);
-            }else{
+            } else {
                 setlost(drin, num_particles);
             }
             element++;
@@ -524,6 +521,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             drout += np6; /*  shift the location to write to in the output array */
         }
     }
+    valid = 1;      /* Tracking successful: the lattice can be reused */
 
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
@@ -531,7 +529,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
     #endif /*_OPENMP*/
 
-    if(losses){
+    if (losses) {
         PyObject *tout = PyTuple_New(2);
         PyObject *dict = PyDict_New();
         PyDict_SetItemString(dict,(char *)"islost",(PyObject *)xlost);
@@ -545,7 +543,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         Py_DECREF(xnelem);
         Py_DECREF(xlostcoord);
         return tout;          
-    }else{
+    } else {
         return rout;
     }
 }
@@ -556,12 +554,10 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     PyArrayObject *rin;
     PyObject *PyPassMethod;
     npy_uint32 num_particles;
-    track_function fn_handle;
-    PyObject *pyfn_handle;
-    PyObject *kwargs = NULL;
+    track_function integrator;
+    PyObject *pyintegrator;
     double *drin;
     struct parameters param;
-    struct elem *elem_data = NULL;
     struct LibraryListElement *LibraryListPtr;
 
     if (!PyArg_ParseTuple(args, "OO!", &element,  &PyArray_Type, &rin)) {
@@ -586,22 +582,32 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;
     LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
-    fn_handle = LibraryListPtr->FunctionHandle;
-    pyfn_handle = LibraryListPtr->PyFunctionHandle;
-    if (fn_handle) {
-        elem_data = fn_handle(element, elem_data, drin, num_particles, &param);
+    Py_DECREF(PyPassMethod);
+    integrator = LibraryListPtr->FunctionHandle;
+    pyintegrator = LibraryListPtr->PyFunctionHandle;
+    if (pyintegrator) {
+        PyObject *kwargs = Buildkwargs(element);
+        kwargs = pyIntegratorPass(drin, pyintegrator, kwargs, num_particles);
+        if (!kwargs) return NULL;
+        Py_DECREF(kwargs);
+    } else {
+        struct elem *elem_data = integrator(element, NULL, drin, num_particles, &param);
+        if (!elem_data) return NULL;
+        free(elem_data);
     }
-    else {
-        kwargs = Buildkwargs(element);
-        kwargs = PyIntegratorPass(drin, pyfn_handle, kwargs, num_particles);
-    }
-    if ((!elem_data) && (!kwargs)) return NULL;
-    free(elem_data);
-    if(pyfn_handle) Py_DECREF(pyfn_handle);
-    if(kwargs) Py_DECREF(kwargs);
-    Py_INCREF(Py_None);
-    return Py_None;
+    if (pyintegrator) Py_DECREF(pyintegrator);
+    Py_RETURN_NONE;
 }
+
+static PyObject *isopenmp(PyObject *self)
+{
+#ifdef _OPENMP
+    Py_RETURN_TRUE;
+#else
+    Py_RETURN_FALSE;
+#endif /*_OPENMP)*/
+}
+
 /* Boilerplate to register methods. */
 
 static PyMethodDef AtMethods[] = {
@@ -621,16 +627,20 @@ static PyMethodDef AtMethods[] = {
               "         of particle coordinates\n"
               )},
     {"elempass",  (PyCFunction)at_elempass, METH_VARARGS,
-    PyDoc_STR("rout = elempass(element, rin)\n\n"
+    PyDoc_STR("elempass(element, rin)\n\n"
               "Track input particles rin through a single element.\n\n"
               "element: AT element\n"
               "rin:     6 x n_particles Fortran-ordered numpy array.\n"
               "         On return, rin contains the final coordinates of the particles\n"
              )},
+    {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
+    PyDoc_STR("isopenmp()\n\n"
+              "Return whether OpenMP is active.\n"
+             )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-MOD_INIT(atpass)
+PyMODINIT_FUNC PyInit_atpass(void)
 {
     PyObject *integ_path_obj, *ext_suffix_obj;
     const char *ext_suffix, *integ_path;
@@ -648,18 +658,18 @@ MOD_INIT(atpass)
     };
     PyObject *m = PyModule_Create(&moduledef);
 
-    if (m == NULL) return MOD_ERROR_VAL;
+    if (m == NULL) return NULL;
     import_array();
 
     integ_path_obj = get_integrators();
-    if (integ_path_obj == NULL) return MOD_ERROR_VAL;
+    if (integ_path_obj == NULL) return NULL;
     ext_suffix_obj = get_ext_suffix();
-    if (ext_suffix_obj == NULL) return MOD_ERROR_VAL;
+    if (ext_suffix_obj == NULL) return NULL;
     ext_suffix = (ext_suffix_obj == Py_None) ? OBJECTEXT : PyUnicode_AsUTF8(ext_suffix_obj);
     integ_path = PyUnicode_AsUTF8(integ_path_obj);
     snprintf(integrator_path, sizeof(integrator_path), "%s%s%%s%s", integ_path, SEPARATOR, ext_suffix);
     Py_DECREF(integ_path_obj);
     Py_DECREF(ext_suffix_obj);
 
-    return MOD_SUCCESS_VAL(m);
+    return m;
 }
