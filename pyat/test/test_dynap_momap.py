@@ -4,6 +4,43 @@ import time
 import copy
 import pytest
 
+def test_acceptance_6d(hmba_lattice):
+
+    sr_ring = at.Lattice(hmba_lattice*32)
+
+    sr_ring.radiation_off()
+
+    # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
+    print('x-xp acceptance, using class directly')
+    da = Acceptance6D(copy.deepcopy(sr_ring),
+                      mode='6D', start_index=120, n_turns=2**3, dp=+0.01)
+
+    da.verbose = True
+    da.parallel_computation = False
+
+    da.dict_def_range = {'x': [-2e-3, 2e-3],
+                      'xp': [-1e-4, 1e-4],
+                      'y': [-5e-3, 5e-3],
+                      'yp': [-1e-4, 1e-4],
+                      'delta': [-1e-1, 1e-1],
+                      'ct': [-1e-1, 1e-1],
+                      }
+    da.n_points = {'x': 5,
+                     'xp': 5,
+                     'y': 5,
+                     'yp': 3,
+                     'delta': 5,
+                     'ct': 3
+                     }
+
+    # define grid of test particles in the range
+    da.test_points_grid()
+    # test if particles of the grid survive or not and produce a curve arround the survived ones
+    h, v = da.compute()
+    [print(h_, v_) for h_, v_ in zip(h, v)]
+    print(da.survived)
+
+    pass
 
 def test_acceptance_x_xp(hmba_lattice):
 
