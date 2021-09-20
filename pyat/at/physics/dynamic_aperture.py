@@ -103,7 +103,14 @@ class Acceptance6D(object):
             if self.verbose:
                 print('using input lattice radiation state: {}'.format(ring.radiation))
 
-        use_radiation = ring.radiation
+        use_radiation = self.ring.radiation
+
+        if use_radiation:
+            self.ring.radiation_off()
+            self.mcf = self.ring.get_mcf()  # get_mcf whants radiation off
+            self.ring.radiation_on()
+        else:
+            self.mcf = self.ring.get_mcf()
 
         # define orbit about wich to compute DA
         self.compute_orbit()
@@ -202,27 +209,41 @@ class Acceptance6D(object):
         computes orbit for given dp
         """
 
-        """
-        L.F.
-        you have to change the RF frequency by alpha * f0 * dpp, 
-        compute the 6D closed orbit
-        """
-        elems = self.ring.get_elements('CAV*')
+        # get RF indexes in lattice
+        elems = self.ring.get_elements(key=at.RFCavity('', 0.0, 0.0, 0.0, 0.0, 0.0))
         ind_rf = [self.ring.index(elem) for elem in elems]
-        # set RF frequency
-        self.ligth_speed = 2.99792458e08
-        self.Circumference = self.ring.s_range[-1]
-        self.harm = self.ring[ind_rf[0]].HarmNumber
-        self.rf_frequency = self.ring[ind_rf[0]].Frequency
 
+        if len(ind_rf)>0:
+            # set RF frequency
+            ligth_speed = 2.99792458e08
+            Circumference = self.ring.s_range[-1]
+            harm = self.ring[ind_rf[0]].HarmNumber
+            rf_frequency = harm * ligth_speed/Circumference
+            drf = - rf_frequency * self.mcf * self.dp
 
-        rad = self.ring.radiation
-        self.ring.radiation_off()
+            new_rf_frequency = self.ring[ind_rf[0]].Frequency + drf
+            if self.verbose:
+                print('dp = {dp}, rf set to initial + {rf} Hz'.format(dp=self.dp, rf=drf))
+                print('new RF = {rf:3.8f} MHz'.format(rf=new_rf_frequency*1e-6))
 
-        self.orbit = self.ring.find_orbit4(dp=self.dp)  # dpp is added to orbit here
+            for ir in ind_rf:
+                self.ring[ir].Frequency = new_rf_frequency
 
-        if rad:
-            self.ring.radiation_on()
+            # compute orbit
+            self.orbit = self.ring.find_orbit(dp=self.dp)
+
+        else:
+
+            print('no cavity in the lattice, using find_orbit4')
+
+            rad = self.ring.radiation
+            self.ring.radiation_off()
+
+            self.orbit = self.ring.find_orbit4(dp=self.dp)  # dpp is added to orbit here
+
+            if rad:
+                self.ring.radiation_on()
+
 
         return self.orbit
 
@@ -771,7 +792,7 @@ def off_energy_dynamic_aperture(sr_ring,
     :return: deltaps, da: for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
     da = Acceptance6D(copy.deepcopy(sr_ring), start_index=start_index, n_turns=n_turns)
-    da.verbose = False
+    da.verbose = True
 
     max_neg_x = []
 
