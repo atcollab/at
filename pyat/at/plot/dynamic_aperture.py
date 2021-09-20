@@ -62,6 +62,8 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
         sel = range(len(h))
 
     num_sel = [int(s) for s in sel]
+    if Acc6D.verbose:
+        print('{p1}-{p2} survived in {m}'.format(n=len(num_sel), p1=pl_h, p2=pl_v))
 
     # apply scale factors for plot
     hs = np.array([h_ * Acc6D.dict_units[pl_h][0] for h_ in h])

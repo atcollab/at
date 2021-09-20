@@ -207,8 +207,13 @@ class Acceptance6D(object):
         you have to change the RF frequency by alpha * f0 * dpp, 
         compute the 6D closed orbit
         """
+        rad = self.ring.radiation
+        self.ring.radiation_off()
 
-        self.orbit, _ = self.ring.find_orbit(dp=self.dp)  # dpp is added to orbit here
+        self.orbit = self.ring.find_orbit4(dp=self.dp)  # dpp is added to orbit here
+
+        if rad:
+            self.ring.radiation_on()
 
         return self.orbit
 
