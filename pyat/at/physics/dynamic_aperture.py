@@ -212,8 +212,8 @@ class Acceptance6D(object):
         # set RF frequency
         self.ligth_speed = 2.99792458e08
         self.Circumference = self.ring.s_range[-1]
-        self.harm = self.ring[self.ind_rf[0]].HarmNumber
-        self.rf_frequency = self.ring[self.ind_rf[0]].Frequency
+        self.harm = self.ring[ind_rf[0]].HarmNumber
+        self.rf_frequency = self.ring[ind_rf[0]].Frequency
 
 
         rad = self.ring.radiation
