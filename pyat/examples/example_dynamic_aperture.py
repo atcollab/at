@@ -1,6 +1,7 @@
 import at
 import at.physics.dynamic_aperture as da
 import at.plot.dynamic_aperture as daplot
+import at.plot
 import time
 import numpy as np
 
@@ -10,7 +11,8 @@ sr_lattice_file = '../test_matlab/hmba.mat'
 sr_lattice_variable = 'RING'
 N = 2**5 # number of turns for tracking
 
-sr_ring = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
+sr_arc = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
+sr_ring = sr_arc*32
 
 sr_ring.radiation_on()
 t = time.time()
