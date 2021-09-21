@@ -1,6 +1,7 @@
 import at
 import copy
 import at.plot
+import at.lattice.cavity_access
 from itertools import compress
 import numpy as np
 import math
@@ -65,7 +66,6 @@ class Acceptance6D(object):
                  compute_range=False,
                  n_turns=2**10,
                  search_divider=10,
-                 use_radiation=True,
                  parallel = False
                 ):
         """
@@ -79,7 +79,6 @@ class Acceptance6D(object):
         :param compute_range: compute range for each plane with more than 1 point to scan
         :param nturns: number of turns that a particle must survive
         :param search_divider: division of range used by recursive range
-        :param use_radiation: default true (turn on radiation, in future version, use radiation state of input lattice)
         :param parallel: default False if True, use patpass when usefull
         : n_point: dictionary to determine the # points to scan in each dimension
         : dict_def_range: default range for each dimension
@@ -95,30 +94,21 @@ class Acceptance6D(object):
         self.dp = dp
         self.mode = mode
 
-        # if explicit input, turn off radiation
-        if not use_radiation:
+        # radiation ON means "there is an active cavity", whether there is radiation or not.
+        if self.ring.radiation:
             self.ring.radiation_off()
-        else:
-            # if no input use state of radiation of the input lattice
-            print('using input lattice radiation state: {}'.format(ring.radiation))
-
-        use_radiation = self.ring.radiation
-
-        if use_radiation:
-            self.ring.radiation_off()
-            self.mcf = self.ring.get_mcf()  # get_mcf whants radiation off
+            self.mcf = self.ring.get_mcf()  # get_mcf wants radiation off
             self.ring.radiation_on()
         else:
             self.mcf = self.ring.get_mcf()
 
         # get RF indexes in lattice
-        elems = self.ring.get_elements(key=at.RFCavity('', 0.0, 0.0, 0.0, 0.0, 0.0))
-        self.ind_rf = [self.ring.index(elem) for elem in elems]
+        self.ind_rf = [i for i, elem in enumerate(ring) if isinstance(elem, at.RFCavity)]
         ligth_speed = 2.99792458e08
         Circumference = self.ring.s_range[-1]
-        harm = self.ring[self.ind_rf[0]].HarmNumber
+        harm = ring.get_rf_harmonic_number()  # use pyat/at/utility/cavity_acess.py module
         rf_frequency_0  = harm * ligth_speed / Circumference
-        self.rf_frequency = self.ring[self.ind_rf[0]].Frequency  # lattice RF
+        self.rf_frequency = ring.get_rf_frequency()  # lattice RF
 
         if abs(self.rf_frequency-rf_frequency_0) > 1e6:
             print('set frequency to ideal one. more than 1MHz difference')
@@ -231,8 +221,11 @@ class Acceptance6D(object):
                 print('new RF = {rf:3.6f} MHz'.format(rf=new_rf_frequency*1e-6))
 
             # set RF frequency to all cavities
-            for ir in self.ind_rf:
-                self.ring[ir].Frequency = new_rf_frequency
+            self.ring.set_rf_frequency(new_rf_frequency, copy=True)
+            #try:
+
+            # except Exception:
+            #    print('RF not set. Probably the lattice has no RFCavity.')
 
             # compute orbit
             self.orbit = self.ring.find_orbit(dp=self.dp)
