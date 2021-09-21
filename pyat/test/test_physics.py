@@ -125,6 +125,13 @@ def test_find_orbit6(hmba_lattice):
     assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-12)
 
 
+def test_find_orbit6_produces_same_result_with_keep_lattice_True(hmba_lattice):
+    hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)
+    orbit0, _ = physics.find_orbit6(hmba_lattice)
+    orbit1, _ = physics.find_orbit6(hmba_lattice, keep_lattice=True)
+    assert_close(orbit0, orbit1, rtol=0, atol=1e-12)
+
+
 def test_find_orbit6_raises_AtError_if_there_is_no_cavity(dba_lattice):
     with pytest.raises(at.lattice.utils.AtError):
         physics.find_orbit6(dba_lattice)
