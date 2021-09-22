@@ -41,7 +41,9 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: cp310*
+          # We don't yet support Python 3.10.
+          # Pypy does not have Scipy so we cannot support it.
+          CIBW_SKIP: cp310* pp*
           CIBW_BEFORE_BUILD: pip install numpy==1.16.6
           CIBW_BUILD_VERBOSITY: 1
 
