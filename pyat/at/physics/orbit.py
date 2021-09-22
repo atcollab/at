@@ -278,6 +278,8 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+        if method is ELossMethod.INTEGRAL:
+            keep_lattice = False
         ref_in = numpy.zeros((6,), order='F')
         ref_in[5] = -dt
     else:
