@@ -8,6 +8,8 @@ import math
 import pickle
 from scipy.io import savemat
 import time
+import os
+import platform
 
 __all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'momentum_acceptance']
 
@@ -221,14 +223,14 @@ class Acceptance6D(object):
                 print('new RF = {rf:3.6f} MHz'.format(rf=new_rf_frequency*1e-6))
 
             # set RF frequency to all cavities
-            self.ring.set_rf_frequency(new_rf_frequency, copy=True)
+            self.ring.set_rf_frequency(new_rf_frequency, copy=False)
             #try:
 
             # except Exception:
             #    print('RF not set. Probably the lattice has no RFCavity.')
 
             # compute orbit
-            self.orbit = self.ring.find_orbit(dp=self.dp)
+            self.orbit = self.ring.find_orbit(dp=self.dp)  # set dp even if ignored to be used if rad is off
 
         else:
 
@@ -263,13 +265,14 @@ class Acceptance6D(object):
         self.parallel_computation = False
 
         # define initial coordinate
-        coord0 = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
+        coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
 
         # define step in each plane
         step = {pl: direction[ip]*(self.dict_def_range[pl][1] - self.dict_def_range[pl][0])
                 for ip, pl in enumerate(self.planes)}
 
-        limit = [v for _, v in coord0.items()]
+        # limit = [v for _, v in coord.items()]
+        limit = list(coord.values())
 
         for ir in range(number_of_recursions):
 
@@ -282,8 +285,8 @@ class Acceptance6D(object):
             #        coord[pl] -= step[pl]  # go back by one of the previous size steps.
             #else:
             #    coord = copy.deepcopy(coord0)
-            if ir == 0:
-                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
+            # if ir == 0:
+            #    coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
 
             if self.verbose:
                 print(coord)
@@ -515,6 +518,22 @@ class Acceptance6D(object):
         else:
             test_coord = list(self.orbit[0])
         """
+
+        # force parallel_computation = False if not on unix
+        if platform.platform() is not 'Unix':
+            self.parallel_computation = False
+            if self.verbose:
+                print('parallel computation with patpass works only in unix: switch to atpass')
+
+        # force parallel_computation = False if openMP=1
+        if 'OPENMP' in os.environ:
+            if os.environ('OPENMP') == '1':
+                self.parallel_computation = False
+                if self.verbose:
+                    print('parallel computation done with OpenMP: switch to atpass')
+        else:
+            if self.verbose:
+                print('OPENMP enivronmental variable does not exist')
 
         # nothing to do if no coordinate to test
         if len(coordinates) == 0:
@@ -816,6 +835,8 @@ def off_energy_dynamic_aperture(sr_ring,
 
         # refresh reference orbit with new dp
         da.compute_orbit()
+        # print(da.orbit)
+        # print(da.ring.get_rf_frequency())
 
         if search:
             if inject_from_inside:
