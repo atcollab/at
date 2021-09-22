@@ -10,7 +10,7 @@ folder_data = '.'  # to store files and figures
 
 sr_lattice_file = '../test_matlab/hmba.mat'
 sr_lattice_variable = 'RING'
-N = 2**5 # number of turns for tracking
+N = 2**2 # number of turns for tracking
 
 sr_arc = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
 
