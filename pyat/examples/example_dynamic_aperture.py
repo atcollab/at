@@ -1,6 +1,7 @@
 import at
 import at.physics.dynamic_aperture as da
 import at.plot.dynamic_aperture as daplot
+import at.lattice.cavity_access
 import at.plot
 import time
 import numpy as np
@@ -12,14 +13,19 @@ sr_lattice_variable = 'RING'
 N = 2**5 # number of turns for tracking
 
 sr_arc = at.load_mat(sr_lattice_file, mat_key=sr_lattice_variable)
-sr_ring = sr_arc*32
 
+sr_ring = at.Lattice(sr_arc*32)
+
+sr_ring.periodicity =1
+sr_ring.set_rf_harmonic_number(992)
+sr_ring.set_rf_voltage(6.0e6)
 sr_ring.radiation_on()
+
 t = time.time()
 
 print('x-xp acceptance, using class directly')
 DA = da.Acceptance6D(sr_ring,
-                  mode='x-xp', start_index=120, n_turns=2**5, dp=-0.005)
+                  mode='x-xp', start_index=120, n_turns=N, dp=-0.005)
 DA.verbose = True
 DA.compute_range()
 # define grid of test particles in the range
@@ -34,7 +40,7 @@ print('x-xp Acceptance took {s:2.1f}s'.format(s=elapsed))
 
 print('5D acceptance, using class directly')
 DA = da.Acceptance6D(sr_ring,
-                  mode='6D', start_index=555, n_turns=2**5, dp=-0.0)
+                  mode='6D', start_index=555, n_turns=N, dp=-0.0)
 DA.n_points['ct'] = 1 # do not scan ct coordinate
 DA.n_points['delta'] = 1 # do not scan ct coordinate
 DA.n_points['x'] = 9 # do not scan ct coordinate
