@@ -20,7 +20,7 @@ else
     dpp=0;
     [newchrom,famname1,famname2]=deal(varargin{:});
 end
-deltaP = 1e-8;
+deltaP = 1e-6;
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{3});
