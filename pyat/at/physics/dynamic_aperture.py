@@ -8,8 +8,6 @@ import math
 import pickle
 from scipy.io import savemat
 import time
-import os
-import platform
 
 __all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'momentum_acceptance']
 
@@ -340,8 +338,8 @@ class Acceptance6D(object):
             self.survived.append(False)
 
             # define limit 6 element array
-            limit = [copy.deepcopy(v) for _, v in coord.items()]
-
+            # limit = [copy.deepcopy(v) for _, v in coord.items()]
+            limit = list(coord.values())
             if self.verbose:
                 print('present limit: {l}'.format(l=limit))
 
@@ -519,21 +517,6 @@ class Acceptance6D(object):
             test_coord = list(self.orbit[0])
         """
 
-        # force parallel_computation = False if not on unix
-        if platform.platform() is not 'Unix':
-            self.parallel_computation = False
-            if self.verbose:
-                print('parallel computation with patpass works only in unix: switch to atpass')
-
-        # force parallel_computation = False if openMP=1
-        if 'OPENMP' in os.environ:
-            if os.environ('OPENMP') == '1':
-                self.parallel_computation = False
-                if self.verbose:
-                    print('parallel computation done with OpenMP: switch to atpass')
-        else:
-            if self.verbose:
-                print('OPENMP enivronmental variable does not exist')
 
         # nothing to do if no coordinate to test
         if len(coordinates) == 0:
