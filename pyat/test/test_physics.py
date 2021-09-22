@@ -47,6 +47,12 @@ def test_find_orbit4_result_unchanged_by_atpass(dba_lattice):
     assert_close(orbit[:4], orbit_copy[:4], atol=1e-12)
 
 
+def test_find_orbit4_produces_same_result_with_keep_lattice_True(dba_lattice):
+    orbit0, _ = physics.find_orbit4(dba_lattice)
+    orbit1, _ = physics.find_orbit4(dba_lattice, keep_lattice=True)
+    assert_close(orbit0, orbit1, rtol=0, atol=1e-12)
+
+
 def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_lattice):
     expected = numpy.array(
         [[8.148212e-6, 1.0993354e-5, 0, 0, DP, 2.963929e-6],
@@ -128,8 +134,15 @@ def test_find_orbit6(hmba_lattice):
 def test_find_orbit6_produces_same_result_with_keep_lattice_True(hmba_lattice):
     hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)
     orbit0, _ = physics.find_orbit6(hmba_lattice)
+    # Technicality - the default arguments to find_orbit6 mean that
+    # keep_lattice argument is always false.
     orbit1, _ = physics.find_orbit6(hmba_lattice, keep_lattice=True)
+    # With INTEGRAL keep_lattice does take effect.
+    orbit2, _ = physics.find_orbit6(
+        hmba_lattice, keep_lattice=True, method=physics.ELossMethod.INTEGRAL
+    )
     assert_close(orbit0, orbit1, rtol=0, atol=1e-12)
+    assert_close(orbit0, orbit2, rtol=0, atol=1e-12)
 
 
 def test_find_orbit6_raises_AtError_if_there_is_no_cavity(dba_lattice):
