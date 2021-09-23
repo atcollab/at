@@ -338,8 +338,10 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
     # Perform analysis
     vps, dtype, el0, els = analyze(mxx, ms)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0) if twiss_in is None \
-            else numpy.NaN
+    if twiss_in is None:
+        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0) 
+    else:
+        tunes = numpy.NaN
 
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
@@ -354,7 +356,7 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
                          ('s_pos', numpy.float64)]
         data0 = (orb0, numpy.identity(2*dms), 0.0)
         datas = (orbs, ms, spos)
-        if get_chrom or get_w:
+        if get_chrom or get_w and twiss_in is None:
             f0 = get_rf_frequency(ring, cavpts=cavpts)
             df = -dp_step * get_mcf(ring.radiation_off(copy=True)) * f0
             rgup = set_rf_frequency(ring, f0 + 0.5*df, cavpts=cavpts, copy=True)
@@ -398,12 +400,12 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
                          ('s_pos', numpy.float64)]
         data0 = (d0, orb0, mt, get_s_pos(ring, len(ring)))
         datas = (ds, orbs, ms, spos)
-        if get_w:
+        if get_w and twiss_in is None:
             dtype = dtype + _W_DTYPE
             chrom, w0, ws = chrom_w(ring, ring, o0up, o0dn, refpts, **kwargs)
             data0 = data0 + (w0,)
             datas = datas + (ws,)
-        elif get_chrom:
+        elif get_chrom and twiss_in is None:
             tunesup = _tunes(ring, orbit=o0up)
             tunesdn = _tunes(ring, orbit=o0dn)
             chrom = (tunesup - tunesdn) / dp_step
