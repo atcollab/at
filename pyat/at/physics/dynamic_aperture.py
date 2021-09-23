@@ -14,7 +14,7 @@ __all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'm
 
 class Acceptance6D(object):
     """
-    Compute acceptance
+    Compute acceptance in 6D.
     """
 
     verbose = False
@@ -716,7 +716,7 @@ def off_energy_dynamic_aperture(sr_ring,
                                 start_index=0,
                                 file_name_save=None,
                                 num_recursions=5,
-                                verbose=True):
+                                verbose=False):
     """
     maximum negative horizontal DA for sereral energy deviations
 
@@ -791,7 +791,12 @@ def off_energy_dynamic_aperture(sr_ring,
     return max_neg_x, deltaps, da
 
 
-def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=None, num_recursions=5, verbose=True):
+def momentum_acceptance(sr_ring,
+                        n_turns=2**10,
+                        ref_pts=None,
+                        file_name_save=None,
+                        num_recursions=5,
+                        verbose=False):
     """
     compute momentum acceptance at given reference positions along the lattice
     :param sr_ring: pyAT lattice
@@ -856,9 +861,10 @@ def dynamic_aperture(sr_ring,
                      parallel=False,
                      search=True,
                      file_name_save=None,
-                     num_recursions=5):
+                     num_recursions=5,
+                     verbose=False):
     """
-    compute Dynamic aperture x-y searching recursively
+    compute Dynamic Aperture x-y searching recursively
 
     :param sr_ring: pyAT lattice
     :param dp: momentum deviation
@@ -871,7 +877,7 @@ def dynamic_aperture(sr_ring,
     :param num_recursions: number of recursion for search
     :param parallel : uses patpass rather than atpass
     :param file_name_save: if given, save to file
-    :param verbose: if True (defualt), print out messages
+    :param verbose: (defualt=False) if True, print out messages
 
     :return: h,v horizontal and vertical coordinates of DA limit
     :return: da, search : for use with plotting function in at.plot.dynamic_aperture.plot_dynamic_aperture
