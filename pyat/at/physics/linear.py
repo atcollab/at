@@ -328,6 +328,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         if get_chrom or get_w:
             warnings.warn(AtWarning("'get_chrom' and 'get_w' are ignored in "
                                     "transfer-line mode"))
+        get_chrom = False
+        get_w = False
         orbit, sigma, d0 = build_sigma(twiss_in, orbit)
         dorbit = numpy.hstack((0.5*dp_step*d0, 0.5*dp_step, 0.0))
         # Get 1-turn transfer matrix
@@ -356,7 +358,7 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
                          ('s_pos', numpy.float64)]
         data0 = (orb0, numpy.identity(2*dms), 0.0)
         datas = (orbs, ms, spos)
-        if get_chrom or get_w and twiss_in is None:
+        if get_chrom or get_w:
             f0 = get_rf_frequency(ring, cavpts=cavpts)
             df = -dp_step * get_mcf(ring.radiation_off(copy=True)) * f0
             rgup = set_rf_frequency(ring, f0 + 0.5*df, cavpts=cavpts, copy=True)
@@ -400,12 +402,12 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
                          ('s_pos', numpy.float64)]
         data0 = (d0, orb0, mt, get_s_pos(ring, len(ring)))
         datas = (ds, orbs, ms, spos)
-        if get_w and twiss_in is None:
+        if get_w:
             dtype = dtype + _W_DTYPE
             chrom, w0, ws = chrom_w(ring, ring, o0up, o0dn, refpts, **kwargs)
             data0 = data0 + (w0,)
             datas = datas + (ws,)
-        elif get_chrom and twiss_in is None:
+        elif get_chrom:
             tunesup = _tunes(ring, orbit=o0up)
             tunesdn = _tunes(ring, orbit=o0dn)
             chrom = (tunesup - tunesdn) / dp_step
