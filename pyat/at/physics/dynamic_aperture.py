@@ -7,6 +7,7 @@ import numpy as np
 import math
 import pickle
 from scipy.io import savemat
+from scipy.constants import c as ligth_speed
 import time
 
 import warnings
@@ -106,8 +107,8 @@ class Acceptance6D(object):
 
         # get RF indexes in lattice
         self.ind_rf = [i for i, elem in enumerate(ring) if isinstance(elem, at.RFCavity)]
-        ligth_speed = 2.99792458e08
-        Circumference = self.ring.s_range[-1]
+
+        Circumference = self.ring.circumference # s_range[-1] not working if periodicity != 1
         harm = ring.get_rf_harmonic_number()  # use pyat/at/utility/cavity_acess.py module
         rf_frequency_0  = harm * ligth_speed / Circumference
         self.rf_frequency = ring.get_rf_frequency()  # lattice RF
@@ -214,7 +215,7 @@ class Acceptance6D(object):
         computes orbit for given dp
         """
 
-        if len(self.ind_rf)>0:
+        if self.ring.radiation:
             # set RF frequency
             drf = - self.rf_frequency * self.mcf * self.dp
 
@@ -233,7 +234,7 @@ class Acceptance6D(object):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 #disable this warning: AtWarning: In 6D, "dp" and "dct" are ignored warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
-                self.orbit = self.ring.find_orbit(dp=self.dp)  # set dp even if ignored to be used if rad is off
+                self.orbit, _ = self.ring.find_orbit(dp=self.dp)  # set dp even if ignored to be used if rad is off
 
         else:
             if self.verbose:
@@ -242,7 +243,7 @@ class Acceptance6D(object):
             rad = self.ring.radiation
             self.ring.radiation_off()
 
-            self.orbit = self.ring.find_orbit4(dp=self.dp)  # dpp is added to orbit here
+            self.orbit, _ = self.ring.find_orbit4(dp=self.dp)  # dpp is added to orbit here
 
             if rad:
                 self.ring.radiation_on()
@@ -506,6 +507,7 @@ class Acceptance6D(object):
         # if coordinates to test:
 
         # create 6xN matrix add orbit (with dpp) to each coordinate
+        """
         rin = np.concatenate(([coordinates['x'] + self.orbit[0][0]],
                               [coordinates['xp'] + self.orbit[0][1]],
                               [coordinates['y'] + self.orbit[0][2]],
@@ -514,13 +516,25 @@ class Acceptance6D(object):
                               [coordinates['ct'] + self.orbit[0][5]]),
                               axis=0)
 
+        
+        rin = np.array(list(coordinates.values()))
+
+        if len(rin.shape) == 1:
+            rin = rin + self.orbit[0]
+        else:
+            rin = rin + self.orbit[0].reshape(6,1)
+
+        rin = np.asfortranarray(rin)
+        """
+
+        rin = np.asfortranarray( np.array(list(coordinates.values())).reshape(6, -1) + self.orbit.reshape(6, 1))
+
         # track coordinates for N turns
         if not self.parallel_computation:
 
-            t = at.atpass(self.ring,
-                          np.asfortranarray(rin.copy()),
-                          self.number_of_turns,
-                          refpts=np.array(np.uint32(0)))
+            t = at.lattice_pass(self.ring,
+                          rin.copy(),
+                          self.number_of_turns)
 
         else:
             if self.verbose:
@@ -562,7 +576,8 @@ class Acceptance6D(object):
 
         fills the self.survived property with booleans corresponding to each coordinate in coordinates
 
-        :return: h_s, v_s lists of dim1 and dim2 coordinates defining the 2D limit of Acceptance
+        :return: h_s, v_s, (h), (v), (survived) lists of dim1 and dim2 coordinates defining the 2D limit of Acceptance
+        :return: (h_s), (v_s), h, v, survived all coordinates tested and array of survival reduced to the 2D in self.mode
         """
 
         # display summary of work to do
@@ -574,31 +589,33 @@ class Acceptance6D(object):
         # test all coordinates at once
         self.survived = self.test_survived(self.coordinates)
 
-        h_s = []
-        v_s = []
+        h_border = []
+        v_border = []
+        h_all = []
+        v_all = []
+        survived = []
 
         if self.mode in self.modes[0:-1]:
             # simplify 6D structure to 2D
-            h, v, sel = self.select_test_points_based_on_mode()
+            h_all, v_all, survived = self.select_test_points_based_on_mode()
 
             # find maximum of each column and return as border
-            h_s, v_s = self.get_border(h, v, sel)
-
             try:
-                h_s, v_s = self.get_border(h, v, sel)
+                h_border, v_border = self.get_border(h_all, v_all, survived)
             except Exception:
                 if self.verbose:
                     print('DA limit could not be computed (probably no closed contour)')
+
         else:
             if self.verbose:
                 print('DA limit could not be computed for this mode')
 
-        return h_s, v_s
+        return h_border, v_border, h_all, v_all, survived
 
     def get_border(self, h, v, sel):
         """
         find border of list of points.
-        works only for grid mode.
+        works only for 2D and grid mode.
         """
         h_border = []
         v_border = []
@@ -609,15 +626,30 @@ class Acceptance6D(object):
         if self.grid_mode == 'grid':
 
             for hc in np.unique(h):
-                col=[]
+                col = []
+                notcol = []
                 for i, h_ in enumerate(h):
+
                     if h_ == hc and sel[i]:
                         col.append(v[i])
+                    elif h_ == hc and not sel[i]:
+                        notcol.append(v[i])
+
                 if len(col) > 0:
+
+                    # compute step size from grid
+                    if len(col)>1:
+                        step = col[-1]-col[-2]
+                    elif len(notcol)>1:
+                        step = notcol[-1] - notcol[-2]
+
+                    # append a point for the first lost on the column from above
                     h_border.append(hc)
-                    v_border.append(np.max(col))
+                    v_border.append(np.min(notcol)-step)
+                    # appen a point on for the firt lost on the column from below
                     h_border.insert(0,hc)
                     v_border.insert(0,np.min(col))
+
         elif self.grid_mode == 'radial':
             # find radial grid extremes.  not implemented
             print('radial mode, no border computed')
@@ -937,7 +969,7 @@ def dynamic_aperture(sr_ring,
             da.dict_def_range['y'][0] = 0.0  # make y single sided
 
             da.test_points_grid()
-            h, v = da.compute()
+            h, v, _, _, _ = da.compute()
 
     if grid_mode == 'grid':
         da.compute_range()  # implement an init at change of mode, npoint, or range.
@@ -945,7 +977,7 @@ def dynamic_aperture(sr_ring,
         da.n_points['y'] = n_radii  # used as radii, if grid radial
         da.dict_def_range['y'][0] = 0.0  # make y single sided
         da.test_points_grid()
-        h, v = da.compute()
+        h, v, _, _, _ = da.compute()
 
     # plot
     if file_name_save:
