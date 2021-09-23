@@ -83,7 +83,8 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
             dat0 = cs.allsegs[-2][0]
             ax.plot(dat0[:, 0], dat0[:, 1], ':', label='limit')
         else:
-            print('DA limit could not be computed (probably no closed contour)')
+            if Acc6D.verbose:
+                print('DA limit could not be computed (probably no closed contour)')
     except Exception:
         print(' limits not computed ')
 

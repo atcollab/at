@@ -9,6 +9,8 @@ import pickle
 from scipy.io import savemat
 import time
 
+import warnings
+
 __all__ = ['Acceptance6D', 'dynamic_aperture', 'off_energy_dynamic_aperture', 'momentum_acceptance']
 
 
@@ -228,7 +230,10 @@ class Acceptance6D(object):
                 print('RF not set. Probably the lattice has no RFCavity.')
 
             # compute orbit
-            self.orbit = self.ring.find_orbit(dp=self.dp)  # set dp even if ignored to be used if rad is off
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                #disable this warning: AtWarning: In 6D, "dp" and "dct" are ignored warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
+                self.orbit = self.ring.find_orbit(dp=self.dp)  # set dp even if ignored to be used if rad is off
 
         else:
             if self.verbose:
@@ -719,6 +724,8 @@ def off_energy_dynamic_aperture(sr_ring,
                                 verbose=False):
     """
     maximum negative horizontal DA for sereral energy deviations
+    The specified energy deviation steps are set with a corresponding change of frequency in the lattice.
+    A cavity in the lattice is required.
 
     :param sr_ring: pyAT lattice
     :param deltaps: list of deltap/p to test
@@ -730,6 +737,7 @@ def off_energy_dynamic_aperture(sr_ring,
     :param start_index: index where to compute off-energy DA
     :param file_name_save: if given, save to file
     :param verbose : print out messages/info
+
     :return: max_neg_x list of maximum negative da for each deltap/p required
     :return: deltaps, da: for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
