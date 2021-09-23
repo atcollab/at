@@ -111,7 +111,8 @@ class Acceptance6D(object):
         self.rf_frequency = ring.get_rf_frequency()  # lattice RF
 
         if abs(self.rf_frequency-rf_frequency_0) > 1e6:
-            print('set frequency to ideal one. more than 1MHz difference')
+            if self.verbose:
+                print('set frequency to ideal one. more than 1MHz difference')
             self.rf_frequency = rf_frequency_0  # if RF not nominal, set to nominal
 
         # define orbit about wich to compute DA
@@ -221,18 +222,17 @@ class Acceptance6D(object):
                 print('new RF = {rf:3.6f} MHz'.format(rf=new_rf_frequency*1e-6))
 
             # set RF frequency to all cavities
-            self.ring = self.ring.set_rf_frequency(new_rf_frequency, copy=True)
-            #try:
-
-            # except Exception:
-            #    print('RF not set. Probably the lattice has no RFCavity.')
+            try:
+                self.ring = self.ring.set_rf_frequency(new_rf_frequency, copy=True)
+            except Exception:
+                print('RF not set. Probably the lattice has no RFCavity.')
 
             # compute orbit
             self.orbit = self.ring.find_orbit(dp=self.dp)  # set dp even if ignored to be used if rad is off
 
         else:
-
-            print('no cavity in the lattice, using find_orbit4')
+            if self.verbose:
+                print('no cavity in the lattice, using find_orbit4')
 
             rad = self.ring.radiation
             self.ring.radiation_off()
@@ -437,7 +437,8 @@ class Acceptance6D(object):
             flat_dd = []
             for k, val in d_.items():
                 flat_dd.append([item for sublist in val for item in sublist])
-                print('{} has {} elements'.format(k, len(flat_dd[-1])))
+                if self.verbose:
+                    print('{} has {} elements'.format(k, len(flat_dd[-1])))
 
             num_points = max([len(dd) for dd in flat_dd])
 
@@ -447,8 +448,6 @@ class Acceptance6D(object):
                      self.coordinates[p] = [item for sublist in d_[p] for item in sublist]
                 else:
                     self.coordinates[p] = [item for sublist in d_[p] for item in sublist]*num_points
-
-                # print(len(self.coordinates[p]))
 
         else:
 
@@ -495,19 +494,6 @@ class Acceptance6D(object):
         returns a boolean if the coordinates survived
         """
 
-        """
-        if delta != 0.0:
-            # recompute orbit
-            self.ring.radiation_off()
-            orbit_delta = self.ring.find_sync_orbit()
-            self.ring.radiation_on()
-
-            test_coord = list(orbit_delta[0])
-        else:
-            test_coord = list(self.orbit[0])
-        """
-
-
         # nothing to do if no coordinate to test
         if len(coordinates) == 0:
             return []
@@ -527,18 +513,19 @@ class Acceptance6D(object):
         if not self.parallel_computation:
 
             t = at.atpass(self.ring,
-                                  np.asfortranarray(rin.copy()),
-                                  self.number_of_turns,
-                                  refpts=np.array(np.uint32(0)))
+                          np.asfortranarray(rin.copy()),
+                          self.number_of_turns,
+                          refpts=np.array(np.uint32(0)))
 
         else:
-            print('parallel computation')
+            if self.verbose:
+                print('parallel computation')
 
             # track coordinates
             t = at.patpass(self.ring,
-                                   rin.copy(),
-                                   self.number_of_turns,
-                                   refpts=np.array(np.uint32(0)))
+                           rin.copy(),
+                           self.number_of_turns,
+                           refpts=np.array(np.uint32(0)))
 
         survived = [not s for s in np.isnan(t[0,:,0,-1])]
 
@@ -562,49 +549,6 @@ class Acceptance6D(object):
                         tot=len(coordinates['x']), surv=s, nt=self.number_of_turns,
                         x=x, y=y, xp=xp, ct=ct, yp=yp, delta=delta))
 
-        """
-        test_coord = copy.deepcopy(list(self.orbit[0]))
-        # print(test_coord[4])
-        # print(self.dp)
-        # test_coord[4] = test_coord[4] + self.dp
-
-        rin = np.asfortranarray(np.zeros((6, 1)))
-
-        for ip, p in enumerate(self.planes):
-
-            if p == 'x':
-                test_coord[ip] += coordinates['x']
-            if p == 'xp':
-                test_coord[ip] += coordinates['xp']
-            if p == 'y':
-                test_coord[ip] += coordinates['y']
-            if p == 'yp':
-                test_coord[ip] += coordinates['yp']
-            if p == 'delta':
-                test_coord[ip] += coordinates['delta']
-            if p == 'ct':
-                test_coord[ip] += coordinates['ct']
-
-        rin[0][0] = test_coord[0]
-        rin[1][0] = test_coord[1]
-        rin[2][0] = test_coord[2]
-        rin[3][0] = test_coord[3]
-        rin[4][0] = test_coord[4]
-        rin[5][0] = test_coord[5]
-
-        # track
-        t = at.atpass(self.ring,
-                      copy.deepcopy(rin),
-                      self.number_of_turns,
-                      refpts=np.array(np.uint32(0)))  #np.array(np.uint32([len(self.ring)])))
-        # atpass help:
-        # rout: 6 x n_particles x n_refpts x n_turns Fortran - ordered numpy array of particle coordinates
-
-        if self.verbose:
-            print('test if {r} survives {n} turns: {s}'.format(
-                r=rin.T, n=self.number_of_turns, s=not(np.isnan(t[0][0][0][-1]))))
-        """
-
         return survived
 
     def compute(self):
@@ -617,10 +561,10 @@ class Acceptance6D(object):
         """
 
         # display summary of work to do
-        print('Computing acceptance {m}'.format(m=self.mode))
-
-        [print('test {np:02d} points in {pl}'.format(np=self.n_points[p], pl=p))
-         for ip, p in enumerate(self.planes)]
+        if self.verbose:
+            print('Computing acceptance {m}'.format(m=self.mode))
+            [print('test {np:02d} points in {pl}'.format(np=self.n_points[p], pl=p))
+             for ip, p in enumerate(self.planes)]
 
         # test all coordinates at once
         self.survived = self.test_survived(self.coordinates)
@@ -638,9 +582,11 @@ class Acceptance6D(object):
             try:
                 h_s, v_s = self.get_border(h, v, sel)
             except Exception:
-                print('DA limit could not be computed (probably no closed contour)')
+                if self.verbose:
+                    print('DA limit could not be computed (probably no closed contour)')
         else:
-            print('DA limit could not be computed for this mode')
+            if self.verbose:
+                print('DA limit could not be computed for this mode')
 
         return h_s, v_s
 
@@ -769,7 +715,8 @@ def off_energy_dynamic_aperture(sr_ring,
                                 n_turns=2**10,
                                 start_index=0,
                                 file_name_save=None,
-                                num_recursions=5):
+                                num_recursions=5,
+                                verbose=True):
     """
     maximum negative horizontal DA for sereral energy deviations
 
@@ -782,11 +729,12 @@ def off_energy_dynamic_aperture(sr_ring,
     :param n_turns: number of turns for survival
     :param start_index: index where to compute off-energy DA
     :param file_name_save: if given, save to file
+    :param verbose : print out messages/info
     :return: max_neg_x list of maximum negative da for each deltap/p required
     :return: deltaps, da: for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
     da = Acceptance6D(copy.deepcopy(sr_ring), start_index=start_index, n_turns=n_turns)
-    da.verbose = False
+    da.verbose = verbose
 
     max_neg_x = []
 
@@ -799,15 +747,14 @@ def off_energy_dynamic_aperture(sr_ring,
     ring_rad = da.ring.radiation
 
     for deltap in deltaps:
-        print('{d:2.1f}%'.format(d=deltap*100))
+        if da.verbose:
+            print('{d:2.1f}%'.format(d=deltap*100))
 
         # change dp
         da.dp = deltap
 
         # refresh reference orbit with new dp
         da.compute_orbit()
-        # print(da.orbit)
-        # print(da.ring.get_rf_frequency())
 
         if search:
             if inject_from_inside:
@@ -844,7 +791,7 @@ def off_energy_dynamic_aperture(sr_ring,
     return max_neg_x, deltaps, da
 
 
-def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=None, num_recursions=5):
+def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=None, num_recursions=5, verbose=True):
     """
     compute momentum acceptance at given reference positions along the lattice
     :param sr_ring: pyAT lattice
@@ -852,6 +799,7 @@ def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=Non
     :param ref_pts: list of positions at which to compute momentum acceptance
     :param num_recursions: number of recursion to refine search
     :param file_name_save: if given, save figure
+    :param verbose: default = True. if True print out messages/info
 
     :return: [[max deltap/p], [min deltap/p]], s locations
     :return: da, for use with plotting function in at.plot.dynamic_aperture.plot_momentum_acceptance
@@ -860,12 +808,12 @@ def momentum_acceptance(sr_ring, n_turns=2**10, ref_pts=None, file_name_save=Non
     mom_acc = [[], []]
 
     for el in ref_pts:
-
-        print('ind {d}'.format(d=el))
+        if verbose:
+            print('ind {d}'.format(d=el))
 
         da = Acceptance6D(copy.deepcopy(sr_ring), start_index=el)
         da.number_of_turns = n_turns
-        da.verbose = False
+        da.verbose = verbose
 
         da.coordinates = {'x': [], 'xp': [], 'y': [], 'yp': [], 'delta': [], 'ct': []}
         da.survived = []
@@ -923,6 +871,7 @@ def dynamic_aperture(sr_ring,
     :param num_recursions: number of recursion for search
     :param parallel : uses patpass rather than atpass
     :param file_name_save: if given, save to file
+    :param verbose: if True (defualt), print out messages
 
     :return: h,v horizontal and vertical coordinates of DA limit
     :return: da, search : for use with plotting function in at.plot.dynamic_aperture.plot_dynamic_aperture
@@ -933,7 +882,7 @@ def dynamic_aperture(sr_ring,
     da = Acceptance6D(copy.deepcopy(sr_ring), mode='x-y', grid_mode=grid_mode, start_index=start_index)
     da.number_of_turns = n_turns
     da.dp = dp
-    da.verbose = False
+    da.verbose = verbose
     da.parallel_computation = parallel
     
     if grid_mode == 'radial':
