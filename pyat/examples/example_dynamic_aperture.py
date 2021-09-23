@@ -55,14 +55,14 @@ print('On-energy DA grid (parallel) took {s:2.1f}s'.format(s=elapsed))
 # max hor. position vs momenutm deviation (off-energy DA)
 t = time.time()
 print('Off-energy DA')
-maxneg0, dpp, da_ = da.off_energy_dynamic_aperture(sr_ring,
+maxneg0, dp, da_ = da.off_energy_dynamic_aperture(sr_ring,
                                n_turns=N,
                                deltaps=np.linspace(-0.1, 0.1, 21),
                                file_name_save=folder_data + '/off_en_da',
                                inject_from_inside=True,
                                num_recursions=5)
 
-daplot.plot_off_energy_dynamic_aperture(maxneg0, dpp, da_, file_name_save=folder_data + '/off_en_da')
+daplot.plot_off_energy_dynamic_aperture(maxneg0, dp, da_, file_name_save=folder_data + '/off_en_da')
 
 elapsed = time.time() - t
 print('Off-energy DA took {s:2.1f}s'.format(s=elapsed))

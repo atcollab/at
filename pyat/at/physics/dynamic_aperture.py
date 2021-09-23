@@ -359,22 +359,17 @@ class Acceptance6D(object):
         init_parcomp = self.parallel_computation
         self.parallel_computation = False
 
-        # relevant_planes = []
-        # if self.mode:
-        #     relevant_planes = self.mode.split('-', 2)
-        coord0 = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
-
         for p in self.planes:
             if self.n_points[p] > 1:
 
                 step = (self.dict_def_range[p][1] - self.dict_def_range[p][0]) / self.search_divider
 
-                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0} # copy.deepcopy(coord0)
+                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
                 while self.test_survived(coord)[0] and coord[p]< 1.0:
                     coord[p] += step
                 self.dict_def_range[p][1] = coord[p]+step
 
-                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0} # copy.deepcopy(coord0)
+                coord = {'x': 1e-6, 'xp': 0.0, 'y': 1e-6, 'yp': 0.0, 'delta': 0.0, 'ct': 0.0}
                 while self.test_survived(coord)[0] and coord[p]> -1.0:
                     coord[p] -= step
                 self.dict_def_range[p][0] = coord[p]-step
