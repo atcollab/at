@@ -417,7 +417,7 @@ class Acceptance6D(object):
 
             ip = 0
 
-            for ind_p, p in enumerate(self.planes):  # must loop all plane to define all 6D ranges (1 point)
+            for p in self.planes:  # must loop all plane to define all 6D ranges (1 point)
 
                 if self.n_points[p] > 1:  # if here, there are only 2 planes available
 
