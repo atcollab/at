@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from at.physics.dynamic_aperture import Acceptance6D
 import numpy as np
+from datetime import datetime
 
 def plot(Acc6D, ax=None, file_name_save=None):
     """
@@ -236,7 +237,11 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
     plt.tight_layout()
 
     tit = axs_top[0].get_title().replace('\n', '')
-    axs_top[0].set_title(tit + '\n', fontdict={'fontsize': 12,
+
+    now = datetime.now()
+    t_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
+    axs_top[0].set_title(t_string + '\n' + tit + '\n', fontdict={'fontsize': 12,
                                                    'verticalalignment': 'center',
                                                    'horizontalalignment': 'left'})
 

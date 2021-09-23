@@ -526,23 +526,21 @@ class Acceptance6D(object):
         # track coordinates for N turns
         if not self.parallel_computation:
 
-            t, losses = at.atpass(self.ring,
-                                  copy.deepcopy(np.asfortranarray(rin)),
+            t = at.atpass(self.ring,
+                                  np.asfortranarray(rin.copy()),
                                   self.number_of_turns,
-                                  refpts=np.array(np.uint32(0)),  # np.array(np.uint32([len(self.ring)])))
-                                  losses=True)
+                                  refpts=np.array(np.uint32(0)))
 
         else:
             print('parallel computation')
 
             # track coordinates
-            t, losses = at.patpass(self.ring,
-                                   copy.deepcopy(rin),
+            t = at.patpass(self.ring,
+                                   rin.copy(),
                                    self.number_of_turns,
-                                   refpts=np.array(np.uint32(0)),  # np.array(np.uint32([len(self.ring)])))
-                                   losses=True)
+                                   refpts=np.array(np.uint32(0)))
 
-        survived = [not s for s in losses['islost']]
+        survived = [not s for s in np.isnan(t[0,:,0,-1])]
 
         # print if survived for each test particle
         if self.verbose:
