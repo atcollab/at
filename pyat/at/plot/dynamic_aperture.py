@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from at.physics.dynamic_aperture import Acceptance6D
 import numpy as np
 from datetime import datetime
+import os
 
 def plot(Acc6D, ax=None, file_name_save=None):
     """
@@ -101,11 +102,13 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
     plt.tight_layout()
 
     if file_name_save:
-        fns = file_name_save.split('.', 2)
-        if fns[1]:
-            plt.savefig(fns[0] + '_' + Acc6D.mode.replace('-', '_') + '.' + fns[1], dpi=600)
+        path, file = os.path.split(file_name_save)
+        fns = file.split('.',2)
+
+        if len(fns)>1:
+            plt.savefig(path + '/' + fns[0] + '_' + Acc6D.mode.replace('-', '_') + '.' + fns[1], dpi=600)
         else:
-            plt.savefig(file_name_save + '_' + Acc6D.mode.replace('-', '_'), dpi=600)
+            plt.savefig(path + '/' + fns[0] + '_' + Acc6D.mode.replace('-', '_'), dpi=600)
 
     return ax
 
