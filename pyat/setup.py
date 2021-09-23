@@ -133,7 +133,7 @@ diffmatrix = Extension(
 
 setup(
     name='accelerator-toolbox',
-    version='0.2.0',
+    version='0.2.1',
     description='Accelerator Toolbox',
     long_description=long_description,
     author='The AT collaboration',
