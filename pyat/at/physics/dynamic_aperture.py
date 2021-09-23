@@ -221,7 +221,7 @@ class Acceptance6D(object):
                 print('new RF = {rf:3.6f} MHz'.format(rf=new_rf_frequency*1e-6))
 
             # set RF frequency to all cavities
-            self.ring.set_rf_frequency(new_rf_frequency, copy=False)
+            self.ring = self.ring.set_rf_frequency(new_rf_frequency, copy=True)
             #try:
 
             # except Exception:
