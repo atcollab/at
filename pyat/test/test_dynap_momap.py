@@ -36,7 +36,7 @@ def test_acceptance_6d(hmba_lattice):
     # define grid of test particles in the range
     da.test_points_grid()
     # test if particles of the grid survive or not and produce a curve arround the survived ones
-    h, v = da.compute()
+    h, v, h_all, v_all, survived = da.compute()
     [print(h_, v_) for h_, v_ in zip(h, v)]
     print(da.survived)
 
@@ -75,7 +75,7 @@ def test_acceptance_x_xp(hmba_lattice):
     # define grid of test particles in the range
     da.test_points_grid()
     # test if particles of the grid survive or not and produce a curve arround the survived ones
-    h, v = da.compute()
+    h, v, h_all, v_all, survived = da.compute()
     [print(h_, v_) for h_, v_ in zip(h, v)]
     print(da.survived)
 
