@@ -225,10 +225,11 @@ class Acceptance6D(object):
                 print('new RF = {rf:3.6f} MHz'.format(rf=new_rf_frequency*1e-6))
 
             # set RF frequency to all cavities
-            try:
+            try :
                 self.ring = self.ring.set_rf_frequency(new_rf_frequency, copy=True)
-            except Exception:
+            except AtError as exc:
                 print('RF not set. Probably the lattice has no RFCavity.')
+                raise(exc)
 
             # compute orbit
             with warnings.catch_warnings():
@@ -507,12 +508,12 @@ class Acceptance6D(object):
         # if coordinates to test:
 
         # create 6xN matrix add orbit (with dpp) to each coordinate
-        rin = np.concatenate(([coordinates['x'] + self.orbit[0][0]],
-                              [coordinates['xp'] + self.orbit[0][1]],
-                              [coordinates['y'] + self.orbit[0][2]],
-                              [coordinates['yp'] + self.orbit[0][3]],
-                              [coordinates['delta'] + self.orbit[0][4]],
-                              [coordinates['ct'] + self.orbit[0][5]]),
+        rin = np.concatenate(([coordinates['x'] + self.orbit[0]],
+                              [coordinates['xp'] + self.orbit[1]],
+                              [coordinates['y'] + self.orbit[2]],
+                              [coordinates['yp'] + self.orbit[3]],
+                              [coordinates['delta'] + self.orbit[4]],
+                              [coordinates['ct'] + self.orbit[5]]),
                               axis=0)
 
         rin = np.asfortranarray(rin)
