@@ -507,7 +507,6 @@ class Acceptance6D(object):
         # if coordinates to test:
 
         # create 6xN matrix add orbit (with dpp) to each coordinate
-        """
         rin = np.concatenate(([coordinates['x'] + self.orbit[0][0]],
                               [coordinates['xp'] + self.orbit[0][1]],
                               [coordinates['y'] + self.orbit[0][2]],
@@ -516,7 +515,9 @@ class Acceptance6D(object):
                               [coordinates['ct'] + self.orbit[0][5]]),
                               axis=0)
 
-        
+        rin = np.asfortranarray(rin)
+
+        """
         rin = np.array(list(coordinates.values()))
 
         if len(rin.shape) == 1:
@@ -525,9 +526,9 @@ class Acceptance6D(object):
             rin = rin + self.orbit[0].reshape(6,1)
 
         rin = np.asfortranarray(rin)
-        """
-
+        
         rin = np.asfortranarray( np.array(list(coordinates.values())).reshape(6, -1) + self.orbit.reshape(6, 1))
+        """
 
         # track coordinates for N turns
         if not self.parallel_computation:
