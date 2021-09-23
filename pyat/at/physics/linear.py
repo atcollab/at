@@ -328,8 +328,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         if get_chrom or get_w:
             warnings.warn(AtWarning("'get_chrom' and 'get_w' are ignored in "
                                     "transfer-line mode"))
-        get_chrom = False
-        get_w = False
+            get_chrom = False
+            get_w = False
         orbit, sigma, d0 = build_sigma(twiss_in, orbit)
         dorbit = numpy.hstack((0.5*dp_step*d0, 0.5*dp_step, 0.0))
         # Get 1-turn transfer matrix
