@@ -21,7 +21,7 @@ sr_ring.set_rf_harmonic_number(992)
 sr_ring.set_rf_voltage(6.0e6)
 sr_ring.radiation_on()
 
-Nex = 6 # number of examples to run
+Nex = 7 # number of examples to run
 i = 1
 
 # x - xp Acceptance
@@ -109,6 +109,25 @@ daplot.plot_off_energy_dynamic_aperture(maxneg0, dp, da_, file_name_save=folder_
 
 elapsed = time.time() - t
 print('Off-energy DA took {s:2.1f}s'.format(s=elapsed))
+
+
+# max hor. position vs momenutm deviation (off-energy DA)
+t = time.time()
+print('{}/{}  Computing: Off-energy DA at a different location ...'.format(i,Nex))
+i +=1
+maxneg0, dp, da_ = da.off_energy_dynamic_aperture(sr_ring,
+                               n_turns=N,
+                               start_index=56,
+                               deltaps=np.linspace(-0.1, 0.1, 21),
+                               file_name_save=folder_data + '/off_en_da',
+                               inject_from_inside=True,
+                               num_recursions=5)
+
+daplot.plot_off_energy_dynamic_aperture(maxneg0, dp, da_, file_name_save=folder_data + '/off_en_da_somewhere')
+
+elapsed = time.time() - t
+print('Off-energy DA took {s:2.1f}s'.format(s=elapsed))
+
 
 
 #  Local Momentum Acceptance
