@@ -442,7 +442,7 @@ class Acceptance6D(object):
             num_points = max([len(dd) for dd in flat_dd])
 
             # define lists for DA scan
-            for ip, p in enumerate(self.planes):
+            for p in self.planes:
                 if p in two_planes:
                      self.coordinates[p] = [item for sublist in d_[p] for item in sublist]
                 else:
@@ -473,12 +473,7 @@ class Acceptance6D(object):
                     #    d_.append(0.0);
 
             # define mesh of points
-            xx, xpxp, yy, ypyp, deltadelta, ctct = np.meshgrid(d_[0],
-                                                               d_[1],
-                                                               d_[2],
-                                                               d_[3],
-                                                               d_[4],
-                                                               d_[5],)
+            xx, xpxp, yy, ypyp, deltadelta, ctct = np.meshgrid(*d_)
 
             self.coordinates['x'] = xx.flatten()
             self.coordinates['xp'] = xpxp.flatten()
