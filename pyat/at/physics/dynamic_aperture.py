@@ -807,6 +807,8 @@ def momentum_acceptance(sr_ring,
                         verbose=False):
     """
     compute momentum acceptance at given reference positions along the lattice
+    the energy variation is set via rf frequency change. a cavity in the lattice is required.
+
     :param sr_ring: pyAT lattice
     :param n_turns: number of turns to survive
     :param ref_pts: list of positions at which to compute momentum acceptance
@@ -875,7 +877,7 @@ def dynamic_aperture(sr_ring,
     compute Dynamic Aperture x-y searching recursively
 
     :param sr_ring: pyAT lattice
-    :param dp: momentum deviation
+    :param dp: momentum deviation (implemented via frequency shift. a cavity in the lattice is required)
     :param n_turns: number of turns to survive
     :param start_index: index in sr_ring where to start the tracking
     :param n_radii: number of radial points to test  (not used if search = True)
