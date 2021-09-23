@@ -278,6 +278,8 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
+        # Getting timelag by tracking uses a different lattice,
+        # so we cannot now use the same one again.
         if method is ELossMethod.TRACKING:
             keep_lattice = False
         ref_in = numpy.zeros((6,), order='F')
