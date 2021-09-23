@@ -37,6 +37,7 @@ print('On-energy DA took {s:2.1f}s'.format(s=elapsed))
 """  FOLLOWING WORKS ONLY IN UNIX.
 print('On-energy DA grid (parallel computation)')
 h0, v0, da_, _ = da.dynamic_aperture(sr_ring,
+                    parallel=True,
                     n_turns=N,
                     n_radii=21,
                     n_theta=21,

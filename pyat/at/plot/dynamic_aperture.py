@@ -22,7 +22,7 @@ def plot(Acc6D, ax=None, file_name_save=None):
     return ax
 
 
-def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None):
+def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None, font_size=10):
     """
     plots results of acceptance scan in a given 2D plane
 
@@ -72,6 +72,7 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
 
     ax.scatter(hs, vs, s=20, c=cols, label='tested', facecolors='none')
     ax.plot(hs[sel], vs[sel], 'x', color='royalblue', markersize=3, label='survived')
+    ax.tick_params(axis='both', which='major', labelsize=font_size)
     try:
         cs = ax.tricontour(hs, vs, sel, linewidths=2)
         for c in cs.collections:
@@ -85,16 +86,16 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
     except Exception:
         print(' limits not computed ')
 
-    ax.set_xlabel(pl_h + ' [' + Acc6D.dict_units[pl_h][1] + ']', fontsize=12)
-    ax.set_ylabel(pl_v + ' [' + Acc6D.dict_units[pl_v][1] + ']', fontsize=12)
+    ax.set_xlabel(pl_h + ' [' + Acc6D.dict_units[pl_h][1] + ']', fontsize=font_size)
+    ax.set_ylabel(pl_v + ' [' + Acc6D.dict_units[pl_v][1] + ']', fontsize=font_size)
     ax.set_xlim([r * Acc6D.dict_units[pl_h][0] for r in Acc6D.dict_def_range[pl_h]])
     ax.set_ylim([r * Acc6D.dict_units[pl_v][0] for r in Acc6D.dict_def_range[pl_v]])
 
-    ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%, rad: {rad}'.format(
+    ax.set_title('{m} for {t} turns\n at {ll} \n dp/p= {dpp}%, rad: {rad}'.format(
         m=Acc6D.mode, t=Acc6D.number_of_turns, ll=Acc6D.ring[0].FamName, dpp=Acc6D.dp * 100,
-        rad=Acc6D.ring.radiation), fontsize=12)
+        rad=Acc6D.ring.radiation), fontsize=font_size)
 
-    ax.legend()
+    ax.legend(prop={'size': font_size})
     plt.tight_layout()
 
     if file_name_save:
@@ -150,6 +151,7 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
         Acc6D.coordinates['ct'])]
 
     axs_top[axnum] = plot_base(Acc6D, h, v, sel, ['x', 'y'], ax=axs_top[axnum])
+    axs_top[axnum].get_legend().remove()
 
     # plot xp yp
     axnum = 1
@@ -165,6 +167,7 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
 
     axs_top[axnum] = plot_base(Acc6D, h, v, sel, ['xp', 'yp'], ax=axs_top[axnum])
     axs_top[axnum].set_title('')
+    axs_top[axnum].get_legend().remove()
 
     # plot ct delta
     axnum = 2
@@ -180,6 +183,7 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
 
     axs_top[axnum] = plot_base(Acc6D, h, v, sel, ['ct', 'delta'], ax=axs_top[axnum])
     axs_top[axnum].set_title('')
+    axs_top[axnum].get_legend().remove()
 
     # plot x xp
     axnum = 0
@@ -195,6 +199,7 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
 
     axs_bottom[axnum] = plot_base(Acc6D, h, v, sel, ['x', 'xp'], ax=axs_bottom[axnum])
     axs_bottom[axnum].set_title('')
+    axs_bottom[axnum].get_legend().remove()
 
     # plot y yp
     axnum = 1
@@ -210,6 +215,7 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
 
     axs_bottom[axnum] = plot_base(Acc6D,h, v, sel, ['y', 'yp'], ax=axs_bottom[axnum])
     axs_bottom[axnum].set_title('')
+    axs_bottom[axnum].get_legend().remove()
 
     # plot delta x
     axnum = 2
@@ -225,8 +231,14 @@ def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
 
     axs_bottom[axnum] = plot_base(Acc6D, h, v, sel, ['delta', 'x'], ax=axs_bottom[axnum])
     axs_bottom[axnum].set_title('')
+    axs_bottom[axnum].get_legend().remove()
 
     plt.tight_layout()
+
+    tit = axs_top[0].get_title().replace('\n', '')
+    axs_top[0].set_title(tit + '\n', fontdict={'fontsize': 12,
+                                                   'verticalalignment': 'center',
+                                                   'horizontalalignment': 'left'})
 
     if file_name_save:
         plt.savefig(file_name_save + '_6D', dpi=600)
