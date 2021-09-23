@@ -2,6 +2,7 @@ import at
 import copy
 import at.plot
 import at.lattice.cavity_access
+from at.lattice import AtError
 from itertools import compress
 import numpy as np
 import math
