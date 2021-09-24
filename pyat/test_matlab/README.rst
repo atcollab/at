@@ -12,13 +12,9 @@ You need an installation of Matlab and a valid licence in order to be able to
 call Matlab directly from Python. MATLAB_ROOT is the root directory of your
 Matlab installation.
 
-Your Matlab installation will support only certain versions of Python [1]_; if
-you're using Python 2 it needs to be compiled using ucs4 [2]_, find further
+Your Matlab installation will support only certain versions of Python [1]_; find further
 information `here <https://uk.mathworks.com/help/matlab/matlab_external/system-
-requirements-for-matlab-engine-for-python.html>`_. N.B. please ensure that the
-versions of the packages required by pyAT (numpy, scipy and pytest) that you
-have installed are compatible with the version of Python that Matlab requires
-you to run.
+requirements-for-matlab-engine-for-python.html>`_.
 
 Set up a virtualenv using a supported Python version:
 
@@ -37,7 +33,12 @@ Install the Matlab engine for Python, ensuring your virtualenv is still active:
 Now run the tests inside your virtualenv:
 
 * ``cd $AT_ROOT/pyat``
-* ``$PYTHON_EXECUTABLE -m pytest test_matlab``
+* ``python3 -m pytest test_matlab``
+
+
+Note: certain versions of GLIBC may be required on Linux: for example,
+using R2021a on RHEL7 does not work even though Matlab itself will run.
+Using R2021a on RHEL8 does work.
 
 
 Footnotes
@@ -48,6 +49,12 @@ Footnotes
    +----------------+--------------------------+
    | Matlab Release | Supported Python Version |
    +================+==========================+
+   |  2021b         |  2.7, 3.7, 3.8, 3.9      |
+   +----------------+--------------------------+
+   |  2021a         |  2.7, 3.7, 3.8           |
+   +----------------+--------------------------+
+   |  2020b         |  2.7, 3.6, 3.7, 3.8      |
+   +----------------+--------------------------+
    |  2020a         |  2.7, 3.6, 3.7           |
    +----------------+--------------------------+
    |  2019b         |  2.7, 3.6, 3.7           |
@@ -74,9 +81,4 @@ Footnotes
    +----------------+--------------------------+
    |  <=2014a       |  Not supported           |
    +----------------+--------------------------+
-
-.. [2] To check if your Python version is compiled with ucs2 or ucs4::
-
-   >>> import sys
-   >>> print('ucs4' if sys.maxunicode > 65535 else 'ucs2')
 
