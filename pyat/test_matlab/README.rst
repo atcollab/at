@@ -33,7 +33,7 @@ Install the Matlab engine for Python, ensuring your virtualenv is still active:
 Now run the tests inside your virtualenv:
 
 * ``cd $AT_ROOT/pyat``
-* ``python3 -m pytest test_matlab``
+* ``python -m pytest test_matlab``
 
 
 Note: certain versions of GLIBC may be required on Linux: for example,
