@@ -4,11 +4,20 @@ pyAT Developer Notes
 See also README.rst.
 
 
-Installation preparation (Windows)
-----------------------------------
+Installation preparation
+------------------------
+
+Windows
+~~~~~~~
 
 Download the appropriate version of Visual C++.
 
+Linux
+~~~~~
+
+Install the Python development package for your OS. For example, using yum:
+
+* ``sudo yum install python3-devel``
 
 Installation (all platforms)
 ----------------------------
