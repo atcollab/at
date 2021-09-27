@@ -7,6 +7,7 @@ import os
 def plot(Acc6D, ax=None, file_name_save=None):
     """
     plots a figure of the acceptance for one of the defined modes
+
     :param Acc6D: instance of the class Acceptance6D
     :param ax: figure axes
     :param file_name_save: if given, save figure to file
@@ -28,6 +29,7 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
     """
     plots results of acceptance scan in a given 2D plane
 
+    :param Acc6D: instance of Acceptance6D class (in pyat/at/physics/dynamic_aperture.py)
     :param h: list of x coordinates of test points
     :param v: list of y coordinates of test points
     :param sel: boolean array to mark if the specified coordinate is lost or not
@@ -116,6 +118,8 @@ def plot_base(Acc6D, h, v, sel=None, pl=('x', 'y'), ax=None, file_name_save=None
 def plot6d(Acc6D, axs_top=None, axs_bottom=None, file_name_save='./test.png'):
     """
     plot DA
+
+    :param Acc6D: instance of Acceptance6D class (in pyat/at/physics/dynamic_aperture.py)
 
     :return:
     """
@@ -313,6 +317,12 @@ def plot_off_energy_dynamic_aperture(max_neg_x, deltaps, da, inject_from_inside 
 def plot_momentum_acceptance(mom_acc, s, da=None, file_name_save=''):
     """
     use output of dynamic_aperture.momentum_acceptance to produce a figure
+
+    :param mom_acc: 2xN array of maximum positive and negative momentum acceptance at N locations
+    :param s: 1xN array, longitudinal location corresponding to the data in mom_acc
+    :param da: instance of Acceptance6D class (in pyat/at/physics/dynamic_aperture.py)
+    :param file_name_save: string, a file name to save the figure produced in png format
+
     """
     # make figure
     fig, ax = plt.subplots()
@@ -336,6 +346,13 @@ def plot_momentum_acceptance(mom_acc, s, da=None, file_name_save=''):
 def plot_dynamic_aperture(h, v, da, search, file_name_save=''):
     """
     use output of dynamic_aperture.dynamic_aperture to produce a figure
+
+    :param h: 1xN array of horizontal coordinates  (can be any coordinate, according to info stored in da input)
+    :param v: 1xN array of vertical coordinates  (can be any coordinate, according to info stored in da input)
+    :param da: instance of Acceptance6D class used for dynamic apertutre computation
+               (in pyat/at/physics/dynamic_aperture.py)
+    :param search: Boolean, output of dynamic_aperture.dynamic_aperture().
+    :param file_name_save: string, a file name to save the figure produced in png format
     """
 
     if search:
@@ -357,7 +374,8 @@ def plot_dynamic_aperture(h, v, da, search, file_name_save=''):
         ax.set_title('{m} for {t} turns\n at {ll}, dp/p= {dpp}%, rad: {rad}\n'.format(
             m=da.mode, t=da.number_of_turns, ll=da.ring[0].FamName, dpp=da.dp * 100, rad=da.ring.radiation))
         ax.legend()
-        plt.savefig(file_name_save, dpi=600)
+        if file_name_save:
+            plt.savefig(file_name_save, dpi=600)
     else:
         ax = plot(da, file_name_save=file_name_save)
 
