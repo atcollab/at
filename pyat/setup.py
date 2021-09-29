@@ -5,12 +5,10 @@ from os.path import abspath, basename, dirname, exists, join, splitext
 import sys
 import shutil
 from setuptools import setup, Extension, find_packages
-try:
-    import numpy
-except ImportError:
-    print('\npyAT requires numpy. '
-          'Please install numpy: "pip install numpy"\n')
-    sys.exit()
+
+# Numpy build dependency defined in pyproject.toml.
+import numpy
+
 
 def select_omp():
     if exists('/usr/local/include/omp.h'):              # Homebrew
