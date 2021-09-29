@@ -8,88 +8,82 @@ from at.lattice.lattice_object import Lattice
 __all__ = ['beam', 'sigma_matrix']
 
 
-def sigma_matrix(argin):
+def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=0, espread=0):
     """
     Calculate the correlation matrix to be used for particle generation
 
     PARAMETERS
-        argin           Lattice object or list of twiss parameters.
-                        Depending on the length of the list the function
-                        will do different things:
-                        [espread, blength] 
-                            computes 2x2 longitudinal sigma matrix
-                        [beta, alpha, emit] 
-                            computes 2x2 transverse sigma matrix
-                        [betax, alphax, emitx, betay, alphay, emity] 
-                            computes the 4x4 sigma matrix for horizontal 
-                            and vertical.
-                        [betax, alphax, emitx, betay, alphay, emity, espread, 
-                            blength] 
-                            computes the 6x6 sigma matrix.
-
-    KEYWORDS
-        twiss=False     Flag which states whether the input is a
-                        lattice object or list of twiss parameters
+        ring            Lattice object or list of twiss parameters.
+        twiss_in        Data structure containing inpu twiss parameters.
+        emitx           Horizontal emittance [m.rad]
+        emity           Vertical emittance [m.rad]
+        blength         One sigma bunch length [m]
+        espread         One sigma energy spread [dp/p]
 
     OUTPUT
-        sigma_matrix    correlation matrix (either 2x2, 4x4 or 6x6)
+        sigma_matrix    6x6 correlation matrix
 
     """
-    if isinstance(argin, Lattice):
-        argin = argin.radiation_on(copy=True)
-
-        emit0, beamdata, emit = ohmi_envelope(argin, refpts=[0])
-        sig_matrix = emit.r66[0]
-
-
-    else:
-        if len(argin) == 2:
-            [espread, blength] = argin
-            sig_matrix = numpy.array([
-                            [espread*espread, 0],
-                            [0, blength*blength]
-                                     ])
-
-        elif len(argin) == 3:
-            [bx, ax, epsx] = argin
-            sig_matrix = epsx * numpy.array([
-                                    [bx, -ax],
-                                    [-ax, (1 + ax * ax)/bx]
-                                            ])
-
-        elif len(argin) == 6:
-            [bx, ax, epsx, by, ay, epsy] = argin
-            sig_matrix = numpy.block([
-                            [sigma_matrix([bx, ax, epsx]),
-                                numpy.zeros((2, 2))],
-                            [numpy.zeros((2, 2)),
-                                sigma_matrix([by, ay, epsy])]
-                                    ])
-
-        elif len(argin) == 8:
-            [bx, ax, epsx, by, ay, epsy, espread, blength] = argin
-            sig_matrix = numpy.block([
-                            [sigma_matrix([bx, ax, epsx]),
-                                numpy.zeros((2, 4))],
-                            [numpy.zeros((2, 2)),
-                                sigma_matrix([by, ay, epsy]),
-                                numpy.zeros((2, 2))],
-                            [numpy.zeros((2, 4)),
-                                sigma_matrix([espread, blength])]
-                                    ])
+    if ring:
+        if isinstance(ring, Lattice):
+            ring = ring.radiation_on(copy=True)
+            emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
+            sig_matrix = emit.r66[0]
         else:
-            raise AttributeError('Wrong number of inputs provided')
+            raise AttributeError('Input must be lattice object')
 
+    elif twiss_in:
+        assert emitx and emity, 'Must provide an emitx and emity for twiss_in'
+
+        if blength:
+            assert espread, 'Must provide both blength and espread'
+        if espread:
+            assert blength, 'Must provide both blength and espread'
+        if not blength and not espread:
+            print("""No bunch length or energy spread provided. \nInfintesimal values set to avoid LinAlgError in cholesky decomposition when using at.beam""")
+            blength = 1e-12
+            espread = 1e-12
+
+        bx, by = twiss_in.beta
+        ax, ay = twiss_in.alpha
+        epsx, epsy = emitx, emity
+
+        sig_matrix_long = numpy.array([
+                             [espread*espread, 0],
+                             [0, blength*blength]
+                                      ])
+
+        sig_matrix_x = epsx * numpy.array([
+                                  [bx, -ax],
+                                  [-ax, (1 + ax * ax)/bx]
+                                          ])
+
+        sig_matrix_y = epsy * numpy.array([
+                                  [by, -ay],
+                                  [-ay, (1 + ay * ay)/by]
+                                           ])
+
+        sig_matrix = numpy.block([
+                        [sig_matrix_x,
+                            numpy.zeros((2, 4))],
+                        [numpy.zeros((2, 2)),
+                            sig_matrix_y,
+                            numpy.zeros((2, 2))],
+                        [numpy.zeros((2, 4)),
+                            sig_matrix_long]
+                                ])
+    else:
+        raise AttributeError('A lattice or twiss_in must be provided')
     return sig_matrix
 
 
-def beam(np, sigma, orbit=None):
+def beam(nparts, sigma, orbit=None):
     """
     Generates an array of random particles according to the given sigma
     matrix
 
     PARAMETERS
-        np              Number of particles
+        nparts          Number of particles
         sigma           sigma_matrix as calculated by at.sigma_matrix
 
     KEYWORDS
@@ -100,7 +94,7 @@ def beam(np, sigma, orbit=None):
         particle_dist   a matrix of shape (M, np) where M is shape of
                         sigma matrix
     """
-    v = numpy.random.normal(size=(sigma.shape[0], np))
+    v = numpy.random.normal(size=(sigma.shape[0], nparts))
 
     try:
         lmat = numpy.linalg.cholesky(sigma)
