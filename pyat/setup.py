@@ -12,6 +12,7 @@ except ImportError:
           'Please install numpy: "pip install numpy"\n')
     sys.exit()
 
+
 def select_omp():
     if exists('/usr/local/include/omp.h'):              # Homebrew
         return '-I/usr/local/include', '/usr/local/lib'
@@ -32,6 +33,25 @@ macros = [('PYAT', None)]
 with_openMP = False
 
 cflags = []
+
+
+mpi = os.environ.get('MPI', None)
+if mpi is None:
+    mpi_cflags = []
+    mpi_lflags = []
+    mpi_includes = []
+else:
+    mpi_cflags = ['-D MPI']
+    mpi_lflags = ['-L/usr/lib/x86_64-linux-gnu/openmpi/lib', '-lmpi']
+    os.environ["CC"] = 'mpicc'
+    try:
+        import mpi4py
+    except ImportError:
+        print('\npyAT with MPI requires mpi4py. '
+              'Please install numpy: "pip install mpi4py"\n')
+        sys.exit()
+    mpi_includes = mpi4py.get_include()
+
 
 omp = os.environ.get('OPENMP', None)
 if omp is None:
@@ -107,10 +127,10 @@ def integrator_ext(pass_method):
     return Extension(
         name=name,
         sources=[pass_method],
-        include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
+        include_dirs=[numpy.get_include(), mpi_includes, integrator_src, diffmatrix_source],
         define_macros=macros + omp_macros,
-        extra_compile_args=cflags + omp_cflags,
-        extra_link_args=omp_lflags
+        extra_compile_args=cflags + omp_cflags + mpi_cflags,
+        extra_link_args=omp_lflags + mpi_lflags
     )
 
 
@@ -120,7 +140,7 @@ at = Extension(
     define_macros=macros + omp_macros,
     include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
     extra_compile_args=cflags + omp_cflags,
-    extra_link_args=omp_lflags
+    extra_link_args=omp_lflags + mpi_lflags
 )
 
 diffmatrix = Extension(
