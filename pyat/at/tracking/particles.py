@@ -63,10 +63,10 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
     """
     flag = emitx or emity or blength or espread
     if flag:
-        assert emitx, 'emitx must be defined'
-        assert emity, 'emity must be defined'
-        assert blength, 'blength must be defined'
-        assert espread, 'espread must be defined'
+        assert emitx is not None, 'emitx must be defined'
+        assert emity is not None, 'emity must be defined'
+        assert blength is not None, 'blength must be defined'
+        assert espread is not None, 'espread must be defined'
 
     if ring:
         if isinstance(ring, Lattice):
