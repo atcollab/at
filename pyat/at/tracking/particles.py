@@ -8,7 +8,7 @@ from at.lattice.lattice_object import Lattice
 __all__ = ['beam', 'sigma_matrix']
 
 
-def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=0, espread=0):
+def sigma_matrix(ring=None, twiss_in=None, emitx=0, emity=0, blength=0, espread=0):
     """
     Calculate the correlation matrix to be used for particle generation
 
@@ -24,41 +24,45 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=0, es
         sigma_matrix    6x6 correlation matrix
 
     """
+
+
     if ring:
         if isinstance(ring, Lattice):
             ring = ring.radiation_on(copy=True)
             emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
             sig_matrix = emit.r66[0]
+
+            if emity:
+                ld0, bd, ld = ring.get_optics()
+                sig_matrix_y = emity * numpy.array([
+                                          [ld0.beta[1], -ld0.alpha[1]],
+                                          [-ld0.alpha[1], (1 + ld0.alpha[1]**2)/ld0.beta[1]]
+                                                   ])
+                sig_matrix[2:4, 2:4] = sig_matrix_y
         else:
             raise AttributeError('Input must be lattice object')
 
     elif twiss_in:
-        assert emitx and emity, 'Must provide an emitx and emity for twiss_in'
-
-        if blength:
-            assert espread, 'Must provide both blength and espread'
-        if espread:
-            assert blength, 'Must provide both blength and espread'
-        if not blength and not espread:
-            print("""No bunch length or energy spread provided. \nInfintesimal values set to avoid LinAlgError in cholesky decomposition when using at.beam""")
-            blength = 1e-12
-            espread = 1e-12
 
         bx, by = twiss_in.beta
         ax, ay = twiss_in.alpha
-        epsx, epsy = emitx, emity
+
+        if (blength and not espread) or (espread and not blength):
+            raise AttributeError('Both blength and espread have to be provided')
+
+
 
         sig_matrix_long = numpy.array([
                              [espread*espread, 0],
                              [0, blength*blength]
                                       ])
 
-        sig_matrix_x = epsx * numpy.array([
+        sig_matrix_x = emitx * numpy.array([
                                   [bx, -ax],
                                   [-ax, (1 + ax * ax)/bx]
                                           ])
 
-        sig_matrix_y = epsy * numpy.array([
+        sig_matrix_y = emity * numpy.array([
                                   [by, -ay],
                                   [-ay, (1 + ay * ay)/by]
                                            ])
@@ -100,11 +104,26 @@ def beam(nparts, sigma, orbit=None):
         lmat = numpy.linalg.cholesky(sigma)
 
     except numpy.linalg.LinAlgError:
-        row_idx = numpy.array([0, 1, 4, 5])
-        a1 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
-        a = numpy.block([[a1, numpy.zeros((4, 2))], [numpy.zeros((2, 6))]])
-        row_idx = numpy.array([0, 1, 4, 5, 2, 3])
-        lmat = a[row_idx[:, None], row_idx]
+        print('Decomposition failed for 6x6 correlation matrix. Computing 3 planes individually')
+        try:
+            row_idx = numpy.array([0, 1])
+            a1 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
+        except numpy.linalg.LinAlgError:
+            a1 = numpy.zeros((2,2))
+
+        try:
+            row_idx = numpy.array([2, 3])
+            a2 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
+        except numpy.linalg.LinAlgError:
+            a2 = numpy.zeros((2,2))
+
+        try:
+            row_idx = numpy.array([4, 5])
+            a3 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
+        except numpy.linalg.LinAlgError:
+            a3 = numpy.zeros((2,2))
+
+        lmat = numpy.block([[a1, numpy.zeros((2, 4))], [numpy.zeros((2, 2)), a2, numpy.zeros((2, 2))], [numpy.zeros((2,4)), a3]])
 
     particle_dist = numpy.squeeze(numpy.dot(lmat, v))
     if particle_dist.ndim == 1:
