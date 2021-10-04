@@ -273,10 +273,8 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
 
-    f_rfs = [cav.Frequency for cav in cavities]
-    f_rf = numpy.amin(f_rfs)
-    l_rf = constants.speed_of_light/f_rf
-    dth = (l0/l_rf-numpy.rint(l0/l_rf))*l_rf
+    f_rf = cavities[0].Frequency
+    harm_number = cavities[0].HarmNumber
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
@@ -288,9 +286,9 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in[5] = -dt
     else:
         ref_in = numpy.copy(guess)
-    
+
     theta = numpy.zeros((6,))
-    theta[5] = -dth
+    theta[5] = constants.speed_of_light * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
               dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
