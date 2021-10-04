@@ -38,10 +38,7 @@ def load_lattice(filepath, **kwargs):
     Known extensions are:
     """
     _, ext = os.path.splitext(filepath)
-    try:
-        return _load_extension[ext.lower()](filepath, **kwargs)
-    except KeyError:
-        print("Could not load lattice file with extension {}.".format(ext))
+    return _load_extension[ext.lower()](filepath, **kwargs)
 
 
 def save_lattice(ring, filepath, **kwargs):
