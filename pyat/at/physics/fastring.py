@@ -68,7 +68,7 @@ def _fring(ring, split_inds=[], detuning_elem=None):
         fastring.append(qd_elem)
     except:
         pass
-    fastring = Lattice(fastring, energy=ring.energy)
+    fastring = Lattice(fastring, **vars(ring))
     fastring.radiation
     return fastring
 
