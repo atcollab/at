@@ -4,11 +4,10 @@ Functions relating to particle generation
 import numpy
 from at.physics import ohmi_envelope
 from at.lattice.lattice_object import Lattice
-from scipy.constants import c as clight
 
 __all__ = ['beam', 'sigma_matrix']
 
-def _generate_uncorrelated_sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
+def _generate__sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
     if radiation:
         sig_matrix = emitx*ld0.R[0] + emity*ld0.R[1] + blength*espread*ld0.R[2]
 
@@ -71,7 +70,7 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
             elif flag:
                 print ('Generating pseudo-correlated matrix from initial optics conditions')
                 ld0, bd, ld = ring.get_optics()
-                sig_matrix = _generate_uncorrelated_sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
+                sig_matrix = _generate__sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
             else:
                 raise AttributeError('Radiation is off but no emittances are specified')
         else:
@@ -80,7 +79,7 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
     elif twiss_in:
 
         print ('Generating un-correlated sigma matrix from parameters in twiss_in')
-        sig_matrix = _generate_uncorrelated_sigma_matrix(twiss_in, emitx, emity, blength, espread, False)
+        sig_matrix = _generate__sigma_matrix(twiss_in, emitx, emity, blength, espread, False)
 
     else:
         raise AttributeError('A lattice or twiss_in must be provided')
