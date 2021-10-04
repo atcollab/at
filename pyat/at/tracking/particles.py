@@ -4,34 +4,28 @@ Functions relating to particle generation
 import numpy
 from at.physics import ohmi_envelope
 from at.lattice.lattice_object import Lattice
+from scipy.constants import c as clight
 
 __all__ = ['beam', 'sigma_matrix']
 
-def _generate_uncorrelated_sigma_matrix(bx, ax, emitx, by, ay, emity, blength, espread):
-    sig_matrix_long = numpy.array([
-                         [espread*espread, 0],
-                         [0, blength*blength]
-                                  ])
+def _generate_uncorrelated_sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
+    if radiation:
+        sig_matrix = emitx*ld0.R[0] + emity*ld0.R[1] + blength*espread*ld0.R[2]
 
-    sig_matrix_x = emitx * numpy.array([
-                              [bx, -ax],
-                              [-ax, (1 + ax * ax)/bx]
+    else:
+        sig_matrix_long = numpy.array([
+                             [espread*espread, 0],
+                             [0, blength*blength]
                                       ])
 
-    sig_matrix_y = emity * numpy.array([
-                              [by, -ay],
-                              [-ay, (1 + ay * ay)/by]
-                                       ])
+        sig_matrix_trans = emitx*ld0.R[0] + emity*ld0.R[1] 
 
-    sig_matrix = numpy.block([
-                    [sig_matrix_x,
-                        numpy.zeros((2, 4))],
-                    [numpy.zeros((2, 2)),
-                        sig_matrix_y,
-                        numpy.zeros((2, 2))],
-                    [numpy.zeros((2, 4)),
-                        sig_matrix_long]
-                            ])
+        sig_matrix = numpy.block([
+                        [sig_matrix_trans[:4,:4],
+                            numpy.zeros((4, 2))],
+                        [numpy.zeros((2, 4)),
+                            sig_matrix_long]
+                                ])
     return sig_matrix
 
 def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None, espread=None):
@@ -70,30 +64,23 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
 
     if ring:
         if isinstance(ring, Lattice):
-            if flag:
-                print ('Generating uncorrelated sigma matrix by combining 2x2 matrices computed from initial optics conditions')
-                ld0, bd, ld = ring.get_optics()
-                bx, by = ld0.beta
-                ax, ay = ld0.alpha
-                sig_matrix = _generate_uncorrelated_sigma_matrix(bx, ax, emitx, by, ay, emity, blength, espread)
-            else:
+            if ring.radiation and not flag:
                 print ('Generating correlated sigma matrix using ohmi envelope')
-                ring = ring.radiation_on(copy=True)
                 emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
                 sig_matrix = emit.r66[0]
+            elif flag:
+                print ('Generating pseudo-correlated matrix from initial optics conditions')
+                ld0, bd, ld = ring.get_optics()
+                sig_matrix = _generate_uncorrelated_sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
+            else:
+                raise AttributeError('Radiation is off but no emittances are specified')
         else:
             raise AttributeError('Input must be lattice object')
 
     elif twiss_in:
 
-        bx, by = twiss_in.beta
-        ax, ay = twiss_in.alpha
-
-        if (blength and not espread) or (espread and not blength):
-            raise AttributeError('Both blength and espread have to be provided')
-
-        print ('Generating uncorrelated sigma matrix by combining 2x2 matrices computed from parameters in twiss_in')
-        sig_matrix = _generate_uncorrelated_sigma_matrix(bx, ax, emitx, by, ay, emity, blength, espread)
+        print ('Generating un-correlated sigma matrix from parameters in twiss_in')
+        sig_matrix = _generate_uncorrelated_sigma_matrix(twiss_in, emitx, emity, blength, espread, False)
 
     else:
         raise AttributeError('A lattice or twiss_in must be provided')
