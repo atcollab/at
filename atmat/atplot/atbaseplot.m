@@ -77,7 +77,7 @@ else
 end
 
 % select the plotting function
-[plotfun,varargs]=getargs(varargs, @defaultplot,'check', @(x) isa(x,'function_handle'));
+[plotfun,varargs]=getargs(varargs, @plotbetadisp,'check', @(x) isa(x,'function_handle'));
 [plotargs,varargs]=getargs(varargs,{},'check', @iscell);
 
 % Get options
@@ -142,12 +142,4 @@ end
             np=ring{find(params,1)}.Periodicity;
         end
     end
-end
-
-function [s,plotdata]=defaultplot(ring,dpp,varargin) %#ok<INUSD>
-%DEFAULTPLOT    Default plotting function for ATBASEPLOT
-%Plots nothing
-
-s=[];
-plotdata=[];
 end

@@ -69,7 +69,7 @@ function curve = atplot(varargin)
 funcarg=find(cellfun(@(arg) isa(arg,'function_handle'),varargin),1);
 if isempty(funcarg)
     funcarg=nargin+1;
-    options={@defaultplot};
+    options={@plotbetadisp};
 else
     options=varargin(funcarg:end);
 end
@@ -115,19 +115,4 @@ end
         end
     end
 
-end
-
-function plotdata=defaultplot(lindata,ring,dpp,varargin) %#ok<INUSD>
-%DEFAULTPLOT    Default plotting function for ATPLOT
-%
-%Plots beta-functions on left axis and dispersion on right axis
-
-beta=cat(1,lindata.beta);
-plotdata(1).values=beta;
-plotdata(1).labels={'\beta_x','\beta_z'};
-plotdata(1).axislabel='\beta [m]';
-dispersion=cat(2,lindata.Dispersion)';
-plotdata(2).values=dispersion(:,1);
-plotdata(2).labels={'\eta_x'};
-plotdata(2).axislabel='dispersion [m]';
 end
