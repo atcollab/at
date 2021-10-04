@@ -2,11 +2,6 @@
 #include "atimplib.c"
 #include <math.h>
 #include <float.h>
-#ifdef MPI
-#include <mpi.h>
-#include <mpi4py/mpi4py.h>
-#endif
-
 /*
  * Impedance pass method by Simon White.  
  * User may contact simon.white@esrf.fr for questions and comments.
@@ -95,48 +90,10 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
         kz[i]=0.0;
     }
 
-    #ifdef MPI
-    int flag;
-    double *bounds;
-    MPI_Initialized(&flag);
-    bounds = getbounds(r_in,num_particles);
-    if(flag){
-       double smin = bounds[0];
-       double smax = bounds[1];
-       MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
-       MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
-       MPI_Barrier(MPI_COMM_WORLD);
-       bounds[0] = smin;
-       bounds[1] = smax;
-    };
-    slice_bunch(r_in,num_particles,nslice,bounds,weight,xpos,ypos,zpos,countslc,pslice);
-    if(flag){
-        int mpsize;
-        MPI_Comm_size(MPI_COMM_WORLD,&mpsize);
-        for (i=0;i<nslice;i++){
-            xpos[i]=xpos[i]*(double)countslc[i];
-            ypos[i]=ypos[i]*(double)countslc[i];
-            zpos[i]=zpos[i]*(double)countslc[i];
-        }        
-        MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,zpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,countslc,nslice,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Barrier(MPI_COMM_WORLD);
-        for (i=0;i<nslice;i++){
-            weight[i] = (double)countslc[i]/(double)num_particles/(double)mpsize;
-            xpos[i]=xpos[i]/(double)countslc[i];
-            ypos[i]=ypos[i]/(double)countslc[i];
-            zpos[i]=zpos[i]/(double)countslc[i];
-        }
-    }
-    #else
     double *bounds;
     bounds = getbounds(r_in,num_particles);
     slice_bunch(r_in,num_particles,nslice,bounds,weight,xpos,ypos,zpos,countslc,pslice);
-    #endif
 
- 
     for(i=0;i<nslice;i++){        
         register double pos0 = zpos[i];
         if(countslc[i]>0.0){
