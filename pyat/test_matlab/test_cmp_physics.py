@@ -123,8 +123,8 @@ def test_fastring(engine, lattices):
         assert_close(r[idq-1].A3,       rml[idq]['A3'], rtol=0.02)
         assert_close(r[idq-1].Alphax,   rml[idq]['Alphax'], rtol=1.0e-5)
         assert_close(r[idq-1].Alphay,   rml[idq]['Alphay'], rtol=1.0e-6)
-        assert_close(r[idq-1].Betax,    rml[idq]['Betax'], rtol=1.0e-12)
-        assert_close(r[idq-1].Betay,    rml[idq]['Betay'], rtol=1.0e-11)
+        assert_close(r[idq-1].Betax,    rml[idq]['Betax'], rtol=1.0e-10)
+        assert_close(r[idq-1].Betay,    rml[idq]['Betay'], rtol=1.0e-10)
         assert_close(r[idq-1].Qpx,      rml[idq]['Qpx'], rtol=1.0e-5)
         assert_close(r[idq-1].Qpy,      rml[idq]['Qpy'], rtol=1.0e-5)
         assert_close(r[idq-1].T1,   numpy.squeeze(rml[idq]['T1']),
