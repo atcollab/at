@@ -3,9 +3,8 @@ Functions relating to fast_ring
 """
 import numpy
 import warnings
-from at.lattice import RFCavity, Marker, Drift, Lattice, get_refpts
+from at.lattice import RFCavity, Marker, Lattice, get_cells, checkname
 from at.lattice import get_elements
-from at.physics import find_orbit
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
 import copy
 
@@ -41,12 +40,11 @@ def _rearrange(ring, split_inds=[]):
 
 def _fring(ring, split_inds=[], detuning_elem=None):
     all_rings, merged_ring = _rearrange(ring, split_inds=split_inds)
-    ibegs = get_refpts(merged_ring, 'xbeg')
-    iends = get_refpts(merged_ring, 'xend')
-    markers = numpy.sort(numpy.concatenate((ibegs, iends)))
+    ibegs = get_cells(merged_ring, checkname('xbeg'))
+    iends = get_cells(merged_ring, checkname('xend'))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        _, orbit = merged_ring.find_orbit(dct=0.0, refpts=markers)
+        _, orbit = merged_ring.find_orbit(dct=0.0, refpts=ibegs | iends)
     if detuning_elem is None:
         detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
     else:
@@ -69,7 +67,6 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     except:
         pass
     fastring = Lattice(fastring, **vars(ring))
-    fastring.radiation
     return fastring
 
 
