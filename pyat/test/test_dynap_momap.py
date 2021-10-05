@@ -13,7 +13,7 @@ def test_acceptance_6d(hmba_lattice):
     # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
     print('x-xp acceptance, using class directly')
     da = Acceptance6D(copy.deepcopy(sr_ring),
-                      mode='6D', start_index=120, n_turns=2**3, dp=+0.01)
+                      mode='6D', start_index=120, n_turns=2**2, dp=+0.01)
 
     da.verbose = True
     da.parallel_computation = False
@@ -51,7 +51,7 @@ def test_acceptance_x_xp(hmba_lattice):
     # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
     print('x-xp acceptance, using class directly')
     da = Acceptance6D(copy.deepcopy(sr_ring),
-                      mode='x-xp', start_index=120, n_turns=2**5, dp=-0.005)
+                      mode='x-xp', start_index=120, n_turns=2**2, dp=-0.005)
 
     da.verbose = True
     da.parallel_computation = True
@@ -90,7 +90,7 @@ def test_dynamic_aperture(hmba_lattice):
     # on-energy DA
     t = time.time()
     print('On-energy DA')
-    h, v, _, _= dynamic_aperture(sr_ring, n_turns=2**5, n_radii=15, num_recursions=4,
+    h, v, _, _= dynamic_aperture(sr_ring, n_turns=2**2, n_radii=13, num_recursions=3,
                             file_name_save='') # 'on_en_da')
     [print(h_,v_) for h_, v_ in zip(h,v)]
     elapsed = time.time() - t
@@ -107,7 +107,7 @@ def test_dynamic_aperture_grid(hmba_lattice):
     t = time.time()
     print('On-energy DA grid')
     h, v, da, _= dynamic_aperture(sr_ring, grid_mode='grid',
-                                 n_turns=2**7, n_radii=25, n_theta=25, num_recursions=4,
+                                 n_turns=2**2, n_radii=15, n_theta=15, num_recursions=3,
                             file_name_save='') # 'on_en_da')
     [print(h_,v_) for h_, v_ in zip(h,v)]
     print(da.survived)
@@ -125,7 +125,7 @@ def test_off_en_dynamic_aperture(hmba_lattice):
     # off-en DA
     t = time.time()
     print('Off-energy DA')
-    off_energy_dynamic_aperture(sr_ring, n_turns=2**4,
+    off_energy_dynamic_aperture(sr_ring, n_turns=2**2,
                                 file_name_save='', # 'off_en_da_inside',
                                 inject_from_inside=True,
                                 num_recursions=3)
@@ -140,7 +140,7 @@ def test_mom_acc(hmba_lattice):
     # momentum acceptance
     t = time.time()
     print('Momentum acceptance')
-    momentum_acceptance(sr_ring, n_turns=2**4,
+    momentum_acceptance(sr_ring, n_turns=2**2,
                         file_name_save='', # 'mom_acc',
                         ref_pts=range(0, 100, 10), num_recursions=3)
     elapsed = time.time() - t
@@ -153,7 +153,7 @@ def test_mom_acc(hmba_lattice):
 
 def test_search(hmba_lattice):
 
-    n_turns = 100
+    n_turns = 4
     dpp = 0.0
     start_index = 0
     num_recursions = 5
