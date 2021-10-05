@@ -2,7 +2,6 @@
 Functions relating to fast_ring
 """
 import numpy
-import warnings
 from at.lattice import RFCavity, Marker, Lattice, get_cells, checkname
 from at.lattice import get_elements
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
@@ -43,9 +42,6 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     ibegs = get_cells(merged_ring, checkname('xbeg'))
     iends = get_cells(merged_ring, checkname('xend'))
     _, orbit = merged_ring.find_orbit(refpts=ibegs | iends)
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter('ignore')
-    #     _, orbit = merged_ring.find_orbit(refpts=ibegs | iends)
     if detuning_elem is None:
         detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
     else:
