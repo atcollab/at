@@ -27,13 +27,15 @@ class Acceptance6D(object):
     planes = ('x', 'xp', 'y', 'yp', 'delta', 'ct')
 
     # 2D combination of planes
-    modes = ('x-y',
-             'delta-x',
-             'xp-yp',
-             'x-xp',
-             'y-yp',
-             'ct-delta',
-             '6D')
+    modes = {
+        'x-y': {'x': 13, 'xp': 1, 'y': 13, 'yp': 1, 'delta': 1, 'ct': 1},
+        'delta-x': {'x': 13, 'xp': 1, 'y': 1, 'yp': 1, 'delta': 13, 'ct': 1},
+        'ct-delta': {'x': 1, 'xp': 1, 'y': 1, 'yp': 1, 'delta': 13, 'ct': 13},
+        'x-xp': {'x': 13, 'xp': 13, 'y': 1, 'yp': 1, 'delta': 1, 'ct': 1},
+        'y-yp': {'x': 1, 'xp': 1, 'y': 13, 'yp': 13, 'delta': 1, 'ct': 1},
+        'xp-yp': {'x': 1, 'xp': 13, 'y': 1, 'yp': 13, 'delta': 1, 'ct': 1},
+        '6D': {'x': 5, 'xp': 5, 'y': 5, 'yp': 5, 'delta': 5, 'ct': 5},
+    }
 
     dict_units = {'x': [1e3, 'mm'],
                   'xp': [1e3, 'mrad'],
@@ -142,70 +144,7 @@ class Acceptance6D(object):
             raise('grid mode must be: grid or radial')
 
         # point to scan in each dimension
-        if mode == 'x-y':
-            self.n_points = {'x': 13,
-                             'xp': 1,
-                             'y': 13,
-                             'yp': 1,
-                             'delta': 1,
-                             'ct': 1
-                             }
-        elif mode == 'delta-x':
-            self.n_points = {'x': 13,
-                             'xp': 1,
-                             'y': 1,
-                             'yp': 1,
-                             'delta': 13,
-                             'ct': 1
-                             }
-        elif mode == 'ct-delta':
-            self.n_points = {'x': 1,
-                             'xp': 1,
-                             'y': 1,
-                             'yp': 1,
-                             'delta': 13,
-                             'ct': 13
-                             }
-        elif mode == 'x-xp':
-            self.n_points = {'x': 13,
-                             'xp': 13,
-                             'y': 1,
-                             'yp': 1,
-                             'delta': 1,
-                             'ct': 1
-                             }
-        elif mode == 'y-yp':
-            self.n_points = {'x': 1,
-                             'xp': 1,
-                             'y': 13,
-                             'yp': 13,
-                             'delta': 1,
-                             'ct': 1
-                             }
-        elif mode == 'xp-yp':
-            self.n_points = {'x': 1,
-                             'xp': 13,
-                             'y': 1,
-                             'yp': 13,
-                             'delta': 1,
-                             'ct': 1
-                             }
-        elif mode == '6D':
-            self.n_points = {'x': 5,
-                             'xp': 5,
-                             'y': 5,
-                             'yp': 5,
-                             'delta': 5,
-                             'ct': 5
-                             }
-        else:  # default for no mode = x-y
-            self.n_points = {'x': 13,
-                             'xp': 1,
-                             'y': 13,
-                             'yp': 1,
-                             'delta': 1,
-                             'ct': 1
-                             }
+        self.n_points = self.modes.get(mode)
 
         self.test_points_grid(compute_limits=compute_range)
 
@@ -598,7 +537,7 @@ class Acceptance6D(object):
         v_all = []
         survived = []
 
-        if self.mode in self.modes[0:-1]:
+        if self.mode in list(self.modes.keys())[0:-1]:
             # simplify 6D structure to 2D
             h_all, v_all, survived = self.select_test_points_based_on_mode()
 
