@@ -42,9 +42,10 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     all_rings, merged_ring = _rearrange(ring, split_inds=split_inds)
     ibegs = get_cells(merged_ring, checkname('xbeg'))
     iends = get_cells(merged_ring, checkname('xend'))
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        _, orbit = merged_ring.find_orbit(dct=0.0, refpts=ibegs | iends)
+    _, orbit = merged_ring.find_orbit(refpts=ibegs | iends)
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter('ignore')
+    #     _, orbit = merged_ring.find_orbit(refpts=ibegs | iends)
     if detuning_elem is None:
         detuning_elem = gen_detuning_elem(merged_ring, orbit[-1])
     else:
