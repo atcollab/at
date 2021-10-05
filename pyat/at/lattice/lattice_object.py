@@ -16,10 +16,12 @@ import numpy
 import math
 import itertools
 from warnings import warn
+from at.lattice import clight
 from at.lattice import AtError, AtWarning
 from at.lattice import uint32_refpts as uint32_refs, bool_refpts as bool_refs
 from at.lattice import refpts_iterator, refpts_len
-from at.lattice import elements, get_s_pos, get_elements
+from at.lattice import elements, get_s_pos, get_elements, get_cells, get_refpts
+from at.lattice import set_shift, set_tilt
 # noinspection PyProtectedMember
 from .utils import _uint32_refs, _bool_refs
 
@@ -29,6 +31,7 @@ __all__ = ['Lattice', 'type_filter', 'params_filter', 'lattice_filter',
            'no_filter']
 
 
+# noinspection PyAttributeOutsideInit
 class Lattice(list):
     """Lattice object
     An AT lattice is a sequence of AT elements.
@@ -45,12 +48,13 @@ class Lattice(list):
             elems:          any iterable of AT elements
 
         KEYWORDS
-            iterator=None   Custom iterator (see below)
-            scan=False      Scan elements, looking for energy and periodicity
-            name            Name of the lattice
-            energy          Energy of the lattice
-            periodicity     Number of periods
-            *               all other keywords will be set as Lattice attributes
+            name=''             Name of the lattice
+            energy              Energy of the lattice
+            periodicity=1       Number of periods
+            iterator=None       Custom iterator (see below)
+            scan=False          Scan elements, look for energy and periodicity
+            *                   all other keywords will be set as attributes of
+                                the Lattice object
 
     To reduce the inter-package dependencies, some methods of the
     lattice object are defined in other AT packages, in the module where
@@ -158,15 +162,15 @@ class Lattice(list):
     def __repr__(self):
         attrs = vars(self).copy()
         k1 = [(k, attrs.pop(k)) for k in Lattice._1st_attributes]
-        k2 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
-        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k2))
+        k3 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
+        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k3))
         return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(), keys)
 
     def __str__(self):
         attrs = vars(self).copy()
         k1 = [(k, attrs.pop(k)) for k in Lattice._1st_attributes]
-        k2 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
-        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k2))
+        k3 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
+        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k3))
         return 'Lattice(<{0} elements>, {1})'.format(len(self), keys)
 
     def __add__(self, elems):
@@ -232,7 +236,6 @@ class Lattice(list):
         RETURN
             New Lattice object
        """
-
         def slice_iter(ibeg, iend):
             for elem in self[:ibeg]:
                 yield elem
@@ -258,7 +261,7 @@ class Lattice(list):
 
     @property
     def s_range(self):
-        """Range of interest. 'None' means the full cell."""
+        """Range of interest: [s_min, s_max]. 'None' means the full cell."""
         try:
             return self._s_range
         except AttributeError:
@@ -293,8 +296,17 @@ class Lattice(list):
 
     @property
     def circumference(self):
-        """Ring circumference"""
+        """Ring circumference (full ring) [m]"""
         return self.periodicity * self.get_s_pos(len(self))[0]
+
+    @property
+    def revolution_frequency(self):
+        """Revolution frequency (full ring) [Hz]"""
+        # gamma = self.energy / self.particle.mass
+        # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+        # frev = beta * clight / self.circumference
+        frev = clight / self.circumference
+        return frev
 
     @property
     def radiation(self):
@@ -602,6 +614,7 @@ def type_filter(params, elem_iterator):
     Analyse elements for radiation state
     """
     radiate = False
+    _ = params.pop('_radiation', None)
     for idx, elem in enumerate(elem_iterator):
         if isinstance(elem, elements.Element):
             if (elem.PassMethod.endswith('RadPass') or
@@ -673,6 +686,10 @@ def params_filter(params, elem_iterator, *args):
 
 Lattice.uint32_refpts = _uint32_refs
 Lattice.bool_refpts = _bool_refs
+Lattice.get_cells = get_cells
+Lattice.get_refpts = get_refpts
+Lattice.set_shift = set_shift
+Lattice.set_tilt = set_tilt
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.select = refpts_iterator

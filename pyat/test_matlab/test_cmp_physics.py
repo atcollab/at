@@ -150,7 +150,7 @@ def test_parameters(engine, lattices, dp):
     # test energy loss
     ml_energy, ml_periods, ml_voltage, \
         ml_harms, ml_eloss = engine.pyproxy('atenergy', ml_lattice, nargout=5)
-    assert_close(py_lattice.voltage, ml_voltage, rtol=1.E-8)
+    assert_close(py_lattice.rf_voltage, ml_voltage, rtol=1.E-8)
     assert_close(py_lattice.energy_loss, ml_eloss, rtol=1.E-6)
     assert py_lattice.energy == ml_energy
     assert py_lattice.periodicity == int(ml_periods)

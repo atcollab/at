@@ -1,14 +1,13 @@
-import sys
 from enum import Enum
 from warnings import warn
 from math import sqrt, pi
 import numpy
 from scipy.optimize import least_squares
-from at.lattice import Lattice, Dipole, Wiggler, RFCavity
+from at.lattice import Lattice, Dipole, Wiggler, RFCavity, clight, e_mass
 from at.lattice import check_radiation, AtError
 from at.lattice import checktype, set_value_refpts, get_cells, refpts_len
 from at.tracking import lattice_pass
-from at.physics import clight, Cgamma, e_mass
+from at.physics import Cgamma
 
 __all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod',
            'get_timelag_fromU0']
@@ -124,17 +123,17 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
                                   bounds=(-tt0, ctmax-tt0)).x[0]
         if numpy.sign(deq(zero_diff-1.0e-6)) > 0:
             ts = least_squares(eq, (zero_diff-tt0)/2,
-                                 bounds=(-tt0, zero_diff)).x[0]
+                               bounds=(-tt0, zero_diff)).x[0]
         else:
             ts = least_squares(eq, (ctmax-tt0+zero_diff)/2,
-                                 bounds=(zero_diff, ctmax-tt0)).x[0]
+                               bounds=(zero_diff, ctmax-tt0)).x[0]
         timelag = ts+tl0
     else:
         if u0 > rfv:
             raise AtError('Not enough RF voltage: unstable ring')
         timelag = clight/(2*pi*freq)*numpy.arcsin(u0/rfv)                  
         ts = timelag - tl0
-        timelag*= numpy.ones(refpts_len(ring,cavpts))
+        timelag *= numpy.ones(refpts_len(ring, cavpts))
     return timelag, ts
 
 
