@@ -147,9 +147,9 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place
     """
-    def get_harm(hcell):
-        if hcell is not None:
-            return hcell*n_periods
+    def get_harm(hring):
+        if hring is not None:
+            return hring
         else:
             return ring.get_rf_harmonic_number(cavpts=cavpts)
 
