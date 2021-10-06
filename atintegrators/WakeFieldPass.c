@@ -25,7 +25,7 @@ struct elem
 };
 
 
-void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){   
+void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){   
     /*
      * r_in - 6-by-N matrix of initial conditions reshaped into
      * 1-d array of 6*N elements
@@ -97,26 +97,21 @@ void impedance_tablePass(double *r_in,int num_particles, struct elem *Elem){
     for(i=0;i<nslice;i++){        
         register double pos0 = zpos[i];
         if(countslc[i]>0.0){
-          for (ii=0;ii<nslice;ii++){
-              register double posi = zpos[ii];
-              double ds = posi-pos0;
-              if(countslc[ii]>0.0 && -ds>waketableT[0] && -ds<waketableT[nelem-1]){
-                register double wi = weight[ii];
-                register double dx = xpos[ii];
-                register double dy = ypos[ii];
-                int index = binarySearch(waketableT,-ds,nelem,0,0);              
-                double fieldx = getWake(waketableDX,waketableT,-ds,index);
-                double fieldy = getWake(waketableDY,waketableT,-ds,index);
-                double fieldx2 = getWake(waketableQX,waketableT,-ds,index);
-                double fieldy2 = getWake(waketableQY,waketableT,-ds,index);
-                double fieldz = getWake(waketableZ,waketableT,-ds,index);
-                kx[i] += fx*wi*fieldx*dx;
-                ky[i] += fy*wi*fieldy*dy;
-                kx2[i] += fqx*wi*fieldx2;
-                ky2[i] += fqy*wi*fieldy2;
-                kz[i] += fz*wi*fieldz;
-              }            
-          }
+            for (ii=0;ii<nslice;ii++){
+                register double posi = zpos[ii];
+                double ds = posi-pos0;
+                if(countslc[ii]>0.0 && -ds>waketableT[0] && -ds<waketableT[nelem-1]){
+                    register double wi = weight[ii];
+                    register double dx = xpos[ii];
+                    register double dy = ypos[ii];
+                    int index = binarySearch(waketableT,-ds,nelem,0,0);              
+                    if(waketableDX)kx[i] += dx*fx*wi*getTableWake(waketableDX,waketableT,-ds,index);
+                    if(waketableDY)ky[i] += dy*fy*wi*getTableWake(waketableDY,waketableT,-ds,index);
+                    if(waketableQX)kx2[i] += fqx*wi*getTableWake(waketableQX,waketableT,-ds,index);
+                    if(waketableQY)ky2[i] += fqy*wi*getTableWake(waketableQY,waketableT,-ds,index);
+                    if(waketableZ) kz[i] += fz*wi*getTableWake(waketableZ,waketableT,-ds,index);
+                }            
+            }
         }
     }
     
@@ -138,8 +133,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         long nslice,nelem;
-        double on_x,on_y,on_qx,on_qy,on_z;
-        double intensity, wakefact, normfactx,normfacty;
+        double intensity, wakefact;
+        double normfactx, normfacty, normfactz;
         double *waketableT;
         double *waketableDX;
         double *waketableDY;
@@ -149,30 +144,26 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         
         nslice=atGetLong(ElemData,"Nslice"); check_error();
         nelem=atGetLong(ElemData,"Nelem"); check_error();
-        on_x=atGetDouble(ElemData,"On_x"); check_error();
-        on_y=atGetDouble(ElemData,"On_y"); check_error();
-        on_qx=atGetDouble(ElemData,"On_qx"); check_error();
-        on_qy=atGetDouble(ElemData,"On_qy"); check_error();
-        on_z=atGetDouble(ElemData,"On_z"); check_error();
         intensity=atGetDouble(ElemData,"Intensity"); check_error();
         wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
-        normfactx=atGetDouble(ElemData,"Normfactx"); check_error();
-        normfacty=atGetDouble(ElemData,"Normfacty"); check_error();
+        normfactx=atGetOptionalDouble(ElemData,"Normfactx",1.0); check_error();
+        normfacty=atGetOptionalDouble(ElemData,"Normfacty",1.0); check_error();
+        normfactz=atGetOptionalDouble(ElemData,"Normfactz",1.0); check_error();
         waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
-        waketableDX=atGetDoubleArray(ElemData,"WakeDX"); check_error();
-        waketableDY=atGetDoubleArray(ElemData,"WakeDY"); check_error();
-        waketableQX=atGetDoubleArray(ElemData,"WakeQX"); check_error();
-        waketableQY=atGetDoubleArray(ElemData,"WakeQY"); check_error();
-        waketableZ=atGetDoubleArray(ElemData,"WakeZ"); check_error();
+        waketableDX=atGetOptionalDoubleArray(ElemData,"WakeDX"); check_error();
+        waketableDY=atGetOptionalDoubleArray(ElemData,"WakeDY"); check_error();
+        waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
+        waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
+        waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->nslice=nslice;
         Elem->nelem=nelem;
-        Elem->fx=intensity*wakefact*normfactx*on_x;
-        Elem->fy=intensity*wakefact*normfacty*on_y;
-        Elem->fqx=intensity*wakefact*normfactx*on_qx;
-        Elem->fqy=intensity*wakefact*normfacty*on_qy;
-        Elem->fz=intensity*wakefact*on_z;
+        Elem->fx=intensity*wakefact*normfactx;
+        Elem->fy=intensity*wakefact*normfacty;
+        Elem->fqx=intensity*wakefact*normfactx;
+        Elem->fqy=intensity*wakefact*normfacty;
+        Elem->fz=intensity*wakefact*normfactz;
         Elem->waketableT=waketableT;
         Elem->waketableDX=waketableDX;
         Elem->waketableDY=waketableDY;
@@ -180,11 +171,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->waketableQY=waketableQY;
         Elem->waketableZ=waketableZ;
     }
-    impedance_tablePass(r_in,num_particles,Elem);
+    WakeFieldPass(r_in,num_particles,Elem);
     return Elem;
 }
 
-MODULE_DEF(ImpedanceTablePass)        /* Dummy module initialisation */
+MODULE_DEF(WakeFieldPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -199,8 +190,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         struct elem El, *Elem=&El;
 
         long nslice,nelem;
-        double on_x,on_y,on_qx,on_qy,on_z;
-        double intensity, wakefact, normfactx,normfacty;
+        double intensity, wakefact;
+        double normfactx, normfacty, normfactz;
         double *waketableT;
         double *waketableDX;
         double *waketableDY;
@@ -210,29 +201,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         
         nslice=atGetLong(ElemData,"Nslice"); check_error();
         nelem=atGetLong(ElemData,"Nelem"); check_error();
-        on_x=atGetDouble(ElemData,"On_x"); check_error();
-        on_y=atGetDouble(ElemData,"On_y"); check_error();
-        on_qx=atGetDouble(ElemData,"On_qx"); check_error();
-        on_qy=atGetDouble(ElemData,"On_qy"); check_error();
-        on_z=atGetDouble(ElemData,"On_z"); check_error();
         intensity=atGetDouble(ElemData,"Intensity"); check_error();
         wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
-        normfactx=atGetDouble(ElemData,"Normfactx"); check_error();
-        normfacty=atGetDouble(ElemData,"Normfacty"); check_error();
+        normfactx=atGetOptionalDouble(ElemData,"Normfactx",1.0); check_error();
+        normfacty=atGetOptionalDouble(ElemData,"Normfacty",1.0); check_error();
+        normfactz=atGetOptionalDouble(ElemData,"Normfactz",1.0); check_error();
         waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
-        waketableDX=atGetDoubleArray(ElemData,"WakeDX"); check_error();
-        waketableDY=atGetDoubleArray(ElemData,"WakeDY"); check_error();
-        waketableQX=atGetDoubleArray(ElemData,"WakeQX"); check_error();
-        waketableQY=atGetDoubleArray(ElemData,"WakeQY"); check_error();
-        waketableZ=atGetDoubleArray(ElemData,"WakeZ"); check_error();
+        waketableDX=atGetOptionalDoubleArray(ElemData,"WakeDX"); check_error();
+        waketableDY=atGetOptionalDoubleArray(ElemData,"WakeDY"); check_error();
+        waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
+        waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
+        waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
         
         Elem->nslice=nslice;
         Elem->nelem=nelem;
-        Elem->fx=intensity*wakefact*normfactx*on_x;
-        Elem->fy=intensity*wakefact*normfacty*on_y;
-        Elem->fqx=intensity*wakefact*normfactx*on_qx;
-        Elem->fqy=intensity*wakefact*normfacty*on_qy;
-        Elem->fz=intensity*wakefact*on_z;
+        Elem->fx=intensity*wakefact*normfactx;
+        Elem->fy=intensity*wakefact*normfacty;
+        Elem->fqx=intensity*wakefact*normfactx;
+        Elem->fqy=intensity*wakefact*normfacty;
+        Elem->fz=intensity*wakefact*normafactz;
         Elem->waketableT=waketableT;
         Elem->waketableDX=waketableDX;
         Elem->waketableDY=waketableDY;
@@ -244,32 +231,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        impedance_tablePass(r_in, num_particles, Elem);
+        WakeFieldPass(r_in, num_particles, Elem);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(17,1);
+        plhs[0] = mxCreateCellMatrix(5,1);
         mxSetCell(plhs[0],0,mxCreateString("Nslice"));
         mxSetCell(plhs[0],1,mxCreateString("Intensity"));
         mxSetCell(plhs[0],2,mxCreateString("Wakefact"));
         mxSetCell(plhs[0],3,mxCreateString("WakeT"));
-        mxSetCell(plhs[0],4,mxCreateString("WakeDX"));
-        mxSetCell(plhs[0],5,mxCreateString("WakeDY"));
-        mxSetCell(plhs[0],6,mxCreateString("WakeQX"));
-        mxSetCell(plhs[0],7,mxCreateString("WakeQY"));
-        mxSetCell(plhs[0],8,mxCreateString("WakeZ"));
-        mxSetCell(plhs[0],9,mxCreateString("Nelem"));
-        mxSetCell(plhs[0],10,mxCreateString("Normfactx"));
-        mxSetCell(plhs[0],11,mxCreateString("Normfacty"));
-        mxSetCell(plhs[0],12,mxCreateString("On_x"));
-        mxSetCell(plhs[0],13,mxCreateString("On_y"));
-        mxSetCell(plhs[0],14,mxCreateString("On_qx"));
-        mxSetCell(plhs[0],15,mxCreateString("On_qy"));
-        mxSetCell(plhs[0],16,mxCreateString("On_z"));
+        mxSetCell(plhs[0],4,mxCreateString("Nelem"));
 
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(0,0); /* No optional fields */
+            plhs[1] = mxCreateCellMatrix(8,1); /* No optional fields */
+            mxSetCell(plhs[0],0,mxCreateString("WakeDX"));
+            mxSetCell(plhs[0],1,mxCreateString("WakeDY"));
+            mxSetCell(plhs[0],2,mxCreateString("WakeQX"));
+            mxSetCell(plhs[0],3,mxCreateString("WakeQY"));
+            mxSetCell(plhs[0],4,mxCreateString("WakeZ"));
+            mxSetCell(plhs[0],5,mxCreateString("Normfactx"));
+            mxSetCell(plhs[0],6,mxCreateString("Normfacty"));
+            mxSetCell(plhs[0],7,mxCreateString("Normfactz"));
         }
     }else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");

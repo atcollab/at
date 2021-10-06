@@ -26,7 +26,7 @@ int binarySearch(double *array,double value,int upper,int lower,int nStep){
 };
 
 
-double getWake(double *waketable,double *waketableT,double distance,int index){
+double getTableWake(double *waketable,double *waketableT,double distance,int index){
     double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
           (waketableT[index+1]-waketableT[index]);
     if(atIsNaN(w)){
