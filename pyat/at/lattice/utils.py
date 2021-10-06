@@ -20,8 +20,8 @@ from itertools import compress
 from fnmatch import fnmatch
 from at.lattice import elements
 
-__all__ = ['AtError', 'AtWarning', 'check_radiation', 'make_copy',
-           'uint32_refpts', 'bool_refpts',
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'set_radiation',
+           'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
            'refpts_count', 'refpts_len', 'refpts_iterator',
@@ -56,6 +56,33 @@ def check_radiation(rad):
         return wrapper
     return radiation_decorator
 
+
+def set_radiation(rad):
+    """Function to be used as a decorator for optics functions
+    The decorated function must be defined as:
+
+    def func(ring, *args, **kwargs):
+        ...
+        return
+
+    func will be called with a copy of the ring such that its radiation state
+    is set to rad (no copy is done if it's already the case).
+    """
+    if rad:
+        def setrad_decorator(func):
+            @functools.wraps(func)
+            def wrapper(ring, *args, **kwargs):
+                rg = ring if ring.radiation else ring.radiation_on(copy=True)
+                return func(rg, *args, **kwargs)
+            return wrapper
+    else:
+        def setrad_decorator(func):
+            @functools.wraps(func)
+            def wrapper(ring, *args, **kwargs):
+                rg = ring.radiation_off(copy=True) if ring.radiation else ring
+                return func(rg, *args, **kwargs)
+            return wrapper
+    return setrad_decorator
 
 def make_copy(copy):
     """Function to be used as a decorator for optics functions
