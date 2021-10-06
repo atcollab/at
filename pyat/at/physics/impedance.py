@@ -1,5 +1,5 @@
 """
-Wake field table and element generation
+Wake field and wake element generation
 """
 import at
 import numpy
@@ -126,19 +126,26 @@ class Wake(object):
         if wcomp is WakeComponent.Z:
             return self.wakefunc_long_resonator(frequency, qfactor, rshunt, beta)
         elif wcomp is WakeComponent.DX:
-            print('WakeComponent {} not yet available for resonator.\n'.format(wcomp))
+            return self.wakefunc_transverse_resonator(frequency, qfactor, rshunt, 
+                                                      yokoya_factor, beta)
         elif wcomp is WakeComponent.DY:
-            print('WakeComponent {} not yet available for resonator.\n'.format(wcomp))
+            return self.wakefunc_transverse_resonator(frequency, qfactor, rshunt, 
+                                                      yokoya_factor, beta)
         elif wcomp is WakeComponent.QX:
-            print('WakeComponent {} not yet available for resonator.\n'.format(wcomp))
+            return self.wakefunc_transverse_resonator(frequency, qfactor, rshunt, 
+                                                      yokoya_factor, beta)
         elif wcomp is WakeComponent.QY:
-            print('WakeComponent {} not yet available for resonator.\n'.format(wcomp))
+            return self.wakefunc_transverse_resonator(frequency, qfactor, rshunt, 
+                                                      yokoya_factor, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
       
     def wakefunc_long_resonator(self, frequency, qfactor, rshunt, beta):
-        """Define the wake function of a longitudinal resonator with the given
-        parameters according to Alex Chao's resonator model (Eq. 2.82)."""
+        """Define the wake function (longitudinal) of a resonator with the given
+        parameters according to Alex Chao's resonator model (Eq. 2.82) and
+        definitions of the resonator in HEADTAIL.
+
+        """
         omega = 2 * numpy.pi * frequency
         alpha = omega / (2 * qfactor)
         omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
@@ -156,9 +163,29 @@ class Wake(object):
                     alpha / omegabar * numpy.sinh(omegabar * dt)))
         return wake
 
+    def wakefunc_transverse_resonator(self, frequency, qfactor, rshunt, yokoya_factor, beta):
+        """Define the wake function (transverse) of a resonator with the given
+        parameters according to Alex Chao's resonator model (Eq. 2.82) and
+        definitions of the resonator in HEADTAIL.
+
+        """
+        omega = 2 * numpy.pi * self.frequency
+        alpha = omega / (2 * qfactor)
+        omegabar = np.sqrt(np.abs(omega**2 - alpha**2))
+        dt = -self._srange/(beta * clight)
+        if qfactor > 0.5:
+            wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
+                    omegabar) * numpy.exp(alpha*dt) * numpy.sin(omegabar*dt))
+        elif qfactor == 0.5:
+            wake = (yokoya_factor * rshunt * omega**2 / qfactor *
+                    numpy.exp(alpha * dt) * dt)
+        else:
+            wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
+                    omegabar) * numpy.exp(alpha*dt) * numpy.sinh(omegabar*dt))
+        return wake
+
 
 class WakeElement(at.Element):
-
     def __init__(self, family_name, intensity, wake, **kwargs):
         super(WakeElement, self).__init__(family_name)
         self.Intensity=intensity
@@ -177,6 +204,17 @@ class WakeElement(at.Element):
     def set_wakefact(self, ring):
         betrel = numpy.sqrt(1.0-partmass**2/ring.energy**2)
         self.Wakefact = -qe/(ring.energy*betrel**2) 
+
+
+class LongResonatorElement(WakeElement):
+    def __init__(self, family_name, intensity, srange, frequency, 
+                 qfactor, rshunt, beta, **kwargs):
+        wake = Wake(srange)
+        wake.add(WakeType.RESONATOR, WakeComponent.Z, frequency, qfactor, 
+                 rshunt, beta)
+        super(LongResonatorElement, self).__init__(family_name, intensity, 
+                                                   wake, **kwargs)
+
    
 
 
