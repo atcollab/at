@@ -7,11 +7,14 @@ function props = atGetRingProperties(ring)
 %
 % ring:         Ring structure
 %
-% properties:   Structure with fields:
+% properties: Structure with fields:
 %   FamName         Name of the lattice
 %   Energy          Ring energy in eV
 %   Periodicity     Number of periods to make 2pi phase advance
 %   Particle        particle (Particle object)
+%
+% Optional fields:
+%   cavpts          Location of the main cavities (Used by atsetcavity
 %
 %  See also ATSETRINGPROPERTIES
 

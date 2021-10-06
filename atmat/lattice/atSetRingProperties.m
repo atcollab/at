@@ -5,6 +5,16 @@ function ring = atSetRingProperties(ring,varargin)
 %   Add or modify the attributes of the RingParam element of the lattice,
 %   Insert a new RingParam element if necessary
 %
+% Standard properties:
+%   FamName         Name of the lattice
+%   Energy          Ring energy in eV
+%   Periodicity     Number of periods to make 2pi phase advance
+%   Particle        particle (Particle object)
+%
+% Optional properties:
+%   cavpts          Location of the main cavities (Used by atsetcavity
+%
+
 %See also atGetRingProperties
 
 % Fast access if RingParam is the first element, as usual
