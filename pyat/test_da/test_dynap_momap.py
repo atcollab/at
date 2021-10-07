@@ -1,5 +1,5 @@
 import at
-from at.physics.dynamic_aperture import Acceptance6D, dynamic_aperture, off_energy_dynamic_aperture, momentum_acceptance
+from at.physics import Acceptance6D, dynamic_aperture, off_energy_dynamic_aperture, momentum_acceptance
 import time
 import copy
 import pytest
@@ -12,7 +12,7 @@ def test_acceptance_6d(hmba_lattice):
 
     # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
     print('x-xp acceptance, using class directly')
-    da = Acceptance6D(copy.deepcopy(sr_ring),
+    da = Acceptance6D(sr_ring,
                       mode='6D', start_index=120, n_turns=2**2, dp=+0.01)
 
     da.verbose = True
@@ -50,7 +50,7 @@ def test_acceptance_x_xp(hmba_lattice):
 
     # x-xp acceptance at index 120 with dpp -0.5% for 32 turns
     print('x-xp acceptance, using class directly')
-    da = Acceptance6D(copy.deepcopy(sr_ring),
+    da = Acceptance6D(sr_ring,
                       mode='x-xp', start_index=120, n_turns=2**2, dp=-0.005)
 
     da.verbose = True
@@ -169,7 +169,7 @@ def test_search(hmba_lattice):
     h = []
     v = []
 
-    da = Acceptance6D(copy.deepcopy(sr_ring), mode='x-y', start_index=start_index)
+    da = Acceptance6D(sr_ring, mode='x-y', start_index=start_index)
     da.number_of_turns = n_turns
     da.dpp = dpp
     da.verbose = True

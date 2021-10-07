@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from at.physics.dynamic_aperture import Acceptance6D
+from at.physics import Acceptance6D
 import numpy as np
 from datetime import datetime
 import os
