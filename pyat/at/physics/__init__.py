@@ -28,5 +28,4 @@ from .harmonic_analysis import *
 from .nonlinear import *
 from .fastring import *
 
-# do NOT import DA by default (includes matplotlib).
-# from .dynamic_aperture import dynamic_aperture, momentum_acceptance, off_energy_dynamic_aperture
+#from .dynamic_aperture import dynamic_aperture, Acceptance6D, momentum_acceptance, off_energy_dynamic_aperture

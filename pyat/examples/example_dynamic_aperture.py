@@ -2,9 +2,11 @@ import at
 import at.physics.dynamic_aperture as da
 import at.plot.dynamic_aperture as daplot
 import at.lattice.cavity_access
+from at.lattice import get_refpts
 import at.plot
 import time
 import numpy as np
+import copy
 
 folder_data = '.'  # to store files and figures
 
@@ -73,6 +75,34 @@ daplot.plot_dynamic_aperture(h0, v0, da_, search, file_name_save=folder_data + '
 
 elapsed = time.time() - t
 print('On-energy DA grid took {s:2.1f}s'.format(s=elapsed))
+
+sr_ring_err = copy.deepcopy(sr_ring)
+indquad = at.get_cells(sr_ring_err,at.checkname('[QS]*'))
+dH = 1e-4 * np.random.randn(len(sr_ring_err))
+dV = 1e-4 * np.random.randn(len(sr_ring_err))
+for iii, v in enumerate(indquad):
+    if not v:
+        dH[iii] = 0.0
+        dV[iii] = 0.0
+
+at.set_shift(sr_ring_err,dH,dV)
+
+herr, verr, _, _ = da.dynamic_aperture(
+                    sr_ring_err,
+                    n_turns=N,
+                    n_radii=21, # here = N Horizontal grid points
+                    n_theta=21, # here = N Vertical grid points
+                    grid_mode='cartesian', # search input will be ignored
+                    parallel=False,  # can be set to True on Unix to use patpass, see next example
+                    file_name_save=folder_data + '/on_en_da',
+                    num_recursions=5)
+
+[print('({}, {})'.format(h,v)) for h,v in zip(h0, v0)]
+print(' + alignemnt errors:  ')
+[print('({}, {})'.format(he,ve)) for he,ve in zip(herr, verr)]
+
+elapsed = time.time() - t
+print('On-energy DA grid with errors took {s:2.1f}s'.format(s=elapsed))
 
 
 """  FOLLOWING WORKS ONLY IN UNIX.
