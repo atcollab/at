@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,IE=9,chrome=1"><meta name="generator" content="MATLAB 2021a"><title>Controlling the RF cavities</title><style type="text/css">.rtcContent { padding: 30px; } .S0 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 28.8px; min-height: 0px; white-space: pre-wrap; color: rgb(213, 80, 0); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 24px; font-weight: 400; text-align: left;  }
+.S1 { margin-bottom: 20px; padding-bottom: 4px;  }
+.S2 { margin: 0px; padding: 10px 0px 10px 5px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(0, 0, 0); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: start;  }
+.S3 { margin: -1px 0px 0px; padding: 10px 0px 10px 7px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(0, 0, 0); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: start;  }
+.S4 { margin: 2px 10px 9px 4px; padding: 0px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(0, 0, 0); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: left;  }
+.S5 { margin: 20px 10px 5px 4px; padding: 0px; line-height: 20px; min-height: 0px; white-space: pre-wrap; color: rgb(60, 60, 60); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 20px; font-weight: 700; text-align: left;  }
+.S6 { margin: 15px 10px 5px 4px; padding: 0px; line-height: 18px; min-height: 0px; white-space: pre-wrap; color: rgb(60, 60, 60); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 17px; font-weight: 700; text-align: left;  }
+.S7 { margin: 10px 0px 20px; padding-left: 0px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;  }
+.S8 { margin-left: 56px; line-height: 21px; min-height: 0px; text-align: left; white-space: pre-wrap;  }</style></head><body><div class = rtcContent><h1  class = 'S0' id = 'T_703E94F3' ><span>Controlling the RF cavities</span></h1><div  class = 'S1'><div  class = 'S2'><span style=' font-weight: bold;'>Table of Contents</span></div><div  class = 'S3'><a href = "#H_0C7B2124"><span>Lattice attributes
+</span></a><a href = "#H_6A367191"><span>Cavity access
+</span></a><span>    </span><a href = "#H_227E0725"><span>Selection of the target cavities
+</span></a><span>    </span><a href = "#H_ADBD8F72"><span>Cavity attributes</span></a></div></div><div  class = 'S4'><span>A lattice may contain multiple RF cavities, grouped according to different RF systems:</span></div><div  class = 'S4'><span>main cavities, harmonic cavities… AT provides simple tools to tune them.</span></div><h2  class = 'S5' id = 'H_0C7B2124' ><span>Lattice attributes</span></h2><div  class = 'S4'><span>Lattice attributes are used to describe global properties of the lattice. They are stored as attributes of a </span><span style=' font-family: monospace;'>RingParam</span><span> element, ideally located in the 1st position in the lattice.</span></div><div  class = 'S4'><span>The lattice attributes can be accessed with the </span><a href = "matlab:doc('atSetRingProperties')"><span>atSetRingProperties</span></a><span> / </span><a href = "matlab:doc('atGetRingProperties')"><span>atGetRingProperties</span></a><span> functions.</span></div><div  class = 'S4'><span>An optional attribute </span><span style=' font-family: monospace;'>'cavpts'</span><span> may be used to select the cavities, as explained </span><a href = "#H_227E0725"><span>below</span></a><span>.</span></div><h2  class = 'S5' id = 'H_6A367191' ><span>Cavity access</span></h2><div  class = 'S4'><span>Cavity parameters are set with the </span><a href = "matlab:doc('atsetcavity')"><span>atsetcavity</span></a><span> function.</span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,'Name',Value)</span><span> specifies cavity properties using one or more </span><span style=' font-family: monospace;'>Name,Value</span><span> pair arguments. The values handled by the function concern the full ring (</span><span style=' font-style: italic;'>`periodicity` </span><span style="font-family: STIXGeneral, STIXGeneral-webfont, serif; font-style: italic; font-weight: 400; color: rgb(0, 0, 0);">x</span><span> superperiod).</span></div><h3  class = 'S6' id = 'H_227E0725' ><span>Selection of the target cavities</span></h3><div  class = 'S4'><span>The </span><span style=' font-family: monospace;'>`cavpts`</span><span style=' font-style: italic;'> </span><span>argument is used to select the cavities driven by the command.</span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'cavpts',cavpts)</span><span> </span></div><div  class = 'S4'><span>It is used as follows:</span></div><ul  class = 'S7'><li  class = 'S8'><span style=' font-family: monospace;'>cavpts</span><span style=' font-style: italic;'> </span><span>is a "refpts" type (integer or logical array): it is used to select the cavities,</span></li><li  class = 'S8'><span style=' font-family: monospace;'>cavpts </span><span>is empty (default value), and the lattice has a </span><span style=' font-family: monospace;'>'cavpts'</span><span style=' font-style: italic;'> </span><span>attribute: the lattice attribute is used to select the cavities,</span></li><li  class = 'S8'><span style=' font-family: monospace;'>cavpts</span><span> is empty, and the lattice has no </span><span style=' font-family: monospace;'>'cavpts'</span><span> attribute (or it is empty): all cavities are selected.</span></li></ul><div  class = 'S4'><span>So the easier way to use it is:</span></div><ul  class = 'S7'><li  class = 'S8'><span style=' font-weight: bold;'>single RF system</span><span> (main cavities): forget the </span><span style=' font-family: monospace;'>cavpts</span><span> argument. The default is to use all cavities,</span></li><li  class = 'S8'><span style=' font-weight: bold;'>main RF system + harmonic system</span><span>: set the lattice </span><span style=' font-family: monospace;'>'cavpts' </span><span>attribute to the location of the main cavities, so that the default behaviour is to drive the main system. Use the function's </span><span style=' font-family: monospace;'>'cavpts'</span><span style=' font-style: italic;'> </span><span>argument to drive the harmonic cavities.</span></li></ul><h3  class = 'S6' id = 'H_ADBD8F72' ><span>Cavity attributes</span></h3><div  class = 'S4'><span></span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'Frequency',frf)</span><span> </span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'Frequency','nominal')</span><span> </span></div><div  class = 'S4'><span>    If the frequency is </span><span style=' font-family: monospace;'>'nominal'</span><span>, the function will set the frequency to the nominal value, according to the revolution frequency and harmonic number. An optional off-momentum may be applied using the</span><span> '</span><span style=' font-family: monospace;'>dp'</span><span> </span><span>or</span><span> '</span><span style=' font-family: monospace;'>dct'</span><span> </span><span>arguments. The frequency shift is then computed using the linear slip factor </span><span texencoding="$\eta_c = 1/\gamma^2 - \alpha_c$" style="vertical-align:-6px"><img src="data:image/png;base64,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" width="89.5" height="21" /></span><span> , so that the resulting</span><span> dp </span><span>may slighly differ from the specified value.</span></div><div  class = 'S4'><span></span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'HarmNumber',h)</span><span> </span></div><div  class = 'S4'><span>    Set the ring harmonic number of the full ring (all cells). The harmonic number of each cavity is h / n_cells</span></div><div  class = 'S4'><span></span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'Voltage',Vrf)</span><span> </span></div><div  class = 'S4'><span>    Set the total voltage (all cells) [V]. The voltage is equally distributed over all selected cavities in all cells. So the voltage of each cavity is Vrf / n_cavities / n_cells.</span></div><div  class = 'S4'><span></span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'Timelag',time_lag)</span><span> </span></div><div  class = 'S4'><span>   The time lag is expressed in values of path lengthening “cτ”, the 6</span><span>th</span><span> </span><span>particle coordinate [m].</span></div><div  class = 'S4'><span></span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'dp',dp)</span><span> </span></div><div  class = 'S4'><span style=' font-family: monospace;'>newring=atsetcavity(ring,___,'dct',dct)</span><span> </span></div><div  class = 'S4'><span>   Set the off-momentum used to compute the nominal RF frequency.</span></div><div  class = 'S4'><span></span></div><div  class = 'S4'></div>
+<br>
+<!-- 
+##### SOURCE BEGIN #####
+%% Controlling the RF cavities
+%% 
+% A lattice may contain multiple RF cavities, grouped according to different 
+% RF systems:
+% 
+% main cavities, harmonic cavities… AT provides simple tools to tune them.
+%% Lattice attributes
+% Lattice attributes are used to describe global properties of the lattice. 
+% They are stored as attributes of a |RingParam| element, ideally located in the 
+% 1st position in the lattice.
+% 
+% The lattice attributes can be accessed with the <matlab:doc('atSetRingProperties') 
+% atSetRingProperties> / <matlab:doc('atGetRingProperties') atGetRingProperties> 
+% functions.
+% 
+% An optional attribute |'cavpts'| may be used to select the cavities, as explained 
+% below.
+%% Cavity access
+% Cavity parameters are set with the <matlab:doc('atsetcavity') atsetcavity> 
+% function.
+% 
+% |newring=atsetcavity(ring,'Name',Value)| specifies cavity properties using 
+% one or more |Name,Value| pair arguments. The values handled by the function 
+% concern the full ring (_`periodicity`_ $x$ superperiod).
+% Selection of the target cavities
+% The |`cavpts`| argument is used to select the cavities driven by the command.
+% 
+% |newring=atsetcavity(ring,___,'cavpts',cavpts)| 
+% 
+% It is used as follows:
+%% 
+% * |cavpts| is a "refpts" type (integer or logical array): it is used to select 
+% the cavities,
+% * |cavpts| is empty (default value), and the lattice has a |'cavpts'| attribute: 
+% the lattice attribute is used to select the cavities,
+% * |cavpts| is empty, and the lattice has no |'cavpts'| attribute (or it is 
+% empty): all cavities are selected.
+%% 
+% So the easier way to use it is:
+%% 
+% * *single RF system* (main cavities): forget the |cavpts| argument. The default 
+% is to use all cavities,
+% * *main RF system + harmonic system*: set the lattice |'cavpts'| attribute 
+% to the location of the main cavities, so that the default behaviour is to drive 
+% the main system. Use the function's |'cavpts'| argument to drive the harmonic 
+% cavities.
+% Cavity attributes
+% 
+% 
+% |newring=atsetcavity(ring,___,'Frequency',frf)| 
+% 
+% |newring=atsetcavity(ring,___,'Frequency','nominal')| 
+% 
+% If the frequency is |'nominal'|, the function will set the frequency to the 
+% nominal value, according to the revolution frequency and harmonic number. An 
+% optional off-momentum may be applied using the '|dp'| or '|dct'| arguments. 
+% The frequency shift is then computed using the linear slip factor $$\eta_c = 
+% 1/\gamma^2 - \alpha_c$$ , so that the resulting dp may slighly differ from the 
+% specified value.
+% 
+% 
+% 
+% |newring=atsetcavity(ring,___,'HarmNumber',h)| 
+% 
+% Set the ring harmonic number of the full ring (all cells). The harmonic number 
+% of each cavity is h / n_cells
+% 
+% 
+% 
+% |newring=atsetcavity(ring,___,'Voltage',Vrf)| 
+% 
+% Set the total voltage (all cells) [V]. The voltage is equally distributed 
+% over all selected cavities in all cells. So the voltage of each cavity is Vrf 
+% / n_cavities / n_cells.
+% 
+% 
+% 
+% |newring=atsetcavity(ring,___,'Timelag',time_lag)| 
+% 
+% The time lag is expressed in values of path lengthening “cτ”, the 6th particle 
+% coordinate [m].
+% 
+% 
+% 
+% |newring=atsetcavity(ring,___,'dp',dp)| 
+% 
+% |newring=atsetcavity(ring,___,'dct',dct)| 
+% 
+% Set the off-momentum used to compute the nominal RF frequency.
+% 
+% 
+% 
+%
+##### SOURCE END #####
+-->
+</div></body></html>
