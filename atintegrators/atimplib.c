@@ -37,6 +37,45 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
 };
 
 
+void fill_table_history(long nturns,long nslice,double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
+                        double *turnhistoryW,double *xpos,double *ypos,double *zpos,double *weight,double circumference){
+    double *xtmp,*xtmp0;
+    double *ytmp,*ytmp0;
+    double *ztmp,*ztmp0;
+    double *wtmp,*wtmp0;
+    int i, ii;
+    /*First rotate array*/
+    for (i=0;i<nturns-1;i++){
+        xtmp = turnhistoryX + (i+1)*nslice;
+        xtmp0 = turnhistoryX + i*nslice;
+        ytmp = turnhistoryY + (i+1)*nslice;
+        ytmp0 = turnhistoryY + i*nslice;
+        ztmp = turnhistoryZ + (i+1)*nslice;
+        ztmp0 = turnhistoryZ + i*nslice;
+        wtmp = turnhistoryW + (i+1)*nslice;
+        wtmp0 = turnhistoryW + i*nslice;
+        for(ii=0;ii<nslice;ii++){
+            xtmp0[ii]=xtmp[ii];
+            ytmp0[ii]=ytmp[ii];
+            ztmp0[ii]=ztmp[ii]+circumference;
+            wtmp0[ii]=ytmp[ii];
+        }
+    }
+    /*Now set last row to present slices*/
+    xtmp = turnhistoryX + (nturns-1)*nslice;
+    ytmp = turnhistoryY + (nturns-1)*nslice;
+    ztmp = turnhistoryZ + (nturns-1)*nslice;
+    wtmp = turnhistoryW + (nturns-1)*nslice;
+    for(ii=0;ii<nslice;ii++){
+        xtmp[ii]=xpos[ii];
+        ytmp[ii]=ypos[ii];
+        ztmp[ii]=zpos[ii];
+        wtmp[ii]=weight[ii];
+    }        
+};
+
+
+
 double *getbounds(double *r_in,int num_particles){
     double *rtmp;
     int i;
@@ -70,7 +109,7 @@ double *getbounds(double *r_in,int num_particles){
 
 
 void slice_bunch(double *r_in,int num_particles,int nslice,double *bounds,double *weight,
-                 double *xpos,double *ypos,double *zpos,int *countslc,int *pslice){
+                 double *xpos,double *ypos,double *zpos,int *pslice){
 
     
     int i,ii;
@@ -96,7 +135,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,double *bounds,double
             }
             else {
                 ii = (int)floor((ct-smin)/hz);
-                countslc[ii]++;
+                weight[ii] += 1.0;
                 xpos[ii] += x;
                 ypos[ii] += y;
                 zpos[ii] += ct;
@@ -118,18 +157,17 @@ void slice_bunch(double *r_in,int num_particles,int nslice,double *bounds,double
         MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE,zpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,countslc,nslice,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,weight,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
     }
     #endif
 
     /*Compute average x/y position and weight of each slice */
     for (i=0;i<nslice;i++) {
-        double count = (double) countslc[i];
-        weight[i]=count/np_total;
-        zpos[i] =  (countslc[i]>0) ? zpos[i]/count : (smin + (i+0.5)*hz);
-        xpos[i] =  (countslc[i]>0) ? xpos[i]/count : 0.0;
-        ypos[i] =  (countslc[i]>0) ? ypos[i]/count : 0.0;
+        zpos[i] =  (weight[i]>0.0) ? zpos[i]/weight[i] : (smin + (i+0.5)*hz);
+        xpos[i] =  (weight[i]>0.0) ? xpos[i]/weight[i] : 0.0;
+        ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
+        weight[i] /= np_total;
     } 
 
 };

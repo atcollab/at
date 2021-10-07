@@ -13,11 +13,22 @@ from at.lattice import AtWarning
 partmass = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
 
 
+
+def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, total_length):
+    ranges = numpy.arange(start, bunch_ext, short_step)
+    rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
+    srange = ranges
+    nbunch = int(total_length/bunch_interval)+1
+    for i in range(nbunch):
+        srange = numpy.concatenate((srange,rangel+bunch_interval*(i+1)))
+    return numpy.unique(srange)
+    
+    
 class WakeType(Enum):
     """Enum class for wake type"""
     FILE = 1 #Import from file
     TABLE = 2 #Provide vectors
-    RESONATOR = 3 #analytical resonator
+    RESONATOR = 3 #Analytical resonator
 
 
 class WakeComponent(Enum):
@@ -144,7 +155,6 @@ class Wake(object):
         """Define the wake function (longitudinal) of a resonator with the given
         parameters according to Alex Chao's resonator model (Eq. 2.82) and
         definitions of the resonator in HEADTAIL.
-
         """
         omega = 2 * numpy.pi * frequency
         alpha = omega / (2 * qfactor)
@@ -167,7 +177,6 @@ class Wake(object):
         """Define the wake function (transverse) of a resonator with the given
         parameters according to Alex Chao's resonator model (Eq. 2.82) and
         definitions of the resonator in HEADTAIL.
-
         """
         omega = 2 * numpy.pi * self.frequency
         alpha = omega / (2 * qfactor)
@@ -186,34 +195,59 @@ class Wake(object):
 
 
 class WakeElement(at.Element):
-    def __init__(self, family_name, intensity, wake, **kwargs):
+    def __init__(self, family_name, ring, wake, **kwargs):
         super(WakeElement, self).__init__(family_name)
-        self.Intensity=intensity
+        self.Intensity= kwargs.pop('Intensity', 0.0)
         self.Length = kwargs.pop('Length', 0.0)
         self.PassMethod = kwargs.pop('PassMethod', 'WakeFieldPass')
         self.Nslice = kwargs.pop('Nslice', 101)
-        self.Wakefact = kwargs.pop('Wakefact', 1.0)
+        self.Wakefact = self.get_wakefact(ring)
+        self.int2curr = self.get_int2curr(ring)
         self.WakeT = wake.get_srange()
         self.Nelem = len(self.WakeT)
         if wake.Z is not None : self.WakeZ = wake.Z 
         if wake.DX is not None : self.WakeDX = wake.DX 
         if wake.DY is not None  : self.WakeDY = wake.DY 
         if wake.QX is not None : self.WakeQX = wake.QX 
-        if wake.QY is not None  : self.WakeQY = wake.QY 
+        if wake.QY is not None  : self.WakeQY = wake.QY
+        self.Nturns = kwargs.pop('Nturns', 1)
+        self.Circumference = ring.circumference
+        self.TurnHistoryX = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
 
-    def set_wakefact(self, ring):
-        betrel = numpy.sqrt(1.0-partmass**2/ring.energy**2)
-        self.Wakefact = -qe/(ring.energy*betrel**2) 
+    def get_wakefact(self, ring):
+        betrel = numpy.sqrt(1.0-(partmass/ring.energy)**2)
+        return -qe/(ring.energy*betrel**2) 
+
+    def get_int2curr(self, ring):
+        betrel = numpy.sqrt(1.0-(partmass/ring.energy)**2)
+        return clight*betrel*qe/ring.circumference 
+
+    def clear_history(self):
+        self.TurnHistoryX = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
+
+    # noinspection PyPep8Naming
+    @property
+    def Current(self):
+        return self.Intensity*self.int2curr
+
+    # noinspection PyPep8Naming
+    @Current.setter
+    def Current(self, current):
+        self.Intensity = current/self.int2curr
 
 
 class LongResonatorElement(WakeElement):
-    def __init__(self, family_name, intensity, srange, frequency, 
-                 qfactor, rshunt, beta, **kwargs):
+    def __init__(self, family_name, ring, srange, frequency, qfactor, rshunt, **kwargs):
+        beta = numpy.sqrt(1.0-(partmass/ring.energy)**2)
         wake = Wake(srange)
-        wake.add(WakeType.RESONATOR, WakeComponent.Z, frequency, qfactor, 
-                 rshunt, beta)
-        super(LongResonatorElement, self).__init__(family_name, intensity, 
-                                                   wake, **kwargs)
+        wake.add(WakeType.RESONATOR, WakeComponent.Z, frequency, qfactor, rshunt, beta)
+        super(LongResonatorElement, self).__init__(family_name, ring, wake, **kwargs)
 
    
 
