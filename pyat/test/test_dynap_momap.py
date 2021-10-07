@@ -106,7 +106,7 @@ def test_dynamic_aperture_grid(hmba_lattice):
     # on-energy DA
     t = time.time()
     print('On-energy DA grid')
-    h, v, da, _= dynamic_aperture(sr_ring, grid_mode='grid',
+    h, v, da, _= dynamic_aperture(sr_ring, grid_mode='cartesian',
                                  n_turns=2**2, n_radii=15, n_theta=15, num_recursions=3,
                             file_name_save='') # 'on_en_da')
     [print(h_,v_) for h_, v_ in zip(h,v)]
