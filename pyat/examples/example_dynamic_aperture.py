@@ -65,7 +65,7 @@ h0, v0, da_, search = da.dynamic_aperture(
                     n_turns=N,
                     n_radii=21, # here = N Horizontal grid points
                     n_theta=21, # here = N Vertical grid points
-                    grid_mode='grid', # search input will be ignored
+                    grid_mode='cartesian', # search input will be ignored
                     parallel=False,  # can be set to True on Unix to use patpass, see next example
                     file_name_save=folder_data + '/on_en_da',
                     num_recursions=5)

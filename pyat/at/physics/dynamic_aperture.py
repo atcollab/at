@@ -26,6 +26,8 @@ class Acceptance6D(object):
     # possible acceptance planes
     planes = ('x', 'xp', 'y', 'yp', 'delta', 'ct')
 
+    grid_modes = ['cartesian', 'polar']
+
     # 2D combination of planes
     modes = {
         'x-y': {'x': 13, 'xp': 1, 'y': 13, 'yp': 1, 'delta': 1, 'ct': 1},
@@ -68,7 +70,7 @@ class Acceptance6D(object):
                  dp=0.0,
                  mode='x-y',
                  start_index=0,
-                 grid_mode='grid',
+                 grid_mode='cartesian',
                  compute_range=False,
                  n_turns=2**10,
                  search_divider=10,
@@ -81,7 +83,7 @@ class Acceptance6D(object):
         :param dp: momentum deviation
         :param mode: mode for computation. None = 6D, '6D', 'x-y' (default), 'delta-x'. 'x-xp',...
         :param start_index: index in ring where to start the computation
-        :param grid_mode: 'grid' or 'radial' set of test points to compute Acceptance
+        :param grid_mode: 'cartesian' or 'polar' set of test points to compute Acceptance
         :param compute_range: compute range for each plane with more than 1 point to scan
         :param nturns: number of turns that a particle must survive
         :param search_divider: division of range used by recursive range
@@ -138,10 +140,10 @@ class Acceptance6D(object):
         self.search_divider = search_divider
 
         # define grid modes for later use
-        self.grid_modes = ['grid', 'radial']
         self.grid_mode = grid_mode
         if not (self.grid_mode in self.grid_modes):
-            raise('grid mode must be: grid or radial')
+            print('grid mode must be: {} or {}. found: {}'.format(self.grid_modes[0], self.grid_modes[1], self.grid_mode))
+            raise ValueError
 
         # point to scan in each dimension
         self.n_points = self.modes.get(mode)
@@ -344,7 +346,7 @@ class Acceptance6D(object):
             self.compute_range()
 
         # define grid
-        if self.grid_mode == 'radial':
+        if self.grid_mode == 'polar':
 
             d_ = {'x': [], 'xp': [], 'y': [], 'yp': [], 'delta': [], 'ct': []}
 
@@ -429,7 +431,7 @@ class Acceptance6D(object):
             self.coordinates['ct'] = ctct.flatten()
 
         if len(self.coordinates['x']) == 0:
-            raise IOError('grid mode must be grid or radial')
+            raise IOError('grid mode must be {} or {}'.format(self.grid_modes[0], self.grid_modes[1]))
 
         self.survived = [False]*len(self.coordinates['x'])
 
@@ -565,7 +567,7 @@ class Acceptance6D(object):
         # [print(h_, v_, s_) for h_, v_, s_ in zip(h, v, sel)]
 
         # loop columns of grid
-        if self.grid_mode == 'grid':
+        if self.grid_mode == 'cartesian':
 
             for hc in np.unique(h):
                 col = []
@@ -592,12 +594,12 @@ class Acceptance6D(object):
                     h_border.insert(0,hc)
                     v_border.insert(0,np.min(col))
 
-        elif self.grid_mode == 'radial':
-            # find radial grid extremes.  not implemented
-            print('radial mode, no border computed')
+        elif self.grid_mode == 'polar':
+            # find polar grid extremes.  not implemented
+            print('polar mode, no border computed')
             pass
         else:
-            print('grid_mode must be grid or radial')
+            print('grid_mode must be {} or {}'.format(self.grid_modes[0], self.grid_modes[1]))
 
         # remove bottom line if any. not implemented
 
@@ -787,7 +789,7 @@ def dynamic_aperture(sr_ring,
                      start_index=0,
                      n_radii=13,
                      n_theta=13,
-                     grid_mode='radial',
+                     grid_mode='polar',
                      parallel=False,
                      search=True,
                      file_name_save=None,
@@ -802,7 +804,7 @@ def dynamic_aperture(sr_ring,
     :param start_index: index in sr_ring where to start the tracking
     :param n_radii: number of radial points to test  (not used if search = True)
     :param n_theta: number of angular divisions
-    :param grid_mode: 'grid' or 'radial' fixed test points grid
+    :param grid_mode: 'cartesian' or 'polar' fixed test points grid
     :param search: True (default), ignore grid and search recursively for maximum along given radial direction
     :param num_recursions: number of recursion for search
     :param parallel : uses patpass rather than atpass
@@ -821,12 +823,12 @@ def dynamic_aperture(sr_ring,
     da.verbose = verbose
     da.parallel_computation = parallel
     
-    if grid_mode == 'radial':
+    if grid_mode == 'polar':
 
         da.compute_range()  # implement an init at change of mode, npoint, or range.
 
-        da.n_points['x'] = n_theta  # used as theta, if grid radial
-        da.n_points['y'] = n_radii  # used as radii, if grid radial
+        da.n_points['x'] = n_theta  # used as theta, if grid polar
+        da.n_points['y'] = n_radii  # used as radii, if grid polar
         da.dict_def_range['y'][0] = 0.0  # make y single sided
 
         if search:
@@ -852,17 +854,17 @@ def dynamic_aperture(sr_ring,
         else:
             da.compute_range()  # implement an init at change of mode, npoint, or range.
 
-            da.n_points['x'] = n_theta  # used as theta, if grid radial
-            da.n_points['y'] = n_radii  # used as radii, if grid radial
+            da.n_points['x'] = n_theta  # used as theta, if grid polar
+            da.n_points['y'] = n_radii  # used as radii, if grid polar
             da.dict_def_range['y'][0] = 0.0  # make y single sided
 
             da.test_points_grid()
             h, v, _, _, _ = da.compute()
 
-    if grid_mode == 'grid':
+    if grid_mode == 'cartesian':
         da.compute_range()  # implement an init at change of mode, npoint, or range.
-        da.n_points['x'] = n_theta  # used as theta, if grid radial
-        da.n_points['y'] = n_radii  # used as radii, if grid radial
+        da.n_points['x'] = n_theta  # used as theta, if grid polar
+        da.n_points['y'] = n_radii  # used as radii, if grid polar
         da.dict_def_range['y'][0] = 0.0  # make y single sided
         da.test_points_grid()
         h, v, _, _, _ = da.compute()
