@@ -177,13 +177,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         double Length, BendingAngle, EntranceAngle, ExitAngle, K, ByError, FringeInt1, FringeInt2, FullGap;
-        double *R1, *R2, *T1, *T2;
+        double *R1, *R2, *T1, *T2, *PolynomB;
         Length=atGetDouble(ElemData,"Length"); check_error();
         BendingAngle=atGetDouble(ElemData,"BendingAngle"); check_error();
         EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
         ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
         /*optional fields*/
-        K=atGetOptionalDouble(ElemData,"K",0); check_error();
+        PolynomB=atGetOptionalDoubleArray(ElemData,"PolynomB"); check_error();
+        K=PolynomB ? PolynomB[1] : atGetOptionalDouble(ElemData,"K",0); check_error();
         ByError=atGetOptionalDouble(ElemData,"ByError",0); check_error();
         FringeInt1=atGetOptionalDouble(ElemData,"FringeInt1",0); check_error();
         FringeInt2=atGetOptionalDouble(ElemData,"FringeInt2",0); check_error();

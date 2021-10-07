@@ -5,15 +5,10 @@ from os.path import abspath, basename, dirname, exists, join, splitext
 import sys
 import shutil
 from setuptools import setup, Extension, find_packages
-try:
-    import numpy
-except ImportError:
-    print('\npyAT requires numpy. '
-          'Please install numpy: "pip install numpy"\n')
-    sys.exit()
 
-if sys.version_info[0] < 3:
-    FileNotFoundError = IOError
+# Numpy build dependency defined in pyproject.toml.
+import numpy
+
 
 def select_omp():
     if exists('/usr/local/include/omp.h'):              # Homebrew
@@ -136,25 +131,25 @@ diffmatrix = Extension(
 
 setup(
     name='accelerator-toolbox',
-    version='0.1.0',
+    version='0.2.1',
     description='Accelerator Toolbox',
     long_description=long_description,
     author='The AT collaboration',
     author_email='atcollab-general@lists.sourceforge.net',
     url='https://github.com/atcollab/at',
-    # Numpy 1.14.3 is the oldest version that builds with Python 3.7.
-    install_requires=['numpy>=1.14.3', 'scipy>=0.16'],
+    # Numpy 1.16.6 is the oldest version that builds with Python 3.9.
+    install_requires=['numpy>=1.16.6', 'scipy>=0.16'],
     packages=find_packages(),
     ext_modules=[at, diffmatrix] + [integrator_ext(pm) for pm in pass_methods],
     zip_safe=False,
-    python_requires='>=3.5.0',
+    python_requires='>=3.6.0',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ]
 )

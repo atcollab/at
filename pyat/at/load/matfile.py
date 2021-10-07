@@ -7,7 +7,7 @@ from os.path import abspath
 from warnings import warn
 import scipy.io
 import numpy
-from at.lattice import elements, Lattice, AtWarning, params_filter
+from at.lattice import elements, Lattice, AtWarning, params_filter, AtError
 from at.load import register_format
 from at.load.utils import element_from_dict, element_from_m, RingParam
 from at.load.utils import element_to_dict, element_to_m
@@ -39,6 +39,9 @@ def matfile_generator(params, mat_file):
     matvars = [varname for varname in m if not varname.startswith('__')]
     default_key = matvars[0] if (len(matvars) == 1) else 'RING'
     key = params.setdefault('mat_key', default_key)
+    if key not in m.keys():
+        kok = [k for k in m.keys() if '__' not in k]
+        raise AtError('Selected mat_key does not exist, please select in: {}'.format(kok))
     check = params.pop('check', True)
     quiet = params.pop('quiet', False)
     cell_array = m[key].flat

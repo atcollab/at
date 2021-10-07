@@ -136,6 +136,7 @@ static long atGetLong(const PyObject *element, const char *name)
 {
     const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
     if (!attr) return 0L;
+    Py_DECREF(attr);
     return PyLong_AsLong((PyObject *)attr);
 }
 
@@ -143,6 +144,7 @@ static double atGetDouble(const PyObject *element, const char *name)
 {
     const PyObject *attr = PyObject_GetAttrString((PyObject *)element, name);
     if (!attr) return 0.0;
+    Py_DECREF(attr);
     return PyFloat_AsDouble((PyObject *)attr);
 }
 
@@ -166,26 +168,22 @@ static double atGetOptionalDouble(const PyObject *element, const char *name, dou
     return d;
 }
 
-static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+static double *atGetArrayData(PyArrayObject *array, char *name, int atype, int *msz, int *nsz)
 {
     char errmessage[60];
     int ndims;
     npy_intp *dims;
-    PyArrayObject *array;
     if (!array_imported) {
         init_numpy();
         array_imported = 1;
     }
-    array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
-    if (array == NULL) {
-        return NULL;
-    }
+    Py_DECREF(array);
     if (!PyArray_Check(array)) {
         snprintf(errmessage, 60, "The attribute %s is not an array.", name);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
     }
-    if (PyArray_TYPE(array) != NPY_DOUBLE) {
+    if (PyArray_TYPE(array) != atype) {
         snprintf(errmessage, 60, "The attribute %s is not a double array.", name);
         PyErr_SetString(PyExc_RuntimeError, errmessage);
         return NULL;
@@ -202,6 +200,15 @@ static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz,
     return (double *) PyArray_DATA(array);
 }
 
+static double *atGetDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
+{
+    PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
+    if (array == NULL) {
+        return NULL;
+    }
+    return (double *) atGetArrayData(array, name, NPY_DOUBLE, msz, nsz);
+}
+
 static double *atGetDoubleArray(const PyObject *element, char *name)
 {
     int msz, nsz;
@@ -210,12 +217,12 @@ static double *atGetDoubleArray(const PyObject *element, char *name)
 
 static double *atGetOptionalDoubleArraySz(const PyObject *element, char *name, int *msz, int *nsz)
 {
-    PyObject *obj = PyObject_GetAttrString((PyObject *)element, name);
-    if (obj == NULL) {
+    PyArrayObject *array = (PyArrayObject *) PyObject_GetAttrString((PyObject *)element, name);
+    if (array == NULL) {
         PyErr_Clear();
         return NULL;
     }
-    return atGetDoubleArraySz(element, name, msz, nsz);
+    return (double *) atGetArrayData(array, name, NPY_DOUBLE, msz, nsz);
 }
 
 static double *atGetOptionalDoubleArray(const PyObject *element, char *name)

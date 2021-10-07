@@ -328,6 +328,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         if get_chrom or get_w:
             warnings.warn(AtWarning("'get_chrom' and 'get_w' are ignored in "
                                     "transfer-line mode"))
+            get_chrom = False
+            get_w = False
         orbit, sigma, d0 = build_sigma(twiss_in, orbit)
         dorbit = numpy.hstack((0.5*dp_step*d0, 0.5*dp_step, 0.0))
         # Get 1-turn transfer matrix
@@ -338,8 +340,10 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
     # Perform analysis
     vps, dtype, el0, els = analyze(mxx, ms)
-    tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0) if twiss_in is None \
-            else numpy.NaN
+    if twiss_in is None:
+        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0) 
+    else:
+        tunes = numpy.NaN
 
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
