@@ -279,7 +279,7 @@ class Acceptance6D(object):
             if self.survived:
                 self.survived[-1] = False
 
-            coord_lost = copy.deepcopy(coord)
+            coord_lost = coord.copy() # copy.deepcopy(coord)
             for pl in self.planes:
                 coord_lost[pl] += step[pl]
                 # update tested points
@@ -663,7 +663,7 @@ def off_energy_dynamic_aperture(sr_ring,
     :return: max_neg_x list of maximum negative da for each deltap/p required
     :return: deltaps, da: for use with plotting function in at.plot.dynamic_aperture.plot_off_energy_dynamic_aperture
     """
-    da = Acceptance6D(copy.deepcopy(sr_ring), start_index=start_index, n_turns=n_turns)
+    da = Acceptance6D(sr_ring, start_index=start_index, n_turns=n_turns)
     da.verbose = verbose
 
     max_neg_x = []
@@ -697,7 +697,7 @@ def off_energy_dynamic_aperture(sr_ring,
                     number_of_recursions=num_recursions)
             max_neg_x.append(lim[0])
         else:
-            coord = copy.deepcopy(coord0)
+            coord = coord0.copy()   # .deepcopy(coord0)
             while da.test_survived(coord)[0]:
                 if inject_from_inside:
                     coord['x'] -= step_size
@@ -748,7 +748,7 @@ def momentum_acceptance(sr_ring,
         if verbose:
             print('ind {d}'.format(d=el))
 
-        da = Acceptance6D(copy.deepcopy(sr_ring), start_index=el)
+        da = Acceptance6D(sr_ring, start_index=el)
         da.number_of_turns = n_turns
         da.verbose = verbose
 
@@ -817,7 +817,7 @@ def dynamic_aperture(sr_ring,
     h = []
     v = []
 
-    da = Acceptance6D(copy.deepcopy(sr_ring), mode='x-y', grid_mode=grid_mode, start_index=start_index)
+    da = Acceptance6D(sr_ring, mode='x-y', grid_mode=grid_mode, start_index=start_index)
     da.number_of_turns = n_turns
     da.dp = dp
     da.verbose = verbose
