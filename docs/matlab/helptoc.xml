@@ -40,6 +40,10 @@
             <tocitem target="atsummary.html">Parameter summary</tocitem>
             <tocitem target="atphysics.html">Physics</tocitem>
         </tocitem>
+        <tocitem target="howtosummary.html"
+            image="HelpIcon.USER_GUIDE">How to…
+            <tocitem target="CavityControl.html">Control RF cavities</tocitem>
+        </tocitem>
         <tocitem target="https://atcollab.github.io/at/" 
                  image="$toolbox/matlab/icons/webicon.gif">
         AT Web Site
