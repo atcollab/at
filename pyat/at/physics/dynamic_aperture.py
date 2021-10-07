@@ -614,71 +614,17 @@ class Acceptance6D(object):
                 print('no selection of test points for modes None and 6D')
             return [], [], []
 
-        if self.mode == 'x-y':
-            h = self.coordinates['x']
-            v = self.coordinates['y']
-
-            sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-                self.survived,
-                self.coordinates['delta'],
-                self.coordinates['xp'],
-                self.coordinates['yp'],
-                self.coordinates['ct'])]
-
-        if self.mode == 'delta-x':
-            h = self.coordinates['delta']
-            v = self.coordinates['x']
-
-            sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-                self.survived,
-                self.coordinates['y'],
-                self.coordinates['ct'],
-                self.coordinates['yp'],
-                self.coordinates['xp'])]
-
-        if self.mode == 'xp-yp':
-            h = self.coordinates['xp']
-            v = self.coordinates['yp']
-
-            sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-                self.survived,
-                self.coordinates['y'],
-                self.coordinates['ct'],
-                self.coordinates['delta'],
-                self.coordinates['x'])]
-
-        if self.mode == 'ct-delta':
-            h = self.coordinates['ct']
-            v = self.coordinates['delta']
-
-            sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-                self.survived,
-                self.coordinates['y'],
-                self.coordinates['x'],
-                self.coordinates['xp'],
-                self.coordinates['yp'])]
-
-        if self.mode == 'x-xp':
-            h = self.coordinates['x']
-            v = self.coordinates['xp']
-
-            sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-                self.survived,
-                self.coordinates['y'],
-                self.coordinates['ct'],
-                self.coordinates['delta'],
-                self.coordinates['yp'])]
-
-        if self.mode == 'y-yp':
-            h = self.coordinates['y']
-            v = self.coordinates['yp']
-
-            sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
-                self.survived,
-                self.coordinates['x'],
-                self.coordinates['ct'],
-                self.coordinates['delta'],
-                self.coordinates['xp'])]
+        xaxis, yaxis = self.mode.split('-')
+        h = self.coordinates[xaxis]
+        v = self.coordinates[yaxis]
+        otherplanes = []
+        [otherplanes.append(plane) for plane in self.planes if xaxis != plane and yaxis != plane]
+        sel = [a and b == 0 and c == 0 and d == 0 and e == 0 for a, b, c, d, e in zip(
+            self.survived,
+            self.coordinates[otherplanes[0]],
+            self.coordinates[otherplanes[1]],
+            self.coordinates[otherplanes[2]],
+            self.coordinates[otherplanes[3]])]
 
         return h, v, sel
 
