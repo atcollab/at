@@ -37,8 +37,8 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
 };
 
 
-void fill_table_history(long nturns,long nslice,double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
-                        double *turnhistoryW,double *xpos,double *ypos,double *zpos,double *weight,double circumference){
+void rotate_table_history(long nturns,long nslice,double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
+                        double *turnhistoryW,double circumference){
     double *xtmp,*xtmp0;
     double *ytmp,*ytmp0;
     double *ztmp,*ztmp0;
@@ -57,6 +57,7 @@ void fill_table_history(long nturns,long nslice,double *turnhistoryX,double *tur
         for(ii=0;ii<nslice;ii++){
             xtmp0[ii]=xtmp[ii];
             ytmp0[ii]=ytmp[ii];
+            /*shift zpos by one turn*/
             ztmp0[ii]=ztmp[ii]+circumference;
             wtmp0[ii]=ytmp[ii];
         }
@@ -67,10 +68,10 @@ void fill_table_history(long nturns,long nslice,double *turnhistoryX,double *tur
     ztmp = turnhistoryZ + (nturns-1)*nslice;
     wtmp = turnhistoryW + (nturns-1)*nslice;
     for(ii=0;ii<nslice;ii++){
-        xtmp[ii]=xpos[ii];
-        ytmp[ii]=ypos[ii];
-        ztmp[ii]=zpos[ii];
-        wtmp[ii]=weight[ii];
+        xtmp[ii]=0.0;
+        ytmp[ii]=0.0;
+        ztmp[ii]=0.0;
+        wtmp[ii]=0.0;
     }        
 };
 
@@ -108,16 +109,22 @@ double *getbounds(double *r_in,int num_particles){
 }
 
 
-void slice_bunch(double *r_in,int num_particles,int nslice,double *bounds,double *weight,
-                 double *xpos,double *ypos,double *zpos,int *pslice){
+void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
+                 double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
+                 double *turnhistoryW,int *pslice){
 
     
     int i,ii;
     double *rtmp;
+    double *bounds = getbounds(r_in,num_particles);
     double smin = bounds[0];
     double smax = bounds[1];  
     double hz;
     hz = (smax-smin)/(nslice);
+    double *xpos = turnhistoryX + (nturns-1)*nslice;
+    double *ypos = turnhistoryY + (nturns-1)*nslice;
+    double *zpos = turnhistoryZ + (nturns-1)*nslice;
+    double *weight = turnhistoryW + (nturns-1)*nslice;
 
 
     /*slices sorted from head to tail (increasing ct)*/

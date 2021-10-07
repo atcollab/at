@@ -56,14 +56,10 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     double *turnhistoryZ = Elem->turnhistoryZ;
     double *turnhistoryW = Elem->turnhistoryW;
     
-    size_t sz = 9*nslice*sizeof(double) + num_particles*sizeof(int);
+    size_t sz = 5*nslice*sizeof(double) + num_particles*sizeof(int);
     int i,ii;
     double *rtmp;
 
-    double *weight;
-    double *xpos;
-    double *ypos;
-    double *zpos;
     int *pslice;
     double *kx;
     double *ky;
@@ -71,14 +67,13 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     double *ky2;
     double *kz;
 
+    double wi, dx, dy, ds;
+    int index;
+
     void *buffer = atMalloc(sz);
     double *dptr = (double *) buffer;
     int *iptr;
 
-    weight = dptr; dptr += nslice;
-    xpos = dptr; dptr += nslice;
-    ypos = dptr; dptr += nslice;
-    zpos = dptr; dptr += nslice;
     kx = dptr; dptr += nslice;
     ky = dptr; dptr += nslice;
     kx2 = dptr; dptr += nslice;
@@ -89,39 +84,30 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     pslice = iptr; iptr += num_particles;
 
     for (i=0;i<nslice;i++) {
-        xpos[i]=0.0;
-        ypos[i]=0.0;
-        zpos[i]=0.0;
         kx[i]=0.0;
         ky[i]=0.0;
         kx2[i]=0.0;
         ky2[i]=0.0;
         kz[i]=0.0;
-        weight[i]=0.0;
     }
 
-    double *bounds;
-    bounds = getbounds(r_in,num_particles);
-    slice_bunch(r_in,num_particles,nslice,bounds,weight,xpos,ypos,zpos,pslice);
-    fill_table_history(nturns,nslice,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,
-                       xpos,ypos,zpos,weight,circumference);
+    rotate_table_history(nturns,nslice,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,circumference);
+    slice_bunch(r_in,num_particles,nslice,nturns,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,pslice);
 
-    for(i=0;i<nslice;i++){        
-        register double pos0 = zpos[i];
-        if(weight[i]>0.0){
+    for(i=nslice*(nturns-1);i<nslice*nturns;i++){        
+        if(turnhistoryW[i]>0.0){
             for (ii=0;ii<nslice*nturns;ii++){
-                register double posi = turnhistoryZ[ii];
-                double ds = posi-pos0;
+                ds = turnhistoryZ[ii]-turnhistoryZ[i];
                 if(turnhistoryW[ii]>0.0 && -ds>waketableT[0] && -ds<waketableT[nelem-1]){
-                    register double wi = turnhistoryW[ii];
-                    register double dx = turnhistoryX[ii];
-                    register double dy = turnhistoryY[ii];
-                    int index = binarySearch(waketableT,-ds,nelem,0,0);              
-                    if(waketableDX)kx[i] += dx*fx*wi*getTableWake(waketableDX,waketableT,-ds,index);
-                    if(waketableDY)ky[i] += dy*fy*wi*getTableWake(waketableDY,waketableT,-ds,index);
-                    if(waketableQX)kx2[i] += fqx*wi*getTableWake(waketableQX,waketableT,-ds,index);
-                    if(waketableQY)ky2[i] += fqy*wi*getTableWake(waketableQY,waketableT,-ds,index);
-                    if(waketableZ) kz[i] += fz*wi*getTableWake(waketableZ,waketableT,-ds,index);
+                    wi = turnhistoryW[ii];
+                    dx = turnhistoryX[ii];
+                    dy = turnhistoryY[ii];
+                    index = binarySearch(waketableT,-ds,nelem,0,0);              
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*fx*wi*getTableWake(waketableDX,waketableT,-ds,index);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*fy*wi*getTableWake(waketableDY,waketableT,-ds,index);
+                    if(waketableQX)kx2[i-nslice*(nturns-1)] += fqx*wi*getTableWake(waketableQX,waketableT,-ds,index);
+                    if(waketableQY)ky2[i-nslice*(nturns-1)] += fqy*wi*getTableWake(waketableQY,waketableT,-ds,index);
+                    if(waketableZ) kz[i-nslice*(nturns-1)] += fz*wi*getTableWake(waketableZ,waketableT,-ds,index);
                 }            
             }
         }
