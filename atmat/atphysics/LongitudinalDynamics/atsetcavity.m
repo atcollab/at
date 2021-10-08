@@ -17,11 +17,11 @@ function ring = atsetcavity(ring,varargin)
 %
 %NEWRING=ATSETCAVITY(RING,...,'HarmNumber',HARM_NUMBER,...)
 %   Set the cavity harmonic number of the full ring (all cells)
-%   The harmonic number of each cavity is HARM_NUMBER / N_CELLS
+%   The harmonic number of each cavity is HARM_NUMBER / PERIODICITY
 %
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
 %   Set the total voltage (all cells) [V]
-%   The voltage of each cavity is VOLTAGE / N_CAVITIES / N_CELLS
+%   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
 %
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
 %   Set the time lag [m]
@@ -45,7 +45,7 @@ function ring = atsetcavity(ring,varargin)
 %  NOTES
 %  1. This mode is deprecated and should be replaced by
 %       RING=ATSETCAVITY(RING,'Frequency','nominal',...
-%           'HarmNumber',HARM_NUMBER*ncells, 'Voltage',RFV/ncells)
+%           'HarmNumber',HARM_NUMBER*PERIODICITY, 'Voltage',RFV/PERIODICITY)
 %       RING=atSetCavityPhase(RING) (optional)
 %       RING=atradon(RING)          (optional)
 %  2. All the N cavities will have a voltage RFV/N
