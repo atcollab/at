@@ -62,7 +62,7 @@ void rotate_table_history(long nturns,long nslice,double *turnhistoryX,double *t
             wtmp0[ii]=ytmp[ii];
         }
     }
-    /*Now set last row to present slices*/
+    /*Now set last row to 0 (present slices)*/
     xtmp = turnhistoryX + (nturns-1)*nslice;
     ytmp = turnhistoryY + (nturns-1)*nslice;
     ztmp = turnhistoryZ + (nturns-1)*nslice;
