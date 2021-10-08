@@ -274,9 +274,17 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         raise AtError('No cavity found in the lattice.')
 
     f_rfs = [cav.Frequency for cav in cavities]
-    f_rf = numpy.amin(f_rfs)
+    imin = numpy.argmin(f_rfs)
+    f_rf = cavities[imin].Frequency
     l_rf = constants.speed_of_light/f_rf
-    dth = (l0/l_rf-numpy.rint(l0/l_rf))*l_rf
+    useold = kwargs.pop('useold',True)
+    if useold:
+       harm_number = cavities[imin].HarmNumber
+    else: 
+       harm_number = numpy.squeeze(numpy.round(l0/l_rf))
+
+    dth = constants.speed_of_light * harm_number / f_rf - l0
+    print(useold,l0/l_rf,harm_number,dth)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)

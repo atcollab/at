@@ -7,9 +7,17 @@
 
 #include "atelem.c"
 #include "atlalib.c"
+#include <math.h>
 
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8 
+
+
+double harm_number(double length, double freq){
+    printf("%f %f %f\n",C0,freq,length);
+    return round(C0/freq/length);
+}
+
 
 struct elem 
 {
@@ -52,7 +60,9 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
 	      r_in[c6+2]+= NormL*r_in[c6+3];
 	      r_in[c6+5]+= NormL*p_norm*(r_in[c6+1]*r_in[c6+1]+r_in[c6+3]*r_in[c6+3])/2;
 	      /* Longitudinal momentum kick */
-	      r_in[c6+4] += -nv*sin(TWOPI*freq*((r_in[c6+5]-lag)/C0 - (h/freq-T0)*nturn ));
+              printf("%f %f\n",h, harm_number(T0*C0, freq));
+              r_in[c6+5] += (h/freq-T0)*C0/3;
+	      r_in[c6+4] += -nv*sin(TWOPI*freq*((r_in[c6+5]-lag)/C0));
 	      p_norm = 1/(1+r_in[c6+4]); 				
 	      NormL  = halflength*p_norm;
 	      /* Propagate through a drift equal to half cavity length */
