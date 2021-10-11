@@ -14,7 +14,7 @@ partmass = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
 
 
 
-def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, circ, Nturnsw=1):
+def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, circ, Nturnsw=0):
     ranges = numpy.arange(start, bunch_ext, short_step)
     rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
     srange = ranges
@@ -183,7 +183,7 @@ class Wake(object):
         """
         omega = 2 * numpy.pi * self.frequency
         alpha = omega / (2 * qfactor)
-        omegabar = np.sqrt(np.abs(omega**2 - alpha**2))
+        omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
         dt = -self._srange/(beta * clight)
         if qfactor > 0.5:
             wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
