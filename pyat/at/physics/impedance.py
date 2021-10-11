@@ -14,12 +14,15 @@ partmass = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
 
 
 
-def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, total_length):
+def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, circ, Nturnsw=1):
     ranges = numpy.arange(start, bunch_ext, short_step)
     rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
     srange = ranges
-    nbunch = int(total_length/bunch_interval)+1
-    for i in range(nbunch):
+
+    
+    nbunch = int(circ/bunch_interval)
+    #if nbunch > 1:    
+    for i in range((Nturnsw+1)*nbunch - 1):
         srange = numpy.concatenate((srange,rangel+bunch_interval*(i+1)))
     return numpy.unique(srange)
     
