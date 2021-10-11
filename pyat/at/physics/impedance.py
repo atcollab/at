@@ -14,15 +14,17 @@ partmass = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
 
 
 
-def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, circ, Nturnsw=0):
+def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, circ, Nturnsw):
+    assert isinstance(Nturnsw, int), 'Nturnsw must be an integer'
+    assert Nturnsw >= 1, 'Nturnsw must be greater than or equal to 1'
     ranges = numpy.arange(start, bunch_ext, short_step)
     rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
     srange = ranges
 
     
     nbunch = int(circ/bunch_interval)
-    #if nbunch > 1:    
-    for i in range((Nturnsw+1)*nbunch - 1):
+
+    for i in range(Nturnsw*nbunch - 1):
         srange = numpy.concatenate((srange,rangel+bunch_interval*(i+1)))
     return numpy.unique(srange)
     
@@ -136,7 +138,7 @@ class Wake(object):
         w *= wfact
         return self.resample(s, w)
 
-    def resonator(self, wcomp, frequency, qfactor, rshunt, beta):
+    def resonator(self, wcomp, frequency, qfactor, rshunt, beta, yokoya_factor=1):
         if wcomp is WakeComponent.Z:
             return self.wakefunc_long_resonator(frequency, qfactor, rshunt, beta)
         elif wcomp is WakeComponent.DX:
