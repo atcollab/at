@@ -9,7 +9,7 @@ from scipy.constants import physical_constants
 from scipy.constants import c as clight
 from scipy.constants import e as qe
 from scipy.interpolate import interp1d
-from at.lattice import AtWarning
+from at.lattice import AtWarning, AtError
 partmass = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
 
 
