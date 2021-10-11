@@ -164,7 +164,7 @@ class Wake(object):
         omega = 2 * numpy.pi * frequency
         alpha = omega / (2 * qfactor)
         omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
-        dt = -self._srange/(beta * clight)
+        dt = self._srange/(beta * clight)
         if qfactor > 0.5:
             wake = (-(numpy.sign(dt) - 1) * rshunt * alpha *
                     numpy.exp(alpha * dt) * (numpy.cos(omegabar * dt) +
@@ -186,7 +186,7 @@ class Wake(object):
         omega = 2 * numpy.pi * self.frequency
         alpha = omega / (2 * qfactor)
         omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
-        dt = -self._srange/(beta * clight)
+        dt = self._srange/(beta * clight)
         if qfactor > 0.5:
             wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
                     omegabar) * numpy.exp(alpha*dt) * numpy.sin(omegabar*dt))
