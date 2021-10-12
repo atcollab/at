@@ -1,5 +1,6 @@
 from ..lattice import Lattice, get_rf_frequency, check_radiation, get_s_pos
-from ..lattice import DConstant, clight, e_mass
+from ..lattice import DConstant
+from ..lattice.constants import clight, e_mass
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy

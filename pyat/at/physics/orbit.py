@@ -2,7 +2,8 @@
 Closed orbit related functions
 """
 import numpy
-from at.lattice import AtWarning, AtError, check_radiation, DConstant, clight
+from at.lattice.constants import clight
+from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import ELossMethod, get_timelag_fromU0

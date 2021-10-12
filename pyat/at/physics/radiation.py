@@ -4,12 +4,12 @@ Radiation and equilibrium emittances
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from scipy.linalg import inv, det, solve_sylvester
+from at.lattice.constants import clight, e_mass
 from at.lattice import Lattice, check_radiation
 from at.lattice import Element, Dipole, Wiggler, DConstant, Multipole
 from at.lattice import get_refpts, get_value_refpts
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
-from at.lattice import clight, e_mass
 from at.physics import find_orbit6, find_m66, find_elem_m66
 from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
 

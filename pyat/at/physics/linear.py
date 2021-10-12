@@ -5,7 +5,8 @@ import numpy
 from math import sqrt, pi, sin, cos, atan2
 import warnings
 from scipy.linalg import solve
-from ..lattice import DConstant, get_s_pos, clight
+from ..lattice.constants import clight
+from ..lattice import DConstant, get_s_pos
 from ..lattice import AtWarning, Lattice, check_radiation
 from ..tracking import lattice_pass
 from .revolution import set_rf_frequency

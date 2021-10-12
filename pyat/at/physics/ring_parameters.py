@@ -1,7 +1,8 @@
 from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
-from ..lattice import Lattice, clight, e_mass, Cgamma, Cq
+from ..lattice import Lattice
+from ..lattice.constants import clight, e_mass, Cgamma, Cq
 
 __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 

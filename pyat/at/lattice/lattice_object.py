@@ -16,7 +16,7 @@ import numpy
 import math
 import itertools
 from warnings import warn
-from at.lattice import clight
+from at.lattice.constants import clight
 from at.lattice import AtError, AtWarning
 from at.lattice import uint32_refpts as uint32_refs, bool_refpts as bool_refs
 from at.lattice import refpts_iterator, refpts_len
