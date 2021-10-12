@@ -61,7 +61,7 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     try:
         qd_elem = gen_quantdiff_elem(merged_ring)
         fastring.append(qd_elem)
-    except:
+    except ValueError:      # No synchrotron radiation => no diffusion element
         pass
     fastring = Lattice(fastring, **vars(ring))
     return fastring
