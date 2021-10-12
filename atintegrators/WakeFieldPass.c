@@ -28,6 +28,7 @@ struct elem
   double *turnhistoryY;
   double *turnhistoryZ;
   double *turnhistoryW;
+  double *z_cuts;
 };
 
 
@@ -55,7 +56,8 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     double *turnhistoryY = Elem->turnhistoryY;
     double *turnhistoryZ = Elem->turnhistoryZ;
     double *turnhistoryW = Elem->turnhistoryW;
-    
+    double *z_cuts = Elem->z_cuts;    
+
     size_t sz = 5*nslice*sizeof(double) + num_particles*sizeof(int);
     int i,ii;
     double *rtmp;
@@ -92,7 +94,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     }
 
     rotate_table_history(nturns,nslice,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,circumference);
-    slice_bunch(r_in,num_particles,nslice,nturns,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,pslice);
+    slice_bunch(r_in,num_particles,nslice,nturns,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,pslice,z_cuts);
 
     for(i=nslice*(nturns-1);i<nslice*nturns;i++){        
         if(turnhistoryW[i]>0.0){
@@ -143,7 +145,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *turnhistoryY;
         double *turnhistoryZ;
         double *turnhistoryW;
-        
+        double *z_cuts;
+
         nslice=atGetLong(ElemData,"Nslice"); check_error();
         nelem=atGetLong(ElemData,"Nelem"); check_error();  
         nturns=atGetLong(ElemData,"Nturns"); check_error();      
@@ -164,6 +167,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
         waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
         waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"z_cuts"); check_error();
+
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->nslice=nslice;
@@ -185,6 +190,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->turnhistoryY=turnhistoryY;
         Elem->turnhistoryZ=turnhistoryZ;
         Elem->turnhistoryW=turnhistoryW;
+        Elem->z_cuts=z_cuts;
     }
     WakeFieldPass(r_in,num_particles,Elem);
     return Elem;
@@ -217,6 +223,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *turnhistoryY;
         double *turnhistoryZ;
         double *turnhistoryW;
+        double *z_cuts;
         
         nslice=atGetLong(ElemData,"Nslice"); check_error();
         nelem=atGetLong(ElemData,"Nelem"); check_error();
@@ -238,6 +245,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
         waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
         waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"z_cuts"); check_error();
         
         Elem->nslice=nslice;
         Elem->nelem=nelem;
@@ -258,6 +266,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->turnhistoryY=turnhistoryY;
         Elem->turnhistoryZ=turnhistoryZ;
         Elem->turnhistoryW=turnhistoryW;
+        Elem->z_cuts=z_cuts;
 
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
         /* ALLOCATE memory for the output array of the same size as the input  */
@@ -282,7 +291,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(13,1); /* No optional fields */
+            plhs[1] = mxCreateCellMatrix(9,1); /* No optional fields */
             mxSetCell(plhs[0],0,mxCreateString("WakeDX"));
             mxSetCell(plhs[0],1,mxCreateString("WakeDY"));
             mxSetCell(plhs[0],2,mxCreateString("WakeQX"));
@@ -291,6 +300,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0],5,mxCreateString("Normfactx"));
             mxSetCell(plhs[0],6,mxCreateString("Normfacty"));
             mxSetCell(plhs[0],7,mxCreateString("Normfactz"));
+            mxSetCell(plhs[0],8,mxCreateString("z_cuts"));
         }
     }else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");

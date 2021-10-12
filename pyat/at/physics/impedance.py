@@ -221,6 +221,8 @@ class WakeElement(at.Element):
         self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
         self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
         self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
+        if 'z_cuts' in kwargs:
+            self.z_cuts = kwargs.pop('z_cuts', 0)
 
     def get_wakefact(self, ring):
         betrel = numpy.sqrt(1.0-(partmass/ring.energy)**2)
