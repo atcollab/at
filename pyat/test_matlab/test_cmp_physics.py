@@ -108,7 +108,7 @@ def test_fastring(engine, lattices):
     ring_ml, ringrad_ml = engine.pyproxy('atfastring',
                                          ml_lattice, nargout=2)
     # Comparison
-    for r, rml, idq in zip([ring, ringrad], [ring_ml, ringrad_ml], [3, 4]):
+    for r, rml in zip([ring, ringrad], [ring_ml, ringrad_ml]):
         assert_close(r[0].Frequency,    rml[1]['Frequency'], rtol=1.0e-20)
         assert_close(r[0].Voltage,      rml[1]['Voltage'], rtol=1.0e-20)
         assert_close(r[1].I2,           rml[2]['I2'], rtol=1.0e-20)
@@ -118,21 +118,21 @@ def test_fastring(engine, lattices):
                      rtol=1.0e-8, atol=1.0e-11)
         assert_close(r[1].T2,   numpy.squeeze(rml[2]['T2']),
                      rtol=1.0e-8, atol=1.0e-11)
-        assert_close(r[idq-1].A1,       rml[idq]['A1'], rtol=0.02)
-        assert_close(r[idq-1].A2,       rml[idq]['A2'], rtol=0.02)
-        assert_close(r[idq-1].A3,       rml[idq]['A3'], rtol=0.02)
-        assert_close(r[idq-1].Alphax,   rml[idq]['Alphax'], rtol=1.0e-5)
-        assert_close(r[idq-1].Alphay,   rml[idq]['Alphay'], rtol=1.0e-6)
-        assert_close(r[idq-1].Betax,    rml[idq]['Betax'], rtol=1.0e-12)
-        assert_close(r[idq-1].Betay,    rml[idq]['Betay'], rtol=1.0e-11)
-        assert_close(r[idq-1].Qpx,      rml[idq]['Qpx'], rtol=1.0e-5)
-        assert_close(r[idq-1].Qpy,      rml[idq]['Qpy'], rtol=1.0e-5)
-        assert_close(r[idq-1].T1,   numpy.squeeze(rml[idq]['T1']),
+        assert_close(r[2].A1,       rml[-1]['A1'], rtol=0.02)
+        assert_close(r[2].A2,       rml[-1]['A2'], rtol=0.02)
+        assert_close(r[2].A3,       rml[-1]['A3'], rtol=0.02)
+        assert_close(r[2].Alphax,   rml[-1]['Alphax'], rtol=1.0e-5)
+        assert_close(r[2].Alphay,   rml[-1]['Alphay'], rtol=1.0e-6)
+        assert_close(r[2].Betax,    rml[-1]['Betax'], rtol=1.0e-10)
+        assert_close(r[2].Betay,    rml[-1]['Betay'], rtol=1.0e-10)
+        assert_close(r[2].Qpx,      rml[-1]['Qpx'], rtol=1.0e-5)
+        assert_close(r[2].Qpy,      rml[-1]['Qpy'], rtol=1.0e-5)
+        assert_close(r[2].T1,   numpy.squeeze(rml[-1]['T1']),
                      rtol=1.0e-8, atol=1.0e-11)
-        assert_close(r[idq-1].T2,   numpy.squeeze(rml[idq]['T2']),
+        assert_close(r[2].T2,   numpy.squeeze(rml[-1]['T2']),
                      rtol=1.0e-8, atol=1.0e-11)
-        if idq == 4:
-            assert_close(r[2].Lmatp,    rml[3]['Lmatp'],
+        if len(r) >= 4:
+            assert_close(r[3].Lmatp,    rml[-2]['Lmatp'],
                          rtol=0.02, atol=1.0e-10)
 
 

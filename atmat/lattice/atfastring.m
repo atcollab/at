@@ -54,7 +54,7 @@ ibeg=[1 iend(1:end-1)];
 
 xm=0.001;
 zm=0.0005;
-GLOBVAL.E0=atenergy(ring0);
+[GLOBVAL.E0,nper]=atenergy(ring0);
 [lindata,tunes,xsi]=atlinopt(ring0,0); %#ok<ASGLU>
 gamma=(1+lindata.alpha.*lindata.alpha)./lindata.beta;
 
@@ -66,7 +66,7 @@ ringrad=atradon(ring);
 orbit4=zeros(6,sum(markers));
 orbit4(1:5,:)=findsyncorbit(ring,0,markers);
 orbit4=num2cell(orbit4,1);
-r1=detuning(ring,gamma,xm,zm,orbit4(:,1));
+r1=detuning(ring,gamma,xm,zm,orbit4(:,1))/nper;
 
 orbit6=num2cell(findorbit6(ringrad,markers),1);
 
