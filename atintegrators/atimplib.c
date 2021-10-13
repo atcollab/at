@@ -45,28 +45,30 @@ void rotate_table_history(long nturns,long nslice,double *turnhistoryX,double *t
     double *wtmp,*wtmp0;
     int i, ii;
     /*First rotate array*/
+
     for (i=0;i<nturns-1;i++){
-        xtmp = turnhistoryX + (i+1)*nslice;
         xtmp0 = turnhistoryX + i*nslice;
-        ytmp = turnhistoryY + (i+1)*nslice;
+        xtmp = turnhistoryX + (i+1)*nslice;
         ytmp0 = turnhistoryY + i*nslice;
-        ztmp = turnhistoryZ + (i+1)*nslice;
+        ytmp = turnhistoryY + (i+1)*nslice;
         ztmp0 = turnhistoryZ + i*nslice;
-        wtmp = turnhistoryW + (i+1)*nslice;
+        ztmp = turnhistoryZ + (i+1)*nslice;
         wtmp0 = turnhistoryW + i*nslice;
+        wtmp = turnhistoryW + (i+1)*nslice;
         for(ii=0;ii<nslice;ii++){
             xtmp0[ii]=xtmp[ii];
             ytmp0[ii]=ytmp[ii];
             /*shift zpos by one turn*/
-            ztmp0[ii]=ztmp[ii]+circumference;
-            wtmp0[ii]=ytmp[ii];
+            ztmp0[ii]=ztmp[ii]-circumference;
+            wtmp0[ii]=wtmp[ii];
         }
     }
     /*Now set last row to 0 (present slices)*/
+    
     xtmp = turnhistoryX + (nturns-1)*nslice;
     ytmp = turnhistoryY + (nturns-1)*nslice;
     ztmp = turnhistoryZ + (nturns-1)*nslice;
-    wtmp = turnhistoryW + (nturns-1)*nslice;
+    wtmp = turnhistoryW + (nturns-1)*nslice; 
     for(ii=0;ii<nslice;ii++){
         xtmp[ii]=0.0;
         ytmp[ii]=0.0;

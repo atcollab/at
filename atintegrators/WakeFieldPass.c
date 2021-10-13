@@ -100,7 +100,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
         if(turnhistoryW[i]>0.0){
             for (ii=0;ii<nslice*nturns;ii++){
                 ds = turnhistoryZ[ii]-turnhistoryZ[i];
-                if(turnhistoryW[ii]>0.0 && -ds>waketableT[0] && -ds<waketableT[nelem-1]){
+                if(turnhistoryW[ii]>0.0 && -ds>=waketableT[0] && -ds<waketableT[nelem-1]){
                     wi = turnhistoryW[ii];
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
