@@ -17,7 +17,7 @@ serving as an introduction for someone just starting AT.
 The 6-d phase space coordinates used in AT are as follows
 $$\vec Z = \pmatrix{x\cr \frac{p_x}{p_0}=x'(1+\delta) \cr y \cr \frac{p_y}{p_0}=y'(1+\delta) \cr \delta=\frac{\left(p_z-p_0\right)}{p_0} \cr c\tau}$$
 
-\$$p_0$$ is the reference momentum. $$\tau$$ is the
+$$p_0$$ is the reference momentum. $$\tau$$ is the
 time lag relative to the ideal particle.
 
 ## Creation of Elements and Lattices

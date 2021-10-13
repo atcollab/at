@@ -2,7 +2,7 @@
 Closed orbit related functions
 """
 import numpy
-import scipy.constants as constants
+from at.lattice.constants import clight
 from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
@@ -135,7 +135,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, dct=None, orbit=None,
     2.  have any time dependence (localized impedance, fast kickers etc)
 
     PARAMETERS
-        ring            Sequence of AT elements
+        ring            lattice description (radiation must be OFF)
         dp              momentum deviation. Defaults to 0
         refpts          elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
@@ -210,7 +210,7 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, dp=None, orbit=None,
     2.  have any time dependence (localized impedance, fast kickers etc).
 
     PARAMETERS
-        ring            Sequence of AT elements
+        ring            lattice description (radiation must be OFF)
         dct             Path length deviation. Default: 0
         refpts          elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
@@ -288,7 +288,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
-    theta[5] = constants.speed_of_light * harm_number / f_rf - l0
+    theta[5] = clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
               dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
@@ -353,7 +353,7 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
         the equilibrium RF phase. If there is no radiation the phase is 0;
 
     PARAMETERS
-        ring            Sequence of AT elements
+        ring            lattice description (radiation must be ON)
         refpts          elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
