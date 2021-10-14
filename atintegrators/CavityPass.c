@@ -115,7 +115,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        CavityPass(r_in,Length,Voltage/Energy,Frequency,TimeLag,num_particles);
+        CavityPass(r_in,Length,Voltage/Energy,Frequency,TimeLag,CavityLength,num_particles);
     }
     else if (nrhs == 0) {   /* return list of required fields */
         plhs[0] = mxCreateCellMatrix(4,1);

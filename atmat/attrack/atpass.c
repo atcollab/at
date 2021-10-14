@@ -228,6 +228,7 @@ static mxDouble *passhook(mxArray *mxPassArg[], mxArray *mxElem, mxArray *func)
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     static double lattice_length= 0.0;
+    static double cavity_length= 0.0;
     
     int turn, nelem, npart, *refpts, num_refpts;
     int nextrefindex, nextref; /* index to the array of refpts */
@@ -321,6 +322,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mexMakeMemoryPersistent(track_table);
         
         lattice_length = 0.0;
+        cavity_length = 0.0;
         element = element_list;
         pass_elem = pass_table;
         track_elem = track_table;
@@ -332,7 +334,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 mexErrMsgIdAndTxt("Atpass:MissingPassMethod","Element # %d: Required field 'PassMethod' was not found in the element data structure", nelem);
             if (!mxIsChar(mxPassMethod))
                 mexErrMsgIdAndTxt("Atpass:WrongPassMethod","Element # %d: 'PassMethod' field must be a string", nelem);            
-            if (mxLength) lattice_length+=mxGetScalar(mxLength);
+            if (mxLength){
+                lattice_length+=mxGetScalar(mxLength);
+                cavity_length+=mxGetScalar(mxLength);
+            }
+            if(!strcmp(mxArrayToString(mxPassMethod),"CavityPass")) cavity_length=0;
             LibraryListPtr = pass_method(mxPassMethod, nelem);
             *pass_elem++ = LibraryListPtr->PassHandle;
             *track_elem++ = LibraryListPtr->TrackHandle;
@@ -346,6 +352,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 	paramStruct.RingLength = lattice_length;
 	paramStruct.T0 = lattice_length/299792458;
+        paramStruct.CavityLength = cavity_length;
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */
         int nref;
         mxDouble *dblrefpts = mxGetDoubles(REFPTS);
@@ -438,6 +445,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 DblPtrDataOut += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
+            mxArray *mxLength = mxGetField(*element, 0, "Length");
+            paramStruct.CavityLength += mxGetScalar(mxLength);
             if (lhist > 0) {
                 memcpy(histbuf+ihist*np6, DblBuffer, np6*sizeof(mxDouble));
             }
