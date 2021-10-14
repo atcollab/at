@@ -15,28 +15,17 @@ if isempty(cavities)
     error('AT:NoFrequency', 'The lattice has no Cavity element')
 end
 
-L0 = findspos(RING,length(RING)+1); % design length [m]
-C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
-
-T0 = L0/C0;
-
-Frf = unique(atgetfieldvalues(cavities,'Frequency'));
-HarmNumber = unique(atgetfieldvalues(cavities,'HarmNumber'));
-if length(Frf) > 1 || length(HarmNumber) > 1
-    error('AT:NoFrequency','RF cavities are not identical');
-end
-
 if isempty(Ri)
+    C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
+    Frf = min(unique(atgetfieldvalues(cavities,'Frequency')));
     Vcell=sum(atgetfieldvalues(cavities,'Voltage'));
     U0cell=atgetU0(RING,'periods',1,'method',method);
     if U0cell > Vcell
         error('AT:MissingVoltage','Missing RF voltage: unstable ring');
     end
     Ri = zeros(6,1);
-    Ri(6) = -L0/(2*pi*HarmNumber) * asin(U0cell/Vcell);
+    Ri(6) = -C0/(2*pi*Frf) * asin(U0cell/Vcell);
 end
-
-theta = [0 0 0 0 0 C0*(HarmNumber/Frf - T0)]';
 
 scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];
 D = [diag(scaling) zeros(6,1)];
@@ -50,7 +39,7 @@ while (change > dps) && (itercount < max_iterations)
     % compute the transverse part of the Jacobian
     J6 = (RMATf(:,1:6)-RMATf(:,7))./scaling;
     Rf = RMATf(:,end);
-    Ri_next = Ri + (eye(6)-J6)\(Rf-Ri-theta);
+    Ri_next = Ri + (eye(6)-J6)\(Rf-Ri);
     change = norm(Ri_next - Ri);
     Ri = Ri_next;
     itercount = itercount+1;
