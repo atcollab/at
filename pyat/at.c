@@ -316,6 +316,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
+    static double cavity_length = 0.0;
     static int valid = 0;
 
     PyObject *lattice;
@@ -456,6 +457,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         kwargs_list = (PyObject **)calloc(num_elements, sizeof(PyObject *));
 
         lattice_length = 0.0;
+        cavity_length = 0.0;
         element = element_list;
         integrator = integrator_list;
         pyintegrator = pyintegrator_list;
@@ -467,8 +469,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
             if (!LibraryListPtr) return print_error(elem_index, rout);        /* No trackFunction for the given PassMethod */
             length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
-            if (PyErr_Occurred()) PyErr_Clear();
-            else lattice_length += length;
+            if(PyErr_Occurred()){
+                PyErr_Clear();
+            }else{
+                lattice_length += length; 
+                cavity_length += length;
+            }           
+            if(!strcmp(PyUnicode_AsUTF8(PyPassMethod),"CavityPass")) cavity_length=0;
             *integrator++ = LibraryListPtr->FunctionHandle;
             *pyintegrator++ = LibraryListPtr->PyFunctionHandle;
             *element++ = el;
@@ -479,6 +486,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     param.RingLength = lattice_length;
+    param.CavityLength = cavity_length;
     param.T0 = lattice_length/299792458.0;
     for (turn = 0; turn < num_turns; turn++) {
         PyObject **element = element_list;
@@ -495,6 +503,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 drout += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
+            double length = PyFloat_AsDouble(PyObject_GetAttrString(*element, "Length"));
+            param.CavityLength+=length;
             /* the actual integrator call */
             if (*pyintegrator) {
                 if (!*kwargs) *kwargs = Buildkwargs(*element);

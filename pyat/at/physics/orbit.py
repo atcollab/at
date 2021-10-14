@@ -267,24 +267,9 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
 
-    # Get revolution period
-    l0 = get_s_pos(ring, len(ring))
     cavities = [elm for elm in ring if isinstance(elm, elements.RFCavity)]
     if len(cavities) == 0:
         raise AtError('No cavity found in the lattice.')
-
-    f_rfs = [cav.Frequency for cav in cavities]
-    imin = numpy.argmin(f_rfs)
-    f_rf = cavities[imin].Frequency
-    l_rf = constants.speed_of_light/f_rf
-    useold = kwargs.pop('useold',True)
-    if useold:
-       harm_number = cavities[imin].HarmNumber
-    else: 
-       harm_number = numpy.squeeze(numpy.round(l0/l_rf))
-
-    dth = constants.speed_of_light * harm_number / f_rf - l0
-    print(useold,l0/l_rf,harm_number,dth)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
@@ -296,9 +281,6 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in[5] = -dt
     else:
         ref_in = numpy.copy(guess)
-    
-    theta = numpy.zeros((6,))
-    theta[5] = -dth
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
               dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
@@ -317,7 +299,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         # f(x+d) - f(x) / d
         j6 = (in_mat[:, :6] - in_mat[:, 6:]) / scaling
         a = j6 - id6  # f'(r_n) - 1
-        b = ref_out[:] - ref_in[:] - theta
+        b = ref_out[:] - ref_in[:]
         # b_over_a, _, _, _ = numpy.linalg.lstsq(a, b, rcond=-1)
         b_over_a = numpy.linalg.solve(a, b)
         r_next = ref_in - b_over_a

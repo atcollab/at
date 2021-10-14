@@ -12,6 +12,7 @@ struct parameters
   int nturn;
   double RingLength;
   double T0;
+  double CavityLength;
 };
 
 #endif /*ATTYPES_H*/
