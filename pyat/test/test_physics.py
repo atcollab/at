@@ -67,6 +67,7 @@ def test_find_orbit4_with_two_refpts_with_and_without_guess(dba_lattice):
 
 
 def test_orbit_maxiter_warnings(hmba_lattice):
+    set_rf_frequency(hmba_lattice, Frf.NOMINAL)
     hmba_lattice_rad = hmba_lattice.radiation_on(copy=True)
     with pytest.warns(AtWarning):
         physics.find_orbit4(hmba_lattice, max_iterations=1)
@@ -89,6 +90,7 @@ def test_find_m44_returns_same_answer_as_matlab(dba_lattice, refpts):
 
 @pytest.mark.parametrize('refpts', ([145], [20], [1, 2, 3]))
 def test_find_m66(hmba_lattice, refpts):
+    set_rf_frequency(hmba_lattice, Frf.NOMINAL)
     hmba_lattice = hmba_lattice.radiation_on(copy=True, quadrupole_pass=None)
     m66, mstack = physics.find_m66(hmba_lattice, refpts=refpts)
     assert_close(m66, M66_MATLAB, rtol=0, atol=1e-8)
@@ -134,6 +136,7 @@ def test_find_orbit6(hmba_lattice):
 
 
 def test_find_orbit6_produces_same_result_with_keep_lattice_True(hmba_lattice):
+    set_rf_frequency(hmba_lattice, Frf.NOMINAL)
     hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)
     orbit0, _ = physics.find_orbit6(hmba_lattice)
     # Technicality - the default arguments to find_orbit6 mean that
@@ -272,6 +275,7 @@ def test_nl_detuning_chromaticity(hmba_lattice):
 
 
 def test_quantdiff(hmba_lattice):
+    set_rf_frequency(hmba_lattice, Frf.NOMINAL)
     hmba_lattice = hmba_lattice.radiation_on(copy=True)
     dmat = physics.radiation.quantdiffmat(hmba_lattice)
     lmat = physics.radiation._lmat(dmat)
