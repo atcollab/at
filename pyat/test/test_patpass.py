@@ -1,4 +1,4 @@
-from at import elements, patpass
+from at import Lattice, elements, patpass
 import numpy
 import pytest
 
@@ -9,7 +9,7 @@ def test_patpass_multiple_particles_and_turns():
     nparticles = 10
     rin = numpy.zeros((6, nparticles))
     d = elements.Drift('drift', 1.0)
-    lattice = [d]
+    lattice = Lattice([d], energy=1.0E9)
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
     rout = patpass(lattice, rin, nturns)

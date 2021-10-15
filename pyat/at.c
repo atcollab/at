@@ -1,6 +1,7 @@
 /*
  * This file contains the Python interface to AT, compatible with
- * Python 3 only. It provides a module 'atpass' containing one method 'atpass'.
+ * Python 3 only. It provides a module 'atpass' containing 3 python functions:
+ * _atpass, _elempass, isopenmp
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -305,7 +306,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
 }
 
 /*
- * Parse the arguments to atpass, set things up, and execute.
+ * Parse the arguments to _atpass, set things up, and execute.
  * Arguments:
  *  - line: sequence of elements
  *  - rin: numpy 6-vector of initial conditions
@@ -314,7 +315,9 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
  *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads","losses", NULL};
+    static char *kwlist[] = {"line","rin","nturns","refpts",
+                             "energy", "rest_energy", "charge",
+                             "reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
     static int valid = 0;
 
@@ -339,8 +342,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_uint32 nextref;
     unsigned int nextrefindex;
     unsigned int num_refpts;
-    npy_uint32 keep_lattice=0;
-    npy_uint32 losses=0;
+    int keep_lattice=0;
+    int losses=0;
     npy_intp outdims[4];
     npy_intp pdims[1];
     npy_intp lxdims[2];
@@ -351,9 +354,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!III", kwlist, &PyList_Type, &lattice,
-        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &keep_lattice, &omp_num_threads, &losses)) {
+    param.energy=1.0;
+    param.rest_energy=0.0;
+    param.charge=-1;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!ddipIp", kwlist,
+        &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
+        &PyArray_Type, &refs,
+        &param.energy, &param.rest_energy, &param.charge,
+        &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -548,8 +556,9 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 }
 
-static PyObject *at_elempass(PyObject *self, PyObject *args)
+static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    static char *kwlist[] = {"energy", "rest_energy", "charge", NULL};
     PyObject *element;
     PyArrayObject *rin;
     PyObject *PyPassMethod;
@@ -560,7 +569,12 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    if (!PyArg_ParseTuple(args, "OO!", &element,  &PyArray_Type, &rin)) {
+    param.energy=1.0;
+    param.rest_energy=0.0;
+    param.charge=-1;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO!|ddi", kwlist,
+        &element,  &PyArray_Type, &rin,
+        &param.energy, &param.rest_energy, &param.charge)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -611,8 +625,8 @@ static PyObject *isopenmp(PyObject *self)
 /* Boilerplate to register methods. */
 
 static PyMethodDef AtMethods[] = {
-    {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)\n\n"
+    {"_atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("rout = _atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)\n\n"
               "Track input particles rin along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
               "line:    list of elements\n"
@@ -622,17 +636,25 @@ static PyMethodDef AtMethods[] = {
               "refpts:  numpy array of indices of elements where output is desired\n"
               "         0 means entrance of the first element\n"
               "         len(line) means end of the last element\n"
+              "energy:  nominal energy [eV]\n"
+              "rest_energy:  rest_energy of the particle [eV]\n"
+              "charge:  particle charge [elementary charge]\n"
               "reuse:   if True, use previously cached description of the lattice.\n\n"
+              "omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
+              "losses:  if True, process losses\n"
               "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
               "         of particle coordinates\n"
               )},
-    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS,
-    PyDoc_STR("elempass(element, rin)\n\n"
+    {"_elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("_elempass(element, rin)\n\n"
               "Track input particles rin through a single element.\n\n"
               "element: AT element\n"
               "rin:     6 x n_particles Fortran-ordered numpy array.\n"
               "         On return, rin contains the final coordinates of the particles\n"
-             )},
+              "energy:  nominal energy [eV]\n"
+              "rest_energy:  rest_energy of the particle [eV]\n"
+              "charge:  particle charge [elementary charge]\n"
+            )},
     {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
     PyDoc_STR("isopenmp()\n\n"
               "Return whether OpenMP is active.\n"
@@ -647,7 +669,7 @@ PyMODINIT_FUNC PyInit_atpass(void)
 
     static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "at",         /* m_name */
+    "atpass",         /* m_name */
     PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
     -1,           /* m_size */
     AtMethods,    /* m_methods */

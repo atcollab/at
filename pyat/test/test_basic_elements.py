@@ -1,6 +1,7 @@
 import pytest
 import numpy
-from at import atpass
+# noinspection PyUnresolvedReferences
+from at.tracking import _atpass as atpass
 from at import elements
 
 

@@ -3,8 +3,8 @@ Simple parallelisation of atpass() using multiprocessing.
 """
 from functools import partial
 import multiprocessing
-from at.tracking import atpass
-from at.lattice import uint32_refpts
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from .atpass import _atpass
 from sys import platform
 from warnings import warn
 from at.lattice import AtWarning, elements
@@ -36,13 +36,13 @@ def format_results(results, r_in, losses):
 
 def _atpass_one(ring, rin, **kwargs):
     if ring is None:
-        result = atpass(globring, rin, **kwargs)
+        result = _atpass(globring, rin, **kwargs)
     else:
-        result = atpass(ring, rin, **kwargs)
+        result = _atpass(ring, rin, **kwargs)
     return {'rin': rin, 'results': result}
 
 
-def _atpass(ring, r_in, pool_size, globvar, **kwargs):
+def _pass(ring, r_in, pool_size, globvar, **kwargs):
     if platform.startswith('linux') and globvar:
         global globring
         globring = ring
@@ -68,9 +68,9 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
 
     INPUT:
         ring            lattice description
-        r_in:           6xN array: input coordinates of N particles
-        nturns:         number of passes through the lattice line
-        refpts          elements at which data is returned. It can be:
+        r_in            6xN array: input coordinates of N particles
+        nturns          number of passes through the lattice line
+        refpts=None     elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing
                            rules. As a special case, len(ring) is allowed and
@@ -82,7 +82,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
                         passing an empty array for calculation purposes.
         losses          Activate loss maps
         pool_size       number of processes, if None the min(npart,nproc) is used
-        globvar         For linux machines speed-up is achieved by defining a global
+        globvar=Tr      For linux machines speed-up is achieved by defining a global
                         ring variable, this can be disabled using globvar=False
 
      OUTPUT:
@@ -95,14 +95,14 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     """
     if refpts is None:
         refpts = len(ring)
-    refpts = uint32_refpts(refpts, len(ring))
+    refpts = ring.uint32_refpts(refpts)
     pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
-        return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
+        return _pass(ring, r_in, pool_size, globvar, nturns=nturns,
                        refpts=refpts, losses=losses)
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+        return _atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)

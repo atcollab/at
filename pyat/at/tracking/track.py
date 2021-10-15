@@ -1,6 +1,8 @@
 import numpy
-from at.tracking import atpass, elempass
-from at.lattice import uint32_refpts, DConstant
+from warnings import warn
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from .atpass import _atpass, _elempass
+from at.lattice import Lattice, AtWarning, DConstant
 
 
 __all__ = ['lattice_pass', 'element_pass']
@@ -37,7 +39,7 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
                     2) an ordered list of such integers without duplicates,
                     3) a numpy array of booleans of maximum length
                        len(ring)+1, where selected elements are True.
-                    Defaults to None, meaning no refpts, equivelent to
+                    Defaults to None, meaning no refpts, equivalent to
                     passing an empty array for calculation purposes.
         keep_lattice: use elements persisted from a previous call to at.atpass.
                     If True, assume that the lattice has not changed since
@@ -47,39 +49,46 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     OUTPUT
         (6, N, R, T) array containing output coordinates of N particles
         at R reference points for T turns.
-        If losses ==True: {islost,turn,elem,coord} dictionnary containing
+        If losses ==True: {islost,turn,elem,coord} dictionary containing
         flag for particles lost (True -> particle lost), turn, element and
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
-    if not isinstance(lattice, list):
-        lattice = list(lattice)
-    nelems = len(lattice)
+    if not isinstance(lattice, Lattice):
+        warn("'lattice_pass' need a Lattice object. " +
+             "Implicit conversion to Lattice will be removed in the future.",
+             FutureWarning)
+        lattice = Lattice(lattice, energy=1.0E9)
     if refpts is None:
-        refpts = nelems
+        refpts = len(lattice)
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
-    refs = uint32_refpts(refpts, nelems)
+    refs = lattice.uint32_refpts(refpts)
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
     # * C is the number of turns
     if r_in.flags.f_contiguous:
-        return atpass(lattice, r_in, nturns, refpts=refs,
-                      reuse=int(keep_lattice),
-                      omp_num_threads=omp_num_threads,
-                      losses=int(losses))
-    else:
-        r_fin = numpy.asfortranarray(r_in)
-        r_out = atpass(lattice, r_fin, nturns, refpts=refs,
+        return _atpass(lattice, r_in, nturns, refpts=refs,
                        reuse=int(keep_lattice),
                        omp_num_threads=omp_num_threads,
                        losses=int(losses))
+    else:
+        r_fin = numpy.asfortranarray(r_in)
+        r_out = _atpass(lattice, r_fin, nturns, refpts=refs,
+                        reuse=int(keep_lattice),
+                        omp_num_threads=omp_num_threads,
+                        losses=int(losses))
         r_in[:] = r_fin[:]
         return r_out
 
 
-def element_pass(element, r_in):
+def element_pass(element, r_in, **kwargs):
     r_in = numpy.asfortranarray(r_in)
-    elempass(element, r_in)
+    _elempass(element, r_in, **kwargs)
+
+
+def atpass(args, **kwargs):
+    warn("The public interface for tracking is 'lattice_pass'", AtWarning)
+    return _atpass(args, **kwargs)
