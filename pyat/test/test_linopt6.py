@@ -1,7 +1,7 @@
 from at import linopt2, linopt4, linopt6, get_optics
 from numpy.testing import assert_allclose as assert_close
 import pytest
-
+from at.lattice import set_rf_frequency, Frf
 
 @pytest.mark.parametrize('lattice',
                          [pytest.lazy_fixture('dba_lattice'),
@@ -22,13 +22,15 @@ def test_linopt6_norad(lattice):
 @pytest.mark.parametrize('lattice', [pytest.lazy_fixture('hmba_lattice')])
 def test_linopt6_rad(lattice):
     """Compare the results with and without radiation"""
+    lattice.radiation_off()
+    set_rf_frequency(lattice, Frf.NOMINAL)
     refpts = range(len(lattice)+1)
     # Turn cavity ON, without radiation
-    radlattice = lattice.radiation_on(dipole_pass=None, copy=True)
+    radlattice = lattice.radiation_off(cavity_pass='CavityPass', copy=True)
     ld04, rd4, ld4 = linopt6(lattice, refpts, get_w=True)
     ld06, rd6, ld6 = linopt6(radlattice, refpts, get_w=True)
 
-    assert_close(rd4.tune, rd6.tune[:2], atol=1e-10, rtol=0)
+    assert_close(rd4.tune, rd6.tune[:2], atol=1e-9, rtol=0)
     assert_close(rd4.chromaticity, rd6.chromaticity[:2], atol=1e-8, rtol=0)
 
     for field in ['s_pos', 'closed_orbit', 'dispersion', 'alpha', 'beta']:
