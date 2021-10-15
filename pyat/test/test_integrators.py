@@ -53,14 +53,14 @@ def test_pydrift():
     cout = lattice_pass(clattice, numpy.zeros(6)+1.0e-6, nturns=1)
     numpy.testing.assert_equal(pyout, cout)
 
-    set_shift(pydrift, [1.0e-3], [1.0e-3], relative=False)
-    set_shift(cdrift, [1.0e-3], [1.0e-3], relative=False)
+    set_shift(pylattice, [1.0e-3], [1.0e-3], relative=False)
+    set_shift(clattice, [1.0e-3], [1.0e-3], relative=False)
     pyout = lattice_pass(pylattice, numpy.zeros(6)+1.0e-6, nturns=1)
     cout = lattice_pass(clattice, numpy.zeros(6)+1.0e-6, nturns=1)
     numpy.testing.assert_equal(pyout, cout)
 
-    set_tilt(pydrift, [1.0e-3], relative=False)
-    set_tilt(cdrift, [1.0e-3], relative=False)
+    set_tilt(pylattice, [1.0e-3], relative=False)
+    set_tilt(clattice, [1.0e-3], relative=False)
     pyout = lattice_pass(pylattice, numpy.zeros(6)+1.0e-6, nturns=1)
     cout = lattice_pass(clattice, numpy.zeros(6)+1.0e-6, nturns=1)
     numpy.testing.assert_equal(pyout, cout)

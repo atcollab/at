@@ -1,8 +1,8 @@
 import numpy
 from warnings import warn
 # noinspection PyUnresolvedReferences,PyProtectedMember
-from .atpass import _atpass, _elempass
-from at.lattice import Lattice, AtWarning, DConstant
+from .atpass import _atpass, _elempass, isopenmp
+from ..lattice import Lattice, AtWarning, DConstant
 
 
 __all__ = ['lattice_pass', 'element_pass']
@@ -71,13 +71,15 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     # * C is the number of turns
     if r_in.flags.f_contiguous:
         return _atpass(lattice, r_in, nturns, refpts=refs,
+                       energy=lattice.energy,
                        reuse=int(keep_lattice),
                        omp_num_threads=omp_num_threads,
                        losses=int(losses))
     else:
         r_fin = numpy.asfortranarray(r_in)
         r_out = _atpass(lattice, r_fin, nturns, refpts=refs,
-                        reuse=int(keep_lattice),
+                        energy=lattice.energy,
+                        reuse=keep_lattice,
                         omp_num_threads=omp_num_threads,
                         losses=int(losses))
         r_in[:] = r_fin[:]

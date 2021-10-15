@@ -12,15 +12,12 @@ class _Dst(object):
     omp_num_threads = int(os.environ.get('ORM_NUM_THREADS','0'))
 
     def __setattr__(self, name, value):
+        """Prevent from adding new attributes"""
         _ = getattr(self, name)     # make sure attribute exists
         object.__setattr__(self, name, value)
 
     def reset(self, name):
         delattr(self, name)
-
-    @property
-    def orm(self):
-        return False
 
 
 DConstant = _Dst()

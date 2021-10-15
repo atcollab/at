@@ -7,7 +7,7 @@ import multiprocessing
 from .atpass import _atpass
 from sys import platform
 from warnings import warn
-from at.lattice import AtWarning, elements
+from at.lattice import Lattice, elements, AtWarning
 import numpy
 
 
@@ -93,6 +93,11 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
+    if not isinstance(ring, Lattice):
+        warn("'patpass' need a Lattice object. " +
+             "Implicit conversion to Lattice will be removed in the future.",
+             FutureWarning)
+        ring = Lattice(ring, energy=1.0E9)
     if refpts is None:
         refpts = len(ring)
     refpts = ring.uint32_refpts(refpts)
@@ -101,8 +106,9 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
         return _pass(ring, r_in, pool_size, globvar, nturns=nturns,
-                       refpts=refpts, losses=losses)
+                       refpts=refpts, energy=ring.energy, losses=losses)
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        return _atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+        return _atpass(ring, r_in, nturns=nturns,
+                       refpts=refpts, energy=ring.energy, losses=losses)
