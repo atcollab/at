@@ -3,6 +3,7 @@ import numpy
 from numpy.testing import assert_allclose as assert_close
 import pytest
 from at import AtWarning, physics, atpass
+from at.lattice import set_rf_frequency, Frf
 
 
 DP = 1e-5
@@ -125,10 +126,11 @@ def test_find_sync_orbit_finds_zeros(dba_lattice):
 
 
 def test_find_orbit6(hmba_lattice):
+    set_rf_frequency(hmba_lattice, Frf.NOMINAL)
     hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)
     refpts = numpy.ones(len(hmba_lattice), dtype=bool)
     orbit6, all_points = physics.find_orbit6(hmba_lattice, refpts)
-    assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-12)
+    assert_close(orbit6, orbit6_MATLAB, rtol=0, atol=1e-11)
 
 
 def test_find_orbit6_produces_same_result_with_keep_lattice_True(hmba_lattice):
@@ -305,6 +307,7 @@ def test_quantdiff(hmba_lattice):
 
 @pytest.mark.parametrize('refpts', ([121], [0, 40, 121]))
 def test_ohmi_envelope(hmba_lattice, refpts):
+    set_rf_frequency(hmba_lattice, Frf.NOMINAL)
     hmba_lattice = hmba_lattice.radiation_on(quadrupole_pass=None, copy=True)
     emit0, beamdata, emit = hmba_lattice.ohmi_envelope(refpts)
     obs = emit[-1]
@@ -331,8 +334,8 @@ def test_ohmi_envelope(hmba_lattice, refpts):
              [5.277154175864e-04, -1.008471110362e-07, 0.0, 0.0, 3.054851032955e-01, -1.374469424428e-02],
              [-6.509766798157e-05, -2.750326322828e-08, 0.0, 0.0, -1.374469426584e-02, 3.274100458152e+00]]
          ],
-        rtol=0, atol=1e-8)
-    assert_close(beamdata['mode_emittances'], [1.320573957833556e-10, 0.0, 2.858758561755633e-06], atol=1e-9)
+        rtol=0, atol=1e-7)
+    assert_close(beamdata['mode_emittances'], [1.320573957833556e-10, 0.0, 2.858758561755633e-06], atol=1e-8)
     assert_close(obs['r66'], [
         [9.136741971381e-10, -3.482498346543e-15, -3.540695039195e-27,
          2.549996268446e-27, 1.507800991407e-09, -1.435701289711e-15],
@@ -369,7 +372,7 @@ def test_ohmi_envelope(hmba_lattice, refpts):
                    0.00000000e+00, 2.24325836e-03, 9.99999539e-01]],
                  atol=1E-8)
     assert_close(obs['orbit6'], [-2.63520320e-09, -1.45845186e-10, 0.00000000e+00, 0.00000000e+00, -6.69677955e-06, -5.88436653e-02],
-                 atol=1E-20)
+                 rtol=1.0e-5, atol=1E-20)
     # Matlab results:
     assert_close(obs['emitXY'], [1.320388935445164e-10, 0.0], atol=3e-12)
     assert_close(obs['emitXYZ'], [1.322274374826649e-10, 0.0, 2.858473194929233e-06], atol=3e-12)
