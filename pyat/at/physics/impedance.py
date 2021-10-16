@@ -13,17 +13,28 @@ from at.lattice import AtWarning, AtError
 partmass = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
 
 
+def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, totallength):
+    """Function to build the wake table s column. This is not the slicing but the look-up
+    table, however it generates data where bunches are located to avoid using too much 
+    memory to store the table.
 
-def build_srange(start, bunch_ext, short_step, long_step, bunch_interval, circ, Nturnsw):
-    assert isinstance(Nturnsw, int), 'Nturnsw must be an integer'
-    assert Nturnsw >= 1, 'Nturnsw must be greater than or equal to 1'
-    ranges = numpy.arange(start, bunch_ext, short_step)
+    PARAMETERS
+        start           starting s-coordinate of the table (can be negative for wake potential)
+        bunch_ext       maximum bunch extension, function generates data at +/- bunch_ext
+                        around the bucket center
+        short_step      step size for the short range wake table
+        long_step       step size for the long range wake table
+        bunch_interval  minimum bunch interval data will be generate for each bunch_inteval step
+        totallength     total length of the wake table, has to contain the full bunch extension
+        
+
+    OUTPUT
+        srange          vector of s position where to sample the wake
+    """
+    srange = numpy.arange(start, bunch_ext, short_step)
     rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
-    srange = ranges
-
-    nbunch = int(circ/bunch_interval)
-
-    for i in range(Nturnsw*nbunch - 1):
+    nbunch = int((totallength-bunch_ext)/bunch_interval)
+    for i in range(nbunch):
         srange = numpy.concatenate((srange,rangel+bunch_interval*(i+1)))
     return numpy.unique(srange)
     
@@ -45,13 +56,14 @@ class WakeComponent(Enum):
 
 
 class Wake(object):
-    def __init__(self, srange):
-        self._srange = srange
-        self.components={WakeComponent.DX:None,
-                         WakeComponent.DY:None,
-                         WakeComponent.QX:None,
-                         WakeComponent.QY:None,
-                         WakeComponent.Z:None}
+    """Class to generate a wake object
+
+
+    PARAMETERS
+        
+
+    OUTPUT
+    """
 
     # noinspection PyPep8Naming
     @property
