@@ -151,7 +151,7 @@ def _uint32_refs(ring, refpts):
     """
     if callable(refpts):
         return numpy.array([i for i, el in enumerate(ring) if refpts(el)],
-                           dtype=numpy.unit32)
+                           dtype=numpy.uint32)
     elif refpts is None:
         return numpy.array([], dtype=numpy.uint32)
     else:
