@@ -5,6 +5,7 @@
  *  Nicola Carmignani
  */
 
+#include <math.h>
 #include "atelem.c"
 #include "atlalib.c"
 
@@ -17,11 +18,10 @@ struct elem
   double Voltage;
   double Energy;
   double Frequency;
-  double HarmNumber;
   double TimeLag;
 };
 
-void RFCavityPass(double *r_in, double le, double nv, double freq, double h, double lag, int nturn, double T0, int num_particles)
+void RFCavityPass(double *r_in, double le, double nv, double freq, double lag, int nturn, double T0, int num_particles)
 /* le - physical length
    nv - peak voltage (V) normalized to the design enegy (eV)
    r is a 6-by-N matrix of initial conditions reshaped into
@@ -29,6 +29,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
 */
 {	int c, c6;
   double halflength , p_norm, NormL;
+  double h = round(freq*T0);
   /* I get T0 and nturn from matlab global variables */
   /*T0=getT0FromMatlab();*/
   
@@ -71,22 +72,20 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     int nturn=Param->nturn;
     double T0=Param->T0;
     if (!Elem) {
-        double Length, Voltage, Energy, Frequency, HarmNumber, TimeLag;
+        double Length, Voltage, Energy, Frequency, TimeLag;
         Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
-        HarmNumber=atGetDouble(ElemData,"HarmNumber"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
         Elem->Energy=Energy;
         Elem->Frequency=Frequency;
-        Elem->HarmNumber=HarmNumber;
         Elem->TimeLag=TimeLag;
     }
-    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag, nturn, T0, num_particles);
+    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->TimeLag, nturn, T0, num_particles);
     return Elem;
 }
 
@@ -107,14 +106,13 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double Voltage=atGetDouble(ElemData,"Voltage");
       double Energy=atGetDouble(ElemData,"Energy");
       double Frequency=atGetDouble(ElemData,"Frequency");
-      double HarmNumber=atGetDouble(ElemData,"HarmNumber");
       double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
-      double T0=HarmNumber/Frequency;
+      double T0=1.0/Frequency;      /* Does not matter since nturns == 0 */
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
-      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, 0, T0, num_particles);
+      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, TimeLag, 0, T0, num_particles);
 
     }
   else if (nrhs == 0)
@@ -124,7 +122,6 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],1,mxCreateString("Voltage"));
       mxSetCell(plhs[0],2,mxCreateString("Energy"));
       mxSetCell(plhs[0],3,mxCreateString("Frequency"));
-      mxSetCell(plhs[0],4,mxCreateString("HarmNumber"));
       if(nlhs>1) /* optional fields */
       {
           plhs[1] = mxCreateCellMatrix(1,1);
