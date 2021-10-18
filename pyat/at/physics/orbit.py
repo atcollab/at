@@ -261,20 +261,27 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, dp=None, orbit=None,
 
 def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     """Solver for 6D motion"""
+
+    def iscavity(elem):
+        return isinstance(elem, elements.RFCavity) and \
+               elem.PassMethod.endswith('CavityPass')
+
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
 
-    # Get revolution period
-    l0 = get_s_pos(ring, len(ring))
-    cavities = [elm for elm in ring if isinstance(elm, elements.RFCavity)]
-    if len(cavities) == 0:
+    l0 = get_s_pos(ring, len(ring))[0]
+    # Get the main RF frequency (the lowest)
+    try:
+        f_rf = min(elm.Frequency for elm in ring if iscavity(elm))
+    except ValueError:
         raise AtError('No cavity found in the lattice.')
-
-    f_rf = cavities[0].Frequency
-    harm_number = cavities[0].HarmNumber
+    # gamma = self.energy / self.particle.mass
+    # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+    # h = round(fmin*l0/beta/clight)
+    harm_number = round(f_rf*l0/clight)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
