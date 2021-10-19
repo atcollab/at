@@ -253,7 +253,7 @@ class WakeElement(at.Element):
             Nturns (defult=1)
             ZCuts  (default=0)
     """
-    def __init__(self, family_name, ring, wake, **kwargs): 
+    def __init__(self, family_name, ring, wake, **kwargs):         
         kwargs.setdefault('PassMethod', 'WakeFieldPass')       
         self.Intensity = kwargs.pop('Intensity', 0.0)
         self.Nslice = kwargs.pop('Nslice', 101)
@@ -304,6 +304,13 @@ class WakeElement(at.Element):
     def Current(self, current):
         self.Intensity = current/self.int2curr
 
+    def __repr__(self):
+        '''Simplified __repr__ to avoid errors due to arguments 
+        not defined as attributes
+        '''
+        attrs = dict(self.items())
+        return '{0}({1})'.format(self.__class__.__name__, attrs)
+
 
 class LongResonatorElement(WakeElement):
     """Class to generate a longitudinal resonator, inherits from Wake()
@@ -311,9 +318,12 @@ class LongResonatorElement(WakeElement):
     """
     def __init__(self, family_name, ring, srange, frequency, qfactor,
                  rshunt, **kwargs):
+        self.Frequency = frequency
+        self.QFactor = qfactor
+        self.RShunt = rshunt
         beta = numpy.sqrt(1.0-(partmass/ring.energy)**2)
         wake = Wake(srange)
         wake.add(WakeType.RESONATOR, WakeComponent.Z, frequency,
                  qfactor, rshunt, beta)
-        super(LongResonatorElement, self).__init__(family_name, ring,
-                                                   wake, **kwargs)
+        super(LongResonatorElement, self).__init__(family_name, ring=ring,
+                                                   wake=wake, **kwargs)
