@@ -253,11 +253,9 @@ class WakeElement(at.Element):
             Nturns (defult=1)
             ZCuts  (default=0)
     """
-    def __init__(self, family_name, ring, wake, **kwargs):
-        super(WakeElement, self).__init__(family_name)
+    def __init__(self, family_name, ring, wake, **kwargs): 
+        kwargs.setdefault('PassMethod', 'WakeFieldPass')       
         self.Intensity = kwargs.pop('Intensity', 0.0)
-        self.Length = kwargs.pop('Length', 0.0)
-        self.PassMethod = kwargs.pop('PassMethod', 'WakeFieldPass')
         self.Nslice = kwargs.pop('Nslice', 101)
         self.z_cuts = kwargs.pop('ZCuts', 0)
         self.Wakefact = self.get_wakefact(ring)
@@ -280,6 +278,7 @@ class WakeElement(at.Element):
         self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
         self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
         self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
+        super(WakeElement, self).__init__(family_name, **kwargs)      
 
     def get_wakefact(self, ring):
         betrel = numpy.sqrt(1.0-(partmass/ring.energy)**2)
