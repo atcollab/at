@@ -100,7 +100,7 @@ def radiation_parameters(ring, dp=None, params=None, **kwargs):
     integs = ring.get_radiation_integrals(dp, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = numpy.array(integs) * ring.periodicity
     circumference = ring.circumference
-    voltage = ring.voltage
+    voltage = ring.rf_voltage
     E0 = ring.energy
     gamma = E0 / e_mass
     gamma2 = gamma * gamma
@@ -161,12 +161,16 @@ def envelope_parameters(ring, params=None):
             phi_s           Synchrotron phase [rad]
             f_s             Synchrotron frequency [Hz]
     """
+    E0 = ring.energy
+    gamma = E0 / e_mass
+    gamma2 = gamma * gamma
+    beta = sqrt(1.0 - 1.0/gamma2)
     rp = RingParameters() if params is None else params
     emit0, beamdata, emit = ring.ohmi_envelope()
-    voltage = ring.voltage
-    rp.E0 = ring.energy
+    voltage = ring.rf_voltage
+    rp.E0 = E0
     rp.U0 = ring.energy_loss
-    revolution_period = ring.revolution_period
+    revolution_period = ring.circumference / clight / beta
     rp.Tau = revolution_period / beamdata.damping_rates / ring.periodicity
     alpha = 1.0 / rp.Tau
     rp.J = 4.0 * alpha / numpy.sum(alpha)
