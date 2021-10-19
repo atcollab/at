@@ -8,6 +8,7 @@
 #include <math.h>
 #include "atelem.c"
 #include "atlalib.c"
+#include "driftkickrad.c"
 
 #define TWOPI  6.28318530717959
 #define C0  	2.99792458e8 
@@ -18,52 +19,41 @@ struct elem
   double Voltage;
   double Energy;
   double Frequency;
+  double HarmNumber;
   double TimeLag;
 };
 
-void RFCavityPass(double *r_in, double le, double nv, double freq, double lag, int nturn, double T0, int num_particles)
+void RFCavityPass(double *r_in, double le, double nv, double freq, double h, double lag, int nturn, double T0, int num_particles)
 /* le - physical length
    nv - peak voltage (V) normalized to the design enegy (eV)
    r is a 6-by-N matrix of initial conditions reshaped into
    1-d array of 6*N elements
 */
-{	int c, c6;
-  double halflength , p_norm, NormL;
-  double h = round(freq*T0);
-  /* I get T0 and nturn from matlab global variables */
-  /*T0=getT0FromMatlab();*/
-  
-  if(le == 0)
-    {
-      for(c = 0;c<num_particles;c++)
-	{	c6 = c*6;
-	  if(!atIsNaN(r_in[c6]))
-	    r_in[c6+4] += -nv*sin(TWOPI*freq*((r_in[c6+5]-lag)/C0 - (h/freq-T0)*nturn ));
-	}
+{
+    int c;
+
+    if (le == 0) {
+        for (c = 0; c<num_particles; c++) {
+            double *r6 = r_in+c*6;
+            if(!atIsNaN(r6[0]))
+                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn));
+        }
     }
-  else
-    {	halflength = le/2;
-      for(c = 0;c<num_particles;c++)
-	{	c6 = c*6;
-	  if(!atIsNaN(r_in[c6])) 
-	    {   p_norm = 1/(1+r_in[c6+4]); 				
-	      NormL  = halflength*p_norm;
-	      /* Propagate through a drift equal to half cavity length */
-	      r_in[c6+0]+= NormL*r_in[c6+1];
-	      r_in[c6+2]+= NormL*r_in[c6+3];
-	      r_in[c6+5]+= NormL*p_norm*(r_in[c6+1]*r_in[c6+1]+r_in[c6+3]*r_in[c6+3])/2;
-	      /* Longitudinal momentum kick */
-	      r_in[c6+4] += -nv*sin(TWOPI*freq*((r_in[c6+5]-lag)/C0 - (h/freq-T0)*nturn ));
-	      p_norm = 1/(1+r_in[c6+4]); 				
-	      NormL  = halflength*p_norm;
-	      /* Propagate through a drift equal to half cavity length */
-	      r_in[c6+0]+= NormL*r_in[c6+1];
-	      r_in[c6+2]+= NormL*r_in[c6+3];
-	      r_in[c6+5]+= NormL*p_norm*(r_in[c6+1]*r_in[c6+1]+r_in[c6+3]*r_in[c6+3])/2;
-	    }
-	}
+    else {
+        double halflength = le/2;
+        for (c = 0;c<num_particles;c++) {
+            double *r6 = r_in+c*6;
+            if(!atIsNaN(r6[0]))  {
+                /* Propagate through a drift equal to half cavity length */
+                drift6(r6, halflength);
+                /* Longitudinal momentum kick */
+                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn));
+                /* Propagate through a drift equal to half cavity length */
+                drift6(r6, halflength);
+            }
+        }
     }
-} 
+}
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
@@ -83,9 +73,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->Voltage=Voltage;
         Elem->Energy=Energy;
         Elem->Frequency=Frequency;
+        Elem->HarmNumber=round(Frequency*T0);
         Elem->TimeLag=TimeLag;
     }
-    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->TimeLag, nturn, T0, num_particles);
+    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag, nturn, T0, num_particles);
     return Elem;
 }
 
@@ -108,11 +99,12 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double Frequency=atGetDouble(ElemData,"Frequency");
       double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
       double T0=1.0/Frequency;      /* Does not matter since nturns == 0 */
+      double HarmNumber=round(Frequency*T0)
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
-      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, TimeLag, 0, T0, num_particles);
+      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, 0, T0, num_particles);
 
     }
   else if (nrhs == 0)
