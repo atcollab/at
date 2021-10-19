@@ -305,9 +305,9 @@ class WakeElement(at.Element):
         self.Intensity = current/self.int2curr
 
     def __repr__(self):
-        '''Simplified __repr__ to avoid errors due to arguments 
+        """Simplified __repr__ to avoid errors due to arguments 
         not defined as attributes
-        '''
+        """
         attrs = dict(self.items())
         return '{0}({1})'.format(self.__class__.__name__, attrs)
 
