@@ -57,13 +57,31 @@ class WakeComponent(Enum):
 
 class Wake(object):
     """Class to generate a wake object
-
-
-    PARAMETERS
-        
-
-    OUTPUT
+    The wake object is define by its srange, specified
+    at initialization, and DX, DY, QY, Z corresponding
+    to transverse dipoles and quadrupoles and longitudinal
+    
+    The srange is common to all components and cannot be changed
+    once initialized, all added component are resampled to the
+    srange
+ 
+    usage:
+    wake = Wake(srange)
+    wake.add(WakeType,WakeComponent, *args, *kwargs)
+    
+    Component are WakeComponent.FILE (import from file),
+    WakeComponent.TABLE (provide vectors), WakeComponent.RESONATOR
+    (analytical resonator)
+                    
+    Components are retrieved with Wake.DX for example
     """
+    def __init__(self, srange):
+        self._srange = srange
+        self.components={WakeComponent.DX:None,
+                         WakeComponent.DY:None,
+                         WakeComponent.QX:None,
+                         WakeComponent.QY:None,
+                         WakeComponent.Z:None}
 
     # noinspection PyPep8Naming
     @property
@@ -211,12 +229,23 @@ class Wake(object):
 
 
 class WakeElement(at.Element):
+    """Class to generate an AT wake element using the
+    passmethod WakeFieldPass
+    args:  family name, ring, wake object
+    kwargs: Intensity (default=0)
+            Length (default=0)
+            Passmethod(default=WakeFieldPass)
+            Nslice (default=101)  
+            Nturns (defult=1)
+            ZCuts  (default=0)   
+    """
     def __init__(self, family_name, ring, wake, **kwargs):
         super(WakeElement, self).__init__(family_name)
         self.Intensity= kwargs.pop('Intensity', 0.0)
         self.Length = kwargs.pop('Length', 0.0)
         self.PassMethod = kwargs.pop('PassMethod', 'WakeFieldPass')
         self.Nslice = kwargs.pop('Nslice', 101)
+        self.z_cuts = kwargs.pop('ZCuts', 0)
         self.Wakefact = self.get_wakefact(ring)
         self.int2curr = self.get_int2curr(ring)
         self.WakeT = wake.get_srange()
@@ -232,8 +261,6 @@ class WakeElement(at.Element):
         self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
         self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
         self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
-        if 'z_cuts' in kwargs:
-            self.z_cuts = kwargs.pop('z_cuts', 0)
 
     def get_wakefact(self, ring):
         betrel = numpy.sqrt(1.0-(partmass/ring.energy)**2)
@@ -261,6 +288,9 @@ class WakeElement(at.Element):
 
 
 class LongResonatorElement(WakeElement):
+    """Class to generate a longitudinal resonator, inherits from Wake()
+       additonal argument are frequency, qfactor, rshunt
+    """
     def __init__(self, family_name, ring, srange, frequency, qfactor, rshunt, **kwargs):
         beta = numpy.sqrt(1.0-(partmass/ring.energy)**2)
         wake = Wake(srange)
