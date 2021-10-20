@@ -86,6 +86,14 @@ static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
     va_end(ap);
     return NULL;
 }
+
+static const char *pyprint(PyObject* pyobj) {
+    PyObject *pystr = PyObject_Str(pyobj);
+    const char* str = PyUnicode_AsUTF8(pystr);
+    Py_XDECREF(str);
+    return str;
+}
+
 /*
  * Recursively search the list to check if the library containing
  * method_name is already loaded. If it is - return the pointer to the
@@ -221,41 +229,11 @@ static PyObject *GetpyFunction(const char *fn_name)
 }
 
 /*
- * Build input positional arguments for python integrators
- */
-static PyObject *Buildkwargs(const atElem *ElemData)
-{
-  PyObject *kwargs;
-  kwargs = PyDict_New();
-  PyDict_SetItemString(kwargs,(char *)"elem",(PyObject *)ElemData);
-  return kwargs;
-}
-
-/*
- * Build input keyword arguments for python integrators
- */
-static PyObject *Buildargs(double *r_in, int num_particles)
-{
-  npy_intp outdims[1];
-  outdims[0] = 6*num_particles;
-  PyObject *rin;
-  rin = PyArray_SimpleNewFromData(1, outdims, NPY_DOUBLE, r_in);
-  if (!rin){
-      printf("PyFuncPass: could not generate pyArray rin");
-    }
-  return PyTuple_Pack(1,rin);
-}
-
-/*
  * Call python integrators
  */
-static PyObject *pyIntegratorPass(double *r_in, PyObject *function, PyObject *kwargs, int num_particles)
+static PyObject *pyPass(PyArrayObject *r_in, PyObject *function, PyObject *elem, int num_particles)
 {
-  PyObject *args;
-  args = Buildargs(r_in, num_particles);
-  PyObject_Call(function, args, kwargs);
-  Py_DECREF(args);
-  return kwargs;
+  return PyObject_CallFunctionObjArgs(function, r_in, elem, NULL);
 }
 
 /*
@@ -497,9 +475,9 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             }
             /* the actual integrator call */
             if (*pyintegrator) {
-                if (!*kwargs) *kwargs = Buildkwargs(*element);
-                *kwargs = pyIntegratorPass(drin, *pyintegrator, *kwargs, num_particles);
-                if (!*kwargs) return print_error(elem_index, rout);       /* trackFunction failed */
+                PyObject *res = pyPass(rin, *pyintegrator, *element, num_particles);
+                if (!res) return print_error(elem_index, rout);       /* trackFunction failed */
+                Py_DECREF(res);
             } else {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
@@ -586,16 +564,14 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     integrator = LibraryListPtr->FunctionHandle;
     pyintegrator = LibraryListPtr->PyFunctionHandle;
     if (pyintegrator) {
-        PyObject *kwargs = Buildkwargs(element);
-        kwargs = pyIntegratorPass(drin, pyintegrator, kwargs, num_particles);
-        if (!kwargs) return NULL;
-        Py_DECREF(kwargs);
+        PyObject *res = pyPass(rin, pyintegrator, element, num_particles);
+        if (!res) return NULL;
+        Py_DECREF(res);
     } else {
         struct elem *elem_data = integrator(element, NULL, drin, num_particles, &param);
         if (!elem_data) return NULL;
         free(elem_data);
     }
-    if (pyintegrator) Py_DECREF(pyintegrator);
     Py_RETURN_NONE;
 }
 
