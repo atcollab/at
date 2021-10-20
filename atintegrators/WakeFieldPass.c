@@ -76,12 +76,14 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
         kz[i]=0.0;
     }
 
+    /*slices beam and compute kick*/
     rotate_table_history(nturns,nslice,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturns,turnhistory,pslice,z_cuts);
     compute_kicks(nslice,nturns,nelem,turnhistory,waketableT,waketableDX,
                   waketableDY,waketableQX,waketableQY,waketableZ,
                   normfact,kx,ky,kx2,ky2,kz);
     
+    /*apply kicks*/
     for (i=0; i<num_particles; i++) {
         rtmp = r_in+i*6;
         if (!atIsNaN(rtmp[0])) {
