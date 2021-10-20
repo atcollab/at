@@ -229,14 +229,6 @@ static PyObject *GetpyFunction(const char *fn_name)
 }
 
 /*
- * Call python integrators
- */
-static PyObject *pyPass(PyArrayObject *r_in, PyObject *function, PyObject *elem, int num_particles)
-{
-  return PyObject_CallFunctionObjArgs(function, r_in, elem, NULL);
-}
-
-/*
  * Find the correct track function by name.
  */
 static struct LibraryListElement* get_track_function(const char *fn_name) {
@@ -475,7 +467,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             }
             /* the actual integrator call */
             if (*pyintegrator) {
-                PyObject *res = pyPass(rin, *pyintegrator, *element, num_particles);
+                PyObject *res = PyObject_CallFunctionObjArgs(*pyintegrator, rin, *element, NULL);
                 if (!res) return print_error(elem_index, rout);       /* trackFunction failed */
                 Py_DECREF(res);
             } else {
@@ -564,7 +556,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     integrator = LibraryListPtr->FunctionHandle;
     pyintegrator = LibraryListPtr->PyFunctionHandle;
     if (pyintegrator) {
-        PyObject *res = pyPass(rin, pyintegrator, element, num_particles);
+        PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
         if (!res) return NULL;
         Py_DECREF(res);
     } else {
