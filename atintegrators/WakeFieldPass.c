@@ -102,10 +102,8 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
-        mod = (i+size)%size;
-        printf("i =%d, rank =%d, modulo=%d, size=%d\n",i,rank,mod,size);   
-        if(mod==rank){
-            printf("i=%d done\n",i);   
+        mod = (i+size)%size; 
+        if(mod==rank){ 
             if(turnhistoryW[i]>0.0){
                 for (ii=0;ii<nslice*nturns;ii++){
                     ds = turnhistoryZ[ii]-turnhistoryZ[i];
