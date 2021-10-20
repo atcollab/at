@@ -246,17 +246,25 @@ class WakeElement(at.Element):
     """Class to generate an AT wake element using the
     passmethod WakeFieldPass
     args:  family name, ring, wake object
-    kwargs: Intensity (default=0)
-            Length (default=0)
-            Passmethod(default=WakeFieldPass)
-            Nslice (default=101)
-            Nturns (defult=1)
-            ZCuts  (default=0)
+    kwargs: Intensity  (default=0) bunch intensity
+            Passmethod (default=WakeFieldPass)
+            Nslice     (default=101) number of slices
+                       per bunch
+            Nturns     (default=1) number of turn for 
+                       the wake field
+            ZCuts      (default=None)limits for fixed 
+                       slicing, default is adaptative
+            NormFact   (default=[1,1,1]) normalization
+                       for the 3 planes, to account for
+                       beta function at the observation
+                       point for example
     """
     def __init__(self, family_name, ring, wake, **kwargs):         
         kwargs.setdefault('PassMethod', 'WakeFieldPass')       
         self.Intensity = kwargs.pop('Intensity', 0.0)
         self.Nslice = kwargs.pop('Nslice', 101)
+        self.NormFact = kwargs.pop('NormFact',
+                                   numpy.ones(3,order='F'))
         self.Wakefact = self.get_wakefact(ring)
         self.int2curr = self.get_int2curr(ring)
         self.WakeT = wake.get_srange()

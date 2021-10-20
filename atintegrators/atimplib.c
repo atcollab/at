@@ -182,8 +182,8 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
 void compute_kicks(int nslice,int nturns,int nelem,
                    double *turnhistory,double *waketableT,double *waketableDX,
                    double *waketableDY,double *waketableQX,double *waketableQY,
-                   double *waketableZ,double fx, double fy, double fqx,double fqy,
-                   double fz, double *kx,double *ky,double *kx2,double *ky2,double *kz){
+                   double *waketableZ,double *normfact, double *kx,double *ky,
+                   double *kx2,double *ky2,double *kz){
     int rank=0;
     int size=1;
     int i,ii,index;
@@ -209,11 +209,11 @@ void compute_kicks(int nslice,int nturns,int nelem,
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
                     index = binarySearch(waketableT,-ds,nelem,0,0);              
-                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*fx*wi*getTableWake(waketableDX,waketableT,-ds,index);
-                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*fy*wi*getTableWake(waketableDY,waketableT,-ds,index);
-                    if(waketableQX)kx2[i-nslice*(nturns-1)] += fqx*wi*getTableWake(waketableQX,waketableT,-ds,index);
-                    if(waketableQY)ky2[i-nslice*(nturns-1)] += fqy*wi*getTableWake(waketableQY,waketableT,-ds,index);
-                    if(waketableZ) kz[i-nslice*(nturns-1)] += fz*wi*getTableWake(waketableZ,waketableT,-ds,index);
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,-ds,index);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,-ds,index);
+                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,-ds,index);
+                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableQY,waketableT,-ds,index);
+                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*getTableWake(waketableZ,waketableT,-ds,index);
                 }            
             }
         }

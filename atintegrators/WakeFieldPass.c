@@ -12,12 +12,8 @@ struct elem
   int nslice;
   int nelem;
   int nturns;
-  double fx;
-  double fy;       
-  double fz;
-  double fqx;
-  double fqy;
   double circumference;
+  double *normfact;
   double *waketableT;
   double *waketableDX;
   double *waketableDY;
@@ -37,12 +33,8 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     long nslice = Elem->nslice;
     long nelem = Elem->nelem;
     long nturns = Elem->nturns;
-    double fx = Elem->fx;
-    double fy = Elem->fy;
-    double fqx = Elem->fqx;
-    double fqy = Elem->fqy;
-    double fz = Elem->fz;
     double circumference = Elem->circumference;
+    double *normfact = Elem->normfact;
     double *waketableT = Elem->waketableT;
     double *waketableDX = Elem->waketableDX;
     double *waketableDY = Elem->waketableDY;
@@ -88,7 +80,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     slice_bunch(r_in,num_particles,nslice,nturns,turnhistory,pslice,z_cuts);
     compute_kicks(nslice,nturns,nelem,turnhistory,waketableT,waketableDX,
                   waketableDY,waketableQX,waketableQY,waketableZ,
-                  fx,fy,fqx,fqy,fz,kx,ky,kx2,ky2,kz);
+                  normfact,kx,ky,kx2,ky2,kz);
     
     for (i=0; i<num_particles; i++) {
         rtmp = r_in+i*6;
@@ -109,7 +101,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         long nslice,nelem, nturns;
         double intensity, wakefact, circumference;
-        double normfactx, normfacty, normfactz;
+        double *normfact;
         double *waketableT;
         double *waketableDX;
         double *waketableDY;
@@ -127,10 +119,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
         turnhistory=atGetDoubleArray(ElemData,"TurnHistory"); check_error();
+        normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
         /*optional attributes*/
-        normfactx=atGetOptionalDouble(ElemData,"Normfactx",1.0); check_error();
-        normfacty=atGetOptionalDouble(ElemData,"Normfacty",1.0); check_error();
-        normfactz=atGetOptionalDouble(ElemData,"Normfactz",1.0); check_error();
         waketableDX=atGetOptionalDoubleArray(ElemData,"WakeDX"); check_error();
         waketableDY=atGetOptionalDoubleArray(ElemData,"WakeDY"); check_error();
         waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
@@ -144,11 +134,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->nelem=nelem;
         Elem->nturns=nturns;
         Elem->circumference=circumference;
-        Elem->fx=intensity*wakefact*normfactx;
-        Elem->fy=intensity*wakefact*normfacty;
-        Elem->fqx=intensity*wakefact*normfactx;
-        Elem->fqy=intensity*wakefact*normfacty;
-        Elem->fz=intensity*wakefact*normfactz;
+        for(int i=0;i<3;i++){
+           normfact[i]*=intensity*wakefact;
+        }
+        Elem->normfact=normfact;
         Elem->waketableT=waketableT;
         Elem->waketableDX=waketableDX;
         Elem->waketableDY=waketableDY;
@@ -178,17 +167,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         long nslice,nelem,nturns;
         double intensity, wakefact, circumference;
-        double normfactx, normfacty, normfactz;
+        double *normfact;
         double *waketableT;
         double *waketableDX;
         double *waketableDY;
         double *waketableQX;
         double *waketableQY;
         double *waketableZ;
-        double *turnhistoryX;
-        double *turnhistoryY;
-        double *turnhistoryZ;
-        double *turnhistoryW;
+        double *turnhistory;
         double *z_cuts;
         
         nslice=atGetLong(ElemData,"Nslice"); check_error();
@@ -198,14 +184,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         circumference=atGetDouble(ElemData,"Circumference"); check_error();
         wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
-        turnhistoryX=atGetDoubleArray(ElemData,"TurnHistoryX"); check_error();
-        turnhistoryY=atGetDoubleArray(ElemData,"TurnHistoryY"); check_error();
-        turnhistoryZ=atGetDoubleArray(ElemData,"TurnHistoryZ"); check_error();
-        turnhistoryW=atGetDoubleArray(ElemData,"TurnHistoryW"); check_error();
+        turnhistory=atGetDoubleArray(ElemData,"TurnHistory"); check_error();
+        normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
         /*optional attributes*/
-        normfactx=atGetOptionalDouble(ElemData,"Normfactx",1.0); check_error();
-        normfacty=atGetOptionalDouble(ElemData,"Normfacty",1.0); check_error();
-        normfactz=atGetOptionalDouble(ElemData,"Normfactz",1.0); check_error();
         waketableDX=atGetOptionalDoubleArray(ElemData,"WakeDX"); check_error();
         waketableDY=atGetOptionalDoubleArray(ElemData,"WakeDY"); check_error();
         waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
@@ -217,21 +198,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->nelem=nelem;
         Elem->nturns=nturns;
         Elem->circumference=circumference;
-        Elem->fx=intensity*wakefact*normfactx;
-        Elem->fy=intensity*wakefact*normfacty;
-        Elem->fqx=intensity*wakefact*normfactx;
-        Elem->fqy=intensity*wakefact*normfacty;
-        Elem->fz=intensity*wakefact*normafactz;
+        for(int i=0;i<3;i++){
+           normfact[i]*=intensity*wakefact;
+        }
+        Elem->normfact=normfact;
         Elem->waketableT=waketableT;
         Elem->waketableDX=waketableDX;
         Elem->waketableDY=waketableDY;
         Elem->waketableQX=waketableQX;
         Elem->waketableQY=waketableQY;
         Elem->waketableZ=waketableZ;
-        Elem->turnhistoryX=turnhistoryX;
-        Elem->turnhistoryY=turnhistoryY;
-        Elem->turnhistoryZ=turnhistoryZ;
-        Elem->turnhistoryW=turnhistoryW;
+        Elem->turnhistoryX=turnhistory;
         Elem->z_cuts=z_cuts;
 
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
@@ -242,7 +219,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(11,1);
+        plhs[0] = mxCreateCellMatrix(9,1);
         mxSetCell(plhs[0],0,mxCreateString("Nelem"));
         mxSetCell(plhs[0],1,mxCreateString("Nslice"));
         mxSetCell(plhs[0],2,mxCreateString("Nturns"));
@@ -250,23 +227,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],4,mxCreateString("Circumference"));
         mxSetCell(plhs[0],5,mxCreateString("Wakefact"));
         mxSetCell(plhs[0],6,mxCreateString("WakeT"));
-        mxSetCell(plhs[0],7,mxCreateString("TurnHistoryX"));
-        mxSetCell(plhs[0],8,mxCreateString("TurnHistoryY"));
-        mxSetCell(plhs[0],9,mxCreateString("TurnHistoryZ"));
-        mxSetCell(plhs[0],10,mxCreateString("TurnHistoryW"));
+        mxSetCell(plhs[0],7,mxCreateString("TurnHistory"));
+        mxSetCell(plhs[0],8,mxCreateString("Normfact"));
 
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(9,1); /* No optional fields */
+            plhs[1] = mxCreateCellMatrix(6,1); /* No optional fields */
             mxSetCell(plhs[0],0,mxCreateString("WakeDX"));
             mxSetCell(plhs[0],1,mxCreateString("WakeDY"));
             mxSetCell(plhs[0],2,mxCreateString("WakeQX"));
             mxSetCell(plhs[0],3,mxCreateString("WakeQY"));
             mxSetCell(plhs[0],4,mxCreateString("WakeZ"));
-            mxSetCell(plhs[0],5,mxCreateString("Normfactx"));
-            mxSetCell(plhs[0],6,mxCreateString("Normfacty"));
-            mxSetCell(plhs[0],7,mxCreateString("Normfactz"));
-            mxSetCell(plhs[0],8,mxCreateString("ZCuts"));
+            mxSetCell(plhs[0],5,mxCreateString("ZCuts"));
         }
     }else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");
