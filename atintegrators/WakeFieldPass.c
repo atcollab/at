@@ -167,7 +167,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
         waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
         waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
-        z_cuts=atGetOptionalDoubleArray(ElemData,"z_cuts"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
 
         
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
@@ -245,7 +245,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
         waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
         waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
-        z_cuts=atGetOptionalDoubleArray(ElemData,"z_cuts"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         
         Elem->nslice=nslice;
         Elem->nelem=nelem;
@@ -300,7 +300,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0],5,mxCreateString("Normfactx"));
             mxSetCell(plhs[0],6,mxCreateString("Normfacty"));
             mxSetCell(plhs[0],7,mxCreateString("Normfactz"));
-            mxSetCell(plhs[0],8,mxCreateString("z_cuts"));
+            mxSetCell(plhs[0],8,mxCreateString("ZCuts"));
         }
     }else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");
