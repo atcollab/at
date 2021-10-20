@@ -113,24 +113,16 @@ double *getbounds(double *r_in,int num_particles){
 
 void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
                  double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
-                 double *turnhistoryW,int *pslice,double *z_cuts){
-
+                 double *turnhistoryW,int *pslice, double *z_cuts){
     
     int i,ii;
     double *rtmp;
-    double smin, smax;
-    if (z_cuts) {
-      smin=z_cuts[0];
-      smax=z_cuts[1];
-                 }
-    else {
-      double *bounds = getbounds(r_in,num_particles);
-      smin = bounds[0];
-      smax = bounds[1]; 
-         }
 
-    double hz;
-    hz = (smax-smin)/(nslice);
+    double *bounds = z_cuts ? z_cuts : getbounds(r_in,num_particles); 
+    double smin = bounds[0];
+    double smax = bounds[1];
+
+    double hz = (smax-smin)/(nslice);
     double *xpos = turnhistoryX + (nturns-1)*nslice;
     double *ypos = turnhistoryY + (nturns-1)*nslice;
     double *zpos = turnhistoryZ + (nturns-1)*nslice;

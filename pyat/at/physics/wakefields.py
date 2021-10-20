@@ -257,11 +257,13 @@ class WakeElement(at.Element):
         kwargs.setdefault('PassMethod', 'WakeFieldPass')       
         self.Intensity = kwargs.pop('Intensity', 0.0)
         self.Nslice = kwargs.pop('Nslice', 101)
-        self.z_cuts = kwargs.pop('ZCuts', 0)
         self.Wakefact = self.get_wakefact(ring)
         self.int2curr = self.get_int2curr(ring)
         self.WakeT = wake.get_srange()
         self.Nelem = len(self.WakeT)
+        zcuts = kwargs.pop('ZCuts',None)
+        if zcuts is not None:
+            self.ZCuts=zcuts
         if wake.Z is not None:
             self.WakeZ = wake.Z
         if wake.DX is not None:
