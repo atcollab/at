@@ -24,10 +24,7 @@ struct elem
   double *waketableQX;
   double *waketableQY;
   double *waketableZ;
-  double *turnhistoryX;
-  double *turnhistoryY;
-  double *turnhistoryZ;
-  double *turnhistoryW;
+  double *turnhistory;
   double *z_cuts;
 };
 
@@ -52,10 +49,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     double *waketableQX = Elem->waketableQX;
     double *waketableQY = Elem->waketableQY;
     double *waketableZ = Elem->waketableZ;
-    double *turnhistoryX = Elem->turnhistoryX;
-    double *turnhistoryY = Elem->turnhistoryY;
-    double *turnhistoryZ = Elem->turnhistoryZ;
-    double *turnhistoryW = Elem->turnhistoryW;
+    double *turnhistory = Elem->turnhistory;
     double *z_cuts = Elem->z_cuts;    
 
     size_t sz = 5*nslice*sizeof(double) + num_particles*sizeof(int);
@@ -90,10 +84,10 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
         kz[i]=0.0;
     }
 
-    rotate_table_history(nturns,nslice,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,circumference);
-    slice_bunch(r_in,num_particles,nslice,nturns,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,pslice,z_cuts);
-    compute_kicks(nslice,nturns,nelem,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,
-                  waketableT,waketableDX,waketableDY,waketableQX,waketableQY,waketableZ,
+    rotate_table_history(nturns,nslice,turnhistory,circumference);
+    slice_bunch(r_in,num_particles,nslice,nturns,turnhistory,pslice,z_cuts);
+    compute_kicks(nslice,nturns,nelem,turnhistory,waketableT,waketableDX,
+                  waketableDY,waketableQX,waketableQY,waketableZ,
                   fx,fy,fqx,fqy,fz,kx,ky,kx2,ky2,kz);
     
     for (i=0; i<num_particles; i++) {
@@ -122,10 +116,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *waketableQX;
         double *waketableQY;
         double *waketableZ;
-        double *turnhistoryX;
-        double *turnhistoryY;
-        double *turnhistoryZ;
-        double *turnhistoryW;
+        double *turnhistory;
         double *z_cuts;
 
         nslice=atGetLong(ElemData,"Nslice"); check_error();
@@ -135,10 +126,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         circumference=atGetDouble(ElemData,"Circumference"); check_error();
         wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
-        turnhistoryX=atGetDoubleArray(ElemData,"TurnHistoryX"); check_error();
-        turnhistoryY=atGetDoubleArray(ElemData,"TurnHistoryY"); check_error();
-        turnhistoryZ=atGetDoubleArray(ElemData,"TurnHistoryZ"); check_error();
-        turnhistoryW=atGetDoubleArray(ElemData,"TurnHistoryW"); check_error();
+        turnhistory=atGetDoubleArray(ElemData,"TurnHistory"); check_error();
         /*optional attributes*/
         normfactx=atGetOptionalDouble(ElemData,"Normfactx",1.0); check_error();
         normfacty=atGetOptionalDouble(ElemData,"Normfacty",1.0); check_error();
@@ -167,10 +155,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->waketableQX=waketableQX;
         Elem->waketableQY=waketableQY;
         Elem->waketableZ=waketableZ;
-        Elem->turnhistoryX=turnhistoryX;
-        Elem->turnhistoryY=turnhistoryY;
-        Elem->turnhistoryZ=turnhistoryZ;
-        Elem->turnhistoryW=turnhistoryW;
+        Elem->turnhistory=turnhistory;
         Elem->z_cuts=z_cuts;
     }
     WakeFieldPass(r_in,num_particles,Elem);

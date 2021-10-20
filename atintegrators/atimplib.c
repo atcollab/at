@@ -37,24 +37,23 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
 };
 
 
-void rotate_table_history(long nturns,long nslice,double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
-                        double *turnhistoryW,double circumference){
+void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
     double *xtmp,*xtmp0;
     double *ytmp,*ytmp0;
     double *ztmp,*ztmp0;
     double *wtmp,*wtmp0;
-    int i, ii;
+    int i, ii;    
     /*First rotate array*/
 
     for (i=0;i<nturns-1;i++){
-        xtmp0 = turnhistoryX + i*nslice;
-        xtmp = turnhistoryX + (i+1)*nslice;
-        ytmp0 = turnhistoryY + i*nslice;
-        ytmp = turnhistoryY + (i+1)*nslice;
-        ztmp0 = turnhistoryZ + i*nslice;
-        ztmp = turnhistoryZ + (i+1)*nslice;
-        wtmp0 = turnhistoryW + i*nslice;
-        wtmp = turnhistoryW + (i+1)*nslice;
+        xtmp0 = turnhistory + i*nslice;
+        xtmp = turnhistory + (i+1)*nslice;
+        ytmp0 = turnhistory + i*nslice+nslice*nturns;
+        ytmp = turnhistory + (i+1)*nslice+nslice*nturns;
+        ztmp0 = turnhistory + i*nslice+nslice*nturns*2;
+        ztmp = turnhistory + (i+1)*nslice+nslice*nturns*2;
+        wtmp0 = turnhistory + i*nslice+nslice*nturns*3;
+        wtmp = turnhistory + (i+1)*nslice+nslice*nturns*3;
         for(ii=0;ii<nslice;ii++){
             xtmp0[ii]=xtmp[ii];
             ytmp0[ii]=ytmp[ii];
@@ -65,10 +64,10 @@ void rotate_table_history(long nturns,long nslice,double *turnhistoryX,double *t
     }
     /*Now set last row to 0 (present slices)*/
     
-    xtmp = turnhistoryX + (nturns-1)*nslice;
-    ytmp = turnhistoryY + (nturns-1)*nslice;
-    ztmp = turnhistoryZ + (nturns-1)*nslice;
-    wtmp = turnhistoryW + (nturns-1)*nslice; 
+    xtmp = turnhistory + (nturns-1)*nslice;
+    ytmp = turnhistory + (nturns-1)*nslice+nslice*nturns;
+    ztmp = turnhistory + (nturns-1)*nslice+nslice*nturns*2;
+    wtmp = turnhistory + (nturns-1)*nslice+nslice*nturns*3; 
     for(ii=0;ii<nslice;ii++){
         xtmp[ii]=0.0;
         ytmp[ii]=0.0;
@@ -112,8 +111,7 @@ double *getbounds(double *r_in,int num_particles){
 
 
 void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
-                 double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
-                 double *turnhistoryW,int *pslice, double *z_cuts){
+                 double *turnhistory,int *pslice,double *z_cuts){
     
     int i,ii;
     double *rtmp;
@@ -123,10 +121,10 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     double smax = bounds[1];
 
     double hz = (smax-smin)/(nslice);
-    double *xpos = turnhistoryX + (nturns-1)*nslice;
-    double *ypos = turnhistoryY + (nturns-1)*nslice;
-    double *zpos = turnhistoryZ + (nturns-1)*nslice;
-    double *weight = turnhistoryW + (nturns-1)*nslice;
+    double *xpos = turnhistory + (nturns-1)*nslice;
+    double *ypos = turnhistory + (nturns-1)*nslice+nslice*nturns;
+    double *zpos = turnhistory + (nturns-1)*nslice+nslice*nturns*2;
+    double *weight = turnhistory + (nturns-1)*nslice+nslice*nturns*3;
 
 
     /*slices sorted from head to tail (increasing ct)*/
@@ -182,8 +180,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
 };
 
 void compute_kicks(int nslice,int nturns,int nelem,
-                   double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
-                   double *turnhistoryW,double *waketableT,double *waketableDX,
+                   double *turnhistory,double *waketableT,double *waketableDX,
                    double *waketableDY,double *waketableQX,double *waketableQY,
                    double *waketableZ,double fx, double fy, double fqx,double fqy,
                    double fz, double *kx,double *ky,double *kx2,double *ky2,double *kz){
@@ -191,6 +188,10 @@ void compute_kicks(int nslice,int nturns,int nelem,
     int size=1;
     int i,ii,index;
     double ds,wi,dx,dy;
+    double *turnhistoryX = turnhistory;
+    double *turnhistoryY = turnhistory+nslice*nturns;
+    double *turnhistoryZ = turnhistory+nslice*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nturns*3;
     #ifdef MPI
     int flag;
     MPI_Initialized(&flag); 

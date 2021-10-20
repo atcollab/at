@@ -276,10 +276,8 @@ class WakeElement(at.Element):
             self.WakeQY = wake.QY
         self.Nturns = kwargs.pop('Nturns', 1)
         self.Circumference = ring.circumference
-        self.TurnHistoryX = numpy.zeros(self.Nturns*self.Nslice)
-        self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
-        self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
-        self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistory = numpy.zeros((self.Nturns*self.Nslice,4),
+                                       order='F')
         super(WakeElement, self).__init__(family_name, **kwargs)      
 
     def get_wakefact(self, ring):
@@ -291,10 +289,8 @@ class WakeElement(at.Element):
         return clight*betrel*qe/ring.circumference
 
     def clear_history(self):
-        self.TurnHistoryX = numpy.zeros(self.Nturns*self.Nslice)
-        self.TurnHistoryY = numpy.zeros(self.Nturns*self.Nslice)
-        self.TurnHistoryZ = numpy.zeros(self.Nturns*self.Nslice)
-        self.TurnHistoryW = numpy.zeros(self.Nturns*self.Nslice)
+        self.TurnHistory = numpy.zeros((self.Nturns*self.Nslice,4),
+                                       order='F')
 
     # noinspection PyPep8Naming
     @property
