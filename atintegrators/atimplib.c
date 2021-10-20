@@ -181,5 +181,53 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
 
 };
 
+void compute_kicks(int nslice,int nturns,int nelem,
+                   double *turnhistoryX,double *turnhistoryY,double *turnhistoryZ,
+                   double *turnhistoryW,double *waketableT,double *waketableDX,
+                   double *waketableDY,double *waketableQX,double *waketableQY,
+                   double *waketableZ,double fx, double fy, double fqx,double fqy,
+                   double fz, double *kx,double *ky,double *kx2,double *ky2,double *kz){
+    int rank=0;
+    int size=1;
+    int i,ii,index;
+    double ds,wi,dx,dy;
+    #ifdef MPI
+    int flag;
+    MPI_Initialized(&flag); 
+    if(flag){
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+    }
+    #endif
+    for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
+        if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
+            for (ii=0;ii<nslice*nturns;ii++){
+                ds = turnhistoryZ[ii]-turnhistoryZ[i];
+                if(turnhistoryW[ii]>0.0 && -ds>=waketableT[0] && -ds<waketableT[nelem-1]){
+                    wi = turnhistoryW[ii];
+                    dx = turnhistoryX[ii];
+                    dy = turnhistoryY[ii];
+                    index = binarySearch(waketableT,-ds,nelem,0,0);              
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*fx*wi*getTableWake(waketableDX,waketableT,-ds,index);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*fy*wi*getTableWake(waketableDY,waketableT,-ds,index);
+                    if(waketableQX)kx2[i-nslice*(nturns-1)] += fqx*wi*getTableWake(waketableQX,waketableT,-ds,index);
+                    if(waketableQY)ky2[i-nslice*(nturns-1)] += fqy*wi*getTableWake(waketableQY,waketableT,-ds,index);
+                    if(waketableZ) kz[i-nslice*(nturns-1)] += fz*wi*getTableWake(waketableZ,waketableT,-ds,index);
+                }            
+            }
+        }
+    }
+    #ifdef MPI
+    if(flag){
+        MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+    #endif
+};
+
 
 
