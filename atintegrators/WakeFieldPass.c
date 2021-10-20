@@ -96,6 +96,41 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     rotate_table_history(nturns,nslice,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,circumference);
     slice_bunch(r_in,num_particles,nslice,nturns,turnhistoryX,turnhistoryY,turnhistoryZ,turnhistoryW,pslice,z_cuts);
 
+    #ifdef MPI
+    int flag, rank, size, mod;
+    MPI_Initialized(&flag); 
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
+        mod = (i+size)%size;
+        printf("i =%d, rank =%d, modulo=%d, size=%d\n",i,rank,mod,size);   
+        if(mod==rank){
+            printf("i=%d done\n",i);   
+            if(turnhistoryW[i]>0.0){
+                for (ii=0;ii<nslice*nturns;ii++){
+                    ds = turnhistoryZ[ii]-turnhistoryZ[i];
+                    if(turnhistoryW[ii]>0.0 && -ds>=waketableT[0] && -ds<waketableT[nelem-1]){
+                        wi = turnhistoryW[ii];
+                        dx = turnhistoryX[ii];
+                        dy = turnhistoryY[ii];
+                        index = binarySearch(waketableT,-ds,nelem,0,0);              
+                        if(waketableDX)kx[i-nslice*(nturns-1)] += dx*fx*wi*getTableWake(waketableDX,waketableT,-ds,index);
+                        if(waketableDY)ky[i-nslice*(nturns-1)] += dy*fy*wi*getTableWake(waketableDY,waketableT,-ds,index);
+                        if(waketableQX)kx2[i-nslice*(nturns-1)] += fqx*wi*getTableWake(waketableQX,waketableT,-ds,index);
+                        if(waketableQY)ky2[i-nslice*(nturns-1)] += fqy*wi*getTableWake(waketableQY,waketableT,-ds,index);
+                        if(waketableZ) kz[i-nslice*(nturns-1)] += fz*wi*getTableWake(waketableZ,waketableT,-ds,index);
+                    }            
+                }
+            }
+        }
+    }
+    MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+    #else
     for(i=nslice*(nturns-1);i<nslice*nturns;i++){        
         if(turnhistoryW[i]>0.0){
             for (ii=0;ii<nslice*nturns;ii++){
@@ -114,6 +149,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
             }
         }
     }
+    #endif
     
     for (i=0; i<num_particles; i++) {
         rtmp = r_in+i*6;
