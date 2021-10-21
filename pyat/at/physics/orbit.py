@@ -279,8 +279,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         f_rf = min(elm.Frequency for elm in ring if iscavity(elm))
     except ValueError:
         raise AtError('No cavity found in the lattice.')
-    harm_number = round(f_rf*l0/ring.beta/clight)
-    # harm_number = round(f_rf*l0/clight)
+    harm_number = round(f_rf/ring.periodicity/ring.revolution_frequency)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)

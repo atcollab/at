@@ -328,14 +328,11 @@ class Lattice(list):
         return gamma
 
     @property
-    def beta(self):
-        gamma = self.gamma
-        return math.sqrt(1.0 - 1.0 / gamma / gamma)
-
-    @property
     def revolution_frequency(self):
         """Revolution frequency (full ring) [Hz]"""
-        frev = self.beta * clight / self.circumference
+        gamma = self.gamma
+        beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+        frev = beta * clight / self.circumference
         return frev
 
     @property
