@@ -96,7 +96,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         long nslice,nelem, nturns;
         double intensity, wakefact, circumference;
         double *normfact;
-        double lnf[3];
+        static double lnf[3];
         double *waketableT;
         double *waketableDX;
         double *waketableDY;
