@@ -192,6 +192,15 @@ void compute_kicks(int nslice,int nturns,int nelem,
     double *turnhistoryY = turnhistory+nslice*nturns;
     double *turnhistoryZ = turnhistory+nslice*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nturns*3;
+
+    for (i=0;i<nslice;i++) {
+        kx[i]=0.0;
+        ky[i]=0.0;
+        kx2[i]=0.0;
+        ky2[i]=0.0;
+        kz[i]=0.0;
+    }
+
     #ifdef MPI
     int flag;
     MPI_Initialized(&flag); 

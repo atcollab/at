@@ -68,14 +68,6 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     iptr = (int *) dptr;
     pslice = iptr; iptr += num_particles;
 
-    for (i=0;i<nslice;i++) {
-        kx[i]=0.0;
-        ky[i]=0.0;
-        kx2[i]=0.0;
-        ky2[i]=0.0;
-        kz[i]=0.0;
-    }
-
     /*slices beam and compute kick*/
     rotate_table_history(nturns,nslice,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturns,turnhistory,pslice,z_cuts);
