@@ -13,20 +13,22 @@ class Particle(object):
                     other particles, the mass and charge must be provided.
 
     KEYWORDS
-        mass        Particle rest mass [ev]
-        charge      Particle charge
+        rest_energy Particle rest energy [ev]
+        charge      Particle charge [elementary charge]
         *           Other keywords will be set as attributes of the particle
     """
     _known = dict(
-        electron=dict(mass=e_mass, charge=-1.0),
-        proton=dict(mass=p_mass, charge=1.0)
+        relativistic=dict(rest_energy=0.0, charge=-1.0),
+        electron=dict(rest_energy=e_mass, charge=-1.0),
+        positron=dict(rest_energy=e_mass, charge=1.0),
+        proton=dict(rest_energy=p_mass, charge=1.0)
     )
 
     def __init__(self, name, **kwargs):
         if name in self._known:
             kwargs.update(self._known[name])
         self.name = name
-        for key in ('mass', 'charge'):
+        for key in ('rest_energy', 'charge'):
             if key not in kwargs:
                 raise KeyError('"{}" is undefined'.format(key))
         for (key, val) in kwargs.items():

@@ -1,7 +1,6 @@
 import pytest
 import numpy
-# noinspection PyUnresolvedReferences
-from at.tracking import _atpass as atpass
+from at import element_pass, lattice_pass
 from at import elements
 
 
@@ -180,20 +179,19 @@ def test_insert_into_drift():
 
 
 def test_correct_dimensions_does_not_raise_error(rin):
-    atpass([], rin, 1)
+    lattice_pass([], rin, 1)
     rin = numpy.zeros((6,))
-    atpass([], rin, 1)
+    lattice_pass([], rin, 1)
     rin = numpy.array(numpy.zeros((6, 2), order='F'))
-    atpass([], rin, 1)
+    lattice_pass([], rin, 1)
 
 
 @pytest.mark.parametrize("dipole_class", (elements.Dipole, elements.Bend))
 def test_dipole_bend_synonym(rin, dipole_class):
     b = dipole_class('dipole', 1.0, 0.1, EntranceAngle=0.05, ExitAngle=0.05)
-    lat = [b]
     rin[0, 0] = 1e-6
-    rin_orig = numpy.copy(rin)
-    atpass(lat, rin, 1)
+    rin_orig = rin.copy()
+    element_pass(b, rin)
     rin_expected = numpy.array([1e-6, 0, 0, 0, 0, 1e-7]).reshape((6, 1))
     numpy.testing.assert_almost_equal(rin_orig, rin_expected)
     assert b.K == 0.0
@@ -206,31 +204,28 @@ def test_dipole_bend_synonym(rin, dipole_class):
 def test_marker(rin):
     m = elements.Marker('marker')
     assert m.Length == 0
-    lattice = [m]
     rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
     rin_orig = numpy.array(rin, copy=True, order='F')
-    atpass(lattice, rin, 1)
+    element_pass(m, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
 def test_monitor(rin):
     mon = elements.Monitor('monitor')
     assert mon.Length == 0
-    lattice = [mon]
     rin = numpy.array(numpy.random.rand(*rin.shape), order='F')
-    rin_orig = numpy.array(rin, copy=True, order='F')
-    atpass(lattice, rin, 1)
+    rin_orig = rin.copy()
+    element_pass(mon, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
 def test_aperture_inside_limits(rin):
     a = elements.Aperture('aperture', [-1e-3, 1e-3, -1e-4, 1e-4])
     assert a.Length == 0
-    lattice = [a]
     rin[0, 0] = 1e-5
     rin[2, 0] = -1e-5
-    rin_orig = numpy.array(rin, copy=True)
-    atpass(lattice, rin, 1)
+    rin_orig = rin.copy()
+    element_pass(a, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
@@ -240,28 +235,26 @@ def test_aperture_outside_limits(rin):
     lattice = [a]
     rin[0, 0] = 1e-2
     rin[2, 0] = -1e-2
-    atpass(lattice, rin, 1)
+    lattice_pass(lattice, rin, 1)
     assert numpy.isnan(rin[0, 0])
     assert rin[2, 0] == 0.0  # Only the 1st coordinate is nan, the rest is zero
 
 
 def test_drift_offset(rin):
     d = elements.Drift('drift', 1)
-    lattice = [d]
     rin[0, 0] = 1e-6
     rin[2, 0] = 2e-6
-    rin_orig = numpy.array(rin, copy=True)
-    atpass(lattice, rin, 1)
+    rin_orig = rin.copy()
+    element_pass(d, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
 def test_drift_divergence(rin):
     d = elements.Drift('drift', 1.0)
     assert d.Length == 1
-    lattice = [d]
     rin[1, 0] = 1e-6
     rin[3, 0] = -2e-6
-    atpass(lattice, rin, 1)
+    element_pass(d, rin)
     # results from Matlab
     rin_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
                                 2.5e-12]).reshape(6, 1)
@@ -271,7 +264,6 @@ def test_drift_divergence(rin):
 def test_drift_two_particles(rin):
     d = elements.Drift('drift', 1.0)
     assert d.Length == 1
-    lattice = [d]
     two_rin = numpy.array(numpy.concatenate((rin, rin), axis=1), order='F')
     # particle one is offset
     two_rin[0, 0] = 1e-6
@@ -279,8 +271,8 @@ def test_drift_two_particles(rin):
     # particle two has divergence
     two_rin[1, 1] = 1e-6
     two_rin[3, 1] = -2e-6
-    two_rin_orig = numpy.array(two_rin, copy=True)
-    atpass(lattice, two_rin, 1)
+    two_rin_orig = two_rin.copy()
+    element_pass(d, two_rin)
     # results from Matlab
     p1_expected = numpy.array(two_rin_orig[:, 0]).reshape(6, 1)
     p2_expected = numpy.array([1e-6, 1e-6, -2e-6, -2e-6, 0,
@@ -291,9 +283,8 @@ def test_drift_two_particles(rin):
 
 def test_quad(rin):
     q = elements.Quadrupole('quad', 0.4, k=1)
-    lattice = [q]
     rin[0, 0] = 1e-6
-    atpass(lattice, rin, 1)
+    element_pass(q, rin)
     expected = numpy.array([0.9210610203854122, -0.3894182419439, 0,
                             0, 0, 0.0000000103303797478]).reshape(6, 1) * 1e-6
     numpy.testing.assert_allclose(rin, expected)
@@ -309,7 +300,7 @@ def test_rfcavity(rin):
     lattice = [rf, rf, rf, rf]
     rin[4, 0] = 1e-6
     rin[5, 0] = 1e-6
-    atpass(lattice, rin, 1)
+    lattice_pass(lattice, rin, 1)
     expected = numpy.array([0., 0., 0., 0., 9.990769e-7, 1.e-6]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)
 
@@ -319,9 +310,8 @@ def test_m66(rin, n):
     m = numpy.random.rand(6, 6)
     m66 = elements.M66('m66', m)
     assert m66.Length == 0
-    lattice = [m66]
     rin[n, 0] = 1e-6
-    atpass(lattice, rin, 1)
+    element_pass(m66, rin)
     expected = numpy.array([m[0, n], m[1, n], m[2, n], m[3, n], m[4, n],
                             m[5, n]]).reshape(6, 1) * 1e-6
     numpy.testing.assert_equal(rin, expected)
@@ -331,12 +321,11 @@ def test_corrector(rin):
     c = elements.Corrector('corrector', 0.0, numpy.array([0.9, 0.5],
                                                          dtype=numpy.float64))
     assert c.Length == 0
-    lattice = [c]
     rin[0, 0] = 1e-6
-    rin_orig = numpy.array(rin, copy=True)
+    rin_orig = rin.copy()
     rin_orig[1] = 0.9
     rin_orig[3] = 0.5
-    atpass(lattice, rin, 1)
+    element_pass(c, rin)
     numpy.testing.assert_equal(rin, rin_orig)
 
 
@@ -347,9 +336,8 @@ def test_wiggler(rin):
     by = numpy.array([1, 1, 0, 1, 1, 0], dtype=numpy.float64)
     c = elements.Wiggler('wiggler', period * periods, period, bmax, 3e9, By=by)
     assert abs(c.Length - 1.15) < 1e-10
-    lattice = [c]
     # Expected value from Matlab AT.
     expected = numpy.array(rin, copy=True)
     expected[5] = 0.000000181809691064259
-    atpass(lattice, rin, 1)
+    element_pass(c, rin)
     numpy.testing.assert_allclose(rin, expected, atol=1e-12)

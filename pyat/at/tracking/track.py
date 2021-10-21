@@ -2,7 +2,7 @@ import numpy
 from warnings import warn
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from .atpass import _atpass, _elempass, isopenmp
-from ..lattice import Lattice, AtWarning, DConstant
+from ..lattice import Particle, AtWarning, DConstant, uint32_refpts
 
 
 __all__ = ['lattice_pass', 'element_pass']
@@ -11,7 +11,7 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
-                 omp_num_threads=None, losses=False):
+                 omp_num_threads=None, **kwargs):
     """lattice_pass tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the
     lattice[i].PassMethod field.
@@ -55,40 +55,42 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
         that survived
     """
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
-    if not isinstance(lattice, Lattice):
-        warn("'lattice_pass' need a Lattice object. " +
-             "Implicit conversion to Lattice will be removed in the future.",
-             FutureWarning)
-        lattice = Lattice(lattice, energy=1.0E9)
+    if not isinstance(lattice, list):
+        lattice = list(lattice)
     if refpts is None:
         refpts = len(lattice)
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
-    refs = lattice.uint32_refpts(refpts)
+    refs = uint32_refpts(refpts, len(lattice))
+    particle = getattr(lattice, 'particle', Particle('relativistic'))
+    kwargs.setdefault('energy', getattr(lattice, 'energy', 1.0e9))
+    kwargs.setdefault('rest_energy', particle.rest_energy)
+    kwargs.setdefault('charge', particle.charge)
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
     # * C is the number of turns
     if r_in.flags.f_contiguous:
         return _atpass(lattice, r_in, nturns, refpts=refs,
-                       energy=lattice.energy,
-                       reuse=int(keep_lattice),
+                       reuse=keep_lattice,
                        omp_num_threads=omp_num_threads,
-                       losses=int(losses))
+                       **kwargs)
     else:
         r_fin = numpy.asfortranarray(r_in)
         r_out = _atpass(lattice, r_fin, nturns, refpts=refs,
-                        energy=lattice.energy,
                         reuse=keep_lattice,
                         omp_num_threads=omp_num_threads,
-                        losses=int(losses))
+                        **kwargs)
         r_in[:] = r_fin[:]
         return r_out
 
 
 def element_pass(element, r_in, **kwargs):
+    particle = kwargs.pop('particle', Particle('relativistic'))
+    kwargs.setdefault('rest_energy', particle.rest_energy)
+    kwargs.setdefault('charge', particle.charge)
     r_in = numpy.asfortranarray(r_in)
-    _elempass(element, r_in, **kwargs)
+    return _elempass(element, r_in, **kwargs)
 
 
 def atpass(args, **kwargs):

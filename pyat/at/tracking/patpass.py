@@ -7,7 +7,7 @@ import multiprocessing
 from .atpass import _atpass
 from sys import platform
 from warnings import warn
-from at.lattice import Lattice, elements, AtWarning
+from at.lattice import Particle, elements, AtWarning, uint32_refpts
 import numpy
 
 
@@ -58,7 +58,7 @@ def _pass(ring, r_in, pool_size, globvar, **kwargs):
     return format_results(results, r_in, losses)
 
 
-def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
+def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
             globvar=True, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
@@ -93,22 +93,23 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
-    if not isinstance(ring, Lattice):
-        warn("'patpass' need a Lattice object. " +
-             "Implicit conversion to Lattice will be removed in the future.",
-             FutureWarning)
-        ring = Lattice(ring, energy=1.0E9)
+    if not isinstance(ring, list):
+        ring = list(ring)
     if refpts is None:
         refpts = len(ring)
-    refpts = ring.uint32_refpts(refpts)
+    refpts = uint32_refpts(refpts, len(ring))
+    particle = getattr(ring, 'particle', Particle('relativistic'))
+    kwargs.setdefault('energy', getattr(ring, 'energy', 1.0e9))
+    kwargs.setdefault('rest_energy', particle.rest_energy)
+    kwargs.setdefault('charge', particle.charge)
     pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
         return _pass(ring, r_in, pool_size, globvar, nturns=nturns,
-                       refpts=refpts, energy=ring.energy, losses=losses)
+                       refpts=refpts, **kwargs)
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
         return _atpass(ring, r_in, nturns=nturns,
-                       refpts=refpts, energy=ring.energy, losses=losses)
+                       refpts=refpts, **kwargs)

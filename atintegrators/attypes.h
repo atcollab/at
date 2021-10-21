@@ -14,7 +14,7 @@ struct parameters
   double T0;
   double energy;
   double rest_energy;
-  int charge;
+  double charge;
 };
 
 #endif /*ATTYPES_H*/

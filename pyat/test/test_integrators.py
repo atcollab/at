@@ -3,7 +3,6 @@ import numpy
 import pytest
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
-from at.tracking import _atpass as atpass
 from at.tracking import lattice_pass, element_pass
 from at.lattice import Lattice, Element, elements
 from at import set_shift, set_tilt, shift_elem, tilt_elem
@@ -47,22 +46,20 @@ def test_bndstrmpole_symplectic_4_pass(rin):
 def test_pydrift():
     pydrift = elements.Drift('drift', 1.0, PassMethod='pyDriftPass')
     cdrift = elements.Drift('drift', 1.0, PassMethod='DriftPass')
-    pylattice = Lattice([pydrift], energy=1.0E9)
-    clattice = Lattice([cdrift], energy=1.0E9)
-    pyout = lattice_pass(pylattice, numpy.zeros(6)+1.0e-6, nturns=1)
-    cout = lattice_pass(clattice, numpy.zeros(6)+1.0e-6, nturns=1)
+    pyout = element_pass(pydrift, numpy.zeros(6)+1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros(6)+1.0e-6)
     numpy.testing.assert_equal(pyout, cout)
 
-    set_shift(pylattice, [1.0e-3], [1.0e-3], relative=False)
-    set_shift(clattice, [1.0e-3], [1.0e-3], relative=False)
-    pyout = lattice_pass(pylattice, numpy.zeros(6)+1.0e-6, nturns=1)
-    cout = lattice_pass(clattice, numpy.zeros(6)+1.0e-6, nturns=1)
+    shift_elem(pydrift, 1.0e-3, 1.0e-3)
+    shift_elem(cdrift, 1.0e-3, 1.0e-3)
+    pyout = element_pass(pydrift, numpy.zeros(6) + 1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros(6) + 1.0e-6)
     numpy.testing.assert_equal(pyout, cout)
 
-    set_tilt(pylattice, [1.0e-3], relative=False)
-    set_tilt(clattice, [1.0e-3], relative=False)
-    pyout = lattice_pass(pylattice, numpy.zeros(6)+1.0e-6, nturns=1)
-    cout = lattice_pass(clattice, numpy.zeros(6)+1.0e-6, nturns=1)
+    tilt_elem(pydrift, 1.0e-3, 1.0e-3)
+    tilt_elem(cdrift, 1.0e-3, 1.0e-3)
+    pyout = element_pass(pydrift, numpy.zeros(6)+1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros(6)+1.0e-6)
     numpy.testing.assert_equal(pyout, cout)
 
 

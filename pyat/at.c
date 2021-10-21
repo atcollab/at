@@ -87,6 +87,14 @@ static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
     va_end(ap);
     return NULL;
 }
+
+static const char *pyprint(PyObject* pyobj) {
+    PyObject *pystr = PyObject_Str(pyobj);
+    const char* str = PyUnicode_AsUTF8(pystr);
+    Py_XDECREF(pystr);
+    return str;
+}
+
 /*
  * Recursively search the list to check if the library containing
  * method_name is already loaded. If it is - return the pointer to the
@@ -212,51 +220,11 @@ static PyObject *GetpyFunction(const char *fn_name)
   PyObject *pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
   if ((!pyfunction) || !PyCallable_Check(pyfunction)) {
       Py_DECREF(pModule);
-      if(pyfunction){
-          Py_DECREF(pyfunction);
-      }
+      Py_XDECREF(pyfunction);
       return NULL;
   }
   Py_DECREF(pModule);
   return pyfunction;
-}
-
-/*
- * Build input positional arguments for python integrators
- */
-static PyObject *Buildkwargs(const atElem *ElemData)
-{
-  PyObject *kwargs;
-  kwargs = PyDict_New();
-  PyDict_SetItemString(kwargs,(char *)"elem",(PyObject *)ElemData);
-  return kwargs;
-}
-
-/*
- * Build input keyword arguments for python integrators
- */
-static PyObject *Buildargs(double *r_in, int num_particles)
-{
-  npy_intp outdims[1];
-  outdims[0] = 6*num_particles;
-  PyObject *rin;
-  rin = PyArray_SimpleNewFromData(1, outdims, NPY_DOUBLE, r_in);
-  if (!rin){
-      printf("PyFuncPass: could not generate pyArray rin");
-    }
-  return PyTuple_Pack(1,rin);
-}
-
-/*
- * Call python integrators
- */
-static PyObject *pyIntegratorPass(double *r_in, PyObject *function, PyObject *kwargs, int num_particles)
-{
-  PyObject *args;
-  args = Buildargs(r_in, num_particles);
-  PyObject_Call(function, args, kwargs);
-  Py_DECREF(args);
-  return kwargs;
 }
 
 /*
@@ -354,10 +322,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    param.energy=1.0;
+    param.energy=1.0e9;
     param.rest_energy=0.0;
-    param.charge=-1;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!ddipIp", kwlist,
+    param.charge=-1.0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!dddpIp", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs,
         &param.energy, &param.rest_energy, &param.charge,
@@ -468,20 +436,23 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         integrator = integrator_list;
         pyintegrator = pyintegrator_list;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
+            PyObject *pylength;
             PyObject *el = PyList_GET_ITEM(lattice, elem_index);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
             double length;
             if (!PyPassMethod) return print_error(elem_index, rout);     /* No PassMethod */
             LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
+            Py_DECREF(PyPassMethod);
             if (!LibraryListPtr) return print_error(elem_index, rout);        /* No trackFunction for the given PassMethod */
-            length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
+            pylength = PyObject_GetAttrString(el, "Length");
+            length = PyFloat_AsDouble(pylength);
+            Py_XDECREF(pylength);
             if (PyErr_Occurred()) PyErr_Clear();
             else lattice_length += length;
             *integrator++ = LibraryListPtr->FunctionHandle;
             *pyintegrator++ = LibraryListPtr->PyFunctionHandle;
             *element++ = el;
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
-            Py_DECREF(PyPassMethod);
         }
         valid = 0;
     }
@@ -505,9 +476,9 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             }
             /* the actual integrator call */
             if (*pyintegrator) {
-                if (!*kwargs) *kwargs = Buildkwargs(*element);
-                *kwargs = pyIntegratorPass(drin, *pyintegrator, *kwargs, num_particles);
-                if (!*kwargs) return print_error(elem_index, rout);       /* trackFunction failed */
+                PyObject *res = PyObject_CallFunctionObjArgs(*pyintegrator, rin, *element, NULL);
+                if (!res) return print_error(elem_index, rout);       /* trackFunction failed */
+                Py_DECREF(res);
             } else {
                 *elemdata = (*integrator)(*element, *elemdata, drin, num_particles, &param);
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
@@ -558,7 +529,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    static char *kwlist[] = {"energy", "rest_energy", "charge", NULL};
+    static char *kwlist[] = {"element", "rin",
+                             "energy", "rest_energy", "charge", NULL};
     PyObject *element;
     PyArrayObject *rin;
     PyObject *PyPassMethod;
@@ -569,10 +541,10 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    param.energy=1.0;
+    param.energy=1.0e9;
     param.rest_energy=0.0;
-    param.charge=-1;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO!|ddi", kwlist,
+    param.charge=-1.0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO!|ddd", kwlist,
         &element,  &PyArray_Type, &rin,
         &param.energy, &param.rest_energy, &param.charge)) {
         return NULL;
@@ -600,17 +572,16 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     integrator = LibraryListPtr->FunctionHandle;
     pyintegrator = LibraryListPtr->PyFunctionHandle;
     if (pyintegrator) {
-        PyObject *kwargs = Buildkwargs(element);
-        kwargs = pyIntegratorPass(drin, pyintegrator, kwargs, num_particles);
-        if (!kwargs) return NULL;
-        Py_DECREF(kwargs);
+        PyObject *res = PyObject_CallFunctionObjArgs(pyintegrator, rin, element, NULL);
+        if (!res) return NULL;
+        Py_DECREF(res);
     } else {
         struct elem *elem_data = integrator(element, NULL, drin, num_particles, &param);
         if (!elem_data) return NULL;
         free(elem_data);
     }
-    if (pyintegrator) Py_DECREF(pyintegrator);
-    Py_RETURN_NONE;
+    Py_INCREF(rin);
+    return (PyObject *) rin;
 }
 
 static PyObject *isopenmp(PyObject *self)
