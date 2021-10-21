@@ -100,9 +100,9 @@ def radiation_parameters(ring, dp=None, params=None, **kwargs):
     integs = ring.get_radiation_integrals(dp, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = numpy.array(integs) * ring.periodicity
     circumference = ring.circumference
-    voltage = ring.voltage
+    voltage = ring.rf_voltage
     E0 = ring.energy
-    gamma = E0 / e_mass
+    gamma = ring.gamma
     gamma2 = gamma * gamma
     beta = sqrt(1.0 - 1.0/gamma2)
     U0 = Cgamma / 2.0 / pi * E0**4 * rp.i2
@@ -163,7 +163,7 @@ def envelope_parameters(ring, params=None):
     """
     rp = RingParameters() if params is None else params
     emit0, beamdata, emit = ring.ohmi_envelope()
-    voltage = ring.voltage
+    voltage = ring.rf_voltage
     rp.E0 = ring.energy
     rp.U0 = ring.energy_loss
     revolution_period = ring.revolution_period

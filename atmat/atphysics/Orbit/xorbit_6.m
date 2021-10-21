@@ -10,21 +10,15 @@ function Ri = xorbit_6(RING,varargin)
 [Ri,varargs]=getargs(varargs,Ri,'check',@(arg) isnumeric(arg) && isequal(size(arg),[6,1])); %#ok<ASGLU>
 
 cavities=RING(atgetcells(RING,'Frequency'));
-
 if isempty(cavities)
     error('AT:NoFrequency', 'The lattice has no Cavity element')
 end
+Frf=min(atgetfieldvalues(cavities,'Frequency'));
 
 L0 = findspos(RING,length(RING)+1); % design length [m]
 C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
-
-T0 = L0/C0;
-
-Frf = unique(atgetfieldvalues(cavities,'Frequency'));
-HarmNumber = unique(atgetfieldvalues(cavities,'HarmNumber'));
-if length(Frf) > 1 || length(HarmNumber) > 1
-    error('AT:NoFrequency','RF cavities are not identical');
-end
+T0 = L0/C0;                         % Revolution period [s]
+HarmNumber = round(Frf*L0/C0);
 
 if isempty(Ri)
     Vcell=sum(atgetfieldvalues(cavities,'Voltage'));

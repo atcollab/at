@@ -1,6 +1,6 @@
 from ..lattice import Lattice, get_rf_frequency, check_radiation, get_s_pos
 from ..lattice import DConstant
-from ..lattice.constants import clight, e_mass
+from ..lattice.constants import clight
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy
@@ -45,7 +45,7 @@ def get_slip_factor(ring, **kwargs):
                         Defaults to False
         dp_step=1.0E-6  momentum deviation used for differentiation
     """
-    gamma = ring.energy / e_mass
+    gamma = ring.gamma
     etac = (1.0/gamma/gamma - get_mcf(ring, **kwargs))
     return etac
 

@@ -17,6 +17,7 @@ import math
 import itertools
 from warnings import warn
 from at.lattice.constants import clight
+from at.lattice import Particle
 from at.lattice import AtError, AtWarning
 from at.lattice import uint32_refpts as uint32_refs, bool_refpts as bool_refs
 from at.lattice import refpts_iterator, refpts_len
@@ -41,17 +42,21 @@ class Lattice(list):
         name        Name of the lattice
         energy      Particle energy
         periodicity Number of super-periods to describe the full ring
+        particle    Circulating particle
 
-    Lattice(elems, **params)     Create a new lattice object
+    Lattice(elems, **params)        Create a new lattice object
 
         INPUT
-            elems:          any iterable of AT elements
+            elems:                  any iterable of AT elements
 
         KEYWORDS
-            name=''             Name of the lattice
-            energy              Energy of the lattice
-            periodicity=1       Number of periods
-            iterator=None       Custom iterator (see below)
+            name=''                 Name of the lattice
+            energy                  Energy of the lattice
+            periodicity=1           Number of periods
+            particle='relativistic' Circulating particle. May be 'relativistic',
+                                    'electron', 'positron', 'proton'
+                                    or a Particle object
+            iterator=None           Custom iterator (see below)
             scan=False          Scan elements, look for energy and periodicity
             *                   all other keywords will be set as attributes of
                                 the Lattice object
@@ -127,6 +132,7 @@ class Lattice(list):
         # set default values
         kwargs.setdefault('name', '')
         kwargs.setdefault('periodicity', 1)
+        kwargs.setdefault('particle', 'relativistic')
         if 'energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
         # set attributes
@@ -162,15 +168,17 @@ class Lattice(list):
     def __repr__(self):
         attrs = vars(self).copy()
         k1 = [(k, attrs.pop(k)) for k in Lattice._1st_attributes]
+        k2 = [('particle', self.particle)]
         k3 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
-        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k3))
+        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k2 + k3))
         return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(), keys)
 
     def __str__(self):
         attrs = vars(self).copy()
         k1 = [(k, attrs.pop(k)) for k in Lattice._1st_attributes]
+        k2 = [('particle', self.particle)]
         k3 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
-        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k3))
+        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k2 + k3))
         return 'Lattice(<{0} elements>, {1})'.format(len(self), keys)
 
     def __add__(self, elems):
@@ -300,12 +308,34 @@ class Lattice(list):
         return self.periodicity * self.get_s_pos(len(self))[0]
 
     @property
+    def particle(self):
+        """Circulating particle"""
+        return self._particle
+
+    @particle.setter
+    def particle(self, particle):
+        if isinstance(particle, Particle):
+            self._particle = particle
+        else:
+            self._particle = Particle(particle)
+
+    @property
+    def gamma(self):
+        try:
+            gamma = self.energy / self.particle.rest_energy
+        except ZeroDivisionError:
+            gamma = math.inf
+        return gamma
+
+    @property
+    def beta(self):
+        gamma = self.gamma
+        return math.sqrt(1.0 - 1.0 / gamma / gamma)
+
+    @property
     def revolution_frequency(self):
         """Revolution frequency (full ring) [Hz]"""
-        # gamma = self.energy / self.particle.mass
-        # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
-        # frev = beta * clight / self.circumference
-        frev = clight / self.circumference
+        frev = self.beta * clight / self.circumference
         return frev
 
     @property
