@@ -1,6 +1,7 @@
 /*
  * This file contains the Python interface to AT, compatible with
- * Python 3 only. It provides a module 'atpass' containing one method 'atpass'.
+ * Python 3 only. It provides a module 'atpass' containing 3 python functions:
+ * _atpass, _elempass, isopenmp
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -90,7 +91,7 @@ static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
 static const char *pyprint(PyObject* pyobj) {
     PyObject *pystr = PyObject_Str(pyobj);
     const char* str = PyUnicode_AsUTF8(pystr);
-    Py_XDECREF(str);
+    Py_XDECREF(pystr);
     return str;
 }
 
@@ -219,9 +220,7 @@ static PyObject *GetpyFunction(const char *fn_name)
   PyObject *pyfunction = PyObject_GetAttrString(pModule, "trackFunction");
   if ((!pyfunction) || !PyCallable_Check(pyfunction)) {
       Py_DECREF(pModule);
-      if(pyfunction){
-          Py_DECREF(pyfunction);
-      }
+      Py_XDECREF(pyfunction);
       return NULL;
   }
   Py_DECREF(pModule);
@@ -309,8 +308,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     npy_uint32 nextref;
     unsigned int nextrefindex;
     unsigned int num_refpts;
-    npy_uint32 keep_lattice=0;
-    npy_uint32 losses=0;
+    int keep_lattice=0;
+    int losses=0;
     npy_intp outdims[4];
     npy_intp pdims[1];
     npy_intp lxdims[2];
@@ -322,7 +321,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct LibraryListElement *LibraryListPtr;
 
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!III", kwlist, &PyList_Type, &lattice,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!pIp", kwlist, &PyList_Type, &lattice,
         &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
@@ -430,20 +429,23 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         integrator = integrator_list;
         pyintegrator = pyintegrator_list;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
+            PyObject *pylength;
             PyObject *el = PyList_GET_ITEM(lattice, elem_index);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
             double length;
             if (!PyPassMethod) return print_error(elem_index, rout);     /* No PassMethod */
             LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
+            Py_DECREF(PyPassMethod);
             if (!LibraryListPtr) return print_error(elem_index, rout);        /* No trackFunction for the given PassMethod */
-            length = PyFloat_AsDouble(PyObject_GetAttrString(el, "Length"));
+            pylength = PyObject_GetAttrString(el, "Length");
+            length = PyFloat_AsDouble(pylength);
+            Py_XDECREF(pylength);
             if (PyErr_Occurred()) PyErr_Clear();
             else lattice_length += length;
             *integrator++ = LibraryListPtr->FunctionHandle;
             *pyintegrator++ = LibraryListPtr->PyFunctionHandle;
             *element++ = el;
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
-            Py_DECREF(PyPassMethod);
         }
         valid = 0;
     }
@@ -564,7 +566,8 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
         if (!elem_data) return NULL;
         free(elem_data);
     }
-    Py_RETURN_NONE;
+    Py_INCREF(rin);
+    return (PyObject *) rin;
 }
 
 static PyObject *isopenmp(PyObject *self)
@@ -591,6 +594,8 @@ static PyMethodDef AtMethods[] = {
               "         0 means entrance of the first element\n"
               "         len(line) means end of the last element\n"
               "reuse:   if True, use previously cached description of the lattice.\n\n"
+              "omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
+              "losses:  if True, process losses\n"
               "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
               "         of particle coordinates\n"
               )},
@@ -615,7 +620,7 @@ PyMODINIT_FUNC PyInit_atpass(void)
 
     static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
-    "at",         /* m_name */
+    "atpass",         /* m_name */
     PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
     -1,           /* m_size */
     AtMethods,    /* m_methods */
