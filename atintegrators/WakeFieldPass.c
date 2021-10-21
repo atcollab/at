@@ -96,6 +96,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         long nslice,nelem, nturns;
         double intensity, wakefact, circumference;
         double *normfact;
+        double lnf[3];
         double *waketableT;
         double *waketableDX;
         double *waketableDY;
@@ -129,9 +130,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->nturns=nturns;
         Elem->circumference=circumference;
         for(int i=0;i<3;i++){
-           normfact[i]*=intensity*wakefact;
+           lnf[i]=normfact[i]*intensity*wakefact;
         }
-        Elem->normfact=normfact;
+        Elem->normfact=lnf;
         Elem->waketableT=waketableT;
         Elem->waketableDX=waketableDX;
         Elem->waketableDY=waketableDY;
