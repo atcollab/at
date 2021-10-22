@@ -241,6 +241,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
         PyObject *pyfunction = NULL;
 
         pyfunction = GetpyFunction(fn_name);
+        PyErr_Clear();      /* Clear any import error if there is no python integrator */
 
         if(!pyfunction){
             snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
