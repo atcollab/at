@@ -1,8 +1,7 @@
 import numpy
-from warnings import warn
 # noinspection PyUnresolvedReferences,PyProtectedMember
-from .atpass import _atpass, _elempass, isopenmp
-from ..lattice import Particle, AtWarning, DConstant, uint32_refpts
+from .atpass import atpass, elempass, isopenmp
+from ..lattice import Particle, DConstant, uint32_refpts
 
 
 __all__ = ['lattice_pass', 'element_pass']
@@ -71,13 +70,13 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     # * B is number of refpts
     # * C is the number of turns
     if r_in.flags.f_contiguous:
-        return _atpass(lattice, r_in, nturns, refpts=refs,
+        return atpass(lattice, r_in, nturns, refpts=refs,
                        reuse=keep_lattice,
                        omp_num_threads=omp_num_threads,
                        **kwargs)
     else:
         r_fin = numpy.asfortranarray(r_in)
-        r_out = _atpass(lattice, r_fin, nturns, refpts=refs,
+        r_out = atpass(lattice, r_fin, nturns, refpts=refs,
                         reuse=keep_lattice,
                         omp_num_threads=omp_num_threads,
                         **kwargs)
@@ -90,9 +89,9 @@ def element_pass(element, r_in, **kwargs):
     kwargs.setdefault('rest_energy', particle.rest_energy)
     kwargs.setdefault('charge', particle.charge)
     r_in = numpy.asfortranarray(r_in)
-    return _elempass(element, r_in, **kwargs)
-
-
-def atpass(args, **kwargs):
-    warn("The public interface for tracking is 'lattice_pass'", AtWarning)
-    return _atpass(args, **kwargs)
+    return elempass(element, r_in, **kwargs)
+#
+#
+# def atpass(args, **kwargs):
+#     warn("The public interface for tracking is 'lattice_pass'", AtWarning)
+#     return _atpass(args, **kwargs)

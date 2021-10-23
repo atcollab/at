@@ -1,7 +1,7 @@
 /*
  * This file contains the Python interface to AT, compatible with
  * Python 3 only. It provides a module 'atpass' containing 3 python functions:
- * _atpass, _elempass, isopenmp
+ * atpass, elempass, isopenmp
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -241,6 +241,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
         PyObject *pyfunction = NULL;
 
         pyfunction = GetpyFunction(fn_name);
+        PyErr_Clear();      /* Clear any import error if there is no python integrator */
 
         if(!pyfunction){
             snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
@@ -274,7 +275,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
 }
 
 /*
- * Parse the arguments to _atpass, set things up, and execute.
+ * Parse the arguments to atpass, set things up, and execute.
  * Arguments:
  *  - line: sequence of elements
  *  - rin: numpy 6-vector of initial conditions
@@ -596,8 +597,8 @@ static PyObject *isopenmp(PyObject *self)
 /* Boilerplate to register methods. */
 
 static PyMethodDef AtMethods[] = {
-    {"_atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("rout = _atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)\n\n"
+    {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("rout = atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)\n\n"
               "Track input particles rin along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
               "line:    list of elements\n"
@@ -616,8 +617,8 @@ static PyMethodDef AtMethods[] = {
               "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
               "         of particle coordinates\n"
               )},
-    {"_elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("_elempass(element, rin)\n\n"
+    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("elempass(element, rin)\n\n"
               "Track input particles rin through a single element.\n\n"
               "element: AT element\n"
               "rin:     6 x n_particles Fortran-ordered numpy array.\n"

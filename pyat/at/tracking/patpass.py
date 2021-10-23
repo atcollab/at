@@ -4,7 +4,7 @@ Simple parallelisation of atpass() using multiprocessing.
 from functools import partial
 import multiprocessing
 # noinspection PyUnresolvedReferences,PyProtectedMember
-from .atpass import _atpass
+from .atpass import atpass
 from sys import platform
 from warnings import warn
 from at.lattice import Particle, elements, AtWarning, uint32_refpts
@@ -36,9 +36,9 @@ def format_results(results, r_in, losses):
 
 def _atpass_one(ring, rin, **kwargs):
     if ring is None:
-        result = _atpass(globring, rin, **kwargs)
+        result = atpass(globring, rin, **kwargs)
     else:
-        result = _atpass(ring, rin, **kwargs)
+        result = atpass(ring, rin, **kwargs)
     return {'rin': rin, 'results': result}
 
 
@@ -111,5 +111,5 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        return _atpass(ring, r_in, nturns=nturns,
+        return atpass(ring, r_in, nturns=nturns,
                        refpts=refpts, **kwargs)
