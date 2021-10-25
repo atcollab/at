@@ -84,6 +84,16 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
         pool_size       number of processes, if None the min(npart,nproc) is used
         globvar=Tr      For linux machines speed-up is achieved by defining a global
                         ring variable, this can be disabled using globvar=False
+    The following keyword overloads a value from lattice:
+        particle:   circulating particle. Default: lattice.particle if existing,
+                    otherwise Particle('relativistic')
+    The following keywords overload values from lattice or particle keyword:
+        energy      lattice energy
+        rest_energy rest energy of the circulating particle [eV]
+        charge      charge of the circulating particle [elementary charge]
+
+    If 'energy' is not available, relativistic tracking if forced, rest_energy
+    is ignored.
 
      OUTPUT:
         (6, N, R, T) array containing output coordinates of N particles
@@ -98,10 +108,21 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
-    particle = getattr(ring, 'particle', Particle('relativistic'))
-    kwargs.setdefault('energy', getattr(ring, 'energy', 1.0e9))
-    kwargs.setdefault('rest_energy', particle.rest_energy)
-    kwargs.setdefault('charge', particle.charge)
+    particle = kwargs.pop('particle', getattr(ring, 'particle',
+                                              Particle('relativistic')))
+    try:
+        # try to get 'energy' from the lattice
+        kwargs.setdefault('energy', getattr(ring, 'energy'))
+    except AttributeError:
+        pass
+    if 'energy' in kwargs:
+        # energy available, use the particle properties
+        kwargs.setdefault('rest_energy', particle.rest_energy)
+        kwargs.setdefault('charge', particle.charge)
+    else:
+        # energy no available, force relativistic tracking
+        kwargs['rest_energy'] = 0.0
+        kwargs['charge'] = -1.0
     pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
