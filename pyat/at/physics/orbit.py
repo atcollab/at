@@ -273,13 +273,31 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
 
+    try:
+        gamma0 = ring.energy / ring.particle.rest_energy
+    except ZeroDivisionError:
+        beta0 = 1.0
+
+        # noinspection PyUnusedLocal
+        def beta(r):
+            return 1.0
+    else:
+        bg0 = math.sqrt(gamma0*gamma0 - 1.0)
+        beta0 = bg0 / gamma0
+
+        def beta(r):
+            bg = bg0 * (1.0+r[4])
+            bet = bg/math.sqrt(1.0 + bg*bg)
+            print(bet)
+            return bet
+
     l0 = get_s_pos(ring, len(ring))[0]
     # Get the main RF frequency (the lowest)
     try:
         f_rf = min(elm.Frequency for elm in ring if iscavity(elm))
     except ValueError:
         raise AtError('No cavity found in the lattice.')
-    harm_number = round(f_rf/ring.periodicity/ring.revolution_frequency)
+    harm_number = round(f_rf * l0/beta0/clight)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
@@ -293,7 +311,6 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
-    theta[5] = clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
               dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
@@ -304,6 +321,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     change = 1
     itercount = 0
     while (change > convergence) and itercount < max_iterations:
+        theta[5] = beta(ref_in) * clight * harm_number / f_rf - l0
         in_mat = ref_in.reshape((6, 1)) + delta_matrix
         _ = lattice_pass(ring, in_mat, refpts=[], keep_lattice=keep_lattice)
         # the reference particle after one turn

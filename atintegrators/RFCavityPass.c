@@ -27,10 +27,14 @@ struct elem
 
 void non_relativistic_kick(double *r6, const struct elem *el, double tau_ref)
 {
-    double betgam = el.betgam0*(1.0 + r6[4]);
-    double betai = betgam/sqrt(1.0 + betgami*betgami);
+    double betgami = el->betgam0*(1.0 + r6[4]);
+    double betai = betgami/sqrt(1.0 + betgami*betgami);
     double tau_rel = (r6[5]-el->TimeLag)/betai/C0;
     r6[4] += -el->NormV * sin(TWOPI*el->Frequency*(tau_rel + tau_ref));
+    double betgamf = el->betgam0*(1.0 + r6[4]);
+    double betaf = betgamf/sqrt(1.0 + betgamf*betgamf);
+/*  ensure continuity of tau = delta_s / beta / clight */
+    r6[5] *= betaf/betai;
 }
 
 void relativistic_kick(double *r6, const struct elem *el, double tau_ref)
@@ -80,7 +84,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
-        gamma0 = Energy/param->rest_energy;
+        gamma0 = Energy/Param->rest_energy;
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->NormV=Voltage/Energy;
@@ -90,7 +94,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         if (isfinite(gamma0)) {
             Elem->betgam0 = sqrt(gamma0*gamma0 - 1.0);
             Elem->beta0 = Elem->betgam0/gamma0;
-            Elem->RFKick = &nonrelativistic_kick;
+            Elem->RFKick = &non_relativistic_kick;
         }
         else {
             Elem->RFKick = &relativistic_kick;
