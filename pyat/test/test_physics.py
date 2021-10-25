@@ -2,7 +2,7 @@ import at
 import numpy
 from numpy.testing import assert_allclose as assert_close
 import pytest
-from at import AtWarning, physics, atpass
+from at import AtWarning, physics, lattice_pass
 
 
 DP = 1e-5
@@ -43,7 +43,7 @@ def test_find_orbit4_result_unchanged_by_atpass(dba_lattice):
     orbit, _ = physics.find_orbit4(dba_lattice, DP)
     orbit_copy = numpy.copy(orbit)
     orbit[4] = DP
-    atpass(dba_lattice, orbit, 1)
+    lattice_pass(dba_lattice, orbit, 1)
     assert_close(orbit[:4], orbit_copy[:4], atol=1e-12)
 
 
