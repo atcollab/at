@@ -44,6 +44,7 @@ typedef PyObject atElem;
 #endif
 
 #define LIMIT_AMPLITUDE		1
+#define C0  	2.99792458e8
 
 /* define the general signature of a pass function */
 typedef struct elem *(*track_function)(const PyObject *element,
@@ -322,6 +323,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     #endif /*_OPENMP*/
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
+    double gamma0, beta0;
 
     param.energy=1.0e9;
     param.rest_energy=0.0;
@@ -458,8 +460,16 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         valid = 0;
     }
 
+    gamma0 = param.energy/param.rest_energy;
+    if (isfinite(gamma0)) {
+        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+        beta0 = betagamma0/gamma0;
+    }
+    else {
+        beta0 = 1.0;
+    }
     param.RingLength = lattice_length;
-    param.T0 = lattice_length/299792458.0;
+    param.T0 = lattice_length/beta0/C0;
     for (turn = 0; turn < num_turns; turn++) {
         PyObject **element = element_list;
         track_function *integrator = integrator_list;

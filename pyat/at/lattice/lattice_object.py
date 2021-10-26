@@ -132,7 +132,7 @@ class Lattice(list):
         # set default values
         kwargs.setdefault('name', '')
         kwargs.setdefault('periodicity', 1)
-        kwargs.setdefault('particle', 'relativistic')
+        kwargs.setdefault('_particle', Particle('relativistic'))
         if 'energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
         # set attributes
@@ -384,10 +384,10 @@ class Lattice(list):
                     radiate = True
             self._radiation = radiate
 
-        def lattice_copy(params):
+        def lattice_copy(params, elem_iterator, *args):
             """Custom iterator for the creation of a new lattice"""
             radiate = False
-            for elem in lattice_filter(params, self):
+            for elem in elem_iterator(params, *args):
                 attrs = elem_modify(elem)
                 if attrs is not None:
                     elem = elem.copy()
@@ -399,7 +399,7 @@ class Lattice(list):
             params['_radiation'] = radiate
 
         if copy:
-            return Lattice(iterator=lattice_copy)
+            return Lattice(lattice_filter, self, iterator=lattice_copy)
         else:
             lattice_modify()
 
