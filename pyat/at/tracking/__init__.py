@@ -3,7 +3,7 @@ Tracking functions
 """
 
 # noinspection PyUnresolvedReferences
-from .atpass import atpass, elempass, isopenmp
+from .atpass import atpass, elempass, isopenmp, ismpi
 from .patpass import patpass
 from .track import *
 from .particles import *
@@ -17,4 +17,12 @@ def _omp(self):
     return isopenmp()
 
 
+# noinspection PyUnusedLocal
+def _mpi(self):
+    """True is AT is compiled with OpenMP"""
+    return ismpi()
+
 _Dst.openmp = property(_omp)
+_Dst.mpi = property(_mpi)
+if(_Dst.mpi):
+    from mpi4py import MPI

@@ -623,6 +623,10 @@ static PyMethodDef AtMethods[] = {
     PyDoc_STR("isopenmp()\n\n"
               "Return whether OpenMP is active.\n"
              )},
+    {"ismpi",  (PyCFunction)ismpi, METH_NOARGS,
+    PyDoc_STR("ismpi()\n\n"
+              "Return whether MPI is active.\n"
+             )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

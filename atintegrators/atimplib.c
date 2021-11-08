@@ -95,13 +95,9 @@ double *getbounds(double *r_in,int num_particles){
     }
 
     #ifdef MPI
-    int flag;
-    MPI_Initialized(&flag);
-    if(flag){
-        MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
-        MPI_Barrier(MPI_COMM_WORLD);
-    };
+    MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
+    MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
     bounds[0]=smin;
@@ -155,18 +151,14 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     double np_total = (double)num_particles;
 
     #ifdef MPI
-    int flag;
-    MPI_Initialized(&flag); 
-    if(flag){
-        int mpsize;
-        MPI_Comm_size(MPI_COMM_WORLD,&mpsize); 
-        np_total *= (double)mpsize;      
-        MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,zpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,weight,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
+    int mpsize;
+    MPI_Comm_size(MPI_COMM_WORLD,&mpsize); 
+    np_total *= (double)mpsize;      
+    MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,zpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,weight,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
     /*Compute average x/y position and weight of each slice */
@@ -202,12 +194,8 @@ void compute_kicks(int nslice,int nturns,int nelem,
     }
 
     #ifdef MPI
-    int flag;
-    MPI_Initialized(&flag); 
-    if(flag){
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Comm_size(MPI_COMM_WORLD, &size);
-    }
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
     #endif
     for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
         if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
@@ -228,14 +216,12 @@ void compute_kicks(int nslice,int nturns,int nelem,
         }
     }
     #ifdef MPI
-    if(flag){
-        MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
+    MPI_Allreduce(MPI_IN_PLACE,kx,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     #endif
 };
 
