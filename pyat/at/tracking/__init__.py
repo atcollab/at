@@ -19,10 +19,13 @@ def _omp(self):
 
 # noinspection PyUnusedLocal
 def _mpi(self):
-    """True is AT is compiled with OpenMP"""
+    """True is AT is compiled with MPI"""
     return ismpi()
 
 _Dst.openmp = property(_omp)
 _Dst.mpi = property(_mpi)
+
+# when compiled with mpicc this is required
 if(_Dst.mpi):
+    print(_Dst.mpi)
     from mpi4py import MPI
