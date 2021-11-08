@@ -212,17 +212,17 @@ void compute_kicks(int nslice,int nturns,int nelem,
     for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
         if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
             for (ii=0;ii<nslice*nturns;ii++){
-                ds = turnhistoryZ[ii]-turnhistoryZ[i];
-                if(turnhistoryW[ii]>0.0 && -ds>=waketableT[0] && -ds<waketableT[nelem-1]){
+                ds = turnhistoryZ[i]-turnhistoryZ[ii];
+                if(turnhistoryW[ii]>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
                     wi = turnhistoryW[ii];
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
-                    index = binarySearch(waketableT,-ds,nelem,0,0);              
-                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,-ds,index);
-                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,-ds,index);
-                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,-ds,index);
-                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableQY,waketableT,-ds,index);
-                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*getTableWake(waketableZ,waketableT,-ds,index);
+                    index = binarySearch(waketableT,ds,nelem,0,0);              
+                    if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,ds,index);
+                    if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,ds,index);
+                    if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,ds,index);
+                    if(waketableQY)ky2[i-nslice*(nturns-1)] += normfact[1]*wi*getTableWake(waketableQY,waketableT,ds,index);
+                    if(waketableZ) kz[i-nslice*(nturns-1)] += normfact[2]*wi*getTableWake(waketableZ,waketableT,ds,index);
                 }            
             }
         }
