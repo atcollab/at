@@ -78,7 +78,7 @@ class Wake(object):
 
     Component are WakeComponent.FILE (import from file),
     WakeComponent.TABLE (provide vectors), WakeComponent.RESONATOR
-    (analytical resonator)
+    (analytical resonator), WakeComponent.RESWALL (transverse RW)
 
     Components are retrieved with Wake.DX for example
     """
@@ -228,11 +228,11 @@ class Wake(object):
             return self.wakefunc_reswall(yokoya_factor, length,
                                          rvac, conduct, beta)
         elif wcomp is WakeComponent.QX:
-            raise AtError('Resitive wall not available '
-                          'for WakeComponent: {}'.format(wcomp))
+            return self.wakefunc_reswall(yokoya_factor, length,
+                                         rvac, conduct, beta)
         elif wcomp is WakeComponent.QY:
-            raise AtError('Resitive wall not available '
-                          'for WakeComponent: {}'.format(wcomp))
+            return self.wakefunc_reswall(yokoya_factor, length,
+                                         rvac, conduct, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
