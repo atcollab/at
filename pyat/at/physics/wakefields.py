@@ -351,6 +351,11 @@ class WakeElement(at.Element):
         self.TurnHistory = numpy.zeros((self.Nturns*self.Nslice,4),
                                        order='F')
 
+    def set_normfactxy(self,ring):
+        l0, _, _ = at.get_optics(ring)
+        self.Normfact[0] = 1/l0['beta'][0]
+        self.Normfact[1] = 1/l0['beta'][1]
+
     # noinspection PyPep8Naming
     @property
     def Current(self):
