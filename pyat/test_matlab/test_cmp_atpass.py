@@ -19,7 +19,7 @@ def test_atpass(engine, lattices):
     ml_rout = engine.atpass(ml_lattice, ml_rin, 1, 1)
 
     py_rin = numpy.asfortranarray(numpy.diag(scaling))
-    at.atpass(py_lattice, py_rin, 1)
+    at.lattice_pass(py_lattice, py_rin, 1)
 
     assert_close(py_rin, ml_rout, rtol=0, atol=1.e-30)
 
