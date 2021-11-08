@@ -57,18 +57,12 @@ def test_lattice_string_ordering():
     lat = Lattice([elements.Drift('D0', 1.0, attr1=numpy.array(0))],
                   name='lat', energy=5, periodicity=1, attr2=3)
     # Default dictionary ordering is only in Python >= 3.6
-    if sys.version_info < (3, 6):
-        assert lat.__str__().startswith("Lattice(<1 elements>, ")
-        assert lat.__str__().endswith(", attr2=3)")
-        assert lat.__repr__().startswith("Lattice([Drift('D0', 1.0, "
-                                         "attr1=array(0))], ")
-        assert lat.__repr__().endswith(", attr2=3)")
-    else:
-        assert lat.__str__() == ("Lattice(<1 elements>, name='lat', energy=5,"
-                                 " periodicity=1, attr2=3)")
-        assert lat.__repr__() == ("Lattice([Drift('D0', 1.0, attr1=array(0))],"
-                                  " name='lat', energy=5, periodicity=1,"
-                                  " attr2=3)")
+    assert str(lat).startswith("Lattice(<1 elements>, name='lat', "
+                               "energy=5, periodicity=1")
+    assert str(lat).endswith("attr2=3)")
+    assert repr(lat).startswith("Lattice([Drift('D0', 1.0, attr1=array(0))], "
+                                "name='lat', energy=5, periodicity=1")
+    assert repr(lat).endswith("attr2=3)")
 
 
 def test_getitem(simple_lattice, simple_ring):
@@ -113,7 +107,7 @@ def test_deepcopy(hmba_lattice):
 
 
 def test_property_values_against_known(hmba_lattice):
-    assert hmba_lattice.voltage == 6000000
+    assert hmba_lattice.rf_voltage == 6000000
     assert hmba_lattice.harmonic_number == 992
     assert hmba_lattice.radiation is False
     numpy.testing.assert_almost_equal(hmba_lattice.energy_loss,

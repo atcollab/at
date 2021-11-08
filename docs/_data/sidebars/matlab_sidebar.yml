@@ -15,3 +15,9 @@ entries:
     - title: Example
       url: /mdemo1.html
       output: web
+  - title: How to…
+    output: web
+    folderitems:
+    - title: Control RF cavities
+      url: /mcavitycontrol.html
+      output: web

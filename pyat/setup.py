@@ -5,12 +5,10 @@ from os.path import abspath, basename, dirname, exists, join, splitext
 import sys
 import shutil
 from setuptools import setup, Extension, find_packages
-try:
-    import numpy
-except ImportError:
-    print('\npyAT requires numpy. '
-          'Please install numpy: "pip install numpy"\n')
-    sys.exit()
+
+# Numpy build dependency defined in pyproject.toml.
+import numpy
+
 
 
 def select_omp():
@@ -151,7 +149,7 @@ diffmatrix = Extension(
 
 setup(
     name='accelerator-toolbox',
-    version='0.2.0',
+    version='0.2.1',
     description='Accelerator Toolbox',
     long_description=long_description,
     author='The AT collaboration',
@@ -162,12 +160,11 @@ setup(
     packages=find_packages(),
     ext_modules=[at, diffmatrix] + [integrator_ext(pm) for pm in pass_methods],
     zip_safe=False,
-    python_requires='>=3.5.0',
+    python_requires='>=3.6.0',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

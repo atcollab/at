@@ -13,7 +13,10 @@ defined in Accelerator Toolbox, implemented by compiling the C code used in the
 AT 'integrators' into a Python extension. These pass methods are used by
 higher-level functions to provide physics results.
 
-pyAT supports Python 2.7 (deprecated) and 3.5 to 3.8.
+See the `pyAT website <https://atcollab.github.io/at/python.html>`_ for a
+more detailed introduction.
+
+pyAT supports Python 3.6 to 3.9.
 
 Installation
 ------------
@@ -28,9 +31,9 @@ Usage
 Example usage::
 
     >>> from at.load import load_mat
-    >>> from at.physics import linopt
+    >>> from at.physics import get_optics
     >>> ring = load_mat('test_matlab/hmba.mat')
-    >>> linopt(ring, refpts=range(5))
+    >>> get_optics(ring, refpts=range(5))
 
 For more examples of how to use pyAT, see ``pyat_examples.rst``.
 

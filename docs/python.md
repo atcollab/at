@@ -7,7 +7,7 @@ sidebar: python_sidebar
 pyAT is a Python interface to Accelerator Toolbox. It uses the 'pass methods' defined in Accelerator Toolbox, implemented by compiling the C code used in the AT 'integrators' into a Python extension. These pass methods are used by higher-level functions to provide physics results.
 
 ## Requirements
-pyAT supports Python 3.5 to 3.8.
+pyAT supports Python 3.6 to 3.9.
 ## Installation
 ### From PyPI
 Install accelerator-toolbox from PyPI:

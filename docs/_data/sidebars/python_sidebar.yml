@@ -12,3 +12,9 @@ entries:
     - title: AT Primer
       url: /pprimer.html
       output: web
+  - title: How to…
+    output: web
+    folderitems:
+    - title: Control RF cavities
+      url: /pcavitycontrol.html
+      output: web

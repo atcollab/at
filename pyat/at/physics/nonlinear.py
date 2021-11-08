@@ -120,11 +120,10 @@ def gen_detuning_elem(ring, orbit=None):
     xsi = get_chrom(ring.radiation_off(copy=True))
     r0, r1, x, q_dx, y, q_dy = detuning(ring.radiation_off(copy=True),
                                         xm=1.0e-4, ym=1.0e-4, npoints=3)
-    rp = ring.periodicity
     nonlin_elem = Element('NonLinear', PassMethod='DeltaQPass',
                           Betax=lindata0.beta[0], Betay=lindata0.beta[1],
                           Alphax=lindata0.alpha[0], Alphay=lindata0.alpha[1],
                           Qpx=xsi[0], Qpy=xsi[1],
-                          A1=r1[0][0]*rp, A2=r1[0][1]*rp, A3=r1[1][1]*rp,
+                          A1=r1[0][0], A2=r1[0][1], A3=r1[1][1],
                           T1=-orbit, T2=orbit)
     return nonlin_elem
