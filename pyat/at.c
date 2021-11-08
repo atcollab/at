@@ -599,6 +599,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+
 static PyObject *isopenmp(PyObject *self)
 {
 #ifdef _OPENMP
@@ -607,6 +608,17 @@ static PyObject *isopenmp(PyObject *self)
     Py_RETURN_FALSE;
 #endif /*_OPENMP)*/
 }
+
+
+static PyObject *ismpi(PyObject *self)
+{
+#ifdef MPI
+    Py_RETURN_TRUE;
+#else
+    Py_RETURN_FALSE;
+#endif /*MPI)*/
+}
+
 
 /* Boilerplate to register methods. */
 
