@@ -50,6 +50,7 @@ class WakeType(Enum):
     FILE = 1  # Import from file
     TABLE = 2  # Provide vectors
     RESONATOR = 3  # Analytical resonator
+    RESWALL = 4 # Analytical resistive wall
 
 
 class WakeComponent(Enum):
@@ -165,6 +166,25 @@ class Wake(object):
         wint = fint(self._srange)
         return wint
 
+    def convolve_wakefun(self, w, sigt):        
+        min_step = numpy.diff(self._srange)
+        t_out = numpy.arange(self._srange[0], self._srange[-1], min_step)
+        sdiff = t_out[-1]-t_out[0]
+        npoints = len(t_out)
+        nt = npoints+npoints-1;
+        func = interp1d(self._srange, w, bounds_error=False, fill_value = 0)
+        wout = func(t_out)
+        wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
+        fftr = numpy.fft.fft(wout)
+        f = numpy.fft.fftshift(np.linspace(-(npoints-1)/sdiff,(npoints-1)/sdiff,nt))
+        fftl = numpy.exp(-(f*2*np.pi*sigt)**2/2)
+        wout = numpy.fft.ifft(fftr*fftl)
+        wout = numpy.roll(wout,int(npoints/2))
+        t_out = numpy.linspace(t_out[0],t_out[-1],nt)
+        func = interp1d(t_out, wout, bounds_error=False, fill_value = 0)
+        wout = func(self._srange)
+    return wout
+
     def readwakefile(self, filename, scol=0, wcol=1, sfact=1, wfact=1,
                      delimiter=None, skiprows=0):
         s, w = numpy.loadtxt(filename, delimiter=delimiter, unpack=True,
@@ -194,6 +214,25 @@ class Wake(object):
             return self.wakefunc_transverse_resonator(frequency, qfactor,
                                                       rshunt, yokoya_factor,
                                                       beta)
+        else:
+            raise AtError('Invalid WakeComponent: {}'.format(wcomp))
+
+    def reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
+        if wcomp is WakeComponent.Z:
+            raise AtError('Resitive wall not available '
+                          'for WakeComponent: {}'.format(wcomp))
+        elif wcomp is WakeComponent.DX:
+            return self.wakefunc_reswall(yokoya_factor, length, 
+                                         rvac, conduct, beta)
+        elif wcomp is WakeComponent.DY:
+            return self.wakefunc_reswall(yokoya_factor, length,
+                                         rvac, conduct, beta)
+        elif wcomp is WakeComponent.QX:
+            raise AtError('Resitive wall not available '
+                          'for WakeComponent: {}'.format(wcomp))
+        elif wcomp is WakeComponent.QY:
+            raise AtError('Resitive wall not available '
+                          'for WakeComponent: {}'.format(wcomp))
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
@@ -239,6 +278,18 @@ class Wake(object):
         else:
             wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
                     omegabar) * numpy.exp(alpha*dt) * numpy.sinh(omegabar*dt))
+        return wake
+
+    def wakefunc_reswall(self, yokoya_factor, length, rvac, conduct, beta):
+        """Define the wake function (transverse) of a resistive wall with the given
+        parameters according to Alex Chao's RW model (2.53) and definitions used in
+        HEADTAIL
+        """
+        z0 = 119.9169832 * np.pi
+        dt = -self._srange/(beta * clight)
+        wake = yokoya_factor * (numpy.sign(dt) - 1) / 2. *
+               beta * length / numpy.pi / rvac **3*
+               numpy.sqrt(-clight * z0 /conduct / numpy.pi / dt))
         return wake
 
 
