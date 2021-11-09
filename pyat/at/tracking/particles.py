@@ -5,6 +5,7 @@ import numpy
 from at.physics import ohmi_envelope
 from at.lattice.lattice_object import Lattice
 from scipy.constants import c as clight
+from at.physics import get_mcf, envelope_parameters
 
 __all__ = ['beam', 'sigma_matrix']
 
@@ -32,16 +33,9 @@ def _compute_bunch_length_from_espread(ring, espread):
     emass = 0.510998910e6
     gamma = ring.energy/emass
     beta = numpy.sqrt(1.0-1.0/gamma/gamma)
-    radFlag = ring.radiation
         
-    ring.radiation_off()
-    mcf = ring.get_mcf()
-    ring.radiation_on()
-    envel = ring.envelope_parameters()
-
-    if not radFlag:
-        ring.radiation_off()
-
+    mcf = get_mcf(ring.radiation_off(copy=True))
+    envel = envelope_parameters(ring.radiation_on(copy=True))
 
     blength = clight * beta * numpy.abs(mcf) * espread / (2 * numpy.pi * envel.f_s )
     return blength
@@ -81,22 +75,20 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
         assert espread is not None, 'espread must be defined'
 
     if ring:
-        if isinstance(ring, Lattice):
-            ld0, bd, ld = ring.get_optics()
-            if ring.radiation and not flag:
-                print ('Generating correlated sigma matrix using ohmi envelope')
-                emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
-                sig_matrix = emit.r66[0]
-            elif flag:
-                print ('Generating pseudo-correlated matrix from initial optics conditions')
-                if ring.radiation:
-                    print('Ignoring provided blength and calculating it based on espread')
-                    blength = _compute_bunch_length_from_espread(ring, espread)
-                sig_matrix = _generate__sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
-            else:
-                raise AttributeError('Radiation is off but no emittances are specified')
+        ld0, bd, ld = ring.get_optics()
+        if ring.radiation and not flag:
+            print ('Generating correlated sigma matrix using ohmi envelope')
+            emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
+            sig_matrix = emit.r66[0]
+        elif flag:
+            print ('Generating pseudo-correlated matrix from initial optics conditions')
+            if ring.radiation:
+                print('Ignoring provided blength and calculating it based on espread')
+                blength = _compute_bunch_length_from_espread(ring, espread)
+            sig_matrix = _generate__sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
         else:
-            raise AttributeError('Input must be lattice object')
+            raise AttributeError('Radiation is off but no emittances are specified')
+
 
     elif twiss_in:
         print ('Generating un-correlated sigma matrix from parameters in twiss_in')
