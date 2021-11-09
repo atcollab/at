@@ -5,24 +5,49 @@ import numpy
 from at.physics import ohmi_envelope
 from at.lattice.lattice_object import Lattice
 from scipy.constants import c as clight
-from at.physics import get_mcf, envelope_parameters
+from at.physics import get_mcf, envelope_parameters, get_tune
 
 __all__ = ['beam', 'sigma_matrix']
 
-def _generate__sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
+def _generate_2d_trans_matrix(emit, beta, alpha):
+    return  emit*numpy.array([[beta, -alpha], [-alpha, (1+alpha**2)/beta]])
+
+def _generate_2d_long_matrix(espread, blength):
+    return  numpy.array([[espread*espread, 0], [0, blength*blength]])
+
+
+def _generate_sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
     if radiation:
-        sig_matrix = emitx*ld0.R[0] + emity*ld0.R[1] + blength*espread*ld0.R[2]
-
+        try:
+            sig_matrix = emitx*ld0.R[0] + emity*ld0.R[1] + blength*espread*ld0.R[2]
+        except AttributeError:
+            print('R matrices not found. (are you using linopt6?)')
+            print('Creating uncoupled sigma matrix')
+            sig_matrix_x = _generate_2d_trans_matrix(emitx, ld0.beta[0], ld0.alpha[0])
+            sig_matrix_y = _generate_2d_trans_matrix(emity, ld0.beta[1], ld0.alpha[1])
+            sig_matrix_long = _generate_2d_long_matrix(espread, blength)
+            sig_matrix = numpy.block([
+                                     [sig_matrix_x, numpy.zeros((2,4))],
+                                     [numpy.zeros((2,2)), sig_matrix_y, numpy.zeros((2,2))],
+                                     [numpy.zeros((2,4)), sig_matrix_long]
+                                     ])
     else:
-        sig_matrix_long = numpy.array([
-                             [espread*espread, 0],
-                             [0, blength*blength]
-                                      ])
+        sig_matrix_long = _generate_2d_long_matrix(espread, blength)
 
-        sig_matrix_trans = emitx*ld0.R[0] + emity*ld0.R[1] 
+        try:
+            sig_matrix_trans = (emitx*ld0.R[0] + emity*ld0.R[1])[:4, :4]
+        except AttributeError:
+            print('R matrices not found. (are you using linopt6?)')
+            print('Creating uncoupled sigma matrix')
+            sig_matrix_x = _generate_2d_trans_matrix(emitx, ld0.beta[0], ld0.alpha[0])
+            sig_matrix_y = _generate_2d_trans_matrix(emity, ld0.beta[1], ld0.alpha[1])
+            sig_matrix_trans = numpy.block([
+                                     [sig_matrix_x, numpy.zeros((2,2))],
+                                     [numpy.zeros((2,2)), sig_matrix_y],
+                                     ])
 
         sig_matrix = numpy.block([
-                        [sig_matrix_trans[:4,:4],
+                        [sig_matrix_trans,
                             numpy.zeros((4, 2))],
                         [numpy.zeros((2, 4)),
                             sig_matrix_long]
@@ -33,11 +58,17 @@ def _compute_bunch_length_from_espread(ring, espread):
     emass = 0.510998910e6
     gamma = ring.energy/emass
     beta = numpy.sqrt(1.0-1.0/gamma/gamma)
-        
-    mcf = get_mcf(ring.radiation_off(copy=True))
-    envel = envelope_parameters(ring.radiation_on(copy=True))
+    f0 = clight/ring.circumference
 
-    blength = clight * beta * numpy.abs(mcf) * espread / (2 * numpy.pi * envel.f_s )
+    mcf = get_mcf(ring.radiation_off(copy=True))
+    if ring.radiation:
+        qs3 = get_tune(ring)
+    else:
+        qs3 = get_tune(ring.radiation_on(copy=True))
+
+    f_s = qs3[2]*f0
+
+    blength = clight * beta * numpy.abs(mcf) * espread / (2 * numpy.pi * f_s )
     return blength
 
 def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None, espread=None):
@@ -85,14 +116,14 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
             if ring.radiation:
                 print('Ignoring provided blength and calculating it based on espread')
                 blength = _compute_bunch_length_from_espread(ring, espread)
-            sig_matrix = _generate__sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
+            sig_matrix = _generate_sigma_matrix(ld0, emitx, emity, blength, espread, ring.radiation)
         else:
             raise AttributeError('Radiation is off but no emittances are specified')
 
 
     elif twiss_in:
         print ('Generating un-correlated sigma matrix from parameters in twiss_in')
-        sig_matrix = _generate__sigma_matrix(twiss_in, emitx, emity, blength, espread, False)
+        sig_matrix = _generate_sigma_matrix(twiss_in, emitx, emity, blength, espread, False)
 
     else:
         raise AttributeError('A lattice or twiss_in must be provided')
