@@ -2,7 +2,7 @@
 Closed orbit related functions
 """
 import numpy
-import scipy.constants as constants
+from at.lattice.constants import clight
 from at.lattice import AtWarning, AtError, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, elements, uint32_refpts
 from at.tracking import lattice_pass
@@ -135,7 +135,7 @@ def find_orbit4(ring, dp=0.0, refpts=None, dct=None, orbit=None,
     2.  have any time dependence (localized impedance, fast kickers etc)
 
     PARAMETERS
-        ring            Sequence of AT elements
+        ring            lattice description (radiation must be OFF)
         dp              momentum deviation. Defaults to 0
         refpts          elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
@@ -210,7 +210,7 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, dp=None, orbit=None,
     2.  have any time dependence (localized impedance, fast kickers etc).
 
     PARAMETERS
-        ring            Sequence of AT elements
+        ring            lattice description (radiation must be OFF)
         dct             Path length deviation. Default: 0
         refpts          elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
@@ -261,20 +261,27 @@ def find_sync_orbit(ring, dct=0.0, refpts=None, dp=None, orbit=None,
 
 def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     """Solver for 6D motion"""
+
+    def iscavity(elem):
+        return isinstance(elem, elements.RFCavity) and \
+               elem.PassMethod.endswith('CavityPass')
+
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
 
-    # Get revolution period
-    l0 = get_s_pos(ring, len(ring))
-    cavities = [elm for elm in ring if isinstance(elm, elements.RFCavity)]
-    if len(cavities) == 0:
+    l0 = get_s_pos(ring, len(ring))[0]
+    # Get the main RF frequency (the lowest)
+    try:
+        f_rf = min(elm.Frequency for elm in ring if iscavity(elm))
+    except ValueError:
         raise AtError('No cavity found in the lattice.')
-
-    f_rf = cavities[0].Frequency
-    harm_number = cavities[0].HarmNumber
+    # gamma = self.energy / self.particle.mass
+    # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+    # h = round(fmin*l0/beta/clight)
+    harm_number = round(f_rf*l0/clight)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
@@ -288,7 +295,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
-    theta[5] = constants.speed_of_light * harm_number / f_rf - l0
+    theta[5] = clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
               dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
@@ -353,7 +360,7 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
         the equilibrium RF phase. If there is no radiation the phase is 0;
 
     PARAMETERS
-        ring            Sequence of AT elements
+        ring            lattice description (radiation must be ON)
         refpts          elements at which data is returned. It can be:
                         1) an integer in the range [-len(ring), len(ring)-1]
                            selecting the element according to python indexing

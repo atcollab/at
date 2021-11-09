@@ -20,8 +20,8 @@ from itertools import compress
 from fnmatch import fnmatch
 from at.lattice import elements
 
-__all__ = ['AtError', 'AtWarning', 'check_radiation', 'make_copy',
-           'uint32_refpts', 'bool_refpts',
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'set_radiation',
+           'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
            'refpts_count', 'refpts_len', 'refpts_iterator',
@@ -57,6 +57,33 @@ def check_radiation(rad):
     return radiation_decorator
 
 
+def set_radiation(rad):
+    """Function to be used as a decorator for optics functions
+    The decorated function must be defined as:
+
+    def func(ring, *args, **kwargs):
+        ...
+        return
+
+    func will be called with a copy of the ring such that its radiation state
+    is set to rad (no copy is done if it's already the case).
+    """
+    if rad:
+        def setrad_decorator(func):
+            @functools.wraps(func)
+            def wrapper(ring, *args, **kwargs):
+                rg = ring if ring.radiation else ring.radiation_on(copy=True)
+                return func(rg, *args, **kwargs)
+            return wrapper
+    else:
+        def setrad_decorator(func):
+            @functools.wraps(func)
+            def wrapper(ring, *args, **kwargs):
+                rg = ring.radiation_off(copy=True) if ring.radiation else ring
+                return func(rg, *args, **kwargs)
+            return wrapper
+    return setrad_decorator
+
 def make_copy(copy):
     """Function to be used as a decorator for optics functions
     The decorated function must be defined as:
@@ -70,14 +97,17 @@ def make_copy(copy):
     by refpts are deep-copied, then func is applied to the copy, and the new
     ring is returned.
     """
-    def copy_decorator(func):
-        @functools.wraps(func)
-        def wrapper(ring, refpts, *args, **kwargs):
-            if copy:
+    if copy:
+        def copy_decorator(func):
+            @functools.wraps(func)
+            def wrapper(ring, refpts, *args, **kwargs):
                 ring = ring.replace(refpts)
-            func(ring, refpts, *args, **kwargs)
-            return ring if copy else None
-        return wrapper
+                func(ring, refpts, *args, **kwargs)
+                return ring
+            return wrapper
+    else:
+        def copy_decorator(func):
+            return func
     return copy_decorator
 
 
@@ -120,8 +150,12 @@ def _uint32_refs(ring, refpts):
     3) a callable f such that f(elem) is True for selected elements
     """
     if callable(refpts):
-        refpts = [refpts(el) for el in ring]
-    return uint32_refpts(refpts, len(ring))
+        return numpy.array([i for i, el in enumerate(ring) if refpts(el)],
+                           dtype=numpy.uint32)
+    elif refpts is None:
+        return numpy.array([], dtype=numpy.uint32)
+    else:
+        return uint32_refpts(refpts, len(ring))
 
 
 def bool_refpts(refpts, n_elements):
@@ -155,8 +189,11 @@ def _bool_refs(ring, refpts):
     3) a callable f such that f(elem) is True for selected elements
     """
     if callable(refpts):
-        refpts = [refpts(el) for el in ring]
-    return bool_refpts(refpts, len(ring))
+        return numpy.array([refpts(el) for el in ring] + [False], dtype=bool)
+    elif refpts is None:
+        return numpy.zeros(len(ring) + 1, dtype=bool)
+    else:
+        return bool_refpts(refpts, len(ring))
 
 
 def checkattr(*args):
@@ -267,11 +304,13 @@ def refpts_iterator(ring, refpts):
     2) a sequence of booleans marking the selected elements
     3) a callable f such that f(elem) is True for selected elements
     """
-    if callable(refpts):
+    if refpts is None:
+        return iter(())
+    elif callable(refpts):
         return filter(refpts, ring)
     else:
         refs = numpy.ravel(refpts)
-        if (refpts is None) or (refs.size == 0):
+        if refs.size == 0:
             return iter(())
         elif refs.dtype == bool:
             return compress(ring, refs)
@@ -279,21 +318,9 @@ def refpts_iterator(ring, refpts):
             return (ring[i] for i in refs)
 
 
-def refpts_len(ring, refpts):
-    if callable(refpts):
-        return len(list(filter(refpts, ring)))
-    else:
-        refs = numpy.ravel(refpts)
-        if (refpts is None) or (refs.size == 0):
-            return 0
-        elif refs.dtype == bool:
-            return numpy.count_nonzero(refs)
-        else:
-            return len(refs)
-
-
 # noinspection PyUnusedLocal
 def refpts_count(refpts, n_elements):
+    """Number of reference points"""
     refs = numpy.ravel(refpts)
     if (refpts is None) or (refs.size == 0):
         return 0
@@ -301,6 +328,16 @@ def refpts_count(refpts, n_elements):
         return numpy.count_nonzero(refs)
     else:
         return len(refs)
+
+
+def refpts_len(ring, refpts):
+    """Number of reference points"""
+    if refpts is None:
+        return 0
+    elif callable(refpts):
+        return len(list(filter(refpts, ring)))
+    else:
+        return refpts_count(refpts, len(ring))
 
 
 def get_refpts(ring, key, quiet=True):

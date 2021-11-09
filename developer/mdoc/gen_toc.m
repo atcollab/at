@@ -8,10 +8,10 @@ tocfile = fullfile(docdir,'helptoc.xml');
 if fid <= 0
     error(fmid,'%s: %s',tocfile,fmess);
 end
-ugname=fullfile('m','ugsummary.m');
 fid=openmfile(tocfile,'at');
-hid=openmfile(ugname,'wt');
 
+ugname=fullfile('m','ugsummary.m');
+hid=openmfile(ugname,'wt');
 fprintf(fid,'        <tocitem target="ugsummary.html"\n');
 fprintf(fid,'            image="HelpIcon.USER_GUIDE">AT User Guide\n');
 fprintf(hid,'%%%% AT User Guide\n%%\n%%%%\n');
@@ -26,6 +26,19 @@ for m=atchapters()
     publish(mname,'evalCode',false,'outputDir',docdir);
 end
 fprintf(fid,'        </tocitem>\n');
+fclose(hid);
+
+howtoname=fullfile('m','howtosummary.m');
+hid=openmfile(howtoname,'wt');
+fprintf(fid,'        <tocitem target="howtosummary.html"\n');
+fprintf(fid,'            image="HelpIcon.USER_GUIDE">How to…\n');
+fprintf(hid,'%%%% How to…\n%%\n%%%%\n');
+for m=howtochapters()
+    fprintf(hid,'%% <matlab:web(fullfile(docroot,''3ptoolbox'',''atacceleratortoolbox'',''doc'',''%s.html'')) %s>\n%%\n',m.id,m.title);
+    fprintf(fid,'            <tocitem target="%s.html">%s</tocitem>\n',m.id,m.title);
+end
+fprintf(fid,'        </tocitem>\n');
+fclose(hid);
 
 fprintf(fid,'        <tocitem target="https://atcollab.github.io/at/" \n');
 fprintf(fid,'                 image="$toolbox/matlab/icons/webicon.gif">\n');
@@ -34,8 +47,8 @@ fprintf(fid,'        </tocitem>\n');
 fprintf(fid,'    </tocitem>\n');
 fprintf(fid,'</toc>\n');
 fclose(fid);
-fclose(hid);
 publish(ugname,'evalCode',false,'outputDir',docdir);
+publish(howtoname,'evalCode',false,'outputDir',docdir);
 
     function mloop(fid,mlist)
         for item=mlist

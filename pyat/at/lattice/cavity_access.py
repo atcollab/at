@@ -1,11 +1,11 @@
 from enum import Enum
 import numpy
-from scipy.constants import c as clight
-from at.lattice import elements, AtError, checktype, make_copy, get_cells
-from at.lattice import Lattice
+from .elements import RFCavity
+from .utils import AtError, checktype, make_copy
+from .lattice_object import Lattice
 
-__all__ = ['get_rf_frequency', 'get_rf_harmonic_number', 'get_rf_voltage',
-           'set_rf_frequency', 'set_rf_harmonic_number', 'set_rf_voltage',
+__all__ = ['get_rf_frequency', 'get_rf_voltage', 'set_rf_voltage',
+           'get_rf_harmonic_number', 'set_rf_harmonic_number',
            'get_rf_timelag', 'set_rf_timelag', 'set_cavity', 'Frf']
 
 
@@ -16,7 +16,7 @@ class Frf(Enum):
 
 def _get_rf_attr(ring, attr, cavpts=None):
     if cavpts is None:
-        cavpts = checktype(elements.RFCavity)
+        cavpts = getattr(ring, 'cavpts', checktype(RFCavity))
     cavities = ring.select(cavpts)
     return numpy.array([getattr(cavity, attr) for cavity in cavities])
 
@@ -34,8 +34,9 @@ def _get_rf_unique_attr(ring, attr, cavpts=None):
 def get_rf_frequency(ring, cavpts=None):
     """Return the RF frequency
     KEYWORDS
-        cavpts=None     location of RF cavities. If None, take all cavities.
-                        This allows to ignore harmonic cavities
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
     """
     return _get_rf_unique_attr(ring, 'Frequency', cavpts=cavpts)
 
@@ -43,8 +44,9 @@ def get_rf_frequency(ring, cavpts=None):
 def get_rf_harmonic_number(ring, cavpts=None):
     """Return the RF harmonic number for the full ring
     KEYWORDS
-        cavpts=None     location of RF cavities. If None, take all cavities.
-                        This allows to ignore harmonic cavities
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
     """
     hcell = _get_rf_unique_attr(ring, 'HarmNumber', cavpts=cavpts)
     return ring.periodicity * hcell
@@ -53,8 +55,9 @@ def get_rf_harmonic_number(ring, cavpts=None):
 def get_rf_voltage(ring, cavpts=None):
     """Return the total RF voltage for the full ring
     KEYWORDS
-        cavpts=None     location of RF cavities. If None, take all cavities.
-                        This allows to ignore harmonic cavities
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
     """
     _ = get_rf_frequency(ring, cavpts=cavpts)   # check single frequency
     vcell = sum(_get_rf_attr(ring, 'Voltage', cavpts=cavpts))
@@ -62,30 +65,13 @@ def get_rf_voltage(ring, cavpts=None):
 
 
 def get_rf_timelag(ring, cavpts=None):
-    """Return the RF frequency
+    """Return the RF time lag
     KEYWORDS
-        cavpts=None     location of RF cavities. If None, take all cavities.
-                        This allows to ignore harmonic cavities
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
     """
     return _get_rf_unique_attr(ring, 'TimeLag', cavpts=cavpts)
-
-
-def set_rf_frequency(ring, frequency, cavpts=None, copy=False):
-    """Set the RF frequency
-
-    PARAMETERS
-        ring                lattice description
-        frequency           RF frequency. The special enum value Frf.NOMINAL
-                            sets the frequency to the nominal value, given
-                            ring length and harmonic number.
-
-    KEYWORDS
-        cavpts=None         Cavity location. If None, use all cavities.
-                            This allows to ignore harmonic cavities.
-        copy=False          If True, returns a shallow copy of ring with new
-                            cavity elements. Otherwise, modify ring in-place
-    """
-    return set_cavity(ring, Frequency=frequency, cavpts=cavpts, copy=copy)
 
 
 def set_rf_harmonic_number(ring, harm_number, cavpts=None, copy=False):
@@ -96,8 +82,9 @@ def set_rf_harmonic_number(ring, harm_number, cavpts=None, copy=False):
         harm_number         Harmonic number for the full ring
 
     KEYWORDS
-        cavpts=None         Cavity location. If None, use all cavities.
-                            This allows to ignore harmonic cavities.
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place
     """
@@ -112,8 +99,9 @@ def set_rf_voltage(ring, voltage, cavpts=None, copy=False):
         voltage             Total RF voltage for the full ring
 
     KEYWORDS
-        cavpts=None         Cavity location. If None, use all cavities.
-                            This allows to ignore harmonic cavities.
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place
     """
@@ -128,8 +116,9 @@ def set_rf_timelag(ring, timelag, cavpts=None, copy=False):
         timelag
 
     KEYWORDS
-        cavpts=None         Cavity location. If None, use all cavities.
-                            This allows to ignore harmonic cavities.
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place
     """
@@ -140,6 +129,8 @@ def set_rf_timelag(ring, timelag, cavpts=None, copy=False):
 def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
                TimeLag=None, cavpts=None, copy=False):
     """
+    Set the parameters of the RF cavities
+
     PARAMETERS
         ring                lattice description
 
@@ -150,19 +141,20 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
         Voltage=None        RF voltage for the full ring.
         HarmNumber=None     Harmonic number for the full ring.
         TimeLag=None
-        cavpts=None         Cavity location. If None, use all cavities.
-                            This allows to ignore harmonic cavities.
+        cavpts=None         Cavity location. If None, look for ring.cavpts,
+                            otherwise take all cavities. This allows to ignore
+                            harmonic cavities.
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place
     """
-    def get_harm(hcell):
-        if hcell is not None:
-            return hcell*n_periods
+    def get_harm(hring):
+        if hring is not None:
+            return hring
         else:
             return ring.get_rf_harmonic_number(cavpts=cavpts)
 
     if cavpts is None:
-        cavpts = get_cells(ring, checktype(elements.RFCavity))
+        cavpts = getattr(ring, 'cavpts', checktype(RFCavity))
     n_cavities = ring.refcount(cavpts)
     if n_cavities < 1:
         raise AtError('No cavity found in the lattice')
@@ -171,7 +163,7 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
     modif = {}
     if Frequency is not None:
         if Frequency is Frf.NOMINAL:
-            Frequency = (clight / ring.circumference) * get_harm(HarmNumber)
+            Frequency = ring.revolution_frequency * get_harm(HarmNumber)
         modif['Frequency'] = Frequency
     if HarmNumber is not None:
         modif['HarmNumber'] = HarmNumber / n_periods
@@ -194,14 +186,11 @@ Lattice.get_rf_frequency = get_rf_frequency
 Lattice.get_rf_harmonic_number = get_rf_harmonic_number
 Lattice.get_rf_timelag = get_rf_timelag
 Lattice.set_rf_voltage = set_rf_voltage
-Lattice.set_rf_frequency = set_rf_frequency
 Lattice.set_rf_harmonic_number = set_rf_harmonic_number
 Lattice.set_rf_timelag = set_rf_timelag
 Lattice.set_cavity = set_cavity
-Lattice.voltage = property(get_rf_voltage, set_rf_voltage,
-                           doc="Total RF voltage of the full ring [V]")
+Lattice.rf_voltage = property(get_rf_voltage, set_rf_voltage,
+                              doc="Total RF voltage of the full ring [V]")
 Lattice.harmonic_number = property(get_rf_harmonic_number,
                                    set_rf_harmonic_number,
                                    doc="Harmonic number of the full ring")
-Lattice.frequency = property(get_rf_frequency, set_rf_frequency,
-                             doc="RF frequency [Hz]")

@@ -4,16 +4,18 @@ Coupled or non-coupled 4x4 linear motion
 import numpy
 from math import sqrt, pi, sin, cos, atan2
 import warnings
-from scipy.constants import c as clight
 from scipy.linalg import solve
-from at.lattice import get_rf_frequency, set_rf_frequency, DConstant, get_s_pos
-from at.lattice import AtWarning, Lattice, check_radiation
-from at.tracking import lattice_pass
-from at.physics import find_orbit4, find_orbit6, find_m44, find_m66
-from at.physics import a_matrix, jmat, jmatswap
+from ..lattice.constants import clight
+from ..lattice import DConstant, get_s_pos
+from ..lattice import AtWarning, Lattice, check_radiation
+from ..tracking import lattice_pass
+from .revolution import set_rf_frequency
+from .orbit import find_orbit4, find_orbit6
+from .matrix import find_m44, find_m66
+from .amat import a_matrix, jmat, jmatswap
 from .harmonic_analysis import get_tunes_harmonic
 
-__all__ = ['linopt', 'linopt2', 'linopt4', 'linopt6', 'avlinopt', 'get_mcf',
+__all__ = ['linopt', 'linopt2', 'linopt4', 'linopt6', 'avlinopt',
            'get_optics', 'get_tune', 'get_chrom']
 
 _jmt = jmatswap(1)
@@ -72,7 +74,7 @@ def _twiss22(t12, alpha0, beta0):
 def _closure(m22):
     diff = (m22[0, 0] - m22[1, 1]) / 2.0
     try:
-        sinmu = numpy.sign(m22[0, 1]) * sqrt(-m22[0, 1] * m22[1, 0] - diff * diff)
+        sinmu = numpy.sign(m22[0, 1]) * sqrt(-m22[0, 1]*m22[1, 0] - diff*diff)
         cosmu = 0.5 * numpy.trace(m22)
         alpha = diff / sinmu
         beta = m22[0, 1] / sinmu
@@ -185,14 +187,14 @@ def _analyze6(mt, ms):
             rot = -get_phase(aa[slc, slc])
             cs = cos(rot)
             sn = sin(rot)
-            return aa[:,slc] @ numpy.array([[cs, sn], [-sn, cs]])
+            return aa[:, slc] @ numpy.array([[cs, sn], [-sn, cs]])
 
         return numpy.concatenate([rot2(slc) for slc in slcs], axis=1)
 
     def r_matrices(ai):
         # Rk = A * S * Ik * inv(A) * S.T
         def mul2(slc):
-            return ai[:,slc] @ tt[slc, slc]
+            return ai[:, slc] @ tt[slc, slc]
 
         ais = numpy.concatenate([mul2(slc) for slc in slices], axis=1)
         invai = solve(ai, ss.T)
@@ -247,7 +249,7 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
             twiss_in=None, get_chrom=False, get_w=False, keep_lattice=False,
             mname='M', add0=(), adds=(), cavpts=None, **kwargs):
     """"""
-    def build_sigma(twin,orbit):
+    def build_sigma(twin, orbit):
         """Build the initial distribution at entrance of the transfer line"""
         if orbit is None:
             try:
@@ -359,8 +361,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         data0 = (orb0, numpy.identity(2*dms), 0.0)
         datas = (orbs, ms, spos)
         if get_chrom or get_w:
-            f0 = get_rf_frequency(ring, cavpts=cavpts)
-            df = -dp_step * get_mcf(ring.radiation_off(copy=True)) * f0
+            f0 = ring.get_rf_frequency(cavpts=cavpts)
+            df = dp_step * ring.radiation_off(copy=True).slip_factor * f0
             rgup = set_rf_frequency(ring, f0 + 0.5*df, cavpts=cavpts, copy=True)
             rgdn = set_rf_frequency(ring, f0 - 0.5*df, cavpts=cavpts, copy=True)
             o0up, _ = get_orbit(rgup, guess=orb0, **kwargs)
@@ -943,29 +945,6 @@ def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
 
-@check_radiation(False)
-def get_mcf(ring, dp=0.0, keep_lattice=False, **kwargs):
-    """Compute momentum compaction factor
-
-    PARAMETERS
-        ring            lattice description
-        dp              momentum deviation. Defaults to 0
-
-    KEYWORDS
-        keep_lattice    Assume no lattice change since the previous tracking.
-                        Defaults to False
-        dp_step=1.0E-6  momentum deviation used for differentiation
-    """
-    dp_step = kwargs.pop('DPStep', DConstant.DPStep)
-    fp_a, _ = find_orbit4(ring, dp=dp - 0.5*dp_step, keep_lattice=keep_lattice)
-    fp_b, _ = find_orbit4(ring, dp=dp + 0.5*dp_step, keep_lattice=True)
-    fp = numpy.stack((fp_a, fp_b),
-                     axis=0).T  # generate a Fortran contiguous array
-    b = numpy.squeeze(lattice_pass(ring, fp, keep_lattice=True), axis=(2, 3))
-    ring_length = get_s_pos(ring, len(ring))
-    return (b[5, 1] - b[5, 0]) / dp_step / ring_length[0]
-
-
 def get_tune(ring, method='linopt', dp=None, dct=None, orbit=None, **kwargs):
     """gets the tune using several available methods
 
@@ -1000,7 +979,7 @@ def get_tune(ring, method='linopt', dp=None, dct=None, orbit=None, **kwargs):
     # noinspection PyShadowingNames
     def gen_centroid(ring, ampl, nturns, remove_dc, ld):
         nv = ld.A.shape[0]
-        p0=ld.closed_orbit.copy()
+        p0 = ld.closed_orbit.copy()
         p0[0] += ampl
         p0[2] += ampl
         if nv >= 6:
@@ -1008,7 +987,7 @@ def get_tune(ring, method='linopt', dp=None, dct=None, orbit=None, **kwargs):
         p1 = numpy.squeeze(lattice_pass(ring, p0, nturns, len(ring)))
         if remove_dc:
             p1 -= numpy.mean(p1, axis=1, keepdims=True)
-        p2 = solve(ld.A, p1[:nv,:])
+        p2 = solve(ld.A, p1[:nv, :])
         return numpy.conjugate(p2.T.view(dtype=complex).T)
 
     if method == 'linopt':
@@ -1061,8 +1040,8 @@ def get_chrom(ring, method='linopt', dp=0, dct=None, cavpts=None, **kwargs):
               'chromaticity')
 
     if ring.radiation:
-        f0 = get_rf_frequency(ring, cavpts=cavpts)
-        df = -dp_step * get_mcf(ring.radiation_off(copy=True)) * f0
+        f0 = ring.get_rf_frequency(cavpts=cavpts)
+        df = dp_step * ring.radiation_off(copy=True).slip_factor * f0
         rgup = set_rf_frequency(ring, f0 + 0.5 * df, cavpts=cavpts, copy=True)
         o0up, _ = find_orbit6(rgup, **kwargs)
         tune_up = get_tune(rgup,  method=method, orbit=o0up, **kwargs)
@@ -1086,7 +1065,6 @@ Lattice.linopt4 = linopt4
 Lattice.linopt6 = linopt6
 Lattice.get_optics = get_optics
 Lattice.avlinopt = avlinopt
-Lattice.get_mcf = get_mcf
 Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
 Lattice.get_chrom = get_chrom

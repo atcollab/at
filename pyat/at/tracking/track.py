@@ -82,4 +82,4 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
 
 def element_pass(element, r_in):
     r_in = numpy.asfortranarray(r_in)
-    elempass(element, r_in)
+    return elempass(element, r_in)
