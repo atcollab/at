@@ -120,6 +120,8 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None, emity=None, blength=None,
 
 
     elif twiss_in:
+        if not emitx:
+            raise AttributeError('Emittances must be specified for twiss_in')           
         print ('Generating un-correlated sigma matrix from parameters in twiss_in')
         sig_matrix = _generate_sigma_matrix(twiss_in, emitx, emity, blength, espread, False)
 
