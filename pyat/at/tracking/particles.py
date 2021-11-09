@@ -4,7 +4,7 @@ Functions relating to particle generation
 import numpy
 from at.physics import ohmi_envelope
 from at.lattice.lattice_object import Lattice
-from scipy.constants import c as clight
+from at.lattice.constants import clight, e_mass
 from at.physics import get_mcf, envelope_parameters, get_tune
 
 __all__ = ['beam', 'sigma_matrix']
@@ -55,8 +55,7 @@ def _generate_sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
     return sig_matrix
 
 def _compute_bunch_length_from_espread(ring, espread):
-    emass = 0.510998910e6
-    gamma = ring.energy/emass
+    gamma = ring.energy/e_mass
     beta = numpy.sqrt(1.0-1.0/gamma/gamma)
     f0 = clight/ring.circumference
 
