@@ -3,7 +3,6 @@ Functions relating to particle generation
 """
 import numpy
 from at.physics import ohmi_envelope
-from at.lattice.lattice_object import Lattice
 from at.lattice.constants import clight, e_mass
 from at.physics import get_mcf, get_tune
 
