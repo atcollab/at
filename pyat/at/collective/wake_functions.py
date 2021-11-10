@@ -3,6 +3,7 @@ Analytical wake functions
 """
 import numpy
 from at.lattice.constants import clight
+from scipy.interpolate import interp1d
 
 
 def convolve_wakefun(srange, w, sigs):
