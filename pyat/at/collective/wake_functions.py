@@ -82,7 +82,7 @@ def transverse_reswall(srange, yokoya_factor, length, rvac, conduct, beta):
     parameters according to Alex Chao's RW model (2.53) and definitions used in
     HEADTAIL
     """
-    z0 = 119.9169832 * numpi.pi
+    z0 = 119.9169832 * numpy.pi
     dt = -srange/(beta * clight)
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *
