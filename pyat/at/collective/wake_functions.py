@@ -16,7 +16,7 @@ def convolve_wakefun(srange, w, sigs):
     sdiff = t_out[-1]-t_out[0]
     npoints = len(t_out)
     nt = npoints+npoints-1
-    func = interp1d(self._srange, w, bounds_error=False, fill_value=0)
+    func = interp1d(srange, w, bounds_error=False, fill_value=0)
     wout = func(t_out)
     wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
     fftr = numpy.fft.fft(wout)
@@ -27,7 +27,7 @@ def convolve_wakefun(srange, w, sigs):
     wout = numpy.roll(wout, int(npoints/2))
     t_out = numpy.linspace(t_out[0], t_out[-1], nt)
     func = interp1d(t_out, wout, bounds_error=False, fill_value=0)
-    wout = func(self._srange)
+    wout = func(srange)
     return wout
 
 
