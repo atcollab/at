@@ -5,6 +5,31 @@ import numpy
 from at.lattice.constants import clight
 
 
+def convolve_wakefun(srange, w, sigs):
+    """Convolution of a wake function with a pulse of rms
+    length sigs, this is use to generate a wake potential
+    that can be added to the output of EM code like GDFIDL"""
+    sigt = sigs/clight
+    min_step = numpy.diff(srange)
+    t_out = numpy.arange(srange[0], srange[-1], min_step)
+    sdiff = t_out[-1]-t_out[0]
+    npoints = len(t_out)
+    nt = npoints+npoints-1
+    func = interp1d(self._srange, w, bounds_error=False, fill_value=0)
+    wout = func(t_out)
+    wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
+    fftr = numpy.fft.fft(wout)
+    f = numpy.fft.fftshift(numpy.linspace(-(npoints-1)/sdiff,
+                           (npoints-1)/sdiff, nt))
+    fftl = numpy.exp(-(f*2*numpy.pi*sigt)**2/2)
+    wout = numpy.fft.ifft(fftr*fftl)
+    wout = numpy.roll(wout, int(npoints/2))
+    t_out = numpy.linspace(t_out[0], t_out[-1], nt)
+    func = interp1d(t_out, wout, bounds_error=False, fill_value=0)
+    wout = func(self._srange)
+    return wout
+
+
 def long_resonator(srange, frequency, qfactor, rshunt, beta):
     """Define the wake function (longitudinal) of a resonator
     with the given parameters according to Alex Chao's resonator
@@ -56,7 +81,7 @@ def transverse_reswall(srange, yokoya_factor, length, rvac, conduct, beta):
     parameters according to Alex Chao's RW model (2.53) and definitions used in
     HEADTAIL
     """
-    z0 = 119.9169832 * np.pi
+    z0 = 119.9169832 * numpi.pi
     dt = -srange/(beta * clight)
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *

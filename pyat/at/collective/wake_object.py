@@ -162,25 +162,6 @@ class Wake(object):
         wint = fint(self._srange)
         return wint
 
-    def convolve_wakefun(self, w, sigt):
-        min_step = numpy.diff(self._srange)
-        t_out = numpy.arange(self._srange[0], self._srange[-1], min_step)
-        sdiff = t_out[-1]-t_out[0]
-        npoints = len(t_out)
-        nt = npoints+npoints-1
-        func = interp1d(self._srange, w, bounds_error=False, fill_value=0)
-        wout = func(t_out)
-        wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
-        fftr = numpy.fft.fft(wout)
-        f = numpy.fft.fftshift(np.linspace(-(npoints-1)/sdiff,
-                               (npoints-1)/sdiff, nt))
-        fftl = numpy.exp(-(f*2*np.pi*sigt)**2/2)
-        wout = numpy.fft.ifft(fftr*fftl)
-        wout = numpy.roll(wout, int(npoints/2))
-        t_out = numpy.linspace(t_out[0], t_out[-1], nt)
-        func = interp1d(t_out, wout, bounds_error=False, fill_value=0)
-        wout = func(self._srange)
-        return wout
 
     def readwakefile(self, filename, scol=0, wcol=1, sfact=1, wfact=1,
                      delimiter=None, skiprows=0):
