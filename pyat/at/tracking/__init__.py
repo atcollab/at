@@ -22,13 +22,10 @@ def _mpi(self):
     """True is AT is compiled with MPI"""
     return ismpi()
 
+
 _Dst.openmp = property(_omp)
 _Dst.mpi = property(_mpi)
 
-# when compiled with mpicc this is required
-if(_Dst.mpi):
-    try:
-        from mpi4py import MPI
-    except ModuleNotFoundError:
-        print('mpi4py could not be imported')
+
+
 
