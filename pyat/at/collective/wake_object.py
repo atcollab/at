@@ -176,19 +176,8 @@ class Wake(object):
         if wcomp is WakeComponent.Z:
             return wake_functions.long_resonator(self._srange, frequency,
                                                  qfactor, rshunt, beta)
-        elif wcomp is WakeComponent.DX:
-            return wake_functions.transverse_resonator(self._srange, frequency,
-                                                       qfactor, rshunt,
-                                                       yokoya_factor, beta)
-        elif wcomp is WakeComponent.DY:
-            return wake_functions.transverse_resonator(self._srange, frequency,
-                                                       qfactor, rshunt,
-                                                       yokoya_factor, beta)
-        elif wcomp is WakeComponent.QX:
-            return wake_functions.transverse_resonator(self._srange, frequency,
-                                                       qfactor, rshunt,
-                                                       yokoya_factor, beta)
-        elif wcomp is WakeComponent.QY:
+        elif wcomp is (WakeComponent.DX or WakeComponent.DY
+                       or WakeComponent.QX or WakeComponent.QY):
             return wake_functions.transverse_resonator(self._srange, frequency,
                                                        qfactor, rshunt,
                                                        yokoya_factor, beta)
@@ -199,22 +188,8 @@ class Wake(object):
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))
-        elif wcomp is WakeComponent.DX:
-            return wake_functions.transverse_reswall(self._srange,
-                                                     yokoya_factor,
-                                                     length, rvac,
-                                                     conduct, beta)
-        elif wcomp is WakeComponent.DY:
-            return wake_functions.transverse_reswall(self._srange,
-                                                     yokoya_factor,
-                                                     length, rvac,
-                                                     conduct, beta)
-        elif wcomp is WakeComponent.QX:
-            return wake_functions.transverse_reswall(self._srange,
-                                                     yokoya_factor,
-                                                     length, rvac,
-                                                     conduct, beta)
-        elif wcomp is WakeComponent.QY:
+        elif wcomp is (WakeComponent.DX or WakeComponent.DY
+                       or WakeComponent.QX or WakeComponent.QY):
             return wake_functions.transverse_reswall(self._srange,
                                                      yokoya_factor,
                                                      length, rvac,
