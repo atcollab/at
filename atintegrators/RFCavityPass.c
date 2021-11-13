@@ -99,7 +99,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double Frequency=atGetDouble(ElemData,"Frequency");
       double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
       double T0=1.0/Frequency;      /* Does not matter since nturns == 0 */
-      double HarmNumber=round(Frequency*T0)
+      double HarmNumber=round(Frequency*T0);
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
