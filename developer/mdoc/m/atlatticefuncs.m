@@ -3,6 +3,19 @@
 %%
 % <matlab:doc('isatlattice') isatlattice> - Tests if an input argument is a valid AT lattice
 %
+%% Global lattice parameters
+% 
+%%
+% The global lattice properties 'FamName', 'Energy', 'Periodicity', 'Particle', 'HarmNumber' are stored in the RingParam lattice element.
+%
+% The following functions gives an easy access to them:
+%
+% <matlab:doc('atGetRingProperties') atGetRingProperties> - Get the ring properties
+%
+% <matlab:doc('atSetRingProperties') atSetRingProperties> - Add or modify properties of the lattice
+%
+% <matlab:doc('atenergy') atenergy> - Gets the lattice energy
+%
 %% Access elements
 % 
 %%
