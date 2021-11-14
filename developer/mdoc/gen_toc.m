@@ -55,7 +55,7 @@ publish(howtoname,'evalCode',false,'outputDir',docdir);
             if startsWith(item,"-")     % Section header
                 fprintf(fid,'%%%% %s\n%% \n%%%%\n', eraseBetween(item,1,1));
             elseif startsWith(item,"0") % Plain text
-                fprintf(fid,'%% %s\n',eraseBetween(item,1,1));
+                fprintf(fid,'%% %s\n%%\n',eraseBetween(item,1,1));
             else                        % AT function name
                 try
                     h1=h1_line(which(item));
