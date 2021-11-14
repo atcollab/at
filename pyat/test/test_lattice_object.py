@@ -1,4 +1,3 @@
-import sys
 import numpy
 import pytest
 from at import elements
@@ -11,19 +10,30 @@ def test_lattice_creation_gets_attributes_from_arguments():
     assert lat.name == 'lattice'
     assert lat.energy == 3.e+6
     assert lat.periodicity == 32
-    assert lat._radiation is False
+    assert lat.radiation is False
+    assert lat.particle.name == 'relativistic'
     assert lat.an_attr == 12
 
 
-def test_lattice_creation_short_scan_reads_radiation_status_correctly():
-    d = elements.Dipole('d1', 1, BendingAngle=numpy.pi, Energy=5.e+6,
+def test_lattice_energy_radiation_periodicity():
+    d = elements.Dipole('d1', 1, BendingAngle=numpy.pi/16, Energy=5.e+6,
                         PassMethod='BndMPoleSymplectic4RadPass')
-    lat = Lattice([d], name='lattice', energy=3.e+6, periodicity=32)
-    assert len(lat) == 1
-    assert lat.name == 'lattice'
+    lat = Lattice([d], name='lattice', energy=3.e+6)
     assert lat.energy == 3.e+6
     assert lat.periodicity == 32
-    assert lat._radiation is True
+    assert lat.radiation is True
+
+
+def test_lattice_voltage_harmonic_number():
+    rf = elements.RFCavity('rf', 0, 0.2e6, 0.5e9, 5, 3.e6)
+    d = elements.Dipole('d1', 2.99792458, BendingAngle=numpy.pi/5)
+    lat = Lattice([rf, d], name='lattice')
+    assert lat.energy == 3.e+6
+    assert lat.periodicity == 10
+    assert lat.rf_voltage == 2e6
+    assert lat.revolution_frequency == 10.e6
+    assert lat.harmonic_number == 50
+    assert lat.radiation is True
 
 
 def test_lattice_creation_from_lattice_inherits_attributes():
@@ -31,21 +41,22 @@ def test_lattice_creation_from_lattice_inherits_attributes():
                         PassMethod='BndMPoleSymplectic4RadPass')
     lat1 = Lattice([d], name='lattice', energy=3.e+6, periodicity=32,
                    an_attr=12)
-    lat1.another_attr = 5
-    lat2 = Lattice(lat1)
+    lat2 = Lattice(lat1, another_attr=5)
     assert id(lat1) != id(lat2)
     assert len(lat2) == 1
     assert lat2.name == 'lattice'
     assert lat2.energy == 3.e+6
     assert lat2.periodicity == 32
-    assert lat2._radiation is True
-    assert lat2.an_attr == 12
+    assert lat2.radiation is True
     assert lat2.another_attr == 5
+    with pytest.raises(AttributeError):
+        assert lat2.an_attr == 12
 
 
 def test_lattice_energy_is_not_defined_raises_AtError():
+    d = elements.Dipole('d1', 1, BendingAngle=numpy.pi)
     with pytest.raises(AtError):
-        Lattice()
+        Lattice([d])
 
 
 def test_item_is_not_an_AT_element_warns_correctly():
@@ -56,13 +67,18 @@ def test_item_is_not_an_AT_element_warns_correctly():
 def test_lattice_string_ordering():
     lat = Lattice([elements.Drift('D0', 1.0, attr1=numpy.array(0))],
                   name='lat', energy=5, periodicity=1, attr2=3)
-    # Default dictionary ordering is only in Python >= 3.6
-    assert str(lat).startswith("Lattice(<1 elements>, name='lat', "
-                               "energy=5, periodicity=1")
-    assert str(lat).endswith("attr2=3)")
-    assert repr(lat).startswith("Lattice([Drift('D0', 1.0, attr1=array(0))], "
-                                "name='lat', energy=5, periodicity=1")
-    assert repr(lat).endswith("attr2=3)")
+    latstr = str(lat)
+    assert latstr.startswith("Lattice(<1 elements>, name='lat', "
+                               "energy=5, particle=Particle('relativistic'), "
+                               "periodicity=1")
+    assert latstr.endswith("attr2=3)")
+
+    latrepr = repr(lat)
+    assert latrepr.startswith("Lattice([Drift('D0', 1.0, attr1=array(0))], "
+                                "name='lat', "
+                                "energy=5, particle=Particle('relativistic'), "
+                                "periodicity=1")
+    assert latrepr.endswith("attr2=3)")
 
 
 def test_getitem(simple_lattice, simple_ring):

@@ -8,7 +8,9 @@ import numpy
 from at.lattice import Lattice
 from at.load import register_format
 from at.load.utils import element_from_string
-
+# imports necessary in' globals()' for 'eval'
+# noinspection PyUnresolvedReferences
+from at.lattice import Particle
 __all__ = ['load_repr', 'save_repr']
 
 
@@ -46,8 +48,9 @@ def save_repr(ring, filename=None):
         filename=None   name of the '.repr' file. Default: output on sys.stdout
     """
     def save(file):
-        print(repr(dict((k, v) for k, v in vars(ring).items()
-                        if not k.startswith('_'))), file=file)
+        # print(repr(dict((k, v) for k, v in vars(ring).items()
+        #                 if not k.startswith('_'))), file=file)
+        print(repr(ring.attrs), file=file)
         for elem in ring:
             print(repr(elem), file=file)
 
