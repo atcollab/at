@@ -399,7 +399,12 @@ class Lattice(list):
 
     @property
     def gamma(self):
-        return self.energy / self.particle.rest_energy
+        return float(self.energy / self.particle.rest_energy)
+
+    @property
+    def beta(self):
+        gamma = float(self.energy / self.particle.rest_energy)
+        return math.sqrt(1.0 - 1.0/gamma/gamma)
 
     @property
     def revolution_frequency(self):

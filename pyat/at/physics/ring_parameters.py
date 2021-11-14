@@ -2,7 +2,7 @@ from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
 from ..lattice import Lattice
-from ..lattice.constants import clight, e_mass, Cgamma, Cq
+from ..lattice.constants import clight, Cgamma, Cq
 
 __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 
@@ -102,7 +102,7 @@ def radiation_parameters(ring, dp=None, params=None, **kwargs):
     circumference = ring.circumference
     voltage = ring.rf_voltage
     E0 = ring.energy
-    gamma = E0 / e_mass
+    gamma = ring.gamma
     gamma2 = gamma * gamma
     beta = sqrt(1.0 - 1.0/gamma2)
     U0 = Cgamma / 2.0 / pi * E0**4 * rp.i2
@@ -162,22 +162,19 @@ def envelope_parameters(ring, params=None):
             f_s             Synchrotron frequency [Hz]
     """
     E0 = ring.energy
-    gamma = E0 / e_mass
-    gamma2 = gamma * gamma
-    beta = sqrt(1.0 - 1.0/gamma2)
     rp = RingParameters() if params is None else params
     emit0, beamdata, emit = ring.ohmi_envelope()
     voltage = ring.rf_voltage
     rp.E0 = E0
     rp.U0 = ring.energy_loss
-    revolution_period = ring.circumference / clight / beta
-    rp.Tau = revolution_period / beamdata.damping_rates / ring.periodicity
+    rev_freq = ring.revolution_frequency
+    rp.Tau = 1.0 / rev_freq / beamdata.damping_rates / ring.periodicity
     alpha = 1.0 / rp.Tau
     rp.J = 4.0 * alpha / numpy.sum(alpha)
     rp.tunes6, _ = numpy.modf(ring.periodicity * beamdata.tunes)
     rp.phi_s = pi - asin(rp.U0 / voltage)
     rp.voltage = voltage
-    rp.f_s = rp.tunes6[2] / revolution_period
+    rp.f_s = rp.tunes6[2] * rev_freq
     rp.emittances = beamdata.mode_emittances
     rp.sigma_e = sqrt(emit0.r66[4, 4])
     rp.sigma_l = sqrt(emit0.r66[5, 5])
