@@ -72,7 +72,7 @@ end
 emitx=pa.modemittance(1);
 emity=emitx./2;
 
-[emitx,emity,integrationmethod,sigp,sigs,rest] = ...
+[emitx,emity,integrationmethod,sigp,sigs,~] = ...
     getargs(varargs, emitx, emity,'integral',pa.espread,pa.blength);
 
 fprintf('emitx: %.3e [m]\n', emitx);
@@ -80,48 +80,6 @@ fprintf('emity: %.3e [m]\n', emity);
 fprintf('integration method: "%s"\n', integrationmethod);
 fprintf('energy spread: %.3e\n', sigp);
 fprintf('bunch length:  %.5g [m]\n', sigs);
-
-% if naddvar==2
-%     emitx=varargs{2};
-%     disp('set defaults: ey=ex/2')
-%     disp(' integration method is integral,')
-%     disp(' energy spread, bunch length from ATX')
-%     
-% elseif naddvar==3
-%     emitx=varargs{2};
-%     emity=varargs{3};
-%     disp('set defaults: ')
-%     disp(' integration method is integral,')
-%     disp(' energy spread, bunch length from ATX')
-%     
-% elseif naddvar==4
-%     emitx=varargs{2};
-%     emity=varargs{3};
-%     integrationmethod=varargs{4};
-%     disp('set defaults: ')
-%     disp(' energy spread, bunch length from ATX')
-%     
-% elseif naddvar==5
-%     emitx=varargs{2};
-%     emity=varargs{3};
-%     integrationmethod=varargs{4};
-%     sigp=varargs{5};
-%     disp('set defaults: ')
-%     disp('bunch length from ATX')
-%     
-% elseif naddvar==6
-%     emitx=varargs{2};
-%     emity=varargs{3};
-%     integrationmethod=varargs{4};
-%     sigp=varargs{5};
-%     sigs=varargs{6};
-%     
-% else
-%     disp('set defaults: ey=ex/2')
-%     disp(' integration method is integral,')
-%     disp(' energy spread, bunch length, x emittance from ATX')
-%     disp(' evaluation at all points with non zero length')
-% end
 
 % if dpp is a scalar assume constant momentum aperture.
 if numel(dpp)==1
