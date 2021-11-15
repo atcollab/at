@@ -133,7 +133,7 @@ def integrator_ext(pass_method):
 at = Extension(
     'at.tracking.atpass',
     sources=[at_source],
-    define_macros=macros + omp_macros,
+    define_macros=macros + omp_macros + mpi_macros,
     include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
     extra_compile_args=cflags + omp_cflags,
     extra_link_args=omp_lflags
