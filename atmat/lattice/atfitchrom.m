@@ -20,6 +20,7 @@ check_radiation(ring,false);
 [dpp,varargin]=getargs(varargin,0.0,'check',@(arg) isscalar(arg) && isnumeric(arg));
 [newchrom,famname1,famname2]=deal(varargin{:});
 
+idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{3});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{3});
