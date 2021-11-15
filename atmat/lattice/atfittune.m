@@ -1,5 +1,5 @@
 function newring=atfittune(ring,varargin)
-%ATFITTUNE fits linear tunes by scaling 2 quadrupole families
+%ATFITTUNE Fit linear tunes by scaling 2 quadrupole families
 % NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
 % NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
 %
@@ -22,12 +22,12 @@ function newring=atfittune(ring,varargin)
 %
 
 [UseIntegerPart,varargin]=getflag(varargin,'UseIntegerPart');
-if isscalar(varargin{1}) && isnumeric(varargin{1})
-    dpp=varargin{1};
-    [newtunes,famname1,famname2]=deal(varargin{2:end});
+[dpp,varargin]=getargs(varargin,[],'check',@(arg) isscalar(arg) && isnumeric(arg));
+[newtunes,famname1,famname2]=deal(varargin{:});
+if isempty(dpp)
+    dpparg={};
 else
-    dpp=0;
-    [newtunes,famname1,famname2]=deal(varargin{:});
+    dpparg={'dp',dpp};
 end
 
 idx1=varelem(ring,famname1);
@@ -35,28 +35,26 @@ idx2=varelem(ring,famname2);
 
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{2});
-delta = 1e-6;
-if ~UseIntegerPart
+delta = 1e-6;   % Step on quadrupole strengths
+
+if UseIntegerPart
+    allpos=1:length(ring)+1;
+    gettune = @getinttune;
+else
     if any(newtunes>=1)
         warning('AT:FitTune','The integer part of the tunes is ignored unless you use the ''UseIntegerPart'' flag');
         newtunes=newtunes-floor(newtunes);
     end
-    % Compute initial tunes before fitting
-    [lindata, tunes] = atlinopt(ring,dpp); %#ok<ASGLU>
-    % Take Derivative
-    [lindata, tunes1] = atlinopt(setqp(ring,idx1,kl1,delta),dpp); %#ok<ASGLU>
-    [lindata, tunes2] = atlinopt(setqp(ring,idx2,kl2,delta),dpp); %#ok<ASGLU>
-else
-    % Compute initial tunes before fitting
-    lastpos=length(ring)+1;
-    lindata = atlinopt(ring,dpp,1:lastpos);
-    tunes=lindata(lastpos).mu/2/pi;
-    % Take Derivative
-    lindata1 = atlinopt(setqp(ring,idx1,kl1,delta),dpp,1:lastpos);
-    lindata2 = atlinopt(setqp(ring,idx2,kl2,delta),dpp,1:lastpos);
-    tunes1=lindata1(lastpos).mu/2/pi;
-    tunes2=lindata2(lastpos).mu/2/pi;
+    gettune = @getfractune;
 end
+
+% Compute initial tunes before fitting
+tunes = gettune(ring,dpparg{:});
+
+% Take Derivative
+tunes1 = gettune(setqp(ring,idx1,kl1,delta),dpparg{:});
+tunes2 = gettune(setqp(ring,idx2,kl2,delta),dpparg{:});
+
 %Construct the Jacobian
 J = ([tunes1(:) tunes2(:)] - [tunes(:) tunes(:)])/delta;
 dK = J\(newtunes(:)-tunes(:));
@@ -86,5 +84,13 @@ newring = setqp(newring,idx2,kl2,dK(2));
         else
             error('AT:GetElemList:WrongArg','Cannot parse argument');
         end
+    end
+    function tun=getfractune(ring,varargin)
+        [ringdata,elemdata]=atlinopt6(ring,varargin{:}); %#ok<ASGLU>
+        tun=ringdata.tune(1:2);
+    end
+    function tun=getinttune(ring,varargin)
+        [ringdata,elemdata] = atlinopt6(ring,allpos,varargin{:}); %#ok<ASGLU>
+        tun=elemdata(end).mu(1:2)/2/pi;
     end
 end
