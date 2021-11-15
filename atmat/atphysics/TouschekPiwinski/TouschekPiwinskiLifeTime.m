@@ -1,29 +1,38 @@
 function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
-% function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib)
+% function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(ring,dpp,Ib,...)
 %
 % evaluates Touschek Lifetime using Piwinski formula
 %
-% TouschekPiwinskiLifeTime(latticeATring,momentumaperturecolumnvector,0.002)
-%  or
+% INPUT
+%
 % TouschekPiwinskiLifeTime(
-%  latticeATring,
+%  ring,
 %  momentumaperturecolumnvector,  column array (size of r or positions)
 %                                 it can be length(r)x2, for positive and
 %                                 negative aperture
-%  current per bunch in A,                 % scalar
-%  positions where to evaluate,  %(default all elements with length>0 )  column array
-%  emittancex, %(default atx modemittance(1))   scalar
-%  emittancey, %(default is emittancex/2)		       scalar
-%  integration method,  % (default 'integral', may be: 'integral', 'quad', 'trapz')
-%  energy spread,	% scalar
-%  bunch length,        % scalar
+%  current per bunch in A,        scalar
+%  positions where to evaluate,	  default: all elements with length>0  column array
+%  emittancex,                    default: atx modemittance(1)   scalar
+%  emittancey,                    default: emittancex/2		     scalar
+%  integration_method,            default: 'integral', may be: 'integral', 'quad', 'trapz')
+%  energy_spread,                 scalar
+%  bunch_length,	              scalar
 %			   )
+%
+% OUTPUT
 %
 %  contributionsTL 1/T contribution at each element 
 %                  if dpp has positive and negative apertures, then contributionTL is a 2 columns vector      
 %
 %  Tl  Lifetime in seconds 1/Tl=sum(contributionsTL.*L)/sum(L);
 %
+% NAME-VALUE PAIRS
+%
+% TouschekPiwinskiLifeTime(..., 'AbsTol', abstol)
+%   Absolute tolerance for the 'integral' function. Default: 1.0e-16
+%
+% TouschekPiwinskiLifeTime(..., 'RelTol', abstol)
+%   Relative tolerance for the 'integral' function. Default: 1.0e-12
 %
 % "The Touscheck Effect in strong focusing storage rings"
 % A.Piwinski, DESY 98-179, November 1998
@@ -31,11 +40,12 @@ function [Tl,contributionsTL]=TouschekPiwinskiLifeTime(r,dpp,Ib,varargin)
 % "Touscheck Effect calculation and its applications to a transport line"
 % A.Xiao M. Borland, Proceedings of PAC07, Albuquerque, New Mexico, USA
 %
-%
+
 % created 31-10-2012
 % updated 22-01-2013 corrected and compared with elegant
 % updates 08-11-2018 add: PhysConstant, default 'integral', contributionTL
 %                         given for positive and negative side
+% updated 14/11/2021 Added optional specification of integral tolerances
 
 %ensure a column lattice
 r=reshape(r,numel(r),1);
@@ -44,10 +54,12 @@ e0 = PhysConstant.elementary_charge.value; %1.60217646e-19; %Coulomb
 r0 = PhysConstant.classical_electron_radius.value; %2.817940327e-15; %m %  classical electron radius
 spl = PhysConstant.speed_of_light_in_vacuum.value; %299792458; % speed of ligth
 
-naddvar=length(varargin);
-if naddvar>=1
-    positions=varargin{1};
-else
+[abstol,varargs]=getoption(varargin, 'AbsTol', 1.0e-16);
+[reltol,varargs]=getoption(varargs, 'RelTol', 1.0e-12);
+tol = {'AbsTol', abstol, 'RelTol', reltol};
+
+[positions,varargs]=getargs(varargs,[]);
+if isempty(positions)
     % positions default= non zero length elements
     positions=findcells(r,'Length');
     L=getcellstruct(r,'Length',positions);
@@ -59,56 +71,15 @@ end
 
 emitx=pa.modemittance(1);
 emity=emitx./2;
-integrationmethod='integral';
-sigp=pa.espread; % relative momentum spread
-sigs=pa.blength; % bunch length
 
-if naddvar==2
-    positions=varargin{1};
-    emitx=varargin{2};
-    disp('set defaults: ey=ex/2')
-    disp(' integration method is integral,')
-    disp(' energy sperad, bunch length from ATX')
-    
-elseif naddvar==3
-    positions=varargin{1};
-    emitx=varargin{2};
-    emity=varargin{3};
-    disp('set defaults: ')
-    disp(' integration method is integral,')
-    disp(' energy sperad, bunch length from ATX')
-    
-elseif naddvar==4
-    positions=varargin{1};
-    emitx=varargin{2};
-    emity=varargin{3};
-    integrationmethod=varargin{4};
-    disp('set defaults: ')
-    disp(' energy sperad, bunch length from ATX')
-    
-elseif naddvar==5
-    positions=varargin{1};
-    emitx=varargin{2};
-    emity=varargin{3};
-    integrationmethod=varargin{4};
-    sigp=varargin{5};
-    disp('set defaults: ')
-    disp('bunch length from ATX')
-    
-elseif naddvar==6
-    positions=varargin{1};
-    emitx=varargin{2};
-    emity=varargin{3};
-    integrationmethod=varargin{4};
-    sigp=varargin{5};
-    sigs=varargin{6};
-    
-else
-    disp('set defaults: ey=ex/2')
-    disp(' integration method is integral,')
-    disp(' energy spread, bunch length, x emittance from ATX')
-    disp(' evaluation at all points with non zero length')
-end
+[emitx,emity,integrationmethod,sigp,sigs,~] = ...
+    getargs(varargs, emitx, emity,'integral',pa.espread,pa.blength);
+
+fprintf('emitx: %.3e [m]\n', emitx);
+fprintf('emity: %.3e [m]\n', emity);
+fprintf('integration method: "%s"\n', integrationmethod);
+fprintf('energy spread: %.3e\n', sigp);
+fprintf('bunch length:  %.5g [m]\n', sigs);
 
 % if dpp is a scalar assume constant momentum aperture.
 if numel(dpp)==1
@@ -188,10 +159,10 @@ for dppcolnum=1:size(dppinput,2)
         % choose integration method
         switch integrationmethod
             case 'infiniteintegral'
-                val(ii)= integral(@(u)TLT_IntPiw(u,um(ii),B1(ii),B2(ii)),um(ii),Inf); %,...um(ii)*1e4
+                val(ii)= integral(@(u)TLT_IntPiw(u,um(ii),B1(ii),B2(ii)),um(ii),Inf, tol{:}); %,...um(ii)*1e4
                 
             case 'integral'
-                val(ii) = integral(@(k)TLT_IntPiw_k(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2); %,...,'Waypoints',evalpoints um(ii)*1e4
+                val(ii) = integral(@(k)TLT_IntPiw_k(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2, tol{:}); %,...,'Waypoints',evalpoints um(ii)*1e4
                 
             case 'quad'
                 val(ii)= quad(@(k)TLT_IntPiw_k(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2); %,...,'Waypoints',evalpoints um(ii)*1e4
@@ -201,7 +172,7 @@ for dppcolnum=1:size(dppinput,2)
                 val(ii)= trapz(k,TLT_IntPiw_k(k,km(ii),B1(ii),B2(ii))); %,...,'Waypoints',evalpoints um(ii)*1e4
                 
             otherwise % use default method quad (backward compatible)
-                val(ii)=integral(@(k)TLT_IntPiw_k(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2); %,...,'Waypoints',evalpoints um(ii)*1e4
+                val(ii)=integral(@(k)TLT_IntPiw_k(k,km(ii),B1(ii),B2(ii)),km(ii),pi/2, tol{:}); %,...,'Waypoints',evalpoints um(ii)*1e4
                 
         end
     end
