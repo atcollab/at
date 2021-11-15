@@ -1,10 +1,10 @@
 # noinspection PyProtectedMember
-from ..lattice.options import _Dst
+from ..lattice.options import DConstant
 
 # when atimplib was compiled with mpicc
 # this is required
 
-if(_Dst.mpi):
+if(DConstant.mpi):
     try:
         from mpi4py import MPI
     except ModuleNotFoundError:
