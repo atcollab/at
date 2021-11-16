@@ -1,5 +1,5 @@
 function newring=atfitchrom(ring,varargin)
-%ATFITTUNE Fit chromaticites by scaling 2 sextupole families
+%ATFITCHROM Fit chromaticites by scaling 2 sextupole families
 % NEWRING = ATFITCHROM(RING,NEWCHROM,SEXTFAMILY1,SEXTFAMILY2)
 % NEWRING = ATFITCHROM(RING,DPP,NEWCHROM,SEXTFAMILY1,SEXTFAMILY2)
 %
@@ -14,9 +14,20 @@ function newring=atfitchrom(ring,varargin)
 %   logical array: mask of selected elements in RING
 %   Numeric array: list of selected elements in RING
 %   Cell array: All elements selected by each cell
+%
+%NEWRING = ATFITTUNE(RING,...,'DPStep',dpstep)
+%   dpstep is the momentum step applied to compute the chromaticity.
+%   The default is the DPStep global option, which defaults to 3.0e-6
+%
+%NEWRING = ATFITTUNE(RING,...,'HStep',hstep)
+%   hstep is the sextupole strength applied to build the jacobian [m^-3].
+%   Default: 1.0e-5
+%
+% See also ATFITTUNE
 
 check_radiation(ring,false);
 [deltaP,varargin]=getoption(varargin,'DPStep');
+[deltaS,varargin]=getoption(varargin,'HStep',1.0e-5);
 [dpp,varargin]=getargs(varargin,0.0,'check',@(arg) isscalar(arg) && isnumeric(arg));
 [newchrom,famname1,famname2]=deal(varargin{:});
 
@@ -25,8 +36,6 @@ idx2=varelem(ring,famname2);
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{3});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{3});
 %if true
-    deltaS = 1e-5; % step size in Sextupole strngth
-    
     % Compute initial tunes before fitting
     chrom=getchrom(ring,dpp,deltaP);
     

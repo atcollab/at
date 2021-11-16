@@ -15,13 +15,19 @@ function newring=atfittune(ring,varargin)
 %   Numeric array: list of selected elements in RING
 %   Cell array: All elements selected by each cell
 %
-% NEWRING = ATFITTUNE(RING,...,'UseIntegerPart') With this flag, the 
-% function fits the tunes to the total values of NEWTUNES, including 
-% the integer part.
-% With this option the function is substantially slower!
+%NEWRING = ATFITTUNE(RING,...,'UseIntegerPart') With this flag, the 
+%   function fits the tunes to the total values of NEWTUNES, including 
+%   the integer part.
+%   With this option the function is substantially slower!
 %
+%NEWRING = ATFITTUNE(RING,...,'KStep',kstep)
+%   kstep is the quadrupole strength applied to build the jacobian [m^-2].
+%   Default: 1.0e-6
+%
+% See also ATFITCHROM
 
 [UseIntegerPart,varargin]=getflag(varargin,'UseIntegerPart');
+[delta,varargin]=getoption(varargin,'KStep',1.0e-6);
 [dpp,varargin]=getargs(varargin,[],'check',@(arg) isscalar(arg) && isnumeric(arg));
 [newtunes,famname1,famname2]=deal(varargin{:});
 if isempty(dpp)
@@ -35,7 +41,6 @@ idx2=varelem(ring,famname2);
 
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{2});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{2});
-delta = 1e-6;   % Step on quadrupole strengths
 
 if UseIntegerPart
     allpos=1:length(ring)+1;
