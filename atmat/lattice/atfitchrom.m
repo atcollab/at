@@ -1,8 +1,10 @@
 function newring=atfitchrom(ring,varargin)
-%ATFITTUNE fits chromaticites by scaling 2 sextupol families
+%ATFITCHROM Fit chromaticites by scaling 2 sextupole families
 % NEWRING = ATFITCHROM(RING,NEWCHROM,SEXTFAMILY1,SEXTFAMILY2)
+% NEWRING = ATFITCHROM(RING,DPP,NEWCHROM,SEXTFAMILY1,SEXTFAMILY2)
 %
 %RING:          Cell array
+%DPP:           Optional momentum deviation (default 0)
 %NEWCHROM:      Desired non-normalized chromaticities
 %SEXTFAMILY1:   1st sextupole family
 %SEXTFAMILY2:   2nd sextupole family
@@ -12,22 +14,28 @@ function newring=atfitchrom(ring,varargin)
 %   logical array: mask of selected elements in RING
 %   Numeric array: list of selected elements in RING
 %   Cell array: All elements selected by each cell
+%
+%NEWRING = ATFITTUNE(RING,...,'DPStep',dpstep)
+%   dpstep is the momentum step applied to compute the chromaticity.
+%   The default is the DPStep global option, which defaults to 3.0e-6
+%
+%NEWRING = ATFITTUNE(RING,...,'HStep',hstep)
+%   hstep is the sextupole strength applied to build the jacobian [m^-3].
+%   Default: 1.0e-5
+%
+% See also ATFITTUNE
 
-if isscalar(varargin{1}) && isnumeric(varargin{1})
-    dpp=varargin{1};
-    [newchrom,famname1,famname2]=deal(varargin{2:end});
-else
-    dpp=0;
-    [newchrom,famname1,famname2]=deal(varargin{:});
-end
-deltaP = 1e-8;
+check_radiation(ring,false);
+[deltaP,varargin]=getoption(varargin,'DPStep');
+[deltaS,varargin]=getoption(varargin,'HStep',1.0e-5);
+[dpp,varargin]=getargs(varargin,0.0,'check',@(arg) isscalar(arg) && isnumeric(arg));
+[newchrom,famname1,famname2]=deal(varargin{:});
+
 idx1=varelem(ring,famname1);
 idx2=varelem(ring,famname2);
 kl1=atgetfieldvalues(ring(idx1),'PolynomB',{3});
 kl2=atgetfieldvalues(ring(idx2),'PolynomB',{3});
-if true
-    deltaS = 1e-5; % step size in Sextupole strngth
-    
+%if true
     % Compute initial tunes before fitting
     chrom=getchrom(ring,dpp,deltaP);
     
@@ -38,11 +46,11 @@ if true
     %Construct the Jacobian
     J = ([chrom1(:) chrom2(:)] - [chrom(:) chrom(:)])/deltaS;
     dK = J\(newchrom(:)-chrom(:));
-else
-    dK=fminsearch(@funchrom,[0;0],...
-        optimset(optimset('fminsearch'),'Display','iter',...
-		'TolX',1.e-5,'TolFun',1.e-8));
-end
+% else
+%     dK=fminsearch(@funchrom,[0;0],...
+%         optimset(optimset('fminsearch'),'Display','iter',...
+% 		'TolX',1.e-5,'TolFun',1.e-8));
+% end
 newring=setsx(ring,idx1,kl1,dK(1));
 newring=setsx(newring,idx2,kl2,dK(2));
 
@@ -78,8 +86,8 @@ newring=setsx(newring,idx2,kl2,dK(2));
     end
 
     function chrom=getchrom(ring,dpp,deltaP)
-        [lindata, tunesa] = atlinopt(ring,dpp); %#ok<ASGLU>
-        [lindata, tunesb] = atlinopt(ring,dpp+deltaP); %#ok<ASGLU>
-        chrom = (tunesb-tunesa)/deltaP;
+        [ringda,elemdata]=atlinopt6(ring,'dp',dpp-0.5*deltaP); %#ok<ASGLU>
+        [ringdb,elemdata]=atlinopt6(ring,'dp',dpp+0.5*deltaP); %#ok<ASGLU>
+        chrom = (ringdb.tune(1:2)-ringda.tune(1:2))/deltaP;
     end
 end
