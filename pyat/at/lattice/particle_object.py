@@ -27,6 +27,9 @@ class Particle(object):
     )
 
     def __init__(self, name, **kwargs):
+        if name != 'relativistic':
+            raise NotImplementedError(
+                "Only 'relativistic' is allowed at the moment")
         if name in self._known:
             kwargs.update(self._known[name])
         self.name = name

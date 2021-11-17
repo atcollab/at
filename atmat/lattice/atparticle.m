@@ -30,6 +30,9 @@ classdef atparticle
         function obj = atparticle(name, varargin)
             %ATPARTICLE Construct an ATPARTICLE instance
             %   Detailed explanation goes here
+            if ~strcmp(name,'relativistic')
+                error('AT:particle','Only ''relativistic'' is allowed at the moment');
+            end
             try
                 args = atparticle.known2.(name);
             catch
