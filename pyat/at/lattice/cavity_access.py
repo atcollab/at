@@ -97,8 +97,8 @@ def set_rf_timelag(ring, timelag, cavpts=None, copy=False):
 
 
 # noinspection PyPep8Naming
-def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
-               TimeLag=None, cavpts=None, copy=False):
+def set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None, cavpts=None,
+               copy=False):
     """
     Set the parameters of the RF cavities
 
@@ -110,7 +110,6 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
                             sets the frequency to the nominal value, given
                             ring length and harmonic number.
         Voltage=None        RF voltage for the full ring.
-        HarmNumber=None     Harmonic number for the full ring.
         TimeLag=None
         cavpts=None         Cavity location. If None, look for ring.cavpts,
                             otherwise take all cavities. This allows to ignore
@@ -118,30 +117,21 @@ def set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
         copy=False          If True, returns a shallow copy of ring with new
                             cavity elements. Otherwise, modify ring in-place
     """
-    def get_harm(hring):
-        if hring is not None:
-            return hring
-        else:
-            return ring.get_rf_harmonic_number(cavpts=cavpts)
-
     if cavpts is None:
         cavpts = getattr(ring, 'cavpts', checktype(RFCavity))
     n_cavities = ring.refcount(cavpts)
     if n_cavities < 1:
         raise AtError('No cavity found in the lattice')
-    n_periods = ring.periodicity
 
     modif = {}
     if Frequency is not None:
         if Frequency is Frf.NOMINAL:
-            Frequency = ring.revolution_frequency * get_harm(HarmNumber)
+            Frequency = ring.revolution_frequency * ring.harmonic_number
         modif['Frequency'] = Frequency
-    if HarmNumber is not None:
-        modif['HarmNumber'] = HarmNumber / n_periods
     if TimeLag is not None:
         modif['TimeLag'] = TimeLag
     if Voltage is not None:
-        modif['Voltage'] = Voltage / n_periods / n_cavities
+        modif['Voltage'] = Voltage / ring.periodicity / n_cavities
 
     # noinspection PyShadowingNames
     @make_copy(copy)
