@@ -16,7 +16,8 @@ __all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
            'load_var']
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
-                     'FamName': 'name'}
+                     'FamName': 'name', 'Particle': 'particle',
+                     'HarmNumber': 'harmonic_number'}
 _param_ignore = {'PassMethod', 'Length'}
 
 # Python to Matlab attribute translation
@@ -35,27 +36,35 @@ def matfile_generator(params, mat_file):
         check=True      if False, skip the coherence tests
         quiet=False     If True, suppress the warning for non-standard classes
     """
+    def mclean(data):
+        if data.dtype.type is numpy.str_:
+            # Convert strings in arrays back to strings.
+            return str(data[0])
+        elif data.size == 1:
+            v = data[0, 0]
+            if issubclass(v.dtype.type, numpy.void):
+                for f in v.dtype.fields:
+                    v[f] = mclean(v[f])
+            # Return a scalar
+            return v
+        else:
+            # Remove any surplus dimensions in arrays.
+            return numpy.squeeze(data)
+
     m = scipy.io.loadmat(params.setdefault('mat_file', mat_file))
     matvars = [varname for varname in m if not varname.startswith('__')]
     default_key = matvars[0] if (len(matvars) == 1) else 'RING'
     key = params.setdefault('mat_key', default_key)
     if key not in m.keys():
         kok = [k for k in m.keys() if '__' not in k]
-        raise AtError('Selected mat_key does not exist, please select in: {}'.format(kok))
+        raise AtError('Selected mat_key does not exist, '
+                      'please select in: {}'.format(kok))
     check = params.pop('check', True)
     quiet = params.pop('quiet', False)
     cell_array = m[key].flat
     for index, mat_elem in enumerate(cell_array):
-        element_array = mat_elem[0, 0]
-        kwargs = {}
-        for field_name in element_array.dtype.fields:
-            # Remove any surplus dimensions in arrays.
-            data = numpy.squeeze(element_array[field_name])
-            # Convert strings in arrays back to strings.
-            if data.dtype.type is numpy.unicode_:
-                data = str(data)
-            kwargs[field_name] = data
-
+        elem = mat_elem[0, 0]
+        kwargs = {f: mclean(elem[f]) for f in elem.dtype.fields}
         yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
@@ -91,7 +100,7 @@ def ringparam_filter(params, elem_iterator, *args):
 
 
 def load_mat(filename, **kwargs):
-    """Create a lattice object from a matmab mat-file
+    """Create a lattice object from a Matlab mat-file
 
     PARAMETERS
         filename        name of a '.mat' file
@@ -178,7 +187,7 @@ def load_var(matlat, **kwargs):
 def matlab_ring(ring):
     """Prepend a RingParam element to a lattice"""
     dct = dict((_matattr_map.get(k, k.title()), v)
-               for k, v in vars(ring).items() if not k.startswith('_'))
+               for k, v in ring.attrs.items())
     famname = dct.pop('FamName')
     energy = dct.pop('Energy')
     yield RingParam(famname, energy, **dct)

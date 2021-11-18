@@ -20,7 +20,7 @@ def test_lattice_gets_attributes_from_RingParam():
     p = RingParam('lattice_name', 3.e+6, Periodicity=32)
     params = _matlab_scanner([p])
     assert params['name'] == 'lattice_name'
-    assert params['energy'] == 3.e+6
+    assert params['_energy'] == 3.e+6
     assert params['periodicity'] == 32
     assert params['_radiation'] is False
 
@@ -30,7 +30,7 @@ def test_lattice_gets_attributes_from_elements():
                         PassMethod='BndMPoleSymplectic4RadPass')
     params = _matlab_scanner([d])
     assert params['name'] == ''
-    assert params['energy'] == 3.e+6
+    assert params['_energy'] == 3.e+6
     assert params['periodicity'] == 2
     assert params['_radiation'] is True
 
@@ -57,10 +57,10 @@ def test_inconsistent_energy_values_warns_correctly():
     m2 = elements.Marker('m2', Energy=3.e+9)
     with pytest.warns(AtWarning):
         params = _matlab_scanner([m1, m2])
-        assert params['energy'] == 5.e+9
+        assert params['_energy'] == 5.e+9
     with pytest.warns(AtWarning):
         params = _matlab_scanner([d1, d2])
-        assert params['energy'] == 5.e+9
+        assert params['_energy'] == 5.e+9
 
 
 def test_more_than_one_RingParam_in_ring_raises_warning():
@@ -68,7 +68,7 @@ def test_more_than_one_RingParam_in_ring_raises_warning():
     p2 = RingParam('rp2', 3.e+6)
     with pytest.warns(AtWarning):
         params = _matlab_scanner([p1, p2])
-        assert params['energy'] == 5.e+6
+        assert params['_energy'] == 5.e+6
 
 
 def test_invalid_class_warns_correctly():

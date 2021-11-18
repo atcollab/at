@@ -1,4 +1,5 @@
 from .constants import e_mass, p_mass
+import numpy
 
 
 class Particle(object):
@@ -9,8 +10,9 @@ class Particle(object):
     Particle(name, **params)
 
     PARAMETERS
-        name        Particle name. 'electron' and 'proton' are predefined. For
-                    other particles, the mass and charge must be provided.
+        name        Particle name. 'electron', 'positron and 'proton' are
+                    predefined. For other particles, the rest energy and charge
+                    must be provided as keywords.
 
     KEYWORDS
         rest_energy Particle rest energy [ev]
@@ -25,12 +27,15 @@ class Particle(object):
     )
 
     def __init__(self, name, **kwargs):
+        if name != 'relativistic':
+            raise NotImplementedError(
+                "Only 'relativistic' is allowed at the moment")
         if name in self._known:
             kwargs.update(self._known[name])
         self.name = name
-        for key in ('rest_energy', 'charge'):
-            if key not in kwargs:
-                raise KeyError('"{}" is undefined'.format(key))
+        # Use a numpy scalar to allow division by zero
+        self._rest_energy = numpy.array(kwargs.pop('rest_energy'), dtype=float)
+        self._charge = kwargs.pop('charge')
         for (key, val) in kwargs.items():
             setattr(self, key, val)
 
@@ -40,6 +45,8 @@ class Particle(object):
         else:
             attrs = vars(self).copy()
             name = attrs.pop('name')
+            attrs['rest_energy'] = attrs.pop('_rest_energy')
+            attrs['charge'] = attrs.pop('_charge')
             args = ', '.join('{0}={1!r}'.format(k, v) for k, v in attrs.items())
             return "Particle('{0}', {1})".format(name, args)
 
@@ -48,3 +55,12 @@ class Particle(object):
             return self.name
         else:
             return self.__repr__()
+
+    # Use properties so that they are read-only
+    @property
+    def rest_energy(self):
+        return self._rest_energy
+
+    @property
+    def charge(self):
+        return self._charge

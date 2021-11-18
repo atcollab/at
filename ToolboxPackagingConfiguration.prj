@@ -16,7 +16,7 @@ AT is based on a 6-D modular tracking engine written in C/C++ for efficiency. La
 
 View on GitHub</param.description>
     <param.screenshot>${PROJECT_ROOT}/developer/mdoc/AT.png</param.screenshot>
-    <param.version>2.1.003</param.version>
+    <param.version>2.1.004</param.version>
     <param.output>${PROJECT_ROOT}/Accelerator Toolbox.mltbx</param.output>
     <param.products.name />
     <param.products.id />
@@ -83,7 +83,11 @@ docs/p</param.exclude.filters>
     </param.matlabpath.excludes>
     <param.javaclasspath.excludes />
     <param.exported.on.package>false</param.exported.on.package>
-    <param.required.addons />
+    <param.required.addons>
+      <requiredaddons>
+        <requiredAddOn earliest="earliest" fromRepository="true" id="e562b2d1-4a80-11e4-9553-005056977bd0" include="false" latest="latest">export_fig</requiredAddOn>
+      </requiredaddons>
+    </param.required.addons>
     <param.matlab.project.id>25a6ccb8-d1d3-4459-847b-7335e59e8646</param.matlab.project.id>
     <param.matlab.project.name>at</param.matlab.project.name>
     <param.release.start>R2016b</param.release.start>
@@ -114,7 +118,6 @@ docs/p</param.exclude.filters>
       <param.getting.started.guide />
       <param.javaclasspath.excludes />
       <param.exported.on.package />
-      <param.required.addons />
       <param.release.current.only />
       <param.compatiblity.windows />
       <param.compatiblity.macos />
@@ -143,15 +146,8 @@ docs/p</param.exclude.filters>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/Applications/MATLAB_R2021b.app</root>
-      <toolboxes>
-        <toolbox name="matlabcoder" />
-      </toolboxes>
-      <toolbox>
-        <matlabcoder>
-          <enabled>true</enabled>
-        </matlabcoder>
-      </toolbox>
+      <root>/Applications/MATLAB_R2021a.app</root>
+      <toolboxes />
     </matlab>
     <platform>
       <unix>true</unix>
@@ -162,7 +158,7 @@ docs/p</param.exclude.filters>
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>11.6</osver>
+      <osver>10.16</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>maci64</arch>

@@ -39,9 +39,11 @@ def load_lattice(filepath, **kwargs):
     """
     _, ext = os.path.splitext(filepath)
     try:
-        return _load_extension[ext.lower()](filepath, **kwargs)
+        load_func = _load_extension[ext.lower()]
     except KeyError:
         print("File load failed: unknow extension {}.".format(ext))
+    else:
+        return load_func(filepath, **kwargs)
 
 
 def save_lattice(ring, filepath, **kwargs):
@@ -60,10 +62,11 @@ def save_lattice(ring, filepath, **kwargs):
     """
     _, ext = os.path.splitext(filepath)
     try:
-        return _save_extension[ext.lower()](ring, filepath, **kwargs)
+        save_func = _save_extension[ext.lower()]
     except KeyError:
         print("File save failed: unknow extension {}.".format(ext))
-
+    else:
+        return save_func(ring, filepath, **kwargs)
 
 def register_format(extension, load_func=None, save_func=None, descr=''):
     """Register format-specific processing functions

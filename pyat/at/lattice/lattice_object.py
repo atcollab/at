@@ -16,13 +16,15 @@ import numpy
 import math
 import itertools
 from warnings import warn
-from at.lattice.constants import clight
-from at.lattice import Particle
-from at.lattice import AtError, AtWarning
-from at.lattice import uint32_refpts as uint32_refs, bool_refpts as bool_refs
-from at.lattice import refpts_iterator, refpts_len
-from at.lattice import elements, get_s_pos, get_elements, get_cells, get_refpts
-from at.lattice import set_shift, set_tilt
+from .constants import clight
+from .particle_object import Particle
+from .utils import AtError, AtWarning
+from .utils import uint32_refpts as uint32_refs, bool_refpts as bool_refs
+from .utils import refpts_iterator, refpts_len
+from .utils import get_s_pos, get_elements, get_cells, get_refpts
+from .utils import get_value_refpts, set_value_refpts
+from .utils import set_shift, set_tilt
+from . import elements
 # noinspection PyProtectedMember
 from .utils import _uint32_refs, _bool_refs
 
@@ -30,6 +32,9 @@ TWO_PI_ERROR = 1.E-4
 
 __all__ = ['Lattice', 'type_filter', 'params_filter', 'lattice_filter',
            'no_filter']
+
+# Don't warn on floating-pont errors
+numpy.seterr(divide='ignore', invalid='ignore')
 
 
 # noinspection PyAttributeOutsideInit
@@ -39,10 +44,11 @@ class Lattice(list):
     A Lattice accepts extended indexing (as a numpy ndarray).
 
     Lattice attributes;
-        name        Name of the lattice
-        energy      Particle energy
-        periodicity Number of super-periods to describe the full ring
-        particle    Circulating particle
+        name            Name of the lattice
+        energy          Particle energy
+        periodicity     Number of super-periods to describe the full ring
+        particle        Circulating particle
+        harmonic_number Harmonic number of the full ring (periodicity x cells)
 
     Lattice(elems, **params)        Create a new lattice object
 
@@ -57,9 +63,8 @@ class Lattice(list):
                                     'electron', 'positron', 'proton'
                                     or a Particle object
             iterator=None           Custom iterator (see below)
-            scan=False          Scan elements, look for energy and periodicity
-            *                   all other keywords will be set as attributes of
-                                the Lattice object
+            *                       All other keywords will be set as attributes
+                                    of the Lattice object
 
     To reduce the inter-package dependencies, some methods of the
     lattice object are defined in other AT packages, in the module where
@@ -76,9 +81,9 @@ class Lattice(list):
             fill the "params" dictionary used to set the Lattice attributes.
 
             params is the dictionary of lattice parameters. It is initialised
-                   with the keywords of the lattice constructor. It can be
-                   modified by the custom iterator to add or remove parameters.
-                   Finally, all remaining parameters will be set as Lattice
+                   with the keywords of the lattice constructor. The custom
+                   iterator may add, remove or mofify parameters.
+                   Finally, the remaining parameters will be set as Lattice
                    attributes.
             *args  all positional arguments of the Lattice constructor are sent
                    to the custom iterator.
@@ -107,23 +112,23 @@ class Lattice(list):
             runs through ringparam_filter(params, *args), looks for energy and
             periodicity if not yet defined.
     """
-    _1st_attributes = ('name', 'energy', 'periodicity')
+    # Attributes displayed:
+    _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
+                        'harmonic_number')
+    # Attributes propagated in copies:
+    _std_attributes = ('name', '_energy', '_particle', 'periodicity',
+                       '_cell_harmnumber', '_radiation')
 
-    def __init__(self, *args, **kwargs):
+    # noinspection PyUnusedLocal
+    def __init__(self, *args, iterator=None, scan=False, **kwargs):
         """Lattice constructor"""
 
-        iterator = kwargs.pop('iterator', None)
-        scan = kwargs.pop('scan', False)
-        for key in list(k for k in kwargs.keys() if k.startswith('_')):
-            kwargs.pop(key)
         if iterator is None:
-            elem_list, = args or [[]]  # accept 0 or 1 argument
-            if isinstance(elem_list, Lattice):
-                elems = lattice_filter(kwargs, elem_list)
-            elif scan:
-                elems = params_filter(kwargs, type_filter, elem_list)
+            arg1, = args or [[]]  # accept 0 or 1 argument
+            if isinstance(arg1, Lattice):
+                elems = arg1.attrs_filter(kwargs, arg1)
             else:
-                elems = type_filter(kwargs, elem_list)
+                elems = params_filter(kwargs, type_filter, arg1)
         else:
             elems = iterator(kwargs, *args)
 
@@ -131,12 +136,28 @@ class Lattice(list):
 
         # set default values
         kwargs.setdefault('name', '')
-        kwargs.setdefault('periodicity', 1)
+        periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle('relativistic'))
-        if 'energy' not in kwargs:
+        # Remove temporary keywords
+        frequency = kwargs.pop('_frequency', None)
+        cell_h = kwargs.pop('_harmnumber', None)
+
+        if 'harmonic_number' in kwargs:
+            cell_h = kwargs.pop('harmonic_number') / periodicity
+        if 'energy' in kwargs:
+            kwargs.pop('_energy', None)
+        elif '_energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
+        if 'particle' in kwargs:
+            kwargs.pop('_particle', None)
         # set attributes
         self.update(kwargs)
+
+        if cell_h is not None:
+            self._cell_harmnumber = cell_h
+        elif frequency is not None:
+            rev = self.revolution_frequency * periodicity
+            self._cell_harmnumber = int(round(frequency / rev))
 
     def __getitem__(self, key):
         try:                                # Integer
@@ -147,7 +168,7 @@ class Lattice(list):
             else:                           # Array of integers or boolean
                 rg = self.uint32_refpts(key)
             return Lattice((super(Lattice, self).__getitem__(i) for i in rg),
-                           iterator=no_filter, **vars(self))
+                           iterator=self.attrs_filter)
 
     def __setitem__(self, key, values):
         try:                                # Integer or slice
@@ -166,27 +187,39 @@ class Lattice(list):
                 super(Lattice, self).__delitem__(i)
 
     def __repr__(self):
-        attrs = vars(self).copy()
-        k1 = [(k, attrs.pop(k)) for k in Lattice._1st_attributes]
-        k2 = [('particle', self.particle)]
-        k3 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
-        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k2 + k3))
-        return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(), keys)
+        ks = ', '.join('{0}={1!r}'.format(k, v) for k, v in self.attrs.items())
+        return 'Lattice({0}, {1})'.format(super(Lattice, self).__repr__(), ks)
 
     def __str__(self):
-        attrs = vars(self).copy()
-        k1 = [(k, attrs.pop(k)) for k in Lattice._1st_attributes]
-        k2 = [('particle', self.particle)]
-        k3 = [(k, v) for k, v in attrs.items() if not k.startswith('_')]
-        keys = ', '.join('{0}={1!r}'.format(k, v) for k, v in (k1 + k2 + k3))
-        return 'Lattice(<{0} elements>, {1})'.format(len(self), keys)
+        ks = ', '.join('{0}={1!r}'.format(k, v) for k, v in self.attrs.items())
+        return 'Lattice(<{0} elements>, {1})'.format(len(self), ks)
 
     def __add__(self, elems):
-        return Lattice(itertools.chain(self, elems), **vars(self))
+        """Add elems, an iterable of AT elements, to the lattice"""
+        def add_filter(params, el1, el2):
+            it1 = el1.attrs_filter(params, el1)
+            return type_filter(params, itertools.chain(it1, el2))
+        return Lattice(self, elems, iterator=add_filter)
 
-    def __mul__(self, times):
-        return Lattice(itertools.chain(*itertools.repeat(self, times)),
-                       **vars(self))
+    def __mul__(self, n):
+        """Repeats n times the lattice"""
+        return Lattice(itertools.chain(*itertools.repeat(self, n)),
+                       iterator=self.attrs_filter)
+
+    @property
+    def attrs(self):
+        """Dictionary of lattice attributes"""
+        def extattr(d):
+            for k in self._disp_attributes:
+                d.pop(k, None)
+                yield k, getattr(self, k, None)
+
+        vrs = vars(self).copy()
+        # Standard attributes
+        res = {k: v for k, v in extattr(vrs) if v is not None}
+        # Custom attributes
+        res.update((k, v) for k, v in vrs.items() if not k.startswith('_'))
+        return res
 
     def uint32_refpts(self, refpts):
         """"Return a uint32 numpy array containing the indices of the selected
@@ -223,8 +256,8 @@ class Lattice(list):
             setattr(self, key, value)
 
     def copy(self):
-        """Return a shallow copy"""
-        return Lattice(self)
+        """Return a shallow copy of the lattice"""
+        return copy.copy(self)
 
     def deepcopy(self):
         """Return a deep copy"""
@@ -243,10 +276,9 @@ class Lattice(list):
 
         RETURN
             New Lattice object
-       """
+        """
         def slice_iter(ibeg, iend):
-            for elem in self[:ibeg]:
-                yield elem
+            yield from self[:ibeg]
             for elem in self[ibeg:iend]:
                 nslices = int(math.ceil(elem.Length / size))
                 if nslices > 1:
@@ -255,17 +287,28 @@ class Lattice(list):
                         yield el
                 else:
                     yield elem
-            for elem in self[iend:]:
-                yield elem
+            yield from self[iend:]
 
         s_range = self.s_range
         if size is None:
             smin, smax = s_range
             size = (smax - smin) / slices
+        i_range = self.i_range
+        return Lattice(slice_iter(i_range[0], i_range[-1]),
+                       iterator=self.attrs_filter, s_range=s_range)
 
-        i1 = self._i_range[0]
-        i2 = self._i_range[-1]
-        return Lattice(slice_iter(i1, i2), s_range=s_range, **vars(self))
+    @property
+    def attrs_filter(self):
+        """Filter function which duplicates the lattice attributes"""
+        def filt(params, elems_iterator):
+            for key in self._std_attributes:
+                try:
+                    params.setdefault(key, getattr(self, key))
+                except AttributeError:
+                    pass
+            return elems_iterator
+
+        return filt
 
     @property
     def s_range(self):
@@ -303,6 +346,23 @@ class Lattice(list):
         return self.uint32_refpts(i_range)
 
     @property
+    def energy(self):
+        """Lattice energy"""
+        return self._energy
+
+    @energy.setter
+    def energy(self, energy):
+        # Set the Energy attribute of radiating elements
+        for elem in self:
+            if (isinstance(elem, (elements.RFCavity, elements.Wiggler)) or
+                    elem.PassMethod.endswith('RadPass')):
+                elem.Energy = energy
+        # Set the energy attribute of the Lattice
+        # Use a numpy scalar to allow division by zero
+        # self._energy = numpy.array(energy, dtype=float)
+        self._energy = energy
+
+    @property
     def circumference(self):
         """Ring circumference (full ring) [m]"""
         return self.periodicity * self.get_s_pos(len(self))[0]
@@ -320,12 +380,31 @@ class Lattice(list):
             self._particle = Particle(particle)
 
     @property
-    def gamma(self):
+    def harmonic_number(self):
         try:
-            gamma = self.energy / self.particle.rest_energy
-        except ZeroDivisionError:
-            gamma = math.inf
-        return gamma
+            return self.periodicity * self._cell_harmnumber
+        except AttributeError:
+            raise AttributeError('harmonic_number undefined: '
+                                 'No cavity found in the lattice') from None
+
+    @harmonic_number.setter
+    def harmonic_number(self, value):
+        periods = int(self.periodicity)
+        cell_h, rem = divmod(int(value), periods)
+        if rem == 0:
+            self._cell_harmnumber = cell_h
+        else:
+            raise AtError('harmonic number must be a multiple of {}'
+                          .format(periods))
+
+    @property
+    def gamma(self):
+        return float(self.energy / self.particle.rest_energy)
+
+    @property
+    def beta(self):
+        gamma = float(self.energy / self.particle.rest_energy)
+        return math.sqrt(1.0 - 1.0/gamma/gamma)
 
     @property
     def revolution_frequency(self):
@@ -352,7 +431,7 @@ class Lattice(list):
             return radiate
 
     # noinspection PyShadowingNames
-    def modify_elements(self, elem_modify, copy=True):
+    def modify_elements(self, elem_modify, copy=True, **kwargs):
         """Modify selected elements, in-place or in a lattice copy
 
         PARAMETERS
@@ -372,7 +451,7 @@ class Lattice(list):
                         If False, the modification is done in-place
         """
 
-        def lattice_modify():
+        def lattice_modify(**kws):
             """Modifies the Lattice with elements modified by elem_modify"""
             radiate = False
             for elem in self:
@@ -383,11 +462,12 @@ class Lattice(list):
                         elem.PassMethod.endswith('CavityPass')):
                     radiate = True
             self._radiation = radiate
+            self.update(kws)
 
-        def lattice_copy(params, elem_iterator, *args):
+        def lattice_copy(params):
             """Custom iterator for the creation of a new lattice"""
             radiate = False
-            for elem in elem_iterator(params, *args):
+            for elem in self.attrs_filter(params, self):
                 attrs = elem_modify(elem)
                 if attrs is not None:
                     elem = elem.copy()
@@ -399,9 +479,9 @@ class Lattice(list):
             params['_radiation'] = radiate
 
         if copy:
-            return Lattice(lattice_filter, self, iterator=lattice_copy)
+            return Lattice(iterator=lattice_copy, **kwargs)
         else:
-            lattice_modify()
+            lattice_modify(**kwargs)
 
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
@@ -557,7 +637,7 @@ class Lattice(list):
             repfunc(multipole_pass, auto_multipole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
-    def sbreak(self, break_s, break_elems=None):
+    def sbreak(self, break_s, break_elems=None, **kwargs):
         """Insert elements at selected locations in the lattice
 
         PARAMETERS
@@ -569,13 +649,13 @@ class Lattice(list):
             A new lattice with new elements inserted at breakpoints
         """
 
-        def sbreak_iterator(elems, insertions):
+        def sbreak_iterator(params):
             """Iterate over elements and breaks where necessary"""
 
             def next_mk():
                 """Extract the next element to insert"""
                 try:
-                    return next(insertions)
+                    return next(iter_mk)
                 except StopIteration:
                     return sys.float_info.max, None
 
@@ -586,7 +666,7 @@ class Lattice(list):
             while smk < s_end:
                 smk, mk = next_mk()
 
-            for elem in elems:
+            for elem in self.attrs_filter(params, self):
                 s_end += elem.Length
                 # loop over all insertions within the element
                 while smk < s_end:
@@ -610,9 +690,9 @@ class Lattice(list):
         # and create an iterator over the elements to be inserted
         iter_mk = zip(*numpy.broadcast_arrays(break_s, break_elems))
 
-        return Lattice(sbreak_iterator(self, iter_mk), **vars(self))
+        return Lattice(iterator=sbreak_iterator, **kwargs)
 
-    def replace(self, refpts):
+    def replace(self, refpts, **kwargs):
         """Return a shallow copy of the lattice replacing the selected
         elements by a deep copy"""
         if callable(refpts):
@@ -620,20 +700,18 @@ class Lattice(list):
         else:
             check = iter(self.bool_refpts(refpts))
         elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
-        return Lattice(elems, iterator=no_filter, **vars(self))
+        return Lattice(elems, iterator=self.attrs_filter, **kwargs)
 
 
 def lattice_filter(params, lattice):
     """Copy lattice parameters and run through all lattice elements"""
-    for key, value in vars(lattice).items():
-        params.setdefault(key, value)
-    return iter(lattice)
+    return lattice.attrs_filter(params, lattice)
 
 
 # noinspection PyUnusedLocal
 def no_filter(params, elems):
     """Run through all elements without any check"""
-    return iter(elems)
+    return elems
 
 
 def type_filter(params, elem_iterator):
@@ -641,7 +719,6 @@ def type_filter(params, elem_iterator):
     Analyse elements for radiation state
     """
     radiate = False
-    _ = params.pop('_radiation', None)
     for idx, elem in enumerate(elem_iterator):
         if isinstance(elem, elements.Element):
             if (elem.PassMethod.endswith('RadPass') or
@@ -660,25 +737,20 @@ def params_filter(params, elem_iterator, *args):
 
     energy is taken from:
         1) The params dictionary
-        2) Radiative elements (Cavity, RingParam, Radiating magnets)
+        2) Cavity elements
         3) Any other element
 
     periodicity is taken from:
         1) The params dictionary
         2) Sum of the bending angles of magnets
     """
-    rad_energies = []
     el_energies = []
     thetas = []
+    cavities = []
 
     for idx, elem in enumerate(elem_iterator(params, *args)):
-        if (isinstance(elem, (elements.RFCavity, elements.Wiggler)) or
-                elem.PassMethod.endswith('RadPass')):
-            rad_energies.append(elem.Energy)
-            try:
-                elem.Energy = params['energy']
-            except KeyError:
-                params['energy'] = elem.Energy
+        if isinstance(elem, elements.RFCavity):
+            cavities.append(elem)
         elif hasattr(elem, 'Energy'):
             el_energies.append(elem.Energy)
             del elem.Energy
@@ -686,15 +758,20 @@ def params_filter(params, elem_iterator, *args):
             thetas.append(elem.BendingAngle)
         yield elem
 
-    energies = rad_energies or el_energies
+    cav_energies = [el.Energy for el in cavities if hasattr(el, 'Energy')]
+    cavities.sort(key=lambda el: el.Frequency)
+    if cavities:
+        params['_harmnumber'] = getattr(cavities[0], 'HarmNumber', None)
+        params['_frequency'] = getattr(cavities[0], 'Frequency', None)
 
-    if 'energy' not in params and energies:
-        # Guess energy from the Energy attribute of the elements
-        params['energy'] = max(energies)
-
-    if energies and min(energies) < max(energies):
-        warn(AtWarning('Inconsistent energy values, '
-                       '"energy" set to {0}'.format(params['energy'])))
+    if 'energy' not in params:
+        energies = cav_energies or el_energies
+        if energies:
+            # Guess energy from the Energy attribute of the elements
+            energy = params.setdefault('energy',  max(energies))
+            if min(energies) < max(energies):
+                warn(AtWarning('Inconsistent energy values, '
+                               '"energy" set to {0}'.format(energy)))
 
     if 'periodicity' not in params:
         # Guess periodicity from the bending angles of the lattice
@@ -721,3 +798,5 @@ Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.select = refpts_iterator
 Lattice.refcount = refpts_len
+Lattice.get_value_refpts = get_value_refpts
+Lattice.set_value_refpts = set_value_refpts

@@ -10,21 +10,32 @@ from distutils import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
+from at.lattice import Particle
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from numpy import array, uint8  # For global namespace
+
+
+def _particle(value):
+    if isinstance(value, Particle):
+        return value
+    else:
+        return Particle(value['name'], rest_energy=value['rest_energy'],
+                        charge=int(value['charge']))
 
 
 class RingParam(elt.Element):
     """Private class for Matlab RingParam element"""
     REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
                                                              'Periodicity']
-    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int)
+    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int,
+                        Particle=_particle)
 
     def __init__(self, family_name, energy, periodicity=1, **kwargs):
+        kwargs.setdefault('Energy', energy)
         kwargs.setdefault('Periodicity', periodicity)
         kwargs.setdefault('PassMethod', 'IdentityPass')
-        super(RingParam, self).__init__(family_name, Energy=energy, **kwargs)
+        super(RingParam, self).__init__(family_name, **kwargs)
 
 
 _alias_map = {'rbend': elt.Dipole,
@@ -247,33 +258,48 @@ def element_from_string(elem_string):
 
 def element_from_m(line):
     """Generate a AT-element from a line in a m-file"""
+    def argsplit(value):
+        return [a.strip() for a in split_ignoring_parentheses(value, ',')]
 
-    def convert(argmt):
-        """convert Matlab syntax to numpy syntax"""
+    def makedir(mat_struct):
+        """Build directory from Matlab struct arguments"""
+        def pairs(it):
+            while True:
+                try:
+                    a = next(it)
+                except StopIteration:
+                    break
+                yield eval(a), convert(next(it))
+        return dict(pairs(iter(mat_struct)))
 
-        def setarray(arr):
+    def makearray(mat_arr):
+        """Build numpy array for Matlab array syntax"""
+        def arraystr(arr):
             lns = arr.split(';')
-            rr = [setarray(v) for v in lns] if len(lns) > 1 else lns[0].split()
+            rr = [arraystr(v) for v in lns] if len(lns) > 1 else lns[0].split()
             return '[{0}]'.format(', '.join(rr))
+        return eval('numpy.array({0})'.format(arraystr(mat_arr)))
 
-        if argmt.startswith('['):
-            return 'array({0})'.format(setarray(argmt[1:-1]))
+    def convert(value):
+        """convert Matlab syntax to numpy syntax"""
+        if value.startswith('['):
+            result = makearray(value[1:-1])
+        elif value.startswith('struct'):
+            result = makedir(argsplit(value[7:-1]))
         else:
-            return argmt
+            result = eval(value)
+        return result
 
     left = line.index('(')
     right = line.rindex(')')
     cls = _CLASS_MAP[line[:left].strip()[2:]]
-    arguments = [a.strip() for a in line[left + 1:right].split(',')]
+    arguments = argsplit(line[left + 1:right])
     ll = len(cls.REQUIRED_ATTRIBUTES)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
-    keys = arguments[ll::2]
-    vals = arguments[ll + 1::2]
     args = [convert(v) for v in arguments[:ll]]
-    keywords = ['='.join((k[1:-1], convert(v))) for k, v in zip(keys, vals)]
-    elem_string = '{0}({1})'.format(cls.__name__, ', '.join(args + keywords))
-    return element_from_string(elem_string)
+    kwargs = makedir(arguments[ll:])
+    return cls(*args, **kwargs)
 
 
 def element_to_dict(elem):
@@ -289,14 +315,28 @@ def element_to_m(elem):
     """Generate the Matlab-evaluable string for a AT element"""
 
     def convert(arg):
-        if isinstance(arg, numpy.ndarray):
-            if arg.ndim > 1:
-                lns = (str(list(ln)).replace(',', '')[1:-1] for ln in arg)
+        def convert_dict(pdir):
+            def scan(d):
+                for k, v in d.items():
+                    yield repr(k)
+                    yield repr(v)
+            return 'struct({0})'.format(', '.join(scan(pdir)))
+
+        def convert_array(arr):
+            if arr.ndim > 1:
+                lns = (str(list(ln)).replace(',', '')[1:-1] for ln in arr)
                 return ''.join(('[', '; '.join(lns), ']'))
-            elif arg.ndim > 0:
-                return str(list(arg)).replace(',', '')
+            elif arr.ndim > 0:
+                return str(list(arr)).replace(',', '')
             else:
-                return str(arg)
+                return str(arr)
+
+        if isinstance(arg, numpy.ndarray):
+            return convert_array(arg)
+        elif isinstance(arg, dict):
+            return convert_dict(arg)
+        elif isinstance(arg, Particle):
+            return convert_dict(vars(arg))
         else:
             return repr(arg)
 
