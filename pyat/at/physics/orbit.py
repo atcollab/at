@@ -273,17 +273,13 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
 
-    try:
-        gamma0 = ring.energy / ring.particle.rest_energy
-    except ZeroDivisionError:
-        beta0 = 1.0
-
+    if ring.particle.rest_energy == 0.0:
         # noinspection PyUnusedLocal
         def beta(r):
             return 1.0
     else:
-        bg0 = math.sqrt(gamma0*gamma0 - 1.0)
-        beta0 = bg0 / gamma0
+        gamma0 = ring.gamma
+        bg0 = math.sqrt(gamma0 * gamma0 - 1.0)
 
         def beta(r):
             bg = bg0 * (1.0+r[4])
@@ -297,7 +293,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         f_rf = min(elm.Frequency for elm in ring if iscavity(elm))
     except ValueError:
         raise AtError('No cavity found in the lattice.')
-    harm_number = round(f_rf * l0/beta0/clight)
+    harm_number = round(f_rf * l0/ring.beta/clight)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
