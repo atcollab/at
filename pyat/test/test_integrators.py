@@ -58,8 +58,8 @@ def test_pydrift():
 
     tilt_elem(pydrift, 1.0e-3, 1.0e-3)
     tilt_elem(cdrift, 1.0e-3, 1.0e-3)
-    pyout = element_pass(pydrift, numpy.zeros((6,2))+1.0e-6)
-    cout = element_pass(cdrift, numpy.zeros((6,2))+1.0e-6)
+    pyout = element_pass(pydrift, numpy.zeros(6)+1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros(6)+1.0e-6)
     numpy.testing.assert_equal(pyout, cout)
 
     # Multiple particles
