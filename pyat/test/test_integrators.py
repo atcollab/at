@@ -58,8 +58,13 @@ def test_pydrift():
 
     tilt_elem(pydrift, 1.0e-3, 1.0e-3)
     tilt_elem(cdrift, 1.0e-3, 1.0e-3)
-    pyout = element_pass(pydrift, numpy.zeros(6)+1.0e-6)
-    cout = element_pass(cdrift, numpy.zeros(6)+1.0e-6)
+    pyout = element_pass(pydrift, numpy.zeros((6,2))+1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros((6,2))+1.0e-6)
+    numpy.testing.assert_equal(pyout, cout)
+
+    # Multiple particles
+    pyout = element_pass(pydrift, numpy.zeros((6,2))+1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros((6,2))+1.0e-6)
     numpy.testing.assert_equal(pyout, cout)
 
 
@@ -68,7 +73,7 @@ def test_pyintegrator(hmba_lattice):
               'PassMethod': 'pyIdentityPass',
               }
     id_elem = Element('py_id', **params)
-    pin = numpy.zeros(6)+1.0e-6
+    pin = numpy.zeros((6,2))+1.0e-6
     pout1 = lattice_pass(hmba_lattice, pin.copy(), nturns=1)
     hmba_lattice = hmba_lattice + [id_elem]
     pout2 = lattice_pass(hmba_lattice, pin.copy(), nturns=1)

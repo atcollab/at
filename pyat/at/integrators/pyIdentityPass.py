@@ -16,8 +16,8 @@ params = {'Length':0,
 ib_elem = Element('py_id',**params)
 
 To be noted:
-The particles are described by a one dimensional vector
-6*num_particles in the C tracking engine.
+The particles are described by a 2 dimensional vector
+(6,num_particles)
 In case a pyhton passmethod and a c passmethod with the same name
 are found, the c passmethod is used
 '''
@@ -25,6 +25,5 @@ are found, the c passmethod is used
 _id = numpy.identity(6)
 
 def trackFunction(rin,elem=None):
-    for i in range(0,len(rin),6):
-        rin[i:i+6] = numpy.dot(_id, rin[i:i+6])
-    return rin
+    for rtmp in numpy.atleast_2d(rin.T):
+        rtmp[:] = numpy.dot(_id, rtmp)
