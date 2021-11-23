@@ -54,3 +54,6 @@ directory and add a link to it in the sidebar configuration file.
 > The `permalink` directive defines the location of the html file in the site, which
 > must be at the top-level. To avoid name conflicts, please follow the convention
 > of prepending a "p" (or "m") to the markdown file name (see on existing files).
+
+For creating markdown files you can also look at [pandoc](https://pandoc.org) which
+can convert from a lot of formats (LaTeX, .docx, .odt…) to markdown.
