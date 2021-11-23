@@ -47,7 +47,8 @@ The easiest way of contributing to the AT documentation is to write a markdown f
 Nice formatting can be obtained by making use of the many specific features of
 the [jekyll markdown](https://daringfireball.net/projects/markdown/syntax) syntax.
 Formulæ and figures can be easily included. Then put this file into the `docs/p`
-directory and add a link to it in the sidebar configuration file.
+directory and add a link to it in the sidebar configuration file. Images should be
+put in the `docs/images` directory.
 
 > Due to some restrictions of the theme, a jekyll-specific section delimited by
 > "`---`" lines must be present at the top of the file. It does not appear in the output.
