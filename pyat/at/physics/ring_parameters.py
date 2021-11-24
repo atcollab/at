@@ -161,11 +161,10 @@ def envelope_parameters(ring, params=None):
             phi_s           Synchrotron phase [rad]
             f_s             Synchrotron frequency [Hz]
     """
-    E0 = ring.energy
     rp = RingParameters() if params is None else params
     emit0, beamdata, emit = ring.ohmi_envelope()
     voltage = ring.rf_voltage
-    rp.E0 = E0
+    rp.E0 = ring.energy
     rp.U0 = ring.energy_loss
     rev_freq = ring.revolution_frequency
     rp.Tau = 1.0 / rev_freq / beamdata.damping_rates / ring.periodicity

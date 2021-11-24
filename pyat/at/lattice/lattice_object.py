@@ -408,7 +408,7 @@ class Lattice(list):
 
     @property
     def revolution_frequency(self):
-        """Revolution frequency (full ring) [Hz]"""
+        """Revolution frequency of on-momentum particles (full ring) [Hz]"""
         gamma = self.gamma
         beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
         frev = beta * clight / self.circumference
