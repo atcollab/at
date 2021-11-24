@@ -41,6 +41,9 @@ plugins:
 kramdown:
   math_engine: mathjax
 
+exclude:
+  - README.md
+
 site_title: Accelerator Toolbox
 topnav_title: Accelerator Toolbox
 feedback_disable: true
