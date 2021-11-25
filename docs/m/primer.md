@@ -1,5 +1,4 @@
 ---
-permalink: /mprimer.html
-oc: false
+toc: false
 ---
-{% include frame.html src="matlab/primer.html" title="test" %}
+{% include frame.html src="/matlab/primer.html" title="test" %}

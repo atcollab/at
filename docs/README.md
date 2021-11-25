@@ -50,11 +50,9 @@ Formulæ and figures can be easily included. Then put this file into the `docs/p
 directory and add a link to it in the sidebar configuration file. Images should be
 put in the `docs/images` directory.
 
-> Due to some restrictions of the theme, a jekyll-specific section delimited by
+> A jekyll-specific section delimited by
 > "`---`" lines must be present at the top of the file. It does not appear in the output.
-> The `permalink` directive defines the location of the html file in the site, which
-> must be at the top-level. To avoid name conflicts, please follow the convention
-> of prepending a "p" (or "m") to the markdown file name (see on existing files).
+> (see on existing files).
 
 For creating markdown files you can also look at [pandoc](https://pandoc.org) which
 can convert from a lot of formats (LaTeX, .docx, .odt…) to markdown.
