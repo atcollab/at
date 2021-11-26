@@ -16,5 +16,5 @@ entries:
     output: web
     folderitems:
     - title: Control RF cavities
-      url: /pcavitycontrol.html
+      url: /p/CavityControl.html
       output: web

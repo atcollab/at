@@ -1,6 +1,5 @@
 ---
 title: Controlling the RF cavities
-permalink: /pcavitycontrol.html
 ---
 A lattice may contain multiple RF cavities, grouped according to different RF systems:
 main cavities, harmonic cavities…
