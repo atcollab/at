@@ -4,6 +4,7 @@ from ..lattice.constants import clight, e_mass
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy
+import math
 
 __all__ = ['get_mcf', 'get_slip_factor', 'get_revolution_frequency',
            'set_rf_frequency']
@@ -63,7 +64,9 @@ def get_revolution_frequency(ring, dp=None, dct=None, **kwargs):
                         Defaults to False
         dp_step=1.0E-6  momentum deviation used for differentiation
     """
-    frev = ring.revolution_frequency
+    gamma = ring.gamma
+    beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+    frev = beta * clight / ring.circumference
     if dct is not None:
         frev -= frev * frev / clight * ring.periodicity * dct
     elif dp is not None:
@@ -98,6 +101,8 @@ def set_rf_frequency(ring, frequency=None, dp=None, dct=None, cavpts=None,
 Lattice.mcf = property(get_mcf, doc="Momentum compaction factor")
 Lattice.slip_factor = property(get_slip_factor, doc="Slip factor")
 Lattice.get_revolution_frequency = get_revolution_frequency
+Lattice.revolution_frequency = property(get_revolution_frequency,
+    doc="Revolution frequency of on-momentum particles (full ring) [Hz]")
 Lattice.get_mcf = get_mcf
 Lattice.get_slip_factor = get_slip_factor
 Lattice.set_rf_frequency = set_rf_frequency

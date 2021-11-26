@@ -43,10 +43,7 @@ according to the revolution frequency and harmonic number. An optional
 off-momentum may be applied using the `dp` or `dct` arguments. The frequency
 shift is then computed using the linear slip factor $$\eta_c = 1/\gamma^2 - \alpha_c$$ ,
 so that the resulting `dp` may slighly differ from the specified value.
-#### Harmonic number
-`harmonic_number = Lattice.get_rf_harmonic_number(cavpts=None)`
 
-`Lattice.set_rf_harmonic_number(harmonic_number, cavpts=None, copy=False)`
 #### Time lag
 `time_lag = Lattice.get_rf_timelag(cavpts=None)`
 
@@ -54,8 +51,8 @@ so that the resulting `dp` may slighly differ from the specified value.
 
 The time lag is expressed in values of path lengthening "c&tau;", the 6<sup>th</sup> particle coordinate [m].
 #### All-in-one method
-`Lattice.set_cavity(ring, Voltage=None, Frequency=None, HarmNumber=None,
-               TimeLag=None, cavpts=None, copy=False)`
+`Lattice.set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None,
+                    cavpts=None, copy=False)`
 
 This method sets only the explicity provided values, default ones are left unchanged.
 For the frequency, a special value `at.Frf.NOMINAL` means nominal frequency,

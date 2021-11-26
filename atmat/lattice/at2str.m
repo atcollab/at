@@ -127,11 +127,15 @@ elstr=sprintf(fmt,func2str(create),strargs{:});
     function argstr=arg2str(arg)
         persistent prevarg
         try
-            argstr=mat2str(reshape(arg,[],size(arg,2)));
+            if isstruct(arg)
+                argstr=struct2str(arg);
+            else
+                argstr=mat2str(reshape(arg,[],size(arg,2)));
+            end
         catch
             argstr=sprintf('%s([])',class(arg));
             warning('AT:CannotDisplay',...
-            'In the element ''%s'' the %s field cannot be displayed (replaced by ''%s'')',famname, prevarg, argstr);
+                'In the element ''%s'' the %s field cannot be displayed (replaced by ''%s'')',famname, prevarg, argstr);
         end
         prevarg=argstr;
     end
@@ -152,5 +156,12 @@ elstr=sprintf(fmt,func2str(create),strargs{:});
         ok=isfield(elem,fnames);                        % Check for default values
         ok(ok)=cellfun(@(fname,fval) isequal(elem.(fname),fval),fnames(ok),fvalues(ok));
         opts=rmfield2(elem,[argnames,fnames(ok)]);      % Keep only non-default values
+    end
+
+    function res=struct2str(str)
+        g=cellfun(@(fn) sprintf('''%s'',%s',fn,mat2str(str.(fn))),...
+            fieldnames(str),'UniformOutput',false);
+        h=sprintf(',%s',g{:});
+        res=sprintf('struct(%s)',h(2:end));
     end
 end

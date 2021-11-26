@@ -15,10 +15,6 @@ function ring = atsetcavity(ring,varargin)
 %   Set the cavity frequency to the nominal value according to
 %   circumference and harmonic number
 %
-%NEWRING=ATSETCAVITY(RING,...,'HarmNumber',HARM_NUMBER,...)
-%   Set the cavity harmonic number of the full ring (all cells)
-%   The harmonic number of each cavity is HARM_NUMBER / PERIODICITY
-%
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
 %   Set the total voltage (all cells) [V]
 %   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
@@ -68,7 +64,6 @@ end
 [cavpts,varargs]=getoption(varargin, 'refpts', cavpts);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
-[harmring,varargs]=getoption(varargs, 'HarmNumber', []);
 [timelag,varargs]=getoption(varargs, 'TimeLag', []);
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [dct,varargs]=getoption(varargs,'dct',NaN);
@@ -85,19 +80,12 @@ if isempty(varargs)             % New syntax
     if ncavs == 0
         error('AT:NoCavity', 'No cavity found in the lattice');
     end
-    if ~isempty(harmring)
-        cavities=atsetfieldvalues(cavities, 'HarmNumber', harmring/ncells);
-    end
     if ~isempty(frequency)
         if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            if isempty(harmring)
-                harmring=ncells*getfield(cavities,'HarmNumber');
-            end
             gamma0=props.Energy/E_MASS;
-            % beta0=sqrt(gamma0^2-1)/gamma0;
+            beta0=sqrt(1-1/gamma0/gamma0);
             lcell=ncells*findspos(ring,length(ring)+1);
-            frev=CLIGHT/lcell;
-            % frev=beta0*CLIGHT/circ/ncells;
+            frev=beta0*CLIGHT/lcell;
             if isfinite(dct)
                 frev=frev - frev*frev/CLIGHT*ncells*dct;
             elseif isfinite(dp)
@@ -105,7 +93,7 @@ if isempty(varargs)             % New syntax
                 etac=1/gamma0^2 - mcf(ringrad);
                 frev=frev + frev*etac*dp;
             end
-            frequency = frev*harmring;
+            frequency = frev*props.HarmNumber;
         end
         cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     end

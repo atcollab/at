@@ -5,6 +5,7 @@
 % 
 %%
 % Lattices can be saved as binary mat-files using the standard load and save commands
+%
 %% Text Files
 % 
 %%
