@@ -315,8 +315,8 @@ plt.plot(Z3[0, 0, 0, :], Z3[1, 0, 0, :],'.')
 
 
     
-![png]({% link assets/images/output_33_1.png %})
-    
+{%include image.html file="/assets/images/output_33_1.png" %}
+
 
 
 In this example, we started with one initial condition, and all subsequent turns are returned by **lattice_pass**. We may also start with multiple initial conditions:
@@ -351,8 +351,7 @@ plt.plot(Z[0, 2, 0, :], Z[1, 2, 0, :],'.')
 
 
     
-![png]({% link assets/images/output_37_1.png %})
-   
+{%include image.html file="/assets/images/output_37_1.png" %}
 
 
 ## Computation of beam parameters
@@ -590,7 +589,7 @@ plt.ylabel(r'$\beta$ [m]')
 
 
     
-![png]({% link assets/images/output_67_1.png %})
+{%include image.html file="/assets/images/output_67_1.png" %}
 
 
 We may also plot the lattice parameters using a dedicated function
@@ -603,7 +602,7 @@ FODOcellSext.plot_beta()
 
 
     
-![png]({% link assets/images/output_69_0.png %})
+{%include image.html file="/assets/images/output_69_0.png" %}
 
 
 
