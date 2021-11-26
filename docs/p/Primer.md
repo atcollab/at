@@ -1,6 +1,5 @@
 ---
 title: AT Primer
-permalink: /pprimer.html
 ---
 ## Introduction
 
