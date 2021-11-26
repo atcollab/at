@@ -315,7 +315,7 @@ plt.plot(Z3[0, 0, 0, :], Z3[1, 0, 0, :],'.')
 
 
     
-![png](images/output_33_1.png)
+![png](assets/images/output_33_1.png)
     
 
 
@@ -351,7 +351,7 @@ plt.plot(Z[0, 2, 0, :], Z[1, 2, 0, :],'.')
 
 
     
-![png](images/output_37_1.png)
+![png](assets/images/output_37_1.png)
     
 
 
@@ -590,7 +590,7 @@ plt.ylabel(r'$\beta$ [m]')
 
 
     
-![png](images/output_67_1.png)
+![png](assets/images/output_67_1.png)
     
 
 
@@ -604,7 +604,7 @@ FODOcellSext.plot_beta()
 
 
     
-![png](images/output_69_0.png)
+![png](assets/images/output_69_0.png)
     
 
 
