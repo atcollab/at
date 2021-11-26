@@ -156,7 +156,9 @@ class Lattice(list):
         if cell_h is not None:
             self._cell_harmnumber = cell_h
         elif frequency is not None:
-            rev = self.revolution_frequency * periodicity
+            gamma = self.gamma
+            beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+            rev = beta * clight / self.get_s_pos(len(self))[0]
             self._cell_harmnumber = int(round(frequency / rev))
 
     def __getitem__(self, key):
@@ -405,14 +407,6 @@ class Lattice(list):
     def beta(self):
         gamma = float(self.energy / self.particle.rest_energy)
         return math.sqrt(1.0 - 1.0/gamma/gamma)
-
-    @property
-    def revolution_frequency(self):
-        """Revolution frequency of on-momentum particles (full ring) [Hz]"""
-        gamma = self.gamma
-        beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
-        frev = beta * clight / self.circumference
-        return frev
 
     @property
     def radiation(self):
