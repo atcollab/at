@@ -25,7 +25,7 @@ $ pip install accelerator-toolbox
    ```
 4. Build and install
    ```shell
-   $ pip install .
+   $ python setup.py install
    ```
 
 ## Usage
