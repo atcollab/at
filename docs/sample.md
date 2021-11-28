@@ -1,18 +1,13 @@
 ---
-title: Test
+title: Sample page
+summary: This demonstrates some features of the AT theme
 pict2: assets/images/output_69_0.png
 ---
-{% assign pict1 = "/assets/images/output_69_0.png" %}
+{% assign pict1 = "assets/images/output_69_0.png" %}
 
-## Heading with explicit id {#location}
-
-**Using variables:**
-
-base_url: {{ site.baseurl }}
-
-link: {%link p/Installation.md %}\
-The link tag cannot be used on github pages because it still does not prepend
-site.baseurl.
+If present, the **title** and **summary** defined in the frontmatter are automatically
+displayed.\
+The table of contents is automatically generated unless "toc: false" is specified.
 
 ## Markdown features
 {: #idfn .red}
@@ -47,5 +42,15 @@ alt="Figure 3" caption="Figure 3: test caption" %}
 **Comments:** (do not appear)
 {% comment %} The following lines are the referenced links
 and do not appear in the output{% endcomment %}
+
+## Using variables {#location}
+
+**base_url**: {{ site.baseurl }}\
+**pict1**: {{ pict1 }}\
+**pict2**: {{ page.pict2 }}
+
+**link**: {%link p/Installation.md %}\
+The link tag cannot be used on github pages because it still does not prepend
+site.baseurl.
 
 [Figure 2]: {{ "assets/images/output_69_0.png" | relative_url }}
