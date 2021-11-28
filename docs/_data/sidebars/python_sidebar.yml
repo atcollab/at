@@ -7,14 +7,14 @@ entries:
     output: web
     folderitems:
     - title: Installation
-      url: /python.html
+      url: /p/Installation.html
       output: web
     - title: AT Primer
-      url: /pprimer.html
+      url: /p/Primer.html
       output: web
   - title: How to…
     output: web
     folderitems:
     - title: Control RF cavities
-      url: /pcavitycontrol.html
+      url: /p/CavityControl.html
       output: web

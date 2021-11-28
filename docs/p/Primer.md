@@ -1,6 +1,5 @@
 ---
 title: AT Primer
-permalink: /pprimer.html
 ---
 ## Introduction
 
@@ -315,8 +314,8 @@ plt.plot(Z3[0, 0, 0, :], Z3[1, 0, 0, :],'.')
 
 
     
-![png](images/output_33_1.png)
-    
+![png][figure 1]
+
 
 
 In this example, we started with one initial condition, and all subsequent turns are returned by **lattice_pass**. We may also start with multiple initial conditions:
@@ -333,7 +332,7 @@ print(' Z.shape:', Z.shape)
      Z.shape: (6, 3, 1, 200)
 
 
-Now the same plot can be obtaiined with:
+Now the same plot can be obtained with:
 
 
 ```python
@@ -351,8 +350,7 @@ plt.plot(Z[0, 2, 0, :], Z[1, 2, 0, :],'.')
 
 
     
-![png](images/output_37_1.png)
-    
+![png][figure 2]
 
 
 ## Computation of beam parameters
@@ -590,8 +588,7 @@ plt.ylabel(r'$\beta$ [m]')
 
 
     
-![png](images/output_67_1.png)
-    
+![png][figure 3]
 
 
 We may also plot the lattice parameters using a dedicated function
@@ -604,8 +601,7 @@ FODOcellSext.plot_beta()
 
 
     
-![png](images/output_69_0.png)
-    
+![png][figure 4]
 
 
 
@@ -744,3 +740,11 @@ spread of $$3.3\times 10^{-4}$$ and a bunch length of 12.2 mm.
 
 [4](https://journals.aps.org/prab/pdf/10.1103/PhysRevSTAB.2.074001) D. Sagan, D. Rubin, *Linear Analysis of Coupled Lattices*, Phys. Rev. Special Topics - Accelerators
 and Beams, Vol 2,(1999)
+
+[figure 1]: {{ "/assets/images/output_33_1.png" | relative_url}}  "Figure 1"
+
+[figure 2]: {{ "/assets/images/output_37_1.png" | relative_url}}  "Figure 2"
+
+[figure 3]: {{ "/assets/images/output_67_1.png" | relative_url}}  "Figure 3"
+
+[figure 4]: {{ "/assets/images/output_69_0.png" | relative_url}}  "Figure 4"
