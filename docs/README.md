@@ -49,8 +49,9 @@ Formulas and figures can be easily included. Then put this file into the `docs/p
 directory and add a link to it in the sidebar configuration file. Images should be
 put in the `docs/assets/images` directory.
 
-For an example of handling equations and images, look at the `docs/sample.md`
-document. The resulting Web page can be seen [here](https://atcollab.github.io/at/sample.html).
+**For an example showing some of the available features, look at the `docs/sample.md`
+document**.  
+The resulting Web page can be seen [here](https://atcollab.github.io/at/sample.html).
 
 > To enable conversion to HTML, a jekyll-specific section delimited by
 > "`---`" lines must be present at the top of the file. It does not appear in the output
