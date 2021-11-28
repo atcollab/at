@@ -10,7 +10,9 @@ pict2: assets/images/output_69_0.png
 
 base_url: {{ site.baseurl }}
 
-link: {%link p/Installation.md %}
+link: {%link p/Installation.md %}\
+The link tag cannot be used on github pages because it still does not prepend
+site.baseurl.
 
 ## Markdown features
 {: #idfn .red}
