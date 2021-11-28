@@ -10,6 +10,8 @@ pict2: assets/images/output_69_0.png
 
 base_url: {{ site.baseurl }}
 
+link: {%link p/Installation.md %}
+
 ## Markdown features
 {: #idfn .red}
 
@@ -20,11 +22,11 @@ base_url: {{ site.baseurl }}
 $$\gamma=\frac{1+\alpha^2}{\beta}$$
 
 **link:**
-[Python installation]({%link p/Installation.md %})
+[Python installation]({{ "p/Installation.html" | relative_url }})
 
 **Image with in-line link:**
 
-![Figure 1]({% link assets/images/output_33_1.png %})
+![Figure 1]({{ "assets/images/output_33_1.png" | realtive_url }})
 
 **Image with referenced link:**\
 The referenced link may be anywhere (here at the bottom of the file)
@@ -34,7 +36,7 @@ The referenced link may be anywhere (here at the bottom of the file)
 ## Theme features
 
 **Image with format and caption** (specific for the AT theme):
-{%include image.html src="/assets/images/output_67_1.png"
+{%include image.html src="assets/images/output_67_1.png"
 alt="Figure 3" caption="Figure 3: test caption" %}
 
 **Alerts:**
@@ -44,4 +46,4 @@ alt="Figure 3" caption="Figure 3: test caption" %}
 {% comment %} The following lines are the referenced links
 and do not appear in the output{% endcomment %}
 
-[Figure 2]: {% link assets/images/output_69_0.png %}
+[Figure 2]: {{ "assets/images/output_69_0.png" | relative_url }}
