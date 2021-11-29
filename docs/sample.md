@@ -23,7 +23,7 @@ $$\gamma=\frac{1+\alpha^2}{\beta}$$
 
 **Image with in-line link:**
 
-![Figure 1]({{ "assets/images/output_33_1.png" | realtive_url }})
+![Figure 1]({{ "assets/images/output_33_1.png" | relative_url }})
 
 **Image with referenced link:**\
 The referenced link may be anywhere (here at the bottom of the file)
