@@ -84,13 +84,19 @@ def transverse_reswall(srange, yokoya_factor, length, rvac, conduct, beta):
     HEADTAIL
     """
 
+    if numpy.amin(srange) <= 0:
+        raise ValueError("""
+                        Provided srange has either negative values or 0s
+                        This is not allowed for the transverse resistive wall
+                        wake function. Please correct.
+                        """)
+
     z0 = 119.9169832 * numpy.pi
     dt = -srange/(beta * clight)
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *
             numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
-    wake[numpy.isinf(wake)]=0
-    wake[numpy.isnan(wake)]=0
+
     return wake
 
 
