@@ -64,8 +64,8 @@ class WakeElement(at.Element):
 
     def set_normfactxy(self, ring):
         l0, _, _ = at.get_optics(ring)
-        self.Normfact[0] = 1/l0['beta'][0]
-        self.Normfact[1] = 1/l0['beta'][1]
+        self.NormFact[0] = 1/l0['beta'][0]
+        self.NormFact[1] = 1/l0['beta'][1]
 
     # noinspection PyPep8Naming
     @property
@@ -100,3 +100,37 @@ class LongResonatorElement(WakeElement):
                  frequency, qfactor, rshunt, beta)
         super(LongResonatorElement, self).__init__(family_name, ring=ring,
                                                    wake=wake, **kwargs)
+
+class TransResonatorElement(WakeElement):
+    """Class to generate a transverse resonator, inherits from WakeElement
+       additonal argument are frequency, qfactor, rshunt
+    """
+    def __init__(self, family_name, ring, srange, wakecomp, frequency, qfactor,
+                 rshunt, **kwargs):
+        self.Frequency = frequency
+        self.QFactor = qfactor
+        self.RShunt = rshunt
+        beta = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
+        wake = Wake(srange)
+        wake.add(WakeType.RESONATOR, wakecomp,
+                 frequency, qfactor, rshunt, beta)
+        super(TransResonatorElement, self).__init__(family_name, ring=ring,
+                                                   wake=wake, **kwargs)
+
+class ResWallElement(WakeElement):
+    """Class to generate a resistive wall element, inherits from WakeElement
+       additonal argument are yokoya_factor, length, pipe radius, conductivity
+    """
+    def __init__(self, family_name, ring, srange, yokoya_factor, length,
+                 rvac, conduc, wakecomp, **kwargs):
+        self.yokoya_factor = yokoya_factor
+        self.length = length
+        self.rvac = rvac
+        self.conduc = conduc
+        beta = np.sqrt(1.0-(e_mass/ring.energy)**2)
+        wake = Wake(srange)
+        wake.add(WakeType.RESWALL, wakecomp,
+                 length, rvac, conduc, beta, yokoya_factor)
+        super(ResWallElement, self).__init__(family_name, ring=ring,
+                                                   wake=wake, **kwargs)
+
