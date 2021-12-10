@@ -61,18 +61,19 @@ def transverse_resonator(srange, frequency, qfactor, rshunt,
     resonator model (Eq. 2.82) and definitions of the resonator
     in HEADTAIL.
     """
+
     omega = 2 * numpy.pi * frequency
     alpha = omega / (2 * qfactor)
     omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
     dt = -srange/(beta * clight)
     if qfactor > 0.5:
-        wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
+        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 / (qfactor *
                 omegabar) * numpy.exp(alpha*dt) * numpy.sin(omegabar*dt))
     elif qfactor == 0.5:
-        wake = (yokoya_factor * rshunt * omega**2 / qfactor *
+        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 / qfactor *
                 numpy.exp(alpha * dt) * dt)
     else:
-        wake = (yokoya_factor * rshunt * omega**2 / (qfactor *
+        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 / (qfactor *
                 omegabar) * numpy.exp(alpha*dt) * numpy.sinh(omegabar*dt))
     return wake
 
@@ -82,9 +83,14 @@ def transverse_reswall(srange, yokoya_factor, length, rvac, conduct, beta):
     parameters according to Alex Chao's RW model (2.53) and definitions used in
     HEADTAIL
     """
+
     z0 = 119.9169832 * numpy.pi
     dt = -srange/(beta * clight)
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *
-            numpy.sqrt(-clight * z0 / conduct / numpy.pi / dt))
+            numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
+    wake[numpy.isinf(wake)]=0
+    wake[numpy.isnan(wake)]=0
     return wake
+
+
