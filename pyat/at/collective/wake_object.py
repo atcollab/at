@@ -146,6 +146,9 @@ class Wake(object):
             w = self.resample(*args)
         elif wtype is WakeType.RESONATOR:
             w = self.resonator(wcomp, *args, **kwargs)
+        elif wtype is WakeType.RESWALL:
+            w = self.reswall(wcomp, *args, **kwargs)
+
         else:
             raise AtError('Invalid WakeType: {}'.format(wtype))
         if self.components[wcomp] is None:
@@ -176,8 +179,8 @@ class Wake(object):
         if wcomp is WakeComponent.Z:
             return wake_functions.long_resonator(self._srange, frequency,
                                                  qfactor, rshunt, beta)
-        elif wcomp is (WakeComponent.DX or WakeComponent.DY
-                       or WakeComponent.QX or WakeComponent.QY):
+        elif (wcomp is WakeComponent.DX or wcomp is WakeComponent.DY
+                       or wcomp is WakeComponent.QX or wcomp is WakeComponent.QY):
             return wake_functions.transverse_resonator(self._srange, frequency,
                                                        qfactor, rshunt,
                                                        yokoya_factor, beta)
@@ -188,8 +191,8 @@ class Wake(object):
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))
-        elif wcomp is (WakeComponent.DX or WakeComponent.DY
-                       or WakeComponent.QX or WakeComponent.QY):
+        elif wcomp is (WakeComponent.DX or wcomp is WakeComponent.DY
+                       or wcomp is WakeComponent.QX or wcomp is WakeComponent.QY):
             return wake_functions.transverse_reswall(self._srange,
                                                      yokoya_factor,
                                                      length, rvac,
