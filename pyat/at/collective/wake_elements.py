@@ -127,7 +127,7 @@ class ResWallElement(WakeElement):
         self.length = length
         self.rvac = rvac
         self.conduc = conduc
-        beta = np.sqrt(1.0-(e_mass/ring.energy)**2)
+        beta = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         wake = Wake(srange)
         wake.add(WakeType.RESWALL, wakecomp,
                  length, rvac, conduc, beta, yokoya_factor)
