@@ -3,10 +3,10 @@
 # remote_theme: jekyll/minima
 remote_theme: tomjoht/documentation-theme-jekyll
 
-title: Accelerator Toolbox
+#title: Accelerator Toolbox
 # email: your-email@example.com
-description: >- # this means to ignore newlines until "baseurl:"
-  A toolbox for modelling particle accelerators in Matlab or python
+#description: >- # this means to ignore newlines until "baseurl:"
+#  A toolbox for modelling particle accelerators in Matlab or python
 
 defaults:
   -
@@ -37,9 +37,8 @@ header_pages:
 
 plugins:
   - jekyll-remote-theme
-
-kramdown:
-  math_engine: mathjax
+  - jekyll-optional-front-matter
+  - jekyll-github-metadata
 
 site_title: Accelerator Toolbox
 topnav_title: Accelerator Toolbox

@@ -45,9 +45,16 @@ and do not appear in the output{% endcomment %}
 
 ## Using variables {#location}
 
-**base_url**: {{ site.baseurl }}\
+**site.title**: {{ site.title }}\
+**site.description**: {{ site.description }}\
+**site.url**: {{ site.url }}\
+**site.baseurl**: {{ site.baseurl }}\
+**site.github.owner_name**: {{ site.github.owner_name }}\
+**site.github.owner_url**: {{ site.github.owner_url }}\
+**site.github.owner_gravatar_url**: {{ site.github.owner_gravatar_url }}\
+**site.github.repository_url**: {{ site.github.repository_url }}\
 **pict1**: {{ pict1 }}\
-**pict2**: {{ page.pict2 }}
+**page.pict2**: {{ page.pict2 }}
 
 **link**: {%link p/Installation.md %}\
 The link tag cannot be used on github pages because it still does not prepend
