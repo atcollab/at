@@ -56,6 +56,11 @@ and do not appear in the output{% endcomment %}
 **pict1**: {{ pict1 }}\
 **page.pict2**: {{ page.pict2 }}
 
+## Links
+
+**Absolute:** [Python installation](/p/Installation.md)\
+**Relative:**[Matlab installation](m/Installation.md)\
+**Image** [fig1](/assets/images/output_69_0.png)\
 **link**: {%link p/Installation.md %}\
 The link tag cannot be used on github pages because it still does not prepend
 site.baseurl.

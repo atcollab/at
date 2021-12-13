@@ -39,6 +39,7 @@ plugins:
   - jekyll-remote-theme
   - jekyll-optional-front-matter
   - jekyll-github-metadata
+  - jekyll-relative-links
 
 site_title: Accelerator Toolbox
 topnav_title: Accelerator Toolbox
