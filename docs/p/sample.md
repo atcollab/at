@@ -57,13 +57,21 @@ and do not appear in the output{% endcomment %}
 **page.pict2**: {{ page.pict2 }}
 
 ## Links
+### Using liquid
+Use links relative to the root directory, refer to the html file
+
+[Python installation]({{ "p/Installation.html" | relative_url }})\
+[Matlab installation]
+### Using markdown
+Use relative links, refer to the markdown file
 
 **Absolute:** [Python installation](/p/Installation.md)\
 **Relative:**[Matlab installation](../m/Installation.md)\
-**Image** [fig1](/assets/images/output_69_0.png)
-
+**Image**: [fig1]\
 **link**: {%link p/Installation.md %}\
 The link tag cannot be used on github pages because it still does not prepend
 site.baseurl.
 
 [Figure 2]: {{ "assets/images/output_69_0.png" | relative_url }}
+[Matlab installation]: {{ "m/Installation.html" | relative_url }}
+[fig1]: ../assets/images/output_69_0.png

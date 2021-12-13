@@ -18,8 +18,10 @@ The table of contents is automatically generated unless "toc: false" is specifie
 
 $$\gamma=\frac{1+\alpha^2}{\beta}$$
 
-**link:**
-[Python installation]({{ "p/Installation.html" | relative_url }})
+## Images
+Images should be put in the `/assets/images directory`.
+### Using Liquid tags
+Use links relative to the root directory. You can use in-line or referenced links.
 
 **Image with in-line link:**
 
@@ -29,6 +31,17 @@ $$\gamma=\frac{1+\alpha^2}{\beta}$$
 The referenced link may be anywhere (here at the bottom of the file)
 
 ![Figure 2]
+
+### Using markdown syntax
+
+**Image with in-line link:**
+
+![Figure 3](assets/images/output_33_1.png)
+
+**Image with referenced link:**\
+The referenced link may be anywhere (here at the bottom of the file)
+
+![Figure 4]
 
 ## Theme features
 
@@ -57,12 +70,23 @@ and do not appear in the output{% endcomment %}
 **page.pict2**: {{ page.pict2 }}
 
 ## Links
+### Using Liquid tags
+Use links relative to the root directory and refer to the html file. You can use in-line or referenced links.
 
-**Absolute:** [Python installation](/p/Installation.md)\
-**Relative:**[Matlab installation](m/Installation.md)\
-**Image** [fig1](/assets/images/output_69_0.png)\
-**link**: {%link p/Installation.md %}\
+[Python installation]({{ "p/Installation.html" | relative_url }}) (in-line)\
+[Matlab installation] (referenced)\
+
+**link tag**: {%link p/Installation.md %}\
 The link tag cannot be used on github pages because it still does not prepend
 site.baseurl.
+### Using markdown syntax
+Use relative links (absolute links only work from the root directory), refer to the markdown file.
+You can used in-line or referenced links.
+
+[Matlab installation](m/Installation.md) (in-line)\
+[Python installation] (referenced)
 
 [Figure 2]: {{ "assets/images/output_69_0.png" | relative_url }}
+[Figure 4]: assets/images/output_69_0.png
+[Matlab installation]: {{ "m/Installation.html" | relative_url }}
+[Python installation]: p/Installation.md
