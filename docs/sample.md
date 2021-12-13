@@ -3,8 +3,6 @@ title: Sample page
 summary: This demonstrates some features of the AT theme
 pict2: assets/images/output_69_0.png
 ---
-{% assign pict1 = "assets/images/output_69_0.png" %}
-
 If present, the **title** and **summary** defined in the frontmatter are automatically
 displayed.\
 The table of contents is automatically generated unless "toc: false" is specified.
@@ -18,6 +16,25 @@ The table of contents is automatically generated unless "toc: false" is specifie
 
 $$\gamma=\frac{1+\alpha^2}{\beta}$$
 
+## Links
+### Using Liquid tags
+Use links relative to the root directory and refer to the html file. You can use in-line or referenced links
+The referenced link may be anywhere (here at the bottom of the file).
+
+in-line: [Python installation]({{ "p/Installation.html" | relative_url }})\
+referenced: [Matlab installation]
+
+**link tag**: {%link p/Installation.md %}\
+The link tag cannot be used on github pages because it still does not prepend
+site.baseurl.
+
+### Using markdown syntax
+Use relative links (absolute links only work from the root directory), refer to the markdown file.
+You can used in-line or referenced links.
+
+in-line: [Matlab installation](m/Installation.md)\
+referenced: [Python installation]
+
 ## Images
 Images should be put in the `/assets/images directory`.
 ### Using Liquid tags
@@ -27,8 +44,7 @@ Use links relative to the root directory. You can use in-line or referenced link
 
 ![Figure 1]({{ "assets/images/output_33_1.png" | relative_url }})
 
-**Image with referenced link:**\
-The referenced link may be anywhere (here at the bottom of the file)
+**Image with referenced link:**
 
 ![Figure 2]
 
@@ -58,6 +74,8 @@ and do not appear in the output{% endcomment %}
 
 ## Using variables {#location}
 
+{% assign pict1 = "assets/images/output_33_1.png" %}
+
 **site.title**: {{ site.title }}\
 **site.description**: {{ site.description }}\
 **site.url**: {{ site.url }}\
@@ -69,24 +87,8 @@ and do not appear in the output{% endcomment %}
 **pict1**: {{ pict1 }}\
 **page.pict2**: {{ page.pict2 }}
 
-## Links
-### Using Liquid tags
-Use links relative to the root directory and refer to the html file. You can use in-line or referenced links.
-
-[Python installation]({{ "p/Installation.html" | relative_url }}) (in-line)\
-[Matlab installation] (referenced)\
-
-**link tag**: {%link p/Installation.md %}\
-The link tag cannot be used on github pages because it still does not prepend
-site.baseurl.
-### Using markdown syntax
-Use relative links (absolute links only work from the root directory), refer to the markdown file.
-You can used in-line or referenced links.
-
-[Matlab installation](m/Installation.md) (in-line)\
-[Python installation] (referenced)
-
-[Figure 2]: {{ "assets/images/output_69_0.png" | relative_url }}
+{% comment %} Link references (do not appear in the output) {% endcomment %}
+[Figure 2]: {{ page.pict2 | relative_url }}
 [Figure 4]: assets/images/output_69_0.png
 [Matlab installation]: {{ "m/Installation.html" | relative_url }}
 [Python installation]: p/Installation.md
