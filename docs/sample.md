@@ -2,10 +2,12 @@
 title: Sample page
 summary: This demonstrates some features of the AT theme
 pict2: assets/images/output_69_0.png
+hide_sidebar: true
 ---
 If present, the **title** and **summary** defined in the frontmatter are automatically
 displayed.\
-The table of contents is automatically generated unless "toc: false" is specified.
+The table of contents is automatically generated unless "toc: false" is specified.\
+A side-bar is displayed unless "hide_sidebar: true" is specified (as here).
 
 ## Markdown features
 {: #idfn .red}
