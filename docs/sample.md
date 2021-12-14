@@ -25,12 +25,12 @@ in-line: [Python installation]({{ "p/Installation.html" | relative_url }})\
 referenced: [Matlab installation]
 
 **link tag**: {%link p/Installation.md %}\
-The link tag cannot be used on github pages because it still does not prepend
+The link tag cannot be used on GitHub pages because it still does not prepend
 site.baseurl.
 
 ### Using markdown syntax
 Use relative links (absolute links only work from the root directory), refer to the markdown file.
-You can used in-line or referenced links.
+You can use in-line or referenced links.
 
 in-line: [Matlab installation](m/Installation.md)\
 referenced: [Python installation]
