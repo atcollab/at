@@ -1,0 +1,264 @@
+import at
+import numpy
+from .boundary import GridMode
+from .boundary import boundary_search
+import multiprocessing
+
+
+
+def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
+                   refpts=None, dp=0, offset=None, bounds=None,
+                   grid_mode=GridMode.RADIAL, use_mp=False, verbose=True):
+    """
+    Computes the acceptance at repfts observation points
+    Grid Coordiantes ordering is as follows: GRID: (x,y), RADIAL/RECURSIVE (r, theta).
+    Scalar inputs can be used for 1D grid   
+    
+    PARAMETERS
+        ring            ring use for tracking
+        planes          max. dimension 2, defines the plane where to search for
+                        the acceptance, allowed values are: x,xp,y,yp,dp,ct
+        npoints         number of points in each dimension shape (len(planes),)
+        amplitudes      max. amplitude  or initial step in RECURSIVE in each dimension
+                        shape (len(planes),), for RADIAL/RECURSIVE grid: r = sqrt(x**2+y**2)
+        grid_mode       GridMode.GRID: (x,y) grid
+                        GridMode.RADIAL: (r,theta) grid
+                        GridMode.RECURSIVE: (r,theta) recursive boundary search
+                        
+
+    KEYWORDS
+        nturns=1024     Number of turns for the tracking
+        refpts=None     Observation refpts, default start of the machine
+        dp=0            static momentum offset
+        offset=None     initial orbit, default no offset
+        bounds=None     Allows to define boundaries for the grid default values are:
+                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
+        grid_mode       mode for the gird default GridMode.RADIAL
+        use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
+                        In case multi-processing is not enabled GridMode is forced to
+                        RECURSIVE (most efficient in single core)
+        verbose=True    Print out some inform
+
+
+    OUTPUT
+        Returns 3 lists containing the 2D acceptance, the grid that was tracked and the
+        particles of the grid that survived. The length of the lists=refpts. In case
+        len(refpts)=1 the acceptance, grid, suvived arrays are returned directly.
+    """
+    if not use_mp:
+       grid_mode=GridMode.RECURSIVE 
+
+    if verbose:
+        nproc = multiprocessing.cpu_count()
+        print('\n{0} cpu found for acceptance calculation'.format(nproc))       
+        if use_mp:
+            nprocu=nproc
+            print('Multi-process acceptance calculation selected...')  
+            if nproc == 1:
+                print('Consider use_mp=False for single core computations') 
+        else:
+            nprocu=1
+            print('Single process acceptance calculation selected...')
+            if nproc > 1:
+                print('Consider use_mp=True for parallelized computations')
+        np = numpy.atleast_1d(npoints)
+        na = 2
+        if len(np)==2:
+            na = np[1]
+        npp = numpy.prod(npoints)
+        rpp = 2*numpy.ceil(numpy.log2(np[0]))*numpy.ceil(na/nprocu)
+        mpp = npp/nprocu
+        if rpp>mpp: 
+            cond = grid_mode is GridMode.RADIAL or grid_mode is GridMode.GRID
+        else:
+            cond = grid_mode is GridMode.RECURSIVE       
+        if rpp>mpp and not cond: 
+            print('The estimated load for grid mode is {0}'.format(mpp))
+            print('The estimated load for recursive mode is {0}'.format(rpp))
+            print('{0} or {1} is recommended'.format(GridMode.RADIAL, GridMode.GRID))
+        elif rpp<mpp and not cond:
+            print('The estimated load for grid mode is {0}'.format(mpp))
+            print('The estimated load for recursive mode is {0}'.format(rpp))
+            print('{0} is recommended'.format(GridMode.RECURSIVE))
+
+    boundary = []
+    survived = []
+    grid = []
+    rp = numpy.atleast_1d(refpts)
+    for r in rp:
+        b,s,g = boundary_search(ring, planes, npoints, amplitudes, nturns=nturns, refpts=r,
+                                dp=dp, offset=offset, bounds=bounds, grid_mode=grid_mode,
+                                use_mp=use_mp, verbose=verbose)
+        boundary.append(b)
+        survived.append(s)
+        grid.append(g)   
+    if len(rp)==1:
+        return boundary[0], survived[0], grid[0]
+    else:
+        return boundary, survived, grid
+
+
+def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=0, refpts=None,
+                      grid_mode=GridMode.RADIAL, use_mp=False, verbose=False):
+    """
+    Computes the 1D acceptance at refpts observation points
+    Scalar parameters required
+    
+    PARAMETERS
+        ring            ring use for tracking
+        plane           the plane where to search for the acceptance, allowed values
+                        are: x,xp,y,yp,dp,ct
+        resolution      minimum distance between 2 grid points
+        amplitude       max. amplitude of the grid or initial step in RECURSIVE
+        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
+                        GridMode.RECURSIVE: recursive search
+                        
+
+    KEYWORDS
+        nturns=1024     Number of turns for the tracking
+        refpts=None     Observation refpts, default start of the machine
+        dp=0            static momentum offset
+        offset=None     initial orbit, default no offset
+        bounds=None     Allows to define boundaries for the grid default values are:
+                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
+        grid_mode       mode for the gird default GridMode.RADIAL
+        use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
+                        In case multi-processing is not enabled GridMode is forced to
+                        RECURSIVE (most efficient in single core)
+        verbose=False   Print out some information
+
+
+    OUTPUT
+        Returns 3 lists containing the 1D acceptance, the grid that was tracked and the
+        particles of the grid that survived. The length of the lists=refpts. In case
+        len(refpts)=1 the acceptance, grid, suvived arrays are returned. The boundary
+        output is squeezed to an array with shape (len(refpts),2)
+    """
+    assert len(numpy.atleast_1d(plane))==1, '1D acceptance: single plane required'
+    assert numpy.isscalar(resolution), '1D acceptance: scalar args required'
+    assert numpy.isscalar(amplitude), '1D acceptance: scalar args required'
+    npoint = numpy.ceil(amplitude/resolution)
+    boundary, survived, grid= get_acceptance(ring, plane, npoint, amplitude, nturns=nturns,
+                                             dp=dp, refpts=refpts, grid_mode=grid_mode,
+                                             use_mp=use_mp, verbose=verbose)
+    return numpy.squeeze(boundary), survived, grid
+          
+
+def get_horizontal_acceptance(ring, *args, **kwargs):
+    """
+    Computes the 1D horizontal acceptance at refpts observation points
+    Scalar parameters required
+    
+    PARAMETERS
+        ring            ring use for tracking
+        resolution      minimum distance between 2 grid points
+        amplitude       max. amplitude of the grid or initial step in RECURSIVE
+        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
+                        GridMode.RECURSIVE: recursive search
+                        
+
+    KEYWORDS
+        nturns=1024     Number of turns for the tracking
+        refpts=None     Observation refpts, default start of the machine
+        dp=0            static momentum offset
+        offset=None     initial orbit, default no offset
+        bounds=None     Allows to define boundaries for the grid default values are:
+                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
+        grid_mode       mode for the gird default GridMode.RADIAL
+        use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
+                        In case multi-processing is not enabled GridMode is forced to
+                        RECURSIVE (most efficient in single core)
+        verbose=False   Print out some information
+
+
+    OUTPUT
+        Returns 3 lists containing the 1D acceptance, the grid that was tracked and the
+        particles of the grid that survived. The length of the lists=refpts. In case
+        len(refpts)=1 the acceptance, grid, suvived arrays are returned. The boundary
+        output is squeezed to an array with shape (len(refpts),2)
+    """
+    return get_1d_acceptance(ring, 'x', *args, **kwargs)
+
+
+def get_vertical_acceptance(ring, *args, **kwargs):
+    """
+    Computes the 1D vertical acceptance at refpts observation points
+    Scalar parameters required
+    
+    PARAMETERS
+        ring            ring use for tracking
+        resolution      minimum distance between 2 grid points
+        amplitude       max. amplitude of the grid or initial step in RECURSIVE
+        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
+                        GridMode.RECURSIVE: recursive search
+                        
+
+    KEYWORDS
+        nturns=1024     Number of turns for the tracking
+        refpts=None     Observation refpts, default start of the machine
+        dp=0            static momentum offset
+        offset=None     initial orbit, default no offset
+        bounds=None     Allows to define boundaries for the grid default values are:
+                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
+        grid_mode       mode for the gird default GridMode.RADIAL
+        use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
+                        In case multi-processing is not enabled GridMode is forced to
+                        RECURSIVE (most efficient in single core)
+        verbose=False   Print out some information
+
+
+    OUTPUT
+        Returns 3 lists containing the 1D acceptance, the grid that was tracked and the
+        particles of the grid that survived. The length of the lists=refpts. In case
+        len(refpts)=1 the acceptance, grid, suvived arrays are returned. The boundary
+        output is squeezed to an array with shape (len(refpts),2)
+    """
+    return get_1d_acceptance(ring, 'y', *args, **kwargs)
+
+
+def get_momentum_acceptance(ring, *args, **kwargs):
+    """
+    Computes the 1D momentum acceptnace at refpts observation points
+    Scalar parameters required
+    
+    PARAMETERS
+        ring            ring use for tracking
+        resolution      minimum distance between 2 grid points
+        amplitude       max. amplitude of the grid or initial step in RECURSIVE
+        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
+                        GridMode.RECURSIVE: recursive search
+                        
+
+    KEYWORDS
+        nturns=1024     Number of turns for the tracking
+        refpts=None     Observation refpts, default start of the machine
+        dp=0            static momentum offset
+        offset=None     initial orbit, default no offset
+        bounds=None     Allows to define boundaries for the grid default values are:
+                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
+        grid_mode       mode for the gird default GridMode.RADIAL
+        use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
+                        In case multi-processing is not enabled GridMode is forced to
+                        RECURSIVE (most efficient in single core)
+        verbose=False   Print out some information
+
+
+    OUTPUT
+        Returns 3 lists containing the 1D acceptance, the grid that was tracked and the
+        particles of the grid that survived. The length of the lists=refpts. In case
+        len(refpts)=1 the acceptance, grid, suvived arrays are returned. The boundary
+        output is squeezed to an array with shape (len(refpts),2)
+    """
+    return get_1d_acceptance(ring, 'dp', *args, **kwargs)
+    
+        
+
+
+
+
+
