@@ -7,4 +7,5 @@ from .tracking import *
 from .physics import *
 from .load import *
 from .matching import *
+from .acceptance import *
 sys.modules['at.constants'] = sys.modules['at.lattice.constants']

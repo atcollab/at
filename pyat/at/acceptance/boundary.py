@@ -7,6 +7,8 @@ from scipy.ndimage.morphology import binary_dilation, binary_opening
 from collections import namedtuple
 import time
 
+__all__ = ['GridMode']
+
 _pdict = {'x':0, 'xp':1, 
           'y':2, 'yp':3,
           'dp':4, 'ct':5}

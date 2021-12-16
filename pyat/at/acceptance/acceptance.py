@@ -3,7 +3,11 @@ import numpy
 from .boundary import GridMode
 from .boundary import boundary_search
 import multiprocessing
+from ..lattice import Lattice
 
+
+__all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
+           'get_vertical_acceptance', 'get_momentum_acceptance']
 
 
 def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
@@ -21,9 +25,9 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         npoints         number of points in each dimension shape (len(planes),)
         amplitudes      max. amplitude  or initial step in RECURSIVE in each dimension
                         shape (len(planes),), for RADIAL/RECURSIVE grid: r = sqrt(x**2+y**2)
-        grid_mode       GridMode.GRID: (x,y) grid
-                        GridMode.RADIAL: (r,theta) grid
-                        GridMode.RECURSIVE: (r,theta) recursive boundary search
+        grid_mode       at.GridMode.GRID: (x,y) grid
+                        at.GridMode.RADIAL: (r,theta) grid
+                        at.GridMode.RECURSIVE: (r,theta) recursive boundary search
                         
 
     KEYWORDS
@@ -111,8 +115,8 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=0, ref
                         are: x,xp,y,yp,dp,ct
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
-                        GridMode.RECURSIVE: recursive search
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
@@ -155,8 +159,8 @@ def get_horizontal_acceptance(ring, *args, **kwargs):
         ring            ring use for tracking
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
-                        GridMode.RECURSIVE: recursive search
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
@@ -192,8 +196,8 @@ def get_vertical_acceptance(ring, *args, **kwargs):
         ring            ring use for tracking
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
-                        GridMode.RECURSIVE: recursive search
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
@@ -229,8 +233,8 @@ def get_momentum_acceptance(ring, *args, **kwargs):
         ring            ring use for tracking
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       GridMode.GRID/RADIAL: track full vector (default)
-                        GridMode.RECURSIVE: recursive search
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
@@ -255,8 +259,12 @@ def get_momentum_acceptance(ring, *args, **kwargs):
         output is squeezed to an array with shape (len(refpts),2)
     """
     return get_1d_acceptance(ring, 'dp', *args, **kwargs)
-    
-        
+  
+  
+Lattice.get_acceptance = get_acceptance
+Lattice.get_horizontal_acceptance = get_horizontal_acceptance
+Lattice.get_vertical_acceptance = get_vertical_acceptance
+Lattice.get_momentum_acceptance = get_momentum_acceptance   
 
 
 
