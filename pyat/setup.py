@@ -10,6 +10,7 @@ from setuptools import setup, Extension, find_packages
 import numpy
 
 
+
 def select_omp():
     if exists('/usr/local/include/omp.h'):              # Homebrew
         return '-I/usr/local/include', '/usr/local/lib'
@@ -30,6 +31,23 @@ macros = [('PYAT', None)]
 with_openMP = False
 
 cflags = []
+
+
+mpi = os.environ.get('MPI', None)
+if mpi is None:
+    mpi_macros = []
+    mpi_includes = []
+else:
+    mpi_macros = [('MPI',None)]
+    os.environ["CC"] = 'mpicc'
+    try:
+        import mpi4py
+    except ImportError:
+        print('\npyAT with MPI requires mpi4py. '
+              'Please install mpi4py: "pip install mpi4py"\n')
+        sys.exit()
+    mpi_includes = mpi4py.get_include()
+
 
 omp = os.environ.get('OPENMP', None)
 if omp is None:
@@ -105,8 +123,8 @@ def integrator_ext(pass_method):
     return Extension(
         name=name,
         sources=[pass_method],
-        include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
-        define_macros=macros + omp_macros,
+        include_dirs=[numpy.get_include(), mpi_includes, integrator_src, diffmatrix_source],
+        define_macros=macros + omp_macros + mpi_macros,
         extra_compile_args=cflags + omp_cflags,
         extra_link_args=omp_lflags
     )
@@ -115,7 +133,7 @@ def integrator_ext(pass_method):
 at = Extension(
     'at.tracking.atpass',
     sources=[at_source],
-    define_macros=macros + omp_macros,
+    define_macros=macros + omp_macros + mpi_macros,
     include_dirs=[numpy.get_include(), integrator_src, diffmatrix_source],
     extra_compile_args=cflags + omp_cflags,
     extra_link_args=omp_lflags

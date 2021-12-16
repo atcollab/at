@@ -37,7 +37,7 @@ to include them.
 ### The AT template
 The AT website is based on the [Documentation Theme for jekyll](https://idratherbewriting.com/documentation-theme-jekyll/)
 by Tom Johnson, with some modifications. It was chosen for its top navigation bar and its possibility of
-optional side bars. There is a side bar for python pages, defined by the YAML file
+optional side-bars. There is a side-bar for python pages, defined by the YAML file
 `docs/_data/sidebars/python_sidebar.yml` and another one for Matlab pages defined in
 `docs/_data/sidebars/matlab_sidebar.yml`.
 
