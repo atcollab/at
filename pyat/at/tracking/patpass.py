@@ -19,7 +19,7 @@ globring = None
 
 def format_results(results, r_in, losses):
     rin = [r['rin'] for r in results]
-    r_in = numpy.vstack(rin).T
+    r_in[:] = numpy.vstack(rin).T[:]
     if losses:
         rout = [r['results'][0] for r in results]
         rout = numpy.concatenate(rout, axis=1)
