@@ -30,8 +30,8 @@ classdef atparticle
         function obj = atparticle(name, varargin)
             %ATPARTICLE Construct an ATPARTICLE instance
             %   Detailed explanation goes here
-            if ~strcmp(name,'relativistic')
-                error('AT:particle','Only ''relativistic'' is allowed at the moment');
+            if ~strcmp(name,'electron')
+                warning('AT:particle','AT tracking still assumes beta==1. Make sure your particle is ultra-relativistic');
             end
             try
                 args = atparticle.known2.(name);
