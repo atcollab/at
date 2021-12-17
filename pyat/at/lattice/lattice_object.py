@@ -1,8 +1,8 @@
 """Lattice object
 
 The methods implemented in this module are internal to the 'lattice' package.
-This is necessary to ensure that the 'lattice' package is independent
-from other AT packages.
+This is necessary to ensure that the 'lattice' package is independent of other
+AT packages.
 
 Other Lattice methods are implemented in other AT packages and are available
 as soon as the package is imported. The 'tracking' and 'physics' packages are
@@ -137,7 +137,7 @@ class Lattice(list):
         # set default values
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
-        kwargs.setdefault('_particle', Particle('relativistic'))
+        kwargs.setdefault('_particle', Particle('electron'))
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_h = kwargs.pop('_harmnumber', None)
