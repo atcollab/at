@@ -1,140 +1,159 @@
 import at
 import numpy
-from scipy.constants import physical_constants
 from scipy.special import iv
 from scipy import integrate
-from tlt_da.compute_aperture import get_aperture_array_multi
-_qe = physical_constants['elementary charge'][0]
-_re = physical_constants['classical electron radius'][0]
-_clight = physical_constants['speed of light in vacuum'][0]
-_erm = physical_constants['electron mass energy equivalent in MeV'][0]*1.0e6
+from scipy.optimize import fsolve
+from ..lattice.constants import clight, e_mass, qe, clight, _e_radius
+from .acceptance import get_momentum_acceptance
 
 
-def blength_espread(ring, zn, bcurr):
-    ringtmp = ring.radiation_off(copy=True)
-    rad_param = ringtmp.radiation_parameters()
-    vrf = ring.get_rf_voltage()
-    u0 = rad_param.U0
-    e0 = rad_param.E0
-    h = ring.get_rf_harmonic_number()
-    alphac = rad_param.alphac
-    espread = rad_param.sigma_e
-    circ = ring.get_s_pos(len(ring))[0]
-    phis = rad_param.phi_s
-    nus = rad_param.f_s/_clight*circ
-    delta = -(2*numpy.pi*bcurr*zn)/(vrf*h*numpy.cos(phis)*(alphac*espread/nus)**3)
-    q=delta/(4*numpy.sqrt(numpy.pi))
-    blg = (2/3)**(1/3)/(9*q + numpy.sqrt(3)*numpy.sqrt(-4+27*q**2))**(1/3) \
-           + (9*q + numpy.sqrt(3)*numpy.sqrt(-4+27*q**2))**(1/3)/(2**(1/3)*3**(2/3))
-    bl= espread*(circ * alphac)/(2 * numpy.pi * nus )
-    bl *= blg
+def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
+    """
+    Solves the Haissinski formula and returns the bunch length and energy 
+    spread for given bunch current and Z/n. If both zn and bunch_curr are None,
+    zero current case, otherwise both are needed for the calculation 
+
+    PARAMETERS
+        ring              ring use for tracking
+                      
+    KEYWORDS
+        zn=None           Z/n for the full ring
+        bunch_curr=None   Bunch current
+        espread=None      Energy spread, if None use lattice parameter
+
+    OUTPUT
+        Bunch length, energy spread
+    """
+    def haissinski(x, cst):
+        return x**3-x-cst
+
+    ep  = at.envelope_parameters(ring.radiation_on(copy=True))
+    bl0 = ep.sigma_l
+    if espread is None:
+        espread = ep.sigma_e 
+    if zn is None and bunch_curr is None:
+        bl= bl0
+    elif zn is None or bunch_curr is None:
+        raise AtError('Please provide both current and Z/n for bunch '
+                      'length calculation')
+    else:
+        vrf = ep.voltage
+        h = ring.harmonic_number
+        etac = ring.get_slip_factor()
+        cs = numpy.cos(ep.phi_s)
+        nus = ep.f_s/ring.revolution_frequency
+        cst = (-0.5 * numpy.sqrt(numpy.pi) * bunch_curr * zn / 
+               (vrf * h * cs * (abs(etac) * espread / nus)**3))
+        bl = numpy.float(bl0*fsolve(haissinski,(1,),args=(cst)))
     return bl, espread
 
 
-def get_tlt(ring, bcurr, epsx, epsy, sigs, sigp, refpts=None, iends=None, maxdp=0.06, tol=1.0e-3, nturns=1024):
-    momap = get_aperture_array_multi(ring, 4, maxdp, tol=tol, refpts=refpts, nturns=nturns)
-    return tlt_piwinski(ring, bcurr, epsx, epsy, sigs, sigp, momap, refpts=refpts, iends=iends)/3600
+def get_beam_sizes(ring, bunch_curr, zn=None, emitx=None, sigs=None, sigp=None):
+    if zn is None:
+        bunch_curr = None
+    if sigs is None or sigp is None:      
+        sigsi, sigpi = get_bunch_length_espread(ring, zn=zn, bunch_curr=bunch_curr, 
+                                                espread=sigp)        
+        if sigs is None:
+            sigs = sigsi
+        if sigp is None:
+            sigp = sigpi              
+    if emitx is None:
+        _, bd, _ = at.ohmi_envelope(ring.radiation_on(copy=True)) 
+        emitx = bd.mode_emittances[0]
+    return emitx, sigs, sigp        
+    
 
-
-def tlt_intpiw(k, km, B1, B2): 
+def int_piwinski(k, km, B1, B2): 
+    """
+    Integrand of the piwinski formula
+    """        
     t=numpy.tan(k)**2
     tm=numpy.tan(km)**2
+    fact = ((2*t+1)**2*(t/tm/(1+t)-1)/t + t -numpy.sqrt(t*tm*(1+t)) -
+            (2+1/(2*t))*numpy.log(t/tm/(1+t)))
     if B2*t<500:
-        I=((2*t+1)**2*(t/tm/(1+t)-1)/t + t -numpy.sqrt(t*tm*(1+t)) -(2+1/(2*t))*numpy.log(t/tm/(1+t)))* \
-          numpy.exp(-B1*t)*iv(0,B2*t)*numpy.sqrt(1+t)
+        I= fact * numpy.exp(-B1*t)*iv(0,B2*t)*numpy.sqrt(1+t)
     else:
-        I=((2*t+1)**2*(t/tm/(1+t)-1)/t + t -numpy.sqrt(t*tm*(1+t)) -(2+1/(2*t))*numpy.log(t/tm/(1+t)))* \
-          numpy.exp(B2*t-B1*t)/numpy.sqrt(2*numpy.pi*B2*t)*numpy.sqrt(1+t)
+        I= fact * numpy.exp(B2*t-B1*t)/numpy.sqrt(2*numpy.pi*B2*t)*numpy.sqrt(1+t)
     return I
 
 
-def tlt_piwinski(ring, bcurr, emitx, emity, sigs, sigp, momap, refpts=None, iends=None):
+def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None, zn=None, momap=None,
+                 refpts=None, **kwargs):
+    """
+    Computes the touschek lifetime using the piwinski formula
+    """
+
+    epsabs = kwargs.pop('epsabs', 1.0e-16)
+    epsrel = kwargs.pop('epsrel', 1.0e-12)
+
+    emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn, emitx=emitx, sigs=sigs, sigp=sigp)
     if refpts is None:
         refpts=range(len(ring))
-    if iends is None:
-        iends = (0,len(ring))
-    ii,ie=iends
 
-    si= ring.get_s_pos(ii)[0]
-    se= ring.get_s_pos(ie)[0]
-    spos = ring.get_s_pos(refpts)
-    l=numpy.zeros(len(refpts))
-    l[0]=spos[1]-si
-    for ii in range(1,len(refpts)-1):
-        l[ii]=spos[ii+1]-spos[ii]
-    l[len(refpts)-1]=se-spos[len(refpts)-1] 
-  
-    tlcol= numpy.zeros(2)
+    if momap is None:   
+        resolution = kwargs.pop('resolution',1.0e-3)
+        amplitude = kwargs.pop('amplitude',0.1)
+        kwargs.update({'refpts':refpts})    
+        momap, _, _ = ring.get_momentum_acceptance(resolution, amplitude, **kwargs)
+    else:
+        print('Using user input momentum aperture: refpts and momap have to be coherent')
+        assert len(momap)==len(refpts), 'momap and refpts have different lengths'
 
-    circ = ring.get_s_pos(len(ring))[0]
-    energy = ring.energy
-    nc = bcurr/(_clight/circ)/_qe
-    gamma = energy/_erm
-    beta=numpy.sqrt(1-1/gamma**2)
-    beta2 = beta*beta
-    gamma2 = gamma*gamma
+    l = numpy.diff(ring.get_s_pos(refpts))
+    ma, rp = momap[:-1], refpts[:-1]
 
-    ld0,bd,ld = ring.get_optics(refpts=refpts,get_chrom=True)
-    bx = ld.beta[:,0]
-    by = ld.beta[:,1]
-    ax = ld.alpha[:,0]
-    ay = ld.alpha[:,1]
-    dx = ld.dispersion[:,0]
-    dy = ld.dispersion[:,2]
-    dpx = ld.dispersion[:,1]
-    dpy = ld.dispersion[:,3]
+    nc = bunch_curr/ring.revolution_frequency/qe
+    beta2 = ring.beta*ring.beta
+    #gamma2 = ring.gamma*ring.gamma
+    gamma2 = (ring.energy/e_mass)**2
 
-    sigxb=numpy.sqrt(emitx*bx)
-    sigyb=numpy.sqrt(emity*by)   
-    sigx=numpy.sqrt(emitx*bx+sigp*dx*sigp*dx)
-    sigy=numpy.sqrt(emity*by+sigp*dy*sigp*dy) 
-
-    dtx=dx*ax+dpx*bx
-    dty=dy*ay+dpy*by
-
-    bx2 = bx*bx
-    by2 = by*by
-    sigx2 = sigx*sigx
-    sigy2 = sigy*sigy
-    sigp2=sigp*sigp
-    dx2=dx*dx
-    dy2=dy*dy
-    dtx2=dtx*dtx
-    dty2=dty*dty
-    sigxb2=sigxb*sigxb
-    sigyb2=sigyb*sigyb
-
-    sigtx2=sigx2+sigp2*dtx2
-    sigty2=sigy2+sigp2*dty2
-    sigtx=numpy.sqrt(sigtx2)
-    sigty=numpy.sqrt(sigty2)
-
-    sighinv2=1/(sigp2) +(dx2+dtx2)/(sigxb2) + (dy2+dty2)/(sigyb2)
-    sigh2 = 1/sighinv2    
+    emit = numpy.array([emitx, emity])
+    _, _ , ld = ring.get_optics(refpts=rp)
+    bxy = ld.beta
+    bxy2 = bxy*bxy
+    axy =ld.alpha
+    dxy = ld.dispersion[:,[0,2]]
+    dxy2 = dxy*dxy
+    dpxy = ld.dispersion[:,[1,3]]   
+    sigb = numpy.sqrt(bxy*emit) 
+    sigb2 = sigb*sigb
+    sigp2 = sigp*sigp   
+    sig = numpy.sqrt(sigb2+sigp2*dxy2)
+    sig2 = sig*sig
+    dt = dxy*axy+dpxy*bxy    
+    dt2 = dt*dt
+    sigt = numpy.sqrt(sig2 + sigp2*dt2)
+    sigt2 = sigt*sigt
+    sigh2=1/(1/sigp2 + numpy.sum((dxy2+dt2)/(sigb2), axis=1))  
     sigh=numpy.sqrt(sigh2)
 
-    B1=1/(2*beta2*gamma2)*(bx2/sigxb2*(1-sigh2*dtx2/sigxb2) + by2/sigyb2*(1-sigh2*dty2/sigyb2))  
-    B2sq=1/(2*beta2*gamma2)**2*(bx2/sigxb2*(1-sigh2*dtx2/sigxb2) - by2/sigyb2*(1-sigh2*dty2/sigyb2))**2+ \
-         (sigh2*sigh2*bx2*by2*dtx2*dty2)/(beta2*beta2*gamma2*gamma2*sigxb2*sigxb2*sigyb2*sigyb2)   
-    B2=numpy.sqrt(B2sq)
-  
-    val=numpy.zeros(len(refpts))
- 
+    bs = bxy2/sigb2*(1-(sigh2*(dt2/sigb2).T).T) 
+    bg2i = 1/(2*beta2*gamma2)
+    B1 = bg2i*numpy.sum(bs, axis=1)
+    B2sq = bg2i*bg2i*(numpy.diff(bs, axis=1).T**2 + 
+                      sigh2*sigh2*numpy.prod(bxy2*dt2, axis=1) /
+                      numpy.prod(sigb2*sigb2, axis=1))
+    B2= numpy.squeeze(numpy.sqrt(B2sq))
+      
+    invtl= numpy.zeros(2)
     for i in range(2): 
-        dpp = momap[:,i]          
-        um=beta2*dpp*dpp  
-        em=bx2*sigx2/(beta2*gamma2*sigxb2*sigtx2)*um  
+        dpp = ma[:,i]          
+        um=beta2*dpp*dpp          
         km=numpy.arctan(numpy.sqrt(um)) 
-        FpiWfact=numpy.sqrt(numpy.pi*(B1**2-B2**2))*um
-                
-        for ii in range(len(refpts)):
-            val[ii],_ = integrate.quad(tlt_intpiw, km[ii], numpy.pi/2,args=(km[ii], B1[ii], B2[ii]),limit=1000,points=range(1000))  
-             
-        frontfact=(_re**2*_clight*nc)/(8*numpy.pi*(gamma2)*sigs*numpy.sqrt(sigx2*sigy2-sigp2*sigp2*dx2*dy2)*um)*2*FpiWfact
-        contributionsTL=frontfact*val          
-        tlcol[i]=1/(1/sum(l)*sum(contributionsTL*l.T))
-    
-    return len(tlcol)/sum(1/tlcol)
+        
+        val=numpy.zeros(len(rp))     
+        for ii in range(len(rp)):
+            args = (km[ii], B1[ii], B2[ii])
+            val[ii],_ = integrate.quad(int_piwinski, args[0], numpy.pi/2, args=args,
+                                       epsabs=epsabs, epsrel=epsrel)
+ 
+        val *= _e_radius**2*clight*nc/(8*numpy.pi*(gamma2)*sigs * \
+               numpy.sqrt(numpy.prod(sig2, axis=1) - sigp2*sigp2* \
+               numpy.prod(dxy2, axis=1)))*2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2))
+        
+        invtl[i]=sum(val*l.T)/sum(l)   
+    tl = 1/numpy.mean(invtl)
 
-
-
+    return tl, momap, refpts

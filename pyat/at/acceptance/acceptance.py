@@ -34,7 +34,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         nturns=1024     Number of turns for the tracking
         refpts=None     Observation refpts, default start of the machine
         dp=0            static momentum offset
-        offset=None     initial orbit, default no offset
+        offset=None     initial orbit, default closed orbit
         bounds=None     Allows to define boundaries for the grid default values are:
                         GridMode.GRID: ((-1,1),(0,1))
                         GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
@@ -115,19 +115,14 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=0, ref
                         are: x,xp,y,yp,dp,ct
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
-                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
         nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
         dp=0            static momentum offset
-        offset=None     initial orbit, default no offset
-        bounds=None     Allows to define boundaries for the grid default values are:
-                        GridMode.GRID: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
-        grid_mode       mode for the gird default GridMode.RADIAL
+        refpts=None     Observation refpts, default start of the machine
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
                         In case multi-processing is not enabled GridMode is forced to
                         RECURSIVE (most efficient in single core)
@@ -144,9 +139,9 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=0, ref
     assert numpy.isscalar(resolution), '1D acceptance: scalar args required'
     assert numpy.isscalar(amplitude), '1D acceptance: scalar args required'
     npoint = numpy.ceil(amplitude/resolution)
-    boundary, survived, grid= get_acceptance(ring, plane, npoint, amplitude, nturns=nturns,
-                                             dp=dp, refpts=refpts, grid_mode=grid_mode,
-                                             use_mp=use_mp, verbose=verbose)
+    boundary, survived, grid = get_acceptance(ring, plane, npoint, amplitude, nturns=nturns,
+                                              dp=dp, refpts=refpts, grid_mode=grid_mode,
+                                              use_mp=use_mp, verbose=verbose)
     return numpy.squeeze(boundary), survived, grid
           
 
@@ -159,19 +154,14 @@ def get_horizontal_acceptance(ring, *args, **kwargs):
         ring            ring use for tracking
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
-                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
         nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
         dp=0            static momentum offset
-        offset=None     initial orbit, default no offset
-        bounds=None     Allows to define boundaries for the grid default values are:
-                        GridMode.GRID: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
-        grid_mode       mode for the gird default GridMode.RADIAL
+        refpts=None     Observation refpts, default start of the machine
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
                         In case multi-processing is not enabled GridMode is forced to
                         RECURSIVE (most efficient in single core)
@@ -196,19 +186,14 @@ def get_vertical_acceptance(ring, *args, **kwargs):
         ring            ring use for tracking
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
-                        at.GridMode.RECURSIVE: recursive search
                         
 
     KEYWORDS
         nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
         dp=0            static momentum offset
-        offset=None     initial orbit, default no offset
-        bounds=None     Allows to define boundaries for the grid default values are:
-                        GridMode.GRID: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
-        grid_mode       mode for the gird default GridMode.RADIAL
+        refpts=None     Observation refpts, default start of the machine
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
                         In case multi-processing is not enabled GridMode is forced to
                         RECURSIVE (most efficient in single core)
@@ -228,24 +213,18 @@ def get_momentum_acceptance(ring, *args, **kwargs):
     """
     Computes the 1D momentum acceptnace at refpts observation points
     Scalar parameters required
-    
+
     PARAMETERS
         ring            ring use for tracking
         resolution      minimum distance between 2 grid points
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
-                        at.GridMode.RECURSIVE: recursive search
                         
-
     KEYWORDS
         nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
         dp=0            static momentum offset
-        offset=None     initial orbit, default no offset
-        bounds=None     Allows to define boundaries for the grid default values are:
-                        GridMode.GRID: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
-        grid_mode       mode for the gird default GridMode.RADIAL
+        refpts=None     Observation refpts, default start of the machine
+        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+                        at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
                         In case multi-processing is not enabled GridMode is forced to
                         RECURSIVE (most efficient in single core)

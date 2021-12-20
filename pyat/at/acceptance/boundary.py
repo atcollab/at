@@ -256,12 +256,13 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
     if verbose:
         print('\nRunning grid boundary search:')
+        print('Element {0}, refpts={1}'.format(ring[refpts].FamName, refpts))
         print('The grid mode is {0}'.format(config.mode))
         print('The planes are {0}'.format(config.planes))
         print('Number of steps are {0}'.format(config.shape))
         print('The maximum amplitudes are {0}'.format(config.amplitudes))
         print('The maximum boundaries are {0}'.format(config.bounds))
-        print('The initial offset is {0} with refpts={1} and dp={2}'.format(offset,refpts,dp))
+        print('The initial offset is {0} with dp={1}'.format(offset,dp))
 
     t0 = time.time()
     parts, grid = get_parts(config, offset)
@@ -352,12 +353,13 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     
     if verbose:
         print('\nRunning recursive boundary search:')
+        print('Element {0}, refpts={1}'.format(ring[refpts].FamName, refpts))
         print('The grid mode is {0}'.format(config.mode))
         print('The planes are {0}'.format(config.planes))        
         print('Number of angles is {0} from {1} to {2} rad'.format(len(angles),angles[0],angles[-1]))
         print('The resolution of the search is {0}'.format(rtol))
         print('The initial step size is {0}'.format(rstep))
-        print('The initial offset is {0} with refpts={1} and dp={2}'.format(offset,refpts,dp))
+        print('The initial offset is {0} with dp={1}'.format(offset,dp))
      
     t0 = time.time()
     result = search_boundary(ring, config.planesi, angles, rtol, rstep, nturns, offset, method)
