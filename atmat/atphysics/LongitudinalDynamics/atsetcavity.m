@@ -85,7 +85,8 @@ if isempty(varargs)             % New syntax
             gamma0=props.Energy/E_MASS;
             beta0=sqrt(1-1/gamma0/gamma0);
             lcell=ncells*findspos(ring,length(ring)+1);
-            frev=beta0*CLIGHT/lcell;
+%           frev=beta0*CLIGHT/lcell;
+            frev=CLIGHT/lcell;
             if isfinite(dct)
                 frev=frev - frev*frev/CLIGHT*ncells*dct;
             elseif isfinite(dp)

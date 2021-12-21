@@ -41,7 +41,7 @@ if ~isempty(idx)            % Found RingParam: use it
     parmelem = strupdate(parmelem, newparms);
     new_nper = parmelem.Periodicity;
     if ~isfield(parmelem, 'Particle')
-        parmelem.Particle = saveobj(atparticle('relativistic'));
+        parmelem.Particle = saveobj(atparticle('electron'));
     end
     if isfield(newparms, 'HarmNumber')
         check_h(newparms.HarmNumber, parmelem.Periodicity);
