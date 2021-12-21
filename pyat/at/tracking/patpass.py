@@ -10,7 +10,7 @@ from warnings import warn
 from at.lattice import AtWarning, elements
 import numpy
 
-if not platform.startswith('linux')
+if not platform.startswith('linux'):
     print('Runing on {0}, switching multiprocessing to '
           'fork start method')
     multiprocessing.set_start_method('fork')
