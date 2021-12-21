@@ -153,9 +153,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
 
     nc = bunch_curr/ring.revolution_frequency/qe
     beta2 = ring.beta*ring.beta
-    #  gamma2 = ring.gamma*ring.gamma
-    #  TODO: put back when electron is default
-    gamma2 = (ring.energy/e_mass)**2
+    gamma2 = ring.gamma*ring.gamma
 
     emit = numpy.array([emitx, emity])
     _, _, ld = ring.get_optics(refpts=rp)

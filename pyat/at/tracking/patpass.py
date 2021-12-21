@@ -105,7 +105,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        if 'win' not in platform:
+        if 'win' in platform:
             warn(AtWarning('Windows OS: patpass not available: use single '
                            'process or compile with OpenMP'))
         return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
