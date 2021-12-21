@@ -10,8 +10,9 @@ AT provides simple tools to tune them, with methods and properties of the
 
 All methods have `array` and `cavpts` keyword arguments, used to select the cavities concerned by the command.
 
-- if `array is True`, the output attribute value is an array as long as the number of selected cavities,
-  and the input argument must be broadcastable to the number of cavities,
+- if `array is True`, the output attribute value is an array as long as the number of selected cavities.
+  The input argument must be an array as long as the number of selected cavities
+  or a scalar which will be broadcasted to the number of cavities,
 - if `array is False` (default), the input and output are scalars. The scalar value
 applies to the set of cavities with the lowest frequency within the selection.
 The other cavities are ignored in `get_*` methods. For `set_*` methods, the other
