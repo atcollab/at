@@ -14,11 +14,12 @@ from at.lattice import Particle
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from numpy import array, uint8  # For global namespace
+from ..lattice.constants import e_mass
 
 
 def _particle(value):
-    if isinstance(value, Particle):
-        return value
+    if not isinstance(value, Particle):
+        return Particle('electron', rest_energy=e_mass, charge=1)
     else:
         return Particle(value['name'], rest_energy=value['rest_energy'],
                         charge=int(value['charge']))
