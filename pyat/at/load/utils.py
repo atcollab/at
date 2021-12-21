@@ -18,11 +18,18 @@ from ..lattice.constants import e_mass
 
 
 def _particle(value):
-    if not isinstance(value, Particle):
-        return Particle('electron', rest_energy=e_mass, charge=1)
+    if isinstance(value, Particle):
+        return value
     else:
-        return Particle(value['name'], rest_energy=value['rest_energy'],
-                        charge=int(value['charge']))
+        try:
+            return Particle(value['name'], 
+                            rest_energy=value['rest_energy'],
+                            charge=int(value['charge']))
+        except:
+            return Particle('electron', 
+                            rest_energy=e_mass,
+                            charge=1)
+            
 
 
 class RingParam(elt.Element):
