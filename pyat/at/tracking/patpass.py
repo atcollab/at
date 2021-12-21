@@ -12,7 +12,7 @@ import numpy
 
 if not platform.startswith('linux'):
     print('Runing on {0}, switching multiprocessing to '
-          'fork start method')
+          'fork start method'.format(platform))
     multiprocessing.set_start_method('fork')
 
 __all__ = ['patpass']
