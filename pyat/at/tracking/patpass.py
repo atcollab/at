@@ -10,6 +10,8 @@ from warnings import warn
 from at.lattice import AtWarning, elements
 import numpy
 
+print('switching to fork method')
+multiprocessing.set_start_method('fork')
 
 __all__ = ['patpass']
 
