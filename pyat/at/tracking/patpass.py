@@ -10,8 +10,10 @@ from warnings import warn
 from at.lattice import AtWarning, elements
 import numpy
 
-print('switching to fork method')
-multiprocessing.set_start_method('fork')
+if not platform.startswith('linux')
+    print('Runing on {0}, switching multiprocessing to '
+          'fork start method')
+    multiprocessing.set_start_method('fork')
 
 __all__ = ['patpass']
 
@@ -45,7 +47,7 @@ def _atpass_one(ring, rin, **kwargs):
 
 
 def _atpass(ring, r_in, pool_size, globvar, **kwargs):
-    if platform.startswith('linux') and globvar:
+    if globvar:
         global globring
         globring = ring
         args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
