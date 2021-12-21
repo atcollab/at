@@ -10,10 +10,6 @@ from warnings import warn
 from at.lattice import AtWarning, elements
 import numpy
 
-if not platform.startswith('linux'):
-    print('Runing on {0}, switching multiprocessing to '
-          'fork start method'.format(platform))
-    multiprocessing.set_start_method('fork')
 
 __all__ = ['patpass']
 
@@ -47,7 +43,7 @@ def _atpass_one(ring, rin, **kwargs):
 
 
 def _atpass(ring, r_in, pool_size, globvar, **kwargs):
-    if globvar:
+    if platform.startswith('linux') and globvar:
         global globring
         globring = ring
         args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
@@ -56,7 +52,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with multiprocessing.get_context('fork').Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
@@ -101,7 +97,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
     pm_ok = [e.PassMethod in elements._collective for e in ring]
-    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
+    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok) and 'win' not in platform:
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
         return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
@@ -109,4 +105,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
+        if 'win' not in platform:
+            warn(AtWarning('Windows OS: patpass not available: use single '
+                           'process or compile with OpenMP'))
         return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
