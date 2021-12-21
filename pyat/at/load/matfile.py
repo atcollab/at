@@ -188,7 +188,7 @@ def matlab_ring(ring):
     """Prepend a RingParam element to a lattice"""
     dct = dict((_matattr_map.get(k, k.title()), v)
                for k, v in ring.attrs.items())
-    famname = dct.pop('FamName','RingParam')
+    famname = dct.pop('FamName')
     energy = dct.pop('Energy')
     yield RingParam(famname, energy, **dct)
     for elem in ring:

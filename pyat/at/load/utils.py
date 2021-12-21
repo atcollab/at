@@ -40,6 +40,8 @@ class RingParam(elt.Element):
                         Particle=_particle)
 
     def __init__(self, family_name, energy, periodicity=1, **kwargs):
+        if family_name == '':
+            family_name = 'RingParam'
         kwargs.setdefault('Energy', energy)
         kwargs.setdefault('Periodicity', periodicity)
         kwargs.setdefault('PassMethod', 'IdentityPass')
