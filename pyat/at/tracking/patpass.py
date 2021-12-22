@@ -97,7 +97,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
     pm_ok = [e.PassMethod in elements._collective for e in ring]
-    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok) and 'win' not in platform:
+    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok) and 'win32' not in platform:
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
         return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
@@ -105,7 +105,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        if 'win' in platform:
+        if 'win32' in platform:
             warn(AtWarning('Windows OS: patpass not available: use single '
                            'process or compile with OpenMP'))
-        return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+        return atpass(ring, numpy.asfortranarray(r_in), nturns=nturns, refpts=refpts, losses=losses)
