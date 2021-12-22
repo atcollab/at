@@ -49,3 +49,8 @@ athelp.mat
 
 # octave files
 octave-workspace
+
+# non python files in example folder
+pyat/examples/*.mat
+pyat/examples/*.pickle
+pyat/examples/*.png
