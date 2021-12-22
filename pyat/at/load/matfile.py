@@ -16,7 +16,7 @@ __all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
            'load_var']
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
-                     'FamName': 'name', 'Particle': 'particle',
+                     'FamName': 'name', 'Particle': '_particle',
                      'HarmNumber': 'harmonic_number'}
 _param_ignore = {'PassMethod', 'Length'}
 
@@ -39,14 +39,15 @@ def matfile_generator(params, mat_file):
     def mclean(data):
         if data.dtype.type is numpy.str_:
             # Convert strings in arrays back to strings.
-            return str(data[0])
+            return str(data[0]) if data.size > 0 else ''
         elif data.size == 1:
             v = data[0, 0]
             if issubclass(v.dtype.type, numpy.void):
-                for f in v.dtype.fields:
-                    v[f] = mclean(v[f])
-            # Return a scalar
-            return v
+                # Object => Return a dict
+                return {f: mclean(v[f]) for f in v.dtype.fields}
+            else:
+                # Return a scalar
+                return v
         else:
             # Remove any surplus dimensions in arrays.
             return numpy.squeeze(data)

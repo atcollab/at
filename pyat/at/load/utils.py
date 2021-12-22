@@ -18,10 +18,12 @@ from numpy import array, uint8  # For global namespace
 
 def _particle(value):
     if isinstance(value, Particle):
+        # Create from python: save_mat
         return value
     else:
-        return Particle(value['name'], rest_energy=value['rest_energy'],
-                        charge=int(value['charge']))
+        # Create from Matlab: load_mat
+        name = value.pop('name')
+        return Particle(name, **value)
 
 
 class RingParam(elt.Element):
@@ -74,7 +76,8 @@ _matclass_map = {'Dipole': 'Bend'}
 
 # Python to Matlab type translation
 _mattype_map = {int: float,
-                numpy.ndarray: lambda attr: numpy.asanyarray(attr)}
+                numpy.ndarray: lambda attr: numpy.asanyarray(attr),
+                Particle: lambda attr: attr.to_dict()}
 
 _class_to_matfunc = {
     elt.Dipole: 'atsbend',
@@ -369,17 +372,17 @@ def find_class_name(elem_dict, quiet=False):
 
 
 def split_ignoring_parentheses(string, delimiter):
-    PLACEHOLDER = "placeholder"
+    placeholder = "placeholder"
     substituted = string[:]
     matches = collections.deque(re.finditer("\\(.*?\\)", string))
     for match in matches:
-        substituted = substituted.replace(match.group(), PLACEHOLDER, 1)
+        substituted = substituted.replace(match.group(), placeholder, 1)
     parts = substituted.split(delimiter)
     replaced_parts = []
     for part in parts:
-        if PLACEHOLDER in part:
+        if placeholder in part:
             next_match = matches.popleft()
-            part = part.replace(PLACEHOLDER, next_match.group(), 1)
+            part = part.replace(placeholder, next_match.group(), 1)
         replaced_parts.append(part)
     assert not matches
 
