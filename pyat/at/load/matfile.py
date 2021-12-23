@@ -3,7 +3,7 @@ Load lattices from Matlab files.
 """
 from __future__ import print_function
 import sys
-from os.path import abspath
+from os.path import abspath, basename, splitext
 from warnings import warn
 import scipy.io
 import numpy
@@ -219,18 +219,19 @@ def save_m(ring, filename=None):
     """
 
     def save(file):
-        print('function ring = {0}()'.format(ring.name), file=file)
         print('ring = {...', file=file)
         for elem in matlab_ring(ring):
             print(element_to_m(elem), file=file)
         print('};', file=file)
-        print('end', file=file)
 
     if filename is None:
         save(sys.stdout)
     else:
         with open(filename, 'wt') as mfile:
+            [funcname, _] = splitext(basename(filename))
+            print('function ring = {0}()'.format(funcname), file=mfile)
             save(mfile)
+            print('end', file=mfile)
 
 
 register_format('.mat', load_mat, save_mat, descr='Matlab binary mat-file')

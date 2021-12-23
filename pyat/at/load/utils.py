@@ -321,8 +321,8 @@ def element_to_m(elem):
         def convert_dict(pdir):
             def scan(d):
                 for k, v in d.items():
-                    yield repr(k)
-                    yield repr(v)
+                    yield convert(k)
+                    yield convert(v)
             return 'struct({0})'.format(', '.join(scan(pdir)))
 
         def convert_array(arr):
@@ -339,7 +339,7 @@ def element_to_m(elem):
         elif isinstance(arg, dict):
             return convert_dict(arg)
         elif isinstance(arg, Particle):
-            return convert_dict(vars(arg))
+            return convert_dict(arg.to_dict())
         else:
             return repr(arg)
 
