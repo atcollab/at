@@ -55,8 +55,7 @@ _alias_map = {'rbend': elt.Dipole,
 _CLASS_MAP = dict((k.lower(), v) for k, v in CLASS_MAP.items())
 _CLASS_MAP.update(_alias_map)
 
-_PASS_MAP = {'DriftPass': elt.Drift,
-             'BendLinearPass': elt.Dipole,
+_PASS_MAP = {'BendLinearPass': elt.Dipole,
              'BndMPoleSymplectic4RadPass': elt.Dipole,
              'BndMPoleSymplectic4Pass': elt.Dipole,
              'QuadLinearPass': elt.Quadrupole,
