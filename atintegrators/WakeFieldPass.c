@@ -93,7 +93,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        long nslice,nelem, nturns;
+        long nslice,nelem,nturns;
         double intensity, wakefact, circumference;
         static double lnf[3];
         double *normfact;
@@ -107,8 +107,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *z_cuts;
 
         nslice=atGetLong(ElemData,"Nslice"); check_error();
-        nelem=atGetLong(ElemData,"Nelem"); check_error();  
-        nturns=atGetLong(ElemData,"Nturns"); check_error();      
+        nelem=atGetLong(ElemData,"Nelem"); check_error();
+        nturns=atGetLong(ElemData,"Nturns"); check_error();
         intensity=atGetDouble(ElemData,"Intensity"); check_error();
         circumference=atGetDouble(ElemData,"Circumference"); check_error();
         wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
@@ -171,7 +171,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *waketableZ;
         double *turnhistory;
         double *z_cuts;
-        
+
         nslice=atGetLong(ElemData,"Nslice"); check_error();
         nelem=atGetLong(ElemData,"Nelem"); check_error();
         nturns=atGetLong(ElemData,"Nturns"); check_error();
@@ -203,7 +203,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->waketableQX=waketableQX;
         Elem->waketableQY=waketableQY;
         Elem->waketableZ=waketableZ;
-        Elem->turnhistoryX=turnhistory;
+        Elem->turnhistory=turnhistory;
         Elem->z_cuts=z_cuts;
 
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
