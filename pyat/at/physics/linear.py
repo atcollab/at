@@ -9,7 +9,6 @@ from ..lattice.constants import clight
 from ..lattice import DConstant, get_s_pos
 from ..lattice import AtWarning, Lattice, check_radiation
 from ..tracking import lattice_pass
-from .revolution import set_rf_frequency
 from .orbit import find_orbit4, find_orbit6
 from .matrix import find_m44, find_m66
 from .amat import a_matrix, jmat, jmatswap
@@ -363,8 +362,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         if get_chrom or get_w:
             f0 = ring.get_rf_frequency(cavpts=cavpts)
             df = dp_step * ring.radiation_off(copy=True).slip_factor * f0
-            rgup = set_rf_frequency(ring, f0 + 0.5*df, cavpts=cavpts, copy=True)
-            rgdn = set_rf_frequency(ring, f0 - 0.5*df, cavpts=cavpts, copy=True)
+            rgup = ring.set_rf_frequency(f0 + 0.5*df, cavpts=cavpts, copy=True)
+            rgdn = ring.set_rf_frequency(f0 - 0.5*df, cavpts=cavpts, copy=True)
             o0up, _ = get_orbit(rgup, guess=orb0, **kwargs)
             o0dn, _ = get_orbit(rgdn, guess=orb0, **kwargs)
             if get_w:
@@ -1042,10 +1041,10 @@ def get_chrom(ring, method='linopt', dp=0, dct=None, cavpts=None, **kwargs):
     if ring.radiation:
         f0 = ring.get_rf_frequency(cavpts=cavpts)
         df = dp_step * ring.radiation_off(copy=True).slip_factor * f0
-        rgup = set_rf_frequency(ring, f0 + 0.5 * df, cavpts=cavpts, copy=True)
+        rgup = ring.set_rf_frequency(f0 + 0.5 * df, cavpts=cavpts, copy=True)
         o0up, _ = find_orbit6(rgup, **kwargs)
         tune_up = get_tune(rgup,  method=method, orbit=o0up, **kwargs)
-        rgdn = set_rf_frequency(ring, f0 - 0.5 * df, cavpts=cavpts, copy=True)
+        rgdn = ring.set_rf_frequency(f0 - 0.5 * df, cavpts=cavpts, copy=True)
         o0dn, _ = find_orbit6(rgdn, **kwargs)
         tune_down = get_tune(rgdn,  method=method, orbit=o0dn, **kwargs)
         dp_step = o0up[4] - o0dn[4]

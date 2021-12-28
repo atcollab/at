@@ -370,6 +370,14 @@ class Lattice(list):
         return self.periodicity * self.get_s_pos(len(self))[0]
 
     @property
+    def revolution_frequency(self):
+        """Revolution frequency (fullring) [Hz]"""
+        # gamma = self.gamma
+        # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+        # return beta * clight / self.circumference
+        return clight / self.circumference
+
+    @property
     def particle(self):
         """Circulating particle"""
         return self._particle
@@ -407,6 +415,11 @@ class Lattice(list):
     def beta(self):
         gamma = float(self.energy / self.particle.rest_energy)
         return math.sqrt(1.0 - 1.0/gamma/gamma)
+
+    # noinspection PyPep8Naming
+    @property
+    def BRho(self):
+        return math.sqrt(self.energy**2 - self.particle.rest_energy**2)/clight
 
     @property
     def radiation(self):
