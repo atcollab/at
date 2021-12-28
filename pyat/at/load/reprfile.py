@@ -11,6 +11,7 @@ from at.load.utils import element_from_string
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from at.lattice import Particle
+from numpy import array
 __all__ = ['load_repr', 'save_repr']
 
 

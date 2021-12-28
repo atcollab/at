@@ -40,14 +40,18 @@ class Particle(object):
         for (key, val) in kwargs.items():
             setattr(self, key, val)
 
+    def to_dict(self):
+        attrs = vars(self).copy()
+        attrs['rest_energy'] = attrs.pop('_rest_energy')
+        attrs['charge'] = attrs.pop('_charge')
+        return attrs
+
     def __repr__(self):
         if self.name in self._known:
             return "Particle('{0}')".format(self.name)
         else:
-            attrs = vars(self).copy()
+            attrs = self.to_dict()
             name = attrs.pop('name')
-            attrs['rest_energy'] = attrs.pop('_rest_energy')
-            attrs['charge'] = attrs.pop('_charge')
             args = ', '.join('{0}={1!r}'.format(k, v) for k, v in attrs.items())
             return "Particle('{0}', {1})".format(name, args)
 
