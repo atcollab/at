@@ -235,7 +235,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0],4,mxCreateString("WakeZ"));
             mxSetCell(plhs[0],5,mxCreateString("ZCuts"));
         }
-    }else {
+    }
+    else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");
     }
 }
