@@ -17,7 +17,7 @@ from .harmonic_analysis import get_tunes_harmonic
 __all__ = ['linopt', 'linopt2', 'linopt4', 'linopt6', 'avlinopt',
            'get_optics', 'get_tune', 'get_chrom']
 
-_jmt = jmatswap(1)
+_S = jmat(1)
 _S2 = numpy.array([[0, 1], [-1, 0]], dtype=numpy.float64)
 
 # dtype for structured array containing linopt parameters
@@ -121,18 +121,18 @@ def _analyze4(mt, ms):
         n = t12[2:, :2]
         ff = n @ C + g * N
         gamma = sqrt(numpy.linalg.det(ff))
-        e12 = (g * M - m @ _jmt @ C.T @ _jmt.T) / gamma
+        e12 = (g * M - m @ _S @ C.T @ _S.T) / gamma
         f12 = ff / gamma
-        a12 = e12 @ A @ _jmt @ e12.T @ _jmt.T
-        b12 = f12 @ B @ _jmt @ f12.T @ _jmt.T
-        c12 = M @ C + g*m @ _jmt @ f12.T @ _jmt.T
+        a12 = e12 @ A @ _S @ e12.T @ _S.T
+        b12 = f12 @ B @ _S @ f12.T @ _S.T
+        c12 = M @ C + g * m @ _S @ f12.T @ _S.T
         return e12, f12, gamma, a12, b12, c12
 
     M = mt[:2, :2]
     N = mt[2:, 2:]
     m = mt[:2, 2:]
     n = mt[2:, :2]
-    H = m + _jmt @ n.T @ _jmt.T
+    H = m + _S @ n.T @ _S.T
     detH = numpy.linalg.det(H)
     if detH == 0.0:
         g = 1.0
@@ -146,10 +146,10 @@ def _analyze4(mt, ms):
         g2 = (1.0 + sqrt(t2 / t2h)) / 2
         g = sqrt(g2)
         C = -H * numpy.sign(t) / (g * sqrt(t2h))
-        A = g2*M - g*(m @ _jmt @ C.T @ _jmt.T + C @ n) + \
-            C @ N @ _jmt @ C.T @ _jmt.T
-        B = g2*N + g*(_jmt @ C.T @ _jmt.T @ m + n @ C) + \
-            _jmt @ C.T @ _jmt.T @ M @ C
+        A = g2 * M - g * (m @ _S @ C.T @ _S.T + C @ n) + \
+            C @ N @ _S @ C.T @ _S.T
+        B = g2 * N + g * (_S @ C.T @ _S.T @ m + n @ C) + \
+            _S @ C.T @ _S.T @ M @ C
     alp0_a, bet0_a, vp_a = _closure(A)
     alp0_b, bet0_b, vp_b = _closure(B)
     vps = numpy.array([vp_a, vp_b])
@@ -256,7 +256,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
             except (ValueError, KeyError):  # record arrays throw ValueError !
                 orbit = numpy.zeros((6,))
         try:
-            sigm = numpy.sum(twin['R'], axis=0)
+            # For some reason, "emittances" must be dofferent...
+            sigm = twin['R'][0,...]+10.0*twin['R'][1,...]+0.0*twin['R'][2,...]
         except (ValueError, KeyError):  # record arrays throw ValueError !
             slices = [slice(2 * i, 2 * (i + 1)) for i in range(2)]
             ab = numpy.stack((twin['alpha'], twin['beta']), axis=1)
