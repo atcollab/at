@@ -256,8 +256,10 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
             except (ValueError, KeyError):  # record arrays throw ValueError !
                 orbit = numpy.zeros((6,))
         try:
-            # For some reason, "emittances" must be dofferent...
-            sigm = twin['R'][0,...]+10.0*twin['R'][1,...]+0.0*twin['R'][2,...]
+            # For some reason, "emittances" must be different...
+            sigm = twin['R'][0,...]+10.0*twin['R'][1,...]
+            if twin['R'].shape[0] >= 3:
+                sigm = sigm+0.1*twin['R'][2,...]
         except (ValueError, KeyError):  # record arrays throw ValueError !
             slices = [slice(2 * i, 2 * (i + 1)) for i in range(2)]
             ab = numpy.stack((twin['alpha'], twin['beta']), axis=1)
@@ -268,7 +270,6 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
         try:
             d0 = twin['dispersion']
         except (ValueError, KeyError):  # record arrays throw ValueError !
-            print('Dispersion not found in twiss_in, setting to zero')
             d0 = numpy.zeros((4,))
         return orbit, sigm, d0
 

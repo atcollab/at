@@ -185,15 +185,19 @@ end
     function [orbit,sigma,d0]=build_sigma(twiss_in,orbit)
         % build the initial conditions for a transfer line: sigma = R1 + R2
         if isempty(orbit)
+            orbit=zeros(6,1);
             if isfield(twiss_in, 'ClosedOrbit')
-                orbit=twiss_in.ClosedOrbit;
-            else
-                orbit=zeros(6,1);
+                lo=length(twiss_in.ClosedOrbit);
+                orbit(1:lo)=twiss_in.ClosedOrbit;
             end
         end
         if isfield(twiss_in,'R')
+            sz=size(twiss_in.R);
             % For some reason, "emittances" must be different...
-            sigma=twiss_in.R(:,:,1)+10.0*twiss_in.R(:,:,2)+0.1*twiss_in.R(:,:,3);
+            sigma=twiss_in.R(:,:,1)+10.0*twiss_in.R(:,:,2);
+            if sz(3) >= 3
+                sigma=sigma+0.1*twiss_in.R(:,:,3);
+            end
         else
             slices=num2cell(reshape(1:4,2,2),1);
             v=num2cell(cat(1,twiss_in.alpha,twiss_in.beta),1);
@@ -203,7 +207,7 @@ end
         if isfield(twiss_in,'Dispersion')
             d0=twiss_in.Dispersion;
         else
-            d0=ones(4,1);
+            d0=zeros(4,1);
         end
         
         function sigma22(ab,slc)
