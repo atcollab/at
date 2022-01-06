@@ -8,7 +8,7 @@ function [linargs,opts] = linoptions(opts, dp)
 % (0, 'opt1', val1) to
 % ('opt1',val1)
 
-[linargs,opts]=getoption(opts,{'dp','dct','twiss_in'});
+[linargs,opts]=getoption(opts,{'dp','dct','twiss_in','orbit'});
 if nargin >=2 && dp ~= 0
     linargs=[{'dp',dp} linargs];
 end

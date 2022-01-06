@@ -3,7 +3,8 @@ function [phi,bks,as]=r_analysis(a0,ms)
 nv=size(a0,1);
 dms=nv/2;
 slices=num2cell(reshape(1:nv,2,dms),1);
-s=kmat(dms);
+s=jmat(dms);
+t=kmat(dms);
 
 astd=standardize(a0);
 
@@ -32,7 +33,7 @@ warning(sw);
 
     function [phi,bk,ai]=propagate(ai)
         % Propagate the A matrices
-        ais=ai*s;
+        ais=ai*t;
         invai=ai\s';
         bk=cellfun(@(slc) ais(:,slc)*invai(slc,:),slices,'UniformOutput',false);
 %       bk=cellfun(@(slc) ai(:,slc)*ai(:,slc)',slices,'UniformOutput',false);   % Only if symplectic

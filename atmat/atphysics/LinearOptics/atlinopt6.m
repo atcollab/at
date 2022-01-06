@@ -86,14 +86,18 @@ if isempty(twiss_in)        % Circular machine
     is6d=check_radiation(ring);
     [orbs,orbitin]=findorbit(ring,refpts,'dp',dp,'orbit',orbitin,varargs{:});
     [vps,ms,mu,ri,ai]=build_1turn_map(ring,dp,refpts,orbitin);
+    o1P=[];
+    o1M=[];
 else                        % Transfer line
-    if isempty(orbitin), orbitin=zeros(6,1); end
+    [orbitin,sigma,d0]=build_sigma(twiss_in,orbitin);
     orbs=linepass(ring,orbitin,refpts);
-    sigma=build_sigma(twiss_in);
+    dorbit=0.5*DPStep*[d0;1;0];
     nv=size(sigma,1);
     dms=nv/2;
     is6d=(dms>=3);
     [vps,ms,mu,ri,ai]=build_1turn_map(ring,dp,refpts,orbitin,'mxx',sigma*jmat(dms));
+    o1P=orbitin+dorbit;
+    o1M=orbitin-dorbit;
 end
 
 tunes=mod(angle(vps)/2/pi,1);
@@ -129,8 +133,8 @@ if is6d                     % 6D processing
 else                        % 4D processing
     dp=orbitin(5);
     [alpha,beta]=cellfun(@output4,ri,'UniformOutput',false);
-    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'guess',orbitin,varargs{:});
-    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'guess',orbitin,varargs{:});
+    [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,'orbit',o1P,'guess',orbitin,varargs{:});
+    [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,'orbit',o1M,'guess',orbitin,varargs{:});
     disp = num2cell((orbitP-orbitM)/DPStep,1);
     if get_w
             [ringdata.chromaticity,w]=chrom_w(ring,ring,o1P,o1M,refpts);
@@ -178,15 +182,32 @@ end
         [phis,rmats,as]=r_analysis(amat0,ms);
     end
 
-    function sigma=build_sigma(twiss_in)
+    function [orbit,sigma,d0]=build_sigma(twiss_in,orbit)
         % build the initial conditions for a transfer line: sigma = R1 + R2
+        if isempty(orbit)
+            orbit=zeros(6,1);
+            if isfield(twiss_in, 'ClosedOrbit')
+                lo=length(twiss_in.ClosedOrbit);
+                orbit(1:lo)=twiss_in.ClosedOrbit;
+            end
+        end
         if isfield(twiss_in,'R')
-            sigma=sum(twiss_in.R,3);
+            sz=size(twiss_in.R);
+            % For some reason, "emittances" must be different...
+            sigma=twiss_in.R(:,:,1)+10.0*twiss_in.R(:,:,2);
+            if sz(3) >= 3
+                sigma=sigma+0.1*twiss_in.R(:,:,3);
+            end
         else
             slices=num2cell(reshape(1:4,2,2),1);
             v=num2cell(cat(1,twiss_in.alpha,twiss_in.beta),1);
             sigma=zeros(4,4);
             cellfun(@sigma22,v,slices,'UniformOutput',false);
+        end
+        if isfield(twiss_in,'Dispersion')
+            d0=twiss_in.Dispersion;
+        else
+            d0=zeros(4,1);
         end
         
         function sigma22(ab,slc)
