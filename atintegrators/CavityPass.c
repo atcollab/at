@@ -18,10 +18,10 @@ struct elem
     double Frequency;
     /* optional fields */
     double TimeLag;
-    double Phi0;
+    double PhaseLag;
 };
 
-void CavityPass(double *r_in, double le, double nv, double freq, double lag, double phi0, int num_particles)
+void CavityPass(double *r_in, double le, double nv, double freq, double lag, double philag, int num_particles)
 /* le - physical length
  * nv - peak voltage (V) normalized to the design enegy (eV)
  * r is a 6-by-N matrix of initial conditions reshaped into
@@ -33,7 +33,7 @@ void CavityPass(double *r_in, double le, double nv, double freq, double lag, dou
     {	for(c = 0;c<num_particles;c++)
         {	c6 = c*6;
             if(!atIsNaN(r_in[c6]))
-                r_in[c6+4] += -nv*sin(TWOPI*freq*(r_in[c6+5]-lag)/C0+phi0);
+                r_in[c6+4] += -nv*sin(TWOPI*freq*(r_in[c6+5]-lag)/C0-philag);
         }
     }
     else
@@ -48,7 +48,7 @@ void CavityPass(double *r_in, double le, double nv, double freq, double lag, dou
                 r_in[c6+2]+= NormL*r_in[c6+3];
                 r_in[c6+5]+= NormL*p_norm*(r_in[c6+1]*r_in[c6+1]+r_in[c6+3]*r_in[c6+3])/2;
                 /* Longitudinal momentum kick */
-                r_in[c6+4] += -nv*sin(TWOPI*freq*(r_in[c6+5]-lag)/C0+phi0);
+                r_in[c6+4] += -nv*sin(TWOPI*freq*(r_in[c6+5]-lag)/C0-philag);
                 p_norm = 1/(1+r_in[c6+4]);
                 NormL  = halflength*p_norm;
                 /* Prropagate through a drift equal to half cavity length */
@@ -67,23 +67,23 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *r_in, int num_particles, struct parameters *Param)
 {
     if (!Elem) {
-        double Length, Voltage, Energy, Frequency, TimeLag, Phi0;
+        double Length, Voltage, Energy, Frequency, TimeLag, PhaseLag;
         Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
-        Phi0=atGetOptionalDouble(ElemData,"Phi0",0); check_error();
+        PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
         Elem->Energy=Energy;
         Elem->Frequency=Frequency;
         Elem->TimeLag=TimeLag;
-        Elem->Phi0=Phi0;
+        Elem->PhaseLag=PhaseLag;
     }
     CavityPass(r_in,Elem->Length,Elem->Voltage/Elem->Energy,Elem->Frequency,
-            Elem->TimeLag,Elem->Phi0,num_particles);
+            Elem->TimeLag,Elem->PhaseLag,num_particles);
     return Elem;
 }
 
@@ -104,7 +104,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double Energy=atGetDouble(ElemData,"Energy");
         double Frequency=atGetDouble(ElemData,"Frequency");
         double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
-        double Phi0=atGetOptionalDouble(ElemData,"Phi0",0);
+        double PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0);
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
@@ -120,7 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (nlhs>1) /* optional fields */
         {   plhs[1] = mxCreateCellMatrix(2,1);
             mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
-            mxSetCell(plhs[1],1,mxCreateString("Phi0"));
+            mxSetCell(plhs[1],1,mxCreateString("PhaseLag"));
         }
     }
 	else {
