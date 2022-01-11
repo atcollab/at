@@ -1,0 +1,29 @@
+# This workflow will install Python dependencies, run tests and lint with a
+# variety of Python version
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Build Python extension and run tests
+
+on:
+  push:
+  pull_request:
+
+defaults:
+  run:
+    working-directory: pyat
+
+jobs:
+  build_and_run_tests:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9']
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2

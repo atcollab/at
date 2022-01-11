@@ -6,6 +6,8 @@ name: Build Python extension and run tests
 
 on:
   push:
+    branches:
+      "master"
   pull_request:
 
 defaults:
