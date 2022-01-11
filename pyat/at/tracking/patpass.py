@@ -43,16 +43,20 @@ def _atpass_one(ring, rin, **kwargs):
 
 
 def _atpass(ring, r_in, pool_size, globvar, **kwargs):
-    if multiprocessing.get_start_method()=='fork':
+    cxt = kwargs.pop('context', None)
+    if cxt is None:
+        cxt = multiprocessing.get_context('fork')
+    print(cxt.get_start_method())
+    if cxt.get_start_method()=='fork':
         global globring
         globring = ring
         args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with cxt.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with cxt.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
@@ -93,6 +97,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
+    cxt = kwargs.pop('context',None)
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
@@ -101,7 +106,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
         return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
-                       refpts=refpts, losses=losses)
+                       refpts=refpts, losses=losses, context=cxt)
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
