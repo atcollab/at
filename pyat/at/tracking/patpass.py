@@ -59,7 +59,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
 
 
 def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
-            globvar=True, **kwargs):
+            globvar=True, start_method=None, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -93,12 +93,11 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
-    start_method = kwargs.pop('start_method','spawn')
     if start_method is not None:
-        #try:
-        multiprocessing.set_start_method(start_method)
-        #except RuntimeError:
-        #   pass
+        try:
+            multiprocessing.set_start_method(start_method)
+        except RuntimeError:
+            pass
 
     if refpts is None:
         refpts = len(ring)
@@ -112,4 +111,11 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        return atpass(ring, numpy.asfortranarray(r_in), nturns=nturns, refpts=refpts, losses=losses)
+        if r_in.flags.f_contiguous:
+            return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+    else:
+        r_fin = numpy.asfortranarray(r_in)
+        r_out = atpass(ring, r_fin, nturns=nturns, refpts=refpts, losses=losses)
+        r_in[:] = r_fin[:]
+        return r_out
+        
