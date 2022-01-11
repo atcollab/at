@@ -93,6 +93,13 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
+    start_method = kwargs.pop('start_method','spawn')
+    if start_method is not None:
+        #try:
+        multiprocessing.set_start_method(start_method)
+        #except RuntimeError:
+        #   pass
+
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
