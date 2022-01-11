@@ -113,9 +113,9 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
             warn(AtWarning('Collective PassMethod found: use single process'))
         if r_in.flags.f_contiguous:
             return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
-    else:
-        r_fin = numpy.asfortranarray(r_in)
-        r_out = atpass(ring, r_fin, nturns=nturns, refpts=refpts, losses=losses)
-        r_in[:] = r_fin[:]
-        return r_out
+        else:
+            r_fin = numpy.asfortranarray(r_in)
+            r_out = atpass(ring, r_fin, nturns=nturns, refpts=refpts, losses=losses)
+            r_in[:] = r_fin[:]
+            return r_out
         
