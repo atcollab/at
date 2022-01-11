@@ -124,7 +124,7 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       {
           plhs[1] = mxCreateCellMatrix(2,1);
           mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
-          mxSetCell(plhs[1],0,mxCreateString("PhaseLag"));
+          mxSetCell(plhs[1],1,mxCreateString("PhaseLag"));
       }
   }
   else
