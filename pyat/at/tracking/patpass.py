@@ -43,7 +43,6 @@ def _atpass_one(ring, rin, **kwargs):
 
 
 def _atpass(ring, r_in, pool_size, globvar, **kwargs):
-    print(multiprocessing.get_start_method())
     if multiprocessing.get_start_method()=='fork':
         global globring
         globring = ring
