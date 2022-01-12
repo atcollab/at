@@ -28,10 +28,12 @@ jobs:
 
     - name: Set up MATLAB
       uses: matlab-actions/setup-matlab@v1
+      with:
+        release: R2021a
 
     - name: Set up Matlab engine for python
       run: python setup.py build --build-base=$(mktemp -d) install
-      working-directory: /usr/local/MATLAB/R2021b/extern/engines/python
+      working-directory: /usr/local/MATLAB/R2021a/extern/engines/python
 
     - name: Atmexall
       uses: matlab-actions/run-command@v1
