@@ -25,10 +25,9 @@ function newring=atfitchrom(ring,varargin)
 %
 % See also ATFITTUNE
 
-check_radiation(ring,false);
 [deltaP,varargin]=getoption(varargin,'DPStep');
 [deltaS,varargin]=getoption(varargin,'HStep',1.0e-5);
-[dpp,varargin]=getargs(varargin,0.0,'check',@(arg) isscalar(arg) && isnumeric(arg));
+[dpp,varargin]=getargs(varargin,NaN,'check',@(arg) isscalar(arg) && isnumeric(arg));
 [newchrom,famname1,famname2]=deal(varargin{:});
 
 idx1=varelem(ring,famname1);
@@ -45,7 +44,7 @@ kl2=atgetfieldvalues(ring(idx2),'PolynomB',{3});
     
     %Construct the Jacobian
     J = ([chrom1(:) chrom2(:)] - [chrom(:) chrom(:)])/deltaS;
-    dK = J\(newchrom(:)-chrom(:));
+    dK = J(1:2,:)\(newchrom-chrom(1:2))';
 % else
 %     dK=fminsearch(@funchrom,[0;0],...
 %         optimset(optimset('fminsearch'),'Display','iter',...
@@ -86,8 +85,7 @@ newring=setsx(newring,idx2,kl2,dK(2));
     end
 
     function chrom=getchrom(ring,dpp,deltaP)
-        [ringda,elemdata]=atlinopt6(ring,'dp',dpp-0.5*deltaP); %#ok<ASGLU>
-        [ringdb,elemdata]=atlinopt6(ring,'dp',dpp+0.5*deltaP); %#ok<ASGLU>
-        chrom = (ringdb.tune(1:2)-ringda.tune(1:2))/deltaP;
+        [ringda,elemdata]=atlinopt6(ring,'dp',dpp,'DPStep',deltaP,'get_chrom'); %#ok<ASGLU>
+        chrom = ringda.chromaticity;
     end
 end
