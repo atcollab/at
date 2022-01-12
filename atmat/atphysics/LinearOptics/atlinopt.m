@@ -1,5 +1,11 @@
 function [lindata, varargout] = atlinopt(RING,dp,varargin)
-%ATLINOPT Performs linear analysis of the COUPLED lattices
+%ATLINOPT Performs 4D linear analysis of the COUPLED lattices
+%
+%ATLINOPT only works for CONSTANT energy. So no PassMethod should:
+%   1. change the longitudinal momentum dP (cavities, magnets with radiation)
+%   2. have any time dependence (localized impedance, fast kickers etc)
+%
+%For a more general computation, see ATLINOPT6
 %
 % LinData = ATLINOPT(RING,DP,REFPTS) is a MATLAB structure array with fields
 %

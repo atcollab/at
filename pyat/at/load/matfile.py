@@ -3,7 +3,7 @@ Load lattices from Matlab files.
 """
 from __future__ import print_function
 import sys
-from os.path import abspath
+from os.path import abspath, basename, splitext
 from warnings import warn
 import scipy.io
 import numpy
@@ -16,7 +16,7 @@ __all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
            'load_var']
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
-                     'FamName': 'name', 'Particle': 'particle',
+                     'FamName': 'name', 'Particle': '_particle',
                      'HarmNumber': 'harmonic_number'}
 _param_ignore = {'PassMethod', 'Length'}
 
@@ -39,14 +39,15 @@ def matfile_generator(params, mat_file):
     def mclean(data):
         if data.dtype.type is numpy.str_:
             # Convert strings in arrays back to strings.
-            return str(data[0])
+            return str(data[0]) if data.size > 0 else ''
         elif data.size == 1:
             v = data[0, 0]
             if issubclass(v.dtype.type, numpy.void):
-                for f in v.dtype.fields:
-                    v[f] = mclean(v[f])
-            # Return a scalar
-            return v
+                # Object => Return a dict
+                return {f: mclean(v[f]) for f in v.dtype.fields}
+            else:
+                # Return a scalar
+                return v
         else:
             # Remove any surplus dimensions in arrays.
             return numpy.squeeze(data)
@@ -218,18 +219,19 @@ def save_m(ring, filename=None):
     """
 
     def save(file):
-        print('function ring = {0}()'.format(ring.name), file=file)
         print('ring = {...', file=file)
         for elem in matlab_ring(ring):
             print(element_to_m(elem), file=file)
         print('};', file=file)
-        print('end', file=file)
 
     if filename is None:
         save(sys.stdout)
     else:
         with open(filename, 'wt') as mfile:
+            [funcname, _] = splitext(basename(filename))
+            print('function ring = {0}()'.format(funcname), file=mfile)
             save(mfile)
+            print('end', file=mfile)
 
 
 register_format('.mat', load_mat, save_mat, descr='Matlab binary mat-file')
