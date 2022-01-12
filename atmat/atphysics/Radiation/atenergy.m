@@ -19,7 +19,8 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %    5. U0         Energy loss per turn in eV
 %
 %  NOTES
-%    1. Check for 2 pi phase advance if more than 2 ouput arguments
+%    1. voltage and harmnumber assume a single RF system: fundamental
+%       frequency, no harmonic system.
 %
 %  EXAMPLES
 %    1. [ENERGY,PERIODS]=atenergy(ring) also outputs the number of periods
