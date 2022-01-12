@@ -84,6 +84,13 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         pool_size       number of processes, if None the min(npart,nproc) is used
         globvar         For linux machines speed-up is achieved by defining a global
                         ring variable, this can be disabled using globvar=False
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
      OUTPUT:
         (6, N, R, T) array containing output coordinates of N particles
@@ -93,11 +100,8 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
-    if start_method is not None:
-        try:
-            multiprocessing.set_start_method(start_method)
-        except RuntimeError:
-            pass
+    if multiprocessing.get_start_method(allow_none=True) != start_method:
+        multiprocessing.set_start_method(start_method, force=True)
 
     if refpts is None:
         refpts = len(ring)
