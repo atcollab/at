@@ -44,7 +44,7 @@ kl2=atgetfieldvalues(ring(idx2),'PolynomB',{3});
     
     %Construct the Jacobian
     J = ([chrom1(:) chrom2(:)] - [chrom(:) chrom(:)])/deltaS;
-    dK = J\(newchrom(:)-chrom(:));
+    dK = J(1:2,:)\(newchrom-chrom(1:2))';
 % else
 %     dK=fminsearch(@funchrom,[0;0],...
 %         optimset(optimset('fminsearch'),'Display','iter',...
