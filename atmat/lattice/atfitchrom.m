@@ -25,7 +25,7 @@ function newring=atfitchrom(ring,varargin)
 %
 % See also ATFITTUNE
 
-check_radiation(ring,false);
+%check_radiation(ring,false);
 [deltaP,varargin]=getoption(varargin,'DPStep');
 [deltaS,varargin]=getoption(varargin,'HStep',1.0e-5);
 [dpp,varargin]=getargs(varargin,0.0,'check',@(arg) isscalar(arg) && isnumeric(arg));
@@ -86,8 +86,7 @@ newring=setsx(newring,idx2,kl2,dK(2));
     end
 
     function chrom=getchrom(ring,dpp,deltaP)
-        [ringda,elemdata]=atlinopt6(ring,'dp',dpp-0.5*deltaP); %#ok<ASGLU>
-        [ringdb,elemdata]=atlinopt6(ring,'dp',dpp+0.5*deltaP); %#ok<ASGLU>
-        chrom = (ringdb.tune(1:2)-ringda.tune(1:2))/deltaP;
+        [ringda,elemdata]=atlinopt6(ring,'dp',dpp,'DPStep',deltaP,'get_chrom'); %#ok<ASGLU>
+        chrom = ringda.chromaticity;
     end
 end
