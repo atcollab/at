@@ -19,7 +19,7 @@ globring = None
 
 def format_results(results, r_in, losses):
     rin = [r['rin'] for r in results]
-    r_in[:] = numpy.vstack(rin).T[:]
+    r_in = numpy.vstack(rin).T
     if losses:
         rout = [r['results'][0] for r in results]
         rout = numpy.concatenate(rout, axis=1)
@@ -52,7 +52,7 @@ def _atpass(ring, r_in, pool_size, globvar, **kwargs):
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.get_context('fork').Pool(pool_size) as pool:
+        with multiprocessing.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
@@ -97,7 +97,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
     pm_ok = [e.PassMethod in elements._collective for e in ring]
-    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok) and 'win32' not in platform:
+    if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
         return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
@@ -105,7 +105,4 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        if 'win32' in platform:
-            warn(AtWarning('Windows OS: patpass not available: use single '
-                           'process or compile with OpenMP'))
-        return atpass(ring, numpy.asfortranarray(r_in), nturns=nturns, refpts=refpts, losses=losses)
+        return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
