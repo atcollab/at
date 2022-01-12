@@ -28,7 +28,7 @@ function newring=atfitchrom(ring,varargin)
 %check_radiation(ring,false);
 [deltaP,varargin]=getoption(varargin,'DPStep');
 [deltaS,varargin]=getoption(varargin,'HStep',1.0e-5);
-[dpp,varargin]=getargs(varargin,0.0,'check',@(arg) isscalar(arg) && isnumeric(arg));
+[dpp,varargin]=getargs(varargin,NaN,'check',@(arg) isscalar(arg) && isnumeric(arg));
 [newchrom,famname1,famname2]=deal(varargin{:});
 
 idx1=varelem(ring,famname1);
