@@ -20,7 +20,10 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %
 %  NOTES
 %    1. voltage and harmnumber assume a single RF system: fundamental
-%       frequency, no harmonic system.
+%       frequency, no harmonic system. More prcisely:
+%
+%       voltage is the sum of the voltages of all cavities,
+%       harmnuber is computed with the frequency of the 1st cavity in the ring
 %
 %  EXAMPLES
 %    1. [ENERGY,PERIODS]=atenergy(ring) also outputs the number of periods
