@@ -79,7 +79,12 @@ end
 if nargout >= 3 
     if any(cavities) % sum over cavity number
         voltage=nbper*sum(atgetfieldvalues(ring(cavities),'Voltage'));
-        harmnumber=nbper*atgetfieldvalues(ring(find(cavities,1)),'HarmNumber');
+        %harmnumber=nbper*atgetfieldvalues(ring(find(cavities,1)),'HarmNumber');
+        Frf=atgetfieldvalues(ring(find(cavities,1)),'Frequency');
+        L0 = nbper*findspos(ring,length(ring)+1); % design length [m]
+        C0 = PhysConstant.speed_of_light_in_vacuum.value; % speed of light [m/s]
+        harmnumber = round(Frf*L0/C0);
+
     elseif nargout >= 5
         voltage=NaN;
         harmnumber=NaN;
