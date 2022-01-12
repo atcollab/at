@@ -25,7 +25,6 @@ function newring=atfitchrom(ring,varargin)
 %
 % See also ATFITTUNE
 
-%check_radiation(ring,false);
 [deltaP,varargin]=getoption(varargin,'DPStep');
 [deltaS,varargin]=getoption(varargin,'HStep',1.0e-5);
 [dpp,varargin]=getargs(varargin,NaN,'check',@(arg) isscalar(arg) && isnumeric(arg));
