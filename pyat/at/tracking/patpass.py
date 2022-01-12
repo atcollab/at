@@ -42,24 +42,25 @@ def _atpass_one(ring, rin, **kwargs):
     return {'rin': rin, 'results': result}
 
 
-def _atpass(ring, r_in, pool_size, globvar, **kwargs):
-    if multiprocessing.get_start_method()=='fork' and globvar:
+def _atpass(ring, r_in, pool_size, start_method, **kwargs):
+    ctx = multiprocessing.get_context(start_method)
+    if ctx.get_start_method()=='fork':
         global globring
         globring = ring
         args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with ctx.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with ctx.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
 
 
 def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
-            globvar=True, start_method=None, **kwargs):
+            start_method=None, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -82,8 +83,6 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
                         passing an empty array for calculation purposes.
         losses          Activate loss maps
         pool_size       number of processes, if None the min(npart,nproc) is used
-        globvar         For linux machines speed-up is achieved by defining a global
-                        ring variable, this can be disabled using globvar=False
         start_method    This parameter allows to change the python multiprocessing
                         start method, default=None uses the python defaults that is
                         considered safe. 
@@ -100,9 +99,6 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
-    if multiprocessing.get_start_method(allow_none=True) != start_method:
-        multiprocessing.set_start_method(start_method, force=True)
-
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
@@ -110,7 +106,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
-        return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
+        return _atpass(ring, r_in, pool_size, start_method, nturns=nturns,
                        refpts=refpts, losses=losses)
     else:
         if any(pm_ok):
