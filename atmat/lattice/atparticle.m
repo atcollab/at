@@ -40,7 +40,7 @@ classdef atparticle
             %   REST_ENERGY Rest energy [eV]
             %   CHARGE      Charge [elementary charge]
             
-            if ~strcmp(name,'electron')
+            if ~strcmp(name,'relativistic')
                 warning('AT:particle','AT tracking still assumes beta==1. Make sure your particle is ultra-relativistic');
             end
             try
