@@ -46,10 +46,14 @@ if ~isempty(idx)            % Found RingParam: use it
     if isfield(newparms, 'HarmNumber')
         check_h(newparms.HarmNumber, parmelem.Periodicity);
     elseif ~isfield(parmelem, 'HarmNumber')
-        maincav = findmaincav(ring(atgetcells(ring,'Frequency')));
-        if ~isempty(maincav)
+        if isfield(parmelem, 'cavpts')
+            maincavs = ring(props.cavpts);
+        else
+            maincavs = findmaincav(ring(atgetcells(ring,'Frequency')));
+        end
+        if ~isempty(maincavs)
             gamma = parmelem.Energy / parmelem.Particle.rest_energy;
-            h = parmelem.Periodicity * cellharmnumber(ring, maincav, gamma);
+            h = parmelem.Periodicity * cellharmnumber(ring, maincavs(1), gamma);
             parmelem.HarmNumber = h;
         end
     elseif new_nper ~= old_nper
