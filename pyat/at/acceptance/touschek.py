@@ -1,6 +1,6 @@
 import at
 import numpy
-from ..lattice import Lattice
+from ..lattice import Lattice, AtError
 from scipy.special import iv
 from scipy import integrate
 from scipy.optimize import fsolve
