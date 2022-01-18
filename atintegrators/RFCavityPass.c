@@ -21,9 +21,11 @@ struct elem
   double Frequency;
   double HarmNumber;
   double TimeLag;
+  double PhaseLag;
 };
 
-void RFCavityPass(double *r_in, double le, double nv, double freq, double h, double lag, int nturn, double T0, int num_particles)
+void RFCavityPass(double *r_in, double le, double nv, double freq, double h, double lag, double philag,
+                  int nturn, double T0, int num_particles)
 /* le - physical length
    nv - peak voltage (V) normalized to the design enegy (eV)
    r is a 6-by-N matrix of initial conditions reshaped into
@@ -36,7 +38,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
         for (c = 0; c<num_particles; c++) {
             double *r6 = r_in+c*6;
             if(!atIsNaN(r6[0]))
-                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn));
+                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
         }
     }
     else {
@@ -47,7 +49,7 @@ void RFCavityPass(double *r_in, double le, double nv, double freq, double h, dou
                 /* Propagate through a drift equal to half cavity length */
                 drift6(r6, halflength);
                 /* Longitudinal momentum kick */
-                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn));
+                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
                 /* Propagate through a drift equal to half cavity length */
                 drift6(r6, halflength);
             }
@@ -62,12 +64,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     int nturn=Param->nturn;
     double T0=Param->T0;
     if (!Elem) {
-        double Length, Voltage, Energy, Frequency, TimeLag;
+        double Length, Voltage, Energy, Frequency, TimeLag, PhaseLag;
         Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->Length=Length;
         Elem->Voltage=Voltage;
@@ -75,8 +78,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->Frequency=Frequency;
         Elem->HarmNumber=round(Frequency*T0);
         Elem->TimeLag=TimeLag;
+        Elem->PhaseLag=PhaseLag;
     }
-    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag, nturn, T0, num_particles);
+    RFCavityPass(r_in, Elem->Length, Elem->Voltage/Elem->Energy, Elem->Frequency, Elem->HarmNumber, Elem->TimeLag,
+                 Elem->PhaseLag, nturn, T0, num_particles);
     return Elem;
 }
 
@@ -98,13 +103,14 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       double Energy=atGetDouble(ElemData,"Energy");
       double Frequency=atGetDouble(ElemData,"Frequency");
       double TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0);
+      double PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0);
       double T0=1.0/Frequency;      /* Does not matter since nturns == 0 */
       double HarmNumber=round(Frequency*T0);
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
-      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, 0, T0, num_particles);
+      RFCavityPass(r_in, Length, Voltage/Energy, Frequency, HarmNumber, TimeLag, PhaseLag, 0, T0, num_particles);
 
     }
   else if (nrhs == 0)
@@ -116,8 +122,9 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       mxSetCell(plhs[0],3,mxCreateString("Frequency"));
       if(nlhs>1) /* optional fields */
       {
-          plhs[1] = mxCreateCellMatrix(1,1);
+          plhs[1] = mxCreateCellMatrix(2,1);
           mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
+          mxSetCell(plhs[1],1,mxCreateString("PhaseLag"));
       }
   }
   else
