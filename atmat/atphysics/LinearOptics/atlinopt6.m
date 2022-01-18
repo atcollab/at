@@ -77,7 +77,7 @@ clight = PhysConstant.speed_of_light_in_vacuum.value;   % m/s
 [get_w, varargs]=getflag(varargs, 'get_w');
 [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
-[DPStep,~]=getoption(varargs,'DPStep');
+[DPStep,varargs]=getoption(varargs,'DPStep');
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [refpts,varargs]=getargs(varargs,1);
 
