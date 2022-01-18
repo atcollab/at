@@ -19,7 +19,7 @@ globring = None
 
 def format_results(results, r_in, losses):
     rin = [r['rin'] for r in results]
-    r_in = numpy.vstack(rin).T
+    r_in[:] = numpy.vstack(rin).T[:]
     if losses:
         rout = [r['results'][0] for r in results]
         rout = numpy.concatenate(rout, axis=1)
@@ -42,24 +42,25 @@ def _atpass_one(ring, rin, **kwargs):
     return {'rin': rin, 'results': result}
 
 
-def _atpass(ring, r_in, pool_size, globvar, **kwargs):
-    if platform.startswith('linux') and globvar:
+def _atpass(ring, r_in, pool_size, start_method, **kwargs):
+    ctx = multiprocessing.get_context(start_method)
+    if ctx.get_start_method()=='fork':
         global globring
         globring = ring
         args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with ctx.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
         globring = None
     else:
         args = [(ring, r_in[:, i]) for i in range(r_in.shape[1])]
-        with multiprocessing.Pool(pool_size) as pool:
+        with ctx.Pool(pool_size) as pool:
             results = pool.starmap(partial(_atpass_one, **kwargs), args)
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
 
 
 def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
-            globvar=True, **kwargs):
+            start_method=None, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
@@ -82,8 +83,13 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
                         passing an empty array for calculation purposes.
         losses          Activate loss maps
         pool_size       number of processes, if None the min(npart,nproc) is used
-        globvar         For linux machines speed-up is achieved by defining a global
-                        ring variable, this can be disabled using globvar=False
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
      OUTPUT:
         (6, N, R, T) array containing output coordinates of N particles
@@ -100,9 +106,16 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
-        return _atpass(ring, r_in, pool_size, globvar, nturns=nturns,
+        return _atpass(ring, r_in, pool_size, start_method, nturns=nturns,
                        refpts=refpts, losses=losses)
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
-        return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+        if r_in.flags.f_contiguous:
+            return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+        else:
+            r_fin = numpy.asfortranarray(r_in)
+            r_out = atpass(ring, r_fin, nturns=nturns, refpts=refpts, losses=losses)
+            r_in[:] = r_fin[:]
+            return r_out
+        
