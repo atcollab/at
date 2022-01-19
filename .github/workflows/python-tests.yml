@@ -32,7 +32,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Build and install at with tests
-      run: python -m pip install ".[dev]"
+      run: python -m pip install -e ".[dev]"
 
     - name: Lint with flake8
       run: |
