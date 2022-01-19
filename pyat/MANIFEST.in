@@ -1,2 +1,2 @@
 
-recursive-include integrator-src *.c *.h
+global-include *.c *.h *.cc
