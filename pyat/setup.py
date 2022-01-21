@@ -28,7 +28,7 @@ here = abspath(dirname(__file__))
 macros = [('PYAT', None)]
 with_openMP = False
 
-cflags = []
+cflags = ['-std=c99']
 
 
 mpi = os.environ.get('MPI', None)
