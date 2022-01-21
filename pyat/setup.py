@@ -29,7 +29,7 @@ macros = [('PYAT', None)]
 with_openMP = False
 
 cflags = ['-std=c99']
-
+cppflags = []
 
 mpi = os.environ.get('MPI', None)
 if mpi is None:
@@ -99,13 +99,13 @@ if exists(integrator_src_orig):
     for f in source_files:
         shutil.copy2(f, integrator_src)
 
-pass_methods = glob.glob(join(integrator_src, '*Pass.c'))
-pass_methods.extend(glob.glob(join(integrator_src, '*Pass.cc')))
+c_pass_methods = glob.glob(join(integrator_src, '*Pass.c'))
+cpp_pass_methods = glob.glob(join(integrator_src, '*Pass.cc'))
 diffmatrix_source = join(integrator_src, 'findmpoleraddiffmatrix.c')
 at_source = 'at.c'
 
 
-def integrator_ext(pass_method):
+def c_integrator_ext(pass_method):
     name, _ = splitext(basename(pass_method))
     name = ".".join(('at', 'integrators', name))
     return Extension(
@@ -114,6 +114,19 @@ def integrator_ext(pass_method):
         include_dirs=[numpy.get_include(), mpi_includes, integrator_src],
         define_macros=macros + omp_macros + mpi_macros,
         extra_compile_args=cflags + omp_cflags,
+        extra_link_args=omp_lflags
+    )
+
+
+def cpp_integrator_ext(pass_method):
+    name, _ = splitext(basename(pass_method))
+    name = ".".join(('at', 'integrators', name))
+    return Extension(
+        name=name,
+        sources=[pass_method],
+        include_dirs=[numpy.get_include(), mpi_includes, integrator_src],
+        define_macros=macros + omp_macros + mpi_macros,
+        extra_compile_args=cppflags + omp_cflags,
         extra_link_args=omp_lflags
     )
 
@@ -136,5 +149,7 @@ diffmatrix = Extension(
 )
 
 setup(
-    ext_modules=[at, diffmatrix] + [integrator_ext(pm) for pm in pass_methods],
+    ext_modules=[at, diffmatrix] +
+                [c_integrator_ext(pm) for pm in c_pass_methods] +
+                [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )
