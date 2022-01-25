@@ -24,6 +24,7 @@ pyat/dist
 pyat/at.egg-info
 pyat/prefix
 pyat/integrator-src
+pyat/at/_version.py
 *.egg-info
 .pytest_cache
 .coverage

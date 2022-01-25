@@ -1,4 +1,0 @@
-pytest>=2.9
-numpy>=1.16.6
-scipy>=0.16
-pytest-lazy-fixture
