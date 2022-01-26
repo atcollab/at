@@ -69,7 +69,7 @@ if radnum > 0
     atdisplay(1,[num2str(radnum) ' elements switched to include radiation']);
 end
 
-    function [ring,mask]=changepass(ring,newpass,selfunc,autopass,code)
+    function [ring,mask]=changepass(ring,newpass,selfunc,autopass,code) %#ok<INUSD>
         if isempty(newpass)
             mask=false(size(ring));
         else
@@ -81,8 +81,6 @@ end
             end
             if any(mask)
                 ring(mask)=cellfun(@newelem,ring(mask),passlist(ok),'UniformOutput',false);
-            else
-                warning(['AT:atradoff:NO' code], ['no ' code ' modified']),
             end
         end
         
