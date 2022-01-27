@@ -22,8 +22,8 @@ Initialisation:
 
 - Load a pyAT ring from a .mat file::
 
-    >>> from at.load import load_mat
-    >>> ring = load_mat('test_matlab/hmba.mat')
+    >>> import at
+    >>> ring = at.load_lattice('test_matlab/hmba.mat')
 
 Basic Use:
 ----------
@@ -44,20 +44,16 @@ Basic Use:
 
 - Get the s position of the 10th element in the ring::
 
-    >>> at.lattice.get_s_pos(ring, 10)
+    >>> at.get_s_pos(ring, 10)
     array([3.4295565])
-
-- Creating a lattice object::
-
-    >>> lattice = at.lattice.Lattice(ring)
 
 Calculating Physics Data:
 -------------------------
 
 - Return the linear optics data at the first 5 elements::
 
-    >>> at.physics.linopt(ring, refpts=[0, 1, 2, 3, 4])
+    >>> at.get_optics(ring, refpts=[0, 1, 2, 3, 4])
 
 - Physics data functions can also be called as methods on the lattice::
 
-    >>> lattice.find_orbit4(refpts=[0, 1, 2, 3, 4])
+    >>> ring.find_orbit(refpts=[0, 1, 2, 3, 4])
