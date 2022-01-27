@@ -57,3 +57,4 @@ Calculating Physics Data:
 - Physics data functions can also be called as methods on the lattice::
 
     >>> ring.find_orbit(refpts=[0, 1, 2, 3, 4])
+
