@@ -1,9 +1,11 @@
 from at import elements, patpass
 import numpy
 import pytest
+import sys
 
 
-
+@pytest.mark.skipif(not sys.platform.startswith("win"),
+                    reason="May hang on linux and MacOS")
 def test_patpass_multiple_particles_and_turns():
     nturns = 10
     nparticles = 10
