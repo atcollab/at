@@ -43,7 +43,7 @@ jobs:
     - name: mex test
       uses: matlab-actions/run-command@v1
       with:
-        command: path
+        command: pwd,path
 #
 #    - name: Install test dependencies
 #      run: |
