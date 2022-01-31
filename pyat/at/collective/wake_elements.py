@@ -51,12 +51,10 @@ class WakeElement(at.Element):
         super(WakeElement, self).__init__(family_name, **kwargs)
 
     def get_wakefact(self, ring):
-        betrel = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
-        return -qe/(ring.energy*betrel**2)
+        return -qe/(ring.energy*ring.beta**2)
 
     def get_int2curr(self, ring):
-        betrel = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
-        return clight*betrel*qe/ring.circumference
+        return clight*ring.beta*qe/ring.circumference
 
     def clear_history(self):
         self.TurnHistory = numpy.zeros((self.Nturns*self.Nslice, 4),
@@ -94,12 +92,12 @@ class LongResonatorElement(WakeElement):
         self.Frequency = frequency
         self.QFactor = qfactor
         self.RShunt = rshunt
-        beta = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         wake = Wake(srange)
         wake.add(WakeType.RESONATOR, WakeComponent.Z,
-                 frequency, qfactor, rshunt, beta)
-        super(LongResonatorElement, self).__init__(family_name, ring=ring,
-                                                   wake=wake, **kwargs)
+                 frequency, qfactor, rshunt, ring.beta)
+        super(LongResonatorElement, self).__init__(family_name, ring,
+                                                   wake, **kwargs)
+
 
 class TransResonatorElement(WakeElement):
     """Class to generate a transverse resonator, inherits from WakeElement
@@ -110,12 +108,12 @@ class TransResonatorElement(WakeElement):
         self.Frequency = frequency
         self.QFactor = qfactor
         self.RShunt = rshunt
-        beta = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         wake = Wake(srange)
         wake.add(WakeType.RESONATOR, wakecomp,
-                 frequency, qfactor, rshunt, beta)
-        super(TransResonatorElement, self).__init__(family_name, ring=ring,
-                                                   wake=wake, **kwargs)
+                 frequency, qfactor, rshunt, ring.beta)
+        super(TransResonatorElement, self).__init__(family_name, ring,
+                                                    wake, **kwargs)
+
 
 class ResWallElement(WakeElement):
     """Class to generate a resistive wall element, inherits from WakeElement
@@ -127,10 +125,8 @@ class ResWallElement(WakeElement):
         self.length = length
         self.rvac = rvac
         self.conduc = conduc
-        beta = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         wake = Wake(srange)
         wake.add(WakeType.RESWALL, wakecomp,
-                 length, rvac, conduc, beta, yokoya_factor)
-        super(ResWallElement, self).__init__(family_name, ring=ring,
-                                                   wake=wake, **kwargs)
-
+                 length, rvac, conduc, ring.beta, yokoya_factor)
+        super(ResWallElement, self).__init__(family_name, ring,
+                                             wake, **kwargs)
