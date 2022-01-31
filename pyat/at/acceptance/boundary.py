@@ -72,7 +72,7 @@ def set_ring_orbit(ring, dp, refpts, orbit):
     """
     if refpts is not None:
         assert numpy.isscalar(refpts), 'Scalar value needed for refpts'
-        newring = newring.rotate(refpts)
+        newring = ring.rotate(refpts)
     else:
         newring = ring.copy()
     if orbit is None:
