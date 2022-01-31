@@ -107,7 +107,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
                         default = 0.1
         nturns=1024     Number of turns for the tracking
-        dp=0            static momentum offset
+        dp=None         static momentum offset
         offset=None     initial orbit, default closed orbit
         bounds=None     Allows to define boundaries for the grid default
                         values are:

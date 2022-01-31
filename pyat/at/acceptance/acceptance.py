@@ -11,7 +11,7 @@ __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
 
 
 def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
-                   refpts=None, dp=0, offset=None, bounds=None,
+                   refpts=None, dp=None, offset=None, bounds=None,
                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True):
     """
     Computes the acceptance at repfts observation points
@@ -35,7 +35,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
     KEYWORDS
         nturns=1024     Number of turns for the tracking
         refpts=None     Observation refpts, default start of the machine
-        dp=0            static momentum offset
+        dp=None         static momentum offset
         offset=None     initial orbit, default closed orbit
         bounds=None     Allows to define boundaries for the grid default
                         values are:
@@ -113,7 +113,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         return boundary, survived, grid
 
 
-def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=0,
+def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                       refpts=None, grid_mode=GridMode.RADIAL, use_mp=False,
                       verbose=False):
     """

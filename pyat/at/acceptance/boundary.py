@@ -70,14 +70,13 @@ def set_ring_orbit(ring, dp, refpts, orbit):
     Returns a ring starting at refpts and initial
     closed orbit
     """
-    newring = ring.set_rf_frequency(dp=dp, copy=True)
     if refpts is not None:
         assert numpy.isscalar(refpts), 'Scalar value needed for refpts'
         newring = newring.rotate(refpts)
+    else:
+        newring = ring.copy()
     if orbit is None:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            orbit, _ = ring.find_orbit(dp=dp)
+        orbit, _ = newring.find_orbit(dp=dp)
     return orbit, newring
 
 
@@ -244,7 +243,7 @@ def get_grid_boundary(mask, grid, config):
 
 
 def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
-                         refpts=None, dp=0, offset=None, bounds=None,
+                         refpts=None, dp=None, offset=None, bounds=None,
                          grid_mode=GridMode.RADIAL, use_mp=False,
                          verbose=True):
     """
@@ -285,7 +284,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 
 def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
-                              refpts=None, dp=0, offset=None, bounds=None,
+                              refpts=None, dp=None, offset=None, bounds=None,
                               use_mp=False, verbose=True):
     """
     Recursively search for the boundary in a given plane and direction (angle)
@@ -389,7 +388,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 
 def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
-                    refpts=None, dp=0, offset=None, bounds=None,
+                    refpts=None, dp=None, offset=None, bounds=None,
                     grid_mode=GridMode.RADIAL, use_mp=False, verbose=True):
     """
     Computes the loss boundary at a single point in the machine
