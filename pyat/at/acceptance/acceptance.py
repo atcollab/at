@@ -15,7 +15,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True):
     """
     Computes the acceptance at repfts observation points
-    Grid Coordiantes ordering is as follows: GRID: (x,y), RADIAL/RECURSIVE
+    Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
     (r, theta). Scalar inputs can be used for 1D grid
 
     PARAMETERS
@@ -27,7 +27,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                         dimension
                         shape (len(planes),), for RADIAL/RECURSIVE grid:
                         r = sqrt(x**2+y**2)
-        grid_mode       at.GridMode.GRID: (x,y) grid
+        grid_mode       at.GridMode.CARTESIAN: (x,y) grid
                         at.GridMode.RADIAL: (r,theta) grid
                         at.GridMode.RECURSIVE: (r,theta) recursive boundary
                         search
@@ -39,7 +39,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         offset=None     initial orbit, default closed orbit
         bounds=None     Allows to define boundaries for the grid default
                         values are:
-                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.CARTESIAN: ((-1,1),(0,1))
                         GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
         grid_mode       mode for the gird default GridMode.RADIAL
         use_mp=False    Use python multiprocessing (patpass, default use
@@ -78,14 +78,14 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         rpp = 2*numpy.ceil(numpy.log2(np[0]))*numpy.ceil(na/nprocu)
         mpp = npp/nprocu
         if rpp > mpp:
-            cond = grid_mode is GridMode.RADIAL or grid_mode is GridMode.GRID
+            cond = grid_mode is GridMode.RADIAL or grid_mode is GridMode.CARTESIAN
         else:
             cond = grid_mode is GridMode.RECURSIVE
         if rpp > mpp and not cond:
             print('The estimated load for grid mode is {0}'.format(mpp))
             print('The estimated load for recursive mode is {0}'.format(rpp))
             print('{0} or {1} is recommended'.format(GridMode.RADIAL,
-                                                     GridMode.GRID))
+                                                     GridMode.CARTESIAN))
         elif rpp < mpp and not cond:
             print('The estimated load for grid mode is {0}'.format(mpp))
             print('The estimated load for recursive mode is {0}'.format(rpp))
@@ -94,7 +94,10 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
     boundary = []
     survived = []
     grid = []
-    rp = numpy.atleast_1d(refpts)
+    if refpts is not None:
+        rp = ring.uint32_refpts(refpts)
+    else:
+        rp = numpy.atleast_1d(refpts)
     for r in rp:
         b, s, g = boundary_search(ring, planes, npoints, amplitudes,
                                   nturns=nturns, refpts=r, dp=dp,
@@ -128,7 +131,7 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=0,
         nturns=1024     Number of turns for the tracking
         dp=0            static momentum offset
         refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector (default)
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).
@@ -170,7 +173,7 @@ def get_horizontal_acceptance(ring, *args, **kwargs):
         nturns=1024     Number of turns for the tracking
         dp=0            static momentum offset
         refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector (default)
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).
@@ -203,7 +206,7 @@ def get_vertical_acceptance(ring, *args, **kwargs):
         nturns=1024     Number of turns for the tracking
         dp=0            static momentum offset
         refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector (default)
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).
@@ -236,7 +239,7 @@ def get_momentum_acceptance(ring, *args, **kwargs):
         nturns=1024     Number of turns for the tracking
         dp=0            static momentum offset
         refpts=None     Observation refpts, default start of the machine
-        grid_mode       at.GridMode.GRID/RADIAL: track full vector (default)
+        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector (default)
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).

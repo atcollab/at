@@ -135,6 +135,8 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                                        emitx=emitx, sigs=sigs, sigp=sigp)
     if refpts is None:
         refpts = range(len(ring))
+    else:
+        refpts = ring.uint32_refpts(refpts)
 
     if momap is None:
         resolution = kwargs.pop('resolution', 1.0e-3)

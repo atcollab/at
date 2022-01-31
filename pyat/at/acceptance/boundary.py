@@ -20,7 +20,7 @@ class GridMode(Enum):
     for the boundary
     """
     RADIAL = 0
-    GRID = 1
+    CARTESIAN = 1
     RECURSIVE = 2
 
 
@@ -84,7 +84,7 @@ def set_ring_orbit(ring, dp, refpts, orbit):
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
     """
     Return a grid configuration based on user input parameters, the ordering
-    is as follows: GRID: (x,y), RADIAL/RECURSIVE (r, theta). Scalar inputs can
+    is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta). Scalar inputs can
     be used for 1D grid
     """
     ndims = len(numpy.atleast_1d(planes))
@@ -100,13 +100,13 @@ def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
     if ndims > 2 or ndims == 0:
         raise AtError('planes can have 1 or 2 element (1D or 2D aperture)')
     elif ndims == 1 and grid_mode is GridMode.RADIAL:
-        grid_mode = GridMode.GRID
+        grid_mode = GridMode.CARTESIAN
 
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
             bounds = numpy.array([[0, 1], [numpy.pi, 0]])
         bounds[0][bounds[0] == 0] = 1.0e-6
-    elif grid_mode is GridMode.GRID:
+    elif grid_mode is GridMode.CARTESIAN:
         if bounds is None:
             bounds = numpy.array([[p-1, 1] for p in range(ndims)])
     else:
@@ -144,7 +144,7 @@ def get_parts(config, offset):
     bnd = config.bounds
     gm = config.mode
 
-    if gm is GridMode.GRID:
+    if gm is GridMode.CARTESIAN:
         g = get_part_grid_uniform(bnd, np, amp)
     elif gm is GridMode.RADIAL:
         g = get_part_grid_radial(bnd, np, amp)
@@ -237,7 +237,7 @@ def get_grid_boundary(mask, grid, config):
 
     if config.mode is GridMode.RADIAL:
         return radial_boundary(mask, grid)
-    elif config.mode is GridMode.GRID:
+    elif config.mode is GridMode.CARTESIAN:
         return grid_boundary(mask, grid, config)
     else:
         raise AtError('GridMode {0} undefined.'.format(grid.mode))
