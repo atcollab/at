@@ -41,15 +41,19 @@ if ~isempty(idx)            % Found RingParam: use it
     parmelem = strupdate(parmelem, newparms);
     new_nper = parmelem.Periodicity;
     if ~isfield(parmelem, 'Particle')
-        parmelem.Particle = saveobj(atparticle('electron'));
+        parmelem.Particle = saveobj(atparticle('relativistic'));
     end
     if isfield(newparms, 'HarmNumber')
         check_h(newparms.HarmNumber, parmelem.Periodicity);
     elseif ~isfield(parmelem, 'HarmNumber')
-        maincav = findmaincav(ring(atgetcells(ring,'Frequency')));
-        if ~isempty(maincav)
+        if isfield(parmelem, 'cavpts')
+            maincavs = ring(props.cavpts);
+        else
+            maincavs = findmaincav(ring(atgetcells(ring,'Frequency')));
+        end
+        if ~isempty(maincavs)
             gamma = parmelem.Energy / parmelem.Particle.rest_energy;
-            h = parmelem.Periodicity * cellharmnumber(ring, maincav, gamma);
+            h = parmelem.Periodicity * cellharmnumber(ring, maincavs(1), gamma);
             parmelem.HarmNumber = h;
         end
     elseif new_nper ~= old_nper
@@ -152,13 +156,9 @@ end
 
     function cellh=cellharmnumber(ring, maincav, gamma)
         % Extract the harmonic number from the main cavity
-        if isfield(maincav, 'HarmNumber')
-            cellh = maincav.HarmNumber;
-        else
-            vel = sqrt(1-1/gamma/gamma)*PhysConstant.speed_of_light_in_vacuum.value;
-            cellfrev = vel / findspos(ring, length(ring)+1);
-            cellh = round(maincav.Frequency/cellfrev);
-        end
+        vel = sqrt(1-1/gamma/gamma)*PhysConstant.speed_of_light_in_vacuum.value;
+        cellfrev = vel / findspos(ring, length(ring)+1);
+        cellh = round(maincav.Frequency/cellfrev);
     end
 
     function str = strupdate(str, str2)
