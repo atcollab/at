@@ -10,6 +10,6 @@ function atclearmex(rootdir)
 if nargin < 1
     rootdir=atroot;
 end
-eval(sprintf('!find ''%s'' -name ''*.mex*'' -exec rm {} \\;', rootdir));
-eval(['!rm ' fullfile(rootdir,'atintegrators','*.mex*')]);
+[status,out]=unix(sprintf('find "%s" -name "*.mex*" -exec rm {} \\;', rootdir));
+[status,out]=unix(sprintf('rm %s',fullfile(rootdir,'..','atintegrators','*.mex*')));
 end
