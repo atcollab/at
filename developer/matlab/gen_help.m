@@ -25,7 +25,8 @@ for m=atchapters()
     fprintf(fid,'%%\n%%*%s*\n',m.title);
     mloop(fid,m.contents);
 end
-
+athelproot=fullfile(docroot,'3ptoolbox/atacceleratortoolbox/doc/AT_page.html');
+fprintf(fid,'%%\n%%<a href="matlab:web(''%s'')">See documentation for AT</a>\n',athelproot);
 fclose(fid);
 
     function mloop(fid,mlist)

@@ -1,4 +1,9 @@
-% Accelerator toolbox
-% Version 2.2.dev358 (atcollab) 30-Jan-2022
+% Accelerator Toolbox
+% Version 2.1.dev777 (atcollab) 30-Jan-2022
 %
-% This file defines the version and release of AT
+%   atdiag           - Tests AT intallation
+%   atdisplay        - checks the verbosity level in the global variable GLOBVAL
+%   atmexall         - build all AT platform dependent mex-files from C-sources
+%   atpath           - Adds the AT directories to the MATLAB search path
+%   atroot           - returns Accelerator Toolbox root directory
+%   isOctave         - isOctave check if running Octave
