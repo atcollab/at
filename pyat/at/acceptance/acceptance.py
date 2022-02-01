@@ -1,4 +1,3 @@
-import at
 import numpy
 from .boundary import GridMode
 from .boundary import boundary_search
@@ -100,7 +99,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         rp = numpy.atleast_1d(refpts)
     for r in rp:
         b, s, g = boundary_search(ring, planes, npoints, amplitudes,
-                                  nturns=nturns, refpts=r, dp=dp,
+                                  nturns=nturns, obspt=r, dp=dp,
                                   offset=offset, bounds=bounds,
                                   grid_mode=grid_mode, use_mp=use_mp,
                                   verbose=verbose)
