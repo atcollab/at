@@ -3,15 +3,12 @@ from at.lattice import Lattice
 from at.tracking import lattice_pass
 from at.physics import get_optics
 from at.plot import baseplot
-import matplotlib.pyplot as plt
-import numpy
 
 # --------- Example 1 --------
 
 # The specific data generating functions do not depend on any graphics-related
 # function. So they could be located in any module, for instance
-# in lattice/linear.py where the get_optics function is.
-             
+# in lattice/linear.py where the get_optics function is.        
 
 # data generating function
 def pldata_beta_disp(ring, refpts, **kwargs):
