@@ -18,18 +18,18 @@ def plot_acceptance(ring, *args, **kwargs):
         npoints         number of points in each dimension shape (len(planes),)
         amplitudes      max. amplitude  or initial step in RECURSIVE in each dimension
                         shape (len(planes),), for RADIAL/RECURSIVE grid: r = sqrt(x**2+y**2)
-        grid_mode       at.GridMode.GRID: (x,y) grid
+        grid_mode       at.GridMode.CARTESIAN: (x,y) grid
                         at.GridMode.RADIAL: (r,theta) grid
                         at.GridMode.RECURSIVE: (r,theta) recursive boundary search
                         
 
     KEYWORDS
         nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
+        obspt=None      Observation point, default start of the machine
         dp=0            static momentum offset
         offset=None     initial orbit, default no offset
         bounds=None     Allows to define boundaries for the grid default values are:
-                        GridMode.GRID: ((-1,1),(0,1))
+                        GridMode.CARTESIAN: ((-1,1),(0,1))
                         GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))  
         grid_mode       mode for the gird default GridMode.RADIAL
         use_mp=False    Use python multiprocessing (patpass, default use lattice_pass).
@@ -50,12 +50,11 @@ def plot_acceptance(ring, *args, **kwargs):
     units = {'x':'[m]', 'xp':'[rad]','y':'[m]', 
              'yp':'[rad]', 'dp':'', 'ct':'[m]'}
 
-    refpts = kwargs.pop('refpts',None)
+    obspt = kwargs.pop('obspt',None)
     block = kwargs.pop('block',False)
-    if len(numpy.atleast_1d(refpts))>1:
-        print('Multiple refpts provided for acceptance plot {0}'.format(refpts))
-        print('Using only the first one {0}'.format(refpts[0]))
-        kwargs.update('refpts',refpts[0])
+    if obspt is not None:
+        assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
+    kwargs['refpts'] = obspt
     boundary, survived, grid = ring.get_acceptance(*args, **kwargs)
     planes = args[0]
     plt.figure()
