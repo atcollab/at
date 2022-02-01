@@ -1,4 +1,5 @@
 import at
+from at.lattice import AtError
 from enum import Enum
 import numpy
 import warnings
