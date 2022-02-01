@@ -5,7 +5,7 @@ name: Build and upload wheels and sdist
 on:
   push:
     tags:
-      - pyat-*
+      - pyat-[0-9]*
   workflow_dispatch:
 
 defaults:
