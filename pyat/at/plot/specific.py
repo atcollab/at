@@ -8,7 +8,8 @@ from at.plot import baseplot
 
 # The specific data generating functions do not depend on any graphics-related
 # function. So they could be located in any module, for instance
-# in lattice/linear.py where the get_optics function is.        
+# in lattice/linear.py where the get_optics function is.
+
 
 # data generating function
 def pldata_beta_disp(ring, refpts, **kwargs):
