@@ -11,7 +11,8 @@ __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
 
 def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                    refpts=None, dp=None, offset=None, bounds=None,
-                   grid_mode=GridMode.RADIAL, use_mp=False, verbose=True):
+                   grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
+                   start_method=None):
     """
     Computes the acceptance at repfts observation points
     Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
@@ -53,8 +54,11 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
         survived arrays are returned directly.
     """
+    kwargs={}
     if not use_mp:
         grid_mode = GridMode.RECURSIVE
+    elif start_method is not None:
+        kwargs['start_method'] = start_method
 
     if verbose:
         nproc = multiprocessing.cpu_count()
@@ -102,7 +106,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                                   nturns=nturns, obspt=r, dp=dp,
                                   offset=offset, bounds=bounds,
                                   grid_mode=grid_mode, use_mp=use_mp,
-                                  verbose=verbose)
+                                  verbose=verbose, **kwargs)
         boundary.append(b)
         survived.append(s)
         grid.append(g)
@@ -114,7 +118,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
 
 def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                       refpts=None, grid_mode=GridMode.RADIAL, use_mp=False,
-                      verbose=False):
+                      verbose=False, start_method=None):
     """
     Computes the 1D acceptance at refpts observation points
     Scalar parameters required
@@ -154,7 +158,7 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
     b, s, g = get_acceptance(ring, plane, npoint, amplitude,
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
-                             verbose=verbose)
+                             verbose=verbose, start_method=start_method)
     return numpy.squeeze(b), s, g
 
 

@@ -153,14 +153,14 @@ def get_parts(config, offset):
     return parts, grid(g, offset[pind])
 
 
-def get_survived(parts, ring, nturns, method):
+def get_survived(parts, ring, nturns, method, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
     if not (method is at.patpass or method is at.lattice_pass):
         raise AtError('Only patpass (multi-process) and lattice_pass '
                       '(single process) allowed for tracking method')
-    pout = numpy.squeeze(method(ring, parts, nturns=nturns))
+    pout = numpy.squeeze(method(ring, parts, nturns=nturns, **kwargs))    
     if pout.ndim == 2:
         return numpy.invert(numpy.isnan(pout[0, -1]))
     else:
@@ -245,7 +245,7 @@ def get_grid_boundary(mask, grid, config):
 def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                          obspt=None, dp=None, offset=None, bounds=None,
                          grid_mode=GridMode.RADIAL, use_mp=False,
-                         verbose=True):
+                         verbose=True, **kwargs):
     """
     Search for the boundary by tracking a grid
     """
@@ -275,7 +275,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
     t0 = time.time()
     parts, grid = get_parts(config, offset)
-    mask = get_survived(parts, newring, nturns, method)
+    mask = get_survived(parts, newring, nturns, method, **kwargs)
     survived = grid.grid[:, mask]
     boundary = get_grid_boundary(mask, grid, config)
     if verbose:
@@ -285,7 +285,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                               obspt=None, dp=None, offset=None, bounds=None,
-                              use_mp=False, verbose=True):
+                              use_mp=False, verbose=True, **kwargs):
     """
     Recursively search for the boundary in a given plane and direction (angle)
     """
@@ -321,7 +321,8 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                     istracked[i] = True
 
             ptmp = (part[:, istracked].T + offset).T
-            survived[istracked] = get_survived(ptmp, newring, nturns, method)
+            survived[istracked] = get_survived(ptmp, newring, nturns,
+                                               method, **kwargs)
 
             for i in range(len(angles)):
                 rp = get_r(part[planesi, i])
@@ -389,7 +390,8 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                     obspt=None, dp=None, offset=None, bounds=None,
-                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True):
+                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
+                    **kwargs):
     """
     Computes the loss boundary at a single point in the machine
     """
@@ -397,11 +399,12 @@ def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         result = recursive_boundary_search(ring, planes, npoints, amplitudes,
                                            nturns=nturns, obspt=obspt, dp=dp,
                                            offset=offset, bounds=bounds,
-                                           use_mp=use_mp, verbose=verbose)
+                                           use_mp=use_mp, verbose=verbose,
+                                           **kwargs)
     else:
         result = grid_boundary_search(ring, planes, npoints, amplitudes,
                                       nturns=nturns, obspt=obspt, dp=dp,
                                       offset=offset, bounds=bounds,
                                       grid_mode=grid_mode, use_mp=use_mp,
-                                      verbose=verbose)
+                                      verbose=verbose, **kwargs)
     return result
