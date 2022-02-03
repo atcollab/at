@@ -43,6 +43,7 @@ end
         [oldchrom,varargs]=getflag(varargin,'chrom');
         [chrom,varargs]=getflag(varargs,'get_chrom');
         [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
+        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
         if is6d
             tunefunc=@tune6;
@@ -58,8 +59,8 @@ end
             if is6d
                 frf=get_rf_frequency(ring);
                 DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep);
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep);
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
                 [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
                 deltap=o1P(5)-o1M(5);

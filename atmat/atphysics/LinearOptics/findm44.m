@@ -73,28 +73,31 @@ end
 NE = length(LATTICE);
 [fullflag,varargs]=getflag(varargin,'full');
 [XYStep,varargs]=getoption(varargs,'XYStep');
-[R0,varargs]=getoption(varargs,'orbit',[]);
+[orbitin,varargs]=getoption(varargs,'orbit',[]);
 [ct,varargs]=getoption(varargs,'ct',NaN);
-[REFPTS,R0,varargs]=getargs(varargs,[],R0,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
+[refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
 
-if ~isempty(R0)
-    if length(R0) >= 5
-        dp=R0(5);
-    end
-    R0 = [R0(1:4);dp;0];
-elseif isnan(ct)
-    [~,R0] = findorbit4(LATTICE,dp);
+if islogical(refpts)
+    refpts(end+1:NE+1)=false;
+elseif isnumeric(refpts)
+    refpts=setelems(false(1,NE+1),refpts);
 else
-    [~,R0]=findsyncorbit(LATTICE,ct);
-end
-
-if isnumeric(REFPTS)
-    REFPTS=setelems(false(1,NE+1),REFPTS);
-elseif ~islogical(refpts)
     error('REFPTS must be numeric or logical');
 end
-refs=setelems(REFPTS,NE+1); % Add end-of-lattice
-reqs=REFPTS(refs);
+
+if ~isempty(orbitin)
+    if length(orbitin) >= 5
+        dp=orbitin(5);
+    end
+    orbitin = [orbitin(1:4);dp;0];
+elseif isnan(ct)
+    [~,orbitin] = findorbit4(LATTICE,dp);
+else
+    [~,orbitin]=findsyncorbit(LATTICE,ct);
+end
+
+refs=setelems(refpts,NE+1); % Add end-of-lattice
+reqs=refpts(refs);
 
 % Build a diagonal matrix of initial conditions
 % scaling=2*XYStep*[1 0.1 1 0.1];
@@ -102,7 +105,7 @@ scaling=XYStep*[1 1 1 1];
 D4 = [0.5*diag(scaling);zeros(2,4)];
 % Add to the orbit_in. First 8 columns for derivative
 % 9-th column is for closed orbit
-RIN = R0 + [D4 -D4 zeros(6,1)];
+RIN = orbitin + [D4 -D4 zeros(6,1)];
 ROUT = linepass(LATTICE,RIN,refs);
 TMAT3 = reshape(ROUT(1:4,:),4,9,[]);
 M44 = (TMAT3(:,1:4,end)-TMAT3(:,5:8,end))./scaling;

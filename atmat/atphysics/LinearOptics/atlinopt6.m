@@ -81,6 +81,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
         [refpts,varargs]=getargs(varargs,1);
+        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
 
         if isempty(twiss_in)        % Circular machine
             [orbs,orbitin]=findorbit(ring,refpts,dpargs{:},varargs{:});
@@ -115,8 +116,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
             if get_w || get_chrom
                 frf=get_rf_frequency(ring);
                 DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep);
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep);
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
                 [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
                 if get_w
@@ -233,7 +234,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 
             function [dp,tunes,rmats]=offmom(ring,orbit,refpts)
                 dp=orbit(5);
-                [vals,~,~,rmats,~]=build_1turn_map(ring,dp,refpts,orbit);
+                [vals,~,~,rmats,~]=build_1turn_map(ring,refpts,orbit);
                 tunes=mod(angle(vals)/2/pi,1);
             end
 

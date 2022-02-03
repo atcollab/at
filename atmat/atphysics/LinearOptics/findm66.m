@@ -40,24 +40,27 @@ end
 NE = length(LATTICE);
 [XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
 [DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
-[R0,varargs]=getoption(varargs,'orbit',[]);
-[REFPTS,R0,varargs]=getargs(varargs,[],R0,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
+[orbitin,varargs]=getoption(varargs,'orbit',[]);
+[refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
 
-if isempty(R0)
+if islogical(refpts)
+    refpts(end+1:NE+1)=false;
+elseif isnumeric(refpts)
+    refpts=setelems(false(1,NE+1),refpts);
+else
+    error('REFPTS must be numeric or logical');
+end
+
+if isempty(orbitin)
     if check_radiation(LATTICE)
-        R0 = findorbit6(LATTICE,'XYStep',XYStep,'DPStep',DPStep);
+        orbitin = findorbit6(LATTICE,'XYStep',XYStep,'DPStep',DPStep);
     else
-        [~, R0] = findorbit4(LATTICE,0.0,'XYStep',XYStep);
+        [~, orbitin] = findorbit4(LATTICE,0.0,'XYStep',XYStep);
     end
 end
 
-if isnumeric(REFPTS)
-    REFPTS=setelems(false(1,NE+1),REFPTS);
-elseif ~islogical(refpts)
-    error('REFPTS must be numeric or logical');
-end
-refs=setelems(REFPTS,NE+1); % Add end-of-lattice
-reqs=REFPTS(refs);
+refs=setelems(refpts,NE+1);
+reqs=refpts(refs);
 
 % Build a diagonal matrix of initial conditions
 %scaling=2*XYStep*[1 0.1 1 0.1 1 1];
@@ -65,7 +68,7 @@ scaling=XYStep*[1 1 1 1 0 0] + DPStep*[0 0 0 0 1 1];
 D6 = 0.5*diag(scaling);
 % Add to the orbit_in. First 12 columns for derivative
 % 13-th column is for closed orbit
-RIN = R0 + [D6 -D6 zeros(6,1)];
+RIN = orbitin + [D6 -D6 zeros(6,1)];
 ROUT = linepass(LATTICE,RIN,refs);
 TMAT3 = reshape(ROUT,6,13,[]);
 M66 = (TMAT3(:,1:6,end)-TMAT3(:,7:12,end))./scaling;
