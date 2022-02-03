@@ -1,5 +1,6 @@
 import at
 from at.lattice import AtError
+from at.tracking import lattice_pass, patpass
 from enum import Enum
 import numpy
 import warnings
@@ -153,14 +154,14 @@ def get_parts(config, offset):
     return parts, grid(g, offset[pind])
 
 
-def get_survived(parts, ring, nturns, method, **kwargs):
+def get_survived(parts, ring, nturns, use_mp, **kwargs):
     """
     Track a grid through the ring and extract survived particles
     """
-    if not (method is at.patpass or method is at.lattice_pass):
-        raise AtError('Only patpass (multi-process) and lattice_pass '
-                      '(single process) allowed for tracking method')
-    pout = numpy.squeeze(method(ring, parts, nturns=nturns, **kwargs))    
+    if use_mp:
+        pout = numpy.squeeze(patpass(ring, parts, nturns=nturns, **kwargs)) 
+    else:
+        pout = numpy.squeeze(lattice_pass(ring, parts, nturns=nturns, **kwargs))   
     if pout.ndim == 2:
         return numpy.invert(numpy.isnan(pout[0, -1]))
     else:
@@ -249,11 +250,6 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     """
     Search for the boundary by tracking a grid
     """
-    if use_mp:
-        method = at.patpass
-    else:
-        method = at.lattice_pass
-
     offset, newring = set_ring_orbit(ring, dp, obspt,
                                      offset)
     config = grid_configuration(planes, npoints, amplitudes,
@@ -275,7 +271,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
     t0 = time.time()
     parts, grid = get_parts(config, offset)
-    mask = get_survived(parts, newring, nturns, method, **kwargs)
+    mask = get_survived(parts, newring, nturns, use_mp, **kwargs)
     survived = grid.grid[:, mask]
     boundary = get_grid_boundary(mask, grid, config)
     if verbose:
@@ -294,7 +290,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         return numpy.around(r, decimals=9)
 
     def search_boundary(planesi, angles, rtol, rstep, nturns,
-                        offset, method):
+                        offset, use_mp, **kwargs):
 
         rstep[rstep < rtol] = rtol
         if len(planesi) == 1:
@@ -322,7 +318,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
             ptmp = (part[:, istracked].T + offset).T
             survived[istracked] = get_survived(ptmp, newring, nturns,
-                                               method, **kwargs)
+                                               use_mp, **kwargs)
 
             for i in range(len(angles)):
                 rp = get_r(part[planesi, i])
@@ -350,10 +346,6 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         g = numpy.array(grid).T
         return p, m, g
 
-    if use_mp:
-        method = at.patpass
-    else:
-        method = at.lattice_pass
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
     config = grid_configuration(planes, npoints, amplitudes,
                                 GridMode.RECURSIVE, bounds=bounds)
@@ -382,7 +374,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
     t0 = time.time()
     result = search_boundary(config.planesi, angles, rtol, rstep,
-                             nturns, offset, method)
+                             nturns, offset, use_mp, **kwargs)
     if verbose:
         print('Calculation took {0}'.format(time.time()-t0))
     return result

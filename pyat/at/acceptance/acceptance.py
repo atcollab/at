@@ -47,6 +47,13 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                         enabled GridMode is forced to
                         RECURSIVE (most efficient in single core)
         verbose=True    Print out some inform
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
     OUTPUT
         Returns 3 lists containing the 2D acceptance, the grid that was
@@ -141,6 +148,13 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                         In case multi-processing is not enabled GridMode is
                         forced to RECURSIVE (most efficient in single core)
         verbose=False   Print out some information
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
 
     OUTPUT
