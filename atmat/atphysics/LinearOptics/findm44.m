@@ -75,10 +75,7 @@ NE = length(LATTICE);
 [XYStep,varargs]=getoption(varargs,'XYStep');
 [R0,varargs]=getoption(varargs,'orbit',[]);
 [ct,varargs]=getoption(varargs,'ct',NaN);
-
-if length(varargs) >= 2     % FINDM44(LATTICE,DP,REFPTS,ORBITIN)
-    R0=varargs{2};
-end
+[REFPTS,R0,varargs]=getargs(varargs,[],R0,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
 
 if ~isempty(R0)
     if length(R0) >= 5
@@ -91,17 +88,10 @@ else
     [~,R0]=findsyncorbit(LATTICE,ct);
 end
 
-if length(varargs) >= 1     % FINDM44(LATTICE,DP,REFPTS)
-    if islogical(varargs{1})
-        REFPTS=varargs{1};
-        REFPTS(end+1:NE+1)=false;
-    elseif isnumeric(varargs{1})
-        REFPTS=setelems(false(1,NE+1),varargs{1});
-    else
-        error('REFPTS must be numeric or logical');
-    end
-else
-    REFPTS=false(1,NE+1);
+if isnumeric(REFPTS)
+    REFPTS=setelems(false(1,NE+1),REFPTS);
+elseif ~islogical(refpts)
+    error('REFPTS must be numeric or logical');
 end
 refs=setelems(REFPTS,NE+1); % Add end-of-lattice
 reqs=REFPTS(refs);

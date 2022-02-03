@@ -24,9 +24,10 @@ if nargout == 1 % From atplot
     plotdata(2).axislabel='Vertical dispersion [m]';
     varargout={plotdata};
 else % From atbaseplot
-    ring=varargin{1};
-    [linargs,vargs]=linoptions(varargin(3:end),varargin{2});
+    [ring,dpp]=deal(varargin{1:2});
+    [linargs,varargs]=linoptions(getdparg(varargin(2:end)));
     [~,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:});
-    varargout={cat(1,lindata.SPos),plClosedOrbit(lindata,ring,vargs{:})};
+    s=cat(1,lindata.SPos);
+    varargout={s,plClosedOrbit(lindata,ring,dpp,varargs{:})};
 end
 end

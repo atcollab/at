@@ -30,10 +30,10 @@ if nargout == 1 % From atplot
     varargout={plotdata};
 else % From atbaseplot
     [ring,dpp]=deal(varargin{1:2});
-    s=findspos(ring,1:length(ring)+1);
-    [linargs,vargs] = linoptions(varargin(4:end),dpp);
+    [linargs,varargs]=linoptions(getdparg(varargin(2:end)));
     [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
-    varargout={s,plEmitContrib(lindata,ring,dpp,vargs{:})};
+    s=cat(1,lindata.SPos);
+    varargout={s,plEmitContrib(lindata,ring,dpp,varargs{:})};
 end
 
 end

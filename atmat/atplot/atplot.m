@@ -77,10 +77,10 @@ resarg=find(cellfun(@(arg) ischar(arg),varargin(1:funcarg-1)),1);
 if isempty(resarg)
     resarg=funcarg;
 end
-
-varargs=cellfun(@correct, varargin(resarg:funcarg-1), 'UniformOutput',false);
-[largs,varargs]=linoptions(varargs);
+varargs=varargin(resarg:funcarg-1);
 [comment,varargs]=getoption(varargs,'comment',true);
+varargs=cellfun(@correct, varargs, 'UniformOutput',false);
+[largs,varargs]=linoptions(varargs);
 
 lindata=[];
 
@@ -102,7 +102,7 @@ if comment && ~isempty(curve.left)
 end
 
     function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
-        [linargs,vargs] = linoptions(varargin,dpp);
+        [linargs,vargs] = linoptions(getdparg([{dpp} varargin]));
         [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
         s=cat(1,lindata.SPos);
         plotdata=plotfun(lindata,ring,dpp,vargs{:});

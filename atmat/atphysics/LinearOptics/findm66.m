@@ -41,12 +41,9 @@ NE = length(LATTICE);
 [XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
 [DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
 [R0,varargs]=getoption(varargs,'orbit',[]);
+[REFPTS,R0,varargs]=getargs(varargs,[],R0,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
 
-if length(varargs) >= 2	% FINDM66(RING,REFPTS,ORBITIN)
-    R0 = varargs{2};
-end
-
-if  isempty(R0)
+if isempty(R0)
     if check_radiation(LATTICE)
         R0 = findorbit6(LATTICE,'XYStep',XYStep,'DPStep',DPStep);
     else
@@ -54,19 +51,12 @@ if  isempty(R0)
     end
 end
 
-if length(varargs) >= 1	% FINDM66(RING,REFPTS)
-    if islogical(varargs{1})
-        REFPTS=varargs{1};
-        REFPTS(end+1:NE+1)=false;
-    elseif isnumeric(varargs{1})
-        REFPTS=setelems(false(1,NE+1),varargs{1});
-    else
-        error('REFPTS must be numeric or logical');
-    end
-else
-    REFPTS=false(1,NE+1);
+if isnumeric(REFPTS)
+    REFPTS=setelems(false(1,NE+1),REFPTS);
+elseif ~islogical(refpts)
+    error('REFPTS must be numeric or logical');
 end
-refs=setelems(REFPTS,NE+1);
+refs=setelems(REFPTS,NE+1); % Add end-of-lattice
 reqs=REFPTS(refs);
 
 % Build a diagonal matrix of initial conditions

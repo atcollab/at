@@ -59,7 +59,7 @@ if isempty(ax), ax=gca; end
 
 
 % Select the momentum deviation
-[curve.dpp,varargs]=getargs(varargs,0.0,'check',@(x) isnumeric(x) && isscalar(x));
+[curve.dpp,varargs]=getdparg(varargs,0.0);
 
 % Select the plotting range
 s0=findspos(ring0,1:elt0+1);
