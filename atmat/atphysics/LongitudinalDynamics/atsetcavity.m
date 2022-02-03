@@ -65,23 +65,12 @@ CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
 E_MASS=1.0E6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
 
 props=atGetRingProperties(ring);
-[cavpts,varargs]=getoption(varargin,'cavpts', []);
+[cavpts,varargs]=getcavptsarg(varargin,ring,props);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
 [timelag,varargs]=getoption(varargs, 'TimeLag', []);
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [dct,varargs]=getoption(varargs,'dct',NaN);
-
-if isempty(cavpts)
-    try         % Look for cavities in the lattice properties
-        cavpts=props.cavpts;
-    catch       % Take all cavities
-        cavpts=atgetcells(ring,'Frequency');
-    end
-end
-if islogical(cavpts)
-    cavpts=find(cavpts);
-end
 
 ncells=props.Periodicity;
 cavities=ring(cavpts);
