@@ -41,7 +41,7 @@ fring.append(welem)
 
 
 sigm = at.sigma_matrix(ring.radiation_on(copy=True))
-Nparts = 40000
+Nparts = 10000
 Nturns = 20000
 nbins = 30
 part = at.beam(Nparts, sigm)
@@ -80,7 +80,7 @@ prof = numpy.mean(allData[:,1:],axis=1)
 
 cc = numpy.average(zr, weights=prof)
 norm = numpy.trapz(prof,x=zr)
-prof = nt1/norm
+prof /= norm
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
