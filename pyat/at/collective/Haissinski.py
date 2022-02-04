@@ -211,6 +211,8 @@ class Haissinski(object):
         '''
         self.conv = (numpy.sum(numpy.abs(self.phi_1 - self.phi)))/numpy.sum(numpy.abs(self.phi))
 
+    def set_output(self):
+        self.res = (self.phi_1.copy())[::-1]
 
     def solve(self):
         for it in numpy.arange(self.numIters):
@@ -218,6 +220,7 @@ class Haissinski(object):
             self.dFi_dphij()
             self.compute_new_phi()
             self.convergence()
+            self.set_output()
             print('Iteration: ', it, ', Delta: ', self.conv)
             if self.conv < self.eps:
                 print('Converged')

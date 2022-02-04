@@ -27,10 +27,10 @@ welem.Current = current
 ha = Haissinski(welem, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=1e-13)
 ha.solve()
 
-ha_prof = ha.phi_1/ha.I
-ha_prof /= numpy.trapz(ha.phi_1/ha.I, x=ha.q_array*ha.sigma_l)
+ha_prof = ha.res/ha.I
+ha_prof /= numpy.trapz(ha.res/ha.I, x=ha.q_array*ha.sigma_l)
 ha_cc = numpy.average(ha.q_array*ha.sigma_l, weights=ha_prof)
-ha_x = (ha.q_array*ha.sigma_l - ha_cc)[::-1] #This should be integrated into code but the sign reversal is needed
+ha_x = (ha.q_array*ha.sigma_l - ha_cc) 
 
 
 # Now we set up and run the tracking. The final distribution is an average of the last numAve turns 
@@ -52,7 +52,7 @@ numAve = 5000
 id0 = 0
 for t in numpy.arange(Nturns):
     if t%1000==0:
-        print('Tracking turn ', t+1, ' of ', Nturns)
+        print('Tracking turn ', t, ' of ', Nturns)
     part = at.lattice_pass(fring, part)[:,:,0,0]
     
     if t > Nturns-numAve:  
@@ -85,7 +85,7 @@ prof /= norm
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax1.plot(1e3*ha_x, ha_prof, color='r', linestyle='solid', label='Haissinski Solution')
-ax1.plot(1e3*(zr+cc), prof, color='k', linestyle='dashed', label='Tracking')
+ax1.plot(1e3*(zr-cc), prof, color='k', linestyle='dashed', label='Tracking')
 ax1.set_xlabel('z [mm]')
 ax1.set_ylabel(r'$\rho(z)$')
 ax1.legend()
