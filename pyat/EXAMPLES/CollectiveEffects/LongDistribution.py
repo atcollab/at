@@ -43,7 +43,7 @@ fring.append(welem)
 sigm = at.sigma_matrix(ring.radiation_on(copy=True))
 Nparts = 10000
 Nturns = 20000
-nbins = 30
+nbins = 60
 part = at.beam(Nparts, sigm)
 part[:,2] += 10e-6
 
