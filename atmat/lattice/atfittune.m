@@ -1,5 +1,6 @@
 function newring=atfittune(ring,varargin)
 %ATFITTUNE Fit linear tunes by scaling 2 quadrupole families
+%
 % NEWRING = ATFITTUNE(RING,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
 % NEWRING = ATFITTUNE(RING,DPP,NEWTUNES,QUADFAMILY1,QUADFAMILY2)
 %
@@ -24,11 +25,18 @@ function newring=atfittune(ring,varargin)
 %   kstep is the quadrupole strength applied to build the jacobian [m^-2].
 %   Default: 1.0e-6
 %
+%NEWRING = ATFITTUNE(RING,...,'dp',DP)
+%   Specify off-momentum if radiation is OFF (default 0)
+%
+%NEWRING = ATFITTUNE(RING,...,'dct',DCT)
+%   Specify path lengthening if radiation is OFF (default 0)
+%
 % See also ATFITCHROM
-allargs=getdparg(varargin);
-newring=wrapper6d(ring,@xfit,allargs{:});
 
-    function newring=xfit(ring,~,varargin)
+newargs=getdparg(varargin);
+newring=wrapper6d(ring,@fittune,newargs{:});
+
+    function newring=fittune(ring,~,varargin)
         [UseIntegerPart,varargs]=getflag(varargin,'UseIntegerPart');
         [delta,varargs]=getoption(varargs,'KStep',1.0e-6);
         [newtunes,famname1,famname2,varargs]=getargs(varargs,[],[],[]);
@@ -61,6 +69,7 @@ newring=wrapper6d(ring,@xfit,allargs{:});
         J = [tunes1-tunes tunes2-tunes]/delta;
         dK = J\(newtunes(:)-tunes);
 
+        % Apply new strengths
         newring = setqp(ring,idx1,kl1,dK(1));
         newring = setqp(newring,idx2,kl2,dK(2));
 
@@ -87,10 +96,12 @@ newring=wrapper6d(ring,@xfit,allargs{:});
                 error('AT:GetElemList:WrongArg','Cannot parse argument');
             end
         end
+
         function tun=getfractune(ring,varargin)
             tun3=tunechrom(ring,varargin{:});
             tun=tun3(1:2)';
         end
+        
         function tun=getinttune(ring,varargin)
             [ringdata,elemdata] = atlinopt6(ring,allpos,varargin{:}); %#ok<ASGLU>
             tun=elemdata(end).mu(1:2)'/2/pi;
