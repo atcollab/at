@@ -25,7 +25,7 @@ struct elem
 };
 
 
-void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){   
+void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem) {
     /*
      * r_in - 6-by-N matrix of initial conditions reshaped into
      * 1-d array of 6*N elements
@@ -45,8 +45,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     double *z_cuts = Elem->z_cuts;    
 
     size_t sz = 5*nslice*sizeof(double) + num_particles*sizeof(int);
-    int i;
-    double *rtmp;
+    int c;
 
     int *pslice;
     double *kx;
@@ -76,16 +75,21 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
                   normfact,kx,ky,kx2,ky2,kz);
     
     /*apply kicks*/
-    for (i=0; i<num_particles; i++) {
-        rtmp = r_in+i*6;
-        if (!atIsNaN(rtmp[0])) {
-            rtmp[4] += kz[pslice[i]];
-            rtmp[1] += (kx[pslice[i]]+rtmp[0]*kx2[pslice[i]])*(1+rtmp[4]);
-            rtmp[3] += (ky[pslice[i]]+rtmp[2]*ky2[pslice[i]])*(1+rtmp[4]);
+    /* OpenMP not efficient. Too much shared data ?
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+    shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
+    */
+    for (c=0; c<num_particles; c++) {
+        double *r6 = r_in+c*6;
+        int islice=pslice[c];
+        if (!atIsNaN(r6[0])) {
+            r6[4] += kz[islice];
+            r6[1] += (kx[islice]+r6[0]*kx2[islice])*(1+r6[4]);
+            r6[3] += (ky[islice]+r6[2]*ky2[islice])*(1+r6[4]);
         }
-    }    
+    }
     atFree(buffer);
-};
+}
 
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
