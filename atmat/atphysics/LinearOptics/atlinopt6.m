@@ -63,6 +63,12 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %           beta    [betax0, betay0] vector
 %           alpha	[alphax0, alphay0] vector
 %
+% [...] = ATLINOPT6(...,'dp',DP)
+%   Specify off-momentum 
+%
+% [...] = ATLINOPT6(...,'dct',DCT)
+%   Specify path lengthening
+%
 %  REFERENCES
 %   [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
 %   [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
