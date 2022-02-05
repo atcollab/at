@@ -1,4 +1,3 @@
-import at
 import numpy
 # noinspection PyProtectedMember
 from at.lattice.elements import Element, _array
@@ -74,10 +73,10 @@ class WakeElement(Element):
 
     def clear_history(self):
         self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
-                                       order='F')
+                                        order='F')
 
     def set_normfactxy(self, ring):
-        l0, _, _ = at.get_optics(ring)
+        l0, _, _ = ring.get_optics(ring)
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
 
