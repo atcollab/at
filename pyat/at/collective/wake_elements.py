@@ -1,10 +1,13 @@
 import at
 import numpy
+# noinspection PyProtectedMember
+from at.lattice.elements import Element, _array
 from at.lattice.constants import clight, qe, e_mass
 from at.collective.wake_object import Wake, WakeComponent, WakeType
 
 
-class WakeElement(at.Element):
+# noinspection PyPep8Naming
+class WakeElement(Element):
     """Class to generate an AT wake element using the
     passmethod WakeFieldPass
     args:  family name, ring, wake object
@@ -21,33 +24,44 @@ class WakeElement(at.Element):
                        beta function at the observation
                        point for example
     """
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+
+    _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
+                        _nelem=int, Intensity=float, Circumference=float,
+                        NormFact=lambda v: _array(v, (3,)),
+                        WakeFact=float,
+                        _wakeDX=lambda v: _array(v),
+                        _wakeDY=lambda v: _array(v),
+                        _wakeQX=lambda v: _array(v),
+                        _wakeQY=lambda v: _array(v),
+                        _wakeZ=lambda v: _array(v),
+                        _wakeT=lambda v: _array(v))
+
     def __init__(self, family_name, ring, wake, **kwargs):
         kwargs.setdefault('PassMethod', 'WakeFieldPass')
         self.Intensity = kwargs.pop('Intensity', 0.0)
-        self.Nslice = kwargs.pop('Nslice', 101)
-        self.NormFact = kwargs.pop('NormFact',
-                                   numpy.ones(3, order='F'))
+        self._nslice = kwargs.pop('Nslice', 101)
+        self._nturns = kwargs.pop('Nturns', 1)
+        self.clear_history()
+        self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
+        self.Circumference = ring.circumference
         self.Wakefact = self.get_wakefact(ring)
         self.int2curr = self.get_int2curr(ring)
-        self.WakeT = wake.get_srange()
-        self.Nelem = len(self.WakeT)
+        self._wakeT = wake.get_srange()
+        self._nelem = len(self._wakeT)
         zcuts = kwargs.pop('ZCuts', None)
         if zcuts is not None:
             self.ZCuts = zcuts
         if wake.Z is not None:
-            self.WakeZ = wake.Z
+            self._wakeZ = wake.Z
         if wake.DX is not None:
-            self.WakeDX = wake.DX
+            self._wakeDX = wake.DX
         if wake.DY is not None:
-            self.WakeDY = wake.DY
+            self._wakeDY = wake.DY
         if wake.QX is not None:
-            self.WakeQX = wake.QX
+            self._wakeQX = wake.QX
         if wake.QY is not None:
-            self.WakeQY = wake.QY
-        self.Nturns = kwargs.pop('Nturns', 1)
-        self.Circumference = ring.circumference
-        self.TurnHistory = numpy.zeros((self.Nturns*self.Nslice, 4),
-                                       order='F')
+            self._wakeQY = wake.QY
         super(WakeElement, self).__init__(family_name, **kwargs)
 
     def get_wakefact(self, ring):
@@ -59,7 +73,7 @@ class WakeElement(at.Element):
         return clight*betrel*qe/ring.circumference
 
     def clear_history(self):
-        self.TurnHistory = numpy.zeros((self.Nturns*self.Nslice, 4),
+        self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
                                        order='F')
 
     def set_normfactxy(self, ring):
@@ -67,12 +81,28 @@ class WakeElement(at.Element):
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
 
-    # noinspection PyPep8Naming
+    @property
+    def Nslice(self):
+        return self._nslice
+
+    @Nslice.setter
+    def Nslice(self, nslice):
+        self._nslice = nslice
+        self.clear_history()
+
+    @property
+    def Nturns(self):
+        return self._nslice
+
+    @Nturns.setter
+    def Nturns(self, nslice):
+        self._nslice = nslice
+        self.clear_history()
+
     @property
     def Current(self):
         return self.Intensity*self.int2curr
 
-    # noinspection PyPep8Naming
     @Current.setter
     def Current(self, current):
         self.Intensity = current/self.int2curr
@@ -101,6 +131,7 @@ class LongResonatorElement(WakeElement):
         super(LongResonatorElement, self).__init__(family_name, ring=ring,
                                                    wake=wake, **kwargs)
 
+
 class TransResonatorElement(WakeElement):
     """Class to generate a transverse resonator, inherits from WakeElement
        additonal argument are frequency, qfactor, rshunt
@@ -115,7 +146,8 @@ class TransResonatorElement(WakeElement):
         wake.add(WakeType.RESONATOR, wakecomp,
                  frequency, qfactor, rshunt, beta)
         super(TransResonatorElement, self).__init__(family_name, ring=ring,
-                                                   wake=wake, **kwargs)
+                                                    wake=wake, **kwargs)
+
 
 class ResWallElement(WakeElement):
     """Class to generate a resistive wall element, inherits from WakeElement
@@ -132,5 +164,4 @@ class ResWallElement(WakeElement):
         wake.add(WakeType.RESWALL, wakecomp,
                  length, rvac, conduc, beta, yokoya_factor)
         super(ResWallElement, self).__init__(family_name, ring=ring,
-                                                   wake=wake, **kwargs)
-
+                                             wake=wake, **kwargs)
