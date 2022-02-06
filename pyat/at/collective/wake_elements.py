@@ -1,8 +1,8 @@
 import numpy
 # noinspection PyProtectedMember
-from at.lattice.elements import Element, _array
-from at.lattice.constants import clight, qe, e_mass
-from at.collective.wake_object import Wake, WakeComponent, WakeType
+from ..lattice.elements import Element, _array
+from ..lattice.constants import clight, qe, e_mass
+from .wake_object import Wake, WakeComponent, WakeType
 
 
 # noinspection PyPep8Naming
@@ -41,12 +41,13 @@ class WakeElement(Element):
         self.Intensity = kwargs.pop('Intensity', 0.0)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
+        self._turnhistory = None        # To avoid warning
         self.clear_history()
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
         self.Circumference = ring.circumference
         self.Wakefact = self.get_wakefact(ring)
         self.int2curr = self.get_int2curr(ring)
-        self._wakeT = wake.get_srange()
+        self._wakeT = wake.srange
         self._nelem = len(self._wakeT)
         zcuts = kwargs.pop('ZCuts', None)
         if zcuts is not None:
@@ -63,11 +64,13 @@ class WakeElement(Element):
             self._wakeQY = wake.QY
         super(WakeElement, self).__init__(family_name, **kwargs)
 
-    def get_wakefact(self, ring):
+    @staticmethod
+    def get_wakefact(ring):
         betrel = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         return -qe/(ring.energy*betrel**2)
 
-    def get_int2curr(self, ring):
+    @staticmethod
+    def get_int2curr(ring):
         betrel = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         return clight*betrel*qe/ring.circumference
 

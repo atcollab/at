@@ -58,6 +58,7 @@ class WakeComponent(Enum):
     Z = 5   # Longitudinal
 
 
+# noinspection PyPep8Naming
 class Wake(object):
     """Class to generate a wake object
     The wake object is define by its srange, specified
@@ -86,33 +87,29 @@ class Wake(object):
                            WakeComponent.QY: None,
                            WakeComponent.Z: None}
 
-    # noinspection PyPep8Naming
+    @property
+    def srange(self):
+        return self._srange
+
     @property
     def DX(self):
         return self.components[WakeComponent.DX]
 
-    # noinspection PyPep8Naming
     @property
     def DY(self):
         return self.components[WakeComponent.DY]
 
-    # noinspection PyPep8Naming
     @property
     def QX(self):
         return self.components[WakeComponent.QX]
 
-    # noinspection PyPep8Naming
     @property
     def QY(self):
         return self.components[WakeComponent.QY]
 
-    # noinspection PyPep8Naming
     @property
     def Z(self):
         return self.components[WakeComponent.Z]
-
-    def get_srange(self):
-        return self._srange
 
     def add(self, wtype, wcomp, *args, **kwargs):
         if wtype is WakeType.FILE:
