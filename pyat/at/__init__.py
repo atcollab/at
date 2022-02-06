@@ -13,7 +13,6 @@ except PackageNotFoundError:
 # Make all functions visible in the at namespace:
 from .lattice import *
 from .tracking import *
-from .collective import *
 from .physics import *
 from .load import *
 from .matching import *
