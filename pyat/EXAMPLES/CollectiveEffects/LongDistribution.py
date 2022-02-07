@@ -33,13 +33,13 @@ ha_cc = numpy.average(ha.q_array*ha.sigma_l, weights=ha_prof)
 ha_x = (ha.q_array*ha.sigma_l - ha_cc) 
 
 '''
-currents = numpy.arange(0, 11e-3, 3e-3)
+currents = numpy.arange(0, 1.1e-3, 2e-4)
 ha.solve_steps(currents)
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
-for i in np.arange(len(currents)):
-    ax1.plot(1e3*ha.q_array*ha.sigma_l, ha.res_steps[i,:]/ha.I_steps[i], label='Ib={:f}mA'.format(currents[i]*1e3), color=cm.jet(float(i)/len(currents)))
+for i in numpy.arange(len(currents)):
+    ax1.plot(1e3*ha.q_array*ha.sigma_l, ha.res_steps[i,:], label='Ib={:f}mA'.format(currents[i]*1e3), color=cm.jet(float(i)/len(currents)))
 ax1.legend()
 ax1.set_xlabel('z [mm]')
 ax1.set_ylabel(r'$\rho(z)$')

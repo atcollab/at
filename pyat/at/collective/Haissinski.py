@@ -28,6 +28,8 @@ class Haissinski(object):
     numIters is the number of iterations
     eps is the convergence criteria.
 
+    the functions solve or solve_steps can be used after initialisation
+
     Future developments of this class:
         Adding LR wake or harmonic cavity as done at SOLEIL. Needs to be added WITH this class which is just for short range wake.
     '''
@@ -230,6 +232,10 @@ class Haissinski(object):
             print('Did not converge, maybe solve for an intermediate current then use the solution as a starting point')
           
     def solve_steps(self, currents):
+        '''
+        input:
+            currents: an array of currents to solve. If 0 is given, a current of 1uA is used to prevent failure. 
+        '''
         self.I_steps = numpy.zeros(len(currents))
         self.res_steps = numpy.zeros((len(currents), len(self.q_array)))
         for ii, Ib in enumerate(currents):
