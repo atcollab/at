@@ -7,7 +7,7 @@ from at.collective.wake_object import build_srange
 from at.collective.wake_elements import LongResonatorElement
 from at.collective.Haissinski import Haissinski
 import time
-
+from matplotlib import cm
 
 # First we define the ring, the BB resonator, the current and the wake element
 ring = at.load_m('../../../machine_data/esrf.m')
@@ -32,6 +32,20 @@ ha_prof /= numpy.trapz(ha.res/ha.I, x=ha.q_array*ha.sigma_l)
 ha_cc = numpy.average(ha.q_array*ha.sigma_l, weights=ha_prof)
 ha_x = (ha.q_array*ha.sigma_l - ha_cc) 
 
+'''
+currents = numpy.arange(0, 11e-3, 3e-3)
+ha.solve_steps(currents)
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+for i in np.arange(len(currents)):
+    ax1.plot(1e3*ha.q_array*ha.sigma_l, ha.res_steps[i,:]/ha.I_steps[i], label='Ib={:f}mA'.format(currents[i]*1e3), color=cm.jet(float(i)/len(currents)))
+ax1.legend()
+ax1.set_xlabel('z [mm]')
+ax1.set_ylabel(r'$\rho(z)$')
+plt.show()
+
+'''
 
 # Now we set up and run the tracking. The final distribution is an average of the last numAve turns 
 ring.radiation_on()

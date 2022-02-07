@@ -29,7 +29,6 @@ class Haissinski(object):
     eps is the convergence criteria.
 
     Future developments of this class:
-        When a high current is provided, it is better to solve for intermediate currents and use this solution as start for higher current otherwise it may not converge
         Adding LR wake or harmonic cavity as done at SOLEIL. Needs to be added WITH this class which is just for short range wake.
     '''
 
@@ -230,6 +229,19 @@ class Haissinski(object):
         if self.conv > self.eps:
             print('Did not converge, maybe solve for an intermediate current then use the solution as a starting point')
           
+    def solve_steps(self, currents):
+        self.I_steps = numpy.zeros(len(currents))
+        self.res_steps = numpy.zeros((len(currents), len(self.q_array)))
+        for ii, Ib in enumerate(currents):
+            print('Running step ', ii+1, ' out of ', len(currents))
+            if Ib==0:
+                self.set_I(1e-6) #If Ib=0, the gaussian is zero, it becomes a mess. Small delta is given
+            else:
+                self.set_I(Ib)
+            self.I_steps[ii] = self.I
+            self.solve()
+            self.res_steps[ii,:] = self.res
+
 
 
 
