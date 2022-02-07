@@ -39,7 +39,7 @@ ha.solve_steps(currents)
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 for i in numpy.arange(len(currents)):
-    ax1.plot(1e3*ha.q_array*ha.sigma_l, ha.res_steps[i,:], label='Ib={:f}mA'.format(currents[i]*1e3), color=cm.jet(float(i)/len(currents)))
+    ax1.plot(1e3*ha.q_array*ha.sigma_l, ha.res_steps[i,:]/ha.I_steps[i], label='Ib={:f}mA'.format(currents[i]*1e3), color=cm.jet(float(i)/len(currents)))
 ax1.legend()
 ax1.set_xlabel('z [mm]')
 ax1.set_ylabel(r'$\rho(z)$')

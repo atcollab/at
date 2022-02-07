@@ -234,14 +234,14 @@ class Haissinski(object):
     def solve_steps(self, currents):
         '''
         input:
-            currents: an array of currents to solve. If 0 is given, a current of 1uA is used to prevent failure. 
+            currents: an array of currents to solve. If 0 is given, a current of 10uA is used to prevent failure. 
         '''
         self.I_steps = numpy.zeros(len(currents))
         self.res_steps = numpy.zeros((len(currents), len(self.q_array)))
         for ii, Ib in enumerate(currents):
             print('Running step ', ii+1, ' out of ', len(currents))
             if Ib==0:
-                self.set_I(1e-6) #If Ib=0, the gaussian is zero, it becomes a mess. Small delta is given
+                self.set_I(1e-5) #If Ib=0, the gaussian is zero, it becomes a mess. Small delta is given
             else:
                 self.set_I(Ib)
             self.I_steps[ii] = self.I
