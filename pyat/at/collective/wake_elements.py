@@ -44,7 +44,6 @@ class WakeElement(Element):
         self._turnhistory = None        # To avoid warning
         self.clear_history()
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
-        self.Circumference = ring.circumference
         self.Wakefact = self.get_wakefact(ring)
         self.int2curr = self.get_int2curr(ring)
         self._wakeT = wake.srange
