@@ -67,8 +67,8 @@ intensity = welem.Intensity
 Rp = rshunt / (1 + 1j * qfactor * ((freqres + fs) / fr - fr / (freqres + fs)))
 Rm = rshunt / (1 + 1j * qfactor * ((freqres - fs) / fr - fr / (freqres - fs)))
 
-numer = e_mass * qe * 2 * gamma * t_rev**2 * 2 * np.pi * fs
-denom = qe**2 * intensity * eta * 2 * np.pi * fr * np.real(Rp - Rm)
+numer = e_mass * 2 * gamma * t_rev**2 * 2 * np.pi * fs
+denom = -qe * intensity * eta * 2 * np.pi * fr * np.real(Rp - Rm)
 tau_RS = numer / denom
 gr = tau_RS/t_rev
 
