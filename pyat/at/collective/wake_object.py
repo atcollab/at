@@ -1,13 +1,13 @@
 """
 Wake object creation
 """
-import at
 import numpy
 import warnings
 from enum import Enum
 from scipy.interpolate import interp1d
-from at.lattice import AtWarning, AtError
-from at.collective import wake_functions
+from ..lattice import AtWarning, AtError
+from .wake_functions import long_resonator, transverse_resonator
+from .wake_functions import transverse_reswall
 
 
 def build_srange(start, bunch_ext, short_step, long_step,
@@ -58,6 +58,7 @@ class WakeComponent(Enum):
     Z = 5   # Longitudinal
 
 
+# noinspection PyPep8Naming
 class Wake(object):
     """Class to generate a wake object
     The wake object is define by its srange, specified
@@ -86,58 +87,29 @@ class Wake(object):
                            WakeComponent.QY: None,
                            WakeComponent.Z: None}
 
-    # noinspection PyPep8Naming
+    @property
+    def srange(self):
+        return self._srange
+
     @property
     def DX(self):
         return self.components[WakeComponent.DX]
 
-    # noinspection PyPep8Naming
-    @DX.setter
-    def DX(self, s, w):
-        self.components[WakeComponent.DX] = self.resample(s, w)
-
-    # noinspection PyPep8Naming
     @property
     def DY(self):
         return self.components[WakeComponent.DY]
 
-    # noinspection PyPep8Naming
-    @DY.setter
-    def DY(self, s, w):
-        self.components[WakeComponent.DY] = self.resample(s, w)
-
-    # noinspection PyPep8Naming
     @property
     def QX(self):
         return self.components[WakeComponent.QX]
 
-    # noinspection PyPep8Naming
-    @QX.setter
-    def QX(self, s, w):
-        self.components[WakeComponent.QX] = self.resample(s, w)
-
-    # noinspection PyPep8Naming
     @property
     def QY(self):
         return self.components[WakeComponent.QY]
 
-    # noinspection PyPep8Naming
-    @QY.setter
-    def QY(self, s, w):
-        self.components[WakeComponent.QY] = self.resample(s, w)
-
-    # noinspection PyPep8Naming
     @property
     def Z(self):
         return self.components[WakeComponent.Z]
-
-    # noinspection PyPep8Naming
-    @Z.setter
-    def Z(self, s, w):
-        self.components[WakeComponent.Z] = self.resample(s, w)
-
-    def get_srange(self):
-        return self._srange
 
     def add(self, wtype, wcomp, *args, **kwargs):
         if wtype is WakeType.FILE:
@@ -165,7 +137,6 @@ class Wake(object):
         wint = fint(self._srange)
         return wint
 
-
     def readwakefile(self, filename, scol=0, wcol=1, sfact=1, wfact=1,
                      delimiter=None, skiprows=0):
         s, w = numpy.loadtxt(filename, delimiter=delimiter, unpack=True,
@@ -177,13 +148,11 @@ class Wake(object):
     def resonator(self, wcomp, frequency, qfactor, rshunt, beta,
                   yokoya_factor=1):
         if wcomp is WakeComponent.Z:
-            return wake_functions.long_resonator(self._srange, frequency,
-                                                 qfactor, rshunt, beta)
-        elif (wcomp is WakeComponent.DX or wcomp is WakeComponent.DY
-                       or wcomp is WakeComponent.QX or wcomp is WakeComponent.QY):
-            return wake_functions.transverse_resonator(self._srange, frequency,
-                                                       qfactor, rshunt,
-                                                       yokoya_factor, beta)
+            return long_resonator(self._srange, frequency,
+                                  qfactor, rshunt, beta)
+        elif isinstance(wcomp, WakeComponent):
+            return transverse_resonator(self._srange, frequency,
+                                        qfactor, rshunt, yokoya_factor, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
@@ -191,11 +160,8 @@ class Wake(object):
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))
-        elif wcomp is (WakeComponent.DX or wcomp is WakeComponent.DY
-                       or wcomp is WakeComponent.QX or wcomp is WakeComponent.QY):
-            return wake_functions.transverse_reswall(self._srange,
-                                                     yokoya_factor,
-                                                     length, rvac,
-                                                     conduct, beta)
+        elif isinstance(wcomp, WakeComponent):
+            return transverse_reswall(self._srange, yokoya_factor,
+                                      length, rvac, conduct, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
