@@ -41,7 +41,7 @@ NE = length(LATTICE);
 [XYStep,varargs]=getoption(varargin,'XYStep');	% Step size for numerical differentiation	%1.e-8
 [DPStep,varargs]=getoption(varargs,'DPStep');	% Step size for numerical differentiation	%1.e-6
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
-[refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
+[refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU>
 
 if islogical(refpts)
     refpts(end+1:NE+1)=false;

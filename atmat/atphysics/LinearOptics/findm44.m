@@ -75,7 +75,7 @@ NE = length(LATTICE);
 [XYStep,varargs]=getoption(varargs,'XYStep');
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
 [ct,varargs]=getoption(varargs,'ct',NaN);
-[refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU> 
+[refpts,orbitin,varargs]=getargs(varargs,[],orbitin,'check',@(x) ~(ischar(x) || isstring(x))); %#ok<ASGLU>
 
 if islogical(refpts)
     refpts(end+1:NE+1)=false;
