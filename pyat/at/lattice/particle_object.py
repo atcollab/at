@@ -1,4 +1,4 @@
-from .constants import e_mass, p_mass
+from ..constants import e_mass, p_mass
 import numpy
 from warnings import warn
 

@@ -16,7 +16,7 @@ import numpy
 import math
 import itertools
 from warnings import warn
-from .constants import clight
+from ..constants import clight
 from .particle_object import Particle
 from .utils import AtError, AtWarning
 from .utils import uint32_refpts as uint32_refs, bool_refpts as bool_refs
@@ -493,7 +493,7 @@ class Lattice(list):
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
                          quadrupole_func, wiggler_func,
-                         sextupole_func, octupole_func, 
+                         sextupole_func, octupole_func,
                          multipole_func):
         """Create a function returning the modified attributes"""
 
@@ -525,7 +525,7 @@ class Lattice(list):
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
                      quadrupole_pass='auto', wiggler_pass='auto',
-                     sextupole_pass=None, octupole_pass=None, 
+                     sextupole_pass=None, octupole_pass=None,
                      multipole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
@@ -582,7 +582,7 @@ class Lattice(list):
     # noinspection PyShadowingNames
     def radiation_off(self, cavity_pass='auto', dipole_pass='auto',
                       quadrupole_pass='auto', wiggler_pass='auto',
-                      sextupole_pass='auto', octupole_pass='auto', 
+                      sextupole_pass='auto', octupole_pass='auto',
                       multipole_pass='auto', copy=False):
         """
         Turn acceleration and radiation off and return the lattice
