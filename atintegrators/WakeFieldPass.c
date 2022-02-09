@@ -113,7 +113,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         nelem=atGetLong(ElemData,"_nelem"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
         intensity=atGetDouble(ElemData,"Intensity"); check_error();
-        wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
+        wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
         turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
         normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
@@ -177,7 +177,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nelem=atGetLong(ElemData,"_nelem"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
         intensity=atGetDouble(ElemData,"Intensity"); check_error();
-        wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
+        wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
         turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
         normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
@@ -218,7 +218,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],1,mxCreateString("_nslice"));
         mxSetCell(plhs[0],2,mxCreateString("_nturns"));
         mxSetCell(plhs[0],3,mxCreateString("Intensity"));
-        mxSetCell(plhs[0],4,mxCreateString("Wakefact"));
+        mxSetCell(plhs[0],4,mxCreateString("_wakefact"));
         mxSetCell(plhs[0],5,mxCreateString("_wakeT"));
         mxSetCell(plhs[0],6,mxCreateString("_turnhistory"));
         mxSetCell(plhs[0],7,mxCreateString("Normfact"));
