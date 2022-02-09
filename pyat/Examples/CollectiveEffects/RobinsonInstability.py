@@ -34,10 +34,8 @@ welem.Current = current
 fring.append(welem)
 
 # Particle generation and tracking
-orbit, _ = fring.find_orbit()
-print(orbit)
 sigm = at.sigma_matrix(ring.radiation_on(copy=True))
-part = at.beam(Npart, sigm, orbit=orbit)
+part = at.beam(Npart, sigm)
 
 dp_all = np.zeros(nturns)
 for i in np.arange(nturns):
@@ -60,7 +58,7 @@ t_rev = 1.0/ring.revolution_frequency
 eta = ring.slip_factor
 params = ring.radiation_parameters()
 fs = params.f_s
-intensity = welem.Intensity
+intensity = welem.NumParticles
 
 
 # Compute the growth rate

@@ -21,7 +21,7 @@ class WakeElement(Element):
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
 
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
-                        _nelem=int, Intensity=float, Circumference=float,
+                        _nelem=int, NumParticles=float, Circumference=float,
                         NormFact=lambda v: _array(v, (3,)),
                         WakeFact=float,
                         _wakeDX=lambda v: _array(v),
@@ -88,11 +88,11 @@ class WakeElement(Element):
 
     @property
     def Current(self):
-        return self.Intensity*self._charge2current
+        return self.NumParticles*self._charge2current
 
     @Current.setter
     def Current(self, current):
-        self.Intensity = current/self._charge2current
+        self.NumParticles = current/self._charge2current
 
     def __repr__(self):
         """Simplified __repr__ to avoid errors due to arguments

@@ -97,7 +97,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         long nslice,nelem,nturns;
-        double intensity, wakefact;
+        double num_charges, wakefact;
         static double lnf[3];
         double *normfact;
         double *waketableT;
@@ -112,7 +112,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nelem=atGetLong(ElemData,"_nelem"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
-        intensity=atGetDouble(ElemData,"Intensity"); check_error();
+        num_charges=atGetDouble(ElemData,"NumParticles"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
         turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
@@ -131,7 +131,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->nelem=nelem;
         Elem->nturns=nturns;
         for(int i=0;i<3;i++){
-           lnf[i]=normfact[i]*intensity*wakefact;
+           lnf[i]=normfact[i]*num_charges*wakefact;
         }
         Elem->normfact=lnf;
         Elem->waketableT=waketableT;
@@ -162,7 +162,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         struct elem El, *Elem=&El;
 
         long nslice,nelem,nturns;
-        double intensity, wakefact;
+        double num_charges, wakefact;
         double *normfact;
         double *waketableT;
         double *waketableDX;
@@ -176,7 +176,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nelem=atGetLong(ElemData,"_nelem"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
-        intensity=atGetDouble(ElemData,"Intensity"); check_error();
+        num_charges=atGetDouble(ElemData,"NumParticles"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
         turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
@@ -193,7 +193,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->nelem=nelem;
         Elem->nturns=nturns;
         for(int i=0;i<3;i++){
-           normfact[i]*=intensity*wakefact;
+           normfact[i]*=num_charges*wakefact;
         }
         Elem->normfact=normfact;
         Elem->waketableT=waketableT;
@@ -217,7 +217,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],0,mxCreateString("_nelem"));
         mxSetCell(plhs[0],1,mxCreateString("_nslice"));
         mxSetCell(plhs[0],2,mxCreateString("_nturns"));
-        mxSetCell(plhs[0],3,mxCreateString("Intensity"));
+        mxSetCell(plhs[0],3,mxCreateString("NumParticles"));
         mxSetCell(plhs[0],4,mxCreateString("_wakefact"));
         mxSetCell(plhs[0],5,mxCreateString("_wakeT"));
         mxSetCell(plhs[0],6,mxCreateString("_turnhistory"));
