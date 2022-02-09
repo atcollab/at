@@ -10,14 +10,11 @@ class WakeElement(Element):
     """Class to generate an AT wake element using the
     passmethod WakeFieldPass
     args:  family name, ring, wake object
-    kwargs: Intensity  (default=0) bunch intensity
-            Passmethod (default=WakeFieldPass)
-            Nslice     (default=101) number of slices
-                       per bunch
-            Nturns     (default=1) number of turn for
-                       the wake field
-            ZCuts      (default=None)limits for fixed
-                       slicing, default is adaptative
+    kwargs: Passmethod=WakeFieldPass
+            Current=0   Bunch current [A]
+            Nslice=101  Number of slices per bunch
+            Nturns=1    Number of turn for the wake field
+            ZCuts=None  Limits for fixed slicing, default is adaptative
             NormFact   (default=[1,1,1]) normalization
                        for the 3 planes, to account for
                        beta function at the observation
@@ -38,14 +35,15 @@ class WakeElement(Element):
 
     def __init__(self, family_name, ring, wake, **kwargs):
         kwargs.setdefault('PassMethod', 'WakeFieldPass')
-        self.Intensity = kwargs.pop('Intensity', 0.0)
+        self._charge2current = self.get_charge2current(ring)
+        self.Wakefact = self.get_wakefact(ring)
+        self.Intensity = 0.0        # To avoid warning
+        self.Current = kwargs.pop('Current', 0.0)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
-        self._turnhistory = None        # To avoid warning
+        self._turnhistory = None    # To avoid warning
         self.clear_history()
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
-        self.Wakefact = self.get_wakefact(ring)
-        self.int2curr = self.get_int2curr(ring)
         self._wakeT = wake.srange
         self._nelem = len(self._wakeT)
         zcuts = kwargs.pop('ZCuts', None)
@@ -69,7 +67,7 @@ class WakeElement(Element):
         return -qe/(ring.energy*betrel**2)
 
     @staticmethod
-    def get_int2curr(ring):
+    def get_charge2current(ring):
         betrel = numpy.sqrt(1.0-(e_mass/ring.energy)**2)
         return clight*betrel*qe/ring.circumference
 
@@ -102,11 +100,11 @@ class WakeElement(Element):
 
     @property
     def Current(self):
-        return self.Intensity*self.int2curr
+        return self.Intensity*self._charge2current
 
     @Current.setter
     def Current(self, current):
-        self.Intensity = current/self.int2curr
+        self.Intensity = current/self._charge2current
 
     def __repr__(self):
         """Simplified __repr__ to avoid errors due to arguments
