@@ -59,7 +59,6 @@ Nparts = 10000
 Nturns = 20000
 nbins = 60
 part = at.beam(Nparts, sigm)
-part[:,2] += 10e-6
 
 histAveFlag = False
 numAve = 5000

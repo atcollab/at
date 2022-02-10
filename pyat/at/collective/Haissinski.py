@@ -55,9 +55,9 @@ class Haissinski(object):
 
 
         #negative s to be consistent with paper and negative Wz
-        s = wake_element.WakeT
+        s = wake_element._wakeT
         self.ds = numpy.diff(s)[0]/self.sigma_l
-        self.wtot_fun = interp1d(-s/self.sigma_l, -wake_element.WakeZ) 
+        self.wtot_fun = interp1d(-s/self.sigma_l, -wake_element._wakeZ) 
 
         self.s = -s/self.sigma_l
 
