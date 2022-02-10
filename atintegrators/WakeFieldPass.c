@@ -25,7 +25,7 @@ struct elem
 };
 
 
-void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){   
+void WakeFieldPass(double *r_in,int num_particles,double circumference,struct elem *Elem) {
     /*
      * r_in - 6-by-N matrix of initial conditions reshaped into
      * 1-d array of 6*N elements
@@ -33,7 +33,6 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     long nslice = Elem->nslice;
     long nelem = Elem->nelem;
     long nturns = Elem->nturns;
-    double circumference = Elem->circumference;
     double *normfact = Elem->normfact;
     double *waketableT = Elem->waketableT;
     double *waketableDX = Elem->waketableDX;
@@ -45,8 +44,7 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
     double *z_cuts = Elem->z_cuts;    
 
     size_t sz = 5*nslice*sizeof(double) + num_particles*sizeof(int);
-    int i;
-    double *rtmp;
+    int c;
 
     int *pslice;
     double *kx;
@@ -76,16 +74,21 @@ void WakeFieldPass(double *r_in,int num_particles, struct elem *Elem){
                   normfact,kx,ky,kx2,ky2,kz);
     
     /*apply kicks*/
-    for (i=0; i<num_particles; i++) {
-        rtmp = r_in+i*6;
-        if (!atIsNaN(rtmp[0])) {
-            rtmp[4] += kz[pslice[i]];
-            rtmp[1] += (kx[pslice[i]]+rtmp[0]*kx2[pslice[i]])*(1+rtmp[4]);
-            rtmp[3] += (ky[pslice[i]]+rtmp[2]*ky2[pslice[i]])*(1+rtmp[4]);
+    /* OpenMP not efficient. Too much shared data ?
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+    shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
+    */
+    for (c=0; c<num_particles; c++) {
+        double *r6 = r_in+c*6;
+        int islice=pslice[c];
+        if (!atIsNaN(r6[0])) {
+            r6[4] += kz[islice];
+            r6[1] += (kx[islice]+r6[0]*kx2[islice])*(1+r6[4]);
+            r6[3] += (ky[islice]+r6[2]*ky2[islice])*(1+r6[4]);
         }
-    }    
+    }
     atFree(buffer);
-};
+}
 
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -94,7 +97,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         long nslice,nelem,nturns;
-        double intensity, wakefact, circumference;
+        double num_charges, wakefact;
         static double lnf[3];
         double *normfact;
         double *waketableT;
@@ -106,21 +109,20 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *turnhistory;
         double *z_cuts;
 
-        nslice=atGetLong(ElemData,"Nslice"); check_error();
-        nelem=atGetLong(ElemData,"Nelem"); check_error();
-        nturns=atGetLong(ElemData,"Nturns"); check_error();
-        intensity=atGetDouble(ElemData,"Intensity"); check_error();
-        circumference=atGetDouble(ElemData,"Circumference"); check_error();
-        wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
-        waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
-        turnhistory=atGetDoubleArray(ElemData,"TurnHistory"); check_error();
+        nslice=atGetLong(ElemData,"_nslice"); check_error();
+        nelem=atGetLong(ElemData,"_nelem"); check_error();
+        nturns=atGetLong(ElemData,"_nturns"); check_error();
+        num_charges=atGetDouble(ElemData,"NumParticles"); check_error();
+        wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
+        waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
+        turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
         normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
         /*optional attributes*/
-        waketableDX=atGetOptionalDoubleArray(ElemData,"WakeDX"); check_error();
-        waketableDY=atGetOptionalDoubleArray(ElemData,"WakeDY"); check_error();
-        waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
-        waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
-        waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
+        waketableDX=atGetOptionalDoubleArray(ElemData,"_wakeDX"); check_error();
+        waketableDY=atGetOptionalDoubleArray(ElemData,"_wakeDY"); check_error();
+        waketableQX=atGetOptionalDoubleArray(ElemData,"_wakeQX"); check_error();
+        waketableQY=atGetOptionalDoubleArray(ElemData,"_wakeQY"); check_error();
+        waketableZ=atGetOptionalDoubleArray(ElemData,"_wakeZ"); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
 
         
@@ -128,9 +130,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->nslice=nslice;
         Elem->nelem=nelem;
         Elem->nturns=nturns;
-        Elem->circumference=circumference;
         for(int i=0;i<3;i++){
-           lnf[i]=normfact[i]*intensity*wakefact;
+           lnf[i]=normfact[i]*num_charges*wakefact;
         }
         Elem->normfact=lnf;
         Elem->waketableT=waketableT;
@@ -142,7 +143,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->turnhistory=turnhistory;
         Elem->z_cuts=z_cuts;
     }
-    WakeFieldPass(r_in,num_particles,Elem);
+    WakeFieldPass(r_in,num_particles,Param->RingLength,Elem);
     return Elem;
 }
 
@@ -161,7 +162,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         struct elem El, *Elem=&El;
 
         long nslice,nelem,nturns;
-        double intensity, wakefact, circumference;
+        double num_charges, wakefact;
         double *normfact;
         double *waketableT;
         double *waketableDX;
@@ -172,29 +173,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *turnhistory;
         double *z_cuts;
 
-        nslice=atGetLong(ElemData,"Nslice"); check_error();
-        nelem=atGetLong(ElemData,"Nelem"); check_error();
-        nturns=atGetLong(ElemData,"Nturns"); check_error();
-        intensity=atGetDouble(ElemData,"Intensity"); check_error();
-        circumference=atGetDouble(ElemData,"Circumference"); check_error();
-        wakefact=atGetDouble(ElemData,"Wakefact"); check_error();
-        waketableT=atGetDoubleArray(ElemData,"WakeT"); check_error();
-        turnhistory=atGetDoubleArray(ElemData,"TurnHistory"); check_error();
+        nslice=atGetLong(ElemData,"_nslice"); check_error();
+        nelem=atGetLong(ElemData,"_nelem"); check_error();
+        nturns=atGetLong(ElemData,"_nturns"); check_error();
+        num_charges=atGetDouble(ElemData,"NumParticles"); check_error();
+        wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
+        waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
+        turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
         normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
         /*optional attributes*/
-        waketableDX=atGetOptionalDoubleArray(ElemData,"WakeDX"); check_error();
-        waketableDY=atGetOptionalDoubleArray(ElemData,"WakeDY"); check_error();
-        waketableQX=atGetOptionalDoubleArray(ElemData,"WakeQX"); check_error();
-        waketableQY=atGetOptionalDoubleArray(ElemData,"WakeQY"); check_error();
-        waketableZ=atGetOptionalDoubleArray(ElemData,"WakeZ"); check_error();
+        waketableDX=atGetOptionalDoubleArray(ElemData,"_wakeDX"); check_error();
+        waketableDY=atGetOptionalDoubleArray(ElemData,"_wakeDY"); check_error();
+        waketableQX=atGetOptionalDoubleArray(ElemData,"_wakeQX"); check_error();
+        waketableQY=atGetOptionalDoubleArray(ElemData,"_wakeQY"); check_error();
+        waketableZ=atGetOptionalDoubleArray(ElemData,"_wakeZ"); check_error();
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
         
         Elem->nslice=nslice;
         Elem->nelem=nelem;
         Elem->nturns=nturns;
-        Elem->circumference=circumference;
         for(int i=0;i<3;i++){
-           normfact[i]*=intensity*wakefact;
+           normfact[i]*=num_charges*wakefact;
         }
         Elem->normfact=normfact;
         Elem->waketableT=waketableT;
@@ -210,29 +209,28 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        WakeFieldPass(r_in, num_particles, Elem);
+        WakeFieldPass(r_in, num_particles, 0.0, Elem);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(9,1);
-        mxSetCell(plhs[0],0,mxCreateString("Nelem"));
-        mxSetCell(plhs[0],1,mxCreateString("Nslice"));
-        mxSetCell(plhs[0],2,mxCreateString("Nturns"));
-        mxSetCell(plhs[0],3,mxCreateString("Intensity"));
-        mxSetCell(plhs[0],4,mxCreateString("Circumference"));
-        mxSetCell(plhs[0],5,mxCreateString("Wakefact"));
-        mxSetCell(plhs[0],6,mxCreateString("WakeT"));
-        mxSetCell(plhs[0],7,mxCreateString("TurnHistory"));
-        mxSetCell(plhs[0],8,mxCreateString("Normfact"));
+        plhs[0] = mxCreateCellMatrix(8,1);
+        mxSetCell(plhs[0],0,mxCreateString("_nelem"));
+        mxSetCell(plhs[0],1,mxCreateString("_nslice"));
+        mxSetCell(plhs[0],2,mxCreateString("_nturns"));
+        mxSetCell(plhs[0],3,mxCreateString("NumParticles"));
+        mxSetCell(plhs[0],4,mxCreateString("_wakefact"));
+        mxSetCell(plhs[0],5,mxCreateString("_wakeT"));
+        mxSetCell(plhs[0],6,mxCreateString("_turnhistory"));
+        mxSetCell(plhs[0],7,mxCreateString("Normfact"));
 
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(6,1); /* No optional fields */
-            mxSetCell(plhs[0],0,mxCreateString("WakeDX"));
-            mxSetCell(plhs[0],1,mxCreateString("WakeDY"));
-            mxSetCell(plhs[0],2,mxCreateString("WakeQX"));
-            mxSetCell(plhs[0],3,mxCreateString("WakeQY"));
-            mxSetCell(plhs[0],4,mxCreateString("WakeZ"));
+            mxSetCell(plhs[0],0,mxCreateString("_wakeDX"));
+            mxSetCell(plhs[0],1,mxCreateString("_wakeDY"));
+            mxSetCell(plhs[0],2,mxCreateString("_wakeQX"));
+            mxSetCell(plhs[0],3,mxCreateString("_wakeQY"));
+            mxSetCell(plhs[0],4,mxCreateString("_wakeZ"));
             mxSetCell(plhs[0],5,mxCreateString("ZCuts"));
         }
     }
