@@ -8,7 +8,7 @@ function varargout=plotB0curlyh(varargin)
 %  See also atbaseplot
 
 if nargout == 1 % From atplot
-    [lindata,ring,dpp]=deal(varargin{1:3});
+    [lindata,ring,~]=deal(varargin{1:3});
     spl=PhysConstant.speed_of_light_in_vacuum.value;
     E0 = atenergy(ring);
     Brho=E0/spl;
@@ -31,8 +31,8 @@ if nargout == 1 % From atplot
     varargout={plotdata};
 else % From atbaseplot
     [ring,dpp]=deal(varargin{1:2});
-    [linargs,varargs]=linoptions(getdparg(varargin(2:end)));
-    [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
+    [linargs,varargs]=linoptions(varargin(3:end));
+    [~,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:});
     s=cat(1,lindata.SPos);
     varargout={s,plotB0curlyh(lindata,ring,dpp,varargs{:})};
 end
