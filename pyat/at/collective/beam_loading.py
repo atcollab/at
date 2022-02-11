@@ -76,8 +76,7 @@ class BeamLoadingElement(LongResonatorElement):
         wake.add(WakeType.RESONATOR, WakeComponent.Z,
                  fres, self.QFactor, self.RShunt, self.beta)
         self.WakeZ = wake.Z
-        vfact = vgen/numpy.sum([c.Voltage for c in
-                                self.ring.select(self.cavpts)])
+        vfact = vgen/v0
         for c in self.ring.select(self.cavpts):
             c.update({'PhaseLag': -psi})
             c.update({'Voltage': c.Voltage*vfact})           
