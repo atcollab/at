@@ -10,22 +10,10 @@ from .particles import *
 # noinspection PyProtectedMember
 from ..lattice.options import _Dst
 
+if ismpi():
+    # if AT is compiled with mpicc this is required
+    # noinspection PyUnresolvedReferences
+    from mpi4py import MPI
 
-# noinspection PyUnusedLocal
-def _omp(self):
-    """True is AT is compiled with OpenMP"""
-    return isopenmp()
-
-
-# noinspection PyUnusedLocal
-def _mpi(self):
-    """True is AT is compiled with MPI"""
-    return ismpi()
-
-
-_Dst.openmp = property(_omp)
-_Dst.mpi = property(_mpi)
-
-
-
-
+_Dst.openmp = property(lambda self: isopenmp())
+_Dst.mpi = property(lambda self: ismpi())

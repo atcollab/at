@@ -15,6 +15,12 @@ function ring = atsetcavity(ring,varargin)
 %   Set the cavity frequency to the nominal value according to
 %   circumference and harmonic number
 %
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dp',dp)
+%   Set the cavity frequency to the nominal value for the specified dp
+%
+%NEWRING=ATSETCAVITY(RING,...,'Frequency','nominal','dct',dct)
+%   Set the cavity frequency to the nominal value for the specified dct
+%
 %NEWRING=ATSETCAVITY(RING,...,'Voltage',VOLTAGE,...)
 %   Set the total voltage (all cells) [V]
 %   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
@@ -22,12 +28,15 @@ function ring = atsetcavity(ring,varargin)
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
 %   Set the time lag [m]
 %
-%NEWRING=ATSETCAVITY(RING,...,'refpts',CAVPTS)
+%NEWRING=ATSETCAVITY(RING,...,'cavpts',CAVPTS)
 %   CAVPTS is the location of RF cavities. This allows to ignore harmonic
 %   cavities. The default is to use all cavities
 %
 %  NOTES
 %  1. In this mode, the radiation state of the lattice is not modified.
+%  2. When dp is specified, the RF frequency is computed with the
+%     slip factor, so that the resulting dp may slightly differ from the
+%     specified value.
 %
 %
 %Compatibility mode
@@ -61,7 +70,7 @@ try         % Look for cavities in the lattice properties
 catch       % Take all cavities
     cavpts=atgetcells(ring,'Frequency');
 end
-[cavpts,varargs]=getoption(varargin, 'refpts', cavpts);
+[cavpts,varargs]=getoption(varargin, 'cavpts', cavpts);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
 [timelag,varargs]=getoption(varargs, 'TimeLag', []);
@@ -82,10 +91,10 @@ if isempty(varargs)             % New syntax
     end
     if ~isempty(frequency)
         if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            gamma0=props.Energy/E_MASS;
-            beta0=sqrt(1-1/gamma0/gamma0);
             lcell=ncells*findspos(ring,length(ring)+1);
-%           frev=beta0*CLIGHT/lcell;
+            gamma0=props.Energy/E_MASS;
+            % beta0=sqrt(1-1/gamma0/gamma0);
+            % frev=beta0*CLIGHT/lcell;
             frev=CLIGHT/lcell;
             if isfinite(dct)
                 frev=frev - frev*frev/CLIGHT*ncells*dct;
@@ -106,11 +115,11 @@ if isempty(varargs)             % New syntax
     end
     ring(cavpts)=cavities;
 else                            % Old syntax, for compatibility
-    % gamma0=props.Energy/E_MASS;
-    % beta0=sqrt(gamma0^2-1)/gamma0;
     [vcell,radflag,harmcell]=deal(varargin{:});
     lcell=findspos(ring,length(ring)+1);
-%   frequency = (beta0*CLIGHT/circ)*harmnumber;
+    % gamma0=props.Energy/E_MASS;
+    % beta0=sqrt(gamma0^2-1)/gamma0;
+    % frequency = (beta0*CLIGHT/circ)*harmnumber;
     frequency = (CLIGHT/lcell)*harmcell;
     
     %now set cavity frequencies, Harmonic Number and RF Voltage
@@ -130,12 +139,5 @@ else                            % Old syntax, for compatibility
     end
     ring=atsetfieldvalues(ring, cavpts, 'TimeLag', timelag);
 end
-
-    function values=getfield(ring,attr)
-        values = unique(atgetfieldvalues(ring,attr));
-        if length(values) > 1
-            error('AT:IncompatibleValues','%s not equal for all cavities', attr);
-        end
-    end
         
 end

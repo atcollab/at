@@ -13,6 +13,7 @@
 
 #if defined(MATLAB_MEX_FILE)
 
+#include <string.h>
 #define atIsFinite mxIsFinite
 #define atIsNaN mxIsNaN
 #define atGetNaN mxGetNaN
@@ -54,23 +55,40 @@ static void *atCalloc(size_t count, size_t size)
 typedef mxArray atElem;
 #define check_error()
 
+static mxArray *get_field(const mxArray *pm, const char *fieldname)
+{
+   mxArray *field;
+   if (fieldname[0] == '_') {   /* replace leading '-' by trailing '_' */
+      size_t n=strlen(fieldname);
+      char *buffer=strcpy((char *)malloc(n+1),fieldname+1);
+      buffer[n-1]='_';
+      buffer[n]='\0';
+      field = mxGetField(pm,0,buffer);
+      free(buffer);
+   }
+   else {
+      field = mxGetField(pm,0,fieldname);
+   }
+   return field;
+}
+
 static long atGetLong(const mxArray *ElemData, const char *fieldname)
 {
-    mxArray *field=mxGetField(ElemData,0,fieldname);
+    mxArray *field=get_field(ElemData,fieldname);
     if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
     return (long)mxGetScalar(field);
 }
 
 static double atGetDouble(const mxArray *ElemData, const char *fieldname)
 {
-    mxArray *field=mxGetField(ElemData,0,fieldname);
+    mxArray *field=get_field(ElemData,fieldname);
     if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
     return mxGetScalar(field);
 }
 
 static double* atGetDoubleArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
 {
-    mxArray *field=mxGetField(ElemData,0,fieldname);
+     mxArray *field=get_field(ElemData,fieldname);
     if (!field) mexErrMsgIdAndTxt("AT:WrongArg", "The required attribute %s is missing.", fieldname);
     *msz = mxGetM(field);  /*Number of rows in the 2-D array*/
     *nsz = mxGetN(field);  /*Number of columns in the 2-D array.*/
@@ -85,20 +103,20 @@ static double* atGetDoubleArray(const mxArray *ElemData, const char *fieldname)
 
 static long atGetOptionalLong(const mxArray *ElemData, const char *fieldname, long default_value)
 {
-    mxArray *field=mxGetField(ElemData,0,fieldname);
+    mxArray *field=get_field(ElemData,fieldname);
     return (field) ? (long)mxGetScalar(field) : default_value;
 }
 
 static double atGetOptionalDouble(const mxArray *ElemData, const char *fieldname, double default_value)
 {
-    mxArray *field=mxGetField(ElemData,0,fieldname);
+    mxArray *field=get_field(ElemData,fieldname);
     return (field) ? mxGetScalar(field) : default_value;
 }
 
 static double* atGetOptionalDoubleArraySz(const mxArray *ElemData, const char *fieldname, int *msz, int *nsz)
 {
     double *ptr = NULL;
-    mxArray *field=mxGetField(ElemData,0,fieldname);
+    mxArray *field=get_field(ElemData,fieldname);
     if (field) {
         *msz = mxGetM(field);
         *nsz = mxGetN(field);
