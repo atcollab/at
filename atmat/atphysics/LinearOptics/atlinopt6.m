@@ -86,8 +86,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
         [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
-        [refpts,varargs]=getargs(varargs,1);
         [cavpts,varargs]=getoption(varargs,'cavpts',[]);
+        [refpts,varargs]=getargs(varargs,1,'check',@(arg) isnumeric(arg) || islogical(arg));
 
         if isempty(twiss_in)        % Circular machine
             [orbs,orbitin]=findorbit(ring,refpts,dpargs{:},varargs{:});
