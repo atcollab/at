@@ -7,7 +7,7 @@ import numpy as np
 @pytest.fixture(scope='session')
 def test_ring(hmba_lattice):
     ring = hmba_lattice.deepcopy()
-    sf = at.get_refpts(hmba_lattice, 'SF*')
+    sf = at.get_refpts(ring, 'SF*')
     sf1 = ring[sf[0]].divide([0.5, 0.5])
     sf2 = ring[sf[1]].divide([0.5, 0.5])
     ring.pop(sf[1])
