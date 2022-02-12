@@ -1,11 +1,17 @@
 """
 A special file that contains test fixtures for the other test files to use.
 """
-import os
+import sys
+if sys.version_info.minor < 9:
+    from importlib_resources import files, as_file
+else:
+    from importlib.resources import files, as_file
 import platform
 import numpy
 import pytest
-from at import elements, load, lattice
+import at
+import machine_data
+from at import elements
 
 
 # noinspection PyUnusedLocal
@@ -37,18 +43,18 @@ def simple_ring():
 
 @pytest.fixture(scope='session')
 def simple_lattice(simple_ring):
-    return lattice.Lattice(simple_ring, name='lat', energy=5, periodicity=1)
+    return at.Lattice(simple_ring, name='lat', energy=5, periodicity=1)
 
 
 @pytest.fixture(scope='session')
 def dba_lattice():
-    path = os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                         '../test_matlab/dba.mat'))
-    return load.load_mat(path)
+    with as_file(files(machine_data) / 'dba.mat') as path:
+        ring = at.load_lattice(path)
+    return ring
 
 
 @pytest.fixture(scope='session')
 def hmba_lattice():
-    path = os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                         '../test_matlab/hmba.mat'))
-    return load.load_mat(path)
+    with as_file(files(machine_data) / 'hmba.mat') as path:
+        ring = at.load_lattice(path)
+    return ring
