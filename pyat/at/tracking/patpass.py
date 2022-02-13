@@ -3,11 +3,11 @@ Simple parallelisation of atpass() using multiprocessing.
 """
 from functools import partial
 import multiprocessing
-from at.tracking import atpass
 from at.lattice import uint32_refpts
-from sys import platform
 from warnings import warn
-from at.lattice import AtWarning, elements
+# noinspection PyUnresolvedReferences
+from .atpass import atpass as _atpass
+from at.lattice import Particle, AtWarning, elements
 import numpy
 
 
@@ -36,15 +36,15 @@ def format_results(results, r_in, losses):
 
 def _atpass_one(ring, rin, **kwargs):
     if ring is None:
-        result = atpass(globring, rin, **kwargs)
+        result = _atpass(globring, rin, **kwargs)
     else:
-        result = atpass(ring, rin, **kwargs)
+        result = _atpass(ring, rin, **kwargs)
     return {'rin': rin, 'results': result}
 
 
-def _atpass(ring, r_in, pool_size, start_method, **kwargs):
+def _pass(ring, r_in, pool_size, start_method, **kwargs):
     ctx = multiprocessing.get_context(start_method)
-    if ctx.get_start_method()=='fork':
+    if ctx.get_start_method() == 'fork':
         global globring
         globring = ring
         args = [(None, r_in[:, i]) for i in range(r_in.shape[1])]
@@ -59,7 +59,7 @@ def _atpass(ring, r_in, pool_size, start_method, **kwargs):
     return format_results(results, r_in, losses)
 
 
-def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
+def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
             start_method=None, **kwargs):
     """
     Simple parallel implementation of atpass().  If more than one particle
@@ -90,6 +90,16 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
                         for linux is fork, default for MacOS and Windows is spawn. 
                         fork may used for MacOS to speed-up the calculation or to solve
                         Runtime Errors, however it is considered unsafe.
+    The following keyword overloads a value from lattice:
+        particle:   circulating particle. Default: lattice.particle if existing,
+                    otherwise Particle('relativistic')
+    The following keywords overload values from lattice of from particle keyword
+        energy      lattice energy
+        rest_energy rest energy of the circulating particle [eV]
+        charge      charge of the circulating particle [elementary charge]
+
+    If 'energy' is not available, relativistic tracking if forced, rest_energy
+    is ignored.
 
      OUTPUT:
         (6, N, R, T) array containing output coordinates of N particles
@@ -99,23 +109,39 @@ def patpass(ring, r_in, nturns=1, refpts=None, losses=False, pool_size=None,
         coordinates at which the particle is lost. Set to zero for particles
         that survived
     """
+    if not isinstance(ring, list):
+        ring = list(ring)
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
+    particle = kwargs.pop('particle', getattr(ring, 'particle', Particle()))
+    try:
+        # try to get 'energy' from the lattice
+        kwargs.setdefault('energy', getattr(ring, 'energy'))
+    except AttributeError:
+        pass
+    if 'energy' in kwargs:
+        # energy available, use the particle properties
+        kwargs.setdefault('rest_energy', particle.rest_energy)
+        kwargs.setdefault('charge', particle.charge)
+    else:
+        # energy no available, force relativistic tracking
+        kwargs['rest_energy'] = 0.0
+        kwargs['charge'] = -1.0
     pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
-        return _atpass(ring, r_in, pool_size, start_method, nturns=nturns,
-                       refpts=refpts, losses=losses)
+        return _pass(ring, r_in, pool_size, start_method, nturns=nturns,
+                     refpts=refpts, **kwargs)
     else:
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
         if r_in.flags.f_contiguous:
-            return atpass(ring, r_in, nturns=nturns, refpts=refpts, losses=losses)
+            return _atpass(ring, r_in, nturns=nturns, refpts=refpts, **kwargs)
         else:
             r_fin = numpy.asfortranarray(r_in)
-            r_out = atpass(ring, r_fin, nturns=nturns, refpts=refpts, losses=losses)
+            r_out = _atpass(ring, r_fin, nturns=nturns, refpts=refpts, **kwargs)
             r_in[:] = r_fin[:]
             return r_out
         
