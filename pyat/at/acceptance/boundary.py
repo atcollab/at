@@ -101,7 +101,7 @@ def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
         raise AtError('planes can have 1 or 2 element (1D or 2D aperture)')
     elif ndims == 1 and grid_mode is GridMode.RADIAL:
         grid_mode = GridMode.CARTESIAN
-
+        
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
             bounds = numpy.array([[0, 1], [numpy.pi, 0]])
@@ -285,66 +285,46 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     """
     Recursively search for the boundary in a given plane and direction (angle)
     """
-    def get_r(arr):
-        r = numpy.linalg.norm(arr)
-        return numpy.around(r, decimals=9)
-
-    def search_boundary(planesi, angles, rtol, rstep, nturns,
+    def search_boundary(planesi, angles, rtol, rsteps, nturns,
                         offset, use_mp, **kwargs):
 
-        rstep[rstep < rtol] = rtol
-        if len(planesi) == 1:
-            cs = numpy.atleast_2d(numpy.cos(angles)).T
-            rsteps = numpy.array([numpy.squeeze(rstep) for c in cs])
-        else:
-            cs = numpy.squeeze([numpy.cos(angles), numpy.sin(angles)]).T
-            rsteps = numpy.array([numpy.sqrt((rstep[0]*c[0])**2 +
-                                             (rstep[1]*c[1])**2) for c in cs])
+        ftol = min(rtol/rsteps)
+        cs = numpy.squeeze([numpy.cos(angles), numpy.sin(angles)])
         cs = numpy.around(cs, decimals=9)
-
-        steps = [{} for a in angles]
+        fact = numpy.ones(len(angles))
+        
         survived = numpy.full(len(angles), True)
         istracked = numpy.full(len(angles), True)
         part = numpy.zeros((6, len(angles)))
+        grid = numpy.array([])
+        mask = numpy.array([])
+        
         while numpy.any(survived):
-            for pi, c in zip(planesi, cs.T):
-                part[pi, survived] += c[survived]*rsteps[survived]
-            for i in range(len(angles)):
-                try:
-                    survived[i] = steps[i][get_r(part[planesi, i])]
-                    istracked[i] = False
-                except KeyError:
-                    istracked[i] = True
-
-            ptmp = (part[:, istracked].T + offset).T
+            for i, pi in enumerate(planesi):
+                part[pi, survived] += cs[i,survived]*rsteps[i]*fact[survived]
+            istracked = numpy.array([not numpy.any([numpy.allclose(p,g,rtol=1.0e-9)
+                                    for g in grid.T]) for p in part[planesi].T])
+            survived = numpy.array([numpy.any([numpy.allclose(p,m,rtol=1.0e-9)
+                                   for m in mask.T]) for p in part[planesi].T])
+            pt = part[:,istracked]          
+            grid = numpy.hstack([grid, pt[planesi]]) if grid.size else pt[planesi]
+            ptmp = (pt.T + offset).T
             survived[istracked] = get_survived(ptmp, newring, nturns,
-                                               use_mp, **kwargs)
-
-            for i in range(len(angles)):
-                rp = get_r(part[planesi, i])
-                steps[i][rp] = survived[i]
-                if not survived[i] and rsteps[i] > rtol:
-                    part[planesi, i] -= cs[i]*min(2.0*rsteps[i], rp)
-                    rsteps[i] *= 0.5
+                                               use_mp, **kwargs)                                              
+            pm = part[:,numpy.logical_and(istracked, survived)]
+            mask = numpy.hstack([mask, pm[planesi]]) if mask.size else pm[planesi]
+            for i in range(len(angles)):               
+                if not survived[i] and fact[i] > ftol:
+                    for j, pi in enumerate(planesi):
+                        part[pi, i] -= cs[j, i]*rsteps[j]*min(1, 2*fact[i])
                     survived[i] = True
+                    fact[i] *= 0.5
 
-        for pi, c in zip(planesi, cs.T):
-            part[pi] -= c*rsteps
-
-        grid = []
-        mask = []
-
-        for a, stp in zip(angles, steps):
-            for k, v in stp.items():
-                x = numpy.around(k*numpy.cos(a), decimals=9)
-                y = numpy.around(k*numpy.sin(a), decimals=9)
-                if v:
-                    mask.append([x, y])
-                grid.append([x, y])
+        for i, pi in enumerate(planesi):
+            part[pi] -= cs[i]*rsteps[i]*fact
+        
         p = numpy.squeeze(part[planesi])
-        m = numpy.array(mask).T
-        g = numpy.array(grid).T
-        return p, m, g
+        return p, mask, grid
 
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
     config = grid_configuration(planes, npoints, amplitudes,
