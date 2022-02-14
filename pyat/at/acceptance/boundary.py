@@ -281,7 +281,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                               obspt=None, dp=None, offset=None, bounds=None,
-                              use_mp=False, verbose=True, **kwargs):
+                              use_mp=False, divider=2, verbose=True, **kwargs):
     """
     Recursively search for the boundary in a given plane and direction (angle)
     """
@@ -318,7 +318,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                     for j, pi in enumerate(planesi):
                         part[pi, i] -= cs[j, i]*rsteps[j]*min(1, 2*fact[i])
                     survived[i] = True
-                    fact[i] *= 0.5
+                    fact[i] *= 1/divider
 
         for i, pi in enumerate(planesi):
             part[pi] -= cs[i]*rsteps[i]*fact
@@ -367,12 +367,13 @@ def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     """
     Computes the loss boundary at a single point in the machine
     """
+    divider = kwargs.pop('divider',2)
     if grid_mode is GridMode.RECURSIVE:
         result = recursive_boundary_search(ring, planes, npoints, amplitudes,
                                            nturns=nturns, obspt=obspt, dp=dp,
                                            offset=offset, bounds=bounds,
                                            use_mp=use_mp, verbose=verbose,
-                                           **kwargs)
+                                           divider=divider, **kwargs)
     else:
         result = grid_boundary_search(ring, planes, npoints, amplitudes,
                                       nturns=nturns, obspt=obspt, dp=dp,

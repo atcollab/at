@@ -12,7 +12,7 @@ __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
 def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                    refpts=None, dp=None, offset=None, bounds=None,
                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
-                   start_method=None):
+                   start_method=None, divider=2):
     """
     Computes the acceptance at repfts observation points
     Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
@@ -46,6 +46,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                         lattice_pass). In case multi-processing is not
                         enabled GridMode is forced to
                         RECURSIVE (most efficient in single core)
+        divider=2       Value of the divider used in RECURSIVE boundary search
         verbose=True    Print out some inform
         start_method    This parameter allows to change the python multiprocessing
                         start method, default=None uses the python defaults that is
@@ -113,7 +114,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                                   nturns=nturns, obspt=r, dp=dp,
                                   offset=offset, bounds=bounds,
                                   grid_mode=grid_mode, use_mp=use_mp,
-                                  verbose=verbose, **kwargs)
+                                  verbose=verbose, divider=divider, **kwargs)
         boundary.append(b)
         survived.append(s)
         grid.append(g)
@@ -125,7 +126,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
 
 def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                       refpts=None, grid_mode=GridMode.RADIAL, use_mp=False,
-                      verbose=False, start_method=None):
+                      verbose=False, start_method=None, divider=2):
     """
     Computes the 1D acceptance at refpts observation points
     Scalar parameters required
@@ -147,6 +148,7 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                         lattice_pass).
                         In case multi-processing is not enabled GridMode is
                         forced to RECURSIVE (most efficient in single core)
+        divider=2       Value of the divider used in RECURSIVE boundary search
         verbose=False   Print out some information
         start_method    This parameter allows to change the python multiprocessing
                         start method, default=None uses the python defaults that is
@@ -172,7 +174,8 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
     b, s, g = get_acceptance(ring, plane, npoint, amplitude,
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
-                             verbose=verbose, start_method=start_method)
+                             verbose=verbose, start_method=start_method,
+                             divider=2)
     return numpy.squeeze(b), s, g
 
 
@@ -194,9 +197,17 @@ def get_horizontal_acceptance(ring, *args, **kwargs):
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).
+        divider=2       Value of the divider used in RECURSIVE boundary search
                         In case multi-processing is not enabled GridMode is
                         forced to RECURSIVE (most efficient in single core)
         verbose=False   Print out some information
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
 
     OUTPUT
@@ -227,9 +238,17 @@ def get_vertical_acceptance(ring, *args, **kwargs):
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).
+        divider=2       Value of the divider used in RECURSIVE boundary search
                         In case multi-processing is not enabled GridMode is
                         forced to RECURSIVE (most efficient in single core)
         verbose=False   Print out some information
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
 
     OUTPUT
@@ -260,9 +279,17 @@ def get_momentum_acceptance(ring, *args, **kwargs):
                         at.GridMode.RECURSIVE: recursive search
         use_mp=False    Use python multiprocessing (patpass, default use
                         lattice_pass).
+        divider=2       Value of the divider used in RECURSIVE boundary search
                         In case multi-processing is not enabled GridMode is
                         forced to RECURSIVE (most efficient in single core)
         verbose=False   Print out some information
+        start_method    This parameter allows to change the python multiprocessing
+                        start method, default=None uses the python defaults that is
+                        considered safe. 
+                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
+                        for linux is fork, default for MacOS and Windows is spawn. 
+                        fork may used for MacOS to speed-up the calculation or to solve
+                        Runtime Errors, however it is considered unsafe.
 
 
     OUTPUT
