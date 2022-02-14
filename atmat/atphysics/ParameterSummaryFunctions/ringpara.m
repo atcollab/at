@@ -113,7 +113,7 @@ rp.tunes = tune;
 rp.chroms = chrom;
 rp.etac = 1/gamma^2-alphac;
 
-cavind = findcells(ring,'HarmNumber');
+cavind = findcells(ring,'Frequency');
 if ~isempty(cavind)
     freq_rf = ring{cavind(1)}.Frequency;
 else
