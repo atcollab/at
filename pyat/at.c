@@ -44,6 +44,7 @@ typedef PyObject atElem;
 #endif
 
 #define LIMIT_AMPLITUDE		1
+#define C0  	2.99792458e8
 
 /* define the general signature of a pass function */
 typedef struct elem *(*track_function)(const PyObject *element,
@@ -55,6 +56,7 @@ typedef struct elem *(*track_function)(const PyObject *element,
 static npy_uint32 num_elements = 0;
 static struct elem **elemdata_list = NULL;
 static PyObject **element_list = NULL;
+static double *elemlength_list = NULL;
 static track_function *integrator_list = NULL;
 static PyObject **pyintegrator_list = NULL;
 static PyObject **kwargs_list = NULL;
@@ -284,7 +286,9 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
  *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts","reuse","omp_num_threads","losses", NULL};
+    static char *kwlist[] = {"line","rin","nturns","refpts",
+                             "energy", "rest_energy", "charge",
+                             "reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
     static int valid = 0;
 
@@ -321,9 +325,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!pIp", kwlist, &PyList_Type, &lattice,
-        &PyArray_Type, &rin, &num_turns, &PyArray_Type, &refs, &keep_lattice, &omp_num_threads, &losses)) {
+    param.energy=1.0e9;
+    param.rest_energy=0.0;
+    param.charge=-1.0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!dddpIp", kwlist,
+        &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
+        &PyArray_Type, &refs,
+        &param.energy, &param.rest_energy, &param.charge,
+        &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -397,6 +406,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (!(keep_lattice && valid)) {
         PyObject **element;
+        double *elem_length;
         track_function *integrator;
         PyObject **pyintegrator;
         /* Release the stored elements */
@@ -409,6 +419,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         /* Pointer to Element structures used by the tracking function */
         free(elemdata_list);
         elemdata_list = (struct elem **)calloc(num_elements, sizeof(struct elem *));
+
+        /* Pointer to Element lengths */
+        free(elemlength_list);
+        elemlength_list = (double *)calloc(num_elements, sizeof(double));
 
         /* Pointer to Element list, make sure all pointers are initially NULL */
         free(element_list);
@@ -427,6 +441,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
         lattice_length = 0.0;
         element = element_list;
+        elem_length = elemlength_list;
         integrator = integrator_list;
         pyintegrator = pyintegrator_list;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
@@ -441,28 +456,44 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             pylength = PyObject_GetAttrString(el, "Length");
             length = PyFloat_AsDouble(pylength);
             Py_XDECREF(pylength);
-            if (PyErr_Occurred()) PyErr_Clear();
-            else lattice_length += length;
+            if (PyErr_Occurred()) {
+                length = 0.0;
+                PyErr_Clear();
+            }
+            lattice_length += length;
             *integrator++ = LibraryListPtr->FunctionHandle;
             *pyintegrator++ = LibraryListPtr->PyFunctionHandle;
             *element++ = el;
+            *elem_length++ = length;
             Py_INCREF(el);                          /* Keep a reference to each element in case of reuse */
         }
         valid = 0;
     }
 
     param.RingLength = lattice_length;
-    param.T0 = lattice_length/299792458.0;
+    if (param.rest_energy == 0.0) {
+        param.T0 = param.RingLength/C0;
+    }
+    else {
+        double gamma0 = param.energy/param.rest_energy;
+        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+        double beta0 = betagamma0/gamma0;
+        param.T0 = param.RingLength/beta0/C0;
+    }
+
     for (turn = 0; turn < num_turns; turn++) {
         PyObject **element = element_list;
+        double *elem_length = elemlength_list;
         track_function *integrator = integrator_list;
         PyObject **pyintegrator = pyintegrator_list;
         PyObject **kwargs = kwargs_list;
         struct elem **elemdata = elemdata_list;
+        double s_coord = 0.0;
         param.nturn = turn;
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
+            param.s_coord = s_coord;
             if (elem_index == nextref) {
                 memcpy(drout, drin, np6*sizeof(double));
                 drout += np6; /*  shift the location to write to in the output array */
@@ -482,6 +513,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             } else {
                 setlost(drin, num_particles);
             }
+            s_coord += *elem_length++;
             element++;
             integrator++;
             pyintegrator++;
@@ -521,8 +553,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 }
 
-static PyObject *at_elempass(PyObject *self, PyObject *args)
+static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    static char *kwlist[] = {"element", "rin",
+                             "energy", "rest_energy", "charge", NULL};
     PyObject *element;
     PyArrayObject *rin;
     PyObject *PyPassMethod;
@@ -533,7 +567,12 @@ static PyObject *at_elempass(PyObject *self, PyObject *args)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    if (!PyArg_ParseTuple(args, "OO!", &element,  &PyArray_Type, &rin)) {
+    param.energy=1.0e9;
+    param.rest_energy=0.0;
+    param.charge=-1.0;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO!|ddd", kwlist,
+        &element,  &PyArray_Type, &rin,
+        &param.energy, &param.rest_energy, &param.charge)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -606,19 +645,25 @@ static PyMethodDef AtMethods[] = {
               "refpts:  numpy array of indices of elements where output is desired\n"
               "         0 means entrance of the first element\n"
               "         len(line) means end of the last element\n"
+              "energy:  nominal energy [eV]\n"
+              "rest_energy:  rest_energy of the particle [eV]\n"
+              "charge:  particle charge [elementary charge]\n"
               "reuse:   if True, use previously cached description of the lattice.\n\n"
               "omp_num_threads: number of OpenMP threads (default 0: automatic)\n"
               "losses:  if True, process losses\n"
               "rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array\n"
               "         of particle coordinates\n"
               )},
-    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS,
+    {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("elempass(element, rin)\n\n"
               "Track input particles rin through a single element.\n\n"
               "element: AT element\n"
               "rin:     6 x n_particles Fortran-ordered numpy array.\n"
               "         On return, rin contains the final coordinates of the particles\n"
-             )},
+              "energy:  nominal energy [eV]\n"
+              "rest_energy:  rest_energy of the particle [eV]\n"
+              "charge:  particle charge [elementary charge]\n"
+            )},
     {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
     PyDoc_STR("isopenmp()\n\n"
               "Return whether OpenMP is active.\n"

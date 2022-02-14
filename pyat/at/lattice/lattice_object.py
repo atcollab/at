@@ -16,7 +16,7 @@ import numpy
 import math
 import itertools
 from warnings import warn
-from ..constants import clight
+from ..constants import clight, e_mass
 from .particle_object import Particle
 from .utils import AtError, AtWarning
 from .utils import uint32_refpts as uint32_refs, bool_refpts as bool_refs
@@ -137,7 +137,7 @@ class Lattice(list):
         # set default values
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
-        kwargs.setdefault('_particle', Particle('electron'))
+        kwargs.setdefault('_particle', Particle())
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_h = kwargs.pop('_harmnumber', None)
@@ -156,8 +156,7 @@ class Lattice(list):
         if cell_h is not None:
             self._cell_harmnumber = cell_h
         elif frequency is not None:
-            gamma = self.gamma
-            beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+            beta = self.beta
             rev = beta * clight / self.get_s_pos(len(self))[0]
             self._cell_harmnumber = int(round(frequency / rev))
 
@@ -372,10 +371,8 @@ class Lattice(list):
     @property
     def revolution_frequency(self):
         """Revolution frequency (fullring) [Hz]"""
-        # gamma = self.gamma
-        # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
-        # return beta * clight / self.circumference
-        return clight / self.circumference
+        beta = self.beta
+        return beta * clight / self.circumference
 
     @property
     def particle(self):
@@ -409,12 +406,19 @@ class Lattice(list):
 
     @property
     def gamma(self):
-        return float(self.energy / self.particle.rest_energy)
+        rest_energy = self.particle.rest_energy
+        if rest_energy == 0.0:
+            rest_energy = e_mass
+        return float(self.energy / rest_energy)
 
     @property
     def beta(self):
-        gamma = float(self.energy / self.particle.rest_energy)
-        return math.sqrt(1.0 - 1.0/gamma/gamma)
+        rest_energy = self.particle.rest_energy
+        if rest_energy == 0.0:
+            return 1.0
+        else:
+            gamma = float(self.energy / rest_energy)
+            return math.sqrt(1.0 - 1.0/gamma/gamma)
 
     # noinspection PyPep8Naming
     @property

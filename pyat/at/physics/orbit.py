@@ -2,7 +2,7 @@
 Closed orbit related functions
 """
 import numpy
-from at.lattice.constants import clight
+from at.constants import clight
 from at.lattice import AtWarning, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, uint32_refpts
 from at.tracking import lattice_pass
@@ -269,7 +269,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
 
     l0 = get_s_pos(ring, len(ring))[0]
     f_rf = ring.get_rf_frequency()
-    harm_number = round(f_rf*l0/clight)
+    harm_number = round(f_rf*l0/ring.beta/clight)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
@@ -283,7 +283,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
-    theta[5] = clight * harm_number / f_rf - l0
+    theta[5] = ring.beta * clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
               dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
