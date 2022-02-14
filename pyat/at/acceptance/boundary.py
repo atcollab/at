@@ -84,8 +84,8 @@ def set_ring_orbit(ring, dp, obspt, orbit):
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
     """
     Return a grid configuration based on user input parameters, the ordering
-    is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta). Scalar inputs can
-    be used for 1D grid
+    is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
+    Scalar inputs can be used for 1D grid
     """
     ndims = len(numpy.atleast_1d(planes))
 
@@ -101,7 +101,7 @@ def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
         raise AtError('planes can have 1 or 2 element (1D or 2D aperture)')
     elif ndims == 1 and grid_mode is GridMode.RADIAL:
         grid_mode = GridMode.CARTESIAN
-        
+
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
             bounds = numpy.array([[0, 1], [numpy.pi, 0]])
@@ -159,9 +159,11 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
     Track a grid through the ring and extract survived particles
     """
     if use_mp:
-        pout = numpy.squeeze(patpass(ring, parts, nturns=nturns, **kwargs)) 
+        pout = numpy.squeeze(patpass(ring, parts,
+                                     nturns=nturns, **kwargs))
     else:
-        pout = numpy.squeeze(lattice_pass(ring, parts, nturns=nturns, **kwargs))   
+        pout = numpy.squeeze(lattice_pass(ring, parts,
+                             nturns=nturns, **kwargs))
     if pout.ndim == 2:
         return numpy.invert(numpy.isnan(pout[0, -1]))
     else:
@@ -261,7 +263,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
             print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
         else:
             print('Element {0}, obspt={1}'.format(ring[obspt].FamName,
-                                                   obspt))
+                                                  obspt))
         print('The grid mode is {0}'.format(config.mode))
         print('The planes are {0}'.format(config.planes))
         print('Number of steps are {0}'.format(config.shape))
@@ -292,28 +294,33 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
         cs = numpy.squeeze([numpy.cos(angles), numpy.sin(angles)])
         cs = numpy.around(cs, decimals=9)
         fact = numpy.ones(len(angles))
-        
         survived = numpy.full(len(angles), True)
         istracked = numpy.full(len(angles), True)
         part = numpy.zeros((6, len(angles)))
         grid = numpy.array([])
         mask = numpy.array([])
-        
+
         while numpy.any(survived):
             for i, pi in enumerate(planesi):
-                part[pi, survived] += cs[i,survived]*rsteps[i]*fact[survived]
-            istracked = numpy.array([not numpy.any([numpy.allclose(p,g,rtol=1.0e-9)
-                                    for g in grid.T]) for p in part[planesi].T])
-            survived = numpy.array([numpy.any([numpy.allclose(p,m,rtol=1.0e-9)
-                                   for m in mask.T]) for p in part[planesi].T])
-            pt = part[:,istracked]          
-            grid = numpy.hstack([grid, pt[planesi]]) if grid.size else pt[planesi]
+                part[pi, survived] += cs[i, survived]*rsteps[i]*fact[survived]
+            istracked = numpy.array([not numpy.any([numpy.allclose(p, g,
+                                                                   rtol=1.0e-9)
+                                    for g in grid.T])
+                                    for p in part[planesi].T])
+            survived = numpy.array([numpy.any([numpy.allclose(p, m,
+                                                              rtol=1.0e-9)
+                                   for m in mask.T])
+                                   for p in part[planesi].T])
+            pt = part[:, istracked]
+            grid = numpy.hstack([grid,
+                                 pt[planesi]]) if grid.size else pt[planesi]
             ptmp = (pt.T + offset).T
             survived[istracked] = get_survived(ptmp, newring, nturns,
-                                               use_mp, **kwargs)                                              
-            pm = part[:,numpy.logical_and(istracked, survived)]
-            mask = numpy.hstack([mask, pm[planesi]]) if mask.size else pm[planesi]
-            for i in range(len(angles)):               
+                                               use_mp, **kwargs)
+            pm = part[:, numpy.logical_and(istracked, survived)]
+            mask = numpy.hstack([mask,
+                                 pm[planesi]]) if mask.size else pm[planesi]
+            for i in range(len(angles)):
                 if not survived[i] and fact[i] > ftol:
                     for j, pi in enumerate(planesi):
                         part[pi, i] -= cs[j, i]*rsteps[j]*min(1, 2*fact[i])
@@ -322,7 +329,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
         for i, pi in enumerate(planesi):
             part[pi] -= cs[i]*rsteps[i]*fact
-        
+
         p = numpy.squeeze(part[planesi])
         return p, mask, grid
 
@@ -343,7 +350,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
             print('Element {0}, obspt={1}'.format(ring[0].FamName, 0))
         else:
             print('Element {0}, obspt={1}'.format(ring[obspt].FamName,
-                                                   obspt))
+                                                  obspt))
         print('The grid mode is {0}'.format(config.mode))
         print('The planes are {0}'.format(config.planes))
         print('Number of angles is {0} from {1} to {2} rad'.format(len(angles),
@@ -367,7 +374,7 @@ def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     """
     Computes the loss boundary at a single point in the machine
     """
-    divider = kwargs.pop('divider',2)
+    divider = kwargs.pop('divider', 2)
     if grid_mode is GridMode.RECURSIVE:
         result = recursive_boundary_search(ring, planes, npoints, amplitudes,
                                            nturns=nturns, obspt=obspt, dp=dp,

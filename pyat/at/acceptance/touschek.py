@@ -10,6 +10,7 @@ from .acceptance import get_momentum_acceptance
 
 __all__ = ['get_bunch_length_espread', 'get_lifetime']
 
+
 def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
     """
     Solves the Haissinski formula and returns the bunch length and energy
