@@ -85,6 +85,7 @@ alloptions=[atoptions varargs];
 % atpass
 cdir=fullfile(atroot,'attrack','');
 compile([alloptions, {passinclude}, LIBDL, ompoptions], fullfile(cdir,'atpass.c'));
+compile([atoptions, ompoptions],fullfile(cdir,'coptions.c'))
 
 [warnmess,warnid]=lastwarn; %#ok<ASGLU>
 if strcmp(warnid,'MATLAB:mex:GccVersion_link')

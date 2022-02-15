@@ -15,12 +15,13 @@ classdef atoptions < handle
     
     %% AT dependent parameters
     properties (Dependent, SetAccess=private)
-        orm                         % True if compiled with OpenMP (not yet implemented)
+        openmp                      % True if compiled with OpenMP (not yet implemented)
     end
     
     methods
-        function v=get.orm(obj) %#ok<MANU>
-            v=false;
+        function v=get.openmp(obj) %#ok<MANU>
+            copts = coptions();
+            v = logical(copts.openmp);
         end
     end
     
