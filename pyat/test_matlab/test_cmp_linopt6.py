@@ -1,4 +1,4 @@
-from at import linopt6, uint32_refpts
+from at import linopt6
 import numpy
 import matlab
 from numpy.testing import assert_allclose as assert_close

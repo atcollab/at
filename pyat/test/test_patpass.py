@@ -1,7 +1,7 @@
 from at import elements, patpass
 import numpy
 import pytest
-import sys
+# import sys
 
 
 # @pytest.mark.skipif(not sys.platform.startswith("win"),

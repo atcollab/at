@@ -4,8 +4,8 @@ import pytest
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from at.tracking import lattice_pass, element_pass
-from at.lattice import Lattice, Element, elements
-from at import set_shift, set_tilt, shift_elem, tilt_elem
+from at.lattice import Element, elements
+from at import shift_elem, tilt_elem
 
 
 def test_exact_hamiltonian_pass(rin):

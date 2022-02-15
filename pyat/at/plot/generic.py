@@ -126,12 +126,12 @@ def baseplot(ring, plot_function, *args, **kwargs):
     lines2 = [] if (nplots < 2) else plot1(axright, *plots[1])
     if legend:
         if nplots < 2:
-            axleft.legend(handles=[l for l in lines1 if labeled(l)])
+            axleft.legend(handles=[li for li in lines1 if labeled(li)])
         elif axleft.get_shared_x_axes().joined(axleft, axright):
             axleft.legend(
-                handles=[l for l in lines1 + lines2 if labeled(l)])
+                handles=[li for li in lines1 + lines2 if labeled(li)])
         else:
-            axleft.legend(handles=[l for l in lines1 if labeled(l)])
-            axright.legend(handles=[l for l in lines2 if labeled(l)])
+            axleft.legend(handles=[li for li in lines1 if labeled(li)])
+            axright.legend(handles=[li for li in lines2 if labeled(li)])
     plt.show(block=block)
     return axleft, axright, axsyn
