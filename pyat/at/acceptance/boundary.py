@@ -4,7 +4,7 @@ from at.tracking import lattice_pass, patpass
 from enum import Enum
 import numpy
 import warnings
-from scipy.ndimage.morphology import binary_dilation, binary_opening
+from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
 
