@@ -98,5 +98,3 @@ def transverse_reswall(srange, yokoya_factor, length, rvac, conduct, beta):
             numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
 
     return wake
-
-

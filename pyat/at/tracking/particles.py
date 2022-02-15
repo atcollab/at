@@ -175,34 +175,26 @@ def beam(nparts, sigma, orbit=None):
         particle_dist   a matrix of shape (M, np) where M is shape of
                         sigma matrix
     """
+    def _get_single_plane(dims):
+        row_idx = numpy.array(dims)
+        try:
+            return numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
+        except numpy.linalg.LinAlgError:
+            return numpy.zeros((2, 2))
+    
     v = numpy.random.normal(size=(sigma.shape[0], nparts))
 
     try:
         lmat = numpy.linalg.cholesky(sigma)
-
     except numpy.linalg.LinAlgError:
         print('Decomposition failed for 6x6 correlation matrix.'
-              ' Computing 3 planes individually')
-        try:
-            row_idx = numpy.array([0, 1])
-            a1 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
-        except numpy.linalg.LinAlgError:
-            a1 = numpy.zeros((2, 2))
-
-        try:
-            row_idx = numpy.array([2, 3])
-            a2 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
-        except numpy.linalg.LinAlgError:
-            a2 = numpy.zeros((2, 2))
-
-        try:
-            row_idx = numpy.array([4, 5])
-            a3 = numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
-        except numpy.linalg.LinAlgError:
-            a3 = numpy.zeros((2, 2))
-
+              ' Computing 3 planes individually')       
+        a1 = _get_single_plane([0, 1])
+        a2 = _get_single_plane([2, 3])
+        a3 = _get_single_plane([4, 5])
         lmat = numpy.block([[a1, numpy.zeros((2, 4))],
-                            [numpy.zeros((2, 2)), a2, numpy.zeros((2, 2))],
+                            [numpy.zeros((2, 2)), a2,
+                             numpy.zeros((2, 2))],
                             [numpy.zeros((2, 4)), a3]])
 
     particle_dist = numpy.squeeze(numpy.dot(lmat, v))
@@ -216,7 +208,6 @@ def beam(nparts, sigma, orbit=None):
                                  ' with a length the same as sigma' +
                                  ' matrix')
         else:
-            shp = particle_dist.shape
             for i, orb in enumerate(orbit):
                 particle_dist[i, :] += orb
 
