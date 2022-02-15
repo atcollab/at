@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.2-dev.354 (atcollab) 01-Feb-2022
+% Version 2.2-dev.364 (atcollab) 15-Feb-2022
 %
 %   atdiag           - Tests AT intallation
 %   atdisplay        - checks the verbosity level in the global variable GLOBVAL
