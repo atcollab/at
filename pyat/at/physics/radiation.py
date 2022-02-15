@@ -266,14 +266,14 @@ def get_radiation_integrals(ring, dp=None, twiss=None, **kwargs):
             hp0 = 2.0 * (alpha1 * eta0 + beta0 * etap1) / rho
             h2p0 = 2.0 * (-alpha1 * etap1 + beta0 / rho - gamma1 * eta0) / rho
             h_ave = h0 + hp0 * ll / 2.0 + h2p0 * ll * ll / 6.0 \
-                    - alpha1 * ll ** 3 / 4.0 / rho2 \
-                    + gamma1 * ll ** 4 / 20.0 / rho2
+                - alpha1 * ll ** 3 / 4.0 / rho2 \
+                + gamma1 * ll ** 4 / 20.0 / rho2
 
         di1 = eta_ave * ll / rho
         di2 = ll / rho2
         di3 = ll / abs(rho) / rho2
         di4 = eta_ave * ll * (2.0 * elem.K + 1.0 / rho2) / rho \
-              - (eta0 * eps1 + eta3 * eps2) / rho
+            - (eta0 * eps1 + eta3 * eps2) / rho
         di5 = h_ave * ll / abs(rho) / rho2
         return numpy.array([di1, di2, di3, di4, di5])
 

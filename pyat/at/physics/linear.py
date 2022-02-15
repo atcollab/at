@@ -257,9 +257,9 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
                 orbit = numpy.zeros((6,))
         try:
             # For some reason, "emittances" must be different...
-            sigm = twin['R'][0,...]+10.0*twin['R'][1,...]
+            sigm = twin['R'][0, ...]+10.0*twin['R'][1, ...]
             if twin['R'].shape[0] >= 3:
-                sigm = sigm+0.1*twin['R'][2,...]
+                sigm = sigm+0.1*twin['R'][2, ...]
         except (ValueError, KeyError):  # record arrays throw ValueError !
             slices = [slice(2 * i, 2 * (i + 1)) for i in range(2)]
             ab = numpy.stack((twin['alpha'], twin['beta']), axis=1)
@@ -295,7 +295,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
         tunesup, el0up, elsup = off_momentum(ringup, orbitup)
         tunesdn, el0dn, elsdn = off_momentum(ringdn, orbitdn)
-        deltap = orbitup[4] - orbitdn[4]    # in 6D, dp comes out of find_orbit6
+        # in 6D, dp comes out of find_orbit6
+        deltap = orbitup[4] - orbitdn[4]
         chrom = (tunesup-tunesdn) / deltap
         w0 = wget(deltap, el0up, el0dn)
         ws = wget(deltap, elsup, elsdn)
@@ -303,7 +304,8 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
 
     def unwrap(mu):
         """Remove the phase jumps"""
-        dmu = numpy.diff(numpy.concatenate((numpy.zeros((1, dms)), mu)), axis=0)
+        dmu = numpy.diff(numpy.concatenate((numpy.zeros((1, dms)),
+                                            mu)), axis=0)
         jumps = dmu < -1.e-3
         mu += numpy.cumsum(jumps, axis=0) * 2.0 * numpy.pi
 
@@ -344,15 +346,16 @@ def _linopt(ring, analyze, refpts=None, dp=None, dct=None, orbit=None,
     # Perform analysis
     vps, dtype, el0, els = analyze(mxx, ms)
     if twiss_in is None:
-        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0) 
+        tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
     else:
         tunes = numpy.NaN
 
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
                            keep_lattice=keep_lattice)
-    spos = ring.get_s_pos(ring.uint32_refpts(refpts))   # avoid problem if
-                                                        # refpts is None
+    # avoid problem if refpts is None
+    spos = ring.get_s_pos(ring.uint32_refpts(refpts))
+
     nrefs = orbs.shape[0]
     dms = vps.size
     if dms >= 3:            # 6D processing
@@ -455,9 +458,9 @@ def linopt2(ring, *args, **kwargs):
                         ((6,) array)
         get_chrom=False compute chromaticities. Needs computing the tune at
                         2 different momentum deviations around the central one.
-        get_w=False     computes chromatic amplitude functions (W) [4]. Needs to
-                        compute the optics at 2 different momentum deviations
-                        around the central one.
+        get_w=False     computes chromatic amplitude functions (W) [4].
+                        Needs to compute the optics at 2 different momentum
+                        deviations around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         XYStep=1.0e-8   transverse step for numerical computation
@@ -529,9 +532,9 @@ def linopt4(ring, *args, **kwargs):
                         ((6,) array)
         get_chrom=False compute chromaticities. Needs computing the tune at
                         2 different momentum deviations around the central one.
-        get_w=False     computes chromatic amplitude functions (W) [4]. Needs to
-                        compute the optics at 2 different momentum deviations
-                        around the central one.
+        get_w=False     computes chromatic amplitude functions (W) [4].
+                        Needs to compute the optics at 2 different momentum
+                        deviations around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         XYStep=1.0e-8   transverse step for numerical computation
@@ -674,7 +677,7 @@ def linopt_auto(ring, *args, **kwargs):
         Same as linopt2 or linopt6
 
     KEYWORDS
-        coupled = True  If set to False H/V coupling will be ingnored to 
+        coupled = True  If set to False H/V coupling will be ingnored to
                         simplify the calculation, needs radiation OFF
 
     OUTPUT
@@ -684,12 +687,12 @@ def linopt_auto(ring, *args, **kwargs):
                         refpts is None an empty elemdata structure is returned.
 
     !!!WARNING!!!       Output varies depending whether linopt2 or linopt6 is
-                        called to be used with care                     
+                        called to be used with care
     """
     if not (kwargs.pop('coupled', True) or ring.radiation):
         return linopt2(ring, *args, **kwargs)
     else:
-        return linopt6(ring, *args, **kwargs)  
+        return linopt6(ring, *args, **kwargs)
 
 
 def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
@@ -723,9 +726,9 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
                         ((6,) array)
         get_chrom=False compute chromaticities. Needs computing the tune at
                         2 different momentum deviations around the central one.
-        get_w=False     computes chromatic amplitude functions (W) [4]. Needs to
-                        compute the optics at 2 different momentum deviations
-                        around the central one.
+        get_w=False     computes chromatic amplitude functions (W) [4].
+                        Needs to compute the optics at 2 different momentum
+                        deviations around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         twiss_in=None   Initial conditions for transfer line optics. Record
@@ -742,7 +745,8 @@ def get_optics(ring, refpts=None, dp=None, method=linopt6, **kwargs):
         elemdata        linear optics at the points refered to by refpts, if
                         refpts is None an empty elemdata structure is returned.
 
-        elemdata is a record array with fields depending on the selected method.
+        elemdata is a record array with fields depending on the
+        selected method.
         See the help for linopt6, linopt4, linopt2, linopt_auto.
 
         beamdata is a record with fields:
@@ -777,9 +781,9 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, **kwargs):
                         ((6,) array)
         get_chrom=False compute chromaticities. Needs computing the tune at
                         2 different momentum deviations around the central one.
-        get_w=False     computes chromatic amplitude functions (W) [4]. Needs to
-                        compute the optics at 2 different momentum deviations
-                        around the central one.
+        get_w=False     computes chromatic amplitude functions (W) [4].
+                        Needs to compute the optics at 2 different momentum
+                        deviations around the central one.
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to False
         XYStep=1.0e-8   transverse step for numerical computation
@@ -840,8 +844,8 @@ def linopt(ring, dp=0.0, refpts=None, get_chrom=False, **kwargs):
 # noinspection PyPep8Naming
 @check_radiation(False)
 def avlinopt(ring, dp=0.0, refpts=None, **kwargs):
-    """Perform linear analysis of a lattice and returns average beta, dispersion
-    and phase advance
+    """Perform linear analysis of a lattice and returns average
+    beta, dispersion and phase advance
 
     lindata,avebeta,avemu,avedisp,tune,chrom = avlinopt(lattice, dp, refpts)
 
@@ -960,8 +964,9 @@ def get_tune(ring, method='linopt', dp=None, dct=None, orbit=None, **kwargs):
         orbit           avoids looking for the closed orbit if is already known
                         ((6,) array)
         method='linopt' 'linopt' returns the tunes from the linopt function
-                        'fft' tracks a single particle and computes the tunes with fft
-                        'laskar' tracks a single particle and computes the tunes with NAFF
+                        'fft' tracks a single particle and computes the
+                        tunes with fft 'laskar' tracks a single particle
+                        and computes the tunes with NAFF
 
       for the 'fft' and 'laskar' methods only:
 
@@ -1017,8 +1022,10 @@ def get_chrom(ring, method='linopt', dp=0, dct=None, cavpts=None, **kwargs):
         orbit           avoids looking for the closed orbit if already known
                         ((6,) array)
         method='linopt' 'linopt' returns the tunes from the linopt function
-                        'laskar' tracks a single particle and computes the tunes with NAFF
-        DPStep=1.0E-6   momentum step used for the computation of chromaticities
+                        'laskar' tracks a single particle and computes the
+                        tunes with NAFF
+        DPStep=1.0E-6   momentum step used for the computation of
+                        chromaticities
 
       for the 'laskar' method only:
 
@@ -1055,7 +1062,8 @@ def get_chrom(ring, method='linopt', dp=0, dct=None, cavpts=None, **kwargs):
             orbit = find_orbit4(ring, dct=dct)
             dp = orbit[4]
         tune_up = get_tune(ring, method=method, dp=dp + 0.5*dp_step, **kwargs)
-        tune_down = get_tune(ring, method=method, dp=dp - 0.5*dp_step, **kwargs)
+        tune_down = get_tune(ring, method=method,
+                             dp=dp - 0.5*dp_step, **kwargs)
 
     return (tune_up - tune_down) / dp_step
 

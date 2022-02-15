@@ -181,14 +181,14 @@ def beam(nparts, sigma, orbit=None):
             return numpy.linalg.cholesky(sigma[row_idx[:, None], row_idx])
         except numpy.linalg.LinAlgError:
             return numpy.zeros((2, 2))
-    
+
     v = numpy.random.normal(size=(sigma.shape[0], nparts))
 
     try:
         lmat = numpy.linalg.cholesky(sigma)
     except numpy.linalg.LinAlgError:
         print('Decomposition failed for 6x6 correlation matrix.'
-              ' Computing 3 planes individually')       
+              ' Computing 3 planes individually')
         a1 = _get_single_plane([0, 1])
         a2 = _get_single_plane([2, 3])
         a3 = _get_single_plane([4, 5])
