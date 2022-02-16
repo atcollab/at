@@ -235,7 +235,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
             elif pass_to_class is not None:
                 if not issubclass(cls, pass_to_class):
                     raise err("is not compatible with Class {0}.", class_name)
-            elif issubclass(cls, (elt.Marker, elt.Monitor, RingParam)):
+            elif issubclass(cls, (elt.Monitor, RingParam)):
                 if pass_method != 'IdentityPass':
                     raise err("is not compatible with Class {0}.", class_name)
             elif cls == elt.Drift:
