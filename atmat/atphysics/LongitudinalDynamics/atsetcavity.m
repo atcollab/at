@@ -25,6 +25,9 @@ function ring = atsetcavity(ring,varargin)
 %   Set the total voltage (all cells) [V]
 %   The voltage of each cavity is VOLTAGE / N_CAVITIES / PERIODICITY
 %
+%NEWRING=ATSETCAVITY(RING,...,'HarmNumber',h,...)
+%   Set the harmonic number
+%
 %NEWRING=ATSETCAVITY(RING,...,'TimeLag',TIMELAG,...)
 %   Set the time lag [m]
 %
@@ -62,11 +65,11 @@ function ring = atsetcavity(ring,varargin)
 
 % Speed of light
 CLIGHT=PhysConstant.speed_of_light_in_vacuum.value;
-E_MASS=1.0E6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
 
-props=atGetRingProperties(ring);
+[props,idx]=atGetRingProperties(ring);
 [cavpts,varargs]=getcavptsarg(varargin,ring,props);
 [frequency,varargs]=getoption(varargs, 'Frequency', []);
+[harmnumber,varargs]=getoption(varargs, 'HarmNumber',[]);
 [vring,varargs]=getoption(varargs, 'Voltage', []);
 [timelag,varargs]=getoption(varargs, 'TimeLag', []);
 [dp,varargs]=getoption(varargs,'dp',NaN);
@@ -75,26 +78,27 @@ props=atGetRingProperties(ring);
 ncells=props.Periodicity;
 cavities=ring(cavpts);
 ncavs=length(cavities);
+if ncavs == 0
+    error('AT:NoCavity', 'No cavity found in the lattice');
+end
 
 if isempty(varargs)             % New syntax
-    if ncavs == 0
-        error('AT:NoCavity', 'No cavity found in the lattice');
-    end
     if ~isempty(frequency)
+        lcell=findspos(ring,length(ring)+1);
+        gamma0=props.Energy/props.Particle.rest_energy;
+        beta0=sqrt(1-1/gamma0/gamma0);
+        frev=beta0*CLIGHT/lcell/ncells;
         if (ischar(frequency) || isstring(frequency)) && strcmp(frequency, 'nominal')
-            lcell=ncells*findspos(ring,length(ring)+1);
-            gamma0=props.Energy/E_MASS;
-            % beta0=sqrt(1-1/gamma0/gamma0);
-            % frev=beta0*CLIGHT/lcell;
-            frev=CLIGHT/lcell;
             if isfinite(dct)
-                frev=frev - frev*frev/CLIGHT*ncells*dct;
+                frev=frev * lcell/(lcell+dct);
             elseif isfinite(dp)
                 [~,ringrad]=check_radiation(ring,false,'force');
                 etac=1/gamma0^2 - mcf(ringrad);
                 frev=frev + frev*etac*dp;
             end
-            frequency = frev*props.HarmNumber;
+            frequency = frev * props_harmnumber(harmnumber,props);
+        else
+            harmnumber=round(frequency/frev);
         end
         cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
     end
@@ -106,19 +110,19 @@ if isempty(varargs)             % New syntax
     end
     ring(cavpts)=cavities;
 else                            % Old syntax, for compatibility
-    [vcell,radflag,harmcell]=deal(varargin{:});
+    [vcell,radflag,harmnumber]=deal(varargin{:});
+    harmcell=harmnumber/ncells;
     lcell=findspos(ring,length(ring)+1);
-    % gamma0=props.Energy/E_MASS;
-    % beta0=sqrt(gamma0^2-1)/gamma0;
-    % frequency = (beta0*CLIGHT/circ)*harmnumber;
-    frequency = (CLIGHT/lcell)*harmcell;
-    
+    gamma0=props.Energy/props.Particle.rest_energy;
+    beta0=sqrt(1-1/gamma0/gamma0);
+    frequency = (beta0*CLIGHT/lcell)*harmcell;
+
     %now set cavity frequencies, Harmonic Number and RF Voltage
     cavities=atsetfieldvalues(cavities, 'Frequency', frequency);
-    cavities=atsetfieldvalues(cavities, 'HarmNumber', harmcell);
+    cavities=atsetfieldvalues(cavities, 'HarmNumber', harmnumber);
     cavities=atsetfieldvalues(cavities, 'Voltage', vcell/ncavs);
     ring(cavpts)=cavities;
-    
+
     %now set phaselags in cavities
     if radflag
         U0=atgetU0(ring);
@@ -130,5 +134,20 @@ else                            % Old syntax, for compatibility
     end
     ring=atsetfieldvalues(ring, cavpts, 'TimeLag', timelag);
 end
-        
+
+% Update the ring properties if HarmNumber has changed
+if ~(isempty(idx) || isempty(harmnumber) || ...
+    (isfield(props, 'HarmNumber') && harmnumber == props.HarmNumber))
+    ring=atSetRingProperties(ring,'HarmNumber',harmnumber);
+end
+
+    function h=props_harmnumber(h, props)
+        if isempty(h)
+            if isfield(props,'HarmNumber') && props.HarmNumber ~= 0
+                h=props.HarmNumber;
+            else
+                error('AT:NoCavity','Harmonic number is unknown')
+            end
+        end
+    end
 end
