@@ -9,22 +9,10 @@ function [parmelem, idx] = atfindparam(ring,varargin)
 %
 %  See also ATGETRINGPROPERTIES, ATSETRINGPROPERTIES
 
-persistent location         % Location saved for fast access
-global GLOBVAL
+global GLOBVAL %#ok<*GVMIS> 
 TWO_PI_ERROR = 1.e-4;
 
-% Assume RingParam in 1st position in the ring
-if isempty(location)
-    location = 1;
-end
-
-% Check if it is where expected, otherwise look for it
-if ~(length(ring) >= location && ...
-     isfield(ring{location},'Class') && ...
-     strcmp(ring{location}.Class, 'RingParam'))
-    location=find(atgetcells(ring(:,1),'Class','RingParam'), 1);
-end
-idx = location;
+idx = atlocateparam(ring);
 
 newparms = struct(varargin{:});
 if isfield(newparms, 'Particle')

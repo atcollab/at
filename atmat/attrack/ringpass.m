@@ -81,8 +81,11 @@ else
     refpts=length(ring)+1;
 end
 
+props=atCheckRingProperties(ring);
+
 try
-    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,prefunc,postfunc,nhist,omp_num_threads);
+    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts, ...
+        prefunc,postfunc,nhist,omp_num_threads,props);
     
     if nargout>1
         if nargout>3, varargout{3}=lossinfo; end
