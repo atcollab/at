@@ -213,7 +213,7 @@ def test_find_ThinMultipole(elem_kwargs):
         {'Length': 0.0, 'FamName': 'fam', 'PassMethod': 'IdentityPass'}))
 def test_find_Marker(elem_kwargs):
     assert find_class(elem_kwargs, True) is elements.Marker
-    
+
 
 @pytest.mark.parametrize('elem_kwargs', (
         {'FamName': 'fam'},
