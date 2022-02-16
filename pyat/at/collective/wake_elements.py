@@ -2,7 +2,7 @@ import numpy
 # noinspection PyProtectedMember
 from ..lattice.elements import Element, _array
 from ..lattice.constants import clight, qe
-from .wake_object import Wake, WakeComponent, WakeType
+from .wake_object import resonator, longresonator, reswall
 
 
 # noinspection PyPep8Naming
@@ -33,6 +33,7 @@ class WakeElement(Element):
 
     def __init__(self, family_name, ring, wake, **kwargs):
         kwargs.setdefault('PassMethod', 'WakeFieldPass')
+        zcuts = kwargs.pop('ZCuts', None)
         betrel = ring.beta
         self._charge2current = clight*betrel*qe/ring.circumference
         self._wakefact = -qe/(ring.energy*betrel**2)
@@ -44,7 +45,6 @@ class WakeElement(Element):
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
         self._wakeT = wake.srange
         self._nelem = len(self._wakeT)
-        zcuts = kwargs.pop('ZCuts', None)
         if zcuts is not None:
             self.ZCuts = zcuts
         if wake.Z is not None:
@@ -58,6 +58,20 @@ class WakeElement(Element):
         if wake.QY is not None:
             self._wakeQY = wake.QY
         super(WakeElement, self).__init__(family_name, **kwargs)
+        
+    def rebuild_wake(wake):
+        self._wakeT = wake.srange
+        self._nelem = len(self._wakeT)
+        if wake.Z is not None:
+            self._wakeZ = wake.Z
+        if wake.DX is not None:
+            self._wakeDX = wake.DX
+        if wake.DY is not None:
+            self._wakeDY = wake.DY
+        if wake.QX is not None:
+            self._wakeQX = wake.QX
+        if wake.QY is not None:
+            self._wakeQY = wake.QY
 
     def clear_history(self):
         self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
@@ -67,6 +81,36 @@ class WakeElement(Element):
         l0, _, _ = ring.get_optics(ring)
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
+        
+    def get_opt_attr(self, attrname):
+        if hasattr(self, attrname):
+            return getattr(self, attrname)
+        else:
+            return None
+        
+    @property
+    def WakeT(self):
+        return self._wakeT
+        
+    @property
+    def WakeZ(self):
+        return self.get_opt_attr('_wakeZ')
+        
+    @property
+    def WakeDX(self):
+        return self.get_opt_attr('_wakeDX')
+
+    @property
+    def WakeDY(self):
+        return self.get_opt_attr('_wakeDY')
+        
+    @property
+    def WakeQX(self):
+        return self.get_opt_attr('_wakeQX')
+
+    @property
+    def WakeQY(self):
+        return self.get_opt_attr('_wakeQY')
 
     @property
     def Nslice(self):
@@ -98,53 +142,81 @@ class WakeElement(Element):
         """Simplified __repr__ to avoid errors due to arguments
         not defined as attributes
         """
-        attrs = dict((k, v) for (k, v) in self.items() if not k.startswith('_'))
+        attrs = dict((k, v) for (k, v) in self.items()
+                     if not k.startswith('_'))
         return '{0}({1})'.format(self.__class__.__name__, attrs)
+
+
+class ResonatorElement(WakeElement):
+    """Class to generate a resonator, inherits from WakeElement
+       additonal argument are frequency, qfactor, rshunt
+    """
+    def __init__(self, family_name, ring, srange, wakecomp, frequency, qfactor,
+                 rshunt, yokoya_factor=1, **kwargs):
+        self._wakecomponent = wakecomp
+        self._frequency = frequency
+        self._qfactor = qfactor
+        self._rshunt = rshunt
+        self._yokoya_factor = yokoya_factor
+        self._beta = beta
+        wake = resonator(srange, wakecomp, frequency, qfactor, rshunt,
+                         ring.beta, yokoya_factor=yokoya_factor)
+        super(ResonatorElement, self).__init__(family_name, ring, wake,
+                                               **kwargs)    
+                                               
+    def rebuild_wake(self):          
+        wake = resonator(self.WakeT, self._wakecomponent, self.ResFrequency,
+                         self.Qfactor, self.Rshunt, self._beta, self.Yokoya)    
+        if wake.Z is not None:
+            self._wakeZ = wake.Z
+        if wake.DX is not None:
+            self._wakeDX = wake.DX
+        if wake.DY is not None:
+            self._wakeDY = wake.DY
+        if wake.QX is not None:
+            self._wakeQX = wake.QX
+        if wake.QY is not None:
+            self._wakeQY = wake.QY                                        
+                                               
+    @property
+    def Qfactor(self):
+        return self._qfactor
+            
+    @Qfactor.setter
+    def Qfactor(self, qfactor):
+        self._qfactor = qfactor
+        self.rebuild_wake()
+            
+                                              
 
 
 class LongResonatorElement(WakeElement):
     """Class to generate a longitudinal resonator, inherits from WakeElement
        additional argument are frequency, qfactor, rshunt
     """
-    def __init__(self, family_name, ring, srange, frequency, qfactor,
-                 rshunt, **kwargs):
-        self.Frequency = frequency
-        self.QFactor = qfactor
-        self.RShunt = rshunt
-        wake = Wake(srange)
-        wake.add(WakeType.RESONATOR, WakeComponent.Z,
-                 frequency, qfactor, rshunt, ring.beta)
+    def __init__(self, family_name, ring, srange, frequency, qfactor, rshunt,
+                 **kwargs):
+        self.WParams{'Frequency': frequency,
+                     'Qfactor': qfactor,
+                     'Rshunt': rshunt
+                     'Beta': ring.beta}
+        wake = longresonator(srange, frequency, qfactor, rshunt, ring.beta)
         super(LongResonatorElement, self).__init__(family_name, ring, wake,
                                                    **kwargs)
-
-
-class TransResonatorElement(WakeElement):
-    """Class to generate a transverse resonator, inherits from WakeElement
-       additonal argument are frequency, qfactor, rshunt
-    """
-    def __init__(self, family_name, ring, srange, wakecomp, frequency, qfactor,
-                 rshunt, **kwargs):
-        self.Frequency = frequency
-        self.QFactor = qfactor
-        self.RShunt = rshunt
-        wake = Wake(srange)
-        wake.add(WakeType.RESONATOR, wakecomp,
-                 frequency, qfactor, rshunt, ring.beta)
-        super(TransResonatorElement, self).__init__(family_name, ring, wake,
-                                                    **kwargs)
 
 
 class ResWallElement(WakeElement):
     """Class to generate a resistive wall element, inherits from WakeElement
        additional argument are yokoya_factor, length, pipe radius, conductivity
     """
-    def __init__(self, family_name, ring, srange, yokoya_factor, length,
-                 rvac, conduc, wakecomp, **kwargs):
-        self.yokoya_factor = yokoya_factor
-        self.length = length
-        self.rvac = rvac
-        self.conduc = conduc
-        wake = Wake(srange)
-        wake.add(WakeType.RESWALL, wakecomp,
-                 length, rvac, conduc, ring.beta, yokoya_factor)
+    def __init__(self, family_name, ring, srange, wakecomp, rwlength,
+                 rvac, conduc, yokoya_factor=1, **kwargs):
+        self.WParams{'WakeComponent': wakecomp,
+                     'Length': rwlength,
+                     'Rvac': rvac,
+                     'Conductivity': conduct,
+                     'Yokoya': yokoya_factor,
+                     'Beta': ring.beta}
+        wake = reswall(srange, wakecomp, rwlength, rvac, conduc, ring.beta,
+                       yokoya_factor=yokoya_factor)
         super(ResWallElement, self).__init__(family_name, ring, wake, **kwargs)
