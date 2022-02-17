@@ -1,7 +1,7 @@
 function varargout=atpass(varargin) %#ok<STOUT>
 %ATPASS is a numerical tracking engine for AT
 %
-% ROUT = ATPASS(LATTICE,RIN,MODE,NTURNS,REFPTS,PREFUNC,POSTFUNC,NHIST,NUMTHREADS)
+% ROUT = ATPASS(LATTICE,RIN,MODE,NTURNS,REFPTS,PREFUNC,POSTFUNC,NHIST,NUMTHREADS,RINGPROPS)
 %   LATTICE     AT lattice
 %   RIN         6xN matrix: input coordinates of N particles
 %   MODE        0 - reuse lattice
@@ -13,6 +13,7 @@ function varargout=atpass(varargin) %#ok<STOUT>
 %   POSTFUNC    function called after each element
 %   NHIST       length of history buffer. Optional, default 1
 %   NUMTHREADS  Number of threads in OpenMP. Optional, default: automatic
+%   RINGPROPS   Ring properties (energy and particle).
 %
 % [ROUT,LOST] = ATPASS(...)
 %   Additionally return information on lost particles
