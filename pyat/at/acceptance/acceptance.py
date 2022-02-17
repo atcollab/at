@@ -66,10 +66,13 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                         it is considered unsafe.
 
     OUTPUT
-        Returns 3 lists containing the 2D acceptance, the grid that was
+        Returns 3 numpy arrays with shape (2,n) (or lists of numpy arrays for 
+        multiple refpts): the 2D acceptance , the full grid that was
         tracked and the particles of the grid that survived. The length
         of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
         survived arrays are returned directly.
+        The units depend on the selected planes and are the same as for the 6D
+        particle coordinates
     """
     kwargs = {}
     if not use_mp:
