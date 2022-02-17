@@ -71,13 +71,20 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     Returns a ring starting at obspt and initial
     closed orbit
     """
-    if obspt is not None:
-        assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
-        newring = ring.rotate(obspt)
+    if dp is not None:
+        newring = ring.set_rf_frequency(dp=dp, copy=True)
     else:
         newring = ring.copy()
+        
+    if obspt is not None:
+        assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
+        newring = newring.rotate(obspt)
+
     if orbit is None:
-        orbit, _ = newring.find_orbit(dp=dp)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            orbit, _ = newring.find_orbit(dp=dp)
+        
     return orbit, newring
 
 
