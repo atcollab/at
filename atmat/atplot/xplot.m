@@ -66,7 +66,7 @@ end
 set(ax,'XLim',[smin smax],'XGrid','on','YGrid','on',leftargs{:});
 xlabel(ax,'s [m]');
 if synopt
-    curve.lattice=atplotsyn(ax,ring,varargs{:});  % Plot lattice elements
+    curve.lattice=atplotsyn(ax,ring0,varargs{:});  % Plot lattice elements
 end
 lines=[curve.left;curve.right];
 if ~isempty(lines)
