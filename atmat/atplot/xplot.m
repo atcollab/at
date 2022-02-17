@@ -41,15 +41,15 @@ end
 % Split the ring
 elmlength=findspos(ring(el1:el2-1),el2-el1+1)/npts;
 r2=cellfun(@splitelem,ring(el1:el2-1),'UniformOutput',false);
-ring=cat(1,ring(1:el1-1),r2{:},ring(el2:elt0));
-plrange=el1:el2+length(ring)-elt0;
+splitring=cat(1,ring(1:el1-1),r2{:},ring(el2:elt0));
+plrange=el1:el2+length(splitring)-elt0;
 
-[s,outp]=plotfun(ring,curve.dpp,plotargs{:},dpargs{:});
+[s,outp]=plotfun(splitring,curve.dpp,plotargs{:},dpargs{:});
 if numel(outp) >= 2
     % plotyy kept instead of yyaxis for octave compatibility...
     [ax2,curve.left,curve.right]=plotyy(ax,...
         s(plrange),outp(1).values(plrange,:),...
-        s(plrange),outp(2).values(plrange,:));
+        s(plrange),outp(2).values(plrange,:)); %#ok<PLOTYY> 
     set(ax2(2),'XTick',[],'YColor',get(ax2(1),'YColor'),rightargs{:});
     ylabel(ax2(1),outp(1).axislabel);
     ylabel(ax2(2),outp(2).axislabel);
@@ -66,7 +66,7 @@ end
 set(ax,'XLim',[smin smax],'XGrid','on','YGrid','on',leftargs{:});
 xlabel(ax,'s [m]');
 if synopt
-    curve.lattice=atplotsyn(ax,ring0,varargs{:});  % Plot lattice elements
+    curve.lattice=atplotsyn(ax,ring,varargs{:});  % Plot lattice elements
 end
 lines=[curve.left;curve.right];
 if ~isempty(lines)
@@ -84,15 +84,6 @@ if nargout>0, varargout={curve}; end
             end
         else
             newelems={elem};
-        end
-    end
-
-    function [cellsize,np,cell]=get1cell(ring)
-        [cellsize,np]=size(ring);
-        cell=ring(:,1);
-        params=atgetcells(cell,'Class','RingParam');
-        if any(params)
-            np=ring{find(params,1)}.Periodicity;
         end
     end
 end
