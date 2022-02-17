@@ -75,7 +75,7 @@ def set_ring_orbit(ring, dp, obspt, orbit):
         newring = ring.set_rf_frequency(dp=dp, copy=True)
     else:
         newring = ring.copy()
-        
+
     if obspt is not None:
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
         newring = newring.rotate(obspt)
@@ -84,7 +84,7 @@ def set_ring_orbit(ring, dp, obspt, orbit):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             orbit, _ = newring.find_orbit(dp=dp)
-        
+
     return orbit, newring
 
 
@@ -198,7 +198,19 @@ def get_grid_boundary(mask, grid, config):
             #  take only points inside unit square
             if dd[ic[0]] < numpy.sqrt(2)*1.1:
                 iorder.append(ic[0])
-        return grid[:, iorder]
+        grid = grid[:, iorder]
+        # finally keep only max r for each angle
+        angle = numpy.arctan2(*grid)
+        norm = numpy.linalg.norm(grid.T, axis=1)
+        val, inv = numpy.unique(angle, return_inverse=True)
+        gf = numpy.zeros((2, len(val)))
+        for i, v in enumerate(val):
+            inds = numpy.where(inv == i)[0]
+            ni = norm[inds]
+            nim = numpy.where(ni == numpy.amax(ni))[0]
+            ind = inds[nim][0]
+            gf[:, i] = grid[:, ind]
+        return gf
 
     def search_bnd(ma, sa):
         bnd = numpy.zeros((2, 1))
@@ -222,7 +234,7 @@ def get_grid_boundary(mask, grid, config):
         k = numpy.zeros((3, 3), dtype=int)
         k[1] = 1
         k[:, 1] = 1
-        bnd = numpy.logical_and(binary_dilation(bnd == 0), bnd)
+        bnd = numpy.logical_and(binary_dilation(bnd == 0, border_value=1), bnd)
         bnd = grid.grid[:, bnd.reshape(mask.shape)]
         return nearest_order(bnd)
 
