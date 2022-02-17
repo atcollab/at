@@ -60,9 +60,9 @@ if ~isempty(idx)            % Found RingParam: use it
         parmelem.HarmNumber = parmelem.HarmNumber/old_nper*new_nper;
     end
 else                        % No RingParam element : create a new one
-    t1='Slow access to properties because there is no RingParam element.';
-    t2='Consider adding it with the command: ">> ring=atSetRingProperties(ring)".';
-    warning('AT:NoRingParam', '%s\n%s', t1, t2);
+%     t1='Slow access to properties because there is no RingParam element.';
+%     t2='Consider adding it with the command: ">> ring=atSetRingProperties(ring)".';
+%     warning('AT:NoRingParam', '%s\n%s', t1, t2);
     
     cavities = atgetcells(ring(:,1),'Frequency');
 
