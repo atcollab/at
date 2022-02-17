@@ -45,7 +45,9 @@ def test_elegant_element_from_string_handles_drift(defaults):
 
 def test_elegant_element_from_string_handles_arithmetic(defaults):
     drift = 'drift,l="0.04 2 /"'
-    assert elegant_element_from_string("d1", drift, defaults).equals(Drift("d1", 0.02))
+    assert elegant_element_from_string("d1",
+                                       drift,
+                                       defaults).equals(Drift("d1", 0.02))
 
 
 def test_elegant_element_from_string_handles_marker(defaults):
@@ -58,7 +60,8 @@ def test_elegant_element_from_string_handles_quadrupole(defaults):
     quad = "KQUAD, N_KICKS=30, L=0.4064, K1=-0.7008"
     quad = quad.lower()
     expected = Quadrupole(
-        "q1", 0.4064, k=-0.7008, NumIntSteps=30, PassMethod="StrMPoleSymplectic4Pass",
+        "q1", 0.4064, k=-0.7008, NumIntSteps=30,
+        PassMethod="StrMPoleSymplectic4Pass",
     )
     assert elegant_element_from_string("q1", quad, defaults).equals(expected)
 
@@ -80,7 +83,8 @@ def test_elegant_element_from_string_handles_cavity(defaults):
 
 
 def test_elegant_element_from_string_handles_bending(defaults):
-    bend = "CSBEN,L=0.933,K1=0,Angle=0.1308,E1=0.06544,E2=0.06544, N_KICKS=50, HGAP=0.0233, FINT=0.6438"
+    bend = "CSBEN,L=0.933,K1=0,Angle=0.1308,E1=0.06544,E2=0.06544," \
+           "N_KICKS=50, HGAP=0.0233, FINT=0.6438"
     bend = bend.lower()
     expected = Dipole(
         "b1",
@@ -115,12 +119,15 @@ def test_elegant_element_from_string_handles_variable(defaults):
         ["2*a", {"a": Marker("m")}, {}, [Marker("m"), Marker("m")]],
         ["2*(a)", {"a": Marker("m")}, {}, [Marker("m"), Marker("m")]],
         ["-a", {"a": Marker("m")}, {}, [Marker("m")]],
-        ["b", {}, {"b": [Marker("1"), Marker("2")]}, [Marker("1"), Marker("2")]],
-        ["-b", {}, {"b": [Marker("1"), Marker("2")]}, [Marker("2"), Marker("1")]],
+        ["b", {}, {"b": [Marker("1"), Marker("2")]},
+         [Marker("1"), Marker("2")]],
+        ["-b", {}, {"b": [Marker("1"), Marker("2")]},
+         [Marker("2"), Marker("1")]],
         [
             "-bb",
             {},
-            {"bb": [Dipole("bb", 1.0, 0.05, EntranceAngle=0.02, ExitAngle=0.03,)]},
+            {"bb": [Dipole("bb", 1.0, 0.05, EntranceAngle=0.02,
+             ExitAngle=0.03,)]},
             [Dipole("bb", 1.0, 0.05, EntranceAngle=0.03, ExitAngle=0.02)],
         ],
     ],

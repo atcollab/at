@@ -92,7 +92,8 @@ def get_rf_timelag(ring, **kwargs):
                       cavities.
         array=False   If False, return the time lag of the cavities with the
                       lowest frequency.
-                      If True, return the time lag of all the selected cavities.
+                      If True, return the time lag of all the selected
+                      cavities.
     """
     return _get_cavity(ring, 'TimeLag', _singlev, **kwargs)
 
@@ -192,7 +193,7 @@ def set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None, cavpts=None,
             vall, vmain = getv(ring, 'TimeLag', cavpts)
             TimeLag += vall-_singlev(vmain, 'TimeLag')
         modif['TimeLag'] = TimeLag
-        
+
     if Voltage is not None:
         vcell = Voltage / ring.periodicity
         if fundmask is not None:

@@ -5,7 +5,7 @@ such as the tune and the chromaticity
 import numpy
 from at.lattice import set_value_refpts
 from at.physics import get_tune, get_chrom
-from at.matching import matching 
+
 
 __all__ = ['fit_tune', 'fit_chrom']
 
@@ -48,15 +48,15 @@ def _fit_tune_chrom(ring, index, func, refpts1, refpts2, newval, tol=1.0e-12,
     dq1 = _get_resp(ring, index, func, refpts1, 'PolynomB', delta, dp=dp)
     dq2 = _get_resp(ring, index, func, refpts2, 'PolynomB', delta, dp=dp)
     J = [[dq1[0], dq2[0]], [dq1[1], dq2[1]]]
-    
-    n=0
+
+    n = 0
     sumsq = tol+1
     print('Initial value', func(ring, dp=dp))
     while sumsq > tol and n < niter:
-        sumsq= _fit(ring, index, func, refpts1, refpts2, newval, J, dp=dp)
-        print('iter#',n,'Res.',sumsq)
-        n +=1
-    print('Final value', func(ring, dp=dp),'\n')
+        sumsq = _fit(ring, index, func, refpts1, refpts2, newval, J, dp=dp)
+        print('iter#', n, 'Res.', sumsq)
+        n += 1
+    print('Final value', func(ring, dp=dp), '\n')
     return
 
 

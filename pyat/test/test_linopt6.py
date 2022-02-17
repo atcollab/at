@@ -14,7 +14,8 @@ def test_linopt6_norad(lattice):
     assert_close(rd2.tune, rd6.tune, atol=1e-12, rtol=0)
     assert_close(rd2.chromaticity, rd6.chromaticity, atol=1e-12, rtol=0)
 
-    for field in ['s_pos', 'closed_orbit', 'dispersion', 'alpha', 'beta', 'mu']:
+    for field in ['s_pos', 'closed_orbit', 'dispersion',
+                  'alpha', 'beta', 'mu']:
         assert_close(ld2[field], ld6[field], atol=1e-10, rtol=0, err_msg=field)
     assert_close(ld2.W, ld6.W, atol=1e-6, rtol=0)
 
@@ -50,7 +51,11 @@ def test_linopt6_line(lattice, dp, method):
     twin = dict(alpha=ld04.alpha, beta=ld04.beta,
                 dispersion=ld04.dispersion, closed_orbit=ld04.closed_orbit)
     # twin = ld04
-    tr04, bd4, tr4 = get_optics(lattice, refpts, dp=dp, twiss_in=twin, method=method)
-    for field in ['s_pos', 'closed_orbit', 'dispersion', 'alpha', 'beta', 'mu']:
-        assert_close(ld04[field], tr04[field], atol=1.e-10, rtol=0, err_msg=field)
-        assert_close(ld4[field], tr4[field], atol=1.e-8, rtol=0, err_msg=field)
+    tr04, bd4, tr4 = get_optics(lattice, refpts, dp=dp,
+                                twiss_in=twin, method=method)
+    for field in ['s_pos', 'closed_orbit', 'dispersion',
+                  'alpha', 'beta', 'mu']:
+        assert_close(ld04[field], tr04[field], atol=1.e-10,
+                     rtol=0, err_msg=field)
+        assert_close(ld4[field], tr4[field], atol=1.e-8,
+                     rtol=0, err_msg=field)
