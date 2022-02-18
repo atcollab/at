@@ -183,8 +183,10 @@ def find_class(elem_dict, quiet=False):
                     return elt.Drift
                 elif hasattrs(elem_dict, 'GCR'):
                     return elt.Monitor
-                else:
+                elif pass_method == 'IdentityPass':
                     return elt.Marker
+                else:
+                    return elt.Element
 
 
 def get_pass_method_file_name(pass_method):
