@@ -3,7 +3,7 @@ Closed orbit related functions
 """
 import numpy
 from at.constants import clight
-from at.lattice import AtWarning, check_radiation, DConstant
+from at.lattice import AtError, AtWarning, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, uint32_refpts
 from at.tracking import lattice_pass
 from at.physics import ELossMethod, get_timelag_fromU0
@@ -388,7 +388,7 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
     See also find_orbit4, find_sync_orbit.
     """
     if not (dp is None and dct is None):
-        warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
+        raise AtError('In 6D, "dp" and "dct" cannot be specified')
     if orbit is None:
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
