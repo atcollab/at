@@ -528,7 +528,7 @@ class Lattice(list):
         return elem_func
 
     # noinspection PyShadowingNames
-    def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
+    def radiation_on(self, cavity_pass='RFCavityPass', dipole_pass='auto',
                      quadrupole_pass='auto', wiggler_pass='auto',
                      sextupole_pass=None, octupole_pass=None,
                      multipole_pass=None, copy=False):
@@ -536,7 +536,7 @@ class Lattice(list):
         Turn acceleration and radiation on and return the lattice
 
         KEYWORDS
-            cavity_pass='CavityPass'    PassMethod set on cavities
+            cavity_pass='RFCavityPass'  PassMethod set on cavities
             dipole_pass='auto'          PassMethod set on dipoles
             quadrupole_pass='auto'      PassMethod set on quadrupoles
             wiggler_pass='auto'         PassMethod set on wigglers

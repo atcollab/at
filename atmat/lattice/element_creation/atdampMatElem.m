@@ -4,7 +4,7 @@ function elem=atdampMatElem(fname,ring,varargin)
 %
 %FAMNAME:   family name
 %RING:		initial AT structure, without radiation passmethods
-%CAVIPASS:	pass method for cavities (default ThinCavityPass)
+%CAVIPASS:	pass method for cavities (default RFCavityPass)
 %BENDPASS:	pass method for bending magnets. Special values:
 %           '' makes no change,
 %           'auto' wille substitute 'Pass' with 'RadPass' in any method

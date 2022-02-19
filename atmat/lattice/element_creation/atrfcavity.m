@@ -10,7 +10,7 @@ function elem=atrfcavity(fname,varargin)
 %   4. FREQUENCY	RF frequency [Hz] 
 %   5. HARMNUMBER	Harmonic Number
 %   6. ENERGY       Energy [eV]
-%   7. PASSMETHOD	Tracking function, defaults to 'CavityPass'
+%   7. PASSMETHOD	Tracking function, defaults to 'RFCavityPass'
 %
 %  OUTPUTS
 %      1. ELEM - Structure with the AT element
@@ -28,7 +28,7 @@ function elem=atrfcavity(fname,varargin)
 %          atmultipole, atthinmultipole, atmarker, atcorrector
 
 % Input parser for option
-[rsrc,L,V,F,H,E,method] = decodeatargs({0,0,1,1,1.E9,'CavityPass'},varargin);
+[rsrc,L,V,F,H,E,method] = decodeatargs({0,0,1,1,1.E9,'RFCavityPass'},varargin);
 [L,rsrc]                = getoption(rsrc,'Length',L);
 [V,rsrc]                = getoption(rsrc,'Voltage',V);
 [F,rsrc]                = getoption(rsrc,'Frequency',F);

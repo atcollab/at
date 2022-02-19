@@ -15,7 +15,7 @@ function [orb6,orbitin] = findorbit6(ring,varargin)
 %    6-by-6 Jacobian matrix J6. In order for (J-E) matrix
 %    to be non-singular it is NECESSARY to use a realistic
 %    PassMethod for cavities with non-zero momentum kick
-%    (such as ThinCavityPass).
+%    (such as RFCavityPass).
 % 3. FINDORBIT6 can find orbits with radiation.
 %    In order for the solution to exist the cavity must supply
 %    adequate energy compensation.

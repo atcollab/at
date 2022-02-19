@@ -2,7 +2,7 @@ function varargout = cavityon(varargin)
 %CAVITYON turns Cavities ON
 %
 % CAVITYON looks for elements that have field Frequency
-%    and sets PassMethod for them to ThinCavityPass
+%    and sets PassMethod for them to RFCavityPass
 % CAVITYON(ENERGY)
 %    In addition sets the E0 field of the global variable GLOBVAL
 %    to energy - design energy [eV]
@@ -40,7 +40,7 @@ if isempty(localcavindex)
    error('No cavities were found in the lattice');
 end
 
-THERING = setcellstruct(THERING,'PassMethod',localcavindex, 'CavityPass');
+THERING = setcellstruct(THERING,'PassMethod',localcavindex, 'RFCavityPass');
 
 disp(strcat('Cavities located at index  [',num2str(localcavindex),  ']  were turned ON'))     
 if nargout
