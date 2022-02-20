@@ -34,7 +34,8 @@ function [orbs,orbitin]  = findorbit(ring,varargin)
 if isempty(orbitin)
     if check_radiation(ring)    % Radiation ON: 6D orbit
         if isfinite(dp) || isfinite(dct)
-            warning('AT:linopt','In 6D, "dp" and "dct" are ignored');
+%           warning('AT:linopt','In 6D, "dp" and "dct" are ignored');
+            error('AT:linopt','In 6D, "dp" and "dct" are nor allowed');
         end
         orbitin=xorbit_6(ring,varargs{:});
     elseif isfinite(dct)
