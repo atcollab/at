@@ -388,7 +388,7 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
     See also find_orbit4, find_sync_orbit.
     """
     if not (dp is None and dct is None):
-        raise AtError('In 6D, "dp" and "dct" cannot be specified')
+        raise AtError('In 6D, "dp" and "dct" are not allowed')
     if orbit is None:
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
