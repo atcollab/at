@@ -31,7 +31,7 @@ warning(s);                         % Restore the warning state
 
 if isempty(idx)
     % No RingParam element: insert a new one
-    ring=[{parmelem};ring];
+    ring=[{parmelem};ring(:)];
 else
     % Update the existing RingParam element
     ring{idx}=parmelem;

@@ -47,7 +47,11 @@ if nargout >= 3
     end
 end
 if nargout >= 4
-    harmnumber = props.HarmNumber;
+    if isfield(props,'HarmNumber')
+        harmnumber = props.HarmNumber;
+    else
+        harmnumber=NaN;
+    end
 end
 if nargout >= 5
     U0 = atgetU0(ring);

@@ -9,7 +9,7 @@ function [parmelem, idx] = atfindparam(ring,varargin)
 %
 %  See also ATGETRINGPROPERTIES, ATSETRINGPROPERTIES
 
-global GLOBVAL %#ok<*GVMIS> 
+global GLOBVAL %#ok<*GVMIS>
 TWO_PI_ERROR = 1.e-4;
 
 idx = atlocateparam(ring);
@@ -39,18 +39,18 @@ if ~isempty(idx)            % Found RingParam: use it
         else
             maincavs = findmaincav(ring(atgetcells(ring,'Frequency')));
         end
-        if ~isempty(maincavs)
+        if ~isempty(maincavs) && maincavs(1).Frequency ~= 0
             gamma = parmelem.Energy / parmelem.Particle.rest_energy;
-            h = parmelem.Periodicity * cellharmnumber(ring, maincavs(1), gamma);
+            h = round(parmelem.Periodicity * maincavs(1).Frequency / cellfrev(ring, gamma));
             parmelem.HarmNumber = h;
         end
     elseif new_nper ~= old_nper
         parmelem.HarmNumber = parmelem.HarmNumber/old_nper*new_nper;
     end
 else                        % No RingParam element : create a new one
-    t1='Slow access to properties because there is no RingParam element.';
-    t2='Consider adding it with the command: ">> ring=atSetRingProperties(ring)".';
-    warning('AT:NoRingParam', '%s\n%s', t1, t2);
+%     t1='Slow access to properties because there is no RingParam element.';
+%     t2='Consider adding it with the command: ">> ring=atSetRingProperties(ring)".';
+%     warning('AT:NoRingParam', '%s\n%s', t1, t2);
     
     cavities = atgetcells(ring(:,1),'Frequency');
 
@@ -119,11 +119,10 @@ else                        % No RingParam element : create a new one
         hargs = {'HarmNumber', h};
     else
         maincav=findmaincav(ring(cavities,1));
-        if isempty(maincav)
-            hargs = {};
-        else
+        hargs = {};
+        if ~isempty(maincav) && maincav(1).Frequency ~= 0
             gamma = energy / particle.rest_energy;
-            h = nbper * cellharmnumber(ring, maincav, gamma);
+            h = round(nbper * maincav.Frequency/cellfrev(ring, gamma));
             hargs = {'HarmNumber', h};
         end
     end
@@ -142,11 +141,10 @@ end
         end
     end
 
-    function cellh=cellharmnumber(ring, maincav, gamma)
+    function frev=cellfrev(ring, gamma)
         % Extract the harmonic number from the main cavity
         vel = sqrt(1-1/gamma/gamma)*PhysConstant.speed_of_light_in_vacuum.value;
-        cellfrev = vel / findspos(ring, length(ring)+1);
-        cellh = round(maincav.Frequency/cellfrev);
+        frev = vel / findspos(ring, length(ring)+1);
     end
 
     function str = strupdate(str, str2)
@@ -161,7 +159,7 @@ end
     function h = check_h(h, nbper)
         % Check that the harmonic number is a multiple of the periodicity
         if mod(h, nbper) ~= 0
-            error('AT:HarmNumber', 'The harmonic number must be a multiple of %d', nbper);
+%             error('AT:HarmNumber', 'The harmonic number must be a multiple of %d', nbper);
         end
     end
 end
