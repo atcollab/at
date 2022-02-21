@@ -1,6 +1,6 @@
 import numpy
-from at import envelope_parameters, get_mcf
-from at.constants import clight, e_mass, qe
+from at import radiation_parameters
+from at.constants import clight, qe
 from scipy.interpolate import interp1d
 import time
 
@@ -39,16 +39,16 @@ class Haissinski(object):
         self.circumference = ring.circumference
         self.energy = ring.energy
 
-        envelpars = envelope_parameters(ring.radiation_on(copy=True))
-        self.f_s = envelpars.f_s
+        radpars = radiation_parameters(ring)
+        self.f_s = radpars.f_s
         self.nu_s = self.f_s / (clight/self.circumference)
-        self.sigma_e = envelpars.sigma_e * self.energy
-        self.sigma_l = envelpars.sigma_l
+        self.sigma_e = radpars.sigma_e * self.energy
+        self.sigma_l = radpars.sigma_l
 
-        self.eta = get_mcf(ring.radiation_off(copy=True))
-        self.ga = self.energy/e_mass
-        self.betrel = numpy.sqrt(1.0-1.0/self.ga/self.ga)
-
+        #The paper uses alpha and eta with same sign. AT uses opposite signs. So negative sign is needed for eta.
+        self.eta = -ring.radiation_off(copy=True).slip_factor 
+        self.ga = ring.gamma
+        self.betrel = ring.beta
 
         self.numIters = numIters
         self.eps = eps    
