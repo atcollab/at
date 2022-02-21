@@ -1,13 +1,10 @@
 import numpy
 import at
-from at.constants import clight, e_mass, qe
-from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from at.collective.wake_object import build_srange
 from at.collective.wake_elements import LongResonatorElement
 from at.collective.Haissinski import Haissinski
-import time
-from matplotlib import cm
 
 # First we define the ring, the BB resonator, the current and the wake element
 ring = at.load_m('../../../machine_data/esrf.m')
@@ -27,10 +24,11 @@ welem.Current = current
 ha = Haissinski(welem, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=1e-13)
 ha.solve()
 
+ha_x_tmp = ha.q_array*ha.sigma_l
 ha_prof = ha.res/ha.I
-ha_prof /= numpy.trapz(ha.res/ha.I, x=ha.q_array*ha.sigma_l)
-ha_cc = numpy.average(ha.q_array*ha.sigma_l, weights=ha_prof)
-ha_x = (ha.q_array*ha.sigma_l - ha_cc) 
+ha_prof /= numpy.trapz(ha_prof, x=ha_x_tmp)
+ha_cc = numpy.average(ha_x_tmp, weights=ha_prof)
+ha_x = (ha_x_tmp - ha_cc) 
 
 '''
 currents = numpy.arange(0, 1.1e-3, 2e-4)
@@ -88,17 +86,17 @@ for t in numpy.arange(Nturns):
         
 
 # Identical post processing of tracking distribution (to the Haissinski)
-zr = allData[:,0]
+zr_tmp = allData[:,0]
 prof = numpy.mean(allData[:,1:],axis=1) 
+prof /= numpy.trapz(prof,x=zr_tmp)
 
-cc = numpy.average(zr, weights=prof)
-norm = numpy.trapz(prof,x=zr)
-prof /= norm
+cc = numpy.average(zr_tmp, weights=prof)
+zr = zr_tmp - cc
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax1.plot(1e3*ha_x, ha_prof, color='r', linestyle='solid', label='Haissinski Solution')
-ax1.plot(1e3*(zr-cc), prof, color='k', linestyle='dashed', label='Tracking')
+ax1.plot(1e3*zr, prof, color='k', linestyle='dashed', label='Tracking')
 ax1.set_xlabel('z [mm]')
 ax1.set_ylabel(r'$\rho(z)$')
 ax1.legend()
