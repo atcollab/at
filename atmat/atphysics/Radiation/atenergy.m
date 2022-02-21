@@ -25,11 +25,24 @@ function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %
 %  See also atGetRingProperties atgetU0 atsetcavity
 
+global GLOBVAL %#ok<GVMIS> 
 s=warning;                          % Save the warning state
 warning('Off','AT:NoRingParam');    % Disable warning
 props = atGetRingProperties(ring);  % Get ring propeties
 warning(s);                         % Restore the warning state
 energy = props.Energy;
+if ~isfinite(energy)
+    if isfield(GLOBVAL,'E0')
+        energy=GLOBVAL.E0;
+    else
+        error('AT:NoEnergy',...
+                ['Energy not defined (searched in ''RingParam'',''RFCavity'', ',...
+                'the ''Energy'' field of each element, GLOBVAL.E0)\n' ...
+                'You can set it with:\n>> ring=atSetRingProperties(''energy'',energy)\n'...
+                'or by using the global variable GLOBVAL:\n>> GLOBVAL.E0=energy;'...
+                ]);
+    end
+end
 nbper = props.Periodicity;
 
 if nargout >= 3

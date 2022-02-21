@@ -9,7 +9,6 @@ function [parmelem, idx] = atfindparam(ring,varargin)
 %
 %  See also ATGETRINGPROPERTIES, ATSETRINGPROPERTIES
 
-global GLOBVAL %#ok<*GVMIS>
 TWO_PI_ERROR = 1.e-4;
 
 idx = atlocateparam(ring);
@@ -80,17 +79,12 @@ else                        % No RingParam element : create a new one
         maincav=findmaincav(ring(cavities,1));
         if ~isempty(maincav) && isfield(maincav, 'Energy')
             energy=maincav.Energy;
-        elseif isfield(GLOBVAL,'E0')
-            energy=GLOBVAL.E0;
         elseif length(unique(E0s)) == 1
             energy = unique(E0s);
         elseif length(unique(E0s)) > 1
             error('AT:NoEnergy','Energy field not equal for all elements')
         else
-            error('AT:NoEnergy',...
-                ['Energy not defined (searched in '...
-                '''RingParam'',''RFCavity'',GLOBVAL.E0,',...
-                ' field ''Energy'' of each element)']);
+            energy=NaN;
         end
     end
 
