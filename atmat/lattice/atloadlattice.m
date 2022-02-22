@@ -2,12 +2,23 @@ function lattice = atloadlattice(fspec,varargin)
 %ATLOADLATTICE  load a lattice from a file
 %
 %LATTICE=ATLOADLATTICE(FILEPATH)
+%   Create an AT lattice (cell array of AT elements) from FILEPATH
+%
+%LATTICE=ATLOADLATTICE(FILEPATH,'matkey',VARIABLE_NAME,...)
+%   Give the name of a variable containing the lattice in .mat files
+%   containing several variables. Defaults to 'RING'.
 %
 %LATTICE=ATLOADLATTICE(FILEPATH,KEY,VALUE...)
 %   (Key,value) pairs are added to the RingProperties of the lattice or
 %   overload existing ones.
 %   Standard keys include: FamName, Energy, Periodicity, HarmNumber, Particle
 %   Custom properties are allowed
+%
+%Allowed file types:
+%   .mat    Binary Matlab file. If the file contains several variables,
+%           the variable name must be specified using the 'matkey' keyword.
+%
+%   .m      Matlab function. The function must output a valid AT structure.
 
 persistent link_table
 
@@ -19,7 +30,11 @@ end
 [~,~,fext]=fileparts(fspec);
 
 if isempty(fext), fext='.mat'; end
-load_func=link_table.(fext(2:end));
+try
+    load_func=link_table.(fext(2:end));
+catch
+    error('AT:load','AT cannot load %s files', fext)
+end
 [lattice,varargs]=load_func(fspec,varargin);
 lattice=atSetRingProperties(lattice,varargs{:});
 
