@@ -48,6 +48,7 @@ typedef double mxDouble;
 #define LHIST prhs[7]
 #define NUMTHREADS prhs[8]
 #define RINGPROPERTIES prhs[9]
+#define TURN prhs[10]
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
 									exceeds this limit it is marked as lost */
@@ -273,6 +274,8 @@ static void getproperties(const mxArray *opts, double *energy, double *rest_ener
 @param[in]      [6] POSTHOOK
 @param[in]      [7] LHIST
 @param[in]      [8] NUMTHREADS
+@param[in]      [9] RINGPROPERTIES
+@param[in]     [10] TURN
 */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
@@ -322,8 +325,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.energy = 0.0;
     param.rest_energy = 0.0;
     param.charge = -1.0;
+    param.nturn = 0;
     if (nrhs >= 10) {
         getproperties(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge);
+    }
+    if (nrhs >= 11) {
+        param.nturn=(int)mxGetScalar(TURN);
     }
 
     if (nlhs >= 2) {
@@ -506,7 +513,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double s_coord = 0.0;
 
         *xturn = (mxDouble)(turn+1);
-		param.nturn = turn;
         nextrefindex = 0;
         nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index=0; elem_index<num_elements; elem_index++) {
@@ -543,6 +549,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             integrator++;
             elemdata++;
             field_numbers++;
+            param.nturn++;
         }
         if (num_elements == nextref) {
             memcpy(drout, drin, np6*sizeof(mxDouble));

@@ -68,6 +68,7 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 [dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
 [silent,args]=getflag(args, 'silent');
 [nhist,args]=getoption(args,'nhist',1);
+[turn,args]=getoption(args,'turn',0);
 [omp_num_threads,args]=getoption(args,'omp_num_threads');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
 nturns=getargs(args(~funcargs),1);
@@ -85,7 +86,7 @@ props=atCheckRingProperties(ring);
 
 try
     [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts, ...
-        prefunc,postfunc,nhist,omp_num_threads,props);
+        prefunc,postfunc,nhist,omp_num_threads,props,turn);
     
     if nargout>1
         if nargout>3, varargout{3}=lossinfo; end

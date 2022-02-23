@@ -92,14 +92,10 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
                         Windows is spawn. fork may used for MacOS to speed-up
                         the calculation or to solve Runtime Errors, however it
                         is considered unsafe.
-    The following keyword overloads a value from lattice:
+    The following keywords overload the lattice value:
         particle:   circulating particle. Default: lattice.particle if
                     existing, otherwise Particle('relativistic')
-    The following keywords overload values from lattice of from particle
-        keyword
         energy      lattice energy
-        rest_energy rest energy of the circulating particle [eV]
-        charge      charge of the circulating particle [elementary charge]
 
     If 'energy' is not available, relativistic tracking if forced, rest_energy
     is ignored.
@@ -117,20 +113,6 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
-    particle = kwargs.pop('particle', getattr(ring, 'particle', Particle()))
-    try:
-        # try to get 'energy' from the lattice
-        kwargs.setdefault('energy', getattr(ring, 'energy'))
-    except AttributeError:
-        pass
-    if 'energy' in kwargs:
-        # energy available, use the particle properties
-        kwargs.setdefault('rest_energy', particle.rest_energy)
-        kwargs.setdefault('charge', particle.charge)
-    else:
-        # energy no available, force relativistic tracking
-        kwargs['rest_energy'] = 0.0
-        kwargs['charge'] = -1.0
     pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:

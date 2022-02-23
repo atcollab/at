@@ -45,14 +45,10 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
                     If True, assume that the lattice has not changed since
                     that previous call.
         losses:     Boolean to activate loss maps output, default is False
-    The following keyword overloads a value from lattice:
+    The following keywords overload the lattice value:
         particle:   circulating particle. Default: lattice.particle if
                     existing, otherwise Particle('relativistic')
-    The following keywords overload values from lattice of from particle
-    keyword
-        energy      lattice energy
-        rest_energy rest energy of the circulating particle [eV]
-        charge      charge of the circulating particle [elementary charge]
+        energy      lattice energy. Default 0.
 
     If 'energy' is not available, relativistic tracking if forced, rest_energy
     is ignored.
@@ -73,20 +69,6 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
-    particle = kwargs.pop('particle', getattr(lattice, 'particle', Particle()))
-    try:
-        # try to get 'energy' from the lattice
-        kwargs.setdefault('energy', getattr(lattice, 'energy'))
-    except AttributeError:
-        pass
-    if 'energy' in kwargs:
-        # energy available, use the particle properties
-        kwargs.setdefault('rest_energy', particle.rest_energy)
-        kwargs.setdefault('charge', particle.charge)
-    else:
-        # energy no available, force relativistic tracking
-        kwargs['rest_energy'] = 0.0
-        kwargs['charge'] = -1.0
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
@@ -118,9 +100,6 @@ def element_pass(element, r_in, **kwargs):
     KEYWORDS
         particle:   circulating particle. Default: Particle('relativistic')
         energy      lattice energy
-    The following keywords overload the values from the particle keyword:
-        rest_energy rest energy of the circulating particle [eV]
-        charge      charge of the circulating particle [elementary charge]
 
     If 'energy' is not available, relativistic tracking if forced, rest_energy
     is ignored.

@@ -1,7 +1,7 @@
 /*
  * This file contains the Python interface to AT, compatible with
- * Python 3 only. It provides a module 'atpass' containing 3 python functions:
- * _atpass, _elempass, isopenmp
+ * Python 3 only. It provides a module 'atpass' containing 4 python functions:
+ * atpass, elempass, isopenmp, ismpi
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -276,6 +276,37 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
     return LibraryListPtr;
 }
 
+void set_energy_particle(PyObject *lattice, PyObject *energy,
+                         PyObject *particle, struct parameters *param)
+{
+    if (energy == NULL)
+        energy = PyObject_GetAttrString(lattice, "energy");
+    else
+        Py_INCREF(energy);
+    if (energy != NULL) {
+        param->energy = PyFloat_AsDouble(energy);
+        Py_DECREF(energy);
+        if (particle == NULL)
+            particle = PyObject_GetAttrString(lattice, "particle");
+        else
+            Py_INCREF(particle);
+        if (particle != NULL) {
+            PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
+            PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
+            if (prest_energy != NULL) {
+                param->rest_energy = PyFloat_AsDouble(prest_energy);
+                Py_DECREF(prest_energy);
+            }
+            if (pcharge != NULL) {
+                param->charge = PyFloat_AsDouble(pcharge);
+                Py_DECREF(pcharge);
+            }
+            Py_DECREF(particle);
+         }
+    }
+    PyErr_Clear();
+}
+
 /*
  * Parse the arguments to atpass, set things up, and execute.
  * Arguments:
@@ -286,15 +317,17 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
  *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts",
-                             "energy", "rest_energy", "charge",
+    static char *kwlist[] = {"line","rin","nturns","refpts","turn",
+                             "energy", "particle",
                              "reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
     static int valid = 0;
 
     PyObject *lattice;
+    PyObject *particle;
+    PyObject *energy;
     PyArrayObject *rin;
-    PyArrayObject *refs = NULL;
+    PyArrayObject *refs;
     PyObject *rout;
     double *drin, *drout;
     PyObject *xnturn = NULL;
@@ -325,28 +358,31 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    param.energy=1.0e9;
+    param.nturn = 0;
+    param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!dddpIp", kwlist,
+    particle=NULL;
+    energy=NULL;
+    refs=NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!iO!OpIp", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
-        &PyArray_Type, &refs,
-        &param.energy, &param.rest_energy, &param.charge,
+        &PyArray_Type, &refs, &param.nturn,
+        &PyFloat_Type ,&energy, &particle,
         &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
-        PyErr_SetString(PyExc_ValueError, "Numpy array is not 6D");
-        return NULL;
+        return set_error(PyExc_ValueError, "rin is not 6D");
     }
     if (PyArray_TYPE(rin) != NPY_DOUBLE) {
-        PyErr_SetString(PyExc_ValueError, "rin is not a double array");
-        return NULL;
+        return set_error(PyExc_ValueError, "rin is not a double array");
     }
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
-        PyErr_SetString(PyExc_ValueError, "rin is not Fortran-aligned");
-        return NULL;
+        return set_error(PyExc_ValueError, "rin is not Fortran-aligned");
     }
+
+    set_energy_particle(lattice, energy, particle, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
@@ -354,8 +390,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (refs) {
         if (PyArray_TYPE(refs) != NPY_UINT32) {
-            PyErr_SetString(PyExc_ValueError, "refpts is not a uint32 array");
-            return NULL;
+            return set_error(PyExc_ValueError, "refpts is not a uint32 array");
         }
         refpts = PyArray_DATA(refs);
         num_refpts = PyArray_SIZE(refs);
@@ -489,7 +524,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         PyObject **kwargs = kwargs_list;
         struct elem **elemdata = elemdata_list;
         double s_coord = 0.0;
-        param.nturn = turn;
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
@@ -519,6 +553,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             pyintegrator++;
             elemdata++;
             kwargs++;
+            param.nturn++;
         }
         /* the last element in the ring */
         if (num_elements == nextref) {
@@ -686,7 +721,7 @@ PyMODINIT_FUNC PyInit_atpass(void)
     PyDoc_STR("Clone of atpass in Accelerator Toolbox"),      /* m_doc */
     -1,           /* m_size */
     AtMethods,    /* m_methods */
-    NULL,         /* m_reload */
+    NULL,         /* m_slots */
     NULL,         /* m_traverse */
     NULL,         /* m_clear */
     NULL,         /* m_free */
