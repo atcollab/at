@@ -108,15 +108,6 @@ def element_pass(element, r_in, **kwargs):
         (6, N) array containing output the coordinates of the particles at the
         exit of the element.
     """
-    particle = kwargs.pop('particle', Particle())
-    if 'energy' in kwargs:
-        # energy available: use the particle properties
-        kwargs.setdefault('rest_energy', particle.rest_energy)
-        kwargs.setdefault('charge', particle.charge)
-    else:
-        # energy not available: force relativistic tracking
-        kwargs['rest_energy'] = 0.0
-        kwargs['charge'] = -1.0
     r_in = numpy.asfortranarray(r_in)
     return _elempass(element, r_in, **kwargs)
 

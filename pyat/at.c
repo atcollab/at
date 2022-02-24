@@ -61,6 +61,8 @@ static track_function *integrator_list = NULL;
 static PyObject **pyintegrator_list = NULL;
 static PyObject **kwargs_list = NULL;
 static char integrator_path[300];
+static PyObject *particle_type;
+static PyObject *element_type;
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
@@ -161,45 +163,46 @@ static void setlost(double *drin, npy_uint32 np)
 }
 
 
-/*
- * Use Python calls to establish the location of the at integrators
- * package.
- */
-static PyObject *get_integrators(void) {
-    PyObject *at_module, *os_module, *fileobj, *dirname_function, *dirobj;
-    at_module = PyImport_ImportModule("at.integrators");
-    if (at_module == NULL) return NULL;
-    fileobj = PyObject_GetAttrString(at_module, "__file__");
-    Py_DECREF(at_module);
-    if (fileobj == NULL) return NULL;
-    os_module = PyImport_ImportModule("os.path");
-    if (os_module == NULL) return NULL;
-    dirname_function = PyObject_GetAttrString(os_module, "dirname");
-    Py_DECREF(os_module);
-    if (dirname_function == NULL) return NULL;
-    dirobj = PyObject_CallFunctionObjArgs(dirname_function, fileobj, NULL);
-    Py_DECREF(fileobj);
-    Py_DECREF(dirname_function);
-    return dirobj;
+/* Get a reference to a python object in a module
+   Equivalent to "from module_name import object" */
+static PyObject *get_pyobj(const char *module_name, const char *object)
+{
+    PyObject *pyobj = NULL;
+    PyObject *module = PyImport_ImportModule(module_name);
+    if (module) {
+        pyobj = PyObject_GetAttrString(module, object);
+        Py_DECREF(module);
+    }
+    return pyobj;
 }
 
+/* Get the location of the at integrators package. */
+static PyObject *get_integrators(void) {
+    PyObject *dirobj = NULL;
+    PyObject *fileobj = get_pyobj("at.integrators", "__file__");
+    if (fileobj) {
+        PyObject *dirname_function = get_pyobj("os.path", "dirname");
+        if (dirname_function) {
+            dirobj = PyObject_CallFunctionObjArgs(dirname_function, fileobj, NULL);
+            Py_DECREF(dirname_function);
+        }
+        Py_DECREF(fileobj);
+    }
+    return dirobj;
+}
 /*
  * Query Python for the full extension given to shared objects.
  * This is useful for Python 3, where the extension may not be trivial.
  * If none is defined, return NULL.
  */
 static PyObject *get_ext_suffix(void) {
-    PyObject *sysconfig_module, *get_config_var_fn, *ext_suffix;
-    sysconfig_module = PyImport_ImportModule("distutils.sysconfig");
-    if (sysconfig_module == NULL) return NULL;
-    get_config_var_fn = PyObject_GetAttrString(sysconfig_module, "get_config_var");
-    Py_DECREF(sysconfig_module);
+    PyObject *get_config_var_fn, *ext_suffix;
+    get_config_var_fn = get_pyobj("sysconfig", "get_config_var");
     if (get_config_var_fn == NULL) return NULL;
     ext_suffix = PyObject_CallFunction(get_config_var_fn, "s", "EXT_SUFFIX");
     Py_DECREF(get_config_var_fn);
     return ext_suffix;
 }
-
 
 /*
  * Import the python module for python integrators
@@ -279,15 +282,17 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
 void set_energy_particle(PyObject *lattice, PyObject *energy,
                          PyObject *particle, struct parameters *param)
 {
-    if (energy == NULL)
-        energy = PyObject_GetAttrString(lattice, "energy");
+    if (energy == NULL) {
+        if (lattice) energy = PyObject_GetAttrString(lattice, "energy");
+    }
     else
         Py_INCREF(energy);
     if (energy != NULL) {
         param->energy = PyFloat_AsDouble(energy);
         Py_DECREF(energy);
-        if (particle == NULL)
-            particle = PyObject_GetAttrString(lattice, "particle");
+        if (particle == NULL) {
+            if (lattice) particle = PyObject_GetAttrString(lattice, "particle");
+        }
         else
             Py_INCREF(particle);
         if (particle != NULL) {
@@ -365,10 +370,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     particle=NULL;
     energy=NULL;
     refs=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!iO!OpIp", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pIp", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &param.nturn,
-        &PyFloat_Type ,&energy, &particle,
+        &PyFloat_Type ,&energy, particle_type, &particle,
         &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
@@ -591,8 +596,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"element", "rin",
-                             "energy", "rest_energy", "charge", NULL};
+                             "energy", "particle", NULL};
     PyObject *element;
+    PyObject *energy;
+    PyObject *particle;
     PyArrayObject *rin;
     PyObject *PyPassMethod;
     npy_uint32 num_particles;
@@ -602,12 +609,15 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    param.energy=1.0e9;
+    param.nturn = 0;
+    param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO!|ddd", kwlist,
-        &element,  &PyArray_Type, &rin,
-        &param.energy, &param.rest_energy, &param.charge)) {
+    particle=NULL;
+    energy=NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|$O!O!", kwlist,
+        element_type, &element,  &PyArray_Type, &rin,
+        &PyFloat_Type ,&energy, particle_type, &particle)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -619,12 +629,14 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
         return set_error(PyExc_ValueError, "rin is not Fortran-aligned");
     }
+
+    set_energy_particle(NULL, energy, particle, &param);
+
     num_particles = (PyArray_SIZE(rin)/6);
     drin = PyArray_DATA(rin);
 
     param.RingLength = 0.0;
     param.T0 = 0.0;
-    param.nturn = 0;
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;
@@ -712,8 +724,7 @@ static PyMethodDef AtMethods[] = {
 
 PyMODINIT_FUNC PyInit_atpass(void)
 {
-    PyObject *integ_path_obj, *ext_suffix_obj;
-    const char *ext_suffix, *integ_path;
+    PyObject *integ_path_obj;
 
     static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
@@ -731,15 +742,32 @@ PyMODINIT_FUNC PyInit_atpass(void)
     if (m == NULL) return NULL;
     import_array();
 
+    /* Build path for loading Python integrators */
     integ_path_obj = get_integrators();
-    if (integ_path_obj == NULL) return NULL;
-    ext_suffix_obj = get_ext_suffix();
-    if (ext_suffix_obj == NULL) return NULL;
-    ext_suffix = (ext_suffix_obj == Py_None) ? OBJECTEXT : PyUnicode_AsUTF8(ext_suffix_obj);
-    integ_path = PyUnicode_AsUTF8(integ_path_obj);
-    snprintf(integrator_path, sizeof(integrator_path), "%s%s%%s%s", integ_path, SEPARATOR, ext_suffix);
-    Py_DECREF(integ_path_obj);
-    Py_DECREF(ext_suffix_obj);
+    if (integ_path_obj) {
+        const char *integ_path = PyUnicode_AsUTF8(integ_path_obj);
+        PyObject *ext_suffix_obj = get_ext_suffix();
+        Py_DECREF(integ_path_obj);
+        if (ext_suffix_obj) {
+            const char *ext_suffix = (ext_suffix_obj == Py_None) ? OBJECTEXT : PyUnicode_AsUTF8(ext_suffix_obj);
+            Py_DECREF(ext_suffix_obj);
+            snprintf(integrator_path, sizeof(integrator_path), "%s%s%%s%s", integ_path, SEPARATOR, ext_suffix);
+        }
+        else {
+            return NULL;
+        }
+    }
+    else {
+        return NULL;
+    }
+
+    /* get Particle type */
+    particle_type = get_pyobj("at.lattice", "Particle");
+    if (particle_type == NULL) return NULL;
+
+    /* get Element type */
+    element_type = get_pyobj("at.lattice", "Element");
+    if (element_type == NULL) return NULL;
 
     return m;
 }
