@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.2-dev.364 (atcollab) 15-Feb-2022
+% Version 2.2-dev.377 (atcollab) 25-Feb-2022
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, <a href="matlab:web('https://github.com/atcollab')">atcollab</a>
