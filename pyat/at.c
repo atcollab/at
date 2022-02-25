@@ -33,6 +33,11 @@ typedef PyObject atElem;
 #define GETTRACKFCN(libfilename) GetProcAddress((libfilename),ATPY_PASS)
 #define SEPARATOR "\\"
 #define OBJECTEXT ".pyd"
+#if PY_MINOR_VERSION <= 7    /* module sysconfig wrong on windows for python<=3.7 */
+#define SYSCONFIG "distutils.sysconfig"
+#else
+#define SYSCONFIG "sysconfig"
+#endif /*PY_MINOR_VERSION*/
 #else
 #include <dlfcn.h>
 #define LIBRARYHANDLETYPE void *
@@ -41,6 +46,7 @@ typedef PyObject atElem;
 #define GETTRACKFCN(libfilename) dlsym((libfilename),ATPY_PASS)
 #define SEPARATOR "/"
 #define OBJECTEXT ".so"
+#define SYSCONFIG "sysconfig"
 #endif
 
 #define LIMIT_AMPLITUDE		1
@@ -197,7 +203,7 @@ static PyObject *get_integrators(void) {
  */
 static PyObject *get_ext_suffix(void) {
     PyObject *get_config_var_fn, *ext_suffix;
-    get_config_var_fn = get_pyobj("sysconfig", "get_config_var");
+    get_config_var_fn = get_pyobj(SYSCONFIG, "get_config_var");
     if (get_config_var_fn == NULL) return NULL;
     ext_suffix = PyObject_CallFunction(get_config_var_fn, "s", "EXT_SUFFIX");
     Py_DECREF(get_config_var_fn);
