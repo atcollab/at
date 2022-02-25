@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.2-dev.354 (atcollab) 01-Feb-2022
+% Version 2.2-dev.364 (atcollab) 15-Feb-2022
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, <a href="matlab:web('https://github.com/atcollab')">atcollab</a>
@@ -85,6 +85,9 @@
 %       <a href="matlab:help mvfield">mvfield</a>                  - Move fields from one structure to another
 %
 %*Loading and Saving lattices*
+%
+%   Loading lattices from files
+%       <a href="matlab:help atloadlattice">atloadlattice</a>            - Load a lattice from a file
 %
 %   Binary files
 %       Lattices can be saved as binary mat-files using the standard load and save commands
