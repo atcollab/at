@@ -82,19 +82,7 @@ static struct LibraryListElement {
 
 static PyObject *print_error(int elem_number, PyObject *rout)
 {
-    printf("Error in tracking element %d.\n", elem_number);
     Py_XDECREF(rout);
-    return NULL;
-}
-
-static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
-{
-    char buffer[300];
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(buffer, sizeof(buffer), fmt, ap);
-    PyErr_SetString(errtype, buffer);
-    va_end(ap);
     return NULL;
 }
 
@@ -263,7 +251,7 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
         
         if (!(fn_handle || pyfunction)) {
             if (dl_handle) FREELIBFCN(dl_handle);
-            set_error(PyExc_RuntimeError,
+            PyErr_Format(PyExc_RuntimeError,
             "PassMethod %s: library, module or trackFunction not found",
             fn_name);
             return NULL;
@@ -379,13 +367,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
-        return set_error(PyExc_ValueError, "rin is not 6D");
+        return PyErr_Format(PyExc_ValueError, "rin is not 6D");
     }
     if (PyArray_TYPE(rin) != NPY_DOUBLE) {
-        return set_error(PyExc_ValueError, "rin is not a double array");
+        return PyErr_Format(PyExc_ValueError, "rin is not a double array");
     }
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
-        return set_error(PyExc_ValueError, "rin is not Fortran-aligned");
+        return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
 
     set_energy_particle(lattice, energy, particle, &param);
@@ -396,7 +384,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     if (refs) {
         if (PyArray_TYPE(refs) != NPY_UINT32) {
-            return set_error(PyExc_ValueError, "refpts is not a uint32 array");
+            return PyErr_Format(PyExc_ValueError, "refpts is not a uint32 array");
         }
         refpts = PyArray_DATA(refs);
         num_refpts = PyArray_SIZE(refs);
@@ -622,13 +610,13 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
-        return set_error(PyExc_ValueError, "rin is not 6D");
+        return PyErr_Format(PyExc_ValueError, "rin is not 6D");
     }
     if (PyArray_TYPE(rin) != NPY_DOUBLE) {
-        return set_error(PyExc_ValueError, "rin is not a double array");
+        return PyErr_Format(PyExc_ValueError, "rin is not a double array");
     }
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
-        return set_error(PyExc_ValueError, "rin is not Fortran-aligned");
+        return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
 
     set_energy_particle(NULL, energy, particle, &param);
