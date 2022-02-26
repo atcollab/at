@@ -89,10 +89,10 @@ static PyObject *print_error(int elem_number, PyObject *rout)
 
 static PyObject *set_error(PyObject *errtype, const char *fmt, ...)
 {
-    char buffer[132];
+    char buffer[300];
     va_list ap;
     va_start(ap, fmt);
-    vsprintf(buffer, fmt, ap);
+    vsnprintf(buffer, sizeof(buffer), fmt, ap);
     PyErr_SetString(errtype, buffer);
     va_end(ap);
     return NULL;
@@ -248,13 +248,12 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
     if (!LibraryListPtr) {
         LIBRARYHANDLETYPE dl_handle=NULL;
         track_function fn_handle = NULL;
-        char lib_file[300], buffer[200];
-        PyObject *pyfunction = NULL;
 
-        pyfunction = GetpyFunction(fn_name);
+        PyObject *pyfunction = GetpyFunction(fn_name);
         PyErr_Clear();      /* Clear any import error if there is no python integrator */
 
-        if(!pyfunction){
+        if (!pyfunction){
+            char lib_file[300];
             snprintf(lib_file, sizeof(lib_file), integrator_path, fn_name);
             dl_handle = LOADLIBFCN(lib_file);
             if (dl_handle) {
@@ -262,15 +261,11 @@ static struct LibraryListElement* get_track_function(const char *fn_name) {
             }
         }
         
-        if((fn_handle==NULL) && (pyfunction==NULL)){
-            snprintf(buffer, sizeof(buffer), "PassMethod %s: library, module or trackFunction not found", fn_name);
-            if(dl_handle){
-                FREELIBFCN(dl_handle);
-            }
-            if(pyfunction){
-                Py_DECREF(pyfunction);
-            }
-            PyErr_SetString(PyExc_RuntimeError, buffer);
+        if (!(fn_handle || pyfunction)) {
+            if (dl_handle) FREELIBFCN(dl_handle);
+            set_error(PyExc_RuntimeError,
+            "PassMethod %s: library, module or trackFunction not found",
+            fn_name);
             return NULL;
         }
 
@@ -495,10 +490,10 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             PyObject *el = PyList_GET_ITEM(lattice, elem_index);
             PyObject *PyPassMethod = PyObject_GetAttrString(el, "PassMethod");
             double length;
-            if (!PyPassMethod) return print_error(elem_index, rout);     /* No PassMethod */
+            if (!PyPassMethod) return print_error(elem_index, rout);    /* No PassMethod: AttributeError */
             LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
             Py_DECREF(PyPassMethod);
-            if (!LibraryListPtr) return print_error(elem_index, rout);        /* No trackFunction for the given PassMethod */
+            if (!LibraryListPtr) return print_error(elem_index, rout);  /* No trackFunction for the given PassMethod: RuntimeError */
             pylength = PyObject_GetAttrString(el, "Length");
             length = PyFloat_AsDouble(pylength);
             Py_XDECREF(pylength);
@@ -648,6 +643,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     if (!PyPassMethod) return NULL;
     LibraryListPtr = get_track_function(PyUnicode_AsUTF8(PyPassMethod));
     Py_DECREF(PyPassMethod);
+    if (!LibraryListPtr) return NULL;
     integrator = LibraryListPtr->FunctionHandle;
     pyintegrator = LibraryListPtr->PyFunctionHandle;
     if (pyintegrator) {
