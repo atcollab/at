@@ -111,6 +111,9 @@ class Wake(object):
     def Z(self):
         return self.components[WakeComponent.Z]
 
+    def get_wake(self, wcomp):
+        return self.components[wcomp]
+
     def add(self, wtype, wcomp, *args, **kwargs):
         if wtype is WakeType.FILE:
             w = self.readwakefile(*args, **kwargs)
@@ -165,3 +168,20 @@ class Wake(object):
                                       length, rvac, conduct, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
+
+
+    def LongResonator(self, frequency, qfactor, rshunt, beta, **kwargs):
+        self.add(WakeType.RESONATOR, WakeComponent.Z,
+                 frequency, qfactor, rshunt, beta)
+
+
+    def TransResonator(self, wakecomp, frequency, qfactor, rshunt, beta, **kwargs):
+        self.add(WakeType.RESONATOR, wakecomp,
+                 frequency, qfactor, rshunt, beta)
+
+    def ResWall(self, wakecomp, length, rvac, conduc, beta, yokoya_factor, **kwargs):
+        self.add(WakeType.RESWALL, wakecomp,
+                 length, rvac, conduc, beta, yokoya_factor)
+
+
+
