@@ -1,6 +1,5 @@
 function plotdata=plotsqrtbetadispcurlyh(lindata,ring,dpp,varargin)
 
-idx=cat(1,lindata.ElemIndex);
 H=CurlyHlindata(lindata);
 
 beta=cat(1,lindata.beta);                     % left axis
