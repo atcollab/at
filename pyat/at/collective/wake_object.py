@@ -111,6 +111,9 @@ class Wake(object):
     def Z(self):
         return self.components[WakeComponent.Z]
 
+    def get_srange(self):
+        return self._srange
+
     def get_wake(self, wcomp):
         return self.components[wcomp]
 
