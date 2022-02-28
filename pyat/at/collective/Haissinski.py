@@ -3,7 +3,6 @@ from at import radiation_parameters
 from at.constants import clight, qe
 from scipy.interpolate import interp1d
 import time
-from at.collective.wake_object import WakeComponent
 
 class Haissinski(object):
 
@@ -56,10 +55,10 @@ class Haissinski(object):
 
 
         #negative s to be consistent with paper and negative Wz
-        s = wake_object.get_srange()
+        s = wake_object.srange
         self.s = -s/self.sigma_l
 
-        Wz = wake_object.get_wake(WakeComponent.Z)
+        Wz = wake_object.Z
         self.ds = numpy.diff(s)[0]/self.sigma_l
         self.wtot_fun = interp1d(self.s, -Wz) 
 

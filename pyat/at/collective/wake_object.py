@@ -111,12 +111,6 @@ class Wake(object):
     def Z(self):
         return self.components[WakeComponent.Z]
 
-    def get_srange(self):
-        return self._srange
-
-    def get_wake(self, wcomp):
-        return self.components[wcomp]
-
     def add(self, wtype, wcomp, *args, **kwargs):
         if wtype is WakeType.FILE:
             w = self.readwakefile(*args, **kwargs)
