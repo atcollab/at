@@ -70,20 +70,19 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     """
     Returns a ring starting at obspt and initial
     closed orbit
-    """
-    if dp is not None:
+    """     
+    if ring.radiation:
         newring = ring.set_rf_frequency(dp=dp, copy=True)
+        dp = None
     else:
-        newring = ring.copy()
-
+        newring=ring
+    
     if obspt is not None:
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
         newring = newring.rotate(obspt)
 
     if orbit is None:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            orbit, _ = newring.find_orbit(dp=dp)
+        orbit, _ = newring.find_orbit(dp=dp)
 
     return orbit, newring
 
@@ -182,9 +181,6 @@ def get_grid_boundary(mask, grid, config):
     Compute the boundary of survided particles array
     """
     def nearest_order(grid):
-        #  first sort by angle
-        idx = numpy.argsort(numpy.arctan2(*grid))
-        grid = grid[:, idx]
         #  keep only max r for each angle
         angle = numpy.arctan2(*grid)
         norm = numpy.linalg.norm(grid.T, axis=1)
@@ -195,7 +191,10 @@ def get_grid_boundary(mask, grid, config):
             ni = norm[inds]
             nim = numpy.where(ni == numpy.amax(ni))[0]
             ind = inds[nim][0]
-            gf[:, i] = grid[:, ind]        
+            gf[:, i] = grid[:, ind] 
+        #  first sort by angle
+        idx = numpy.argsort(numpy.arctan2(*gf))
+        gf = gf[:, idx]     
         #  now sort by closest neighbour on normalized grid
         x, y = gf[0, :].copy(), gf[1, :].copy()
         dxmin = min(numpy.diff(numpy.unique(x)))
@@ -206,9 +205,7 @@ def get_grid_boundary(mask, grid, config):
             ynow = y[iorder[-1]]
             dd = numpy.sqrt(((x-xnow)/dxmin)**2+((y-ynow)/dymin)**2)
             ic = [j for j in numpy.argsort(dd) if j not in iorder]
-            #  take only points inside unit square
-            if dd[ic[0]] < numpy.sqrt(2)*1.1:
-                iorder.append(ic[0])
+            iorder.append(ic[0])
         gf = gf[:, iorder]
         return gf
 
