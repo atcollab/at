@@ -2,7 +2,7 @@ import numpy
 # noinspection PyProtectedMember
 from ..lattice.elements import Element, _array
 from ..lattice.constants import clight, qe
-from .wake_object import resonator, longresonator, reswall
+from .wake_object import resonator, longresonator, reswall, WakeComponent
 
 
 # noinspection PyPep8Naming
@@ -153,31 +153,31 @@ class ResonatorElement(WakeElement):
     """
     def __init__(self, family_name, ring, srange, wakecomp, frequency, qfactor,
                  rshunt, yokoya_factor=1, **kwargs):
-        self._wakecomponent = wakecomp
-        self._frequency = frequency
+        self._resfrequency = frequency
         self._qfactor = qfactor
         self._rshunt = rshunt
-        self._yokoya_factor = yokoya_factor
+        self._yokoya = yokoya_factor
+        self._wakecomponent = wakecomp
         self._beta = beta
         wake = resonator(srange, wakecomp, frequency, qfactor, rshunt,
                          ring.beta, yokoya_factor=yokoya_factor)
         super(ResonatorElement, self).__init__(family_name, ring, wake,
                                                **kwargs)    
                                                
-    def rebuild_wake(self):          
-        wake = resonator(self.WakeT, self._wakecomponent, self.ResFrequency,
-                         self.Qfactor, self.Rshunt, self._beta, self.Yokoya)    
-        if wake.Z is not None:
-            self._wakeZ = wake.Z
-        if wake.DX is not None:
-            self._wakeDX = wake.DX
-        if wake.DY is not None:
-            self._wakeDY = wake.DY
-        if wake.QX is not None:
-            self._wakeQX = wake.QX
-        if wake.QY is not None:
-            self._wakeQY = wake.QY                                        
-                                               
+    def rebuild_resonator(self):          
+        wake = resonator(self.WakeT, self._wakecomponent, self._resfrequency,
+                         self._qfactor, self._rshunt, self._beta, self._yokoya)   
+        self.rebuild_wake(wake) 
+        
+    @property
+    def ResFrequency(self):
+        return self._resfrequency
+            
+    @ResFrequency.setter
+    def ResFrequency(self, frequency):
+        self._resfrequency = frequency
+        self.rebuild_resonator()
+                                                                                    
     @property
     def Qfactor(self):
         return self._qfactor
@@ -185,24 +185,41 @@ class ResonatorElement(WakeElement):
     @Qfactor.setter
     def Qfactor(self, qfactor):
         self._qfactor = qfactor
-        self.rebuild_wake()
+        self.rebuild_resonator()
+        
+    @property
+    def Rshunt(self):
+        return self._rshunt
             
-                                              
+    @Rshunt.setter
+    def Rshunt(self, rshunt):
+        self._rshunt = rshunt
+        self.rebuild_resonator()
+        
+    @property
+    def Yokoya(self):
+        return self._yokoya
+            
+    @Yokoya.setter
+    def Yokoya(self, yokoya):
+        self._yokoya = yokoya
+        self.rebuild_resonator()                
+                                             
 
-
-class LongResonatorElement(WakeElement):
+class LongResonatorElement(ResonatorElement):
     """Class to generate a longitudinal resonator, inherits from WakeElement
        additional argument are frequency, qfactor, rshunt
     """
     def __init__(self, family_name, ring, srange, frequency, qfactor, rshunt,
                  **kwargs):
-        self.WParams{'Frequency': frequency,
-                     'Qfactor': qfactor,
-                     'Rshunt': rshunt
-                     'Beta': ring.beta}
-        wake = longresonator(srange, frequency, qfactor, rshunt, ring.beta)
-        super(LongResonatorElement, self).__init__(family_name, ring, wake,
-                                                   **kwargs)
+        super(LongResonatorElement, self).__init__(family_name, ring, srange,
+                                                   WakeComponent.Z, frequency,
+                                                   qfactor, rshunt, **kwargs)
+                                                   
+    def rebuild_resonator(self):          
+        wake = longresonator(self.WakeT, self._resfrequency, self._qfactor,
+                             self._rshunt, self._beta)   
+        self.rebuild_wake(wake) 
 
 
 class ResWallElement(WakeElement):
@@ -211,12 +228,53 @@ class ResWallElement(WakeElement):
     """
     def __init__(self, family_name, ring, srange, wakecomp, rwlength,
                  rvac, conduc, yokoya_factor=1, **kwargs):
-        self.WParams{'WakeComponent': wakecomp,
-                     'Length': rwlength,
-                     'Rvac': rvac,
-                     'Conductivity': conduct,
-                     'Yokoya': yokoya_factor,
-                     'Beta': ring.beta}
+        self._wakecomponent = wakecomp
+        self._rwlength = rwlength
+        self._rvac = rvac
+        self._conductivity = conduc
+        self._yokoya = yokoya_factor
+        self._beta = ring.beta
         wake = reswall(srange, wakecomp, rwlength, rvac, conduc, ring.beta,
                        yokoya_factor=yokoya_factor)
         super(ResWallElement, self).__init__(family_name, ring, wake, **kwargs)
+        
+    def rebuild_reswall(self):          
+        wake = reswall(self.WakeT, self._wakecomp, self._rwlength, self._rvac,
+                       self._conduc, self._beta, yokoya_factor=self._yokoya)  
+        self.rebuild_wake(wake) 
+        
+    @property
+    def RWLength(self):
+        return self._rwlength
+            
+    @RWLength.setter
+    def RWLength(self, length):
+        self._rwlength = length
+        self.rebuild_reswall()
+                                                                                    
+    @property
+    def Conductivity(self):
+        return self._conductivity
+            
+    @Conductivity.setter
+    def Conductivity(self, conduct):
+        self._conductivity = conduct
+        self.rebuild_reswall()
+        
+    @property
+    def Rvac(self):
+        return self._rvac
+            
+    @Rvac.setter
+    def Rvac(self, rvac):
+        self._rvac = rvac
+        self.rebuild_reswall()
+        
+    @property
+    def Yokoya(self):
+        return self._yokoya
+            
+    @Yokoya.setter
+    def Yokoya(self, yokoya):
+        self._yokoya = yokoya
+        self.rebuild_reswall()  
