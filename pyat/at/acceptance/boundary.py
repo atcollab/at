@@ -185,8 +185,19 @@ def get_grid_boundary(mask, grid, config):
         #  first sort by angle
         idx = numpy.argsort(numpy.arctan2(*grid))
         grid = grid[:, idx]
+        #  keep only max r for each angle
+        angle = numpy.arctan2(*grid)
+        norm = numpy.linalg.norm(grid.T, axis=1)
+        val, inv = numpy.unique(angle, return_inverse=True)
+        gf = numpy.zeros((2, len(val)))
+        for i, v in enumerate(val):
+            inds = numpy.where(inv == i)[0]
+            ni = norm[inds]
+            nim = numpy.where(ni == numpy.amax(ni))[0]
+            ind = inds[nim][0]
+            gf[:, i] = grid[:, ind]        
         #  now sort by closest neighbour on normalized grid
-        x, y = grid[0, :].copy(), grid[1, :].copy()
+        x, y = gf[0, :].copy(), gf[1, :].copy()
         dxmin = min(numpy.diff(numpy.unique(x)))
         dymin = min(numpy.diff(numpy.unique(y)))
         iorder = [0]
@@ -198,18 +209,7 @@ def get_grid_boundary(mask, grid, config):
             #  take only points inside unit square
             if dd[ic[0]] < numpy.sqrt(2)*1.1:
                 iorder.append(ic[0])
-        grid = grid[:, iorder]
-        # finally keep only max r for each angle
-        angle = numpy.arctan2(*grid)
-        norm = numpy.linalg.norm(grid.T, axis=1)
-        val, inv = numpy.unique(angle, return_inverse=True)
-        gf = numpy.zeros((2, len(val)))
-        for i, v in enumerate(val):
-            inds = numpy.where(inv == i)[0]
-            ni = norm[inds]
-            nim = numpy.where(ni == numpy.amax(ni))[0]
-            ind = inds[nim][0]
-            gf[:, i] = grid[:, ind]
+        gf = gf[:, iorder]
         return gf
 
     def search_bnd(ma, sa):
