@@ -173,8 +173,17 @@ def res_object(srange, wakecomp, frequency, qfactor, rshunt, beta,
     Method to build a resonator wake object
     """
     wake = Wake(srange)
-    wake.add(WakeType.RESONATOR, wakecomp, frequency, qfactor, rshunt, beta,
-             yokoya_factor=yokoya_factor)
+    wakecomp = numpy.atleast_1d(wakecomp)
+    try:
+        frequency = numpy.broadcast_to(frequency, (len(wakecomp), ))
+        qfactor = numpy.broadcast_to(qfactor, (len(wakecomp), ))
+        rshunt = numpy.broadcast_to(rshunt, (len(wakecomp), ))
+        yokoya_factor = numpy.broadcast_to(yokoya_factor, (len(wakecomp), )) 
+    except ValueError:
+        raise AtError('Wake object inputs should be either scalars '
+                      'or with shape (len(wakecomp), )')
+    for wc, fr, qf, rs, yk in zip(wakecomp, frequency, qfactor, rshunt, yokoya_factor):
+        wake.add(WakeType.RESONATOR, wc, fr, qf, rs, beta, yokoya_factor=yk)
     return wake
 
 
@@ -185,11 +194,20 @@ def longres_object(srange, frequency, qfactor, rshunt, beta):
     return res_object(srange, WakeComponent.Z, frequency, qfactor, rshunt, beta)
 
 
-def reswall_object(srange, wakecomp, length, rvac, conduc, beta, yokoya_factor=1):
+def reswall_object(srange, wakecomp, length, rvac, conduct, beta, yokoya_factor=1):
     """
     Method to build a resistive wall wake object
     """
     wake = Wake(srange)
-    wake.add(WakeType.RESWALL, wakecomp, length, rvac, conduc, beta,
-             yokoya_factor=yokoya_factor)
+    wakecomp = numpy.atleast_1d(wakecomp)
+    try:
+        length = numpy.broadcast_to(length, (len(wakecomp), ))
+        rvac = numpy.broadcast_to(rvac, (len(wakecomp), ))
+        conduct = numpy.broadcast_to(conduct, (len(wakecomp), ))
+        yokoya_factor = numpy.broadcast_to(yokoya_factor, (len(wakecomp), )) 
+    except ValueError:
+        raise AtError('Wake object inputs should be either scalars '
+                      'or with shape (len(wakecomp), )')
+    for wc, le, rv, co, yk in zip(wakecomp, length, rvac, conduct, yokoya_factor):
+        wake.add(WakeType.RESWALL, wc, le, rv, co, beta, yokoya_factor=yk)
     return wake
