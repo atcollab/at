@@ -182,7 +182,7 @@ def longres_object(srange, frequency, qfactor, rshunt, beta):
     """
     Method to build a longitudinal resonator wake object
     """
-    return resonator(srange, WakeComponent.Z, frequency, qfactor, rshunt, beta)
+    return res_object(srange, WakeComponent.Z, frequency, qfactor, rshunt, beta)
 
 
 def reswall_object(srange, wakecomp, length, rvac, conduc, beta, yokoya_factor=1):
