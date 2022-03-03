@@ -130,7 +130,7 @@ class TransResonatorElement(WakeElement):
         wake = Wake(srange)
         wake.add(WakeType.RESONATOR, wakecomp,
                  frequency, qfactor, rshunt, ring.beta)
-super(TransResonatorElement, self).__init__(family_name, ring, wake,
+        super(TransResonatorElement, self).__init__(family_name, ring, wake,
                                                     **kwargs)
 
 
