@@ -43,23 +43,12 @@ class WakeElement(Element):
         self._turnhistory = None    # Defined here to avoid warning
         self.clear_history()
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
-        self._wakeT = wake.srange
-        self._nelem = len(self._wakeT)
+        self._build(wake)
         if zcuts is not None:
             self.ZCuts = zcuts
-        if wake.Z is not None:
-            self._wakeZ = wake.Z
-        if wake.DX is not None:
-            self._wakeDX = wake.DX
-        if wake.DY is not None:
-            self._wakeDY = wake.DY
-        if wake.QX is not None:
-            self._wakeQX = wake.QX
-        if wake.QY is not None:
-            self._wakeQY = wake.QY
         super(WakeElement, self).__init__(family_name, **kwargs)
         
-    def rebuild_wake(wake):
+    def _build(wake):
         self._wakeT = wake.srange
         self._nelem = len(self._wakeT)
         if wake.Z is not None:
@@ -72,6 +61,9 @@ class WakeElement(Element):
             self._wakeQX = wake.QX
         if wake.QY is not None:
             self._wakeQY = wake.QY
+        
+    def rebuild_wake(wake):
+        self._build(wake)
 
     def clear_history(self):
         self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
@@ -164,10 +156,10 @@ class ResonatorElement(WakeElement):
         super(ResonatorElement, self).__init__(family_name, ring, wake,
                                                **kwargs)    
                                                
-    def rebuild_resonator(self):          
+    def rebuild_wake(self):          
         wake = resonator(self.WakeT, self._wakecomponent, self._resfrequency,
                          self._qfactor, self._rshunt, self._beta, self._yokoya)   
-        self.rebuild_wake(wake) 
+        self._build(wake) 
         
     @property
     def ResFrequency(self):
@@ -216,10 +208,10 @@ class LongResonatorElement(ResonatorElement):
                                                    WakeComponent.Z, frequency,
                                                    qfactor, rshunt, **kwargs)
                                                    
-    def rebuild_resonator(self):          
+    def rebuild_wake(self):          
         wake = longresonator(self.WakeT, self._resfrequency, self._qfactor,
                              self._rshunt, self._beta)   
-        self.rebuild_wake(wake) 
+        self._build(wake) 
 
 
 class ResWallElement(WakeElement):
@@ -238,10 +230,10 @@ class ResWallElement(WakeElement):
                        yokoya_factor=yokoya_factor)
         super(ResWallElement, self).__init__(family_name, ring, wake, **kwargs)
         
-    def rebuild_reswall(self):          
+    def rebuild_wake(self):          
         wake = reswall(self.WakeT, self._wakecomp, self._rwlength, self._rvac,
                        self._conduc, self._beta, yokoya_factor=self._yokoya)  
-        self.rebuild_wake(wake) 
+        self._build(wake) 
         
     @property
     def RWLength(self):
