@@ -1,14 +1,7 @@
-function [linargs,opts] = linoptions(opts, dp)
+function [linargs,opts] = linoptions(opts)
 %LINOPTIONS  (private) extract arguments for atlinopt
 %
-% convert an argument list like
-% (0.01,'opt1', val1) to
-% ('dp',0.01,'opt1',val1)
-%or
-% (0, 'opt1', val1) to
-% ('opt1',val1)
+% Separate the options for atlinopt
 
-[linargs,opts]=getoption(opts,{'dp','dct','twiss_in','orbit'});
-if nargin >=2 && dp ~= 0
-    linargs=[{'dp',dp} linargs];
-end
+[linargs,opts]=getoption(opts,{'dp','dct','df','twiss_in','orbit','XYStep','DPStep',...
+    'OrbConvergence','OrbMaxIter','guess','method'});

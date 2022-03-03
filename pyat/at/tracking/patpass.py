@@ -26,7 +26,7 @@ def format_results(results, r_in, losses):
         lin = [r['results'][1] for r in results]
         lout = {}
         for k in lin[0].keys():
-            lout[k] = numpy.hstack([l[k] for l in lin])
+            lout[k] = numpy.hstack([li[k] for li in lin])
         return rout, lout
     else:
         rout = [r['results'] for r in results]
@@ -82,18 +82,21 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
                         Defaults to None, meaning no refpts, equivelent to
                         passing an empty array for calculation purposes.
         losses          Activate loss maps
-        pool_size       number of processes, if None the min(npart,nproc) is used
-        start_method    This parameter allows to change the python multiprocessing
-                        start method, default=None uses the python defaults that is
-                        considered safe. 
-                        Available parameters: 'fork', 'spawn', 'forkserver'. Default
-                        for linux is fork, default for MacOS and Windows is spawn. 
-                        fork may used for MacOS to speed-up the calculation or to solve
-                        Runtime Errors, however it is considered unsafe.
+        pool_size       number of processes, if None the min(npart,nproc)
+                        is used
+        start_method    This parameter allows to change the python
+                        multiprocessing start method, default=None uses the
+                        python defaults that is considered safe.
+                        Available parameters: 'fork', 'spawn', 'forkserver'.
+                        Default for linux is fork, default for MacOS and
+                        Windows is spawn. fork may used for MacOS to speed-up
+                        the calculation or to solve Runtime Errors, however it
+                        is considered unsafe.
     The following keyword overloads a value from lattice:
-        particle:   circulating particle. Default: lattice.particle if existing,
-                    otherwise Particle('relativistic')
-    The following keywords overload values from lattice of from particle keyword
+        particle:   circulating particle. Default: lattice.particle if
+                    existing, otherwise Particle('relativistic')
+    The following keywords overload values from lattice of from particle
+        keyword
         energy      lattice energy
         rest_energy rest energy of the circulating particle [eV]
         charge      charge of the circulating particle [elementary charge]
@@ -138,10 +141,11 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
         if any(pm_ok):
             warn(AtWarning('Collective PassMethod found: use single process'))
         if r_in.flags.f_contiguous:
-            return _atpass(ring, r_in, nturns=nturns, refpts=refpts, **kwargs)
+            return _atpass(ring, r_in, nturns=nturns,
+                           refpts=refpts, **kwargs)
         else:
             r_fin = numpy.asfortranarray(r_in)
-            r_out = _atpass(ring, r_fin, nturns=nturns, refpts=refpts, **kwargs)
+            r_out = _atpass(ring, r_fin, nturns=nturns,
+                            refpts=refpts, **kwargs)
             r_in[:] = r_fin[:]
             return r_out
-        

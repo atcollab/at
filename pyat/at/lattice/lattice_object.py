@@ -59,12 +59,13 @@ class Lattice(list):
             name=''                 Name of the lattice
             energy                  Energy of the lattice
             periodicity=1           Number of periods
-            particle='relativistic' Circulating particle. May be 'relativistic',
-                                    'electron', 'positron', 'proton'
+            particle='relativistic' Circulating particle. May be
+                                    'relativistic', 'electron',
+                                    'positron', 'proton'
                                     or a Particle object
             iterator=None           Custom iterator (see below)
-            *                       All other keywords will be set as attributes
-                                    of the Lattice object
+            *                       All other keywords will be set as
+                                    attributes of the Lattice object
 
     To reduce the inter-package dependencies, some methods of the
     lattice object are defined in other AT packages, in the module where

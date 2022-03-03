@@ -15,12 +15,13 @@ def select_omp():
     elif exists('/opt/local/include/libomp/omp.h'):     # MacPorts
         return '-I/opt/local/include/libomp', '/opt/local/lib/libomp'
     else:
-        raise FileNotFoundError('\n'.join(('',
-          'libomp.dylib must be installed with your favourite package manager:',
-          '',
-          'Use "$ brew install libomp"',
-          'Or  "$ sudo port install libomp"',
-          ''
+        raise FileNotFoundError('\n'.join((
+            '',
+            'libomp.dylib must be installed with your package manager:',
+            '',
+            'Use "$ brew install libomp"',
+            'Or  "$ sudo port install libomp"',
+            ''
         )))
 
 

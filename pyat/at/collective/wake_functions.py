@@ -11,7 +11,7 @@ def convolve_wakefun(srange, w, sigs):
     length sigs, this is use to generate a wake potential
     that can be added to the output of EM code like GDFIDL"""
     sigt = sigs/clight
-    min_step = numpy.diff(srange)
+    min_step = numpy.diff(srange)[0]
     t_out = numpy.arange(srange[0], srange[-1], min_step)
     sdiff = t_out[-1]-t_out[0]
     npoints = len(t_out)
@@ -98,5 +98,3 @@ def transverse_reswall(srange, yokoya_factor, length, rvac, conduct, beta):
             numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
 
     return wake
-
-

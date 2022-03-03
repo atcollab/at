@@ -46,9 +46,10 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
                     that previous call.
         losses:     Boolean to activate loss maps output, default is False
     The following keyword overloads a value from lattice:
-        particle:   circulating particle. Default: lattice.particle if existing,
-                    otherwise Particle('relativistic')
-    The following keywords overload values from lattice of from particle keyword
+        particle:   circulating particle. Default: lattice.particle if
+                    existing, otherwise Particle('relativistic')
+    The following keywords overload values from lattice of from particle
+    keyword
         energy      lattice energy
         rest_energy rest energy of the circulating particle [eV]
         charge      charge of the circulating particle [elementary charge]

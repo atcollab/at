@@ -1,10 +1,12 @@
 import at
 import numpy
 import pytest
+import warnings
 from at import AtWarning
 from at.lattice import Lattice, elements, params_filter, no_filter
 from at.load.utils import find_class, element_from_dict
-from at.load.utils import _CLASS_MAP, _PASS_MAP, RingParam, split_ignoring_parentheses
+from at.load.utils import _CLASS_MAP, _PASS_MAP
+from at.load.utils import RingParam, split_ignoring_parentheses
 from at.load import ringparam_filter
 
 
@@ -75,7 +77,7 @@ def test_invalid_class_warns_correctly():
     elem_kwargs = {'Class': 'Invalid'}
     with pytest.warns(at.AtWarning):
         find_class(elem_kwargs, quiet=False)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
         find_class(elem_kwargs, quiet=True)
     assert len(record) == 0
 
@@ -84,7 +86,7 @@ def test_no_pass_method_warns_correctly():
     elem_kwargs = {}
     with pytest.warns(at.AtWarning):
         find_class(elem_kwargs, quiet=False)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
         find_class(elem_kwargs, quiet=True)
     assert len(record) == 0
 
@@ -93,7 +95,7 @@ def test_invalid_pass_method_warns_correctly():
     elem_kwargs = {'PassMethod': 'invalid'}
     with pytest.warns(at.AtWarning):
         find_class(elem_kwargs, quiet=False)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings(record=True) as record:
         find_class(elem_kwargs, quiet=True)
     assert len(record) == 0
 
@@ -208,10 +210,18 @@ def test_find_ThinMultipole(elem_kwargs):
     assert find_class(elem_kwargs, True) is elements.ThinMultipole
 
 
-@pytest.mark.parametrize('elem_kwargs', ({'FamName': 'fam'},
-                                         {'Length': 0.0, 'FamName': 'fam'}))
+@pytest.mark.parametrize('elem_kwargs', (
+        {'FamName': 'fam', 'PassMethod': 'IdentityPass'},
+        {'Length': 0.0, 'FamName': 'fam', 'PassMethod': 'IdentityPass'}))
 def test_find_Marker(elem_kwargs):
     assert find_class(elem_kwargs, True) is elements.Marker
+
+
+@pytest.mark.parametrize('elem_kwargs', (
+        {'FamName': 'fam'},
+        {'Length': 0.0, 'FamName': 'fam'}))
+def test_find_Element(elem_kwargs):
+    assert find_class(elem_kwargs, True) is elements.Element
 
 
 @pytest.mark.parametrize('elem_kwargs', (
@@ -239,7 +249,8 @@ def test_sanitise_class_error(elem_kwargs):
         ["a,b", ",", ["a", "b"]],
         ["a,b(c,d)", ",", ["a", "b(c,d)"]],
         ["l=0,hom(4,0.0,0)", ",", ["l=0", "hom(4,0.0,0)"]],
-        ["inv(arca_c1r),3*(ms,arca_c2)", ",", ["inv(arca_c1r)", "3*(ms,arca_c2)"]]
+        ["inv(arca_c1r),3*(ms,arca_c2)", ",",
+         ["inv(arca_c1r)", "3*(ms,arca_c2)"]]
     ],
 )
 def test_split_ignoring_parentheses(string, delimiter, target):

@@ -286,7 +286,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
     theta[5] = ring.beta * clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
-              dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+        dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
     delta_matrix = numpy.asfortranarray(
         numpy.concatenate((numpy.diag(scaling), numpy.zeros((6, 1))), axis=1))
 
@@ -375,10 +375,11 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
                         loss of the ring
         keep_lattice    Assume no lattice change since the previous tracking.
                         Default: False
-        method          Method for energy loss computation (see get_energy_loss)
+        method          Method for energy loss computation
+                        (see get_energy_loss)
                         default: ELossMethod.TRACKING
-        cavpts=None     Cavity location. If None, use all cavities. This is used
-                        to compute the initial synchronous phase.
+        cavpts=None     Cavity location. If None, use all cavities.
+                        This is used to compute the initial synchronous phase.
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
         XYStep          Step size. Default: DConstant.XYStep

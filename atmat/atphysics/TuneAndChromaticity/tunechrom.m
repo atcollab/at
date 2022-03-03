@@ -1,9 +1,9 @@
-function [tune, varargout] = tunechrom(ring,varargin)
+function varargout = tunechrom(ring,varargin)
 %TUNECHROM computes linear tunes and chromaticities
 %
 %TUNE=TUNECHROM(RING)	Quick calculation of the fractional part of the tune
 %	from numerically computed transfer matrix.
-%   
+%
 % [TUNE, CHROM] = TUNECHROM(RINGD,DP,'get_chrom') - optionally computes the
 %    chromaticities by numerical differentiation from the difference between
 %   tune values at momentums DP+0.5*DPStep and DP-0.5*DPStep
@@ -22,7 +22,7 @@ function [tune, varargout] = tunechrom(ring,varargin)
 %
 % Note: TUNECHROM computes tunes and chromaticities from the one-turn
 %   transfer matrix. The transfer matrix is computed from tracking using
-%   numerical differentiation. The error of numerical differentiation 
+%   numerical differentiation. The error of numerical differentiation
 %   is sensitive to the step size. (Reference: Numerical Recipes)
 %   The calculation of tunes involves one numerical differentiation.
 %   The calculation of chromaticity involves TWO!!! numerical differentiations.
@@ -31,55 +31,67 @@ function [tune, varargout] = tunechrom(ring,varargin)
 %   in chromaticity calculations
 %
 % See also ATLINOPT6
-
-[oldchrom,varargs]=getflag(varargin,'chrom');   
-[chrom,varargs]=getflag(varargs,'get_chrom');
-[cpl1,varargs]=getflag(varargs,'coupling');	% ignored, kept for compatibility
-[cpl2,varargs]=getoption(varargs,'coupled',true);	% ignored, kept for compatibility
-[orbitin,varargs]=getoption(varargs,'orbit',[]);
-[dp,varargs]=getoption(varargs,'dp',NaN);
-[dp,varargs]=getargs(varargs,dp,'check',@(arg) isscalar(arg) || isnumeric(arg));
-[DPStep,~]=getoption(varargs,'DPStep');
-
+[cpl1,allargs]=getflag(varargin,'coupling');	% ignored, kept for compatibility
+[cpl2,allargs]=getoption(allargs,'coupled',true);	% ignored, kept for compatibility
+allargs=getdparg(allargs);
 if cpl1 || ~cpl2
     warning('AT:ObsoleteParameter','The "coupled" flag is ignored: coupling is always assumed');
 end
+[varargout{1:nargout}]=wrapper6d(ring,@xtunechrom,allargs{:});
 
-[~,orbitin]=findorbit(ring,'dp',dp,'orbit',orbitin,varargs{:});
-is6d=check_radiation(ring);
-if is6d
-    mm=findm66(ring,'orbit',orbitin,varargs{:});
-else
-    dp=orbitin(5);
-    mm=findm44(ring,dp,'orbit',orbitin,varargs{:});
-end
-[~,vals]=amat(mm);
-tune=mod(angle(vals)/2/pi,1);
+    function [tune, chrom] = xtunechrom(ring,is6d,varargin)
+        [oldchrom,varargs]=getflag(varargin,'chrom');
+        [chrom,varargs]=getflag(varargs,'get_chrom');
+        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
+        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
+        [DPStep,~]=getoption(varargs,'DPStep');
+        if is6d
+            tunefunc=@tune6;
+        else
+            tunefunc=@tune4;
+        end
 
-if chrom || oldchrom
-    if is6d
-        frf=get_rf_frequency(ring);
-        DFStep=-DPStep*mcf(atradoff(ring))*frf;
-        rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep);
-        rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep);
-        [~,o1P]=findorbit(rgup,[],'guess',orbitin,varargs{:});
-        [~,o1M]=findorbit(rgdn,[],'guess',orbitin,varargs{:});
-        tuneP=tunechrom(rgup,'orbit',o1P,varargs{:});
-        tuneM=tunechrom(rgdn,'orbit',o1M,varargs{:});
-        deltap=o1P(5)-o1M(5);
-    else
-        dp=orbitin(5);
-        tuneP=tunechrom(ring,'dp',dp + 0.5*DPStep,varargs{:});
-        tuneM=tunechrom(ring,'dp',dp - 0.5*DPStep,varargs{:});
-        deltap=DPStep;
+        [~,orbitin]=findorbit(ring,dpargs{:},varargs{:});
+        
+        tune=tunefunc(ring,'orbit',orbitin,varargs{:});
+
+        if chrom || oldchrom || nargout == 2
+            if is6d
+                frf=get_rf_frequency(ring);
+                DFStep=-DPStep*mcf(atradoff(ring))*frf;
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
+                [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
+                [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
+                deltap=o1P(5)-o1M(5);
+            else
+                dp=orbitin(5);
+                [~,o1P]=findorbit4(ring,dp+0.5*DPStep,'guess',orbitin,varargs{:});
+                [~,o1M]=findorbit4(ring,dp-0.5*DPStep,'guess',orbitin,varargs{:});
+                deltap=DPStep;
+            end
+            tuneP=tunefunc(ring,'orbit',o1P,varargs{:});
+            tuneM=tunefunc(ring,'orbit',o1M,varargs{:});
+            chrom = (tuneP - tuneM)/deltap;
+        end
+
+        function f=get_rf_frequency(ring)
+            % Get the initial RF frequency
+            cavities=ring(atgetcells(ring, 'Frequency'));
+            freqs=atgetfieldvalues(cavities,'Frequency');
+            f=freqs(1);
+        end
+
+    function tune=tune4(ring,varargin)
+        mm=findm44(ring,NaN,varargin{:});
+        [~,vals]=amat(mm);
+        tune=mod(angle(vals)/2/pi,1);
     end
-    varargout{1} = (tuneP - tuneM)/deltap;
-end
-    
-    function f=get_rf_frequency(ring)
-        % Get the initial RF frequency
-        cavities=ring(atgetcells(ring, 'Frequency'));
-        freqs=atgetfieldvalues(cavities,'Frequency');
-        f=freqs(1);
+
+    function tune=tune6(ring,varargin)
+        mm=findm66(ring,varargin{:});
+        [~,vals]=amat(mm);
+        tune=mod(angle(vals)/2/pi,1);
+    end
     end
 end
