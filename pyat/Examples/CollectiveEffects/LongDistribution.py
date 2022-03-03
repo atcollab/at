@@ -2,7 +2,7 @@ import numpy
 import at
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from at.collective.wake_object import build_srange
+from at.collective.wake_object import build_srange, longres_object
 from at.collective.wake_elements import LongResonatorElement
 from at.collective.Haissinski import Haissinski
 
@@ -17,11 +17,10 @@ m = 50 #30 is quite coarse, 70 or 80 is very fine. 50 is middle
 kmax = 8
 
 srange = build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
-welem = LongResonatorElement('wake', ring, srange, freq, qfactor, Rs, Nslice=300)
-welem.Current = current
 
 # Now we initialise the Haissinski class, and solve, then we normalise the distribution and shift the charge center to be at 0
-ha = Haissinski(welem, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=1e-13)
+wobj = longres_object(srange, freq, qfactor, Rs, ring.beta)
+ha = Haissinski(wobj, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=1e-13)
 ha.solve()
 
 ha_x_tmp = ha.q_array*ha.sigma_l
@@ -46,6 +45,10 @@ plt.show()
 '''
 
 # Now we set up and run the tracking. The final distribution is an average of the last numAve turns 
+welem = LongResonatorElement('wake', ring, srange, freq, qfactor, Rs, Nslice=300)
+welem.Current = current
+
+
 ring.radiation_on()
 ring.set_cavity_phase()
 _,fring = at.fast_ring(ring)

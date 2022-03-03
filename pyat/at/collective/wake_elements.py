@@ -48,7 +48,7 @@ class WakeElement(Element):
             self.ZCuts = zcuts
         super(WakeElement, self).__init__(family_name, **kwargs)
         
-    def _build(wake):
+    def _build(self, wake):
         self._wakeT = wake.srange
         self._nelem = len(self._wakeT)
         if wake.Z is not None:
@@ -62,7 +62,7 @@ class WakeElement(Element):
         if wake.QY is not None:
             self._wakeQY = wake.QY
         
-    def rebuild_wake(wake):
+    def rebuild_wake(self, wake):
         self._build(wake)
 
     def clear_history(self):
@@ -150,7 +150,7 @@ class ResonatorElement(WakeElement):
         self._rshunt = rshunt
         self._yokoya = yokoya_factor
         self._wakecomponent = wakecomp
-        self._beta = beta
+        self._beta = ring.beta
         wake = res_object(srange, wakecomp, frequency, qfactor, rshunt,
                           ring.beta, yokoya_factor=yokoya_factor)
         super(ResonatorElement, self).__init__(family_name, ring, wake,

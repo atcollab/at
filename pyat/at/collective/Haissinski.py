@@ -19,7 +19,7 @@ class Haissinski(object):
     The equation number of key formula are written next to the relevant function.
 
     As input:
-    wake_element is a wake_object that contains a WakeT and WakeZ array. 
+    wake_object is a object that contains an srange and Z array. 
     ring is a ring instance which is needed for machine parameters (sigma_l, sigma_e, etc)
     
     m is the number of points in the full distribution that you want
@@ -34,7 +34,7 @@ class Haissinski(object):
         Adding LR wake or harmonic cavity as done at SOLEIL. Needs to be added WITH this class which is just for short range wake.
     '''
 
-    def __init__(self, wake_element, ring, m=12, kmax=1, current=1e-4, numIters = 10, eps = 1e-10):
+    def __init__(self, wake_object, ring, m=12, kmax=1, current=1e-4, numIters = 10, eps = 1e-10):
 
         self.circumference = ring.circumference
         self.energy = ring.energy
@@ -55,11 +55,11 @@ class Haissinski(object):
 
 
         #negative s to be consistent with paper and negative Wz
-        s = wake_element._wakeT
-        self.ds = numpy.diff(s)[0]/self.sigma_l
-        self.wtot_fun = interp1d(-s/self.sigma_l, -wake_element._wakeZ) 
+        s = wake_object.srange/self.sigma_l
+        self.ds = numpy.diff(s)[0]
+        self.s = -s
+        self.wtot_fun = interp1d(self.s, -wake_object.Z) 
 
-        self.s = -s/self.sigma_l
 
         if m%2!=0:
             raise AttributeError('m must be even and int')
