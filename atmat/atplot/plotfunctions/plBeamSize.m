@@ -25,9 +25,9 @@ if nargout == 1 % From atplot
     varargout={plotdata};
 else % From atbaseplot
     [ring,dpp]=deal(varargin{1:2});
-    s=findspos(ring,1:length(ring)+1);
-    [linargs,vargs] = linoptions(varargin(4:end),dpp);
+    [linargs,varargs]=linoptions(varargin(3:end));
     [~,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:});
-    varargout={s,plBeamSize(lindata,ring,dpp,vargs{:})};
+    s=cat(1,lindata.SPos);
+    varargout={s,plBeamSize(lindata,ring,dpp,varargs{:})};
 end
 end

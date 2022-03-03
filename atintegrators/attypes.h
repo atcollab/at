@@ -12,6 +12,10 @@ struct parameters
   int nturn;
   double RingLength;
   double T0;
+  double s_coord;
+  double energy;
+  double rest_energy;
+  double charge;
 };
 
 #endif /*ATTYPES_H*/

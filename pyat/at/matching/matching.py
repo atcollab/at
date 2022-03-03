@@ -98,8 +98,8 @@ class Constraints(object):
         """Constraints(*args, **kwargs)
         build a generic constraints container.
 
-        The positional and keyword parameters are provided to all the evaluation
-        functions.
+        The positional and keyword parameters are provided to all
+        the evaluation functions.
         """
         self.name = []
         self.fun = []
@@ -279,7 +279,7 @@ class LinoptConstraints(ElementConstraints):
                         required and used.
         orbit=None      Initial trajectory for transfer line
                         ((6,) array)
-        method=linopt6  Method used for the analysis of the transfer matrix.  
+        method=linopt6  Method used for the analysis of the transfer matrix.
                         Can be None, at.linopt2, at.linopt4, at.linopt6
                         linopt2:    no longitudinal motion, no H/V coupling,
                         linopt4:    no longitudinal motion, Sagan/Rubin
@@ -351,9 +351,10 @@ class LinoptConstraints(ElementConstraints):
             # noinspection PyUnusedLocal
             def fun(refdata, tune, chrom):
                 if param == 'mu':
-                    return getf(refdata, param)%(2*np.pi)
+                    return getf(refdata, param) % (2*np.pi)
                 elif param == 'mu' and use_integer:
-                    self.refpts[:] = True # necessary not to miss 2*pi jumps
+                    # necessary not to miss 2*pi jumps
+                    self.refpts[:] = True
                 return getf(refdata, param)
 
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,
@@ -390,8 +391,8 @@ class OrbitConstraints(ElementConstraints):
         orbit=None          Initial trajectory for transfer line: (6,) array
         """
         if ring.radiation:
-            args.pop('dp',0.0)
-            args.pop('dct',0.0)
+            args.pop('dp', 0.0)
+            args.pop('dct', 0.0)
         super(OrbitConstraints, self).__init__(ring, *args, **kwargs)
 
     def add(self, target, refpts=None, index=None, name=None, **kwargs):
@@ -422,7 +423,7 @@ class OrbitConstraints(ElementConstraints):
 
         fun = self._arrayaccess(index)
         super(OrbitConstraints, self).add(fun, target, refpts, name=name,
-                                           **kwargs)
+                                          **kwargs)
 
     def compute(self, ring, *args, **kwargs):
         """Orbit computation before evaluation of all constraints"""
@@ -450,9 +451,9 @@ class EnvelopeConstraints(ElementConstraints):
 
         PARAMETERS
             param         2 possibilities:
-                          - parameter name: see at.ohmi_envelope for the name of
-                            available parameters. In addition to local
-                            parameters, 'tunes', 'damping_rates',
+                          - parameter name: see at.ohmi_envelope for the
+                            name of available parameters. In addition to
+                            local parameters, 'tunes', 'damping_rates',
                             'mode_matrices' and 'mode_emittance' are allowed.
                           - user-supplied parameter evaluation function:
                                 value = prm(emit_data, beam_data)
@@ -538,7 +539,7 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
             for ref in uint32_refpts(var.refpts, len(ring1)):
                 ring1[ref] = ring1[ref].deepcopy()
     else:
-        ring1 = ring  
+        ring1 = ring
 
     aaa = [(var.get(ring1), var.bounds) for var in variables]
     vini, bounds = zip(*aaa)
@@ -563,7 +564,6 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
         print(Constraints.header())
         for cst, ini in zip(constraints, cini):
             print(cst.status(ring1, initial=ini))
-
 
         print(Variable.header())
         for var, vini in zip(variables, vini):

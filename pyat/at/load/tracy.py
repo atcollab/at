@@ -49,11 +49,15 @@ def create_sext(name, params, variables):
 
 def create_dipole(name, params, variables):
     length = parse_float(params.pop("l", 0), variables)
-    params["NumIntSteps"] = parse_float(params.pop("n", 10), variables)
+    params["NumIntSteps"] = parse_float(params.pop("n", 10),
+                                        variables)
     params["PassMethod"] = "BndMPoleSymplectic4Pass"
-    params["BendingAngle"] = (parse_float(params.pop("t"), variables) / 180) * numpy.pi
-    params["EntranceAngle"] = (parse_float(params.pop("t1"), variables) / 180) * numpy.pi
-    params["ExitAngle"] = (parse_float(params.pop("t2"), variables) / 180) * numpy.pi
+    params["BendingAngle"] = (parse_float(params.pop("t"),
+                              variables) / 180) * numpy.pi
+    params["EntranceAngle"] = (parse_float(params.pop("t1"),
+                               variables) / 180) * numpy.pi
+    params["ExitAngle"] = (parse_float(params.pop("t2"),
+                           variables) / 180) * numpy.pi
     # Tracy is encoding gap plus fringe int in the 'gap' field.
     # Since BndMPoleSymplectic4Pass only uses the product of FringeInt
     # and gap we can substitute the following.
@@ -91,7 +95,8 @@ def create_cavity(name, params, variables):
     params["Phi"] = parse_float(params.pop("phi", 0), variables)
     harmonic_number = variables["harmonic_number"]
     energy = variables["energy"]
-    return RFCavity(name, length, voltage, frequency, harmonic_number, energy, **params)
+    return RFCavity(name, length, voltage, frequency,
+                    harmonic_number, energy, **params)
 
 
 ELEMENT_MAP = {
@@ -180,22 +185,27 @@ def parse_float(expression, variables):
             try:
                 b1 = tokens.index("(")
                 b2 = len(tokens) - 1 - tokens[::-1].index(")")
-                return evaluate(tokens[:b1] + [evaluate(tokens[b1 + 1:b2])] + tokens[b2 + 1:])
+                return evaluate(tokens[:b1] + [evaluate(tokens[b1 + 1:b2])]
+                                + tokens[b2 + 1:])
             except ValueError:
                 # No open parentheses found.
                 pass
             # Evaluate / and * from left to right.
             for i, token in enumerate(tokens[:-1]):
                 if token == "/":
-                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) / float(tokens[i+1])] + tokens[i+2:])
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1])
+                                    / float(tokens[i+1])] + tokens[i+2:])
                 if token == "*":
-                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) * float(tokens[i+1])] + tokens[i+2:])
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1])
+                                    * float(tokens[i+1])] + tokens[i+2:])
             # Evaluate + and - from left to right.
             for i, token in enumerate(tokens[:-1]):
                 if token == "+":
-                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) + float(tokens[i+1])] + tokens[i+2:])
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1])
+                                    + float(tokens[i+1])] + tokens[i+2:])
                 if token == "-":
-                    return evaluate(tokens[:i-1] + [float(tokens[i-1]) - float(tokens[i+1])] + tokens[i+2:])
+                    return evaluate(tokens[:i-1] + [float(tokens[i-1])
+                                    - float(tokens[i+1])] + tokens[i+2:])
 
         return evaluate(tokens)
 
@@ -276,7 +286,9 @@ def expand_tracy(contents, lattice_key, harmonic_number):
         else:
             key, value = line.split(":")
             if value.split(",")[0].strip() in ELEMENT_MAP:
-                elements[key] = tracy_element_from_string(key, value, variables)
+                elements[key] = tracy_element_from_string(key,
+                                                          value,
+                                                          variables)
             else:
                 chunk = parse_chunk(value, elements, chunks)
                 chunks[key] = chunk
@@ -347,7 +359,8 @@ def load_tracy(filename, **kwargs):
 
         return Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
     except Exception as e:
-        raise ValueError("Failed to load tracy lattice {}: {}".format(filename, e))
+        raise ValueError('Failed to load tracy '
+                         'lattice {}: {}'.format(filename, e))
 
 
 register_format(".lat", load_tracy, descr="Tracy format")

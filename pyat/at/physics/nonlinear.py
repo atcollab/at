@@ -2,14 +2,11 @@
 Function to compute quantities related to non-linear optics
 """
 import numpy
-from math import sqrt, atan2
 from scipy.special import factorial
-from at.lattice import Lattice, check_radiation, uint32_refpts, get_s_pos, \
-    bool_refpts
-from at.tracking import lattice_pass
-from at.physics import HarmonicAnalysis, get_tune, linopt6, find_orbit, \
-    get_tunes_harmonic, get_chrom
 from at.lattice import Element
+from at.tracking import lattice_pass
+from at.physics import get_tune, linopt6, find_orbit
+from at.physics import get_tunes_harmonic, get_chrom
 
 __all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
 

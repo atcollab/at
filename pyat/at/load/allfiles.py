@@ -68,6 +68,7 @@ def save_lattice(ring, filepath, **kwargs):
     else:
         return save_func(ring, filepath, **kwargs)
 
+
 def register_format(extension, load_func=None, save_func=None, descr=''):
     """Register format-specific processing functions
 

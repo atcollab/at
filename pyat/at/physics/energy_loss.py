@@ -111,6 +111,12 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
             raise AtError('values not equal for all cavities')
         return vals[0]
 
+    def eq(x):
+        return numpy.sum(rfv*numpy.sin(2*pi*freq*(x+tl0)/clight))-u0
+
+    def deq(x):
+        return numpy.sum(rfv*numpy.cos(2*pi*freq*(x+tl0)/clight))
+
     if cavpts is None:
         cavpts = get_cells(ring, checktype(RFCavity))
     u0 = get_energy_loss(ring, method=method) / ring.periodicity
@@ -125,8 +131,6 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
             raise AtError('Not enough RF voltage: unstable ring')
         ctmax = 1/numpy.amin(freq)*clight/2
         tt0 = tl0[numpy.argmin(freq)]
-        eq = lambda x: numpy.sum(rfv*numpy.sin(2*pi*freq*(x+tl0)/clight))-u0
-        deq = lambda x: numpy.sum(rfv*numpy.cos(2*pi*freq*(x+tl0)/clight))
         zero_diff = least_squares(deq, -tt0+ctmax/2,
                                   bounds=(-tt0, ctmax-tt0)).x[0]
         if numpy.sign(deq(zero_diff-1.0e-6)) > 0:
@@ -153,8 +157,8 @@ def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
    voltage and energy loss per turn, so that the synchronous phase is zero.
    An error occurs if all cavities do not have the same frequency.
 
-   !!!!WARNING!!!: This function changes the time reference, this should be 
-   avoided
+   !!!!WARNING!!!: This function changes the time reference,
+   this should be avoided
 
     PARAMETERS
         ring        lattice description

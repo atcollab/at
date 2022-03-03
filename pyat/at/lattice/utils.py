@@ -84,6 +84,7 @@ def set_radiation(rad):
             return wrapper
     return setrad_decorator
 
+
 def make_copy(copy):
     """Function to be used as a decorator for optics functions
     The decorated function must be defined as:
@@ -181,8 +182,8 @@ def bool_refpts(refpts, n_elements):
 
 # Private function accepting a callable for refpts
 def _bool_refs(ring, refpts):
-    """Return a boolean numpy array of length n_elements + 1 where True elements
-    are selected. refpts may be:
+    """Return a boolean numpy array of length n_elements
+    + 1 where True elements are selected. refpts may be:
 
     1) a integer or a sequence of integers (0 indicating the first element)
     2) a sequence of booleans marking the selected elements

@@ -1,96 +1,85 @@
 function [energy,nbper,voltage,harmnumber,U0]=atenergy(ring)
 %ATENERGY Gets the lattice energy
 %
-%  ENERGY=ATENERGY(RING) Gets the RING energy
-%   ATENERGY looks for the machine energy in:
-%       1) the 1st 'RingParam' element
-%       2) the 1st 'RFCavity' element
-%       3) the field "E0" of the global variable "GLOBVAL"
-%       4) The field "Energy" in any element
-%  
-%  INPUTS
-%    1. ring  Ring structure
+%  ENERGY=ATENERGY(RING)
+%  [ENERGY,PERIODS]=atenergy(RING)
+%  [ENERGY,PERIODS,VOLTAGE,HARMNUMBER]=atenergy(RING)
+%  [ENERGY,PERIODS,VOLTAGE,HARMNUMBER,U0]=atenergy(RING)
 %
-%  OUPUTS
-%    1. energy     Ring energy in eV
-%    2. nbper      Number of periods to make 2pi phase advance
-%    3. voltage    Total RF voltage  
-%    4. harmnumber Harmonic number
-%    5. U0         Energy loss per turn in eV
+% Warning: To get ENERGY, PERIODS and HARMNUMBER, use atGetRingProperties
+%          To get U0, use atgetU0
 %
-%  NOTES
-%    1. Check for 2 pi phase advance if more than 2 ouput arguments
+%   RING        Ring structure
 %
-%  EXAMPLES
-%    1. [ENERGY,PERIODS]=atenergy(ring) also outputs the number of periods
-%    2. [ENERGY,PERIODS,VOLTAGE,HARMNUMBER]=atenergy(ring) also outputs the harmonic number
-%    3. [ENERGY,PERIODS,VOLTAGE,HARMNUMBER,U0]=atenergy(ring) also outputs total losses in eV
+%   ENERGY      Ring energy
+%       ATENERGY looks for the machine energy in:
+%           1) the 1st 'RingParam' element
+%           2) the 'RFCavity' with the lowest frequency
+%           3) the field "E0" of the global variable "GLOBVAL"
+%           4) The field "Energy" in any element
+%   PERIODS     Number of periods
+%   VOLTAGE     Total RF voltage for the main cavities. The main cavities
+%               are the ones with the lowest frequency
+%   HARMNUMBER  Harmonic number. Computed from the frequency of the main cavities
+%   U0          Total energy loss per turn
 %
-%  See also atgetU0 atsetcavity atenergy
+%  See also atGetRingProperties atgetU0 atsetcavity
 
-global GLOBVAL
-TWO_PI_ERROR = 1.e-4;
- 
-params   = atgetcells(ring(:,1),'Class','RingParam');
-cavities = atgetcells(ring(:,1),'Frequency');
-        
-if any(params) % case RingParam is defined in the lattice
-    parmelem=ring{find(params,1)};
-    energy=parmelem.Energy;
-    if nargout >= 2
-        nbper=parmelem.Periodicity;
-    end
-else % else look for energy in cavity or GLOBVAL
-    E0s = atgetfieldvalues(ring,'Energy');
-    E0s = E0s(isfinite(E0s));         % Discard undefined values
-    if any(cavities) && isfield(ring{find(cavities,1)},'Energy')
-        energy=ring{find(cavities,1)}.Energy;
-    elseif isfield(GLOBVAL,'E0')
+global GLOBVAL %#ok<GVMIS> 
+s=warning;                          % Save the warning state
+warning('Off','AT:NoRingParam');    % Disable warning
+props = atGetRingProperties(ring);  % Get ring propeties
+warning(s);                         % Restore the warning state
+energy = props.Energy;
+if ~isfinite(energy)
+    if isfield(GLOBVAL,'E0')
         energy=GLOBVAL.E0;
-    elseif length(unique(E0s)) == 1
-        energy = unique(E0s);
-    elseif length(unique(E0s)) > 1
-        error('AT:NoEnergy','Energy field not equal for all elements')
     else
         error('AT:NoEnergy',...
-            ['Energy not defined (searched in '...
-            '''RingParam'',''RFCavity'',GLOBVAL.E0,',...
-            ' field ''Energy'' of each element)']);
-    end
-    if nargout >= 2 % get number of periods
-        dipoles  = atgetcells(ring(:,1),'BendingAngle');
-        theta    = atgetfieldvalues(ring(dipoles),'BendingAngle');
-        if size(ring,2) > 1
-            nbper=size(ring,2);
-        else % Guess number of periods based on the total bending angle
-            nbp=2*pi/sum(theta);
-            nbper=round(nbp);
-            if ~isfinite(nbp)
-                warning('AT:WrongNumberOfCells','No bending in the cell, ncells set to 1');
-                nbper=1;
-            elseif abs(nbp-nbper) > TWO_PI_ERROR
-                warning('AT:WrongNumberOfCells','non integer number of cells: ncells = %g -> %g',nbp,nbper);
-            end
-        end
+                ['Energy not defined (searched in ''RingParam'',''RFCavity'', ',...
+                'the ''Energy'' field of each element, GLOBVAL.E0)\n' ...
+                'You can set it with:\n>> ring=atSetRingProperties(ring,''energy'',energy)\n'...
+                'or by using the global variable GLOBVAL:\n>> GLOBVAL.E0=energy;'...
+                ]);
     end
 end
+nbper = props.Periodicity;
 
-% Get total cavity voltage and harmonic number
-if nargout >= 3 
-    if any(cavities) % sum over cavity number
-        voltage=nbper*sum(atgetfieldvalues(ring(cavities),'Voltage'));
-        harmnumber=nbper*atgetfieldvalues(ring(find(cavities,1)),'HarmNumber');
+if nargout >= 3
+    if isfield(props, 'cavpts')
+        maincavs = ring(props.cavpts);
+    else
+        maincavs = findmaincavs(ring);
+    end
+    if ~isempty(maincavs)
+        voltage=nbper*sum(atgetfieldvalues(maincavs,'Voltage'));
     elseif nargout >= 5
         voltage=NaN;
-        harmnumber=NaN;
     else
         error('AT:NoCavity','No cavity element in the ring');
     end
 end
-
-% get energy loss per turn
+if nargout >= 4
+    if isfield(props,'HarmNumber')
+        harmnumber = props.HarmNumber;
+    else
+        harmnumber=NaN;
+    end
+end
 if nargout >= 5
     U0 = atgetU0(ring);
 end
+
+    function cavs=findmaincavs(ring)
+        cavities = atgetcells(ring,'Frequency');
+        if any(cavities)
+            freqs = atgetfieldvalues(ring(cavities), 'Frequency');
+            [~,~,ic]=unique(freqs);
+            cavities(cavities) = (ic == 1);
+            cavs = ring(cavities);
+        else
+            cavs={};
+        end
+    end
 
 end

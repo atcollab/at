@@ -30,8 +30,8 @@ class RingParam(elt.Element):
     """Private class for Matlab RingParam element"""
     REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
                                                              'Periodicity']
-    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int,
-                        Particle=_particle)
+    _conversions = dict(elt.Element._conversions, Energy=float,
+                        Periodicity=int, Particle=_particle)
 
     def __init__(self, family_name, energy, periodicity=1, **kwargs):
         kwargs.setdefault('Energy', energy)
@@ -183,8 +183,10 @@ def find_class(elem_dict, quiet=False):
                     return elt.Drift
                 elif hasattrs(elem_dict, 'GCR'):
                     return elt.Monitor
-                else:
+                elif pass_method == 'IdentityPass':
                     return elt.Marker
+                else:
+                    return elt.Element
 
 
 def get_pass_method_file_name(pass_method):
@@ -355,7 +357,8 @@ def element_to_m(elem):
     if 'PassMethod' in kwds:
         argstrs.append(convert(kwds.pop('PassMethod')))
     argstrs += [', '.join((repr(k), convert(v))) for k, v in kwds.items()]
-    return '{0:>15}({1});...'.format(m_name(elem.__class__), ', '.join(argstrs))
+    return '{0:>15}({1});...'.format(m_name(elem.__class__),
+                                     ', '.join(argstrs))
 
 
 # Kept for compatibility but should be deprecated:

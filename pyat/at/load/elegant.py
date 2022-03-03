@@ -128,7 +128,8 @@ def create_cavity(name, params, energy, harmonic_number):
     voltage = params.pop("volt")
     frequency = params.pop("freq")
     params["Phi"] = params.pop("phase")
-    return RFCavity(name, length, voltage, frequency, harmonic_number, energy, **params)
+    return RFCavity(name, length, voltage,
+                    frequency, harmonic_number, energy, **params)
 
 
 ELEMENT_MAP = {
@@ -260,7 +261,9 @@ def expand_elegant(contents, lattice_key, energy, harmonic_number):
             key = key.strip()
             value = value.strip()
             if value.split(",")[0] in ELEMENT_MAP:
-                elements[key] = elegant_element_from_string(key, value, variables)
+                elements[key] = elegant_element_from_string(key,
+                                                            value,
+                                                            variables)
             else:
                 chunk = parse_chunk(value, elements, chunks)
                 chunks[key] = chunk
@@ -334,7 +337,8 @@ def load_elegant(filename, **kwargs):
         lat = Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
         return lat
     except Exception as e:
-        raise ValueError("Failed to load elegant lattice {}: {}".format(filename, e))
+        raise ValueError('Failed to load elegant '
+                         'lattice {}: {}'.format(filename, e))
 
 
 register_format(".lte", load_elegant, descr="Elegant format")

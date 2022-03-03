@@ -42,8 +42,9 @@ RUN git clone --depth 1 -b $AT_BRANCH $AT_REPO /home/$USERNAME/at \
 	&& octave --eval 'bootstrap(:,true);savepath'
 
 RUN cd /home/$USERNAME/at/pyat \
-	&& pip3 install -r requirements.txt \
 	&& pip3 install matplotlib \
+	&& pip3 install numpy \
+	&& pip3 install scipy \
 	&& python3 setup.py install --user
 
 WORKDIR $DOCKER_NOTEBOOK_DIR

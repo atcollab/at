@@ -47,26 +47,29 @@ typedef double mxDouble;
 #define POSTHOOK prhs[6]
 #define LHIST prhs[7]
 #define NUMTHREADS prhs[8]
+#define RINGPROPERTIES prhs[9]
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
 									exceeds this limit it is marked as lost */
+#define C0  	2.99792458e8
 
 
-typedef int*(*MYPASS)(mxArray*, int*, double*, int, int);
-typedef struct elem*(*MYTRACK)(mxArray*,struct elem*, double*, int, struct parameters*);
+typedef int*(*pass_function)(mxArray*, int*, double*, int, int);
+typedef struct elem*(*track_function)(mxArray*, struct elem*, double*, int, struct parameters*);
 
 static int num_elements = 0;
-static int **field_numbers_ptr = NULL;
 static struct elem **elemdata_list = NULL;
 static mxArray **element_list = NULL;
-static MYPASS *pass_table = NULL;
-static MYTRACK *track_table = NULL;
+static double *elemlength_list = NULL;
+static track_function *integrator_list = NULL;
+static pass_function *pass_list = NULL;
+static int **field_numbers_ptr = NULL;
 
 static struct LibraryListElement {
     const char *MethodName;
     LIBRARYHANDLETYPE LibraryHandle;
-    MYPASS PassHandle;
-    MYTRACK TrackHandle;
+    pass_function PassHandle;
+    track_function TrackHandle;
     struct LibraryListElement *Next;
 } *LibraryList = NULL;
 
@@ -109,8 +112,8 @@ static struct LibraryListElement* pass_method(mxArray *mxPassMethod, int nelem)
                 mxDestroyArray(mxWhich);
 
                 LibraryListPtr->LibraryHandle = LOADLIBFCN(LibraryFileName);
-                LibraryListPtr->PassHandle = (MYPASS)GETPASSFCN(LibraryListPtr->LibraryHandle);
-                LibraryListPtr->TrackHandle = (MYTRACK)GETTRACKFCN(LibraryListPtr->LibraryHandle);
+                LibraryListPtr->PassHandle = (pass_function)GETPASSFCN(LibraryListPtr->LibraryHandle);
+                LibraryListPtr->TrackHandle = (track_function)GETTRACKFCN(LibraryListPtr->LibraryHandle);
                 if ((LibraryListPtr->PassHandle == NULL) && (LibraryListPtr->TrackHandle == NULL)) {
                     FREELIBFCN(LibraryListPtr->LibraryHandle);
                     mexErrMsgIdAndTxt("Atpass:UnknownLibrary",
@@ -146,8 +149,8 @@ static void cleanup(void)
     mxFree(field_numbers_ptr);
     mxFree(elemdata_list);
     mxFree(element_list);
-    mxFree(pass_table);
-    mxFree(track_table);
+    mxFree(pass_list);
+    mxFree(integrator_list);
     
     /* Free memory and unload libraries */
     while (LibraryListPtr) {
@@ -159,14 +162,14 @@ static void cleanup(void)
     }
 }
 
-static void checkiflost(mxDouble *DblBuffer, int np,
+static void checkiflost(mxDouble *drin, int np,
         mxDouble num_elem, mxDouble num_turn, mxDouble *xnturn, mxDouble *xnelem,
         mxDouble *xcoord, mxDouble *xlostcoord, mxLogical *xlost, mxDouble *histbuf, int ihist, int lhist)
 {
     int n, c;
     for (c=0; c<np; c++) {/* Loop over particles */
         if (!xlost[c]) {  /* No change if already marked */
-           mxDouble *r6 = DblBuffer+c*6;
+           mxDouble *r6 = drin+c*6;
            for (n=0; n<6; n++) {	/* I remove the check on the sixth coordinate N.C. */
                 if (!mxIsFinite(r6[n]) || ((fabs(r6[n])>LIMIT_AMPLITUDE)&&n<5)) {
                     int h, k=ihist;
@@ -225,11 +228,58 @@ static mxDouble *passhook(mxArray *mxPassArg[], mxArray *mxElem, mxArray *func)
     return tempdoubleptr;
 }
 
+static double getoptionaldoubleprop(const mxArray *obj, const char *fieldname, double default_value)
+{
+    mxArray *field=mxGetProperty(obj, 0, fieldname);
+    return (field) ? mxGetScalar(field) : default_value;
+}
+
+static void getparticle(const mxArray *opts, double *rest_energy, double *charge)
+{
+    const mxArray *part = mxGetField(opts, 0, "Particle");
+    if (part) {
+        if (mxIsClass(part, "atparticle")) {  /* OK */
+            *rest_energy = getoptionaldoubleprop(part, "rest_energy", 0.0);
+            *charge = getoptionaldoubleprop(part, "charge", -1.0);
+        }
+        else {                              /* particle is not a Particle object */
+            mexErrMsgIdAndTxt("Atpass:WrongParameter","Particle must be an 'atparticle' object");
+        }
+    }
+}
+
+static void getproperties(const mxArray *opts, double *energy, double *rest_energy, double *charge)
+{
+    mxArray *field;
+    if (!mxIsStruct(opts)) {
+        mexErrMsgIdAndTxt("Atpass:WrongParameter","ring properties must be a struct");
+    }
+    field = mxGetField(opts, 0, "Energy");
+    if (field) {
+        *energy = mxGetScalar(field);
+        getparticle(opts, rest_energy, charge);
+    }
+}
+
+/*!
+ * 
+
+@param[in]      [0] LATTICE
+@param[in,out]  [1] INITCONDITIONS
+@param[in]      [2] NEWLATTICE
+@param[in]      [3] NTURNS
+@param[in]      [4] REFPTS
+@param[in]      [5] PREHOOK
+@param[in]      [6] POSTHOOK
+@param[in]      [7] LHIST
+@param[in]      [8] NUMTHREADS
+*/
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    static double lattice_length= 0.0;
+    static double lattice_length = 0.0;
+    static int valid = 0;
     
-    int turn, nelem, npart, *refpts, num_refpts;
+    int turn, elem_index, npart, *refpts, num_refpts;
     int nextrefindex, nextref; /* index to the array of refpts */
     mxArray *mxBuffer;
     const char *lossinfo[] = {"lost", "turn", "element", "coordinates_at_loss", "coordinates"};
@@ -244,7 +294,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mwSize outsize;
     int pass_mode;
 
-    mxDouble *DblPtrDataOut ,*DblPtrDataIn, *DblBuffer;
+    mxDouble *drout ,*datain, *drin;
     
     struct LibraryListElement *LibraryListPtr;
     int numel  = mxGetNumberOfElements(LATTICE);
@@ -255,7 +305,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int np6 = num_particles*6;
     int ihist, lhist;
     mxDouble *histbuf = NULL;
-    struct parameters paramStruct;
+    struct parameters param;
 
     #ifdef _OPENMP
     int maxthreads;
@@ -268,6 +318,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         omp_set_num_threads(nthreads);
     }
     #endif /*_OPENMP*/
+
+    param.energy = 0.0;
+    param.rest_energy = 0.0;
+    param.charge = -1.0;
+    if (nrhs >= 10) {
+        getproperties(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge);
+    }
 
     if (nlhs >= 2) {
         lhist = (nrhs >= 8) ? (int)mxGetScalar(LHIST) : 1;
@@ -290,13 +347,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     mexAtExit(cleanup);
 
-    if (new_lattice) {
+    if (new_lattice || !valid) {
         mxArray **element;
-        MYPASS *pass_elem;
-        MYTRACK *track_elem;
-        for (nelem=0; nelem<num_elements; nelem++) { /* free memory from previously used lattice */
-            mxFree(field_numbers_ptr[nelem]);
-            mxFree(elemdata_list[nelem]);
+        double *elem_length;
+        pass_function *oldintegrator;
+        track_function *integrator;
+        for (elem_index=0; elem_index<num_elements; elem_index++) { /* free memory from previously used lattice */
+            mxFree(field_numbers_ptr[elem_index]);
+            mxFree(elemdata_list[elem_index]);
         }        
         num_elements = numel;
         
@@ -309,43 +367,61 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxFree(elemdata_list);	/* Use calloc to ensure uninitialized values are NULL */
         elemdata_list = (struct elem**)mxCalloc(num_elements,sizeof(struct elem*));
         mexMakeMemoryPersistent(elemdata_list);
+
+        /* Pointer to Element lengths */
+        free(elemlength_list);
+        elemlength_list = (double *)calloc(num_elements, sizeof(double));
         
         /* Pointer to Element list */
         element_list = (mxArray **)mxRealloc(element_list, num_elements*sizeof(mxArray *));
         mexMakeMemoryPersistent(element_list);
         
         /* pointer to the list of integrators */
-		pass_table = (MYPASS*)mxRealloc(pass_table, num_elements*sizeof(MYPASS));
-		track_table = (MYTRACK*)mxRealloc(track_table, num_elements*sizeof(MYTRACK));
-		mexMakeMemoryPersistent(pass_table);
-        mexMakeMemoryPersistent(track_table);
+		pass_list = (pass_function*)mxRealloc(pass_list, num_elements*sizeof(pass_function));
+		integrator_list = (track_function*)mxRealloc(integrator_list, num_elements*sizeof(track_function));
+		mexMakeMemoryPersistent(pass_list);
+        mexMakeMemoryPersistent(integrator_list);
         
         lattice_length = 0.0;
         element = element_list;
-        pass_elem = pass_table;
-        track_elem = track_table;
-        for (nelem=0; nelem<num_elements; nelem++) {
-            mxArray *mxElem = mxGetCell(LATTICE,nelem);
+        elem_length = elemlength_list;
+        oldintegrator = pass_list;
+        integrator = integrator_list;
+        for (elem_index=0; elem_index<num_elements; elem_index++) {
+            mxArray *mxElem = mxGetCell(LATTICE,elem_index);
             mxArray *mxPassMethod = mxGetField(mxElem,0,"PassMethod");
             mxArray *mxLength = mxGetField(mxElem, 0, "Length");
+            double length;
             if (!mxPassMethod)
-                mexErrMsgIdAndTxt("Atpass:MissingPassMethod","Element # %d: Required field 'PassMethod' was not found in the element data structure", nelem);
+                mexErrMsgIdAndTxt("Atpass:MissingPassMethod","Element # %d: Required field 'PassMethod' was not found in the element data structure", elem_index);
             if (!mxIsChar(mxPassMethod))
-                mexErrMsgIdAndTxt("Atpass:WrongPassMethod","Element # %d: 'PassMethod' field must be a string", nelem);            
-            if (mxLength) lattice_length+=mxGetScalar(mxLength);
-            LibraryListPtr = pass_method(mxPassMethod, nelem);
-            *pass_elem++ = LibraryListPtr->PassHandle;
-            *track_elem++ = LibraryListPtr->TrackHandle;
-            *element++=mxElem;
+                mexErrMsgIdAndTxt("Atpass:WrongPassMethod","Element # %d: 'PassMethod' field must be a string", elem_index);            
+            if (mxLength) length=mxGetScalar(mxLength); else length = 0.0;
+            lattice_length += length;
+            LibraryListPtr = pass_method(mxPassMethod, elem_index);
+            *oldintegrator++ = LibraryListPtr->PassHandle;
+            *integrator++ = LibraryListPtr->TrackHandle;
+            *element++ = mxElem;
+            *elem_length++ = length;
         }
         pass_mode = MAKE_LOCAL_COPY;
-        new_lattice = 0;
+        valid = 0;
     }
     else {
         pass_mode = USE_LOCAL_COPY;
     }
-	paramStruct.RingLength = lattice_length;
-	paramStruct.T0 = lattice_length/299792458;
+
+    param.RingLength = lattice_length;
+    if (param.rest_energy == 0.0) {
+        param.T0 = param.RingLength/C0;
+    }
+    else {
+        double gamma0 = param.energy/param.rest_energy;
+        double betagamma0 = sqrt(gamma0*gamma0 - 1.0);
+        double beta0 = betagamma0/gamma0;
+        param.T0 = param.RingLength/beta0/C0;
+    }
+
     if (nrhs >= 5) {    /* subtract 1 for C numbering: 0 to num_elements-1 */
         int nref;
         mxDouble *dblrefpts = mxGetDoubles(REFPTS);
@@ -405,12 +481,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         xlostcoord[npart] = mxGetNaN();
     }
         
-    DblPtrDataIn  = mxGetDoubles(INITCONDITIONS);
-    DblPtrDataOut = mxGetDoubles(plhs[0]);
+    datain  = mxGetDoubles(INITCONDITIONS);
+    drout = mxGetDoubles(plhs[0]);
     
     mxBuffer = mxCreateDoubleMatrix(6,num_particles,mxREAL);    /* Current coordinates */
-    DblBuffer = mxGetDoubles(mxBuffer);              /* Current coordinates */
-    memcpy(DblBuffer, DblPtrDataIn, np6*sizeof(mxDouble));
+    drin = mxGetDoubles(mxBuffer);              /* Current coordinates */
+    memcpy(drin, datain, np6*sizeof(mxDouble));
     
     mxPassArg1[2] = mxBuffer;
     mxPassArg1[3] = mxTurn;
@@ -422,64 +498,70 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     ihist = 0;
     for (turn=0; turn<num_turns; turn++) {
         mxArray **element = element_list;
-        MYPASS *pass_elem = pass_table;
-        MYTRACK *track_elem = track_table;
+        double *elem_length = elemlength_list;
+        pass_function *oldintegrator = pass_list;
+        track_function *integrator = integrator_list;
         int **field_numbers = field_numbers_ptr;
         struct elem **elemdata= elemdata_list;
+        double s_coord = 0.0;
 
+        *xturn = (mxDouble)(turn+1);
+		param.nturn = turn;
         nextrefindex = 0;
         nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
-        *xturn = (mxDouble)(turn+1);
-		paramStruct.nturn = turn;
-        for (nelem=0; nelem<num_elements; nelem++) {
-            *xelmn = (mxDouble)(nelem+1);
-            if (nelem == nextref) {
-                memcpy(DblPtrDataOut, DblBuffer, np6*sizeof(mxDouble));
-                DblPtrDataOut += np6; /*  shift the location to write to in the output array */
+        for (elem_index=0; elem_index<num_elements; elem_index++) {
+            *xelmn = (mxDouble)(elem_index+1);
+            param.s_coord = s_coord;
+            if (elem_index == nextref) {
+                memcpy(drout, drin, np6*sizeof(mxDouble));
+                drout += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
             }
             if (lhist > 0) {
-                memcpy(histbuf+ihist*np6, DblBuffer, np6*sizeof(mxDouble));
+                memcpy(histbuf+ihist*np6, drin, np6*sizeof(mxDouble));
             }
             if (mxPre) {                            /* Pre-tracking optional function */
-                DblBuffer=passhook(mxPassArg1, *element, mxPre);
+                drin=passhook(mxPassArg1, *element, mxPre);
             }
-            if (*track_elem) {                      /* pointer to a TrackFunction */
-				*elemdata = (*track_elem)(*element,*elemdata,DblBuffer,num_particles,&paramStruct);
+            if (*integrator) {                      /* pointer to a TrackFunction */
+				*elemdata = (*integrator)(*element,*elemdata,drin,num_particles,&param);
 			}
-            else if (*pass_elem) {                 /* Pointer to a passFunction */
-                *field_numbers = (*pass_elem)(*element,*field_numbers,DblBuffer,num_particles,pass_mode);
+            else if (*oldintegrator) {                 /* Pointer to a passFunction */
+                *field_numbers = (*oldintegrator)(*element,*field_numbers,drin,num_particles,pass_mode);
             }
             else {                                  /* M-File */
-                DblBuffer=passmfile(mxPassArg1+1, *element);
+                drin=passmfile(mxPassArg1+1, *element);
             }
             if (mxPost) {                           /* Post-tracking optional function */
-                DblBuffer=passhook(mxPassArg1, *element, mxPost);
+                drin=passhook(mxPassArg1, *element, mxPost);
             }
-            checkiflost(DblBuffer,num_particles,*xelmn,*xturn,xnturn,xnelem,xcoord,xlostcoord,xlost,histbuf,ihist,lhist);
+            checkiflost(drin,num_particles,*xelmn,*xturn,xnturn,xnelem,xcoord,xlostcoord,xlost,histbuf,ihist,lhist);
             if (++ihist >= lhist) ihist = 0;
-            pass_elem++;
-            track_elem++;
+            s_coord += *elem_length++;
+            element++;
+            oldintegrator++;
+            integrator++;
             elemdata++;
             field_numbers++;
-            element++;
         }
         if (num_elements == nextref) {
-            memcpy(DblPtrDataOut, DblBuffer, np6*sizeof(mxDouble));
-            DblPtrDataOut += np6; /*  shift the location to write to in the output array */
+            memcpy(drout, drin, np6*sizeof(mxDouble));
+            drout += np6; /*  shift the location to write to in the output array */
             nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         }
         if (pass_mode == MAKE_LOCAL_COPY) {             /* First turn */
-            for (nelem=0; nelem<num_elements; nelem++) {
-                if (field_numbers_ptr[nelem]) mexMakeMemoryPersistent(field_numbers_ptr[nelem]);
-                if (elemdata_list[nelem]) mexMakeMemoryPersistent(elemdata_list[nelem]);
+            for (elem_index=0; elem_index<num_elements; elem_index++) {
+                if (field_numbers_ptr[elem_index]) mexMakeMemoryPersistent(field_numbers_ptr[elem_index]);
+                if (elemdata_list[elem_index]) mexMakeMemoryPersistent(elemdata_list[elem_index]);
             }
         }   
         pass_mode = USE_LOCAL_COPY;
     }
+    valid = 1;      /* Tracking successful: the lattice can be reused */
+
     if (num_refpts == 0) {
-        memcpy(DblPtrDataOut, DblBuffer, np6*sizeof(mxDouble));
-        DblPtrDataOut += np6; /*  shift the location to write to in the output array */
+        memcpy(drout, drin, np6*sizeof(mxDouble));
+        drout += np6; /*  shift the location to write to in the output array */
     }
     
     #ifdef _OPENMP

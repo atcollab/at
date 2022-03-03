@@ -59,10 +59,12 @@ def test_uint32_refpts_throws_ValueError_correctly(ref_in):
 def test_bool_refpts(ref_in, expected):
     numpy.testing.assert_equal(bool_refpts(ref_in, 3), expected)
 
+
 @pytest.mark.parametrize('ref_in', (10, range(100)))
 def test_bool_refpts_throws_IndexErrorrs(ref_in):
     with pytest.raises(IndexError):
         bool_refpts(ref_in, 3)
+
 
 def test_checkattr(simple_ring):
     assert checkattr('Length')(simple_ring[0]) is True
@@ -93,8 +95,9 @@ def test_get_cells(simple_ring):
 def test_refpts_iterator(simple_ring):
     assert (list(refpts_iterator(simple_ring, [0, 1, 2, 3, 4, 5])) ==
             simple_ring)
-    assert (list(refpts_iterator(simple_ring, numpy.ones(6, dtype=bool)))
-            == simple_ring)
+    assert (list(refpts_iterator(simple_ring,
+                                 numpy.ones(6, dtype=bool))) ==
+            simple_ring)
     assert list(refpts_iterator(simple_ring, [1])) == [simple_ring[1]]
     a = numpy.array([False, True, False, False, False, False])
     assert list(refpts_iterator(simple_ring, a)) == [simple_ring[1]]
@@ -147,7 +150,7 @@ def test_get_s_pos_returns_length_for_lattice_with_one_element():
     assert get_s_pos([e], [1]) == numpy.array([0.1])
 
 
-def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_and_refpts_None():
+def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_and_refpts_None():
     e = elements.LongElement('e', 0.1)
     f = elements.LongElement('e', 2.1)
     print(get_s_pos([e, f], None))
@@ -155,7 +158,7 @@ def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_and_refpts_N
                                numpy.array([0, 0.1, 2.2]))
 
 
-def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_int_refpts():
+def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_using_int_refpts():
     e = elements.LongElement('e', 0.1)
     f = elements.LongElement('e', 2.1)
     lat = [e, f]
@@ -163,7 +166,7 @@ def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_int_re
                                numpy.array([0, 0.1, 2.2]))
 
 
-def test_get_s_pos_returns_all_points_for_lattice_with_two_elements_using_bool_refpts():
+def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_using_bool_refpts():
     e = elements.LongElement('e', 0.1)
     f = elements.LongElement('e', 2.1)
     lat = [e, f]

@@ -65,6 +65,7 @@ alloptions=[atoptions varargs];
 % atpass
 cdir=fullfile(atroot,'attrack','');
 compile([alloptions, {passinclude}, ompoptions], fullfile(cdir,'atpass.c'));
+compile([atoptions, ompoptions], fullfile(cdir,'coptions.c'));
 
 % Diffusion matrices
 cdir=fullfile(atroot,'atphysics','Radiation');

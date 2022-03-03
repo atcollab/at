@@ -19,6 +19,12 @@ Install the Python development package for your OS. For example, using yum:
 
 * ``sudo yum install python3-devel``
 
+Source download
+---------------
+Download the latest version of AT:
+    ``$ git clone https://github.com/atcollab/at.git``
+
+
 Installation (all platforms)
 ----------------------------
 
@@ -30,9 +36,18 @@ It is easiest to do this using a virtualenv. inside pyat:
 
 Then:
 
-* ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
-* ``pip install -r requirements.txt``
-* ``pip install -e .``
+* activate the virtual environment:
+
+  ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
+* make sure you have a recent pip installer:
+
+  ``pip install --upgrade pip``
+* Go to the pyat root directory:
+
+  ``cd <atroot>/pyat``
+* install AT:
+
+  ``pip install -e .``
 
 Finally, you should be able to run the tests:
 
@@ -58,17 +73,17 @@ recompiled.  To force recompilation, remove the build directory:
 Any changes to .py files are automatically reinstalled in the build, but to
 ensure any changes to .c files are reinstalled rerun:
 
-* ``python setup.py develop``
+* ``pip install -e .``
 
-If you get strange behaviour even after running setup.py develop again, then
+If you get strange behaviour even after running pip install develop again, then
 running the following, inside pyat, should fix it:
 
 * ``rm -rf build``
 * ``find at -name "*.pyc" -exec rm '{}' \;``
 * ``find at -name "*.so" -exec rm '{}' \;``
-* ``python setup.py develop``
+* ``pip install -e .``
 
-N.B. setup.py develop needs to be run with the same version of Python (and
+N.B. ``pip install -e .`` needs to be run with the same version of Python (and
 numpy) that you are using to run pyAT.
 
 Releasing a version to PyPI
@@ -91,12 +106,10 @@ For testing any version that you have installed, the simple snippet in
 ``README.rst`` is sufficient.
 
 * Decide the Python versions that should be supported in the release
-   * Set these Python versions in setup.py
-   * Set at least these Python versions as python-version in .github/workflows/python-tests.yml
+   * Set these Python versions in ``python_requires`` in ``setup.cfg``
+   * Set at least these Python versions as ``python-version`` in ``.github/workflows/python-tests.yml``
 * Determine the minimum Numpy version that is required for those Python versions
-   * Set this numpy version in install_requires in setup.py
-   * Set this numpy version in requirements.txt
-* Update the pyat version in setup.py to x.y.z
+   * Set this numpy version in ``install_requires`` in ``setup.cfg``
 * Push a tag ``pyat-x.y.z`` to Github
 
 If all goes well, there will be a build of "Build and upload wheels and sdist"

@@ -16,7 +16,7 @@ import numpy
 import math
 import itertools
 from warnings import warn
-from .constants import clight
+from ..constants import clight, e_mass
 from .particle_object import Particle
 from .utils import AtError, AtWarning
 from .utils import uint32_refpts as uint32_refs, bool_refpts as bool_refs
@@ -59,12 +59,13 @@ class Lattice(list):
             name=''                 Name of the lattice
             energy                  Energy of the lattice
             periodicity=1           Number of periods
-            particle='relativistic' Circulating particle. May be 'relativistic',
-                                    'electron', 'positron', 'proton'
+            particle='relativistic' Circulating particle. May be
+                                    'relativistic', 'electron',
+                                    'positron', 'proton'
                                     or a Particle object
             iterator=None           Custom iterator (see below)
-            *                       All other keywords will be set as attributes
-                                    of the Lattice object
+            *                       All other keywords will be set as
+                                    attributes of the Lattice object
 
     To reduce the inter-package dependencies, some methods of the
     lattice object are defined in other AT packages, in the module where
@@ -137,7 +138,7 @@ class Lattice(list):
         # set default values
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
-        kwargs.setdefault('_particle', Particle('electron'))
+        kwargs.setdefault('_particle', Particle())
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_h = kwargs.pop('_harmnumber', None)
@@ -156,8 +157,7 @@ class Lattice(list):
         if cell_h is not None:
             self._cell_harmnumber = cell_h
         elif frequency is not None:
-            gamma = self.gamma
-            beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
+            beta = self.beta
             rev = beta * clight / self.get_s_pos(len(self))[0]
             self._cell_harmnumber = int(round(frequency / rev))
 
@@ -372,10 +372,8 @@ class Lattice(list):
     @property
     def revolution_frequency(self):
         """Revolution frequency (fullring) [Hz]"""
-        # gamma = self.gamma
-        # beta = math.sqrt(1.0 - 1.0 / gamma / gamma)
-        # return beta * clight / self.circumference
-        return clight / self.circumference
+        beta = self.beta
+        return beta * clight / self.circumference
 
     @property
     def particle(self):
@@ -409,12 +407,19 @@ class Lattice(list):
 
     @property
     def gamma(self):
-        return float(self.energy / self.particle.rest_energy)
+        rest_energy = self.particle.rest_energy
+        if rest_energy == 0.0:
+            rest_energy = e_mass
+        return float(self.energy / rest_energy)
 
     @property
     def beta(self):
-        gamma = float(self.energy / self.particle.rest_energy)
-        return math.sqrt(1.0 - 1.0/gamma/gamma)
+        rest_energy = self.particle.rest_energy
+        if rest_energy == 0.0:
+            return 1.0
+        else:
+            gamma = float(self.energy / rest_energy)
+            return math.sqrt(1.0 - 1.0/gamma/gamma)
 
     # noinspection PyPep8Naming
     @property
@@ -493,7 +498,7 @@ class Lattice(list):
     @staticmethod
     def _radiation_attrs(cavity_func, dipole_func,
                          quadrupole_func, wiggler_func,
-                         sextupole_func, octupole_func, 
+                         sextupole_func, octupole_func,
                          multipole_func):
         """Create a function returning the modified attributes"""
 
@@ -525,7 +530,7 @@ class Lattice(list):
     # noinspection PyShadowingNames
     def radiation_on(self, cavity_pass='CavityPass', dipole_pass='auto',
                      quadrupole_pass='auto', wiggler_pass='auto',
-                     sextupole_pass=None, octupole_pass=None, 
+                     sextupole_pass=None, octupole_pass=None,
                      multipole_pass=None, copy=False):
         """
         Turn acceleration and radiation on and return the lattice
@@ -582,7 +587,7 @@ class Lattice(list):
     # noinspection PyShadowingNames
     def radiation_off(self, cavity_pass='auto', dipole_pass='auto',
                       quadrupole_pass='auto', wiggler_pass='auto',
-                      sextupole_pass='auto', octupole_pass='auto', 
+                      sextupole_pass='auto', octupole_pass='auto',
                       multipole_pass='auto', copy=False):
         """
         Turn acceleration and radiation off and return the lattice
