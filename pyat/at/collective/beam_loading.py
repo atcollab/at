@@ -53,14 +53,15 @@ class BeamLoadingElement(LongResonatorElement):
     """
     def __init__(self, family_name, ring, srange, qfactor, rshunt,
                  cavpts=None, **kwargs):
-        cavpts = _select_cav(ring, cavpts)
+        self._cavpts = _select_cav(ring, cavpts)
+        self._ring = ring
         self._cavs = ring.select(cavpts)
         self._v0 = ring.get_rf_voltage(cavpts=cavpts)
         self._frf0 = ring.get_rf_frequency(cavpts=cavpts)
         self._u0 = ring.get_energy_loss(method=ELossMethod.TRACKING)
         self._phil = kwargs.pop('PhiL',0.0)
         self._beta = ring.beta
-        super(BeamLoadingElement, self).__init__(family_name, ring, srange, 
+        super(BeamLoadingElement, self).__init__(family_name, self._ring, srange, 
                                                  self._frf0, qfactor, rshunt,
                                                  **kwargs)
 
@@ -76,8 +77,8 @@ class BeamLoadingElement(LongResonatorElement):
     def update_gen_res(self, current):
         vgen, fres, psi = get_anal_values_phasor(self._frf0, current, self._v0,
                                                  self._qfactor, self._rshunt,
-                                                 self._phil, self._u0)
-        self.ResFrequency = fres
-        for c in self._cavs:
-            c.update({'PhaseLag': -psi})
-            c.update({'Voltage': vgen})           
+                                                 self._phil, self._u0)                                       
+        self.ResFrequency = fres    
+        for c in self._ring.select(self._cavpts):
+            c.PhaseLag = -psi
+            c.Voltage = vgen          

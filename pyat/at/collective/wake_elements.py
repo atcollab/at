@@ -10,13 +10,13 @@ class WakeElement(Element):
     """Class to generate an AT wake element using the passmethod WakeFieldPass
     args:  family name, ring, wake object
     kwargs: PassMethod=WakeFieldPass
-            Current=0   Bunch current [A]
-            Nslice=101  Number of slices per bunch
-            Nturns=1    Number of turn for the wake field
-            ZCuts=None  Limits for fixed slicing, default is adaptive
-            NormFact    (default=[1,1,1]) normalization for the 3 planes,
-                        to account for beta function at the observation
-                        point for example
+            NumParticles=0   Number of particles in the bunch
+            Nslice=101       Number of slices per bunch
+            Nturns=1         Number of turn for the wake field
+            ZCuts=None       Limits for fixed slicing, default is adaptive
+            NormFact         (default=[1,1,1]) normalization for the 3 planes,
+                             to account for beta function at the observation
+                             point for example
     """
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
 
@@ -37,7 +37,7 @@ class WakeElement(Element):
         betrel = ring.beta
         self._charge2current = clight*betrel*qe/ring.circumference
         self._wakefact = -qe/(ring.energy*betrel**2)
-        self.Current = kwargs.pop('Current', 0.0)
+        self.NumParticles = kwargs.pop('NumParticles', 0.0)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
         self._turnhistory = None    # Defined here to avoid warning
@@ -209,7 +209,7 @@ class LongResonatorElement(ResonatorElement):
                                                    qfactor, rshunt, **kwargs)
                                                    
     def rebuild_wake(self):          
-        wake = longres_object(self.WakeT, self._resfrequency, self._qfactor,
+        wake = longres_object(self._wakeT, self._resfrequency, self._qfactor,
                               self._rshunt, self._beta)   
         self._build(wake) 
 
