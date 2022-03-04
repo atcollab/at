@@ -37,7 +37,7 @@ class WakeElement(Element):
         betrel = ring.beta
         self._charge2current = clight*betrel*qe/ring.circumference
         self._wakefact = -qe/(ring.energy*betrel**2)
-        self.Current = kwargs.pop('Current', 0.0)
+        self.NumParticles = kwargs.pop('NumParticles', 0.0)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
         self._turnhistory = None    # Defined here to avoid warning
