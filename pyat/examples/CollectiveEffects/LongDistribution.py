@@ -24,7 +24,7 @@ ha = Haissinski(wobj, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=
 ha.solve()
 
 ha_x_tmp = ha.q_array*ha.sigma_l
-ha_prof = ha.res/ha.I
+ha_prof = ha.res/ha.Ic
 ha_prof /= numpy.trapz(ha_prof, x=ha_x_tmp)
 ha_cc = numpy.average(ha_x_tmp, weights=ha_prof)
 ha_x = (ha_x_tmp - ha_cc) 
