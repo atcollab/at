@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from at.collective.wake_object import build_srange, longres_object
 from at.collective.wake_elements import LongResonatorElement
-from at.collective.Haissinski import Haissinski
+from at.collective.haissinski import Haissinski
 
 # First we define the ring, the BB resonator, the current and the wake element
 ring = at.load_m('../../../machine_data/esrf.m')
