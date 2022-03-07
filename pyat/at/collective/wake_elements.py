@@ -4,6 +4,7 @@ from ..lattice.elements import Element, _array
 from ..lattice.constants import clight, qe
 from .wake_object import res_object, longres_object
 from .wake_object import reswall_object, WakeComponent
+from ..lattice import AtError
 
 
 # noinspection PyPep8Naming
@@ -46,6 +47,13 @@ class WakeElement(Element):
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
         self._build(wake)
         if zcuts is not None:
+            rffreq = ring.rf_frequency
+            nomfreq = ring.revolution_frequency * ring.harmonic_number
+            if rffreq != nomfreq:
+                raise AtError('WakeElement: Zcuts is not compatible with '
+                              'off-energy tracking: please use ZCuts=None '
+                              'or set frequency with ring.set_rf_frequency()')
+                            
             self.ZCuts = zcuts
         super(WakeElement, self).__init__(family_name, **kwargs)
 
