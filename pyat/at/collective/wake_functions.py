@@ -67,14 +67,16 @@ def transverse_resonator(srange, frequency, qfactor, rshunt,
     omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
     dt = -srange/(beta * clight)
     if qfactor > 0.5:
-        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 / (qfactor *
-                omegabar) * numpy.exp(alpha*dt) * numpy.sin(omegabar*dt))
+        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 /
+                (qfactor * omegabar) * numpy.exp(alpha*dt) *
+                numpy.sin(omegabar*dt))
     elif qfactor == 0.5:
-        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 / qfactor *
-                numpy.exp(alpha * dt) * dt)
+        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 /
+                qfactor * numpy.exp(alpha * dt) * dt)
     else:
-        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 / (qfactor *
-                omegabar) * numpy.exp(alpha*dt) * numpy.sinh(omegabar*dt))
+        wake = (-(numpy.sign(dt) - 1) * yokoya_factor * rshunt * omega**2 /
+                (qfactor * omegabar) * numpy.exp(alpha*dt) *
+                numpy.sinh(omegabar*dt))
     return wake
 
 
