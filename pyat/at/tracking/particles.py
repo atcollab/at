@@ -5,7 +5,8 @@ import numpy
 from at.physics import ohmi_envelope
 from at.lattice.constants import clight, e_mass
 from at.physics import get_mcf, get_tune
-
+from at.lattice import AtWarning, AtError
+import warnings
 
 __all__ = ['beam', 'sigma_matrix']
 
@@ -24,8 +25,10 @@ def _generate_sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
             sig_matrix = emitx*ld0.R[0] + emity*ld0.R[1] + \
                          blength*espread*ld0.R[2]
         except AttributeError:
-            print('R matrices not found. (are you using linopt6?)')
-            print('Creating uncoupled sigma matrix')
+            warnings.warn(AtWarning('R matrices not found. '
+                                    '(are you using linopt6?)'))
+            warnings.warn(AtWarning('Creating uncoupled sigma matrix'))
+
             sig_matrix_x = _generate_2d_trans_matrix(emitx,
                                                      ld0.beta[0],
                                                      ld0.alpha[0])
@@ -45,8 +48,10 @@ def _generate_sigma_matrix(ld0, emitx, emity, blength, espread, radiation):
         try:
             sig_matrix_trans = (emitx*ld0.R[0] + emity*ld0.R[1])[:4, :4]
         except AttributeError:
-            print('R matrices not found. (are you using linopt6?)')
-            print('Creating uncoupled sigma matrix')
+            warnings.warn(AtWarning('R matrices not found. '
+                                    '(are you using linopt6?)'))
+            warnings.warn(AtWarning('Creating uncoupled sigma matrix'))
+
             sig_matrix_x = _generate_2d_trans_matrix(emitx,
                                                      ld0.beta[0],
                                                      ld0.alpha[0])
@@ -99,6 +104,9 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None,
         blength         One sigma bunch length [m]
         espread         One sigma energy spread [dp/p]
 
+    KEYWORDS
+        verbose=False   Boolean flag on whether to print information
+                        to the terminal
     OUTPUT
         sigma_matrix    6x6 correlation matrix
 
@@ -125,36 +133,51 @@ def sigma_matrix(ring=None, twiss_in=None, emitx=None,
         assert espread is not None, 'espread must be defined'
 
     if ring:
+        cavPassFlag = numpy.any(
+                        numpy.array(
+                          [i.PassMethod == 'CavityPass' for i in ring]))
+        radPassFlag = numpy.any(
+                        numpy.array(
+                          ['Rad' in i.PassMethod for i in ring]))
+
+        if cavPassFlag and not radPassFlag and not flag:
+            raise AtError('Cannot compute 6D sigma matrix without '
+                          'radiation damping and without emittances')
+
         ld0, bd, ld = ring.get_optics()
         if ring.radiation and not flag:
-            print('Generating correlated sigma matrix using ohmi envelope')
+            warnings.warn(AtWarning('Generating correlated sigma matrix using '
+                                    'ohmi envelope'))
+
             emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
             sig_matrix = emit.r66[0]
         elif flag:
-            print('Generating pseudo-correlated matrix '
-                  'from initial optics conditions')
+            warnings.warn(AtWarning('Generating pseudo-correlated matrix '
+                      'from initial optics conditions'))
             if ring.radiation:
-                print('Ignoring provided blength and '
-                      'calculating it based on espread')
+                warnings.warn(AtWarning('Ignoring provided blength and '
+                          'calculating it based on espread'))
+
                 blength = _compute_bunch_length_from_espread(ring, espread)
             sig_matrix = _generate_sigma_matrix(ld0, emitx, emity,
                                                 blength, espread,
                                                 ring.radiation)
         else:
-            raise AttributeError('Radiation is off but no '
+            raise AtError('Radiation is off but no '
                                  'emittances are specified')
     elif twiss_in:
         if not emitx:
-            raise AttributeError('Emittances must be '
+            raise AtError('Emittances must be '
                                  'specified for twiss_in')
-        print('Generating un-correlated sigma matrix '
-              'from parameters in twiss_in')
+
+        warnings.warn(AtWarning('Generating un-correlated sigma matrix '
+                  'from parameters in twiss_in'))
         sig_matrix = _generate_sigma_matrix(twiss_in, emitx,
                                             emity, blength,
                                             espread, False)
 
     else:
-        raise AttributeError('A lattice or twiss_in must be provided')
+        raise AtError('A lattice or twiss_in must be provided')
     return sig_matrix
 
 
@@ -187,8 +210,8 @@ def beam(nparts, sigma, orbit=None):
     try:
         lmat = numpy.linalg.cholesky(sigma)
     except numpy.linalg.LinAlgError:
-        print('Decomposition failed for 6x6 correlation matrix.'
-              ' Computing 3 planes individually')
+        warnings.warn(AtWarning('Decomposition failed for 6x6 correlation matrix.'
+              ' Computing 3 planes individually'))
         a1 = _get_single_plane([0, 1])
         a2 = _get_single_plane([2, 3])
         a3 = _get_single_plane([4, 5])
