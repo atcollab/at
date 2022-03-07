@@ -42,7 +42,7 @@ def _fundmask(ring, cavpts):
     if len(freqs) < 1:
         raise AtError('No cavity found in the lattice')
     mask = (freqs == min(freqs))
-    return None if numpy.all(mask) else mask
+    return mask
 
 
 def _get_cavity(ring, attr, fsingle, cavpts=None, array=False):
