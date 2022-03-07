@@ -1,6 +1,6 @@
 import numpy
-from at.collective.wake_elements import LongResonatorElement
-from at.collective.wake_object import Wake, WakeType, WakeComponent
+from .wake_elements import LongResonatorElement
+from .wake_object import Wake, WakeType, WakeComponent
 from at.physics import ELossMethod
 from at.lattice import AtError, get_cells, checktype, RFCavity
 

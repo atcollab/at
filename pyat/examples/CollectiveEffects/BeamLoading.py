@@ -1,20 +1,14 @@
 import numpy
 import matplotlib.pyplot as plt
 import at
-from at.collective.beam_loading import BeamLoadingElement, get_anal_qs
-from at.collective.wake_object import build_srange
+from at.collective import BeamLoadingElement, get_anal_qs
+from at.collective import build_srange
 from at.physics import harmonic_analysis
 
 
-#ring = at.load_lattice('../../../machine_data/esrf.m')
-path = '/machfs/swhite/lattice/lat_files/'
-filename = 'S28F.mat'
-key = 'LOW_EMIT_RING_INJ'
-latticef = path+filename
-ring = at.load_lattice(latticef,key=key)
+ring = at.load_lattice('../../../machine_data/esrf.m')
 ring.radiation_off(cavity_pass='CavityPass')
 ring.set_rf_frequency()
-ring.set_rf_voltage(5.5e6)
 
 wturns = 50
 beta = 2.8
@@ -23,18 +17,17 @@ rshunt = 145*qfactor*11
 phil = 0.0
 
 fring, _ = at.fast_ring(ring)
-qs0 = at.get_tune(fring)[2]
-u0 = fring.get_energy_loss(method=at.ELossMethod.TRACKING)
-frev = fring.revolution_frequency
-volt = fring.rf_voltage
-rffreq = fring.rf_frequency
-harm = fring.harmonic_number 
-phis = numpy.pi-numpy.arcsin(u0/volt)
+qs0 = at.get_tune(ring)[2]
+u0 = ring.get_energy_loss(method=at.ELossMethod.TRACKING)
+frev = ring.revolution_frequency
+volt = ring.rf_voltage
+rffreq = ring.rf_frequency
+harm = ring.harmonic_number 
+phis = numpy.arcsin(u0/volt)
 
 
-srange = build_srange(-0.36, 0.36, 1e-5, 1e-2, fring.circumference, fring.circumference*wturns)
-bl_elem = BeamLoadingElement('bl', fring, srange, qfactor, rshunt)
-bl_elem.Nslice = 1
+srange = build_srange(0, 0.3, 1e-5, 1e-2, fring.circumference, fring.circumference*wturns)
+bl_elem = BeamLoadingElement('bl', fring, srange, qfactor, rshunt, Nturns=wturns, Nslice=1)
 fring.append(bl_elem)
 
 print('u0', u0)
@@ -46,10 +39,10 @@ print('Synch. freq.: ', qs0*frev)
 print('Q', qfactor)
 print('Rs', rshunt)
 
-Npart = 10
-part = at.beam(Npart, at.sigma_matrix(ring))
+Npart = 500
+part = at.beam(Npart, at.sigma_matrix(ring.radiation_on(copy=True)))
 Nturns = 1000
-allCurrents = numpy.linspace(0, 0.1, 5)
+allCurrents = numpy.linspace(0.0, 0.5, 11)
 allQs = numpy.zeros(len(allCurrents))
 allQsa = numpy.zeros(len(allCurrents))
 
@@ -61,12 +54,16 @@ for p, Ib in enumerate(allCurrents):
     print('Generator voltage: ', fring.rf_voltage)
     print('Resonator frequency: ', fring[-1].ResFrequency)
     print('Detuning angle: ', fring.get_elements(at.RFCavity)[0].PhaseLag/numpy.pi*180)
-    print('Synch. tune: ', qsa)    
+    print('Synch. tune: ', qsa)   
     part = numpy.squeeze(at.lattice_pass(fring, part, nturns=Nturns))
     tbt_dp = numpy.mean(part[4,:,:], axis=0)
     tbt_s = numpy.mean(part[5,:,:], axis=0)
-    qs_dp = harmonic_analysis.get_tunes_harmonic(tbt_dp,'laskar', num_harmonics=20, fmin=1e-4, fmax=0.1)
-    qs_s = harmonic_analysis.get_tunes_harmonic(tbt_s,'laskar', num_harmonics=20, fmin=1e-4, fmax=0.1)
+    try:
+        qs_dp = harmonic_analysis.get_tunes_harmonic(tbt_dp,'laskar', num_harmonics=20, fmin=1e-5, fmax=0.1)
+        qs_s = harmonic_analysis.get_tunes_harmonic(tbt_s,'laskar', num_harmonics=20, fmin=1e-5, fmax=0.1)
+    except ValueError:
+        qs_dp = 0
+        qs_s = 0
     allQs[p] = (qs_dp+qs_s)/2
     allQsa[p] = qsa
     part = part[:,:,-1]
@@ -85,6 +82,7 @@ ax2.set_xlabel('Turn #')
 ax2.set_ylabel('dp/ ct [m]')
 ax2.legend()
 plt.show()
+
 
 
 
