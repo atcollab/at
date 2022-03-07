@@ -79,6 +79,10 @@ class WakeElement(Element):
             return getattr(self, attrname)
         else:
             return None
+            
+    @property
+    def TurnHistory(self):
+        return self._turnhistory
         
     @property
     def WakeT(self):

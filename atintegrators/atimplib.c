@@ -99,7 +99,7 @@ double *getbounds(double *r_in,int num_particles){
     MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
-
+        
     bounds[0]=smin;
     bounds[1]=smax;
     return bounds;
@@ -132,9 +132,17 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
             register double ct = rtmp[5];
             if (ct < smin) {
                 pslice[i] = 0;
+                weight[0] += 1.0;
+                xpos[0] += x;
+                ypos[0] += y;
+                zpos[0] += ct;
             }
             else if (ct >= smax) {
                 pslice[i] = nslice-1;
+                weight[nslice-1] += 1.0;
+                xpos[nslice-1] += x;
+                ypos[nslice-1] += y;
+                zpos[nslice-1] += ct;
             }
             else {
                 ii = (int)floor((ct-smin)/hz);

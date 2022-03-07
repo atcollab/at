@@ -8,11 +8,28 @@ from at.lattice import AtError, get_cells, checktype, RFCavity
 def _select_cav(ring, cavpts):
     """Select the cavities"""
     if cavpts is None:
-        try:
-            cavpts = ring.cavpts
-        except AttributeError:
-            cavpts = get_cells(ring, checktype(RFCavity))
+        cavpts = get_cells(ring, checktype(RFCavity))
     return cavpts
+    
+
+def _check_unique(vals, attr):
+    vu = numpy.unique(vals)
+    if len(vu) > 1:
+        raise AtError('Not all cavities {0} are identical: '
+                      'please define one beamloading element '
+                      'per cavity type'.format(attr))
+                      
+                      
+def get_anal_qs(qs0,current,volt,rshunt,phil,u0):
+    phis = numpy.arcsin(u0/volt)
+    theta = numpy.pi/2-phis-phil
+    vb = 2*current*rshunt
+    a = volt*numpy.cos(phis)*numpy.sin(theta)+u0*numpy.cos(theta)
+    b = volt*numpy.cos(phis)*numpy.cos(theta)-(vb+u0)*numpy.sin(theta)
+    xi = numpy.arcsin(a*b/numpy.sqrt(a**2*(a**2+b**2)))
+    qs = qs0*(numpy.sqrt(volt*numpy.cos(phis)-vb*numpy.cos(xi)*(numpy.cos(xi+phis)*
+         numpy.sin(phis)-numpy.sin(xi+phis)*numpy.cos(phis)))/numpy.sqrt(volt*numpy.cos(phis)))
+    return qs
 
 
 def get_anal_values_phasor(frf, current, volt, qfactor, rshunt, phil, u0):
@@ -31,7 +48,7 @@ def get_anal_values_phasor(frf, current, volt, qfactor, rshunt, phil, u0):
     vgen   generator voltage
     fres   resonator frequency
     psi    cavity phase offset (tuning angle)
-    '''
+    ''' 
     phis = numpy.arcsin(u0/volt)
     theta = numpy.pi/2-phis-phil
     vb = 2*current*rshunt
@@ -39,12 +56,10 @@ def get_anal_values_phasor(frf, current, volt, qfactor, rshunt, phil, u0):
     b = volt*numpy.cos(phis)*numpy.cos(theta)-(vb+u0)*numpy.sin(theta)
     x = a*b/numpy.sqrt(a**2*(a**2+b**2))
     psi = numpy.arcsin(x)
-    vgr=(u0+vb*(1-x**2))/(numpy.cos(psi)*numpy.cos(psi+theta));
     vgen = rshunt*numpy.cos(psi)*(volt/rshunt+2*current*numpy.sin(phis))/numpy.cos(phil)
     dff=-numpy.tan(psi)/(2*qfactor);
     fres=frf/(dff+1)
-    psi = numpy.arctan(2*qfactor*(fres-frf)/fres)
-    return vgen,fres,psi
+    return vgen, fres, psi
 
 
 class BeamLoadingElement(LongResonatorElement):
@@ -54,12 +69,17 @@ class BeamLoadingElement(LongResonatorElement):
     def __init__(self, family_name, ring, srange, qfactor, rshunt,
                  cavpts=None, **kwargs):
         self._cavpts = _select_cav(ring, cavpts)
+        self._ncavs = ring.refcount(self._cavpts)
         self._ring = ring
-        self._cavs = ring.select(cavpts)
-        self._v0 = ring.get_rf_voltage(cavpts=cavpts)
-        self._frf0 = ring.get_rf_frequency(cavpts=cavpts)
-        self._u0 = ring.get_energy_loss(method=ELossMethod.TRACKING)
-        self._phil = kwargs.pop('PhiL',0.0)
+        self._cavs = ring.select(self._cavpts)
+        va = ring.get_rf_voltage(cavpts=self._cavpts, array=True)
+        _check_unique(va, 'Voltage')
+        frf = ring.get_rf_frequency(cavpts=self._cavpts, array=True)
+        _check_unique(frf, 'Frequency')
+        self._v0 = numpy.sum(va)
+        self._frf0 = numpy.unique(frf)[0]        
+        self._u0 = ring.get_energy_loss(method=ELossMethod.TRACKING)        
+        self.Phil = kwargs.pop('PhiL',0.0)
         self._beta = ring.beta
         super(BeamLoadingElement, self).__init__(family_name, self._ring, srange, 
                                                  self._frf0, qfactor, rshunt,
@@ -77,8 +97,8 @@ class BeamLoadingElement(LongResonatorElement):
     def update_gen_res(self, current):
         vgen, fres, psi = get_anal_values_phasor(self._frf0, current, self._v0,
                                                  self._qfactor, self._rshunt,
-                                                 self._phil, self._u0)                                       
+                                                 self.Phil, self._u0)                                       
         self.ResFrequency = fres    
         for c in self._ring.select(self._cavpts):
             c.PhaseLag = -psi
-            c.Voltage = vgen          
+            c.Voltage = vgen/self._ncavs       
