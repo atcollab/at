@@ -219,9 +219,9 @@ def beam(nparts, sigma, orbit=None):
         orbit=None      An orbit can be provided to give a center of
                         mass offset to the distribution
     OUTPUT
-        particle_dist   a matrix of shape (M, np) where M is shape of
-                        sigma matrix
+        particle_dist   a matrix of shape (6, np)
     """
+
     def _get_single_plane(dims):
         row_idx = numpy.array(dims)
         try:
