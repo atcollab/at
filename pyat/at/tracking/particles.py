@@ -167,6 +167,11 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     longitudinal parameters, then the 2x2 uncorrelated
     matrices are computed for each plane and combined
     into the 6x6 matrix.
+
+    If neither a lattice object nor a twiss_in is provided,
+    then the beta, alpha and emittance for horizontal and 
+    vertical is required, as well as blength and espread.
+    This then computes the analytical uncoupled sigma matrix
     """
 
     d = kwargs
