@@ -5,8 +5,7 @@ import numpy
 from at.physics import ohmi_envelope
 from at.lattice.constants import clight, e_mass
 from at.physics import get_mcf, get_tune
-from at.lattice import AtWarning, AtError
-import warnings
+from at.lattice import AtError
 
 __all__ = ['beam', 'sigma_matrix']
 
