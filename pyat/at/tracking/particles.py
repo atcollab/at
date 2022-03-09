@@ -18,6 +18,8 @@ def _generate_2d_trans_matrix(emit, beta, alpha):
 def _generate_2d_long_matrix(espread, blength):
     return numpy.array([[espread*espread, 0], [0, blength*blength]])
 
+def _generate_2d_long_Rmatrix(espread, blength):
+    return numpy.array([[espread/blength, 0], [0, blength/espread]])
 
 def _sigma_matrix_uncoupled(betax, alphax, emitx,
                             betay, alphay, emity,
@@ -73,53 +75,72 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
         assert emity is not None, 'emity must be defined'
         assert espread is not None, 'espread must be defined'
 
-    if twiss_in and not flag:
-        raise AtError('Emittances must be specified for twiss_in')
+
     if twiss_in:
+        if flag:
+            assert blength is not None, 'blength must be defined for twiss_in'
+        else:
+            raise AtError('Emittances must be specified for twiss_in')
         if not hasattr(twiss_in, 'R'):
             raise AtError('twiss_in should contain the R matrix. '
                           'Please use the output from linopt6.')
+        rmat = twiss_in.R
 
-    if flag and twiss_in:
-        assert blength is not None, 'blength must be defined for twiss_in'
-    elif flag and ring:
-        if espread is not None and blength is None:
-            blength = _compute_bunch_length_from_espread(ring, espread)
 
-    if ring and not flag:
+    if ring:
+        if not ring.radiation and not flag:
+            raise AtError('Emittances must be specified for ring without '
+                          'radiation')
 
-        cavPassFlag = numpy.any([i.PassMethod == 'CavityPass' for i in ring])
-        radPassFlag = numpy.any(['Rad' in i.PassMethod for i in ring])
+        if flag:
+            if espread is not None and blength is None:
+                blength = _compute_bunch_length_from_espread(ring, espread)
+        else:
 
-        if cavPassFlag and not radPassFlag and not flag:
-            raise AtError('Cannot compute 6D sigma matrix without '
-                          'radiation damping and without emittances. '
-                          'Either switch on radiation or provide the '
-                          'emittances.')
+            cavPassFlag = numpy.any([i.PassMethod == 'CavityPass' for i in ring])
+            radPassFlag = numpy.any(['Rad' in i.PassMethod for i in ring])
 
-        if ring.radiation:
-            if verbose:
-                print('Generating correlated sigma matrix using '
-                      'ohmi envelope')
-            emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
-            sig_matrix = emit.r66[0]
+            if cavPassFlag and not radPassFlag:
+                raise AtError('Cannot compute 6D sigma matrix without '
+                              'radiation damping and without emittances. '
+                              'Either switch on radiation or provide the '
+                              'emittances.')
 
-    elif flag:
-        if ring:
-            ld0, bd, ld = ring.get_optics()
+            if ring.radiation:
+                if verbose:
+                    print('Generating correlated sigma matrix using '
+                          'ohmi envelope')
+                emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
+                return emit.r66[0]
+
+        ld0, bd, ld = ring.get_optics()
+        if ld0.R.shape[0] == 3:
             rmat = ld0.R
-        elif twiss_in:
-            rmat = twiss_in.R
+        else:           
+            rmat = numpy.zeros((3, 6, 6))
+            rmat[0] = numpy.block([
+                                [ld0.R[0], numpy.zeros((4,2))],
+                                [numpy.zeros((2,6))]
+                                ])
 
-        if verbose:
-            print('Generating pseudo-correlated matrix '
-                  'from initial optics conditions')
+            rmat[1] = numpy.block([
+                                [ld0.R[1], numpy.zeros((4,2))],
+                                [numpy.zeros((2,6))]
+                                ])
 
-        sig_matrix = _sigma_matrix_from_R66(rmat,
-                                            emitx, emity, blength, espread)
+            rlong = _generate_2d_long_Rmatrix(espread, blength)
+            rmat[2] = numpy.block([
+                                [numpy.zeros((4, 6))],
+                                [numpy.zeros((2, 4)), rlong]
+                                ])
 
-    else:
-        raise AtError('A lattice or twiss_in must be provided')
+    if verbose:
+        print('Generating pseudo-correlated matrix '
+              'from initial optics conditions')
+
+    sig_matrix = _sigma_matrix_from_R66(rmat,
+                                        emitx, emity, blength, espread)
+
     return sig_matrix
 
 
