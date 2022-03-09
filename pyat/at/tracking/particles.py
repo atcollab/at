@@ -18,8 +18,10 @@ def _generate_2d_trans_matrix(emit, beta, alpha):
 def _generate_2d_long_matrix(espread, blength):
     return numpy.array([[espread*espread, 0], [0, blength*blength]])
 
+
 def _generate_2d_long_Rmatrix(espread, blength):
     return numpy.array([[espread/blength, 0], [0, blength/espread]])
+
 
 def _sigma_matrix_uncoupled(betax, alphax, emitx,
                             betay, alphay, emity,
@@ -75,7 +77,6 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
         assert emity is not None, 'emity must be defined'
         assert espread is not None, 'espread must be defined'
 
-
     if twiss_in:
         if flag:
             assert blength is not None, 'blength must be defined for twiss_in'
@@ -85,7 +86,6 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
             raise AtError('twiss_in should contain the R matrix. '
                           'Please use the output from linopt6.')
         rmat = twiss_in.R
-
 
     if ring:
         if not ring.radiation and not flag:
@@ -97,8 +97,10 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
                 blength = _compute_bunch_length_from_espread(ring, espread)
         else:
 
-            cavPassFlag = numpy.any([i.PassMethod == 'CavityPass' for i in ring])
-            radPassFlag = numpy.any(['Rad' in i.PassMethod for i in ring])
+            cavPassFlag = numpy.any(
+                            [i.PassMethod == 'CavityPass' for i in ring])
+            radPassFlag = numpy.any(
+                            ['Rad' in i.PassMethod for i in ring])
 
             if cavPassFlag and not radPassFlag:
                 raise AtError('Cannot compute 6D sigma matrix without '
@@ -116,16 +118,16 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
         ld0, bd, ld = ring.get_optics()
         if ld0.R.shape[0] == 3:
             rmat = ld0.R
-        else:           
+        else:
             rmat = numpy.zeros((3, 6, 6))
             rmat[0] = numpy.block([
-                                [ld0.R[0], numpy.zeros((4,2))],
-                                [numpy.zeros((2,6))]
+                                [ld0.R[0], numpy.zeros((4, 2))],
+                                [numpy.zeros((2, 6))]
                                 ])
 
             rmat[1] = numpy.block([
-                                [ld0.R[1], numpy.zeros((4,2))],
-                                [numpy.zeros((2,6))]
+                                [ld0.R[1], numpy.zeros((4, 2))],
+                                [numpy.zeros((2, 6))]
                                 ])
 
             rlong = _generate_2d_long_Rmatrix(espread, blength)
