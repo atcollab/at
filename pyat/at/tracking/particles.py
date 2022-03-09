@@ -67,14 +67,28 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
                           emity=None, blength=None, espread=None,
                           verbose=False):
 
-    flag = emitx or emity or blength or espread
+    flag = emitx or emity or espread
     if flag:
         assert emitx is not None, 'emitx must be defined'
         assert emity is not None, 'emity must be defined'
-        assert blength is not None, 'blength must be defined'
         assert espread is not None, 'espread must be defined'
 
-    if ring:
+    if twiss_in and not flag:
+        raise AtError('Emittances must be specified for twiss_in')
+    if twiss_in:
+        if not hasattr(twiss_in, 'R'):
+            raise AtError('twiss_in should contain the R matrix. '
+                          'Please use the output from linopt6.')
+
+
+    if flag and twiss_in:
+        assert blength is not None, 'blength must be defined for twiss_in'
+    elif flag and ring:
+        if espread is not None and blength is None:
+            blength = _compute_bunch_length_from_espread(ring, espread)
+
+    if ring and not flag:
+
         cavPassFlag = numpy.any([i.PassMethod == 'CavityPass' for i in ring])
         radPassFlag = numpy.any(['Rad' in i.PassMethod for i in ring])
 
@@ -84,40 +98,26 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
                           'Either switch on radiation or provide the '
                           'emittances.')
 
-        ld0, bd, ld = ring.get_optics()
-        if ring.radiation and not flag:
+        if ring.radiation:
             if verbose:
                 print('Generating correlated sigma matrix using '
                       'ohmi envelope')
-
             emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
             sig_matrix = emit.r66[0]
-        elif flag:
-            if verbose:
-                print('Generating pseudo-correlated matrix '
-                      'from initial optics conditions')
-            if ring.radiation:
-                if verbose:
-                    print('Ignoring provided blength and '
-                          'calculating it based on espread')
 
-                blength = _compute_bunch_length_from_espread(ring, espread)
-            sig_matrix = _sigma_matrix_from_R66(ld0.R, emitx, emity,
-                                                blength, espread)
-        else:
-            raise AtError('Radiation is off but no '
-                          'emittances are specified.'
-                          'Please turn radiation on or'
-                          'specify emittances.')
-    elif twiss_in:
-        if not flag:
-            raise AtError('Emittances must be '
-                          'specified for twiss_in')
-        if not hasattr(twiss_in, 'R'):
-            raise AtError('twiss_in should contain the R matrix. '
-                          'Please use the output from linopt6.')
+    elif flag:
+        if ring:
+            ld0, bd, ld = ring.get_optics()
+            rmat =  ld0.R
+        elif twiss_in:
+            rmat = twiss_in.R
 
-        sig_matrix = _sigma_matrix_from_R66(twiss_in.R,
+        if verbose:
+            print('Generating pseudo-correlated matrix '
+                  'from initial optics conditions')
+
+
+        sig_matrix = _sigma_matrix_from_R66(rmat,
                                             emitx, emity, blength, espread)
 
     else:
