@@ -5,7 +5,8 @@ import numpy
 from at.physics import ohmi_envelope
 from at.lattice.constants import clight, e_mass
 from at.physics import get_mcf, get_tune
-from at.lattice import AtError
+from at.lattice import AtError, AtWarning
+import warnings
 
 __all__ = ['beam', 'sigma_matrix']
 
@@ -74,12 +75,8 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
         assert espread is not None, 'espread must be defined'
 
     if ring:
-        cavPassFlag = numpy.any(
-                        numpy.array(
-                          [i.PassMethod == 'CavityPass' for i in ring]))
-        radPassFlag = numpy.any(
-                        numpy.array(
-                          ['Rad' in i.PassMethod for i in ring]))
+        cavPassFlag = numpy.any([i.PassMethod == 'CavityPass' for i in ring])
+        radPassFlag = numpy.any(['Rad' in i.PassMethod for i in ring])
 
         if cavPassFlag and not radPassFlag and not flag:
             raise AtError('Cannot compute 6D sigma matrix without '
@@ -185,7 +182,11 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     espread = d.get('espread', None)
     verbose = d.get('verbose', False)
 
-    if isinstance(ring, list) or isinstance(twiss_in, numpy.recarray):
+    if ring is not None and twiss_in is not None:
+        warnings.warn(AtWarning('Both ring and twiss_in have been provided. '
+                                'Ignoring twiss_in and taking the ring.'))
+
+    if ring is not None or twiss_in is not None:
         return _sigma_matrix_lattice(ring=ring, twiss_in=twiss_in,
                                      emitx=emitx, emity=emity,
                                      blength=blength, espread=espread,
