@@ -80,7 +80,6 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
             raise AtError('twiss_in should contain the R matrix. '
                           'Please use the output from linopt6.')
 
-
     if flag and twiss_in:
         assert blength is not None, 'blength must be defined for twiss_in'
     elif flag and ring:
@@ -108,14 +107,13 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
     elif flag:
         if ring:
             ld0, bd, ld = ring.get_optics()
-            rmat =  ld0.R
+            rmat = ld0.R
         elif twiss_in:
             rmat = twiss_in.R
 
         if verbose:
             print('Generating pseudo-correlated matrix '
                   'from initial optics conditions')
-
 
         sig_matrix = _sigma_matrix_from_R66(rmat,
                                             emitx, emity, blength, espread)
@@ -166,7 +164,7 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     into the 6x6 matrix.
 
     If neither a lattice object nor a twiss_in is provided,
-    then the beta, alpha and emittance for horizontal and 
+    then the beta, alpha and emittance for horizontal and
     vertical is required, as well as blength and espread.
     This then computes the analytical uncoupled sigma matrix
     """
