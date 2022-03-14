@@ -56,7 +56,7 @@ def get_anal_values_phasor(frf, current, volt, qfactor, rshunt, phil, u0):
     vb = 2*current*rshunt
     a = volt*numpy.cos(phis)*numpy.sin(theta)+u0*numpy.cos(theta)
     b = volt*numpy.cos(phis)*numpy.cos(theta)-(vb+u0)*numpy.sin(theta)
-    x = a*b/numpy.sqrt(a**2*(a**2+b**2))
+    x = b/numpy.sqrt((a**2+b**2))
     psi = numpy.arcsin(x)
     vgen = rshunt*numpy.cos(psi)*(volt/rshunt+2*current *
                                   numpy.sin(phis))/numpy.cos(phil)
