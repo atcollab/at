@@ -29,10 +29,8 @@ def get_anal_qs(qs0, current, volt, rshunt, phil, u0):
     vb = 2*current*rshunt
     a = volt*numpy.cos(phis)*numpy.sin(theta)+u0*numpy.cos(theta)
     b = volt*numpy.cos(phis)*numpy.cos(theta)-(vb+u0)*numpy.sin(theta)
-    xi = numpy.arcsin(a*b/numpy.sqrt(a**2*(a**2+b**2)))
-    qs = qs0*(numpy.sqrt(volt*numpy.cos(phis)-vb*numpy.cos(xi) *
-              (numpy.cos(xi+phis) * numpy.sin(phis)-numpy.sin(xi+phis) *
-              numpy.cos(phis)))/numpy.sqrt(volt*numpy.cos(phis)))
+    xi = numpy.arcsin(b/numpy.sqrt((a**2+b**2)))
+    qs = qs0*(numpy.sqrt(volt*numpy.cos(phis)+vb*numpy.cos(xi) * numpy.sin(xi))/numpy.sqrt(volt*numpy.cos(phis)))
     return qs
 
 
