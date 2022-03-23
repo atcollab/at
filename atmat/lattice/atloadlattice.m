@@ -6,7 +6,9 @@ function lattice = atloadlattice(fspec,varargin)
 %
 %LATTICE=ATLOADLATTICE(FILEPATH,'matkey',VARIABLE_NAME,...)
 %   Give the name of a variable containing the lattice in .mat files
-%   containing several variables. Defaults to 'RING'.
+%   containing several variables. By default, if the .mat file contains a
+%   single variable, it will be loaded. Otherwise ATLOADLATTICE will look
+%   in order for 'ring', 'lattice' and 'RING'.
 %
 %LATTICE=ATLOADLATTICE(FILEPATH,KEY,VALUE...)
 %   (Key,value) pairs are added to the RingProperties of the lattice or
@@ -53,13 +55,19 @@ lattice=atSetRingProperties(lattice,varargs{:});
     function [lattice,opts]=load_mat(fpath, opts)
         dt=load(fpath);
         vnames=fieldnames(dt);
+        key='RING';
         if length(vnames) == 1
             key=vnames{1};
         else
-            key='RING';
+            for v={'ring','lattice'}
+                vn=v{1};
+                if isfield(dt,vn)
+                    key=vn;
+                    break;
+                end
+            end
         end
         [key,opts]=getoption(opts,'matkey',key);
-%       if any(cellfun(@(x) strcmp(key,x), vnames))
         try
             lattice=dt.(key);
         catch
