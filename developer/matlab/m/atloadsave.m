@@ -1,6 +1,11 @@
 %% Loading and Saving lattices
 % 
 %%
+%% Loading lattices from files
+% 
+%%
+% <matlab:doc('atloadlattice') atloadlattice> - Load a lattice from a file
+%
 %% Binary files
 % 
 %%
