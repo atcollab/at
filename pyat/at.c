@@ -312,9 +312,10 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
-                             "energy", "particle",
+                             "energy", "particle", "keep_counter",
                              "reuse","omp_num_threads","losses", NULL};
     static double lattice_length = 0.0;
+    static int last_turn = 0;
     static int valid = 0;
 
     PyObject *lattice;
@@ -341,6 +342,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     unsigned int nextrefindex;
     unsigned int num_refpts;
     int keep_lattice=0;
+    int keep_counter=0;
+    int counter=0;
     int losses=0;
     npy_intp outdims[4];
     npy_intp pdims[1];
@@ -352,18 +355,14 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     struct parameters param;
     struct LibraryListElement *LibraryListPtr;
 
-    param.nturn = 0;
-    param.energy=0.0;
-    param.rest_energy=0.0;
-    param.charge=-1.0;
     particle=NULL;
     energy=NULL;
     refs=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!pIp", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIp", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
-        &PyArray_Type, &refs, &param.nturn,
+        &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
-        &keep_lattice, &omp_num_threads, &losses)) {
+        &keep_counter, &keep_lattice, &omp_num_threads, &losses)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -376,6 +375,13 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
 
+    param.energy=0.0;
+    param.rest_energy=0.0;
+    param.charge=-1.0;
+    if (keep_counter)
+        param.nturn = last_turn;
+    else
+        param.nturn = counter;
     set_energy_particle(lattice, energy, particle, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
@@ -518,6 +524,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         PyObject **kwargs = kwargs_list;
         struct elem **elemdata = elemdata_list;
         double s_coord = 0.0;
+
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
@@ -537,7 +544,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
                 if (!*elemdata) return print_error(elem_index, rout);       /* trackFunction failed */
             }
             if (losses) {
-                checkiflost(drin, num_particles, elem_index, turn, ixnturn, ixnelem, bxlost, dxlostcoord);
+                checkiflost(drin, num_particles, elem_index, param.nturn, ixnturn, ixnelem, bxlost, dxlostcoord);
             } else {
                 setlost(drin, num_particles);
             }
@@ -547,15 +554,16 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             pyintegrator++;
             elemdata++;
             kwargs++;
-            param.nturn++;
         }
         /* the last element in the ring */
         if (num_elements == nextref) {
             memcpy(drout, drin, np6*sizeof(double));
             drout += np6; /*  shift the location to write to in the output array */
         }
+        param.nturn++;
     }
     valid = 1;      /* Tracking successful: the lattice can be reused */
+    last_turn = param.nturn;  /* Store turn number in a static variable */
 
     #ifdef _OPENMP
     if ((omp_num_threads > 0) && (num_particles > OMP_PARTICLE_THRESHOLD)) {
