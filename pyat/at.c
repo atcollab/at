@@ -5,7 +5,6 @@
  */
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
-#include <stdarg.h>
 #ifdef _OPENMP
 #include <string.h>
 #include <omp.h>
@@ -525,6 +524,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         struct elem **elemdata = elemdata_list;
         double s_coord = 0.0;
 
+      /*PySys_WriteStdout("turn: %i\n", param.nturn);*/
         nextrefindex = 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
