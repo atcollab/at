@@ -424,7 +424,7 @@ def tapering(ring, multipoles=True, niter=1, **kwargs):
         mults = get_refpts(ring, Multipole)
         k0 = get_value_refpts(ring, dipoles, 'PolynomB', index=0)
         _, o6 = find_orbit6(ring, refpts=range(len(ring)+1),
-                            XYStep=xy_step, DPStep=dp_step)
+                            XYStep=xy_step, DPStep=dp_step, method=method)
         dpps = (o6[mults, 4] + o6[mults+1, 4]) / 2
         for dpp, el in zip(dpps, ring[mults]):
             el.PolynomB *= 1+dpp
