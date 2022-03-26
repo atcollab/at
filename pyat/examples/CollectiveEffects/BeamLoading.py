@@ -7,7 +7,7 @@ from at.physics import harmonic_analysis
 
 
 ring = at.load_lattice('../../../machine_data/esrf.m')
-ring.radiation_off(cavity_pass='CavityPass')
+ring.radiation_on(cavity_pass='CavityPass')
 ring.set_rf_frequency()
 
 wturns = 50
@@ -16,7 +16,7 @@ qfactor = 37500/(1+beta)
 rshunt = 145*qfactor*11
 phil = 0.0
 
-fring, _ = at.fast_ring(ring)
+_, fring = at.fast_ring(ring)
 qs0 = at.get_tune(ring)[2]
 u0 = ring.get_energy_loss(method=at.ELossMethod.TRACKING)
 frev = ring.revolution_frequency
