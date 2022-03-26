@@ -32,7 +32,7 @@ typedef PyObject atElem;
 #define GETTRACKFCN(libfilename) GetProcAddress((libfilename),ATPY_PASS)
 #define SEPARATOR "\\"
 #define OBJECTEXT ".pyd"
-#if PY_MINOR_VERSION <= 7    /* module sysconfig wrong on windows for python<=3.7 */
+#if PY_MINOR_VERSION < 7    /* module sysconfig wrong on windows for python<3.7 */
 #define SYSCONFIG "distutils.sysconfig"
 #else
 #define SYSCONFIG "sysconfig"
