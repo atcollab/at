@@ -157,7 +157,7 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
     return timelag, ts
 
 
-def set_cavity_phase(ring, method=ELossMethod.INTEGRAL,
+def set_cavity_phase(ring, method=ELossMethod.TRACKING,
                      refpts=None, cavpts=None, copy=False):
     """
    Adjust the TimeLag attribute of RF cavities based on frequency,
