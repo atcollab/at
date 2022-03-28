@@ -2,7 +2,7 @@ import numpy
 # noinspection PyProtectedMember
 from ..lattice.elements import Element, _array
 from ..lattice.constants import clight, qe
-from .wake_object import res_object, longres_object, reswall_object, WakeComponent
+from .wake_object import resonator, long_resonator, resistive_wall, WakeComponent
 
 
 # noinspection PyPep8Naming
@@ -145,13 +145,13 @@ class ResonatorElement(WakeElement):
         self._yokoya = yokoya_factor
         self._wakecomponent = wakecomp
         self._beta = ring.beta
-        wake = res_object(srange, wakecomp, frequency, qfactor, rshunt,
+        wake = resonator(srange, wakecomp, frequency, qfactor, rshunt,
                           ring.beta, yokoya_factor=yokoya_factor)
         super(ResonatorElement, self).__init__(family_name, ring, wake,
                                                **kwargs)    
                                                
     def rebuild_wake(self):          
-        wake = res_object(self.WakeT, self._wakecomponent, self._resfrequency,
+        wake = resonator(self.WakeT, self._wakecomponent, self._resfrequency,
                           self._qfactor, self._rshunt, self._beta, self._yokoya)   
         self._build(wake) 
         
@@ -192,18 +192,18 @@ class ResonatorElement(WakeElement):
         self.rebuild_wake()                
                                              
 
-class LongResonatorElement(ResonatorElement):
+class long_resonatorElement(ResonatorElement):
     """Class to generate a longitudinal resonator, inherits from WakeElement
        additional argument are frequency, qfactor, rshunt
     """
     def __init__(self, family_name, ring, srange, frequency, qfactor, rshunt,
                  **kwargs):
-        super(LongResonatorElement, self).__init__(family_name, ring, srange,
+        super(long_resonatorElement, self).__init__(family_name, ring, srange,
                                                    WakeComponent.Z, frequency,
                                                    qfactor, rshunt, **kwargs)
                                                    
     def rebuild_wake(self):          
-        wake = longres_object(self.WakeT, self._resfrequency, self._qfactor,
+        wake = long_resonator(self.WakeT, self._resfrequency, self._qfactor,
                               self._rshunt, self._beta)   
         self._build(wake) 
 
@@ -220,12 +220,12 @@ class ResWallElement(WakeElement):
         self._conductivity = conduc
         self._yokoya = yokoya_factor
         self._beta = ring.beta
-        wake = reswall_object(srange, wakecomp, rwlength, rvac, conduc, ring.beta,
+        wake = resistive_wall(srange, wakecomp, rwlength, rvac, conduc, ring.beta,
                               yokoya_factor=yokoya_factor)
         super(ResWallElement, self).__init__(family_name, ring, wake, **kwargs)
         
     def rebuild_wake(self):          
-        wake = reswall_object(self.WakeT, self._wakecomp, self._rwlength, self._rvac,
+        wake = resistive_wall(self.WakeT, self._wakecomp, self._rwlength, self._rvac,
                               self._conduc, self._beta, yokoya_factor=self._yokoya)  
         self._build(wake) 
         
