@@ -2,7 +2,7 @@ import numpy
 import at
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from at.collective.wake_object import build_srange, longres_object
+from at.collective.wake_object import build_srange, Wake
 from at.collective.wake_elements import LongResonatorElement
 from at.collective.haissinski import Haissinski
 
@@ -19,7 +19,7 @@ kmax = 8
 srange = build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
 
 # Now we initialise the Haissinski class, and solve, then we normalise the distribution and shift the charge center to be at 0
-wobj = longres_object(srange, freq, qfactor, Rs, ring.beta)
+wobj = Wake.long_resonator(srange, freq, qfactor, Rs, ring.beta)
 ha = Haissinski(wobj, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=1e-13)
 ha.solve()
 
