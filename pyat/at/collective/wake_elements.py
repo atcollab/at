@@ -151,7 +151,7 @@ class ResonatorElement(WakeElement):
                                                **kwargs)    
 
     def rebuild_wake(self):          
-        wake = resonator(self.WakeT, self._wakecomponent, self._resfrequency,
+        wake = Wake.resonator(self.WakeT, self._wakecomponent, self._resfrequency,
                           self._qfactor, self._rshunt, self._beta, self._yokoya)   
         self._build(wake) 
 
