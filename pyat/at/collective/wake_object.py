@@ -6,8 +6,8 @@ import warnings
 from enum import Enum
 from scipy.interpolate import interp1d
 from ..lattice import AtWarning, AtError
-from .wake_functions import long_resonator, transverse_resonator
-from .wake_functions import transverse_reswall
+from .wake_functions import long_resonator_wf, transverse_resonator_wf
+from .wake_functions import transverse_reswall_wf
 
 
 def build_srange(start, bunch_ext, short_step, long_step,
@@ -113,13 +113,13 @@ class Wake(object):
 
     def add(self, wtype, wcomp, *args, **kwargs):
         if wtype is WakeType.FILE:
-            w = self.readwakefile(*args, **kwargs)
+            w = self._readwakefile(*args, **kwargs)
         elif wtype is WakeType.TABLE:
-            w = self.resample(*args)
+            w = self._resample(*args)
         elif wtype is WakeType.RESONATOR:
-            w = self.resonator(wcomp, *args, **kwargs)
+            w = self._resonator(wcomp, *args, **kwargs)
         elif wtype is WakeType.RESWALL:
-            w = self.reswall(wcomp, *args, **kwargs)
+            w = self._reswall(wcomp, *args, **kwargs)
 
         else:
             raise AtError('Invalid WakeType: {}'.format(wtype))
@@ -128,7 +128,7 @@ class Wake(object):
         else:
             self.components[wcomp] += w
 
-    def resample(self, s, w):
+    def _resample(self, s, w):
         if self._srange[0] < s[0] or self._srange[-1] < s[-1]:
             warnings.warn(AtWarning('Input wake is smaller '
                                     'than desired Wake() range. '
@@ -137,31 +137,31 @@ class Wake(object):
         wint = fint(self._srange)
         return wint
 
-    def readwakefile(self, filename, scol=0, wcol=1, sfact=1, wfact=1,
+    def _readwakefile(self, filename, scol=0, wcol=1, sfact=1, wfact=1,
                      delimiter=None, skiprows=0):
         s, w = numpy.loadtxt(filename, delimiter=delimiter, unpack=True,
                              usecols=(scol, wcol), skiprows=skiprows)
         s *= sfact
         w *= wfact
-        return self.resample(s, w)
+        return self._resample(s, w)
 
-    def resonator(self, wcomp, frequency, qfactor, rshunt, beta,
+    def _resonator(self, wcomp, frequency, qfactor, rshunt, beta,
                   yokoya_factor=1):
         if wcomp is WakeComponent.Z:
-            return long_resonator(self._srange, frequency,
+            return long_resonator_wf(self._srange, frequency,
                                   qfactor, rshunt, beta)
         elif isinstance(wcomp, WakeComponent):
-            return transverse_resonator(self._srange, frequency,
+            return transverse_resonator_wf(self._srange, frequency,
                                         qfactor, rshunt, yokoya_factor, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
-    def reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
+    def _reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))
         elif isinstance(wcomp, WakeComponent):
-            return transverse_reswall(self._srange, yokoya_factor,
+            return transverse_reswall_wf(self._srange, yokoya_factor,
                                       length, rvac, conduct, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
