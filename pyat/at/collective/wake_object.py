@@ -167,7 +167,7 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
 
-def res_object(srange, wakecomp, frequency, qfactor, rshunt, beta,
+def resonator(srange, wakecomp, frequency, qfactor, rshunt, beta,
               yokoya_factor=1):
     """
     Method to build a resonator wake object
@@ -187,14 +187,14 @@ def res_object(srange, wakecomp, frequency, qfactor, rshunt, beta,
     return wake
 
 
-def longres_object(srange, frequency, qfactor, rshunt, beta):
+def long_resonator(srange, frequency, qfactor, rshunt, beta):
     """
     Method to build a longitudinal resonator wake object
     """
     return res_object(srange, WakeComponent.Z, frequency, qfactor, rshunt, beta)
 
 
-def reswall_object(srange, wakecomp, length, rvac, conduct, beta, yokoya_factor=1):
+def resistive_wall(srange, wakecomp, length, rvac, conduct, beta, yokoya_factor=1):
     """
     Method to build a resistive wall wake object
     """
