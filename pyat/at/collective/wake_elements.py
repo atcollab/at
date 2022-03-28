@@ -74,35 +74,29 @@ class WakeElement(Element):
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
         
-    def get_opt_attr(self, attrname):
-        if hasattr(self, attrname):
-            return getattr(self, attrname)
-        else:
-            return None
-        
     @property
     def WakeT(self):
         return self._wakeT
         
     @property
     def WakeZ(self):
-        return self.get_opt_attr('_wakeZ')
+        return self.get_attr('_wakeZ', None)
         
     @property
     def WakeDX(self):
-        return self.get_opt_attr('_wakeDX')
+        return self.get_attr('_wakeDX', None)
 
     @property
     def WakeDY(self):
-        return self.get_opt_attr('_wakeDY')
+        return self.get_attr('_wakeDY', None)
         
     @property
     def WakeQX(self):
-        return self.get_opt_attr('_wakeQX')
+        return self.get_attr('_wakeQX', None)
 
     @property
     def WakeQY(self):
-        return self.get_opt_attr('_wakeQY')
+        return self.get_attr('_wakeQY', None)
 
     @property
     def Nslice(self):
