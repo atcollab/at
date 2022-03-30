@@ -10,37 +10,6 @@ from .wake_functions import long_resonator_wf, transverse_resonator_wf
 from .wake_functions import transverse_reswall_wf
 
 
-def build_srange(start, bunch_ext, short_step, long_step,
-                 bunch_interval, totallength):
-    """Function to build the wake table s column.
-    This is not the slicing but the look-up table,
-    however it generates data where bunches are located
-    to avoid using too much memory to store the table.
-
-    PARAMETERS
-        start           starting s-coordinate of the table
-                        (can be negative for wake potential)
-        bunch_ext       maximum bunch extension, function
-                        generates data at +/- bunch_ext
-                        around the bucket center
-        short_step      step size for the short range wake table
-        long_step       step size for the long range wake table
-        bunch_interval  minimum bunch interval data will be generate
-                        for each bunch_inteval step
-        totallength     total length of the wake table, has to contain
-                        the full bunch extension
-
-    OUTPUT
-        srange          vector of s position where to sample the wake
-    """
-    srange = numpy.arange(start, bunch_ext, short_step)
-    rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
-    nbunch = int((totallength-bunch_ext)/bunch_interval)
-    for i in range(nbunch):
-        srange = numpy.concatenate((srange, rangel+bunch_interval*(i+1)))
-    return numpy.unique(srange)
-
-
 class WakeType(Enum):
     """Enum class for wake type"""
     FILE = 1  # Import from file
@@ -138,7 +107,7 @@ class Wake(object):
         return wint
 
     def _readwakefile(self, filename, scol=0, wcol=1, sfact=1, wfact=1,
-                     delimiter=None, skiprows=0):
+                      delimiter=None, skiprows=0):
         s, w = numpy.loadtxt(filename, delimiter=delimiter, unpack=True,
                              usecols=(scol, wcol), skiprows=skiprows)
         s *= sfact
@@ -146,13 +115,14 @@ class Wake(object):
         return self._resample(s, w)
 
     def _resonator(self, wcomp, frequency, qfactor, rshunt, beta,
-                  yokoya_factor=1):
+                   yokoya_factor=1):
         if wcomp is WakeComponent.Z:
             return long_resonator_wf(self._srange, frequency,
-                                  qfactor, rshunt, beta)
+                                     qfactor, rshunt, beta)
         elif isinstance(wcomp, WakeComponent):
             return transverse_resonator_wf(self._srange, frequency,
-                                        qfactor, rshunt, yokoya_factor, beta)
+                                           qfactor, rshunt, yokoya_factor,
+                                           beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
@@ -162,7 +132,7 @@ class Wake(object):
                           'for WakeComponent: {}'.format(wcomp))
         elif isinstance(wcomp, WakeComponent):
             return transverse_reswall_wf(self._srange, yokoya_factor,
-                                      length, rvac, conduct, beta)
+                                         length, rvac, conduct, beta)
         else:
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
@@ -178,12 +148,15 @@ class Wake(object):
             frequency = numpy.broadcast_to(frequency, (len(wakecomp), ))
             qfactor = numpy.broadcast_to(qfactor, (len(wakecomp), ))
             rshunt = numpy.broadcast_to(rshunt, (len(wakecomp), ))
-            yokoya_factor = numpy.broadcast_to(yokoya_factor, (len(wakecomp), )) 
+            yokoya_factor = numpy.broadcast_to(yokoya_factor,
+                                               (len(wakecomp), ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
-        for wc, fr, qf, rs, yk in zip(wakecomp, frequency, qfactor, rshunt, yokoya_factor):
-            wake.add(WakeType.RESONATOR, wc, fr, qf, rs, beta, yokoya_factor=yk)
+        for wc, fr, qf, rs, yk in zip(wakecomp, frequency, qfactor, rshunt,
+                                      yokoya_factor):
+            wake.add(WakeType.RESONATOR, wc, fr, qf, rs, beta,
+                     yokoya_factor=yk)
         return wake
 
     @staticmethod
@@ -191,10 +164,12 @@ class Wake(object):
         """
         Method to build a longitudinal resonator wake object
         """
-        return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor, rshunt, beta)
+        return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
+                              rshunt, beta)
 
     @staticmethod
-    def resistive_wall(srange, wakecomp, length, rvac, conduct, beta, yokoya_factor=1):
+    def resistive_wall(srange, wakecomp, length, rvac, conduct, beta,
+                       yokoya_factor=1):
         """
         Method to build a resistive wall wake object
         """
@@ -204,10 +179,43 @@ class Wake(object):
             length = numpy.broadcast_to(length, (len(wakecomp), ))
             rvac = numpy.broadcast_to(rvac, (len(wakecomp), ))
             conduct = numpy.broadcast_to(conduct, (len(wakecomp), ))
-            yokoya_factor = numpy.broadcast_to(yokoya_factor, (len(wakecomp), )) 
+            yokoya_factor = numpy.broadcast_to(yokoya_factor,
+                                               (len(wakecomp), ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
-        for wc, le, rv, co, yk in zip(wakecomp, length, rvac, conduct, yokoya_factor):
+        for wc, le, rv, co, yk in zip(wakecomp, length, rvac,
+                                      conduct, yokoya_factor):
             wake.add(WakeType.RESWALL, wc, le, rv, co, beta, yokoya_factor=yk)
         return wake
+
+    @staticmethod
+    def build_srange(start, bunch_ext, short_step, long_step,
+                     bunch_interval, totallength):
+        """Function to build the wake table s column.
+        This is not the slicing but the look-up table,
+        however it generates data where bunches are located
+        to avoid using too much memory to store the table.
+
+        PARAMETERS
+            start           starting s-coordinate of the table
+                            (can be negative for wake potential)
+            bunch_ext       maximum bunch extension, function
+                            generates data at +/- bunch_ext
+                            around the bucket center
+            short_step      step size for the short range wake table
+            long_step       step size for the long range wake table
+            bunch_interval  minimum bunch interval data will be generate
+                            for each bunch_inteval step
+            totallength     total length of the wake table, has to contain
+                            the full bunch extension
+
+        OUTPUT
+            srange          vector of s position where to sample the wake
+        """
+        srange = numpy.arange(start, bunch_ext, short_step)
+        rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
+        nbunch = int((totallength-bunch_ext)/bunch_interval)
+        for i in range(nbunch):
+            srange = numpy.concatenate((srange, rangel+bunch_interval*(i+1)))
+        return numpy.unique(srange)

@@ -2,7 +2,7 @@ import numpy as np
 from at.constants import clight, e_mass, qe
 import matplotlib.pyplot as plt
 import at
-from at.collective import build_srange, LongResonatorElement
+from at.collective import Wake, LongResonatorElement
 
 # Set up the ring
 nturns = 10000
@@ -19,7 +19,7 @@ fring.radiation_on(cavity_pass='RFCavityPass', dipole_pass=None, quadrupole_pass
 
 # Define the resonator parameters and current
 wturns = 50
-srange = build_srange(0., 0.3, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference*wturns)
+srange = Wake.build_srange(0., 0.3, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference*wturns)
 
 detuneHz = -5e4
 fr = freqres + detuneHz
