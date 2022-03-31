@@ -2,7 +2,7 @@ import numpy
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import Particle, DConstant, uint32_refpts
+from ..lattice import DConstant, uint32_refpts
 
 
 __all__ = ['lattice_pass', 'element_pass', 'atpass', 'elempass']
@@ -16,13 +16,16 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     calling the element-specific tracking function specified in the
     lattice[i].PassMethod field.
 
-    Note:
+    Notes:
 
      * lattice_pass(lattice, r_in, refpts=len(line)) is the same as
        lattice_pass(lattice, r_in) since the reference point len(line) is the
-       exit of the last element
+       exit of the last element.
      * lattice_pass(lattice, r_in, refpts=0) is a copy of r_in since the
-       reference point 0 is the entrance of the first element
+       reference point 0 is the entrance of the first element.
+     * To resume an interrupted tracking (for instance to get intermediate
+       results), one must use one of the 'turn' or 'keep_counter' keywords to
+       ensure the continuity of the turn number.
 
     PARAMETERS
         lattice:    iterable of AT elements
@@ -31,28 +34,29 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
                     the end of the tracking. For the the best efficiency, r_in
                     should be given as F_CONTIGUOUS numpy array.
     KEYWORDS
-        nturns=1:   number of passes through the lattice line
-        refpts      elements at which data is returned. It can be:
-                    1) an integer in the range [-len(ring), len(ring)-1]
-                       selecting the element according to python indexing
-                       rules. As a special case, len(ring) is allowed and
-                       refers to the end of the last element,
-                    2) an ordered list of such integers without duplicates,
-                    3) a numpy array of booleans of maximum length
-                       len(ring)+1, where selected elements are True.
-                    Default: end of lattice
-        keep_lattice: use elements persisted from a previous call to at.atpass.
-                    If True, assume that the lattice has not changed since
-                    that previous call.
-        losses:     Boolean to activate loss maps output, default is False
-    The following keyword overloads a value from lattice:
-        particle:   circulating particle. Default: lattice.particle if
-                    existing, otherwise Particle('relativistic')
-    The following keywords overload values from lattice of from particle
-    keyword
-        energy      lattice energy
-        rest_energy rest energy of the circulating particle [eV]
-        charge      charge of the circulating particle [elementary charge]
+        nturns=1        number of passes through the lattice line
+        refpts          elements at which data is returned. It can be:
+                        1) an integer in the range [-len(ring), len(ring)-1]
+                           selecting the element according to python indexing
+                           rules. As a special case, len(ring) is allowed and
+                           refers to the end of the last element,
+                        2) an ordered list of such integers without duplicates,
+                        3) a numpy array of booleans of maximum length
+                           len(ring)+1, where selected elements are True.
+                        Default: end of lattice
+        keep_lattice    use elements persisted from a previous call.
+                        If True, assume that the lattice has not changed since
+                        that previous call.
+        keep_counter    Keep the turn number from the previous call.
+                        Default: False
+        turn=0          Starting turn number. Ignored if keep_counter is True.
+                        The turn number is necessary to compute the absolute
+                        path length used in RFCavityPass.
+        losses:         Boolean to activate loss maps output, default is False
+    The following keywords overload the lattice value:
+        particle:       circulating particle. Default: lattice.particle if
+                        existing, otherwise Particle('relativistic')
+        energy          lattice energy. Default 0.
 
     If 'energy' is not available, relativistic tracking if forced, rest_energy
     is ignored.
@@ -73,20 +77,6 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
-    particle = kwargs.pop('particle', getattr(lattice, 'particle', Particle()))
-    try:
-        # try to get 'energy' from the lattice
-        kwargs.setdefault('energy', getattr(lattice, 'energy'))
-    except AttributeError:
-        pass
-    if 'energy' in kwargs:
-        # energy available, use the particle properties
-        kwargs.setdefault('rest_energy', particle.rest_energy)
-        kwargs.setdefault('charge', particle.charge)
-    else:
-        # energy no available, force relativistic tracking
-        kwargs['rest_energy'] = 0.0
-        kwargs['charge'] = -1.0
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
@@ -118,9 +108,6 @@ def element_pass(element, r_in, **kwargs):
     KEYWORDS
         particle:   circulating particle. Default: Particle('relativistic')
         energy      lattice energy
-    The following keywords overload the values from the particle keyword:
-        rest_energy rest energy of the circulating particle [eV]
-        charge      charge of the circulating particle [elementary charge]
 
     If 'energy' is not available, relativistic tracking if forced, rest_energy
     is ignored.
@@ -129,15 +116,6 @@ def element_pass(element, r_in, **kwargs):
         (6, N) array containing output the coordinates of the particles at the
         exit of the element.
     """
-    particle = kwargs.pop('particle', Particle())
-    if 'energy' in kwargs:
-        # energy available: use the particle properties
-        kwargs.setdefault('rest_energy', particle.rest_energy)
-        kwargs.setdefault('charge', particle.charge)
-    else:
-        # energy not available: force relativistic tracking
-        kwargs['rest_energy'] = 0.0
-        kwargs['charge'] = -1.0
     r_in = numpy.asfortranarray(r_in)
     return _elempass(element, r_in, **kwargs)
 

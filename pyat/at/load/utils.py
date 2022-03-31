@@ -2,11 +2,15 @@
 Conversion utilities for creating pyat elements
 """
 import collections
+import sys
 import os
 import re
 import numpy
 from warnings import warn
-from distutils import sysconfig
+if sys.platform.startswith('win') and sys.version_info.minor < 7:
+    from distutils import sysconfig
+else:
+    import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
@@ -15,6 +19,7 @@ from at.lattice import Particle
 # noinspection PyUnresolvedReferences
 from numpy import array, uint8  # For global namespace
 
+_ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
 
 def _particle(value):
     if isinstance(value, Particle):
@@ -189,13 +194,6 @@ def find_class(elem_dict, quiet=False):
                     return elt.Element
 
 
-def get_pass_method_file_name(pass_method):
-    extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
-    extension = set(filter(None, extension_list))
-    ext = extension.pop() if len(extension) == 1 else '.so'
-    return pass_method + ext
-
-
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     """return an AT element from a dictionary of attributes
     """
@@ -228,7 +226,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         if pass_method is not None:
             pass_to_class = _PASS_MAP.get(pass_method)
             length = float(elem_dict.get('Length', 0.0))
-            file_name = get_pass_method_file_name(pass_method)
+            file_name = pass_method + _ext_suffix
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
                 raise err("does not have a {0} file.".format(file_name))
