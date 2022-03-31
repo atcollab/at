@@ -138,18 +138,18 @@ class Wake(object):
 
     @staticmethod
     def resonator(srange, wakecomp, frequency, qfactor, rshunt, beta,
-                  yokoya_factor=1):
+                  yokoya_factor=1, nelems=1):
         """
         Method to build a resonator wake object
         """
         wake = Wake(srange)
-        wakecomp = numpy.atleast_1d(wakecomp)
         try:
-            frequency = numpy.broadcast_to(frequency, (len(wakecomp), ))
-            qfactor = numpy.broadcast_to(qfactor, (len(wakecomp), ))
-            rshunt = numpy.broadcast_to(rshunt, (len(wakecomp), ))
+            wakecomp = numpy.broadcast_to(wakecomp, (nelems, ))
+            frequency = numpy.broadcast_to(frequency, (nelems, ))
+            qfactor = numpy.broadcast_to(qfactor, (nelems, ))
+            rshunt = numpy.broadcast_to(rshunt, (nelems, ))
             yokoya_factor = numpy.broadcast_to(yokoya_factor,
-                                               (len(wakecomp), ))
+                                               (nelems, ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
@@ -160,27 +160,27 @@ class Wake(object):
         return wake
 
     @staticmethod
-    def long_resonator(srange, frequency, qfactor, rshunt, beta):
+    def long_resonator(srange, frequency, qfactor, rshunt, beta, nelems=1):
         """
         Method to build a longitudinal resonator wake object
         """
         return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
-                              rshunt, beta)
+                              rshunt, beta, nelems=nelems)
 
     @staticmethod
     def resistive_wall(srange, wakecomp, length, rvac, conduct, beta,
-                       yokoya_factor=1):
+                       yokoya_factor=1, nelems=1):
         """
         Method to build a resistive wall wake object
         """
         wake = Wake(srange)
-        wakecomp = numpy.atleast_1d(wakecomp)
         try:
-            length = numpy.broadcast_to(length, (len(wakecomp), ))
-            rvac = numpy.broadcast_to(rvac, (len(wakecomp), ))
-            conduct = numpy.broadcast_to(conduct, (len(wakecomp), ))
+            wakecomp = numpy.broadcast_to(wakecomp, (nelems, ))
+            length = numpy.broadcast_to(length, (nelems, ))
+            rvac = numpy.broadcast_to(rvac, (nelems, ))
+            conduct = numpy.broadcast_to(conduct, (nelems, ))
             yokoya_factor = numpy.broadcast_to(yokoya_factor,
-                                               (len(wakecomp), ))
+                                               (nelems, ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')

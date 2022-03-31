@@ -80,23 +80,23 @@ class WakeElement(Element):
 
     @property
     def WakeZ(self):
-        return self.get_attr('_wakeZ', None)
+        return getattr(self, '_wakeZ', None)
 
     @property
     def WakeDX(self):
-        return self.get_attr('_wakeDX', None)
+        return getattr(self, '_wakeDX', None)
 
     @property
     def WakeDY(self):
-        return self.get_attr('_wakeDY', None)
+        return getattr(self, '_wakeDY', None)
 
     @property
     def WakeQX(self):
-        return self.get_attr('_wakeQX', None)
+        return getattr(self, '_wakeQX', None)
 
     @property
     def WakeQY(self):
-        return self.get_attr('_wakeQY', None)
+        return getattr(self, '_wakeQY', None)
 
     @property
     def Nslice(self):
