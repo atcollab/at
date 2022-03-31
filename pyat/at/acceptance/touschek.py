@@ -43,7 +43,7 @@ def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
     else:
         vrf = ring.get_rf_voltage()
         h = ring.harmonic_number
-        etac = ring.get_slip_factor()
+        etac = at.get_slip_factor(ring.radiation_off(copy=True))
         cs = numpy.cos(ep.phi_s)
         nus = ep.f_s/ring.revolution_frequency
         cst = (-0.5 * numpy.sqrt(numpy.pi) * bunch_curr * zn /
