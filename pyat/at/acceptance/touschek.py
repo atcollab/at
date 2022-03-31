@@ -138,7 +138,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         refpts = range(len(ring))
     else:
         refpts = ring.uint32_refpts(refpts)
-        assert ring.refcount(refpts) < 3, \
+        assert ring.refcount(refpts) > 2, \
             'len(refpts) > 2 required for lifetime calculation'
             
 
