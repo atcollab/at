@@ -123,10 +123,8 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         epsabs, epsrel  integral absolute and relative tolerances
 
     OUTPUT
-        Returns 3 lists containing the 2D acceptance, the grid that was
-        tracked and the particles of the grid that survived. The length
-        of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
-        survived arrays are returned directly.
+        Returns the touschek lifetime in seconds, the momentum aperture
+        and the refpts at which the aperture was computed
     """
 
     epsabs = kwargs.pop('epsabs', 1.0e-16)
