@@ -103,7 +103,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         zn=None         full ring Z/n
         momap=None      momentum aperture, has to be consistent with refpts
                         if provided the momentum aperture is not calculated
-        refpts=None     refpts where the momentum aperture is calculated
+        refpts=None     refpts where the momentum aperture is calculated, the
+                        default is to compute it for all elements in the ring
+                        len(refpts)>2 is required
         resolution      minimum distance between 2 grid points, default=1.0e-3
         amplitude       max. amplitude of the grid or initial step in RECURSIVE
                         default = 0.1
@@ -136,6 +138,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         refpts = range(len(ring))
     else:
         refpts = ring.uint32_refpts(refpts)
+        assert ring.refcount(refpts) < 3, \
+            'len(refpts) > 2 required for lifetime calculation'
+            
 
     if momap is None:
         resolution = kwargs.pop('resolution', 1.0e-3)
