@@ -33,7 +33,7 @@ jobs:
 
     - name: Set up Matlab engine for python
       run: python setup.py build --build-base=$(mktemp -d) install
-      working-directory: /usr/local/MATLAB/R2021a/extern/engines/python
+      working-directory: /usr/local/MATLAB/R2022a/extern/engines/python
 
     - name: Atmexall
       uses: matlab-actions/run-command@v1
