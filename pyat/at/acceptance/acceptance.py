@@ -12,7 +12,7 @@ __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
 def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                    refpts=None, dp=None, offset=None, bounds=None,
                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
-                   start_method=None, divider=2):
+                   start_method=None, divider=2, shift_zero=1.0e-9):
     """
     Computes the acceptance at repfts observation points
     Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
@@ -34,18 +34,17 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         planes          max. dimension 2, defines the plane where to search
                         for the acceptance, allowed values are: x,xp,y,yp,dp,ct
         npoints         number of points in each dimension shape (len(planes),)
-        amplitudes      max. amplitude  or initial step in RECURSIVE in each
-                        dimension
-                        shape (len(planes),), for RADIAL/RECURSIVE grid:
-                        r = sqrt(x**2+y**2)
+        amplitudes      max. amplitude for RADIAL and CARTESIAN or initial step
+                        in RECURSIVE in each dimension with shape (len(planes),)
+                        for RADIAL/RECURSIVE grid: amplitude = sqrt(x**2+y**2)
 
     KEYWORDS
         nturns=1024     Number of turns for the tracking
         refpts=None     Observation refpts, default start of the machine
         dp=None         static momentum offset
         offset=None     initial orbit, default closed orbit
-        bounds=None     Allows to define boundaries for the grid default
-                        values are:
+        bounds=None     Allows to select the quadrants/ direction for the grid
+                        default values are:
                         GridMode.CARTESIAN: ((-1,1),(0,1))
                         GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
         grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
@@ -127,7 +126,8 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                                   nturns=nturns, obspt=r, dp=dp,
                                   offset=offset, bounds=bounds,
                                   grid_mode=grid_mode, use_mp=use_mp,
-                                  verbose=verbose, divider=divider, **kwargs)
+                                  verbose=verbose, divider=divider,
+                                  shift_zero=shift_zero, **kwargs)
         boundary.append(b)
         survived.append(s)
         grid.append(g)
@@ -191,7 +191,7 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
                              verbose=verbose, start_method=start_method,
-                             divider=2)
+                             divider=2, shift_zero=0.0)
     return numpy.squeeze(b), s, g
 
 

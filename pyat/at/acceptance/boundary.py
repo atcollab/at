@@ -25,7 +25,8 @@ class GridMode(Enum):
     RECURSIVE = 2
 
 
-def grid_config(planes, amplitudes, npoints, bounds, grid_mode):
+def grid_config(planes, amplitudes, npoints, bounds, grid_mode,
+                shift_zero):
     """"
     Returns an object that defines the grid configuration
     """
@@ -37,7 +38,8 @@ def grid_config(planes, amplitudes, npoints, bounds, grid_mode):
          'amplitudes': numpy.atleast_1d(amplitudes),
          'shape': numpy.atleast_1d(shape),
          'bounds': bounds,
-         'mode': grid_mode}
+         'mode': grid_mode,
+         'shift_zero': shift_zero}
     return namedtuple('config', d.keys())(**d)
 
 
@@ -87,13 +89,18 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     return orbit, newring
 
 
-def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
+def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None, 
+                       shift_zero=1.0e-9):
     """
     Return a grid configuration based on user input parameters, the ordering
     is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE (r, theta).
     Scalar inputs can be used for 1D grid
     """
     ndims = len(numpy.atleast_1d(planes))
+    if ndims > 2 or ndims == 0:
+        raise AtError('planes can have 1 or 2 element (1D or 2D aperture)')
+    elif ndims == 1 and grid_mode is GridMode.RADIAL:
+        grid_mode = GridMode.CARTESIAN
 
     if numpy.shape(numpy.atleast_1d(npoints)) != (ndims,):
         raise AtError('npoints shape should be (len(planes),)')
@@ -103,23 +110,18 @@ def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None):
        and bounds is not None):
         raise AtError('bounds shape should be (len(planes),2)')
 
-    if ndims > 2 or ndims == 0:
-        raise AtError('planes can have 1 or 2 element (1D or 2D aperture)')
-    elif ndims == 1 and grid_mode is GridMode.RADIAL:
-        grid_mode = GridMode.CARTESIAN
-
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
-            bounds = numpy.array([[0, 1], [numpy.pi, 0]])
-        bounds[0][bounds[0] == 0] = 1.0e-6
+            bounds = numpy.array([[0, 1], [numpy.pi, 0]])  
+        bounds[0][bounds[0]==0] = 1.0e-6       
     elif grid_mode is GridMode.CARTESIAN:
         if bounds is None:
-            bounds = numpy.array([[p-1, 1] for p in range(ndims)])
+            bounds = numpy.array([[p-1, 1] for p in range(ndims)])             
     else:
         raise AtError('GridMode {0} undefined.'.format(grid_mode))
 
     config = grid_config(planes, amplitudes, npoints,
-                         bounds, grid_mode)
+                         bounds, grid_mode, shift_zero)
     return config
 
 
@@ -156,6 +158,9 @@ def get_parts(config, offset):
         g = get_part_grid_radial(bnd, np, amp)
     parts = numpy.zeros((6, numpy.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
+    if len(pind)==2:
+        parts[pind[0]][parts[pind[1]]==0.0] += config.shift_zero
+        parts[pind[1]][parts[pind[0]]==0.0] += config.shift_zero
     parts = (parts.T+offset).T
     return parts, grid(g, offset[pind])
 
@@ -264,14 +269,15 @@ def get_grid_boundary(mask, grid, config):
 def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                          obspt=None, dp=None, offset=None, bounds=None,
                          grid_mode=GridMode.RADIAL, use_mp=False,
-                         verbose=True, **kwargs):
+                         verbose=True, shift_zero=1.0e-9, **kwargs):
     """
     Search for the boundary by tracking a grid
     """
     offset, newring = set_ring_orbit(ring, dp, obspt,
                                      offset)
     config = grid_configuration(planes, npoints, amplitudes,
-                                grid_mode, bounds=bounds)
+                                grid_mode, bounds=bounds, 
+                                shift_zero=shift_zero)
 
     if verbose:
         print('\nRunning grid boundary search:')
@@ -299,7 +305,8 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
 def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                               obspt=None, dp=None, offset=None, bounds=None,
-                              use_mp=False, divider=2, verbose=True, **kwargs):
+                              use_mp=False, divider=2, verbose=True,
+                              shift_zero=1.0e-9, **kwargs):
     """
     Recursively search for the boundary in a given plane and direction (angle)
     """
@@ -351,7 +358,8 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 
     offset, newring = set_ring_orbit(ring, dp, obspt, offset)
     config = grid_configuration(planes, npoints, amplitudes,
-                                GridMode.RECURSIVE, bounds=bounds)
+                                GridMode.RECURSIVE, bounds=bounds,
+                                shift_zero=shift_zero)
     rtol = min(numpy.atleast_1d(config.amplitudes/config.shape))
     rstep = config.amplitudes
     if len(numpy.atleast_1d(config.shape)) == 2:
@@ -386,7 +394,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
 def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                     obspt=None, dp=None, offset=None, bounds=None,
                     grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
-                    **kwargs):
+                    shift_zero=1.0e-9, **kwargs):
     """
     Computes the loss boundary at a single point in the machine
     """
@@ -396,11 +404,13 @@ def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                                            nturns=nturns, obspt=obspt, dp=dp,
                                            offset=offset, bounds=bounds,
                                            use_mp=use_mp, verbose=verbose,
-                                           divider=divider, **kwargs)
+                                           divider=divider, shift_zero=shift_zero,
+                                           **kwargs)
     else:
         result = grid_boundary_search(ring, planes, npoints, amplitudes,
                                       nturns=nturns, obspt=obspt, dp=dp,
                                       offset=offset, bounds=bounds,
                                       grid_mode=grid_mode, use_mp=use_mp,
-                                      verbose=verbose, **kwargs)
+                                      verbose=verbose, shift_zero=shift_zero,
+                                      **kwargs)
     return result
