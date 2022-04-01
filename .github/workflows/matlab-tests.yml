@@ -29,7 +29,7 @@ jobs:
     - name: Set up MATLAB
       uses: matlab-actions/setup-matlab@v1
       with:
-        release: R2021a
+        release: R2022a
 
     - name: Set up Matlab engine for python
       run: python setup.py build --build-base=$(mktemp -d) install
