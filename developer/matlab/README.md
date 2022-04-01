@@ -45,10 +45,8 @@ gen_toc();
 ```
 - Generates _atroot_/developer/matlab/m/*.m files*
 - Publishes these files in _atroot_/../docs/matlab/*.html
+- Publishes _atroot_/developer/matlab/mlx/*.mlx in _atroot_/../docs/matlab/*.html
 - Generates the User's guide files for the help browser
-
-#### Custom files
-All _atroot_/developer/matlab/mlx/*.mlx must be manually exported as html into _atroot_/../docs/matlab
 
 #### Search database
 ```Matlab

@@ -19,5 +19,11 @@ entries:
     output: web
     folderitems:
     - title: Control RF cavities
-      url: /m/CavityControl.html
+      url: /m/howtos/CavityControl.html
+      output: web
+  - title: Release notes
+    output: web
+    folderitems:
+    - title: release 2.3
+      url: /m/releases/r2.3.html
       output: web
