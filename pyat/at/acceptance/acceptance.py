@@ -43,7 +43,8 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
         refpts=None     Observation refpts, default start of the machine
         dp=None         static momentum offset
         offset=None     initial orbit, default closed orbit
-        bounds=None     Allows to select the quadrants/ direction for the grid
+        bounds=None     defines the tracked range: range=bounds*amplitude, it
+                        can be use to select quadrants for example
                         default values are:
                         GridMode.CARTESIAN: ((-1,1),(0,1))
                         GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
