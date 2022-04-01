@@ -513,7 +513,7 @@ class RFCavity(LongElement):
         TimeLag   time lag with respect to the reference particle
         """
         kwargs.setdefault('TimeLag', 0.0)
-        kwargs.setdefault('PassMethod', 'CavityPass')
+        kwargs.setdefault('PassMethod', 'RFCavityPass')
         super(RFCavity, self).__init__(family_name, length,
                                        Voltage=voltage,
                                        Frequency=frequency,

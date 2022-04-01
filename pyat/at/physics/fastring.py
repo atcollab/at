@@ -50,7 +50,7 @@ def _fring(ring, split_inds=[], detuning_elem=None):
 
     fastring = []
     for counter, r in enumerate(all_rings):
-        cavs = [e for e in r if e.PassMethod == 'CavityPass']
+        cavs = [e for e in r if e.PassMethod.endswith('CavityPass')]
         [r.remove(c) for c in cavs]
         lin_elem = gen_m66_elem(r, orbit[2*counter],
                                 orbit[2*counter+1])

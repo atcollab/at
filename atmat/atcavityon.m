@@ -6,7 +6,7 @@ function [ring, ATCavityIndex]=atcavityon(ring,cavityPass)
 %
 %  INPUTS
 %  1. RING	     	initial AT structure
-%  2. CAVITYPASS	customed passmethod for cavities (default CavityPass)      
+%  2. CAVITYPASS	customed passmethod for cavities (default RFCavityPass)
 %
 %  OUPUTS
 %  1. RING2          output ring with cavities off
@@ -17,7 +17,7 @@ function [ring, ATCavityIndex]=atcavityon(ring,cavityPass)
 %% Written by Laurent S. Nadolski
 
 if nargin <= 1
-    cavityPass='CavityPass';
+    cavityPass='RFCavityPass';
 end
 
 [ring,~,ATCavityIndex,~]=atradon(ring,cavityPass,'','','','');
