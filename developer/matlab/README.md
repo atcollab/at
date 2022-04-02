@@ -48,6 +48,9 @@ gen_toc();
 - Publishes _atroot_/developer/matlab/mlx/*.mlx in _atroot_/../docs/matlab/*.html
 - Generates the User's guide files for the help browser
 
+  **Warning:**
+
+   .mlx files must be run with Matlab 2021a to get plots with the right size 
 #### Search database
 ```Matlab
 >> builddocsearchdb(fullfile(atroot,'..','docs','matlab'))
