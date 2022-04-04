@@ -1,5 +1,5 @@
-function [linargs,opts] = linoptions(opts)
-%LINOPTIONS  (private) extract arguments for atlinopt
+function [linargs,opts] = opticsoptions(opts)
+%OPTICSOPTIONS  (private) extract arguments for atlinopt
 %
 % Separate the options for atlinopt
 
