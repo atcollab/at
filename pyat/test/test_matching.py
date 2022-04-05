@@ -1,4 +1,3 @@
-import os
 import at
 from numpy.testing import assert_allclose as assert_close
 import pytest
@@ -6,10 +5,8 @@ import numpy as np
 
 
 @pytest.fixture(scope='session')
-def test_ring():
-    path = os.path.realpath(os.path.join(os.path.dirname(__file__),
-                                         '../test_matlab/hmba.mat'))
-    ring = at.load_mat(path)
+def test_ring(hmba_lattice):
+    ring = hmba_lattice.deepcopy()
     sf = at.get_refpts(ring, 'SF*')
     sf1 = ring[sf[0]].divide([0.5, 0.5])
     sf2 = ring[sf[1]].divide([0.5, 0.5])
@@ -69,7 +66,7 @@ def test_linopt_matching(test_ring):
 
 def test_envelope_matching(test_ring):
     # Define the variables
-    test_ring.radiation_on()
+    test_ring = test_ring.radiation_on(copy=True)
     names = ['QF1*', 'QD2*']
     variables = [at.ElementVariable(at.get_refpts(test_ring, nm), 'PolynomB',
                                     index=1, name=nm) for nm in names]

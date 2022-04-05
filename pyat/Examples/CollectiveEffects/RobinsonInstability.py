@@ -30,7 +30,7 @@ current = 0.1   # A
 
 welem = LongResonatorElement('wake', ring, srange, fr, qfactor, rshunt, Nturns=wturns, Nslice=10)
 
-welem.Current = current 
+welem.Current = current
 fring.append(welem)
 
 # Particle generation and tracking
@@ -75,7 +75,10 @@ gr = tau_RS/t_rev
 fig = plt.figure(figsize=(9, 5))
 ax1 = fig.add_subplot(111)
 ax1.plot(dp_all, label=r'$\Delta f = {:.1f}\ \mathrm{{kHz}}$'.format(detuneHz/1e3), color='b')
-ax1.plot(plotrange, np.exp(fit1[1])*np.exp(fit1[0]*plotrange), color='k', linestyle='solid', marker='None', label=r'$\tau_{{fit}}={:.1f}\ \mathrm{{turns}}$'.format(1/fit1[0]) + '\n' + r'$\tau_{{Chao}}={:.1f}\ \mathrm{{turns}}$'.format(gr))
+ax1.plot(plotrange, np.exp(fit1[1])*np.exp(fit1[0]*plotrange),
+         color='k', linestyle='solid', marker='None',
+         label=r'$\tau_{{fit}}={:.1f}\ \mathrm{{turns}}$'.format(1/fit1[0])
+         + '\n' + r'$\tau_{{Chao}}={:.1f}\ \mathrm{{turns}}$'.format(gr))
 ax1.plot(xr, amp1, linestyle='None', marker='x', color='r')
 
 ax1.legend(bbox_to_anchor=(1.01, 1))

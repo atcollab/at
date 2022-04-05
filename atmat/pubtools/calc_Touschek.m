@@ -50,7 +50,7 @@ r0 = PhysConstant.classical_electron_radius.value; %m
 
 
 %cavity related parameters
-cava = findcells(THERING,'PassMethod','ThinCavityPass');
+cava = findcells(THERING,'PassMethod','RFCavityPass');
 cavb = findcells(THERING,'PassMethod','CavityPass');
 CAVINDEX = sort([cava,cavb]); %ati1.RF;
 if isempty(CAVINDEX)

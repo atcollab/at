@@ -11,7 +11,7 @@ def test_lattice_creation_gets_attributes_from_arguments():
     assert lat.energy == 3.e+6
     assert lat.periodicity == 32
     assert lat.radiation is False
-    assert lat.particle.name == 'electron'
+    assert lat.particle.name == 'relativistic'
     assert lat.an_attr == 12
 
 
@@ -69,15 +69,15 @@ def test_lattice_string_ordering():
                   name='lat', energy=5, periodicity=1, attr2=3)
     latstr = str(lat)
     assert latstr.startswith("Lattice(<1 elements>, name='lat', "
-                               "energy=5, particle=Particle('electron'), "
-                               "periodicity=1")
+                             "energy=5, particle=Particle('relativistic'), "
+                             "periodicity=1")
     assert latstr.endswith("attr2=3)")
 
     latrepr = repr(lat)
     assert latrepr.startswith("Lattice([Drift('D0', 1.0, attr1=array(0))], "
-                                "name='lat', "
-                                "energy=5, particle=Particle('electron'), "
-                                "periodicity=1")
+                              "name='lat', "
+                              "energy=5, particle=Particle('relativistic'), "
+                              "periodicity=1")
     assert latrepr.endswith("attr2=3)")
 
 

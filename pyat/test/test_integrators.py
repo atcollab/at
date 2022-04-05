@@ -4,8 +4,8 @@ import pytest
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from at.tracking import lattice_pass, element_pass
-from at.lattice import Lattice, Element, elements
-from at import set_shift, set_tilt, shift_elem, tilt_elem
+from at.lattice import Element, elements
+from at import shift_elem, tilt_elem
 
 
 def test_exact_hamiltonian_pass(rin):
@@ -17,7 +17,8 @@ def test_exact_hamiltonian_pass(rin):
 
 
 def test_exact_hamiltonian_pass_with_dls_dipole(rin):
-    bend = elements.Multipole('rb', 0.15, [0, 0, 0, 0], [-0.0116333, 3.786786, 0, 0])
+    bend = elements.Multipole('rb', 0.15, [0, 0, 0, 0],
+                              [-0.0116333, 3.786786, 0, 0])
     bend.Type = 1
     bend.PassMethod = 'ExactHamiltonianPass'
     bend.BendingAngle = -0.001745
@@ -25,11 +26,13 @@ def test_exact_hamiltonian_pass_with_dls_dipole(rin):
     bend.MaxOrder = 3
     element_pass(bend, rin)
     # Results from Matlab
-    expected = numpy.array([9.23965e-9, 1.22319e-5, 0, 0, 0, -4.8100e-10]).reshape(6, 1)
+    expected = numpy.array([9.23965e-9, 1.22319e-5, 0,
+                            0, 0, -4.8100e-10]).reshape(6, 1)
     numpy.testing.assert_allclose(rin, expected, rtol=1e-5, atol=1e-6)
 
 
-@pytest.mark.parametrize('passmethod', ('GWigSymplecticPass', 'GWigSymplecticRadPass'))
+@pytest.mark.parametrize('passmethod',
+                         ('GWigSymplecticPass', 'GWigSymplecticRadPass'))
 def test_gwig_symplectic_pass(rin, passmethod):
     # Parameters copied from one of the Diamond wigglers.
     wiggler = elements.Wiggler('w', 1.15, 0.05, 0.8, 3e9)
@@ -63,8 +66,8 @@ def test_pydrift():
     numpy.testing.assert_equal(pyout, cout)
 
     # Multiple particles
-    pyout = element_pass(pydrift, numpy.zeros((6,2))+1.0e-6)
-    cout = element_pass(cdrift, numpy.zeros((6,2))+1.0e-6)
+    pyout = element_pass(pydrift, numpy.zeros((6, 2))+1.0e-6)
+    cout = element_pass(cdrift, numpy.zeros((6, 2))+1.0e-6)
     numpy.testing.assert_equal(pyout, cout)
 
 
@@ -73,7 +76,7 @@ def test_pyintegrator(hmba_lattice):
               'PassMethod': 'pyIdentityPass',
               }
     id_elem = Element('py_id', **params)
-    pin = numpy.zeros((6,2))+1.0e-6
+    pin = numpy.zeros((6, 2))+1.0e-6
     pout1 = lattice_pass(hmba_lattice, pin.copy(), nturns=1)
     hmba_lattice = hmba_lattice + [id_elem]
     pout2 = lattice_pass(hmba_lattice, pin.copy(), nturns=1)

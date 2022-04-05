@@ -1,6 +1,6 @@
 from ..lattice import Lattice, get_rf_frequency, check_radiation, get_s_pos
 from ..lattice import DConstant
-from ..lattice.constants import clight
+from ..constants import clight
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy
@@ -63,9 +63,10 @@ def get_revolution_frequency(ring, dp=None, dct=None, **kwargs):
                         Defaults to False
         dp_step=1.0E-6  momentum deviation used for differentiation
     """
-    frev = ring.revolution_frequency
+    lcell = ring.get_s_pos(len(ring))[0]
+    frev = ring.beta * clight / lcell / ring.periodicity
     if dct is not None:
-        frev -= frev * frev / clight * ring.periodicity * dct
+        frev *= lcell / (lcell + dct)
     elif dp is not None:
         rnorad = ring.radiation_off(copy=True) if ring.radiation else ring
         etac = get_slip_factor(rnorad, **kwargs)

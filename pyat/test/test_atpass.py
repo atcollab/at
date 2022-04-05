@@ -1,6 +1,7 @@
 import pytest
 import numpy
-from at import elements, atpass, uint32_refpts
+from at.tracking.atpass import atpass
+from at import elements, uint32_refpts
 
 
 def test_incorrect_types_raises_value_error(rin):

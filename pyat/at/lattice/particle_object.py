@@ -27,8 +27,8 @@ class Particle(object):
         proton=dict(rest_energy=p_mass, charge=1.0)
     )
 
-    def __init__(self, name, **kwargs):
-        if name != 'electron':
+    def __init__(self, name='relativistic', **kwargs):
+        if name != 'relativistic':
             warn(UserWarning("AT tracking still assumes beta==1\n"
                              "Make sure your particle is ultra-relativistic"))
         if name in self._known:
@@ -52,7 +52,8 @@ class Particle(object):
         else:
             attrs = self.to_dict()
             name = attrs.pop('name')
-            args = ', '.join('{0}={1!r}'.format(k, v) for k, v in attrs.items())
+            args = ', '.join('{0}={1!r}'.format(k, v)
+                             for k, v in attrs.items())
             return "Particle('{0}', {1})".format(name, args)
 
     def __str__(self):

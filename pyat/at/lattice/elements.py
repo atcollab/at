@@ -78,7 +78,7 @@ class Element(object):
         keywords = ['{0!r}'.format(arg) for arg in arguments]
         keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
                      if not numpy.array_equal(v, getattr(defelem, k, None))]
-        args = re.sub('\n\s*', ' ', ', '.join(keywords))
+        args = re.sub(r'\n\s*', ' ', ', '.join(keywords))
         return '{0}({1})'.format(self.__class__.__name__, args)
 
     def equals(self, other):
@@ -513,7 +513,7 @@ class RFCavity(LongElement):
         TimeLag   time lag with respect to the reference particle
         """
         kwargs.setdefault('TimeLag', 0.0)
-        kwargs.setdefault('PassMethod', 'CavityPass')
+        kwargs.setdefault('PassMethod', 'RFCavityPass')
         super(RFCavity, self).__init__(family_name, length,
                                        Voltage=voltage,
                                        Frequency=frequency,

@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,IE=9,chrome=1"><meta name="generator" content="MATLAB 2022a"><title>2.3</title><style type="text/css">.rtcContent { padding: 30px; } .S0 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 28.8px; min-height: 0px; white-space: pre-wrap; color: rgb(192, 76, 11); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 24px; font-weight: 400; text-align: left;  }
+.S1 { margin: 15px 10px 5px 4px; padding: 0px; line-height: 18px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 17px; font-weight: 700; text-align: left;  }
+.S2 { margin: 10px 0px 20px; padding-left: 0px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;  }
+.S3 { margin-left: 56px; line-height: 21px; min-height: 0px; text-align: left; white-space: pre-wrap;  }
+.S4 { margin: 2px 10px 9px 4px; padding: 0px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: left;  }</style></head><body><div class = rtcContent><h1  class = 'S0'><span style=' font-weight: bold;'>2.3</span></h1><h3  class = 'S1'><span style=' font-weight: bold;'>Main changes</span></h3><ul  class = 'S2'><li  class = 'S3'><span style=' font-weight: bold; font-family: monospace;'>atlinopt6</span><span> replaces </span><span style=' font-weight: bold; font-family: monospace;'>atlinopt</span><span> in some optics function: </span><span style=' font-weight: bold; font-family: monospace;'>atplot</span><span>, </span><span style=' font-weight: bold; font-family: monospace;'>atfittun</span><span>, </span><span style=' font-weight: bold; font-family: monospace;'>atfitchro`</span><span>,…This allows working with 6D lattices. However there are still many functions still using `atlinopt`. The transition will be continued,</span></li><li  class = 'S3'><span>2 new functions </span><span style=' font-weight: bold; font-family: monospace;'>atGetRingProperties</span><span> and </span><span style=' font-weight: bold; font-family: monospace;'>atSetRingProperties</span><span> handle global lattices parameters (energy, periodicity, particle, harmonic number). They are stored in the optional RingParam lattice element. Its use is now recommended since it avoids lengthy searches when a parameter is requested,</span></li><li  class = 'S3'><span>A new function </span><span style=' font-weight: bold; font-family: monospace;'>atloadlattice</span><span> makes reading lattice files easier,</span></li><li  class = 'S3'><span>The default passmethod for cavities is now </span><span style=' font-weight: bold; font-family: monospace;'>RFCavityPass</span><span> instead of CavityPass. CavityPass is still available but should not be used: it is wrong for multi-tune tracking if the RF frequency is not the nominal one.</span></li></ul><h3  class = 'S1'><span>List of changes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>Linopt6 in plots and parameters by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/297"><span>#297</span></a></li><li  class = 'S3'><span>first look at PolynomB in *LinearPass by @swhite2401 in </span><a href = "https://github.com/atcollab/at/pull/290"><span>#290</span></a></li><li  class = 'S3'><span>Updated plotAperture by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/313"><span>#313</span></a></li><li  class = 'S3'><span>Remove the dependency of RFCavityPass on harmonic number by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/319"><span>#319</span></a></li><li  class = 'S3'><span>Remove the dependency of find_orbit6 on the harmonic number by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/318"><span>#318</span></a></li><li  class = 'S3'><span>Added optional tolerances in "TouschekPiwinskiLifeTime" by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/326"><span>#326</span></a></li><li  class = 'S3'><span>New README.md file in the docs directory by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/331"><span>#331</span></a></li><li  class = 'S3'><span>New Lattice properties: energy, harmonic number and particle by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/329"><span>#329</span></a></li><li  class = 'S3'><span>Fix problems reading .mat files by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/341"><span>#341</span></a></li><li  class = 'S3'><span>allow fit chrom with radon by @swhite2401 in </span><a href = "https://github.com/atcollab/at/pull/349"><span>#349</span></a></li><li  class = 'S3'><span>Cavity phase offset arg by @swhite2401 in </span><a href = "https://github.com/atcollab/at/pull/348"><span>#348</span></a></li><li  class = 'S3'><span>atenergy computes the harmonic number from the RF frequency by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/350"><span>#350</span></a></li><li  class = 'S3'><span>atsetcavity accepts dp and dct arguments by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/354"><span>#354</span></a></li><li  class = 'S3'><span>Energy and particle available to C integrators by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/368"><span>#368</span></a></li><li  class = 'S3'><span>Allow setting "dp" in 6D linear optics by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/364"><span>#364</span></a></li><li  class = 'S3'><span>New Matlab function atloadlattice by @lfarv </span><a href = "http://in%20https//github.com/atcollab/at/pull/377"><span>#377</span></a></li><li  class = 'S3'><span>Add a "turn" input to atpass by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/376"><span>#376</span></a></li><li  class = 'S3'><span>Set the default cavity PassMethod to RFCavityPass by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/372"><span>#372</span></a></li></ul><h3  class = 'S1'><span>Bug fixes</span></h3><ul  class = 'S2'><li  class = 'S3'><span>Fix on atfastring by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/314"><span>#314</span></a></li><li  class = 'S3'><span>Fit tunes and chromaticities by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/327"><span>#327</span></a></li><li  class = 'S3'><span>Fix WakeFieldPass in Matlab by @lfarv in https://github.com/atcollab/at/pull/343</span></li><li  class = 'S3'><span>Fix problems with transfer line mode by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/342"><span>#342</span></a></li><li  class = 'S3'><span>Fix bug in CavityPass.c by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/358"><span>#358</span></a></li><li  class = 'S3'><span>Fix WakeElement by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/362"><span>#362</span></a></li><li  class = 'S3'><span>Fix atplot when energy is undefined by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/375"><span>#375</span></a></li><li  class = 'S3'><span>Correct bug in plotbetadispcurlyh.m by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/382"><span>#382</span></a></li><li  class = 'S3'><span>Fix plCorrectorStrength by @lfarv in </span><a href = "https://github.com/atcollab/at/pull/392"><span>#392</span></a></li></ul><div  class = 'S4'><span></span></div><div  class = 'S4'><span>**Full Changelog**: </span><a href = "https://github.com/atcollab/at/compare/2.0...2.3"><span>https://github.com/atcollab/at/compare/2.0...2.3</span></a></div><div  class = 'S4'></div>
+<br>
+<!-- 
+##### SOURCE BEGIN #####
+%% *2.3*
+% *Main changes*
+%% 
+% * |*atlinopt6*| replaces |*atlinopt*| in some optics function: |*atplot*|, 
+% |*atfittun*|, |*atfitchro`*|,…This allows working with 6D lattices. However 
+% there are still many functions still using `atlinopt`. The transition will be 
+% continued,
+% * 2 new functions |*atGetRingProperties*| and |*atSetRingProperties*| handle 
+% global lattices parameters (energy, periodicity, particle, harmonic number). 
+% They are stored in the optional RingParam lattice element. Its use is now recommended 
+% since it avoids lengthy searches when a parameter is requested,
+% * A new function |*atloadlattice*| makes reading lattice files easier,
+% * The default passmethod for cavities is now |*RFCavityPass*| instead of CavityPass. 
+% CavityPass is still available but should not be used: it is wrong for multi-tune 
+% tracking if the RF frequency is not the nominal one.
+% List of changes
+%% 
+% * Linopt6 in plots and parameters by @lfarv in <https://github.com/atcollab/at/pull/297 
+% #297>
+% * first look at PolynomB in *LinearPass by @swhite2401 in <https://github.com/atcollab/at/pull/290 
+% #290>
+% * Updated plotAperture by @lfarv in <https://github.com/atcollab/at/pull/313 
+% #313>
+% * Remove the dependency of RFCavityPass on harmonic number by @lfarv in <https://github.com/atcollab/at/pull/319 
+% #319>
+% * Remove the dependency of find_orbit6 on the harmonic number by @lfarv in 
+% <https://github.com/atcollab/at/pull/318 #318>
+% * Added optional tolerances in "TouschekPiwinskiLifeTime" by @lfarv in <https://github.com/atcollab/at/pull/326 
+% #326>
+% * New README.md file in the docs directory by @lfarv in <https://github.com/atcollab/at/pull/331 
+% #331>
+% * New Lattice properties: energy, harmonic number and particle by @lfarv in 
+% <https://github.com/atcollab/at/pull/329 #329>
+% * Fix problems reading .mat files by @lfarv in <https://github.com/atcollab/at/pull/341 
+% #341>
+% * allow fit chrom with radon by @swhite2401 in <https://github.com/atcollab/at/pull/349 
+% #349>
+% * Cavity phase offset arg by @swhite2401 in <https://github.com/atcollab/at/pull/348 
+% #348>
+% * atenergy computes the harmonic number from the RF frequency by @lfarv in 
+% <https://github.com/atcollab/at/pull/350 #350>
+% * atsetcavity accepts dp and dct arguments by @lfarv in <https://github.com/atcollab/at/pull/354 
+% #354>
+% * Energy and particle available to C integrators by @lfarv in <https://github.com/atcollab/at/pull/368 
+% #368>
+% * Allow setting "dp" in 6D linear optics by @lfarv in <https://github.com/atcollab/at/pull/364 
+% #364>
+% * New Matlab function atloadlattice by @lfarv <http://in%20https//github.com/atcollab/at/pull/377 
+% #377>
+% * Add a "turn" input to atpass by @lfarv in <https://github.com/atcollab/at/pull/376 
+% #376>
+% * Set the default cavity PassMethod to RFCavityPass by @lfarv in <https://github.com/atcollab/at/pull/372 
+% #372>
+% Bug fixes
+%% 
+% * Fix on atfastring by @lfarv in <https://github.com/atcollab/at/pull/314 
+% #314>
+% * Fit tunes and chromaticities by @lfarv in <https://github.com/atcollab/at/pull/327 
+% #327>
+% * Fix WakeFieldPass in Matlab by @lfarv in https://github.com/atcollab/at/pull/343
+% * Fix problems with transfer line mode by @lfarv in <https://github.com/atcollab/at/pull/342 
+% #342>
+% * Fix bug in CavityPass.c by @lfarv in <https://github.com/atcollab/at/pull/358 
+% #358>
+% * Fix WakeElement by @lfarv in <https://github.com/atcollab/at/pull/362 #362>
+% * Fix atplot when energy is undefined by @lfarv in <https://github.com/atcollab/at/pull/375 
+% #375>
+% * Correct bug in plotbetadispcurlyh.m by @lfarv in <https://github.com/atcollab/at/pull/382 
+% #382>
+% * Fix plCorrectorStrength by @lfarv in <https://github.com/atcollab/at/pull/392 
+% #392>
+%% 
+% 
+% 
+% **Full Changelog**: <https://github.com/atcollab/at/compare/2.0...2.3 https://github.com/atcollab/at/compare/2.0...2.3>
+% 
+%
+##### SOURCE END #####
+-->
+</div></body></html>

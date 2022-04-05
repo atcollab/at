@@ -1,4 +1,4 @@
-function curve = atplot(varargin)
+function varargout = atplot(varargin)
 %ATPLOT Plots optical functions
 %
 %ATPLOT                 Plots THERING in the current axes
@@ -66,52 +66,69 @@ function curve = atplot(varargin)
 %
 %See also: atbaseplot
 
-funcarg=find(cellfun(@(arg) isa(arg,'function_handle'),varargin),1);
+global THERING %#ok<GVMIS>
+
+% Select axes for the plot
+[ax,args]=getargs(varargin,[],'check',@(x) isscalar(x) && ishandle(x));
+if isempty(ax), ax=gca; end
+
+% Select the lattice
+[ring,args]=getargs(args,THERING,'check',@iscell);
+
+% Extract plotfunction and plotargs
+funcarg=find(cellfun(@(arg) isa(arg,'function_handle'),args),1);
 if isempty(funcarg)
-    funcarg=nargin+1;
+    funcarg=length(args)+1;
     options={@plotbetadisp};
 else
-    options=varargin(funcarg:end);
+    options=args(funcarg:end);
 end
-resarg=find(cellfun(@(arg) ischar(arg),varargin(1:funcarg-1)),1);
-if isempty(resarg)
-    resarg=funcarg;
-end
+args=getdparg(args(1:funcarg-1));
+[varargout{1:nargout}] = wrapper6d(ring,@doplot,ax,options, args{:});
 
-varargs=cellfun(@correct, varargin(resarg:funcarg-1), 'UniformOutput',false);
-[largs,varargs]=linoptions(varargs);
-[comment,varargs]=getoption(varargs,'comment',true);
 
-lindata=[];
+    function varargout=doplot(ring,is6d,ax,options,varargin)
+        [comment,varargs]=getoption(varargin,'comment',true);
+        varargs=cellfun(@correct, varargs, 'UniformOutput',false);
+        [dpargs,varargs]=getoption(varargs,{'dp','dct','df'});
+        [srange,varargs]=getargs(varargs,[0 inf],'check',@(x) isnumeric(x) && numel(x)==2);
+        [largs,varargs]=opticsoptions(varargs);
 
-curve=atbaseplot(varargin{1:resarg-1},...
-    @ringplot,[options largs],varargs{:});
+        lindata=[];
 
-if comment && ~isempty(curve.left)
-    ax=get(curve.left(1),'Parent');
-    set(ax,'Position',[.13 .11 .75 .75]);
-    tuneper=lindata(end).mu/2/pi;
-    tunes=curve.periodicity*tuneper;
-    circumference=curve.periodicity*curve.length;
-    if curve.periodicity > 1, plural='s'; else plural=''; end %#ok<SEPEX>
-    line1=sprintf('\\nu_x=%8.3f      \\deltap/p=%.3f%i %s',tunes(1),curve.dpp);
-    line2=sprintf('\\nu_z=%8.3f      %2i %s, C=%10.3f',tunes(2),...
-        curve.periodicity,['period' plural],circumference);
-    curve.comment=text(ax,-0.14,1.12,{line1;line2},'Units','normalized',...
-        'VerticalAlignment','top');
-end
+        curve=xplot(ring,is6d,ax,srange,@ringplot,[options largs],dpargs{:},varargs{:});
 
-    function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
-        [linargs,vargs] = linoptions(varargin,dpp);
-        [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
-        s=cat(1,lindata.SPos);
-        plotdata=plotfun(lindata,ring,dpp,vargs{:});
-    end
+        if comment && ~isempty(curve.left)
+            set(ax,'Position',[.13 .11 .75 .75]);
+            tuneper=lindata(end).mu/2/pi;
+            tunes=curve.periodicity*tuneper;
+            circumference=curve.periodicity*curve.length;
+            if curve.periodicity > 1, plural='s'; else plural=''; end %#ok<SEPEX>
+            if isfinite(curve.dpp)
+                dppstring=sprintf('\\deltap/p=%.3f',curve.dpp);
+            else
+                dppstring='';
+            end
+            line1=sprintf('\\nu_x=%8.3f      %s',tunes(1),dppstring);
+            line2=sprintf('\\nu_z=%8.3f      %2i %s, C=%10.3f',tunes(2),...
+                curve.periodicity,['period' plural],circumference);
+            curve.comment=text(ax,-0.14,1.12,{line1;line2},'Units','normalized',...
+                'VerticalAlignment','top');
+        end
+        if nargout>0, varargout={curve}; end
 
-    function opt=correct(opt)
-        % Replace the obsolete 'inputtwiss' keyword with 'twiss_in'
-        if strcmp(opt, 'inputtwiss')
-            opt='twiss_in';
+        function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
+            [linargs,vargs] = opticsoptions(varargin);
+            [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
+            s=cat(1,lindata.SPos);
+            plotdata=plotfun(lindata,ring,dpp,vargs{:});
+        end
+
+        function opt=correct(opt)
+            % Replace the obsolete 'inputtwiss' keyword with 'twiss_in'
+            if strcmp(opt, 'inputtwiss')
+                opt='twiss_in';
+            end
         end
     end
 
