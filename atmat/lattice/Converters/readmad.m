@@ -22,7 +22,7 @@ function ATLATTICE = readmad(FILENAME)
 % SEXTUPOLE     |  StrMPoleSymplectic4Pass
 % OCTUPOLE      |  StrMPoleSymplectic4Pass
 % MULTIPOLE     |  !!! Not implemented, in future - ThinMPolePass
-% RFCAVITY      |  ThinCavityPass
+% RFCAVITY      |  RFCavityPass
 % KICKER        |  CorrectorPass
 % HKICKER       |  CorrectorPass
 % VKICKER       |  CorrectorPass

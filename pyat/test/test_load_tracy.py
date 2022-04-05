@@ -124,7 +124,8 @@ def test_tracy_element_from_string_handles_cavity(defaults):
 
 
 def test_tracy_element_from_string_handles_bending(defaults):
-    bend = "bending,l= 0.20000000,t=0.32969999,t1=0.00000000,t2=0.32969999,k=-0.124,gap=0.06,n=nbend,method=4"
+    bend = "bending,l= 0.20000000,t=0.32969999,t1=0.00000000," \
+           "t2=0.32969999,k=-0.124,gap=0.06,n=nbend,method=4"
     defaults["nbend"] = 2
     expected = Dipole(
         "b1",

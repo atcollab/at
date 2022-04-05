@@ -3,7 +3,7 @@ Tracking functions
 """
 
 # noinspection PyUnresolvedReferences
-from .atpass import atpass, elempass, isopenmp, ismpi
+from .atpass import isopenmp, ismpi
 from .patpass import patpass
 from .track import *
 from .particles import *

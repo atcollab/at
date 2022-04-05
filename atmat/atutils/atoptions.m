@@ -9,18 +9,20 @@ classdef atoptions < handle
         DPStep = 3.0E-6             % Momentum step (for dispersion and chromaticity)
         OrbConvergence = 1.0E-12    % Convergence of findorbitx
         OrbMaxIter = 20             % Max. number of iterations for findorbitx
-                                    % Number of OpenMP threads
+                                    % Number of OpenMP thread
+        WarningDp6D = true          % Warn if fp is specified with 6D lattices 
         omp_num_threads = str2double(getenvopt('OMP_NUM_THREADS','0'))
     end
     
     %% AT dependent parameters
     properties (Dependent, SetAccess=private)
-        orm                         % True if compiled with OpenMP (not yet implemented)
+        openmp                      % True if compiled with OpenMP (not yet implemented)
     end
     
     methods
-        function v=get.orm(obj) %#ok<MANU>
-            v=false;
+        function v=get.openmp(obj) %#ok<MANU>
+            copts = coptions();
+            v = logical(copts.openmp);
         end
     end
     

@@ -2,7 +2,7 @@
 Closed orbit related functions
 """
 import numpy
-from at.lattice.constants import clight
+from at.constants import clight
 from at.lattice import AtWarning, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, uint32_refpts
 from at.tracking import lattice_pass
@@ -269,7 +269,7 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
 
     l0 = get_s_pos(ring, len(ring))[0]
     f_rf = ring.get_rf_frequency()
-    harm_number = round(f_rf*l0/clight)
+    harm_number = round(f_rf*l0/ring.beta/clight)
 
     if guess is None:
         _, dt = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
@@ -283,10 +283,10 @@ def _orbit6(ring, cavpts=None, guess=None, keep_lattice=False, **kwargs):
         ref_in = numpy.copy(guess)
 
     theta = numpy.zeros((6,))
-    theta[5] = clight * harm_number / f_rf - l0
+    theta[5] = ring.beta * clight * harm_number / f_rf - l0
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 0.0, 0.0]) + \
-              dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+        dp_step * numpy.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
     delta_matrix = numpy.asfortranarray(
         numpy.concatenate((numpy.diag(scaling), numpy.zeros((6, 1))), axis=1))
 
@@ -336,7 +336,7 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
         6-by-6 Jacobian matrix J6. In order for (J-E) matrix
         to be non-singular it is NECESSARY to use a realistic
         PassMethod for cavities with non-zero momentum kick
-        (such as ThinCavityPass).
+        (such as RFCavityPass).
     3.  find_orbit6 can find orbits with radiation.
         In order for the solution to exist the cavity must supply
         adequate energy compensation.
@@ -375,10 +375,11 @@ def find_orbit6(ring, refpts=None, orbit=None, dp=None, dct=None,
                         loss of the ring
         keep_lattice    Assume no lattice change since the previous tracking.
                         Default: False
-        method          Method for energy loss computation (see get_energy_loss)
+        method          Method for energy loss computation
+                        (see get_energy_loss)
                         default: ELossMethod.TRACKING
-        cavpts=None     Cavity location. If None, use all cavities. This is used
-                        to compute the initial synchronous phase.
+        cavpts=None     Cavity location. If None, use all cavities.
+                        This is used to compute the initial synchronous phase.
         convergence     Convergence criterion. Default: 1.e-12
         max_iterations  Maximum number of iterations. Default: 20
         XYStep          Step size. Default: DConstant.XYStep

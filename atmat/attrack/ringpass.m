@@ -48,6 +48,18 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 % ROUT=RINGPASS(...,'reuse') is kept for compatibilty with previous
 % versions. It has no effect.
 %
+% ROUT=RINGPASS(...,'turn',turn)    Initial turn number. Default 0.
+%   The turn number is necessary to compute the absolute path length used
+%   by RFCavityPass. Ignored if KeepCounter is set.
+%
+% ROUT=RINGPASS(...,'KeepCounter')  The turn number starts with the last
+%   turn of the previous call.
+%
+% NOTE:
+% To resume an interrupted tracking (for instance to get intermediate
+% results), one must use one of the 'turn' option or 'KeepCounter' flag to
+% ensure the continuity of the turn number.
+%
 % ROUT=RINGPASS(...,'Silent') does not output the particle coordinates at
 %    each turn but only at the end of the tracking
 %
@@ -68,6 +80,8 @@ function [Rout, varargout] = ringpass(ring, Rin, varargin)
 [dummy,args]=getflag(args,'reuse');	%#ok<ASGLU> % Kept for compatibility and ignored
 [silent,args]=getflag(args, 'silent');
 [nhist,args]=getoption(args,'nhist',1);
+[turn,args]=getoption(args,'turn',0);
+[keep_counter,args]=getflag(args,'KeepCounter');
 [omp_num_threads,args]=getoption(args,'omp_num_threads');
 funcargs=cellfun(@(arg) isa(arg,'function_handle'), args);
 nturns=getargs(args(~funcargs),1);
@@ -81,8 +95,11 @@ else
     refpts=length(ring)+1;
 end
 
+props=atCheckRingProperties(ring);
+
 try
-    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts,prefunc,postfunc,nhist,omp_num_threads);
+    [Rout,lossinfo] = atpass(ring,Rin,newlattice,nturns,refpts, ...
+        prefunc,postfunc,nhist,omp_num_threads,props,turn,double(keep_counter));
     
     if nargout>1
         if nargout>3, varargout{3}=lossinfo; end

@@ -2,11 +2,15 @@
 Conversion utilities for creating pyat elements
 """
 import collections
+import sys
 import os
 import re
 import numpy
 from warnings import warn
-from distutils import sysconfig
+if sys.platform.startswith('win') and sys.version_info.minor < 7:
+    from distutils import sysconfig
+else:
+    import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
@@ -15,6 +19,7 @@ from at.lattice import Particle
 # noinspection PyUnresolvedReferences
 from numpy import array, uint8  # For global namespace
 
+_ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
 
 def _particle(value):
     if isinstance(value, Particle):
@@ -30,8 +35,8 @@ class RingParam(elt.Element):
     """Private class for Matlab RingParam element"""
     REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
                                                              'Periodicity']
-    _conversions = dict(elt.Element._conversions, Energy=float, Periodicity=int,
-                        Particle=_particle)
+    _conversions = dict(elt.Element._conversions, Energy=float,
+                        Periodicity=int, Particle=_particle)
 
     def __init__(self, family_name, energy, periodicity=1, **kwargs):
         kwargs.setdefault('Energy', energy)
@@ -183,15 +188,10 @@ def find_class(elem_dict, quiet=False):
                     return elt.Drift
                 elif hasattrs(elem_dict, 'GCR'):
                     return elt.Monitor
-                else:
+                elif pass_method == 'IdentityPass':
                     return elt.Marker
-
-
-def get_pass_method_file_name(pass_method):
-    extension_list = sysconfig.get_config_vars('EXT_SUFFIX', 'SO')
-    extension = set(filter(None, extension_list))
-    ext = extension.pop() if len(extension) == 1 else '.so'
-    return pass_method + ext
+                else:
+                    return elt.Element
 
 
 def element_from_dict(elem_dict, index=None, check=True, quiet=False):
@@ -226,7 +226,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         if pass_method is not None:
             pass_to_class = _PASS_MAP.get(pass_method)
             length = float(elem_dict.get('Length', 0.0))
-            file_name = get_pass_method_file_name(pass_method)
+            file_name = pass_method + _ext_suffix
             file_path = os.path.join(integrators.__path__[0], file_name)
             if not os.path.isfile(os.path.realpath(file_path)):
                 raise err("does not have a {0} file.".format(file_name))
@@ -355,7 +355,8 @@ def element_to_m(elem):
     if 'PassMethod' in kwds:
         argstrs.append(convert(kwds.pop('PassMethod')))
     argstrs += [', '.join((repr(k), convert(v))) for k, v in kwds.items()]
-    return '{0:>15}({1});...'.format(m_name(elem.__class__), ', '.join(argstrs))
+    return '{0:>15}({1});...'.format(m_name(elem.__class__),
+                                     ', '.join(argstrs))
 
 
 # Kept for compatibility but should be deprecated:

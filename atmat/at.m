@@ -1,5 +1,5 @@
 % Accelerator Toolbox
-% Version 2.2-dev.354 (atcollab) 01-Feb-2022
+% Version 2.3 (atcollab) 01-Apr-2022
 %
 % The Accelerator Toolbox was originally created by Andrei Terebilo.
 % Development is now continued by a multi-laboratory collaboration, <a href="matlab:web('https://github.com/atcollab')">atcollab</a>
@@ -86,6 +86,9 @@
 %
 %*Loading and Saving lattices*
 %
+%   Loading lattices from files
+%       <a href="matlab:help atloadlattice">atloadlattice</a>            - Load a lattice from a file
+%
 %   Binary files
 %       Lattices can be saved as binary mat-files using the standard load and save commands
 %
@@ -137,4 +140,4 @@
 %
 %       <a href="matlab:help symplectify">symplectify</a>              - Makes a matrix more symplectic
 %
-%<a href="matlab:web('/Applications/MATLAB_R2021b.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>
+%<a href="matlab:web('/Applications/MATLAB_R2022a.app/help/3ptoolbox/atacceleratortoolbox/doc/AT_page.html')">See documentation for AT</a>

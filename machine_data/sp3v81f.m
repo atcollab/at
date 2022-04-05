@@ -18,7 +18,7 @@ AP       =  aperture('AP',  [-0.1, 0.1, -0.1, 0.1],'AperturePass');
 L0 = 2.341440122400003e+002;	% design length [m]
 C0 =   299792458; 				% speed of light [m/s]
 HarmNumber = 372;
-CAV	= rfcavity('RF' , 0 , 3.2e+6 , HarmNumber*C0/L0, HarmNumber ,'CavityPass');  
+CAV	= rfcavity('RF' , 0 , 3.2e+6 , HarmNumber*C0/L0, HarmNumber);
 
 COR =  corrector('COR',0.15,[0 0],'CorrectorPass');
 BPM  =  marker('BPM','IdentityPass');
