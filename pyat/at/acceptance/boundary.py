@@ -209,8 +209,22 @@ def get_grid_boundary(mask, grid, config):
             xnow = x[iorder[-1]]
             ynow = y[iorder[-1]]
             dd = numpy.sqrt(((x-xnow)/dxmin)**2+((y-ynow)/dymin)**2)
-            ic = [j for j in numpy.argsort(dd) if j not in iorder]
-            iorder.append(ic[0])
+            if i <= 3:
+                ic = [j for j in numpy.argsort(dd) if j not in iorder] 
+            else:
+                direction = numpy.sign(iorder[-1]-iorder[-2])  
+                ic = [j for j in numpy.argsort(dd) if j not in iorder
+                      and numpy.sign(j-iorder[-1])==direction]                 
+            if len(ic) > 0:
+                iorder.append(ic[0])
+        #finally connect both ends if distance within unit square
+        xnow = x[iorder[-1]]
+        ynow = y[iorder[-1]]
+        xs = x[iorder[0]]
+        ys = y[iorder[0]]
+        dd = numpy.sqrt(((xs-xnow)/dxmin)**2+((ys-ynow)/dymin)**2)
+        if dd < 1.5:
+            iorder.append(iorder[0])
         gf = gf[:, iorder]
         return gf
 
