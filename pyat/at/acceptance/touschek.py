@@ -138,8 +138,8 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         refpts = range(len(ring))
     else:
         refpts = ring.uint32_refpts(refpts)
-        assert ring.refcount(refpts) > 2, \
-            'len(refpts) > 2 required for lifetime calculation'
+        #assert ring.refcount(refpts) > 2, \
+        #    'len(refpts) > 2 required for lifetime calculation'
             
 
     if momap is None:
@@ -154,8 +154,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         assert len(momap) == len(refpts), \
             'momap and refpts have different lengths'
 
-    spos = numpy.diff(ring.get_s_pos(refpts))
-    ma, rp = momap[:-1], refpts[:-1]
+    #spos = numpy.diff(ring.get_s_pos(refpts))
+    spos = numpy.array([e.Length for e in ring[refpts]])
+    ma, rp = momap, refpts
 
     nc = bunch_curr/ring.revolution_frequency/qe
     beta2 = ring.beta*ring.beta
