@@ -71,7 +71,8 @@ def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
                                      octupole_pass=None,
                                      copy=True)
 
-        o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6), refpts=len(ringtmp)))
+        o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
+                           refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
             dp = 0
             for e in ringtmp:
