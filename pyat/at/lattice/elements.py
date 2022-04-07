@@ -212,7 +212,7 @@ class Aperture(Element):
 
 
 class Collimator(Aperture):
-    """pyAT aperture element"""
+    """pyAT collimator element"""
 
 
 class Drift(LongElement):
