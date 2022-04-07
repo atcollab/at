@@ -211,6 +211,10 @@ class Aperture(Element):
         super(Aperture, self).__init__(family_name, Limits=limits, **kwargs)
 
 
+class Collimator(Aperture):
+    """pyAT aperture element"""
+
+
 class Drift(LongElement):
     """pyAT drift space element"""
 
