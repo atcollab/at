@@ -211,10 +211,6 @@ class Aperture(Element):
         super(Aperture, self).__init__(family_name, Limits=limits, **kwargs)
 
 
-class Collimator(Aperture):
-    """pyAT collimator element"""
-
-
 class Drift(LongElement):
     """pyAT drift space element"""
 
@@ -264,6 +260,16 @@ class Drift(LongElement):
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
+        
+        
+class Collimator(Drift):
+    """pyAT collimator element"""
+    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['RApertures']
+    def __init__(self, family_name, length, limits, **kwargs):
+        """Collimator(FamName, Length, limits, **keywords)
+        """
+        super(Collimator, self).__init__(family_name, length,
+                                         RApertures=limits, **kwargs)
 
 
 class ThinMultipole(Element):
