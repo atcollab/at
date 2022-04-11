@@ -137,10 +137,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
     if refpts is None:
         refpts = range(len(ring))
     else:
-        refpts = ring.uint32_refpts(refpts)
-        #assert ring.refcount(refpts) > 2, \
-        #    'len(refpts) > 2 required for lifetime calculation'
-            
+        refpts = ring.uint32_refpts(refpts)          
 
     if momap is None:
         resolution = kwargs.pop('resolution', 1.0e-3)
@@ -154,9 +151,16 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         assert len(momap) == len(refpts), \
             'momap and refpts have different lengths'
 
-    #spos = numpy.diff(ring.get_s_pos(refpts))
-    spos = numpy.array([e.Length for e in ring[refpts]])
-    ma, rp = momap, refpts
+    spos = numpy.squeeze(ring.get_s_pos(refpts))
+    refpts_all = [i for i in range(refpts[0],refpts[-1])
+                  if ring[i].Length>0]
+    spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
+    length_all = numpy.array([e.Length for e in ring[refpts_all]])
+    momp = numpy.interp(spos_all, spos, momap[:,0])
+    momn = numpy.interp(spos_all, spos, momap[:,1])
+    momap_all = numpy.vstack((momp, momn)).T
+  
+    ma, rp = momap_all, refpts_all
 
     nc = bunch_curr/ring.revolution_frequency/qe
     beta2 = ring.beta*ring.beta
@@ -209,7 +213,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                  sigp2*sigp2*numpy.prod(dxy2, axis=1))) *
                 2*numpy.sqrt(numpy.pi*(B1*B1-B2*B2)))
 
-        invtl[i] = sum(val*spos.T)/sum(spos)
+        invtl[i] = sum(val*length_all.T)/sum(length_all)
     tl = 1/numpy.mean(invtl)
 
     return tl, momap, refpts
