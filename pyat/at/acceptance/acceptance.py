@@ -35,7 +35,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                         for the acceptance, allowed values are: x,xp,y,yp,dp,ct
         npoints         number of points in each dimension shape (len(planes),)
         amplitudes      max. amplitude for RADIAL and CARTESIAN or initial step
-                        in RECURSIVE in each dimension with shape (len(planes),)
+                        in RECURSIVE in each dimension. Shape is (len(planes),)
                         for RADIAL/RECURSIVE grid: amplitude = sqrt(x**2+y**2)
 
     KEYWORDS
@@ -66,7 +66,7 @@ def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                         it is considered unsafe.
 
     OUTPUT
-        Returns 3 numpy arrays with shape (2,n) (or lists of numpy arrays for 
+        Returns 3 numpy arrays with shape (2,n) (or lists of numpy arrays for
         multiple refpts): the 2D acceptance , the full grid that was
         tracked and the particles of the grid that survived. The length
         of the lists=refpts. In case len(refpts)=1 the acceptance, grid,

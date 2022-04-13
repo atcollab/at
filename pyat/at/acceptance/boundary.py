@@ -72,13 +72,13 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     """
     Returns a ring starting at obspt and initial
     closed orbit
-    """     
+    """
     if ring.radiation:
         newring = ring.set_rf_frequency(dp=dp, copy=True)
         dp = None
     else:
-        newring=ring
-    
+        newring = ring
+
     if obspt is not None:
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
         newring = newring.rotate(obspt)
@@ -89,7 +89,7 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     return orbit, newring
 
 
-def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None, 
+def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
                        shift_zero=1.0e-9):
     """
     Return a grid configuration based on user input parameters, the ordering
@@ -112,11 +112,11 @@ def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
 
     if grid_mode is GridMode.RADIAL or grid_mode is GridMode.RECURSIVE:
         if bounds is None:
-            bounds = numpy.array([[0, 1], [numpy.pi, 0]])  
-        bounds[0][bounds[0]==0] = 1.0e-6       
+            bounds = numpy.array([[0, 1], [numpy.pi, 0]])
+        bounds[0][bounds[0] == 0] = 1.0e-6
     elif grid_mode is GridMode.CARTESIAN:
         if bounds is None:
-            bounds = numpy.array([[p-1, 1] for p in range(ndims)])             
+            bounds = numpy.array([[p-1, 1] for p in range(ndims)])
     else:
         raise AtError('GridMode {0} undefined.'.format(grid_mode))
 
@@ -158,9 +158,9 @@ def get_parts(config, offset):
         g = get_part_grid_radial(bnd, np, amp)
     parts = numpy.zeros((6, numpy.prod(np)))
     parts[pind, :] = [g[i] for i in range(len(pind))]
-    if len(pind)==2:
-        parts[pind[0]][parts[pind[1]]==0.0] += config.shift_zero
-        parts[pind[1]][parts[pind[0]]==0.0] += config.shift_zero
+    if len(pind) == 2:
+        parts[pind[0]][parts[pind[1]] == 0.0] += config.shift_zero
+        parts[pind[1]][parts[pind[0]] == 0.0] += config.shift_zero
     parts = (parts.T+offset).T
     return parts, grid(g, offset[pind])
 
@@ -196,10 +196,10 @@ def get_grid_boundary(mask, grid, config):
             ni = norm[inds]
             nim = numpy.where(ni == numpy.amax(ni))[0]
             ind = inds[nim][0]
-            gf[:, i] = grid[:, ind] 
+            gf[:, i] = grid[:, ind]
         #  first sort by angle
         idx = numpy.argsort(numpy.arctan2(*gf))
-        gf = gf[:, idx]     
+        gf = gf[:, idx]
         #  now sort by closest neighbour on normalized grid
         x, y = gf[0, :].copy(), gf[1, :].copy()
         dxmin = min(numpy.diff(numpy.unique(x)))
@@ -210,14 +210,14 @@ def get_grid_boundary(mask, grid, config):
             ynow = y[iorder[-1]]
             dd = numpy.sqrt(((x-xnow)/dxmin)**2+((y-ynow)/dymin)**2)
             if i <= 3:
-                ic = [j for j in numpy.argsort(dd) if j not in iorder] 
+                ic = [j for j in numpy.argsort(dd) if j not in iorder]
             else:
-                direction = numpy.sign(iorder[-1]-iorder[-2])  
+                direction = numpy.sign(iorder[-1]-iorder[-2])
                 ic = [j for j in numpy.argsort(dd) if j not in iorder
-                      and numpy.sign(j-iorder[-1])==direction]                 
+                      and numpy.sign(j-iorder[-1]) == direction]
             if len(ic) > 0:
                 iorder.append(ic[0])
-        #finally connect both ends if distance within unit square
+        #  finally connect both ends if distance within unit square
         xnow = x[iorder[-1]]
         ynow = y[iorder[-1]]
         xs = x[iorder[0]]
@@ -290,7 +290,7 @@ def grid_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     offset, newring = set_ring_orbit(ring, dp, obspt,
                                      offset)
     config = grid_configuration(planes, npoints, amplitudes,
-                                grid_mode, bounds=bounds, 
+                                grid_mode, bounds=bounds,
                                 shift_zero=shift_zero)
 
     if verbose:
@@ -418,7 +418,8 @@ def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                                            nturns=nturns, obspt=obspt, dp=dp,
                                            offset=offset, bounds=bounds,
                                            use_mp=use_mp, verbose=verbose,
-                                           divider=divider, shift_zero=shift_zero,
+                                           divider=divider,
+                                           shift_zero=shift_zero,
                                            **kwargs)
     else:
         result = grid_boundary_search(ring, planes, npoints, amplitudes,

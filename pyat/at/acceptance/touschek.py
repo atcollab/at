@@ -6,6 +6,7 @@ from scipy import integrate
 from scipy.optimize import fsolve
 from ..lattice.constants import clight, e_mass, qe, clight, _e_radius
 from .acceptance import get_momentum_acceptance
+import matplotlib.pyplot as plt
 
 
 __all__ = ['get_bunch_length_espread', 'get_lifetime']
@@ -131,13 +132,16 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
 
     epsabs = kwargs.pop('epsabs', 1.0e-16)
     epsrel = kwargs.pop('epsrel', 1.0e-12)
+    interpolate = kwargs.pop('interpolate', True)
 
     emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn,
                                        emitx=emitx, sigs=sigs, sigp=sigp)
     if refpts is None:
         refpts = range(len(ring))
     else:
-        refpts = ring.uint32_refpts(refpts)          
+        refpts = ring.uint32_refpts(refpts)
+    refpts = numpy.array([r for r in refpts
+                          if ring[r].Length > 0.0])
 
     if momap is None:
         resolution = kwargs.pop('resolution', 1.0e-3)
@@ -146,21 +150,23 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         momap, _, _ = ring.get_momentum_acceptance(resolution,
                                                    amplitude, **kwargs)
     else:
-        print('Using user input momentum aperture: refpts and momap '
-              'have to be coherent')
         assert len(momap) == len(refpts), \
             'momap and refpts have different lengths'
 
-    spos = numpy.squeeze(ring.get_s_pos(refpts))
-    refpts_all = [i for i in range(refpts[0],refpts[-1])
-                  if ring[i].Length>0]
-    spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
-    length_all = numpy.array([e.Length for e in ring[refpts_all]])
-    momp = numpy.interp(spos_all, spos, momap[:,0])
-    momn = numpy.interp(spos_all, spos, momap[:,1])
-    momap_all = numpy.vstack((momp, momn)).T
-  
-    ma, rp = momap_all, refpts_all
+    if interpolate:
+        refpts_all = numpy.array([i for i in range(refpts[0],
+                                                   refpts[-1]+1)
+                                  if ring[i].Length > 0])
+        spos = numpy.squeeze(ring.get_s_pos(refpts))
+        spos_all = numpy.squeeze(ring.get_s_pos(refpts_all))
+        momp = numpy.interp(spos_all, spos, momap[:, 0])
+        momn = numpy.interp(spos_all, spos, momap[:, 1])
+        momap_all = numpy.vstack((momp, momn)).T
+        ma, rp = momap_all, refpts_all
+    else:
+        ma, rp = momap, refpts
+
+    length_all = numpy.array([e.Length for e in ring[rp]])
 
     nc = bunch_curr/ring.revolution_frequency/qe
     beta2 = ring.beta*ring.beta
