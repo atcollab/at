@@ -137,24 +137,31 @@ class Lattice(list):
 
         # set default values
         kwargs.setdefault('name', '')
-        np = kwargs.setdefault('periodicity', 1)
+        periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
+        cell_h = kwargs.pop('_harmnumber', None)
         cell_length = kwargs.pop('_length', None)
 
+        if 'harmonic_number' in kwargs:
+            cell_h, rem = divmod(kwargs.pop('harmonic_number'), periodicity)
+            if rem != 0:
+                raise AtError('harmonic number must be a multiple of {}'
+                              .format(periodicity))
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
         elif '_energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
-        if 'harmonic_number' in kwargs:
-            kwargs['_cell_harmnumber'] = kwargs.pop('harmonic_number') / np
         # set attributes
         self.update(kwargs)
 
-        if not (hasattr(self, '_cell_harmnumber') or (frequency is None)):
+        # Setting the harmonic number is delayed to have self.beta available
+        if cell_h is not None:
+            self._cell_harmnumber = cell_h
+        elif frequency is not None:
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
 
@@ -195,7 +202,6 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        print("add")
         newring = Lattice(self)
         newring.extend(elems)
         return newring
@@ -206,7 +212,6 @@ class Lattice(list):
 
     def __mul__(self, n):
         """Repeats n times the lattice"""
-        print("mul")
         # noinspection PyTypeChecker
         return Lattice(itertools.chain(*itertools.repeat(self, n)),
                        iterator=self.attrs_filter)
@@ -229,7 +234,7 @@ class Lattice(list):
         if cavities and not hasattr(self, '_cell_harmnumber'):
             cavities.sort(key=lambda el: el.Frequency)
             try:
-                self.harmonic_number = getattr(cavities[0], 'HarmNumber')
+                self._cell_harmnumber = getattr(cavities[0], 'HarmNumber')
             except AttributeError:
                 length += self.get_s_pos(len(self))[0]
                 rev = self.beta * clight / length
@@ -815,10 +820,7 @@ def params_filter(params, elem_iterator, *args):
     if cavities:
         cavities.sort(key=lambda el: el.Frequency)
         c0 = cavities[0]
-        try:
-            params.setdefault('harmonic_number', getattr(c0, 'HarmNumber'))
-        except AttributeError:
-            pass
+        params['_harmnumber'] = getattr(c0, 'HarmNumber', None)
         params['_frequency'] = getattr(c0, 'Frequency', None)
 
     if 'energy' not in params:
