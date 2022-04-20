@@ -7,10 +7,7 @@ import os
 import re
 import numpy
 from warnings import warn
-if sys.platform.startswith('win') and sys.version_info.minor < 7:
-    from distutils import sysconfig
-else:
-    import sysconfig
+import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt

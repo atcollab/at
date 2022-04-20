@@ -32,11 +32,6 @@ typedef PyObject atElem;
 #define GETTRACKFCN(libfilename) GetProcAddress((libfilename),ATPY_PASS)
 #define SEPARATOR "\\"
 #define OBJECTEXT ".pyd"
-#if PY_MINOR_VERSION < 7    /* module sysconfig wrong on windows for python<3.7 */
-#define SYSCONFIG "distutils.sysconfig"
-#else
-#define SYSCONFIG "sysconfig"
-#endif /*PY_MINOR_VERSION*/
 #else
 #include <dlfcn.h>
 #define LIBRARYHANDLETYPE void *
@@ -45,9 +40,9 @@ typedef PyObject atElem;
 #define GETTRACKFCN(libfilename) dlsym((libfilename),ATPY_PASS)
 #define SEPARATOR "/"
 #define OBJECTEXT ".so"
-#define SYSCONFIG "sysconfig"
 #endif
 
+#define SYSCONFIG "sysconfig"
 #define LIMIT_AMPLITUDE		1
 #define C0  	2.99792458e8
 
