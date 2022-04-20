@@ -24,7 +24,9 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         exclude:
           - os: windows-latest
-            python-version: ['3.6', '3.7']
+            python-version: '3.6'
+          - os: windows-latest
+            python-version: '3.7'
 
     steps:
 
