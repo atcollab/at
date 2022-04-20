@@ -778,7 +778,6 @@ def type_filter(params, elem_iterator):
             if (elem.PassMethod.endswith('RadPass') or
                     elem.PassMethod.endswith('CavityPass')):
                 radiate = True
-            print(elem.FamName)
             yield elem
         else:
             warn(AtWarning('item {0} ({1}) is not an AT element: '
