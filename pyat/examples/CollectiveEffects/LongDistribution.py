@@ -2,8 +2,7 @@ import numpy
 import at
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from at.collective.wake_object import build_srange, longres_object
-from at.collective.wake_elements import LongResonatorElement
+from at.collective import Wake, LongResonatorElement
 from at.collective.haissinski import Haissinski
 
 # First we define the ring, the BB resonator, the current and the wake element
@@ -16,15 +15,15 @@ current = 5e-4
 m = 50 #30 is quite coarse, 70 or 80 is very fine. 50 is middle
 kmax = 8
 
-srange = build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
+srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
 
 # Now we initialise the Haissinski class, and solve, then we normalise the distribution and shift the charge center to be at 0
-wobj = longres_object(srange, freq, qfactor, Rs, ring.beta)
+wobj = Wake.long_resonator(srange, freq, qfactor, Rs, ring.beta)
 ha = Haissinski(wobj, ring, m=m, kmax=kmax, current=current, numIters = 30, eps=1e-13)
 ha.solve()
 
 ha_x_tmp = ha.q_array*ha.sigma_l
-ha_prof = ha.res/ha.I
+ha_prof = ha.res/ha.Ic
 ha_prof /= numpy.trapz(ha_prof, x=ha_x_tmp)
 ha_cc = numpy.average(ha_x_tmp, weights=ha_prof)
 ha_x = (ha_x_tmp - ha_cc) 

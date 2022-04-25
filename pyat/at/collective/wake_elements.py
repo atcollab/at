@@ -2,9 +2,7 @@ import numpy
 # noinspection PyProtectedMember
 from ..lattice.elements import Element, _array
 from ..lattice.constants import clight, qe
-from .wake_object import res_object, longres_object
-from .wake_object import reswall_object, WakeComponent
-from ..lattice import AtError
+from .wake_object import Wake, WakeComponent
 
 
 # noinspection PyPep8Naming
@@ -12,13 +10,13 @@ class WakeElement(Element):
     """Class to generate an AT wake element using the passmethod WakeFieldPass
     args:  family name, ring, wake object
     kwargs: PassMethod=WakeFieldPass
-            NumParticles=0   Number of particles in the bunch
-            Nslice=101       Number of slices per bunch
-            Nturns=1         Number of turn for the wake field
-            ZCuts=None       Limits for fixed slicing, default is adaptive
-            NormFact         (default=[1,1,1]) normalization for the 3 planes,
-                             to account for beta function at the observation
-                             point for example
+            Current=0   Bunch current [A]
+            Nslice=101  Number of slices per bunch
+            Nturns=1    Number of turn for the wake field
+            ZCuts=None  Limits for fixed slicing, default is adaptive
+            NormFact    (default=[1,1,1]) normalization for the 3 planes,
+                        to account for beta function at the observation
+                        point for example
     """
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
 
@@ -47,13 +45,6 @@ class WakeElement(Element):
         self.NormFact = kwargs.pop('NormFact', numpy.ones(3, order='F'))
         self._build(wake)
         if zcuts is not None:
-            rffreq = ring.rf_frequency
-            nomfreq = ring.revolution_frequency * ring.harmonic_number
-            if rffreq != nomfreq:
-                raise AtError('WakeElement: Zcuts is not compatible with '
-                              'off-energy tracking: please use ZCuts=None '
-                              'or set frequency with ring.set_rf_frequency()')
-                            
             self.ZCuts = zcuts
         super(WakeElement, self).__init__(family_name, **kwargs)
 
@@ -83,39 +74,29 @@ class WakeElement(Element):
         self.NormFact[0] = 1/l0['beta'][0]
         self.NormFact[1] = 1/l0['beta'][1]
 
-    def get_opt_attr(self, attrname):
-        if hasattr(self, attrname):
-            return getattr(self, attrname)
-        else:
-            return None
-
-    @property
-    def TurnHistory(self):
-        return self._turnhistory
-
     @property
     def WakeT(self):
         return self._wakeT
 
     @property
     def WakeZ(self):
-        return self.get_opt_attr('_wakeZ')
+        return getattr(self, '_wakeZ', None)
 
     @property
     def WakeDX(self):
-        return self.get_opt_attr('_wakeDX')
+        return getattr(self, '_wakeDX', None)
 
     @property
     def WakeDY(self):
-        return self.get_opt_attr('_wakeDY')
+        return getattr(self, '_wakeDY', None)
 
     @property
     def WakeQX(self):
-        return self.get_opt_attr('_wakeQX')
+        return getattr(self, '_wakeQX', None)
 
     @property
     def WakeQY(self):
-        return self.get_opt_attr('_wakeQY')
+        return getattr(self, '_wakeQY', None)
 
     @property
     def Nslice(self):
@@ -164,15 +145,15 @@ class ResonatorElement(WakeElement):
         self._yokoya = yokoya_factor
         self._wakecomponent = wakecomp
         self._beta = ring.beta
-        wake = res_object(srange, wakecomp, frequency, qfactor, rshunt,
-                          ring.beta, yokoya_factor=yokoya_factor)
+        wake = Wake.resonator(srange, wakecomp, frequency, qfactor, rshunt,
+                              ring.beta, yokoya_factor=yokoya_factor)
         super(ResonatorElement, self).__init__(family_name, ring, wake,
                                                **kwargs)
 
     def rebuild_wake(self):
-        wake = res_object(self.WakeT, self._wakecomponent,
-                          self._resfrequency, self._qfactor,
-                          self._rshunt, self._beta, self._yokoya)
+        wake = Wake.resonator(self.WakeT, self._wakecomponent,
+                              self._resfrequency, self._qfactor,
+                              self._rshunt, self._beta, self._yokoya)
         self._build(wake)
 
     @property
@@ -223,8 +204,8 @@ class LongResonatorElement(ResonatorElement):
                                                    qfactor, rshunt, **kwargs)
 
     def rebuild_wake(self):
-        wake = longres_object(self._wakeT, self._resfrequency, self._qfactor,
-                              self._rshunt, self._beta)
+        wake = Wake.long_resonator(self.WakeT, self._resfrequency,
+                                   self._qfactor, self._rshunt, self._beta)
         self._build(wake)
 
 
@@ -240,17 +221,14 @@ class ResWallElement(WakeElement):
         self._conductivity = conduc
         self._yokoya = yokoya_factor
         self._beta = ring.beta
-        wake = reswall_object(srange, wakecomp, rwlength, rvac,
-                              conduc, ring.beta,
-                              yokoya_factor=yokoya_factor)
-        super(ResWallElement, self).__init__(family_name, ring,
-                                             wake, **kwargs)
+        wake = Wake.resistive_wall(srange, wakecomp, rwlength, rvac, conduc,
+                                   ring.beta, yokoya_factor=yokoya_factor)
+        super(ResWallElement, self).__init__(family_name, ring, wake, **kwargs)
 
     def rebuild_wake(self):
-        wake = reswall_object(self.WakeT, self._wakecomp,
-                              self._rwlength, self._rvac,
-                              self._conduc, self._beta,
-                              yokoya_factor=self._yokoya)
+        wake = Wake.resistive_wall(self.WakeT, self._wakecomp, self._rwlength,
+                                   self._rvac, self._conduc, self._beta,
+                                   yokoya_factor=self._yokoya)
         self._build(wake)
 
     @property
