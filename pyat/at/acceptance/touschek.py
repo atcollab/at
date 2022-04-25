@@ -6,7 +6,6 @@ from scipy import integrate
 from scipy.optimize import fsolve
 from ..lattice.constants import clight, e_mass, qe, clight, _e_radius
 from .acceptance import get_momentum_acceptance
-import matplotlib.pyplot as plt
 
 
 __all__ = ['get_bunch_length_espread', 'get_lifetime']
