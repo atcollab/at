@@ -99,7 +99,7 @@ double *getbounds(double *r_in,int num_particles){
     MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
-        
+
     bounds[0]=smin;
     bounds[1]=smax;
     
