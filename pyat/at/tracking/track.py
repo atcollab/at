@@ -80,7 +80,7 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
-    # * C is the number of turns   
+    # * C is the number of turns
     if r_in.flags.f_contiguous:
         return _atpass(lattice, r_in, nturns, refpts=refs,
                        reuse=keep_lattice,
