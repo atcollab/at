@@ -37,8 +37,7 @@ C0 =   299792458; % speed of light [m/s]
 
 %CAV    = rfcavity('CAV1' , 0, 1.6e+6 , 280*C0/L0,'IdentityPass');   
 
-%CAV    = rfcavity('CAV1' , 0, 1.6e+6 , 280*C0/L0, 280, 'ThinCavityPass');   
-CAV    = rfcavity('CAV1' , 0, 1.6e+6 , 280*C0/L0, 280, 'CavityPass'); 
+CAV    = rfcavity('CAV1' , 0, 1.6e+6 , 280*C0/L0, 280);
 
 % octupoles are inserted in drift DR03 between Q2 and Q1
 %OCT_Q1 =    drift('OCT_Q1' ,1.0056578,'DriftPass');

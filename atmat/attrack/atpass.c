@@ -48,6 +48,8 @@ typedef double mxDouble;
 #define LHIST prhs[7]
 #define NUMTHREADS prhs[8]
 #define RINGPROPERTIES prhs[9]
+#define TURN prhs[10]
+#define KEEPCOUNTER prhs[11]
 
 #define LIMIT_AMPLITUDE		1	/*  if any of the phase space variables (except the sixth N.C.) 
 									exceeds this limit it is marked as lost */
@@ -273,10 +275,14 @@ static void getproperties(const mxArray *opts, double *energy, double *rest_ener
 @param[in]      [6] POSTHOOK
 @param[in]      [7] LHIST
 @param[in]      [8] NUMTHREADS
+@param[in]      [9] RINGPROPERTIES
+@param[in]     [10] TURN
+@param[in]     [11] KEEPCOUNTER
 */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     static double lattice_length = 0.0;
+    static int last_turn = 0;
     static int valid = 0;
     
     int turn, elem_index, npart, *refpts, num_refpts;
@@ -302,6 +308,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     int new_lattice = (mxGetScalar(NEWLATTICE) == 0) ? 0 : 1;
     int num_turns = (int)mxGetScalar(NTURNS);
     int num_particles = mxGetN(INITCONDITIONS);
+    int counter = (nrhs >= 11) ? (int)mxGetScalar(TURN) : 0;
+    int keep_counter = (nrhs >= 12) ? (int)mxGetScalar(KEEPCOUNTER) : 0;
     int np6 = num_particles*6;
     int ihist, lhist;
     mxDouble *histbuf = NULL;
@@ -322,6 +330,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     param.energy = 0.0;
     param.rest_energy = 0.0;
     param.charge = -1.0;
+    if (keep_counter)
+        param.nturn = last_turn;
+    else
+        param.nturn = counter;
+
     if (nrhs >= 10) {
         getproperties(RINGPROPERTIES, &param.energy, &param.rest_energy, &param.charge);
     }
@@ -505,8 +518,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         struct elem **elemdata= elemdata_list;
         double s_coord = 0.0;
 
-        *xturn = (mxDouble)(turn+1);
-		param.nturn = turn;
+        *xturn = (mxDouble)(param.nturn+1);
         nextrefindex = 0;
         nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index=0; elem_index<num_elements; elem_index++) {
@@ -556,8 +568,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             }
         }   
         pass_mode = USE_LOCAL_COPY;
+        param.nturn++;
     }
     valid = 1;      /* Tracking successful: the lattice can be reused */
+    last_turn = param.nturn;  /* Store turn number in a static variable */
 
     if (num_refpts == 0) {
         memcpy(drout, drin, np6*sizeof(mxDouble));

@@ -92,7 +92,7 @@ args=getdparg(args(1:funcarg-1));
         varargs=cellfun(@correct, varargs, 'UniformOutput',false);
         [dpargs,varargs]=getoption(varargs,{'dp','dct','df'});
         [srange,varargs]=getargs(varargs,[0 inf],'check',@(x) isnumeric(x) && numel(x)==2);
-        [largs,varargs]=linoptions(varargs);
+        [largs,varargs]=opticsoptions(varargs);
 
         lindata=[];
 
@@ -118,7 +118,7 @@ args=getdparg(args(1:funcarg-1));
         if nargout>0, varargout={curve}; end
 
         function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
-            [linargs,vargs] = linoptions(varargin);
+            [linargs,vargs] = opticsoptions(varargin);
             [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
             s=cat(1,lindata.SPos);
             plotdata=plotfun(lindata,ring,dpp,vargs{:});

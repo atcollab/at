@@ -3,8 +3,7 @@ function setversion(version)
 %
 %SERVERSION(VERSION)
 
-gitroot=fullfile(fileparts(mfilename('fullpath')),'..','..');
-versfile=fullfile(gitroot,'atmat','Contents.m');
+versfile=fullfile(atroot,'Contents.m');
 tmpfile=fullfile(tempdir,'Contents.m');
 fout=fopen(tmpfile,'wt');
 fin=fopen(versfile,'rt');

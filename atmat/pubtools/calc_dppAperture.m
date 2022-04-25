@@ -28,7 +28,7 @@ if nargin>=4
    Vrf = varargin{3}*1.0e6; %Volt
 end
 %THERING = setcellstruct(THERING,'Voltage', ati.RF, Vrf); 
-%THERING = setcellstruct(THERING,'PassMethod', ati.RF, 'ThinCavityPass'); 
+%THERING = setcellstruct(THERING,'PassMethod', ati.RF, 'RFCavityPass');
 %turn cavity on
 %cavityon(3e9);
 

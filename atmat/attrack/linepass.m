@@ -88,7 +88,7 @@ props=atCheckRingProperties(line);
 
 try
     [Rout,lossinfo] = atpass(line,Rin,newlattice,1,refpts, ...
-        prefunc,postfunc,nhist,omp_num_threads,props);
+        prefunc,postfunc,nhist,omp_num_threads,props,0);
     
     if nargout>1
         if nargout>2, varargout{2}=lossinfo; end

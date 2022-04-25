@@ -15,7 +15,7 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %  1. RING      initial AT structure
 %  2. CAVIPASS	pass method for cavities
 %                '' makes no change,
-%               (default: CavityPass)
+%               (default: RFCavityPass)
 %  3. BENDPASS	pass method for bending magnets
 %               '' makes no change,
 %               'auto' substitutes 'Pass' with 'RadPass' in any method
@@ -45,7 +45,7 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 %>> ringrad=atradon(ring);
 %   Turns cavities on and sets radiation in bending magnets, quadrupoles and wigglers (default)
 %
-%>> ringrad=atradon(ring,'CavityPass','auto','auto');
+%>> ringrad=atradon(ring,'RFCavityPass','auto','auto');
 %   Turns cavities on and sets radiation in bending magnets, wigglers and quadrupoles
 %
 %>> ringrad=atradon(ring,'quadpass','');
@@ -58,7 +58,7 @@ function [ring,radelemIndex,cavitiesIndex,energy]=atradon(ring,varargin)
 [quadpass,varargs]=getoption(varargs,'quadpass','auto');
 [wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
 [bendpass,varargs]=getoption(varargs,'bendpass','auto');
-[cavipass,varargs]=getoption(varargs,'cavipass','CavityPass');
+[cavipass,varargs]=getoption(varargs,'cavipass','RFCavityPass');
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
 energy=atenergy(ring);

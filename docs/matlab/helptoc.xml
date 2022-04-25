@@ -40,9 +40,15 @@
             <tocitem target="atsummary.html">Parameter summary</tocitem>
             <tocitem target="atphysics.html">Physics</tocitem>
         </tocitem>
-        <tocitem target="howtosummary.html"
-            image="HelpIcon.USER_GUIDE">How to…
-            <tocitem target="CavityControl.html">Control RF cavities</tocitem>
+        <tocitem target="howtos.html" 
+                 image="$toolbox/matlab/icons/webicon.gif">
+        How to…
+            <tocitem target="howtos/CavityControl.html">Control RF cavities</tocitem>
+        </tocitem>
+        <tocitem target="release_notes.html" 
+                 image="$toolbox/matlab/icons/webicon.gif">
+        Release notes
+            <tocitem target="release_notes/r2.3.html">r2.3</tocitem>
         </tocitem>
         <tocitem target="https://atcollab.github.io/at/" 
                  image="$toolbox/matlab/icons/webicon.gif">

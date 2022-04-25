@@ -31,7 +31,7 @@ if nargout == 1 % From atplot
     varargout={plotdata};
 else % From atbaseplot
     [ring,dpp]=deal(varargin{1:2});
-    [linargs,varargs]=linoptions(varargin(3:end));
+    [linargs,varargs]=opticsoptions(varargin(3:end));
     [~,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:});
     s=cat(1,lindata.SPos);
     varargout={s,plotB0curlyh(lindata,ring,dpp,varargs{:})};

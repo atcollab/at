@@ -129,7 +129,7 @@ else                            % Old syntax, for compatibility
         timelag= (lcell/(2*pi*harmcell))*asin(U0/vcell/ncells);
         ring=atradon(ring);  % set radiation on. nothing if radiation is already on
     else
-        ring=atradoff(ring,'CavityPass');  % set radiation off. nothing if radiation is already off
+        ring=atradoff(ring,'RFCavityPass');  % set radiation off. nothing if radiation is already off
         timelag=0;
     end
     ring=atsetfieldvalues(ring, cavpts, 'TimeLag', timelag);

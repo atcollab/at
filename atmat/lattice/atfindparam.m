@@ -13,7 +13,11 @@ TWO_PI_ERROR = 1.e-4;
 
 idx = atlocateparam(ring);
 
-newparms = struct(varargin{:});
+try
+    newparms = struct(varargin{:});
+catch
+    error('AT:WrongOptions', 'Unexpected options')
+end
 if isfield(newparms, 'Particle')
     particle = newparms.Particle;
     if ischar(particle) || isstring(particle)
@@ -109,7 +113,7 @@ else                        % No RingParam element : create a new one
     % Look for harmonic number
     if isfield(newparms, 'HarmNumber')
         h = check_h(newparms.HarmNumber, nbper);
-        newparms = rmfield(newparms, 'HarmNumber'); %#ok<NASGU>
+        newparms = rmfield(newparms, 'HarmNumber');
         hargs = {'HarmNumber', h};
     else
         maincav=findmaincav(ring(cavities,1));
@@ -123,6 +127,7 @@ else                        % No RingParam element : create a new one
 
     % Create the RingParam element
     parmelem=atringparam(name,energy,nbper,'Particle',particle,hargs{:});
+    parmelem=strupdate(parmelem,newparms);
 end
 
     function maincav=findmaincav(cavities)
