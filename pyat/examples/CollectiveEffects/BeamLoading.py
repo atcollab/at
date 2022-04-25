@@ -2,7 +2,7 @@ import numpy
 import matplotlib.pyplot as plt
 import at
 from at.collective import BeamLoadingElement, get_anal_qs
-from at.collective import build_srange
+from at.collective import Wake
 from at.physics import harmonic_analysis
 
 
@@ -26,7 +26,7 @@ harm = ring.harmonic_number
 phis = numpy.arcsin(u0/volt)
 
 
-srange = build_srange(0, 0.3, 1e-5, 1e-2, fring.circumference, fring.circumference*wturns)
+srange = Wake.build_srange(0, 0.3, 1e-5, 1e-2, fring.circumference, fring.circumference*wturns)
 bl_elem = BeamLoadingElement('bl', fring, srange, qfactor, rshunt, Nturns=wturns, Nslice=1)
 fring.append(bl_elem)
 
