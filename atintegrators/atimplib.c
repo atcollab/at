@@ -102,7 +102,7 @@ double *getbounds(double *r_in,int num_particles){
 
     bounds[0]=smin;
     bounds[1]=smax;
-    
+
     return bounds;
 }
 
