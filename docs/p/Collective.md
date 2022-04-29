@@ -28,3 +28,18 @@ The wake object is then built using:
 wake = Wake(srange)
 wake.add(WakeType,WakeComponent, *args, *kwargs)
 ```
+
+It is possible to add as many components as needed, all the componenents are resampled (interpolated) on the provided `srange`. `args` and `kwargs` allow to provide inputs specific to each `WakeType` that are defined as follows:
+
+`WakeType.FILE`:
+- `args`: file name
+- `kwargs`: `scol=0` column for the `s` coordinate, `wcol=1` column for the wake field, `sfact=1` and `wfact=1` column for the wake field scaling factors, `delimiter=None` column delimiter, 'skiprows=0' allows to skip headers. See `numpy.loadtxt()` for details
+`WakeType.TABLE`:
+- `args`: vector of `s` coordinate, vector of wake field
+`WakeType.RESONATOR`:
+- `args`: frequency, Q factor, shunt impedance, relativistic beta
+- `kwargs`: `yokoya_factor=1'
+`WakeType.RESWALL`:
+- `args`: length, vacuum pipe radius, conductivity, relativistic beta
+- `kwargs`: `yokoya_factor=1'
+
