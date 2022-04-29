@@ -6,4 +6,4 @@ A collective effects subpackage `pyat/at/collective` allows to model impedance d
 
 ### Wake object
 
-
+The `Wake` provides an interface to create an object containing the wake field information. It is then passed to the lattice element that is used for tracking. A `Wake` is defined by its `s` coordinate and wake componenents: transverse dipole, transverse quadrupole and longitudinal.
