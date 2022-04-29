@@ -63,3 +63,38 @@ These can be called as:
 wake = Wake.resonator(WakeComponent, *args, *kwargs)
 ```
 Vector inputs are allows in which case `nelems=1` has to be specified, each inputs is then either a scalar or a vector of shape `(nelems,)`.
+
+
+### Wake element
+
+The `WakeElement` is the **AT** element to be integrated in the lattice, it is using the passmethod `WakefieldPass.c` as the integrator and is initialized with the following arguments:
+
+`args`:
+- family name: string name of the element
+- ring: lattice object
+- wake: wake object
+
+`kwargs`: 
+- PassMethod = 'WakeFieldPass'
+- NumParticles = 0,   number of particles
+- Nslice = 101,  number of slices per bunch
+- Nturns = 1,    number of turn for the multi-turn wake field
+- ZCuts = None,  limits for fixed slicing, default is adaptive
+- NormFact = [1,1,1], normalization for the 3 planes, to account for beta function at the observation point for example
+
+The public attributes/properties for this element are:
+- NumParticles, number of charges
+- Normfact, normalization factor
+- Zcuts, fixed slicing limits
+- WakeT/DX/DY/QY/QY/Z: component of the wake considered for tracking, None is returned in case they are defined
+- Nturns, number of turns considered for the multi-turn wake, starts at 1 (multi-turn disabled)
+- Current, beam current [A]
+
+Functions are available to re-initialize some attributes:
+- `WakeElement.rebuild_wake(wake)`: rebuilds the wake field using a new `Wake` object
+- `WakeElement.clear_history()`: clear the turn history used in the multi-turn wake calculation
+- `WakeElement.set_normfactxy()`: applies a normalization by the beta-function at the observation point
+
+Similarly to the `Wake` object specific cases are provided: `ResonatorElement`, `LongResonatorElement`, `ResWallElement`. In these case the `Wake` Object is constructed internally and the proper `args` and `kwargs` to build it need to be provided in the initialization of the `WakeElement`. These arguments are defined as properties and can be accessed and changed by the user after initialization.
+
+### Example usage
