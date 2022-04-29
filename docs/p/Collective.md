@@ -126,3 +126,19 @@ welem.Current = 10e-3
 
 fring.append(welem)
 ```
+
+A beam of 10000 macro-particles is then generated and track through the lattice for 1000 turns
+
+```python
+sigm = at.sigma_matrix(ring.radiation_on(copy=True))
+part = at.beam(10000, sigm)
+part_out = at.lattice_pass(fring, part, nturns=1000)
+```
+**Warning:** AT will save the 6 coordinates of all particles at each turn in part_out, the `C` tracking engine therefore needs to allocate the associated memory, for very large arrays this may cause allocation errors because of insufficient memory. In order to prevent such error it is possible to track one turn at a time and save intermediate values at each turn
+
+```python
+xmean = numpy.zeros(1000)
+for i in range(1000):
+    _ = at.lattice_pass(fring, part, nturns=1)
+    x_mean[i] = numpy.mean(part[0, :], axis=0)
+```
