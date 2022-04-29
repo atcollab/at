@@ -113,10 +113,10 @@ ring.set_rf_frequency()
 fring, _ = at.fast_ring(ring)
 ```
 
-The `WakeElement` is then created and added to the `fast_ring`. In this simulation we consider only single turn effects, `srange` is therefore build accordingly, for single turn short range wakes the last 3 arguments are ignored, the interpolation table is defined from 0 to 0.3m in steps of 1.0e-5m. A 1 GHz vertical broadband resonator is then created, a current of 10mA is assigned to the element and it is appended to the lattice.
+The `WakeElement` is then created and added to the `fast_ring`. In this simulation we consider only single turn effects, `srange` is therefore build accordingly. For single turn `build_srange()` is not useful so here `numpy.arange()` is used instead. The interpolation table is defined from 0 to 0.3m in steps of 1.0e-5m. A 1 GHz vertical broadband resonator is then created, a current of 10mA is assigned to the element and it is appended to the lattice.
 
 ```python
-srange = Wake.build_srange(0., 0.3, 1.0e-5, 1, ring.circumference, ring.circumference)
+srange = numpy.arange(0., 0.3, 1.0e-5)
 
 fr = 1.0e9
 qfactor = 1
