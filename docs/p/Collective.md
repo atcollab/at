@@ -98,3 +98,31 @@ Functions are available to re-initialize some attributes:
 Similarly to the `Wake` object specific cases are provided: `ResonatorElement`, `LongResonatorElement`, `ResWallElement`. In these case the `Wake` Object is constructed internally and the proper `args` and `kwargs` to build it need to be provided in the initialization of the `WakeElement`. These arguments are defined as properties and can be accessed and changed by the user after initialization.
 
 ### Example usage
+
+Practical examples are found in `pyat/examples/CollectiveEffects`. The following shows an example of tracking with a transverse resonator. It uses the lattice `esrf.m` that can be found in `at/machine_data`.
+
+The first step is to load the lattice, set the rf frequency to its nominal value, turn radiations off and generate a `fast_ring`. The `fast_ring` reduces the lattice to a few objects: a 6x6 transfer map, an RF cavity, an element to model chromaticity and amplitude detuning and a diffusion element in case the radiations are turned on.
+
+```python
+import at
+from at.collective import Wake, ResonatorElement, WakeComponent
+
+ring = at.load_m('esrf.m')
+ring.radiation_off(cavity_pass='RFCavityPass')
+ring.set_rf_frequency()
+fring, _ = at.fast_ring(ring)
+```
+
+The `WakeElement` is then created and added to the `fast_ring`. In this simulation we consider only single turn effects, `srange` is therefore build accordingly, for single turn short range wakes the last 3 arguments are ignored, the interpolation table is defined from 0 to 0.3m in steps of 1.0e-5m. A 1 GHz vertical broadband resonator is then created, a current of 10mA is assigned to the element and it is appended to the lattice.
+
+```python
+srange = Wake.build_srange(0., 0.3, 1.0e-5, 1, ring.circumference, ring.circumference)
+
+fr = 1.0e9
+qfactor = 1
+rshunt = 6e6
+welem = ResonatorElement('wake', ring, srange, WakeComponent.DY, fr, qfactor, rshunt)
+welem.Current = 10e-3
+
+fring.append(welem)
+```
