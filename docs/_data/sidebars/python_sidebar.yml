@@ -17,6 +17,7 @@ entries:
     folderitems:
     - title: Control RF cavities
       url: /p/CavityControl.html
+      output: web
     - title: Collective effects
       url: /p/Collective.html
       output: web
