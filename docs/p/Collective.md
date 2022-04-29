@@ -2,8 +2,29 @@
 title: Collective Effects
 ---
 
-A collective effects subpackage `pyat/at/collective` allows to model impedance driven collective effects and perform multi-particle tracking. Presently only single bunch effects are included. It is possible to build pyAT with MPI to perform computing intensive simulations on a cluster.
+A collective effects subpackage `pyat/at/collective` allows to model impedance driven collective effects and perform multi-particle tracking. Presently only single bunch effects are included, however multi-turn wake are included to model beam loading effects for example. It is possible to build pyAT with MPI to perform computing intensive simulations on a cluster.
+The bunch is sliced longitudinal and the wake field from leading slices is applied on trailing slices iteratively, at each turn the slicing is updated and the kick recomputed.
 
 ### Wake object
 
-The `Wake` provides an interface to create an object containing the wake field information. It is then passed to the lattice element that is used for tracking. A `Wake` is defined by its `s` coordinate and wake componenents: transverse dipole, transverse quadrupole and longitudinal.
+The `Wake` provides an interface to create an object containing the wake field information. It is then passed to the lattice element that is used for tracking. A `Wake` is defined by its `s` coordinate its wake componenents: transverse dipole, transverse quadrupole and longitudinal and its type: custom, resistive wall or resonator. The type and components are determined by enumerators:
+
+`Wake.WakeComponent`:
+- `DX`: horizontal dipole
+- `DY`: vertical dipole
+- `QX`: horizontal quadrupole (or detuning)
+- `QY`: vertical quadrupole (or detuning)
+- `Z`: longitudinal
+
+`Wake.WakeType`:
+- `FILE`: import the wake from a file
+- `TABLE`: provide vectors
+- `RESONATOR`: analytical resonator
+- `RESWALL`: analytical resistive wall
+
+The wake object is then built using:
+
+```python
+wake = Wake(srange)
+wake.add(WakeType,WakeComponent, *args, *kwargs)
+```
