@@ -2,7 +2,7 @@
 Functions relating to particle generation
 """
 import numpy
-from at.physics import ohmi_envelope
+from at.physics import ohmi_envelope, radiation_parameters
 from at.lattice.constants import clight, e_mass
 from at.physics import get_mcf, get_tune
 from at.lattice import AtError, AtWarning
@@ -23,32 +23,13 @@ def _generate_2d_long_Rmatrix(espread, blength):
     return numpy.array([[espread/blength, 0], [0, blength/espread]])
 
 
-def _sigma_matrix_uncoupled(betax, alphax, emitx,
-                            betay, alphay, emity,
+def _sigma_matrix_uncoupled(betax, alphax, emitx, betay, alphay, emity,
                             blength, espread):
-
-    sig_matrix_x = _generate_2d_trans_matrix(emitx,
-                                             betax,
-                                             alphax)
-    sig_matrix_y = _generate_2d_trans_matrix(emity,
-                                             betay,
-                                             alphay)
-    sig_matrix_long = _generate_2d_long_matrix(espread, blength)
-
-    sig_matrix = numpy.block([
-                             [sig_matrix_x, numpy.zeros((2, 4))],
-                             [numpy.zeros((2, 2)), sig_matrix_y,
-                              numpy.zeros((2, 2))],
-                             [numpy.zeros((2, 4)), sig_matrix_long]
-                             ])
+    sig_matrix = numpy.zeros((6,6))
+    sig_matrix[:2, :2] = _generate_2d_trans_matrix(emitx, betax, alphax)
+    sig_matrix[2:4, 2:4] = _generate_2d_trans_matrix(emity, betay, alphay)
+    sig_matrix[4:, 4:] = _generate_2d_long_matrix(espread, blength)
     return sig_matrix
-
-
-def _compute_bunch_length_from_espread(ring, espread):
-    rp = at.radiation_parameters(ring.radiation_off(copy=True))
-    blength = ring.beta*clight*numpy.abs(rp.etac)*espread/ \
-        (2.0*numpy.pi*rp.f_s) 
-    return blength
 
 
 def _sigma_matrix_from_R66(R66, emitx, emity, blength, espread):
@@ -57,82 +38,59 @@ def _sigma_matrix_from_R66(R66, emitx, emity, blength, espread):
     return sig_matrix
 
 
-def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None,
-                          emity=None, blength=None, espread=None,
-                          verbose=False):
+def _compute_bunch_length_from_espread(ring, espread):
+    rp = radiation_parameters(ring.radiation_off(copy=True))
+    blength = ring.beta*clight*numpy.abs(rp.etac)*espread / \
+        (2.0*numpy.pi*rp.f_s)
+    return blength
 
-    flag = emitx or emity or espread
-    if flag:
-        assert emitx is not None, 'emitx must be defined'
-        assert emity is not None, 'emity must be defined'
-        assert espread is not None, 'espread must be defined'
 
-    if twiss_in:
-        if flag:
-            assert blength is not None, 'blength must be defined for twiss_in'
-        else:
-            raise AtError('Emittances must be specified for twiss_in')
+def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
+                          blength=None, espread=None, verbose=False):     
+    if espread is not None and blength is None:
+        blength = _compute_bunch_length_from_espread(ring, espread)
+    flag_all = emitx and emity and espread
+    flag_any = emitx or emity or espread
+    
+    if not flag_all:
+        if verbose:
+            print('Calculating missing parameters (ex, ey or espread) '
+                  'using ohmi envelop: needs radiations ON')
+        emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
+        if emitx is None:
+            emitx = beamdata.mode_emittances[0]
+        if emity is None:
+            emity = beamdata.mode_emittances[1]
+        if espread is None:
+            espread = sqrt(emit0.r66[4, 4])
+            blength = sqrt(emit0.r66[5, 5])
+            
+    if not flag_any and not twiss_in:
+        return emit.r66[0]       
+    elif twiss_in:
+        if verbose:
+            print('Generating pseudo-correlated matrix '
+                  'from twiss_in')
         if not hasattr(twiss_in, 'R'):
             raise AtError('twiss_in should contain the R matrix. '
                           'Please use the output from linopt6.')
         rmat = twiss_in.R
-
-    if ring:
-        if not ring.radiation and not flag:
-            raise AtError('Emittances must be specified for ring without '
-                          'radiation')
-
-        if flag:
-            if espread is not None and blength is None:
-                blength = _compute_bunch_length_from_espread(ring, espread)
-        else:
-
-            cavPassFlag = numpy.any(
-                            [i.PassMethod == 'CavityPass' for i in ring])
-            radPassFlag = numpy.any(
-                            ['Rad' in i.PassMethod for i in ring])
-
-            if cavPassFlag and not radPassFlag:
-                raise AtError('Cannot compute 6D sigma matrix without '
-                              'radiation damping and without emittances. '
-                              'Either switch on radiation or provide the '
-                              'emittances.')
-
-            if ring.radiation:
-                if verbose:
-                    print('Generating correlated sigma matrix using '
-                          'ohmi envelope')
-                emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
-                return emit.r66[0]
-
-        ld0, bd, ld = ring.get_optics()
-        if ld0.R.shape[0] == 3:
-            rmat = ld0.R
-        else:
-            rmat = numpy.zeros((3, 6, 6))
-            rmat[0] = numpy.block([
-                                [ld0.R[0], numpy.zeros((4, 2))],
-                                [numpy.zeros((2, 6))]
-                                ])
-
-            rmat[1] = numpy.block([
-                                [ld0.R[1], numpy.zeros((4, 2))],
-                                [numpy.zeros((2, 6))]
-                                ])
-
-            rlong = _generate_2d_long_Rmatrix(espread, blength)
-            rmat[2] = numpy.block([
-                                [numpy.zeros((4, 6))],
-                                [numpy.zeros((2, 4)), rlong]
-                                ])
-
-    if verbose:
-        print('Generating pseudo-correlated matrix '
-              'from initial optics conditions')
-
-    sig_matrix = _sigma_matrix_from_R66(rmat,
-                                        emitx, emity, blength, espread)
-
+    else:
+        if verbose:
+            print('Generating pseudo-correlated matrix '
+                  'from start point of ring')
+        l0, _, _ = ring.get_optics()
+        rmat = l0.R
+        
+    if rmat.shape[0] != 3:
+        rmat6 = numpy.zeros((3, 6, 6))
+        rmat6[0,:4,:4]= rmat[0]
+        rmat6[1,:4,:4]= rmat[1]
+        rmat6[2,4:,4:]= _generate_2d_long_Rmatrix(espread, blength)
+    else:
+        rmat6 = rmat
+    sig_matrix = _sigma_matrix_from_R66(rmat6, emitx, emity, blength,
+                                        espread)
     return sig_matrix
 
 
@@ -182,23 +140,18 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     This then computes the analytical uncoupled sigma matrix
     """
 
-    d = kwargs
-    betax = d.get('betax', None)
-    alphax = d.get('betax', None)
-    emitx = d.get('emitx', None)
-    betay = d.get('betay', None)
-    alphay = d.get('betay', None)
-    emity = d.get('emity', None)
-    blength = d.get('blength', None)
-    espread = d.get('espread', None)
-    verbose = d.get('verbose', False)
+    betax = kwargs.get('betax', None)
+    alphax = kwargs.get('betax', None)
+    emitx = kwargs.get('emitx', None)
+    betay = kwargs.get('betay', None)
+    alphay = kwargs.get('betay', None)
+    emity = kwargs.get('emity', None)
+    blength = kwargs.get('blength', None)
+    espread = kwargs.get('espread', None)
+    verbose = kwargs.get('verbose', False)
 
-    if ring is not None and twiss_in is not None:
-        warnings.warn(AtWarning('Both ring and twiss_in have been provided. '
-                                'Ignoring twiss_in and taking the ring.'))
-
-    if ring is not None or twiss_in is not None:
-        return _sigma_matrix_lattice(ring=ring, twiss_in=twiss_in,
+    if ring is not None:
+        return _sigma_matrix_lattice(ring, twiss_in=twiss_in,
                                      emitx=emitx, emity=emity,
                                      blength=blength, espread=espread,
                                      verbose=verbose)
@@ -233,7 +186,6 @@ def beam(nparts, sigma, orbit=None):
     OUTPUT
         particle_dist   a matrix of shape (6, np)
     """
-
     def _get_single_plane(dims):
         row_idx = numpy.array(dims)
         try:
