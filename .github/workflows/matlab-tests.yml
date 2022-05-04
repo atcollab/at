@@ -43,7 +43,7 @@ jobs:
     - name: mex test
       uses: matlab-actions/run-command@v1
       with:
-        command: runtests('attests');
+        command: runtests('attests',ProcedureName=["lattice_pass","orbit*"]);
 #
 #    - name: Set up Matlab engine for python
 #      run: python setup.py build --build-base=$(mktemp -d) install
