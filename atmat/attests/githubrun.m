@@ -1,3 +1,3 @@
-v=runtests('attests',ProcedureName=["x_*","linopt"]);
-success=all(cat(1,v.Passed));
-exit(~success);
+v=assertsuccess(runtests('attests',ProcedureName="linopt1"));
+% success=all(cat(1,v.Passed));
+% exit(~success);

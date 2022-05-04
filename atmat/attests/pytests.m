@@ -1,5 +1,12 @@
 classdef pytests < matlab.unittest.TestCase
 
+    properties(Constant)
+        mlist=[...
+            "pyat/machine_data/hmba",...
+            "pyat/machine_data/dba",...
+            "machine_data/spear3.m"];
+    end
+    
     properties
         ring4
         ring6
@@ -8,23 +15,23 @@ classdef pytests < matlab.unittest.TestCase
     properties(TestParameter)
         dp = {0., -0.01, 0.01};
         dct = {0., 0.00005};
-        lat = struct("hmba", "hmba","dba","dba");
+        lat = struct("hmba", "hmba","dba","dba","spear3","spear3");
         rad = struct("radoff","ring4","radon","ring6");
+        lat2 = struct("hmba", "hmba","spear3","spear3");
     end
 
     methods(TestClassSetup)
         function load_lattice(testCase)
             % Shared setup for the entire test class
             t=warning('off','AT:atradon:NOCavity');
-            for fpath=["pyat/machine_data/hmba",...
-                    "pyat/machine_data/dba"]
+            for fpath=testCase.mlist
                 [~,fname,~]=fileparts(fpath);
                 [testCase.ring4.(fname),testCase.ring6.(fname)]=mload(fpath);
             end
             warning(t);
 
             function [ring4,ring6]=mload(fpath)
-                mr=atloadlattice(fullfile(atroot,'..',fpath));
+                mr=atradoff(atloadlattice(fullfile(atroot,'..',fpath)));
                 pr=py.at.load_var(mr',pyargs('keep_all',true));
                 ring4.m=mr;
                 ring4.p=pr;
@@ -85,7 +92,7 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(morbit6,porbit6,AbsTol=1.E-9);
         end
 
-        function linopt(testCase,dp)
+        function linopt1(testCase,dp)
             lattice=testCase.ring4.hmba;
             mrefs=true(1,length(lattice.m)+1);
             prefs=py.numpy.array(mrefs);
@@ -101,8 +108,8 @@ classdef pytests < matlab.unittest.TestCase
             mchrom=mrdata.chromaticity;
             mbeta=cat(1,medata.beta);
             testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-9,RelTol=1.e-9);
-            testCase.verifyEqual(mtunes,ptunes,AbsTol=1.E-9,RelTol=1.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.E-5,RelTol=3.e-5);
+            testCase.verifyEqual(mtunes,ptunes,AbsTol=1.E-9);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.E-5);
         end
     end
 end
