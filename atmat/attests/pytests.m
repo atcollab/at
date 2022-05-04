@@ -1,4 +1,4 @@
-classdef attests < matlab.unittest.TestCase
+classdef pytests < matlab.unittest.TestCase
 
     properties
         ring4
@@ -15,10 +15,12 @@ classdef attests < matlab.unittest.TestCase
     methods(TestClassSetup)
         function load_lattice(testCase)
             % Shared setup for the entire test class
+            t=warning('off','AT:atradon:NOCavity');
             for fpath=["pyat/machine_data/hmba","pyat/machine_data/dba"]
                 [~,fname,~]=fileparts(fpath);
                 [testCase.ring4.(fname),testCase.ring6.(fname)]=mload(fpath);
             end
+            warning(t);
 
             function [ring4,ring6]=mload(fpath)
                 mr=atloadlattice(fullfile(atroot,'..',fpath));
@@ -38,7 +40,7 @@ classdef attests < matlab.unittest.TestCase
     methods(Test)
         % Test methods
 
-        function lattice_pass(testCase,lat,rad)
+        function x_lattice_pass(testCase,lat,rad)
             lattice=testCase.(rad).(lat);
             rin=1.e-6*eye(6);
             pin=py.numpy.asfortranarray(rin);
@@ -49,7 +51,7 @@ classdef attests < matlab.unittest.TestCase
             testCase.verifyEqual(mout,pout,AbsTol=1.E-30);
         end
 
-        function orbit4(testCase,lat,dp)
+        function x_orbit4(testCase,lat,dp)
             lattice=testCase.ring4.(lat);
             % Python
             a=cell(lattice.p.find_orbit4(dp));
@@ -60,7 +62,7 @@ classdef attests < matlab.unittest.TestCase
             testCase.verifyEqual(morbit4,porbit4,AbsTol=1.E-9);
         end
 
-        function syncorbit(testCase,lat,dct)
+        function x_syncorbit(testCase,lat,dct)
             lattice=testCase.ring4.(lat);
             % python
             a=cell(lattice.p.find_sync_orbit(dct));
@@ -71,7 +73,7 @@ classdef attests < matlab.unittest.TestCase
             testCase.verifyEqual(msyncorb,psyncorb,AbsTol=1.E-9);
         end
 
-        function orbit6(testCase)
+        function x_orbit6(testCase)
             lattice=testCase.ring6.hmba;
             % python
             a=cell(lattice.p.find_orbit6());
@@ -101,7 +103,5 @@ classdef attests < matlab.unittest.TestCase
             testCase.verifyEqual(mtunes,ptunes,AbsTol=1.E-9,RelTol=1.e-9);
             testCase.verifyEqual(mchrom,pchrom,AbsTol=2.E-5,RelTol=3.e-5);
         end
-
     end
-
 end
