@@ -6,6 +6,7 @@ name: Run Matlab tests
 
 on:
   push:
+  workflow_dispatch:
 #  pull_request:
 #
 #defaults:
@@ -19,34 +20,36 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up python 3.8
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
 
+    - run: type python
+
     - name: Set up MATLAB
       uses: matlab-actions/setup-matlab@v1
       with:
         release: R2022a
-
-    - name: Set up Matlab engine for python
-      run: python setup.py build --build-base=$(mktemp -d) install
-      working-directory: /usr/local/MATLAB/R2022a/extern/engines/python
 
     - name: Atmexall
       uses: matlab-actions/run-command@v1
       with:
         command: run('atmat/atpath');savepath('pathdef.m'); atmexall
 
-    - name: mex test
-      uses: matlab-actions/run-command@v1
-      with:
-        command: pwd,path
-
     - name: Build and install at with tests
       run: python -m pip install -e "./pyat[dev]"
 
-    - name: Test with pytest
-      run: python -m pytest pyat/test_matlab
+    - name: mex test
+      uses: matlab-actions/run-command@v1
+      with:
+        command: pwd,path,getenv('pythonLocation')
+#
+#    - name: Set up Matlab engine for python
+#      run: python setup.py build --build-base=$(mktemp -d) install
+#      working-directory: /usr/local/MATLAB/R2022a/extern/engines/python
+#
+#    - name: Test with pytest
+#      run: python -m pytest pyat/test_matlab
