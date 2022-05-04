@@ -45,19 +45,9 @@ def _sigma_matrix_uncoupled(betax, alphax, emitx,
 
 
 def _compute_bunch_length_from_espread(ring, espread):
-    gamma = ring.energy/e_mass
-    beta = numpy.sqrt(1.0-1.0/gamma/gamma)
-    f0 = clight/ring.circumference
-
-    mcf = get_mcf(ring.radiation_off(copy=True))
-    if ring.radiation:
-        qs3 = get_tune(ring)
-    else:
-        qs3 = get_tune(ring.radiation_on(copy=True))
-
-    f_s = qs3[2]*f0
-
-    blength = clight * beta * numpy.abs(mcf) * espread / (2 * numpy.pi * f_s)
+    rp = at.radiation_parameters(ring.radiation_off(copy=True))
+    blength = ring.beta*clight*numpy.abs(rp.etac)*espread/ \
+        (2.0*numpy.pi*rp.f_s) 
     return blength
 
 
