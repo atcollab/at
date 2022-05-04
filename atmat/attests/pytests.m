@@ -16,7 +16,8 @@ classdef pytests < matlab.unittest.TestCase
         function load_lattice(testCase)
             % Shared setup for the entire test class
             t=warning('off','AT:atradon:NOCavity');
-            for fpath=["pyat/machine_data/hmba","pyat/machine_data/dba"]
+            for fpath=["pyat/machine_data/hmba",...
+                    "pyat/machine_data/dba"]
                 [~,fname,~]=fileparts(fpath);
                 [testCase.ring4.(fname),testCase.ring6.(fname)]=mload(fpath);
             end
