@@ -101,7 +101,7 @@ classdef pytests < matlab.unittest.TestCase
             a2=cell(lattice.p.find_m44(dp));
             [pm44,~]=deal(a2{:});
             pm44=double(pm44);
-            testCase.verifyEqual(mm44,pm44,AbsTol=1.E-15);
+            testCase.verifyEqual(mm44,pm44,AbsTol=2.e-9);
         end
 
         function m66(testCase,lat2)
@@ -114,18 +114,10 @@ classdef pytests < matlab.unittest.TestCase
             pm66=double(pm66);
             testCase.verifyEqual(mm66,pm66,AbsTol=2.E-9);
         end
-
-        function radiation_integrals(testCase,lat)
-            lattice=testCase.ring4.(lat);
-            %mintegrals=atsummary(lattice.m,'NoDisplay').integrals(1:5);
-            mintegrals=ringpara(lattice.m).integrals(1:5);
-            pintegrals=double(lattice.p.get_radiation_integrals());
-            testCase.verifyEqual(mintegrals,pintegrals,RelTol=1.E-12);
-        end
     end
 
     methods(Test)
-        % These tests are disabled on GitHub because of a lapack failure:
+        % These tests are disabled on GitHub because of a Lapack failure:
         % "Intel MKL ERROR: Parameter 11 was incorrect on entry to DGEEV."
         % preventing the computation if eigenvectors.
         % Hypothesis: library conflict when running python under Matlab
@@ -148,6 +140,14 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(mbeta,pbeta,AbsTol=1.E-9,RelTol=1.e-9);
             testCase.verifyEqual(mtunes,ptunes,AbsTol=1.E-9);
             testCase.verifyEqual(mchrom,pchrom,AbsTol=2.E-5);
+        end
+
+        function radiation_integrals(testCase,lat)
+            lattice=testCase.ring4.(lat);
+            %mintegrals=atsummary(lattice.m,'NoDisplay').integrals(1:5);
+            mintegrals=ringpara(lattice.m).integrals(1:5);
+            pintegrals=double(lattice.p.get_radiation_integrals());
+            testCase.verifyEqual(mintegrals,pintegrals,RelTol=1.E-12);
         end
 
         function ringparameters(testCase,lat2)
