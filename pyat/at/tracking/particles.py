@@ -56,14 +56,18 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
         if verbose:
             print('Calculating missing parameters (ex, ey or espread) '
                   'using ohmi envelop: needs radiations ON')
-        emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
+        try:
+            emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
+        except AtError:
+            raise AtError('Please provide ex, ey, espread or turn on '
+                          'radiations to compute the sigma matrix') 
         if emitx is None:
             emitx = beamdata.mode_emittances[0]
         if emity is None:
             emity = beamdata.mode_emittances[1]
         if espread is None:
-            espread = sqrt(emit0.r66[4, 4])
-            blength = sqrt(emit0.r66[5, 5])
+            espread = numpy.sqrt(emit0.r66[4, 4])
+            blength = numpy.sqrt(emit0.r66[5, 5])
             
     if not flag_any and not twiss_in:
         return emit.r66[0]       
@@ -72,7 +76,7 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
             print('Generating pseudo-correlated matrix '
                   'from twiss_in')
         if not hasattr(twiss_in, 'R'):
-            raise AtError('twiss_in should contain the R matrix. '
+            raise AtError('twiss_in has to the contain the R matrix. '
                           'Please use the output from linopt6.')
         rmat = twiss_in.R
     else:
@@ -95,7 +99,6 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
 
 
 def sigma_matrix(ring=None, twiss_in=None, **kwargs):
-
     """
     Calculate the correlation matrix to be used for particle generation
 
@@ -139,7 +142,6 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     vertical is required, as well as blength and espread.
     This then computes the analytical uncoupled sigma matrix
     """
-
     betax = kwargs.get('betax', None)
     alphax = kwargs.get('betax', None)
     emitx = kwargs.get('emitx', None)
@@ -149,7 +151,6 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     blength = kwargs.get('blength', None)
     espread = kwargs.get('espread', None)
     verbose = kwargs.get('verbose', False)
-
     if ring is not None:
         return _sigma_matrix_lattice(ring, twiss_in=twiss_in,
                                      emitx=emitx, emity=emity,
@@ -165,7 +166,6 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
         assert emity is not None, ln.format('emity')
         assert blength is not None, ln.format('blength')
         assert espread is not None, ln.format('espread')
-
         return _sigma_matrix_uncoupled(betax, alphax, emitx,
                                        betay, alphay, emity,
                                        blength, espread)
@@ -197,27 +197,19 @@ def beam(nparts, sigma, orbit=None):
 
     try:
         lmat = numpy.linalg.cholesky(sigma)
-    except numpy.linalg.LinAlgError:
-        a1 = _get_single_plane([0, 1])
-        a2 = _get_single_plane([2, 3])
-        a3 = _get_single_plane([4, 5])
-        lmat = numpy.block([[a1, numpy.zeros((2, 4))],
-                            [numpy.zeros((2, 2)), a2,
-                             numpy.zeros((2, 2))],
-                            [numpy.zeros((2, 4)), a3]])
+    except numpy.linalg.LinAlgError: 
+        lmat = numpy.zeros((6,6))      
+        lmat[:2, :2] = _get_single_plane([0, 1])
+        lmat[2:4, 2:4] = _get_single_plane([2, 3])
+        lmat[4:, 4:] = _get_single_plane([4, 5])
 
     particle_dist = numpy.squeeze(numpy.dot(lmat, v))
     if particle_dist.ndim == 1:
         particle_dist = numpy.array([particle_dist]).T
 
     if orbit is not None:
-        if (not isinstance(orbit, (numpy.ndarray, list)) or
-                len(orbit) != sigma.shape[0]):
-            raise AttributeError('orbit should be a list or array' +
-                                 ' with a length the same as sigma' +
-                                 ' matrix')
-        else:
-            for i, orb in enumerate(orbit):
-                particle_dist[i, :] += orb
+        if numpy.shape(orbit) != (6,)
+            raise AtError('beam: input orbit shape has to be (6,)')
+        particle_dist = (particle_dist.T + numpy.array(orb)).T
 
     return particle_dist
