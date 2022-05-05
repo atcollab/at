@@ -25,7 +25,7 @@ def _generate_2d_long_Rmatrix(espread, blength):
 
 def _sigma_matrix_uncoupled(betax, alphax, emitx, betay, alphay, emity,
                             blength, espread):
-    sig_matrix = numpy.zeros((6,6))
+    sig_matrix = numpy.zeros((6, 6))
     sig_matrix[:2, :2] = _generate_2d_trans_matrix(emitx, betax, alphax)
     sig_matrix[2:4, 2:4] = _generate_2d_trans_matrix(emity, betay, alphay)
     sig_matrix[4:, 4:] = _generate_2d_long_matrix(espread, blength)
@@ -46,12 +46,12 @@ def _compute_bunch_length_from_espread(ring, espread):
 
 
 def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
-                          blength=None, espread=None, verbose=False):     
+                          blength=None, espread=None, verbose=False):
     if espread is not None and blength is None:
         blength = _compute_bunch_length_from_espread(ring, espread)
     flag_all = emitx and emity and espread
     flag_any = emitx or emity or espread
-    
+
     if not flag_all:
         if verbose:
             print('Calculating missing parameters (ex, ey or espread) '
@@ -60,7 +60,7 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
             emit0, beamdata, emit = ohmi_envelope(ring, refpts=[0])
         except AtError:
             raise AtError('Please provide ex, ey, espread or turn on '
-                          'radiations to compute the sigma matrix') 
+                          'radiations to compute the sigma matrix')
         if emitx is None:
             emitx = beamdata.mode_emittances[0]
         if emity is None:
@@ -68,9 +68,9 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
         if espread is None:
             espread = numpy.sqrt(emit0.r66[4, 4])
             blength = numpy.sqrt(emit0.r66[5, 5])
-            
+
     if not flag_any and not twiss_in:
-        return emit.r66[0]       
+        return emit.r66[0]
     elif twiss_in:
         if verbose:
             print('Generating pseudo-correlated matrix '
@@ -85,12 +85,12 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
                   'from start point of ring')
         l0, _, _ = ring.get_optics()
         rmat = l0.R
-        
+
     if rmat.shape[0] != 3:
         rmat6 = numpy.zeros((3, 6, 6))
-        rmat6[0,:4,:4]= rmat[0]
-        rmat6[1,:4,:4]= rmat[1]
-        rmat6[2,4:,4:]= _generate_2d_long_Rmatrix(espread, blength)
+        rmat6[0, :4, :4] = rmat[0]
+        rmat6[1, :4, :4] = rmat[1]
+        rmat6[2, 4:, 4:] = _generate_2d_long_Rmatrix(espread, blength)
     else:
         rmat6 = rmat
     sig_matrix = _sigma_matrix_from_R66(rmat6, emitx, emity, blength,
@@ -197,8 +197,8 @@ def beam(nparts, sigma, orbit=None):
 
     try:
         lmat = numpy.linalg.cholesky(sigma)
-    except numpy.linalg.LinAlgError: 
-        lmat = numpy.zeros((6,6))      
+    except numpy.linalg.LinAlgError:
+        lmat = numpy.zeros((6, 6))
         lmat[:2, :2] = _get_single_plane([0, 1])
         lmat[2:4, 2:4] = _get_single_plane([2, 3])
         lmat[4:, 4:] = _get_single_plane([4, 5])
@@ -208,7 +208,7 @@ def beam(nparts, sigma, orbit=None):
         particle_dist = numpy.array([particle_dist]).T
 
     if orbit is not None:
-        if numpy.shape(orbit) != (6,)
+        if numpy.shape(orbit) != (6,):
             raise AtError('beam: input orbit shape has to be (6,)')
         particle_dist = (particle_dist.T + numpy.array(orb)).T
 
