@@ -43,7 +43,7 @@ jobs:
     - name: Run tests
       uses: matlab-actions/run-command@v1
       with:
-        command: setenv('LD_LIBRARY_PATH',[getenv('pythonLocation') '/lib:' getenv('LD_LIBRARY_PATH')]);run('atmat/attests/githubrun')
+        command: disp(table(assertSuccess(run(testsuite('atmat/attests',ProcedureName='x_*')))))
 #
 #    - name: Set up Matlab engine for python
 #      run: python setup.py build --build-base=$(mktemp -d) install

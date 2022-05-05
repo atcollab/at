@@ -14,7 +14,7 @@ classdef pytests < matlab.unittest.TestCase
     
     properties(TestParameter)
         dp = {0., -0.01, 0.01};
-        dct = {0., 0.00005};
+        dct = {0., -0.00005, 0.00005};
         lat = struct("hmba", "hmba","dba","dba","spear3","spear3");
         rad = struct("radoff","ring4","radon","ring6");
         lat2 = struct("hmba", "hmba","spear3","spear3");
@@ -67,7 +67,7 @@ classdef pytests < matlab.unittest.TestCase
             porbit4=double(porbit4)';
             % Matlab
             [~,morbit4]=findorbit4(lattice.m,dp);
-            testCase.verifyEqual(morbit4,porbit4,AbsTol=1.E-9);
+            testCase.verifyEqual(morbit4,porbit4,AbsTol=1.E-15);
         end
 
         function x_syncorbit(testCase,lat,dct)
@@ -78,18 +78,40 @@ classdef pytests < matlab.unittest.TestCase
             psyncorb=double(psyncorb)';
             % Matlab
             [~,msyncorb]=findsyncorbit(lattice.m,dct);
-            testCase.verifyEqual(msyncorb,psyncorb,AbsTol=1.E-9);
+            testCase.verifyEqual(msyncorb,psyncorb,AbsTol=1.E-15);
         end
 
-        function x_orbit6(testCase)
-            lattice=testCase.ring6.hmba;
+        function x_orbit6(testCase,lat2)
+            lattice=testCase.ring6.(lat2);
             % python
             a=cell(lattice.p.find_orbit6());
             [porbit6,~]=deal(a{:});
             porbit6=double(porbit6)';
             % Matlab
             [~,morbit6]=findorbit6(lattice.m);
-            testCase.verifyEqual(morbit6,porbit6,AbsTol=1.E-9);
+            testCase.verifyEqual(morbit6,porbit6,AbsTol=1.E-15 );
+        end
+
+        function x_m44(testCase,lat2,dp)
+            lattice=testCase.ring4.(lat2);
+            % Matlab
+            mm44=findm44(lattice.m,dp);
+            % python
+            a2=cell(lattice.p.find_m44(dp));
+            [pm44,~]=deal(a2{:});
+            pm44=double(pm44);
+            testCase.verifyEqual(mm44,pm44,AbsTol=1.E-15);
+        end
+
+        function x_m66(testCase,lat2)
+            lattice=testCase.ring6.(lat2);
+            % Matlab
+            mm66=findm66(lattice.m);
+            % python
+            a2=cell(lattice.p.find_m66());
+            [pm66,~]=deal(a2{:});
+            pm66=double(pm66);
+            testCase.verifyEqual(mm66,pm66,AbsTol=1.E-10);
         end
 
         function linopt1(testCase,dp)
