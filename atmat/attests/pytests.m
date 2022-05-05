@@ -45,10 +45,10 @@ classdef pytests < matlab.unittest.TestCase
         % Setup for each test
     end
 
-    methods(Test)
+    methods(Test, TestTags="GitHub")
         % Test methods
 
-        function x_lattice_pass(testCase,lat,rad)
+        function lattice_pass(testCase,lat,rad)
             lattice=testCase.(rad).(lat);
             rin=1.e-6*eye(6);
             pin=py.numpy.asfortranarray(rin);
@@ -59,7 +59,7 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(mout,pout,AbsTol=1.E-30);
         end
 
-        function x_orbit4(testCase,lat,dp)
+        function orbit4(testCase,lat,dp)
             lattice=testCase.ring4.(lat);
             % Python
             a=cell(lattice.p.find_orbit4(dp));
@@ -70,7 +70,7 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(morbit4,porbit4,AbsTol=1.E-15);
         end
 
-        function x_syncorbit(testCase,lat,dct)
+        function syncorbit(testCase,lat,dct)
             lattice=testCase.ring4.(lat);
             % python
             a=cell(lattice.p.find_sync_orbit(dct));
@@ -81,7 +81,7 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(msyncorb,psyncorb,AbsTol=1.E-15);
         end
 
-        function x_orbit6(testCase,lat2)
+        function orbit6(testCase,lat2)
             lattice=testCase.ring6.(lat2);
             % python
             a=cell(lattice.p.find_orbit6());
@@ -92,7 +92,7 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(morbit6,porbit6,AbsTol=1.E-15 );
         end
 
-        function x_m44(testCase,lat2,dp)
+        function m44(testCase,lat2,dp)
             lattice=testCase.ring4.(lat2);
             % Matlab
             mm44=findm44(lattice.m,dp);
@@ -103,7 +103,7 @@ classdef pytests < matlab.unittest.TestCase
             testCase.verifyEqual(mm44,pm44,AbsTol=1.E-15);
         end
 
-        function x_m66(testCase,lat2)
+        function m66(testCase,lat2)
             lattice=testCase.ring6.(lat2);
             % Matlab
             mm66=findm66(lattice.m);
@@ -113,6 +113,27 @@ classdef pytests < matlab.unittest.TestCase
             pm66=double(pm66);
             testCase.verifyEqual(mm66,pm66,AbsTol=2.E-9);
         end
+
+        function radiation_integrals(testCase,lat)
+            lattice=testCase.ring4.(lat);
+            %mintegrals=atsummary(lattice.m,'NoDisplay').integrals(1:5);
+            mintegrals=ringpara(lattice.m).integrals(1:5);
+            pintegrals=double(lattice.p.get_radiation_integrals());
+            testCase.verifyEqual(mintegrals,pintegrals,RelTol=1.E-12);
+        end
+
+        function ringparameters(testCase,lat2)
+            lattice=testCase.ring4.(lat2);
+            mprops=atGetRingProperties(lattice.m);
+            mmcf=mcf(lattice.m,0.0);
+            testCase.verifyEqual(mprops.Energy,lattice.p.energy);
+            testCase.verifyEqual(mprops.HarmNumber,lattice.p.harmonic_number);
+            testCase.verifyEqual(mprops.Periodicity,double(lattice.p.periodicity));
+            testCase.verifyEqual(mmcf,lattice.p.mcf,RelTol=1.E-8);
+        end
+    end
+
+    methods(Test)
 
         function linopt1(testCase,dp)
             lattice=testCase.ring4.hmba;
