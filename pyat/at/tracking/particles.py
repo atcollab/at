@@ -210,6 +210,6 @@ def beam(nparts, sigma, orbit=None):
     if orbit is not None:
         if numpy.shape(orbit) != (6,):
             raise AtError('beam: input orbit shape has to be (6,)')
-        particle_dist = (particle_dist.T + numpy.array(orb)).T
+        particle_dist = (particle_dist.T + numpy.array(orbit)).T
 
     return particle_dist
