@@ -3,10 +3,8 @@ Functions relating to particle generation
 """
 import numpy
 from at.physics import ohmi_envelope, radiation_parameters
-from at.lattice.constants import clight, e_mass
-from at.physics import get_mcf, get_tune
-from at.lattice import AtError, AtWarning
-import warnings
+from at.lattice.constants import clight
+from at.lattice import AtError
 
 __all__ = ['beam', 'sigma_matrix']
 
@@ -98,7 +96,9 @@ def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
     return sig_matrix
 
 
-def sigma_matrix(ring=None, twiss_in=None, **kwargs):
+def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
+                 emitx=None, betay=None, alphay=None, emity=None,
+                 blength=None, espread=None, verbose=False):
     """
     Calculate the correlation matrix to be used for particle generation
 
@@ -142,15 +142,6 @@ def sigma_matrix(ring=None, twiss_in=None, **kwargs):
     vertical is required, as well as blength and espread.
     This then computes the analytical uncoupled sigma matrix
     """
-    betax = kwargs.get('betax', None)
-    alphax = kwargs.get('betax', None)
-    emitx = kwargs.get('emitx', None)
-    betay = kwargs.get('betay', None)
-    alphay = kwargs.get('betay', None)
-    emity = kwargs.get('emity', None)
-    blength = kwargs.get('blength', None)
-    espread = kwargs.get('espread', None)
-    verbose = kwargs.get('verbose', False)
     if ring is not None:
         return _sigma_matrix_lattice(ring, twiss_in=twiss_in,
                                      emitx=emitx, emity=emity,
