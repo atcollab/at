@@ -21,6 +21,10 @@ entries:
     - title: Collective effects
       url: /p/Collective.html
       output: web
-  - title: Getting Started
+  - title: Doxy documentation
     output: web
-    url: p/doxy/html/index.html
+    folderitems:
+    - title: webpage
+      url: p/doxy/html/index.html
+    - title: PDF
+      url: p/doxy/latex/refman.pdf
