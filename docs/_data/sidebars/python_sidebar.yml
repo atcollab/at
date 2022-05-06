@@ -21,3 +21,6 @@ entries:
     - title: Collective effects
       url: /p/Collective.html
       output: web
+  - title: Getting Started
+    output: web
+    url: p/doxy/html/index.html
