@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2022.5.6)  6 MAY 2022 11:46
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2022.5.6)  6 MAY 2022 13:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -854,7 +854,12 @@ LaTeX Font Info:    Font shape `T1/phv/b/n' will be
 LaTeX Font Info:    Font shape `T1/phv/b/n' will be
 (Font)              scaled to size 6.29996pt on input line 169.
  [1] [2] [3] [4] [5] [6] [7] [8] [9]
-[10]
+Underfull \vbox (badness 2865) has occurred while \output is active []
+
+ [10]
+[11] [12
+
+]
 Package hyperref Info: Option `pageanchor' set `true' on input line 171.
 
 Chapter 1.
@@ -870,57 +875,60 @@ LaTeX Font Info:    Font shape `T1/phv/b/n' will be
 (Font)              scaled to size 22.39185pt on input line 174.
 LaTeX Font Info:    Font shape `T1/phv/bc/n' will be
 (Font)              scaled to size 22.39185pt on input line 174.
-(./namespaces.tex
+(./index.tex
+LaTeX Font Info:    Trying to load font information for T1+pcr on input line 1.
+
+ (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pcr.fd
+File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
+)
 LaTeX Font Info:    Font shape `T1/phv/b/n' will be
 (Font)              scaled to size 12.9599pt on input line 1.
-) [1
+LaTeX Font Info:    Trying to load font information for TS1+phv on input line 4
+.
 
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1phv.fd
+File: ts1phv.fd 2001/06/04 scalable font definitions for TS1/phv.
+)
+LaTeX Font Info:    Font shape `TS1/phv/m/n' will be
+(Font)              scaled to size 8.99994pt on input line 4.
+) [1
 
 ] [2
 
 ]
 Chapter 2.
-(./hierarchy.tex [3]) [4]
-Chapter 3.
-(./annotated.tex [5
+(./namespaces.tex) [3] [4
 
-]) [6]
+]
+Chapter 3.
+(./hierarchy.tex [5]) [6]
 Chapter 4.
+(./annotated.tex [7
+
+]) [8]
+Chapter 5.
 (./namespaceat.tex
 LaTeX Font Info:    Font shape `T1/phv/b/n' will be
 (Font)              scaled to size 10.79993pt on input line 3.
-LaTeX Font Info:    Trying to load font information for TS1+phv on input line 6
-.
- (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1phv.fd
-File: ts1phv.fd 2001/06/04 scalable font definitions for TS1/phv.
-)
-LaTeX Font Info:    Font shape `TS1/phv/m/n' will be
-(Font)              scaled to size 8.99994pt on input line 6.
 LaTeX Font Info:    Font shape `T1/phv/m/n' will be
 (Font)              scaled to size 7.19995pt on input line 25.
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 25
-.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1pcr.fd
-File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
-))
-(./namespaceat_1_1collective.tex)
-(./namespaceat_1_1collective_1_1wake__functions.tex [7
+) (./namespaceat_1_1collective.tex)
+(./namespaceat_1_1collective_1_1wake__functions.tex [9
 
 ]
 LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <8> not available
 (Font)              Font shape `T1/pcr/m/sl' tried instead on input line 26.
 LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <7> not available
 (Font)              Font shape `T1/pcr/m/sl' tried instead on input line 45.
- [8])
+ [10])
 (./namespaceat_1_1collective_1_1wake__object.tex)
-(./namespaceat_1_1integrators.tex) (./namespaceat_1_1lattice.tex [9])
-(./namespaceat_1_1lattice_1_1elements.tex [10])
-(./namespaceat_1_1lattice_1_1lattice__object.tex [11])
-(./namespaceat_1_1lattice_1_1options.tex [12])
-(./namespaceat_1_1lattice_1_1utils.tex [13] [14] [15] [16] [17] [18] [19]
-[20]) (./namespaceat_1_1load.tex) (./namespaceat_1_1load_1_1allfiles.tex
-[21]
+(./namespaceat_1_1integrators.tex) (./namespaceat_1_1lattice.tex [11])
+(./namespaceat_1_1lattice_1_1elements.tex [12])
+(./namespaceat_1_1lattice_1_1lattice__object.tex [13])
+(./namespaceat_1_1lattice_1_1options.tex [14])
+(./namespaceat_1_1lattice_1_1utils.tex [15] [16] [17] [18] [19] [20] [21]
+[22]) (./namespaceat_1_1load.tex) (./namespaceat_1_1load_1_1allfiles.tex
+[23]
 LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 5
 7.
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
@@ -928,101 +936,1177 @@ File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
 )
 LaTeX Font Info:    Font shape `TS1/pcr/m/it' in size <8> not available
 (Font)              Font shape `TS1/pcr/m/sl' tried instead on input line 57.
- [22])
-(./namespaceat_1_1load_1_1elegant.tex [23] [24])
-(./namespaceat_1_1load_1_1matfile.tex [25] [26] [27])
-(./namespaceat_1_1load_1_1reprfile.tex [28])
-(./namespaceat_1_1load_1_1tracy.tex [29]) (./namespaceat_1_1load_1_1utils.tex
-[30] [31] [32]) (./namespaceat_1_1matching.tex)
-(./namespaceat_1_1matching_1_1globalfit.tex [33]) (./namespaceat_1_1physics.tex
-[34]) (./namespaceat_1_1physics_1_1amat.tex [35] [36])
-(./namespaceat_1_1physics_1_1fastring.tex [37])
-(./namespaceat_1_1physics_1_1harmonic__analysis.tex [38])
-(./namespaceat_1_1physics_1_1linear.tex [39] [40] [41] [42] [43] [44] [45]
-[46] [47]) (./namespaceat_1_1physics_1_1matrix.tex [48] [49] [50])
-(./namespaceat_1_1physics_1_1nonlinear.tex [51])
-(./namespaceat_1_1physics_1_1orbit.tex [52] [53] [54] [55] [56])
-(./namespaceat_1_1physics_1_1radiation.tex [57] [58] [59])
-(./namespaceat_1_1plot.tex) (./namespaceat_1_1plot_1_1generic.tex [60])
-(./namespaceat_1_1plot_1_1specific.tex [61] [62] [63])
-(./namespaceat_1_1plot_1_1standalone.tex [64] [65])
-(./namespaceat_1_1plot_1_1synopt.tex [66]) (./namespaceat_1_1tracking.tex)
-(./namespaceat_1_1tracking_1_1particles.tex [67])
-(./namespaceat_1_1tracking_1_1patpass.tex [68] [69]) [70]
-Chapter 5.
-(./classat_1_1lattice_1_1options_1_1__Dst.tex)
-(./classat_1_1lattice_1_1elements_1_1Aperture.tex [71
+ [24])
+(./namespaceat_1_1load_1_1elegant.tex [25] [26])
+(./namespaceat_1_1load_1_1matfile.tex [27] [28] [29])
+(./namespaceat_1_1load_1_1reprfile.tex [30])
+(./namespaceat_1_1load_1_1tracy.tex [31]) (./namespaceat_1_1load_1_1utils.tex
+[32] [33] [34]) (./namespaceat_1_1matching.tex)
+(./namespaceat_1_1matching_1_1globalfit.tex [35]) (./namespaceat_1_1physics.tex
+[36]) (./namespaceat_1_1physics_1_1amat.tex [37] [38])
+(./namespaceat_1_1physics_1_1fastring.tex [39])
+(./namespaceat_1_1physics_1_1harmonic__analysis.tex [40])
+(./namespaceat_1_1physics_1_1linear.tex [41] [42] [43] [44] [45] [46] [47]
+[48] [49]) (./namespaceat_1_1physics_1_1matrix.tex [50] [51] [52])
+(./namespaceat_1_1physics_1_1nonlinear.tex [53])
+(./namespaceat_1_1physics_1_1orbit.tex [54] [55] [56] [57] [58])
+(./namespaceat_1_1physics_1_1radiation.tex [59] [60] [61])
+(./namespaceat_1_1plot.tex) (./namespaceat_1_1plot_1_1generic.tex [62])
+(./namespaceat_1_1plot_1_1specific.tex [63] [64] [65])
+(./namespaceat_1_1plot_1_1standalone.tex [66] [67])
+(./namespaceat_1_1plot_1_1synopt.tex [68]) (./namespaceat_1_1tracking.tex)
+(./namespaceat_1_1tracking_1_1particles.tex [69])
+(./namespaceat_1_1tracking_1_1patpass.tex [70] [71]) [72]
+Chapter 6.
+(./classat_1_1lattice_1_1options_1_1__Dst.tex <./classat_1_1lattice_1_1options_
+1_1__Dst__inherit__graph.pdf
 
-])
-(./classat_1_1lattice_1_1utils_1_1AtError.tex)
-(./classat_1_1lattice_1_1utils_1_1AtWarning.tex)
-(./classat_1_1lattice_1_1elements_1_1Collimator.tex [72])
-(./classat_1_1matching_1_1matching_1_1Constraints.tex [73] [74] [75])
-(./classat_1_1lattice_1_1elements_1_1Corrector.tex)
-(./classat_1_1lattice_1_1elements_1_1Dipole.tex [76] [77])
-(./classat_1_1lattice_1_1elements_1_1Drift.tex [78])
-(./classat_1_1lattice_1_1elements_1_1Element.tex [79] [80])
-(./classat_1_1matching_1_1matching_1_1ElementConstraints.tex [81]
-Underfull \hbox (badness 10000) in paragraph at lines 56--57
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1options_1_1__Dst__inheri
+t__graph.pdf): PDF inclusion: multiple pdfs with page group included in a singl
+e page
+>
+<classat_1_1lattice_1_1options_1_1__Dst__inherit__graph.pdf, id=3133, 204.765pt
+ x 156.585pt>
+File: classat_1_1lattice_1_1options_1_1__Dst__inherit__graph.pdf Graphic file (
+type pdf)
+<use classat_1_1lattice_1_1options_1_1__Dst__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1options_1_1__Dst__inherit__graph
+.pdf  used on input line 9.
+(pdftex.def)             Requested size: 204.0pt x 156.00879pt.
+ <./classat_1_1lattice_1_1options_1_1__Dst__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1options_1_1__Dst__coll__
+graph.pdf): PDF inclusion: multiple pdfs with page group included in a single p
+age
+>
+<classat_1_1lattice_1_1options_1_1__Dst__coll__graph.pdf, id=3141, 204.765pt x 
+156.585pt>
+File: classat_1_1lattice_1_1options_1_1__Dst__coll__graph.pdf Graphic file (typ
+e pdf)
+<use classat_1_1lattice_1_1options_1_1__Dst__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1options_1_1__Dst__coll__graph.pd
+f  used on input line 18.
+(pdftex.def)             Requested size: 204.0pt x 156.00879pt.
+ [73
+
+]) (./classat_1_1lattice_1_1elements_1_1Aperture.tex <./classat_1_1lattice_1_1e
+lements_1_1Aperture__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Aperture__inherit__graph.pdf, id=3159, 234.8
+775pt x 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1Aperture__inherit__graph.pdf Graphic fi
+le (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Aperture__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Aperture__inherit__g
+raph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 234.0pt x 211.99895pt.
+ <./classat_1_1lattice_1_1elements_1_1Aperture__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Aperture__co
+ll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sing
+le page
+>
+<classat_1_1lattice_1_1elements_1_1Aperture__coll__graph.pdf, id=3167, 234.8775
+pt x 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1Aperture__coll__graph.pdf Graphic file 
+(type pdf)
+<use classat_1_1lattice_1_1elements_1_1Aperture__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Aperture__coll__grap
+h.pdf  used on input line 18.
+(pdftex.def)             Requested size: 234.0pt x 211.99895pt.
+ [74]) (./classat_1_1lattice_1_1utils_1_1AtError.tex <./classat_1_1lattice_1_1u
+tils_1_1AtError__inherit__graph.pdf>
+<classat_1_1lattice_1_1utils_1_1AtError__inherit__graph.pdf, id=3187, 201.75375
+pt x 156.585pt>
+File: classat_1_1lattice_1_1utils_1_1AtError__inherit__graph.pdf Graphic file (
+type pdf)
+<use classat_1_1lattice_1_1utils_1_1AtError__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1utils_1_1AtError__inherit__graph
+.pdf  used on input line 9.
+(pdftex.def)             Requested size: 201.0pt x 156.00162pt.
+ [75] <./classat_1_1lattice_1_1utils_1_1AtError__coll__graph.pdf>
+<classat_1_1lattice_1_1utils_1_1AtError__coll__graph.pdf, id=3207, 201.75375pt 
+x 156.585pt>
+File: classat_1_1lattice_1_1utils_1_1AtError__coll__graph.pdf Graphic file (typ
+e pdf)
+<use classat_1_1lattice_1_1utils_1_1AtError__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1utils_1_1AtError__coll__graph.pd
+f  used on input line 18.
+(pdftex.def)             Requested size: 201.0pt x 156.00162pt.
+) (./classat_1_1lattice_1_1utils_1_1AtWarning.tex <./classat_1_1lattice_1_1util
+s_1_1AtWarning__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1utils_1_1AtWarning__inhe
+rit__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sin
+gle page
+>
+<classat_1_1lattice_1_1utils_1_1AtWarning__inherit__graph.pdf, id=3215, 217.813
+75pt x 156.585pt>
+File: classat_1_1lattice_1_1utils_1_1AtWarning__inherit__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1utils_1_1AtWarning__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1utils_1_1AtWarning__inherit__gra
+ph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 217.0pt x 155.99922pt.
+
+Underfull \vbox (badness 7133) has occurred while \output is active []
+
+ [76] <./classat_1_1lattice_1_1utils_1_1AtWarning__coll__graph.pdf>
+<classat_1_1lattice_1_1utils_1_1AtWarning__coll__graph.pdf, id=3230, 217.81375p
+t x 156.585pt>
+File: classat_1_1lattice_1_1utils_1_1AtWarning__coll__graph.pdf Graphic file (t
+ype pdf)
+<use classat_1_1lattice_1_1utils_1_1AtWarning__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1utils_1_1AtWarning__coll__graph.
+pdf  used on input line 18.
+(pdftex.def)             Requested size: 217.0pt x 155.99922pt.
+)
+(./classat_1_1lattice_1_1elements_1_1Collimator.tex <./classat_1_1lattice_1_1el
+ements_1_1Collimator__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Collimator__
+inherit__graph.pdf): PDF inclusion: multiple pdfs with page group included in a
+ single page
+>
+<classat_1_1lattice_1_1elements_1_1Collimator__inherit__graph.pdf, id=3238, 243
+.91125pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Collimator__inherit__graph.pdf Graphic 
+file (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Collimator__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Collimator__inherit_
+_graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 243.0pt x 335.0035pt.
+
+Underfull \vbox (badness 7133) has occurred while \output is active []
+
+ [77] <./classat_1_1lattice_1_1elements_1_1Collimator__coll__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Collimator__coll__graph.pdf, id=3254, 243.91
+125pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Collimator__coll__graph.pdf Graphic fil
+e (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Collimator__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Collimator__coll__gr
+aph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 243.0pt x 335.0035pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [78]
+[79]) (./classat_1_1matching_1_1matching_1_1Constraints.tex <./classat_1_1match
+ing_1_1matching_1_1Constraints__inherit__graph.pdf>
+<classat_1_1matching_1_1matching_1_1Constraints__inherit__graph.pdf, id=3280, 7
+58.835pt x 209.78375pt>
+File: classat_1_1matching_1_1matching_1_1Constraints__inherit__graph.pdf Graphi
+c file (type pdf)
+<use classat_1_1matching_1_1matching_1_1Constraints__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1Constraints__inheri
+t__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 96.76097pt.
+ <./classat_1_1matching_1_1matching_1_1Constraints__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1Constraints
+__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a 
+single page
+>
+<classat_1_1matching_1_1matching_1_1Constraints__coll__graph.pdf, id=3288, 262.
+9825pt x 156.585pt>
+File: classat_1_1matching_1_1matching_1_1Constraints__coll__graph.pdf Graphic f
+ile (type pdf)
+<use classat_1_1matching_1_1matching_1_1Constraints__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1Constraints__coll__
+graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 262.0pt x 156.0064pt.
+ [80] [81] [82]) (./classat_1_1lattice_1_1elements_1_1Corrector.tex <./classat_
+1_1lattice_1_1elements_1_1Corrector__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Corrector__i
+nherit__graph.pdf): PDF inclusion: multiple pdfs with page group included in a 
+single page
+>
+<classat_1_1lattice_1_1elements_1_1Corrector__inherit__graph.pdf, id=3337, 237.
+88875pt x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1Corrector__inherit__graph.pdf Graphic f
+ile (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Corrector__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Corrector__inherit__
+graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 237.0pt x 279.01143pt.
+ <./classat_1_1lattice_1_1elements_1_1Corrector__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Corrector__c
+oll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sin
+gle page
+>
+<classat_1_1lattice_1_1elements_1_1Corrector__coll__graph.pdf, id=3345, 237.888
+75pt x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1Corrector__coll__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Corrector__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Corrector__coll__gra
+ph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 237.0pt x 279.01143pt.
+ [83]) (./classat_1_1lattice_1_1elements_1_1Dipole.tex <./classat_1_1lattice_1_
+1elements_1_1Dipole__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Dipole__inherit__graph.pdf, id=3361, 367.372
+5pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Dipole__inherit__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Dipole__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Dipole__inherit__gra
+ph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+ [84] <./classat_1_1lattice_1_1elements_1_1Dipole__coll__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Dipole__coll__graph.pdf, id=3380, 367.3725pt
+ x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Dipole__coll__graph.pdf Graphic file (t
+ype pdf)
+<use classat_1_1lattice_1_1elements_1_1Dipole__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Dipole__coll__graph.
+pdf  used on input line 18.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [85]
+[86]) (./classat_1_1lattice_1_1elements_1_1Drift.tex <./classat_1_1lattice_1_1e
+lements_1_1Drift__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Drift__inherit__graph.pdf, id=3409, 243.9112
+5pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Drift__inherit__graph.pdf Graphic file 
+(type pdf)
+<use classat_1_1lattice_1_1elements_1_1Drift__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Drift__inherit__grap
+h.pdf  used on input line 9.
+(pdftex.def)             Requested size: 243.0pt x 335.0035pt.
+ [87] <./classat_1_1lattice_1_1elements_1_1Drift__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Drift__coll_
+_graph.pdf): PDF inclusion: multiple pdfs with page group included in a single 
+page
+>
+<classat_1_1lattice_1_1elements_1_1Drift__coll__graph.pdf, id=3423, 232.87pt x 
+280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1Drift__coll__graph.pdf Graphic file (ty
+pe pdf)
+<use classat_1_1lattice_1_1elements_1_1Drift__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Drift__coll__graph.p
+df  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 279.01143pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [88]
+[89]) (./classat_1_1lattice_1_1elements_1_1Element.tex <./classat_1_1lattice_1_
+1elements_1_1Element__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Element__inherit__graph.pdf, id=3451, 925.45
+75pt x 412.54124pt>
+File: classat_1_1lattice_1_1elements_1_1Element__inherit__graph.pdf Graphic fil
+e (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Element__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Element__inherit__gr
+aph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 156.0182pt.
+ <./classat_1_1lattice_1_1elements_1_1Element__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Element__col
+l__graph.pdf): PDF inclusion: multiple pdfs with page group included in a singl
+e page
+>
+<classat_1_1lattice_1_1elements_1_1Element__coll__graph.pdf, id=3459, 232.87pt 
+x 156.585pt>
+File: classat_1_1lattice_1_1elements_1_1Element__coll__graph.pdf Graphic file (
+type pdf)
+<use classat_1_1lattice_1_1elements_1_1Element__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Element__coll__graph
+.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 156.0064pt.
+ [90] [91] [92]) (./classat_1_1matching_1_1matching_1_1ElementConstraints.tex <
+./classat_1_1matching_1_1matching_1_1ElementConstraints__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1ElementCons
+traints__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group incl
+uded in a single page
+>
+<classat_1_1matching_1_1matching_1_1ElementConstraints__inherit__graph.pdf, id=
+3508, 758.835pt x 209.78375pt>
+File: classat_1_1matching_1_1matching_1_1ElementConstraints__inherit__graph.pdf
+ Graphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1ElementConstraints__inherit__graph.pdf>
+
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1ElementConstraints_
+_inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 96.76097pt.
+ <./classat_1_1matching_1_1matching_1_1ElementConstraints__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1ElementCons
+traints__coll__graph.pdf): PDF inclusion: multiple pdfs with page group include
+d in a single page
+>
+<classat_1_1matching_1_1matching_1_1ElementConstraints__coll__graph.pdf, id=351
+6, 262.9825pt x 223.83624pt>
+File: classat_1_1matching_1_1matching_1_1ElementConstraints__coll__graph.pdf Gr
+aphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1ElementConstraints__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1ElementConstraints_
+_coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 262.0pt x 223.00914pt.
+ [93]
+Underfull \hbox (badness 10000) in paragraph at lines 66--67
 []\T1/phv/m/n/10 Reimplemented in [], [], and
  []
 
-[82]) (./classat_1_1matching_1_1matching_1_1ElementVariable.tex)
-(./classat_1_1physics_1_1energy__loss_1_1ELossMethod.tex [83])
-(./classat_1_1matching_1_1matching_1_1EnvelopeConstraints.tex [84] [85])
-(./classat_1_1lattice_1_1cavity__access_1_1Frf.tex)
-(./classat_1_1acceptance_1_1boundary_1_1GridMode.tex)
-(./classat_1_1collective_1_1haissinski_1_1Haissinski.tex [86] [87] [88]
-[89]) (./classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis.tex)
-(./classat_1_1lattice_1_1lattice__object_1_1Lattice.tex [90] [91] [92] [93]
-[94] [95] [96] [97] [98] [99])
-(./classat_1_1matching_1_1matching_1_1LinoptConstraints.tex [100] [101])
-(./classat_1_1lattice_1_1elements_1_1LongElement.tex [102])
-(./classat_1_1collective_1_1wake__elements_1_1LongResonatorElement.tex)
-(./classat_1_1lattice_1_1elements_1_1M66.tex [103])
-(./classat_1_1lattice_1_1elements_1_1Marker.tex)
-(./classat_1_1lattice_1_1elements_1_1Monitor.tex [104])
-(./classat_1_1lattice_1_1elements_1_1Multipole.tex [105])
-(./classat_1_1lattice_1_1elements_1_1Octupole.tex [106])
-(./classat_1_1matching_1_1matching_1_1OrbitConstraints.tex [107] [108])
-(./classat_1_1lattice_1_1particle__object_1_1Particle.tex)
-(./classat_1_1lattice_1_1elements_1_1Quadrupole.tex [109])
-(./classat_1_1collective_1_1wake__elements_1_1ResonatorElement.tex [110])
-(./classat_1_1collective_1_1wake__elements_1_1ResWallElement.tex [111])
-(./classat_1_1lattice_1_1elements_1_1RFCavity.tex [112])
-(./classat_1_1load_1_1utils_1_1RingParam.tex)
-(./classat_1_1physics_1_1ring__parameters_1_1RingParameters.tex [113] [114])
-(./classat_1_1lattice_1_1elements_1_1Sextupole.tex [115])
-(./classat_1_1lattice_1_1elements_1_1ThinMultipole.tex [116])
-(./classat_1_1matching_1_1matching_1_1Variable.tex [117])
-(./classat_1_1collective_1_1wake__object_1_1Wake.tex [118] [119] [120])
-(./classat_1_1collective_1_1wake__object_1_1WakeComponent.tex)
-(./classat_1_1collective_1_1wake__elements_1_1WakeElement.tex [121])
-(./classat_1_1collective_1_1wake__object_1_1WakeType.tex [122])
-(./classat_1_1lattice_1_1elements_1_1Wiggler.tex [123]) [124] (./refman.ind
+[94]) (./classat_1_1matching_1_1matching_1_1ElementVariable.tex <./classat_1_1m
+atching_1_1matching_1_1ElementVariable__inherit__graph.pdf>
+<classat_1_1matching_1_1matching_1_1ElementVariable__inherit__graph.pdf, id=355
+2, 247.92625pt x 223.83624pt>
+File: classat_1_1matching_1_1matching_1_1ElementVariable__inherit__graph.pdf Gr
+aphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1ElementVariable__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1ElementVariable__in
+herit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 247.0pt x 223.00232pt.
+ <./classat_1_1matching_1_1matching_1_1ElementVariable__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1ElementVari
+able__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included i
+n a single page
+>
+<classat_1_1matching_1_1matching_1_1ElementVariable__coll__graph.pdf, id=3560, 
+247.92625pt x 223.83624pt>
+File: classat_1_1matching_1_1matching_1_1ElementVariable__coll__graph.pdf Graph
+ic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1ElementVariable__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1ElementVariable__co
+ll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 247.0pt x 223.00232pt.
+ [95]) (./classat_1_1physics_1_1energy__loss_1_1ELossMethod.tex <./classat_1_1p
+hysics_1_1energy__loss_1_1ELossMethod__inherit__graph.pdf>
+<classat_1_1physics_1_1energy__loss_1_1ELossMethod__inherit__graph.pdf, id=3578
+, 238.8925pt x 167.62625pt>
+File: classat_1_1physics_1_1energy__loss_1_1ELossMethod__inherit__graph.pdf Gra
+phic file (type pdf)
+<use classat_1_1physics_1_1energy__loss_1_1ELossMethod__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1physics_1_1energy__loss_1_1ELossMethod__inh
+erit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 238.0pt x 166.99916pt.
+ [96] <./classat_1_1physics_1_1energy__loss_1_1ELossMethod__coll__graph.pdf>
+<classat_1_1physics_1_1energy__loss_1_1ELossMethod__coll__graph.pdf, id=3597, 2
+38.8925pt x 167.62625pt>
+File: classat_1_1physics_1_1energy__loss_1_1ELossMethod__coll__graph.pdf Graphi
+c file (type pdf)
+<use classat_1_1physics_1_1energy__loss_1_1ELossMethod__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1physics_1_1energy__loss_1_1ELossMethod__col
+l__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 238.0pt x 166.99916pt.
+)
+(./classat_1_1matching_1_1matching_1_1EnvelopeConstraints.tex <./classat_1_1mat
+ching_1_1matching_1_1EnvelopeConstraints__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1EnvelopeCon
+straints__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group inc
+luded in a single page
+>
+<classat_1_1matching_1_1matching_1_1EnvelopeConstraints__inherit__graph.pdf, id
+=3605, 262.9825pt x 291.0875pt>
+File: classat_1_1matching_1_1matching_1_1EnvelopeConstraints__inherit__graph.pd
+f Graphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1EnvelopeConstraints__inherit__graph.pdf
+>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1EnvelopeConstraints
+__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 262.0pt x 290.0119pt.
+ [97] <./classat_1_1matching_1_1matching_1_1EnvelopeConstraints__coll__graph.pd
+f>
+<classat_1_1matching_1_1matching_1_1EnvelopeConstraints__coll__graph.pdf, id=36
+23, 262.9825pt x 291.0875pt>
+File: classat_1_1matching_1_1matching_1_1EnvelopeConstraints__coll__graph.pdf G
+raphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1EnvelopeConstraints__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1EnvelopeConstraints
+__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 262.0pt x 290.0119pt.
+ [98] [99]) (./classat_1_1lattice_1_1cavity__access_1_1Frf.tex <./classat_1_1la
+ttice_1_1cavity__access_1_1Frf__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1cavity__access_1_1Frf__i
+nherit__graph.pdf): PDF inclusion: multiple pdfs with page group included in a 
+single page
+>
+<classat_1_1lattice_1_1cavity__access_1_1Frf__inherit__graph.pdf, id=3650, 227.
+85126pt x 156.585pt>
+File: classat_1_1lattice_1_1cavity__access_1_1Frf__inherit__graph.pdf Graphic f
+ile (type pdf)
+<use classat_1_1lattice_1_1cavity__access_1_1Frf__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1cavity__access_1_1Frf__inherit__
+graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 227.0pt x 156.004pt.
+ [100] <./classat_1_1lattice_1_1cavity__access_1_1Frf__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1cavity__access_1_1Frf__c
+oll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sin
+gle page
+>
+<classat_1_1lattice_1_1cavity__access_1_1Frf__coll__graph.pdf, id=3663, 227.851
+26pt x 156.585pt>
+File: classat_1_1lattice_1_1cavity__access_1_1Frf__coll__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1cavity__access_1_1Frf__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1cavity__access_1_1Frf__coll__gra
+ph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 227.0pt x 156.004pt.
+) (./classat_1_1acceptance_1_1boundary_1_1GridMode.tex <./classat_1_1acceptance
+_1_1boundary_1_1GridMode__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1acceptance_1_1boundary_1_1GridMode_
+_inherit__graph.pdf): PDF inclusion: multiple pdfs with page group included in 
+a single page
+>
+<classat_1_1acceptance_1_1boundary_1_1GridMode__inherit__graph.pdf, id=3671, 26
+2.9825pt x 156.585pt>
+File: classat_1_1acceptance_1_1boundary_1_1GridMode__inherit__graph.pdf Graphic
+ file (type pdf)
+<use classat_1_1acceptance_1_1boundary_1_1GridMode__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1acceptance_1_1boundary_1_1GridMode__inherit
+__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 262.0pt x 156.0064pt.
+ [101] <./classat_1_1acceptance_1_1boundary_1_1GridMode__coll__graph.pdf>
+<classat_1_1acceptance_1_1boundary_1_1GridMode__coll__graph.pdf, id=3689, 262.9
+825pt x 156.585pt>
+File: classat_1_1acceptance_1_1boundary_1_1GridMode__coll__graph.pdf Graphic fi
+le (type pdf)
+<use classat_1_1acceptance_1_1boundary_1_1GridMode__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1acceptance_1_1boundary_1_1GridMode__coll__g
+raph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 262.0pt x 156.0064pt.
+)
+(./classat_1_1collective_1_1haissinski_1_1Haissinski.tex <./classat_1_1collecti
+ve_1_1haissinski_1_1Haissinski__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1haissinski_1_1Haissin
+ski__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group included
+ in a single page
+>
+<classat_1_1collective_1_1haissinski_1_1Haissinski__inherit__graph.pdf, id=3697
+, 211.79124pt x 167.62625pt>
+File: classat_1_1collective_1_1haissinski_1_1Haissinski__inherit__graph.pdf Gra
+phic file (type pdf)
+<use classat_1_1collective_1_1haissinski_1_1Haissinski__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1haissinski_1_1Haissinski__inh
+erit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 211.0pt x 167.00684pt.
+ [102] <./classat_1_1collective_1_1haissinski_1_1Haissinski__coll__graph.pdf>
+<classat_1_1collective_1_1haissinski_1_1Haissinski__coll__graph.pdf, id=3716, 2
+11.79124pt x 167.62625pt>
+File: classat_1_1collective_1_1haissinski_1_1Haissinski__coll__graph.pdf Graphi
+c file (type pdf)
+<use classat_1_1collective_1_1haissinski_1_1Haissinski__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1haissinski_1_1Haissinski__col
+l__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 211.0pt x 167.00684pt.
+
+[103] [104] [105])
+(./classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis.tex <./classat_
+1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1physics_1_1harmonic__analysis_1_1Ha
+rmonicAnalysis__inherit__graph.pdf): PDF inclusion: multiple pdfs with page gro
+up included in a single page
+>
+<classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__inherit__graph.p
+df, id=3802, 234.8775pt x 167.62625pt>
+File: classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__inherit__gr
+aph.pdf Graphic file (type pdf)
+<use classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__inherit__gra
+ph.pdf>
+Package pdftex.def Info: classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAn
+alysis__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 234.0pt x 166.99916pt.
+ [106] <./classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__coll__g
+raph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1physics_1_1harmonic__analysis_1_1Ha
+rmonicAnalysis__coll__graph.pdf): PDF inclusion: multiple pdfs with page group 
+included in a single page
+>
+<classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__coll__graph.pdf,
+ id=3814, 234.8775pt x 167.62625pt>
+File: classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__coll__graph
+.pdf Graphic file (type pdf)
+<use classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis__coll__graph.
+pdf>
+Package pdftex.def Info: classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAn
+alysis__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 234.0pt x 166.99916pt.
+ [107]) (./classat_1_1lattice_1_1lattice__object_1_1Lattice.tex <./classat_1_1l
+attice_1_1lattice__object_1_1Lattice__inherit__graph.pdf>
+<classat_1_1lattice_1_1lattice__object_1_1Lattice__inherit__graph.pdf, id=3830,
+ 174.6525pt x 167.62625pt>
+File: classat_1_1lattice_1_1lattice__object_1_1Lattice__inherit__graph.pdf Grap
+hic file (type pdf)
+<use classat_1_1lattice_1_1lattice__object_1_1Lattice__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1lattice__object_1_1Lattice__inhe
+rit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 174.0pt x 167.0094pt.
+ <./classat_1_1lattice_1_1lattice__object_1_1Lattice__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1lattice__object_1_1Latti
+ce__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included in 
+a single page
+>
+<classat_1_1lattice_1_1lattice__object_1_1Lattice__coll__graph.pdf, id=3838, 17
+4.6525pt x 167.62625pt>
+File: classat_1_1lattice_1_1lattice__object_1_1Lattice__coll__graph.pdf Graphic
+ file (type pdf)
+<use classat_1_1lattice_1_1lattice__object_1_1Lattice__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1lattice__object_1_1Lattice__coll
+__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 174.0pt x 167.0094pt.
+ [108] [109] [110] [111] [112] [113] [114] [115] [116])
+(./classat_1_1matching_1_1matching_1_1LinoptConstraints.tex <./classat_1_1match
+ing_1_1matching_1_1LinoptConstraints__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1LinoptConst
+raints__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group inclu
+ded in a single page
+>
+<classat_1_1matching_1_1matching_1_1LinoptConstraints__inherit__graph.pdf, id=3
+970, 262.9825pt x 291.0875pt>
+File: classat_1_1matching_1_1matching_1_1LinoptConstraints__inherit__graph.pdf 
+Graphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1LinoptConstraints__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1LinoptConstraints__
+inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 262.0pt x 290.0119pt.
+ <./classat_1_1matching_1_1matching_1_1LinoptConstraints__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1LinoptConst
+raints__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included
+ in a single page
+>
+<classat_1_1matching_1_1matching_1_1LinoptConstraints__coll__graph.pdf, id=3978
+, 262.9825pt x 291.0875pt>
+File: classat_1_1matching_1_1matching_1_1LinoptConstraints__coll__graph.pdf Gra
+phic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1LinoptConstraints__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1LinoptConstraints__
+coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 262.0pt x 290.0119pt.
+ [117] [118] [119]) (./classat_1_1lattice_1_1elements_1_1LongElement.tex <./cla
+ssat_1_1lattice_1_1elements_1_1LongElement__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1LongElement_
+_inherit__graph.pdf): PDF inclusion: multiple pdfs with page group included in 
+a single page
+>
+<classat_1_1lattice_1_1elements_1_1LongElement__inherit__graph.pdf, id=4013, 88
+7.315pt x 252.945pt>
+File: classat_1_1lattice_1_1elements_1_1LongElement__inherit__graph.pdf Graphic
+ file (type pdf)
+<use classat_1_1lattice_1_1elements_1_1LongElement__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1LongElement__inherit
+__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 99.7713pt.
+ <./classat_1_1lattice_1_1elements_1_1LongElement__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1LongElement_
+_coll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a s
+ingle page
+>
+<classat_1_1lattice_1_1elements_1_1LongElement__coll__graph.pdf, id=4021, 232.8
+7pt x 223.83624pt>
+File: classat_1_1lattice_1_1elements_1_1LongElement__coll__graph.pdf Graphic fi
+le (type pdf)
+<use classat_1_1lattice_1_1elements_1_1LongElement__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1LongElement__coll__g
+raph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 223.00914pt.
+ [120] [121])
+(./classat_1_1collective_1_1wake__elements_1_1LongResonatorElement.tex <./class
+at_1_1collective_1_1wake__elements_1_1LongResonatorElement__inherit__graph.pdf>
+<classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__inherit__grap
+h.pdf, id=4048, 264.99pt x 358.33875pt>
+File: classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__inherit_
+_graph.pdf Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__inherit__
+graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1LongResonat
+orElement__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 264.0pt x 357.02559pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [122] <./classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__coll
+__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1wake__elements_1_1Lon
+gResonatorElement__coll__graph.pdf): PDF inclusion: multiple pdfs with page gro
+up included in a single page
+>
+<classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__coll__graph.p
+df, id=4060, 264.99pt x 358.33875pt>
+File: classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__coll__gr
+aph.pdf Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1LongResonatorElement__coll__gra
+ph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1LongResonat
+orElement__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 264.0pt x 357.02559pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [123])
+(./classat_1_1lattice_1_1elements_1_1M66.tex <./classat_1_1lattice_1_1elements_
+1_1M66__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1M66__inherit__graph.pdf, id=4075, 232.87pt x
+ 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1M66__inherit__graph.pdf Graphic file (t
+ype pdf)
+<use classat_1_1lattice_1_1elements_1_1M66__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1M66__inherit__graph.
+pdf  used on input line 9.
+(pdftex.def)             Requested size: 232.0pt x 212.00868pt.
+ [124] <./classat_1_1lattice_1_1elements_1_1M66__coll__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1M66__coll__graph.pdf, id=4093, 232.87pt x 21
+2.795pt>
+File: classat_1_1lattice_1_1elements_1_1M66__coll__graph.pdf Graphic file (type
+ pdf)
+<use classat_1_1lattice_1_1elements_1_1M66__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1M66__coll__graph.pdf
+  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 212.00868pt.
+ [125]) (./classat_1_1lattice_1_1elements_1_1Marker.tex <./classat_1_1lattice_1
+_1elements_1_1Marker__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Marker__inherit__graph.pdf, id=4113, 232.87p
+t x 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1Marker__inherit__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Marker__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Marker__inherit__gra
+ph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 232.0pt x 212.00868pt.
+ <./classat_1_1lattice_1_1elements_1_1Marker__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Marker__coll
+__graph.pdf): PDF inclusion: multiple pdfs with page group included in a single
+ page
+>
+<classat_1_1lattice_1_1elements_1_1Marker__coll__graph.pdf, id=4121, 232.87pt x
+ 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1Marker__coll__graph.pdf Graphic file (t
+ype pdf)
+<use classat_1_1lattice_1_1elements_1_1Marker__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Marker__coll__graph.
+pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 212.00868pt.
+ [126]) (./classat_1_1lattice_1_1elements_1_1Monitor.tex <./classat_1_1lattice_
+1_1elements_1_1Monitor__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Monitor__inherit__graph.pdf, id=4137, 232.87
+pt x 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1Monitor__inherit__graph.pdf Graphic fil
+e (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Monitor__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Monitor__inherit__gr
+aph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 232.0pt x 212.00868pt.
+ <./classat_1_1lattice_1_1elements_1_1Monitor__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Monitor__col
+l__graph.pdf): PDF inclusion: multiple pdfs with page group included in a singl
+e page
+>
+<classat_1_1lattice_1_1elements_1_1Monitor__coll__graph.pdf, id=4145, 232.87pt 
+x 212.795pt>
+File: classat_1_1lattice_1_1elements_1_1Monitor__coll__graph.pdf Graphic file (
+type pdf)
+<use classat_1_1lattice_1_1elements_1_1Monitor__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Monitor__coll__graph
+.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 212.00868pt.
+ [127]) (./classat_1_1lattice_1_1elements_1_1Multipole.tex <./classat_1_1lattic
+e_1_1elements_1_1Multipole__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Multipole__inherit__graph.pdf, id=4161, 887.
+315pt x 214.8025pt>
+File: classat_1_1lattice_1_1elements_1_1Multipole__inherit__graph.pdf Graphic f
+ile (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Multipole__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Multipole__inherit__
+graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 84.72641pt.
+ <./classat_1_1lattice_1_1elements_1_1Multipole__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Multipole__c
+oll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sin
+gle page
+>
+<classat_1_1lattice_1_1elements_1_1Multipole__coll__graph.pdf, id=4169, 367.372
+5pt x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1Multipole__coll__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Multipole__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Multipole__coll__gra
+ph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 350.0pt x 266.82013pt.
+ [128]) (./classat_1_1lattice_1_1elements_1_1Octupole.tex <./classat_1_1lattice
+_1_1elements_1_1Octupole__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Octupole__inherit__graph.pdf, id=4188, 367.3
+725pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Octupole__inherit__graph.pdf Graphic fi
+le (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Octupole__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Octupole__inherit__g
+raph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+ [129] <./classat_1_1lattice_1_1elements_1_1Octupole__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Octupole__co
+ll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sing
+le page
+>
+<classat_1_1lattice_1_1elements_1_1Octupole__coll__graph.pdf, id=4204, 367.3725
+pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Octupole__coll__graph.pdf Graphic file 
+(type pdf)
+<use classat_1_1lattice_1_1elements_1_1Octupole__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Octupole__coll__grap
+h.pdf  used on input line 18.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [130])
+(./classat_1_1matching_1_1matching_1_1OrbitConstraints.tex <./classat_1_1matchi
+ng_1_1matching_1_1OrbitConstraints__inherit__graph.pdf>
+<classat_1_1matching_1_1matching_1_1OrbitConstraints__inherit__graph.pdf, id=42
+18, 262.9825pt x 291.0875pt>
+File: classat_1_1matching_1_1matching_1_1OrbitConstraints__inherit__graph.pdf G
+raphic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1OrbitConstraints__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1OrbitConstraints__i
+nherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 262.0pt x 290.0119pt.
+ [131] <./classat_1_1matching_1_1matching_1_1OrbitConstraints__coll__graph.pdf>
+<classat_1_1matching_1_1matching_1_1OrbitConstraints__coll__graph.pdf, id=4237,
+ 262.9825pt x 291.0875pt>
+File: classat_1_1matching_1_1matching_1_1OrbitConstraints__coll__graph.pdf Grap
+hic file (type pdf)
+<use classat_1_1matching_1_1matching_1_1OrbitConstraints__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1OrbitConstraints__c
+oll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 262.0pt x 290.0119pt.
+ [132] [133])
+(./classat_1_1lattice_1_1particle__object_1_1Particle.tex <./classat_1_1lattice
+_1_1particle__object_1_1Particle__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1particle__object_1_1Part
+icle__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group include
+d in a single page
+>
+<classat_1_1lattice_1_1particle__object_1_1Particle__inherit__graph.pdf, id=426
+5, 180.675pt x 167.62625pt>
+File: classat_1_1lattice_1_1particle__object_1_1Particle__inherit__graph.pdf Gr
+aphic file (type pdf)
+<use classat_1_1lattice_1_1particle__object_1_1Particle__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1particle__object_1_1Particle__in
+herit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 180.0pt x 167.00172pt.
+ [134] <./classat_1_1lattice_1_1particle__object_1_1Particle__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1particle__object_1_1Part
+icle__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included i
+n a single page
+>
+<classat_1_1lattice_1_1particle__object_1_1Particle__coll__graph.pdf, id=4277, 
+180.675pt x 167.62625pt>
+File: classat_1_1lattice_1_1particle__object_1_1Particle__coll__graph.pdf Graph
+ic file (type pdf)
+<use classat_1_1lattice_1_1particle__object_1_1Particle__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1particle__object_1_1Particle__co
+ll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 180.0pt x 167.00172pt.
+ [135]) (./classat_1_1lattice_1_1elements_1_1Quadrupole.tex <./classat_1_1latti
+ce_1_1elements_1_1Quadrupole__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Quadrupole__inherit__graph.pdf, id=4302, 367
+.3725pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Quadrupole__inherit__graph.pdf Graphic 
+file (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Quadrupole__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Quadrupole__inherit_
+_graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+ <./classat_1_1lattice_1_1elements_1_1Quadrupole__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Quadrupole__
+coll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a si
+ngle page
+>
+<classat_1_1lattice_1_1elements_1_1Quadrupole__coll__graph.pdf, id=4310, 367.37
+25pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Quadrupole__coll__graph.pdf Graphic fil
+e (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Quadrupole__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Quadrupole__coll__gr
+aph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+ [136] [137])
+(./classat_1_1collective_1_1wake__elements_1_1ResonatorElement.tex <./classat_1
+_1collective_1_1wake__elements_1_1ResonatorElement__inherit__graph.pdf>
+<classat_1_1collective_1_1wake__elements_1_1ResonatorElement__inherit__graph.pd
+f, id=4341, 264.99pt x 358.33875pt>
+File: classat_1_1collective_1_1wake__elements_1_1ResonatorElement__inherit__gra
+ph.pdf Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1ResonatorElement__inherit__grap
+h.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1ResonatorEl
+ement__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 264.0pt x 357.02559pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [138] <./classat_1_1collective_1_1wake__elements_1_1ResonatorElement__coll__gr
+aph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1wake__elements_1_1Res
+onatorElement__coll__graph.pdf): PDF inclusion: multiple pdfs with page group i
+ncluded in a single page
+>
+<classat_1_1collective_1_1wake__elements_1_1ResonatorElement__coll__graph.pdf, 
+id=4354, 241.90375pt x 291.0875pt>
+File: classat_1_1collective_1_1wake__elements_1_1ResonatorElement__coll__graph.
+pdf Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1ResonatorElement__coll__graph.p
+df>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1ResonatorEl
+ement__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 241.0pt x 290.0119pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [139])
+(./classat_1_1collective_1_1wake__elements_1_1ResWallElement.tex <./classat_1_1
+collective_1_1wake__elements_1_1ResWallElement__inherit__graph.pdf>
+<classat_1_1collective_1_1wake__elements_1_1ResWallElement__inherit__graph.pdf,
+ id=4368, 232.87pt x 291.0875pt>
+File: classat_1_1collective_1_1wake__elements_1_1ResWallElement__inherit__graph
+.pdf Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1ResWallElement__inherit__graph.
+pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1ResWallElem
+ent__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 232.0pt x 290.0119pt.
+ [140] <./classat_1_1collective_1_1wake__elements_1_1ResWallElement__coll__grap
+h.pdf>
+<classat_1_1collective_1_1wake__elements_1_1ResWallElement__coll__graph.pdf, id
+=4394, 232.87pt x 291.0875pt>
+File: classat_1_1collective_1_1wake__elements_1_1ResWallElement__coll__graph.pd
+f Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1ResWallElement__coll__graph.pdf
+>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1ResWallElem
+ent__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 290.0119pt.
+
+[141]) (./classat_1_1lattice_1_1elements_1_1RFCavity.tex <./classat_1_1lattice_
+1_1elements_1_1RFCavity__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1RFCavity__inherit__graph.pdf, id=4409, 236.8
+85pt x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1RFCavity__inherit__graph.pdf Graphic fi
+le (type pdf)
+<use classat_1_1lattice_1_1elements_1_1RFCavity__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1RFCavity__inherit__g
+raph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 236.0pt x 279.00716pt.
+ <./classat_1_1lattice_1_1elements_1_1RFCavity__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1RFCavity__co
+ll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sing
+le page
+>
+<classat_1_1lattice_1_1elements_1_1RFCavity__coll__graph.pdf, id=4417, 236.885p
+t x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1RFCavity__coll__graph.pdf Graphic file 
+(type pdf)
+<use classat_1_1lattice_1_1elements_1_1RFCavity__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1RFCavity__coll__grap
+h.pdf  used on input line 18.
+(pdftex.def)             Requested size: 236.0pt x 279.00716pt.
+ [142] [143]) (./classat_1_1load_1_1utils_1_1RingParam.tex <./classat_1_1load_1
+_1utils_1_1RingParam__inherit__graph.pdf>
+<classat_1_1load_1_1utils_1_1RingParam__inherit__graph.pdf, id=4456, 210.7875pt
+ x 156.585pt>
+File: classat_1_1load_1_1utils_1_1RingParam__inherit__graph.pdf Graphic file (t
+ype pdf)
+<use classat_1_1load_1_1utils_1_1RingParam__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1load_1_1utils_1_1RingParam__inherit__graph.
+pdf  used on input line 9.
+(pdftex.def)             Requested size: 210.0pt x 156.004pt.
+ <./classat_1_1load_1_1utils_1_1RingParam__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1load_1_1utils_1_1RingParam__coll__g
+raph.pdf): PDF inclusion: multiple pdfs with page group included in a single pa
+ge
+>
+<classat_1_1load_1_1utils_1_1RingParam__coll__graph.pdf, id=4464, 210.7875pt x 
+156.585pt>
+File: classat_1_1load_1_1utils_1_1RingParam__coll__graph.pdf Graphic file (type
+ pdf)
+<use classat_1_1load_1_1utils_1_1RingParam__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1load_1_1utils_1_1RingParam__coll__graph.pdf
+  used on input line 18.
+(pdftex.def)             Requested size: 210.0pt x 156.004pt.
+ [144]) (./classat_1_1physics_1_1ring__parameters_1_1RingParameters.tex <./clas
+sat_1_1physics_1_1ring__parameters_1_1RingParameters__inherit__graph.pdf>
+<classat_1_1physics_1_1ring__parameters_1_1RingParameters__inherit__graph.pdf, 
+id=4479, 232.87pt x 167.62625pt>
+File: classat_1_1physics_1_1ring__parameters_1_1RingParameters__inherit__graph.
+pdf Graphic file (type pdf)
+<use classat_1_1physics_1_1ring__parameters_1_1RingParameters__inherit__graph.p
+df>
+Package pdftex.def Info: classat_1_1physics_1_1ring__parameters_1_1RingParamete
+rs__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 232.0pt x 167.00684pt.
+
+[145] <./classat_1_1physics_1_1ring__parameters_1_1RingParameters__coll__graph.
+pdf>
+<classat_1_1physics_1_1ring__parameters_1_1RingParameters__coll__graph.pdf, id=
+4497, 232.87pt x 167.62625pt>
+File: classat_1_1physics_1_1ring__parameters_1_1RingParameters__coll__graph.pdf
+ Graphic file (type pdf)
+<use classat_1_1physics_1_1ring__parameters_1_1RingParameters__coll__graph.pdf>
+
+Package pdftex.def Info: classat_1_1physics_1_1ring__parameters_1_1RingParamete
+rs__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 167.00684pt.
+ [146]) (./classat_1_1lattice_1_1elements_1_1Sextupole.tex <./classat_1_1lattic
+e_1_1elements_1_1Sextupole__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Sextupole__inherit__graph.pdf, id=4517, 367.
+3725pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Sextupole__inherit__graph.pdf Graphic f
+ile (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Sextupole__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Sextupole__inherit__
+graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+ [147] <./classat_1_1lattice_1_1elements_1_1Sextupole__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Sextupole__c
+oll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sin
+gle page
+>
+<classat_1_1lattice_1_1elements_1_1Sextupole__coll__graph.pdf, id=4531, 367.372
+5pt x 336.25626pt>
+File: classat_1_1lattice_1_1elements_1_1Sextupole__coll__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Sextupole__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Sextupole__coll__gra
+ph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 350.0pt x 320.37544pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [148]
+[149]) (./classat_1_1lattice_1_1elements_1_1ThinMultipole.tex <./classat_1_1lat
+tice_1_1elements_1_1ThinMultipole__inherit__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1ThinMultipole__inherit__graph.pdf, id=4562, 
+885.3075pt x 214.8025pt>
+File: classat_1_1lattice_1_1elements_1_1ThinMultipole__inherit__graph.pdf Graph
+ic file (type pdf)
+<use classat_1_1lattice_1_1elements_1_1ThinMultipole__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1ThinMultipole__inher
+it__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 84.9198pt.
+ <./classat_1_1lattice_1_1elements_1_1ThinMultipole__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1ThinMultipol
+e__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a
+ single page
+>
+<classat_1_1lattice_1_1elements_1_1ThinMultipole__coll__graph.pdf, id=4570, 232
+.87pt x 223.83624pt>
+File: classat_1_1lattice_1_1elements_1_1ThinMultipole__coll__graph.pdf Graphic 
+file (type pdf)
+<use classat_1_1lattice_1_1elements_1_1ThinMultipole__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1ThinMultipole__coll_
+_graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 223.00914pt.
+ [150] [151]) (./classat_1_1matching_1_1matching_1_1Variable.tex <./classat_1_1
+matching_1_1matching_1_1Variable__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1Variable__i
+nherit__graph.pdf): PDF inclusion: multiple pdfs with page group included in a 
+single page
+>
+<classat_1_1matching_1_1matching_1_1Variable__inherit__graph.pdf, id=4600, 247.
+92625pt x 223.83624pt>
+File: classat_1_1matching_1_1matching_1_1Variable__inherit__graph.pdf Graphic f
+ile (type pdf)
+<use classat_1_1matching_1_1matching_1_1Variable__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1Variable__inherit__
+graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 247.0pt x 223.00232pt.
+ <./classat_1_1matching_1_1matching_1_1Variable__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1matching_1_1matching_1_1Variable__c
+oll__graph.pdf): PDF inclusion: multiple pdfs with page group included in a sin
+gle page
+>
+<classat_1_1matching_1_1matching_1_1Variable__coll__graph.pdf, id=4608, 247.926
+25pt x 156.585pt>
+File: classat_1_1matching_1_1matching_1_1Variable__coll__graph.pdf Graphic file
+ (type pdf)
+<use classat_1_1matching_1_1matching_1_1Variable__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1matching_1_1matching_1_1Variable__coll__gra
+ph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 247.0pt x 156.00162pt.
+ [152]) (./classat_1_1collective_1_1wake__object_1_1Wake.tex <./classat_1_1coll
+ective_1_1wake__object_1_1Wake__inherit__graph.pdf>
+<classat_1_1collective_1_1wake__object_1_1Wake__inherit__graph.pdf, id=4623, 18
+5.69376pt x 167.62625pt>
+File: classat_1_1collective_1_1wake__object_1_1Wake__inherit__graph.pdf Graphic
+ file (type pdf)
+<use classat_1_1collective_1_1wake__object_1_1Wake__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__object_1_1Wake__inherit
+__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 185.0pt x 167.00427pt.
+ [153] <./classat_1_1collective_1_1wake__object_1_1Wake__coll__graph.pdf>
+<classat_1_1collective_1_1wake__object_1_1Wake__coll__graph.pdf, id=4652, 185.6
+9376pt x 167.62625pt>
+File: classat_1_1collective_1_1wake__object_1_1Wake__coll__graph.pdf Graphic fi
+le (type pdf)
+<use classat_1_1collective_1_1wake__object_1_1Wake__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__object_1_1Wake__coll__g
+raph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 185.0pt x 167.00427pt.
+ [154] [155])
+(./classat_1_1collective_1_1wake__object_1_1WakeComponent.tex <./classat_1_1col
+lective_1_1wake__object_1_1WakeComponent__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1wake__object_1_1WakeC
+omponent__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group inc
+luded in a single page
+>
+<classat_1_1collective_1_1wake__object_1_1WakeComponent__inherit__graph.pdf, id
+=4692, 217.81375pt x 167.62625pt>
+File: classat_1_1collective_1_1wake__object_1_1WakeComponent__inherit__graph.pd
+f Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__object_1_1WakeComponent__inherit__graph.pdf
+>
+Package pdftex.def Info: classat_1_1collective_1_1wake__object_1_1WakeComponent
+__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 217.0pt x 166.99916pt.
+ [156] <./classat_1_1collective_1_1wake__object_1_1WakeComponent__coll__graph.p
+df
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1wake__object_1_1WakeC
+omponent__coll__graph.pdf): PDF inclusion: multiple pdfs with page group includ
+ed in a single page
+>
+<classat_1_1collective_1_1wake__object_1_1WakeComponent__coll__graph.pdf, id=47
+04, 217.81375pt x 167.62625pt>
+File: classat_1_1collective_1_1wake__object_1_1WakeComponent__coll__graph.pdf G
+raphic file (type pdf)
+<use classat_1_1collective_1_1wake__object_1_1WakeComponent__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__object_1_1WakeComponent
+__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 217.0pt x 166.99916pt.
+) (./classat_1_1collective_1_1wake__elements_1_1WakeElement.tex <./classat_1_1c
+ollective_1_1wake__elements_1_1WakeElement__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1wake__elements_1_1Wak
+eElement__inherit__graph.pdf): PDF inclusion: multiple pdfs with page group inc
+luded in a single page
+>
+<classat_1_1collective_1_1wake__elements_1_1WakeElement__inherit__graph.pdf, id
+=4712, 908.39375pt x 160.6pt>
+File: classat_1_1collective_1_1wake__elements_1_1WakeElement__inherit__graph.pd
+f Graphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1WakeElement__inherit__graph.pdf
+>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1WakeElement
+__inherit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 350.0pt x 61.87897pt.
+ [157] <./classat_1_1collective_1_1wake__elements_1_1WakeElement__coll__graph.p
+df>
+<classat_1_1collective_1_1wake__elements_1_1WakeElement__coll__graph.pdf, id=47
+33, 232.87pt x 223.83624pt>
+File: classat_1_1collective_1_1wake__elements_1_1WakeElement__coll__graph.pdf G
+raphic file (type pdf)
+<use classat_1_1collective_1_1wake__elements_1_1WakeElement__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__elements_1_1WakeElement
+__coll__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 223.00914pt.
+ [158]) (./classat_1_1collective_1_1wake__object_1_1WakeType.tex <./classat_1_1
+collective_1_1wake__object_1_1WakeType__inherit__graph.pdf>
+<classat_1_1collective_1_1wake__object_1_1WakeType__inherit__graph.pdf, id=4769
+, 185.69376pt x 167.62625pt>
+File: classat_1_1collective_1_1wake__object_1_1WakeType__inherit__graph.pdf Gra
+phic file (type pdf)
+<use classat_1_1collective_1_1wake__object_1_1WakeType__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__object_1_1WakeType__inh
+erit__graph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 185.0pt x 167.00427pt.
+ <./classat_1_1collective_1_1wake__object_1_1WakeType__coll__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1collective_1_1wake__object_1_1WakeT
+ype__coll__graph.pdf): PDF inclusion: multiple pdfs with page group included in
+ a single page
+>
+<classat_1_1collective_1_1wake__object_1_1WakeType__coll__graph.pdf, id=4777, 1
+85.69376pt x 167.62625pt>
+File: classat_1_1collective_1_1wake__object_1_1WakeType__coll__graph.pdf Graphi
+c file (type pdf)
+<use classat_1_1collective_1_1wake__object_1_1WakeType__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1collective_1_1wake__object_1_1WakeType__col
+l__graph.pdf  used on input line 18.
+(pdftex.def)             Requested size: 185.0pt x 167.00427pt.
+ [159]) (./classat_1_1lattice_1_1elements_1_1Wiggler.tex <./classat_1_1lattice_
+1_1elements_1_1Wiggler__inherit__graph.pdf
+
+pdfTeX warning: pdflatex (file ./classat_1_1lattice_1_1elements_1_1Wiggler__inh
+erit__graph.pdf): PDF inclusion: multiple pdfs with page group included in a si
+ngle page
+>
+<classat_1_1lattice_1_1elements_1_1Wiggler__inherit__graph.pdf, id=4795, 232.87
+pt x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1Wiggler__inherit__graph.pdf Graphic fil
+e (type pdf)
+<use classat_1_1lattice_1_1elements_1_1Wiggler__inherit__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Wiggler__inherit__gr
+aph.pdf  used on input line 9.
+(pdftex.def)             Requested size: 232.0pt x 279.01143pt.
+ [160] <./classat_1_1lattice_1_1elements_1_1Wiggler__coll__graph.pdf>
+<classat_1_1lattice_1_1elements_1_1Wiggler__coll__graph.pdf, id=4815, 232.87pt 
+x 280.04625pt>
+File: classat_1_1lattice_1_1elements_1_1Wiggler__coll__graph.pdf Graphic file (
+type pdf)
+<use classat_1_1lattice_1_1elements_1_1Wiggler__coll__graph.pdf>
+Package pdftex.def Info: classat_1_1lattice_1_1elements_1_1Wiggler__coll__graph
+.pdf  used on input line 18.
+(pdftex.def)             Requested size: 232.0pt x 279.01143pt.
+ [161]
+[162]) [163] [164
+
+] (./refman.ind
 Underfull \hbox (badness 10000) in paragraph at lines 54--56
 []\T1/phv/m/n/10 at.collective.wake_elements.LongResonatorElement,
  []
 
-[125
+[165
 
 
-
-] [126] [127] [128] [129] [130])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 271.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 271.
+] [166] [167] [168] [169] [170])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 273.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 273.
  (./refman.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 271.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 271.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 273.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 273.
 Package rerunfilecheck Info: File `refman.out' has not changed.
-(rerunfilecheck)             Checksum: DB7EE62C7567362938D15D84F16DA4E5;92360.
+(rerunfilecheck)             Checksum: 9538BCB4D7EA398CEFEC511103FD16AF;92866.
  ) 
 Here is how much of TeX's memory you used:
- 18818 strings out of 483183
- 341621 string characters out of 5966293
- 643190 words of memory out of 5000000
- 32141 multiletter control sequences out of 15000+600000
- 577343 words of font info for 84 fonts, out of 8000000 for 9000
+ 19485 strings out of 483183
+ 381420 string characters out of 5966293
+ 644293 words of memory out of 5000000
+ 32670 multiletter control sequences out of 15000+600000
+ 577964 words of font info for 86 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  55i,16n,96p,938b,526s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
@@ -1034,10 +2118,10 @@ w/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/courier/ucr
 ro8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></u
 sr/share/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvb8ac.pfb></usr/share/te
 xlive/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb>
-Output written on refman.pdf (142 pages, 392244 bytes).
+Output written on refman.pdf (184 pages, 947819 bytes).
 PDF statistics:
- 4588 PDF objects out of 5155 (max. 8388607)
- 4391 compressed objects within 44 object streams
- 1216 named destinations out of 1440 (max. 500000)
- 3313 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 5659 PDF objects out of 6186 (max. 8388607)
+ 5134 compressed objects within 52 object streams
+ 1351 named destinations out of 1440 (max. 500000)
+ 3767 words of extra memory for PDF output out of 10000 (max. 10000000)
 
