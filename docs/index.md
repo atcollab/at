@@ -19,7 +19,7 @@ AT is based on a 6-D modular tracking engine written in C/C++ for efficiency.
 Lattice manipulation and computation of accelerator physics parameters are provided
 by two interfaces:
 - a [Matlab interface][1], available as a Matlab toolbox,
-- a [python interface][2], available as a python package.
+- a [python interface][2], available as a python package, [doxy page][3] and [doxy pdf][4]
 
 ## Coordinate system
 The 6-d phase space coordinates used in AT are as follows
@@ -43,3 +43,6 @@ the ideal particle.
 
 [1]: https://atcollab.github.io/at/m/Installation.html "Matlab interface"
 [2]: https://atcollab.github.io/at/p/Installation.html "python interface"
+[3]: https://atcollab.github.io/at/p/doxy/html/index.html "python doxygen documentation page"
+[4]: https://atcollab.github.io/at/p/doxy/latex/refman.pdf "python doxygen documentation pdf"
+
