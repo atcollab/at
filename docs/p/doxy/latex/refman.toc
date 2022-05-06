@@ -1,0 +1,415 @@
+\@ifundefined {etoctocstyle}{\let \etoc@startlocaltoc \@gobble \let \etoc@settocdepth \@gobble \let \etoc@depthtag \@gobble \let \etoc@setlocaltop \@gobble }{}
+\contentsline {chapter}{\numberline {1}Namespace Index}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Namespace List}{1}{section.1.1}%
+\contentsline {chapter}{\numberline {2}Hierarchical Index}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Class Hierarchy}{3}{section.2.1}%
+\contentsline {chapter}{\numberline {3}Class Index}{5}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Class List}{5}{section.3.1}%
+\contentsline {chapter}{\numberline {4}Namespace Documentation}{7}{chapter.4}%
+\contentsline {section}{\numberline {4.1}at Namespace Reference}{7}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Detailed Description}{7}{subsection.4.1.1}%
+\contentsline {section}{\numberline {4.2}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective Namespace Reference}{7}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Detailed Description}{7}{subsection.4.2.1}%
+\contentsline {section}{\numberline {4.3}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}functions Namespace Reference}{8}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Detailed Description}{8}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Function Documentation}{8}{subsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.2.1}convolve\_wakefun()}{8}{subsubsection.4.3.2.1}%
+\contentsline {subsubsection}{\numberline {4.3.2.2}long\_resonator\_wf()}{8}{subsubsection.4.3.2.2}%
+\contentsline {subsubsection}{\numberline {4.3.2.3}transverse\_resonator\_wf()}{9}{subsubsection.4.3.2.3}%
+\contentsline {subsubsection}{\numberline {4.3.2.4}transverse\_reswall\_wf()}{9}{subsubsection.4.3.2.4}%
+\contentsline {section}{\numberline {4.4}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object Namespace Reference}{9}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Detailed Description}{9}{subsection.4.4.1}%
+\contentsline {section}{\numberline {4.5}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}integrators Namespace Reference}{9}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Detailed Description}{9}{subsection.4.5.1}%
+\contentsline {section}{\numberline {4.6}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice Namespace Reference}{10}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Detailed Description}{10}{subsection.4.6.1}%
+\contentsline {section}{\numberline {4.7}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements Namespace Reference}{10}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}Detailed Description}{10}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Variable Documentation}{11}{subsection.4.7.2}%
+\contentsline {subsubsection}{\numberline {4.7.2.1}CLASS\_MAP}{11}{subsubsection.4.7.2.1}%
+\contentsline {section}{\numberline {4.8}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object Namespace Reference}{11}{section.4.8}%
+\contentsline {subsection}{\numberline {4.8.1}Detailed Description}{11}{subsection.4.8.1}%
+\contentsline {subsection}{\numberline {4.8.2}Function Documentation}{11}{subsection.4.8.2}%
+\contentsline {subsubsection}{\numberline {4.8.2.1}lattice\_filter()}{12}{subsubsection.4.8.2.1}%
+\contentsline {subsubsection}{\numberline {4.8.2.2}no\_filter()}{12}{subsubsection.4.8.2.2}%
+\contentsline {subsubsection}{\numberline {4.8.2.3}params\_filter()}{12}{subsubsection.4.8.2.3}%
+\contentsline {subsubsection}{\numberline {4.8.2.4}type\_filter()}{12}{subsubsection.4.8.2.4}%
+\contentsline {section}{\numberline {4.9}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}options Namespace Reference}{13}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}Detailed Description}{13}{subsection.4.9.1}%
+\contentsline {section}{\numberline {4.10}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}utils Namespace Reference}{13}{section.4.10}%
+\contentsline {subsection}{\numberline {4.10.1}Detailed Description}{14}{subsection.4.10.1}%
+\contentsline {subsection}{\numberline {4.10.2}Function Documentation}{14}{subsection.4.10.2}%
+\contentsline {subsubsection}{\numberline {4.10.2.1}bool\_refpts()}{14}{subsubsection.4.10.2.1}%
+\contentsline {subsubsection}{\numberline {4.10.2.2}check\_radiation()}{14}{subsubsection.4.10.2.2}%
+\contentsline {subsubsection}{\numberline {4.10.2.3}checkattr()}{15}{subsubsection.4.10.2.3}%
+\contentsline {subsubsection}{\numberline {4.10.2.4}checkname()}{15}{subsubsection.4.10.2.4}%
+\contentsline {subsubsection}{\numberline {4.10.2.5}checktype()}{15}{subsubsection.4.10.2.5}%
+\contentsline {subsubsection}{\numberline {4.10.2.6}get\_cells()}{16}{subsubsection.4.10.2.6}%
+\contentsline {subsubsection}{\numberline {4.10.2.7}get\_elements()}{16}{subsubsection.4.10.2.7}%
+\contentsline {subsubsection}{\numberline {4.10.2.8}get\_refpts()}{17}{subsubsection.4.10.2.8}%
+\contentsline {subsubsection}{\numberline {4.10.2.9}get\_s\_pos()}{17}{subsubsection.4.10.2.9}%
+\contentsline {subsubsection}{\numberline {4.10.2.10}get\_value\_refpts()}{17}{subsubsection.4.10.2.10}%
+\contentsline {subsubsection}{\numberline {4.10.2.11}make\_copy()}{18}{subsubsection.4.10.2.11}%
+\contentsline {subsubsection}{\numberline {4.10.2.12}refpts\_count()}{18}{subsubsection.4.10.2.12}%
+\contentsline {subsubsection}{\numberline {4.10.2.13}refpts\_iterator()}{18}{subsubsection.4.10.2.13}%
+\contentsline {subsubsection}{\numberline {4.10.2.14}refpts\_len()}{18}{subsubsection.4.10.2.14}%
+\contentsline {subsubsection}{\numberline {4.10.2.15}set\_radiation()}{19}{subsubsection.4.10.2.15}%
+\contentsline {subsubsection}{\numberline {4.10.2.16}set\_shift()}{19}{subsubsection.4.10.2.16}%
+\contentsline {subsubsection}{\numberline {4.10.2.17}set\_tilt()}{19}{subsubsection.4.10.2.17}%
+\contentsline {subsubsection}{\numberline {4.10.2.18}set\_value\_refpts()}{20}{subsubsection.4.10.2.18}%
+\contentsline {subsubsection}{\numberline {4.10.2.19}shift\_elem()}{20}{subsubsection.4.10.2.19}%
+\contentsline {subsubsection}{\numberline {4.10.2.20}tilt\_elem()}{21}{subsubsection.4.10.2.20}%
+\contentsline {subsubsection}{\numberline {4.10.2.21}uint32\_refpts()}{21}{subsubsection.4.10.2.21}%
+\contentsline {section}{\numberline {4.11}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load Namespace Reference}{21}{section.4.11}%
+\contentsline {subsection}{\numberline {4.11.1}Detailed Description}{21}{subsection.4.11.1}%
+\contentsline {section}{\numberline {4.12}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}allfiles Namespace Reference}{22}{section.4.12}%
+\contentsline {subsection}{\numberline {4.12.1}Detailed Description}{22}{subsection.4.12.1}%
+\contentsline {subsection}{\numberline {4.12.2}Function Documentation}{22}{subsection.4.12.2}%
+\contentsline {subsubsection}{\numberline {4.12.2.1}load\_lattice()}{22}{subsubsection.4.12.2.1}%
+\contentsline {subsubsection}{\numberline {4.12.2.2}register\_format()}{23}{subsubsection.4.12.2.2}%
+\contentsline {subsubsection}{\numberline {4.12.2.3}save\_lattice()}{23}{subsubsection.4.12.2.3}%
+\contentsline {section}{\numberline {4.13}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elegant Namespace Reference}{23}{section.4.13}%
+\contentsline {subsection}{\numberline {4.13.1}Detailed Description}{24}{subsection.4.13.1}%
+\contentsline {subsection}{\numberline {4.13.2}Function Documentation}{24}{subsection.4.13.2}%
+\contentsline {subsubsection}{\numberline {4.13.2.1}elegant\_element\_from\_string()}{24}{subsubsection.4.13.2.1}%
+\contentsline {subsubsection}{\numberline {4.13.2.2}parse\_chunk()}{24}{subsubsection.4.13.2.2}%
+\contentsline {subsubsection}{\numberline {4.13.2.3}parse\_lines()}{25}{subsubsection.4.13.2.3}%
+\contentsline {section}{\numberline {4.14}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matfile Namespace Reference}{25}{section.4.14}%
+\contentsline {subsection}{\numberline {4.14.1}Detailed Description}{25}{subsection.4.14.1}%
+\contentsline {subsection}{\numberline {4.14.2}Function Documentation}{25}{subsection.4.14.2}%
+\contentsline {subsubsection}{\numberline {4.14.2.1}load\_m()}{25}{subsubsection.4.14.2.1}%
+\contentsline {subsubsection}{\numberline {4.14.2.2}load\_mat()}{26}{subsubsection.4.14.2.2}%
+\contentsline {subsubsection}{\numberline {4.14.2.3}load\_var()}{26}{subsubsection.4.14.2.3}%
+\contentsline {subsubsection}{\numberline {4.14.2.4}matfile\_generator()}{26}{subsubsection.4.14.2.4}%
+\contentsline {subsubsection}{\numberline {4.14.2.5}matlab\_ring()}{27}{subsubsection.4.14.2.5}%
+\contentsline {subsubsection}{\numberline {4.14.2.6}mfile\_generator()}{27}{subsubsection.4.14.2.6}%
+\contentsline {subsubsection}{\numberline {4.14.2.7}ringparam\_filter()}{27}{subsubsection.4.14.2.7}%
+\contentsline {subsubsection}{\numberline {4.14.2.8}save\_m()}{27}{subsubsection.4.14.2.8}%
+\contentsline {subsubsection}{\numberline {4.14.2.9}save\_mat()}{28}{subsubsection.4.14.2.9}%
+\contentsline {section}{\numberline {4.15}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}reprfile Namespace Reference}{28}{section.4.15}%
+\contentsline {subsection}{\numberline {4.15.1}Detailed Description}{28}{subsection.4.15.1}%
+\contentsline {subsection}{\numberline {4.15.2}Function Documentation}{28}{subsection.4.15.2}%
+\contentsline {subsubsection}{\numberline {4.15.2.1}load\_repr()}{28}{subsubsection.4.15.2.1}%
+\contentsline {subsubsection}{\numberline {4.15.2.2}save\_repr()}{29}{subsubsection.4.15.2.2}%
+\contentsline {section}{\numberline {4.16}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}tracy Namespace Reference}{29}{section.4.16}%
+\contentsline {subsection}{\numberline {4.16.1}Detailed Description}{29}{subsection.4.16.1}%
+\contentsline {subsection}{\numberline {4.16.2}Function Documentation}{29}{subsection.4.16.2}%
+\contentsline {subsubsection}{\numberline {4.16.2.1}parse\_float()}{30}{subsubsection.4.16.2.1}%
+\contentsline {subsubsection}{\numberline {4.16.2.2}parse\_hom()}{30}{subsubsection.4.16.2.2}%
+\contentsline {subsubsection}{\numberline {4.16.2.3}parse\_lines()}{30}{subsubsection.4.16.2.3}%
+\contentsline {subsection}{\numberline {4.16.3}Variable Documentation}{30}{subsection.4.16.3}%
+\contentsline {subsubsection}{\numberline {4.16.3.1}ELEMENT\_MAP}{30}{subsubsection.4.16.3.1}%
+\contentsline {section}{\numberline {4.17}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}utils Namespace Reference}{31}{section.4.17}%
+\contentsline {subsection}{\numberline {4.17.1}Detailed Description}{31}{subsection.4.17.1}%
+\contentsline {subsection}{\numberline {4.17.2}Function Documentation}{31}{subsection.4.17.2}%
+\contentsline {subsubsection}{\numberline {4.17.2.1}element\_from\_dict()}{31}{subsubsection.4.17.2.1}%
+\contentsline {subsubsection}{\numberline {4.17.2.2}element\_from\_m()}{32}{subsubsection.4.17.2.2}%
+\contentsline {subsubsection}{\numberline {4.17.2.3}element\_from\_string()}{32}{subsubsection.4.17.2.3}%
+\contentsline {subsubsection}{\numberline {4.17.2.4}element\_to\_dict()}{32}{subsubsection.4.17.2.4}%
+\contentsline {subsubsection}{\numberline {4.17.2.5}element\_to\_m()}{32}{subsubsection.4.17.2.5}%
+\contentsline {subsubsection}{\numberline {4.17.2.6}find\_class()}{32}{subsubsection.4.17.2.6}%
+\contentsline {subsubsection}{\numberline {4.17.2.7}hasattrs()}{33}{subsubsection.4.17.2.7}%
+\contentsline {section}{\numberline {4.18}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching Namespace Reference}{33}{section.4.18}%
+\contentsline {subsection}{\numberline {4.18.1}Detailed Description}{33}{subsection.4.18.1}%
+\contentsline {section}{\numberline {4.19}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}globalfit Namespace Reference}{33}{section.4.19}%
+\contentsline {subsection}{\numberline {4.19.1}Detailed Description}{33}{subsection.4.19.1}%
+\contentsline {subsection}{\numberline {4.19.2}Function Documentation}{33}{subsection.4.19.2}%
+\contentsline {subsubsection}{\numberline {4.19.2.1}fit\_chrom()}{34}{subsubsection.4.19.2.1}%
+\contentsline {subsubsection}{\numberline {4.19.2.2}fit\_tune()}{34}{subsubsection.4.19.2.2}%
+\contentsline {section}{\numberline {4.20}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics Namespace Reference}{35}{section.4.20}%
+\contentsline {subsection}{\numberline {4.20.1}Detailed Description}{35}{subsection.4.20.1}%
+\contentsline {section}{\numberline {4.21}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}amat Namespace Reference}{35}{section.4.21}%
+\contentsline {subsection}{\numberline {4.21.1}Detailed Description}{35}{subsection.4.21.1}%
+\contentsline {subsection}{\numberline {4.21.2}Function Documentation}{35}{subsection.4.21.2}%
+\contentsline {subsubsection}{\numberline {4.21.2.1}a\_matrix()}{36}{subsubsection.4.21.2.1}%
+\contentsline {subsubsection}{\numberline {4.21.2.2}amat()}{36}{subsubsection.4.21.2.2}%
+\contentsline {subsubsection}{\numberline {4.21.2.3}get\_mode\_matrices()}{36}{subsubsection.4.21.2.3}%
+\contentsline {subsubsection}{\numberline {4.21.2.4}get\_tunes\_damp()}{37}{subsubsection.4.21.2.4}%
+\contentsline {subsubsection}{\numberline {4.21.2.5}jmat()}{37}{subsubsection.4.21.2.5}%
+\contentsline {subsubsection}{\numberline {4.21.2.6}jmatswap()}{37}{subsubsection.4.21.2.6}%
+\contentsline {subsubsection}{\numberline {4.21.2.7}symplectify()}{37}{subsubsection.4.21.2.7}%
+\contentsline {section}{\numberline {4.22}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}fastring Namespace Reference}{38}{section.4.22}%
+\contentsline {subsection}{\numberline {4.22.1}Detailed Description}{38}{subsection.4.22.1}%
+\contentsline {subsection}{\numberline {4.22.2}Function Documentation}{38}{subsection.4.22.2}%
+\contentsline {subsubsection}{\numberline {4.22.2.1}fast\_ring()}{38}{subsubsection.4.22.2.1}%
+\contentsline {section}{\numberline {4.23}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}harmonic\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}analysis Namespace Reference}{38}{section.4.23}%
+\contentsline {subsection}{\numberline {4.23.1}Detailed Description}{39}{subsection.4.23.1}%
+\contentsline {subsection}{\numberline {4.23.2}Function Documentation}{39}{subsection.4.23.2}%
+\contentsline {subsubsection}{\numberline {4.23.2.1}get\_spectrum\_harmonic()}{39}{subsubsection.4.23.2.1}%
+\contentsline {subsubsection}{\numberline {4.23.2.2}get\_tunes\_harmonic()}{39}{subsubsection.4.23.2.2}%
+\contentsline {section}{\numberline {4.24}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}linear Namespace Reference}{40}{section.4.24}%
+\contentsline {subsection}{\numberline {4.24.1}Detailed Description}{40}{subsection.4.24.1}%
+\contentsline {subsection}{\numberline {4.24.2}Function Documentation}{40}{subsection.4.24.2}%
+\contentsline {subsubsection}{\numberline {4.24.2.1}avlinopt()}{40}{subsubsection.4.24.2.1}%
+\contentsline {subsubsection}{\numberline {4.24.2.2}get\_chrom()}{41}{subsubsection.4.24.2.2}%
+\contentsline {subsubsection}{\numberline {4.24.2.3}get\_optics()}{42}{subsubsection.4.24.2.3}%
+\contentsline {subsubsection}{\numberline {4.24.2.4}get\_tune()}{43}{subsubsection.4.24.2.4}%
+\contentsline {subsubsection}{\numberline {4.24.2.5}linopt()}{43}{subsubsection.4.24.2.5}%
+\contentsline {subsubsection}{\numberline {4.24.2.6}linopt2()}{44}{subsubsection.4.24.2.6}%
+\contentsline {subsubsection}{\numberline {4.24.2.7}linopt4()}{46}{subsubsection.4.24.2.7}%
+\contentsline {subsubsection}{\numberline {4.24.2.8}linopt6()}{47}{subsubsection.4.24.2.8}%
+\contentsline {subsubsection}{\numberline {4.24.2.9}linopt\_auto()}{48}{subsubsection.4.24.2.9}%
+\contentsline {section}{\numberline {4.25}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matrix Namespace Reference}{48}{section.4.25}%
+\contentsline {subsection}{\numberline {4.25.1}Detailed Description}{49}{subsection.4.25.1}%
+\contentsline {subsection}{\numberline {4.25.2}Function Documentation}{49}{subsection.4.25.2}%
+\contentsline {subsubsection}{\numberline {4.25.2.1}find\_elem\_m66()}{49}{subsubsection.4.25.2.1}%
+\contentsline {subsubsection}{\numberline {4.25.2.2}find\_m44()}{49}{subsubsection.4.25.2.2}%
+\contentsline {subsubsection}{\numberline {4.25.2.3}find\_m66()}{50}{subsubsection.4.25.2.3}%
+\contentsline {subsubsection}{\numberline {4.25.2.4}gen\_m66\_elem()}{51}{subsubsection.4.25.2.4}%
+\contentsline {section}{\numberline {4.26}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}nonlinear Namespace Reference}{51}{section.4.26}%
+\contentsline {subsection}{\numberline {4.26.1}Detailed Description}{51}{subsection.4.26.1}%
+\contentsline {subsection}{\numberline {4.26.2}Function Documentation}{51}{subsection.4.26.2}%
+\contentsline {subsubsection}{\numberline {4.26.2.1}chromaticity()}{52}{subsubsection.4.26.2.1}%
+\contentsline {subsubsection}{\numberline {4.26.2.2}detuning()}{52}{subsubsection.4.26.2.2}%
+\contentsline {subsubsection}{\numberline {4.26.2.3}gen\_detuning\_elem()}{52}{subsubsection.4.26.2.3}%
+\contentsline {subsubsection}{\numberline {4.26.2.4}tunes\_vs\_amp()}{52}{subsubsection.4.26.2.4}%
+\contentsline {section}{\numberline {4.27}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}orbit Namespace Reference}{53}{section.4.27}%
+\contentsline {subsection}{\numberline {4.27.1}Detailed Description}{53}{subsection.4.27.1}%
+\contentsline {subsection}{\numberline {4.27.2}Function Documentation}{53}{subsection.4.27.2}%
+\contentsline {subsubsection}{\numberline {4.27.2.1}find\_orbit()}{53}{subsubsection.4.27.2.1}%
+\contentsline {subsubsection}{\numberline {4.27.2.2}find\_orbit4()}{54}{subsubsection.4.27.2.2}%
+\contentsline {subsubsection}{\numberline {4.27.2.3}find\_orbit6()}{55}{subsubsection.4.27.2.3}%
+\contentsline {subsubsection}{\numberline {4.27.2.4}find\_sync\_orbit()}{56}{subsubsection.4.27.2.4}%
+\contentsline {section}{\numberline {4.28}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}radiation Namespace Reference}{57}{section.4.28}%
+\contentsline {subsection}{\numberline {4.28.1}Detailed Description}{57}{subsection.4.28.1}%
+\contentsline {subsection}{\numberline {4.28.2}Function Documentation}{57}{subsection.4.28.2}%
+\contentsline {subsubsection}{\numberline {4.28.2.1}gen\_quantdiff\_elem()}{57}{subsubsection.4.28.2.1}%
+\contentsline {subsubsection}{\numberline {4.28.2.2}get\_radiation\_integrals()}{58}{subsubsection.4.28.2.2}%
+\contentsline {subsubsection}{\numberline {4.28.2.3}ohmi\_envelope()}{58}{subsubsection.4.28.2.3}%
+\contentsline {subsubsection}{\numberline {4.28.2.4}quantdiffmat()}{59}{subsubsection.4.28.2.4}%
+\contentsline {subsubsection}{\numberline {4.28.2.5}tapering()}{59}{subsubsection.4.28.2.5}%
+\contentsline {subsection}{\numberline {4.28.3}Variable Documentation}{60}{subsection.4.28.3}%
+\contentsline {subsubsection}{\numberline {4.28.3.1}ENVELOPE\_DTYPE}{60}{subsubsection.4.28.3.1}%
+\contentsline {section}{\numberline {4.29}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}plot Namespace Reference}{60}{section.4.29}%
+\contentsline {subsection}{\numberline {4.29.1}Detailed Description}{60}{subsection.4.29.1}%
+\contentsline {section}{\numberline {4.30}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}plot.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}generic Namespace Reference}{60}{section.4.30}%
+\contentsline {subsection}{\numberline {4.30.1}Detailed Description}{61}{subsection.4.30.1}%
+\contentsline {subsection}{\numberline {4.30.2}Function Documentation}{61}{subsection.4.30.2}%
+\contentsline {subsubsection}{\numberline {4.30.2.1}baseplot()}{61}{subsubsection.4.30.2.1}%
+\contentsline {section}{\numberline {4.31}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}plot.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}specific Namespace Reference}{62}{section.4.31}%
+\contentsline {subsection}{\numberline {4.31.1}Detailed Description}{62}{subsection.4.31.1}%
+\contentsline {subsection}{\numberline {4.31.2}Function Documentation}{62}{subsection.4.31.2}%
+\contentsline {subsubsection}{\numberline {4.31.2.1}pldata\_beta\_disp()}{62}{subsubsection.4.31.2.1}%
+\contentsline {subsubsection}{\numberline {4.31.2.2}pldata\_linear()}{62}{subsubsection.4.31.2.2}%
+\contentsline {subsubsection}{\numberline {4.31.2.3}plot\_beta()}{63}{subsubsection.4.31.2.3}%
+\contentsline {subsubsection}{\numberline {4.31.2.4}plot\_linear()}{63}{subsubsection.4.31.2.4}%
+\contentsline {subsubsection}{\numberline {4.31.2.5}plot\_trajectory()}{64}{subsubsection.4.31.2.5}%
+\contentsline {section}{\numberline {4.32}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}plot.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}standalone Namespace Reference}{64}{section.4.32}%
+\contentsline {subsection}{\numberline {4.32.1}Detailed Description}{65}{subsection.4.32.1}%
+\contentsline {subsection}{\numberline {4.32.2}Function Documentation}{65}{subsection.4.32.2}%
+\contentsline {subsubsection}{\numberline {4.32.2.1}plot\_acceptance()}{65}{subsubsection.4.32.2.1}%
+\contentsline {section}{\numberline {4.33}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}plot.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}synopt Namespace Reference}{66}{section.4.33}%
+\contentsline {subsection}{\numberline {4.33.1}Detailed Description}{66}{subsection.4.33.1}%
+\contentsline {subsection}{\numberline {4.33.2}Function Documentation}{66}{subsection.4.33.2}%
+\contentsline {subsubsection}{\numberline {4.33.2.1}plot\_synopt()}{66}{subsubsection.4.33.2.1}%
+\contentsline {section}{\numberline {4.34}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}tracking Namespace Reference}{67}{section.4.34}%
+\contentsline {subsection}{\numberline {4.34.1}Detailed Description}{67}{subsection.4.34.1}%
+\contentsline {section}{\numberline {4.35}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}tracking.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}particles Namespace Reference}{67}{section.4.35}%
+\contentsline {subsection}{\numberline {4.35.1}Detailed Description}{67}{subsection.4.35.1}%
+\contentsline {subsection}{\numberline {4.35.2}Function Documentation}{67}{subsection.4.35.2}%
+\contentsline {subsubsection}{\numberline {4.35.2.1}beam()}{68}{subsubsection.4.35.2.1}%
+\contentsline {subsubsection}{\numberline {4.35.2.2}sigma\_matrix()}{68}{subsubsection.4.35.2.2}%
+\contentsline {section}{\numberline {4.36}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}tracking.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}patpass Namespace Reference}{69}{section.4.36}%
+\contentsline {subsection}{\numberline {4.36.1}Detailed Description}{69}{subsection.4.36.1}%
+\contentsline {subsection}{\numberline {4.36.2}Function Documentation}{69}{subsection.4.36.2}%
+\contentsline {subsubsection}{\numberline {4.36.2.1}patpass()}{69}{subsubsection.4.36.2.1}%
+\contentsline {chapter}{\numberline {5}Class Documentation}{71}{chapter.5}%
+\contentsline {section}{\numberline {5.1}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}options.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Dst Class Reference}{71}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Detailed Description}{71}{subsection.5.1.1}%
+\contentsline {section}{\numberline {5.2}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Aperture Class Reference}{71}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Detailed Description}{72}{subsection.5.2.1}%
+\contentsline {section}{\numberline {5.3}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}utils.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}At\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Error Class Reference}{72}{section.5.3}%
+\contentsline {section}{\numberline {5.4}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}utils.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}At\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Warning Class Reference}{72}{section.5.4}%
+\contentsline {section}{\numberline {5.5}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Collimator Class Reference}{72}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Detailed Description}{73}{subsection.5.5.1}%
+\contentsline {subsection}{\numberline {5.5.2}Constructor \& Destructor Documentation}{73}{subsection.5.5.2}%
+\contentsline {subsubsection}{\numberline {5.5.2.1}\_\_init\_\_()}{73}{subsubsection.5.5.2.1}%
+\contentsline {section}{\numberline {5.6}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Constraints Class Reference}{73}{section.5.6}%
+\contentsline {subsection}{\numberline {5.6.1}Detailed Description}{74}{subsection.5.6.1}%
+\contentsline {subsection}{\numberline {5.6.2}Constructor \& Destructor Documentation}{74}{subsection.5.6.2}%
+\contentsline {subsubsection}{\numberline {5.6.2.1}\_\_init\_\_()}{74}{subsubsection.5.6.2.1}%
+\contentsline {subsection}{\numberline {5.6.3}Member Function Documentation}{75}{subsection.5.6.3}%
+\contentsline {subsubsection}{\numberline {5.6.3.1}add()}{75}{subsubsection.5.6.3.1}%
+\contentsline {subsubsection}{\numberline {5.6.3.2}evaluate()}{75}{subsubsection.5.6.3.2}%
+\contentsline {subsubsection}{\numberline {5.6.3.3}header()}{75}{subsubsection.5.6.3.3}%
+\contentsline {subsubsection}{\numberline {5.6.3.4}status()}{76}{subsubsection.5.6.3.4}%
+\contentsline {subsubsection}{\numberline {5.6.3.5}values()}{76}{subsubsection.5.6.3.5}%
+\contentsline {section}{\numberline {5.7}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Corrector Class Reference}{76}{section.5.7}%
+\contentsline {subsection}{\numberline {5.7.1}Detailed Description}{76}{subsection.5.7.1}%
+\contentsline {section}{\numberline {5.8}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Dipole Class Reference}{77}{section.5.8}%
+\contentsline {subsection}{\numberline {5.8.1}Detailed Description}{77}{subsection.5.8.1}%
+\contentsline {subsection}{\numberline {5.8.2}Constructor \& Destructor Documentation}{77}{subsection.5.8.2}%
+\contentsline {subsubsection}{\numberline {5.8.2.1}\_\_init\_\_()}{77}{subsubsection.5.8.2.1}%
+\contentsline {subsection}{\numberline {5.8.3}Member Data Documentation}{78}{subsection.5.8.3}%
+\contentsline {subsubsection}{\numberline {5.8.3.1}REQUIRED\_ATTRIBUTES}{78}{subsubsection.5.8.3.1}%
+\contentsline {section}{\numberline {5.9}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Drift Class Reference}{78}{section.5.9}%
+\contentsline {subsection}{\numberline {5.9.1}Detailed Description}{78}{subsection.5.9.1}%
+\contentsline {subsection}{\numberline {5.9.2}Constructor \& Destructor Documentation}{78}{subsection.5.9.2}%
+\contentsline {subsubsection}{\numberline {5.9.2.1}\_\_init\_\_()}{78}{subsubsection.5.9.2.1}%
+\contentsline {subsection}{\numberline {5.9.3}Member Function Documentation}{79}{subsection.5.9.3}%
+\contentsline {subsubsection}{\numberline {5.9.3.1}insert()}{79}{subsubsection.5.9.3.1}%
+\contentsline {section}{\numberline {5.10}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element Class Reference}{79}{section.5.10}%
+\contentsline {subsection}{\numberline {5.10.1}Detailed Description}{80}{subsection.5.10.1}%
+\contentsline {subsection}{\numberline {5.10.2}Member Function Documentation}{80}{subsection.5.10.2}%
+\contentsline {subsubsection}{\numberline {5.10.2.1}copy()}{80}{subsubsection.5.10.2.1}%
+\contentsline {subsubsection}{\numberline {5.10.2.2}deepcopy()}{80}{subsubsection.5.10.2.2}%
+\contentsline {subsubsection}{\numberline {5.10.2.3}divide()}{81}{subsubsection.5.10.2.3}%
+\contentsline {subsubsection}{\numberline {5.10.2.4}equals()}{81}{subsubsection.5.10.2.4}%
+\contentsline {subsubsection}{\numberline {5.10.2.5}items()}{81}{subsubsection.5.10.2.5}%
+\contentsline {subsubsection}{\numberline {5.10.2.6}update()}{82}{subsubsection.5.10.2.6}%
+\contentsline {section}{\numberline {5.11}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Constraints Class Reference}{82}{section.5.11}%
+\contentsline {subsection}{\numberline {5.11.1}Detailed Description}{82}{subsection.5.11.1}%
+\contentsline {subsection}{\numberline {5.11.2}Member Function Documentation}{82}{subsection.5.11.2}%
+\contentsline {subsubsection}{\numberline {5.11.2.1}compute()}{83}{subsubsection.5.11.2.1}%
+\contentsline {subsubsection}{\numberline {5.11.2.2}values()}{83}{subsubsection.5.11.2.2}%
+\contentsline {section}{\numberline {5.12}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Variable Class Reference}{83}{section.5.12}%
+\contentsline {subsection}{\numberline {5.12.1}Detailed Description}{84}{subsection.5.12.1}%
+\contentsline {section}{\numberline {5.13}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}energy\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}loss.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}E\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Loss\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Method Class Reference}{84}{section.5.13}%
+\contentsline {subsection}{\numberline {5.13.1}Detailed Description}{84}{subsection.5.13.1}%
+\contentsline {section}{\numberline {5.14}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Envelope\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Constraints Class Reference}{84}{section.5.14}%
+\contentsline {subsection}{\numberline {5.14.1}Detailed Description}{85}{subsection.5.14.1}%
+\contentsline {subsection}{\numberline {5.14.2}Constructor \& Destructor Documentation}{85}{subsection.5.14.2}%
+\contentsline {subsubsection}{\numberline {5.14.2.1}\_\_init\_\_()}{85}{subsubsection.5.14.2.1}%
+\contentsline {subsection}{\numberline {5.14.3}Member Function Documentation}{85}{subsection.5.14.3}%
+\contentsline {subsubsection}{\numberline {5.14.3.1}add()}{85}{subsubsection.5.14.3.1}%
+\contentsline {subsubsection}{\numberline {5.14.3.2}compute()}{86}{subsubsection.5.14.3.2}%
+\contentsline {section}{\numberline {5.15}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}cavity\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}access.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Frf Class Reference}{86}{section.5.15}%
+\contentsline {subsection}{\numberline {5.15.1}Detailed Description}{86}{subsection.5.15.1}%
+\contentsline {section}{\numberline {5.16}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}acceptance.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}boundary.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Grid\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Mode Class Reference}{87}{section.5.16}%
+\contentsline {section}{\numberline {5.17}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}haissinski.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Haissinski Class Reference}{87}{section.5.17}%
+\contentsline {subsection}{\numberline {5.17.1}Detailed Description}{88}{subsection.5.17.1}%
+\contentsline {subsection}{\numberline {5.17.2}Member Function Documentation}{88}{subsection.5.17.2}%
+\contentsline {subsubsection}{\numberline {5.17.2.1}compute\_Smat()}{88}{subsubsection.5.17.2.1}%
+\contentsline {subsubsection}{\numberline {5.17.2.2}convergence()}{89}{subsubsection.5.17.2.2}%
+\contentsline {subsubsection}{\numberline {5.17.2.3}dFi\_dphij()}{89}{subsubsection.5.17.2.3}%
+\contentsline {subsubsection}{\numberline {5.17.2.4}Fi()}{89}{subsubsection.5.17.2.4}%
+\contentsline {subsubsection}{\numberline {5.17.2.5}initial\_phi()}{89}{subsubsection.5.17.2.5}%
+\contentsline {subsubsection}{\numberline {5.17.2.6}precompute\_S()}{89}{subsubsection.5.17.2.6}%
+\contentsline {subsubsection}{\numberline {5.17.2.7}set\_I()}{90}{subsubsection.5.17.2.7}%
+\contentsline {subsubsection}{\numberline {5.17.2.8}set\_weights()}{90}{subsubsection.5.17.2.8}%
+\contentsline {subsubsection}{\numberline {5.17.2.9}solve\_steps()}{90}{subsubsection.5.17.2.9}%
+\contentsline {section}{\numberline {5.18}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}harmonic\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}analysis.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Harmonic\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Analysis Class Reference}{90}{section.5.18}%
+\contentsline {section}{\numberline {5.19}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Lattice Class Reference}{91}{section.5.19}%
+\contentsline {subsection}{\numberline {5.19.1}Detailed Description}{92}{subsection.5.19.1}%
+\contentsline {subsection}{\numberline {5.19.2}Constructor \& Destructor Documentation}{93}{subsection.5.19.2}%
+\contentsline {subsubsection}{\numberline {5.19.2.1}\_\_init\_\_()}{93}{subsubsection.5.19.2.1}%
+\contentsline {subsection}{\numberline {5.19.3}Member Function Documentation}{93}{subsection.5.19.3}%
+\contentsline {subsubsection}{\numberline {5.19.3.1}\_\_add\_\_()}{93}{subsubsection.5.19.3.1}%
+\contentsline {subsubsection}{\numberline {5.19.3.2}\_\_mul\_\_()}{94}{subsubsection.5.19.3.2}%
+\contentsline {subsubsection}{\numberline {5.19.3.3}attrs()}{94}{subsubsection.5.19.3.3}%
+\contentsline {subsubsection}{\numberline {5.19.3.4}attrs\_filter()}{94}{subsubsection.5.19.3.4}%
+\contentsline {subsubsection}{\numberline {5.19.3.5}bool\_refpts()}{94}{subsubsection.5.19.3.5}%
+\contentsline {subsubsection}{\numberline {5.19.3.6}circumference()}{94}{subsubsection.5.19.3.6}%
+\contentsline {subsubsection}{\numberline {5.19.3.7}copy()}{95}{subsubsection.5.19.3.7}%
+\contentsline {subsubsection}{\numberline {5.19.3.8}deepcopy()}{95}{subsubsection.5.19.3.8}%
+\contentsline {subsubsection}{\numberline {5.19.3.9}energy()}{95}{subsubsection.5.19.3.9}%
+\contentsline {subsubsection}{\numberline {5.19.3.10}i\_range()}{95}{subsubsection.5.19.3.10}%
+\contentsline {subsubsection}{\numberline {5.19.3.11}modify\_elements()}{96}{subsubsection.5.19.3.11}%
+\contentsline {subsubsection}{\numberline {5.19.3.12}particle()}{96}{subsubsection.5.19.3.12}%
+\contentsline {subsubsection}{\numberline {5.19.3.13}radiation()}{96}{subsubsection.5.19.3.13}%
+\contentsline {subsubsection}{\numberline {5.19.3.14}radiation\_off()}{97}{subsubsection.5.19.3.14}%
+\contentsline {subsubsection}{\numberline {5.19.3.15}radiation\_on()}{97}{subsubsection.5.19.3.15}%
+\contentsline {subsubsection}{\numberline {5.19.3.16}replace()}{98}{subsubsection.5.19.3.16}%
+\contentsline {subsubsection}{\numberline {5.19.3.17}revolution\_frequency()}{98}{subsubsection.5.19.3.17}%
+\contentsline {subsubsection}{\numberline {5.19.3.18}rotate()}{98}{subsubsection.5.19.3.18}%
+\contentsline {subsubsection}{\numberline {5.19.3.19}s\_range()}{98}{subsubsection.5.19.3.19}%
+\contentsline {subsubsection}{\numberline {5.19.3.20}sbreak()}{99}{subsubsection.5.19.3.20}%
+\contentsline {subsubsection}{\numberline {5.19.3.21}slice()}{99}{subsubsection.5.19.3.21}%
+\contentsline {subsubsection}{\numberline {5.19.3.22}uint32\_refpts()}{99}{subsubsection.5.19.3.22}%
+\contentsline {subsubsection}{\numberline {5.19.3.23}update()}{100}{subsubsection.5.19.3.23}%
+\contentsline {section}{\numberline {5.20}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Linopt\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Constraints Class Reference}{100}{section.5.20}%
+\contentsline {subsection}{\numberline {5.20.1}Detailed Description}{100}{subsection.5.20.1}%
+\contentsline {subsection}{\numberline {5.20.2}Constructor \& Destructor Documentation}{101}{subsection.5.20.2}%
+\contentsline {subsubsection}{\numberline {5.20.2.1}\_\_init\_\_()}{101}{subsubsection.5.20.2.1}%
+\contentsline {subsection}{\numberline {5.20.3}Member Function Documentation}{101}{subsection.5.20.3}%
+\contentsline {subsubsection}{\numberline {5.20.3.1}add()}{101}{subsubsection.5.20.3.1}%
+\contentsline {subsubsection}{\numberline {5.20.3.2}compute()}{102}{subsubsection.5.20.3.2}%
+\contentsline {section}{\numberline {5.21}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Long\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element Class Reference}{102}{section.5.21}%
+\contentsline {subsection}{\numberline {5.21.1}Detailed Description}{103}{subsection.5.21.1}%
+\contentsline {subsection}{\numberline {5.21.2}Member Function Documentation}{103}{subsection.5.21.2}%
+\contentsline {subsubsection}{\numberline {5.21.2.1}divide()}{103}{subsubsection.5.21.2.1}%
+\contentsline {section}{\numberline {5.22}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Long\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Resonator\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element Class Reference}{103}{section.5.22}%
+\contentsline {subsection}{\numberline {5.22.1}Detailed Description}{104}{subsection.5.22.1}%
+\contentsline {section}{\numberline {5.23}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}M66 Class Reference}{104}{section.5.23}%
+\contentsline {subsection}{\numberline {5.23.1}Detailed Description}{104}{subsection.5.23.1}%
+\contentsline {section}{\numberline {5.24}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Marker Class Reference}{104}{section.5.24}%
+\contentsline {subsection}{\numberline {5.24.1}Detailed Description}{105}{subsection.5.24.1}%
+\contentsline {section}{\numberline {5.25}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Monitor Class Reference}{105}{section.5.25}%
+\contentsline {subsection}{\numberline {5.25.1}Detailed Description}{105}{subsection.5.25.1}%
+\contentsline {section}{\numberline {5.26}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Multipole Class Reference}{105}{section.5.26}%
+\contentsline {subsection}{\numberline {5.26.1}Detailed Description}{106}{subsection.5.26.1}%
+\contentsline {subsection}{\numberline {5.26.2}Constructor \& Destructor Documentation}{106}{subsection.5.26.2}%
+\contentsline {subsubsection}{\numberline {5.26.2.1}\_\_init\_\_()}{106}{subsubsection.5.26.2.1}%
+\contentsline {subsection}{\numberline {5.26.3}Member Data Documentation}{106}{subsection.5.26.3}%
+\contentsline {subsubsection}{\numberline {5.26.3.1}REQUIRED\_ATTRIBUTES}{106}{subsubsection.5.26.3.1}%
+\contentsline {section}{\numberline {5.27}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Octupole Class Reference}{107}{section.5.27}%
+\contentsline {subsection}{\numberline {5.27.1}Detailed Description}{107}{subsection.5.27.1}%
+\contentsline {section}{\numberline {5.28}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Orbit\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Constraints Class Reference}{107}{section.5.28}%
+\contentsline {subsection}{\numberline {5.28.1}Detailed Description}{107}{subsection.5.28.1}%
+\contentsline {subsection}{\numberline {5.28.2}Constructor \& Destructor Documentation}{108}{subsection.5.28.2}%
+\contentsline {subsubsection}{\numberline {5.28.2.1}\_\_init\_\_()}{108}{subsubsection.5.28.2.1}%
+\contentsline {subsection}{\numberline {5.28.3}Member Function Documentation}{108}{subsection.5.28.3}%
+\contentsline {subsubsection}{\numberline {5.28.3.1}add()}{108}{subsubsection.5.28.3.1}%
+\contentsline {subsubsection}{\numberline {5.28.3.2}compute()}{109}{subsubsection.5.28.3.2}%
+\contentsline {section}{\numberline {5.29}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}particle\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Particle Class Reference}{109}{section.5.29}%
+\contentsline {subsection}{\numberline {5.29.1}Detailed Description}{109}{subsection.5.29.1}%
+\contentsline {section}{\numberline {5.30}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Quadrupole Class Reference}{110}{section.5.30}%
+\contentsline {subsection}{\numberline {5.30.1}Detailed Description}{110}{subsection.5.30.1}%
+\contentsline {subsection}{\numberline {5.30.2}Constructor \& Destructor Documentation}{110}{subsection.5.30.2}%
+\contentsline {subsubsection}{\numberline {5.30.2.1}\_\_init\_\_()}{110}{subsubsection.5.30.2.1}%
+\contentsline {section}{\numberline {5.31}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Resonator\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element Class Reference}{111}{section.5.31}%
+\contentsline {subsection}{\numberline {5.31.1}Detailed Description}{111}{subsection.5.31.1}%
+\contentsline {section}{\numberline {5.32}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Res\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Wall\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element Class Reference}{111}{section.5.32}%
+\contentsline {subsection}{\numberline {5.32.1}Detailed Description}{112}{subsection.5.32.1}%
+\contentsline {section}{\numberline {5.33}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}R\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}F\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Cavity Class Reference}{112}{section.5.33}%
+\contentsline {subsection}{\numberline {5.33.1}Detailed Description}{112}{subsection.5.33.1}%
+\contentsline {subsection}{\numberline {5.33.2}Constructor \& Destructor Documentation}{112}{subsection.5.33.2}%
+\contentsline {subsubsection}{\numberline {5.33.2.1}\_\_init\_\_()}{112}{subsubsection.5.33.2.1}%
+\contentsline {subsection}{\numberline {5.33.3}Member Data Documentation}{113}{subsection.5.33.3}%
+\contentsline {subsubsection}{\numberline {5.33.3.1}REQUIRED\_ATTRIBUTES}{113}{subsubsection.5.33.3.1}%
+\contentsline {section}{\numberline {5.34}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}load.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}utils.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Ring\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Param Class Reference}{113}{section.5.34}%
+\contentsline {subsection}{\numberline {5.34.1}Detailed Description}{113}{subsection.5.34.1}%
+\contentsline {subsection}{\numberline {5.34.2}Member Data Documentation}{113}{subsection.5.34.2}%
+\contentsline {subsubsection}{\numberline {5.34.2.1}REQUIRED\_ATTRIBUTES}{113}{subsubsection.5.34.2.1}%
+\contentsline {section}{\numberline {5.35}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}physics.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}ring\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}parameters.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Ring\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Parameters Class Reference}{114}{section.5.35}%
+\contentsline {subsection}{\numberline {5.35.1}Detailed Description}{114}{subsection.5.35.1}%
+\contentsline {subsection}{\numberline {5.35.2}Constructor \& Destructor Documentation}{114}{subsection.5.35.2}%
+\contentsline {subsubsection}{\numberline {5.35.2.1}\_\_init\_\_()}{114}{subsubsection.5.35.2.1}%
+\contentsline {subsection}{\numberline {5.35.3}Member Data Documentation}{114}{subsection.5.35.3}%
+\contentsline {subsubsection}{\numberline {5.35.3.1}props}{115}{subsubsection.5.35.3.1}%
+\contentsline {section}{\numberline {5.36}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Sextupole Class Reference}{115}{section.5.36}%
+\contentsline {subsection}{\numberline {5.36.1}Detailed Description}{115}{subsection.5.36.1}%
+\contentsline {subsection}{\numberline {5.36.2}Constructor \& Destructor Documentation}{116}{subsection.5.36.2}%
+\contentsline {subsubsection}{\numberline {5.36.2.1}\_\_init\_\_()}{116}{subsubsection.5.36.2.1}%
+\contentsline {section}{\numberline {5.37}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Thin\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Multipole Class Reference}{116}{section.5.37}%
+\contentsline {subsection}{\numberline {5.37.1}Detailed Description}{117}{subsection.5.37.1}%
+\contentsline {subsection}{\numberline {5.37.2}Constructor \& Destructor Documentation}{117}{subsection.5.37.2}%
+\contentsline {subsubsection}{\numberline {5.37.2.1}\_\_init\_\_()}{117}{subsubsection.5.37.2.1}%
+\contentsline {subsection}{\numberline {5.37.3}Member Function Documentation}{117}{subsection.5.37.3}%
+\contentsline {subsubsection}{\numberline {5.37.3.1}\_\_setattr\_\_()}{117}{subsubsection.5.37.3.1}%
+\contentsline {subsection}{\numberline {5.37.4}Member Data Documentation}{117}{subsection.5.37.4}%
+\contentsline {subsubsection}{\numberline {5.37.4.1}REQUIRED\_ATTRIBUTES}{118}{subsubsection.5.37.4.1}%
+\contentsline {section}{\numberline {5.38}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}matching.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Variable Class Reference}{118}{section.5.38}%
+\contentsline {subsection}{\numberline {5.38.1}Detailed Description}{118}{subsection.5.38.1}%
+\contentsline {section}{\numberline {5.39}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Wake Class Reference}{119}{section.5.39}%
+\contentsline {subsection}{\numberline {5.39.1}Detailed Description}{119}{subsection.5.39.1}%
+\contentsline {subsection}{\numberline {5.39.2}Member Function Documentation}{119}{subsection.5.39.2}%
+\contentsline {subsubsection}{\numberline {5.39.2.1}build\_srange()}{120}{subsubsection.5.39.2.1}%
+\contentsline {subsubsection}{\numberline {5.39.2.2}long\_resonator()}{120}{subsubsection.5.39.2.2}%
+\contentsline {subsubsection}{\numberline {5.39.2.3}resistive\_wall()}{120}{subsubsection.5.39.2.3}%
+\contentsline {subsubsection}{\numberline {5.39.2.4}resonator()}{121}{subsubsection.5.39.2.4}%
+\contentsline {section}{\numberline {5.40}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Component Class Reference}{121}{section.5.40}%
+\contentsline {subsection}{\numberline {5.40.1}Detailed Description}{121}{subsection.5.40.1}%
+\contentsline {section}{\numberline {5.41}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Element Class Reference}{121}{section.5.41}%
+\contentsline {subsection}{\numberline {5.41.1}Detailed Description}{122}{subsection.5.41.1}%
+\contentsline {subsection}{\numberline {5.41.2}Member Function Documentation}{122}{subsection.5.41.2}%
+\contentsline {subsubsection}{\numberline {5.41.2.1}\_\_repr\_\_()}{123}{subsubsection.5.41.2.1}%
+\contentsline {section}{\numberline {5.42}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}collective.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}\_\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}object.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Wake\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Type Class Reference}{123}{section.5.42}%
+\contentsline {subsection}{\numberline {5.42.1}Detailed Description}{123}{subsection.5.42.1}%
+\contentsline {section}{\numberline {5.43}at.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}lattice.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}elements.\discretionary {\mbox {\scriptsize $\hookleftarrow $}}{}{}Wiggler Class Reference}{123}{section.5.43}%
+\contentsline {subsection}{\numberline {5.43.1}Detailed Description}{124}{subsection.5.43.1}%
+\contentsline {subsection}{\numberline {5.43.2}Constructor \& Destructor Documentation}{124}{subsection.5.43.2}%
+\contentsline {subsubsection}{\numberline {5.43.2.1}\_\_init\_\_()}{124}{subsubsection.5.43.2.1}%
+\contentsline {subsection}{\numberline {5.43.3}Member Data Documentation}{124}{subsection.5.43.3}%
+\contentsline {subsubsection}{\numberline {5.43.3.1}REQUIRED\_ATTRIBUTES}{124}{subsubsection.5.43.3.1}%
+\contentsline {chapter}{Index}{125}{section*.146}%

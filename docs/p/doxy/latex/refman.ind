@@ -1,0 +1,686 @@
+\begin{theindex}
+
+  \item {\_\_add\_\_}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{93}
+  \item {\_\_init\_\_}
+    \subitem {at.lattice.elements.Collimator}, \hyperpage{73}
+    \subitem {at.lattice.elements.Dipole}, \hyperpage{77}
+    \subitem {at.lattice.elements.Drift}, \hyperpage{78}
+    \subitem {at.lattice.elements.Multipole}, \hyperpage{106}
+    \subitem {at.lattice.elements.Quadrupole}, \hyperpage{110}
+    \subitem {at.lattice.elements.RFCavity}, \hyperpage{112}
+    \subitem {at.lattice.elements.Sextupole}, \hyperpage{116}
+    \subitem {at.lattice.elements.ThinMultipole}, \hyperpage{117}
+    \subitem {at.lattice.elements.Wiggler}, \hyperpage{124}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{93}
+    \subitem {at.matching.matching.Constraints}, \hyperpage{74}
+    \subitem {at.matching.matching.EnvelopeConstraints}, \hyperpage{85}
+    \subitem {at.matching.matching.LinoptConstraints}, \hyperpage{101}
+    \subitem {at.matching.matching.OrbitConstraints}, \hyperpage{108}
+    \subitem {at.physics.ring\_parameters.RingParameters}, 
+		\hyperpage{114}
+  \item {\_\_mul\_\_}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{93}
+  \item {\_\_repr\_\_}
+    \subitem {at.collective.wake\_elements.WakeElement}, 
+		\hyperpage{122}
+  \item {\_\_setattr\_\_}
+    \subitem {at.lattice.elements.ThinMultipole}, \hyperpage{117}
+
+  \indexspace
+
+  \item {a\_matrix}
+    \subitem {at.physics.amat}, \hyperpage{35}
+  \item {add}
+    \subitem {at.matching.matching.Constraints}, \hyperpage{75}
+    \subitem {at.matching.matching.EnvelopeConstraints}, \hyperpage{85}
+    \subitem {at.matching.matching.LinoptConstraints}, \hyperpage{101}
+    \subitem {at.matching.matching.OrbitConstraints}, \hyperpage{108}
+  \item {amat}
+    \subitem {at.physics.amat}, \hyperpage{36}
+  \item {at}, \hyperpage{7}
+  \item {at.acceptance.boundary.GridMode}, \hyperpage{87}
+  \item {at.collective}, \hyperpage{7}
+  \item {at.collective.haissinski.Haissinski}, \hyperpage{87}
+    \subitem {compute\_Smat}, \hyperpage{88}
+    \subitem {convergence}, \hyperpage{88}
+    \subitem {dFi\_dphij}, \hyperpage{89}
+    \subitem {Fi}, \hyperpage{89}
+    \subitem {initial\_phi}, \hyperpage{89}
+    \subitem {precompute\_S}, \hyperpage{89}
+    \subitem {set\_I}, \hyperpage{89}
+    \subitem {set\_weights}, \hyperpage{90}
+    \subitem {solve\_steps}, \hyperpage{90}
+  \item {at.collective.wake\_elements.LongResonatorElement}, 
+		\hyperpage{103}
+  \item {at.collective.wake\_elements.ResonatorElement}, 
+		\hyperpage{111}
+  \item {at.collective.wake\_elements.ResWallElement}, \hyperpage{111}
+  \item {at.collective.wake\_elements.WakeElement}, \hyperpage{121}
+    \subitem {\_\_repr\_\_}, \hyperpage{122}
+  \item {at.collective.wake\_functions}, \hyperpage{8}
+    \subitem {convolve\_wakefun}, \hyperpage{8}
+    \subitem {long\_resonator\_wf}, \hyperpage{8}
+    \subitem {transverse\_resonator\_wf}, \hyperpage{8}
+    \subitem {transverse\_reswall\_wf}, \hyperpage{9}
+  \item {at.collective.wake\_object}, \hyperpage{9}
+  \item {at.collective.wake\_object.Wake}, \hyperpage{119}
+    \subitem {build\_srange}, \hyperpage{119}
+    \subitem {long\_resonator}, \hyperpage{120}
+    \subitem {resistive\_wall}, \hyperpage{120}
+    \subitem {resonator}, \hyperpage{120}
+  \item {at.collective.wake\_object.WakeComponent}, \hyperpage{121}
+  \item {at.collective.wake\_object.WakeType}, \hyperpage{123}
+  \item {at.integrators}, \hyperpage{9}
+  \item {at.lattice}, \hyperpage{10}
+  \item {at.lattice.cavity\_access.Frf}, \hyperpage{86}
+  \item {at.lattice.elements}, \hyperpage{10}
+    \subitem {CLASS\_MAP}, \hyperpage{11}
+  \item {at.lattice.elements.Aperture}, \hyperpage{71}
+  \item {at.lattice.elements.Collimator}, \hyperpage{72}
+    \subitem {\_\_init\_\_}, \hyperpage{73}
+  \item {at.lattice.elements.Corrector}, \hyperpage{76}
+  \item {at.lattice.elements.Dipole}, \hyperpage{77}
+    \subitem {\_\_init\_\_}, \hyperpage{77}
+    \subitem {REQUIRED\_ATTRIBUTES}, \hyperpage{78}
+  \item {at.lattice.elements.Drift}, \hyperpage{78}
+    \subitem {\_\_init\_\_}, \hyperpage{78}
+    \subitem {insert}, \hyperpage{79}
+  \item {at.lattice.elements.Element}, \hyperpage{79}
+    \subitem {copy}, \hyperpage{80}
+    \subitem {deepcopy}, \hyperpage{80}
+    \subitem {divide}, \hyperpage{80}
+    \subitem {equals}, \hyperpage{81}
+    \subitem {items}, \hyperpage{81}
+    \subitem {update}, \hyperpage{81}
+  \item {at.lattice.elements.LongElement}, \hyperpage{102}
+    \subitem {divide}, \hyperpage{103}
+  \item {at.lattice.elements.M66}, \hyperpage{104}
+  \item {at.lattice.elements.Marker}, \hyperpage{104}
+  \item {at.lattice.elements.Monitor}, \hyperpage{105}
+  \item {at.lattice.elements.Multipole}, \hyperpage{105}
+    \subitem {\_\_init\_\_}, \hyperpage{106}
+    \subitem {REQUIRED\_ATTRIBUTES}, \hyperpage{106}
+  \item {at.lattice.elements.Octupole}, \hyperpage{107}
+  \item {at.lattice.elements.Quadrupole}, \hyperpage{110}
+    \subitem {\_\_init\_\_}, \hyperpage{110}
+  \item {at.lattice.elements.RFCavity}, \hyperpage{112}
+    \subitem {\_\_init\_\_}, \hyperpage{112}
+    \subitem {REQUIRED\_ATTRIBUTES}, \hyperpage{113}
+  \item {at.lattice.elements.Sextupole}, \hyperpage{115}
+    \subitem {\_\_init\_\_}, \hyperpage{116}
+  \item {at.lattice.elements.ThinMultipole}, \hyperpage{116}
+    \subitem {\_\_init\_\_}, \hyperpage{117}
+    \subitem {\_\_setattr\_\_}, \hyperpage{117}
+    \subitem {REQUIRED\_ATTRIBUTES}, \hyperpage{117}
+  \item {at.lattice.elements.Wiggler}, \hyperpage{123}
+    \subitem {\_\_init\_\_}, \hyperpage{124}
+    \subitem {REQUIRED\_ATTRIBUTES}, \hyperpage{124}
+  \item {at.lattice.lattice\_object}, \hyperpage{11}
+    \subitem {lattice\_filter}, \hyperpage{11}
+    \subitem {no\_filter}, \hyperpage{12}
+    \subitem {params\_filter}, \hyperpage{12}
+    \subitem {type\_filter}, \hyperpage{12}
+  \item {at.lattice.lattice\_object.Lattice}, \hyperpage{91}
+    \subitem {\_\_add\_\_}, \hyperpage{93}
+    \subitem {\_\_init\_\_}, \hyperpage{93}
+    \subitem {\_\_mul\_\_}, \hyperpage{93}
+    \subitem {attrs}, \hyperpage{94}
+    \subitem {attrs\_filter}, \hyperpage{94}
+    \subitem {bool\_refpts}, \hyperpage{94}
+    \subitem {circumference}, \hyperpage{94}
+    \subitem {copy}, \hyperpage{94}
+    \subitem {deepcopy}, \hyperpage{95}
+    \subitem {energy}, \hyperpage{95}
+    \subitem {i\_range}, \hyperpage{95}
+    \subitem {modify\_elements}, \hyperpage{95}
+    \subitem {particle}, \hyperpage{96}
+    \subitem {radiation}, \hyperpage{96}
+    \subitem {radiation\_off}, \hyperpage{96}
+    \subitem {radiation\_on}, \hyperpage{97}
+    \subitem {replace}, \hyperpage{98}
+    \subitem {revolution\_frequency}, \hyperpage{98}
+    \subitem {rotate}, \hyperpage{98}
+    \subitem {s\_range}, \hyperpage{98}
+    \subitem {sbreak}, \hyperpage{98}
+    \subitem {slice}, \hyperpage{99}
+    \subitem {uint32\_refpts}, \hyperpage{99}
+    \subitem {update}, \hyperpage{99}
+  \item {at.lattice.options}, \hyperpage{13}
+  \item {at.lattice.options.\_Dst}, \hyperpage{71}
+  \item {at.lattice.particle\_object.Particle}, \hyperpage{109}
+  \item {at.lattice.utils}, \hyperpage{13}
+    \subitem {bool\_refpts}, \hyperpage{14}
+    \subitem {check\_radiation}, \hyperpage{14}
+    \subitem {checkattr}, \hyperpage{14}
+    \subitem {checkname}, \hyperpage{15}
+    \subitem {checktype}, \hyperpage{15}
+    \subitem {get\_cells}, \hyperpage{15}
+    \subitem {get\_elements}, \hyperpage{16}
+    \subitem {get\_refpts}, \hyperpage{16}
+    \subitem {get\_s\_pos}, \hyperpage{17}
+    \subitem {get\_value\_refpts}, \hyperpage{17}
+    \subitem {make\_copy}, \hyperpage{17}
+    \subitem {refpts\_count}, \hyperpage{18}
+    \subitem {refpts\_iterator}, \hyperpage{18}
+    \subitem {refpts\_len}, \hyperpage{18}
+    \subitem {set\_radiation}, \hyperpage{18}
+    \subitem {set\_shift}, \hyperpage{19}
+    \subitem {set\_tilt}, \hyperpage{19}
+    \subitem {set\_value\_refpts}, \hyperpage{19}
+    \subitem {shift\_elem}, \hyperpage{20}
+    \subitem {tilt\_elem}, \hyperpage{20}
+    \subitem {uint32\_refpts}, \hyperpage{21}
+  \item {at.lattice.utils.AtError}, \hyperpage{72}
+  \item {at.lattice.utils.AtWarning}, \hyperpage{72}
+  \item {at.load}, \hyperpage{21}
+  \item {at.load.allfiles}, \hyperpage{22}
+    \subitem {load\_lattice}, \hyperpage{22}
+    \subitem {register\_format}, \hyperpage{22}
+    \subitem {save\_lattice}, \hyperpage{23}
+  \item {at.load.elegant}, \hyperpage{23}
+    \subitem {elegant\_element\_from\_string}, \hyperpage{24}
+    \subitem {parse\_chunk}, \hyperpage{24}
+    \subitem {parse\_lines}, \hyperpage{24}
+  \item {at.load.matfile}, \hyperpage{25}
+    \subitem {load\_m}, \hyperpage{25}
+    \subitem {load\_mat}, \hyperpage{25}
+    \subitem {load\_var}, \hyperpage{26}
+    \subitem {matfile\_generator}, \hyperpage{26}
+    \subitem {matlab\_ring}, \hyperpage{26}
+    \subitem {mfile\_generator}, \hyperpage{27}
+    \subitem {ringparam\_filter}, \hyperpage{27}
+    \subitem {save\_m}, \hyperpage{27}
+    \subitem {save\_mat}, \hyperpage{27}
+  \item {at.load.reprfile}, \hyperpage{28}
+    \subitem {load\_repr}, \hyperpage{28}
+    \subitem {save\_repr}, \hyperpage{28}
+  \item {at.load.tracy}, \hyperpage{29}
+    \subitem {ELEMENT\_MAP}, \hyperpage{30}
+    \subitem {parse\_float}, \hyperpage{29}
+    \subitem {parse\_hom}, \hyperpage{30}
+    \subitem {parse\_lines}, \hyperpage{30}
+  \item {at.load.utils}, \hyperpage{31}
+    \subitem {element\_from\_dict}, \hyperpage{31}
+    \subitem {element\_from\_m}, \hyperpage{31}
+    \subitem {element\_from\_string}, \hyperpage{32}
+    \subitem {element\_to\_dict}, \hyperpage{32}
+    \subitem {element\_to\_m}, \hyperpage{32}
+    \subitem {find\_class}, \hyperpage{32}
+    \subitem {hasattrs}, \hyperpage{32}
+  \item {at.load.utils.RingParam}, \hyperpage{113}
+    \subitem {REQUIRED\_ATTRIBUTES}, \hyperpage{113}
+  \item {at.matching}, \hyperpage{33}
+  \item {at.matching.globalfit}, \hyperpage{33}
+    \subitem {fit\_chrom}, \hyperpage{33}
+    \subitem {fit\_tune}, \hyperpage{34}
+  \item {at.matching.matching.Constraints}, \hyperpage{73}
+    \subitem {\_\_init\_\_}, \hyperpage{74}
+    \subitem {add}, \hyperpage{75}
+    \subitem {evaluate}, \hyperpage{75}
+    \subitem {header}, \hyperpage{75}
+    \subitem {status}, \hyperpage{75}
+    \subitem {values}, \hyperpage{76}
+  \item {at.matching.matching.ElementConstraints}, \hyperpage{82}
+    \subitem {compute}, \hyperpage{82}
+    \subitem {values}, \hyperpage{83}
+  \item {at.matching.matching.ElementVariable}, \hyperpage{83}
+  \item {at.matching.matching.EnvelopeConstraints}, \hyperpage{84}
+    \subitem {\_\_init\_\_}, \hyperpage{85}
+    \subitem {add}, \hyperpage{85}
+    \subitem {compute}, \hyperpage{86}
+  \item {at.matching.matching.LinoptConstraints}, \hyperpage{100}
+    \subitem {\_\_init\_\_}, \hyperpage{101}
+    \subitem {add}, \hyperpage{101}
+    \subitem {compute}, \hyperpage{102}
+  \item {at.matching.matching.OrbitConstraints}, \hyperpage{107}
+    \subitem {\_\_init\_\_}, \hyperpage{108}
+    \subitem {add}, \hyperpage{108}
+    \subitem {compute}, \hyperpage{108}
+  \item {at.matching.matching.Variable}, \hyperpage{118}
+  \item {at.physics}, \hyperpage{35}
+  \item {at.physics.amat}, \hyperpage{35}
+    \subitem {a\_matrix}, \hyperpage{35}
+    \subitem {amat}, \hyperpage{36}
+    \subitem {get\_mode\_matrices}, \hyperpage{36}
+    \subitem {get\_tunes\_damp}, \hyperpage{36}
+    \subitem {jmat}, \hyperpage{37}
+    \subitem {jmatswap}, \hyperpage{37}
+    \subitem {symplectify}, \hyperpage{37}
+  \item {at.physics.energy\_loss.ELossMethod}, \hyperpage{84}
+  \item {at.physics.fastring}, \hyperpage{38}
+    \subitem {fast\_ring}, \hyperpage{38}
+  \item {at.physics.harmonic\_analysis}, \hyperpage{38}
+    \subitem {get\_spectrum\_harmonic}, \hyperpage{39}
+    \subitem {get\_tunes\_harmonic}, \hyperpage{39}
+  \item {at.physics.harmonic\_analysis.HarmonicAnalysis}, 
+		\hyperpage{90}
+  \item {at.physics.linear}, \hyperpage{40}
+    \subitem {avlinopt}, \hyperpage{40}
+    \subitem {get\_chrom}, \hyperpage{41}
+    \subitem {get\_optics}, \hyperpage{41}
+    \subitem {get\_tune}, \hyperpage{42}
+    \subitem {linopt}, \hyperpage{43}
+    \subitem {linopt2}, \hyperpage{44}
+    \subitem {linopt4}, \hyperpage{45}
+    \subitem {linopt6}, \hyperpage{47}
+    \subitem {linopt\_auto}, \hyperpage{48}
+  \item {at.physics.matrix}, \hyperpage{48}
+    \subitem {find\_elem\_m66}, \hyperpage{49}
+    \subitem {find\_m44}, \hyperpage{49}
+    \subitem {find\_m66}, \hyperpage{50}
+    \subitem {gen\_m66\_elem}, \hyperpage{51}
+  \item {at.physics.nonlinear}, \hyperpage{51}
+    \subitem {chromaticity}, \hyperpage{51}
+    \subitem {detuning}, \hyperpage{52}
+    \subitem {gen\_detuning\_elem}, \hyperpage{52}
+    \subitem {tunes\_vs\_amp}, \hyperpage{52}
+  \item {at.physics.orbit}, \hyperpage{53}
+    \subitem {find\_orbit}, \hyperpage{53}
+    \subitem {find\_orbit4}, \hyperpage{53}
+    \subitem {find\_orbit6}, \hyperpage{54}
+    \subitem {find\_sync\_orbit}, \hyperpage{56}
+  \item {at.physics.radiation}, \hyperpage{57}
+    \subitem {ENVELOPE\_DTYPE}, \hyperpage{60}
+    \subitem {gen\_quantdiff\_elem}, \hyperpage{57}
+    \subitem {get\_radiation\_integrals}, \hyperpage{57}
+    \subitem {ohmi\_envelope}, \hyperpage{58}
+    \subitem {quantdiffmat}, \hyperpage{59}
+    \subitem {tapering}, \hyperpage{59}
+  \item {at.physics.ring\_parameters.RingParameters}, \hyperpage{114}
+    \subitem {\_\_init\_\_}, \hyperpage{114}
+    \subitem {props}, \hyperpage{114}
+  \item {at.plot}, \hyperpage{60}
+  \item {at.plot.generic}, \hyperpage{60}
+    \subitem {baseplot}, \hyperpage{61}
+  \item {at.plot.specific}, \hyperpage{62}
+    \subitem {pldata\_beta\_disp}, \hyperpage{62}
+    \subitem {pldata\_linear}, \hyperpage{62}
+    \subitem {plot\_beta}, \hyperpage{62}
+    \subitem {plot\_linear}, \hyperpage{63}
+    \subitem {plot\_trajectory}, \hyperpage{64}
+  \item {at.plot.standalone}, \hyperpage{64}
+    \subitem {plot\_acceptance}, \hyperpage{65}
+  \item {at.plot.synopt}, \hyperpage{66}
+    \subitem {plot\_synopt}, \hyperpage{66}
+  \item {at.tracking}, \hyperpage{67}
+  \item {at.tracking.particles}, \hyperpage{67}
+    \subitem {beam}, \hyperpage{67}
+    \subitem {sigma\_matrix}, \hyperpage{68}
+  \item {at.tracking.patpass}, \hyperpage{69}
+    \subitem {patpass}, \hyperpage{69}
+  \item {attrs}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{94}
+  \item {attrs\_filter}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{94}
+  \item {avlinopt}
+    \subitem {at.physics.linear}, \hyperpage{40}
+
+  \indexspace
+
+  \item {baseplot}
+    \subitem {at.plot.generic}, \hyperpage{61}
+  \item {beam}
+    \subitem {at.tracking.particles}, \hyperpage{67}
+  \item {bool\_refpts}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{94}
+    \subitem {at.lattice.utils}, \hyperpage{14}
+  \item {build\_srange}
+    \subitem {at.collective.wake\_object.Wake}, \hyperpage{119}
+
+  \indexspace
+
+  \item {check\_radiation}
+    \subitem {at.lattice.utils}, \hyperpage{14}
+  \item {checkattr}
+    \subitem {at.lattice.utils}, \hyperpage{14}
+  \item {checkname}
+    \subitem {at.lattice.utils}, \hyperpage{15}
+  \item {checktype}
+    \subitem {at.lattice.utils}, \hyperpage{15}
+  \item {chromaticity}
+    \subitem {at.physics.nonlinear}, \hyperpage{51}
+  \item {circumference}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{94}
+  \item {CLASS\_MAP}
+    \subitem {at.lattice.elements}, \hyperpage{11}
+  \item {compute}
+    \subitem {at.matching.matching.ElementConstraints}, \hyperpage{82}
+    \subitem {at.matching.matching.EnvelopeConstraints}, \hyperpage{86}
+    \subitem {at.matching.matching.LinoptConstraints}, \hyperpage{102}
+    \subitem {at.matching.matching.OrbitConstraints}, \hyperpage{108}
+  \item {compute\_Smat}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{88}
+  \item {convergence}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{88}
+  \item {convolve\_wakefun}
+    \subitem {at.collective.wake\_functions}, \hyperpage{8}
+  \item {copy}
+    \subitem {at.lattice.elements.Element}, \hyperpage{80}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{94}
+
+  \indexspace
+
+  \item {deepcopy}
+    \subitem {at.lattice.elements.Element}, \hyperpage{80}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{95}
+  \item {detuning}
+    \subitem {at.physics.nonlinear}, \hyperpage{52}
+  \item {dFi\_dphij}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{89}
+  \item {divide}
+    \subitem {at.lattice.elements.Element}, \hyperpage{80}
+    \subitem {at.lattice.elements.LongElement}, \hyperpage{103}
+
+  \indexspace
+
+  \item {elegant\_element\_from\_string}
+    \subitem {at.load.elegant}, \hyperpage{24}
+  \item {element\_from\_dict}
+    \subitem {at.load.utils}, \hyperpage{31}
+  \item {element\_from\_m}
+    \subitem {at.load.utils}, \hyperpage{31}
+  \item {element\_from\_string}
+    \subitem {at.load.utils}, \hyperpage{32}
+  \item {ELEMENT\_MAP}
+    \subitem {at.load.tracy}, \hyperpage{30}
+  \item {element\_to\_dict}
+    \subitem {at.load.utils}, \hyperpage{32}
+  \item {element\_to\_m}
+    \subitem {at.load.utils}, \hyperpage{32}
+  \item {energy}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{95}
+  \item {ENVELOPE\_DTYPE}
+    \subitem {at.physics.radiation}, \hyperpage{60}
+  \item {equals}
+    \subitem {at.lattice.elements.Element}, \hyperpage{81}
+  \item {evaluate}
+    \subitem {at.matching.matching.Constraints}, \hyperpage{75}
+
+  \indexspace
+
+  \item {fast\_ring}
+    \subitem {at.physics.fastring}, \hyperpage{38}
+  \item {Fi}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{89}
+  \item {find\_class}
+    \subitem {at.load.utils}, \hyperpage{32}
+  \item {find\_elem\_m66}
+    \subitem {at.physics.matrix}, \hyperpage{49}
+  \item {find\_m44}
+    \subitem {at.physics.matrix}, \hyperpage{49}
+  \item {find\_m66}
+    \subitem {at.physics.matrix}, \hyperpage{50}
+  \item {find\_orbit}
+    \subitem {at.physics.orbit}, \hyperpage{53}
+  \item {find\_orbit4}
+    \subitem {at.physics.orbit}, \hyperpage{53}
+  \item {find\_orbit6}
+    \subitem {at.physics.orbit}, \hyperpage{54}
+  \item {find\_sync\_orbit}
+    \subitem {at.physics.orbit}, \hyperpage{56}
+  \item {fit\_chrom}
+    \subitem {at.matching.globalfit}, \hyperpage{33}
+  \item {fit\_tune}
+    \subitem {at.matching.globalfit}, \hyperpage{34}
+
+  \indexspace
+
+  \item {gen\_detuning\_elem}
+    \subitem {at.physics.nonlinear}, \hyperpage{52}
+  \item {gen\_m66\_elem}
+    \subitem {at.physics.matrix}, \hyperpage{51}
+  \item {gen\_quantdiff\_elem}
+    \subitem {at.physics.radiation}, \hyperpage{57}
+  \item {get\_cells}
+    \subitem {at.lattice.utils}, \hyperpage{15}
+  \item {get\_chrom}
+    \subitem {at.physics.linear}, \hyperpage{41}
+  \item {get\_elements}
+    \subitem {at.lattice.utils}, \hyperpage{16}
+  \item {get\_mode\_matrices}
+    \subitem {at.physics.amat}, \hyperpage{36}
+  \item {get\_optics}
+    \subitem {at.physics.linear}, \hyperpage{41}
+  \item {get\_radiation\_integrals}
+    \subitem {at.physics.radiation}, \hyperpage{57}
+  \item {get\_refpts}
+    \subitem {at.lattice.utils}, \hyperpage{16}
+  \item {get\_s\_pos}
+    \subitem {at.lattice.utils}, \hyperpage{17}
+  \item {get\_spectrum\_harmonic}
+    \subitem {at.physics.harmonic\_analysis}, \hyperpage{39}
+  \item {get\_tune}
+    \subitem {at.physics.linear}, \hyperpage{42}
+  \item {get\_tunes\_damp}
+    \subitem {at.physics.amat}, \hyperpage{36}
+  \item {get\_tunes\_harmonic}
+    \subitem {at.physics.harmonic\_analysis}, \hyperpage{39}
+  \item {get\_value\_refpts}
+    \subitem {at.lattice.utils}, \hyperpage{17}
+
+  \indexspace
+
+  \item {hasattrs}
+    \subitem {at.load.utils}, \hyperpage{32}
+  \item {header}
+    \subitem {at.matching.matching.Constraints}, \hyperpage{75}
+
+  \indexspace
+
+  \item {i\_range}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{95}
+  \item {initial\_phi}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{89}
+  \item {insert}
+    \subitem {at.lattice.elements.Drift}, \hyperpage{79}
+  \item {items}
+    \subitem {at.lattice.elements.Element}, \hyperpage{81}
+
+  \indexspace
+
+  \item {jmat}
+    \subitem {at.physics.amat}, \hyperpage{37}
+  \item {jmatswap}
+    \subitem {at.physics.amat}, \hyperpage{37}
+
+  \indexspace
+
+  \item {lattice\_filter}
+    \subitem {at.lattice.lattice\_object}, \hyperpage{11}
+  \item {linopt}
+    \subitem {at.physics.linear}, \hyperpage{43}
+  \item {linopt2}
+    \subitem {at.physics.linear}, \hyperpage{44}
+  \item {linopt4}
+    \subitem {at.physics.linear}, \hyperpage{45}
+  \item {linopt6}
+    \subitem {at.physics.linear}, \hyperpage{47}
+  \item {linopt\_auto}
+    \subitem {at.physics.linear}, \hyperpage{48}
+  \item {load\_lattice}
+    \subitem {at.load.allfiles}, \hyperpage{22}
+  \item {load\_m}
+    \subitem {at.load.matfile}, \hyperpage{25}
+  \item {load\_mat}
+    \subitem {at.load.matfile}, \hyperpage{25}
+  \item {load\_repr}
+    \subitem {at.load.reprfile}, \hyperpage{28}
+  \item {load\_var}
+    \subitem {at.load.matfile}, \hyperpage{26}
+  \item {long\_resonator}
+    \subitem {at.collective.wake\_object.Wake}, \hyperpage{120}
+  \item {long\_resonator\_wf}
+    \subitem {at.collective.wake\_functions}, \hyperpage{8}
+
+  \indexspace
+
+  \item {make\_copy}
+    \subitem {at.lattice.utils}, \hyperpage{17}
+  \item {matfile\_generator}
+    \subitem {at.load.matfile}, \hyperpage{26}
+  \item {matlab\_ring}
+    \subitem {at.load.matfile}, \hyperpage{26}
+  \item {mfile\_generator}
+    \subitem {at.load.matfile}, \hyperpage{27}
+  \item {modify\_elements}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{95}
+
+  \indexspace
+
+  \item {no\_filter}
+    \subitem {at.lattice.lattice\_object}, \hyperpage{12}
+
+  \indexspace
+
+  \item {ohmi\_envelope}
+    \subitem {at.physics.radiation}, \hyperpage{58}
+
+  \indexspace
+
+  \item {params\_filter}
+    \subitem {at.lattice.lattice\_object}, \hyperpage{12}
+  \item {parse\_chunk}
+    \subitem {at.load.elegant}, \hyperpage{24}
+  \item {parse\_float}
+    \subitem {at.load.tracy}, \hyperpage{29}
+  \item {parse\_hom}
+    \subitem {at.load.tracy}, \hyperpage{30}
+  \item {parse\_lines}
+    \subitem {at.load.elegant}, \hyperpage{24}
+    \subitem {at.load.tracy}, \hyperpage{30}
+  \item {particle}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{96}
+  \item {patpass}
+    \subitem {at.tracking.patpass}, \hyperpage{69}
+  \item {pldata\_beta\_disp}
+    \subitem {at.plot.specific}, \hyperpage{62}
+  \item {pldata\_linear}
+    \subitem {at.plot.specific}, \hyperpage{62}
+  \item {plot\_acceptance}
+    \subitem {at.plot.standalone}, \hyperpage{65}
+  \item {plot\_beta}
+    \subitem {at.plot.specific}, \hyperpage{62}
+  \item {plot\_linear}
+    \subitem {at.plot.specific}, \hyperpage{63}
+  \item {plot\_synopt}
+    \subitem {at.plot.synopt}, \hyperpage{66}
+  \item {plot\_trajectory}
+    \subitem {at.plot.specific}, \hyperpage{64}
+  \item {precompute\_S}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{89}
+  \item {props}
+    \subitem {at.physics.ring\_parameters.RingParameters}, 
+		\hyperpage{114}
+
+  \indexspace
+
+  \item {quantdiffmat}
+    \subitem {at.physics.radiation}, \hyperpage{59}
+
+  \indexspace
+
+  \item {radiation}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{96}
+  \item {radiation\_off}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{96}
+  \item {radiation\_on}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{97}
+  \item {refpts\_count}
+    \subitem {at.lattice.utils}, \hyperpage{18}
+  \item {refpts\_iterator}
+    \subitem {at.lattice.utils}, \hyperpage{18}
+  \item {refpts\_len}
+    \subitem {at.lattice.utils}, \hyperpage{18}
+  \item {register\_format}
+    \subitem {at.load.allfiles}, \hyperpage{22}
+  \item {replace}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{98}
+  \item {REQUIRED\_ATTRIBUTES}
+    \subitem {at.lattice.elements.Dipole}, \hyperpage{78}
+    \subitem {at.lattice.elements.Multipole}, \hyperpage{106}
+    \subitem {at.lattice.elements.RFCavity}, \hyperpage{113}
+    \subitem {at.lattice.elements.ThinMultipole}, \hyperpage{117}
+    \subitem {at.lattice.elements.Wiggler}, \hyperpage{124}
+    \subitem {at.load.utils.RingParam}, \hyperpage{113}
+  \item {resistive\_wall}
+    \subitem {at.collective.wake\_object.Wake}, \hyperpage{120}
+  \item {resonator}
+    \subitem {at.collective.wake\_object.Wake}, \hyperpage{120}
+  \item {revolution\_frequency}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{98}
+  \item {ringparam\_filter}
+    \subitem {at.load.matfile}, \hyperpage{27}
+  \item {rotate}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{98}
+
+  \indexspace
+
+  \item {s\_range}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{98}
+  \item {save\_lattice}
+    \subitem {at.load.allfiles}, \hyperpage{23}
+  \item {save\_m}
+    \subitem {at.load.matfile}, \hyperpage{27}
+  \item {save\_mat}
+    \subitem {at.load.matfile}, \hyperpage{27}
+  \item {save\_repr}
+    \subitem {at.load.reprfile}, \hyperpage{28}
+  \item {sbreak}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{98}
+  \item {set\_I}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{89}
+  \item {set\_radiation}
+    \subitem {at.lattice.utils}, \hyperpage{18}
+  \item {set\_shift}
+    \subitem {at.lattice.utils}, \hyperpage{19}
+  \item {set\_tilt}
+    \subitem {at.lattice.utils}, \hyperpage{19}
+  \item {set\_value\_refpts}
+    \subitem {at.lattice.utils}, \hyperpage{19}
+  \item {set\_weights}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{90}
+  \item {shift\_elem}
+    \subitem {at.lattice.utils}, \hyperpage{20}
+  \item {sigma\_matrix}
+    \subitem {at.tracking.particles}, \hyperpage{68}
+  \item {slice}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{99}
+  \item {solve\_steps}
+    \subitem {at.collective.haissinski.Haissinski}, \hyperpage{90}
+  \item {status}
+    \subitem {at.matching.matching.Constraints}, \hyperpage{75}
+  \item {symplectify}
+    \subitem {at.physics.amat}, \hyperpage{37}
+
+  \indexspace
+
+  \item {tapering}
+    \subitem {at.physics.radiation}, \hyperpage{59}
+  \item {tilt\_elem}
+    \subitem {at.lattice.utils}, \hyperpage{20}
+  \item {transverse\_resonator\_wf}
+    \subitem {at.collective.wake\_functions}, \hyperpage{8}
+  \item {transverse\_reswall\_wf}
+    \subitem {at.collective.wake\_functions}, \hyperpage{9}
+  \item {tunes\_vs\_amp}
+    \subitem {at.physics.nonlinear}, \hyperpage{52}
+  \item {type\_filter}
+    \subitem {at.lattice.lattice\_object}, \hyperpage{12}
+
+  \indexspace
+
+  \item {uint32\_refpts}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{99}
+    \subitem {at.lattice.utils}, \hyperpage{21}
+  \item {update}
+    \subitem {at.lattice.elements.Element}, \hyperpage{81}
+    \subitem {at.lattice.lattice\_object.Lattice}, \hyperpage{99}
+
+  \indexspace
+
+  \item {values}
+    \subitem {at.matching.matching.Constraints}, \hyperpage{76}
+    \subitem {at.matching.matching.ElementConstraints}, \hyperpage{83}
+
+\end{theindex}

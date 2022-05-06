@@ -1,0 +1,73 @@
+\hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints}{}\doxysection{at.\+matching.\+matching.\+Element\+Constraints Class Reference}
+\label{classat_1_1matching_1_1matching_1_1ElementConstraints}\index{at.matching.matching.ElementConstraints@{at.matching.matching.ElementConstraints}}
+
+
+Inheritance diagram for at.\+matching.\+matching.\+Element\+Constraints\+:
+% FIG 0
+
+
+Collaboration diagram for at.\+matching.\+matching.\+Element\+Constraints\+:
+% FIG 1
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_a80d896482c1740abae9b57a6ef797e00}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_a80d896482c1740abae9b57a6ef797e00}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self, ring, $\ast$args, $\ast$$\ast$kwargs)
+\item 
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_ae60cbd75f49a9bc3a47459284add91ee}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_ae60cbd75f49a9bc3a47459284add91ee}} 
+def {\bfseries add} (self, fun, target, refpts=None, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{classat_1_1matching_1_1matching_1_1ElementConstraints_a01a3ba33e41036cf2b20ad40341feac9}{values}} (self, ring)
+\item 
+def \mbox{\hyperlink{classat_1_1matching_1_1matching_1_1ElementConstraints_a6dd7b0bf17a9357f0ca9ef8d1257bbf4}{compute}} (self, ring, $\ast$args, $\ast$$\ast$kwargs)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_a04be3df8069164189d00a6451918a765}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_a04be3df8069164189d00a6451918a765}} 
+{\bfseries nelems}
+\item 
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_ad56b0e6e370ce14f700144ed3e3bd0e0}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_ad56b0e6e370ce14f700144ed3e3bd0e0}} 
+{\bfseries refs}
+\item 
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_a3c341b0be7e18ecb4355b02c40dc6325}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_a3c341b0be7e18ecb4355b02c40dc6325}} 
+{\bfseries refpts}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Base class for position-related constraints: handle the refpoints
+of each target\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_a6dd7b0bf17a9357f0ca9ef8d1257bbf4}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_a6dd7b0bf17a9357f0ca9ef8d1257bbf4}} 
+\index{at.matching.matching.ElementConstraints@{at.matching.matching.ElementConstraints}!compute@{compute}}
+\index{compute@{compute}!at.matching.matching.ElementConstraints@{at.matching.matching.ElementConstraints}}
+\doxysubsubsection{\texorpdfstring{compute()}{compute()}}
+{\footnotesize\ttfamily def at.\+matching.\+matching.\+Element\+Constraints.\+compute (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{ring,  }\item[{$\ast$}]{args,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Dummy computation. Compute must return:
+- an iterator over local data for each target
+- a tuple of global data\end{DoxyVerb}
+ 
+
+Reimplemented in \mbox{\hyperlink{classat_1_1matching_1_1matching_1_1EnvelopeConstraints_a8fd72f613dd5e952f2171a434510784a}{at.\+matching.\+matching.\+Envelope\+Constraints}}, \mbox{\hyperlink{classat_1_1matching_1_1matching_1_1OrbitConstraints_a70f082601e5cc49c21de446d06a3b53b}{at.\+matching.\+matching.\+Orbit\+Constraints}}, and \mbox{\hyperlink{classat_1_1matching_1_1matching_1_1LinoptConstraints_ae3bbbadb24912254397e51bab56dd357}{at.\+matching.\+matching.\+Linopt\+Constraints}}.
+
+\mbox{\Hypertarget{classat_1_1matching_1_1matching_1_1ElementConstraints_a01a3ba33e41036cf2b20ad40341feac9}\label{classat_1_1matching_1_1matching_1_1ElementConstraints_a01a3ba33e41036cf2b20ad40341feac9}} 
+\index{at.matching.matching.ElementConstraints@{at.matching.matching.ElementConstraints}!values@{values}}
+\index{values@{values}!at.matching.matching.ElementConstraints@{at.matching.matching.ElementConstraints}}
+\doxysubsubsection{\texorpdfstring{values()}{values()}}
+{\footnotesize\ttfamily def at.\+matching.\+matching.\+Element\+Constraints.\+values (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{ring }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return the list of actual parameter values\end{DoxyVerb}
+ 
+
+Reimplemented from \mbox{\hyperlink{classat_1_1matching_1_1matching_1_1Constraints_a470ad1fbad9533a37cd210c227ce42af}{at.\+matching.\+matching.\+Constraints}}.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+at/matching/matching.\+py\end{DoxyCompactItemize}

@@ -1,0 +1,75 @@
+\hypertarget{namespaceat_1_1physics_1_1harmonic__analysis}{}\doxysection{at.\+physics.\+harmonic\+\_\+analysis Namespace Reference}
+\label{namespaceat_1_1physics_1_1harmonic__analysis}\index{at.physics.harmonic\_analysis@{at.physics.harmonic\_analysis}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classat_1_1physics_1_1harmonic__analysis_1_1HarmonicAnalysis}{Harmonic\+Analysis}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1harmonic__analysis_a5f6399253926026dc2845e84e4dea27c}{get\+\_\+spectrum\+\_\+harmonic}} (cent, num\+\_\+harmonics=20, method=\textquotesingle{}laskar\textquotesingle{}, hann=False)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1harmonic__analysis_affe034d1ad55447355d34b18342c2b58}{get\+\_\+tunes\+\_\+harmonic}} (cents, method, num\+\_\+harmonics=20, hann=False, fmin=0, fmax=1)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespaceat_1_1physics_1_1harmonic__analysis_a83c008212a63ea2b33389b3b2b2e18d0}\label{namespaceat_1_1physics_1_1harmonic__analysis_a83c008212a63ea2b33389b3b2b2e18d0}} 
+int {\bfseries P\+I2I} = 2 $\ast$ np.\+pi $\ast$ complex(0, 1)
+\item 
+\mbox{\Hypertarget{namespaceat_1_1physics_1_1harmonic__analysis_a63f8123cd6f319a47e8c2e269167dee8}\label{namespaceat_1_1physics_1_1harmonic__analysis_a63f8123cd6f319a47e8c2e269167dee8}} 
+bool {\bfseries Z\+E\+R\+O\+\_\+\+P\+A\+D\+\_\+\+D\+EF} = False
+\item 
+\mbox{\Hypertarget{namespaceat_1_1physics_1_1harmonic__analysis_a91cabcb0d91531750003ba9b18786c31}\label{namespaceat_1_1physics_1_1harmonic__analysis_a91cabcb0d91531750003ba9b18786c31}} 
+bool {\bfseries H\+A\+N\+N\+\_\+\+D\+EF} = False
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Original author of HarmonicAnalysis class
+Jaime Maria Coello De Portugal - Martinez Vazquez
+
+
+Written while at CERN circa 2016
+This is a reduced version keeping only the key components.
+Full code can be found at: https://github.com/pylhc/harpy\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1physics_1_1harmonic__analysis_a5f6399253926026dc2845e84e4dea27c}\label{namespaceat_1_1physics_1_1harmonic__analysis_a5f6399253926026dc2845e84e4dea27c}} 
+\index{at.physics.harmonic\_analysis@{at.physics.harmonic\_analysis}!get\_spectrum\_harmonic@{get\_spectrum\_harmonic}}
+\index{get\_spectrum\_harmonic@{get\_spectrum\_harmonic}!at.physics.harmonic\_analysis@{at.physics.harmonic\_analysis}}
+\doxysubsubsection{\texorpdfstring{get\_spectrum\_harmonic()}{get\_spectrum\_harmonic()}}
+{\footnotesize\ttfamily def at.\+physics.\+harmonic\+\_\+analysis.\+get\+\_\+spectrum\+\_\+harmonic (\begin{DoxyParamCaption}\item[{}]{cent,  }\item[{}]{num\+\_\+harmonics = {\ttfamily 20},  }\item[{}]{method = {\ttfamily \textquotesingle{}laskar\textquotesingle{}},  }\item[{}]{hann = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}INPUT
+cent: centroid motions of the particle
+num_harmonics: number of harmonic components to compute (before mask
+applied, default=20)
+method: laskar or fft [default=laskar]
+hann: flag to turn on hanning window [default-> False]
+
+OUTPUT
+freq,amp: numpy arrays for the frequency and amplitude
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1harmonic__analysis_affe034d1ad55447355d34b18342c2b58}\label{namespaceat_1_1physics_1_1harmonic__analysis_affe034d1ad55447355d34b18342c2b58}} 
+\index{at.physics.harmonic\_analysis@{at.physics.harmonic\_analysis}!get\_tunes\_harmonic@{get\_tunes\_harmonic}}
+\index{get\_tunes\_harmonic@{get\_tunes\_harmonic}!at.physics.harmonic\_analysis@{at.physics.harmonic\_analysis}}
+\doxysubsubsection{\texorpdfstring{get\_tunes\_harmonic()}{get\_tunes\_harmonic()}}
+{\footnotesize\ttfamily def at.\+physics.\+harmonic\+\_\+analysis.\+get\+\_\+tunes\+\_\+harmonic (\begin{DoxyParamCaption}\item[{}]{cents,  }\item[{}]{method,  }\item[{}]{num\+\_\+harmonics = {\ttfamily 20},  }\item[{}]{hann = {\ttfamily False},  }\item[{}]{fmin = {\ttfamily 0},  }\item[{}]{fmax = {\ttfamily 1} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}INPUT
+cents: are the centroid motions of the particles
+method: laskar or fft
+num_harmonics: number of harmonic components to compute (before mask
+applied, default=20)
+fmin/fmax: determine the boundaries within which the tune is located
+[default 0->1]
+hann: flag to turn on hanning window [default-> False]
+
+OUTPUT
+tunes: numpy array of length len(cents), max of the spectrum within
+fmin:fmax
+\end{DoxyVerb}
+ 

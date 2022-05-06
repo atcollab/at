@@ -1,0 +1,135 @@
+\hypertarget{classat_1_1collective_1_1wake__object_1_1Wake}{}\doxysection{at.\+collective.\+wake\+\_\+object.\+Wake Class Reference}
+\label{classat_1_1collective_1_1wake__object_1_1Wake}\index{at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}}
+
+
+Inheritance diagram for at.\+collective.\+wake\+\_\+object.\+Wake\+:
+% FIG 0
+
+
+Collaboration diagram for at.\+collective.\+wake\+\_\+object.\+Wake\+:
+% FIG 1
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a826c08e992e2a7df2a080a3ca6a3cb51}\label{classat_1_1collective_1_1wake__object_1_1Wake_a826c08e992e2a7df2a080a3ca6a3cb51}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self, srange)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_ab49890b7a28a0403791150e578ea9262}\label{classat_1_1collective_1_1wake__object_1_1Wake_ab49890b7a28a0403791150e578ea9262}} 
+def {\bfseries srange} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a5a6cf8238cadbc4dbb744c3704596917}\label{classat_1_1collective_1_1wake__object_1_1Wake_a5a6cf8238cadbc4dbb744c3704596917}} 
+def {\bfseries DX} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a133751a1205c5372faad5753b0b788c0}\label{classat_1_1collective_1_1wake__object_1_1Wake_a133751a1205c5372faad5753b0b788c0}} 
+def {\bfseries DY} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a473a75a0f73323561593b9614d94369e}\label{classat_1_1collective_1_1wake__object_1_1Wake_a473a75a0f73323561593b9614d94369e}} 
+def {\bfseries QX} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_add9f4d1b8ee6c53e626222c97223c6ef}\label{classat_1_1collective_1_1wake__object_1_1Wake_add9f4d1b8ee6c53e626222c97223c6ef}} 
+def {\bfseries QY} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_afad6915212de647b9f547e25f4f35c1b}\label{classat_1_1collective_1_1wake__object_1_1Wake_afad6915212de647b9f547e25f4f35c1b}} 
+def {\bfseries Z} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a93ecf04937b6abe98476e25a0b93fe99}\label{classat_1_1collective_1_1wake__object_1_1Wake_a93ecf04937b6abe98476e25a0b93fe99}} 
+def {\bfseries add} (self, wtype, wcomp, $\ast$args, $\ast$$\ast$kwargs)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classat_1_1collective_1_1wake__object_1_1Wake_a851380e36fe6eb3613a065908c19fe5d}{resonator}} (srange, wakecomp, frequency, qfactor, rshunt, beta, yokoya\+\_\+factor=1, nelems=1)
+\item 
+def \mbox{\hyperlink{classat_1_1collective_1_1wake__object_1_1Wake_ad7e368e5956d9a57345b73c7e9b1bff8}{long\+\_\+resonator}} (srange, frequency, qfactor, rshunt, beta, nelems=1)
+\item 
+def \mbox{\hyperlink{classat_1_1collective_1_1wake__object_1_1Wake_a6a321680f375e1a2dfe65480a653a65e}{resistive\+\_\+wall}} (srange, wakecomp, length, rvac, conduct, beta, yokoya\+\_\+factor=1, nelems=1)
+\item 
+def \mbox{\hyperlink{classat_1_1collective_1_1wake__object_1_1Wake_a2415b25ad0b1d4c3022a528fbb02b37e}{build\+\_\+srange}} (start, bunch\+\_\+ext, short\+\_\+step, long\+\_\+step, bunch\+\_\+interval, totallength)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_ae6bb22baa670071cc52e14e850a8006d}\label{classat_1_1collective_1_1wake__object_1_1Wake_ae6bb22baa670071cc52e14e850a8006d}} 
+{\bfseries components}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Class to generate a wake object
+The wake object is define by its srange, specified
+at initialization, and DX, DY, QY, Z corresponding
+to transverse dipoles and quadrupoles and longitudinal
+
+The srange is common to all components and cannot be changed
+once initialized, all added component are resampled to the
+srange
+
+usage:
+wake = Wake(srange)
+wake.add(WakeType,WakeComponent, *args, *kwargs)
+
+Component are WakeComponent.FILE (import from file),
+WakeComponent.TABLE (provide vectors), WakeComponent.RESONATOR
+(analytical resonator), WakeComponent.RESWALL (transverse RW)
+
+Components are retrieved with Wake.DX for example
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a2415b25ad0b1d4c3022a528fbb02b37e}\label{classat_1_1collective_1_1wake__object_1_1Wake_a2415b25ad0b1d4c3022a528fbb02b37e}} 
+\index{at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}!build\_srange@{build\_srange}}
+\index{build\_srange@{build\_srange}!at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}}
+\doxysubsubsection{\texorpdfstring{build\_srange()}{build\_srange()}}
+{\footnotesize\ttfamily def at.\+collective.\+wake\+\_\+object.\+Wake.\+build\+\_\+srange (\begin{DoxyParamCaption}\item[{}]{start,  }\item[{}]{bunch\+\_\+ext,  }\item[{}]{short\+\_\+step,  }\item[{}]{long\+\_\+step,  }\item[{}]{bunch\+\_\+interval,  }\item[{}]{totallength }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\begin{DoxyVerb}Function to build the wake table s column.
+This is not the slicing but the look-up table,
+however it generates data where bunches are located
+to avoid using too much memory to store the table.
+
+PARAMETERS
+    start           starting s-coordinate of the table
+            (can be negative for wake potential)
+    bunch_ext       maximum bunch extension, function
+            generates data at +/- bunch_ext
+            around the bucket center
+    short_step      step size for the short range wake table
+    long_step       step size for the long range wake table
+    bunch_interval  minimum bunch interval data will be generate
+            for each bunch_inteval step
+    totallength     total length of the wake table, has to contain
+            the full bunch extension
+
+OUTPUT
+    srange          vector of s position where to sample the wake
+\end{DoxyVerb}
+ \mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_ad7e368e5956d9a57345b73c7e9b1bff8}\label{classat_1_1collective_1_1wake__object_1_1Wake_ad7e368e5956d9a57345b73c7e9b1bff8}} 
+\index{at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}!long\_resonator@{long\_resonator}}
+\index{long\_resonator@{long\_resonator}!at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}}
+\doxysubsubsection{\texorpdfstring{long\_resonator()}{long\_resonator()}}
+{\footnotesize\ttfamily def at.\+collective.\+wake\+\_\+object.\+Wake.\+long\+\_\+resonator (\begin{DoxyParamCaption}\item[{}]{srange,  }\item[{}]{frequency,  }\item[{}]{qfactor,  }\item[{}]{rshunt,  }\item[{}]{beta,  }\item[{}]{nelems = {\ttfamily 1} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\begin{DoxyVerb}Method to build a longitudinal resonator wake object
+\end{DoxyVerb}
+ \mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a6a321680f375e1a2dfe65480a653a65e}\label{classat_1_1collective_1_1wake__object_1_1Wake_a6a321680f375e1a2dfe65480a653a65e}} 
+\index{at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}!resistive\_wall@{resistive\_wall}}
+\index{resistive\_wall@{resistive\_wall}!at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}}
+\doxysubsubsection{\texorpdfstring{resistive\_wall()}{resistive\_wall()}}
+{\footnotesize\ttfamily def at.\+collective.\+wake\+\_\+object.\+Wake.\+resistive\+\_\+wall (\begin{DoxyParamCaption}\item[{}]{srange,  }\item[{}]{wakecomp,  }\item[{}]{length,  }\item[{}]{rvac,  }\item[{}]{conduct,  }\item[{}]{beta,  }\item[{}]{yokoya\+\_\+factor = {\ttfamily 1},  }\item[{}]{nelems = {\ttfamily 1} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\begin{DoxyVerb}Method to build a resistive wall wake object
+\end{DoxyVerb}
+ \mbox{\Hypertarget{classat_1_1collective_1_1wake__object_1_1Wake_a851380e36fe6eb3613a065908c19fe5d}\label{classat_1_1collective_1_1wake__object_1_1Wake_a851380e36fe6eb3613a065908c19fe5d}} 
+\index{at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}!resonator@{resonator}}
+\index{resonator@{resonator}!at.collective.wake\_object.Wake@{at.collective.wake\_object.Wake}}
+\doxysubsubsection{\texorpdfstring{resonator()}{resonator()}}
+{\footnotesize\ttfamily def at.\+collective.\+wake\+\_\+object.\+Wake.\+resonator (\begin{DoxyParamCaption}\item[{}]{srange,  }\item[{}]{wakecomp,  }\item[{}]{frequency,  }\item[{}]{qfactor,  }\item[{}]{rshunt,  }\item[{}]{beta,  }\item[{}]{yokoya\+\_\+factor = {\ttfamily 1},  }\item[{}]{nelems = {\ttfamily 1} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\begin{DoxyVerb}Method to build a resonator wake object
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+at/collective/wake\+\_\+object.\+py\end{DoxyCompactItemize}

@@ -1,0 +1,58 @@
+\hypertarget{namespaceat_1_1plot_1_1synopt}{}\doxysection{at.\+plot.\+synopt Namespace Reference}
+\label{namespaceat_1_1plot_1_1synopt}\index{at.plot.synopt@{at.plot.synopt}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1plot_1_1synopt_aecec75cf7bf8a41d21b180ac1ea250ec}{plot\+\_\+synopt}} (ring, axes=None, dipole=\{\}, quadrupole=\{\}, sextupole=\{\}, multipole=\{\}, monitor=\{\})
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1synopt_a1922eb3c20d36be49f24e0728156132a}\label{namespaceat_1_1plot_1_1synopt_a1922eb3c20d36be49f24e0728156132a}} 
+{\bfseries D\+I\+P\+O\+LE} = dict(label=\textquotesingle{}Dipoles\textquotesingle{}, facecolor=(0.\+5, 0.\+5, 1.\+0))
+\item 
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1synopt_a69e679fa3604fb13e4910de2c3715194}\label{namespaceat_1_1plot_1_1synopt_a69e679fa3604fb13e4910de2c3715194}} 
+{\bfseries Q\+U\+A\+D\+R\+U\+P\+O\+LE} = dict(label=\textquotesingle{}Quadrupoles\textquotesingle{}, facecolor=(1.\+0, 0.\+5, 0.\+5))
+\item 
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1synopt_a1f79c44eed14d09b7074962929dd1e13}\label{namespaceat_1_1plot_1_1synopt_a1f79c44eed14d09b7074962929dd1e13}} 
+{\bfseries S\+E\+X\+T\+U\+P\+O\+LE} = dict(label=\textquotesingle{}Sextupoles\textquotesingle{}, facecolor=(0.\+5, 1.\+0, 0.\+5))
+\item 
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1synopt_a39ff1577aa50ec51faae1912feaf22ff}\label{namespaceat_1_1plot_1_1synopt_a39ff1577aa50ec51faae1912feaf22ff}} 
+{\bfseries M\+U\+L\+T\+I\+P\+O\+LE} = dict(label=\textquotesingle{}Multipoles\textquotesingle{}, facecolor=(0.\+25, 0.\+75, 0.\+25))
+\item 
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1synopt_a97a9a3c7c0c357cc8c928a2dc0e13904}\label{namespaceat_1_1plot_1_1synopt_a97a9a3c7c0c357cc8c928a2dc0e13904}} 
+{\bfseries M\+O\+N\+I\+T\+OR} = dict(label=\textquotesingle{}Monitors\textquotesingle{}, linestyle=None, marker=10, color=\textquotesingle{}k\textquotesingle{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Plot a lattice synoptic\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1synopt_aecec75cf7bf8a41d21b180ac1ea250ec}\label{namespaceat_1_1plot_1_1synopt_aecec75cf7bf8a41d21b180ac1ea250ec}} 
+\index{at.plot.synopt@{at.plot.synopt}!plot\_synopt@{plot\_synopt}}
+\index{plot\_synopt@{plot\_synopt}!at.plot.synopt@{at.plot.synopt}}
+\doxysubsubsection{\texorpdfstring{plot\_synopt()}{plot\_synopt()}}
+{\footnotesize\ttfamily def at.\+plot.\+synopt.\+plot\+\_\+synopt (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{axes = {\ttfamily None},  }\item[{}]{dipole = {\ttfamily \{\}},  }\item[{}]{quadrupole = {\ttfamily \{\}},  }\item[{}]{sextupole = {\ttfamily \{\}},  }\item[{}]{multipole = {\ttfamily \{\}},  }\item[{}]{monitor = {\ttfamily \{\}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Plot a synoptic of a lattice
+
+PARAMETERS
+    ring            Lattice object
+
+KEYWORDS
+    s_range=None    plot range, defaults to the full ring
+    axes=None       axes for plotting the synoptic. If None, a new
+                    figure will be created. Otherwise, a new axes object
+                    sharing the same x-axis as the given one is created.
+    dipole={}       Dictionary of properties overloading the default
+                    properties. If None, dipoles will not be shown.
+    quadrupole={}   Same definition as for dipole
+    sextupole={}    Same definition as for dipole
+    multipole={}    Same definition as for dipole
+    monitor={}      Same definition as for dipole
+
+RETURN
+    synopt_axes     Synoptic axes\end{DoxyVerb}
+ 

@@ -1,0 +1,74 @@
+\hypertarget{classat_1_1lattice_1_1elements_1_1Drift}{}\doxysection{at.\+lattice.\+elements.\+Drift Class Reference}
+\label{classat_1_1lattice_1_1elements_1_1Drift}\index{at.lattice.elements.Drift@{at.lattice.elements.Drift}}
+
+
+Inheritance diagram for at.\+lattice.\+elements.\+Drift\+:
+% FIG 0
+
+
+Collaboration diagram for at.\+lattice.\+elements.\+Drift\+:
+% FIG 1
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Drift_a0894ac8179b52879d9e3b78c2cd49e7d}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, family\+\_\+name, length, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Drift_ade99e6bc020396c4bac7981ceb51d0e0}{insert}} (self, insert\+\_\+list)
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}pyAT drift space element\end{DoxyVerb}
+ 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Drift_a0894ac8179b52879d9e3b78c2cd49e7d}\label{classat_1_1lattice_1_1elements_1_1Drift_a0894ac8179b52879d9e3b78c2cd49e7d}} 
+\index{at.lattice.elements.Drift@{at.lattice.elements.Drift}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!at.lattice.elements.Drift@{at.lattice.elements.Drift}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def at.\+lattice.\+elements.\+Drift.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{family\+\_\+name,  }\item[{}]{length,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Drift(FamName, Length, **keywords)
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Drift_ade99e6bc020396c4bac7981ceb51d0e0}\label{classat_1_1lattice_1_1elements_1_1Drift_ade99e6bc020396c4bac7981ceb51d0e0}} 
+\index{at.lattice.elements.Drift@{at.lattice.elements.Drift}!insert@{insert}}
+\index{insert@{insert}!at.lattice.elements.Drift@{at.lattice.elements.Drift}}
+\doxysubsubsection{\texorpdfstring{insert()}{insert()}}
+{\footnotesize\ttfamily def at.\+lattice.\+elements.\+Drift.\+insert (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{insert\+\_\+list }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}insert elements inside a drift
+
+arguments:
+    insert_list: iterable, each item of insert_list is itself an
+         iterable with 2 objects:
+             1. the location where the center of the element
+                will be inserted, given as a fraction of the
+                Drift length.
+             2. an element to be inserted at that location. If
+                None, the drift will be divided but no element
+                will be inserted.
+
+Return a list of elements.
+
+Drifts with negative lengths may be generated if necessary.
+
+Examples:
+
+>>> Drift('dr', 2.0).insert(((0.25, None), (0.75, None)))
+[Drift('dr', 0.5), Drift('dr', 1.0), Drift('dr', 0.5)]
+
+>>> Drift('dr', 2.0).insert(((0.0, Marker('m1')), (0.5, Marker('m2'))))
+[Marker('m1'), Drift('dr', 1.0), Marker('m2'), Drift('dr', 1.0)]
+
+>>> Drift('dr', 2.0).insert(((0.5, Quadrupole('qp', 0.4, 0.0)),))
+[Drift('dr', 0.8), Quadrupole('qp', 0.4), Drift('dr', 0.8)]
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+at/lattice/elements.\+py\end{DoxyCompactItemize}

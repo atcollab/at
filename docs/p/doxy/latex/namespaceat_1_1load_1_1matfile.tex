@@ -1,0 +1,161 @@
+\hypertarget{namespaceat_1_1load_1_1matfile}{}\doxysection{at.\+load.\+matfile Namespace Reference}
+\label{namespaceat_1_1load_1_1matfile}\index{at.load.matfile@{at.load.matfile}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_a3f607f8b2712ebefb38a554891e089af}{matfile\+\_\+generator}} (params, mat\+\_\+file)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_a480d87d402f6b191c09cf547fb17dbef}{ringparam\+\_\+filter}} (params, elem\+\_\+iterator, $\ast$args)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_a4f5b0d21d605634a9ae180b447d36e19}{load\+\_\+mat}} (filename, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_aed742e5467763ff881bdedcff37bbcbc}{mfile\+\_\+generator}} (params, m\+\_\+file)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_a2e842a932fcb9ee8dc69cdafc8152579}{load\+\_\+m}} (filename, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_ad5cfcb05796336bf8e8a4aa0567f2272}{load\+\_\+var}} (matlat, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_abd2ec2f1982854cc02a1d36950befe7e}{matlab\+\_\+ring}} (ring)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_a607fbb3347736117459273180a98171a}{save\+\_\+mat}} (ring, filename, mat\+\_\+key=\textquotesingle{}R\+I\+NG\textquotesingle{})
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1matfile_ac9c19c15a97df057d1df741ff99fcf94}{save\+\_\+m}} (ring, filename=None)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Load lattices from Matlab files.
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_a2e842a932fcb9ee8dc69cdafc8152579}\label{namespaceat_1_1load_1_1matfile_a2e842a932fcb9ee8dc69cdafc8152579}} 
+\index{at.load.matfile@{at.load.matfile}!load\_m@{load\_m}}
+\index{load\_m@{load\_m}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{load\_m()}{load\_m()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+load\+\_\+m (\begin{DoxyParamCaption}\item[{}]{filename,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Create a lattice object from a matlab m-file
+
+PARAMETERS
+    filename        name of a '.m' file
+
+KEYWORDS
+    keep_all=False  if True, keep RingParam elements as Markers
+    name            Name of the lattice
+                    (default: taken from the elements, or '')
+    energy          Energy of the lattice
+                    (default: taken from the elements)
+    periodicity     Number of periods
+                    (default: taken from the elements, or 1)
+    *               all other keywords will be set as Lattice attributes
+
+OUTPUT
+    Lattice object
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_a4f5b0d21d605634a9ae180b447d36e19}\label{namespaceat_1_1load_1_1matfile_a4f5b0d21d605634a9ae180b447d36e19}} 
+\index{at.load.matfile@{at.load.matfile}!load\_mat@{load\_mat}}
+\index{load\_mat@{load\_mat}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{load\_mat()}{load\_mat()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+load\+\_\+mat (\begin{DoxyParamCaption}\item[{}]{filename,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Create a lattice object from a Matlab mat-file
+
+PARAMETERS
+    filename        name of a '.mat' file
+
+KEYWORDS
+    mat_key         name of the Matlab variable containing the lattice.
+                    Default: Matlab variable name if there is only one,
+                    otherwise 'RING'
+    check=True      if False, skip the coherence tests
+    quiet=False     If True, suppress the warning for non-standard classes
+    keep_all=False  if True, keep RingParam elements as Markers
+    name            Name of the lattice
+                    (default: taken from the lattice, or '')
+    energy          Energy of the lattice
+                    (default: taken from the elements)
+    periodicity     Number of periods
+                    (default: taken from the elements, or 1)
+    *               all other keywords will be set as Lattice attributes
+
+OUTPUT
+    Lattice object
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_ad5cfcb05796336bf8e8a4aa0567f2272}\label{namespaceat_1_1load_1_1matfile_ad5cfcb05796336bf8e8a4aa0567f2272}} 
+\index{at.load.matfile@{at.load.matfile}!load\_var@{load\_var}}
+\index{load\_var@{load\_var}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{load\_var()}{load\_var()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+load\+\_\+var (\begin{DoxyParamCaption}\item[{}]{matlat,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Create a lattice from a Matlab cell array\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_a3f607f8b2712ebefb38a554891e089af}\label{namespaceat_1_1load_1_1matfile_a3f607f8b2712ebefb38a554891e089af}} 
+\index{at.load.matfile@{at.load.matfile}!matfile\_generator@{matfile\_generator}}
+\index{matfile\_generator@{matfile\_generator}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{matfile\_generator()}{matfile\_generator()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+matfile\+\_\+generator (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{mat\+\_\+file }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}run through matlab cells and generate AT elements
+
+KEYWORDS
+    mat_file        name of the .mat file
+    mat_key         name of the Matlab variable containing the lattice.
+                    Default: Matlab variable name if there is only one,
+                    otherwise 'RING'
+    check=True      if False, skip the coherence tests
+    quiet=False     If True, suppress the warning for non-standard classes
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_abd2ec2f1982854cc02a1d36950befe7e}\label{namespaceat_1_1load_1_1matfile_abd2ec2f1982854cc02a1d36950befe7e}} 
+\index{at.load.matfile@{at.load.matfile}!matlab\_ring@{matlab\_ring}}
+\index{matlab\_ring@{matlab\_ring}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{matlab\_ring()}{matlab\_ring()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+matlab\+\_\+ring (\begin{DoxyParamCaption}\item[{}]{ring }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prepend a RingParam element to a lattice\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_aed742e5467763ff881bdedcff37bbcbc}\label{namespaceat_1_1load_1_1matfile_aed742e5467763ff881bdedcff37bbcbc}} 
+\index{at.load.matfile@{at.load.matfile}!mfile\_generator@{mfile\_generator}}
+\index{mfile\_generator@{mfile\_generator}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{mfile\_generator()}{mfile\_generator()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+mfile\+\_\+generator (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{m\+\_\+file }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Run through all lines of a m-file and generates AT elements\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_a480d87d402f6b191c09cf547fb17dbef}\label{namespaceat_1_1load_1_1matfile_a480d87d402f6b191c09cf547fb17dbef}} 
+\index{at.load.matfile@{at.load.matfile}!ringparam\_filter@{ringparam\_filter}}
+\index{ringparam\_filter@{ringparam\_filter}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{ringparam\_filter()}{ringparam\_filter()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+ringparam\+\_\+filter (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{elem\+\_\+iterator,  }\item[{$\ast$}]{args }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}"
+Run through all elements, process and optionally removes RingParam elements
+
+KEYWORDS
+    keep_all=False  if True, keep RingParam elem_iterator as Markers
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_ac9c19c15a97df057d1df741ff99fcf94}\label{namespaceat_1_1load_1_1matfile_ac9c19c15a97df057d1df741ff99fcf94}} 
+\index{at.load.matfile@{at.load.matfile}!save\_m@{save\_m}}
+\index{save\_m@{save\_m}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{save\_m()}{save\_m()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+save\+\_\+m (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{filename = {\ttfamily None} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Save a lattice as a Matlab m-file
+
+PARAMETERS
+    ring            Lattice object
+    filename=None   name of the '.m' file. Default: output on sys.stdout
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1matfile_a607fbb3347736117459273180a98171a}\label{namespaceat_1_1load_1_1matfile_a607fbb3347736117459273180a98171a}} 
+\index{at.load.matfile@{at.load.matfile}!save\_mat@{save\_mat}}
+\index{save\_mat@{save\_mat}!at.load.matfile@{at.load.matfile}}
+\doxysubsubsection{\texorpdfstring{save\_mat()}{save\_mat()}}
+{\footnotesize\ttfamily def at.\+load.\+matfile.\+save\+\_\+mat (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{filename,  }\item[{}]{mat\+\_\+key = {\ttfamily \textquotesingle{}RING\textquotesingle{}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Save a Lattice object as a Matlab mat-file
+
+PARAMETERS
+    ring            Lattice object
+    filename        name of the '.mat' file
+
+KEYWORDS
+    mat_key='RING'  Name of the Matlab variable representing the lattice
+\end{DoxyVerb}
+ 

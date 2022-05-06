@@ -1,0 +1,41 @@
+\hypertarget{namespaceat_1_1physics_1_1fastring}{}\doxysection{at.\+physics.\+fastring Namespace Reference}
+\label{namespaceat_1_1physics_1_1fastring}\index{at.physics.fastring@{at.physics.fastring}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1fastring_a7088e28394150ed8f813ec19e22523f7}{fast\+\_\+ring}} (ring, split\+\_\+inds=\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Functions relating to fast_ring
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1physics_1_1fastring_a7088e28394150ed8f813ec19e22523f7}\label{namespaceat_1_1physics_1_1fastring_a7088e28394150ed8f813ec19e22523f7}} 
+\index{at.physics.fastring@{at.physics.fastring}!fast\_ring@{fast\_ring}}
+\index{fast\_ring@{fast\_ring}!at.physics.fastring@{at.physics.fastring}}
+\doxysubsubsection{\texorpdfstring{fast\_ring()}{fast\_ring()}}
+{\footnotesize\ttfamily def at.\+physics.\+fastring.\+fast\+\_\+ring (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{split\+\_\+inds = {\ttfamily \mbox{[}\mbox{]}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Computes a fast ring consisting of:
+   -1 RF cavity per distinct frequency
+   -6x6 transfer map
+   -detuning and chromaticity element
+   -quantum diffusion element (for radiation ring)
+
+2 rings are returned one with radiation one without
+The original ring is copied such that it is not modified
+It is possible to split the original ring in multiple fastrings
+using split_inds argument
+fr,frrad = at.fast_ring(ring)
+fr,frrad = at.fast_ring(ring, split_inds=[100,200])
+
+PARAMETERS
+    ring            lattice description
+
+KEYWORDS
+    split_inds=[]   List of indexes where to split the ring
+\end{DoxyVerb}
+ 

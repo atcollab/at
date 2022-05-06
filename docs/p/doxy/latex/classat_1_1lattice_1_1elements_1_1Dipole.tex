@@ -1,0 +1,91 @@
+\hypertarget{classat_1_1lattice_1_1elements_1_1Dipole}{}\doxysection{at.\+lattice.\+elements.\+Dipole Class Reference}
+\label{classat_1_1lattice_1_1elements_1_1Dipole}\index{at.lattice.elements.Dipole@{at.lattice.elements.Dipole}}
+
+
+Inheritance diagram for at.\+lattice.\+elements.\+Dipole\+:
+% FIG 0
+
+
+Collaboration diagram for at.\+lattice.\+elements.\+Dipole\+:
+% FIG 1
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Dipole_afa99434a34d60b62c4316deecc0245a7}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, family\+\_\+name, length, bending\+\_\+angle=0.\+0, k=0.\+0, $\ast$$\ast$kwargs)
+\item 
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Dipole_ae548ef723911c5a5d4eeff24437d092f}\label{classat_1_1lattice_1_1elements_1_1Dipole_ae548ef723911c5a5d4eeff24437d092f}} 
+def {\bfseries K} (self)
+\item 
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Dipole_ae42876b281940e88b2f2429f46b4ec98}\label{classat_1_1lattice_1_1elements_1_1Dipole_ae42876b281940e88b2f2429f46b4ec98}} 
+def {\bfseries K} (self, strength)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries R\+E\+Q\+U\+I\+R\+E\+D\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+ES}
+\item 
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Dipole_a6b69f21494cfbdaa95ccbc948a2b9ed4}\label{classat_1_1lattice_1_1elements_1_1Dipole_a6b69f21494cfbdaa95ccbc948a2b9ed4}} 
+int {\bfseries Default\+Order} = 0
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}pyAT dipole element\end{DoxyVerb}
+ 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Dipole_afa99434a34d60b62c4316deecc0245a7}\label{classat_1_1lattice_1_1elements_1_1Dipole_afa99434a34d60b62c4316deecc0245a7}} 
+\index{at.lattice.elements.Dipole@{at.lattice.elements.Dipole}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!at.lattice.elements.Dipole@{at.lattice.elements.Dipole}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily def at.\+lattice.\+elements.\+Dipole.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{family\+\_\+name,  }\item[{}]{length,  }\item[{}]{bending\+\_\+angle = {\ttfamily 0.0},  }\item[{}]{k = {\ttfamily 0.0},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
+
+Available keywords:
+EntranceAngle   entrance angle (default 0.0)
+ExitAngle       exit angle (default 0.0)
+PolynomB        straight multipoles
+PolynomA        skew multipoles
+MaxOrder        Number of desired multipoles
+NumIntSteps     Number of integration steps (default: 10)
+FullGap         Magnet full gap
+FringeInt1      Fringe field extension
+FringeInt2
+FringeBendEntrance  1: legacy version Brown First Order (default)
+            2: SOLEIL close to second order of Brown
+            3: THOMX
+FringeBendExit
+FringeQuadEntrance  0: no fringe fiels effect (default)
+            1: Lee-Whiting's thin lens limit formula
+            2: elegant-like
+FringeQuadExit
+fringeIntM0     Integrals for FringeQuad method 2
+fringeIntP0
+KickAngle       Correction deviation angles (H, V)
+\end{DoxyVerb}
+ 
+
+Reimplemented from \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Multipole_a1e8dc7f43b5247cfb3cde1249cb9a1ae}{at.\+lattice.\+elements.\+Multipole}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1Dipole_a591bbf0aa30227388b7c10acf02b1ca5}\label{classat_1_1lattice_1_1elements_1_1Dipole_a591bbf0aa30227388b7c10acf02b1ca5}} 
+\index{at.lattice.elements.Dipole@{at.lattice.elements.Dipole}!REQUIRED\_ATTRIBUTES@{REQUIRED\_ATTRIBUTES}}
+\index{REQUIRED\_ATTRIBUTES@{REQUIRED\_ATTRIBUTES}!at.lattice.elements.Dipole@{at.lattice.elements.Dipole}}
+\doxysubsubsection{\texorpdfstring{REQUIRED\_ATTRIBUTES}{REQUIRED\_ATTRIBUTES}}
+{\footnotesize\ttfamily at.\+lattice.\+elements.\+Dipole.\+R\+E\+Q\+U\+I\+R\+E\+D\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+ES\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=  LongElement.REQUIRED\_ATTRIBUTES + [\textcolor{stringliteral}{'BendingAngle'},}
+\DoxyCodeLine{                                                             \textcolor{stringliteral}{'K'}]}
+
+\end{DoxyCode}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+at/lattice/elements.\+py\end{DoxyCompactItemize}

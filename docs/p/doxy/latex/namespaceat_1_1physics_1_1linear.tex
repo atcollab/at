@@ -1,0 +1,559 @@
+\hypertarget{namespaceat_1_1physics_1_1linear}{}\doxysection{at.\+physics.\+linear Namespace Reference}
+\label{namespaceat_1_1physics_1_1linear}\index{at.physics.linear@{at.physics.linear}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a095dbfad26193a6c9049757950d0a90d}{linopt2}} (ring, $\ast$args, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a91ae6cfdb3a3a9288a4d4883b5ece5a2}{linopt4}} (ring, $\ast$args, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_aa15a9e0a6d5eecc6a7743cf94d78f36e}{linopt6}} (ring, $\ast$args, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a77c5bccb9c9f6abbcae668e8ebf0b6fc}{linopt\+\_\+auto}} (ring, $\ast$args, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_ad98c02c01dc18ba8d3daf1cebe1fdd71}{get\+\_\+optics}} (ring, refpts=None, dp=None, method=\mbox{\hyperlink{namespaceat_1_1physics_1_1linear_aa15a9e0a6d5eecc6a7743cf94d78f36e}{linopt6}}, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}{linopt}} (ring, dp=0.\+0, refpts=None, \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a59c885d3c3e1ed74b95de48c69307a07}{get\+\_\+chrom}}=False, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a47f0966702da4634ac7ac681eff573f8}{avlinopt}} (ring, dp=0.\+0, refpts=None, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a81b1385dcd08c2f818cd25951f423f0f}{get\+\_\+tune}} (ring, method=\textquotesingle{}\mbox{\hyperlink{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}{linopt}}\textquotesingle{}, dp=None, dct=None, orbit=None, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_a59c885d3c3e1ed74b95de48c69307a07}{get\+\_\+chrom}} (ring, method=\textquotesingle{}\mbox{\hyperlink{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}{linopt}}\textquotesingle{}, dp=0, dct=None, cavpts=None, $\ast$$\ast$kwargs)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Coupled or non-coupled 4x4 linear motion
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_a47f0966702da4634ac7ac681eff573f8}\label{namespaceat_1_1physics_1_1linear_a47f0966702da4634ac7ac681eff573f8}} 
+\index{at.physics.linear@{at.physics.linear}!avlinopt@{avlinopt}}
+\index{avlinopt@{avlinopt}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{avlinopt()}{avlinopt()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+avlinopt (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{dp = {\ttfamily 0.0},  }\item[{}]{refpts = {\ttfamily None},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Perform linear analysis of a lattice and returns average
+beta, dispersion and phase advance
+
+lindata,avebeta,avemu,avedisp,tune,chrom = avlinopt(lattice, dp, refpts)
+
+PARAMETERS
+    lattice         lattice description.
+    dp=0.0          momentum deviation.
+    refpts=None     elements at which data is returned. It can be:
+                    1) an integer in the range [-len(ring), len(ring)-1]
+                       selecting the element according to python indexing
+                       rules. As a special case, len(ring) is allowed and
+                       refers to the end of the last element,
+                    2) an ordered list of such integers without duplicates,
+                    3) a numpy array of booleans of maximum length
+                       len(ring)+1, where selected elements are True.
+
+KEYWORDS
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    XYStep=1.0e-8   transverse step for numerical computation
+    DPStep=1.0E-8   momentum deviation used for computation of
+                    chromaticities and dispersion
+
+OUTPUT
+    lindata         linear optics at the points refered to by refpts, if
+                    refpts is None an empty lindata structure is returned.
+                    See linopt4 for details
+    avebeta         Average beta functions [betax,betay] at refpts
+    avemu           Average phase advances [mux,muy] at refpts
+    avedisp         Average dispersion [Dx,Dx',Dy,Dy'] at refpts
+    avespos         Average s position at refpts
+    tune            [tune_A, tune_B], linear tunes for the two normal modes
+                    of linear motion [1]
+    chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
+
+See also linopt4, get_optics
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_a59c885d3c3e1ed74b95de48c69307a07}\label{namespaceat_1_1physics_1_1linear_a59c885d3c3e1ed74b95de48c69307a07}} 
+\index{at.physics.linear@{at.physics.linear}!get\_chrom@{get\_chrom}}
+\index{get\_chrom@{get\_chrom}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{get\_chrom()}{get\_chrom()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+get\+\_\+chrom (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{method = {\ttfamily \textquotesingle{}\mbox{\hyperlink{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}{linopt}}\textquotesingle{}},  }\item[{}]{dp = {\ttfamily 0},  }\item[{}]{dct = {\ttfamily None},  }\item[{}]{cavpts = {\ttfamily None},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}gets the chromaticity using several available methods
+
+PARAMETERS
+    ring            lattice description.
+
+KEYWORDS
+    dp=None         Ignored if radiation is ON. Momentum deviation.
+    dct=None        Ignored if radiation is ON. Path lengthening.
+                    If specified, dp is ignored and the off-momentum is
+                    deduced from the path lengthening.
+    orbit           avoids looking for the closed orbit if already known
+                    ((6,) array)
+    method='linopt' 'linopt' returns the tunes from the linopt function
+                    'laskar' tracks a single particle and computes the
+                    tunes with NAFF
+    DPStep=1.0E-6   momentum step used for the computation of
+                    chromaticities
+
+  for the 'laskar' method only:
+
+    nturns=512      number of turns
+    amplitude=1.0E-6 amplitude of oscillation
+    remove_dc=False Remove the mean of oscillation data
+    num_harmonics   number of harmonic components to compute
+                    (before mask applied, default=20)
+    fmin/fmax       determine the boundaries within which the tune is
+                    located [default 0->1]
+    hann=False      flag to turn on Hanning window
+
+OUTPUT
+    chromaticities = np.array([Q'x,Q'y])
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_ad98c02c01dc18ba8d3daf1cebe1fdd71}\label{namespaceat_1_1physics_1_1linear_ad98c02c01dc18ba8d3daf1cebe1fdd71}} 
+\index{at.physics.linear@{at.physics.linear}!get\_optics@{get\_optics}}
+\index{get\_optics@{get\_optics}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{get\_optics()}{get\_optics()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+get\+\_\+optics (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts = {\ttfamily None},  }\item[{}]{dp = {\ttfamily None},  }\item[{}]{method = {\ttfamily \mbox{\hyperlink{namespaceat_1_1physics_1_1linear_aa15a9e0a6d5eecc6a7743cf94d78f36e}{linopt6}}},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Perform linear analysis of a fully coupled lattice
+
+elemdata0, beamdata, elemdata = get_optics(lattice, refpts, **kwargs)
+
+PARAMETERS
+    lattice         lattice description.
+    refpts=None     elements at which data is returned. It can be:
+                    1) an integer in the range [-len(ring), len(ring)-1]
+                       selecting the element according to python indexing
+                       rules. As a special case, len(ring) is allowed and
+                       refers to the end of the last element,
+                    2) an ordered list of such integers without duplicates,
+                    3) a numpy array of booleans of maximum length
+                       len(ring)+1, where selected elements are True.
+KEYWORDS
+    method=linopt6  Method used for the analysis of the transfer matrix.
+                    Can be None at.linopt2, at.linopt4, at.linopt6
+                    linopt2:    no longitudinal motion, no H/V coupling,
+                    linopt4:    no longitudinal motion, Sagan/Rubin
+                                4D-analysis of coupled motion,
+                    linopt6:    with or without longitudinal motion, normal
+                                mode analysis
+    dp=None         Ignored if radiation is ON. Momentum deviation.
+    dct=None        Ignored if radiation is ON. Path lengthening.
+                    If specified, dp is ignored and the off-momentum is
+                    deduced from the path lengthening.
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    get_chrom=False compute chromaticities. Needs computing the tune at
+                    2 different momentum deviations around the central one.
+    get_w=False     computes chromatic amplitude functions (W) [4].
+                    Needs to compute the optics at 2 different momentum
+                    deviations around the central one.
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'R' or 'alpha' and 'beta'   (mandatory)
+                    'closed_orbit',             (default 0)
+                    'dispersion'                (default 0)
+                    If present, the attribute 'R' will be used, otherwise
+                    the attributes 'alpha' and 'beta' will be used. All
+                    other attributes are ignored.
+OUTPUT
+    elemdata0       linear optics data at the entrance/end of the ring
+    beamdata        lattice properties
+    elemdata        linear optics at the points refered to by refpts, if
+                    refpts is None an empty elemdata structure is returned.
+
+    elemdata is a record array with fields depending on the
+    selected method.
+    See the help for linopt6, linopt4, linopt2, linopt_auto.
+
+    beamdata is a record with fields:
+    tune            Fractional tunes
+    chromaticity    Chromaticities
+    damping_time    Damping times [s] (only if radiation is ON)
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_a81b1385dcd08c2f818cd25951f423f0f}\label{namespaceat_1_1physics_1_1linear_a81b1385dcd08c2f818cd25951f423f0f}} 
+\index{at.physics.linear@{at.physics.linear}!get\_tune@{get\_tune}}
+\index{get\_tune@{get\_tune}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{get\_tune()}{get\_tune()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+get\+\_\+tune (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{method = {\ttfamily \textquotesingle{}\mbox{\hyperlink{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}{linopt}}\textquotesingle{}},  }\item[{}]{dp = {\ttfamily None},  }\item[{}]{dct = {\ttfamily None},  }\item[{}]{orbit = {\ttfamily None},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}gets the tune using several available methods
+
+PARAMETERS
+    ring            lattice description.
+
+KEYWORDS
+    dp=None         Ignored if radiation is ON. Momentum deviation.
+    dct=None        Ignored if radiation is ON. Path lengthening.
+                    If specified, dp is ignored and the off-momentum is
+                    deduced from the path lengthening.
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    method='linopt' 'linopt' returns the tunes from the linopt function
+                    'fft' tracks a single particle and computes the
+                    tunes with fft 'laskar' tracks a single particle
+                    and computes the tunes with NAFF
+
+  for the 'fft' and 'laskar' methods only:
+
+    nturns=512      number of turns
+    amplitude=1.0E-6 amplitude of oscillation
+    remove_dc=False Remove the mean of oscillation data
+    num_harmonics   number of harmonic components to compute
+                    (before mask applied, default=20)
+    fmin/fmax       determine the boundaries within which the tune is
+                    located [default 0->1]
+    hann=False      flag to turn on Hanning window
+
+OUTPUT
+    tunes = np.array([Qx,Qy])
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}\label{namespaceat_1_1physics_1_1linear_acac34e48889ffa418c18eedd7431d21e}} 
+\index{at.physics.linear@{at.physics.linear}!linopt@{linopt}}
+\index{linopt@{linopt}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{linopt()}{linopt()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+linopt (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{dp = {\ttfamily 0.0},  }\item[{}]{refpts = {\ttfamily None},  }\item[{}]{get\+\_\+chrom = {\ttfamily False},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
+4D-analysis of coupled motion
+
+lindata0, tune, chrom, lindata = linopt(lattice, dp, refpts, **kwargs)
+
+PARAMETERS
+    lattice         lattice description.
+    dp=0.0          momentum deviation.
+    refpts=None     elements at which data is returned. It can be:
+                    1) an integer in the range [-len(ring), len(ring)-1]
+                       selecting the element according to python indexing
+                       rules. As a special case, len(ring) is allowed and
+                       refers to the end of the last element,
+                    2) an ordered list of such integers without duplicates,
+                    3) a numpy array of booleans of maximum length
+                       len(ring)+1, where selected elements are True.
+KEYWORDS
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    get_chrom=False compute chromaticities. Needs computing the tune at
+                    2 different momentum deviations around the central one.
+    get_w=False     computes chromatic amplitude functions (W) [4].
+                    Needs to compute the optics at 2 different momentum
+                    deviations around the central one.
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    XYStep=1.0e-8   transverse step for numerical computation
+    DPStep=1.0E-6   momentum deviation used for computation of
+                    chromaticities and dispersion
+    coupled=True    if False, simplify the calculations by assuming
+                    no H/V coupling
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'alpha' and 'beta'  (mandatory)
+                    'closed_orbit',     (default 0)
+                    'dispersion'        (default 0)
+                    All other attributes are ignored.
+OUTPUT
+    lindata0        linear optics data at the entrance of the ring
+    tune            [tune_A, tune_B], linear tunes for the two normal modes
+                    of linear motion [1]
+    chrom           [ksi_A , ksi_B], chromaticities ksi = d(nu)/(dP/P).
+                    Only computed if 'get_chrom' is True
+    lindata         linear optics at the points refered to by refpts, if
+                    refpts is None an empty lindata structure is returned.
+
+    lindata is a record array with fields:
+    idx             element index in the ring
+    s_pos           longitudinal position [m]
+    m44             (4, 4) transfer matrix M from the beginning of ring
+                    to the entrance of the element [2]
+    closed_orbit    (6,) closed orbit vector
+    dispersion      (4,) dispersion vector
+    beta            [betax, betay] vector
+    alpha           [alphax, alphay] vector
+    mu              [mux, muy], betatron phase (modulo 2*pi)
+    W               (2,) chromatic amplitude function (only if get_w==True)
+    All values given at the entrance of each element specified in refpts.
+    In case coupled == True additional outputs are available:
+    gamma           gamma parameter of the transformation to eigenmodes
+    A               (2, 2) matrix A in [3]
+    B               (2, 2) matrix B in [3]
+    C               (2, 2) matrix C in [3]
+    Field values can be obtained with either
+    lindata['idx']    or
+    lindata.idx
+REFERENCES
+    [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+    [2] E.Courant, H.Snyder
+    [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
+        vol.2 (1999)
+    [4] Brian W. Montague Report LEP Note 165, CERN, 1979
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_a095dbfad26193a6c9049757950d0a90d}\label{namespaceat_1_1physics_1_1linear_a095dbfad26193a6c9049757950d0a90d}} 
+\index{at.physics.linear@{at.physics.linear}!linopt2@{linopt2}}
+\index{linopt2@{linopt2}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{linopt2()}{linopt2()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+linopt2 (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$}]{args,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Perform linear analysis of an uncoupled lattice
+
+elemdata0, beamdata, elemdata = linopt2(ring, refpts, **kwargs)
+
+PARAMETERS
+    lattice         lattice description.
+    refpts=None     elements at which data is returned. It can be:
+                    1) an integer in the range [-len(ring), len(ring)-1]
+                       selecting the element according to python indexing
+                       rules. As a special case, len(ring) is allowed and
+                       refers to the end of the last element,
+                    2) an ordered list of such integers without duplicates,
+                    3) a numpy array of booleans of maximum length
+                       len(ring)+1, where selected elements are True.
+KEYWORDS
+    dp=0.0          momentum deviation.
+    dct=None        path lengthening. If specified, dp is ignored and the
+                    off-momentum is deduced from the path lengthening.
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    get_chrom=False compute chromaticities. Needs computing the tune at
+                    2 different momentum deviations around the central one.
+    get_w=False     computes chromatic amplitude functions (W) [4].
+                    Needs to compute the optics at 2 different momentum
+                    deviations around the central one.
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    XYStep=1.0e-8   transverse step for numerical computation
+    DPStep=1.0E-6   momentum deviation used for computation of
+                    chromaticities and dispersion
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'alpha' and 'beta'  (mandatory)
+                    'closed_orbit',     (default 0)
+                    'dispersion'        (default 0)
+                    All other attributes are ignored.
+OUTPUT
+    lindata0        linear optics data at the entrance of the ring
+    beamdata        lattice properties
+    lindata         linear optics at the points refered to by refpts, if
+                    refpts is None an empty lindata structure is returned.
+
+    lindata is a record array with fields:
+    s_pos           longitudinal position [m]
+    M               (4, 4) transfer matrix M from the beginning of ring
+                    to the entrance of the element [2]
+    closed_orbit    (6,) closed orbit vector
+    dispersion      (4,) dispersion vector
+    beta            [betax, betay] vector
+    alpha           [alphax, alphay] vector
+    mu              [mux, muy], betatron phase (modulo 2*pi)
+    W               (2,) chromatic amplitude function (only if get_w==True)
+    All values given at the entrance of each element specified in refpts.
+    Field values can be obtained with either
+    lindata['idx']    or
+    lindata.idx
+
+    beamdata is a record with fields:
+    tune            Fractional tunes
+    chromaticity    Chromaticities, only computed if get_chrom=True
+
+REFERENCES
+    [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+    [2] E.Courant, H.Snyder
+    [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
+        vol.2 (1999)
+    [4] Brian W. Montague Report LEP Note 165, CERN, 1979
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_a91ae6cfdb3a3a9288a4d4883b5ece5a2}\label{namespaceat_1_1physics_1_1linear_a91ae6cfdb3a3a9288a4d4883b5ece5a2}} 
+\index{at.physics.linear@{at.physics.linear}!linopt4@{linopt4}}
+\index{linopt4@{linopt4}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{linopt4()}{linopt4()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+linopt4 (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$}]{args,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
+4D-analysis of coupled motion
+
+elemdata0, beamdata, elemdata = linopt4(lattice, refpts, **kwargs)
+
+PARAMETERS
+    lattice         lattice description.
+    refpts=None     elements at which data is returned. It can be:
+                    1) an integer in the range [-len(ring), len(ring)-1]
+                       selecting the element according to python indexing
+                       rules. As a special case, len(ring) is allowed and
+                       refers to the end of the last element,
+                    2) an ordered list of such integers without duplicates,
+                    3) a numpy array of booleans of maximum length
+                       len(ring)+1, where selected elements are True.
+KEYWORDS
+    dp=0.0          momentum deviation.
+    dct=None        path lengthening. If specified, dp is ignored and the
+                    off-momentum is deduced from the path lengthening.
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    get_chrom=False compute chromaticities. Needs computing the tune at
+                    2 different momentum deviations around the central one.
+    get_w=False     computes chromatic amplitude functions (W) [4].
+                    Needs to compute the optics at 2 different momentum
+                    deviations around the central one.
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    XYStep=1.0e-8   transverse step for numerical computation
+    DPStep=1.0E-6   momentum deviation used for computation of
+                    chromaticities and dispersion
+    twiss_in=None   Initial twiss to compute transfer line optics of the
+                    type lindata, the initial orbit in twiss_in is ignored,
+                    only the beta and alpha are required other quatities
+                    set to 0 if absent
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'alpha' and 'beta'  (mandatory)
+                    'closed_orbit',     (default 0)
+                    'dispersion'        (default 0)
+                    All other attributes are ignored.
+OUTPUT
+    lindata0        linear optics data at the entrance of the ring
+    beamdata        lattice properties
+    lindata         linear optics at the points refered to by refpts, if
+                    refpts is None an empty lindata structure is returned.
+
+    lindata is a record array with fields:
+    s_pos           longitudinal position [m]
+    M               (4, 4) transfer matrix M from the beginning of ring
+                    to the entrance of the element [2]
+    closed_orbit    (6,) closed orbit vector
+    dispersion      (4,) dispersion vector
+    beta            [betax, betay] vector
+    alpha           [alphax, alphay] vector
+    mu              [mux, muy], betatron phase (modulo 2*pi)
+    gamma           gamma parameter of the transformation to eigenmodes [3]
+    W               (2,) chromatic amplitude function (only if get_w==True)
+    All values given at the entrance of each element specified in refpts.
+    Field values can be obtained with either
+    lindata['idx']    or
+    lindata.idx
+
+    beamdata is a record with fields:
+    tune            Fractional tunes
+    chromaticity    Chromaticities, only computed if get_chrom==True
+
+REFERENCES
+    [1] D.Edwards,L.Teng IEEE Trans.Nucl.Sci. NS-20, No.3, p.885-888, 1973
+    [2] E.Courant, H.Snyder
+    [3] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams,
+        vol.2 (1999)
+    [4] Brian W. Montague Report LEP Note 165, CERN, 1979
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_aa15a9e0a6d5eecc6a7743cf94d78f36e}\label{namespaceat_1_1physics_1_1linear_aa15a9e0a6d5eecc6a7743cf94d78f36e}} 
+\index{at.physics.linear@{at.physics.linear}!linopt6@{linopt6}}
+\index{linopt6@{linopt6}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{linopt6()}{linopt6()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+linopt6 (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$}]{args,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Perform linear analysis of a fully coupled lattice using normal modes
+
+elemdata0, beamdata, elemdata = linopt6(lattice, refpts, **kwargs)
+
+For circular machines, linopt6 analyses
+the 4x4 1-turn transfer matrix if radiation is OFF, or
+the 6x6 1-turn transfer matrix if radiation is ON.
+
+For a transfer line, The "twiss_in" intput must contain either:
+ - a field 'R', as provided by ATLINOPT6, or
+  - the fields 'beta' and 'alpha', as provided by linopt and linopt6
+
+PARAMETERS
+    lattice         lattice description.
+    refpts=None     elements at which data is returned.
+
+KEYWORDS
+    dp=None         Ignored if radiation is ON. Momentum deviation.
+    dct=None        Ignored if radiation is ON. Path lengthening.
+                    If specified, dp is ignored and the off-momentum is
+                    deduced from the path lengthening.
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    get_chrom=False compute chromaticities. Needs computing the tune at
+                    2 different momentum deviations around the central one.
+    get_w=False     compute chromatic amplitude functions (W) [3]. Needs to
+                    compute the optics at 2 different momentum deviations
+                    around the central one.
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    XYStep=1.0e-8   transverse step for numerical computation
+    DPStep=1.0E-6   momentum deviation used for computation of
+                    the closed orbit
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'R' or 'alpha' and 'beta'   (mandatory)
+                    'closed_orbit',             (default 0)
+                    'dispersion'                (default 0)
+                    If present, the attribute 'R' will be used, otherwise
+                    the attributes 'alpha' and 'beta' will be used. All
+                    other attributes are ignored.
+    cavpts=None     Cavity location for off-momentum tuning
+
+OUTPUT
+    elemdata0       linear optics data at the entrance of the ring
+    beamdata        lattice properties
+    elemdata        linear optics at the points refered to by refpts, if
+                    refpts is None an empty elemdata structure is returned.
+
+    elemdata is a record array with fields:
+    s_pos           longitudinal position [m]
+    M               Transfer matrix from the entrance of the line (6, 6)
+    closed_orbit    (6,) closed orbit vector
+    dispersion      (4,) dispersion vector
+    A               A-matrix (6, 6)
+    R               R-matrices (3, 6, 6)
+    beta            [betax, betay] vector
+    alpha           [alphax, alphay] vector
+    mu              [mux, muy], betatron phases
+    W               (2,) chromatic amplitude function (only if get_w==True)
+
+    All values given at the entrance of each element specified in refpts.
+    Field values can be obtained with either
+    elemdata['beta']    or
+    elemdata.beta
+
+    beamdata is a record with fields:
+    tune            Fractional tunes
+    chromaticity    Chromaticities, only computed if get_chrom==True
+    damping_time    Damping times [s] (only if radiation is ON)
+
+REFERENCES
+    [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
+    [2] Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
+        Published 3 February 2006
+    [3] Brian W. Montague Report LEP Note 165, CERN, 1979
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1physics_1_1linear_a77c5bccb9c9f6abbcae668e8ebf0b6fc}\label{namespaceat_1_1physics_1_1linear_a77c5bccb9c9f6abbcae668e8ebf0b6fc}} 
+\index{at.physics.linear@{at.physics.linear}!linopt\_auto@{linopt\_auto}}
+\index{linopt\_auto@{linopt\_auto}!at.physics.linear@{at.physics.linear}}
+\doxysubsubsection{\texorpdfstring{linopt\_auto()}{linopt\_auto()}}
+{\footnotesize\ttfamily def at.\+physics.\+linear.\+linopt\+\_\+auto (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$}]{args,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}This is a convenience function to automatically switch to the faster
+linopt2 in case coupled=False and ring.radiation=False otherwise the
+default linopt6 is used
+
+PARAMETERS
+    Same as linopt2 or linopt6
+
+KEYWORDS
+    coupled = True  If set to False H/V coupling will be ingnored to
+                    simplify the calculation, needs radiation OFF
+
+OUTPUT
+    elemdata0       linear optics data at the entrance of the ring
+    beamdata        lattice properties
+    elemdata        linear optics at the points refered to by refpts, if
+                    refpts is None an empty elemdata structure is returned.
+
+!!!WARNING!!!       Output varies depending whether linopt2 or linopt6 is
+                    called to be used with care
+\end{DoxyVerb}
+ 

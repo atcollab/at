@@ -1,0 +1,51 @@
+\hypertarget{namespaceat_1_1load_1_1reprfile}{}\doxysection{at.\+load.\+reprfile Namespace Reference}
+\label{namespaceat_1_1load_1_1reprfile}\index{at.load.reprfile@{at.load.reprfile}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1reprfile_ad6c6bf1acbfe182c28ba17b073773018}{load\+\_\+repr}} (filename, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1reprfile_a54518680643daa37ba5c0584d9d4a12b}{save\+\_\+repr}} (ring, filename=None)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Text representation of a python AT lattice with each element represented by
+its 'repr' string
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1load_1_1reprfile_ad6c6bf1acbfe182c28ba17b073773018}\label{namespaceat_1_1load_1_1reprfile_ad6c6bf1acbfe182c28ba17b073773018}} 
+\index{at.load.reprfile@{at.load.reprfile}!load\_repr@{load\_repr}}
+\index{load\_repr@{load\_repr}!at.load.reprfile@{at.load.reprfile}}
+\doxysubsubsection{\texorpdfstring{load\_repr()}{load\_repr()}}
+{\footnotesize\ttfamily def at.\+load.\+reprfile.\+load\+\_\+repr (\begin{DoxyParamCaption}\item[{}]{filename,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Load a Lattice object stored as a repr-file
+
+PARAMETERS
+    filename        name of the '.repr' file
+
+KEYWORDS
+    name            Name of the lattice (default: taken from the file)
+    energy          Energy of the lattice (default: taken from the file)
+    periodicity     Number of periods (default: taken from the file)
+    *               all other keywords will be set as Lattice attributes
+
+OUTPUT
+    Lattice object
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1reprfile_a54518680643daa37ba5c0584d9d4a12b}\label{namespaceat_1_1load_1_1reprfile_a54518680643daa37ba5c0584d9d4a12b}} 
+\index{at.load.reprfile@{at.load.reprfile}!save\_repr@{save\_repr}}
+\index{save\_repr@{save\_repr}!at.load.reprfile@{at.load.reprfile}}
+\doxysubsubsection{\texorpdfstring{save\_repr()}{save\_repr()}}
+{\footnotesize\ttfamily def at.\+load.\+reprfile.\+save\+\_\+repr (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{filename = {\ttfamily None} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Save a Lattice object as a repr-file
+
+PARAMETERS
+    ring            Lattice object
+    filename=None   name of the '.repr' file. Default: output on sys.stdout
+\end{DoxyVerb}
+ 

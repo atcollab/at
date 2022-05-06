@@ -1,0 +1,71 @@
+\hypertarget{namespaceat_1_1lattice_1_1elements}{}\doxysection{at.\+lattice.\+elements Namespace Reference}
+\label{namespaceat_1_1lattice_1_1elements}\index{at.lattice.elements@{at.lattice.elements}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Aperture}{Aperture}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Collimator}{Collimator}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Corrector}{Corrector}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Dipole}{Dipole}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Drift}{Drift}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Element}{Element}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1LongElement}{Long\+Element}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1M66}{M66}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Marker}{Marker}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Monitor}{Monitor}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Multipole}{Multipole}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Octupole}{Octupole}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Quadrupole}{Quadrupole}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1RFCavity}{R\+F\+Cavity}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Sextupole}{Sextupole}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1ThinMultipole}{Thin\+Multipole}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Wiggler}{Wiggler}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1elements_af0b41e336d72b6ac21e75352f15ce5d0}\label{namespaceat_1_1lattice_1_1elements_af0b41e336d72b6ac21e75352f15ce5d0}} 
+{\bfseries Bend} = \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Dipole}{Dipole}}
+\item 
+{\bfseries C\+L\+A\+S\+S\+\_\+\+M\+AP}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Module to define common elements used in AT.
+
+Each element has a default PassMethod attribute for which it should have the
+appropriate attributes.  If a different PassMethod is set, it is the caller's
+responsibility to ensure that the appropriate attributes are present.
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1elements_a04319a953633a0d6a748dba0d35c772a}\label{namespaceat_1_1lattice_1_1elements_a04319a953633a0d6a748dba0d35c772a}} 
+\index{at.lattice.elements@{at.lattice.elements}!CLASS\_MAP@{CLASS\_MAP}}
+\index{CLASS\_MAP@{CLASS\_MAP}!at.lattice.elements@{at.lattice.elements}}
+\doxysubsubsection{\texorpdfstring{CLASS\_MAP}{CLASS\_MAP}}
+{\footnotesize\ttfamily at.\+lattice.\+elements.\+C\+L\+A\+S\+S\+\_\+\+M\+AP}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 =  dict((k, v) \textcolor{keywordflow}{for} k, v \textcolor{keywordflow}{in} locals().items()}
+\DoxyCodeLine{2                  \textcolor{keywordflow}{if} isinstance(v, type) \textcolor{keywordflow}{and} issubclass(v, Element))}
+
+\end{DoxyCode}

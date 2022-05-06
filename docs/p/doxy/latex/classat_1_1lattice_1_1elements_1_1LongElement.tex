@@ -1,0 +1,61 @@
+\hypertarget{classat_1_1lattice_1_1elements_1_1LongElement}{}\doxysection{at.\+lattice.\+elements.\+Long\+Element Class Reference}
+\label{classat_1_1lattice_1_1elements_1_1LongElement}\index{at.lattice.elements.LongElement@{at.lattice.elements.LongElement}}
+
+
+Inheritance diagram for at.\+lattice.\+elements.\+Long\+Element\+:
+% FIG 0
+
+
+Collaboration diagram for at.\+lattice.\+elements.\+Long\+Element\+:
+% FIG 1
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1LongElement_a81097624117001485e4cf9e996345e0e}\label{classat_1_1lattice_1_1elements_1_1LongElement_a81097624117001485e4cf9e996345e0e}} 
+def {\bfseries \+\_\+\+\_\+init\+\_\+\+\_\+} (self, family\+\_\+name, length, $\ast$args, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1LongElement_ae85601f207876517a5b163b48c62f72d}{divide}} (self, frac)
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1LongElement_a5946807c262b7e4170efe1a17130e951}\label{classat_1_1lattice_1_1elements_1_1LongElement_a5946807c262b7e4170efe1a17130e951}} 
+{\bfseries R\+E\+Q\+U\+I\+R\+E\+D\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+ES} = Element.\+R\+E\+Q\+U\+I\+R\+E\+D\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+ES + \mbox{[}\textquotesingle{}Length\textquotesingle{}\mbox{]}
+\end{DoxyCompactItemize}
+\doxysubsection*{Additional Inherited Members}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}pyAT long element\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classat_1_1lattice_1_1elements_1_1LongElement_ae85601f207876517a5b163b48c62f72d}\label{classat_1_1lattice_1_1elements_1_1LongElement_ae85601f207876517a5b163b48c62f72d}} 
+\index{at.lattice.elements.LongElement@{at.lattice.elements.LongElement}!divide@{divide}}
+\index{divide@{divide}!at.lattice.elements.LongElement@{at.lattice.elements.LongElement}}
+\doxysubsubsection{\texorpdfstring{divide()}{divide()}}
+{\footnotesize\ttfamily def at.\+lattice.\+elements.\+Long\+Element.\+divide (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{frac }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}split the element in len(frac) pieces whose length
+is frac[i]*self.Length
+
+arguments:
+    frac            length of each slice expressed as a fraction of the
+            initial length. sum(frac) may differ from 1.
+
+Return a list of elements equivalent to the original.
+
+Example:
+
+>>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
+[Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
+\end{DoxyVerb}
+ 
+
+Reimplemented from \mbox{\hyperlink{classat_1_1lattice_1_1elements_1_1Element_ae6ea5b3e1dea55982859c311f47d97a9}{at.\+lattice.\+elements.\+Element}}.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+at/lattice/elements.\+py\end{DoxyCompactItemize}

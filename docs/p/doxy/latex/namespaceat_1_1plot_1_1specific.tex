@@ -1,0 +1,146 @@
+\hypertarget{namespaceat_1_1plot_1_1specific}{}\doxysection{at.\+plot.\+specific Namespace Reference}
+\label{namespaceat_1_1plot_1_1specific}\index{at.plot.specific@{at.plot.specific}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1plot_1_1specific_a472f5329ad2d021d1ea5391434191659}{pldata\+\_\+beta\+\_\+disp}} (ring, refpts, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1plot_1_1specific_a223e78f111ef1f123fb25b548e3d90aa}{plot\+\_\+beta}} (ring, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1plot_1_1specific_a33f47fe6264bd551f39cc0ac10079da4}{pldata\+\_\+linear}} (ring, refpts, $\ast$keys, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1plot_1_1specific_ab705b5b9233df284142bbbe531ebbdff}{plot\+\_\+linear}} (ring, $\ast$keys, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1plot_1_1specific_ade51c038eb6b71ef3508f3b84a220f70}{plot\+\_\+trajectory}} (ring, r\+\_\+in, nturns=1, $\ast$$\ast$kwargs)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}AT plotting functions\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1plot_1_1specific_a472f5329ad2d021d1ea5391434191659}\label{namespaceat_1_1plot_1_1specific_a472f5329ad2d021d1ea5391434191659}} 
+\index{at.plot.specific@{at.plot.specific}!pldata\_beta\_disp@{pldata\_beta\_disp}}
+\index{pldata\_beta\_disp@{pldata\_beta\_disp}!at.plot.specific@{at.plot.specific}}
+\doxysubsubsection{\texorpdfstring{pldata\_beta\_disp()}{pldata\_beta\_disp()}}
+{\footnotesize\ttfamily def at.\+plot.\+specific.\+pldata\+\_\+beta\+\_\+disp (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Generates data for plotting beta functions and dispersion\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1plot_1_1specific_a33f47fe6264bd551f39cc0ac10079da4}\label{namespaceat_1_1plot_1_1specific_a33f47fe6264bd551f39cc0ac10079da4}} 
+\index{at.plot.specific@{at.plot.specific}!pldata\_linear@{pldata\_linear}}
+\index{pldata\_linear@{pldata\_linear}!at.plot.specific@{at.plot.specific}}
+\doxysubsubsection{\texorpdfstring{pldata\_linear()}{pldata\_linear()}}
+{\footnotesize\ttfamily def at.\+plot.\+specific.\+pldata\+\_\+linear (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts,  }\item[{$\ast$}]{keys,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}data extraction function for plotting results of get_optics\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1plot_1_1specific_a223e78f111ef1f123fb25b548e3d90aa}\label{namespaceat_1_1plot_1_1specific_a223e78f111ef1f123fb25b548e3d90aa}} 
+\index{at.plot.specific@{at.plot.specific}!plot\_beta@{plot\_beta}}
+\index{plot\_beta@{plot\_beta}!at.plot.specific@{at.plot.specific}}
+\doxysubsubsection{\texorpdfstring{plot\_beta()}{plot\_beta()}}
+{\footnotesize\ttfamily def at.\+plot.\+specific.\+plot\+\_\+beta (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Plot beta functions and dispersion
+
+PARAMETERS
+    ring            Lattice object
+
+KEYWORDS
+    dp=0.0          Ignored if radiation is ON. Momentum deviation.
+    dct=None        Ignored if radiation is ON. Path lengthening.
+                    If specified, dp is ignored and the off-momentum is
+                    deduced from the path lengthening.
+    method=linopt6  Method used for the analysis of the transfer matrix.
+                    See get_optics.
+                    linopt6: default
+                    linopt2: faster if no longitudinal motion and
+                             no H/V coupling,
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    ddp=1.0E-8      momentum deviation used for computation of
+                    chromaticities and dispersion
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'R' or 'alpha' and 'beta'   (mandatory)
+                    'closed_orbit',             (default 0)
+                    'dispersion'                (default 0)
+                    If present, the attribute 'R' will be used, otherwise
+                    the attributes 'alpha' and 'beta' will be used. All
+                    other attributes are ignored.\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1plot_1_1specific_ab705b5b9233df284142bbbe531ebbdff}\label{namespaceat_1_1plot_1_1specific_ab705b5b9233df284142bbbe531ebbdff}} 
+\index{at.plot.specific@{at.plot.specific}!plot\_linear@{plot\_linear}}
+\index{plot\_linear@{plot\_linear}!at.plot.specific@{at.plot.specific}}
+\doxysubsubsection{\texorpdfstring{plot\_linear()}{plot\_linear()}}
+{\footnotesize\ttfamily def at.\+plot.\+specific.\+plot\+\_\+linear (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$}]{keys,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}axleft, axright = plot_linear(ring, left[, right], **keywords
+Plot linear optical functions returned by get_optics
+
+PARAMETERS
+    ring            Lattice object
+    left            Left axis description as a tuple:
+                    (key[, indices[, indices]])
+                      key:        'beta', 'closed_orbit',...
+                      indices:    integer, sequence of integers, or slice
+                    The number if sequences of indices is data[key].ndim-1
+                    The number of indices is the number of curves to plot.
+                    All sequences must have the same length.
+
+        Examples:
+          ('beta', [0, 1])              beta_x, beta_z
+          ('dispersion', 0)             eta_x
+          ('closed_orbit'), [1, 3])     x', z'
+          ('m44', 2, 2)                 T33
+          ('m44', [0, 0], [0, 1])       T11, T12
+          ('m44', 2, slice(4))          T31, T32, T33, T34
+                                        as a single block
+          ('m44', [2,2,2,2], [0,1,2,3]) T31, T32, T33, T34
+
+    right           Right axis (optional)
+
+KEYWORDS
+    title           Plot title, defaults to "Linear optics"
+    dp=0.0          Ignored if radiation is ON. Momentum deviation.
+    dct=None        Ignored if radiation is ON. Path lengthening.
+                    If specified, dp is ignored and the off-momentum is
+                    deduced from the path lengthening.
+    method=linopt6  Method used for the analysis of the transfer matrix.
+                    See get_optics.
+                    linopt6: default
+                    linopt2: faster if no longitudinal motion and
+                             no H/V coupling,
+    orbit           avoids looking for the closed orbit if is already known
+                    ((6,) array)
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+    ddp=1.0E-8      momentum deviation used for computation of
+                    chromaticities and dispersion
+    twiss_in=None   Initial conditions for transfer line optics. Record
+                    array as output by linopt, or dictionary. Keys:
+                    'R' or 'alpha' and 'beta'   (mandatory)
+                    'closed_orbit',             (default 0)
+                    'dispersion'                (default 0)
+                    If present, the attribute 'R' will be used, otherwise
+                    the attributes 'alpha' and 'beta' will be used. All
+                    other attributes are ignored.
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1plot_1_1specific_ade51c038eb6b71ef3508f3b84a220f70}\label{namespaceat_1_1plot_1_1specific_ade51c038eb6b71ef3508f3b84a220f70}} 
+\index{at.plot.specific@{at.plot.specific}!plot\_trajectory@{plot\_trajectory}}
+\index{plot\_trajectory@{plot\_trajectory}!at.plot.specific@{at.plot.specific}}
+\doxysubsubsection{\texorpdfstring{plot\_trajectory()}{plot\_trajectory()}}
+{\footnotesize\ttfamily def at.\+plot.\+specific.\+plot\+\_\+trajectory (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{r\+\_\+in,  }\item[{}]{nturns = {\ttfamily 1},  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}plot a particle's trajectory
+
+PARAMETERS
+    ring            Lattice object
+    r_in            6xN array: input coordinates of N particles
+    nturns=1        Number of turns
+
+KEYWORDS
+    keep_lattice    Assume no lattice change since the previous tracking.
+                    Defaults to False
+\end{DoxyVerb}
+ 

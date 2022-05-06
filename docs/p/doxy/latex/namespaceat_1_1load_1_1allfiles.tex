@@ -1,0 +1,86 @@
+\hypertarget{namespaceat_1_1load_1_1allfiles}{}\doxysection{at.\+load.\+allfiles Namespace Reference}
+\label{namespaceat_1_1load_1_1allfiles}\index{at.load.allfiles@{at.load.allfiles}}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1allfiles_a6cc20c3bbc210705f9ec6682c757dee2}{load\+\_\+lattice}} (filepath, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1allfiles_aaa8b5d456cf80ca38c18b79df5c1bcf8}{save\+\_\+lattice}} (ring, filepath, $\ast$$\ast$kwargs)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1load_1_1allfiles_af06e548dbb3ecde78a7a403eb974d433}{register\+\_\+format}} (extension, load\+\_\+func=None, save\+\_\+func=None, descr=\textquotesingle{}\textquotesingle{})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Generic function to save and load python AT lattices. The format is
+determined by the file extension
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1load_1_1allfiles_a6cc20c3bbc210705f9ec6682c757dee2}\label{namespaceat_1_1load_1_1allfiles_a6cc20c3bbc210705f9ec6682c757dee2}} 
+\index{at.load.allfiles@{at.load.allfiles}!load\_lattice@{load\_lattice}}
+\index{load\_lattice@{load\_lattice}!at.load.allfiles@{at.load.allfiles}}
+\doxysubsubsection{\texorpdfstring{load\_lattice()}{load\_lattice()}}
+{\footnotesize\ttfamily def at.\+load.\+allfiles.\+load\+\_\+lattice (\begin{DoxyParamCaption}\item[{}]{filepath,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Load a Lattice object from a file
+
+The file format is indicated by the filepath extension.
+
+PARAMETERS
+    filepath        name of the file
+
+KEYWORDS
+    name            Name of the lattice
+                    (default: taken from the file, or '')
+    energy          Energy of the lattice
+                    (default: taken from the file)
+    periodicity     Number of periods
+                    (default: taken from the file, or 1)
+    *               all other keywords will be set as Lattice attributes
+
+MAT-FILE SPECIFIC KEYWORDS
+    mat_key         name of the Matlab variable containing the lattice.
+                    Default: Matlab variable name if there is only one,
+                    otherwise 'RING'
+    check=True      if False, skip the coherence tests
+    quiet=False     If True, suppress the warning for non-standard classes
+    keep_all=False  if True, keep RingParam elements as Markers
+
+Known extensions are:
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1allfiles_af06e548dbb3ecde78a7a403eb974d433}\label{namespaceat_1_1load_1_1allfiles_af06e548dbb3ecde78a7a403eb974d433}} 
+\index{at.load.allfiles@{at.load.allfiles}!register\_format@{register\_format}}
+\index{register\_format@{register\_format}!at.load.allfiles@{at.load.allfiles}}
+\doxysubsubsection{\texorpdfstring{register\_format()}{register\_format()}}
+{\footnotesize\ttfamily def at.\+load.\+allfiles.\+register\+\_\+format (\begin{DoxyParamCaption}\item[{}]{extension,  }\item[{}]{load\+\_\+func = {\ttfamily None},  }\item[{}]{save\+\_\+func = {\ttfamily None},  }\item[{}]{descr = {\ttfamily \textquotesingle{}\textquotesingle{}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Register format-specific processing functions
+
+PARAMETERS
+    extension       File extension string
+    load_func       load function (default: None)
+    save_func       save_lattice function (default: None)
+    descr           File type description
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1load_1_1allfiles_aaa8b5d456cf80ca38c18b79df5c1bcf8}\label{namespaceat_1_1load_1_1allfiles_aaa8b5d456cf80ca38c18b79df5c1bcf8}} 
+\index{at.load.allfiles@{at.load.allfiles}!save\_lattice@{save\_lattice}}
+\index{save\_lattice@{save\_lattice}!at.load.allfiles@{at.load.allfiles}}
+\doxysubsubsection{\texorpdfstring{save\_lattice()}{save\_lattice()}}
+{\footnotesize\ttfamily def at.\+load.\+allfiles.\+save\+\_\+lattice (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{filepath,  }\item[{$\ast$$\ast$}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Save a Lattice object
+
+The file format is indicated by the filepath extension.
+
+PARAMETERS
+    ring            Lattice object
+    filepath        name of the file
+
+MAT-FILE SPECIFIC KEYWORDS
+    mat_key='RING'  Name of the Matlab variable
+
+Known extensions are:
+\end{DoxyVerb}
+ 

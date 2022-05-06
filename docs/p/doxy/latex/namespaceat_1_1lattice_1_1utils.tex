@@ -1,0 +1,430 @@
+\hypertarget{namespaceat_1_1lattice_1_1utils}{}\doxysection{at.\+lattice.\+utils Namespace Reference}
+\label{namespaceat_1_1lattice_1_1utils}\index{at.lattice.utils@{at.lattice.utils}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1utils_1_1AtError}{At\+Error}}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1utils_1_1AtWarning}{At\+Warning}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a658bcec1e7fe75fb34f2d0baa027be8a}{check\+\_\+radiation}} (rad)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a9ada9919e6532a05c37b348a3761e82e}{set\+\_\+radiation}} (rad)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a58df8854d07de95554cb79c2c09d8039}{make\+\_\+copy}} (copy)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a8e88727bdd89ddb176ff00c972ccb3cf}{uint32\+\_\+refpts}} (refpts, n\+\_\+elements)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_abb7ed8e34370ccb28e41dba5742cdf96}{bool\+\_\+refpts}} (refpts, n\+\_\+elements)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_ac8c8fa9031eb8d62694a8789a122230a}{checkattr}} ($\ast$args)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a75bcb068916f3cb9a7cd3f80a9e77b65}{checktype}} (eltype)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a7f692b05616a0ec4a849fdb3be0a0713}{checkname}} (pattern)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a0f35ad753e1fd06eb2cfe0d318e49f85}{get\+\_\+cells}} (ring, $\ast$args)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_abd334e8bc906399492ecfaa3e532d11d}{refpts\+\_\+iterator}} (ring, refpts)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a7da3ea134aa75b607867430106c58eee}{refpts\+\_\+count}} (refpts, n\+\_\+elements)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_adce2c9b00ad9aa8fde572012c59d7c1c}{refpts\+\_\+len}} (ring, refpts)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a2a28997de2ea0809612c4d4434546cf1}{get\+\_\+refpts}} (ring, key, quiet=True)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_aa12a26d837111eb5cca4dc11c72ac984}{get\+\_\+elements}} (ring, key, quiet=True)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a43f9c12da672191210564a4ee09e3250}{get\+\_\+value\+\_\+refpts}} (ring, refpts, var, index=None)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_abbd8456676a677cad3b1776da2b07a11}{set\+\_\+value\+\_\+refpts}} (ring, refpts, var, values, index=None, increment=False, copy=False)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a1d5273d85a8e5b4eba6aa64559d5ccf3}{get\+\_\+s\+\_\+pos}} (ring, refpts=None)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a01336a661704182eee8f31809bd14dde}{tilt\+\_\+elem}} (elem, rots, relative=False)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_aa635e0eb332f7d09fc0de8182eeeacd9}{shift\+\_\+elem}} (elem, deltax=0.\+0, deltaz=0.\+0, relative=False)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a4ed6aa37b8fe1c98e75d5661f67a5c04}{set\+\_\+tilt}} (ring, tilts, relative=False)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1utils_a4f12d0cea95576198f4ad1fc66b06ae7}{set\+\_\+shift}} (ring, dxs, dzs, relative=False)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Helper functions for working with AT lattices.
+
+A lattice as understood by pyAT is any sequence of elements.  These functions
+are useful for working with these sequences.
+
+The refpts allow functions to select points in the lattice, returned values are
+given at the entrance of each element specified in refpts;
+refpts can be:
+- an integer in the range [-len(ring), len(ring)-1] selecting the element
+    according to python indexing rules. As a special case, len(ring) is
+    allowed and refers to the end of the last element,
+- an ordered list of such integers without duplicates,
+- a numpy array of booleans of maximum length len(ring)+1, where selected
+    elements are True.
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_abb7ed8e34370ccb28e41dba5742cdf96}\label{namespaceat_1_1lattice_1_1utils_abb7ed8e34370ccb28e41dba5742cdf96}} 
+\index{at.lattice.utils@{at.lattice.utils}!bool\_refpts@{bool\_refpts}}
+\index{bool\_refpts@{bool\_refpts}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{bool\_refpts()}{bool\_refpts()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+bool\+\_\+refpts (\begin{DoxyParamCaption}\item[{}]{refpts,  }\item[{}]{n\+\_\+elements }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a boolean numpy array of length n_elements + 1 where True elements
+are selected. This is used for indexing a lattice using True or False
+values.
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a658bcec1e7fe75fb34f2d0baa027be8a}\label{namespaceat_1_1lattice_1_1utils_a658bcec1e7fe75fb34f2d0baa027be8a}} 
+\index{at.lattice.utils@{at.lattice.utils}!check\_radiation@{check\_radiation}}
+\index{check\_radiation@{check\_radiation}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{check\_radiation()}{check\_radiation()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+check\+\_\+radiation (\begin{DoxyParamCaption}\item[{}]{rad }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Function to be used as a decorator for optics functions
+
+If ring is a Lattice object, raises an exception
+    if ring.radiation is not rad
+
+If ring is any other sequence, no test is performed
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_ac8c8fa9031eb8d62694a8789a122230a}\label{namespaceat_1_1lattice_1_1utils_ac8c8fa9031eb8d62694a8789a122230a}} 
+\index{at.lattice.utils@{at.lattice.utils}!checkattr@{checkattr}}
+\index{checkattr@{checkattr}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{checkattr()}{checkattr()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+checkattr (\begin{DoxyParamCaption}\item[{$\ast$}]{args }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a function to be used as a filter. Check the presence or the
+value of an attribute. This function can be used to extract from a ring
+all elements have a given attribute.
+
+filtfunc = checkattr(attrname)
+    returns the function filtfunc such that ok=filtfunc(element) is True if
+    the element has a 'attrname' attribute
+
+filtfunc = checkattr(attrname, attrvalue)
+    returns the function filtfunc such that ok=filtfunc(element) is True if
+    the element has a 'attrname' attribute with the value attrvalue
+
+Examples:
+
+cavs = filter(checkattr('Frequency'), ring)
+    returns an iterator over all elements in ring that have a
+    'Frequency' attribute
+
+elts = filter(checkattr('K', 0.0), ring)
+    returns an iterator over all elements in ring that have a 'K'
+    attribute equal to 0.0
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a7f692b05616a0ec4a849fdb3be0a0713}\label{namespaceat_1_1lattice_1_1utils_a7f692b05616a0ec4a849fdb3be0a0713}} 
+\index{at.lattice.utils@{at.lattice.utils}!checkname@{checkname}}
+\index{checkname@{checkname}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{checkname()}{checkname()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+checkname (\begin{DoxyParamCaption}\item[{}]{pattern }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a function to be used as a filter. Check the name of an element.
+This function can be used to extract from a ring all elements have a
+given FamName attribute.
+
+filtfunc = checkname(pattern)
+    returns the function filtfunc such that ok=filtfunc(element) is True
+    if the element's FamName matches pattern.
+
+Example:
+
+qps = filter(checkname('QF.*'), ring)
+    returns an iterator over all elements
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a75bcb068916f3cb9a7cd3f80a9e77b65}\label{namespaceat_1_1lattice_1_1utils_a75bcb068916f3cb9a7cd3f80a9e77b65}} 
+\index{at.lattice.utils@{at.lattice.utils}!checktype@{checktype}}
+\index{checktype@{checktype}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{checktype()}{checktype()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+checktype (\begin{DoxyParamCaption}\item[{}]{eltype }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a function to be used as a filter. Check the type of an element.
+This function can be used to extract from a ring all elements have a
+given type.
+
+filtfunc = checktype(class)
+    returns the function filtfunc such that ok=filtfunc(element) is True
+    if the element is an instance of class
+
+Example:
+
+qps = filter(checktype(at.Quadrupole), ring)
+    returns an iterator over all quadrupoles in ring
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a0f35ad753e1fd06eb2cfe0d318e49f85}\label{namespaceat_1_1lattice_1_1utils_a0f35ad753e1fd06eb2cfe0d318e49f85}} 
+\index{at.lattice.utils@{at.lattice.utils}!get\_cells@{get\_cells}}
+\index{get\_cells@{get\_cells}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{get\_cells()}{get\_cells()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+get\+\_\+cells (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{$\ast$}]{args }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a numpy array of booleans, with the same length as ring,
+marking all elements satisfying a given condition.
+
+refpts = getcells(ring, filtfunc)
+    selects all elements for which the function filtfunc(element)
+    returns True
+
+refpts = getcells(ring, attrname)
+    selects all elements having a 'attrname' attribute
+
+refpts = getcells(ring, attrname, attrvalue)
+    selects all elements having a 'attrname' attribute with value attrvalue
+
+Example:
+
+refpts = getcells(ring, 'Frequency')
+    returns a numpy array of booleans where all elements having a
+    'Frequency' attribute are True
+
+refpts = getcells(ring, 'K', 0.0)
+    returns a numpy array of booleans where all elements having a 'K'
+    attribute equal to 0.0 are True
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_aa12a26d837111eb5cca4dc11c72ac984}\label{namespaceat_1_1lattice_1_1utils_aa12a26d837111eb5cca4dc11c72ac984}} 
+\index{at.lattice.utils@{at.lattice.utils}!get\_elements@{get\_elements}}
+\index{get\_elements@{get\_elements}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{get\_elements()}{get\_elements()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+get\+\_\+elements (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{key,  }\item[{}]{quiet = {\ttfamily True} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Get the elements of a family or class (type) from the lattice.
+
+Args:
+    ring: lattice from which to retrieve the elements.
+    key: can be:
+         1) an element instance, will return all elements of the same type
+            in the lattice, e.g. key=Drift('d1', 1.0)
+         2) an element type, will return all elements of that type in the
+            lattice, e.g. key=at.elements.Sextupole
+         3) a string to match against elements' FamName, supports Unix
+            shell-style wildcards, e.g. key='BPM_*1'
+    quiet: if false print information about matched elements for FamName
+           matches, defaults to True.
+
+Returns:
+    a list of elems matching key
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a2a28997de2ea0809612c4d4434546cf1}\label{namespaceat_1_1lattice_1_1utils_a2a28997de2ea0809612c4d4434546cf1}} 
+\index{at.lattice.utils@{at.lattice.utils}!get\_refpts@{get\_refpts}}
+\index{get\_refpts@{get\_refpts}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{get\_refpts()}{get\_refpts()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+get\+\_\+refpts (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{key,  }\item[{}]{quiet = {\ttfamily True} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Get the elements refpts of a family or class (type) from the lattice.
+
+Args:
+    ring: lattice from which to retrieve the elements.
+    key: can be:
+         1) an element instance, will return all elements of the same type
+            in the lattice, e.g. key=Drift('d1', 1.0)
+         2) an element type, will return all elements of that type in the
+            lattice, e.g. key=at.elements.Sextupole
+         3) a string to match against elements' FamName, supports Unix
+            shell-style wildcards, e.g. key='BPM_*1'
+    quiet: if false print information about matched elements for FamName
+           matches, defaults to True.
+
+Returns:
+    elems: a list of elems refpts matching key
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a1d5273d85a8e5b4eba6aa64559d5ccf3}\label{namespaceat_1_1lattice_1_1utils_a1d5273d85a8e5b4eba6aa64559d5ccf3}} 
+\index{at.lattice.utils@{at.lattice.utils}!get\_s\_pos@{get\_s\_pos}}
+\index{get\_s\_pos@{get\_s\_pos}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{get\_s\_pos()}{get\_s\_pos()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+get\+\_\+s\+\_\+pos (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts = {\ttfamily None} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a numpy array corresponding to the s position of the specified
+elements.
+
+Args:
+    ring: lattice from which to retrieve s position
+    refpts: elements at which to return s position. If None, return
+            s position at all elements in the ring.
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a43f9c12da672191210564a4ee09e3250}\label{namespaceat_1_1lattice_1_1utils_a43f9c12da672191210564a4ee09e3250}} 
+\index{at.lattice.utils@{at.lattice.utils}!get\_value\_refpts@{get\_value\_refpts}}
+\index{get\_value\_refpts@{get\_value\_refpts}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{get\_value\_refpts()}{get\_value\_refpts()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+get\+\_\+value\+\_\+refpts (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts,  }\item[{}]{var,  }\item[{}]{index = {\ttfamily None} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Get the values of an attribute of an array of elements based on
+their refpts
+
+PARAMETERS:
+    ring            Lattice description
+    refpts          Integer, array of integer or booleans, filter
+    var             attribute name
+
+KEYWORDS:
+    index=None      index of the value to retrieve if var is an array.
+                    If None the full array is retrieved (Default)
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a58df8854d07de95554cb79c2c09d8039}\label{namespaceat_1_1lattice_1_1utils_a58df8854d07de95554cb79c2c09d8039}} 
+\index{at.lattice.utils@{at.lattice.utils}!make\_copy@{make\_copy}}
+\index{make\_copy@{make\_copy}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{make\_copy()}{make\_copy()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+make\+\_\+copy (\begin{DoxyParamCaption}\item[{}]{copy }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Function to be used as a decorator for optics functions
+The decorated function must be defined as:
+
+def func(ring, refpts, *args, **kwargs):
+    ...
+    return
+
+If copy is False, the function is not modified,
+If copy is True, a shallow copy of ring is done, then the elements selected
+by refpts are deep-copied, then func is applied to the copy, and the new
+ring is returned.
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a7da3ea134aa75b607867430106c58eee}\label{namespaceat_1_1lattice_1_1utils_a7da3ea134aa75b607867430106c58eee}} 
+\index{at.lattice.utils@{at.lattice.utils}!refpts\_count@{refpts\_count}}
+\index{refpts\_count@{refpts\_count}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{refpts\_count()}{refpts\_count()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+refpts\+\_\+count (\begin{DoxyParamCaption}\item[{}]{refpts,  }\item[{}]{n\+\_\+elements }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Number of reference points\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_abd334e8bc906399492ecfaa3e532d11d}\label{namespaceat_1_1lattice_1_1utils_abd334e8bc906399492ecfaa3e532d11d}} 
+\index{at.lattice.utils@{at.lattice.utils}!refpts\_iterator@{refpts\_iterator}}
+\index{refpts\_iterator@{refpts\_iterator}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{refpts\_iterator()}{refpts\_iterator()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+refpts\+\_\+iterator (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return an iterator over all elements in ring identified by refpts.
+
+refpts may be:
+
+1) a integer or a sequence of integers (0 indicating the first element)
+2) a sequence of booleans marking the selected elements
+3) a callable f such that f(elem) is True for selected elements
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_adce2c9b00ad9aa8fde572012c59d7c1c}\label{namespaceat_1_1lattice_1_1utils_adce2c9b00ad9aa8fde572012c59d7c1c}} 
+\index{at.lattice.utils@{at.lattice.utils}!refpts\_len@{refpts\_len}}
+\index{refpts\_len@{refpts\_len}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{refpts\_len()}{refpts\_len()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+refpts\+\_\+len (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Number of reference points\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a9ada9919e6532a05c37b348a3761e82e}\label{namespaceat_1_1lattice_1_1utils_a9ada9919e6532a05c37b348a3761e82e}} 
+\index{at.lattice.utils@{at.lattice.utils}!set\_radiation@{set\_radiation}}
+\index{set\_radiation@{set\_radiation}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{set\_radiation()}{set\_radiation()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+set\+\_\+radiation (\begin{DoxyParamCaption}\item[{}]{rad }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Function to be used as a decorator for optics functions
+The decorated function must be defined as:
+
+def func(ring, *args, **kwargs):
+    ...
+    return
+
+func will be called with a copy of the ring such that its radiation state
+is set to rad (no copy is done if it's already the case).
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a4f12d0cea95576198f4ad1fc66b06ae7}\label{namespaceat_1_1lattice_1_1utils_a4f12d0cea95576198f4ad1fc66b06ae7}} 
+\index{at.lattice.utils@{at.lattice.utils}!set\_shift@{set\_shift}}
+\index{set\_shift@{set\_shift}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{set\_shift()}{set\_shift()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+set\+\_\+shift (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{dxs,  }\item[{}]{dzs,  }\item[{}]{relative = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Set translations to a list of elements.
+
+ring            sequence of elements to be shifted
+dxs             sequence of horizontal displacement as long as ring or
+                scalar horizontal displacement applied to all elements
+dzs             sequence of vertical displacement as long as ring or
+                scalar vertical displacement applied to all elements
+relative=False  Displacement relative to the previous alignment
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a4ed6aa37b8fe1c98e75d5661f67a5c04}\label{namespaceat_1_1lattice_1_1utils_a4ed6aa37b8fe1c98e75d5661f67a5c04}} 
+\index{at.lattice.utils@{at.lattice.utils}!set\_tilt@{set\_tilt}}
+\index{set\_tilt@{set\_tilt}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{set\_tilt()}{set\_tilt()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+set\+\_\+tilt (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{tilts,  }\item[{}]{relative = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Set tilts to a list of elements.
+
+ring            sequence of elements to be tilted
+tilts           sequence of tilt values as long as ring or
+                scalar tilt value applied to all elements
+relative=False  Rotation relative to the previous tilt angle
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_abbd8456676a677cad3b1776da2b07a11}\label{namespaceat_1_1lattice_1_1utils_abbd8456676a677cad3b1776da2b07a11}} 
+\index{at.lattice.utils@{at.lattice.utils}!set\_value\_refpts@{set\_value\_refpts}}
+\index{set\_value\_refpts@{set\_value\_refpts}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{set\_value\_refpts()}{set\_value\_refpts()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+set\+\_\+value\+\_\+refpts (\begin{DoxyParamCaption}\item[{}]{ring,  }\item[{}]{refpts,  }\item[{}]{var,  }\item[{}]{values,  }\item[{}]{index = {\ttfamily None},  }\item[{}]{increment = {\ttfamily False},  }\item[{}]{copy = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Set the values of an attribute of an array of elements based on
+their refpts
+
+PARAMETERS:
+    ring            Lattice description
+    refpts          Integer, array of integer or booleans, filter
+    var             attribute name
+    values          desired value for the attribute
+
+KEYWORDS:
+    index=None      index of the value to change if var is an array.
+                    If None the full array is replaced by value (Default)
+    increment=False Add values to the initial values.
+                    If False the initial value is replaced (Default)
+    copy=False      If False, do the modification in-place.
+                    If True, returns a shallow copy of ring with new
+                    modified elements.
+                    CAUTION: a shallow copy means that all non-affected
+                    elements are shared with the original lattice.
+                    Any further modification will affect in both lattices.
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_aa635e0eb332f7d09fc0de8182eeeacd9}\label{namespaceat_1_1lattice_1_1utils_aa635e0eb332f7d09fc0de8182eeeacd9}} 
+\index{at.lattice.utils@{at.lattice.utils}!shift\_elem@{shift\_elem}}
+\index{shift\_elem@{shift\_elem}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{shift\_elem()}{shift\_elem()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+shift\+\_\+elem (\begin{DoxyParamCaption}\item[{}]{elem,  }\item[{}]{deltax = {\ttfamily 0.0},  }\item[{}]{deltaz = {\ttfamily 0.0},  }\item[{}]{relative = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}set a new displacement vector to an element.
+The ranslation vectors are stored in the T1 and T2 attributes
+
+elem            element to be displaced
+deltax          horizontal displacement of the element
+deltaz          vertical displacement of the element
+relative=False  Displacement relative to the previous alignment
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a01336a661704182eee8f31809bd14dde}\label{namespaceat_1_1lattice_1_1utils_a01336a661704182eee8f31809bd14dde}} 
+\index{at.lattice.utils@{at.lattice.utils}!tilt\_elem@{tilt\_elem}}
+\index{tilt\_elem@{tilt\_elem}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{tilt\_elem()}{tilt\_elem()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+tilt\+\_\+elem (\begin{DoxyParamCaption}\item[{}]{elem,  }\item[{}]{rots,  }\item[{}]{relative = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}set a new tilt angle to an element.
+The rotation matrices are stored in the R1 and R2 attributes
+
+R1 = [[ cos(rots) sin(rots)]    R2 = [[cos(rots) -sin(rots)]
+      [-sin(rots) cos(rots)]]         [sin(rots)  cos(rots)]]
+
+elem            element to be tilted
+rots            tilt angle (in radians).
+                rots > 0 corresponds to a corkskew rotation of the element
+                looking in the direction of the beam
+relative=False  Rotation relative to the previous element rotation
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1utils_a8e88727bdd89ddb176ff00c972ccb3cf}\label{namespaceat_1_1lattice_1_1utils_a8e88727bdd89ddb176ff00c972ccb3cf}} 
+\index{at.lattice.utils@{at.lattice.utils}!uint32\_refpts@{uint32\_refpts}}
+\index{uint32\_refpts@{uint32\_refpts}!at.lattice.utils@{at.lattice.utils}}
+\doxysubsubsection{\texorpdfstring{uint32\_refpts()}{uint32\_refpts()}}
+{\footnotesize\ttfamily def at.\+lattice.\+utils.\+uint32\+\_\+refpts (\begin{DoxyParamCaption}\item[{}]{refpts,  }\item[{}]{n\+\_\+elements }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Return a uint32 numpy array with contents as the indices of the selected
+elements.  This is used for indexing a lattice using explicit indices.
+\end{DoxyVerb}
+ 

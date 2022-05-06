@@ -1,0 +1,90 @@
+\hypertarget{namespaceat_1_1lattice_1_1lattice__object}{}\doxysection{at.\+lattice.\+lattice\+\_\+object Namespace Reference}
+\label{namespaceat_1_1lattice_1_1lattice__object}\index{at.lattice.lattice\_object@{at.lattice.lattice\_object}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classat_1_1lattice_1_1lattice__object_1_1Lattice}{Lattice}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1lattice__object_aaf12db31f65d6a6579cc64f95e19c542}{lattice\+\_\+filter}} (params, lattice)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1lattice__object_affdfbe2f96ef955d2f931146164dcf18}{no\+\_\+filter}} (params, elems)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1lattice__object_ad60421277ff1f30468dc8e572dc0d3d2}{type\+\_\+filter}} (params, elem\+\_\+iterator)
+\item 
+def \mbox{\hyperlink{namespaceat_1_1lattice_1_1lattice__object_ae594fd3b472c087e98ce615b4487bb21}{params\+\_\+filter}} (params, elem\+\_\+iterator, $\ast$args)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_ad9a8d3489ddeb8791ff59cd9991e9908}\label{namespaceat_1_1lattice_1_1lattice__object_ad9a8d3489ddeb8791ff59cd9991e9908}} 
+int {\bfseries T\+W\+O\+\_\+\+P\+I\+\_\+\+E\+R\+R\+OR} = 1.E-\/4
+\item 
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_aa113e2acb7dda3856bafbe493c48fc18}\label{namespaceat_1_1lattice_1_1lattice__object_aa113e2acb7dda3856bafbe493c48fc18}} 
+{\bfseries divide}
+\item 
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_a2e557de57a92c6d08fa7cddfd94f8893}\label{namespaceat_1_1lattice_1_1lattice__object_a2e557de57a92c6d08fa7cddfd94f8893}} 
+{\bfseries invalid}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Lattice object
+
+The methods implemented in this module are internal to the 'lattice' package.
+This is necessary to ensure that the 'lattice' package is independent of other
+AT packages.
+
+Other Lattice methods are implemented in other AT packages and are available
+as soon as the package is imported. The 'tracking' and 'physics' packages are
+automatically imported.
+
+As an example, see the at.physics.orbit module
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_aaf12db31f65d6a6579cc64f95e19c542}\label{namespaceat_1_1lattice_1_1lattice__object_aaf12db31f65d6a6579cc64f95e19c542}} 
+\index{at.lattice.lattice\_object@{at.lattice.lattice\_object}!lattice\_filter@{lattice\_filter}}
+\index{lattice\_filter@{lattice\_filter}!at.lattice.lattice\_object@{at.lattice.lattice\_object}}
+\doxysubsubsection{\texorpdfstring{lattice\_filter()}{lattice\_filter()}}
+{\footnotesize\ttfamily def at.\+lattice.\+lattice\+\_\+object.\+lattice\+\_\+filter (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{lattice }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Copy lattice parameters and run through all lattice elements\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_affdfbe2f96ef955d2f931146164dcf18}\label{namespaceat_1_1lattice_1_1lattice__object_affdfbe2f96ef955d2f931146164dcf18}} 
+\index{at.lattice.lattice\_object@{at.lattice.lattice\_object}!no\_filter@{no\_filter}}
+\index{no\_filter@{no\_filter}!at.lattice.lattice\_object@{at.lattice.lattice\_object}}
+\doxysubsubsection{\texorpdfstring{no\_filter()}{no\_filter()}}
+{\footnotesize\ttfamily def at.\+lattice.\+lattice\+\_\+object.\+no\+\_\+filter (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{elems }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Run through all elements without any check\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_ae594fd3b472c087e98ce615b4487bb21}\label{namespaceat_1_1lattice_1_1lattice__object_ae594fd3b472c087e98ce615b4487bb21}} 
+\index{at.lattice.lattice\_object@{at.lattice.lattice\_object}!params\_filter@{params\_filter}}
+\index{params\_filter@{params\_filter}!at.lattice.lattice\_object@{at.lattice.lattice\_object}}
+\doxysubsubsection{\texorpdfstring{params\_filter()}{params\_filter()}}
+{\footnotesize\ttfamily def at.\+lattice.\+lattice\+\_\+object.\+params\+\_\+filter (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{elem\+\_\+iterator,  }\item[{$\ast$}]{args }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Run through all elements, looking for energy and periodicity.
+Remove the Energy attribute of non-radiating elements
+
+energy is taken from:
+    1) The params dictionary
+    2) Cavity elements
+    3) Any other element
+
+periodicity is taken from:
+    1) The params dictionary
+    2) Sum of the bending angles of magnets
+\end{DoxyVerb}
+ \mbox{\Hypertarget{namespaceat_1_1lattice_1_1lattice__object_ad60421277ff1f30468dc8e572dc0d3d2}\label{namespaceat_1_1lattice_1_1lattice__object_ad60421277ff1f30468dc8e572dc0d3d2}} 
+\index{at.lattice.lattice\_object@{at.lattice.lattice\_object}!type\_filter@{type\_filter}}
+\index{type\_filter@{type\_filter}!at.lattice.lattice\_object@{at.lattice.lattice\_object}}
+\doxysubsubsection{\texorpdfstring{type\_filter()}{type\_filter()}}
+{\footnotesize\ttfamily def at.\+lattice.\+lattice\+\_\+object.\+type\+\_\+filter (\begin{DoxyParamCaption}\item[{}]{params,  }\item[{}]{elem\+\_\+iterator }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Run through all elements and check element validity.
+Analyse elements for radiation state
+\end{DoxyVerb}
+ 
