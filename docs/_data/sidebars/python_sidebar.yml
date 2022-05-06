@@ -26,5 +26,7 @@ entries:
     folderitems:
     - title: webpage
       url: p/doxy/html/index.html
+      output: web
     - title: PDF
       url: p/doxy/latex/refman.pdf
+      output: web
