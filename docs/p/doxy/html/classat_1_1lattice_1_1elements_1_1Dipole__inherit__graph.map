@@ -1,8 +1,0 @@
-<map id="at.lattice.elements.Dipole" name="at.lattice.elements.Dipole">
-<area shape="rect" id="node1" title=" " alt="" coords="101,319,292,345"/>
-<area shape="rect" id="node2" href="$classat_1_1lattice_1_1elements_1_1Multipole.html" title=" " alt="" coords="91,244,302,271"/>
-<area shape="rect" id="node3" href="$classat_1_1lattice_1_1elements_1_1LongElement.html" title=" " alt="" coords="5,155,185,196"/>
-<area shape="rect" id="node4" href="$classat_1_1lattice_1_1elements_1_1Element.html" title=" " alt="" coords="95,80,298,107"/>
-<area shape="rect" id="node6" href="$classat_1_1lattice_1_1elements_1_1ThinMultipole.html" title=" " alt="" coords="209,155,387,196"/>
-<area shape="rect" id="node5" title=" " alt="" coords="165,5,228,32"/>
-</map>
