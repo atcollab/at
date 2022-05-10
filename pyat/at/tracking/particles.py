@@ -43,8 +43,14 @@ def _compute_bunch_length_from_espread(ring, espread):
     return blength
 
 
-def _sigma_matrix_lattice(ring, twiss_in=None, emitx=None, emity=None,
+def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None, emity=None,
                           blength=None, espread=None, verbose=False):
+
+    if ring is None and (emitx is None or emity is None or blength is None
+                         or espread is None or twiss_in is None):
+        raise AtError('Provide either a ring or twiss_in and ALL emittance '
+                      'paramaters: (ex, ey, espread, blength)')
+
     if espread is not None and blength is None:
         blength = _compute_bunch_length_from_espread(ring, espread)
     flag_all = emitx and emity and espread
@@ -122,28 +128,26 @@ def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
     OUTPUT
         sigma_matrix    6x6 correlation matrix
 
-    If the lattice object is provided with no other
-    arguments, ohmi_envelope is used to compute the
-    correlated sigma matrix.
 
-    If the lattice object and emittances and longitudinal
-    parameters are provided, then the 2x2 uncorrelated
-    matrices are computed for each plane (x,y,z) using
-    the initial optics computed from ring.get_optics,
+    If the lattice object is provided ohmi_envelope is used to
+    compute the correlated sigma matrix and missing emittances
+    and longitudinal parameters
+
+    If emittances and longitudinal parameters are provided, then
+    the 2x2 uncorrelated matrices are computed for each plane (x,y,z)
+    using the initial optics computed from ring.get_optics,
     and are combined together into the 6x6 matrix.
 
-    If the twiss_in is provided alongside the emittances and
-    longitudinal parameters, then the 2x2 uncorrelated
-    matrices are computed for each plane and combined
-    into the 6x6 matrix.
+    If the twiss_in is provided it has to be produced with linopt6 and
+    contain the rmatrix. ring is used only to compute missing emittances.
 
     If neither a lattice object nor a twiss_in is provided,
     then the beta, alpha and emittance for horizontal and
     vertical is required, as well as blength and espread.
     This then computes the analytical uncoupled sigma matrix
     """
-    if ring is not None:
-        return _sigma_matrix_lattice(ring, twiss_in=twiss_in,
+    if ring is not None or twiss_in is not None:
+        return _sigma_matrix_lattice(ring=ring, twiss_in=twiss_in,
                                      emitx=emitx, emity=emity,
                                      blength=blength, espread=espread,
                                      verbose=verbose)
