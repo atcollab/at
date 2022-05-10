@@ -1,0 +1,10 @@
+<map id="at.lattice.elements.ThinMultipole" name="at.lattice.elements.ThinMultipole">
+<area shape="rect" id="node1" title=" " alt="" coords="367,74,544,115"/>
+<area shape="rect" id="node4" href="$classat_1_1lattice_1_1elements_1_1Multipole.html" title=" " alt="" coords="592,81,803,108"/>
+<area shape="rect" id="node2" href="$classat_1_1lattice_1_1elements_1_1Element.html" title=" " alt="" coords="116,81,319,108"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,81,68,108"/>
+<area shape="rect" id="node5" href="$classat_1_1lattice_1_1elements_1_1Dipole.html" title=" " alt="" coords="867,5,1058,32"/>
+<area shape="rect" id="node6" href="$classat_1_1lattice_1_1elements_1_1Octupole.html" title=" " alt="" coords="859,56,1066,83"/>
+<area shape="rect" id="node7" href="$classat_1_1lattice_1_1elements_1_1Quadrupole.html" title=" " alt="" coords="851,107,1075,133"/>
+<area shape="rect" id="node8" href="$classat_1_1lattice_1_1elements_1_1Sextupole.html" title=" " alt="" coords="855,157,1070,184"/>
+</map>
