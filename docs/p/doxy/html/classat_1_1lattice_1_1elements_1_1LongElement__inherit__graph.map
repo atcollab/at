@@ -1,0 +1,15 @@
+<map id="at.lattice.elements.LongElement" name="at.lattice.elements.LongElement">
+<area shape="rect" id="node1" title=" " alt="" coords="367,99,547,141"/>
+<area shape="rect" id="node4" href="$classat_1_1lattice_1_1elements_1_1Corrector.html" title=" " alt="" coords="595,5,805,32"/>
+<area shape="rect" id="node5" href="$classat_1_1lattice_1_1elements_1_1Drift.html" title=" " alt="" coords="611,56,789,83"/>
+<area shape="rect" id="node7" href="$classat_1_1lattice_1_1elements_1_1Multipole.html" title=" " alt="" coords="595,107,805,133"/>
+<area shape="rect" id="node12" href="$classat_1_1lattice_1_1elements_1_1RFCavity.html" title=" " alt="" coords="596,157,804,184"/>
+<area shape="rect" id="node13" href="$classat_1_1lattice_1_1elements_1_1Wiggler.html" title=" " alt="" coords="601,208,799,235"/>
+<area shape="rect" id="node2" href="$classat_1_1lattice_1_1elements_1_1Element.html" title=" " alt="" coords="116,107,319,133"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,107,68,133"/>
+<area shape="rect" id="node6" href="$classat_1_1lattice_1_1elements_1_1Collimator.html" title=" " alt="" coords="857,5,1074,32"/>
+<area shape="rect" id="node8" href="$classat_1_1lattice_1_1elements_1_1Dipole.html" title=" " alt="" coords="870,56,1061,83"/>
+<area shape="rect" id="node9" href="$classat_1_1lattice_1_1elements_1_1Octupole.html" title=" " alt="" coords="862,107,1069,133"/>
+<area shape="rect" id="node10" href="$classat_1_1lattice_1_1elements_1_1Quadrupole.html" title=" " alt="" coords="853,157,1077,184"/>
+<area shape="rect" id="node11" href="$classat_1_1lattice_1_1elements_1_1Sextupole.html" title=" " alt="" coords="858,208,1073,235"/>
+</map>
