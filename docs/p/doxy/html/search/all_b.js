@@ -1,20 +1,6 @@
 var searchData=
 [
-  ['lattice_128',['Lattice',['../classat_1_1lattice_1_1lattice__object_1_1Lattice.html',1,'at::lattice::lattice_object']]],
-  ['lattice_5ffilter_129',['lattice_filter',['../namespaceat_1_1lattice_1_1lattice__object.html#aaf12db31f65d6a6579cc64f95e19c542',1,'at::lattice::lattice_object']]],
-  ['linopt_130',['linopt',['../namespaceat_1_1physics_1_1linear.html#acac34e48889ffa418c18eedd7431d21e',1,'at::physics::linear']]],
-  ['linopt2_131',['linopt2',['../namespaceat_1_1physics_1_1linear.html#a095dbfad26193a6c9049757950d0a90d',1,'at::physics::linear']]],
-  ['linopt4_132',['linopt4',['../namespaceat_1_1physics_1_1linear.html#a91ae6cfdb3a3a9288a4d4883b5ece5a2',1,'at::physics::linear']]],
-  ['linopt6_133',['linopt6',['../namespaceat_1_1physics_1_1linear.html#aa15a9e0a6d5eecc6a7743cf94d78f36e',1,'at::physics::linear']]],
-  ['linopt_5fauto_134',['linopt_auto',['../namespaceat_1_1physics_1_1linear.html#a77c5bccb9c9f6abbcae668e8ebf0b6fc',1,'at::physics::linear']]],
-  ['linoptconstraints_135',['LinoptConstraints',['../classat_1_1matching_1_1matching_1_1LinoptConstraints.html',1,'at::matching::matching']]],
-  ['load_5flattice_136',['load_lattice',['../namespaceat_1_1load_1_1allfiles.html#a6cc20c3bbc210705f9ec6682c757dee2',1,'at::load::allfiles']]],
-  ['load_5fm_137',['load_m',['../namespaceat_1_1load_1_1matfile.html#a2e842a932fcb9ee8dc69cdafc8152579',1,'at::load::matfile']]],
-  ['load_5fmat_138',['load_mat',['../namespaceat_1_1load_1_1matfile.html#a4f5b0d21d605634a9ae180b447d36e19',1,'at::load::matfile']]],
-  ['load_5frepr_139',['load_repr',['../namespaceat_1_1load_1_1reprfile.html#ad6c6bf1acbfe182c28ba17b073773018',1,'at::load::reprfile']]],
-  ['load_5fvar_140',['load_var',['../namespaceat_1_1load_1_1matfile.html#ad5cfcb05796336bf8e8a4aa0567f2272',1,'at::load::matfile']]],
-  ['long_5fresonator_141',['long_resonator',['../classat_1_1collective_1_1wake__object_1_1Wake.html#ad7e368e5956d9a57345b73c7e9b1bff8',1,'at::collective::wake_object::Wake']]],
-  ['long_5fresonator_5fwf_142',['long_resonator_wf',['../namespaceat_1_1collective_1_1wake__functions.html#a3c9317e70a0a2d2075db7445c1176537',1,'at::collective::wake_functions']]],
-  ['longelement_143',['LongElement',['../classat_1_1lattice_1_1elements_1_1LongElement.html',1,'at::lattice::elements']]],
-  ['longresonatorelement_144',['LongResonatorElement',['../classat_1_1collective_1_1wake__elements_1_1LongResonatorElement.html',1,'at::collective::wake_elements']]]
+  ['k_265',['K',['../classat_1_1lattice_1_1elements_1_1Dipole.html#ae548ef723911c5a5d4eeff24437d092f',1,'at.lattice.elements.Dipole.K(self)'],['../classat_1_1lattice_1_1elements_1_1Dipole.html#ae42876b281940e88b2f2429f46b4ec98',1,'at.lattice.elements.Dipole.K(self, strength)'],['../classat_1_1lattice_1_1elements_1_1Quadrupole.html#a184266b9865e93d17cb794c0652a3dbc',1,'at.lattice.elements.Quadrupole.K(self)'],['../classat_1_1lattice_1_1elements_1_1Quadrupole.html#af34abc3258b4eed25ab47ca448729836',1,'at.lattice.elements.Quadrupole.K(self, strength)']]],
+  ['kmax_266',['kmax',['../classat_1_1collective_1_1haissinski_1_1Haissinski.html#aaa5da5b41cc4a98d769062d14d25a077',1,'at::collective::haissinski::Haissinski']]],
+  ['kwargs_267',['kwargs',['../classat_1_1matching_1_1matching_1_1Variable.html#ac1b1925c54c55aa8ec09485ea3ab48f1',1,'at.matching.matching.Variable.kwargs()'],['../classat_1_1matching_1_1matching_1_1Constraints.html#a201a047544fd2b5867fc7464f7c6f491',1,'at.matching.matching.Constraints.kwargs()']]]
 ];

@@ -467,7 +467,7 @@ LOOKUP_CACHE_SIZE      = 0
 # normally produced when WARNINGS is set to YES.
 # The default value is: NO.
 
-EXTRACT_ALL            = NO
+EXTRACT_ALL            = YES
 
 # If the EXTRACT_PRIVATE tag is set to YES, all private members of a class will
 # be included in the documentation.
@@ -491,7 +491,7 @@ EXTRACT_PACKAGE        = NO
 # included in the documentation.
 # The default value is: NO.
 
-EXTRACT_STATIC         = NO
+EXTRACT_STATIC         = YES
 
 # If the EXTRACT_LOCAL_CLASSES tag is set to YES, classes (and structs) defined
 # locally in source files will be included in the documentation. If set to NO,
@@ -1212,7 +1212,7 @@ HTML_FILE_EXTENSION    = .html
 # of the possible markers and block names see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_HEADER            =
+HTML_HEADER            = ../docs/_doxy/header.html
 
 # The HTML_FOOTER tag can be used to specify a user-defined HTML footer for each
 # generated HTML page. If the tag is left blank doxygen will generate a standard
@@ -1222,7 +1222,7 @@ HTML_HEADER            =
 # that doxygen normally uses.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_FOOTER            =
+HTML_FOOTER            = ../docs/_doxy/footer.html
 
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading style
 # sheet that is used by each HTML page. It can be used to fine-tune the look of
@@ -1247,8 +1247,10 @@ HTML_STYLESHEET        =
 # list). For an example see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css \
-                         doxygen-awesome-css/doxygen-awesome-sidebar-only.css
+HTML_EXTRA_STYLESHEET  = ../docs/_doxy/doxygen-awesome.css \
+                         ../docs/_doxy/doxygen-awesome-sidebar-only.css \
+                         ../docs/_doxy/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         ../docs/_doxy/doxygen-awesome-zephyr.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1258,7 +1260,8 @@ HTML_EXTRA_STYLESHEET  = doxygen-awesome-css/doxygen-awesome.css \
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       =
+HTML_EXTRA_FILES       = ../docs/_doxy/doxygen-awesome-darkmode-toggle.js \
+                         ../docs/_doxy/doxygen-awesome-zephyr.js
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to
@@ -1297,7 +1300,7 @@ HTML_COLORSTYLE_GAMMA  = 80
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_TIMESTAMP         = NO
+HTML_TIMESTAMP         = YES
 
 # If the HTML_DYNAMIC_MENUS tag is set to YES then the generated HTML
 # documentation will contain a main index with vertical navigation menus that
@@ -1316,7 +1319,7 @@ HTML_DYNAMIC_MENUS     = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_DYNAMIC_SECTIONS  = NO
+HTML_DYNAMIC_SECTIONS  = YES
 
 # With HTML_INDEX_NUM_ENTRIES one can control the preferred number of entries
 # shown in the various tree structured indices initially; the user can expand
@@ -1562,7 +1565,7 @@ ENUM_VALUES_PER_LINE   = 4
 # Minimum value: 0, maximum value: 1500, default value: 250.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-TREEVIEW_WIDTH         = 250
+TREEVIEW_WIDTH         = 300
 
 # If the EXT_LINKS_IN_WINDOW option is set to YES, doxygen will open links to
 # external symbols imported via tag files in a separate window.
