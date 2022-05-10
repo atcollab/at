@@ -1222,7 +1222,7 @@ HTML_HEADER            = ../docs/_doxy/header.html
 # that doxygen normally uses.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_FOOTER            = 
+HTML_FOOTER            = ../docs/_doxy/footer.html
 
 # The HTML_STYLESHEET tag can be used to specify a user-defined cascading style
 # sheet that is used by each HTML page. It can be used to fine-tune the look of
@@ -1251,6 +1251,7 @@ HTML_EXTRA_STYLESHEET  = ../docs/_doxy/doxygen-awesome.css \
                          ../docs/_doxy/custom.css \
                          ../docs/_doxy/doxygen-awesome-sidebar-only.css \
                          ../docs/_doxy/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         ../docs/_doxy/doxygen-awesome-zephyr.css \
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1260,7 +1261,8 @@ HTML_EXTRA_STYLESHEET  = ../docs/_doxy/doxygen-awesome.css \
 # files will be copied as-is; there are no commands or markers available.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_FILES       = ../docs/_doxy/doxygen-awesome-darkmode-toggle.js
+HTML_EXTRA_FILES       = ../docs/_doxy/doxygen-awesome-darkmode-toggle.js \
+                         ../docs/_doxy/doxygen-awesome-zephyr.js
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to
