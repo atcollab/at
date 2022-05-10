@@ -108,21 +108,21 @@ def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
     """
     Calculate the correlation matrix to be used for particle generation
 
-    PARAMETERS
-        ring            Lattice object or list of
-                        twiss parameters.
-        twiss_in        Data structure containing input
-                        twiss parameters.
 
     KEYWORDS
-        betax           Input horizontal beta function [m]
-        alphax          Input horizontal alpha function [m]
-        emitx           Horizontal emittance [m.rad]
-        betay           Input vertical beta function [m]
-        alphay          Input vertical alpha function [m]
-        emity           Vertical emittance [m.rad]
-        blength         One sigma bunch length [m]
-        espread         One sigma energy spread [dp/p]
+        ring=None       Lattice object or list of
+                        twiss parameters.
+        twiss_in=None        Data structure containing input
+                        twiss parameters.
+
+        betax=None      Input horizontal beta function [m]
+        alphax=None     Input horizontal alpha function [m]
+        emitx=None      Horizontal emittance [m.rad]
+        betay=None      Input vertical beta function [m]
+        alphay=None     Input vertical alpha function [m]
+        emity=None      Vertical emittance [m.rad]
+        blength=None    One sigma bunch length [m]
+        espread=None    One sigma energy spread [dp/p]
         verbose=False   Boolean flag on whether to print information
                         to the terminal
     OUTPUT
