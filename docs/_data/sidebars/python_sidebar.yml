@@ -21,7 +21,6 @@ entries:
     - title: Collective effects
       url: /p/Collective.html
       output: web
-  folders:
   - title: API documentaiton
     output: web
     folderitems:
