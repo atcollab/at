@@ -25,5 +25,5 @@ entries:
     output: web
     folderitems:
     - title: Sphinx Webpage
-      url: /_sphinx/build/html/index.html
+      url: /sphinx/build/html/index.html
       output: web
