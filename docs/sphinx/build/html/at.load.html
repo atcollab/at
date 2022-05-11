@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>at.load package &mdash; pyAT 0.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> pyAT
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyAT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>at.load package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/at.load.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="at-load-package">
+<h1>at.load package<a class="headerlink" href="#at-load-package" title="Permalink to this headline"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-at.load.allfiles">
+<span id="at-load-allfiles-module"></span><h2>at.load.allfiles module<a class="headerlink" href="#module-at.load.allfiles" title="Permalink to this headline"></a></h2>
+<p>Generic function to save and load python AT lattices. The format is
+determined by the file extension</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.allfiles.load_lattice">
+<span class="sig-prename descclassname"><span class="pre">at.load.allfiles.</span></span><span class="sig-name descname"><span class="pre">load_lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.allfiles.load_lattice" title="Permalink to this definition"></a></dt>
+<dd><p>Load a Lattice object from a file</p>
+<p>The file format is indicated by the filepath extension.</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>filepath        name of the file</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>name            Name of the lattice</dt><dd><p>(default: taken from the file, or ‘’)</p>
+</dd>
+<dt>energy          Energy of the lattice</dt><dd><p>(default: taken from the file)</p>
+</dd>
+<dt>periodicity     Number of periods</dt><dd><p>(default: taken from the file, or 1)</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>all other keywords will be set as Lattice attributes</p></li>
+</ul>
+</dd>
+<dt>MAT-FILE SPECIFIC KEYWORDS</dt><dd><dl class="simple">
+<dt>mat_key         name of the Matlab variable containing the lattice.</dt><dd><p>Default: Matlab variable name if there is only one,
+otherwise ‘RING’</p>
+</dd>
+</dl>
+<p>check=True      if False, skip the coherence tests
+quiet=False     If True, suppress the warning for non-standard classes
+keep_all=False  if True, keep RingParam elements as Markers</p>
+</dd>
+</dl>
+<p>Known extensions are:</p>
+<p>.mat        Matlab binary mat-file
+.m          Matlab text m-file
+.repr       Text representation of a python AT Lattice
+.lat        Tracy format
+.lte        Elegant format</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.allfiles.register_format">
+<span class="sig-prename descclassname"><span class="pre">at.load.allfiles.</span></span><span class="sig-name descname"><span class="pre">register_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.allfiles.register_format" title="Permalink to this definition"></a></dt>
+<dd><p>Register format-specific processing functions</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>extension       File extension string
+load_func       load function (default: None)
+save_func       save_lattice function (default: None)
+descr           File type description</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.allfiles.save_lattice">
+<span class="sig-prename descclassname"><span class="pre">at.load.allfiles.</span></span><span class="sig-name descname"><span class="pre">save_lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.allfiles.save_lattice" title="Permalink to this definition"></a></dt>
+<dd><p>Save a Lattice object</p>
+<p>The file format is indicated by the filepath extension.</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+filepath        name of the file</p>
+</dd>
+<dt>MAT-FILE SPECIFIC KEYWORDS</dt><dd><p>mat_key=’RING’  Name of the Matlab variable</p>
+</dd>
+</dl>
+<p>Known extensions are:</p>
+<p>.mat        Matlab binary mat-file
+.m          Matlab text m-file
+.repr       Text representation of a python AT Lattice</p>
+</dd></dl>
+
+</section>
+<section id="module-at.load.elegant">
+<span id="at-load-elegant-module"></span><h2>at.load.elegant module<a class="headerlink" href="#module-at.load.elegant" title="Permalink to this headline"></a></h2>
+<p>Load a lattice from an Elegant file (.lte).</p>
+<p>This is not complete but can parse the example files that I have.
+This parser is quite similar to the Tracy parser in tracy.py.</p>
+<p>The Elegant file format is described briefly here:
+<a class="reference external" href="https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009">https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009</a></p>
+<p>It is similar to the MAD-X format, described briefly here:
+<a class="reference external" href="http://madx.web.cern.ch/madx/">http://madx.web.cern.ch/madx/</a></p>
+<p>Note that Elegant scales magnet polynomials in a different way
+to AT, so the parsed coefficients need to be divided by n! for
+the coefficient of order n.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_aperture">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_aperture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_aperture" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_cavity">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_cavity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_cavity" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_corrector">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_corrector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_corrector" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_dipole">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_dipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_drift">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_drift" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_marker">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_marker" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_multipole">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_multipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_multipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_oct">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_oct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_oct" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_quad">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_quad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_quad" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.create_sext">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">create_sext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.create_sext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.elegant_element_from_string">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">elegant_element_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.elegant_element_from_string" title="Permalink to this definition"></a></dt>
+<dd><p>Create element from Elegant’s string representation.</p>
+<p>e.g. drift,l=0.045 =&gt; Drift(name, 0.045)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.expand_elegant">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">expand_elegant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.expand_elegant" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.handle_value">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">handle_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.handle_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.load_elegant">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">load_elegant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.load_elegant" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.parse_chunk">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">parse_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.parse_chunk" title="Permalink to this definition"></a></dt>
+<dd><p>Parse a non-element part of a lattice file.</p>
+<p>That part can reference already-parsed elements and chunks.</p>
+<p>if
+chunks = {“x”: [“a”, “b”]}
+and
+elements = {“a”: Marker(…), “b”: Quadrupole(…)}</p>
+<p>line(a,b) =&gt; [a, b]
+-x        =&gt; [b, a]
+2*x       =&gt; [a, b, a, b]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.elegant.parse_lines">
+<span class="sig-prename descclassname"><span class="pre">at.load.elegant.</span></span><span class="sig-name descname"><span class="pre">parse_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.elegant.parse_lines" title="Permalink to this definition"></a></dt>
+<dd><p>Return individual lines.</p>
+<p>Remove comments and whitespace and convert to lowercase.</p>
+</dd></dl>
+
+</section>
+<section id="module-at.load.matfile">
+<span id="at-load-matfile-module"></span><h2>at.load.matfile module<a class="headerlink" href="#module-at.load.matfile" title="Permalink to this headline"></a></h2>
+<p>Load lattices from Matlab files.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.matfile.load_m">
+<span class="sig-prename descclassname"><span class="pre">at.load.matfile.</span></span><span class="sig-name descname"><span class="pre">load_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.matfile.load_m" title="Permalink to this definition"></a></dt>
+<dd><p>Create a lattice object from a matlab m-file</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>filename        name of a ‘.m’ file</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>keep_all=False  if True, keep RingParam elements as Markers
+name            Name of the lattice</p>
+<blockquote>
+<div><p>(default: taken from the elements, or ‘’)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>energy          Energy of the lattice</dt><dd><p>(default: taken from the elements)</p>
+</dd>
+<dt>periodicity     Number of periods</dt><dd><p>(default: taken from the elements, or 1)</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>all other keywords will be set as Lattice attributes</p></li>
+</ul>
+</dd>
+<dt>OUTPUT</dt><dd><p>Lattice object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.matfile.load_mat">
+<span class="sig-prename descclassname"><span class="pre">at.load.matfile.</span></span><span class="sig-name descname"><span class="pre">load_mat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.matfile.load_mat" title="Permalink to this definition"></a></dt>
+<dd><p>Create a lattice object from a Matlab mat-file</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>filename        name of a ‘.mat’ file</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>mat_key         name of the Matlab variable containing the lattice.</dt><dd><p>Default: Matlab variable name if there is only one,
+otherwise ‘RING’</p>
+</dd>
+</dl>
+<p>check=True      if False, skip the coherence tests
+quiet=False     If True, suppress the warning for non-standard classes
+keep_all=False  if True, keep RingParam elements as Markers
+name            Name of the lattice</p>
+<blockquote>
+<div><p>(default: taken from the lattice, or ‘’)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>energy          Energy of the lattice</dt><dd><p>(default: taken from the elements)</p>
+</dd>
+<dt>periodicity     Number of periods</dt><dd><p>(default: taken from the elements, or 1)</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>all other keywords will be set as Lattice attributes</p></li>
+</ul>
+</dd>
+<dt>OUTPUT</dt><dd><p>Lattice object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.matfile.load_var">
+<span class="sig-prename descclassname"><span class="pre">at.load.matfile.</span></span><span class="sig-name descname"><span class="pre">load_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matlat</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.matfile.load_var" title="Permalink to this definition"></a></dt>
+<dd><p>Create a lattice from a Matlab cell array</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.matfile.ringparam_filter">
+<span class="sig-prename descclassname"><span class="pre">at.load.matfile.</span></span><span class="sig-name descname"><span class="pre">ringparam_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elem_iterator</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.matfile.ringparam_filter" title="Permalink to this definition"></a></dt>
+<dd><p>”
+Run through all elements, process and optionally removes RingParam elements</p>
+<dl class="simple">
+<dt>KEYWORDS</dt><dd><p>keep_all=False  if True, keep RingParam elem_iterator as Markers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.matfile.save_m">
+<span class="sig-prename descclassname"><span class="pre">at.load.matfile.</span></span><span class="sig-name descname"><span class="pre">save_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.matfile.save_m" title="Permalink to this definition"></a></dt>
+<dd><p>Save a lattice as a Matlab m-file</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+filename=None   name of the ‘.m’ file. Default: output on sys.stdout</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.matfile.save_mat">
+<span class="sig-prename descclassname"><span class="pre">at.load.matfile.</span></span><span class="sig-name descname"><span class="pre">save_mat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mat_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RING'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.matfile.save_mat" title="Permalink to this definition"></a></dt>
+<dd><p>Save a Lattice object as a Matlab mat-file</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+filename        name of the ‘.mat’ file</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>mat_key=’RING’  Name of the Matlab variable representing the lattice</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.load.reprfile">
+<span id="at-load-reprfile-module"></span><h2>at.load.reprfile module<a class="headerlink" href="#module-at.load.reprfile" title="Permalink to this headline"></a></h2>
+<p>Text representation of a python AT lattice with each element represented by
+its ‘repr’ string</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.reprfile.load_repr">
+<span class="sig-prename descclassname"><span class="pre">at.load.reprfile.</span></span><span class="sig-name descname"><span class="pre">load_repr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.reprfile.load_repr" title="Permalink to this definition"></a></dt>
+<dd><p>Load a Lattice object stored as a repr-file</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>filename        name of the ‘.repr’ file</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>name            Name of the lattice (default: taken from the file)
+energy          Energy of the lattice (default: taken from the file)
+periodicity     Number of periods (default: taken from the file)
+*               all other keywords will be set as Lattice attributes</p>
+</dd>
+<dt>OUTPUT</dt><dd><p>Lattice object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.reprfile.save_repr">
+<span class="sig-prename descclassname"><span class="pre">at.load.reprfile.</span></span><span class="sig-name descname"><span class="pre">save_repr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.reprfile.save_repr" title="Permalink to this definition"></a></dt>
+<dd><p>Save a Lattice object as a repr-file</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+filename=None   name of the ‘.repr’ file. Default: output on sys.stdout</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.load.tracy">
+<span id="at-load-tracy-module"></span><h2>at.load.tracy module<a class="headerlink" href="#module-at.load.tracy" title="Permalink to this headline"></a></h2>
+<p>Load a lattice from a Tracy file (.lat).</p>
+<p>This is not complete but can parse the example files that I have.
+This parser is quite similar to the Elegant parser in elegant.py.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_cavity">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_cavity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_cavity" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_corrector">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_corrector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_corrector" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_dipole">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_dipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_drift">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_drift" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_marker">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_marker" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_multipole">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_multipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_multipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_quad">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_quad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_quad" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.create_sext">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">create_sext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.create_sext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.expand_tracy">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">expand_tracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonic_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.expand_tracy" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.load_tracy">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">load_tracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.load_tracy" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.parse_chunk">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">parse_chunk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.parse_chunk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.parse_float">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">parse_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expression</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.parse_float" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate the provided arithmetic expression substituting variables.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.parse_hom">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">parse_hom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hom_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.parse_hom" title="Permalink to this definition"></a></dt>
+<dd><p>Parse ‘hom’ string from lattice file. Note that PolynomB
+is before PolynomA.</p>
+<p>hom(3, 1.2, 3.4) =&gt; [0, 0, 3.4], [0, 0, 1.2]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.parse_lines">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">parse_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.parse_lines" title="Permalink to this definition"></a></dt>
+<dd><p>Return individual lines.</p>
+<p>Remove comments and whitespace, convert to lowercase, and split on
+semicolons.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.tokenise_expression">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">tokenise_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expression</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.tokenise_expression" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.tracy.tracy_element_from_string">
+<span class="sig-prename descclassname"><span class="pre">at.load.tracy.</span></span><span class="sig-name descname"><span class="pre">tracy_element_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.tracy.tracy_element_from_string" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-at.load.utils">
+<span id="at-load-utils-module"></span><h2>at.load.utils module<a class="headerlink" href="#module-at.load.utils" title="Permalink to this headline"></a></h2>
+<p>Conversion utilities for creating pyat elements</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.load.utils.RingParam">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">RingParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.RingParam" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="at.lattice.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">at.lattice.elements.Element</span></code></a></p>
+<p>Private class for Matlab RingParam element</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.load.utils.RingParam.REQUIRED_ATTRIBUTES">
+<span class="sig-name descname"><span class="pre">REQUIRED_ATTRIBUTES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['FamName',</span> <span class="pre">'Energy',</span> <span class="pre">'Periodicity']</span></em><a class="headerlink" href="#at.load.utils.RingParam.REQUIRED_ATTRIBUTES" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.element_from_dict">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">element_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.element_from_dict" title="Permalink to this definition"></a></dt>
+<dd><p>return an AT element from a dictionary of attributes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.element_from_m">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">element_from_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.element_from_m" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a AT-element from a line in a m-file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.element_from_string">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">element_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem_string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.element_from_string" title="Permalink to this definition"></a></dt>
+<dd><p>Generate an AT-element from its repr string</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.element_to_dict">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">element_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.element_to_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the Matlab structure for a AT element</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.element_to_m">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">element_to_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.element_to_m" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the Matlab-evaluable string for a AT element</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.find_class">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">find_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.find_class" title="Permalink to this definition"></a></dt>
+<dd><p>Attempts to correctly identify the Class of the element from its kwargs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>the</strong> (<em>elem_dict       The dictionary of keyword arguments passed to</em>) – Element constructor.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Keywords:</dt><dd><p>quiet=False     If True, suppress the warning for non-standard classes</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The guessed Class name</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>element_class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.find_class_name">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">find_class_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.find_class_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.hasattrs">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">hasattrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">attributes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.hasattrs" title="Permalink to this definition"></a></dt>
+<dd><p>Check if the element would have the specified attribute(s), i.e. if they
+are in kwargs; allows checking for multiple attributes in one go.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kwargs</strong> (<em>dict</em>) – The dictionary of keyword arguments passed to the
+Element constructor.</p></li>
+<li><p><strong>attributes</strong> (<em>iterable</em>) – A list of strings, the attribute names to be
+checked.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A single boolean, True if the element has any of the specified</dt><dd><p>attributes.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.load.utils.split_ignoring_parentheses">
+<span class="sig-prename descclassname"><span class="pre">at.load.utils.</span></span><span class="sig-name descname"><span class="pre">split_ignoring_parentheses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.load.utils.split_ignoring_parentheses" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-at.load">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-at.load" title="Permalink to this headline"></a></h2>
+<p>Import/export AT lattice from/to different formats:
+- .mat files
+- .m files</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, ATCollab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

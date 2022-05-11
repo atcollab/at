@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>at.plot package &mdash; pyAT 0.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> pyAT
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyAT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>at.plot package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/at.plot.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="at-plot-package">
+<h1>at.plot package<a class="headerlink" href="#at-plot-package" title="Permalink to this headline"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-at.plot.generic">
+<span id="at-plot-generic-module"></span><h2>at.plot.generic module<a class="headerlink" href="#module-at.plot.generic" title="Permalink to this headline"></a></h2>
+<p>AT generic plotting function</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.generic.baseplot">
+<span class="sig-prename descclassname"><span class="pre">at.plot.generic.</span></span><span class="sig-name descname"><span class="pre">baseplot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_function</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.generic.baseplot" title="Permalink to this definition"></a></dt>
+<dd><p>baseplot divides the region of interest of ring into small elements,
+calls the specified function to get the plot data and calls matplotlib
+functions to generate the plot.
+By default it creates a new figure for the plot, but if provided with
+axes objects it can be used as part of a GUI</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+plot_function   specific data generating function to be called</p>
+<p>All other positional parameters are sent to the plotting function</p>
+<p>plot_function is called as:</p>
+<p>title, left, right = plot_function(ring, refpts, <a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</p>
+<p>and should return 2 or 3 output:</p>
+<p>title   plot title or None
+left    tuple returning the data for the main (left) axis</p>
+<blockquote>
+<div><p>left[0]   y-axis label
+left[1]   xdata: (N,) array (s coordinate)
+left[2]   ydata: iterable of (N,) or (N,M) arrays. Lines from a</p>
+<blockquote>
+<div><p>(N, M) array share the same style and label</p>
+</div></blockquote>
+<p>left[3]   labels: (optional) iterable of strings as long as ydata</p>
+</div></blockquote>
+<dl class="simple">
+<dt>right   tuple returning the data for the secondary (right) axis</dt><dd><p>(optional)</p>
+</dd>
+</dl>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>s_range         lattice range of interest, default: unchanged,</dt><dd><p>initially set to the full cell.</p>
+</dd>
+<dt>axes=None       axes for plotting as (primary_axes, secondary_axes)</dt><dd><p>Default: create new axes</p>
+</dd>
+</dl>
+<p>slices=400      Number of slices
+legend=True     Show a legend on the plot
+block=False     if True, block until the figure is closed
+dipole={}       Dictionary of properties overloading the default</p>
+<blockquote>
+<div><p>properties of dipole representation.
+See ‘plot_synopt’ for details</p>
+</div></blockquote>
+<p>quadrupole={}   Same definition as for dipole
+sextupole={}    Same definition as for dipole
+multipole={}    Same definition as for dipole
+monitor={}      Same definition as for dipole</p>
+<p>All other keywords are sent to the plotting function</p>
+</dd>
+<dt>RETURN</dt><dd><p>left_axes       Main (left) axes
+right_axes      Secondary (right) axes or None
+synopt_axes     Synoptic axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.plot.specific">
+<span id="at-plot-specific-module"></span><h2>at.plot.specific module<a class="headerlink" href="#module-at.plot.specific" title="Permalink to this headline"></a></h2>
+<p>AT plotting functions</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.specific.pldata_beta_disp">
+<span class="sig-prename descclassname"><span class="pre">at.plot.specific.</span></span><span class="sig-name descname"><span class="pre">pldata_beta_disp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.specific.pldata_beta_disp" title="Permalink to this definition"></a></dt>
+<dd><p>Generates data for plotting beta functions and dispersion</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.specific.pldata_linear">
+<span class="sig-prename descclassname"><span class="pre">at.plot.specific.</span></span><span class="sig-name descname"><span class="pre">pldata_linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.specific.pldata_linear" title="Permalink to this definition"></a></dt>
+<dd><p>data extraction function for plotting results of get_optics</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.specific.plot_beta">
+<span class="sig-prename descclassname"><span class="pre">at.plot.specific.</span></span><span class="sig-name descname"><span class="pre">plot_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.specific.plot_beta" title="Permalink to this definition"></a></dt>
+<dd><p>Plot beta functions and dispersion</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>dp=0.0          Ignored if radiation is ON. Momentum deviation.
+dct=None        Ignored if radiation is ON. Path lengthening.</p>
+<blockquote>
+<div><p>If specified, dp is ignored and the off-momentum is
+deduced from the path lengthening.</p>
+</div></blockquote>
+<dl>
+<dt>method=linopt6  Method used for the analysis of the transfer matrix.</dt><dd><p>See get_optics.
+linopt6: default
+linopt2: faster if no longitudinal motion and</p>
+<blockquote>
+<div><p>no H/V coupling,</p>
+</div></blockquote>
+</dd>
+<dt>orbit           avoids looking for the closed orbit if is already known</dt><dd><p>((6,) array)</p>
+</dd>
+<dt>keep_lattice    Assume no lattice change since the previous tracking.</dt><dd><p>Defaults to False</p>
+</dd>
+<dt>ddp=1.0E-8      momentum deviation used for computation of</dt><dd><p>chromaticities and dispersion</p>
+</dd>
+<dt>twiss_in=None   Initial conditions for transfer line optics. Record</dt><dd><p>array as output by linopt, or dictionary. Keys:
+‘R’ or ‘alpha’ and ‘beta’   (mandatory)
+‘closed_orbit’,             (default 0)
+‘dispersion’                (default 0)
+If present, the attribute ‘R’ will be used, otherwise
+the attributes ‘alpha’ and ‘beta’ will be used. All
+other attributes are ignored.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.specific.plot_linear">
+<span class="sig-prename descclassname"><span class="pre">at.plot.specific.</span></span><span class="sig-name descname"><span class="pre">plot_linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.specific.plot_linear" title="Permalink to this definition"></a></dt>
+<dd><p>axleft, axright = plot_linear(ring, left[, right], <a href="#id5"><span class="problematic" id="id6">**</span></a>keywords
+Plot linear optical functions returned by get_optics</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+left            Left axis description as a tuple:</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="simple">
+<dt>(key[, indices[, indices]])</dt><dd><p>key:        ‘beta’, ‘closed_orbit’,…
+indices:    integer, sequence of integers, or slice</p>
+</dd>
+</dl>
+<p>The number if sequences of indices is data[key].ndim-1
+The number of indices is the number of curves to plot.
+All sequences must have the same length.</p>
+</div></blockquote>
+<dl>
+<dt>Examples:</dt><dd><p>(‘beta’, [0, 1])              beta_x, beta_z
+(‘dispersion’, 0)             eta_x
+(‘closed_orbit’), [1, 3])     x’, z’
+(‘m44’, 2, 2)                 T33
+(‘m44’, [0, 0], [0, 1])       T11, T12
+(‘m44’, 2, slice(4))          T31, T32, T33, T34</p>
+<blockquote>
+<div><p>as a single block</p>
+</div></blockquote>
+<p>(‘m44’, [2,2,2,2], [0,1,2,3]) T31, T32, T33, T34</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>right           Right axis (optional)</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>title           Plot title, defaults to “Linear optics”
+dp=0.0          Ignored if radiation is ON. Momentum deviation.
+dct=None        Ignored if radiation is ON. Path lengthening.</p>
+<blockquote>
+<div><p>If specified, dp is ignored and the off-momentum is
+deduced from the path lengthening.</p>
+</div></blockquote>
+<dl>
+<dt>method=linopt6  Method used for the analysis of the transfer matrix.</dt><dd><p>See get_optics.
+linopt6: default
+linopt2: faster if no longitudinal motion and</p>
+<blockquote>
+<div><p>no H/V coupling,</p>
+</div></blockquote>
+</dd>
+<dt>orbit           avoids looking for the closed orbit if is already known</dt><dd><p>((6,) array)</p>
+</dd>
+<dt>keep_lattice    Assume no lattice change since the previous tracking.</dt><dd><p>Defaults to False</p>
+</dd>
+<dt>ddp=1.0E-8      momentum deviation used for computation of</dt><dd><p>chromaticities and dispersion</p>
+</dd>
+<dt>twiss_in=None   Initial conditions for transfer line optics. Record</dt><dd><p>array as output by linopt, or dictionary. Keys:
+‘R’ or ‘alpha’ and ‘beta’   (mandatory)
+‘closed_orbit’,             (default 0)
+‘dispersion’                (default 0)
+If present, the attribute ‘R’ will be used, otherwise
+the attributes ‘alpha’ and ‘beta’ will be used. All
+other attributes are ignored.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.specific.plot_trajectory">
+<span class="sig-prename descclassname"><span class="pre">at.plot.specific.</span></span><span class="sig-name descname"><span class="pre">plot_trajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nturns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.specific.plot_trajectory" title="Permalink to this definition"></a></dt>
+<dd><p>plot a particle’s trajectory</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object
+r_in            6xN array: input coordinates of N particles
+nturns=1        Number of turns</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>keep_lattice    Assume no lattice change since the previous tracking.</dt><dd><p>Defaults to False</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.plot.standalone">
+<span id="at-plot-standalone-module"></span><h2>at.plot.standalone module<a class="headerlink" href="#module-at.plot.standalone" title="Permalink to this headline"></a></h2>
+<p>AT plotting functions</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.standalone.plot_acceptance">
+<span class="sig-prename descclassname"><span class="pre">at.plot.standalone.</span></span><span class="sig-name descname"><span class="pre">plot_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.standalone.plot_acceptance" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the acceptance at repfts observation points
+Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
+(r, theta). Scalar inputs can be used for 1D grid.
+The grid can be changed using grid_mode input:
+at.GridMode.CARTESIAN: (x,y) grid
+at.GridMode.RADIAL: (r,theta) grid
+at.GridMode.RECURSIVE: (r,theta) recursive boundary search</p>
+<p>Example usage:
+ring.plot_acceptance(planes, npoints, amplitudes)
+plt.show()</p>
+<p>PARAMETERS
+PARAMETERS</p>
+<blockquote>
+<div><p>ring            ring use for tracking
+planes          max. dimension 2, defines the plane where to search</p>
+<blockquote>
+<div><p>for the acceptance, allowed values are: x,xp,y,yp,dp,ct</p>
+</div></blockquote>
+<p>npoints         number of points in each dimension shape (len(planes),)
+amplitudes      max. amplitude  or initial step in RECURSIVE in each</p>
+<blockquote>
+<div><p>dimension
+shape (len(planes),), for RADIAL/RECURSIVE grid:
+r = sqrt(x**2+y**2)</p>
+</div></blockquote>
+</div></blockquote>
+<dl>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>acceptance=None tuple containing pre-computed acceptance</dt><dd><p>(boundary, survived, grid)</p>
+</dd>
+</dl>
+<p>nturns=1024     Number of turns for the tracking
+refpts=None     Observation refpts, default start of the machine
+dp=None         static momentum offset
+offset=None     initial orbit, default closed orbit
+bounds=None     Allows to define boundaries for the grid default</p>
+<blockquote>
+<div><p>values are:
+GridMode.CARTESIAN: ((-1,1),(0,1))
+GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))</p>
+</div></blockquote>
+<dl class="simple">
+<dt>grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector</dt><dd><p>(default) at.GridMode.RECURSIVE: recursive search</p>
+</dd>
+<dt>use_mp=False    Use python multiprocessing (patpass, default use</dt><dd><p>lattice_pass). In case multi-processing is not
+enabled GridMode is forced to
+RECURSIVE (most efficient in single core)</p>
+</dd>
+</dl>
+<p>divider=2       Value of the divider used in RECURSIVE boundary search
+verbose=True    Print out some inform
+start_method    This parameter allows to change the python</p>
+<blockquote>
+<div><p>multiprocessing start method, default=None uses the
+python defaults that is considered safe.
+Available parameters: ‘fork’, ‘spawn’, ‘forkserver’.
+Default for linux is fork, default for MacOS and
+Windows is spawn. fork may used for MacOS to speed-up
+the calculation or to solve Runtime Errors, however
+it is considered unsafe.</p>
+</div></blockquote>
+</dd>
+<dt>OUTPUT</dt><dd><p>Returns 3 lists containing the 2D acceptance, the grid that was
+tracked and the particles of the grid that survived. The length
+of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
+survived arrays are returned directly.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.plot.synopt">
+<span id="at-plot-synopt-module"></span><h2>at.plot.synopt module<a class="headerlink" href="#module-at.plot.synopt" title="Permalink to this headline"></a></h2>
+<p>Plot a lattice synoptic</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.plot.synopt.plot_synopt">
+<span class="sig-prename descclassname"><span class="pre">at.plot.synopt.</span></span><span class="sig-name descname"><span class="pre">plot_synopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dipole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadrupole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sextupole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multipole</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.plot.synopt.plot_synopt" title="Permalink to this definition"></a></dt>
+<dd><p>Plot a synoptic of a lattice</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>ring            Lattice object</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>s_range=None    plot range, defaults to the full ring
+axes=None       axes for plotting the synoptic. If None, a new</p>
+<blockquote>
+<div><p>figure will be created. Otherwise, a new axes object
+sharing the same x-axis as the given one is created.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>dipole={}       Dictionary of properties overloading the default</dt><dd><p>properties. If None, dipoles will not be shown.</p>
+</dd>
+</dl>
+<p>quadrupole={}   Same definition as for dipole
+sextupole={}    Same definition as for dipole
+multipole={}    Same definition as for dipole
+monitor={}      Same definition as for dipole</p>
+</dd>
+<dt>RETURN</dt><dd><p>synopt_axes     Synoptic axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.plot">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-at.plot" title="Permalink to this headline"></a></h2>
+<p>AT plotting functions</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, ATCollab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

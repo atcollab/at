@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyAT &mdash; pyAT 0.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="md_docs.html" />
+    <link rel="prev" title="Welcome to pyAT’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> pyAT
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyAT</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#developer-notes">Developer Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#pyat-developer-notes">pyAT Developer Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation-preparation">Installation preparation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#source-download">Source download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-all-platforms">Installation (all platforms)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comparing-results-with-matlab">Comparing results with Matlab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#releasing-a-version-to-pypi">Releasing a version to PyPI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#release-procedure">Release procedure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#pyat-examples">pyAT Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#initialisation">Initialisation:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-use">Basic Use:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calculating-physics-data">Calculating Physics Data:</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html#pyat-primer">pyAT Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html#cavity-control">Cavity Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html#collective-effects">Collective effects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.collective.html">at.collective package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.lattice.html">at.lattice package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.load.html">at.load package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.matching.html">at.matching package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.physics.html">at.physics package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.plot.html">at.plot package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.tracking.html">at.tracking package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyAT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>pyAT</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rst_doc.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pyat">
+<h1>pyAT<a class="headerlink" href="#pyat" title="Permalink to this headline"></a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h2>
+<p>Accelerator Toolbox is a code used for simulating particle accelerators, used
+particularly for synchrotron light sources. It is hosted on <a class="reference external" href="https://github.com/atcollab/at">Github</a>. Its original implementation is in Matlab.</p>
+<p>pyAT is a Python interface to Accelerator Toolbox. It uses the ‘pass methods’
+defined in Accelerator Toolbox, implemented by compiling the C code used in the
+AT ‘integrators’ into a Python extension. These pass methods are used by
+higher-level functions to provide physics results.</p>
+<p>See the <a class="reference external" href="https://atcollab.github.io/at/p/Installation.html">pyAT website</a> for a
+more detailed introduction.</p>
+<p>pyAT supports Python 3.6 to 3.10.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+<p>Install accelerator-toolbox from PyPI:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">accelerator</span><span class="o">-</span><span class="n">toolbox</span>
+</pre></div>
+</div>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">at.load</span> <span class="kn">import</span> <span class="n">load_mat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">at.physics</span> <span class="kn">import</span> <span class="n">get_optics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span> <span class="o">=</span> <span class="n">load_mat</span><span class="p">(</span><span class="s1">&#39;test_matlab/hmba.mat&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_optics</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>For more examples of how to use pyAT, see <code class="docutils literal notranslate"><span class="pre">pyat_examples.rst</span></code>.</p>
+</section>
+<section id="developer-notes">
+<h2>Developer Notes<a class="headerlink" href="#developer-notes" title="Permalink to this headline"></a></h2>
+<p>Developer notes are in <code class="docutils literal notranslate"><span class="pre">developers.rst</span></code>.</p>
+</section>
+</section>
+<section id="pyat-developer-notes">
+<h1>pyAT Developer Notes<a class="headerlink" href="#pyat-developer-notes" title="Permalink to this headline"></a></h1>
+<p>See also README.rst.</p>
+<section id="installation-preparation">
+<h2>Installation preparation<a class="headerlink" href="#installation-preparation" title="Permalink to this headline"></a></h2>
+<section id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline"></a></h3>
+<p>Download the appropriate version of Visual C++.</p>
+</section>
+<section id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline"></a></h3>
+<p>Install the Python development package for your OS. For example, using yum:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">yum</span> <span class="pre">install</span> <span class="pre">python3-devel</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="source-download">
+<h2>Source download<a class="headerlink" href="#source-download" title="Permalink to this headline"></a></h2>
+<dl class="simple">
+<dt>Download the latest version of AT:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">$</span> <span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/atcollab/at.git</span></code></p>
+</dd>
+</dl>
+</section>
+<section id="installation-all-platforms">
+<h2>Installation (all platforms)<a class="headerlink" href="#installation-all-platforms" title="Permalink to this headline"></a></h2>
+<p>All the binaries should be built when building the Python extension.</p>
+<p>It is easiest to do this using a virtualenv. inside pyat:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">venv</span></code></p></li>
+</ul>
+<p>Then:</p>
+<ul>
+<li><p>activate the virtual environment:</p>
+<p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">venv/bin/activate</span>&#160; <span class="pre">#</span> <span class="pre">or</span> <span class="pre">venv\Scripts\activate</span> <span class="pre">on</span> <span class="pre">Windows</span></code></p>
+</li>
+<li><p>make sure you have a recent pip installer:</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">pip</span></code></p>
+</li>
+<li><p>Go to the pyat root directory:</p>
+<p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">&lt;atroot&gt;/pyat</span></code></p>
+</li>
+<li><p>install AT:</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code></p>
+</li>
+</ul>
+<p>Finally, you should be able to run the tests:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">test</span></code></p></li>
+</ul>
+</section>
+<section id="comparing-results-with-matlab">
+<h2>Comparing results with Matlab<a class="headerlink" href="#comparing-results-with-matlab" title="Permalink to this headline"></a></h2>
+<p>There is a second set of tests that require a Matlab licence and allows
+comparing results directly with a Matlab session.  See test_matlab/README
+for information.</p>
+</section>
+<section id="debugging">
+<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline"></a></h2>
+<p>Print statements in the C code will work once the integrators are
+recompiled.  To force recompilation, remove the build directory:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rm</span> <span class="pre">-rf</span> <span class="pre">build</span></code></p></li>
+</ul>
+<p>Any changes to .py files are automatically reinstalled in the build, but to
+ensure any changes to .c files are reinstalled rerun:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code></p></li>
+</ul>
+<p>If you get strange behaviour even after running pip install develop again, then
+running the following, inside pyat, should fix it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rm</span> <span class="pre">-rf</span> <span class="pre">build</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">find</span> <span class="pre">at</span> <span class="pre">-name</span> <span class="pre">&quot;*.pyc&quot;</span> <span class="pre">-exec</span> <span class="pre">rm</span> <span class="pre">'{}'</span> <span class="pre">\;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">find</span> <span class="pre">at</span> <span class="pre">-name</span> <span class="pre">&quot;*.so&quot;</span> <span class="pre">-exec</span> <span class="pre">rm</span> <span class="pre">'{}'</span> <span class="pre">\;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code></p></li>
+</ul>
+<p>N.B. <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> needs to be run with the same version of Python (and
+numpy) that you are using to run pyAT.</p>
+</section>
+<section id="releasing-a-version-to-pypi">
+<h2>Releasing a version to PyPI<a class="headerlink" href="#releasing-a-version-to-pypi" title="Permalink to this headline"></a></h2>
+<p>Because pyAT compiles C code, releasing a version is not simple. The code
+must be compiled for different operating systems and Python versions.</p>
+<p>To do this, we use the continuous integration service Github Actions.
+When a tag of the form pyat-* is pushed to Github, wheels for each
+supported platform will be built and automatically uploaded as an ‘artifact’.</p>
+</section>
+</section>
+<section id="release-procedure">
+<h1>Release procedure<a class="headerlink" href="#release-procedure" title="Permalink to this headline"></a></h1>
+<p>To upload a release to PyPI, you will need to be a ‘maintainer’ of
+<a class="reference external" href="https://pypi.org/project/accelerator-toolbox/">Accelerator Toolbox on PyPI</a>.</p>
+<p>For testing any version that you have installed, the simple snippet in
+<code class="docutils literal notranslate"><span class="pre">README.rst</span></code> is sufficient.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Decide the Python versions that should be supported in the release</dt><dd><ul>
+<li><p>Set these Python versions in <code class="docutils literal notranslate"><span class="pre">python_requires</span></code> in <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code></p></li>
+<li><p>Set at least these Python versions as <code class="docutils literal notranslate"><span class="pre">python-version</span></code> in <code class="docutils literal notranslate"><span class="pre">.github/workflows/python-tests.yml</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Determine the minimum Numpy version that is required for those Python versions</dt><dd><ul>
+<li><p>Set this numpy version in <code class="docutils literal notranslate"><span class="pre">install_requires</span></code> in <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Push a tag <code class="docutils literal notranslate"><span class="pre">pyat-x.y.z</span></code> to Github</p></li>
+</ul>
+<p>If all goes well, there will be a build of “Build and upload wheels and sdist”
+associated with the tag <code class="docutils literal notranslate"><span class="pre">pyat-x.y.z</span></code>: on the <a class="reference external" href="https://github.com/atcollab/at/actions/workflows/build-python-wheels.yml">Github Actions page</a>. This build will have
+‘tar.gz’ and ‘wheels’ downloads available.</p>
+<ul>
+<li><p>Download the tar.gz and wheels files and unzip them into a directory <code class="docutils literal notranslate"><span class="pre">&lt;dir&gt;</span></code></p></li>
+<li><p>Manually install at least one wheel to make sure that it has built correctly</p></li>
+<li><p>Install Twine for uploading the files to PyPI. One way to do this is to
+create a new virtualenv:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">venv</span> <span class="pre">venv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">venv/bin/activate</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">twine</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt>Use Twine to upload the files to PyPI. You will be prompted for your PyPI credentials:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">twine</span> <span class="pre">upload</span> <span class="pre">&lt;dir&gt;/*.whl</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">twine</span> <span class="pre">upload</span> <span class="pre">&lt;dir&gt;/*.tar.gz</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Finally, check that the wheels are uploaded properly. You can use the same virtualenv:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">accelerator-toolbox</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Note that 46 different files were uploaded for pyat-0.0.4 covering different
+platforms and architectures.</p>
+<p>The configuration for this is in .github/workflows/build-python-wheels.yml.</p>
+</section>
+<section id="pyat-examples">
+<h1>pyAT Examples<a class="headerlink" href="#pyat-examples" title="Permalink to this headline"></a></h1>
+<p>Please follow <code class="docutils literal notranslate"><span class="pre">at/pyat/README.rst</span></code> for installation instructions.
+In these examples, we use the ring from <cite>hmba.mat</cite> found in <code class="docutils literal notranslate"><span class="pre">test_matlab</span></code>;
+however, they will also work on the <code class="docutils literal notranslate"><span class="pre">err.mat</span></code> ring if you want to be more
+representative of a real accelerator.</p>
+<section id="initialisation">
+<h2>Initialisation:<a class="headerlink" href="#initialisation" title="Permalink to this headline"></a></h2>
+<ul>
+<li><p>Start Python inside the <code class="docutils literal notranslate"><span class="pre">pyat</span></code> directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd pyat
+$ source venv/bin/activate
+$ python
+Python 2.7.3 (default, Nov  9 2013, 21:59:00)
+[GCC 4.4.7 20120313 (Red Hat 4.4.7-3)] on linux2
+Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
+&gt;&gt;&gt; import at
+&gt;&gt;&gt;
+</pre></div>
+</div>
+</li>
+<li><p>Load a pyAT ring from a .mat file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">at</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">load_lattice</span><span class="p">(</span><span class="s1">&#39;test_matlab/hmba.mat&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="basic-use">
+<h2>Basic Use:<a class="headerlink" href="#basic-use" title="Permalink to this headline"></a></h2>
+<ul>
+<li><p>The lattice object is a Python interator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">ring</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Viewing the first element in the ring:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">RFCavity(&#39;RFC&#39;, 0.0, 187500.0, 352372212.4670127, 31, 6000000000.0, PassMethod=&#39;IdentityPass&#39;)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Changing the pass method of an element:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">PassMethod</span> <span class="o">=</span> <span class="s2">&quot;CavityPass&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Get the s position of the 10th element in the ring:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">at</span><span class="o">.</span><span class="n">get_s_pos</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">array([3.4295565])</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="calculating-physics-data">
+<h2>Calculating Physics Data:<a class="headerlink" href="#calculating-physics-data" title="Permalink to this headline"></a></h2>
+<ul>
+<li><p>Return the linear optics data at the first 5 elements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">at</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
+<li><p>Physics data functions can also be called as methods on the lattice:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ring</span><span class="o">.</span><span class="n">find_orbit</span><span class="p">(</span><span class="n">refpts</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to pyAT’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="md_docs.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, ATCollab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
