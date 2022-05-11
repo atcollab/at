@@ -6,13 +6,6 @@
 Welcome to pyAT's documentation!
 ================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
-Introduction
-------------
 
 Accelerator Toolbox is a code used for simulating particle accelerators, used
 particularly for synchrotron light sources. It is hosted on `Github
@@ -23,10 +16,41 @@ defined in Accelerator Toolbox, implemented by compiling the C code used in the
 AT 'integrators' into a Python extension. These pass methods are used by
 higher-level functions to provide physics results.
 
-
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting started:
+   :hidden:
+   
+   rst_doc
+   
+
+.. toctree::
+   :maxdepth: 2
+   :caption: How to:
+   :hidden:
+   
+   md_docs
+   
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Modules:
+   :hidden:
+   
+   at.acceptance
+   at.collective
+   at.lattice
+   at.load
+   at.matching
+   at.physics
+   at.plot
+   at.tracking
+

@@ -21,3 +21,10 @@ entries:
     - title: Collective effects
       url: /p/Collective.html
       output: web
+  folders:
+  - title: API documentaiton
+    output: web
+    folderitems:
+    - title: Sphinx Webpage
+      url: /_sphinx/build/html/index.html
+      output: web
