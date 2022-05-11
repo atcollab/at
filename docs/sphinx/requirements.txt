@@ -1,2 +1,3 @@
 myst_parser
 scipy
+-e ./pyat/.
