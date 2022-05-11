@@ -1,6 +1,11 @@
 at.matching package
 ===================
 
+.. automodule:: at.matching
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -16,14 +21,6 @@ at.matching.matching module
 ---------------------------
 
 .. automodule:: at.matching.matching
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.matching
    :members:
    :undoc-members:
    :show-inheritance:

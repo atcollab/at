@@ -1,6 +1,11 @@
 at.tracking package
 ===================
 
+.. automodule:: at.tracking
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -32,14 +37,6 @@ at.tracking.track module
 ------------------------
 
 .. automodule:: at.tracking.track
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.tracking
    :members:
    :undoc-members:
    :show-inheritance:

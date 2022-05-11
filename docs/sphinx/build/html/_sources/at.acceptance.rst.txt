@@ -1,6 +1,11 @@
 at.acceptance package
 =====================
 
+.. automodule:: at.acceptance
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -24,14 +29,6 @@ at.acceptance.touschek module
 -----------------------------
 
 .. automodule:: at.acceptance.touschek
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.acceptance
    :members:
    :undoc-members:
    :show-inheritance:

@@ -12,20 +12,22 @@ __all__ = ['get_bunch_length_espread', 'get_lifetime']
 
 
 def get_bunch_length_espread(ring, zn=None, bunch_curr=None, espread=None):
-    """
+    """Haissinski equation solver
+    
     Solves the Haissinski formula and returns the bunch length and energy
-    spread for given bunch current and Z/n. If both zn and bunch_curr are None,
-    zero current case, otherwise both are needed for the calculation
+    spread for given bunch current and :math:`Z/n`. If both ``zn`` and
+    ``bunch_curr`` are ``None``, zero current case, otherwise both are needed
+    for the calculation
 
-    PARAMETERS
-        ring              ring use for tracking
+    args:
+        ring:             ring use for tracking
 
-    KEYWORDS
-        zn=None           Z/n for the full ring
-        bunch_curr=None   Bunch current
-        espread=None      Energy spread, if None use lattice parameter
+    keyword args:
+        zn=None:          :math:`Z/n` for the full ring
+        bunch_curr=None:  Bunch current
+        espread=None:     Energy spread, if ``None`` use lattice parameter
 
-    OUTPUT
+    Returns:
         Bunch length, energy spread
     """
     def haissinski(x, cst):
@@ -88,43 +90,41 @@ def int_piwinski(k, km, B1, B2):
 
 def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                  zn=None, momap=None, refpts=None, **kwargs):
-    """
+    """Touschek lifetime calculation
+    
     Computes the touschek lifetime using the piwinski formula
 
-    PARAMETERS
-        ring            ring use for tracking
-        emity           verticla emittance
-        bunch_curr      bunch current
+    args:
+        ring:            ring use for tracking
+        emity:           verticla emittance
+        bunch_curr:      bunch current
 
-    KEYWORDS
-        emitx=None      horizontal emittance
-        sigs=None       rms bunch length
-        sigp=None       energy spread
-        zn=None         full ring Z/n
-        momap=None      momentum aperture, has to be consistent with refpts
-                        if provided the momentum aperture is not calculated
-        refpts=None     refpts where the momentum aperture is calculated, the
-                        default is to compute it for all elements in the ring
-                        len(refpts)>2 is required
-        resolution      minimum distance between 2 grid points, default=1.0e-3
-        amplitude       max. amplitude of the grid or initial step in RECURSIVE
-                        default = 0.1
-        nturns=1024     Number of turns for the tracking
-        dp=None         static momentum offset
-        offset=None     initial orbit, default closed orbit
-        bounds=None     Allows to define boundaries for the grid default
-                        values are:
-                        GridMode.GRID: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
-        grid_mode       mode for the gird default GridMode.RADIAL
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass). In case multi-processing is not
-                        enabled GridMode is forced to
-                        RECURSIVE (most efficient in single core)
-        verbose=True    Print out some inform
-        epsabs, epsrel  integral absolute and relative tolerances
+    keyword args:
+        emitx=None:      horizontal emittance
+        sigs=None:       rms bunch length
+        sigp=None:       energy spread
+        zn=None:         full ring :math:`Z/n`
+        momap=None:      momentum aperture, has to be consistent with ``refpts``
+                         if provided the momentum aperture is not calculated
+        refpts=None:     ``refpts`` where the momentum aperture is calculated,
+                         the default is to compute it for all elements in the
+                         ring, ``len(refpts)>2`` is required
+        resolution:      minimum distance between 2 grid points, default=1.0e-3
+        amplitude:       max. amplitude for ``RADIAL`` and ``CARTESIAN`` or
+                         initial step in ``RECURSIVE`
+                         default = 0.1
+        nturns=1024:     Number of turns for the tracking
+        dp=None:         static momentum offset
+        grid_mode:       ``at.GridMode.CARTESIAN/RADIAL`` track full vector
+                         (default). ``at.GridMode.RECURSIVE``: recursive search
+        use_mp=False:    Use python multiprocessing (``patpass``, default use
+                         ``lattice_pass``). In case multi-processing is not
+                         enabled ``GridMode`` is forced to
+                         ``RECURSIVE`` (most efficient in single core)
+        verbose=True:    Print out some inform
+        epsabs, epsrel:  integral absolute and relative tolerances
 
-    OUTPUT
+    Returns:
         Returns the touschek lifetime in seconds, the momentum aperture
         and the refpts at which the aperture was computed
     """

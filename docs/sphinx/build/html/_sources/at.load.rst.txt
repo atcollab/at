@@ -1,6 +1,11 @@
 at.load package
 ===============
 
+.. automodule:: at.load
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -48,14 +53,6 @@ at.load.utils module
 --------------------
 
 .. automodule:: at.load.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.load
    :members:
    :undoc-members:
    :show-inheritance:

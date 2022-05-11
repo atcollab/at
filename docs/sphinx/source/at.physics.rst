@@ -1,6 +1,11 @@
 at.physics package
 ==================
 
+.. automodule:: at.physics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -96,14 +101,6 @@ at.physics.ring\_parameters module
 ----------------------------------
 
 .. automodule:: at.physics.ring_parameters
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.physics
    :members:
    :undoc-members:
    :show-inheritance:

@@ -15,9 +15,12 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="at.load package" href="at.load.html" />
+    <link rel="prev" title="at.collective package" href="at.collective.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -35,9 +38,39 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="rst_doc.html">pyAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rst_doc.html#pyat-developer-notes">pyAT Developer Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rst_doc.html#release-procedure">Release procedure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rst_doc.html#pyat-examples">pyAT Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html#pyat-primer">pyAT Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html#cavity-control">Cavity Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="md_docs.html#collective-effects">Collective effects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.collective.html">at.collective package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">at.lattice package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.lattice.cavity_access">at.lattice.cavity_access module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.lattice.elements">at.lattice.elements module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.lattice.lattice_object">at.lattice.lattice_object module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.lattice.options">at.lattice.options module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.lattice.particle_object">at.lattice.particle_object module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.lattice.utils">at.lattice.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="at.load.html">at.load package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.matching.html">at.matching package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.physics.html">at.physics package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.plot.html">at.plot package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.tracking.html">at.tracking package</a></li>
 </ul>
 
         </div>
@@ -64,8 +97,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="at-lattice-package">
-<h1>at.lattice package<a class="headerlink" href="#at-lattice-package" title="Permalink to this headline"></a></h1>
+  <section id="module-at.lattice">
+<span id="at-lattice-package"></span><h1>at.lattice package<a class="headerlink" href="#module-at.lattice" title="Permalink to this headline"></a></h1>
+<p>Helper functions for working with AT lattices.</p>
+<p>A lattice as understood by pyAT is any sequence of elements.  These functions
+are useful for working with these sequences.</p>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
 </section>
@@ -1186,71 +1222,83 @@ XYStep          Step size. Default: DConstant.XYStep</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_acceptance">
 <span class="sig-name descname"><span class="pre">get_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nturns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">GridMode.RADIAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_mp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_acceptance" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the acceptance at repfts observation points
-Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
-(r, theta). Scalar inputs can be used for 1D grid.
-The grid can be changed using grid_mode input:
-at.GridMode.CARTESIAN: (x,y) grid
-at.GridMode.RADIAL: (r,theta) grid
-at.GridMode.RECURSIVE: (r,theta) recursive boundary search</p>
-<p>Example usage:
-bf,sf,gf = ring.get_acceptance(planes, npoints, amplitudes)
-plt.plot(<a href="#id27"><span class="problematic" id="id28">*</span></a>gf,’.’)
-plt.plot(<a href="#id29"><span class="problematic" id="id30">*</span></a>sf,’.’)
-plt.plot(<a href="#id31"><span class="problematic" id="id32">*</span></a>bf)
-plt.show()</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            ring use for tracking
-planes          max. dimension 2, defines the plane where to search</p>
-<blockquote>
-<div><p>for the acceptance, allowed values are: x,xp,y,yp,dp,ct</p>
-</div></blockquote>
-<p>npoints         number of points in each dimension shape (len(planes),)
-amplitudes      max. amplitude for RADIAL and CARTESIAN or initial step</p>
-<blockquote>
-<div><p>in RECURSIVE in each dimension. Shape is (len(planes),)
-for RADIAL/RECURSIVE grid: amplitude = sqrt(x**2+y**2)</p>
-</div></blockquote>
+<dd><p>2D Acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs can be used for 1D grid. The grid can be
+changed using grid_mode input:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN</span></code>: <span class="math notranslate nohighlight">\((x,y)\)</span> grid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">at.GridMode.RADIAL</span></code>: <span class="math notranslate nohighlight">\((r,\theta)\)</span> grid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: <span class="math notranslate nohighlight">\((r,\theta)\)</span> recursive boundary search</p></li>
+</ul>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bf</span><span class="p">,</span><span class="n">sf</span><span class="p">,</span><span class="n">gf</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_acceptance</span><span class="p">(</span><span class="n">planes</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">gf</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">sf</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">bf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>planes</strong> – max. dimension 2, defines the plane where to search
+for the acceptance allowed values are
+<code class="docutils literal notranslate"><span class="pre">x,xp,y,yp,dp,ct</span></code></p></li>
+<li><p><strong>npoints</strong> – number of points in each dimension shape
+<code class="docutils literal notranslate"><span class="pre">(len(planes),)</span></code></p></li>
+<li><p><strong>amplitudes</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step
+in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> in each dimension. Shape is
+<code class="docutils literal notranslate"><span class="pre">(len(planes),)</span></code> for <code class="docutils literal notranslate"><span class="pre">RADIAL/RECURSIVE</span></code> grid.
+<code class="docutils literal notranslate"><span class="pre">amplitude</span> <span class="pre">=</span> <span class="pre">sqrt(x**2+y**2)</span></code></p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><p>nturns=1024     Number of turns for the tracking
-refpts=None     Observation refpts, default start of the machine
-dp=None         static momentum offset
-offset=None     initial orbit, default closed orbit
-bounds=None     defines the tracked range: range=bounds*amplitude, it</p>
-<blockquote>
-<div><p>can be use to select quadrants for example
-default values are:
-GridMode.CARTESIAN: ((-1,1),(0,1))
-GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))</p>
-</div></blockquote>
-<dl class="simple">
-<dt>grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector</dt><dd><p>(default) at.GridMode.RECURSIVE: recursive search</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>offset=None</strong> – initial orbit, default closed orbit</p></li>
+<li><p><strong>bounds=None</strong> – defines the tracked range <code class="docutils literal notranslate"><span class="pre">range=bounds*amplitude</span></code>,
+it can be use to select quadrants for example
+default values are
+<code class="docutils literal notranslate"><span class="pre">GridMode.CARTESIAN=((-1,1),(0,1))</span></code>
+<code class="docutils literal notranslate"><span class="pre">GridMode.RADIAL/RECURSIVE=((0,1),(pi,0))</span></code></p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
 </dd>
-<dt>use_mp=False    Use python multiprocessing (patpass, default use</dt><dd><p>lattice_pass). In case multi-processing is not
-enabled GridMode is forced to
-RECURSIVE (most efficient in single core)</p>
-</dd>
-</dl>
-<p>divider=2       Value of the divider used in RECURSIVE boundary search
-verbose=True    Print out some inform
-start_method    This parameter allows to change the python</p>
-<blockquote>
-<div><p>multiprocessing start method, default=None uses the
-python defaults that is considered safe.
-Available parameters: ‘fork’, ‘spawn’, ‘forkserver’.
-Default for linux is fork, default for MacOS and
-Windows is spawn. fork may used for MacOS to speed-up
-the calculation or to solve Runtime Errors, however
-it is considered unsafe.</p>
-</div></blockquote>
-</dd>
-<dt>OUTPUT</dt><dd><p>Returns 3 numpy arrays with shape (2,n) (or lists of numpy arrays for
-multiple refpts): the 2D acceptance , the full grid that was
-tracked and the particles of the grid that survived. The length
-of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
-survived arrays are returned directly.
-The units depend on the selected planes and are the same as for the 6D
-particle coordinates</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>The units depend on the selected planes and are the same as for the 6D
+particle coordinates. 3 elements tuples containing:</p>
+<ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(2,n)</span></code> containing the 2D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(2,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(2,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code>
+is returned.</p>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1258,17 +1306,24 @@ particle coordinates</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_bunch_length_espread">
 <span class="sig-name descname"><span class="pre">get_bunch_length_espread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_curr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">espread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_bunch_length_espread" title="Permalink to this definition"></a></dt>
-<dd><p>Solves the Haissinski formula and returns the bunch length and energy
-spread for given bunch current and Z/n. If both zn and bunch_curr are None,
-zero current case, otherwise both are needed for the calculation</p>
-<dl class="simple">
-<dt>PARAMETERS</dt><dd><p>ring              ring use for tracking</p>
+<dd><p>Haissinski equation solver</p>
+<p>Solves the Haissinski formula and returns the bunch length and energy
+spread for given bunch current and <span class="math notranslate nohighlight">\(Z/n\)</span>. If both <code class="docutils literal notranslate"><span class="pre">zn</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bunch_curr</span></code> are <code class="docutils literal notranslate"><span class="pre">None</span></code>, zero current case, otherwise both are needed
+for the calculation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ring</strong> – ring use for tracking</p>
 </dd>
-<dt>KEYWORDS</dt><dd><p>zn=None           Z/n for the full ring
-bunch_curr=None   Bunch current
-espread=None      Energy spread, if None use lattice parameter</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>zn=None</strong> – <span class="math notranslate nohighlight">\(Z/n\)</span> for the full ring</p></li>
+<li><p><strong>bunch_curr=None</strong> – Bunch current</p></li>
+<li><p><strong>espread=None</strong> – Energy spread, if <code class="docutils literal notranslate"><span class="pre">None</span></code> use lattice parameter</p></li>
+</ul>
 </dd>
-<dt>OUTPUT</dt><dd><p>Bunch length, energy spread</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Bunch length, energy spread</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1400,45 +1455,60 @@ Takes into account bending magnets and wigglers.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_horizontal_acceptance">
 <span class="sig-name descname"><span class="pre">get_horizontal_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_horizontal_acceptance" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the 1D horizontal acceptance at refpts observation points
-Scalar parameters required</p>
-<p>See get_acceptance</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            ring use for tracking
-resolution      minimum distance between 2 grid points
-amplitude       max. amplitude of the grid or initial step in RECURSIVE</p>
+<dd><p>Horizontal acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="at.acceptance.html#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a>
+and <a class="reference internal" href="at.acceptance.html#at.acceptance.acceptance.get_1d_acceptance" title="at.acceptance.acceptance.get_1d_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_1d_acceptance()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><p>nturns=1024     Number of turns for the tracking
-dp=0            static momentum offset
-refpts=None     Observation refpts, default start of the machine
-grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector</p>
-<blockquote>
-<div><p>(default) at.GridMode.RECURSIVE: recursive search</p>
-</div></blockquote>
-<dl class="simple">
-<dt>use_mp=False    Use python multiprocessing (patpass, default use</dt><dd><p>lattice_pass).</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
 </dd>
-<dt>divider=2       Value of the divider used in RECURSIVE boundary search</dt><dd><p>In case multi-processing is not enabled GridMode is
-forced to RECURSIVE (most efficient in single core)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code></p>
+</p>
 </dd>
-</dl>
-<p>verbose=False   Print out some information
-start_method    This parameter allows to change the python</p>
-<blockquote>
-<div><p>multiprocessing start method, default=None uses the
-python defaults that is considered safe.
-Available parameters: ‘fork’, ‘spawn’, ‘forkserver’.
-Default for linux is fork, default for MacOS and
-Windows is spawn. fork may used for MacOS to speed-up
-the calculation or to solve Runtime Errors, however
-it is considered unsafe.</p>
-</div></blockquote>
-</dd>
-<dt>OUTPUT</dt><dd><p>Returns 3 lists containing the 1D acceptance, the grid that was tracked
-and the particles of the grid that survived.
-The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-grid, suvived arrays are returned.
-The boundary output is squeezed to an array with shape (len(refpts),2)</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>3 elements tuples containing</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1446,50 +1516,45 @@ The boundary output is squeezed to an array with shape (len(refpts),2)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_lifetime">
 <span class="sig-name descname"><span class="pre">get_lifetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">emity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_curr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emitx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_lifetime" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the touschek lifetime using the piwinski formula</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            ring use for tracking
-emity           verticla emittance
-bunch_curr      bunch current</p>
+<dd><p>Touschek lifetime calculation</p>
+<p>Computes the touschek lifetime using the piwinski formula</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>emity</strong> – verticla emittance</p></li>
+<li><p><strong>bunch_curr</strong> – bunch current</p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><p>emitx=None      horizontal emittance
-sigs=None       rms bunch length
-sigp=None       energy spread
-zn=None         full ring Z/n
-momap=None      momentum aperture, has to be consistent with refpts</p>
-<blockquote>
-<div><p>if provided the momentum aperture is not calculated</p>
-</div></blockquote>
-<dl class="simple">
-<dt>refpts=None     refpts where the momentum aperture is calculated, the</dt><dd><p>default is to compute it for all elements in the ring
-len(refpts)&gt;2 is required</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>emitx=None</strong> – horizontal emittance</p></li>
+<li><p><strong>sigs=None</strong> – rms bunch length</p></li>
+<li><p><strong>sigp=None</strong> – energy spread</p></li>
+<li><p><strong>zn=None</strong> – full ring <span class="math notranslate nohighlight">\(Z/n\)</span></p></li>
+<li><p><strong>momap=None</strong> – momentum aperture, has to be consistent with <code class="docutils literal notranslate"><span class="pre">refpts</span></code>
+if provided the momentum aperture is not calculated</p></li>
+<li><p><strong>refpts=None</strong> – <code class="docutils literal notranslate"><span class="pre">refpts</span></code> where the momentum aperture is calculated,
+the default is to compute it for all elements in the
+ring, <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;2</span></code> is required</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points, default=1.0e-3</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <a href="#id27"><span class="problematic" id="id28">``</span></a>RECURSIVE`
+default = 0.1</p></li>
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>epsrel</strong> (<em>epsabs</em><em>,</em>) – integral absolute and relative tolerances</p></li>
+</ul>
 </dd>
-</dl>
-<p>resolution      minimum distance between 2 grid points, default=1.0e-3
-amplitude       max. amplitude of the grid or initial step in RECURSIVE</p>
-<blockquote>
-<div><p>default = 0.1</p>
-</div></blockquote>
-<p>nturns=1024     Number of turns for the tracking
-dp=None         static momentum offset
-offset=None     initial orbit, default closed orbit
-bounds=None     Allows to define boundaries for the grid default</p>
-<blockquote>
-<div><p>values are:
-GridMode.GRID: ((-1,1),(0,1))
-GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))</p>
-</div></blockquote>
-<p>grid_mode       mode for the gird default GridMode.RADIAL
-use_mp=False    Use python multiprocessing (patpass, default use</p>
-<blockquote>
-<div><p>lattice_pass). In case multi-processing is not
-enabled GridMode is forced to
-RECURSIVE (most efficient in single core)</p>
-</div></blockquote>
-<p>verbose=True    Print out some inform
-epsabs, epsrel  integral absolute and relative tolerances</p>
-</dd>
-<dt>OUTPUT</dt><dd><p>Returns the touschek lifetime in seconds, the momentum aperture
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns the touschek lifetime in seconds, the momentum aperture
 and the refpts at which the aperture was computed</p>
 </dd>
 </dl>
@@ -1515,45 +1580,61 @@ keep_lattice    Assume no lattice change since the previous tracking.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_momentum_acceptance">
 <span class="sig-name descname"><span class="pre">get_momentum_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_momentum_acceptance" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the 1D momentum acceptance at refpts observation points
-Scalar parameters required</p>
-<p>See get_acceptance</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            ring use for tracking
-resolution      minimum distance between 2 grid points
-amplitude       max. amplitude of the grid or initial step in RECURSIVE</p>
+<dd><p>Momentum acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="at.acceptance.html#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a>
+and <a class="reference internal" href="at.acceptance.html#at.acceptance.acceptance.get_1d_acceptance" title="at.acceptance.acceptance.get_1d_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_1d_acceptance()</span></code></a>
+This method is used in <a class="reference internal" href="at.acceptance.html#at.acceptance.touschek.get_lifetime" title="at.acceptance.touschek.get_lifetime"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.touschek.get_lifetime()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><p>nturns=1024     Number of turns for the tracking
-dp=0            static momentum offset
-refpts=None     Observation refpts, default start of the machine
-grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector</p>
-<blockquote>
-<div><p>(default) at.GridMode.RECURSIVE: recursive search</p>
-</div></blockquote>
-<dl class="simple">
-<dt>use_mp=False    Use python multiprocessing (patpass, default use</dt><dd><p>lattice_pass).</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
 </dd>
-<dt>divider=2       Value of the divider used in RECURSIVE boundary search</dt><dd><p>In case multi-processing is not enabled GridMode is
-forced to RECURSIVE (most efficient in single core)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code></p>
+</p>
 </dd>
-</dl>
-<p>verbose=False   Print out some information
-start_method    This parameter allows to change the python</p>
-<blockquote>
-<div><p>multiprocessing start method, default=None uses the
-python defaults that is considered safe.
-Available parameters: ‘fork’, ‘spawn’, ‘forkserver’.
-Default for linux is fork, default for MacOS and
-Windows is spawn. fork may used for MacOS to speed-up
-the calculation or to solve Runtime Errors, however
-it is considered unsafe.</p>
-</div></blockquote>
-</dd>
-<dt>OUTPUT</dt><dd><p>Returns 3 lists containing the 1D acceptance, the grid that was tracked
-and the particles of the grid that survived.
-The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-grid, suvived arrays are returned.
-The boundary output is squeezed to an array with shape (len(refpts),2)</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>3 elements tuples containing</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1562,7 +1643,7 @@ The boundary output is squeezed to an array with shape (len(refpts),2)</p>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_optics">
 <span class="sig-name descname"><span class="pre">get_optics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method=&lt;function</span> <span class="pre">linopt6&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_optics" title="Permalink to this definition"></a></dt>
 <dd><p>Perform linear analysis of a fully coupled lattice</p>
-<p>elemdata0, beamdata, elemdata = get_optics(lattice, refpts, <a href="#id33"><span class="problematic" id="id34">**</span></a>kwargs)</p>
+<p>elemdata0, beamdata, elemdata = get_optics(lattice, refpts, <a href="#id29"><span class="problematic" id="id30">**</span></a>kwargs)</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>lattice         lattice description.
 refpts=None     elements at which data is returned. It can be:</p>
@@ -1874,45 +1955,60 @@ their refpts</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.get_vertical_acceptance">
 <span class="sig-name descname"><span class="pre">get_vertical_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.get_vertical_acceptance" title="Permalink to this definition"></a></dt>
-<dd><p>Computes the 1D vertical acceptance at refpts observation points
-Scalar parameters required</p>
-<p>See get_acceptance</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            ring use for tracking
-resolution      minimum distance between 2 grid points
-amplitude       max. amplitude of the grid or initial step in RECURSIVE</p>
+<dd><p>Vertical acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="at.acceptance.html#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a>
+and <a class="reference internal" href="at.acceptance.html#at.acceptance.acceptance.get_1d_acceptance" title="at.acceptance.acceptance.get_1d_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_1d_acceptance()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><p>nturns=1024     Number of turns for the tracking
-dp=0            static momentum offset
-refpts=None     Observation refpts, default start of the machine
-grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector</p>
-<blockquote>
-<div><p>(default) at.GridMode.RECURSIVE: recursive search</p>
-</div></blockquote>
-<dl class="simple">
-<dt>use_mp=False    Use python multiprocessing (patpass, default use</dt><dd><p>lattice_pass).</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
 </dd>
-<dt>divider=2       Value of the divider used in RECURSIVE boundary search</dt><dd><p>In case multi-processing is not enabled GridMode is
-forced to RECURSIVE (most efficient in single core)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code></p>
+</p>
 </dd>
-</dl>
-<p>verbose=False   Print out some information
-start_method    This parameter allows to change the python</p>
-<blockquote>
-<div><p>multiprocessing start method, default=None uses the
-python defaults that is considered safe.
-Available parameters: ‘fork’, ‘spawn’, ‘forkserver’.
-Default for linux is fork, default for MacOS and
-Windows is spawn. fork may used for MacOS to speed-up
-the calculation or to solve Runtime Errors, however
-it is considered unsafe.</p>
-</div></blockquote>
-</dd>
-<dt>OUTPUT</dt><dd><p>Returns 3 lists containing the 1D acceptance, the grid that was tracked
-and the particles of the grid that survived.
-The length of the lists=refpts. In case len(refpts)=1 the acceptance,
-grid, suvived arrays are returned.
-The boundary output is squeezed to an array with shape (len(refpts),2)</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>3 elements tuples containing</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1939,7 +2035,7 @@ The boundary output is squeezed to an array with shape (len(refpts),2)</p>
 <span class="sig-name descname"><span class="pre">linopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_chrom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt" title="Permalink to this definition"></a></dt>
 <dd><p>Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
 4D-analysis of coupled motion</p>
-<p>lindata0, tune, chrom, lindata = linopt(lattice, dp, refpts, <a href="#id35"><span class="problematic" id="id36">**</span></a>kwargs)</p>
+<p>lindata0, tune, chrom, lindata = linopt(lattice, dp, refpts, <a href="#id31"><span class="problematic" id="id32">**</span></a>kwargs)</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>lattice         lattice description.
 dp=0.0          momentum deviation.
@@ -2032,7 +2128,7 @@ lindata.idx</p>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.linopt2">
 <span class="sig-name descname"><span class="pre">linopt2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt2" title="Permalink to this definition"></a></dt>
 <dd><p>Perform linear analysis of an uncoupled lattice</p>
-<p>elemdata0, beamdata, elemdata = linopt2(ring, refpts, <a href="#id37"><span class="problematic" id="id38">**</span></a>kwargs)</p>
+<p>elemdata0, beamdata, elemdata = linopt2(ring, refpts, <a href="#id33"><span class="problematic" id="id34">**</span></a>kwargs)</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>lattice         lattice description.
 refpts=None     elements at which data is returned. It can be:</p>
@@ -2120,7 +2216,7 @@ chromaticity    Chromaticities, only computed if get_chrom=True</p>
 <span class="sig-name descname"><span class="pre">linopt4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt4" title="Permalink to this definition"></a></dt>
 <dd><p>Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
 4D-analysis of coupled motion</p>
-<p>elemdata0, beamdata, elemdata = linopt4(lattice, refpts, <a href="#id39"><span class="problematic" id="id40">**</span></a>kwargs)</p>
+<p>elemdata0, beamdata, elemdata = linopt4(lattice, refpts, <a href="#id35"><span class="problematic" id="id36">**</span></a>kwargs)</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>lattice         lattice description.
 refpts=None     elements at which data is returned. It can be:</p>
@@ -2212,7 +2308,7 @@ chromaticity    Chromaticities, only computed if get_chrom==True</p>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.linopt6">
 <span class="sig-name descname"><span class="pre">linopt6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.linopt6" title="Permalink to this definition"></a></dt>
 <dd><p>Perform linear analysis of a fully coupled lattice using normal modes</p>
-<p>elemdata0, beamdata, elemdata = linopt6(lattice, refpts, <a href="#id41"><span class="problematic" id="id42">**</span></a>kwargs)</p>
+<p>elemdata0, beamdata, elemdata = linopt6(lattice, refpts, <a href="#id37"><span class="problematic" id="id38">**</span></a>kwargs)</p>
 <p>For circular machines, linopt6 analyses
 the 4x4 1-turn transfer matrix if radiation is OFF, or
 the 6x6 1-turn transfer matrix if radiation is ON.</p>
@@ -2451,7 +2547,7 @@ Any further modification will affect in both lattices.</p>
 </div></blockquote>
 <dl class="simple">
 <dt>For PassMethod names, the convention is:</dt><dd><p>None            no change
-‘auto’          replace <a href="#id43"><span class="problematic" id="id44">*</span></a>RadPass by <a href="#id45"><span class="problematic" id="id46">*</span></a>Pass
+‘auto’          replace <a href="#id39"><span class="problematic" id="id40">*</span></a>RadPass by <a href="#id41"><span class="problematic" id="id42">*</span></a>Pass
 anything else   set as it is</p>
 </dd>
 </dl>
@@ -2478,7 +2574,7 @@ Any further modification will affect in both lattices.</p>
 </div></blockquote>
 <dl class="simple">
 <dt>For PassMethod names, the convention is:</dt><dd><p>None            no change
-‘auto’          replace <a href="#id47"><span class="problematic" id="id48">*</span></a>Pass by <a href="#id49"><span class="problematic" id="id50">*</span></a>RadPass
+‘auto’          replace <a href="#id43"><span class="problematic" id="id44">*</span></a>Pass by <a href="#id45"><span class="problematic" id="id46">*</span></a>RadPass
 anything else   set as the new PassMethod</p>
 </dd>
 </dl>
@@ -2902,9 +2998,9 @@ elements. refpts may be:</p>
 <dt class="sig sig-object py" id="at.lattice.lattice_object.Lattice.update">
 <span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.lattice_object.Lattice.update" title="Permalink to this definition"></a></dt>
 <dd><p>Update the element attributes with the given arguments</p>
-<p>update(<a href="#id51"><span class="problematic" id="id52">**</span></a>kwargs)
-update(mapping, <a href="#id53"><span class="problematic" id="id54">**</span></a>kwargs)
-update(iterable, <a href="#id55"><span class="problematic" id="id56">**</span></a>kwargs)</p>
+<p>update(<a href="#id47"><span class="problematic" id="id48">**</span></a>kwargs)
+update(mapping, <a href="#id49"><span class="problematic" id="id50">**</span></a>kwargs)
+update(iterable, <a href="#id51"><span class="problematic" id="id52">**</span></a>kwargs)</p>
 </dd></dl>
 
 </dd></dl>
@@ -2961,7 +3057,7 @@ Analyse elements for radiation state</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Particle object</p>
 <p>This object defines the properties of the particles circulating in a ring</p>
-<p>Particle(name, <a href="#id57"><span class="problematic" id="id58">**</span></a>params)</p>
+<p>Particle(name, <a href="#id53"><span class="problematic" id="id54">**</span></a>params)</p>
 <dl class="simple">
 <dt>PARAMETERS</dt><dd><dl class="simple">
 <dt>name        Particle name. ‘electron’, ‘positron and ‘proton’ are</dt><dd><p>predefined. For other particles, the rest energy and charge
@@ -3243,7 +3339,7 @@ their refpts</p>
 <dd><p>Function to be used as a decorator for optics functions
 The decorated function must be defined as:</p>
 <dl class="simple">
-<dt>def func(ring, refpts, <a href="#id59"><span class="problematic" id="id60">*</span></a>args, <a href="#id61"><span class="problematic" id="id62">**</span></a>kwargs):</dt><dd><p>…
+<dt>def func(ring, refpts, <a href="#id55"><span class="problematic" id="id56">*</span></a>args, <a href="#id57"><span class="problematic" id="id58">**</span></a>kwargs):</dt><dd><p>…
 return</p>
 </dd>
 </dl>
@@ -3283,7 +3379,7 @@ ring is returned.</p>
 <dd><p>Function to be used as a decorator for optics functions
 The decorated function must be defined as:</p>
 <dl class="simple">
-<dt>def func(ring, <a href="#id63"><span class="problematic" id="id64">*</span></a>args, <a href="#id65"><span class="problematic" id="id66">**</span></a>kwargs):</dt><dd><p>…
+<dt>def func(ring, <a href="#id59"><span class="problematic" id="id60">*</span></a>args, <a href="#id61"><span class="problematic" id="id62">**</span></a>kwargs):</dt><dd><p>…
 return</p>
 </dd>
 </dl>
@@ -3390,18 +3486,15 @@ elements.  This is used for indexing a lattice using explicit indices.</p>
 </dd></dl>
 
 </section>
-<section id="module-at.lattice">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-at.lattice" title="Permalink to this headline"></a></h2>
-<p>Helper functions for working with AT lattices.</p>
-<p>A lattice as understood by pyAT is any sequence of elements.  These functions
-are useful for working with these sequences.</p>
-</section>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="at.collective.html" class="btn btn-neutral float-left" title="at.collective package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="at.load.html" class="btn btn-neutral float-right" title="at.load package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

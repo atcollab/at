@@ -1,6 +1,11 @@
 at package
 ==========
 
+.. automodule:: at
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -23,14 +28,6 @@ at.constants module
 -------------------
 
 .. automodule:: at.constants
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at
    :members:
    :undoc-members:
    :show-inheritance:

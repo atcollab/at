@@ -32,6 +32,7 @@ release = '0.2'
 # ones.
 extensions = ['sphinx.ext.napoleon',
               'myst_parser']
+#napoleon_custom_sections = [('Returns','params_style')]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

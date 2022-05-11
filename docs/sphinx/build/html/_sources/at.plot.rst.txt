@@ -1,6 +1,11 @@
 at.plot package
 ===============
 
+.. automodule:: at.plot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -32,14 +37,6 @@ at.plot.synopt module
 ---------------------
 
 .. automodule:: at.plot.synopt
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.plot
    :members:
    :undoc-members:
    :show-inheritance:

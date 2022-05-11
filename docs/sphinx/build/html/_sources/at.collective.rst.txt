@@ -1,6 +1,11 @@
 at.collective package
 =====================
 
+.. automodule:: at.collective
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -32,14 +37,6 @@ at.collective.wake\_object module
 ---------------------------------
 
 .. automodule:: at.collective.wake_object
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.collective
    :members:
    :undoc-members:
    :show-inheritance:

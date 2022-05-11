@@ -1,6 +1,11 @@
 at.lattice package
 ==================
 
+.. automodule:: at.lattice
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -48,14 +53,6 @@ at.lattice.utils module
 -----------------------
 
 .. automodule:: at.lattice.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: at.lattice
    :members:
    :undoc-members:
    :show-inheritance:

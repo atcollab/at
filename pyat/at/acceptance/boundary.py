@@ -16,7 +16,7 @@ _pdict = {'x': 0, 'xp': 1,
 
 
 class GridMode(Enum):
-    """"
+    """
     Class to defined the grid mode use when searching
     for the boundary
     """
