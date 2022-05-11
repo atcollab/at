@@ -29,4 +29,4 @@ python:
      - method: pip
        path: ./pyat
        extra_requirements:
-         - docs/sphinx/
+         - docs/sphinx/requirements.txt
