@@ -1,5 +1,5 @@
 """
-This package provide fuinction to compute
+This package provide functions to compute
 the transverse and longitudinal acceptance
 of a ring
 """

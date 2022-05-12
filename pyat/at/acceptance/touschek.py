@@ -1,3 +1,7 @@
+"""
+Module to compute the touschek lifetime of the ring
+"""
+
 import at
 import numpy
 from ..lattice import Lattice, AtError

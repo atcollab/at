@@ -1,3 +1,7 @@
+"""
+Module to calculate the 2D or 1D acceptance of the ring
+"""
+
 import numpy
 from .boundary import GridMode
 from .boundary import boundary_search
