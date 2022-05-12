@@ -97,7 +97,7 @@ When a tag of the form pyat-* is pushed to Github, wheels for each
 supported platform will be built and automatically uploaded as an 'artifact'.
 
 Release procedure
-=================
+-----------------
 
 To upload a release to PyPI, you will need to be a 'maintainer' of
 `Accelerator Toolbox on PyPI <https://pypi.org/project/accelerator-toolbox/>`_.
