@@ -13,7 +13,7 @@ defined in Accelerator Toolbox, implemented by compiling the C code used in the
 AT 'integrators' into a Python extension. These pass methods are used by
 higher-level functions to provide physics results.
 
-See the `pyAT website <https://atcollab.github.io/at/p/Installation.html>`_ for a
+See the `pyAT website <https://at.readthedocs.io/en/latest/>`_ for a
 more detailed introduction.
 
 pyAT supports Python 3.6 to 3.10.
