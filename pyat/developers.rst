@@ -118,8 +118,7 @@ associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://git
 
 * Download the tar.gz and wheels files and unzip them into a directory ``<dir>``
 * Manually install at least one wheel to make sure that it has built correctly
-* Install Twine for uploading the files to PyPI. One way to do this is to
-  create a new virtualenv:
+* Install Twine for uploading the files to PyPI. One way to do this is to create a new virtualenv:
    * ``python3 -m venv venv``
    * ``source venv/bin/activate``
    * ``pip install twine``
