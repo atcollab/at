@@ -1,1 +1,0 @@
-.. include:: ../../../pyat/README.rst

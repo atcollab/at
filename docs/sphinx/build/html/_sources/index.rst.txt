@@ -29,22 +29,24 @@ Indices and tables
    :caption: Getting started:
    :hidden:
    
-   rst_doc
+   getting_started
    
-
 .. toctree::
    :maxdepth: 2
    :caption: How to:
    :hidden:
    
-   md_docs
+   howto/Installation
+   howto/Primer
+   howto/CavityControl
+   howto/Collective
    
-
 .. toctree::
    :maxdepth: 2
    :caption: Modules:
    :hidden:
    
+   modules
    at.acceptance
    at.collective
    at.lattice
