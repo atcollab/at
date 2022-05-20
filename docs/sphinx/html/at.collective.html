@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>at.collective package &mdash; pyAT 0.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="at.lattice package" href="at.lattice.html" />
+    <link rel="prev" title="at.acceptance package" href="at.acceptance.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> pyAT
+            <img src="_static/company_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">pyAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pyat-developer-notes">pyAT Developer Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pyat-examples">pyAT Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="howto/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto/Primer.html">pyAT Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto/CavityControl.html">Cavity Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto/Collective.html">Collective</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">at</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">at.collective package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.collective.haissinski">at.collective.haissinski module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.collective.wake_elements">at.collective.wake_elements module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.collective.wake_functions">at.collective.wake_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.collective.wake_object">at.collective.wake_object module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="at.lattice.html">at.lattice package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.load.html">at.load package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.matching.html">at.matching package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.physics.html">at.physics package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.plot.html">at.plot package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.tracking.html">at.tracking package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyAT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">at</a> &raquo;</li>
+          <li><a href="at.html">at package</a> &raquo;</li>
+      <li>at.collective package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-at.collective">
+<span id="at-collective-package"></span><h1>at.collective package<a class="headerlink" href="#module-at.collective" title="Permalink to this headline"></a></h1>
+<p>Collective effects</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-at.collective.haissinski">
+<span id="at-collective-haissinski-module"></span><h2>at.collective.haissinski module<a class="headerlink" href="#module-at.collective.haissinski" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.haissinski.</span></span><span class="sig-name descname"><span class="pre">Haissinski</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wake_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numIters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to find the longitudinal distribution in the presence
+of a short range wakefield.</p>
+<p>This class is a direct implementation of the following paper:
+“Numerical solution of the Haïssinski equation for the equilibrium
+state of  a stored electron beam”, R. Warnock, K.Bane, Phys. Rev. Acc.
+and Beams 21, 124401 (2018)</p>
+<p>The reader is referred to this paper for a description of the methods.
+The equation number of key formula are written next to the relevant
+function.</p>
+<p>As input:
+wake_object is a object that contains an srange and Z array.
+ring is a ring instance which is needed for machine parameters
+(sigma_l, sigma_e, etc)</p>
+<p>m is the number of points in the full distribution that you want
+kmax is the min and max of the range of the distribution.
+See equation 27. In units of sigma_z0
+current is the bunch current.
+numIters is the number of iterations
+eps is the convergence criteria.</p>
+<p>the functions solve or solve_steps can be used after initialisation</p>
+<dl class="simple">
+<dt>Future developments of this class:</dt><dd><p>Adding LR wake or harmonic cavity as done at SOLEIL. Needs
+to be added WITH this class which is just for short range wake.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.Fi">
+<span class="sig-name descname"><span class="pre">Fi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.Fi" title="Permalink to this definition"></a></dt>
+<dd><p>Equation 28</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.compute_Smat">
+<span class="sig-name descname"><span class="pre">compute_Smat</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.compute_Smat" title="Permalink to this definition"></a></dt>
+<dd><p>The sampling of the integrated wake potential S
+is only made at certain places. So all possibilities
+are loaded into a matrix for speed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.compute_new_phi">
+<span class="sig-name descname"><span class="pre">compute_new_phi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.compute_new_phi" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.convergence">
+<span class="sig-name descname"><span class="pre">convergence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.convergence" title="Permalink to this definition"></a></dt>
+<dd><p>Equation 32</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.dFi_dphij">
+<span class="sig-name descname"><span class="pre">dFi_dphij</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.dFi_dphij" title="Permalink to this definition"></a></dt>
+<dd><p>Equation 30</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.dFi_ij">
+<span class="sig-name descname"><span class="pre">dFi_ij</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.dFi_ij" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.initial_phi">
+<span class="sig-name descname"><span class="pre">initial_phi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.initial_phi" title="Permalink to this definition"></a></dt>
+<dd><p>Simply a gaussian but using the normalised units.
+Page 5 top right, in the text.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.precompute_S">
+<span class="sig-name descname"><span class="pre">precompute_S</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.precompute_S" title="Permalink to this definition"></a></dt>
+<dd><p>Equation 16</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.set_I">
+<span class="sig-name descname"><span class="pre">set_I</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.set_I" title="Permalink to this definition"></a></dt>
+<dd><p>Equation 11</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.set_output">
+<span class="sig-name descname"><span class="pre">set_output</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.set_output" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.set_weights">
+<span class="sig-name descname"><span class="pre">set_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.set_weights" title="Permalink to this definition"></a></dt>
+<dd><p>Page 7 second paragraph, in the text</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.solve" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.solve_steps">
+<span class="sig-name descname"><span class="pre">solve_steps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">currents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.solve_steps" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>INPUT:</dt><dd><dl class="simple">
+<dt>currents  an array of currents to solve. If 0 is given,</dt><dd><p>a current of 10uA is used to prevent failure.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.haissinski.Haissinski.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.haissinski.Haissinski.update" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-at.collective.wake_elements">
+<span id="at-collective-wake-elements-module"></span><h2>at.collective.wake_elements module<a class="headerlink" href="#module-at.collective.wake_elements" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_elements.LongResonatorElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_elements.</span></span><span class="sig-name descname"><span class="pre">LongResonatorElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qfactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rshunt</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.LongResonatorElement" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.collective.wake_elements.ResonatorElement" title="at.collective.wake_elements.ResonatorElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">at.collective.wake_elements.ResonatorElement</span></code></a></p>
+<p>Class to generate a longitudinal resonator, inherits from WakeElement
+additional argument are frequency, qfactor, rshunt</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_elements.LongResonatorElement.rebuild_wake">
+<span class="sig-name descname"><span class="pre">rebuild_wake</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.LongResonatorElement.rebuild_wake" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResWallElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_elements.</span></span><span class="sig-name descname"><span class="pre">ResWallElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wakecomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rwlength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conduc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yokoya_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.ResWallElement" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.collective.wake_elements.WakeElement" title="at.collective.wake_elements.WakeElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">at.collective.wake_elements.WakeElement</span></code></a></p>
+<p>Class to generate a resistive wall element, inherits from WakeElement
+additional argument are yokoya_factor, length, pipe radius, conductivity</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResWallElement.Conductivity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Conductivity</span></span><a class="headerlink" href="#at.collective.wake_elements.ResWallElement.Conductivity" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResWallElement.RWLength">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RWLength</span></span><a class="headerlink" href="#at.collective.wake_elements.ResWallElement.RWLength" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResWallElement.Rvac">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Rvac</span></span><a class="headerlink" href="#at.collective.wake_elements.ResWallElement.Rvac" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResWallElement.Yokoya">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Yokoya</span></span><a class="headerlink" href="#at.collective.wake_elements.ResWallElement.Yokoya" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResWallElement.rebuild_wake">
+<span class="sig-name descname"><span class="pre">rebuild_wake</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.ResWallElement.rebuild_wake" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResonatorElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_elements.</span></span><span class="sig-name descname"><span class="pre">ResonatorElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wakecomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qfactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rshunt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yokoya_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.ResonatorElement" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.collective.wake_elements.WakeElement" title="at.collective.wake_elements.WakeElement"><code class="xref py py-class docutils literal notranslate"><span class="pre">at.collective.wake_elements.WakeElement</span></code></a></p>
+<p>Class to generate a resonator, inherits from WakeElement
+additonal argument are frequency, qfactor, rshunt</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResonatorElement.Qfactor">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Qfactor</span></span><a class="headerlink" href="#at.collective.wake_elements.ResonatorElement.Qfactor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResonatorElement.ResFrequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ResFrequency</span></span><a class="headerlink" href="#at.collective.wake_elements.ResonatorElement.ResFrequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResonatorElement.Rshunt">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Rshunt</span></span><a class="headerlink" href="#at.collective.wake_elements.ResonatorElement.Rshunt" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResonatorElement.Yokoya">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Yokoya</span></span><a class="headerlink" href="#at.collective.wake_elements.ResonatorElement.Yokoya" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_elements.ResonatorElement.rebuild_wake">
+<span class="sig-name descname"><span class="pre">rebuild_wake</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.ResonatorElement.rebuild_wake" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_elements.</span></span><span class="sig-name descname"><span class="pre">WakeElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">family_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wake</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.WakeElement" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="at.lattice.html#at.lattice.elements.Element" title="at.lattice.elements.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">at.lattice.elements.Element</span></code></a></p>
+<p>Class to generate an AT wake element using the passmethod WakeFieldPass
+args:  family name, ring, wake object
+kwargs: PassMethod=WakeFieldPass</p>
+<blockquote>
+<div><p>Current=0   Bunch current [A]
+Nslice=101  Number of slices per bunch
+Nturns=1    Number of turn for the wake field
+ZCuts=None  Limits for fixed slicing, default is adaptive
+NormFact    (default=[1,1,1]) normalization for the 3 planes,</p>
+<blockquote>
+<div><p>to account for beta function at the observation
+point for example</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.Current">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Current</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.Current" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.Nslice">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Nslice</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.Nslice" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.Nturns">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Nturns</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.Nturns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.REQUIRED_ATTRIBUTES">
+<span class="sig-name descname"><span class="pre">REQUIRED_ATTRIBUTES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['FamName']</span></em><a class="headerlink" href="#at.collective.wake_elements.WakeElement.REQUIRED_ATTRIBUTES" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.WakeDX">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeDX</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.WakeDX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.WakeDY">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeDY</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.WakeDY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.WakeQX">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeQX</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.WakeQX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.WakeQY">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeQY</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.WakeQY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.WakeT">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeT</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.WakeT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.WakeZ">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WakeZ</span></span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.WakeZ" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.clear_history">
+<span class="sig-name descname"><span class="pre">clear_history</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.clear_history" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.rebuild_wake">
+<span class="sig-name descname"><span class="pre">rebuild_wake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wake</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.rebuild_wake" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_elements.WakeElement.set_normfactxy">
+<span class="sig-name descname"><span class="pre">set_normfactxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_elements.WakeElement.set_normfactxy" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-at.collective.wake_functions">
+<span id="at-collective-wake-functions-module"></span><h2>at.collective.wake_functions module<a class="headerlink" href="#module-at.collective.wake_functions" title="Permalink to this headline"></a></h2>
+<p>Analytical wake functions</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.collective.wake_functions.convolve_wakefun">
+<span class="sig-prename descclassname"><span class="pre">at.collective.wake_functions.</span></span><span class="sig-name descname"><span class="pre">convolve_wakefun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_functions.convolve_wakefun" title="Permalink to this definition"></a></dt>
+<dd><p>Convolution of a wake function with a pulse of rms
+length sigs, this is use to generate a wake potential
+that can be added to the output of EM code like GDFIDL</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.collective.wake_functions.long_resonator_wf">
+<span class="sig-prename descclassname"><span class="pre">at.collective.wake_functions.</span></span><span class="sig-name descname"><span class="pre">long_resonator_wf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qfactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rshunt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_functions.long_resonator_wf" title="Permalink to this definition"></a></dt>
+<dd><p>Define the wake function (longitudinal) of a resonator
+with the given parameters according to Alex Chao’s resonator
+model (Eq. 2.82) and definitions of the resonator in HEADTAIL.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.collective.wake_functions.transverse_resonator_wf">
+<span class="sig-prename descclassname"><span class="pre">at.collective.wake_functions.</span></span><span class="sig-name descname"><span class="pre">transverse_resonator_wf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qfactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rshunt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yokoya_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_functions.transverse_resonator_wf" title="Permalink to this definition"></a></dt>
+<dd><p>Define the wake function (transverse) of a resonator
+with the given parameters according to Alex Chao’s
+resonator model (Eq. 2.82) and definitions of the resonator
+in HEADTAIL.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.collective.wake_functions.transverse_reswall_wf">
+<span class="sig-prename descclassname"><span class="pre">at.collective.wake_functions.</span></span><span class="sig-name descname"><span class="pre">transverse_reswall_wf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yokoya_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conduct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_functions.transverse_reswall_wf" title="Permalink to this definition"></a></dt>
+<dd><p>Define the wake function (transverse) of a resistive wall with the given
+parameters according to Alex Chao’s RW model (2.53) and definitions used in
+HEADTAIL</p>
+</dd></dl>
+
+</section>
+<section id="module-at.collective.wake_object">
+<span id="at-collective-wake-object-module"></span><h2>at.collective.wake_object module<a class="headerlink" href="#module-at.collective.wake_object" title="Permalink to this headline"></a></h2>
+<p>Wake object creation</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_object.</span></span><span class="sig-name descname"><span class="pre">Wake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.Wake" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to generate a wake object
+The wake object is define by its srange, specified
+at initialization, and DX, DY, QY, Z corresponding
+to transverse dipoles and quadrupoles and longitudinal</p>
+<p>The srange is common to all components and cannot be changed
+once initialized, all added component are resampled to the
+srange</p>
+<p>usage:
+wake = Wake(srange)
+wake.add(WakeType,WakeComponent, <a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">*</span></a>kwargs)</p>
+<p>Component are WakeComponent.FILE (import from file),
+WakeComponent.TABLE (provide vectors), WakeComponent.RESONATOR
+(analytical resonator), WakeComponent.RESWALL (transverse RW)</p>
+<p>Components are retrieved with Wake.DX for example</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.DX">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DX</span></span><a class="headerlink" href="#at.collective.wake_object.Wake.DX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.DY">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DY</span></span><a class="headerlink" href="#at.collective.wake_object.Wake.DY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.QX">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QX</span></span><a class="headerlink" href="#at.collective.wake_object.Wake.QX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.QY">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QY</span></span><a class="headerlink" href="#at.collective.wake_object.Wake.QY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.Z">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Z</span></span><a class="headerlink" href="#at.collective.wake_object.Wake.Z" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcomp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.Wake.add" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.build_srange">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build_srange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_ext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">short_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">totallength</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.Wake.build_srange" title="Permalink to this definition"></a></dt>
+<dd><p>Function to build the wake table s column.
+This is not the slicing but the look-up table,
+however it generates data where bunches are located
+to avoid using too much memory to store the table.</p>
+<dl>
+<dt>PARAMETERS</dt><dd><dl class="simple">
+<dt>start           starting s-coordinate of the table</dt><dd><p>(can be negative for wake potential)</p>
+</dd>
+<dt>bunch_ext       maximum bunch extension, function</dt><dd><p>generates data at +/- bunch_ext
+around the bucket center</p>
+</dd>
+</dl>
+<p>short_step      step size for the short range wake table
+long_step       step size for the long range wake table
+bunch_interval  minimum bunch interval data will be generate</p>
+<blockquote>
+<div><p>for each bunch_inteval step</p>
+</div></blockquote>
+<dl class="simple">
+<dt>totallength     total length of the wake table, has to contain</dt><dd><p>the full bunch extension</p>
+</dd>
+</dl>
+</dd>
+<dt>OUTPUT</dt><dd><p>srange          vector of s position where to sample the wake</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.long_resonator">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">long_resonator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qfactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rshunt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelems</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.Wake.long_resonator" title="Permalink to this definition"></a></dt>
+<dd><p>Method to build a longitudinal resonator wake object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.resistive_wall">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resistive_wall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wakecomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conduct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yokoya_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelems</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.Wake.resistive_wall" title="Permalink to this definition"></a></dt>
+<dd><p>Method to build a resistive wall wake object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.resonator">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resonator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wakecomp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qfactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rshunt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yokoya_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelems</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.Wake.resonator" title="Permalink to this definition"></a></dt>
+<dd><p>Method to build a resonator wake object</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="at.collective.wake_object.Wake.srange">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">srange</span></span><a class="headerlink" href="#at.collective.wake_object.Wake.srange" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_object.</span></span><span class="sig-name descname"><span class="pre">WakeComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.WakeComponent" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Enum class for wake component</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent.DX">
+<span class="sig-name descname"><span class="pre">DX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.collective.wake_object.WakeComponent.DX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent.DY">
+<span class="sig-name descname"><span class="pre">DY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.collective.wake_object.WakeComponent.DY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent.QX">
+<span class="sig-name descname"><span class="pre">QX</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#at.collective.wake_object.WakeComponent.QX" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent.QY">
+<span class="sig-name descname"><span class="pre">QY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#at.collective.wake_object.WakeComponent.QY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeComponent.Z">
+<span class="sig-name descname"><span class="pre">Z</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#at.collective.wake_object.WakeComponent.Z" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.collective.wake_object.</span></span><span class="sig-name descname"><span class="pre">WakeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.collective.wake_object.WakeType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Enum class for wake type</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeType.FILE">
+<span class="sig-name descname"><span class="pre">FILE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.collective.wake_object.WakeType.FILE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeType.RESONATOR">
+<span class="sig-name descname"><span class="pre">RESONATOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#at.collective.wake_object.WakeType.RESONATOR" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeType.RESWALL">
+<span class="sig-name descname"><span class="pre">RESWALL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#at.collective.wake_object.WakeType.RESWALL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.collective.wake_object.WakeType.TABLE">
+<span class="sig-name descname"><span class="pre">TABLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.collective.wake_object.WakeType.TABLE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="at.acceptance.html" class="btn btn-neutral float-left" title="at.acceptance package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="at.lattice.html" class="btn btn-neutral float-right" title="at.lattice package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, ATCollab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

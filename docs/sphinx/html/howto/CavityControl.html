@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cavity Control &mdash; pyAT 0.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Collective" href="Collective.html" />
+    <link rel="prev" title="pyAT Primer" href="Primer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> pyAT
+            <img src="../_static/company_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">pyAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html#pyat-developer-notes">pyAT Developer Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html#pyat-examples">pyAT Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Primer.html">pyAT Primer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cavity Control</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#lattice-methods-for-cavity-control">Lattice methods for cavity control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#voltage">Voltage:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#frequency">Frequency:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#time-lag">Time lag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#all-in-one-method">All-in-one method</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#lattice-properties">Lattice properties</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Collective.html">Collective</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">at</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.acceptance.html">at.acceptance package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.collective.html">at.collective package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.lattice.html">at.lattice package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.load.html">at.load package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.matching.html">at.matching package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.physics.html">at.physics package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.plot.html">at.plot package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../at.tracking.html">at.tracking package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyAT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Cavity Control</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cavity-control">
+<h1>Cavity Control<a class="headerlink" href="#cavity-control" title="Permalink to this headline"></a></h1>
+<p>A lattice may contain multiple RF cavities, grouped according to
+different RF systems: main cavities, harmonic cavities…
+AT provides simple tools to tune them, with methods and properties of
+the <code class="docutils literal notranslate"><span class="pre">Lattice</span></code> object.</p>
+<section id="lattice-methods-for-cavity-control">
+<h2>Lattice methods for cavity control<a class="headerlink" href="#lattice-methods-for-cavity-control" title="Permalink to this headline"></a></h2>
+<p>All methods have <code class="docutils literal notranslate"><span class="pre">array</span></code> and <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> keyword arguments, used to
+select the cavities concerned by the command.</p>
+<ul class="simple">
+<li><p>if <code class="docutils literal notranslate"><span class="pre">array</span> <span class="pre">is</span> <span class="pre">True</span></code>, the output attribute value is an array as long
+as the number of selected cavities. The input argument must be an
+array as long as the number of selected cavities or a scalar which
+will be broadcasted to the number of cavities,</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">array</span> <span class="pre">is</span> <span class="pre">False</span></code> (default), the input and output are scalars.
+The scalar value applies to the set of cavities with the lowest
+frequency within the selection. The other cavities are ignored in
+<code class="docutils literal notranslate"><span class="pre">get_*</span></code> methods. For <code class="docutils literal notranslate"><span class="pre">set_*</span></code> methods, the other cavities are
+scaled as explained if the specific method description.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument is used as follows: - <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> is a “refpts”
+type (integer, integer or boolean array, callable): it is used to select
+the cavities. - <code class="docutils literal notranslate"><span class="pre">cavpts</span> <span class="pre">is</span> <span class="pre">None</span></code> (default value), and the <code class="docutils literal notranslate"><span class="pre">Lattice</span></code>
+object has a <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> attribute: the lattice attribute is used to
+select the cavities. - <code class="docutils literal notranslate"><span class="pre">cavpts</span> <span class="pre">is</span> <span class="pre">None</span></code>, and the lattice has no
+<code class="docutils literal notranslate"><span class="pre">cavpts</span></code> attribute (or it is <code class="docutils literal notranslate"><span class="pre">None</span></code>): all cavities are taken into
+account.</p>
+<p>{% include tip.html content=“ - <strong>single RF system:</strong> you can forget the
+<code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument: by default the methods address all cavities.
+However, using the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code> attribute makes calls
+significantly faster by skipping the search for cavities. - <strong>complex
+system:</strong> an easy way is to have the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code> address the
+accelerating cavities so that they will be driven by default. Harmonic
+cavities may be driven using the <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument.” %}</p>
+<p>{% include tip.html content=” Adding to the Lattice “refpts” type
+attributes addressing the different cavity sets make them available
+everywhere the lattice is visible. ” %}</p>
+<p>All <code class="docutils literal notranslate"><span class="pre">set_*</span></code> methods also have a <code class="docutils literal notranslate"><span class="pre">copy</span></code> argument to select either
+in-place modification of the lattice, or creation of a shallow copy with
+modified cavities.</p>
+<section id="voltage">
+<h3>Voltage:<a class="headerlink" href="#voltage" title="Permalink to this headline"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">voltage</span> <span class="pre">=</span> <span class="pre">Lattice.get_rf_voltage(cavpts=None,</span> <span class="pre">array=False)</span></code></p>
+<p>The scalar voltage is the sum of the cavity voltages of the cavities
+with the lowest frequency within the selection, multiplied by the
+periodicity.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.set_rf_voltage(voltage,</span> <span class="pre">cavpts=None,</span> <span class="pre">array=False,</span> <span class="pre">copy=False)</span></code></p>
+<p>For array == False, all the existing voltages are scaled to reach the
+specified value on the fundamental mode.</p>
+</section>
+<section id="frequency">
+<h3>Frequency:<a class="headerlink" href="#frequency" title="Permalink to this headline"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">frequency</span> <span class="pre">=</span> <span class="pre">Lattice.get_rf_frequency(cavpts=None,</span> <span class="pre">array=False)</span></code></p>
+<p>The frequency of the fundamental mode is returned.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.get_rf_frequency(frequency=None,</span> <span class="pre">dp=None,</span> <span class="pre">dct=None,</span> <span class="pre">cavpts=None,</span> <span class="pre">array=False,</span> <span class="pre">copy=False)</span></code></p>
+<p>If the frequency is None, the method will set the frequency to the
+nominal value, according to the revolution frequency and harmonic
+number. An optional off-momentum may be applied using the <code class="docutils literal notranslate"><span class="pre">dp</span></code> or
+<code class="docutils literal notranslate"><span class="pre">dct</span></code> arguments. The frequency shift is then computed using the linear
+slip factor</p>
+<div class="math notranslate nohighlight">
+\[\eta_c = 1/\gamma^2 - \alpha_c\]</div>
+<p>, so that the resulting <code class="docutils literal notranslate"><span class="pre">dp</span></code> may slightly differ from the specified
+value.</p>
+<p>For array == False, the value is applied to the fundamental mode
+cavities and the frequency of all other cavities is scaled by the same
+ratio.</p>
+</section>
+<section id="time-lag">
+<h3>Time lag<a class="headerlink" href="#time-lag" title="Permalink to this headline"></a></h3>
+<p>The time lag is expressed in values of path lengthening “cτ”, the 6th
+particle coordinate [m].</p>
+<p><code class="docutils literal notranslate"><span class="pre">time_lag</span> <span class="pre">=</span> <span class="pre">Lattice.get_rf_timelag(cavpts=None,</span> <span class="pre">array=False)</span></code></p>
+<p>The time lag of the fundamental mode is returned.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.set_rf_timelag(time_lag,</span> <span class="pre">cavpts=None,</span> <span class="pre">array=False,</span> <span class="pre">copy=False)</span></code></p>
+<p>For array == False, the time lag is applied to the fundamental mode
+cavities and the time lag of all the other selected cavities is shifted
+by the same amount.</p>
+</section>
+<section id="all-in-one-method">
+<h3>All-in-one method<a class="headerlink" href="#all-in-one-method" title="Permalink to this headline"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.set_cavity(ring,</span> <span class="pre">Voltage=None,</span> <span class="pre">Frequency=None,</span> <span class="pre">TimeLag=None,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">cavpts=None,</span> <span class="pre">array=False,</span> <span class="pre">copy=False)</span></code></p>
+<p>This method sets only the explicitly provided values, the other ones are
+left unchanged. For the frequency, a special value <code class="docutils literal notranslate"><span class="pre">at.Frf.NOMINAL</span></code>
+means nominal frequency, according to the revolution frequency and
+harmonic number.</p>
+<p>The behaviour of the <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> and <code class="docutils literal notranslate"><span class="pre">array</span></code> keywords is the same as
+for individual methods.</p>
+</section>
+</section>
+<section id="lattice-properties">
+<h2>Lattice properties<a class="headerlink" href="#lattice-properties" title="Permalink to this headline"></a></h2>
+<p>The properties provide an even easier way to control the cavities, but
+are restricted to the default behaviour of the equivalent Lattice
+method: - cavities are selected by the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code> attribute (all
+cavities by default), - Setting a property modifies the ring in-place
+(no copy).</p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.rf_voltage</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.rf_frequency</span></code></p>
+<p>The special value <code class="docutils literal notranslate"><span class="pre">at.Frf.NOMINAL</span></code> means nominal frequency.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.harmonic_number</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.time_lag</span></code></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Primer.html" class="btn btn-neutral float-left" title="pyAT Primer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Collective.html" class="btn btn-neutral float-right" title="Collective" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, ATCollab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

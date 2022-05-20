@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>at.acceptance package &mdash; pyAT 0.2 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="at.collective package" href="at.collective.html" />
+    <link rel="prev" title="at package" href="at.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> pyAT
+            <img src="_static/company_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">pyAT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pyat-developer-notes">pyAT Developer Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pyat-examples">pyAT Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="howto/Installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto/Primer.html">pyAT Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto/CavityControl.html">Cavity Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="howto/Collective.html">Collective</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">at</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">at.acceptance package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.acceptance.acceptance">at.acceptance.acceptance module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.acceptance.boundary">at.acceptance.boundary module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-at.acceptance.touschek">at.acceptance.touschek module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="at.collective.html">at.collective package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.lattice.html">at.lattice package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.load.html">at.load package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.matching.html">at.matching package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.physics.html">at.physics package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.plot.html">at.plot package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="at.tracking.html">at.tracking package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyAT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">at</a> &raquo;</li>
+          <li><a href="at.html">at package</a> &raquo;</li>
+      <li>at.acceptance package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-at.acceptance">
+<span id="at-acceptance-package"></span><h1>at.acceptance package<a class="headerlink" href="#module-at.acceptance" title="Permalink to this headline"></a></h1>
+<p>This package provide functions to compute
+the transverse and longitudinal acceptance
+of a ring</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-at.acceptance.acceptance">
+<span id="at-acceptance-acceptance-module"></span><h2>at.acceptance.acceptance module<a class="headerlink" href="#module-at.acceptance.acceptance" title="Permalink to this headline"></a></h2>
+<p>Module to calculate the 2D or 1D acceptance of the ring</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.acceptance.get_1d_acceptance">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.acceptance.</span></span><span class="sig-name descname"><span class="pre">get_1d_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nturns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">GridMode.RADIAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_mp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.acceptance.get_1d_acceptance" title="Permalink to this definition"></a></dt>
+<dd><p>1D Acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>plane</strong> – defines the axis where to search for the acceptance
+allowed values are <code class="docutils literal notranslate"><span class="pre">x,xp,y,yp,dp,ct</span></code></p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>The units depend on the selected planes and are the same as for the 6D
+particle coordinates. 3 elements tuples containing:</p>
+<ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code>.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.acceptance.get_acceptance">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.acceptance.</span></span><span class="sig-name descname"><span class="pre">get_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nturns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">GridMode.RADIAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_mp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.acceptance.get_acceptance" title="Permalink to this definition"></a></dt>
+<dd><p>2D Acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs can be used for 1D grid. The grid can be
+changed using grid_mode input:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN</span></code>: <span class="math notranslate nohighlight">\((x,y)\)</span> grid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">at.GridMode.RADIAL</span></code>: <span class="math notranslate nohighlight">\((r,\theta)\)</span> grid</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: <span class="math notranslate nohighlight">\((r,\theta)\)</span> recursive boundary search</p></li>
+</ul>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bf</span><span class="p">,</span><span class="n">sf</span><span class="p">,</span><span class="n">gf</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">get_acceptance</span><span class="p">(</span><span class="n">planes</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">gf</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">sf</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">bf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>planes</strong> – max. dimension 2, defines the plane where to search
+for the acceptance allowed values are
+<code class="docutils literal notranslate"><span class="pre">x,xp,y,yp,dp,ct</span></code></p></li>
+<li><p><strong>npoints</strong> – number of points in each dimension shape
+<code class="docutils literal notranslate"><span class="pre">(len(planes),)</span></code></p></li>
+<li><p><strong>amplitudes</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step
+in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> in each dimension. Shape is
+<code class="docutils literal notranslate"><span class="pre">(len(planes),)</span></code> for <code class="docutils literal notranslate"><span class="pre">RADIAL/RECURSIVE</span></code> grid.
+<code class="docutils literal notranslate"><span class="pre">amplitude</span> <span class="pre">=</span> <span class="pre">sqrt(x**2+y**2)</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>offset=None</strong> – initial orbit, default closed orbit</p></li>
+<li><p><strong>bounds=None</strong> – defines the tracked range <code class="docutils literal notranslate"><span class="pre">range=bounds*amplitude</span></code>,
+it can be use to select quadrants for example
+default values are
+<code class="docutils literal notranslate"><span class="pre">GridMode.CARTESIAN=((-1,1),(0,1))</span></code>
+<code class="docutils literal notranslate"><span class="pre">GridMode.RADIAL/RECURSIVE=((0,1),(pi,0))</span></code></p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>The units depend on the selected planes and are the same as for the 6D
+particle coordinates. 3 elements tuples containing:</p>
+<ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(2,n)</span></code> containing the 2D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(2,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(2,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code>
+is returned.</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.acceptance.get_horizontal_acceptance">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.acceptance.</span></span><span class="sig-name descname"><span class="pre">get_horizontal_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.acceptance.get_horizontal_acceptance" title="Permalink to this definition"></a></dt>
+<dd><p>Horizontal acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a>
+and <a class="reference internal" href="#at.acceptance.acceptance.get_1d_acceptance" title="at.acceptance.acceptance.get_1d_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_1d_acceptance()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code></p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>3 elements tuples containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.acceptance.get_momentum_acceptance">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.acceptance.</span></span><span class="sig-name descname"><span class="pre">get_momentum_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.acceptance.get_momentum_acceptance" title="Permalink to this definition"></a></dt>
+<dd><p>Momentum acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a>
+and <a class="reference internal" href="#at.acceptance.acceptance.get_1d_acceptance" title="at.acceptance.acceptance.get_1d_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_1d_acceptance()</span></code></a>
+This method is used in <a class="reference internal" href="#at.acceptance.touschek.get_lifetime" title="at.acceptance.touschek.get_lifetime"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.touschek.get_lifetime()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code></p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>3 elements tuples containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.acceptance.get_vertical_acceptance">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.acceptance.</span></span><span class="sig-name descname"><span class="pre">get_vertical_acceptance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.acceptance.get_vertical_acceptance" title="Permalink to this definition"></a></dt>
+<dd><p>Vertical acceptance calculation</p>
+<p>Computes the acceptance at <code class="docutils literal notranslate"><span class="pre">repfts</span></code> observation points.
+Scalar inputs required.</p>
+<p>See also <a class="reference internal" href="#at.acceptance.acceptance.get_acceptance" title="at.acceptance.acceptance.get_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_acceptance()</span></code></a>
+and <a class="reference internal" href="#at.acceptance.acceptance.get_1d_acceptance" title="at.acceptance.acceptance.get_1d_acceptance"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at.acceptance.acceptance.get_1d_acceptance()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>refpts=None</strong> – Observation refpts, default start of the machine</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>divider=2</strong> – Value of the divider used in <code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> boundary
+search</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>start_method</strong> – This parameter allows to change the python
+multiprocessing start method, <code class="docutils literal notranslate"><span class="pre">default=None</span></code> uses
+the python defaults that is considered safe.
+Available parameters are <code class="docutils literal notranslate"><span class="pre">fork,</span> <span class="pre">spawn,</span> <span class="pre">forkserver</span></code>.
+Default for linux is <code class="docutils literal notranslate"><span class="pre">fork</span></code>, default for MacOS and
+Windows is <code class="docutils literal notranslate"><span class="pre">spawn</span></code>. <code class="docutils literal notranslate"><span class="pre">fork</span></code> may used for MacOS to
+speed-up the calculation or to solve Runtime Errors,
+however it is considered unsafe.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>boundary</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the 1D
+acceptance</p></li>
+<li><p><strong>survived</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinates of the particles that survived</p></li>
+<li><p><strong>grid</strong>: numpy array with shape <code class="docutils literal notranslate"><span class="pre">(,n)</span></code> containing the initial
+coordinate of all the particles that</p></li>
+</ul>
+<p>In case <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;1</span></code> a list of array of length <code class="docutils literal notranslate"><span class="pre">len(refpts)</span></code> is
+returned. The boundary output is squeezed to an array with shape
+<code class="docutils literal notranslate"><span class="pre">(len(refpts),2)</span></code></p>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>3 elements tuples containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-at.acceptance.boundary">
+<span id="at-acceptance-boundary-module"></span><h2>at.acceptance.boundary module<a class="headerlink" href="#module-at.acceptance.boundary" title="Permalink to this headline"></a></h2>
+<p>This module contains the functions used to
+calculate the lost boundary for different
+grid definitions</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.acceptance.boundary.GridMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.acceptance.boundary.</span></span><span class="sig-name descname"><span class="pre">GridMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.boundary.GridMode" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Class to define the grid mode use when searching
+for the boundary</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.acceptance.boundary.GridMode.CARTESIAN">
+<span class="sig-name descname"><span class="pre">CARTESIAN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.acceptance.boundary.GridMode.CARTESIAN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.acceptance.boundary.GridMode.RADIAL">
+<span class="sig-name descname"><span class="pre">RADIAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#at.acceptance.boundary.GridMode.RADIAL" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.acceptance.boundary.GridMode.RECURSIVE">
+<span class="sig-name descname"><span class="pre">RECURSIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.acceptance.boundary.GridMode.RECURSIVE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-at.acceptance.touschek">
+<span id="at-acceptance-touschek-module"></span><h2>at.acceptance.touschek module<a class="headerlink" href="#module-at.acceptance.touschek" title="Permalink to this headline"></a></h2>
+<p>Module to compute the touschek lifetime of the ring</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.touschek.get_bunch_length_espread">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.touschek.</span></span><span class="sig-name descname"><span class="pre">get_bunch_length_espread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_curr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">espread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.touschek.get_bunch_length_espread" title="Permalink to this definition"></a></dt>
+<dd><p>Haissinski equation solver</p>
+<p>Solves the Haissinski formula and returns the bunch length and energy
+spread for given bunch current and <span class="math notranslate nohighlight">\(Z/n\)</span>. If both <code class="docutils literal notranslate"><span class="pre">zn</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bunch_curr</span></code> are <code class="docutils literal notranslate"><span class="pre">None</span></code>, zero current case, otherwise both are needed
+for the calculation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ring</strong> – ring use for tracking</p>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>zn=None</strong> – <span class="math notranslate nohighlight">\(Z/n\)</span> for the full ring</p></li>
+<li><p><strong>bunch_curr=None</strong> – Bunch current</p></li>
+<li><p><strong>espread=None</strong> – Energy spread, if <code class="docutils literal notranslate"><span class="pre">None</span></code> use lattice parameter</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Bunch length, energy spread</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.acceptance.touschek.get_lifetime">
+<span class="sig-prename descclassname"><span class="pre">at.acceptance.touschek.</span></span><span class="sig-name descname"><span class="pre">get_lifetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_curr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emitx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.touschek.get_lifetime" title="Permalink to this definition"></a></dt>
+<dd><p>Touschek lifetime calculation</p>
+<p>Computes the touschek lifetime using the piwinski formula</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>emity</strong> – verticla emittance</p></li>
+<li><p><strong>bunch_curr</strong> – bunch current</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>emitx=None</strong> – horizontal emittance</p></li>
+<li><p><strong>sigs=None</strong> – rms bunch length</p></li>
+<li><p><strong>sigp=None</strong> – energy spread</p></li>
+<li><p><strong>zn=None</strong> – full ring <span class="math notranslate nohighlight">\(Z/n\)</span></p></li>
+<li><p><strong>momap=None</strong> – momentum aperture, has to be consistent with <code class="docutils literal notranslate"><span class="pre">refpts</span></code>
+if provided the momentum aperture is not calculated</p></li>
+<li><p><strong>refpts=None</strong> – <code class="docutils literal notranslate"><span class="pre">refpts</span></code> where the momentum aperture is calculated,
+the default is to compute it for all elements in the
+ring, <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;2</span></code> is required</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points, default=1.0e-3</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <a href="#id1"><span class="problematic" id="id2">``</span></a>RECURSIVE`
+default = 0.1</p></li>
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>epsrel</strong> (<em>epsabs</em><em>,</em>) – integral absolute and relative tolerances</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns the touschek lifetime in seconds, the momentum aperture
+and the refpts at which the aperture was computed</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="at.html" class="btn btn-neutral float-left" title="at package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="at.collective.html" class="btn btn-neutral float-right" title="at.collective package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, ATCollab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
