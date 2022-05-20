@@ -12,9 +12,9 @@
 #
 import os
 import sys
-#sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../pyat'))
-#print(sys.path)
+# print(sys.path)
 
 # -- Project information -----------------------------------------------------
 
@@ -33,7 +33,7 @@ release = '0.2'
 # ones.
 extensions = ['sphinx.ext.napoleon',
               'myst_parser']
-#napoleon_custom_sections = [('Returns','params_style')]
+# napoleon_custom_sections = [('Returns','params_style')]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -43,14 +43,15 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+add_module_names = False
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
+# html_theme = 'alabaster'
+html_theme = 'sphinx_book_theme'
 html_logo = 'images/company_logo.png'
 html_copy_source = False
 

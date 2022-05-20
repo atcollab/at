@@ -1,120 +1,542 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>at.physics package &mdash; pyAT 0.2 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-    <script src="_static/js/theme.js"></script>
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>at.physics package &#8212; pyAT 0.2 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="at.plot package" href="at.plot.html" />
-    <link rel="prev" title="at.matching package" href="at.matching.html" /> 
-</head>
+    <link rel="prev" title="at.matching package" href="at.matching.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> pyAT
-            <img src="_static/company_logo.png" class="logo" alt="Logo"/>
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">pyAT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pyat-developer-notes">pyAT Developer Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html#pyat-examples">pyAT Examples</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="howto/Installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="howto/Primer.html">pyAT Primer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="howto/CavityControl.html">Cavity Control</a></li>
-<li class="toctree-l1"><a class="reference internal" href="howto/Collective.html">Collective</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="modules.html">at</a></li>
-<li class="toctree-l1"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="at.collective.html">at.collective package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="at.lattice.html">at.lattice package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="at.load.html">at.load package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="at.matching.html">at.matching package</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">at.physics package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.amat">at.physics.amat module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.diffmatrix">at.physics.diffmatrix module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.energy_loss">at.physics.energy_loss module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.fastring">at.physics.fastring module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.harmonic_analysis">at.physics.harmonic_analysis module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.linear">at.physics.linear module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.matrix">at.physics.matrix module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.nonlinear">at.physics.nonlinear module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.orbit">at.physics.orbit module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.radiation">at.physics.radiation module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.revolution">at.physics.revolution module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-at.physics.ring_parameters">at.physics.ring_parameters module</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="at.plot.html">at.plot package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="at.tracking.html">at.tracking package</a></li>
-</ul>
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
 
-        </div>
-      </div>
-    </nav>
+    
+    <div class="container-fluid" id="banner"></div>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">pyAT</a>
-      </nav>
+    
 
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">at</a> &raquo;</li>
-          <li><a href="at.html">at package</a> &raquo;</li>
-      <li>at.physics package</li>
-      <li class="wy-breadcrumbs-aside">
-      </li>
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="_static/company_logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">pyAT 0.2 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Getting started:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="getting_started.html">
+   pyAT
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How to:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="howto/Installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="howto/Primer.html">
+   pyAT Primer
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="howto/CavityControl.html">
+   Cavity Control
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="howto/Collective.html">
+   Collective
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Modules:
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="modules.html">
+   at
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="at.html">
+     at package
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.acceptance.html">
+       at.acceptance package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.collective.html">
+       at.collective package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.lattice.html">
+       at.lattice package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.load.html">
+       at.load package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.matching.html">
+       at.matching package
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       at.physics package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.plot.html">
+       at.plot package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="at.tracking.html">
+       at.tracking package
+      </a>
+     </li>
+    </ul>
+   </li>
   </ul>
-  <hr/>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.acceptance.html">
+   at.acceptance package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.collective.html">
+   at.collective package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.lattice.html">
+   at.lattice package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.load.html">
+   at.load package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.matching.html">
+   at.matching package
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   at.physics package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.plot.html">
+   at.plot package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.tracking.html">
+   at.tracking package
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="_sources/"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.rst</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#submodules">
+   Submodules
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.amat">
+   at.physics.amat module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.diffmatrix">
+   at.physics.diffmatrix module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.energy_loss">
+   at.physics.energy_loss module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.fastring">
+   at.physics.fastring module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.harmonic_analysis">
+   at.physics.harmonic_analysis module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.linear">
+   at.physics.linear module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.matrix">
+   at.physics.matrix module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.nonlinear">
+   at.physics.nonlinear module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.orbit">
+   at.physics.orbit module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.radiation">
+   at.physics.radiation module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.revolution">
+   at.physics.revolution module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.ring_parameters">
+   at.physics.ring_parameters module
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>at.physics package</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#submodules">
+   Submodules
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.amat">
+   at.physics.amat module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.diffmatrix">
+   at.physics.diffmatrix module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.energy_loss">
+   at.physics.energy_loss module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.fastring">
+   at.physics.fastring module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.harmonic_analysis">
+   at.physics.harmonic_analysis module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.linear">
+   at.physics.linear module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.matrix">
+   at.physics.matrix module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.nonlinear">
+   at.physics.nonlinear module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.orbit">
+   at.physics.orbit module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.radiation">
+   at.physics.radiation module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.revolution">
+   at.physics.revolution module
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-at.physics.ring_parameters">
+   at.physics.ring_parameters module
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
   <section id="module-at.physics">
-<span id="at-physics-package"></span><h1>at.physics package<a class="headerlink" href="#module-at.physics" title="Permalink to this headline"></a></h1>
+<span id="at-physics-package"></span><h1>at.physics package<a class="headerlink" href="#module-at.physics" title="Permalink to this headline">#</a></h1>
 <p>Accelerator physics functions</p>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">#</a></h2>
 </section>
 <section id="module-at.physics.amat">
-<span id="at-physics-amat-module"></span><h2>at.physics.amat module<a class="headerlink" href="#module-at.physics.amat" title="Permalink to this headline"></a></h2>
+<span id="at-physics-amat-module"></span><h2>at.physics.amat module<a class="headerlink" href="#module-at.physics.amat" title="Permalink to this headline">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.a_matrix">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">a_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.a_matrix" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">a_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.a_matrix" title="Permalink to this definition">#</a></dt>
 <dd><p>A, eigval = a_matrix(T)
 Find the A matrix from one turn map matrix T such that:</p>
 <blockquote>
@@ -137,7 +559,7 @@ eigval  (m,)    vector of Eigen values of T</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.amat">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">amat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.amat" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">amat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.amat" title="Permalink to this definition">#</a></dt>
 <dd><p>A = amat(T)
 Find the A matrix from one turn map matrix T
 Provided for backward compatibility, see ” A, eigval = a_matrix(T)”</p>
@@ -149,13 +571,13 @@ A       (m, m)  A-matrix</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.get_mode_matrices">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">get_mode_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.get_mode_matrices" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_mode_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.get_mode_matrices" title="Permalink to this definition">#</a></dt>
 <dd><p>Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.get_tunes_damp">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">get_tunes_damp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.get_tunes_damp" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_tunes_damp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.get_tunes_damp" title="Permalink to this definition">#</a></dt>
 <dd><p>mode_emit, damping_rates, tunes = get_tunes_damp(T, R)</p>
 <dl>
 <dt>INPUT</dt><dd><p>T                   (m, m) transfer matrix for 1 turn
@@ -176,7 +598,7 @@ mode_emittances     Only if R is specified: (m/2,) emittance of each</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.jmat">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">jmat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.jmat" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jmat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.jmat" title="Permalink to this definition">#</a></dt>
 <dd><p>Return the antisymetric block diagonal matrix [[0, 1][-1, 0]]</p>
 <dl class="simple">
 <dt>INPUT</dt><dd><p>ind     1, 2 or 3. Matrix dimension</p>
@@ -188,14 +610,14 @@ mode_emittances     Only if R is specified: (m/2,) emittance of each</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.jmatswap">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">jmatswap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.jmatswap" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">jmatswap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.jmatswap" title="Permalink to this definition">#</a></dt>
 <dd><p>Modified version of jmat to deal with the swap of the
 longitudinal coordinates</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.amat.symplectify">
-<span class="sig-prename descclassname"><span class="pre">at.physics.amat.</span></span><span class="sig-name descname"><span class="pre">symplectify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.symplectify" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">symplectify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.amat.symplectify" title="Permalink to this definition">#</a></dt>
 <dd><p>symplectify makes a matrix more symplectic
 follow Healy algorithm as described by McKay
 BNL-75461-2006-CP</p>
@@ -203,11 +625,11 @@ BNL-75461-2006-CP</p>
 
 </section>
 <section id="module-at.physics.diffmatrix">
-<span id="at-physics-diffmatrix-module"></span><h2>at.physics.diffmatrix module<a class="headerlink" href="#module-at.physics.diffmatrix" title="Permalink to this headline"></a></h2>
+<span id="at-physics-diffmatrix-module"></span><h2>at.physics.diffmatrix module<a class="headerlink" href="#module-at.physics.diffmatrix" title="Permalink to this headline">#</a></h2>
 <p>Computation of the radiation diffusion matrix</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.diffmatrix.find_mpole_raddiff_matrix">
-<span class="sig-prename descclassname"><span class="pre">at.physics.diffmatrix.</span></span><span class="sig-name descname"><span class="pre">find_mpole_raddiff_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.diffmatrix.find_mpole_raddiff_matrix" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_mpole_raddiff_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.diffmatrix.find_mpole_raddiff_matrix" title="Permalink to this definition">#</a></dt>
 <dd><p>diffmatrix=find_mpole_raddiff_matrix(element, orbit, energy)</p>
 <dl class="simple">
 <dt>element:   element structure with field names consistent with</dt><dd><p>a multipole transverse field model.</p>
@@ -226,27 +648,27 @@ radiation integrals’, Phys.Rev.E  Vol.49 p.751 (1994)</p>
 
 </section>
 <section id="module-at.physics.energy_loss">
-<span id="at-physics-energy-loss-module"></span><h2>at.physics.energy_loss module<a class="headerlink" href="#module-at.physics.energy_loss" title="Permalink to this headline"></a></h2>
+<span id="at-physics-energy-loss-module"></span><h2>at.physics.energy_loss module<a class="headerlink" href="#module-at.physics.energy_loss" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.physics.energy_loss.ELossMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.physics.energy_loss.</span></span><span class="sig-name descname"><span class="pre">ELossMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.ELossMethod" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ELossMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.ELossMethod" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
 <p>Enum class for energy loss methods</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.physics.energy_loss.ELossMethod.INTEGRAL">
-<span class="sig-name descname"><span class="pre">INTEGRAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.physics.energy_loss.ELossMethod.INTEGRAL" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">INTEGRAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#at.physics.energy_loss.ELossMethod.INTEGRAL" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.physics.energy_loss.ELossMethod.TRACKING">
-<span class="sig-name descname"><span class="pre">TRACKING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.physics.energy_loss.ELossMethod.TRACKING" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">TRACKING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#at.physics.energy_loss.ELossMethod.TRACKING" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.energy_loss.get_energy_loss">
-<span class="sig-prename descclassname"><span class="pre">at.physics.energy_loss.</span></span><span class="sig-name descname"><span class="pre">get_energy_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.INTEGRAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.get_energy_loss" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_energy_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.INTEGRAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.get_energy_loss" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the energy loss per turn [eV]</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring                        lattice description</p>
@@ -270,7 +692,7 @@ Takes into account bending magnets and wigglers.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.energy_loss.get_timelag_fromU0">
-<span class="sig-prename descclassname"><span class="pre">at.physics.energy_loss.</span></span><span class="sig-name descname"><span class="pre">get_timelag_fromU0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.INTEGRAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.get_timelag_fromU0" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_timelag_fromU0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.INTEGRAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.get_timelag_fromU0" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the TimeLag attribute of RF cavities based on frequency,
 voltage and energy loss per turn, so that the synchronous phase is zero.
 An error occurs if all cavities do not have the same frequency.
@@ -293,7 +715,7 @@ ts          Time difference with the present value</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.energy_loss.set_cavity_phase">
-<span class="sig-prename descclassname"><span class="pre">at.physics.energy_loss.</span></span><span class="sig-name descname"><span class="pre">set_cavity_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.TRACKING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.set_cavity_phase" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_cavity_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ELossMethod.TRACKING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.energy_loss.set_cavity_phase" title="Permalink to this definition">#</a></dt>
 <dd><p>Adjust the TimeLag attribute of RF cavities based on frequency,
 voltage and energy loss per turn, so that the synchronous phase is zero.
 An error occurs if all cavities do not have the same frequency.</p>
@@ -319,11 +741,11 @@ See “get_energy_loss”.</p>
 
 </section>
 <section id="module-at.physics.fastring">
-<span id="at-physics-fastring-module"></span><h2>at.physics.fastring module<a class="headerlink" href="#module-at.physics.fastring" title="Permalink to this headline"></a></h2>
+<span id="at-physics-fastring-module"></span><h2>at.physics.fastring module<a class="headerlink" href="#module-at.physics.fastring" title="Permalink to this headline">#</a></h2>
 <p>Functions relating to fast_ring</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.fastring.fast_ring">
-<span class="sig-prename descclassname"><span class="pre">at.physics.fastring.</span></span><span class="sig-name descname"><span class="pre">fast_ring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_inds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.fastring.fast_ring" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fast_ring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_inds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.fastring.fast_ring" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Computes a fast ring consisting of:</dt><dd><p>-1 RF cavity per distinct frequency
 -6x6 transfer map
@@ -347,7 +769,7 @@ fr,frrad = at.fast_ring(ring, split_inds=[100,200])</p>
 
 </section>
 <section id="module-at.physics.harmonic_analysis">
-<span id="at-physics-harmonic-analysis-module"></span><h2>at.physics.harmonic_analysis module<a class="headerlink" href="#module-at.physics.harmonic_analysis" title="Permalink to this headline"></a></h2>
+<span id="at-physics-harmonic-analysis-module"></span><h2>at.physics.harmonic_analysis module<a class="headerlink" href="#module-at.physics.harmonic_analysis" title="Permalink to this headline">#</a></h2>
 <p>Original author of HarmonicAnalysis class
 Jaime Maria Coello De Portugal - Martinez Vazquez</p>
 <p>Written while at CERN circa 2016
@@ -355,28 +777,28 @@ This is a reduced version keeping only the key components.
 Full code can be found at: <a class="reference external" href="https://github.com/pylhc/harpy">https://github.com/pylhc/harpy</a></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.physics.harmonic_analysis.HarmonicAnalysis">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.physics.harmonic_analysis.</span></span><span class="sig-name descname"><span class="pre">HarmonicAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hann</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HarmonicAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_pad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hann</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="at.physics.harmonic_analysis.HarmonicAnalysis.get_coefficient_for_freq">
-<span class="sig-name descname"><span class="pre">get_coefficient_for_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis.get_coefficient_for_freq" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_coefficient_for_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis.get_coefficient_for_freq" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="at.physics.harmonic_analysis.HarmonicAnalysis.get_signal">
-<span class="sig-name descname"><span class="pre">get_signal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis.get_signal" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_signal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis.get_signal" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="at.physics.harmonic_analysis.HarmonicAnalysis.laskar_method">
-<span class="sig-name descname"><span class="pre">laskar_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_harmonics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis.laskar_method" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">laskar_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_harmonics</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.HarmonicAnalysis.laskar_method" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.harmonic_analysis.get_spectrum_harmonic">
-<span class="sig-prename descclassname"><span class="pre">at.physics.harmonic_analysis.</span></span><span class="sig-name descname"><span class="pre">get_spectrum_harmonic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_harmonics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'laskar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hann</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.get_spectrum_harmonic" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_spectrum_harmonic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_harmonics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'laskar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hann</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.get_spectrum_harmonic" title="Permalink to this definition">#</a></dt>
 <dd><p>INPUT
 cent: centroid motions of the particle
 num_harmonics: number of harmonic components to compute (before mask
@@ -389,7 +811,7 @@ freq,amp: numpy arrays for the frequency and amplitude</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.harmonic_analysis.get_tunes_harmonic">
-<span class="sig-prename descclassname"><span class="pre">at.physics.harmonic_analysis.</span></span><span class="sig-name descname"><span class="pre">get_tunes_harmonic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_harmonics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hann</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.get_tunes_harmonic" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_tunes_harmonic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_harmonics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hann</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.harmonic_analysis.get_tunes_harmonic" title="Permalink to this definition">#</a></dt>
 <dd><p>INPUT
 cents: are the centroid motions of the particles
 method: laskar or fft
@@ -405,11 +827,11 @@ fmin:fmax</p>
 
 </section>
 <section id="module-at.physics.linear">
-<span id="at-physics-linear-module"></span><h2>at.physics.linear module<a class="headerlink" href="#module-at.physics.linear" title="Permalink to this headline"></a></h2>
+<span id="at-physics-linear-module"></span><h2>at.physics.linear module<a class="headerlink" href="#module-at.physics.linear" title="Permalink to this headline">#</a></h2>
 <p>Coupled or non-coupled 4x4 linear motion</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.avlinopt">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">avlinopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.avlinopt" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">avlinopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.avlinopt" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform linear analysis of a lattice and returns average
 beta, dispersion and phase advance</p>
 <p>lindata,avebeta,avemu,avedisp,tune,chrom = avlinopt(lattice, dp, refpts)</p>
@@ -462,7 +884,7 @@ tune            [tune_A, tune_B], linear tunes for the two normal modes</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.get_chrom">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">get_chrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.get_chrom" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_chrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.get_chrom" title="Permalink to this definition">#</a></dt>
 <dd><p>gets the chromaticity using several available methods</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description.</p>
@@ -507,7 +929,7 @@ num_harmonics   number of harmonic components to compute</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.get_optics">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">get_optics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method=&lt;function</span> <span class="pre">linopt6&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.get_optics" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_optics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method=&lt;function</span> <span class="pre">linopt6&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.get_optics" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform linear analysis of a fully coupled lattice</p>
 <p>elemdata0, beamdata, elemdata = get_optics(lattice, refpts, <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs)</p>
 <dl>
@@ -583,7 +1005,7 @@ damping_time    Damping times [s] (only if radiation is ON)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.get_tune">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">get_tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.get_tune" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_tune</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.get_tune" title="Permalink to this definition">#</a></dt>
 <dd><p>gets the tune using several available methods</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description.</p>
@@ -627,7 +1049,7 @@ num_harmonics   number of harmonic components to compute</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.linopt">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">linopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_chrom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linopt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_chrom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
 4D-analysis of coupled motion</p>
 <p>lindata0, tune, chrom, lindata = linopt(lattice, dp, refpts, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</p>
@@ -721,7 +1143,7 @@ lindata.idx</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.linopt2">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">linopt2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt2" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linopt2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt2" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform linear analysis of an uncoupled lattice</p>
 <p>elemdata0, beamdata, elemdata = linopt2(ring, refpts, <a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs)</p>
 <dl>
@@ -808,7 +1230,7 @@ chromaticity    Chromaticities, only computed if get_chrom=True</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.linopt4">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">linopt4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt4" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linopt4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt4" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform linear analysis of a H/V coupled lattice following Sagan/Rubin
 4D-analysis of coupled motion</p>
 <p>elemdata0, beamdata, elemdata = linopt4(lattice, refpts, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs)</p>
@@ -901,7 +1323,7 @@ chromaticity    Chromaticities, only computed if get_chrom==True</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.linear.linopt6">
-<span class="sig-prename descclassname"><span class="pre">at.physics.linear.</span></span><span class="sig-name descname"><span class="pre">linopt6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt6" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">linopt6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.linear.linopt6" title="Permalink to this definition">#</a></dt>
 <dd><p>Perform linear analysis of a fully coupled lattice using normal modes</p>
 <p>elemdata0, beamdata, elemdata = linopt6(lattice, refpts, <a href="#id9"><span class="problematic" id="id10">**</span></a>kwargs)</p>
 <p>For circular machines, linopt6 analyses
@@ -992,12 +1414,12 @@ damping_time    Damping times [s] (only if radiation is ON)</p>
 
 </section>
 <section id="module-at.physics.matrix">
-<span id="at-physics-matrix-module"></span><h2>at.physics.matrix module<a class="headerlink" href="#module-at.physics.matrix" title="Permalink to this headline"></a></h2>
+<span id="at-physics-matrix-module"></span><h2>at.physics.matrix module<a class="headerlink" href="#module-at.physics.matrix" title="Permalink to this headline">#</a></h2>
 <p>transfer matrix related functions</p>
 <p>A collection of functions to compute 4x4 and 6x6 transfer matrices</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.matrix.find_elem_m66">
-<span class="sig-prename descclassname"><span class="pre">at.physics.matrix.</span></span><span class="sig-name descname"><span class="pre">find_elem_m66</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.find_elem_m66" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_elem_m66</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.find_elem_m66" title="Permalink to this definition">#</a></dt>
 <dd><p>Numerically find the 6x6 transfer matrix of a single element</p>
 <dl>
 <dt>INPUT</dt><dd><p>elem                AT element</p>
@@ -1015,7 +1437,7 @@ damping_time    Damping times [s] (only if radiation is ON)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.matrix.find_m44">
-<span class="sig-prename descclassname"><span class="pre">at.physics.matrix.</span></span><span class="sig-name descname"><span class="pre">find_m44</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.find_m44" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_m44</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.find_m44" title="Permalink to this definition">#</a></dt>
 <dd><p>find_m44 numerically finds the 4x4 transfer matrix of an accelerator
 lattice for a particle with relative momentum deviation DP</p>
 <p>IMPORTANT!!! find_m44 assumes constant momentum deviation.
@@ -1081,7 +1503,7 @@ element indexed by refpts.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.matrix.find_m66">
-<span class="sig-prename descclassname"><span class="pre">at.physics.matrix.</span></span><span class="sig-name descname"><span class="pre">find_m66</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.find_m66" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_m66</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.find_m66" title="Permalink to this definition">#</a></dt>
 <dd><p>find_m66 numerically finds the 6x6 transfer matrix of an accelerator
 lattice by differentiation of lattice_pass near the closed orbit.
 find_m66 uses find_orbit6 to search for the closed orbit in 6-D
@@ -1125,17 +1547,17 @@ returned for mstack.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.matrix.gen_m66_elem">
-<span class="sig-prename descclassname"><span class="pre">at.physics.matrix.</span></span><span class="sig-name descname"><span class="pre">gen_m66_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o4b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o4e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.gen_m66_elem" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gen_m66_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o4b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o4e</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.matrix.gen_m66_elem" title="Permalink to this definition">#</a></dt>
 <dd><p>converts a ring to a linear 6x6 matrix tracking elemtn</p>
 </dd></dl>
 
 </section>
 <section id="module-at.physics.nonlinear">
-<span id="at-physics-nonlinear-module"></span><h2>at.physics.nonlinear module<a class="headerlink" href="#module-at.physics.nonlinear" title="Permalink to this headline"></a></h2>
+<span id="at-physics-nonlinear-module"></span><h2>at.physics.nonlinear module<a class="headerlink" href="#module-at.physics.nonlinear" title="Permalink to this headline">#</a></h2>
 <p>Function to compute quantities related to non-linear optics</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.nonlinear.chromaticity">
-<span class="sig-prename descclassname"><span class="pre">at.physics.nonlinear.</span></span><span class="sig-name descname"><span class="pre">chromaticity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.nonlinear.chromaticity" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">chromaticity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linopt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.nonlinear.chromaticity" title="Permalink to this definition">#</a></dt>
 <dd><p>This function uses computes the tunes to compute the tune for
 the specified momentum offsets. Then it fits this data and returns
 the chromaticity up to the given order (npoints&gt;order)
@@ -1147,7 +1569,7 @@ OUTPUT</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.nonlinear.detuning">
-<span class="sig-prename descclassname"><span class="pre">at.physics.nonlinear.</span></span><span class="sig-name descname"><span class="pre">detuning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ym</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nturns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.nonlinear.detuning" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">detuning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ym</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nturns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.nonlinear.detuning" title="Permalink to this definition">#</a></dt>
 <dd><p>This function uses tunes_vs_amp to compute the tunes for
 the specified amplitudes. Then it fits this data and returns
 result for dQx/dx, dQy/dx, dQx/dy, dQy/dy</p>
@@ -1155,17 +1577,17 @@ result for dQx/dx, dQy/dx, dQx/dy, dQy/dy</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.nonlinear.gen_detuning_elem">
-<span class="sig-prename descclassname"><span class="pre">at.physics.nonlinear.</span></span><span class="sig-name descname"><span class="pre">gen_detuning_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.nonlinear.gen_detuning_elem" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gen_detuning_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.nonlinear.gen_detuning_elem" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates an element that for detuning with amplitude</p>
 </dd></dl>
 
 </section>
 <section id="module-at.physics.orbit">
-<span id="at-physics-orbit-module"></span><h2>at.physics.orbit module<a class="headerlink" href="#module-at.physics.orbit" title="Permalink to this headline"></a></h2>
+<span id="at-physics-orbit-module"></span><h2>at.physics.orbit module<a class="headerlink" href="#module-at.physics.orbit" title="Permalink to this headline">#</a></h2>
 <p>Closed orbit related functions</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.orbit.find_orbit">
-<span class="sig-prename descclassname"><span class="pre">at.physics.orbit.</span></span><span class="sig-name descname"><span class="pre">find_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_orbit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_orbit" title="Permalink to this definition">#</a></dt>
 <dd><p>find_orbit finds the closed orbit by numerically getting the fixed point
 of the one turn map M calculated with lattice_pass.</p>
 <p>Depending on the the lattice, find_orbit will:
@@ -1203,7 +1625,7 @@ keep_lattice    Assume no lattice change since the previous tracking.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.orbit.find_orbit4">
-<span class="sig-prename descclassname"><span class="pre">at.physics.orbit.</span></span><span class="sig-name descname"><span class="pre">find_orbit4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_orbit4" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_orbit4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_orbit4" title="Permalink to this definition">#</a></dt>
 <dd><p>findorbit4 finds the closed orbit in the 4-d transverse phase
 space by numerically solving for a fixed point of the one turn
 map M calculated with lattice_pass.</p>
@@ -1270,7 +1692,7 @@ XYStep          Step size. Default: DConstant.XYStep</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.orbit.find_orbit6">
-<span class="sig-prename descclassname"><span class="pre">at.physics.orbit.</span></span><span class="sig-name descname"><span class="pre">find_orbit6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_orbit6" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_orbit6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_orbit6" title="Permalink to this definition">#</a></dt>
 <dd><p>find_orbit6 finds the closed orbit in the full 6-D phase space
 by numerically solving  for a fixed point of the one turn
 map M calculated with lattice_pass</p>
@@ -1348,7 +1770,7 @@ DPStep          Step size. Default: DConstant.DPStep</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.orbit.find_sync_orbit">
-<span class="sig-prename descclassname"><span class="pre">at.physics.orbit.</span></span><span class="sig-name descname"><span class="pre">find_sync_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_sync_orbit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">find_sync_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.orbit.find_sync_orbit" title="Permalink to this definition">#</a></dt>
 <dd><p>find_sync_orbit finds the closed orbit, synchronous with the RF cavity
 and momentum deviation dP (first 5 components of the phase space vector)
 % by numerically solving  for a fixed point
@@ -1411,17 +1833,17 @@ XYStep          Step size. Default: DConstant.XYStep</p>
 
 </section>
 <section id="module-at.physics.radiation">
-<span id="at-physics-radiation-module"></span><h2>at.physics.radiation module<a class="headerlink" href="#module-at.physics.radiation" title="Permalink to this headline"></a></h2>
+<span id="at-physics-radiation-module"></span><h2>at.physics.radiation module<a class="headerlink" href="#module-at.physics.radiation" title="Permalink to this headline">#</a></h2>
 <p>Radiation and equilibrium emittances</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.radiation.gen_quantdiff_elem">
-<span class="sig-prename descclassname"><span class="pre">at.physics.radiation.</span></span><span class="sig-name descname"><span class="pre">gen_quantdiff_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.gen_quantdiff_elem" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">gen_quantdiff_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.gen_quantdiff_elem" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates a quantum diffusion element</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.radiation.get_radiation_integrals">
-<span class="sig-prename descclassname"><span class="pre">at.physics.radiation.</span></span><span class="sig-name descname"><span class="pre">get_radiation_integrals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twiss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.get_radiation_integrals" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_radiation_integrals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twiss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.get_radiation_integrals" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the 5 radiation integrals for uncoupled lattices.</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description.</p>
@@ -1453,7 +1875,7 @@ linopt2: faster if no longitudinal motion and</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.radiation.ohmi_envelope">
-<span class="sig-prename descclassname"><span class="pre">at.physics.radiation.</span></span><span class="sig-name descname"><span class="pre">ohmi_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.ohmi_envelope" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">ohmi_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.ohmi_envelope" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate the equilibrium beam envelope in a
 circular accelerator using Ohmi’s beam envelope formalism [1]</p>
 <p>emit0, beamdata, emit = ohmi_envelope(ring[, refpts])</p>
@@ -1508,7 +1930,7 @@ emit.r66</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.radiation.quantdiffmat">
-<span class="sig-prename descclassname"><span class="pre">at.physics.radiation.</span></span><span class="sig-name descname"><span class="pre">quantdiffmat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.quantdiffmat" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">quantdiffmat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.quantdiffmat" title="Permalink to this definition">#</a></dt>
 <dd><p>This function computes the diffusion matrix of the whole ring</p>
 <dl class="simple">
 <dt>PARAMETERS</dt><dd><p>ring            lattice description.
@@ -1521,7 +1943,7 @@ orbit=None      initial orbit</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.radiation.tapering">
-<span class="sig-prename descclassname"><span class="pre">at.physics.radiation.</span></span><span class="sig-name descname"><span class="pre">tapering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multipoles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.tapering" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">tapering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multipoles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.tapering" title="Permalink to this definition">#</a></dt>
 <dd><p>Scales magnet strength with local energy to cancel the closed orbit
 and optics errors due to synchrotron radiations. PolynomB is used for
 dipoles such that the machine geometry is maintained. This is the ideal
@@ -1550,10 +1972,10 @@ DPStep=1.0E-6   momentum deviation used for computation of orbit6</p>
 
 </section>
 <section id="module-at.physics.revolution">
-<span id="at-physics-revolution-module"></span><h2>at.physics.revolution module<a class="headerlink" href="#module-at.physics.revolution" title="Permalink to this headline"></a></h2>
+<span id="at-physics-revolution-module"></span><h2>at.physics.revolution module<a class="headerlink" href="#module-at.physics.revolution" title="Permalink to this headline">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.revolution.get_mcf">
-<span class="sig-prename descclassname"><span class="pre">at.physics.revolution.</span></span><span class="sig-name descname"><span class="pre">get_mcf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.get_mcf" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_mcf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.get_mcf" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the momentum compaction factor</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description (radiation must be OFF)</p>
@@ -1570,7 +1992,7 @@ keep_lattice    Assume no lattice change since the previous tracking.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.revolution.get_revolution_frequency">
-<span class="sig-prename descclassname"><span class="pre">at.physics.revolution.</span></span><span class="sig-name descname"><span class="pre">get_revolution_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.get_revolution_frequency" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_revolution_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.get_revolution_frequency" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the revolution frequency of the full ring [Hz]</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description</p>
@@ -1588,7 +2010,7 @@ keep_lattice    Assume no lattice change since the previous tracking.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.revolution.get_slip_factor">
-<span class="sig-prename descclassname"><span class="pre">at.physics.revolution.</span></span><span class="sig-name descname"><span class="pre">get_slip_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.get_slip_factor" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_slip_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.get_slip_factor" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute the slip factor</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description (radiation must be OFF)</p>
@@ -1605,7 +2027,7 @@ keep_lattice    Assume no lattice change since the previous tracking.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.revolution.set_rf_frequency">
-<span class="sig-prename descclassname"><span class="pre">at.physics.revolution.</span></span><span class="sig-name descname"><span class="pre">set_rf_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.set_rf_frequency" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_rf_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.revolution.set_rf_frequency" title="Permalink to this definition">#</a></dt>
 <dd><p>Set the RF frequency</p>
 <dl>
 <dt>PARAMETERS</dt><dd><p>ring            lattice description
@@ -1633,22 +2055,22 @@ of cavities.</p>
 
 </section>
 <section id="module-at.physics.ring_parameters">
-<span id="at-physics-ring-parameters-module"></span><h2>at.physics.ring_parameters module<a class="headerlink" href="#module-at.physics.ring_parameters" title="Permalink to this headline"></a></h2>
+<span id="at-physics-ring-parameters-module"></span><h2>at.physics.ring_parameters module<a class="headerlink" href="#module-at.physics.ring_parameters" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="at.physics.ring_parameters.RingParameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">at.physics.ring_parameters.</span></span><span class="sig-name descname"><span class="pre">RingParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.ring_parameters.RingParameters" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RingParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.ring_parameters.RingParameters" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for pretty printing the ring properties</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="at.physics.ring_parameters.RingParameters.props">
-<span class="sig-name descname"><span class="pre">props</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'E0':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Energy:</span> <span class="pre">{0:e}</span> <span class="pre">eV',</span> <span class="pre">'J':</span> <span class="pre">'Damping</span> <span class="pre">partition</span> <span class="pre">numbers:</span> <span class="pre">{0}',</span> <span class="pre">'Tau':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Damping</span> <span class="pre">times:</span> <span class="pre">{0}</span> <span class="pre">s',</span> <span class="pre">'U0':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Energy</span> <span class="pre">loss</span> <span class="pre">/</span> <span class="pre">turn:</span> <span class="pre">{0:e}</span> <span class="pre">eV',</span> <span class="pre">'alphac':</span> <span class="pre">'</span> <span class="pre">Momentum</span> <span class="pre">compact.</span> <span class="pre">factor:</span> <span class="pre">{0:e}',</span> <span class="pre">'chromaticities':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Chromaticities:</span> <span class="pre">{0}',</span> <span class="pre">'emittances':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Mode</span> <span class="pre">emittances:</span> <span class="pre">{0}',</span> <span class="pre">'etac':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Slip</span> <span class="pre">factor:</span> <span class="pre">{0:e}',</span> <span class="pre">'f_s':</span> <span class="pre">'</span>&#160;&#160;&#160; <span class="pre">Synchrotron</span> <span class="pre">frequency:</span> <span class="pre">{0:g}</span> <span class="pre">Hz',</span> <span class="pre">'fulltunes':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Tunes:</span> <span class="pre">{0}',</span> <span class="pre">'i1':</span> <span class="pre">'</span> <span class="pre">Radiation</span> <span class="pre">integrals</span> <span class="pre">-</span> <span class="pre">I1:</span> <span class="pre">{0}</span> <span class="pre">m',</span> <span class="pre">'i2':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I2:</span> <span class="pre">{0}</span> <span class="pre">m^-1',</span> <span class="pre">'i3':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I3:</span> <span class="pre">{0}</span> <span class="pre">m^-2',</span> <span class="pre">'i4':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I4:</span> <span class="pre">{0}</span> <span class="pre">m^-1',</span> <span class="pre">'i5':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I5:</span> <span class="pre">{0}</span> <span class="pre">m^-1',</span> <span class="pre">'phi_s':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Synchrotron</span> <span class="pre">phase:</span> <span class="pre">{0:g}</span> <span class="pre">rd',</span> <span class="pre">'sigma_e':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Energy</span> <span class="pre">spread:</span> <span class="pre">{0:g}',</span> <span class="pre">'sigma_l':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Bunch</span> <span class="pre">length:</span> <span class="pre">{0:g}</span> <span class="pre">m',</span> <span class="pre">'tunes':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Frac.</span> <span class="pre">tunes:</span> <span class="pre">{0}',</span> <span class="pre">'tunes6':</span> <span class="pre">'</span>&#160; <span class="pre">Frac.</span> <span class="pre">tunes</span> <span class="pre">(6D</span> <span class="pre">motion):</span> <span class="pre">{0}',</span> <span class="pre">'voltage':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Cavities</span> <span class="pre">voltage:</span> <span class="pre">{0}</span> <span class="pre">V'}</span></em><a class="headerlink" href="#at.physics.ring_parameters.RingParameters.props" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">props</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'E0':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Energy:</span> <span class="pre">{0:e}</span> <span class="pre">eV',</span> <span class="pre">'J':</span> <span class="pre">'Damping</span> <span class="pre">partition</span> <span class="pre">numbers:</span> <span class="pre">{0}',</span> <span class="pre">'Tau':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Damping</span> <span class="pre">times:</span> <span class="pre">{0}</span> <span class="pre">s',</span> <span class="pre">'U0':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Energy</span> <span class="pre">loss</span> <span class="pre">/</span> <span class="pre">turn:</span> <span class="pre">{0:e}</span> <span class="pre">eV',</span> <span class="pre">'alphac':</span> <span class="pre">'</span> <span class="pre">Momentum</span> <span class="pre">compact.</span> <span class="pre">factor:</span> <span class="pre">{0:e}',</span> <span class="pre">'chromaticities':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Chromaticities:</span> <span class="pre">{0}',</span> <span class="pre">'emittances':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Mode</span> <span class="pre">emittances:</span> <span class="pre">{0}',</span> <span class="pre">'etac':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Slip</span> <span class="pre">factor:</span> <span class="pre">{0:e}',</span> <span class="pre">'f_s':</span> <span class="pre">'</span>&#160;&#160;&#160; <span class="pre">Synchrotron</span> <span class="pre">frequency:</span> <span class="pre">{0:g}</span> <span class="pre">Hz',</span> <span class="pre">'fulltunes':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Tunes:</span> <span class="pre">{0}',</span> <span class="pre">'i1':</span> <span class="pre">'</span> <span class="pre">Radiation</span> <span class="pre">integrals</span> <span class="pre">-</span> <span class="pre">I1:</span> <span class="pre">{0}</span> <span class="pre">m',</span> <span class="pre">'i2':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I2:</span> <span class="pre">{0}</span> <span class="pre">m^-1',</span> <span class="pre">'i3':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I3:</span> <span class="pre">{0}</span> <span class="pre">m^-2',</span> <span class="pre">'i4':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I4:</span> <span class="pre">{0}</span> <span class="pre">m^-1',</span> <span class="pre">'i5':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">I5:</span> <span class="pre">{0}</span> <span class="pre">m^-1',</span> <span class="pre">'phi_s':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Synchrotron</span> <span class="pre">phase:</span> <span class="pre">{0:g}</span> <span class="pre">rd',</span> <span class="pre">'sigma_e':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Energy</span> <span class="pre">spread:</span> <span class="pre">{0:g}',</span> <span class="pre">'sigma_l':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Bunch</span> <span class="pre">length:</span> <span class="pre">{0:g}</span> <span class="pre">m',</span> <span class="pre">'tunes':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Frac.</span> <span class="pre">tunes:</span> <span class="pre">{0}',</span> <span class="pre">'tunes6':</span> <span class="pre">'</span>&#160; <span class="pre">Frac.</span> <span class="pre">tunes</span> <span class="pre">(6D</span> <span class="pre">motion):</span> <span class="pre">{0}',</span> <span class="pre">'voltage':</span> <span class="pre">'</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">Cavities</span> <span class="pre">voltage:</span> <span class="pre">{0}</span> <span class="pre">V'}</span></em><a class="headerlink" href="#at.physics.ring_parameters.RingParameters.props" title="Permalink to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.ring_parameters.envelope_parameters">
-<span class="sig-prename descclassname"><span class="pre">at.physics.ring_parameters.</span></span><span class="sig-name descname"><span class="pre">envelope_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.ring_parameters.envelope_parameters" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">envelope_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.ring_parameters.envelope_parameters" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute ring parameters from ohmi_envelope</p>
 <dl>
 <dt>INPUT</dt><dd><p>ring            Lattice object.</p>
@@ -1673,7 +2095,7 @@ f_s             Synchrotron frequency [Hz]</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="at.physics.ring_parameters.radiation_parameters">
-<span class="sig-prename descclassname"><span class="pre">at.physics.ring_parameters.</span></span><span class="sig-name descname"><span class="pre">radiation_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.ring_parameters.radiation_parameters" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">radiation_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.ring_parameters.radiation_parameters" title="Permalink to this definition">#</a></dt>
 <dd><p>Compute ring parameters from the radiation integrals. Valid for
 uncoupled lattices with no RF cavity or radiating element.</p>
 <dl>
@@ -1727,34 +2149,50 @@ f_s             Synchrotron frequency [Hz]</p>
 </section>
 
 
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="at.matching.html" class="btn btn-neutral float-left" title="at.matching package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="at.plot.html" class="btn btn-neutral float-right" title="at.plot package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2022, ATCollab.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="at.matching.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">at.matching package</p>
         </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+    </a>
+    <a class='right-next' id="next-link" href="at.plot.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">at.plot package</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By ATCollab<br/>
+  
+      &copy; Copyright 2022, ATCollab.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
 
-</body>
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
 </html>

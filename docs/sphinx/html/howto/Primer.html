@@ -1,115 +1,534 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pyAT Primer &mdash; pyAT 0.2 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="../_static/js/theme.js"></script>
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>pyAT Primer &#8212; pyAT 0.2 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Cavity Control" href="CavityControl.html" />
-    <link rel="prev" title="Installation" href="Installation.html" /> 
-</head>
+    <link rel="prev" title="Installation" href="Installation.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> pyAT
-            <img src="../_static/company_logo.png" class="logo" alt="Logo"/>
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Getting started:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">pyAT</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html#pyat-developer-notes">pyAT Developer Notes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html#pyat-examples">pyAT Examples</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">How to:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">pyAT Primer</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coordinates">Coordinates</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#creation-of-elements-and-lattices">Creation of Elements and Lattices</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#lattice-querying-and-manipulation">Lattice Querying and Manipulation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#selecting-elements">Selecting elements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#iterating-over-selected-elements">Iterating over selected elements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#extracting-attribute-values">Extracting attribute values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#setting-attribute-values">Setting attribute values</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#tracking">Tracking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#computation-of-beam-parameters">Computation of beam parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#beam-sizes">Beam sizes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bibliography">Bibliography</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="CavityControl.html">Cavity Control</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Collective.html">Collective</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Modules:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">at</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.acceptance.html">at.acceptance package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.collective.html">at.collective package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.lattice.html">at.lattice package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.load.html">at.load package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.matching.html">at.matching package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.physics.html">at.physics package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.plot.html">at.plot package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../at.tracking.html">at.tracking package</a></li>
-</ul>
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
 
-        </div>
-      </div>
-    </nav>
+    
+    <div class="container-fluid" id="banner"></div>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">pyAT</a>
-      </nav>
+    
 
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>pyAT Primer</li>
-      <li class="wy-breadcrumbs-aside">
-      </li>
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/company_logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">pyAT 0.2 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Getting started:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting_started.html">
+   pyAT
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How to:
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   pyAT Primer
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="CavityControl.html">
+   Cavity Control
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Collective.html">
+   Collective
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Modules:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../modules.html">
+   at
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../at.html">
+     at package
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.acceptance.html">
+       at.acceptance package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.collective.html">
+       at.collective package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.lattice.html">
+       at.lattice package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.load.html">
+       at.load package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.matching.html">
+       at.matching package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.physics.html">
+       at.physics package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.plot.html">
+       at.plot package
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../at.tracking.html">
+       at.tracking package
+      </a>
+     </li>
+    </ul>
+   </li>
   </ul>
-  <hr/>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.acceptance.html">
+   at.acceptance package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.collective.html">
+   at.collective package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.lattice.html">
+   at.lattice package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.load.html">
+   at.load package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.matching.html">
+   at.matching package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.physics.html">
+   at.physics package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.plot.html">
+   at.plot package
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../at.tracking.html">
+   at.tracking package
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="../_sources/"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.rst</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#introduction">
+   Introduction
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#coordinates">
+     Coordinates
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creation-of-elements-and-lattices">
+   Creation of Elements and Lattices
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lattice-querying-and-manipulation">
+   Lattice Querying and Manipulation
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#selecting-elements">
+     Selecting elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#iterating-over-selected-elements">
+     Iterating over selected elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#extracting-attribute-values">
+     Extracting attribute values
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#setting-attribute-values">
+     Setting attribute values
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tracking">
+   Tracking
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computation-of-beam-parameters">
+   Computation of beam parameters
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#beam-sizes">
+   Beam sizes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bibliography">
+   Bibliography
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>pyAT Primer</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#introduction">
+   Introduction
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#coordinates">
+     Coordinates
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creation-of-elements-and-lattices">
+   Creation of Elements and Lattices
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lattice-querying-and-manipulation">
+   Lattice Querying and Manipulation
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#selecting-elements">
+     Selecting elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#iterating-over-selected-elements">
+     Iterating over selected elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#extracting-attribute-values">
+     Extracting attribute values
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#setting-attribute-values">
+     Setting attribute values
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tracking">
+   Tracking
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computation-of-beam-parameters">
+   Computation of beam parameters
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#beam-sizes">
+   Beam sizes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bibliography">
+   Bibliography
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
   <section id="pyat-primer">
-<h1>pyAT Primer<a class="headerlink" href="#pyat-primer" title="Permalink to this headline"></a></h1>
+<h1>pyAT Primer<a class="headerlink" href="#pyat-primer" title="Permalink to this headline">#</a></h1>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">#</a></h2>
 <p>The Accelerator Toolbox (AT) is a toolbox of functions in Matlab for
 charged particle beam simulation. It was created by Andrei Terebilo in
 the late 1990’s. The original papers still serve as a good introduction
@@ -118,7 +537,7 @@ produced by Terebilo. The next version of AT is considered AT2.0. Here
 we provide examples showing some of the changes from AT1.3, but also
 serving as an introduction for someone just starting AT.</p>
 <section id="coordinates">
-<h3>Coordinates<a class="headerlink" href="#coordinates" title="Permalink to this headline"></a></h3>
+<h3>Coordinates<a class="headerlink" href="#coordinates" title="Permalink to this headline">#</a></h3>
 <p>The 6-d phase space coordinates used in AT are as follows</p>
 <div class="math notranslate nohighlight">
 \[\vec Z = \pmatrix{x\cr \frac{p_x}{p_0}=x'(1+\delta) \cr y \cr \frac{p_y}{p_0}=y'(1+\delta) \cr \delta=\frac{\left(p_z-p_0\right)}{p_0} \cr c\tau}\]</div>
@@ -127,7 +546,7 @@ serving as an introduction for someone just starting AT.</p>
 </section>
 </section>
 <section id="creation-of-elements-and-lattices">
-<h2>Creation of Elements and Lattices<a class="headerlink" href="#creation-of-elements-and-lattices" title="Permalink to this headline"></a></h2>
+<h2>Creation of Elements and Lattices<a class="headerlink" href="#creation-of-elements-and-lattices" title="Permalink to this headline">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">at</span>
 <span class="kn">import</span> <span class="nn">at.plot</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -207,11 +626,11 @@ an RF cavity, but one could track particles through this lattice, as is.</p>
 <code class="docutils literal notranslate"><span class="pre">Quadrupole</span></code>, <code class="docutils literal notranslate"><span class="pre">RFcavity</span></code>, <code class="docutils literal notranslate"><span class="pre">Sextupole</span></code>, <code class="docutils literal notranslate"><span class="pre">Wiggler</span></code>.</p>
 </section>
 <section id="lattice-querying-and-manipulation">
-<h2>Lattice Querying and Manipulation<a class="headerlink" href="#lattice-querying-and-manipulation" title="Permalink to this headline"></a></h2>
+<h2>Lattice Querying and Manipulation<a class="headerlink" href="#lattice-querying-and-manipulation" title="Permalink to this headline">#</a></h2>
 <p>There are many parameters in a storage ring lattice. We need tools to
 view these parameters and to change them.</p>
 <section id="selecting-elements">
-<h3>Selecting elements<a class="headerlink" href="#selecting-elements" title="Permalink to this headline"></a></h3>
+<h3>Selecting elements<a class="headerlink" href="#selecting-elements" title="Permalink to this headline">#</a></h3>
 <p>We have seen how to concatenate elements to form a lattice. To extract
 elements, two indexing methods may be used, similar to indexing in numpy
 arrays: - Integer array indexing: elements are identified by the array
@@ -282,7 +701,7 @@ boolean arrays, the same result can also be obtained as:</p>
 </div>
 </section>
 <section id="iterating-over-selected-elements">
-<h3>Iterating over selected elements<a class="headerlink" href="#iterating-over-selected-elements" title="Permalink to this headline"></a></h3>
+<h3>Iterating over selected elements<a class="headerlink" href="#iterating-over-selected-elements" title="Permalink to this headline">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">select</span></code> method of the lattice object returns an iterator over the
 selected elements:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">):</span>
@@ -311,7 +730,7 @@ selected elements:</p>
 </div>
 </section>
 <section id="extracting-attribute-values">
-<h3>Extracting attribute values<a class="headerlink" href="#extracting-attribute-values" title="Permalink to this headline"></a></h3>
+<h3>Extracting attribute values<a class="headerlink" href="#extracting-attribute-values" title="Permalink to this headline">#</a></h3>
 <p>Following the previous example, we can get the quadrupole stengths
 (PolynomB[1]) with:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">elem</span><span class="o">.</span><span class="n">PolynomB</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">)])</span>
@@ -330,7 +749,7 @@ function:</p>
 </div>
 </section>
 <section id="setting-attribute-values">
-<h3>Setting attribute values<a class="headerlink" href="#setting-attribute-values" title="Permalink to this headline"></a></h3>
+<h3>Setting attribute values<a class="headerlink" href="#setting-attribute-values" title="Permalink to this headline">#</a></h3>
 <p>Similarly, using a the Lattice iterator, we can write:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_strengths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.3</span><span class="p">]</span>
 <span class="k">for</span> <span class="n">elem</span><span class="p">,</span> <span class="n">strength</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">),</span> <span class="n">new_strengths</span><span class="p">):</span>
@@ -355,7 +774,7 @@ function:</p>
 </section>
 </section>
 <section id="tracking">
-<h2>Tracking<a class="headerlink" href="#tracking" title="Permalink to this headline"></a></h2>
+<h2>Tracking<a class="headerlink" href="#tracking" title="Permalink to this headline">#</a></h2>
 <p>Once a lattice is defined, electrons may be tracked through it.
 <code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code> is the function that does the tracking. An example of
 its use is as follows:</p>
@@ -377,7 +796,7 @@ its use is as follows:</p>
 <figure class="align-default" id="id1">
 <img alt="../_images/output_33_1.png" src="../_images/output_33_1.png" />
 <figcaption>
-<p><span class="caption-text">Figure 1</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Figure 1</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>In this example, we started with one initial condition, and all
@@ -405,12 +824,12 @@ with multiple initial conditions:</p>
 <figure class="align-default" id="id2">
 <img alt="../_images/output_37_1.png" src="../_images/output_37_1.png" />
 <figcaption>
-<p><span class="caption-text">Figure 2</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Figure 2</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="computation-of-beam-parameters">
-<h2>Computation of beam parameters<a class="headerlink" href="#computation-of-beam-parameters" title="Permalink to this headline"></a></h2>
+<h2>Computation of beam parameters<a class="headerlink" href="#computation-of-beam-parameters" title="Permalink to this headline">#</a></h2>
 <p>Now that particles can be tracked through the lattice, we can use the
 tracking to understand different properties of the lattice. First, we
 would like to understand the linear properties such as Twiss parameters,
@@ -609,7 +1028,7 @@ compute them at all lattice elements, we call:</p>
 <figure class="align-default" id="id3">
 <img alt="../_images/output_67_1.png" src="../_images/output_67_1.png" />
 <figcaption>
-<p><span class="caption-text">Figure 3</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Figure 3</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>We may also plot the lattice parameters using a dedicated function
@@ -620,7 +1039,7 @@ called <code class="docutils literal notranslate"><span class="pre">atplot</span
 <figure class="align-default" id="id4">
 <img alt="../_images/output_69_0.png" src="../_images/output_69_0.png" />
 <figcaption>
-<p><span class="caption-text">Figure 4</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Figure 4</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="o">&lt;</span><span class="n">AxesSubplot</span><span class="p">:</span><span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;left&#39;</span><span class="p">:</span><span class="s1">&#39;Simple FODO cell&#39;</span><span class="p">,</span><span class="s1">&#39;center&#39;</span><span class="p">:</span><span class="s1">&#39;Optical functions&#39;</span><span class="p">},</span> <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;s [m]&#39;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">beta$ [m]&#39;</span><span class="o">&gt;</span><span class="p">,</span>
@@ -634,7 +1053,7 @@ smoother than those we saw before. They have been computed at more
 positions, by slicing the magnets in the <code class="docutils literal notranslate"><span class="pre">plot_beta</span></code> function.</p>
 </section>
 <section id="beam-sizes">
-<h2>Beam sizes<a class="headerlink" href="#beam-sizes" title="Permalink to this headline"></a></h2>
+<h2>Beam sizes<a class="headerlink" href="#beam-sizes" title="Permalink to this headline">#</a></h2>
 <p>The parameters computed thus far use only the tracking through the
 lattice, with no radiation effects. In reality, for electrons, we know
 that there are radiation effects which cause a damping and diffusion and
@@ -737,7 +1156,7 @@ follows</p>
 spread of <span class="math notranslate nohighlight">\(3.3\times 10^{-4}\)</span> and a bunch length of 12.2 mm.</p>
 </section>
 <section id="bibliography">
-<h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline"></a></h2>
+<h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline">#</a></h2>
 <p><a class="reference external" href="https://www.slac.stanford.edu/pubs/slacpubs/8500/slac-pub-8732.pdf">1</a>
 A. Terebilo <em>Accelerator Toolbox for Matlab</em>, SLAC-PUB 8732 (May 2001)</p>
 <p><a class="reference external" href="https://inspirehep.net/files/298dd81ab9ce89bfb2a42442b46b0379">2</a>
@@ -753,34 +1172,50 @@ Rev. Special Topics - Accelerators and Beams, Vol 2,(1999)</p>
 </section>
 
 
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="CavityControl.html" class="btn btn-neutral float-right" title="Cavity Control" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2022, ATCollab.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="Installation.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Installation</p>
         </div>
-      </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+    </a>
+    <a class='right-next' id="next-link" href="CavityControl.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Cavity Control</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By ATCollab<br/>
+  
+      &copy; Copyright 2022, ATCollab.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
 
-</body>
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
 </html>
