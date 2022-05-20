@@ -4,4 +4,4 @@ _site
 .jekyll-metadata
 .buildinfo
 Gemfile.lock
-vendor
+/vendor
