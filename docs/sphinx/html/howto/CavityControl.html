@@ -119,23 +119,32 @@ frequency within the selection. The other cavities are ignored in
 <code class="docutils literal notranslate"><span class="pre">get_*</span></code> methods. For <code class="docutils literal notranslate"><span class="pre">set_*</span></code> methods, the other cavities are
 scaled as explained if the specific method description.</p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument is used as follows: - <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> is a “refpts”
-type (integer, integer or boolean array, callable): it is used to select
-the cavities. - <code class="docutils literal notranslate"><span class="pre">cavpts</span> <span class="pre">is</span> <span class="pre">None</span></code> (default value), and the <code class="docutils literal notranslate"><span class="pre">Lattice</span></code>
-object has a <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> attribute: the lattice attribute is used to
-select the cavities. - <code class="docutils literal notranslate"><span class="pre">cavpts</span> <span class="pre">is</span> <span class="pre">None</span></code>, and the lattice has no
-<code class="docutils literal notranslate"><span class="pre">cavpts</span></code> attribute (or it is <code class="docutils literal notranslate"><span class="pre">None</span></code>): all cavities are taken into
-account.</p>
-<p>{% include tip.html content=“ - <strong>single RF system:</strong> you can forget the
-<code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument: by default the methods address all cavities.
-However, using the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code> attribute makes calls
-significantly faster by skipping the search for cavities. - <strong>complex
-system:</strong> an easy way is to have the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code> address the
-accelerating cavities so that they will be driven by default. Harmonic
-cavities may be driven using the <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument.” %}</p>
-<p>{% include tip.html content=” Adding to the Lattice “refpts” type
-attributes addressing the different cavity sets make them available
-everywhere the lattice is visible. ” %}</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument is used as follows:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cavpts</span></code> is a “refpts” type (integer, integer or boolean array, callable):
+it is used to select the cavities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cavpts</span> <span class="pre">is</span> <span class="pre">None</span></code> (default value), and the <code class="docutils literal notranslate"><span class="pre">Lattice</span></code> object has a
+<code class="docutils literal notranslate"><span class="pre">cavpts</span></code> attribute: the lattice attribute is used to select the cavities.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cavpts</span> <span class="pre">is</span> <span class="pre">None</span></code>, and the lattice has no <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> attribute (or it is
+<code class="docutils literal notranslate"><span class="pre">None</span></code>): all cavities are taken into account.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><strong>single RF system:</strong> you can forget the <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument: by default
+the methods address all cavities. However, using the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code>
+attribute makes calls significantly faster by skipping the search for
+cavities.</p></li>
+<li><p><strong>complex system:</strong> an easy way is to have the <code class="docutils literal notranslate"><span class="pre">Lattice.cavpts</span></code>
+address the accelerating cavities so that they will be driven by default.
+Harmonic cavities may be driven using the <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument.</p></li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Adding to the Lattice “refpts” type attributes addressing the different
+cavity sets make them available everywhere the lattice is visible.</p>
+</div>
 <p>All <code class="docutils literal notranslate"><span class="pre">set_*</span></code> methods also have a <code class="docutils literal notranslate"><span class="pre">copy</span></code> argument to select either
 in-place modification of the lattice, or creation of a shallow copy with
 modified cavities.</p>
@@ -158,11 +167,8 @@ specified value on the fundamental mode.</p>
 nominal value, according to the revolution frequency and harmonic
 number. An optional off-momentum may be applied using the <code class="docutils literal notranslate"><span class="pre">dp</span></code> or
 <code class="docutils literal notranslate"><span class="pre">dct</span></code> arguments. The frequency shift is then computed using the linear
-slip factor</p>
-<div class="math notranslate nohighlight">
-\[\eta_c = 1/\gamma^2 - \alpha_c\]</div>
-<p>, so that the resulting <code class="docutils literal notranslate"><span class="pre">dp</span></code> may slightly differ from the specified
-value.</p>
+slip factor <span class="math notranslate nohighlight">\(\eta_c = 1/\gamma^2 - \alpha_c\)</span>, so that the resulting
+<code class="docutils literal notranslate"><span class="pre">dp</span></code> may slightly differ from the specified value.</p>
 <p>For array == False, the value is applied to the fundamental mode
 cavities and the frequency of all other cavities is scaled by the same
 ratio.</p>
@@ -180,7 +186,7 @@ by the same amount.</p>
 </section>
 <section id="all-in-one-method">
 <h3>All-in-one method<a class="headerlink" href="#all-in-one-method" title="Permalink to this headline"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">Lattice.set_cavity(ring,</span> <span class="pre">Voltage=None,</span> <span class="pre">Frequency=None,</span> <span class="pre">TimeLag=None,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">cavpts=None,</span> <span class="pre">array=False,</span> <span class="pre">copy=False)</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Lattice.set_cavity(ring,</span> <span class="pre">Voltage=None,</span> <span class="pre">Frequency=None,</span> <span class="pre">TimeLag=None,</span> <span class="pre">cavpts=None,</span> <span class="pre">array=False,</span> <span class="pre">copy=False)</span></code></p>
 <p>This method sets only the explicitly provided values, the other ones are
 left unchanged. For the frequency, a special value <code class="docutils literal notranslate"><span class="pre">at.Frf.NOMINAL</span></code>
 means nominal frequency, according to the revolution frequency and

@@ -136,16 +136,13 @@ methods are used by higher-level functions to provide physics results.</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
-<p>Example usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="p">::</span> <span class="n">python</span>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">at.load</span> <span class="kn">import</span> <span class="n">load_mat</span>
+<span class="kn">from</span> <span class="nn">at.physics</span> <span class="kn">import</span> <span class="n">linopt</span>
+<span class="n">ring</span> <span class="o">=</span> <span class="n">load_mat</span><span class="p">(</span><span class="s1">&#39;test_matlab/hmba.mat&#39;</span><span class="p">)</span>
+<span class="n">linopt</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">refpts</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>from at.load import load_mat
-from at.physics import linopt
-ring = load_mat(‘test_matlab/hmba.mat’)
-linopt(ring, refpts=range(5))</p>
-</div></blockquote>
 <p>For more examples of how to use pyAT, see <code class="docutils literal notranslate"><span class="pre">pyat_examples.rst</span></code>.</p>
 </section>
 </section>

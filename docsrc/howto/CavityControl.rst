@@ -22,25 +22,29 @@ select the cavities concerned by the command.
    ``get_*`` methods. For ``set_*`` methods, the other cavities are
    scaled as explained if the specific method description.
 
-The ``cavpts`` argument is used as follows: - ``cavpts`` is a “refpts”
-type (integer, integer or boolean array, callable): it is used to select
-the cavities. - ``cavpts is None`` (default value), and the ``Lattice``
-object has a ``cavpts`` attribute: the lattice attribute is used to
-select the cavities. - ``cavpts is None``, and the lattice has no
-``cavpts`` attribute (or it is ``None``): all cavities are taken into
-account.
+The ``cavpts`` argument is used as follows:
 
-{% include tip.html content=“ - **single RF system:** you can forget the
-``cavpts`` argument: by default the methods address all cavities.
-However, using the ``Lattice.cavpts`` attribute makes calls
-significantly faster by skipping the search for cavities. - **complex
-system:** an easy way is to have the ``Lattice.cavpts`` address the
-accelerating cavities so that they will be driven by default. Harmonic
-cavities may be driven using the ``cavpts`` argument.” %}
+- ``cavpts`` is a “refpts” type (integer, integer or boolean array, callable):
+  it is used to select the cavities.
+- ``cavpts is None`` (default value), and the ``Lattice`` object has a
+  ``cavpts`` attribute: the lattice attribute is used to select the cavities.
+- ``cavpts is None``, and the lattice has no ``cavpts`` attribute (or it is
+  ``None``): all cavities are taken into account.
 
-{% include tip.html content=" Adding to the Lattice "refpts" type
-attributes addressing the different cavity sets make them available
-everywhere the lattice is visible. " %}
+.. note::
+
+   -  **single RF system:** you can forget the ``cavpts`` argument: by default
+      the methods address all cavities. However, using the ``Lattice.cavpts``
+      attribute makes calls significantly faster by skipping the search for
+      cavities.
+   -  **complex system:** an easy way is to have the ``Lattice.cavpts``
+      address the accelerating cavities so that they will be driven by default.
+      Harmonic cavities may be driven using the ``cavpts`` argument.
+
+.. note::
+
+   Adding to the Lattice "refpts" type attributes addressing the different
+   cavity sets make them available everywhere the lattice is visible.
 
 All ``set_*`` methods also have a ``copy`` argument to select either
 in-place modification of the lattice, or creation of a shallow copy with
@@ -73,12 +77,8 @@ If the frequency is None, the method will set the frequency to the
 nominal value, according to the revolution frequency and harmonic
 number. An optional off-momentum may be applied using the ``dp`` or
 ``dct`` arguments. The frequency shift is then computed using the linear
-slip factor
-
-.. math:: \eta_c = 1/\gamma^2 - \alpha_c
-
-, so that the resulting ``dp`` may slightly differ from the specified
-value.
+slip factor :math:`\eta_c = 1/\gamma^2 - \alpha_c`, so that the resulting
+``dp`` may slightly differ from the specified value.
 
 For array == False, the value is applied to the fundamental mode
 cavities and the frequency of all other cavities is scaled by the same
@@ -103,7 +103,7 @@ by the same amount.
 All-in-one method
 ~~~~~~~~~~~~~~~~~
 
-``Lattice.set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None,                     cavpts=None, array=False, copy=False)``
+``Lattice.set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None, cavpts=None, array=False, copy=False)``
 
 This method sets only the explicitly provided values, the other ones are
 left unchanged. For the frequency, a special value ``at.Frf.NOMINAL``

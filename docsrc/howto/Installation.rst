@@ -45,7 +45,7 @@ From GitHub
 Usage
 -----
 
-Example usage::
+Example:
 
 .. code:: python
 
