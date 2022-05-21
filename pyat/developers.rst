@@ -45,9 +45,9 @@ Then:
 * Go to the pyat root directory:
 
   ``cd <atroot>/pyat``
-* install AT:
+* install AT, with the optional test tools:
 
-  ``pip install -e .``
+  ``pip install -e ".[dev]"``
 
 Finally, you should be able to run the tests:
 

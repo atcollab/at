@@ -300,52 +300,19 @@ title="Fullscreen mode"
   </span>
 
 </button>
-
-<div class="menu-dropdown menu-dropdown-download-buttons">
-  <button class="headerbtn menu-dropdown__trigger"
-      aria-label="Download this page">
-      <i class="fas fa-download"></i>
-  </button>
-  <div class="menu-dropdown__content">
-    <ul>
-      <li>
-        <a href="../_sources/"
+<a href="https://github.com/atcollab/at"
    class="headerbtn"
    data-toggle="tooltip"
-data-placement="left"
-title="Download source file"
+data-placement="bottom"
+title="Source repository"
 >
   
 
 <span class="headerbtn__icon-container">
-  <i class="fas fa-file"></i>
+  <i class="fab fa-github"></i>
   </span>
-<span class="headerbtn__text-container">.rst</span>
+
 </a>
-
-      </li>
-      
-      <li>
-        
-<button onclick="printPdf(this)"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="left"
-title="Print to PDF"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file-pdf"></i>
-  </span>
-<span class="headerbtn__text-container">.pdf</span>
-</button>
-
-      </li>
-      
-    </ul>
-  </div>
-</div>
 <label for="__page-toc"
   class="headerbtn headerbtn-page-toc"
   
@@ -503,10 +470,10 @@ address the accelerating cavities so that they will be driven by default.
 Harmonic cavities may be driven using the <code class="docutils literal notranslate"><span class="pre">cavpts</span></code> argument.</p></li>
 </ul>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Adding to the Lattice “refpts” type attributes addressing the different
-cavity sets make them available everywhere the lattice is visible.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Adding to the Lattice “refpts”-like attributes addressing the different
+cavity sets makes them available everywhere the lattice is visible.</p>
 </div>
 <p>All <code class="docutils literal notranslate"><span class="pre">set_*</span></code> methods also have a <code class="docutils literal notranslate"><span class="pre">copy</span></code> argument to select either
 in-place modification of the lattice, or creation of a shallow copy with

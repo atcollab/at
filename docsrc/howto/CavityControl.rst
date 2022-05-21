@@ -41,10 +41,10 @@ The ``cavpts`` argument is used as follows:
       address the accelerating cavities so that they will be driven by default.
       Harmonic cavities may be driven using the ``cavpts`` argument.
 
-.. note::
+.. tip::
 
-   Adding to the Lattice "refpts" type attributes addressing the different
-   cavity sets make them available everywhere the lattice is visible.
+   Adding to the Lattice "refpts"-like attributes addressing the different
+   cavity sets makes them available everywhere the lattice is visible.
 
 All ``set_*`` methods also have a ``copy`` argument to select either
 in-place modification of the lattice, or creation of a shallow copy with

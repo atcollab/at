@@ -1,3 +1,4 @@
 myst_parser
+sphinx-book-theme
 scipy
 -e ./pyat/.
