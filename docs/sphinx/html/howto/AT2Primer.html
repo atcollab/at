@@ -34,8 +34,6 @@
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Cavity Control" href="CavityControl.html" />
-    <link rel="prev" title="Installation" href="Installation.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -104,14 +102,14 @@
   How to:
  </span>
 </p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="Installation.html">
    Installation
   </a>
  </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Primer.html">
    PyAT Primer
   </a>
  </li>
@@ -519,7 +517,7 @@ relative to the ideal particle.</p>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">9.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">9.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>A lattice in AT is a object of the <strong>Lattice</strong> class containing the
@@ -762,10 +760,10 @@ its use is as follows:</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z3</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z3</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x1260628b0</span><span class="o">&gt;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x12d7e2880</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
-<img alt="../_images/output_33_1.png" src="../_images/output_33_1.png" />
+<img alt="howto/output_34_1.png" src="howto/output_34_1.png" />
 <p>In this example, we started with one initial condition, and all
 subsequent turns are returned by <strong>lattice_pass</strong>. We may also start
 with multiple initial conditions:</p>
@@ -779,16 +777,16 @@ with multiple initial conditions:</p>
  <span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now the same plot can be obtained with:</p>
+<p>Now the same plot can be obtaiined with:</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x1261635b0</span><span class="o">&gt;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x12d8e5370</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
-<img alt="../_images/output_37_1.png" src="../_images/output_37_1.png" />
+<img alt="howto/output_38_1.png" src="howto/output_38_1.png" />
 </section>
 <section id="computation-of-beam-parameters">
 <h2>Computation of beam parameters<a class="headerlink" href="#computation-of-beam-parameters" title="Permalink to this headline">#</a></h2>
@@ -887,8 +885,8 @@ will know that these negative chromaticity values will lead to
 instability and thus our FODO lattice, as is, is not acceptable. To fix
 this problem, we add sextupoles to our lattice. We define a focusing and
 defocussing sextupoles (0.1 meter long) as follows:</p>
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SF</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">(</span><span class="s1">&#39;SF&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-<span class="n">SD</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">(</span><span class="s1">&#39;SD&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SF</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">(</span><span class="s1">&#39;SF&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">SD</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">(</span><span class="s1">&#39;SD&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">drs</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;DRS&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -921,7 +919,7 @@ we can use all the <code class="docutils literal notranslate"><span class="pre">
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span><span class="p">]</span>
-<span class="p">[</span><span class="o">-</span><span class="mf">6.14477442</span> <span class="o">-</span><span class="mf">5.93149994</span><span class="p">]</span>
+<span class="p">[</span><span class="o">-</span><span class="mf">4.74321311</span> <span class="o">-</span><span class="mf">5.38710786</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>The tunes of FODOSext are identical to the ones of FODO. Now we need to
@@ -937,10 +935,10 @@ sextupoles:</p>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Fitting</span> <span class="n">Chromaticity</span><span class="o">...</span>
-<span class="n">Initial</span> <span class="n">value</span> <span class="p">[</span><span class="o">-</span><span class="mf">6.14477442</span> <span class="o">-</span><span class="mf">5.93149994</span><span class="p">]</span>
-<span class="nb">iter</span><span class="c1"># 0 Res. 7.49072769210859e-06</span>
-<span class="nb">iter</span><span class="c1"># 1 Res. 2.221474425226936e-13</span>
-<span class="n">Final</span> <span class="n">value</span> <span class="p">[</span><span class="mf">0.49999953</span> <span class="mf">0.50000002</span><span class="p">]</span>
+<span class="n">Initial</span> <span class="n">value</span> <span class="p">[</span><span class="o">-</span><span class="mf">4.74321311</span> <span class="o">-</span><span class="mf">5.38710786</span><span class="p">]</span>
+<span class="nb">iter</span><span class="c1"># 0 Res. 3.3088803567942626e-09</span>
+<span class="nb">iter</span><span class="c1"># 1 Res. 5.32916469683019e-16</span>
+<span class="n">Final</span> <span class="n">value</span> <span class="p">[</span><span class="mf">0.50000002</span> <span class="mf">0.5</span>       <span class="p">]</span>
 </pre></div>
 </div>
 <p>After changing the tunes and fixing the chromaticities, we find:</p>
@@ -950,7 +948,7 @@ sextupoles:</p>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span><span class="p">]</span>
-<span class="p">[</span><span class="mf">0.49999953</span> <span class="mf">0.50000002</span><span class="p">]</span>
+<span class="p">[</span><span class="mf">0.50000002</span> <span class="mf">0.5</span>       <span class="p">]</span>
 </pre></div>
 </div>
 <p>You may have noticed that we ignored two outputs of <strong>get_optics</strong>. They
@@ -999,13 +997,13 @@ vector of dispersion,</p></li>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\beta$ [m]&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-<img alt="../_images/output_67_1.png" src="../_images/output_67_1.png" />
-<p>We may also plot the lattice parameters using a dedicated plot function
-with the command:</p>
+<img alt="howto/output_68_0.png" src="howto/output_68_0.png" />
+<p>We may also plot the lattice parameters using a dedicated function
+called <strong>atplot</strong> with the command</p>
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODOcellSext</span><span class="o">.</span><span class="n">plot_beta</span><span class="p">();</span>
 </pre></div>
 </div>
-<img alt="../_images/output_69_0.png" src="../_images/output_69_0.png" />
+<img alt="howto/output_70_0.png" src="howto/output_70_0.png" />
 <p>Note that the magnets are displayed below the function, giving a
 convenient visualization. Also note that the lattice functions are
 smoother than those we saw before. They have been computed at more
@@ -1051,7 +1049,7 @@ using the classical radiation integrals:</p>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>              <span class="n">Frac</span><span class="o">.</span> <span class="n">tunes</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span> <span class="mf">0.01845048</span><span class="p">]</span>
                     <span class="n">Tunes</span><span class="p">:</span> <span class="p">[</span><span class="mf">5.1500004</span>  <span class="mf">4.75000033</span><span class="p">]</span>
-           <span class="n">Chromaticities</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.49999953</span> <span class="mf">0.50000002</span><span class="p">]</span>
+           <span class="n">Chromaticities</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.50000002</span> <span class="mf">0.5</span>       <span class="p">]</span>
  <span class="n">Momentum</span> <span class="n">compact</span><span class="o">.</span> <span class="n">factor</span><span class="p">:</span> <span class="mf">4.279525e-02</span>
               <span class="n">Slip</span> <span class="n">factor</span><span class="p">:</span> <span class="o">-</span><span class="mf">4.279499e-02</span>
                    <span class="n">Energy</span><span class="p">:</span> <span class="mf">1.000000e+09</span> <span class="n">eV</span>
@@ -1059,8 +1057,8 @@ using the classical radiation integrals:</p>
  <span class="n">Radiation</span> <span class="n">integrals</span> <span class="o">-</span> <span class="n">I1</span><span class="p">:</span> <span class="mf">4.279525335274485</span> <span class="n">m</span>
                        <span class="n">I2</span><span class="p">:</span> <span class="mf">0.9869604401089351</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
                        <span class="n">I3</span><span class="p">:</span> <span class="mf">0.15503138340149902</span> <span class="n">m</span><span class="o">^-</span><span class="mi">2</span>
-                       <span class="n">I4</span><span class="p">:</span> <span class="mf">0.10559305520899614</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
-                       <span class="n">I5</span><span class="p">:</span> <span class="mf">0.020912844843729298</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
+                       <span class="n">I4</span><span class="p">:</span> <span class="mf">0.10559305520899617</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
+                       <span class="n">I5</span><span class="p">:</span> <span class="mf">0.020912844843729277</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
           <span class="n">Mode</span> <span class="n">emittances</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.48204731e-08</span>            <span class="n">nan</span>            <span class="n">nan</span><span class="p">]</span>
 <span class="n">Damping</span> <span class="n">partition</span> <span class="n">numbers</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.89301187</span> <span class="mf">1.</span>         <span class="mf">2.10698813</span><span class="p">]</span>
             <span class="n">Damping</span> <span class="n">times</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05376156</span> <span class="mf">0.04800971</span> <span class="mf">0.02278594</span><span class="p">]</span> <span class="n">s</span>
@@ -1101,9 +1099,9 @@ follows</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">Frac</span><span class="o">.</span> <span class="n">tunes</span> <span class="p">(</span><span class="mi">6</span><span class="n">D</span> <span class="n">motion</span><span class="p">):</span> <span class="p">[</span><span class="mf">0.14995922</span> <span class="mf">0.75000148</span> <span class="mf">0.0184657</span> <span class="p">]</span>
                    <span class="n">Energy</span><span class="p">:</span> <span class="mf">1.000000e+09</span> <span class="n">eV</span>
        <span class="n">Energy</span> <span class="n">loss</span> <span class="o">/</span> <span class="n">turn</span><span class="p">:</span> <span class="mf">1.389569e+04</span> <span class="n">eV</span>
-          <span class="n">Mode</span> <span class="n">emittances</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.47973047e-08</span> <span class="mf">6.71489487e-37</span> <span class="mf">4.03132669e-06</span><span class="p">]</span>
-<span class="n">Damping</span> <span class="n">partition</span> <span class="n">numbers</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.89298373</span> <span class="mf">0.99999977</span> <span class="mf">2.1070165</span> <span class="p">]</span>
-            <span class="n">Damping</span> <span class="n">times</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05376455</span> <span class="mf">0.04801088</span> <span class="mf">0.02278618</span><span class="p">]</span> <span class="n">s</span>
+          <span class="n">Mode</span> <span class="n">emittances</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.47972984e-08</span> <span class="mf">2.75803883e-37</span> <span class="mf">4.03132786e-06</span><span class="p">]</span>
+<span class="n">Damping</span> <span class="n">partition</span> <span class="n">numbers</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.89298399</span> <span class="mf">0.99999988</span> <span class="mf">2.10701613</span><span class="p">]</span>
+            <span class="n">Damping</span> <span class="n">times</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05376454</span> <span class="mf">0.04801088</span> <span class="mf">0.02278619</span><span class="p">]</span> <span class="n">s</span>
             <span class="n">Energy</span> <span class="n">spread</span><span class="p">:</span> <span class="mf">0.000330959</span>
              <span class="n">Bunch</span> <span class="n">length</span><span class="p">:</span> <span class="mf">0.0122209</span> <span class="n">m</span>
          <span class="n">Cavities</span> <span class="n">voltage</span><span class="p">:</span> <span class="mf">500000.0</span> <span class="n">V</span>
@@ -1138,20 +1136,6 @@ Rev. Special Topics - Accelerators and Beams, Vol 2,(1999)</p>
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="Installation.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Installation</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="CavityControl.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Cavity Control</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
 </div>
             </footer>
         </div>
