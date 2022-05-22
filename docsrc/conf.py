@@ -59,6 +59,7 @@ html_theme_options = {
     "use_repository_button": True,
     "use_download_button": False,
 }
+html_css_files = ["custom_at.css"]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
