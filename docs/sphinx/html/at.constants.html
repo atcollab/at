@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>at &#8212; pyAT 0.2 documentation</title>
+    <title>at.constants module &#8212; pyAT 0.2 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -34,6 +34,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="at.tracking package" href="at.tracking.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -129,7 +130,7 @@
   Modules:
  </span>
 </p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="at.acceptance.html">
    at.acceptance package
@@ -170,8 +171,8 @@
    at.tracking package
   </a>
  </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="at.constants.html">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
    at.constants module
   </a>
  </li>
@@ -264,7 +265,7 @@ title="Source repository"
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>at</h1>
+                <h1>at.constants module</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -276,93 +277,8 @@ title="Source repository"
                 
               <div>
                 
-  <section id="at">
-<h1>at<a class="headerlink" href="#at" title="Permalink to this headline">#</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="at.html">at package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="at.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="at.acceptance.html">at.acceptance package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.acceptance.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.acceptance.html#module-at.acceptance.acceptance">at.acceptance.acceptance module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.acceptance.html#module-at.acceptance.boundary">at.acceptance.boundary module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.acceptance.html#module-at.acceptance.touschek">at.acceptance.touschek module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.collective.html">at.collective package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.collective.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.collective.html#module-at.collective.haissinski">at.collective.haissinski module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.collective.html#module-at.collective.wake_elements">at.collective.wake_elements module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.collective.html#module-at.collective.wake_functions">at.collective.wake_functions module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.collective.html#module-at.collective.wake_object">at.collective.wake_object module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.lattice.html">at.lattice package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#module-at.lattice.cavity_access">at.lattice.cavity_access module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#module-at.lattice.elements">at.lattice.elements module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#module-at.lattice.lattice_object">at.lattice.lattice_object module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#module-at.lattice.options">at.lattice.options module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#module-at.lattice.particle_object">at.lattice.particle_object module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.lattice.html#module-at.lattice.utils">at.lattice.utils module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.load.html">at.load package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#module-at.load.allfiles">at.load.allfiles module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#module-at.load.elegant">at.load.elegant module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#module-at.load.matfile">at.load.matfile module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#module-at.load.reprfile">at.load.reprfile module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#module-at.load.tracy">at.load.tracy module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.load.html#module-at.load.utils">at.load.utils module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.matching.html">at.matching package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.matching.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.matching.html#module-at.matching.globalfit">at.matching.globalfit module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.matching.html#module-at.matching.matching">at.matching.matching module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.physics.html">at.physics package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.amat">at.physics.amat module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.diffmatrix">at.physics.diffmatrix module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.energy_loss">at.physics.energy_loss module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.fastring">at.physics.fastring module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.harmonic_analysis">at.physics.harmonic_analysis module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.linear">at.physics.linear module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.matrix">at.physics.matrix module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.nonlinear">at.physics.nonlinear module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.orbit">at.physics.orbit module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.radiation">at.physics.radiation module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.revolution">at.physics.revolution module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.physics.html#module-at.physics.ring_parameters">at.physics.ring_parameters module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.plot.html">at.plot package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.plot.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.plot.html#module-at.plot.generic">at.plot.generic module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.plot.html#module-at.plot.specific">at.plot.specific module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.plot.html#module-at.plot.standalone">at.plot.standalone module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.plot.html#module-at.plot.synopt">at.plot.synopt module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="at.tracking.html">at.tracking package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="at.tracking.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.tracking.html#module-at.tracking.atpass">at.tracking.atpass module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.tracking.html#module-at.tracking.particles">at.tracking.particles module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.tracking.html#module-at.tracking.patpass">at.tracking.patpass module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="at.tracking.html#module-at.tracking.track">at.tracking.track module</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="at.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="at.html#module-at.constants">at.constants module</a></li>
-</ul>
-</li>
-</ul>
-</div>
+  <section id="module-at.constants">
+<span id="at-constants-module"></span><h1>at.constants module<a class="headerlink" href="#module-at.constants" title="Permalink to this headline">#</a></h1>
 </section>
 
 
@@ -373,6 +289,13 @@ title="Source repository"
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="at.tracking.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">at.tracking package</p>
+        </div>
+    </a>
 </div>
             </footer>
         </div>

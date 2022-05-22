@@ -46,7 +46,6 @@ Indices and tables
    :caption: Modules:
    :hidden:
    
-   modules
    at.acceptance
    at.collective
    at.lattice
@@ -55,4 +54,5 @@ Indices and tables
    at.physics
    at.plot
    at.tracking
+   at.constants
 
