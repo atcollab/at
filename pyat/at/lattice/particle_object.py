@@ -1,24 +1,14 @@
+"""Description of particles"""
 from ..constants import e_mass, p_mass
 import numpy
 from warnings import warn
+from typing import Optional, Dict
 
 
 class Particle(object):
-    """Particle object
-
-    This object defines the properties of the particles circulating in a ring
-
-    Particle(name, **params)
-
-    PARAMETERS
-        name        Particle name. 'electron', 'positron and 'proton' are
-                    predefined. For other particles, the rest energy and charge
-                    must be provided as keywords.
-
-    KEYWORDS
-        rest_energy Particle rest energy [ev]
-        charge      Particle charge [elementary charge]
-        *           Other keywords will be set as attributes of the particle
+    """
+    Particle object: it defines the properties of the particles circulating
+    in a ring
     """
     _known = dict(
         relativistic=dict(rest_energy=0.0, charge=-1.0),
@@ -27,7 +17,20 @@ class Particle(object):
         proton=dict(rest_energy=p_mass, charge=1.0)
     )
 
-    def __init__(self, name='relativistic', **kwargs):
+    def __init__(self, name: Optional[str] = 'relativistic', **kwargs):
+        """
+
+        Parameters:
+            name:   Particle name. 'electron', 'positron and 'proton' are
+              predefined. For other particles, the rest energy and charge
+              must be provided as keywords.
+
+        Keyword Arguments:
+            rest_energy:    Particle rest energy [ev]
+            charge:         Particle charge [elementary charge]
+            *:              Other keywords will be set as attributes of the
+                              particle
+        """
         if name != 'relativistic':
             warn(UserWarning("AT tracking still assumes beta==1\n"
                              "Make sure your particle is ultra-relativistic"))
@@ -40,7 +43,7 @@ class Particle(object):
         for (key, val) in kwargs.items():
             setattr(self, key, val)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         attrs = vars(self).copy()
         attrs['rest_energy'] = attrs.pop('_rest_energy')
         attrs['charge'] = attrs.pop('_charge')
@@ -64,9 +67,11 @@ class Particle(object):
 
     # Use properties so that they are read-only
     @property
-    def rest_energy(self):
+    def rest_energy(self) -> numpy.ndarray:
+        """Particle rest energy [eV]"""
         return self._rest_energy
 
     @property
-    def charge(self):
+    def charge(self) -> float:
+        """Particle charge [elementary charge]"""
         return self._charge

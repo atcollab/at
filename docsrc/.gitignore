@@ -1,0 +1,5 @@
+/autosummary/**
+!/autosummary/at.tracking.atpass.rst
+!/autosummary/at.tracking.patpass.rst
+!/autosummary/at.acceptance.rst
+!/autosummary/at.matching.rst

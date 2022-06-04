@@ -1,7 +1,9 @@
+"""Access to properties of RF cavities"""
 from enum import Enum
 import numpy
+from typing import Optional
 from .elements import RFCavity
-from .utils import AtError, checktype, make_copy, get_cells
+from .utils import AtError, checktype, make_copy, get_cells, Refpts
 from .lattice_object import Lattice
 
 __all__ = ['get_rf_frequency', 'get_rf_voltage', 'set_rf_voltage',
@@ -13,7 +15,7 @@ class Frf(Enum):
     NOMINAL = 'nominal'
 
 
-def _select_cav(ring, cavpts):
+def _select_cav(ring: Lattice, cavpts):
     """Select the cavities"""
     if cavpts is None:
         try:
@@ -37,7 +39,7 @@ def _sumv(values, attr):
     return numpy.sum(values)
 
 
-def _fundmask(ring, cavpts):
+def _fundmask(ring: Lattice, cavpts):
     freqs = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
     if len(freqs) < 1:
         raise AtError('No cavity found in the lattice')
@@ -45,7 +47,7 @@ def _fundmask(ring, cavpts):
     return mask
 
 
-def _get_cavity(ring, attr, fsingle, cavpts=None, array=False):
+def _get_cavity(ring: Lattice, attr, fsingle, cavpts=None, array=False):
     cavpts = _select_cav(ring, cavpts)
     vcell = numpy.array([getattr(cav, attr) for cav in ring.select(cavpts)])
     if array:
@@ -57,116 +59,134 @@ def _get_cavity(ring, attr, fsingle, cavpts=None, array=False):
         return fsingle(vcell, attr)
 
 
-def get_rf_frequency(ring, **kwargs):
+def get_rf_frequency(ring: Lattice, **kwargs) -> float:
     """Return the RF frequency
-    KEYWORDS
-        cavpts=None   Cavity location.
-                      If None, look for ring.cavpts, or otherwise take all
-                      cavities.
-        array=False   If False, return the frequency of the selected cavities
-                      with the lowest frequency.
-                      If True, return the frequency of all selected cavities
+
+    Parameters:
+        ring:           Lattice description
+
+    Keyword Arguments:
+        cavpts=None:    Cavity location. If None, look for ring.cavpts,
+                          otherwise take all cavities.
+        array=False:    If False, return the frequency of the selected cavities
+                          with the lowest frequency.
+
+                          If True, return the frequency of all selected cavities
+
+    Returns:
+        rf_freq:    RF frequency
     """
     return _get_cavity(ring, 'Frequency', _singlev, **kwargs)
 
 
-def get_rf_voltage(ring, **kwargs):
+def get_rf_voltage(ring: Lattice, **kwargs) -> float:
     """Return the total RF voltage (full ring)
-    KEYWORDS
-        cavpts=None   Cavity location.
-                      If None, look for ring.cavpts, or otherwise take all
-                      cavities.
-        array=False   If False, return the sum of the voltage of the selected
-                      cavities with the lowest frequency.
-                      If True, return the voltage of all the selected cavities.
+
+    Parameters:
+        ring:           Lattice description
+
+    Keyword Arguments:
+        cavpts=None:    Cavity location. If None, look for ring.cavpts,
+                          otherwise take all cavities.
+        array=False:    If False, return the frequency of the selected cavities
+                          with the lowest frequency.
+
+                          If True, return the frequency of all selected cavities
+
+    Returns:
+        rf_v:       Total RF voltage (full ring)
     """
     vcell = _get_cavity(ring, 'Voltage', _sumv, **kwargs)
     return ring.periodicity * vcell
 
 
-def get_rf_timelag(ring, **kwargs):
+def get_rf_timelag(ring: Lattice, **kwargs) -> float:
     """Return the RF time lag
-    KEYWORDS
-        cavpts=None   Cavity location.
-                      If None, look for ring.cavpts, or otherwise take all
-                      cavities.
-        array=False   If False, return the time lag of the cavities with the
-                      lowest frequency.
-                      If True, return the time lag of all the selected
-                      cavities.
+
+    Parameters:
+        ring:           Lattice description
+
+    Keyword Arguments:
+        cavpts=None:    Cavity location. If None, look for ring.cavpts,
+                          otherwise take all cavities.
+        array=False:    If False, return the frequency of the selected cavities
+                          with the lowest frequency.
+
+                          If True, return the frequency of all selected cavities
+
+    Returns:
+        rf_timelag: RF time lag
     """
     return _get_cavity(ring, 'TimeLag', _singlev, **kwargs)
 
 
-def set_rf_voltage(ring, voltage, **kwargs):
+def set_rf_voltage(ring: Lattice, voltage: float, **kwargs):
     """Set the RF voltage for the full ring
 
-    PARAMETERS
-        ring            lattice description
-        voltage         RF voltage [V]
+    Parameters:
+        ring:           Lattice description
+        voltage:        Total RF voltage (full ring)
 
-    KEYWORDS
-        cavpts=None     If None, look for ring.cavpts, or otherwise take all
-                        cavities.
-        array=False     If False, the voltages of all cavities are scaled to
-                        reach the specified value on the selected cavities with
-                        the lowest frequency.
-                        If True, directly apply voltage to the selected
-                        cavities. The value must be broadcastable to the number
-                        of cavities.
-        copy=False      If True, returns a shallow copy of ring with new
-                        cavity elements. Otherwise, modify ring in-place
+    Keyword Arguments:
+        cavpts=None:    Cavity location. If None, look for ring.cavpts,
+                          otherwise take all cavities.
+        array=False:    If False, return the frequency of the selected cavities
+                          with the lowest frequency.
+
+                          If True, return the frequency of all selected cavities
+        copy=False:     If True, returns a shallow copy of ``ring`` with new
+                          cavity elements. Otherwise, modify ``ring`` in-place.
     """
     return set_cavity(ring, Voltage=voltage, **kwargs)
 
 
-def set_rf_timelag(ring, timelag, **kwargs):
+def set_rf_timelag(ring: Lattice, timelag: float, **kwargs):
     """Set the RF time lag
 
-    PARAMETERS
-        ring            lattice description
-        timelag         RF time shift (-ct) [m]
+    Parameters:
+        ring:           Lattice description
+        timelag:        RF time lag
 
-    KEYWORDS
-        cavpts=None     If None, look for ring.cavpts, or otherwise take all
-                        cavities.
-        array=False     If False, timelag is applied to the selected cavities
-                        with the lowest frequency. The timelag of all the
-                        other selected cavities is shifted by the same amount.
-                        If True, directly apply timelag to the selected
-                        cavities. The value must be broadcastable to the number
-                        of cavities.
-        copy=False      If True, returns a shallow copy of ring with new
-                        cavity elements. Otherwise, modify ring in-place
+    Keyword Arguments:
+        cavpts=None:    Cavity location. If None, look for ring.cavpts,
+                          otherwise take all cavities.
+        array=False:    If False, return the frequency of the selected cavities
+                          with the lowest frequency.
+
+                          If True, return the frequency of all selected cavities
+        copy=False:     If True, returns a shallow copy of ``ring`` with new
+                          cavity elements. Otherwise, modify ``ring`` in-place.
     """
     return set_cavity(ring, TimeLag=timelag, **kwargs)
 
 
 # noinspection PyPep8Naming
-def set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None, cavpts=None,
-               copy=False, array=False):
+def set_cavity(ring: Lattice, Voltage: Optional[float] = None,
+               Frequency: Optional[float] = None,
+               TimeLag: Optional[float] = None,
+               cavpts: Optional[Refpts] = None,
+               copy: Optional[bool] = False,
+               array: Optional[bool] = False):
     """
     Set the parameters of the RF cavities
 
-    PARAMETERS
-        ring                lattice description
-
-    KEYWORDS
-        Frequency=None  RF frequency [Hz]
-        Voltage=None    RF voltage [V]
-        TimeLag=None    RF time shift [-ct]
-        cavpts=None     Cavity location. If None, look for ring.cavpts, or
-                        otherwise take all cavities
-        array=False     If False, the value is applied as described for
-                        set_rf_voltage, set_rf_timelag and set_rf_frequency
-                        If True, directly apply the value to the selected
-                        cavities. The value must be broadcastable to the number
-                        of cavities.
-        copy=False      If True, returns a shallow copy of ring with new
-                        cavity elements. Otherwise, modify ring in-place
+    Parameters:
+        ring:       lattice description
+        Frequency:  RF frequency [Hz]
+        Voltage:    RF voltage [V]
+        TimeLag:    RF time shift [-ct]
+        cavpts:     Cavity location. If None, look for ring.cavpts, or
+                      otherwise take all cavities
+        array:      If False, the value is applied as described for
+                      set_rf_voltage, set_rf_timelag and set_rf_frequency
+                      If True, directly apply the value to the selected
+                      cavities. The value must be broadcastable to the number
+                      of cavities.
+        copy:       If True, returns a shallow copy of ring with new
+                      cavity elements. Otherwise, modify ring in-place
     """
     # noinspection PyShadowingNames
-    def getv(ring, attr, refpts):
+    def getv(ring: Lattice, attr, refpts):
         values = numpy.array([getattr(c, attr) for c in ring.select(refpts)])
         valfund = values[fundmask]
         return values, valfund
@@ -208,7 +228,7 @@ def set_cavity(ring, Voltage=None, Frequency=None, TimeLag=None, cavpts=None,
 
     # noinspection PyShadowingNames
     @make_copy(copy)
-    def apply(ring, cavpts, modif):
+    def apply(ring: Lattice, cavpts, modif):
         ncavs = ring.refcount(cavpts)
         for attr in modif.keys():
             try:
