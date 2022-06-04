@@ -12,7 +12,7 @@ A side-bar is displayed unless "hide_sidebar: true" is specified (as here).
 ## Markdown features
 {: #idfn .red}
 
-**In-line formula:** $$\eta_c = 1/\gamma^2 - \alpha_c$$
+**In-line formula:** $\eta_c = 1/\gamma^2 - \alpha_c$
 
 **Display formula:**
 
