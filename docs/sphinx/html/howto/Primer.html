@@ -1,0 +1,1419 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>PyAT Primer &#8212; pyAT 0.2.3 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom_at.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cavity Control" href="CavityControl.html" />
+    <link rel="prev" title="Installation" href="Installation.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/AT.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">pyAT 0.2.3 documentation</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Getting started:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting_started.html">
+   pyAT
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How to:
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="Installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   PyAT Primer
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="CavityControl.html">
+   Cavity Control
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="Collective.html">
+   Collective
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Packages:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.acceptance.html">
+   at.acceptance
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.acceptance.acceptance.html">
+     at.acceptance.acceptance
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.acceptance.boundary.html">
+     at.acceptance.boundary
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.acceptance.touschek.html">
+     at.acceptance.touschek
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.collective.html">
+   at.collective
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.collective.haissinski.html">
+     at.collective.haissinski
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.collective.wake_elements.html">
+     at.collective.wake_elements
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.collective.wake_functions.html">
+     at.collective.wake_functions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.collective.wake_object.html">
+     at.collective.wake_object
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.lattice.html">
+   at.lattice
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.lattice.cavity_access.html">
+     at.lattice.cavity_access
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.lattice.elements.html">
+     at.lattice.elements
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.lattice.lattice_object.html">
+     at.lattice.lattice_object
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.lattice.options.html">
+     at.lattice.options
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.lattice.particle_object.html">
+     at.lattice.particle_object
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.lattice.utils.html">
+     at.lattice.utils
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.load.html">
+   at.load
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <label for="toctree-checkbox-4">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.load.allfiles.html">
+     at.load.allfiles
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.load.elegant.html">
+     at.load.elegant
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.load.matfile.html">
+     at.load.matfile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.load.reprfile.html">
+     at.load.reprfile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.load.tracy.html">
+     at.load.tracy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.load.utils.html">
+     at.load.utils
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.matching.html">
+   at.matching
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+  <label for="toctree-checkbox-5">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.matching.globalfit.html">
+     at.matching.globalfit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.matching.matching.html">
+     at.matching.matching
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.physics.html">
+   at.physics
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+  <label for="toctree-checkbox-6">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.amat.html">
+     at.physics.amat
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.diffmatrix.html">
+     at.physics.diffmatrix
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.energy_loss.html">
+     at.physics.energy_loss
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.fastring.html">
+     at.physics.fastring
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.harmonic_analysis.html">
+     at.physics.harmonic_analysis
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.linear.html">
+     at.physics.linear
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.matrix.html">
+     at.physics.matrix
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.nonlinear.html">
+     at.physics.nonlinear
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.orbit.html">
+     at.physics.orbit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.radiation.html">
+     at.physics.radiation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.revolution.html">
+     at.physics.revolution
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.physics.ring_parameters.html">
+     at.physics.ring_parameters
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.plot.html">
+   at.plot
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+  <label for="toctree-checkbox-7">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.plot.generic.html">
+     at.plot.generic
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.plot.specific.html">
+     at.plot.specific
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.plot.standalone.html">
+     at.plot.standalone
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.plot.synopt.html">
+     at.plot.synopt
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../autosummary/at.tracking.html">
+   at.tracking
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+  <label for="toctree-checkbox-8">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.tracking.atpass.html">
+     at.tracking.atpass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.tracking.particles.html">
+     at.tracking.particles
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.tracking.patpass.html">
+     at.tracking.patpass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../autosummary/at.tracking.track.html">
+     at.tracking.track
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../autosummary/at.constants.html">
+   at.constants
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/atcollab/at"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/atcollab/at/issues/new?title=Issue%20on%20page%20%2Fhowto/Primer.html&body=Your%20issue%20content%20here."
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Open an issue"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="headerbtn__text-container">open issue</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#introduction">
+   Introduction
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#coordinates">
+     Coordinates
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creation-of-elements-and-lattices">
+   Creation of Elements and Lattices
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lattice-querying-and-manipulation">
+   Lattice Querying and Manipulation
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#selecting-elements">
+     Selecting elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#iterating-over-selected-elements">
+     Iterating over selected elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#extracting-attribute-values">
+     Extracting attribute values
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#setting-attribute-values">
+     Setting attribute values
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tracking">
+   Tracking
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computation-of-beam-parameters">
+   Computation of beam parameters
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#beam-sizes">
+   Beam sizes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bibliography">
+   Bibliography
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>PyAT Primer</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#introduction">
+   Introduction
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#coordinates">
+     Coordinates
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#creation-of-elements-and-lattices">
+   Creation of Elements and Lattices
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lattice-querying-and-manipulation">
+   Lattice Querying and Manipulation
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#selecting-elements">
+     Selecting elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#iterating-over-selected-elements">
+     Iterating over selected elements
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#extracting-attribute-values">
+     Extracting attribute values
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#setting-attribute-values">
+     Setting attribute values
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tracking">
+   Tracking
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computation-of-beam-parameters">
+   Computation of beam parameters
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#beam-sizes">
+   Beam sizes
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#bibliography">
+   Bibliography
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section id="pyat-primer">
+<h1>PyAT Primer<a class="headerlink" href="#pyat-primer" title="Permalink to this headline">#</a></h1>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">#</a></h2>
+<p>The Accelerator Toolbox (AT) is a toolbox of functions in Matlab for
+charged particle beam simulation. It was created by Andrei Terebilo in
+the late 1990’s. The original papers still serve as a good introduction
+to AT. The AT described in those papers is AT1.3, the latest version
+produced by Terebilo. The next version of AT is considered AT2.0. Here
+we provide examples showing some of the changes from AT1.3, but also
+serving as an introduction for someone just starting AT.</p>
+<section id="coordinates">
+<h3>Coordinates<a class="headerlink" href="#coordinates" title="Permalink to this headline">#</a></h3>
+<p>The 6-d phase space coordinates used in AT are as follows</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\vec Z = \begin{pmatrix} x \\ \frac{p_x}{p_0}=x'(1+\delta) \\ y \\ \frac{p_y}{p_0}=y'(1+\delta) \\ \delta=\frac{\left(p_z-p_0\right)}{p_0} \\ c\tau\end{pmatrix}\end{split}\]</div>
+<p><span class="math notranslate nohighlight">\(p_0\)</span> is the reference momentum. <span class="math notranslate nohighlight">\(\tau\)</span> is the time lag
+relative to the ideal particle.</p>
+</section>
+</section>
+<section id="creation-of-elements-and-lattices">
+<h2>Creation of Elements and Lattices<a class="headerlink" href="#creation-of-elements-and-lattices" title="Permalink to this headline">#</a></h2>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">at</span>
+<span class="kn">import</span> <span class="nn">at.plot</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">9.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>A lattice in AT is a object of the <strong>Lattice</strong> class containing the
+lattice elements. These elements may be created using element creation
+functions. These functions output objects inheriting from the
+<strong>Element</strong> base class. For example, a quadrupole may be created with
+the function <strong>Quadrupole</strong></p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">QF</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">QF</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Quadrupole</span><span class="p">:</span>
+    <span class="n">FamName</span> <span class="p">:</span> <span class="n">QF</span>
+    <span class="n">Length</span> <span class="p">:</span> <span class="mf">0.5</span>
+    <span class="n">PassMethod</span> <span class="p">:</span> <span class="n">StrMPoleSymplectic4Pass</span>
+    <span class="n">NumIntSteps</span> <span class="p">:</span> <span class="mi">10</span>
+    <span class="n">MaxOrder</span> <span class="p">:</span> <span class="mi">1</span>
+    <span class="n">PolynomA</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.</span> <span class="mf">0.</span><span class="p">]</span>
+    <span class="n">PolynomB</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.</span>  <span class="mf">1.2</span><span class="p">]</span>
+    <span class="n">K</span> <span class="p">:</span> <span class="mf">1.2</span>
+</pre></div>
+</div>
+<p>We note that the family name of this quadrupole is ’QF’ and the pass
+method is <code class="docutils literal notranslate"><span class="pre">QuadMPoleFringePass</span></code>. The fields following are parameters
+necessary to be able to pass an electron through this quadrupole (i.e.,
+the set of arguments required by the pass method). We now create some
+other elements needed in a FODO lattice:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Dr</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;Dr&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">HalfDr</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;Dr2&#39;</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="n">QD</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)</span>
+<span class="n">Bend</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Dipole</span><span class="p">(</span><span class="s1">&#39;Bend&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">40</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In addition to <strong>Quadrupole</strong> that we already saw, we have created a
+drift (region with no magnetic field), using <strong>Drift</strong>. Besides the
+family name, the only other needed field is the length. Since we split
+the cell in the center of the drift, we have also created a half drift
+element. The drifts are 0.5 meters long and the half drift is 0.25
+meters long. We have defined a sector dipole, or bend magnet using
+<strong>Dipole</strong>. The family name is ’Bend’. The second field is the length of
+the magnet and we have given it a length of 1 meter. Next is the bending
+angle. We have defined just an arc of a FODO lattice here, so we don’t
+have to bend by all of <span class="math notranslate nohighlight">\(2\pi\)</span> here. We choose to have 20 total
+such arcs, for a realistic field strength, and thus we define the
+bending angle to be <span class="math notranslate nohighlight">\(2\pi/40\)</span> since there are two bends per cell.</p>
+<p>A cell of a FODO lattice may now be constructed as follows</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODOcell</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Lattice</span><span class="p">([</span><span class="n">HalfDr</span><span class="p">,</span> <span class="n">Bend</span><span class="p">,</span> <span class="n">Dr</span><span class="p">,</span> <span class="n">QF</span><span class="p">,</span> <span class="n">Dr</span><span class="p">,</span> <span class="n">Bend</span><span class="p">,</span> <span class="n">Dr</span><span class="p">,</span> <span class="n">QD</span><span class="p">,</span> <span class="n">HalfDr</span><span class="p">],</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Simple FODO cell&#39;</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="mf">1E9</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Lattice</span><span class="p">(</span><span class="o">&lt;</span><span class="mi">9</span> <span class="n">elements</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Simple FODO cell&#39;</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="mf">1000000000.0</span><span class="p">,</span> <span class="n">particle</span><span class="o">=</span><span class="n">Particle</span><span class="p">(</span><span class="s1">&#39;relativistic&#39;</span><span class="p">),</span> <span class="n">periodicity</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As mentioned, this cell is only 1/20 of a FODO lattice. The entire
+lattice may be created by repeating this cell 20 times as follows</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODO</span> <span class="o">=</span> <span class="n">FODOcell</span><span class="o">*</span><span class="mi">20</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">FODO</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Lattice</span><span class="p">(</span><span class="o">&lt;</span><span class="mi">180</span> <span class="n">elements</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Simple FODO cell&#39;</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="mf">1000000000.0</span><span class="p">,</span> <span class="n">particle</span><span class="o">=</span><span class="n">Particle</span><span class="p">(</span><span class="s1">&#39;relativistic&#39;</span><span class="p">),</span> <span class="n">periodicity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We have now created a valid AT lattice, using drifts, dipoles, and
+quadrupoles. We will later add some sextupoles to this lattice, and also
+an RF cavity, but one could track particles through this lattice, as is.</p>
+<p>For completeness, we list all of the AT element creation functions:
+<strong>Aperture</strong>, <strong>Corrector</strong>, <strong>Drift</strong>, <strong>M66</strong>, <strong>Marker</strong>,
+<strong>Monitor</strong>, <strong>ThinMultipole</strong>, <strong>Multipole</strong>, <strong>Octupole</strong>,
+<strong>Quadrupole</strong>, <strong>RFcavity</strong>, <strong>Sextupole</strong>, <strong>Wiggler</strong>.</p>
+</section>
+<section id="lattice-querying-and-manipulation">
+<h2>Lattice Querying and Manipulation<a class="headerlink" href="#lattice-querying-and-manipulation" title="Permalink to this headline">#</a></h2>
+<p>There are many parameters in a storage ring lattice. We need tools to
+view these parameters and to change them.</p>
+<section id="selecting-elements">
+<h3>Selecting elements<a class="headerlink" href="#selecting-elements" title="Permalink to this headline">#</a></h3>
+<p>We have seen how to concatenate elements to form a lattice. To extract
+elements, two indexing methods may be used, similar to indexing in numpy
+arrays:</p>
+<ul class="simple">
+<li><p>Integer array indexing: elements are identified by the array of their
+indices. For instance, the elements at locations 3 and 7 of
+<code class="docutils literal notranslate"><span class="pre">FODOcell</span></code> may be selected with:</p></li>
+</ul>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">),</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Boolean array indexing; elements are identified by a Boolean array,
+as long as the Lattice, where selected elements are identified by a
+True value. The same elements as in the previous example may be
+selected with:</p></li>
+</ul>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mask</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+<span class="n">mask</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">mask</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">),</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Many AT function have an input argument, usually named ‘refpts’ using
+such indexing methods to select the “points of interest” in the function
+output. Please note that:</p>
+<ul class="simple">
+<li><p>The corresponding locations in the ring are the <strong>entrances</strong> of the
+selected ring elements,</p></li>
+<li><p>as a special case, a value of “len(ring)” (normally out-of-range
+element) is used to indicate the <strong>exit</strong> of the <strong>last</strong> element
+(think of it as the entrance of the 2nd turn).</p></li>
+</ul>
+<p>Such indexes can be generated with the <strong>get_cells</strong> function, which
+returns a boolean index of elements selected by the value of any of
+their attributes or by an user-supplied check function:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">refqf</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="s1">&#39;FamName&#39;</span><span class="p">,</span> <span class="s1">&#39;QF&#39;</span><span class="p">)</span>   <span class="c1"># FamName attribute == QF</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">refqf</span><span class="p">]))</span>
+<span class="n">refqd</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="s1">&#39;FamName&#39;</span><span class="p">,</span> <span class="s1">&#39;QD&#39;</span><span class="p">)</span>   <span class="c1"># FamName attribute == QD</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">refqd</span><span class="p">]))</span>
+<span class="n">refbends</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="s1">&#39;BendingAngle&#39;</span><span class="p">)</span> <span class="c1"># Existing BendingAngle attribute</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">refbends</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)]</span>
+<span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)]</span>
+<span class="p">[</span><span class="n">Dipole</span><span class="p">(</span><span class="s1">&#39;Bend&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.15707963267948966</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">Dipole</span><span class="p">(</span><span class="s1">&#39;Bend&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.15707963267948966</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Using predefined check functions we can write:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">refq1</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="n">at</span><span class="o">.</span><span class="n">checktype</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Quadrupole</span><span class="p">))</span>   <span class="c1"># class == Quadrupole</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">refq1</span><span class="p">]))</span>
+<span class="n">refq2</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="n">at</span><span class="o">.</span><span class="n">checkname</span><span class="p">(</span><span class="s1">&#39;Q[FD]&#39;</span><span class="p">))</span>         <span class="c1"># name matches a pattern</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">refq2</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">),</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)]</span>
+<span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">),</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Both methods select the same elements. Since <strong>get_cells</strong> returns numpy
+boolean arrays, the same result can also be obtained as:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">[</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">),</span> <span class="n">Quadrupole</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">)]</span>
+</pre></div>
+</div>
+</section>
+<section id="iterating-over-selected-elements">
+<h3>Iterating over selected elements<a class="headerlink" href="#iterating-over-selected-elements" title="Permalink to this headline">#</a></h3>
+<p>The <strong>select</strong> method of the lattice object returns an iterator over the
+selected elements:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Quadrupole</span><span class="p">:</span>
+    <span class="n">FamName</span> <span class="p">:</span> <span class="n">QF</span>
+    <span class="n">Length</span> <span class="p">:</span> <span class="mf">0.5</span>
+    <span class="n">PassMethod</span> <span class="p">:</span> <span class="n">StrMPoleSymplectic4Pass</span>
+    <span class="n">NumIntSteps</span> <span class="p">:</span> <span class="mi">10</span>
+    <span class="n">MaxOrder</span> <span class="p">:</span> <span class="mi">1</span>
+    <span class="n">PolynomA</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.</span> <span class="mf">0.</span><span class="p">]</span>
+    <span class="n">PolynomB</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.</span>  <span class="mf">1.2</span><span class="p">]</span>
+    <span class="n">K</span> <span class="p">:</span> <span class="mf">1.2</span>
+<span class="n">Quadrupole</span><span class="p">:</span>
+    <span class="n">FamName</span> <span class="p">:</span> <span class="n">QD</span>
+    <span class="n">Length</span> <span class="p">:</span> <span class="mf">0.5</span>
+    <span class="n">PassMethod</span> <span class="p">:</span> <span class="n">StrMPoleSymplectic4Pass</span>
+    <span class="n">NumIntSteps</span> <span class="p">:</span> <span class="mi">10</span>
+    <span class="n">MaxOrder</span> <span class="p">:</span> <span class="mi">1</span>
+    <span class="n">PolynomA</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.</span> <span class="mf">0.</span><span class="p">]</span>
+    <span class="n">PolynomB</span> <span class="p">:</span> <span class="p">[</span> <span class="mf">0.</span>  <span class="o">-</span><span class="mf">1.2</span><span class="p">]</span>
+    <span class="n">K</span> <span class="p">:</span> <span class="o">-</span><span class="mf">1.2</span>
+</pre></div>
+</div>
+</section>
+<section id="extracting-attribute-values">
+<h3>Extracting attribute values<a class="headerlink" href="#extracting-attribute-values" title="Permalink to this headline">#</a></h3>
+<p>Following the previous example, we can get the quadrupole strengths
+(PolynomB[1]) with:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">elem</span><span class="o">.</span><span class="n">PolynomB</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">)])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">array</span><span class="p">([</span> <span class="mf">1.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The same result is provided by the <strong>get_value_refpts</strong> convenience
+function:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">at</span><span class="o">.</span><span class="n">get_value_refpts</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">,</span> <span class="s1">&#39;PolynomB&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">array</span><span class="p">([</span> <span class="mf">1.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="setting-attribute-values">
+<h3>Setting attribute values<a class="headerlink" href="#setting-attribute-values" title="Permalink to this headline">#</a></h3>
+<p>Similarly, using a the Lattice iterator, we can write:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">new_strengths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.3</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">elem</span><span class="p">,</span> <span class="n">strength</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">),</span> <span class="n">new_strengths</span><span class="p">):</span>
+    <span class="n">elem</span><span class="o">.</span><span class="n">PolynomB</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">strength</span>
+<span class="c1"># Check the result:</span>
+<span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">elem</span><span class="o">.</span><span class="n">PolynomB</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">FODOcell</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">)])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">array</span><span class="p">([</span> <span class="mf">1.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Or with the <strong>set_value_refpts</strong> function:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">initial_strengths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">]</span>
+<span class="n">at</span><span class="o">.</span><span class="n">set_value_refpts</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">,</span> <span class="s1">&#39;PolynomB&#39;</span><span class="p">,</span> <span class="n">initial_strengths</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># Check the result:</span>
+<span class="n">at</span><span class="o">.</span><span class="n">get_value_refpts</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="n">refqf</span> <span class="o">|</span> <span class="n">refqd</span><span class="p">,</span> <span class="s1">&#39;PolynomB&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">array</span><span class="p">([</span> <span class="mf">1.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.2</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tracking">
+<h2>Tracking<a class="headerlink" href="#tracking" title="Permalink to this headline">#</a></h2>
+<p>Once a lattice is defined, electrons may be tracked through it.
+<strong>lattice_pass</strong> is the function that does the tracking. An example of
+its use is as follows:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">nturns</span><span class="o">=</span><span class="mi">200</span>
+<span class="n">Z01</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">.001</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">Z02</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">.002</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">Z03</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">.003</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">Z1</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">lattice_pass</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span><span class="n">Z01</span><span class="p">,</span><span class="n">nturns</span><span class="p">)</span>
+<span class="n">Z2</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">lattice_pass</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span><span class="n">Z02</span><span class="p">,</span><span class="n">nturns</span><span class="p">)</span>
+<span class="n">Z3</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">lattice_pass</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span><span class="n">Z03</span><span class="p">,</span><span class="n">nturns</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z1</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z1</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z2</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z3</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z3</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x1260628b0</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<img alt="../_images/output_33_1.png" src="../_images/output_33_1.png" />
+<p>In this example, we started with one initial condition, and all
+subsequent turns are returned by <strong>lattice_pass</strong>. We may also start
+with multiple initial conditions:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Z0</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asfortranarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Z01</span><span class="p">,</span><span class="n">Z02</span><span class="p">,</span><span class="n">Z03</span><span class="p">))</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Z0.shape:&#39;</span><span class="p">,</span> <span class="n">Z0</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">Z</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">lattice_pass</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span><span class="n">Z0</span><span class="p">,</span><span class="n">nturns</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39; Z.shape:&#39;</span><span class="p">,</span> <span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Z0</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+ <span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now the same plot can be obtained with:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Z</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">Z</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="n">at</span> <span class="mh">0x1261635b0</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<img alt="../_images/output_37_1.png" src="../_images/output_37_1.png" />
+</section>
+<section id="computation-of-beam-parameters">
+<h2>Computation of beam parameters<a class="headerlink" href="#computation-of-beam-parameters" title="Permalink to this headline">#</a></h2>
+<p>Now that particles can be tracked through the lattice, we can use the
+tracking to understand different properties of the lattice. First, we
+would like to understand the linear properties such as Twiss parameters,
+tunes, chromaticities, etc. These can all be calculated with the
+function <strong>get_optics</strong>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">beamdata</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span> <span class="n">get_chrom</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first argument is the FODO lattice we have created. The second
+argument says we want to compute the optional chromaticity.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">beamdata</span><span class="o">.</span><span class="n">tune</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">beamdata</span><span class="o">.</span><span class="n">chromaticity</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.21993568</span> <span class="mf">0.91777806</span><span class="p">]</span>
+<span class="p">[</span><span class="o">-</span><span class="mf">6.3404156</span>  <span class="o">-</span><span class="mf">6.19856968</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>which tells us the tunes are <span class="math notranslate nohighlight">\(\nu_x = 0.2199\)</span> and
+<span class="math notranslate nohighlight">\(\nu_y = 0.9178\)</span> and the chromaticities are <span class="math notranslate nohighlight">\(\xi_x = -6.34\)</span>,
+<span class="math notranslate nohighlight">\(\xi_y = -6.20\)</span>.</p>
+<p>How did AT calculate these quantities? Without digging into the details
+of <strong>get_optics</strong>, you could still figure it out, just based on the
+ability to track with the <strong>lattice_pass</strong> function. In fact, AT
+computes the one-turn transfer matrix by tracking several initial
+conditions and interpolating. The one turn transfer matrix (here we
+focus on 4x4) is computed with the function <strong>find_m44</strong> contained
+within <strong>get_optics</strong>. Calling this on the FODO lattice, we find</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">m44</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">find_m44</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">m44</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="o">-</span><span class="mf">0.6518562</span>   <span class="mf">1.90977797</span>  <span class="mf">0.</span>          <span class="mf">0.</span>        <span class="p">]</span>
+ <span class="p">[</span><span class="o">-</span><span class="mf">0.87430341</span>  <span class="mf">1.02741279</span>  <span class="mf">0.</span>          <span class="mf">0.</span>        <span class="p">]</span>
+ <span class="p">[</span> <span class="mf">0.</span>          <span class="mf">0.</span>         <span class="o">-</span><span class="mf">0.1807342</span>  <span class="o">-</span><span class="mf">3.24829821</span><span class="p">]</span>
+ <span class="p">[</span> <span class="mf">0.</span>          <span class="mf">0.</span>          <span class="mf">0.41466639</span>  <span class="mf">1.91972581</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>The 0 as the second argument tells us to compute with <span class="math notranslate nohighlight">\(\delta=0\)</span>.
+We note that the ring is uncoupled, and computing the eigenvalues of
+submatrices, we derive the tunes reported in <strong>get_optics</strong> above.</p>
+<p>Computing the tunes with varying <span class="math notranslate nohighlight">\(\delta\)</span> allows the computation
+of the chromaticity.</p>
+<p>Now, suppose we would like to change the tunes in our FODO lattice. We
+know that we should change the quadrupole strengths, but we may not know
+exactly what values to use.</p>
+<p>Here we reach the question of tuning. How do we set the parameters for
+these quadrupoles in order to correct the tunes? In principle we have
+the tools that we need. We can set the values of the quadrupoles using
+the function <strong>set_value_refpts</strong> and then recompute the chromaticity
+with <strong>get_optics</strong>. But we still don’t know what values to actually
+give the quadrupoles. One could compute the value, or instead use an
+optimization routine to vary the values until the correct output tunes
+are achieved. This is the approach followed with the function
+<strong>fit_tune</strong>.</p>
+<p>This allows you to vary quadrupole strengths until the desired tune
+values are reached. It is used as follows:</p>
+<p>First, we need to select two variable quadrupoles. As FODO has been
+built, the same quadrupole QF is used in each cell, so varying its
+strength will affect all cells. We just need to select the 1st one in
+the ring:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">refqf</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span> <span class="n">at</span><span class="o">.</span><span class="n">checkname</span><span class="p">(</span><span class="s1">&#39;QF&#39;</span><span class="p">))</span> <span class="c1"># Select all QFs</span>
+<span class="n">refqf1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">refqf</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>              <span class="c1"># Get the 1st one</span>
+<span class="n">refqd</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span> <span class="n">at</span><span class="o">.</span><span class="n">checkname</span><span class="p">(</span><span class="s1">&#39;QD&#39;</span><span class="p">))</span> <span class="c1"># Select all QDs</span>
+<span class="n">refqd1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">refqd</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>              <span class="c1"># Get the 1st one</span>
+</pre></div>
+</div>
+<p>Then we can call the fitting function to set the tunes to
+<span class="math notranslate nohighlight">\(\nu_x = 0.15\)</span> and <span class="math notranslate nohighlight">\(\nu_y = 0.75\)</span> using the quadrupoles QF
+and QD.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">at</span><span class="o">.</span><span class="n">fit_tune</span><span class="p">(</span><span class="n">FODO</span><span class="p">,</span> <span class="n">refqf</span><span class="p">,</span> <span class="n">refqd</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Fitting</span> <span class="n">Tune</span><span class="o">...</span>
+<span class="n">Initial</span> <span class="n">value</span> <span class="p">[</span><span class="mf">0.21993568</span> <span class="mf">0.91777806</span><span class="p">]</span>
+<span class="nb">iter</span><span class="c1"># 0 Res. 1.855491062674763e-06</span>
+<span class="nb">iter</span><span class="c1"># 1 Res. 7.129086834236557e-10</span>
+<span class="nb">iter</span><span class="c1"># 2 Res. 2.66800409160274e-13</span>
+<span class="n">Final</span> <span class="n">value</span> <span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Let’s check the result:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">beamdata</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">FODO</span><span class="p">)</span>
+<span class="n">beamdata</span><span class="o">.</span><span class="n">tune</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">array</span><span class="p">([</span><span class="mf">0.1500004</span> <span class="p">,</span> <span class="mf">0.75000033</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Giving satisfactory results for the tunes.</p>
+<p>Now, in case you have some experience with storage ring dynamics, you
+will know that these negative chromaticity values will lead to
+instability and thus our FODO lattice, as is, is not acceptable. To fix
+this problem, we add sextupoles to our lattice. We define a focusing and
+defocussing sextupoles (0.1 meter long) as follows:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SF</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">(</span><span class="s1">&#39;SF&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">SD</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">(</span><span class="s1">&#39;SD&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">drs</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">Drift</span><span class="p">(</span><span class="s1">&#39;DRS&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we want to add these to the lattice at locations where they will be
+effective. We will put them in the middle of the 0.5 meter drift
+sections: SF before the QF and SD before the QD. Let’s locate the
+drifts:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOcell</span><span class="p">,</span> <span class="n">at</span><span class="o">.</span><span class="n">checkname</span><span class="p">(</span><span class="s2">&quot;Dr&quot;</span><span class="p">)))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">]),)</span>
+</pre></div>
+</div>
+<p>We will insert SF in the middle of element 2 and SD in the middle of
+element 6. Since the Lattice object is derived from the python <code class="docutils literal notranslate"><span class="pre">list</span></code>,
+we can use all the <code class="docutils literal notranslate"><span class="pre">list</span></code> methods to do this. For instance:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODOcellSext</span> <span class="o">=</span> <span class="n">FODOcell</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">FODOcellSext</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">drs</span><span class="p">,</span><span class="n">SD</span><span class="p">,</span><span class="n">drs</span><span class="p">]</span>
+<span class="n">FODOcellSext</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">drs</span><span class="p">,</span><span class="n">SF</span><span class="p">,</span><span class="n">drs</span><span class="p">]</span>
+<span class="n">FODOSext</span> <span class="o">=</span> <span class="n">FODOcellSext</span><span class="o">*</span><span class="mi">20</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Lattice</span><span class="p">(</span><span class="o">&lt;</span><span class="mi">260</span> <span class="n">elements</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Simple FODO cell&#39;</span><span class="p">,</span> <span class="n">energy</span><span class="o">=</span><span class="mf">1000000000.0</span><span class="p">,</span> <span class="n">particle</span><span class="o">=</span><span class="n">Particle</span><span class="p">(</span><span class="s1">&#39;relativistic&#39;</span><span class="p">),</span> <span class="n">periodicity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">beamdata</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">,</span> <span class="n">get_chrom</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">beamdata</span><span class="o">.</span><span class="n">tune</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">beamdata</span><span class="o">.</span><span class="n">chromaticity</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span><span class="p">]</span>
+<span class="p">[</span><span class="o">-</span><span class="mf">6.14477442</span> <span class="o">-</span><span class="mf">5.93149994</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The tunes of FODOSext are identical to the ones of FODO. Now we need to
+tune the sextupoles. For this, we will use the function <strong>fit_chrom</strong>.
+This function works analogously to <strong>fit_tune</strong> except the sextupoles
+are varied instead of the quadrupoles. Let’s locate the first
+sextupoles:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">refsext</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_cells</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">,</span> <span class="n">at</span><span class="o">.</span><span class="n">checktype</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">Sextupole</span><span class="p">))</span> <span class="c1"># Select all sextpoles</span>
+<span class="n">refsf</span><span class="p">,</span><span class="n">refsd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">refsext</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>                    <span class="c1"># Take the 1st ones</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">at</span><span class="o">.</span><span class="n">fit_chrom</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">,</span> <span class="n">refsf</span><span class="p">,</span> <span class="n">refsd</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Fitting</span> <span class="n">Chromaticity</span><span class="o">...</span>
+<span class="n">Initial</span> <span class="n">value</span> <span class="p">[</span><span class="o">-</span><span class="mf">6.14477442</span> <span class="o">-</span><span class="mf">5.93149994</span><span class="p">]</span>
+<span class="nb">iter</span><span class="c1"># 0 Res. 7.49072769210859e-06</span>
+<span class="nb">iter</span><span class="c1"># 1 Res. 2.221474425226936e-13</span>
+<span class="n">Final</span> <span class="n">value</span> <span class="p">[</span><span class="mf">0.49999953</span> <span class="mf">0.50000002</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>After changing the tunes and fixing the chromaticities, we find:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">_</span><span class="p">,</span> <span class="n">beamdata</span><span class="p">,</span> <span class="n">_</span><span class="p">]</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">,</span> <span class="n">get_chrom</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">beamdata</span><span class="o">.</span><span class="n">tune</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">beamdata</span><span class="o">.</span><span class="n">chromaticity</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span><span class="p">]</span>
+<span class="p">[</span><span class="mf">0.49999953</span> <span class="mf">0.50000002</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>You may have noticed that we ignored two outputs of <strong>get_optics</strong>. They
+contains linear optics parameters that vary around the ring. These are
+the Twiss parameters, dispersions, phase advance, and coupling
+parameters. <strong>elemdata0</strong> is their values at the entrance of the ring,
+<strong>elemdata</strong> is the values at the selected points of interest. To
+compute them at all lattice elements, we call:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">elemdata0</span><span class="p">,</span> <span class="n">beamdata</span><span class="p">,</span> <span class="n">elemdata</span><span class="p">]</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">get_optics</span><span class="p">(</span><span class="n">FODOcellSext</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FODOcellSext</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Examining <strong>elemdata</strong>, we find:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;elemdata.shape:&#39;</span><span class="p">,</span> <span class="n">elemdata</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;elemdata.fields:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">fld</span> <span class="ow">in</span> <span class="n">elemdata</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fld</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elemdata</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span> <span class="p">(</span><span class="mi">14</span><span class="p">,)</span>
+<span class="n">elemdata</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+<span class="n">alpha</span>
+<span class="n">beta</span>
+<span class="n">mu</span>
+<span class="n">R</span>
+<span class="n">A</span>
+<span class="n">dispersion</span>
+<span class="n">closed_orbit</span>
+<span class="n">M</span>
+<span class="n">s_pos</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>’s_pos’ is the set of <span class="math notranslate nohighlight">\(s\)</span> positions,</p></li>
+<li><p>’closed_orbit’ is the <span class="math notranslate nohighlight">\(x,x',y,y'\)</span> coordinate vector of the
+closed orbit,</p></li>
+<li><p>’dispersion’ is the <span class="math notranslate nohighlight">\(\eta_x,\eta'_x,\eta_y,\eta'_y\)</span> coordinate
+vector of dispersion,</p></li>
+<li><p>’M’ is the local <span class="math notranslate nohighlight">\(4\times 4\)</span> transfer matrix,</p></li>
+<li><p>’beta’ gives the horizontal and vertical <span class="math notranslate nohighlight">\(\beta\)</span> functions,</p></li>
+<li><p>’alpha’ gives the Twiss parameters <span class="math notranslate nohighlight">\(\alpha_{x,y}\)</span>,</p></li>
+<li><p>’mu’ gives the phase advances (times <span class="math notranslate nohighlight">\(2\pi\)</span>).</p></li>
+</ul>
+<p>Let us use these results to plot the beta functions around the ring.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">elemdata</span><span class="o">.</span><span class="n">s_pos</span><span class="p">,</span> <span class="n">elemdata</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;s [m]&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\beta$ [m]&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<img alt="../_images/output_67_1.png" src="../_images/output_67_1.png" />
+<p>We may also plot the lattice parameters using a dedicated plot function
+with the command:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODOcellSext</span><span class="o">.</span><span class="n">plot_beta</span><span class="p">();</span>
+</pre></div>
+</div>
+<img alt="../_images/output_69_0.png" src="../_images/output_69_0.png" />
+<p>Note that the magnets are displayed below the function, giving a
+convenient visualization. Also note that the lattice functions are
+smoother than those we saw before. They have been computed at more
+positions, by slicing the magnets in the <strong>plot_beta</strong> function.</p>
+</section>
+<section id="beam-sizes">
+<h2>Beam sizes<a class="headerlink" href="#beam-sizes" title="Permalink to this headline">#</a></h2>
+<p>The parameters computed thus far use only the tracking through the
+lattice, with no radiation effects. In reality, for electrons, we know
+that there are radiation effects which cause a damping and diffusion and
+determine equilibrium emittances and beam sizes. This is computed in AT
+by the <strong>ohmi_envelope</strong> function using the Ohmi envelope formalism.</p>
+<p>In order to use <strong>ohmi_envelope</strong>, we first need to make sure the beam
+is stable longitudinally as well, requiring us to add an RF cavity to
+our FODO lattice. Let’s add an inactive cavity with the command</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">RFC</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">RFCavity</span><span class="p">(</span><span class="s1">&#39;RFC&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.0E9</span><span class="p">,</span> <span class="n">PassMethod</span><span class="o">=</span><span class="s1">&#39;IdentityPass&#39;</span><span class="p">)</span>
+<span class="n">FODOSext</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">RFC</span><span class="p">)</span>
+<span class="n">FODOSext</span><span class="o">.</span><span class="n">harmonic_number</span><span class="o">=</span><span class="mi">100</span>
+</pre></div>
+</div>
+<p>Now, we need to set the values of the RF cavity. This can be done with
+the function <strong>set_cavity</strong> as follows</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODOSext</span><span class="o">.</span><span class="n">set_cavity</span><span class="p">(</span><span class="n">Voltage</span><span class="o">=</span><span class="mf">0.5E6</span><span class="p">,</span> <span class="n">Frequency</span><span class="o">=</span><span class="n">at</span><span class="o">.</span><span class="n">Frf</span><span class="o">.</span><span class="n">NOMINAL</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">RFC</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RFCavity</span><span class="p">:</span>
+    <span class="n">FamName</span> <span class="p">:</span> <span class="n">RFC</span>
+    <span class="n">Length</span> <span class="p">:</span> <span class="mf">0.0</span>
+    <span class="n">PassMethod</span> <span class="p">:</span> <span class="n">IdentityPass</span>
+    <span class="n">Voltage</span> <span class="p">:</span> <span class="mf">500000.0</span>
+    <span class="n">Frequency</span> <span class="p">:</span> <span class="mf">299792457.9999997</span>
+    <span class="n">HarmNumber</span> <span class="p">:</span> <span class="mi">1</span>
+    <span class="n">Energy</span> <span class="p">:</span> <span class="mf">1000000000.0</span>
+    <span class="n">TimeLag</span> <span class="p">:</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+<p>which says that the each of the 20 RF cavities has a voltage of 25 kV.</p>
+<p><strong>radiation_parameters</strong> gives a summary of the lattice properties,
+using the classical radiation integrals:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">radiation_parameters</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>              <span class="n">Frac</span><span class="o">.</span> <span class="n">tunes</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1500004</span>  <span class="mf">0.75000033</span> <span class="mf">0.01845048</span><span class="p">]</span>
+                    <span class="n">Tunes</span><span class="p">:</span> <span class="p">[</span><span class="mf">5.1500004</span>  <span class="mf">4.75000033</span><span class="p">]</span>
+           <span class="n">Chromaticities</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.49999953</span> <span class="mf">0.50000002</span><span class="p">]</span>
+ <span class="n">Momentum</span> <span class="n">compact</span><span class="o">.</span> <span class="n">factor</span><span class="p">:</span> <span class="mf">4.279525e-02</span>
+              <span class="n">Slip</span> <span class="n">factor</span><span class="p">:</span> <span class="o">-</span><span class="mf">4.279499e-02</span>
+                   <span class="n">Energy</span><span class="p">:</span> <span class="mf">1.000000e+09</span> <span class="n">eV</span>
+       <span class="n">Energy</span> <span class="n">loss</span> <span class="o">/</span> <span class="n">turn</span><span class="p">:</span> <span class="mf">1.389569e+04</span> <span class="n">eV</span>
+ <span class="n">Radiation</span> <span class="n">integrals</span> <span class="o">-</span> <span class="n">I1</span><span class="p">:</span> <span class="mf">4.279525335274485</span> <span class="n">m</span>
+                       <span class="n">I2</span><span class="p">:</span> <span class="mf">0.9869604401089351</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
+                       <span class="n">I3</span><span class="p">:</span> <span class="mf">0.15503138340149902</span> <span class="n">m</span><span class="o">^-</span><span class="mi">2</span>
+                       <span class="n">I4</span><span class="p">:</span> <span class="mf">0.10559305520899614</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
+                       <span class="n">I5</span><span class="p">:</span> <span class="mf">0.020912844843729298</span> <span class="n">m</span><span class="o">^-</span><span class="mi">1</span>
+          <span class="n">Mode</span> <span class="n">emittances</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.48204731e-08</span>            <span class="n">nan</span>            <span class="n">nan</span><span class="p">]</span>
+<span class="n">Damping</span> <span class="n">partition</span> <span class="n">numbers</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.89301187</span> <span class="mf">1.</span>         <span class="mf">2.10698813</span><span class="p">]</span>
+            <span class="n">Damping</span> <span class="n">times</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05376156</span> <span class="mf">0.04800971</span> <span class="mf">0.02278594</span><span class="p">]</span> <span class="n">s</span>
+            <span class="n">Energy</span> <span class="n">spread</span><span class="p">:</span> <span class="mf">0.000330764</span>
+             <span class="n">Bunch</span> <span class="n">length</span><span class="p">:</span> <span class="mf">0.0122102</span> <span class="n">m</span>
+         <span class="n">Cavities</span> <span class="n">voltage</span><span class="p">:</span> <span class="mf">500000.0</span> <span class="n">V</span>
+        <span class="n">Synchrotron</span> <span class="n">phase</span><span class="p">:</span> <span class="mf">3.1138</span> <span class="n">rd</span>
+    <span class="n">Synchrotron</span> <span class="n">frequency</span><span class="p">:</span> <span class="mf">55313.1</span> <span class="n">Hz</span>
+</pre></div>
+</div>
+<p>We may now turn radiation ON and call the function <strong>ohmi_envelope</strong> as
+follows</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">FODOSext</span><span class="o">.</span><span class="n">radiation_on</span><span class="p">()</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">beamdata</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">at</span><span class="o">.</span><span class="n">ohmi_envelope</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;beamdata.fields:&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">fld</span> <span class="ow">in</span> <span class="n">beamdata</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fld</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">beamdata</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+<span class="n">tunes</span>
+<span class="n">damping_rates</span>
+<span class="n">mode_matrices</span>
+<span class="n">mode_emittances</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>’tunes’ gives the 3 tunes of the 6D motion;</p></li>
+<li><p>’damping_rates’,</p></li>
+<li><p>’mode_matrices’ are the sigma matrices of the 3 independent motions</p></li>
+<li><p>’mode_emittances’ are the 3 modal emittances.</p></li>
+</ul>
+<p>An easy way to summarize these results is provided by the
+<strong>envelope_parameters</strong> function:</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">at</span><span class="o">.</span><span class="n">envelope_parameters</span><span class="p">(</span><span class="n">FODOSext</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">Frac</span><span class="o">.</span> <span class="n">tunes</span> <span class="p">(</span><span class="mi">6</span><span class="n">D</span> <span class="n">motion</span><span class="p">):</span> <span class="p">[</span><span class="mf">0.14995922</span> <span class="mf">0.75000148</span> <span class="mf">0.0184657</span> <span class="p">]</span>
+                   <span class="n">Energy</span><span class="p">:</span> <span class="mf">1.000000e+09</span> <span class="n">eV</span>
+       <span class="n">Energy</span> <span class="n">loss</span> <span class="o">/</span> <span class="n">turn</span><span class="p">:</span> <span class="mf">1.389569e+04</span> <span class="n">eV</span>
+          <span class="n">Mode</span> <span class="n">emittances</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.47973047e-08</span> <span class="mf">6.71489487e-37</span> <span class="mf">4.03132669e-06</span><span class="p">]</span>
+<span class="n">Damping</span> <span class="n">partition</span> <span class="n">numbers</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.89298373</span> <span class="mf">0.99999977</span> <span class="mf">2.1070165</span> <span class="p">]</span>
+            <span class="n">Damping</span> <span class="n">times</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05376455</span> <span class="mf">0.04801088</span> <span class="mf">0.02278618</span><span class="p">]</span> <span class="n">s</span>
+            <span class="n">Energy</span> <span class="n">spread</span><span class="p">:</span> <span class="mf">0.000330959</span>
+             <span class="n">Bunch</span> <span class="n">length</span><span class="p">:</span> <span class="mf">0.0122209</span> <span class="n">m</span>
+         <span class="n">Cavities</span> <span class="n">voltage</span><span class="p">:</span> <span class="mf">500000.0</span> <span class="n">V</span>
+        <span class="n">Synchrotron</span> <span class="n">phase</span><span class="p">:</span> <span class="mf">3.1138</span> <span class="n">rd</span>
+    <span class="n">Synchrotron</span> <span class="n">frequency</span><span class="p">:</span> <span class="mf">55358.8</span> <span class="n">Hz</span>
+</pre></div>
+</div>
+<p>We see that our FODO lattice has an emittance of 34.80 nm, an energy
+spread of <span class="math notranslate nohighlight">\(3.3\times 10^{-4}\)</span> and a bunch length of 12.2 mm.</p>
+</section>
+<section id="bibliography">
+<h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline">#</a></h2>
+<p><a class="reference external" href="https://www.slac.stanford.edu/pubs/slacpubs/8500/slac-pub-8732.pdf">1</a>
+A. Terebilo <em>Accelerator Toolbox for Matlab</em>, SLAC-PUB 8732 (May 2001)</p>
+<p><a class="reference external" href="https://inspirehep.net/files/298dd81ab9ce89bfb2a42442b46b0379">2</a>
+A. Terebilo, <em>Accelerator Modelling with Matlab Accelerator Toolbox</em>,
+PAC 2001 Proceedings</p>
+<p><a class="reference external" href="https://inspirehep.net/files/8507fec63dc914e41a782b13b831c64e">3</a>
+B. Nash <em>et al.</em>, <em>New Functionality for Beam Dynamics in Accelerator
+Toolbox</em>, IPAC 2015</p>
+<p><a class="reference external" href="https://journals.aps.org/prab/pdf/10.1103/PhysRevSTAB.2.074001">4</a>
+D. Sagan, D. Rubin, <em>Linear Analysis of Coupled Lattices</em>, Phys.
+Rev. Special Topics - Accelerators and Beams, Vol 2,(1999)</p>
+</section>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="Installation.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Installation</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="CavityControl.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Cavity Control</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By ATCollab<br/>
+  
+      &copy; Copyright 2022, ATCollab.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>
