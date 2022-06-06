@@ -49,4 +49,4 @@ exclude:
   - Gemfile.lock
   - vendor
   - README.md
-  - sphinx/doctrees
+  - doctrees

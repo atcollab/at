@@ -6,7 +6,7 @@ topnav:
     - title: GitHub
       external_url: https://github.com/atcollab/at
     - title: Python
-      url: /sphinx/html/index.html
+      url: /html/index.html
     - title: Matlab
       url: /m/Installation.html
     - title: About

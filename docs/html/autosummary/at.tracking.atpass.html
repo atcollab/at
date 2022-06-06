@@ -584,10 +584,10 @@ title="Open an issue"
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.tracking.atpass.atpass" title="at.tracking.atpass.atpass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">atpass</span></code></a></p></td>
-<td><p>rout = atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">atpass</span></code>(line, rin, n_turns[, refpts, reuse, ...])</p></td>
+<td><p>Track input particles rin along line for nturns turns.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.tracking.atpass.elempass" title="at.tracking.atpass.elempass"><code class="xref py py-obj docutils literal notranslate"><span class="pre">elempass</span></code></a>(element, rin)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">elempass</span></code>(element, rin)</p></td>
 <td><p>Track input particles rin through a single element.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#at.tracking.atpass.isopenmp" title="at.tracking.atpass.isopenmp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">isopenmp</span></code></a>()</p></td>
@@ -598,49 +598,6 @@ title="Open an issue"
 </tr>
 </tbody>
 </table>
-<dl class="py function">
-<dt class="sig sig-object py" id="at.tracking.atpass.atpass">
-<span class="sig-name descname"><span class="pre">atpass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.tracking.atpass.atpass" title="Permalink to this definition">#</a></dt>
-<dd><p>rout = atpass(line, rin, n_turns, refpts=[], reuse=False, omp_num_threads=0)</p>
-<p>Track input particles rin along line for nturns turns.
-Record 6D phase space at elements corresponding to refpts for each turn.</p>
-<p>line:    list of elements
-rin:     6 x n_particles Fortran-ordered numpy array.</p>
-<blockquote>
-<div><p>On return, rin contains the final coordinates of the particles</p>
-</div></blockquote>
-<p>n_turns: number of turns to be tracked
-refpts:  numpy array of indices of elements where output is desired</p>
-<blockquote>
-<div><p>0 means entrance of the first element
-len(line) means end of the last element</p>
-</div></blockquote>
-<p>energy:  nominal energy [eV]
-rest_energy:  rest_energy of the particle [eV]
-charge:  particle charge [elementary charge]
-reuse:   if True, use previously cached description of the lattice.</p>
-<p>omp_num_threads: number of OpenMP threads (default 0: automatic)
-losses:  if True, process losses
-rout:    6 x n_particles x n_refpts x n_turns Fortran-ordered numpy array</p>
-<blockquote>
-<div><p>of particle coordinates</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.tracking.atpass.elempass">
-<span class="sig-name descname"><span class="pre">elempass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rin</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.tracking.atpass.elempass" title="Permalink to this definition">#</a></dt>
-<dd><p>Track input particles rin through a single element.</p>
-<p>element: AT element
-rin:     6 x n_particles Fortran-ordered numpy array.</p>
-<blockquote>
-<div><p>On return, rin contains the final coordinates of the particles</p>
-</div></blockquote>
-<p>energy:  nominal energy [eV]
-rest_energy:  rest_energy of the particle [eV]
-charge:  particle charge [elementary charge]</p>
-</dd></dl>
-
 <dl class="py function">
 <dt class="sig sig-object py" id="at.tracking.atpass.ismpi">
 <span class="sig-name descname"><span class="pre">ismpi</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.tracking.atpass.ismpi" title="Permalink to this definition">#</a></dt>
