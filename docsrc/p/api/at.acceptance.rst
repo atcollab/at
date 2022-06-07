@@ -3,22 +3,16 @@
 
 .. automodule:: at.acceptance
 
-   
-   
-   
+.. rubric:: Modules
 
-   
-   
-   .. rubric:: Functions
+.. autosummary::
+   :toctree:
+   :recursive:
 
-   .. autosummary::
-   
-      get_acceptance
-      get_1d_acceptance
-      get_horizontal_acceptance
-      get_vertical_acceptance
-      get_momentum_acceptance
-   
+   acceptance
+   boundary
+   touschek
+
    
 
    

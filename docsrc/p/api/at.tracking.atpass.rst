@@ -1,6 +1,13 @@
 at.tracking.atpass
 ==================
 
-.. currentmodule:: at.tracking
+.. automodule:: at.tracking.atpass
 
-.. autofunction:: atpass
+   .. rubric:: Functions
+
+   .. autosummary::
+
+      isopenmp
+      ismpi
+      atpass
+      elempass

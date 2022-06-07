@@ -3,35 +3,14 @@
 
 .. automodule:: at.matching
 
-   
-   
-   
+.. rubric:: Modules
 
-   
-   
-   .. rubric:: Functions
+.. autosummary::
+   :toctree:
+   :recursive:
 
-   .. autosummary::
-   
-      match
-   
-   
-
-   
-   
-   .. rubric:: Classes
-
-   .. autosummary::
-   
-      Constraints
-      ElementConstraints
-      ElementVariable
-      EnvelopeConstraints
-      LinoptConstraints
-      OrbitConstraints
-      Variable
-   
-   
+   globalfit
+   matching
 
    
    

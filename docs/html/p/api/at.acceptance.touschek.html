@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>at.physics.radiation &#8212; pyAT 0.2.3 documentation</title>
+    <title>at.acceptance.touschek &#8212; pyAT 0.2.3 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -33,11 +33,13 @@
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="at.physics.revolution" href="at.physics.revolution.html" />
-    <link rel="prev" title="at.physics.orbit" href="at.physics.orbit.html" />
+    <link rel="next" title="at.collective" href="at.collective.html" />
+    <link rel="prev" title="at.acceptance.boundary" href="at.acceptance.boundary.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -171,16 +173,16 @@
  </span>
 </p>
 <ul class="current nav bd-sidenav">
- <li class="toctree-l1 has-children">
+ <li class="toctree-l1 current active has-children">
   <a class="reference internal" href="at.acceptance.html">
    at.acceptance
   </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
   <label for="toctree-checkbox-1">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul>
+  <ul class="current">
    <li class="toctree-l2">
     <a class="reference internal" href="at.acceptance.acceptance.html">
      at.acceptance.acceptance
@@ -191,8 +193,8 @@
      at.acceptance.boundary
     </a>
    </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="at.acceptance.touschek.html">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
      at.acceptance.touschek
     </a>
    </li>
@@ -336,16 +338,16 @@
    </li>
   </ul>
  </li>
- <li class="toctree-l1 current active has-children">
+ <li class="toctree-l1 has-children">
   <a class="reference internal" href="at.physics.html">
    at.physics
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
   <label for="toctree-checkbox-6">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul class="current">
+  <ul>
    <li class="toctree-l2">
     <a class="reference internal" href="at.physics.amat.html">
      at.physics.amat
@@ -391,8 +393,8 @@
      at.physics.orbit
     </a>
    </li>
-   <li class="toctree-l2 current active">
-    <a class="current reference internal" href="#">
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.radiation.html">
      at.physics.radiation
     </a>
    </li>
@@ -516,9 +518,9 @@
               
               <div>
                 
-  <section id="module-at.physics.radiation">
-<span id="at-physics-radiation"></span><h1>at.physics.radiation<a class="headerlink" href="#module-at.physics.radiation" title="Permalink to this headline">#</a></h1>
-<p>Radiation and equilibrium emittances</p>
+  <section id="module-at.acceptance.touschek">
+<span id="at-acceptance-touschek"></span><h1>at.acceptance.touschek<a class="headerlink" href="#module-at.acceptance.touschek" title="Permalink to this headline">#</a></h1>
+<p>Module to compute the touschek lifetime of the ring</p>
 <p class="rubric">Functions</p>
 <table class="autosummary longtable table autosummary">
 <colgroup>
@@ -526,154 +528,84 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.radiation.ohmi_envelope" title="at.physics.radiation.ohmi_envelope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ohmi_envelope</span></code></a>(ring[, refpts, orbit, ...])</p></td>
-<td><p>Calculate the equilibrium beam envelope in a circular accelerator using Ohmi's beam envelope formalism [1]</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.acceptance.touschek.get_bunch_length_espread" title="at.acceptance.touschek.get_bunch_length_espread"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bunch_length_espread</span></code></a>(ring[, zn, ...])</p></td>
+<td><p>Haissinski equation solver</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.physics.radiation.get_radiation_integrals" title="at.physics.radiation.get_radiation_integrals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_radiation_integrals</span></code></a>(ring[, dp, twiss])</p></td>
-<td><p>Compute the 5 radiation integrals for uncoupled lattices.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.radiation.quantdiffmat" title="at.physics.radiation.quantdiffmat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantdiffmat</span></code></a>(ring[, orbit])</p></td>
-<td><p>This function computes the diffusion matrix of the whole ring</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#at.physics.radiation.gen_quantdiff_elem" title="at.physics.radiation.gen_quantdiff_elem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_quantdiff_elem</span></code></a>(ring[, orbit])</p></td>
-<td><p>Generates a quantum diffusion element</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#at.physics.radiation.tapering" title="at.physics.radiation.tapering"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tapering</span></code></a>(ring[, multipoles, niter])</p></td>
-<td><p>Scales magnet strength with local energy to cancel the closed orbit and optics errors due to synchrotron radiations. PolynomB is used for dipoles such that the machine geometry is maintained. This is the ideal tapering scheme where magnets and multipoles components (PolynomB and PolynomA) are scaled individually. !!! WARNING: This method works only for lattices without errors and corrections: if not all corrections and field errors will also be scaled !!! tapering(ring) or ring.tapering() PARAMETERS     ring            lattice description.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.acceptance.touschek.get_lifetime" title="at.acceptance.touschek.get_lifetime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_lifetime</span></code></a>(ring, emity, bunch_curr[, ...])</p></td>
+<td><p>Touschek lifetime calculation</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py function">
-<dt class="sig sig-object py" id="at.physics.radiation.gen_quantdiff_elem">
-<span class="sig-name descname"><span class="pre">gen_quantdiff_elem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.gen_quantdiff_elem" title="Permalink to this definition">#</a></dt>
-<dd><p>Generates a quantum diffusion element</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.radiation.get_radiation_integrals">
-<span class="sig-name descname"><span class="pre">get_radiation_integrals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twiss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.get_radiation_integrals" title="Permalink to this definition">#</a></dt>
-<dd><p>Compute the 5 radiation integrals for uncoupled lattices.</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            lattice description.</p>
+<dt class="sig sig-object py" id="at.acceptance.touschek.get_bunch_length_espread">
+<span class="sig-name descname"><span class="pre">get_bunch_length_espread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_curr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">espread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.touschek.get_bunch_length_espread" title="Permalink to this definition">#</a></dt>
+<dd><p>Haissinski equation solver</p>
+<p>Solves the Haissinski formula and returns the bunch length and energy
+spread for given bunch current and <span class="math notranslate nohighlight">\(Z/n\)</span>. If both <code class="docutils literal notranslate"><span class="pre">zn</span></code> and
+<code class="docutils literal notranslate"><span class="pre">bunch_curr</span></code> are <code class="docutils literal notranslate"><span class="pre">None</span></code>, zero current case, otherwise both are needed
+for the calculation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ring</strong> – ring use for tracking</p>
 </dd>
-<dt>KEYWORDS</dt><dd><dl class="simple">
-<dt>twiss=None      linear optics at all points (from linopt). If None,</dt><dd><p>it will be computed.</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>zn=None</strong> – <span class="math notranslate nohighlight">\(Z/n\)</span> for the full ring</p></li>
+<li><p><strong>bunch_curr=None</strong> – Bunch current</p></li>
+<li><p><strong>espread=None</strong> – Energy spread, if <code class="docutils literal notranslate"><span class="pre">None</span></code> use lattice parameter</p></li>
+</ul>
 </dd>
-</dl>
-<p>dp=0.0          Ignored if radiation is ON. Momentum deviation.
-dct=None        Ignored if radiation is ON. Path lengthening.</p>
-<blockquote>
-<div><p>If specified, dp is ignored and the off-momentum is
-deduced from the path lengthening.</p>
-</div></blockquote>
-<dl>
-<dt>method=linopt6  Method used for the analysis of the transfer matrix.</dt><dd><p>See get_optics.
-linopt6: default
-linopt2: faster if no longitudinal motion and</p>
-<blockquote>
-<div><p>no H/V coupling,</p>
-</div></blockquote>
-</dd>
-</dl>
-</dd>
-<dt>OUTPUT</dt><dd><p>i1, i2, i3, i4, i5</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>Bunch length, energy spread</strong></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="at.physics.radiation.ohmi_envelope">
-<span class="sig-name descname"><span class="pre">ohmi_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.ohmi_envelope" title="Permalink to this definition">#</a></dt>
-<dd><p>Calculate the equilibrium beam envelope in a
-circular accelerator using Ohmi’s beam envelope formalism [1]</p>
-<p>emit0, beamdata, emit = ohmi_envelope(ring[, refpts])</p>
-<dl>
-<dt>PARAMETERS</dt><dd><p>ring            Lattice object.
-refpts=None     elements at which data is returned. It can be:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li><p>an integer in the range [-len(ring), len(ring)-1]
-selecting the element according to python indexing
-rules. As a special case, len(ring) is allowed and
-refers to the end of the last element,</p></li>
-<li><p>an ordered list of such integers without duplicates,</p></li>
-<li><p>a numpy array of booleans of maximum length
-len(ring)+1, where selected elements are True.</p></li>
-</ol>
-</div></blockquote>
+<dt class="sig sig-object py" id="at.acceptance.touschek.get_lifetime">
+<span class="sig-name descname"><span class="pre">get_lifetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bunch_curr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emitx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.acceptance.touschek.get_lifetime" title="Permalink to this definition">#</a></dt>
+<dd><p>Touschek lifetime calculation</p>
+<p>Computes the touschek lifetime using the piwinski formula</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – ring use for tracking</p></li>
+<li><p><strong>emity</strong> – verticla emittance</p></li>
+<li><p><strong>bunch_curr</strong> – bunch current</p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><dl class="simple">
-<dt>orbit=None          Avoids looking for the closed orbit if it is</dt><dd><p>already known ((6,) array)</p>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>emitx=None</strong> – horizontal emittance</p></li>
+<li><p><strong>sigs=None</strong> – rms bunch length</p></li>
+<li><p><strong>sigp=None</strong> – energy spread</p></li>
+<li><p><strong>zn=None</strong> – full ring <span class="math notranslate nohighlight">\(Z/n\)</span></p></li>
+<li><p><strong>momap=None</strong> – momentum aperture, has to be consistent with <code class="docutils literal notranslate"><span class="pre">refpts</span></code>
+if provided the momentum aperture is not calculated</p></li>
+<li><p><strong>refpts=None</strong> – <code class="docutils literal notranslate"><span class="pre">refpts</span></code> where the momentum aperture is calculated,
+the default is to compute it for all elements in the
+ring, <code class="docutils literal notranslate"><span class="pre">len(refpts)&gt;2</span></code> is required</p></li>
+<li><p><strong>resolution</strong> – minimum distance between 2 grid points, default=1.0e-3</p></li>
+<li><p><strong>amplitude</strong> – max. amplitude for <code class="docutils literal notranslate"><span class="pre">RADIAL</span></code> and <code class="docutils literal notranslate"><span class="pre">CARTESIAN</span></code> or
+initial step in <a href="#id1"><span class="problematic" id="id2">``</span></a>RECURSIVE`
+default = 0.1</p></li>
+<li><p><strong>nturns=1024</strong> – Number of turns for the tracking</p></li>
+<li><p><strong>dp=None</strong> – static momentum offset</p></li>
+<li><p><strong>grid_mode</strong> – <code class="docutils literal notranslate"><span class="pre">at.GridMode.CARTESIAN/RADIAL</span></code> track full vector
+(default). <code class="docutils literal notranslate"><span class="pre">at.GridMode.RECURSIVE</span></code>: recursive search</p></li>
+<li><p><strong>use_mp=False</strong> – Use python multiprocessing (<code class="docutils literal notranslate"><span class="pre">patpass</span></code>, default use
+<code class="docutils literal notranslate"><span class="pre">lattice_pass</span></code>). In case multi-processing is not
+enabled <code class="docutils literal notranslate"><span class="pre">GridMode</span></code> is forced to
+<code class="docutils literal notranslate"><span class="pre">RECURSIVE</span></code> (most efficient in single core)</p></li>
+<li><p><strong>verbose=True</strong> – Print out some inform</p></li>
+<li><p><strong>epsrel</strong> (<em>epsabs</em><em>,</em>) – integral absolute and relative tolerances</p></li>
+</ul>
 </dd>
-<dt>keep_lattice=False  Assume no lattice change since the previous</dt><dd><p>tracking</p>
-</dd>
-</dl>
-</dd>
-<dt>OUTPUT</dt><dd><p>emit0               emittance data at the start/end of the ring
-beamdata            beam parameters at the start of the ring
-emit                emittance data at the points refered to by refpts,</p>
-<blockquote>
-<div><p>if refpts is None an empty structure is returned.</p>
-</div></blockquote>
-<p>emit is a record array with fields:
-r66                 (6, 6) equilibrium envelope matrix R
-r44                 (4, 4) betatron emittance matrix (dpp = 0)
-m66                 (6, 6) transfer matrix from the start of the ring
-orbit6              (6,) closed orbit
-emitXY              (2,) betatron emittance projected on xxp and yyp
-emitXYZ             (3,) 6x6 emittance projected on xxp, yyp, ldp</p>
-<p>beamdata is a record array with fields:
-tunes               tunes of the 3 normal modes
-damping_rates       damping rates of the 3 normal modes
-mode_matrices       R-matrices of the 3 normal modes
-mode_emittances     equilibrium emittances of the 3 normal modes</p>
-<p>Field values can be obtained with either
-emit[‘r66’]    or
-emit.r66</p>
-</dd>
-<dt>REFERENCES</dt><dd><p>[1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.radiation.quantdiffmat">
-<span class="sig-name descname"><span class="pre">quantdiffmat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.quantdiffmat" title="Permalink to this definition">#</a></dt>
-<dd><p>This function computes the diffusion matrix of the whole ring</p>
-<dl class="simple">
-<dt>PARAMETERS</dt><dd><p>ring            lattice description.
-orbit=None      initial orbit</p>
-</dd>
-<dt>OUTPUT</dt><dd><p>diffusion matrix (6,6)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="at.physics.radiation.tapering">
-<span class="sig-name descname"><span class="pre">tapering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multipoles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.physics.radiation.tapering" title="Permalink to this definition">#</a></dt>
-<dd><p>Scales magnet strength with local energy to cancel the closed orbit
-and optics errors due to synchrotron radiations. PolynomB is used for
-dipoles such that the machine geometry is maintained. This is the ideal
-tapering scheme where magnets and multipoles components (PolynomB and
-PolynomA) are scaled individually.
-!!! WARNING: This method works only for lattices without errors and
-corrections: if not all corrections and field errors will also be
-scaled !!!
-tapering(ring) or ring.tapering()
-PARAMETERS</p>
-<blockquote>
-<div><p>ring            lattice description.</p>
-</div></blockquote>
-<dl>
-<dt>KEYWORDS</dt><dd><p>multipoles=True scale all multipoles
-method          Method for energy loss computation</p>
-<blockquote>
-<div><p>(see get_energy_loss)</p>
-</div></blockquote>
-<p>niter=1         number of iteration
-XYStep=1.0e-8   transverse step for numerical computation
-DPStep=1.0E-6   momentum deviation used for computation of orbit6</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Returns the touschek lifetime in seconds, the momentum aperture</strong></p></li>
+<li><p><strong>and the refpts at which the aperture was computed</strong></p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -686,17 +618,17 @@ DPStep=1.0E-6   momentum deviation used for computation of orbit6</p>
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="at.physics.orbit.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="at.acceptance.boundary.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">at.physics.orbit</p>
+            <p class="prev-next-title">at.acceptance.boundary</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="at.physics.revolution.html" title="next page">
+    <a class='right-next' id="next-link" href="at.collective.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">at.physics.revolution</p>
+        <p class="prev-next-title">at.collective</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

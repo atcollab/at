@@ -1,0 +1,1038 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>at.matching.matching &#8212; pyAT 0.2.3 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom_at.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="at.physics" href="at.physics.html" />
+    <link rel="prev" title="at.matching.globalfit" href="at.matching.globalfit.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/AT.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../index.html">
+  python
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../matlab.html">
+  Matlab
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../about.html">
+  History
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/atcollab/at" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Getting started:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting_started.html">
+   pyAT
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How to:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/Installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/Primer.html">
+   PyAT Primer
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/CavityControl.html">
+   Cavity Control
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/Collective.html">
+   Collective
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Packages:
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.acceptance.html">
+   at.acceptance
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.acceptance.acceptance.html">
+     at.acceptance.acceptance
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.acceptance.boundary.html">
+     at.acceptance.boundary
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.acceptance.touschek.html">
+     at.acceptance.touschek
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.collective.html">
+   at.collective
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.haissinski.html">
+     at.collective.haissinski
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.wake_elements.html">
+     at.collective.wake_elements
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.wake_functions.html">
+     at.collective.wake_functions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.wake_object.html">
+     at.collective.wake_object
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.lattice.html">
+   at.lattice
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.cavity_access.html">
+     at.lattice.cavity_access
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.elements.html">
+     at.lattice.elements
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.lattice_object.html">
+     at.lattice.lattice_object
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.options.html">
+     at.lattice.options
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.particle_object.html">
+     at.lattice.particle_object
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.utils.html">
+     at.lattice.utils
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.load.html">
+   at.load
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <label for="toctree-checkbox-4">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.allfiles.html">
+     at.load.allfiles
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.elegant.html">
+     at.load.elegant
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.matfile.html">
+     at.load.matfile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.reprfile.html">
+     at.load.reprfile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.tracy.html">
+     at.load.tracy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.utils.html">
+     at.load.utils
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="at.matching.html">
+   at.matching
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+  <label for="toctree-checkbox-5">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.matching.globalfit.html">
+     at.matching.globalfit
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     at.matching.matching
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.physics.html">
+   at.physics
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+  <label for="toctree-checkbox-6">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.amat.html">
+     at.physics.amat
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.diffmatrix.html">
+     at.physics.diffmatrix
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.energy_loss.html">
+     at.physics.energy_loss
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.fastring.html">
+     at.physics.fastring
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.harmonic_analysis.html">
+     at.physics.harmonic_analysis
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.linear.html">
+     at.physics.linear
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.matrix.html">
+     at.physics.matrix
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.nonlinear.html">
+     at.physics.nonlinear
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.orbit.html">
+     at.physics.orbit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.radiation.html">
+     at.physics.radiation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.revolution.html">
+     at.physics.revolution
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.ring_parameters.html">
+     at.physics.ring_parameters
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.plot.html">
+   at.plot
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+  <label for="toctree-checkbox-7">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.generic.html">
+     at.plot.generic
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.specific.html">
+     at.plot.specific
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.standalone.html">
+     at.plot.standalone
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.synopt.html">
+     at.plot.synopt
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.tracking.html">
+   at.tracking
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+  <label for="toctree-checkbox-8">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.atpass.html">
+     at.tracking.atpass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.particles.html">
+     at.tracking.particles
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.patpass.html">
+     at.tracking.patpass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.track.html">
+     at.tracking.track
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.constants.html">
+   at.constants
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="module-at.matching.matching">
+<span id="at-matching-matching"></span><h1>at.matching.matching<a class="headerlink" href="#module-at.matching.matching" title="Permalink to this headline">#</a></h1>
+<p>Classes for matching variables and constraints</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.matching.matching.match" title="at.matching.matching.match"><code class="xref py py-obj docutils literal notranslate"><span class="pre">match</span></code></a>(ring, variables, constraints[, ...])</p></td>
+<td><p>Perform matching of constraints by varying variables</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.matching.matching.Constraints" title="at.matching.matching.Constraints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Constraints</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Container for generic constraints: - a constraint is defined by a user-defined evaluation function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.matching.matching.ElementConstraints" title="at.matching.matching.ElementConstraints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementConstraints</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Base class for position-related constraints: handle the refpoints of each target</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.matching.matching.ElementVariable" title="at.matching.matching.ElementVariable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ElementVariable</span></code></a>(refpts, attname[, index])</p></td>
+<td><p>An ElementVariable is: - a scalar attribute or - an element of an array attribute of one or several elements of a lattice</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.matching.matching.EnvelopeConstraints" title="at.matching.matching.EnvelopeConstraints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EnvelopeConstraints</span></code></a>(ring)</p></td>
+<td><p>Container for envelope constraints: - a constraint can be set on any result of at.ohmi_envelope - constraints are added to the container with the EnvelopeConstraints.add   method.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.matching.matching.LinoptConstraints" title="at.matching.matching.LinoptConstraints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LinoptConstraints</span></code></a>(ring, **kwargs)</p></td>
+<td><p>Container for linear optics constraints: - a constraint can be set on any result of at.get_optics - constraints are added to the container with the LinoptConstraints.add   method.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.matching.matching.OrbitConstraints" title="at.matching.matching.OrbitConstraints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OrbitConstraints</span></code></a>(ring, *args, **kwargs)</p></td>
+<td><p>Container for orbit constraints: The closed orbit can be handled with LinoptConstraints, but for problems which do not involve parameters other than orbit, like steering or orbit bumps, OrbitConstraints is much faster.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.matching.matching.Variable" title="at.matching.matching.Variable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Variable</span></code></a>(setfun, getfun[, name, bounds])</p></td>
+<td><p>A Variable is a scalar value acting on a lattice through the user-defined functions setfun and getfun</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.Constraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Constraints" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Container for generic constraints:
+- a constraint is defined by a user-defined evaluation function.
+- constraints are added to the container with the Constraints.add method</p>
+<p class="rubric">Example</p>
+<p># define an evaluation function for the ring circumference:
+def circ_fun(ring):</p>
+<blockquote>
+<div><p>return ring.get_s_pos(len(ring) + 1)</p>
+</div></blockquote>
+<p># define an evaluation function for the momentum compaction factor:
+def mcf_fun(ring):</p>
+<blockquote>
+<div><p>return ring.get_mcf()</p>
+</div></blockquote>
+<p># Construct the container:
+cnstrs = Constraints()</p>
+<p># Add the two constraints:
+cnstrs.add(circ_fun, 850.0)
+cnstrs.add(mcf_fun, 1.0e-4, weight=0.1)</p>
+<p>build a generic constraints container.</p>
+<p>The positional and keyword parameters are provided to all
+the evaluation functions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Constraints.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Constraints.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a target to the Constraints container</p>
+<dl>
+<dt>PARAMETERS</dt><dd><dl class="simple">
+<dt>fun           evaluation function. Called as:</dt><dd><dl class="simple">
+<dt>value = fun(ring, <a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</dt><dd><p>value is the constrained parameter value
+value may be a scalar or an array.
+the positional and keyword parameters come from
+the Constraints initialisation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>target        desired value.</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>name=None     name of the constraint. If None, name is generated</dt><dd><p>from the name of the evaluation function</p>
+</dd>
+</dl>
+<p>weight=1.0    weight factor: the residual is (value-target)/weight
+bounds=(0,0)  lower and upper bounds. The parameter is constrained</p>
+<blockquote>
+<div><p>in the interval [target-low_bound target+up_bound]</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>The “target”, “weight” and “bounds” input must be broadcastable to the
+shape of “value”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Constraints.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Constraints.evaluate" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a flattened array of weighted residuals</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Constraints.header">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Constraints.header" title="Permalink to this definition">#</a></dt>
+<dd><p>Header for the display of constraint values and residuals</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Constraints.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Constraints.status" title="Permalink to this definition">#</a></dt>
+<dd><p>Return a string giving the actual state of constraints</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Constraints.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Constraints.values" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the list of actual parameter values</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.ElementConstraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ElementConstraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.ElementConstraints" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.matching.matching.Constraints" title="at.matching.matching.Constraints"><code class="xref py py-class docutils literal notranslate"><span class="pre">Constraints</span></code></a></p>
+<p>Base class for position-related constraints: handle the refpoints
+of each target</p>
+<p>build a generic constraints container.</p>
+<p>The positional and keyword parameters are provided to all
+the evaluation functions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.ElementConstraints.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.ElementConstraints.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a target to the Constraints container</p>
+<dl>
+<dt>PARAMETERS</dt><dd><dl class="simple">
+<dt>fun           evaluation function. Called as:</dt><dd><dl class="simple">
+<dt>value = fun(ring, <a href="#id5"><span class="problematic" id="id6">*</span></a>args, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs)</dt><dd><p>value is the constrained parameter value
+value may be a scalar or an array.
+the positional and keyword parameters come from
+the Constraints initialisation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>target        desired value.</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>name=None     name of the constraint. If None, name is generated</dt><dd><p>from the name of the evaluation function</p>
+</dd>
+</dl>
+<p>weight=1.0    weight factor: the residual is (value-target)/weight
+bounds=(0,0)  lower and upper bounds. The parameter is constrained</p>
+<blockquote>
+<div><p>in the interval [target-low_bound target+up_bound]</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>The “target”, “weight” and “bounds” input must be broadcastable to the
+shape of “value”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.ElementConstraints.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.ElementConstraints.compute" title="Permalink to this definition">#</a></dt>
+<dd><p>Dummy computation. Compute must return:
+- an iterator over local data for each target
+- a tuple of global data</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.ElementConstraints.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.ElementConstraints.values" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the list of actual parameter values</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.ElementVariable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ElementVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refpts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.ElementVariable" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.matching.matching.Variable" title="at.matching.matching.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a></p>
+<p>An ElementVariable is:
+- a scalar attribute or
+- an element of an array attribute
+of one or several elements of a lattice</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.EnvelopeConstraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EnvelopeConstraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.EnvelopeConstraints" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.matching.matching.ElementConstraints" title="at.matching.matching.ElementConstraints"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementConstraints</span></code></a></p>
+<p>Container for envelope constraints:
+- a constraint can be set on any result of at.ohmi_envelope
+- constraints are added to the container with the EnvelopeConstraints.add</p>
+<blockquote>
+<div><p>method.</p>
+</div></blockquote>
+<p>at.ohmi_envelope is called once before the evaluation of all constraints</p>
+<p class="rubric">Example</p>
+<p>cnstrs = EnvelopeConstraints(ring)</p>
+<p>Build a EnvelopeConstraints container</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.EnvelopeConstraints.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.EnvelopeConstraints.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a target to the EnvelopeConstraints container</p>
+<dl>
+<dt>PARAMETERS</dt><dd><dl class="simple">
+<dt>param         2 possibilities:</dt><dd><ul class="simple">
+<li><p>parameter name: see at.ohmi_envelope for the
+name of available parameters. In addition to
+local parameters, ‘tunes’, ‘damping_rates’,
+‘mode_matrices’ and ‘mode_emittance’ are allowed.</p></li>
+<li><dl class="simple">
+<dt>user-supplied parameter evaluation function:</dt><dd><p>value = prm(emit_data, beam_data)</p>
+</dd>
+<dt>emit_data contains the emittance data at all the</dt><dd><p>specified refpoints</p>
+</dd>
+<dt>value is the constrained parameter value</dt><dd><p>(scalar or array).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>target        desired value.</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>refpts=None   location of the constraint. Several locations may be</dt><dd><p>given to apply the same constraint at several points.</p>
+</dd>
+<dt>index=None    index in the parameter array. If None, the full array</dt><dd><p>is used.</p>
+</dd>
+<dt>name=None     name of the constraint. If None, name is generated</dt><dd><p>from param and index.</p>
+</dd>
+</dl>
+<p>weight=1.0    weight factor: the residual is (value-target)/weight.
+bounds=(0,0)  lower and upper bounds. The parameter is constrained</p>
+<blockquote>
+<div><p>in the interval [target-low_bound target+up_bound]</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>The target, weight and bounds values must be broadcastable to the shape
+of value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.EnvelopeConstraints.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.EnvelopeConstraints.compute" title="Permalink to this definition">#</a></dt>
+<dd><p>Optics computation before evaluation of all constraints</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.LinoptConstraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">LinoptConstraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.LinoptConstraints" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.matching.matching.ElementConstraints" title="at.matching.matching.ElementConstraints"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementConstraints</span></code></a></p>
+<p>Container for linear optics constraints:
+- a constraint can be set on any result of at.get_optics
+- constraints are added to the container with the LinoptConstraints.add</p>
+<blockquote>
+<div><p>method.</p>
+</div></blockquote>
+<p>at.get_optics is called once before the evaluation of all constraints</p>
+<p class="rubric">Example</p>
+<p>cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)</p>
+<p># Add a beta H (beta[0]) constraint at location ref_inj
+cnstrs.add(‘beta_x_inj’, ‘beta’, 18.0, refpts=ref_inj, index=0)</p>
+<p># Add a tune constraint
+cnstrs.add(‘tunes’, 0.44, index=0, weight=0.01)</p>
+<p># Add a chromaticity constraint (both planes)
+cnstrs.add(‘chroms’, [0.0 0.0])</p>
+<p># define a constraint of phase advances between 2 points
+def mu_diff(lindata, tune, chrom):</p>
+<blockquote>
+<div><p>delta_mu = (lindata[1].mu - lindata[0].mu)/(2*np.pi)
+return delta_mu % 1.0</p>
+</div></blockquote>
+<p># Add a H phase advance constraint, giving the desired locations
+cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1], index=0)</p>
+<p>Build a LinoptConstraints container</p>
+<p>KEYWORDS
+dp=0.0          momentum deviation.
+twiss_in=None   Initial twiss parameters for transfer line optics.</p>
+<blockquote>
+<div><p>“lindata” stucture, where only the beta and alpha are
+required and used.</p>
+</div></blockquote>
+<dl>
+<dt>orbit=None      Initial trajectory for transfer line</dt><dd><p>((6,) array)</p>
+</dd>
+<dt>method=linopt6  Method used for the analysis of the transfer matrix.</dt><dd><p>Can be None, at.linopt2, at.linopt4, at.linopt6
+linopt2:    no longitudinal motion, no H/V coupling,
+linopt4:    no longitudinal motion, Sagan/Rubin</p>
+<blockquote>
+<div><p>4D-analysis of coupled motion,</p>
+</div></blockquote>
+<dl class="simple">
+<dt>linopt6:    with or without longitudinal motion, normal</dt><dd><p>mode analysis</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.LinoptConstraints.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.LinoptConstraints.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a target to the LinoptConstraints container</p>
+<dl>
+<dt>PARAMETERS</dt><dd><dl class="simple">
+<dt>param         2 possibilities:</dt><dd><ul class="simple">
+<li><p>parameter name: see at.linopt for the name of
+available parameters. In addition to local optical
+parameters, ‘tunes’ and ‘chroms’ are allowed.</p></li>
+<li><dl class="simple">
+<dt>user-supplied parameter evaluation function:</dt><dd><p>value = param(lindata, tune, chrom)</p>
+</dd>
+<dt>lindata contains the optics parameters at all the</dt><dd><p>specified refpoints</p>
+</dd>
+<dt>value is the constrained parameter value</dt><dd><p>(scalar or array).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>target        desired value.</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>refpts=None   location of the constraint. Several locations may be</dt><dd><p>given to apply the same constraint at several points.</p>
+</dd>
+<dt>index=None    index in the parameter array. If None, the full array</dt><dd><p>is used.</p>
+</dd>
+<dt>name=None     name of the constraint. If None, name is generated</dt><dd><p>from param and index.</p>
+</dd>
+</dl>
+<p>weight=1.0    weight factor: the residual is (value-target)/weight.
+bounds=(0,0)  lower and upper bounds. The parameter is constrained</p>
+<blockquote>
+<div><p>in the interval [target-low_bound target+up_bound]</p>
+</div></blockquote>
+<dl class="simple">
+<dt>UseInteger    Match integer part of mu, much slower as the optics</dt><dd><p>calculation is done for all refpts</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>The target, weight and bounds values must be broadcastable to the shape
+of value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.LinoptConstraints.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.LinoptConstraints.compute" title="Permalink to this definition">#</a></dt>
+<dd><p>Optics computation before evaluation of all constraints</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.OrbitConstraints">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OrbitConstraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.OrbitConstraints" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#at.matching.matching.ElementConstraints" title="at.matching.matching.ElementConstraints"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementConstraints</span></code></a></p>
+<p>Container for orbit constraints:
+The closed orbit can be handled with LinoptConstraints, but for problems
+which do not involve parameters other than orbit, like steering or
+orbit bumps, OrbitConstraints is much faster.</p>
+<blockquote>
+<div><p>at.find_orbit is called once before the evaluation of all constraints</p>
+</div></blockquote>
+<p class="rubric">Example</p>
+<p>cnstrs = OrbitConstraints(ring, dp=0.01)</p>
+<p># Add a bump (x=-0.004, x’=0) constraint at location ref_inj
+cnstrs.add([-0.004, 0.0], refpts=ref_inj, index=slice(2))</p>
+<p>Build a OrbitConstraints container</p>
+<p>KEYWORDS
+dp=0            Momentum deviation, when radiation is OFF
+dct=0            Path lengthening, when radiation ids OFF
+orbit=None          Initial trajectory for transfer line: (6,) array</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.OrbitConstraints.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.OrbitConstraints.add" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a target to the OrbitConstraints container</p>
+<dl>
+<dt>PARAMETERS</dt><dd><p>target        desired value.</p>
+</dd>
+<dt>KEYWORDS</dt><dd><dl class="simple">
+<dt>refpts=None   location of the constraint. Several locations may be</dt><dd><p>given to apply the same constraint at several points.</p>
+</dd>
+<dt>index=None    index in the orbit vector. If None, the full orbit</dt><dd><dl class="simple">
+<dt>is used. Example:</dt><dd><p>index=0         # x
+index=2         # z
+index=slice(4)  # x, x’, z, z’</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>name=’orbit’  name of the constraint.
+weight=1.0    weight factor: the residual is (value-target)/weight.
+bounds=(0,0)  lower and upper bounds. The parameter is constrained</p>
+<blockquote>
+<div><p>in the interval [target-low_bound target+up_bound]</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>The target, weight and bounds values must be broadcastable to the shape
+of value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.OrbitConstraints.compute">
+<span class="sig-name descname"><span class="pre">compute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.OrbitConstraints.compute" title="Permalink to this definition">#</a></dt>
+<dd><p>Orbit computation before evaluation of all constraints</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="at.matching.matching.Variable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setfun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getfun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(-</span> <span class="pre">inf,</span> <span class="pre">inf)</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Variable" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A Variable is a scalar value acting on a lattice through the
+user-defined functions setfun and getfun</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Variable.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Variable.get" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Variable.header">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">header</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Variable.header" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Variable.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Variable.set" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="at.matching.matching.Variable.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vini</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">nan</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.Variable.status" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.matching.matching.match">
+<span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nfev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diff_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.matching.matching.match" title="Permalink to this definition">#</a></dt>
+<dd><p>Perform matching of constraints by varying variables</p>
+<dl class="simple">
+<dt>PARAMETERS</dt><dd><p>ring                ring lattice or transfer line
+variables           sequence of Variable objects
+constraints         sequence of Constraints objects</p>
+</dd>
+<dt>KEYWORDS</dt><dd><p>verbose=2           See scipy.optimize.least_squares
+max_nfev=1000           ”
+diff_step=1.0e-10       “</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="at.matching.globalfit.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">at.matching.globalfit</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="at.physics.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">at.physics</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, ATCollab.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

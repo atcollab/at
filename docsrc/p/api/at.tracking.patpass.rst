@@ -1,6 +1,10 @@
 at.tracking.patpass
 ===================
 
-.. currentmodule:: at.tracking
+.. automodule:: at.tracking.patpass
 
-.. autofunction:: patpass
+   .. rubric:: Functions
+
+   .. autosummary::
+
+      patpass
