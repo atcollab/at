@@ -99,6 +99,10 @@ html_sidebars = {
     "index": [],
     "about": [],
 }
+# creates an additional page, but impossible to link to it...
+html_additional_pages = {
+    "p/mlink": "mlink.html"
+}
 
 html_css_files = ["css/custom_at.css"]
 
