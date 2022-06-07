@@ -3,61 +3,31 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyAT's documentation!
-================================
-
-
-Accelerator Toolbox is a code used for simulating particle accelerators, used
-particularly for synchrotron light sources. It is hosted on `Github
-<https://github.com/atcollab/at>`_. Its original implementation is in Matlab.
-
-pyAT is a Python interface to Accelerator Toolbox. It uses the 'pass methods'
-defined in Accelerator Toolbox, implemented by compiling the C code used in the
-AT 'integrators' into a Python extension. These pass methods are used by
-higher-level functions to provide physics results.
-
-Sub-packages
+Welcome to AT
+=============
+Introduction
 ------------
 
+Accelerator Toolbox (AT) is a collection of tools to model storage rings and beam transport lines.
+
+With AT, it is possible to:
+
+- **create and manipulate accelerator lattice elements**,
+- **track particles through the lattice**, selecting the appropriate integrator to represent the physics
+- **compute accelerator parameters and beam properties**, generating new scripts or taking advantage of the existing ones
+
+AT is based on a 6-D modular tracking engine written in C/C++ for efficiency.
+Lattice manipulation and computation of accelerator physics parameters are provided
+by two interfaces:
+
+- a :doc:`Matlab interface <matlab>`, available as a Matlab toolbox,
+- a :doc:`python interface <p/index>`, available as a python package.
+
+
 .. toctree::
    :maxdepth: 2
    :hidden:
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Getting started:
-   :hidden:
-
-   getting_started
-   
-.. toctree::
-   :maxdepth: 2
-   :caption: How to:
-   :hidden:
-   
-   howto/Installation
-   howto/Primer
-   howto/CavityControl
-   howto/Collective
-   
-.. autosummary::
-   :toctree: autosummary
-   :caption: Packages:
-   :recursive:
-
-   at.acceptance
-   at.collective
-   at.lattice
-   at.load
-   at.matching
-   at.physics
-   at.plot
-   at.tracking
-   at.constants
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   python <p/index>
+   Matlab <matlab>
+   about

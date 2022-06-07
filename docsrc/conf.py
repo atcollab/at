@@ -37,7 +37,6 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
               'myst_parser',
-              'sphinx.ext.githubpages',
               'sphinx_copybutton',
               ]
 
@@ -89,15 +88,12 @@ myst_heading_anchors = 3
 #
 # html_theme = 'alabaster'
 # html_theme = 'sphinx_rtd_theme'
-html_theme = 'sphinx_book_theme'
-# html_theme = 'pydata_sphinx_theme'
+# html_theme = 'sphinx_book_theme'
+html_theme = 'pydata_sphinx_theme'
 html_logo = 'images/AT.png'
 html_copy_source = False
 html_theme_options = {
-    "repository_url": "https://github.com/atcollab/at",
-    "use_repository_button": True,
-    "use_download_button": False,
-    "use_issues_button": True,
+    "github_url": "https://github.com/atcollab/at",
 }
 html_css_files = ["css/custom_at.css"]
 

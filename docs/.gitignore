@@ -5,6 +5,3 @@ _site
 .buildinfo
 Gemfile.lock
 /vendor
-/sphinx/*/
-!/sphinx/html/
-doctrees

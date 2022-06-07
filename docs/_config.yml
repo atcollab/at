@@ -19,7 +19,7 @@ defaults:
       topnav: topnav
   -
     scope:
-      path: "m"
+      path: "html/m/*"
       type: "pages"
     values:
       sidebar: matlab_sidebar
@@ -49,4 +49,3 @@ exclude:
   - Gemfile.lock
   - vendor
   - README.md
-  - doctrees

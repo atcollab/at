@@ -1,5 +1,6 @@
-/autosummary/**
-!/autosummary/at.tracking.atpass.rst
-!/autosummary/at.tracking.patpass.rst
-!/autosummary/at.acceptance.rst
-!/autosummary/at.matching.rst
+/p/api/**
+!/p/api/at.tracking.atpass.rst
+!/p/api/at.tracking.patpass.rst
+!/p/api/at.acceptance.rst
+!/p/api/at.matching.rst
+/_build

@@ -23,10 +23,10 @@ $$\gamma=\frac{1+\alpha^2}{\beta}$$
 Use links relative to the root directory and refer to the html file. You can use in-line or referenced links
 The referenced link may be anywhere (here at the bottom of the file).
 
-in-line: [Python installation]({{ "p/Installation.html" | relative_url }})\
+in-line: [Python installation]({{ "html/p/howto/Installation.html" | relative_url }})\
 referenced: [Matlab installation]
 
-**link tag**: {%link p/Installation.md %}\
+**link tag**: {%link html/m/Installation.md %}\
 The link tag cannot be used on GitHub pages because it still does not prepend
 site.baseurl.
 
@@ -34,7 +34,7 @@ site.baseurl.
 Use relative links (absolute links only work from the root directory), refer to the markdown file.
 You can use in-line or referenced links.
 
-in-line: [Matlab installation](m/Installation.md)\
+in-line: [Matlab installation](html/m/Installation.md)\
 referenced: [Python installation]
 
 ## Images
@@ -92,5 +92,5 @@ and do not appear in the output{% endcomment %}
 {% comment %} Link references (do not appear in the output) {% endcomment %}
 [Figure 2]: {{ page.pict2 | relative_url }}
 [Figure 4]: assets/images/output_69_0.png
-[Matlab installation]: {{ "m/Installation.html" | relative_url }}
-[Python installation]: p/Installation.md
+[Matlab installation]: {{ "html/m/Installation.html" | relative_url }}
+[Python installation]: html/p//howto/Installation.html
