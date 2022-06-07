@@ -48,7 +48,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["README.rst"]
 autodoc_default_options = {
         # Make sure that any autodoc declarations show the right members
         "members": True,
@@ -95,6 +95,11 @@ html_copy_source = False
 html_theme_options = {
     "github_url": "https://github.com/atcollab/at",
 }
+html_sidebars = {
+    "index": [],
+    "about": [],
+}
+
 html_css_files = ["css/custom_at.css"]
 
 # Add any paths that contain custom static files (such as style sheets) here,

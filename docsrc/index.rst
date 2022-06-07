@@ -28,6 +28,6 @@ by two interfaces:
    :maxdepth: 2
    :hidden:
 
-   python <p/index>
+   Python <p/index>
    Matlab <matlab>
-   about
+   About <about>

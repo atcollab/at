@@ -5,6 +5,7 @@ permalink: about.html
 toc: false
 hide_sidebar: true
 ---
+# About
 
 ## History
 
