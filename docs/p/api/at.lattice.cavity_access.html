@@ -1,0 +1,771 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>at.lattice.cavity_access &#8212; pyAT 0.2.3 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom_at.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="at.lattice.elements" href="at.lattice.elements.html" />
+    <link rel="prev" title="at.lattice" href="at.lattice.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/AT.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../index.html">
+  Python
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../mlink.html">
+  Matlab
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../pabout.html">
+  About
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/atcollab/at" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Getting started:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../getting_started.html">
+   pyAT
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  How to:
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/Installation.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/Primer.html">
+   PyAT Primer
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/CavityControl.html">
+   Cavity Control
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../howto/Collective.html">
+   Collective
+  </a>
+ </li>
+</ul>
+<p aria-level="2" class="caption" role="heading">
+ <span class="caption-text">
+  Packages:
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.acceptance.html">
+   at.acceptance
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.acceptance.acceptance.html">
+     at.acceptance.acceptance
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.acceptance.boundary.html">
+     at.acceptance.boundary
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.acceptance.touschek.html">
+     at.acceptance.touschek
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.collective.html">
+   at.collective
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.haissinski.html">
+     at.collective.haissinski
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.wake_elements.html">
+     at.collective.wake_elements
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.wake_functions.html">
+     at.collective.wake_functions
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.collective.wake_object.html">
+     at.collective.wake_object
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="at.lattice.html">
+   at.lattice
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     at.lattice.cavity_access
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.elements.html">
+     at.lattice.elements
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.lattice_object.html">
+     at.lattice.lattice_object
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.options.html">
+     at.lattice.options
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.particle_object.html">
+     at.lattice.particle_object
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.lattice.utils.html">
+     at.lattice.utils
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.load.html">
+   at.load
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+  <label for="toctree-checkbox-4">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.allfiles.html">
+     at.load.allfiles
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.elegant.html">
+     at.load.elegant
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.matfile.html">
+     at.load.matfile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.reprfile.html">
+     at.load.reprfile
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.tracy.html">
+     at.load.tracy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.load.utils.html">
+     at.load.utils
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.matching.html">
+   at.matching
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+  <label for="toctree-checkbox-5">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.matching.globalfit.html">
+     at.matching.globalfit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.matching.matching.html">
+     at.matching.matching
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.physics.html">
+   at.physics
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+  <label for="toctree-checkbox-6">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.amat.html">
+     at.physics.amat
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.diffmatrix.html">
+     at.physics.diffmatrix
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.energy_loss.html">
+     at.physics.energy_loss
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.fastring.html">
+     at.physics.fastring
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.harmonic_analysis.html">
+     at.physics.harmonic_analysis
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.linear.html">
+     at.physics.linear
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.matrix.html">
+     at.physics.matrix
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.nonlinear.html">
+     at.physics.nonlinear
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.orbit.html">
+     at.physics.orbit
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.radiation.html">
+     at.physics.radiation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.revolution.html">
+     at.physics.revolution
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.physics.ring_parameters.html">
+     at.physics.ring_parameters
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.plot.html">
+   at.plot
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+  <label for="toctree-checkbox-7">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.generic.html">
+     at.plot.generic
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.specific.html">
+     at.plot.specific
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.standalone.html">
+     at.plot.standalone
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.plot.synopt.html">
+     at.plot.synopt
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="at.tracking.html">
+   at.tracking
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+  <label for="toctree-checkbox-8">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.atpass.html">
+     at.tracking.atpass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.particles.html">
+     at.tracking.particles
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.patpass.html">
+     at.tracking.patpass
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="at.tracking.track.html">
+     at.tracking.track
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="at.constants.html">
+   at.constants
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="module-at.lattice.cavity_access">
+<span id="at-lattice-cavity-access"></span><h1>at.lattice.cavity_access<a class="headerlink" href="#module-at.lattice.cavity_access" title="Permalink to this headline">#</a></h1>
+<p>Access to properties of RF cavities</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.cavity_access.get_rf_frequency" title="at.lattice.cavity_access.get_rf_frequency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_rf_frequency</span></code></a>(ring, **kwargs)</p></td>
+<td><p>Return the RF frequency</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.cavity_access.get_rf_voltage" title="at.lattice.cavity_access.get_rf_voltage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_rf_voltage</span></code></a>(ring, **kwargs)</p></td>
+<td><p>Return the total RF voltage (full ring)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.cavity_access.set_rf_voltage" title="at.lattice.cavity_access.set_rf_voltage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_rf_voltage</span></code></a>(ring, voltage, **kwargs)</p></td>
+<td><p>Set the RF voltage for the full ring</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.cavity_access.get_rf_timelag" title="at.lattice.cavity_access.get_rf_timelag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_rf_timelag</span></code></a>(ring, **kwargs)</p></td>
+<td><p>Return the RF time lag</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.cavity_access.set_rf_timelag" title="at.lattice.cavity_access.set_rf_timelag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_rf_timelag</span></code></a>(ring, timelag, **kwargs)</p></td>
+<td><p>Set the RF time lag</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#at.lattice.cavity_access.set_cavity" title="at.lattice.cavity_access.set_cavity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_cavity</span></code></a>(ring[, Voltage, Frequency, ...])</p></td>
+<td><p>Set the parameters of the RF cavities</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#at.lattice.cavity_access.Frf" title="at.lattice.cavity_access.Frf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Frf</span></code></a>(value)</p></td>
+<td><p>Enum class for frequency setting</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.Frf">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Frf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.Frf" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a></p>
+<p>Enum class for frequency setting</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.Frf.NOMINAL">
+<span class="sig-name descname"><span class="pre">NOMINAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'nominal'</span></em><a class="headerlink" href="#at.lattice.cavity_access.Frf.NOMINAL" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.get_rf_frequency">
+<span class="sig-name descname"><span class="pre">get_rf_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.get_rf_frequency" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the RF frequency</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>cavpts=None</strong> – Cavity location. If None, look for ring.cavpts,
+otherwise take all cavities.</p></li>
+<li><p><strong>array=False</strong> – <p>If False, return the frequency of the selected cavities
+with the lowest frequency.</p>
+<p>If True, return the frequency of all selected cavities</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>rf_freq</strong> – RF frequency</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.get_rf_timelag">
+<span class="sig-name descname"><span class="pre">get_rf_timelag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.get_rf_timelag" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the RF time lag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>cavpts=None</strong> – Cavity location. If None, look for ring.cavpts,
+otherwise take all cavities.</p></li>
+<li><p><strong>array=False</strong> – <p>If False, return the frequency of the selected cavities
+with the lowest frequency.</p>
+<p>If True, return the frequency of all selected cavities</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>rf_timelag</strong> – RF time lag</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.get_rf_voltage">
+<span class="sig-name descname"><span class="pre">get_rf_voltage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.get_rf_voltage" title="Permalink to this definition">#</a></dt>
+<dd><p>Return the total RF voltage (full ring)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>cavpts=None</strong> – Cavity location. If None, look for ring.cavpts,
+otherwise take all cavities.</p></li>
+<li><p><strong>array=False</strong> – <p>If False, return the frequency of the selected cavities
+with the lowest frequency.</p>
+<p>If True, return the frequency of all selected cavities</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>rf_v</strong> – Total RF voltage (full ring)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.set_cavity">
+<span class="sig-name descname"><span class="pre">set_cavity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Frequency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TimeLag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cavpts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.set_cavity" title="Permalink to this definition">#</a></dt>
+<dd><p>Set the parameters of the RF cavities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – lattice description</p></li>
+<li><p><strong>Frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em>) – RF frequency [Hz]</p></li>
+<li><p><strong>Voltage</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em>) – RF voltage [V]</p></li>
+<li><p><strong>TimeLag</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em>) – RF time shift [-ct]</p></li>
+<li><p><strong>cavpts</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><em>Refpts</em><em>]</em>) – Cavity location. If None, look for ring.cavpts, or
+otherwise take all cavities</p></li>
+<li><p><strong>array</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>]</em>) – If False, the value is applied as described for
+set_rf_voltage, set_rf_timelag and set_rf_frequency
+If True, directly apply the value to the selected
+cavities. The value must be broadcastable to the number
+of cavities.</p></li>
+<li><p><strong>copy</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.10)"><em>Optional</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>]</em>) – If True, returns a shallow copy of ring with new
+cavity elements. Otherwise, modify ring in-place</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.set_rf_timelag">
+<span class="sig-name descname"><span class="pre">set_rf_timelag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timelag</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.set_rf_timelag" title="Permalink to this definition">#</a></dt>
+<dd><p>Set the RF time lag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
+<li><p><strong>timelag</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – RF time lag</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>cavpts=None</strong> – Cavity location. If None, look for ring.cavpts,
+otherwise take all cavities.</p></li>
+<li><p><strong>array=False</strong> – <p>If False, return the frequency of the selected cavities
+with the lowest frequency.</p>
+<p>If True, return the frequency of all selected cavities</p>
+</p></li>
+<li><p><strong>copy=False</strong> – If True, returns a shallow copy of <code class="docutils literal notranslate"><span class="pre">ring</span></code> with new
+cavity elements. Otherwise, modify <code class="docutils literal notranslate"><span class="pre">ring</span></code> in-place.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="at.lattice.cavity_access.set_rf_voltage">
+<span class="sig-name descname"><span class="pre">set_rf_voltage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voltage</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.lattice.cavity_access.set_rf_voltage" title="Permalink to this definition">#</a></dt>
+<dd><p>Set the RF voltage for the full ring</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> (<a class="reference internal" href="at.lattice.lattice_object.html#at.lattice.lattice_object.Lattice" title="at.lattice.lattice_object.Lattice"><em>Lattice</em></a>) – Lattice description</p></li>
+<li><p><strong>voltage</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Total RF voltage (full ring)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>cavpts=None</strong> – Cavity location. If None, look for ring.cavpts,
+otherwise take all cavities.</p></li>
+<li><p><strong>array=False</strong> – <p>If False, return the frequency of the selected cavities
+with the lowest frequency.</p>
+<p>If True, return the frequency of all selected cavities</p>
+</p></li>
+<li><p><strong>copy=False</strong> – If True, returns a shallow copy of <code class="docutils literal notranslate"><span class="pre">ring</span></code> with new
+cavity elements. Otherwise, modify <code class="docutils literal notranslate"><span class="pre">ring</span></code> in-place.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="at.lattice.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">at.lattice</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="at.lattice.elements.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">at.lattice.elements</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, ATCollab.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

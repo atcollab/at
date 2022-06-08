@@ -19,7 +19,7 @@ defaults:
       topnav: topnav
   -
     scope:
-      path: "html/m/*"
+      path: "m/*"
       type: "pages"
     values:
       sidebar: matlab_sidebar
@@ -27,7 +27,7 @@ defaults:
 header_pages:
   - matlab.md
   - python.md
-  - about.md
+  - mabout.md
 
 plugins:
   - jekyll-remote-theme

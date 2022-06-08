@@ -10,7 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 # sys.path.insert(0, os.path.abspath('../pyat'))
@@ -33,6 +33,8 @@ version = '.'.join(at.__version__.split('.')[:2])
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+
+root_doc = 'index'
 extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
@@ -97,12 +99,13 @@ html_theme_options = {
 }
 html_sidebars = {
     "index": [],
-    "about": [],
+    "pabout": [],
 }
 # creates an additional page, but impossible to link to it...
-html_additional_pages = {
-    "p/mlink": "mlink.html"
-}
+# if os.environ.get('READTHEDOCS') == 'True':
+#     html_additional_pages = {
+#         "index": "plink.html"
+# }
 
 html_css_files = ["css/custom_at.css"]
 

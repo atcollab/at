@@ -6,11 +6,11 @@ topnav:
     - title: GitHub
       external_url: https://github.com/atcollab/at
     - title: Python
-      url: /html/p/index.html
+      url: /p/index.html
     - title: Matlab
-      url: /html/m/Installation.html
+      url: /m/Installation.html
     - title: About
-      url: /about.html
+      url: /mabout.html
 
 #Topnav dropdowns
 #topnav_dropdowns:
