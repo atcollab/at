@@ -3,7 +3,7 @@ Functions relating to particle generation
 """
 import numpy
 from at.physics import ohmi_envelope, radiation_parameters
-from at.lattice.constants import clight
+from at.constants import clight
 from at.lattice import AtError
 
 __all__ = ['beam', 'sigma_matrix']
@@ -108,28 +108,23 @@ def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
     """
     Calculate the correlation matrix to be used for particle generation
 
-
-    KEYWORDS
-        ring=None       Lattice object or list of
-                        twiss parameters.
-        twiss_in=None        Data structure containing input
-                        twiss parameters.
-
-        betax=None      Input horizontal beta function [m]
-        alphax=None     Input horizontal alpha function [m]
-        emitx=None      Horizontal emittance [m.rad]
-        betay=None      Input vertical beta function [m]
-        alphay=None     Input vertical alpha function [m]
-        emity=None      Vertical emittance [m.rad]
-        blength=None    One sigma bunch length [m]
-        espread=None    One sigma energy spread [dp/p]
-        verbose=False   Boolean flag on whether to print information
+    Parameters:
+        ring:           Lattice object or list of twiss parameters.
+        twiss_in:       Data structure containing input twiss parameters.
+        betax:          Input horizontal beta function [m]
+        alphax:         Input horizontal alpha function [m]
+        emitx:          Horizontal emittance [m.rad]
+        betay:          Input vertical beta function [m]
+        alphay:         Input vertical alpha function [m]
+        emity:          Vertical emittance [m.rad]
+        blength:        One sigma bunch length [m]
+        espread:        One sigma energy spread [dp/p]
+        verbose:        Boolean flag on whether to print information
                         to the terminal
-    OUTPUT
-        sigma_matrix    6x6 correlation matrix
+    Returns:
+        sigma_matrix:    6x6 correlation matrix
 
-
-    If the lattice object is provided ohmi_envelope is used to
+    If the lattice object is provided ``ohmi_envelope`` is used to
     compute the correlated sigma matrix and missing emittances
     and longitudinal parameters
 
@@ -138,12 +133,12 @@ def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
     using the initial optics computed from ring.get_optics,
     and are combined together into the 6x6 matrix.
 
-    If the twiss_in is provided it has to be produced with linopt6 and
-    contain the rmatrix. ring is used only to compute missing emittances.
+    If ``twiss_in`` is provided, it has to be produced with ``linopt6`` and
+    contain the rmatrix. ``ring`` is used only to compute missing emittances.
 
     If neither a lattice object nor a twiss_in is provided,
-    then the beta, alpha and emittance for horizontal and
-    vertical is required, as well as blength and espread.
+    then the ``beta``, ``alpha`` and ``emittance`` for horizontal and
+    vertical are required, as well as ``blength`` and ``espread``.
     This then computes the analytical uncoupled sigma matrix
     """
     if ring is not None or twiss_in is not None:
@@ -166,20 +161,18 @@ def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
                                        blength, espread)
 
 
-def beam(nparts, sigma, orbit=None):
+def beam(nparts: int, sigma, orbit=None):
     """
     Generates an array of random particles according to the given sigma
     matrix
 
-    PARAMETERS
-        nparts          Number of particles
-        sigma           sigma_matrix as calculated by at.sigma_matrix
-
-    KEYWORDS
-        orbit=None      An orbit can be provided to give a center of
+    Parameters:
+        nparts:         Number of particles
+        sigma:          sigma_matrix as calculated by at.sigma_matrix
+        orbit:          An orbit can be provided to give a center of
                         mass offset to the distribution
-    OUTPUT
-        particle_dist   a matrix of shape (6, np)
+    Returns:
+        particle_dist:  a (6, ``nparts``) matrix of coordinates
     """
     def _get_single_plane(dims):
         row_idx = numpy.array(dims)

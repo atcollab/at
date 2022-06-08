@@ -7,7 +7,7 @@ from at.lattice import uint32_refpts
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass
-from at.lattice import Particle, AtWarning, elements
+from at.lattice import AtWarning, elements
 import numpy
 
 
@@ -59,60 +59,80 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
     return format_results(results, r_in, losses)
 
 
+# noinspection PyIncorrectDocstring
 def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
             start_method=None, **kwargs):
     """
+    patpass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False, keep_counter=False, turn=0, losses=False, omp_num_threads=None, pool_size=None, start_method=None)
+
     Simple parallel implementation of atpass().  If more than one particle
     is supplied, use multiprocessing to run each particle in a separate
     process. In case a single particle is provided or the ring contains
-    ImpedanceTablePass element, atpass is returned
+    ImpedanceTablePass element, atpass() is returned
 
-    INPUT:
-        ring            lattice description
-        r_in:           6xN array: input coordinates of N particles
-        nturns:         number of passes through the lattice line
-        refpts          elements at which data is returned. It can be:
-                        1) an integer in the range [-len(ring), len(ring)-1]
-                           selecting the element according to python indexing
-                           rules. As a special case, len(ring) is allowed and
-                           refers to the end of the last element,
-                        2) an ordered list of such integers without duplicates,
-                        3) a numpy array of booleans of maximum length
-                           len(ring)+1, where selected elements are True.
-                        Defaults to None, meaning no refpts, equivelent to
-                        passing an empty array for calculation purposes.
-        losses          Activate loss maps
-        pool_size       number of processes, if None the min(npart,nproc)
-                        is used
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however it
-                        is considered unsafe.
-    The following keywords overload the lattice value:
-        particle:   circulating particle. Default: lattice.particle if
-                    existing, otherwise Particle('relativistic')
-        energy      lattice energy
+    ``patpass`` tracks particles through each element of a lattice
+    calling the element-specific tracking function specified in the Element's
+    ``PassMethod`` field.
 
-    If 'energy' is not available, relativistic tracking if forced, rest_energy
-    is ignored.
+    Parameters:
+        lattice (Iterable[Element]): list of elements
+        r_in:                   6 x n_particles Fortran-ordered numpy array.
+          On return, rin contains the final coordinates of the particles
+        nturns (int):           number of turns to be tracked
+        refpts (Uint32_refs):   numpy array of indices of elements where
+          output is desired:
 
-     OUTPUT:
-        (6, N, R, T) array containing output coordinates of N particles
-        at R reference points for T turns.
-        If losses ==True: {islost,turn,elem,coord} dictionnary containing
-        flag for particles lost (True -> particle lost), turn, element and
-        coordinates at which the particle is lost. Set to zero for particles
-        that survived
+          * 0 means entrance of the first element
+          * len(line) means end of the last element
+
+    Keyword arguments:
+        keep_lattice (Optional[bool]):  use elements persisted from a previous
+          call. If True, assume that the lattice has not changed since
+          the previous call.
+        keep_counter (Optional[bool]):  Keep the turn number from the previous
+          call.
+        turn (Optional[int]):           Starting turn number. Ignored if
+          keep_counter is True. The turn number is necessary to compute the
+          absolute path length used in RFCavityPass.
+        losses (Optional[bool]):        Boolean to activate loss maps output
+        pool_size (Optional[int]):      number of processes. If None,
+          ``min(npart,nproc)`` is used
+        start_method (Optional[str]):   This parameter allows to change the
+          python multiprocessing start method, default=None uses the python
+          defaults that is considered safe. Available parameters:
+          '``fork'``, ``'spawn'``, ``'forkserver'``. Default for linux is
+          ``'fork'``, default for MacOS and  Windows is ``'spawn'``. ``'fork'``
+          may used for MacOS to speed-up the calculation or to solve
+          Runtime Errors, however it is considered unsafe.
+        omp_num_threads (Optional[int]): number of OpenMP threads
+          (default: automatic)
+
+    The following keyword arguments overload the Lattice values
+
+    Keyword arguments:
+        particle (Optional[Particle]):  circulating particle.
+          Default: ``lattice.particle`` if existing,
+          otherwise ``Particle('relativistic')``
+        energy (Optiona[float]):        lattice energy. Default 0.
+
+    If ``energy`` is not available, relativistic tracking if forced,
+    ``rest_energy`` is ignored.
+
+    Returns:
+        r_out: (6, N, R, T) array containing output coordinates of N particles
+          at R reference points for T turns.
+
+          If losses ==True: {islost,turn,elem,coord} dictionary containing
+          flag for particles lost (True -> particle lost), turn, element and
+          coordinates at which the particle is lost. Set to zero for particles
+          that survived
     """
     if not isinstance(ring, list):
         ring = list(ring)
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
+    # noinspection PyProtectedMember
     pm_ok = [e.PassMethod in elements._collective for e in ring]
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
