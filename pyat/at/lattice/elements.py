@@ -8,6 +8,7 @@ responsibility to ensure that the appropriate attributes are present.
 import re
 import numpy
 import copy
+from typing import Optional, Generator, Tuple, Union, List, Iterable
 from inspect import getmembers, isdatadescriptor
 
 
@@ -29,7 +30,7 @@ def _nop(value):
 
 
 class Element(object):
-    """Base of pyat elements"""
+    """Base class for AT elements"""
 
     REQUIRED_ATTRIBUTES = ['FamName']
     _conversions = dict(FamName=str, PassMethod=str, Length=float,
@@ -48,7 +49,14 @@ class Element(object):
     _entrance_fields = ['T1', 'R1']
     _exit_fields = ['T2', 'R2']
 
-    def __init__(self, family_name, **kwargs):
+    def __init__(self, family_name: str, **kwargs):
+        """
+        Parameters:
+            family_name:    Name of the element
+
+        All keywords will be set as attributes of the element
+        """
+
         self.FamName = family_name
         self.Length = kwargs.pop('Length', 0.0)
         self.PassMethod = kwargs.pop('PassMethod', 'IdentityPass')
@@ -81,26 +89,26 @@ class Element(object):
         args = re.sub(r'\n\s*', ' ', ', '.join(keywords))
         return '{0}({1})'.format(self.__class__.__name__, args)
 
-    def equals(self, other):
+    def equals(self, other) -> bool:
         """Whether an element is equivalent to another.
 
         This implementation was found to be too slow for the generic
         __eq__ method when comparing lattices.
-
         """
         return repr(self) == repr(other)
 
-    def divide(self, frac):
+    def divide(self, frac) -> List["Element"]:
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
 
-        arguments:
-            frac            length of each slice expressed as a fraction of the
-                            initial length. sum(frac) may differ from 1.
+        Parameters:
+            frac:           length of each slice expressed as a fraction of the
+                            initial length. ``sum(frac)`` may differ from 1.
 
-        Return a list of elements equivalent to the original.
+        Returns:
+            elem_list:  a list of elements equivalent to the original.
 
-        Example:
+        Examples:
 
         >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
         [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
@@ -109,25 +117,25 @@ class Element(object):
         return [self]
 
     def update(self, *args, **kwargs):
-        """Update the element attributes with the given arguments
-
+        """
         update(**kwargs)
         update(mapping, **kwargs)
         update(iterable, **kwargs)
+        Update the element attributes with the given arguments
         """
         attrs = dict(*args, **kwargs)
         for (key, value) in attrs.items():
             setattr(self, key, value)
 
-    def copy(self):
+    def copy(self) -> "Element":
         """Return a shallow copy of the element"""
         return copy.copy(self)
 
-    def deepcopy(self):
+    def deepcopy(self) -> "Element":
         """Return a deep copy of the element"""
         return copy.deepcopy(self)
 
-    def items(self):
+    def items(self) -> Generator[Tuple, None, None]:
         """Iterates through the data members including slots and properties"""
         # Get attributes
         for k, v in vars(self).items():
@@ -139,10 +147,19 @@ class Element(object):
 
 
 class LongElement(Element):
-    """pyAT long element"""
+    """pyAT long element
+
+    Bse class for long elements"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']
 
-    def __init__(self, family_name, length, *args, **kwargs):
+    def __init__(self, family_name: str, length: float, *args, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+
+        Other arguments and keywords are given to the base class
+        """
         kwargs.setdefault('Length', length)
         # Ancestor may be either Element of ThinMultipole
         # noinspection PyArgumentList
@@ -155,22 +172,22 @@ class LongElement(Element):
             pp.KickAngle = fr / sumfr * self.KickAngle
         return pp
 
-    def divide(self, frac):
+    def divide(self, frac) -> List[Element]:
         """split the element in len(frac) pieces whose length
         is frac[i]*self.Length
 
-        arguments:
-            frac            length of each slice expressed as a fraction of the
-                            initial length. sum(frac) may differ from 1.
+        Parameters:
+            frac:           length of each slice expressed as a fraction of the
+                            initial length. ``sum(frac)`` may differ from 1.
 
-        Return a list of elements equivalent to the original.
+        Returns:
+            elem_list:  a list of elements equivalent to the original.
 
-        Example:
+        Examples:
 
         >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
         [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
-
         def popattr(element, attr):
             val = getattr(element, attr)
             delattr(element, attr)
@@ -207,6 +224,14 @@ class Aperture(Element):
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
     def __init__(self, family_name, limits, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            limits:         (4,) array of physical aperture:
+              [xmin, xmax, zmin, zmax] [m]
+
+        Default PassMethod: ``AperturePass``
+        """
         kwargs.setdefault('PassMethod', 'AperturePass')
         super(Aperture, self).__init__(family_name, Limits=limits, **kwargs)
 
@@ -214,26 +239,33 @@ class Aperture(Element):
 class Drift(LongElement):
     """pyAT drift space element"""
 
-    def __init__(self, family_name, length, **kwargs):
-        """Drift(FamName, Length, **keywords)
+    def __init__(self, family_name: str, length: float, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+
+        Default PassMethod: ``DriftPass``
         """
         kwargs.setdefault('PassMethod', 'DriftPass')
         super(Drift, self).__init__(family_name, length, **kwargs)
 
-    def insert(self, insert_list):
+    def insert(self,
+               insert_list: Iterable[Tuple[float, Union[Element, None]]]) \
+            -> List[Element]:
         """insert elements inside a drift
 
-        arguments:
+        Arguments:
             insert_list: iterable, each item of insert_list is itself an
-                         iterable with 2 objects:
-                             1. the location where the center of the element
-                                will be inserted, given as a fraction of the
-                                Drift length.
-                             2. an element to be inserted at that location. If
-                                None, the drift will be divided but no element
-                                will be inserted.
+              iterable with 2 objects:
 
-        Return a list of elements.
+              1. the location where the center of the element
+                 will be inserted, given as a fraction of the Drift length.
+              2. an element to be inserted at that location. If ``None``,
+                 the drift will be divided but no element will be inserted.
+
+        Returns:
+             elem_list: a list of elements.
 
         Drifts with negative lengths may be generated if necessary.
 
@@ -256,17 +288,26 @@ class Drift(LongElement):
         long_elems = (drfrac != 0.0)
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
-        line = [None] * (len(drifts) + len(elements))
+        nline = len(drifts) + len(elements)
+        line = [None] * nline           # type: List[Union[Element, None]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
-        
-        
+
+
 class Collimator(Drift):
     """pyAT collimator element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['RApertures']
-    def __init__(self, family_name, length, limits, **kwargs):
-        """Collimator(FamName, Length, limits, **keywords)
+
+    def __init__(self, family_name: str, length: float, limits, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            limits:         (4,) array of physical aperture:
+              [xmin, xmax, zmin, zmax] [m]
+
+        Default PassMethod: ``DriftPass``
         """
         super(Collimator, self).__init__(family_name, length,
                                          RApertures=limits, **kwargs)
@@ -277,12 +318,18 @@ class ThinMultipole(Element):
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['PolynomA',
                                                          'PolynomB']
 
-    def __init__(self, family_name, poly_a, poly_b, **kwargs):
-        """ThinMultipole(FamName, PolynomA, PolynomB, **keywords)
+    def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            poly_a:         Array of normal multipole components
+            poly_b:         Array of skew multipole components
 
-        Available keywords:
-        MaxOrder        Number of desired multipoles. Default: highest index of
+        Keyword arguments:
+            MaxOrder:   Number of desired multipoles. Default: highest index of
                         non-zero polynomial coefficients
+
+        Default PassMethod: ``ThinMPolePass``
         """
         def getpol(poly):
             nonzero = numpy.flatnonzero(poly != 0.0)
@@ -333,19 +380,38 @@ class Multipole(LongElement, ThinMultipole):
                                                              'PolynomB']
     _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
-    def __init__(self, family_name, length, poly_a, poly_b, **kwargs):
-        """Multipole(FamName, Length, PolynomA, PolynomB, **keywords)
+    def __init__(self, family_name: str, length: float, poly_a, poly_b,
+                 **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            poly_a:         Array of normal multipole components
+            poly_b:         Array of skew multipole components
 
-        Available keywords:
-        MaxOrder        Number of desired multipoles. Default: highest index of
-                        non-zero polynomial coefficients
-        NumIntSteps     Number of integration steps (default: 10)
-        KickAngle       Correction deviation angles (H, V)
+        Keyword arguments:
+            MaxOrder:   Number of desired multipoles. Default: highest index of
+              non-zero polynomial coefficients
+            NumIntSteps: Number of integration steps (default: 10)
+            KickAngle:  Correction deviation angles (H, V)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         kwargs.setdefault('NumIntSteps', 10)
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
+
+    # noinspection PyPep8Naming
+    @property
+    def K(self) -> float:
+        """Focusing strength [mˆ-2]"""
+        return self.PolynomB[1]
+
+    # noinspection PyPep8Naming
+    @K.setter
+    def K(self, strength: float):
+        self.PolynomB[1] = strength
 
 
 class Dipole(Multipole):
@@ -369,31 +435,45 @@ class Dipole(Multipole):
 
     DefaultOrder = 0
 
-    def __init__(self, family_name, length, bending_angle=0.0, k=0.0,
+    def __init__(self, family_name: str, length: float,
+                 bending_angle: Optional[float] = 0.0, k: float = 0.0,
                  **kwargs):
-        """Dipole(FamName, Length, bending_angle, Strength=0, **keywords)
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            bending_angle:  Bending angle [rd]
+            poly_a:         Array of normal multipole components
+            poly_b:         Array of skew multipole components
+            k=0:            Field index
 
-        Available keywords:
-        EntranceAngle   entrance angle (default 0.0)
-        ExitAngle       exit angle (default 0.0)
-        PolynomB        straight multipoles
-        PolynomA        skew multipoles
-        MaxOrder        Number of desired multipoles
-        NumIntSteps     Number of integration steps (default: 10)
-        FullGap         Magnet full gap
-        FringeInt1      Fringe field extension
-        FringeInt2
-        FringeBendEntrance  1: legacy version Brown First Order (default)
-                            2: SOLEIL close to second order of Brown
-                            3: THOMX
-        FringeBendExit
-        FringeQuadEntrance  0: no fringe fiels effect (default)
-                            1: Lee-Whiting's thin lens limit formula
-                            2: elegant-like
-        FringeQuadExit
-        fringeIntM0     Integrals for FringeQuad method 2
-        fringeIntP0
-        KickAngle       Correction deviation angles (H, V)
+        Keyword arguments:
+            EntranceAngle=0.0:  entrance angle
+            ExitAngle=0.0:      exit angle
+            PolynomB:           straight multipoles
+            PolynomA:           skew multipoles
+            MaxOrder:           Number of desired multipoles
+            NumIntSt=10:        Number of integration steps
+            FullGap:            Magnet full gap
+            FringeInt1:         Fringe field extension
+            FringeInt2:
+            FringeBendEntrance: 1: legacy version Brown First Order (default)
+
+              2: SOLEIL close to second order of Brown
+
+              3: THOMX
+            FringeBendExit:     See ``FringeBendEntrance``
+            FringeQuadEntrance: 0: no fringe field effect (default)
+
+              1: Lee-Whiting's thin lens limit formula
+
+              2: elegant-like
+            FringeQuadExit:     See ``FringeQuadEntrance``
+            fringeIntM0:        Integrals for FringeQuad method 2
+            fringeIntP0:
+            KickAngle:          Correction deviation angles (H, V)
+
+        Default PassMethod: ``BndMPoleSymplectic4Pass``
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         kwargs.setdefault('BendingAngle', bending_angle)
@@ -408,16 +488,6 @@ class Dipole(Multipole):
         pp.EntranceAngle = 0.0
         pp.ExitAngle = 0.0
         return pp
-
-    # noinspection PyPep8Naming
-    @property
-    def K(self):
-        return self.PolynomB[1]
-
-    # noinspection PyPep8Naming
-    @K.setter
-    def K(self, strength):
-        self.PolynomB[1] = strength
 
 
 # Bend is a synonym of Dipole.
@@ -435,36 +505,36 @@ class Quadrupole(Multipole):
 
     DefaultOrder = 1
 
-    def __init__(self, family_name, length, k=0.0, **kwargs):
+    def __init__(self, family_name: str, length: float,
+                 k: Optional[float] = 0.0, **kwargs):
         """Quadrupole(FamName, Length, Strength=0, **keywords)
 
-        Available keywords:
-        PolynomB        straight multipoles
-        PolynomA        skew multipoles
-        MaxOrder        Number of desired multipoles
-        NumIntSteps     Number of integration steps (default: 10)
-        FringeQuadEntrance  0: no fringe fiels effect (default)
-                            1: Lee-Whiting's thin lens limit formula
-                            2: elegant-like
-        FringeQuadExit
-        fringeIntM0     Integrals for FringeQuad method 2
-        fringeIntP0
-        KickAngle       Correction deviation angles (H, V)
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            k:              strength [mˆ-2]
+
+        Keyword Arguments:
+            PolynomB:           straight multipoles
+            PolynomA:           skew multipoles
+            MaxOrder:           Number of desired multipoles
+            NumIntSteps=10:     Number of integration steps
+            FringeQuadEntrance: 0: no fringe field effect (default)
+
+              1: Lee-Whiting's thin lens limit formula
+
+              2: elegant-like
+            FringeQuadExit:     See ``FringeQuadEntrance``
+            fringeIntM0:        Integrals for FringeQuad method 2
+            fringeIntP0:
+            KickAngle:          Correction deviation angles (H, V)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         poly_b = kwargs.pop('PolynomB', numpy.array([0, k]))
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
-
-    # noinspection PyPep8Naming
-    @property
-    def K(self):
-        return self.PolynomB[1]
-
-    # noinspection PyPep8Naming
-    @K.setter
-    def K(self, strength):
-        self.PolynomB[1] = strength
 
 
 class Sextupole(Multipole):
@@ -473,15 +543,22 @@ class Sextupole(Multipole):
 
     DefaultOrder = 2
 
-    def __init__(self, family_name, length, h=0.0, **kwargs):
-        """Sextupole(FamName, Length, Strength=0, **keywords)
+    def __init__(self, family_name: str, length: float,
+                 h: Optional[float] = 0.0, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            h:              strength [mˆ-3]
 
-        Available keywords:
-        PolynomB        straight multipoles
-        PolynomA        skew multipoles
-        MaxOrder        Number of desired multipoles
-        NumIntSteps     Number of integration steps (default: 10)
-        KickAngle       Correction deviation angles (H, V)
+        Keyword Arguments:
+            PolynomB:           straight multipoles
+            PolynomA:           skew multipoles
+            MaxOrder:           Number of desired multipoles
+            NumIntSteps=10:     Number of integration steps
+            KickAngle:          Correction deviation angles (H, V)
+
+        Default PassMethod: ``StrMPoleSymplectic4Pass``
         """
         poly_b = kwargs.pop('PolynomB', [0, 0, h])
         kwargs.setdefault('PassMethod', 'StrMPoleSymplectic4Pass')
@@ -516,11 +593,22 @@ class RFCavity(LongElement):
                         Voltage=float, Frequency=float,
                         HarmNumber=int, TimeLag=float)
 
-    def __init__(self, family_name, length, voltage, frequency,
-                 harmonic_number, energy, **kwargs):
+    def __init__(self, family_name: str, length: float, voltage: float,
+                 frequency: float, harmonic_number: int, energy: float,
+                 **kwargs):
         """
-        Available keywords:
-        TimeLag   time lag with respect to the reference particle
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            voltage:        RF voltage [V]
+            frequency:      RF frequency [Hz]
+            harmonic_number:
+            energy:         ring energy [eV]
+
+        Keyword Arguments:
+            TimeLag=0:      Cavity time lag
+
+        Default PassMethod: ``RFCavityPass``
         """
         kwargs.setdefault('TimeLag', 0.0)
         kwargs.setdefault('PassMethod', 'RFCavityPass')
@@ -541,7 +629,14 @@ class M66(Element):
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
     _conversions = dict(Element._conversions, M66=_array66)
 
-    def __init__(self, family_name, m66=None, **kwargs):
+    def __init__(self, family_name: str, m66=None, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            m66:            Transfer matrix. Default: Identity matrix
+
+        Default PassMethod: ``Matrix66Pass``
+       """
         if m66 is None:
             m66 = numpy.identity(6)
         kwargs.setdefault('PassMethod', 'Matrix66Pass')
@@ -552,7 +647,15 @@ class Corrector(LongElement):
     """pyAT corrector element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['KickAngle']
 
-    def __init__(self, family_name, length, kick_angle, **kwargs):
+    def __init__(self, family_name: str, length: float, kick_angle, **kwargs):
+        """
+        Args:
+            family_name:    Name of the element
+            length:         Element length [m]
+            KickAngle:      Correction deviation angles (H, V)
+
+        Default PassMethod: ``CorrectorPass``
+        """
         kwargs.setdefault('PassMethod', 'CorrectorPass')
         super(Corrector, self).__init__(family_name, length,
                                         KickAngle=kick_angle, **kwargs)
@@ -571,21 +674,25 @@ class Wiggler(LongElement):
                         By=lambda v: _array(v, (6, -1)),
                         Nstep=int, Nmeth=int, NHharm=int, NVharm=int)
 
-    def __init__(self, family_name, length, wiggle_period, b_max, energy,
-                 Nstep=5, Nmeth=4, By=(1, 1, 0, 1, 1, 0), Bx=(), **kwargs):
+    # noinspection PyPep8Naming
+    def __init__(self, family_name: str, length: float, wiggle_period: float,
+                 b_max: float, energy: float, Nstep: Optional[int] = 5,
+                 Nmeth: Optional[int] = 4,
+                 By=(1, 1, 0, 1, 1, 0), Bx=(), **kwargs):
         """
         Args:
-            length: total length of the wiggler
-            wiggle_period: length must be a multiple of this
-            b_max: peak wiggler field [Tesla]
-            energy: beam energy [eV]
+            length:         total length of the wiggler
+            wiggle_period:  length must be a multiple of this
+            b_max:          peak wiggler field [Tesla]
+            energy:         beam energy [eV]
+            Nstep:          number of integration steps.
+            Nmeth:          symplectic integration order: 2 or 4
+            Bx:             harmonics for horizontal wiggler: (6, nHharm)
+                              array-like object
+            By:             harmonics for vertical wiggler (6, nHharm)
+                              array-like object
 
-        Available keywords:
-            Nstep: number of integration steps.
-            Nmeth: symplectic integration order: 2 or 4
-            Bx: harmonics for horizontal wiggler: (6,nHharm) array-like object
-            By: harmonics for vertical wiggler (6,nHharm) array-like object
-
+        Default PassMethod: ``GWigSymplecticPass``
         """
         kwargs.setdefault('PassMethod', 'GWigSymplecticPass')
         n_wiggles = length / wiggle_period

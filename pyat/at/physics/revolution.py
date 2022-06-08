@@ -108,4 +108,6 @@ Lattice.get_mcf = get_mcf
 Lattice.get_slip_factor = get_slip_factor
 Lattice.set_rf_frequency = set_rf_frequency
 Lattice.rf_frequency = property(get_rf_frequency, set_rf_frequency,
-                                doc="Fundamental RF frequency [Hz]")
+    doc="Fundamental RF frequency [Hz]. The special value "
+        ":py:class:`at.Frf.NOMINAL <at.lattice.cavity_access.Frf>` "
+        "means nominal frequency.")

@@ -1,3 +1,9 @@
+"""
+Functions used to
+calculate the loss boundary for different
+grid definitions
+"""
+
 import at
 from at.lattice import AtError
 from at.tracking import lattice_pass, patpass
@@ -16,8 +22,8 @@ _pdict = {'x': 0, 'xp': 1,
 
 
 class GridMode(Enum):
-    """"
-    Class to defined the grid mode use when searching
+    """
+    Class to define the grid mode use when searching
     for the boundary
     """
     RADIAL = 0

@@ -12,7 +12,7 @@ A side-bar is displayed unless "hide_sidebar: true" is specified (as here).
 ## Markdown features
 {: #idfn .red}
 
-**In-line formula:** $$\eta_c = 1/\gamma^2 - \alpha_c$$
+**In-line formula:** $\eta_c = 1/\gamma^2 - \alpha_c$
 
 **Display formula:**
 
@@ -23,10 +23,10 @@ $$\gamma=\frac{1+\alpha^2}{\beta}$$
 Use links relative to the root directory and refer to the html file. You can use in-line or referenced links
 The referenced link may be anywhere (here at the bottom of the file).
 
-in-line: [Python installation]({{ "p/Installation.html" | relative_url }})\
+in-line: [Python installation]({{ "p/howto/Installation.html" | relative_url }})\
 referenced: [Matlab installation]
 
-**link tag**: {%link p/Installation.md %}\
+**link tag**: {%link m/Installation.md %}\
 The link tag cannot be used on GitHub pages because it still does not prepend
 site.baseurl.
 
@@ -93,4 +93,4 @@ and do not appear in the output{% endcomment %}
 [Figure 2]: {{ page.pict2 | relative_url }}
 [Figure 4]: assets/images/output_69_0.png
 [Matlab installation]: {{ "m/Installation.html" | relative_url }}
-[Python installation]: p/Installation.md
+[Python installation]: p//howto/Installation.html

@@ -15,43 +15,52 @@ Download the appropriate version of Visual C++.
 Linux
 ~~~~~
 
-Install the Python development package for your OS. For example, using yum:
+Install the Python development package for your OS. For example, using yum::
 
-* ``sudo yum install python3-devel``
+    $ sudo yum install python3-devel
 
 Source download
 ---------------
-Download the latest version of AT:
-    ``$ git clone https://github.com/atcollab/at.git``
+Download the latest version of AT::
 
+    $ git clone https://github.com/atcollab/at.git
 
 Installation (all platforms)
 ----------------------------
 
 All the binaries should be built when building the Python extension.
 
-It is easiest to do this using a virtualenv. inside pyat:
+It is easiest to do this using a virtualenv. inside pyat::
 
-* ``python3 -m venv venv``
+    $ python3 -m venv venv
 
 Then:
 
-* activate the virtual environment:
+* activate the virtual environment::
 
-  ``source venv/bin/activate  # or venv\Scripts\activate on Windows``
-* make sure you have a recent pip installer:
+    $ source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-  ``pip install --upgrade pip``
-* Go to the pyat root directory:
+* make sure you have a recent pip installer::
 
-  ``cd <atroot>/pyat``
-* install AT:
+    $ pip install --upgrade pip
 
-  ``pip install -e .``
+* Go to the pyat root directory::
 
-Finally, you should be able to run the tests:
+    cd <atroot>/pyat
 
-* ``python -m pytest test``
+* install AT, with the developer tools.
+  2 option sets are available:
+
+  * ``[dev]`` installs test modules (``pytest``,...)
+  * ``[doc]`` installs documentation tools (``sphinx`` and extensions)
+
+  They can be installed together: [dev, doc]::
+
+    $ pip install -e ".[dev]"
+
+Finally, you should be able to run the tests::
+
+    $ python -m pytest test
 
 
 Comparing results with Matlab
@@ -66,22 +75,22 @@ Debugging
 ---------
 
 Print statements in the C code will work once the integrators are
-recompiled.  To force recompilation, remove the build directory:
+recompiled.  To force recompilation, remove the build directory::
 
-* ``rm -rf build``
+    $ rm -rf build
 
 Any changes to .py files are automatically reinstalled in the build, but to
-ensure any changes to .c files are reinstalled rerun:
+ensure any changes to .c files are reinstalled rerun::
 
-* ``pip install -e .``
+    $ pip install -e .
 
 If you get strange behaviour even after running pip install develop again, then
-running the following, inside pyat, should fix it:
+running the following, inside pyat, should fix it::
 
-* ``rm -rf build``
-* ``find at -name "*.pyc" -exec rm '{}' \;``
-* ``find at -name "*.so" -exec rm '{}' \;``
-* ``pip install -e .``
+    $ rm -rf build
+    $ find at -name "*.pyc" -exec rm '{}' \;
+    $ find at -name "*.so" -exec rm '{}' \;
+    $ pip install -e .
 
 N.B. ``pip install -e .`` needs to be run with the same version of Python (and
 numpy) that you are using to run pyAT.
@@ -97,7 +106,7 @@ When a tag of the form pyat-* is pushed to Github, wheels for each
 supported platform will be built and automatically uploaded as an 'artifact'.
 
 Release procedure
-=================
+-----------------
 
 To upload a release to PyPI, you will need to be a 'maintainer' of
 `Accelerator Toolbox on PyPI <https://pypi.org/project/accelerator-toolbox/>`_.
@@ -118,17 +127,20 @@ associated with the tag ``pyat-x.y.z``: on the `Github Actions page <https://git
 
 * Download the tar.gz and wheels files and unzip them into a directory ``<dir>``
 * Manually install at least one wheel to make sure that it has built correctly
-* Install Twine for uploading the files to PyPI. One way to do this is to
-  create a new virtualenv:
-   * ``python3 -m venv venv``
-   * ``source venv/bin/activate``
-   * ``pip install twine``
-* Use Twine to upload the files to PyPI. You will be prompted for your PyPI credentials:
-   * ``twine upload <dir>/*.whl``
-   * ``twine upload <dir>/*.tar.gz``
-* Finally, check that the wheels are uploaded properly. You can use the same virtualenv:
-   * ``pip install accelerator-toolbox``
+* Install Twine for uploading the files to PyPI. One way to do this is to create a new virtualenv::
 
+    $ python3 -m venv venv
+    $ source venv/bin/activate
+    $ pip install twine
+
+* Use Twine to upload the files to PyPI. You will be prompted for your PyPI credentials::
+
+    $ twine upload <dir>/*.whl
+    $ twine upload <dir>/*.tar.gz
+
+* Finally, check that the wheels are uploaded properly. You can use the same virtualenv::
+
+    $ pip install accelerator-toolbox
 
 Note that 46 different files were uploaded for pyat-0.0.4 covering different
 platforms and architectures.

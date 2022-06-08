@@ -1,0 +1,5 @@
+myst_parser
+sphinx-book-theme
+sphinx-copybutton
+scipy
+-e ./pyat/.

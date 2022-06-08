@@ -1,3 +1,6 @@
+"""
+Classes for matching variables and constraints
+"""
 from itertools import chain
 import numpy as np
 from scipy.optimize import least_squares
