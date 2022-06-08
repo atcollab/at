@@ -142,9 +142,13 @@ class Lattice(list):
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_h = kwargs.pop('_harmnumber', None)
+        cell_length = kwargs.pop('_length', None)
 
         if 'harmonic_number' in kwargs:
-            cell_h = kwargs.pop('harmonic_number') / periodicity
+            cell_h, rem = divmod(kwargs.pop('harmonic_number'), periodicity)
+            if rem != 0:
+                raise AtError('harmonic number must be a multiple of {}'
+                              .format(periodicity))
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
         elif '_energy' not in kwargs:
@@ -154,11 +158,11 @@ class Lattice(list):
         # set attributes
         self.update(kwargs)
 
+        # Setting the harmonic number is delayed to have self.beta available
         if cell_h is not None:
             self._cell_harmnumber = cell_h
         elif frequency is not None:
-            beta = self.beta
-            rev = beta * clight / self.get_s_pos(len(self))[0]
+            rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
 
     def __getitem__(self, key):
@@ -198,15 +202,57 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        def add_filter(params, el1, el2):
-            it1 = el1.attrs_filter(params, el1)
-            return type_filter(params, itertools.chain(it1, el2))
-        return Lattice(self, elems, iterator=add_filter)
+        newring = Lattice(self)
+        newring.extend(elems)
+        return newring
+
+    def __iadd__(self, elems):
+        elist = list(self._addition_filter({}, elems))
+        return super(Lattice, self).__iadd__(elist)
 
     def __mul__(self, n):
         """Repeats n times the lattice"""
+        # noinspection PyTypeChecker
         return Lattice(itertools.chain(*itertools.repeat(self, n)),
                        iterator=self.attrs_filter)
+
+    def _addition_filter(self, params, elem_iterator):
+        cavities = []
+        length = 0.0
+
+        for elem in type_filter(params, elem_iterator):
+            if isinstance(elem, elements.RFCavity):
+                cavities.append(elem)
+                elem.Energy = self._energy
+            elif elem.PassMethod.endswith('RadPass'):
+                elem.Energy = self._energy
+            elif hasattr(elem, 'Energy'):
+                del elem.Energy
+            length += getattr(elem, 'Length', 0.0)
+            yield elem
+
+        if cavities and not hasattr(self, '_cell_harmnumber'):
+            cavities.sort(key=lambda el: el.Frequency)
+            try:
+                self._cell_harmnumber = getattr(cavities[0], 'HarmNumber')
+            except AttributeError:
+                length += self.get_s_pos(len(self))[0]
+                rev = self.beta * clight / length
+                frequency = getattr(cavities[0], 'Frequency')
+                self._cell_harmnumber = int(round(frequency / rev))
+        self._radiation |= params.pop('_radiation')
+
+    def insert(self, idx, elem):
+        # noinspection PyUnusedLocal
+        elist = list(self._addition_filter({}, [elem]))
+        super(Lattice, self).insert(idx, elem)
+
+    def extend(self, elems):
+        elist = list(self._addition_filter({}, elems))
+        super(Lattice, self).extend(elist)
+
+    def append(self, elem):
+        self.extend([elem])
 
     @property
     def attrs(self):
@@ -299,18 +345,14 @@ class Lattice(list):
         return Lattice(slice_iter(i_range[0], i_range[-1]),
                        iterator=self.attrs_filter, s_range=s_range)
 
-    @property
-    def attrs_filter(self):
+    def attrs_filter(self, params, elem_iterator):
         """Filter function which duplicates the lattice attributes"""
-        def filt(params, elems_iterator):
-            for key in self._std_attributes:
-                try:
-                    params.setdefault(key, getattr(self, key))
-                except AttributeError:
-                    pass
-            return elems_iterator
-
-        return filt
+        for key in self._std_attributes:
+            try:
+                params.setdefault(key, getattr(self, key))
+            except AttributeError:
+                pass
+        return elem_iterator
 
     @property
     def s_range(self):
@@ -759,6 +801,7 @@ def params_filter(params, elem_iterator, *args):
     el_energies = []
     thetas = []
     cavities = []
+    cell_length = 0
 
     for idx, elem in enumerate(elem_iterator(params, *args)):
         if isinstance(elem, elements.RFCavity):
@@ -768,13 +811,16 @@ def params_filter(params, elem_iterator, *args):
             del elem.Energy
         if isinstance(elem, elements.Dipole):
             thetas.append(elem.BendingAngle)
+        cell_length += getattr(elem, 'Length', 0.0)
         yield elem
 
+    params['_length'] = cell_length
     cav_energies = [el.Energy for el in cavities if hasattr(el, 'Energy')]
-    cavities.sort(key=lambda el: el.Frequency)
     if cavities:
-        params['_harmnumber'] = getattr(cavities[0], 'HarmNumber', None)
-        params['_frequency'] = getattr(cavities[0], 'Frequency', None)
+        cavities.sort(key=lambda el: el.Frequency)
+        c0 = cavities[0]
+        params['_harmnumber'] = getattr(c0, 'HarmNumber', None)
+        params['_frequency'] = getattr(c0, 'Frequency', None)
 
     if 'energy' not in params:
         energies = cav_energies or el_energies
