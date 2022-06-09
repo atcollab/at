@@ -5,3 +5,5 @@ _site
 .buildinfo
 Gemfile.lock
 /vendor
+_static/helpsearch*
+_static/custom_toolbox.json
