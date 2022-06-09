@@ -1,5 +1,7 @@
+.. role:: hidden
+
 #########
-AT Primer
+:hidden:`AT Primer`
 #########
 
 .. raw:: html

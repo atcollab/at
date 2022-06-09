@@ -1,5 +1,7 @@
+.. role:: hidden
+
 ############
-Installation
+:hidden:`Installation`
 ############
 
 .. raw:: html

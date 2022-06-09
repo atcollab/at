@@ -1,5 +1,7 @@
+.. role:: hidden
+
 ##############
-Cavity control
+:hidden:`Cavity control`
 ##############
 
 .. raw:: html

@@ -1,5 +1,7 @@
+.. role:: hidden
+
 #######
-2.3
+:hidden:`2.3`
 #######
 
 .. raw:: html
