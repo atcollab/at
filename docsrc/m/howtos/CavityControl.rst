@@ -4,7 +4,7 @@ Cavity control
 
 .. raw:: html
 
-   <iframe id="myIframe" src="../../_static/howtos/CavityControl.html" title="Cavity Control" style="width:100%; height:100vh; border: none; margin: 0; padding: 0; display: block;">
+   <iframe id="myIframe" src="../../_static/matlab/howtos/CavityControl.html" title="Cavity Control" style="width:100%; height:100vh; border: none; margin: 0; padding: 0; display: block;">
    </iframe>
    <script>
       // Selecting the iframe element
