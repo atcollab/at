@@ -21,10 +21,6 @@ Sub-packages
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
-
-.. toctree::
-   :maxdepth: 2
    :caption: Getting started:
    :hidden:
 

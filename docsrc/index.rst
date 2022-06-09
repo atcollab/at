@@ -20,7 +20,7 @@ AT is based on a 6-D modular tracking engine written in C/C++ for efficiency.
 Lattice manipulation and computation of accelerator physics parameters are provided
 by two interfaces:
 
-- a :doc:`Matlab interface <mlink>`, available as a Matlab toolbox,
+- a :doc:`Matlab interface <m/index>`, available as a Matlab toolbox,
 - a :doc:`python interface <p/index>`, available as a python package.
 
 
@@ -29,5 +29,5 @@ by two interfaces:
    :hidden:
 
    Python <p/index>
-   Matlab <mlink>
+   Matlab <m/index>
    About <pabout>

@@ -38,6 +38,7 @@ root_doc = 'index'
 extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
+              'sphinx.ext.githubpages',
               'myst_parser',
               'sphinx_copybutton',
               ]
