@@ -19,7 +19,7 @@
     <!-- but required to parse the file -->
     <icon/>
     <!-- (Required if you supply help) Relative path to help (HTML) folder -->
-    <help_location>../docsrc/atfiles/matlab</help_location>
+    <help_location>../docsrc/atdocs/matlab</help_location>
     <!-- (Required if you supply help) Icon used in the Help browser TOC -->
     <!-- Ignored in R2015a and later -->
     <help_contents_icon/>
