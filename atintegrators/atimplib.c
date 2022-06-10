@@ -138,8 +138,16 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
             if (ct < smin) {
                 pslice[i] = 0;
             }
-            else if (ct >= smax) {
+            else if (ct > smax) {
                 pslice[i] = nslice-1;
+            }
+            else if (ct == smax) {
+                ii = nslice-1;
+                weight[ii] += 1.0;
+                xpos[ii] += x;
+                ypos[ii] += y;
+                zpos[ii] += ct;
+                pslice[i] = ii;
             }
             else {
                 ii = (int)floor((ct-smin)/hz);
