@@ -203,11 +203,6 @@ class LongResonatorElement(ResonatorElement):
                                                    WakeComponent.Z, frequency,
                                                    qfactor, rshunt, **kwargs)
 
-    def rebuild_wake(self):
-        wake = Wake.long_resonator(self.WakeT, self._resfrequency,
-                                   self._qfactor, self._rshunt, self._beta)
-        self._build(wake)
-
 
 class ResWallElement(WakeElement):
     """Class to generate a resistive wall element, inherits from WakeElement
