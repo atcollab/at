@@ -7,6 +7,10 @@
 #endif
 
 
+#define TWOPI  6.28318530717959
+#define C0     2.99792458e8 
+
+
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
     int pivot = (int)(lower+upper)/2;
     if ((upper-lower)<=1){
@@ -35,6 +39,32 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
         return w;
     };
 };
+
+
+double wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta) {
+
+    double omega, alpha, omegabar;
+    double wake;
+    double dt;
+    
+    omega = TWOPI * freqres;
+    alpha = omega / (2 * qfactor);
+    omegabar = sqrt(abs(omega*omega - alpha*alpha));
+    
+    dt = -ds/(beta * C0);          
+    if (dt ==0) {
+        wake = rshunt * alpha;
+    } else if (qfactor > 0.5) {
+        wake = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
+               alpha / omegabar * sin(omegabar*dt));
+    } else if (qfactor == 0.5) {
+        wake = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
+    } else if (qfactor < 0.5) {
+        wake = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
+               alpha / omegabar * sinh(omegabar * dt)); 
+    }                       
+    return wake;
+}
 
 
 void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
@@ -233,6 +263,42 @@ void compute_kicks(int nslice,int nturns,int nelem,
     MPI_Allreduce(MPI_IN_PLACE,ky,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,kx2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,ky2,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+    #endif
+};
+
+
+void compute_kicks_longres(int nslice,int nturns, double *turnhistory,double normfact,
+                           double *kz,double freq, double qfactor, double rshunt, double beta) {
+
+    int rank=0;
+    int size=1;
+    int i,ii;
+    double ds,wi;
+    double *turnhistoryZ = turnhistory+nslice*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nturns*3;
+
+    for (i=0;i<nslice;i++) {
+        kz[i]=0.0;
+    }
+
+    #ifdef MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    #endif
+    for(i=nslice*(nturns-1);i<nslice*nturns;i++){  
+        if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
+            for (ii=0;ii<nslice*nturns;ii++){
+                ds = turnhistoryZ[i]-turnhistoryZ[ii];
+                if(turnhistoryW[ii]>0.0 && ds>=0){
+                    wi = turnhistoryW[ii];             
+                    kz[i-nslice*(nturns-1)] += normfact*wi*wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta);
+                }            
+            }
+        }
+    }
+    #ifdef MPI
     MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
