@@ -70,6 +70,9 @@ def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
                                      sextupole_pass=None,
                                      octupole_pass=None,
                                      copy=True)
+        diff_elem = ringtmp.get_elements('Diffusion')
+        for de in diff_elem:
+            ringtmp.remove(de)
 
         o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
                            refpts=len(ringtmp)))
