@@ -116,6 +116,10 @@ class Wake(object):
 
     def _resonator(self, wcomp, frequency, qfactor, rshunt, beta,
                    yokoya_factor=1):
+        if numpy.any(self._srange<0):
+            warnings.warn(AtWarning('You are adding a wake function with '
+                                    'negative srange. This may cause issues '
+                                    'interpolating around zero.\n'))
         if wcomp is WakeComponent.Z:
             return long_resonator_wf(self._srange, frequency,
                                      qfactor, rshunt, beta)
@@ -127,6 +131,10 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
     def _reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
+        if numpy.any(self._srange<0):
+            warnings.warn(AtWarning('You are adding a wake function with '
+                                    'negative srange. This may cause issues '
+                                    'interpolating around zero.\n'))
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))
@@ -142,7 +150,7 @@ class Wake(object):
         """
         Method to build a resonator wake object
         """
-        wake = Wake(srange)
+        wake = Wake(numpy.unique(srange.clip(0)))
         try:
             wakecomp = numpy.broadcast_to(wakecomp, (nelems, ))
             frequency = numpy.broadcast_to(frequency, (nelems, ))
@@ -173,7 +181,7 @@ class Wake(object):
         """
         Method to build a resistive wall wake object
         """
-        wake = Wake(srange)
+        wake = Wake(numpy.unique(srange.clip(0)))
         try:
             wakecomp = numpy.broadcast_to(wakecomp, (nelems, ))
             length = numpy.broadcast_to(length, (nelems, ))
