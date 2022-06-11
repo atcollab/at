@@ -1,5 +1,6 @@
 myst_parser
-sphinx-book-theme
+pydata-sphinx-theme
 sphinx-copybutton
 scipy
+matplotlib
 -e ./pyat/.
