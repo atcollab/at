@@ -1,6 +1,5 @@
+Sphinx<5
 myst_parser
 pydata-sphinx-theme
 sphinx-copybutton
 scipy
-matplotlib
--e ./pyat/.
