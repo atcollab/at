@@ -26,8 +26,8 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-    - requirements: docsrc/requirements.txt
     - method: pip
       path: ./pyat
       extra_requirements:
       - plot
+      - doc
