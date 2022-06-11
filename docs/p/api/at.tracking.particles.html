@@ -538,16 +538,17 @@
 <span class="sig-name descname"><span class="pre">beam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nparts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.tracking.particles.beam" title="Permalink to this definition">#</a></dt>
 <dd><p>Generates an array of random particles according to the given sigma
 matrix</p>
-<dl class="simple">
-<dt>PARAMETERS</dt><dd><p>nparts          Number of particles
-sigma           sigma_matrix as calculated by at.sigma_matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nparts</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of particles</p></li>
+<li><p><strong>sigma</strong> – sigma_matrix as calculated by at.sigma_matrix</p></li>
+<li><p><strong>orbit</strong> – An orbit can be provided to give a center of
+mass offset to the distribution</p></li>
+</ul>
 </dd>
-<dt>KEYWORDS</dt><dd><dl class="simple">
-<dt>orbit=None      An orbit can be provided to give a center of</dt><dd><p>mass offset to the distribution</p>
-</dd>
-</dl>
-</dd>
-<dt>OUTPUT</dt><dd><p>particle_dist   a matrix of shape (6, np)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>particle_dist</strong> – a (6, <code class="docutils literal notranslate"><span class="pre">nparts</span></code>) matrix of coordinates</p>
 </dd>
 </dl>
 </dd></dl>
@@ -556,41 +557,39 @@ sigma           sigma_matrix as calculated by at.sigma_matrix</p>
 <dt class="sig sig-object py" id="at.tracking.particles.sigma_matrix">
 <span class="sig-name descname"><span class="pre">sigma_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ring</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twiss_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">betax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emitx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">betay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">espread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#at.tracking.particles.sigma_matrix" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate the correlation matrix to be used for particle generation</p>
-<dl>
-<dt>KEYWORDS</dt><dd><dl class="simple">
-<dt>ring=None       Lattice object or list of</dt><dd><p>twiss parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ring</strong> – Lattice object or list of twiss parameters.</p></li>
+<li><p><strong>twiss_in</strong> – Data structure containing input twiss parameters.</p></li>
+<li><p><strong>betax</strong> – Input horizontal beta function [m]</p></li>
+<li><p><strong>alphax</strong> – Input horizontal alpha function [m]</p></li>
+<li><p><strong>emitx</strong> – Horizontal emittance [m.rad]</p></li>
+<li><p><strong>betay</strong> – Input vertical beta function [m]</p></li>
+<li><p><strong>alphay</strong> – Input vertical alpha function [m]</p></li>
+<li><p><strong>emity</strong> – Vertical emittance [m.rad]</p></li>
+<li><p><strong>blength</strong> – One sigma bunch length [m]</p></li>
+<li><p><strong>espread</strong> – One sigma energy spread [dp/p]</p></li>
+<li><p><strong>verbose</strong> – Boolean flag on whether to print information
+to the terminal</p></li>
+</ul>
 </dd>
-<dt>twiss_in=None        Data structure containing input</dt><dd><p>twiss parameters.</p>
-</dd>
-</dl>
-<p>betax=None      Input horizontal beta function [m]
-alphax=None     Input horizontal alpha function [m]
-emitx=None      Horizontal emittance [m.rad]
-betay=None      Input vertical beta function [m]
-alphay=None     Input vertical alpha function [m]
-emity=None      Vertical emittance [m.rad]
-blength=None    One sigma bunch length [m]
-espread=None    One sigma energy spread [dp/p]
-verbose=False   Boolean flag on whether to print information</p>
-<blockquote>
-<div><p>to the terminal</p>
-</div></blockquote>
-</dd>
-<dt>OUTPUT</dt><dd><p>sigma_matrix    6x6 correlation matrix</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sigma_matrix</strong> – 6x6 correlation matrix</p>
 </dd>
 </dl>
-<p>If the lattice object is provided ohmi_envelope is used to
+<p>If the lattice object is provided <code class="docutils literal notranslate"><span class="pre">ohmi_envelope</span></code> is used to
 compute the correlated sigma matrix and missing emittances
 and longitudinal parameters</p>
 <p>If emittances and longitudinal parameters are provided, then
 the 2x2 uncorrelated matrices are computed for each plane (x,y,z)
 using the initial optics computed from ring.get_optics,
 and are combined together into the 6x6 matrix.</p>
-<p>If the twiss_in is provided it has to be produced with linopt6 and
-contain the rmatrix. ring is used only to compute missing emittances.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">twiss_in</span></code> is provided, it has to be produced with <code class="docutils literal notranslate"><span class="pre">linopt6</span></code> and
+contain the rmatrix. <code class="docutils literal notranslate"><span class="pre">ring</span></code> is used only to compute missing emittances.</p>
 <p>If neither a lattice object nor a twiss_in is provided,
-then the beta, alpha and emittance for horizontal and
-vertical is required, as well as blength and espread.
+then the <code class="docutils literal notranslate"><span class="pre">beta</span></code>, <code class="docutils literal notranslate"><span class="pre">alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">emittance</span></code> for horizontal and
+vertical are required, as well as <code class="docutils literal notranslate"><span class="pre">blength</span></code> and <code class="docutils literal notranslate"><span class="pre">espread</span></code>.
 This then computes the analytical uncoupled sigma matrix</p>
 </dd></dl>
 

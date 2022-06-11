@@ -292,23 +292,23 @@ def checktype(eltype: type) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     """Checks the type of an element
 
-        Returns a function to be used as an ``Element`` filter, which checks the
-        type of the provided ``Element``.
-        This function can be used to extract from a ring all elements
-        having a given type.
+    Returns a function to be used as an ``Element`` filter, which checks the
+    type of the provided ``Element``.
+    This function can be used to extract from a ring all elements
+    having a given type.
 
-        Parameters:
-            eltype: Desired ``Element` type
+    Parameters:
+        eltype: Desired ``Element`` type
 
-        Returns:
-            checkfun (ElementFilter):   Element filter function
+    Returns:
+        checkfun (ElementFilter):   Element filter function
 
-        Examples:
+    Examples:
 
-            >>> qps = filter(checktype(at.Quadrupole), ring)
+        >>> qps = filter(checktype(at.Quadrupole), ring)
 
-            Returns an iterator over all quadrupoles in ring
-        """
+        Returns an iterator over all quadrupoles in ring
+    """
     return lambda el: isinstance(el, eltype)
 
 
