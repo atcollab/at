@@ -19,7 +19,7 @@ import at
 
 # -- Project information -----------------------------------------------------
 
-project = 'pyAT'
+project = 'Accelerator Toolbox'
 project_copyright = '2022, ATCollab'
 author = 'ATCollab'
 
