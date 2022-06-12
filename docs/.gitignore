@@ -5,5 +5,6 @@ _site
 .buildinfo
 Gemfile.lock
 /vendor
-/_static/matlab/*
-!/_static/matlab/*.html
+/_static/matlab/helpsearch*
+/_static/matlab/*.json
+/_static/matlab/*.xml
