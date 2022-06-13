@@ -27,7 +27,7 @@ jobs:
       working-directory: docsrc
 
     - name: Publish Docs to gh-pages
-      uses: peaceiris/actions-gh-pages@3.8.0
+      uses: peaceiris/actions-gh-pages@3.8
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docsrc/_build
