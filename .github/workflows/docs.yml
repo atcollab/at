@@ -4,10 +4,6 @@ on:
   push:
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: pyat
-
 jobs:
   build_and_run_tests:
 
@@ -24,14 +20,16 @@ jobs:
 
     - name: Build and install at with tests
       run: python -m pip install ".[plot, doc]"
+      with:
+        working-directory: pyat
 
     - name: Compile docs
       run: make html
       with:
-        working-directory: docsrc@3.8.0
+        working-directory: docsrc
 
     - name: Publish Docs to gh-pages
-      uses: peaceiris/actions-gh-pages
+      uses: peaceiris/actions-gh-pages@3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./_build
+        publish_dir: docsrc/_build
