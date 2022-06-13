@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: 3.9
 
-    - name: Build and install at with tests
+    - name: Build and install at
       run: python -m pip install ".[plot, doc]"
       working-directory: pyat
 
@@ -30,4 +30,4 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docsrc/_build
+        publish_dir: docsrc/_build/html
