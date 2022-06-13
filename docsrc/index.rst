@@ -23,6 +23,7 @@ by two interfaces:
 - a :doc:`Matlab interface <m/index>`, available as a Matlab toolbox,
 - a :doc:`python interface <p/index>`, available as a python package.
 
+Test automation
 
 .. toctree::
    :maxdepth: 2
