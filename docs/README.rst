@@ -12,15 +12,21 @@ Documentation tools
 ===================
 
 The PyAT documentation is compiled with
-`Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_. Sphinx and the
-necessary extensions are automatically installed when you install PyAT with
+`Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_.
+
+The documentation on GitHub Pages is compiled at each ``push`` action on the
+``master`` branch of AT. This ensures that the documentation is immediately
+updated for any modification in python docstrings.
+
+For a local check when writing documentation, Sphinx and the
+necessary extensions are automatically installed if you install PyAT with
 the [doc] option::
 
-    $ pip install -e ".[dev,doc]
+    $ pip install -e ".[doc]"
 
-Then, the compilation is triggered from the ``docsrc`` directory with::
+Then, the compilation may be triggered from the ``docs`` directory with::
 
-    $ cd <at_root>/docsrc
+    $ cd <at_root>/docs
     $ make html
 
 Writing documentation
@@ -34,6 +40,6 @@ better looking at a working example while writing.
 Any other documentation may be added by using
 `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
 or `markdown <https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html>`_,
-and putting files in the ``<at_root>/docsrc`` directory or any subdirectory.
+and putting files in the ``<at_root>/docs`` directory or any subdirectory.
 Links to new files must be provided in ``<at_root>/docsrc/index.rst``, or in
 cross-references from another file.
