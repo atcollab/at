@@ -2,6 +2,9 @@ name: Docs CI
 
 on:
   push:
+    branches:
+      - master
+      - sphinx_automation
   workflow_dispatch:
 
 jobs:
