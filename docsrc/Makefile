@@ -15,7 +15,7 @@ help:
 
 .PHONY: help Makefile
 
-html:	Makefile
+test:	Makefile
 	@$(SPHINXBUILD) -M $@ -d "$(BUILDDIR)/doctrees" "$(SOURCEDIR)" "$(HTMLDIR)" $(SPHINXOPTS) $(O)
 
 # Catch-all target: route all unknown targets to Sphinx using the new
