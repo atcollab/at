@@ -30,7 +30,7 @@ jobs:
       working-directory: docs
 
     - name: Publish Docs to gh-pages
-      uses: peaceiris/actions-gh-pages@ac45008338dab8bf0c3efa91605acffc8565729c
+      uses: peaceiris/actions-gh-pages@068dc23d9710f1ba62e86896f84735d869951305
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/_build/html
