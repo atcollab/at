@@ -49,20 +49,25 @@ double wakefunc_long_resonator(double ds, double freqres, double qfactor, double
     
     omega = TWOPI * freqres;
     alpha = omega / (2 * qfactor);
-    omegabar = sqrt(abs(omega*omega - alpha*alpha));
+    omegabar = sqrt(fabs(omega*omega - alpha*alpha));
     
-    dt = -ds/(beta * C0);          
-    if (dt ==0) {
+    dt = -ds/(beta * C0);      
+             
+    if (dt==0) {
         wake = rshunt * alpha;
-    } else if (qfactor > 0.5) {
-        wake = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
-               alpha / omegabar * sin(omegabar*dt));
-    } else if (qfactor == 0.5) {
-        wake = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
-    } else if (qfactor < 0.5) {
-        wake = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
-               alpha / omegabar * sinh(omegabar * dt)); 
-    }                       
+    } else if (dt<0) {
+        if (qfactor > 0.5) {
+            wake = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
+                   alpha / omegabar * sin(omegabar*dt));
+        } else if (qfactor == 0.5) {
+            wake = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
+        } else if (qfactor < 0.5) {
+            wake = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
+                   alpha / omegabar * sinh(omegabar * dt)); 
+        }  
+    } else {
+        wake = 0.0;
+    }                
     return wake;
 }
 
@@ -292,7 +297,7 @@ void compute_kicks_longres(int nslice,int nturns, double *turnhistory,double nor
             for (ii=0;ii<nslice*nturns;ii++){
                 ds = turnhistoryZ[i]-turnhistoryZ[ii];
                 if(turnhistoryW[ii]>0.0 && ds>=0){
-                    wi = turnhistoryW[ii];             
+                    wi = turnhistoryW[ii];       
                     kz[i-nslice*(nturns-1)] += normfact*wi*wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta);
                 }            
             }

@@ -1,9 +1,10 @@
 #include "atelem.c"
 #include "atimplib.c"
+#include "driftkickrad.c"
 #include <math.h>
 #include <float.h>
 /*
- * RFBeamLoading pass method by Simon White.  
+ * RFCavityBeamLoading pass method by Simon White.  
  * User may contact simon.white@esrf.fr for questions and comments.
  */
  
@@ -19,12 +20,13 @@ struct elem
   double normfact;
   double *turnhistory;
   double *z_cuts;
+  double Length;
   double Voltage;
   double Energy;
   double Frequency;
   double HarmNumber;
   double TimeLag;
-  double Phaselag;
+  double PhaseLag;
   double Qfactor;
   double Phil;
   double Rshunt;
@@ -36,21 +38,37 @@ struct elem
 };
 
 
-double get_vbeam(int nslice, int nturnsw, double *turnhistory, double freqres, 
-                 double qfactor, double rshunt, double beta, double circumference,
-                 double num_charge, double psi) {                 
-    int i;
-    double *turnhistoryZ = turnhistory;
-    double *turnhistoryW = turnhistory+nslice*nturnsw;
-    double ds, wi, wake, vbeam; 
-             
-    for(i=0; i< nslice*nturnsw; i++) {
-        ds = turnhistoryZ[nslice*nturnsw-1] - turnhistoryZ[i];
-        wi = turnhistoryW[i];
-        wake = wakefunc_long_resonator(ds,freqres,qfactor,rshunt,beta);
-        vbeam += wake*wi;
+void trackCavity(double *r_in, double le, double nv, double freq, double h, double lag, double philag,
+                 int nturn, double T0, int num_particles) {
+    int c;
+    if (le == 0) {
+        for (c = 0; c<num_particles; c++) {
+            double *r6 = r_in+c*6;
+            if(!atIsNaN(r6[0]))
+                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
+        }
     }
-    vbeam = abs(vbeam)*num_charge*QE/(cos(psi)*cos(psi));
+    else {
+        double halflength = le/2;
+        for (c = 0;c<num_particles;c++) {
+            double *r6 = r_in+c*6;
+            if(!atIsNaN(r6[0]))  {
+                drift6(r6, halflength);
+                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
+                drift6(r6, halflength);
+            }
+        }
+    }
+}
+
+double get_vbeam(int nslice, double normfact, double num_charge, double *kz, double psi){
+    int i;
+    double vbeam;
+    vbeam=0;
+    for(i=0; i<nslice;i++){
+        vbeam += kz[i]/normfact/nslice;
+    }
+    vbeam = fabs(vbeam)*num_charge*QE/(cos(psi)*cos(psi));
     return vbeam;
 }
 
@@ -88,11 +106,13 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,double circumference
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw;
     double normfact = Elem->normfact;  
+    double le = Elem->Length;
     double rfv = Elem->Voltage;
     double energy = Elem->Energy;
     double rffreq = Elem->Frequency;
     double harmn = Elem->HarmNumber;
     double tlag = Elem->TimeLag;
+    double plag = Elem->PhaseLag;
     double qfactor = Elem->Qfactor;
     double rshunt = Elem->Rshunt;
     double beta = Elem->Beta;
@@ -112,6 +132,12 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,double circumference
     double vbeam = bl_params[1];
     double vgen = bl_params[3];
     double psi = bl_params[4];
+    
+    if (plag) {
+        trackCavity(r_in,le,rfv/energy,rffreq,harmn,tlag,-plag,nturn,circumference/C0,num_particles);
+    } else {
+        trackCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
+    }
 
     void *buffer = atMalloc(sz);
     double *dptr = (double *) buffer;
@@ -126,20 +152,19 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,double circumference
     rotate_table_history(nturnsw,nslice,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturnsw,turnhistory,pslice,z_cuts);
     compute_kicks_longres(nslice,nturnsw,turnhistory,normfact,kz,freqres,qfactor,rshunt,beta);
-    vbeam = get_vbeam(nslice,nturnsw,turnhistory,freqres,qfactor,rshunt,beta,circumference,num_charges,psi);
+    vbeam = get_vbeam(nslice,normfact,num_charges,kz,psi);
     update_params(vbeam,qfactor,rfv,u0,phil,rffreq,bl_params);
-     
+   
     /*apply kicks and RF*/
     /* OpenMP not efficient. Too much shared data ?
     #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
     shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
-    */
+    */   
     for (c=0; c<num_particles; c++) {
         double *r6 = r_in+c*6;
         int islice=pslice[c];
-        if (!atIsNaN(r6[0])) {            
+        if (!atIsNaN(r6[0])) {         
             r6[4] += kz[islice]; 
-            r6[4] += -vgen/energy*sin(TWOPI*rffreq*((r6[5]-tlag)/C0 - (harmn/rffreq-circumference/C0)*nturn) + psi);
         }
     }
     atFree(buffer);
@@ -158,15 +183,17 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double normfact;
         double *turnhistory;
         double *z_cuts;
-        double Voltage, Energy, Frequency, TimeLag;
+        double Voltage, Energy, Frequency, TimeLag, Length, PhaseLag;
         double qfactor,rshunt,beta,u0,phil;
         double *bl_params;
 
         /*attributes for RF cavity*/
+        Length=atGetDouble(ElemData,"Length"); check_error();
         Voltage=atGetDouble(ElemData,"Voltage"); check_error();
         Energy=atGetDouble(ElemData,"Energy"); check_error();
         Frequency=atGetDouble(ElemData,"Frequency"); check_error();
         TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+        PhaseLag=atGetOptionalDouble(ElemData,"PhaseLag",0); check_error();
         /*attributes for resonator*/
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
@@ -174,7 +201,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
         rshunt=atGetDouble(ElemData,"Rshunt"); check_error();
-        beta=atGetDouble(ElemData,"Beta"); check_error();
+        beta=atGetDouble(ElemData,"_beta"); check_error();
         u0=atGetDouble(ElemData,"_u0"); check_error();
         phil=atGetDouble(ElemData,"Phil"); check_error();
         normfact=atGetDouble(ElemData,"NormFact"); check_error();
@@ -185,11 +212,13 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
        
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         
+        Elem->Length=Length;
         Elem->Voltage=Voltage;
         Elem->Frequency=Frequency;
         Elem->HarmNumber=round(Frequency*rl/C0);
         Elem->Energy = Energy;
-        Elem->TimeLag=TimeLag;      
+        Elem->TimeLag=TimeLag;
+        Elem->PhaseLag=PhaseLag;     
         Elem->nslice=nslice;
         Elem->nturnsw=nturns;
         Elem->normfact=normfact*num_charges*wakefact;
