@@ -4,9 +4,40 @@ from ..constants import clight
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy
+import functools
 
-__all__ = ['get_mcf', 'get_slip_factor', 'get_revolution_frequency',
-           'set_rf_frequency']
+__all__ = ['frequency_control', 'get_mcf', 'get_slip_factor',
+           'get_revolution_frequency', 'set_rf_frequency']
+
+
+def frequency_control(func):
+    """Function to be used as decorator for ``func(ring, *args, **kwargs)``
+
+    If ``ring.radiation`` is ``True`` and ``dp``, ``dct`` or ``df`` is
+    specified, make a copy of ``ring`` with a modified RF frequency, remove
+    ``dp``, ``dct`` or ``df`` from ``kwargs`` and call ``func`` with the
+    modified ``ring``.
+
+    If ``ring.radiation`` is ``False``, ``func`` is called unchanged.
+
+    Examples::
+
+        @frequency_control
+        def func(ring, *args, dp=None, dct=None, **kwargs):
+            pass
+    """
+    @functools.wraps(func)
+    def wrapper(ring, *args, **kwargs):
+        if ring.radiation:
+            momargs = {}
+            for key in ['dp', 'dct', 'df']:
+                v = kwargs.pop(key, None)
+                if v is not None:
+                    momargs[key] = v
+            if len(momargs) > 0:
+                ring = set_rf_frequency(ring, **momargs, copy=True)
+        return func(ring, *args, **kwargs)
+    return wrapper
 
 
 @check_radiation(False)
@@ -50,7 +81,7 @@ def get_slip_factor(ring, **kwargs):
     return etac
 
 
-def get_revolution_frequency(ring, dp=None, dct=None, **kwargs):
+def get_revolution_frequency(ring, dp=None, dct=None):
     """Compute the revolution frequency of the full ring [Hz]
 
     PARAMETERS
@@ -59,9 +90,6 @@ def get_revolution_frequency(ring, dp=None, dct=None, **kwargs):
     KEYWORDS
         dp=0.0          momentum deviation.
         dct=0.0         Path length deviation
-        keep_lattice    Assume no lattice change since the previous tracking.
-                        Defaults to False
-        dp_step=1.0E-6  momentum deviation used for differentiation
     """
     lcell = ring.get_s_pos(len(ring))[0]
     frev = ring.beta * clight / lcell / ring.periodicity
@@ -69,8 +97,9 @@ def get_revolution_frequency(ring, dp=None, dct=None, **kwargs):
         frev *= lcell / (lcell + dct)
     elif dp is not None:
         rnorad = ring.radiation_off(copy=True) if ring.radiation else ring
-        etac = get_slip_factor(rnorad, **kwargs)
-        frev += frev * etac * dp
+        orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
+        dct = numpy.squeeze(orbit)[5]
+        frev *= lcell / (lcell + dct)
     return frev
 
 
