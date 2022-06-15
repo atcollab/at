@@ -96,6 +96,7 @@ def get_revolution_frequency(ring, dp=None, dct=None):
     if dct is not None:
         frev *= lcell / (lcell + dct)
     elif dp is not None:
+        # Find the path lengthening for dp
         rnorad = ring.radiation_off(copy=True) if ring.radiation else ring
         orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
         dct = numpy.squeeze(orbit)[5]
