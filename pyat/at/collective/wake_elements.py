@@ -109,11 +109,11 @@ class WakeElement(Element):
 
     @property
     def Nturns(self):
-        return self._nslice
+        return self._nturns
 
     @Nturns.setter
-    def Nturns(self, nslice):
-        self._nslice = nslice
+    def Nturns(self, nturns):
+        self._nturns = nturns
         self.clear_history()
 
     @property
