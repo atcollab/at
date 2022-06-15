@@ -39,6 +39,7 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx',
               'sphinx.ext.githubpages',
+              'sphinx.ext.viewcode',
               'myst_parser',
               'sphinx_copybutton',
               ]
