@@ -47,21 +47,21 @@ atoctave
 developer
 doc
 jupyter
-matlab_releases
 pyat
 resources
 utils
 *.md
 **/*.md
+**/*.rst
 **/*.tar
 **/*.mex*
-athelp.mat
+**/*.py
 docs/_*
-docs/css
-docs/images
-docs/js
 docs/m
-docs/p</param.exclude.filters>
+docs/p
+docs/images
+docs/make.bat
+docs/Makefile</param.exclude.filters>
     <param.exclude.pcodedmfiles>true</param.exclude.pcodedmfiles>
     <param.examples>&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;examples&gt;
@@ -88,7 +88,7 @@ docs/p</param.exclude.filters>
     <param.exported.on.package>false</param.exported.on.package>
     <param.required.addons>
       <requiredaddons>
-        <requiredAddOn earliest="earliest" fromRepository="true" id="e562b2d1-4a80-11e4-9553-005056977bd0" include="false" latest="latest">export_fig</requiredAddOn>
+        <requiredAddOn earliest="earliest" fromRepository="true" id="e562b2d1-4a80-11e4-9553-005056977bd0" include="false" latest="latest">export_fig(2)</requiredAddOn>
       </requiredaddons>
     </param.required.addons>
     <param.matlab.project.id>25a6ccb8-d1d3-4459-847b-7335e59e8646</param.matlab.project.id>
@@ -167,7 +167,7 @@ docs/p</param.exclude.filters>
       <vista>false</vista>
       <linux>false</linux>
       <solaris>false</solaris>
-      <osver>12.3.1</osver>
+      <osver>12.4</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>maci64</arch>
