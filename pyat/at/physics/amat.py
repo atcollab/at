@@ -1,4 +1,4 @@
-""""""
+"""A-matrix construction"""
 import numpy
 from scipy.linalg import block_diag, eig, inv, solve
 from math import pi
@@ -19,43 +19,45 @@ _submat = [slice(0, 2), slice(2, 4), slice(4, 6)]
 
 
 def jmat(ind):
-    """
-    Return the antisymetric block diagonal matrix [[0, 1][-1, 0]]
+    """antisymetric block diagonal matrix [[0, 1][-1, 0]]
 
-    INPUT
-        ind     1, 2 or 3. Matrix dimension
+    Parameters:
+        ind:    Matrix dimension: 1, 2 or 3
 
-    OUTPUT
-        jm      block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
+    Returns:
+            jm: Block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
     """
     return _jm[ind - 1]
 
 
 def jmatswap(ind):
-    """Modified version of jmat to deal with the swap of the
-    longitudinal coordinates"""
+    """Modified antisymetric block diagonal matrix to deal with the swap of the
+    longitudinal coordinates
+    """
     return _jmswap[ind - 1]
 
 
 def a_matrix(tt):
-    """A, eigval = a_matrix(T)
-    Find the A matrix from one turn map matrix T such that:
+    """Find the A matrix from one turn map matrix T
 
                [Rotx  0    0  ]
     inv(A)*T*A=[ 0   Rotz  0  ]
                [ 0    0   Rots]
 
     Order it so that it is close to the order of x,y,z
+
     also ensure that positive modes are before negative so that
     one has proper symplecticity
+
+    Author:
     B. Nash July 18, 2013
 
-    INPUT
-    T       (m, m)  transfer matrix for 1 turn
+    Parameters:
+        tt:     (m, m)  transfer matrix for 1 turn
 
-    OUTPUT
-    A       (m, m)  A-matrix
-    eigval  (m,)    vector of Eigen values of T
+    Returns:
+        aa:     (m, m)  A-matrix
+        eigval: (m,)    Vector of Eigen values of T
     """
     nv = tt.shape[0]
     dms = int(nv / 2)
@@ -97,15 +99,15 @@ def a_matrix(tt):
 
 
 def amat(tt):
-    """A = amat(T)
-    Find the A matrix from one turn map matrix T
+    """Find the A matrix from one turn map matrix T
+
     Provided for backward compatibility, see " A, eigval = a_matrix(T)"
 
-    INPUT
-    T       (m, m)  transfer matrix for 1 turn
+    Parameters:
+        tt:     (m, m)  transfer matrix for 1 turn
 
-    OUTPUT
-    A       (m, m)  A-matrix
+    Returns:
+        aa:     (m, m)  A-matrix
     """
     aa, _ = a_matrix(tt)
     return aa
@@ -113,10 +115,16 @@ def amat(tt):
 
 # noinspection PyPep8Naming
 def symplectify(M):
-    """
-    symplectify makes a matrix more symplectic
+    """Makes a matrix more symplectic
+
     follow Healy algorithm as described by McKay
     BNL-75461-2006-CP
+
+    Parameters:
+        M:
+
+    Returns:
+        MS: Symplectic matrix
     """
     nv = M.shape[0]
     J = jmat(nv // 2)
@@ -132,7 +140,14 @@ def symplectify(M):
 
 
 def get_mode_matrices(a):
-    """Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes"""
+    """Derive R-matrices from A-matrix
+
+    Parameters:
+        a:  A-matrix
+
+    Returns:
+        r:
+    """
 
     def mul2(slc):
         return a[:, slc] @ tt[slc, slc]
@@ -150,21 +165,24 @@ def get_mode_matrices(a):
 
 
 def get_tunes_damp(tt, rr=None):
-    """
-    mode_emit, damping_rates, tunes = get_tunes_damp(T, R)
+    """Compute Mode emittances, tunes and damping times
 
-    INPUT
-        T                   (m, m) transfer matrix for 1 turn
-        R                   (m, m) beam matrix (optional)
+    Parameters:
+        tt:     (m, m) transfer matrix for 1 turn
+        rr:     (m, m) beam matrix (optional)
 
         m can be 2 (single plane), 4 (betatron motion) or 6 (full motion)
 
-    OUTPUT
-        record array with the following fields:
-        tunes               (m/2,) tunes of the m/2 normal modes
-        damping_rates       (m/2,) damping rates of the m/2 normal modes
-        mode_matrices       (m/2, m, m) the R-matrices of the m/2 normal modes
-        mode_emittances     Only if R is specified: (m/2,) emittance of each
+    Returns:
+        vv:     record array with the following fields:
+
+          **tunes**             (m/2,) tunes of the m/2 normal modes
+
+          **damping_rates**     (m/2,) damping rates of the m/2 normal modes
+
+          **mode_matrices**     (m/2, m, m) the R-matrices of the m/2 normal modes
+
+          **mode_emittances**   Only if R is specified: (m/2,) emittance of each
                             of the m/2 normal modes
     """
     nv = tt.shape[0]
