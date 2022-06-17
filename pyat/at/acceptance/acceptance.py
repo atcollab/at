@@ -1,21 +1,24 @@
 import numpy
 from .boundary import GridMode
+# noinspection PyProtectedMember
 from .boundary import boundary_search
 import multiprocessing
 from ..lattice import Lattice
+from ..physics import frequency_control
 
 
 __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
            'get_vertical_acceptance', 'get_momentum_acceptance']
 
 
+@frequency_control
 def get_acceptance(ring, planes, npoints, amplitudes, nturns=1024,
                    refpts=None, dp=None, offset=None, bounds=None,
                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
                    start_method=None, divider=2, shift_zero=1.0e-9):
     """
     Computes the acceptance at repfts observation points
-    Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
+    Grid Coordinates ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
     (r, theta). Scalar inputs can be used for 1D grid.
     The grid can be changed using grid_mode input:
     at.GridMode.CARTESIAN: (x,y) grid
@@ -192,7 +195,7 @@ def get_1d_acceptance(ring, plane, resolution, amplitude, nturns=1024, dp=None,
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
                              verbose=verbose, start_method=start_method,
-                             divider=2, shift_zero=0.0)
+                             divider=divider, shift_zero=0.0)
     return numpy.squeeze(b), s, g
 
 

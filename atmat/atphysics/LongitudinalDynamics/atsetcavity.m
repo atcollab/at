@@ -92,9 +92,12 @@ if isempty(varargs)             % New syntax
             if isfinite(dct)
                 frev=frev * lcell/(lcell+dct);
             elseif isfinite(dp)
-                [~,ringrad]=check_radiation(ring,false,'force');
-                etac=1/gamma0^2 - mcf(ringrad);
-                frev=frev + frev*etac*dp;
+                % Find the path lengthening for dp
+                [~,rnorad]=check_radiation(ring,false,'force');
+                [~,orbitin]=findorbit4(rnorad,dp);
+                orbitout=ringpass(rnorad,orbitin);
+                dct=orbitout(6);
+                frev=frev * lcell/(lcell+dct);
             end
             frequency = frev * props_harmnumber(harmnumber,props);
         else

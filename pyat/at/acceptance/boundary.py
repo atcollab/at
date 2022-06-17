@@ -4,12 +4,10 @@ calculate the loss boundary for different
 grid definitions
 """
 
-import at
 from at.lattice import AtError
 from at.tracking import lattice_pass, patpass
 from enum import Enum
 import numpy
-import warnings
 from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
@@ -79,20 +77,14 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     Returns a ring starting at obspt and initial
     closed orbit
     """
-    if ring.radiation:
-        newring = ring.set_rf_frequency(dp=dp, copy=True)
-        dp = None
-    else:
-        newring = ring
-
     if obspt is not None:
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
-        newring = newring.rotate(obspt)
+        ring = ring.rotate(obspt)
 
     if orbit is None:
-        orbit, _ = newring.find_orbit(dp=dp)
+        orbit = ring.find_orbit(dp=dp)[0]
 
-    return orbit, newring
+    return orbit, ring
 
 
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
