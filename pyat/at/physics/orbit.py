@@ -2,15 +2,18 @@
 Closed orbit related functions
 """
 import numpy
-from typing import Optional, Sequence
+from typing import Optional
 from at.constants import clight
 from at.lattice import AtWarning, check_radiation, DConstant
 from at.lattice import Lattice, get_s_pos, uint32_refpts, Refpts
 from at.tracking import lattice_pass
-from at.physics import ELossMethod, get_timelag_fromU0
+from . import ELossMethod, get_timelag_fromU0
 import warnings
 
-__all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6', 'find_orbit']
+Orbit = numpy.ndarray
+
+__all__ = ['Orbit', 'find_orbit4', 'find_sync_orbit', 'find_orbit6',
+           'find_orbit']
 
 
 @check_radiation(False)
@@ -114,7 +117,7 @@ def _orbit_dct(ring, dct=None, guess=None, **kwargs):
 def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
                 refpts: Optional[Refpts] = None,
                 dct: Optional[float] = None,
-                orbit: Optional[Sequence[float]] = None,
+                orbit: Optional[Orbit] = None,
                 keep_lattice: Optional[bool] = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dp
 
@@ -156,7 +159,7 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
           Default: False
 
     Keyword Args:
-        guess (Optional[Sequence[float]]):  (6,) initial value for the
+        guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence`
@@ -193,7 +196,7 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
 def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
                     refpts: Optional[Refpts] = None,
                     dp: Optional[float] = None,
-                    orbit: Optional[Sequence[float]] = None,
+                    orbit: Optional[Orbit] = None,
                     keep_lattice: Optional[bool] = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dct
 
@@ -235,7 +238,7 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
           Default: False
 
     Keyword Args:
-        guess (Optional[Sequence[float]]):  (6,) initial value for the
+        guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence`
@@ -330,7 +333,7 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
 
 
 def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
-                orbit=None,
+                orbit: Optional[Orbit] = None,
                 dp: Optional[float] = None,
                 dct: Optional[float] = None,
                 keep_lattice: Optional[bool] = False, **kwargs):
@@ -370,7 +373,7 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
             the equilibrium RF phase. If there is no radiation it is 0.
 
     Parameters:
-        ring:           Lattice description (radiation must be OFF)
+        ring:           Lattice description
         refpts:         Observation points
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
@@ -381,7 +384,7 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
           Default: False
 
     Keyword Args:
-        guess (Optional[Sequence[float]]):  (6,) initial value for the
+        guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence`
@@ -436,9 +439,12 @@ def find_orbit(ring, refpts=None, **kwargs):
         refpts:         Observation points
 
     Keyword Args:
-        dp (Optional[float]):             Momentum deviation. Defaults to None
-        dct (Optional[float]):            Path lengthening. Defaults to None
-        guess (Optional[Sequence[float]]):  (6,) initial value for the
+        orbit (Optional[Orbit]):       Avoids looking for initial the closed
+          orbit if it is already known. :py:func:`find_orbit` propagates it
+          to the specified ``refpts``.
+        dp (Optional[float]):           Momentum deviation. Defaults to None
+        dct (Optional[float]):          Path lengthening. Defaults to None
+        guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence`
