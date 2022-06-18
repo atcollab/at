@@ -77,7 +77,7 @@ def a_matrix(M):
         eigval: (m/2,)    Vector of Eigen values of T
 
     References:
-        Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
+        **[1]** Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
     """
     nv = M.shape[0]
     dms = int(nv / 2)
@@ -147,7 +147,7 @@ def symplectify(M):
         MS: Symplectic matrix
 
     References:
-        `W.W.MacKay, Comment on Healy's symplectification algorithm,
+        **[1]** `W.W.MacKay, Comment on Healy's symplectification algorithm,
         Proceedings of EPAC 2006
         <https://accelconf.web.cern.ch/e06/PAPERS/WEPCH152.PDF>`_
     """
@@ -175,7 +175,7 @@ def get_mode_matrices(A):
         R:
 
     References:
-        Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
+        **[1]** Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
         Published 3 February 2006
     """
 

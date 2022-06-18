@@ -21,3 +21,13 @@ class _Dst(object):
 
 
 DConstant = _Dst()
+"""
+Default values for AT algorithms
+
+Attributes:
+    XYStep:             Coordinate step for differentiation
+    DPStep:             Momentum step for dispersion and chromaticity
+    OrbConvergence:     Convergence criterion for orbit
+    OrbMaxIter:         Max. number of iterations for orbit
+    omp_num_threads:    Default number of OpenMP threads
+"""
