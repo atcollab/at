@@ -22,12 +22,11 @@ _pdict = {'x': 0, 'xp': 1,
 
 class GridMode(Enum):
     """
-    Class to define the grid mode use when searching
-    for the boundary
+    Grid definition for 2D acceptance boundary search
     """
-    RADIAL = 0
-    CARTESIAN = 1
-    RECURSIVE = 2
+    RADIAL = 0      #: full [:math:`\:r, \theta\:`] grid
+    CARTESIAN = 1   #: full [:math:`\:x, y\:`] grid
+    RECURSIVE = 2   #: radial recursive search
 
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode,

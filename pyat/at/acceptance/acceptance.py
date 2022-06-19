@@ -39,8 +39,9 @@ def get_acceptance(
           dimension
         amplitudes:     (len(planes),) array: set the search range:
 
-          * ``GridMode.RADIAL/CARTESIAN``: max. amplitude
-          * ``GridMode.RECURSIVE``: initial step
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
         nturns:         Number of turns for the tracking
         refpts:         Observation points. Default: start of the machine
         dp:             static momentum offset
@@ -48,20 +49,21 @@ def get_acceptance(
         bounds:         defines the tracked range: range=bounds*amplitude.
           It can be use to select quadrants. For example, default values are:
 
-          * ``GridMode.CARTESIAN``: ((-1, 1), (0, 1))
-          * ``GridMode.RADIAL/RECURSIVE``: ((0, 1), (:math:`\pi`, 0))
+          * :py:attr:`.GridMode.CARTESIAN`: ((-1, 1), (0, 1))
+          * :py:attr:`GridMode.RADIAL/RECURSIVE <.GridMode.RADIAL>`: ((0, 1),
+            (:math:`\pi`, 0))
         grid_mode:      defines the evaluation grid:
 
-          * ``GridMode.CARTESIAN``: full :math:`x, y` grid
-          * ``GridMode.RADIAL``: full :math:`r, \theta` grid
-          * ``GridMode.RECURSIVE``: recursive search
-        use_mp:         Use python multiprocessing (:py:func:`patpass`,
-          default use :py:func:`lattice_pass`). In case multi-processing is
-          not enabled, ``grid_mode`` is forced to ``GridMode.RECURSIVE``
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing is not
+          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         verbose:        Print out some information
-        divider:        Value of the divider used in ``GridMode.RECURSIVE``
-          boundary search
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
         shift_zero:
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
@@ -176,23 +178,24 @@ def get_1d_acceptance(
         resolution:     Minimum distance between 2 grid points
         amplitude:      Search range:
 
-          * ``GridMode.RADIAL/CARTESIAN``: max. amplitude
-          * ``GridMode.RECURSIVE``: initial step
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
         nturns:         Number of turns for the tracking
         refpts:         Observation points. Default: start of the machine
         dp:             static momentum offset
         grid_mode:      defines the evaluation grid:
 
-          * ``GridMode.CARTESIAN``: full :math:`x, y` grid
-          * ``GridMode.RADIAL``: full :math:`r, \theta` grid
-          * ``GridMode.RECURSIVE``: recursive search
-        use_mp:         Use python multiprocessing (:py:func:`patpass`,
-          default use :py:func:`lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to ``GridMode.RECURSIVE``
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing is not
+          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         verbose:        Print out some information
-        divider:        Value of the divider used in ``GridMode.RECURSIVE``
-          boundary search
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
         shift_zero:
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
@@ -203,7 +206,7 @@ def get_1d_acceptance(
           unsafe.
 
     Returns:
-        boundery:   (len(refpts),2) array: 1D acceptance
+        boundary:   (len(refpts),2) array: 1D acceptance
         tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
 
@@ -234,8 +237,9 @@ def get_horizontal_acceptance(ring, resolution: float, amplitude: float,
         resolution:     Minimum distance between 2 grid points
         amplitude:      Search range:
 
-          * ``GridMode.RADIAL/CARTESIAN``: max. amplitude
-          * ``GridMode.RECURSIVE``: initial step
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
 
     Keyword Args:
         nturns:         Number of turns for the tracking
@@ -243,16 +247,16 @@ def get_horizontal_acceptance(ring, resolution: float, amplitude: float,
         dp:             static momentum offset
         grid_mode:      defines the evaluation grid:
 
-          * ``GridMode.CARTESIAN``: full :math:`x, y` grid
-          * ``GridMode.RADIAL``: full :math:`r, \theta` grid
-          * ``GridMode.RECURSIVE``: recursive search
-        use_mp:         Use python multiprocessing (:py:func:`patpass`,
-          default use :py:func:`lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to ``GridMode.RECURSIVE``
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing is not
+          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         verbose:        Print out some information
-        divider:        Value of the divider used in ``GridMode.RECURSIVE``
-          boundary search
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
         shift_zero:
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
@@ -263,7 +267,7 @@ def get_horizontal_acceptance(ring, resolution: float, amplitude: float,
           unsafe.
 
     Returns:
-        boundery:   (len(refpts),2) array: 1D acceptance
+        boundary:   (len(refpts),2) array: 1D acceptance
         tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
 
@@ -284,8 +288,9 @@ def get_vertical_acceptance(ring, resolution: float, amplitude: float,
         resolution:     Minimum distance between 2 grid points
         amplitude:      Search range:
 
-          * ``GridMode.RADIAL/CARTESIAN``: max. amplitude
-          * ``GridMode.RECURSIVE``: initial step
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
 
     Keyword Args:
         nturns:         Number of turns for the tracking
@@ -293,16 +298,16 @@ def get_vertical_acceptance(ring, resolution: float, amplitude: float,
         dp:             static momentum offset
         grid_mode:      defines the evaluation grid:
 
-          * ``GridMode.CARTESIAN``: full :math:`x, y` grid
-          * ``GridMode.RADIAL``: full :math:`r, \theta` grid
-          * ``GridMode.RECURSIVE``: recursive search
-        use_mp:         Use python multiprocessing (:py:func:`patpass`,
-          default use :py:func:`lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to ``GridMode.RECURSIVE``
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing is not
+          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         verbose:        Print out some information
-        divider:        Value of the divider used in ``GridMode.RECURSIVE``
-          boundary search
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
         shift_zero:
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
@@ -313,7 +318,7 @@ def get_vertical_acceptance(ring, resolution: float, amplitude: float,
           unsafe.
 
     Returns:
-        boundery:   (len(refpts),2) array: 1D acceptance
+        boundary:   (len(refpts),2) array: 1D acceptance
         tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
 
@@ -334,8 +339,9 @@ def get_momentum_acceptance(ring, resolution: float, amplitude: float,
         resolution:     Minimum distance between 2 grid points
         amplitude:      Search range:
 
-          * ``GridMode.RADIAL/CARTESIAN``: max. amplitude
-          * ``GridMode.RECURSIVE``: initial step
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
 
     Keyword Args:
         nturns:         Number of turns for the tracking
@@ -343,16 +349,16 @@ def get_momentum_acceptance(ring, resolution: float, amplitude: float,
         dp:             static momentum offset
         grid_mode:      defines the evaluation grid:
 
-          * ``GridMode.CARTESIAN``: full :math:`x, y` grid
-          * ``GridMode.RADIAL``: full :math:`r, \theta` grid
-          * ``GridMode.RECURSIVE``: recursive search
-        use_mp:         Use python multiprocessing (:py:func:`patpass`,
-          default use :py:func:`lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to ``GridMode.RECURSIVE``
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp:         Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multi-processing is not
+          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         verbose:        Print out some information
-        divider:        Value of the divider used in ``GridMode.RECURSIVE``
-          boundary search
+        divider:        Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
         shift_zero:
         start_method:   Python multiprocessing start method. The default
           ``None`` uses the python default that is considered safe.
@@ -363,7 +369,7 @@ def get_momentum_acceptance(ring, resolution: float, amplitude: float,
           unsafe.
 
     Returns:
-        boundery:   (len(refpts),2) array: 1D acceptance
+        boundary:   (len(refpts),2) array: 1D acceptance
         tracked:    (n,) array: Coordinates of tracked particles
         survived:   (n,) array: Coordinates of surviving particles
 
