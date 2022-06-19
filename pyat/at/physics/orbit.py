@@ -123,7 +123,7 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
 
     Finds the closed orbit in the 4-d transverse phase space by numerically
     solving for a fixed point of the one turn map M calculated with
-    :py:func:`lattice_pass`.
+    :py:func:`.lattice_pass`.
 
     .. math:: \begin{pmatrix}x \\ p_x \\ y \\ p_y \\ dp \\ c\tau_2\end{pmatrix}
        =\mathbf{M} \cdot
@@ -162,11 +162,11 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`DConstant.OrbConvergence`
+          Default: :py:data:`.DConstant`.OrbConvergence
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`DConstant.OrbMaxIter`
+          Default: :py:data:`.DConstant`.OrbMaxIter
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
@@ -202,7 +202,7 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
 
     Finds the closed orbit, synchronous with the RF cavity (first 5
     components of the phase space vector) by numerically solving for a fixed
-    point of the one turn map M calculated with :py:func:`lattice_pass`
+    point of the one turn map M calculated with :py:func:`.lattice_pass`
 
     .. math:: \begin{pmatrix}x \\ p_x \\ y \\ p_y \\ dp \\ c\tau_1+
        dc\tau\end{pmatrix} =\mathbf{M} \cdot
@@ -241,11 +241,11 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`DConstant.OrbConvergence`
+          Default: :py:data:`.DConstant`.OrbConvergence
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`DConstant.OrbMaxIter`
+          Default: :py:data:`.DConstant`.OrbMaxIter
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
@@ -341,7 +341,7 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
 
     Findsinds the closed orbit in the full 6-D phase space
     by numerically solving  for a fixed point of the one turn
-    map M calculated with :py:func:`lattice_pass`
+    map M calculated with :py:func:`.lattice_pass`
 
     .. math:: \begin{pmatrix}x \\ p_x \\ y \\ p_y \\ dp \\ c\tau_2\end{pmatrix}
        =\mathbf{M} \cdot
@@ -350,7 +350,7 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
     with constraint :math:`c\tau_2 - c\tau_1 = c.h (1/f_{RF} - 1/f_{RF_0})`
 
     Important:
-        py:func:`find_orbit6` is a realistic simulation:
+        :py:func:`find_orbit6` is a realistic simulation:
 
         1.  The requency in the RF cavities :math:`f_{RF}` (may be different
             from :math:`f_{RF_0}`) imposes the synchronous condition
@@ -387,15 +387,15 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`DConstant.OrbConvergence`
+          Default: :py:data:`.DConstant`.OrbConvergence
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`DConstant.OrbMaxIter`
+          Default: :py:data:`.DConstant`.OrbMaxIter
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`DConstant.DPStep`
+          Default: :py:data:`.DConstant`.DPStep
         method (Optional[ELossMethod]): Method for energy loss computation.
-          See :py:class:`ELossMethod`.
+          See :py:class:`.ELossMethod`.
         cavpts (Optional[Refpts]):      Cavity location. If None, use all
           cavities. This is used to compute the initial synchronous phase.
 
@@ -447,13 +447,13 @@ def find_orbit(ring, refpts=None, **kwargs):
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`DConstant.OrbConvergence`
+          Default: :py:data:`.DConstant`.OrbConvergence
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`DConstant.OrbMaxIter`
+          Default: :py:data:`.DConstant`.OrbMaxIter
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`DConstant.DPStep`
+          Default: :py:data:`.DConstant`.DPStep
 
     For other keywords, refer to the underlying methods
 

@@ -34,8 +34,8 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
             (cavities , magnets with radiation, ...)
         2.  have any time dependence (localized impedance, fast kickers, ...)
 
-    Unless an input orbit is introduced, find_m44 assumes that the lattice is
-    a ring and first finds the closed orbit.
+    Unless an input orbit is introduced, :py:func:`find_m44` assumes that the
+    lattice is a ring and first finds the closed orbit.
 
     Parameters:
         ring:           Lattice description (radiation must be OFF)
@@ -44,8 +44,7 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
         dct:            Path lengthening. If specified, ``dp`` is ignored and
           the off-momentum is deduced from the path lengthening.
         orbit:          Avoids looking for initial the closed orbit if it is
-          already known ((6,) array). :py:func:`find_orbit4` propagates it to
-          the specified ``refpts``.
+          already known ((6,) array).
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
@@ -55,15 +54,15 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
           matrices are between the entrance of the first element and the
           entrance of the selected element
         XYStep (Optional[float]):   Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
 
     Returns:
-        M44:    full one-turn matrix at the entrance of the first element
-        M:      4x4 transfer matrices between the entrance of the first
+        m44:    full one-turn matrix at the entrance of the first element
+        ms:     4x4 transfer matrices between the entrance of the first
           element and each element indexed by refpts: (Nrefs, 4, 4) array
 
     See also:
-         :py:func:`find_m66`, :py:func:`find_orbit4`
+         :py:func:`find_m66`, :py:func:`.find_orbit4`
     """
 
     def mrotate(m):
@@ -112,7 +111,7 @@ def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
     :py:func:`find_m66` finds the 6x6 transfer matrix of an accelerator
     lattice by differentiation of trajectories near the closed orbit.
 
-    :py:func:`find_m66` uses :py:func:`find_orbit6` to search for the closed
+    :py:func:`find_m66` uses :py:func:`.find_orbit6` to search for the closed
     orbit in 6-D. In order for this to work the ring **MUST** have a ``Cavity``
     element
 
@@ -120,24 +119,23 @@ def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
         ring:           Lattice description
         refpts:         Observation points
         orbit:          Avoids looking for initial the closed orbit if it is
-          already known ((6,) array). :py:func:`find_sync_orbit` propagates it
-          to the specified ``refpts``.
+          already known ((6,) array).
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
     Keyword Args:
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`DConstant.DPStep`
+          Default: :py:data:`.DConstant`.DPStep
 
     Returns:
-        M66:    full one-turn matrix at the entrance of the first element
-        M:      6x6 transfer matrices between the entrance of the first
+        m66:    full one-turn matrix at the entrance of the first element
+        ms:     6x6 transfer matrices between the entrance of the first
           element and each element indexed by refpts: (Nrefs, 6, 6) array
 
     See also:
-         :py:func:`find_m44`, :py:func:`find_orbit6`
+         :py:func:`find_m44`, :py:func:`.find_orbit6`
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
@@ -190,10 +188,10 @@ def find_elem_m66(elem: Element,
 
     Keyword Args:
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`DConstant.XYStep`
+          Default: :py:data:`.DConstant`.XYStep
 
     Returns:
-        M66:        6x6 transfer matrix
+        m66:        6x6 transfer matrix
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     if orbit is None:
@@ -222,7 +220,7 @@ def gen_m66_elem(ring: Lattice,
         o4e:
 
     Returns:
-        M66:        6x6 transfer matrix
+        m66:        6x6 transfer matrix
     """
 
     dip_inds = get_refpts(ring, Bend)
