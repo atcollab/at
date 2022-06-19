@@ -14,12 +14,13 @@ __all__ = ['frequency_control', 'get_mcf', 'get_slip_factor',
 def frequency_control(func):
     """Function to be used as decorator for ``func(ring, *args, **kwargs)``
 
-    If ``ring.radiation`` is ``True`` and ``dp``, ``dct`` or ``df`` is
-    specified, make a copy of ``ring`` with a modified RF frequency, remove
-    ``dp``, ``dct`` or ``df`` from ``kwargs`` and call ``func`` with the
-    modified ``ring``.
+    If ``ring.radiation`` is :py:obj:`True` **and** ``dp``, ``dct`` or ``df``
+    is specified in ``kwargs``, make a copy of ``ring`` with a modified
+    RF frequency, remove ``dp``, ``dct`` or ``df`` from ``kwargs`` and call
+    ``func`` with the modified ``ring``.
 
-    If ``ring.radiation`` is ``False``, ``func`` is called unchanged.
+    If ``ring.radiation`` is :py:obj:`False` **or** no ``dp``, ``dct`` or
+    ``df`` is specified in ``kwargs``, ``func`` is called unchanged.
 
     Examples::
 
@@ -48,13 +49,13 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
 
     Parameters:
         ring:           Lattice description (radiation must be OFF)
-        dp:             Momentum deviation. Defaults to None
+        dp:             Momentum deviation. Defaults to :py:obj:`None`
         keep_lattice:   Assume no lattice change since the previous tracking.
-          Default: False
+          Default: :py:obj:`False`
 
     Keyword Args:
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`.DConstant`.DPStep
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
         mcf (float):    Momentum compaction factor :math:`\alpha`
@@ -79,7 +80,7 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     Keyword Args:
         dp (Optional[float]):       Momentum deviation
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`.DConstant`.DPStep
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
         eta (float):    Slip factor :math:`\eta`
@@ -96,8 +97,8 @@ def get_revolution_frequency(ring,
 
     Parameters:
         ring:       Lattice description
-        dp:         Momentum deviation. Defaults to None
-        dct:        Path lengthening. Defaults to None
+        dp:             Momentum deviation. Defaults to :py:obj:`None`
+        dct:            Path lengthening. Defaults to :py:obj:`None`
 
     Returns:
         frev:       Revolution frequency [Hz]
@@ -121,20 +122,22 @@ def set_rf_frequency(ring, frequency=None, dp=None, dct=None, **kwargs):
     Parameters:
         ring:           Lattice description
         frequency:      RF frequency [Hz]. Default: nominal frequency.
-        dp:             Momentum deviation. Defaults to None
-        dct:            Path lengthening. Defaults to None
+        dp:             Momentum deviation. Defaults to :py:obj:`None`
+        dct:            Path lengthening. Defaults to :py:obj:`None`
 
     Keyword Args:
-        cavpts (Optional[Refpts]):   If None, look for ring.cavpts, or otherwise
-          take all cavities.
-        array (Optional[bool]):     If False, frequency is applied to the
-          selected cavities with the lowest frequency. The frequency of all the
-          other selected cavities is scaled by the same ratio.
+        cavpts (Optional[Refpts]):  If :py:obj:`None`, look for ring.cavpts, or
+          otherwise take all cavities.
+        array (Optional[bool]):     If :py:obj:`False` (default), ``frequency``
+          is applied to the selected cavities with the lowest frequency. The
+          frequency of all the other selected cavities is scaled by the same
+          ratio.
 
-          If True, directly apply frequency to the selected cavities.
-          The value must be broadcastable to the number of cavities.
-        copy (Optional[bool]):     If True, returns a shallow copy of ``ring``
-          with new cavity elements. Otherwise, modify ``ring`` in-place
+          If :py:obj:`True`, directly apply ``frequency`` to the selected
+          cavities. The value must be broadcastable to the number of cavities.
+        copy (Optional[bool]):     If :py:obj:`True`, returns a shallow copy of
+          ``ring`` with new cavity elements. Otherwise (default), modify
+          ``ring`` in-place
     """
     if frequency is None:
         frequency = ring.get_revolution_frequency(dp=dp, dct=dct) \
@@ -150,5 +153,4 @@ Lattice.get_slip_factor = get_slip_factor
 Lattice.set_rf_frequency = set_rf_frequency
 Lattice.rf_frequency = property(get_rf_frequency, set_rf_frequency,
     doc="Fundamental RF frequency [Hz]. The special value "
-        ":py:class:`at.Frf.NOMINAL <at.lattice.cavity_access.Frf>` "
-        "means nominal frequency.")
+        ":py:class:`Frf.NOMINAL <.Frf>` means nominal frequency.")

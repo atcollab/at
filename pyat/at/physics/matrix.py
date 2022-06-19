@@ -54,7 +54,7 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
           matrices are between the entrance of the first element and the
           entrance of the selected element
         XYStep (Optional[float]):   Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
         m44:    full one-turn matrix at the entrance of the first element
@@ -125,9 +125,9 @@ def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
 
     Keyword Args:
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`.DConstant`.DPStep
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
         m66:    full one-turn matrix at the entrance of the first element
@@ -188,7 +188,7 @@ def find_elem_m66(elem: Element,
 
     Keyword Args:
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
         m66:        6x6 transfer matrix

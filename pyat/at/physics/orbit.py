@@ -162,11 +162,11 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`.DConstant`.OrbConvergence
+          Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`.DConstant`.OrbMaxIter
+          Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
@@ -241,11 +241,11 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`.DConstant`.OrbConvergence
+          Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`.DConstant`.OrbMaxIter
+          Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
@@ -387,13 +387,13 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`.DConstant`.OrbConvergence
+          Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`.DConstant`.OrbMaxIter
+          Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`.DConstant`.DPStep
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
         method (Optional[ELossMethod]): Method for energy loss computation.
           See :py:class:`.ELossMethod`.
         cavpts (Optional[Refpts]):      Cavity location. If None, use all
@@ -447,13 +447,13 @@ def find_orbit(ring, refpts=None, **kwargs):
         guess (Optional[Orbit]):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
         convergence (Optional[float]):  Convergence criterion.
-          Default: :py:data:`.DConstant`.OrbConvergence
+          Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
         max_iterations (Optional[int]): Maximum number of iterations.
-          Default: :py:data:`.DConstant`.OrbMaxIter
+          Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
         XYStep (Optional[float]):       Step size.
-          Default: :py:data:`.DConstant`.XYStep
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
         DPStep (Optional[float]):       Momentum step size.
-          Default: :py:data:`.DConstant`.DPStep
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     For other keywords, refer to the underlying methods
 
