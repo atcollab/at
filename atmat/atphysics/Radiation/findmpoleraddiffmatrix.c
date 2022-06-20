@@ -577,20 +577,19 @@ static PyMethodDef AtMethods[] = {
     {"find_mpole_raddiff_matrix",
     (PyCFunction)compute_diffmatrix, METH_VARARGS,
     PyDoc_STR(
-        "diffmatrix=find_mpole_raddiff_matrix(element, orbit, energy)\n\n"
-        "element:   element structure with field names consistent with\n"
-        "           a multipole transverse field model.\n"
-        "orbit:     (6,) vector of the closed orbit at the entrance\n"
-        "energy:    ring energy\n\n"
-             
-        "calculate radiation diffusion matrix B defined in [2]\n"
-        "for multipole elements in MATLAB Accelerator Toolbox\n"
-        "A.Terebilo 8/14/00\n\n"
-
-        "References\n"
-        "[1] M.Sands 'The Physics of Electron Storage Rings\n"
-        "[2] Ohmi, Kirata, Oide 'From the beam-envelope matrix to synchrotron\n"
-        "radiation integrals', Phys.Rev.E  Vol.49 p.751 (1994)\n"
+    "find_mpole_raddiff_matrix(element, orbit, energy)\n\n"
+    "Computes the radiation diffusion matrix B defined in [2]_\n"
+    "for multipole elements\n\n"
+    "Args:\n"
+    "    element:    Lattice element\n"
+    "    orbit:      (6,) closed orbit at the entrance of ``element``\n"
+    "    energy:     particle energy\n\n"
+    "Returns:\n"
+    "    diffmatrix: The radiation diffusion matrix\n\n"
+    "References:\n"
+    "    **[1]** M.Sands, *The Physics of Electron Storage Rings*\n\n"
+    "    .. [2] Ohmi, Kirata, Oide, *From the beam-envelope matrix to synchrotron\n"
+    "       radiation integrals*, Phys.Rev.E  Vol.49 p.751 (1994)\n"
 	)},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };

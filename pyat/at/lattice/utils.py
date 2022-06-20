@@ -24,8 +24,8 @@ from .elements import Element
 
 Refpts = TypeVar("Refpts", int, Sequence[int], bool, Sequence[bool])
 ElementFilter = Callable[[Element], bool]
-BoolRefpts = Sequence[bool]
-Uint32Refpts = Sequence[numpy.uint32]
+BoolRefpts = numpy.ndarray
+Uint32Refpts = numpy.ndarray
 Key = Union[type, Element, str]
 
 

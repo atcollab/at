@@ -1,4 +1,4 @@
-""""""
+"""A-matrix construction"""
 import numpy
 from scipy.linalg import block_diag, eig, inv, solve
 from math import pi
@@ -19,54 +19,76 @@ _submat = [slice(0, 2), slice(2, 4), slice(4, 6)]
 
 
 def jmat(ind):
-    """
-    Return the antisymetric block diagonal matrix [[0, 1][-1, 0]]
+    """antisymetric block diagonal matrix [[0, 1][-1, 0]]
 
-    INPUT
-        ind     1, 2 or 3. Matrix dimension
+    Parameters:
+        ind:    Matrix dimension: 1, 2 or 3
 
-    OUTPUT
-        jm      block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
+    Returns:
+        S:      Block diagonal matrix, (2, 2) or (4, 4) or (6, 6)
     """
     return _jm[ind - 1]
 
 
 def jmatswap(ind):
-    """Modified version of jmat to deal with the swap of the
-    longitudinal coordinates"""
+    """Modified antisymetric block diagonal matrix to deal with the swap of the
+    longitudinal coordinates
+    """
     return _jmswap[ind - 1]
 
 
-def a_matrix(tt):
-    """A, eigval = a_matrix(T)
-    Find the A matrix from one turn map matrix T such that:
+# noinspection PyPep8Naming
+def a_matrix(M):
+    r"""Find the :math:`\mathbf{A}` matrix from one turn map :math:`\mathbf{M}`
 
-               [Rotx  0    0  ]
-    inv(A)*T*A=[ 0   Rotz  0  ]
-               [ 0    0   Rots]
+    :math:`\mathbf{A}` represents A change of referential which converts the
+    one-turn transfer matrix :math:`\mathbf{M}` into a set of rotations:
 
-    Order it so that it is close to the order of x,y,z
-    also ensure that positive modes are before negative so that
-    one has proper symplecticity
-    B. Nash July 18, 2013
+    .. math:: \mathbf{M} = \mathbf{A} \cdot \mathbf{R} \cdot \mathbf{A}^{-1}
 
-    INPUT
-    T       (m, m)  transfer matrix for 1 turn
+    with :math:`\mathbf{R}` A block-diagonal matrix:
 
-    OUTPUT
-    A       (m, m)  A-matrix
-    eigval  (m,)    vector of Eigen values of T
+    .. math::
+
+        \mathbf{R}=\begin{pmatrix}rot_1 & 0 & 0 \\ 0 & rot_2 & 0 \\ 0 & 0 &
+        rot_3\end{pmatrix} \text{, and } rot_i = \begin{pmatrix}\cos{\mu_i} &
+        \sin{\mu_i} \\ -\sin{\mu_i} & cos{\mu_i}\end{pmatrix}
+
+    With radiation damping, the diagonal blocks are instead damped rotations:
+
+    .. math::
+
+        rot_i = \begin{pmatrix}\exp{(-\alpha_i}) & 0 \\ 0 & \exp{(-\alpha_i)}
+        \end{pmatrix} \cdot \begin{pmatrix}\cos{\mu_i} & \sin{\mu_i} \\
+        -\sin{\mu_i} & cos{\mu_i}\end{pmatrix}
+
+    The order of diagonal blocks it set so that it is close to the order of
+    x,y,z.
+
+    Parameters:
+        M:     (m, m)  transfer matrix for 1 turn
+
+    m, the dimension of :math:`\mathbf{M}`, may be 2 (single plane),
+    4 (betatron motion) or 6 (full motion)
+
+
+    Returns:
+        A:      (m, m)  A-matrix
+        eigval: (m/2,)    Vector of Eigen values of T
+
+    References:
+        **[1]** Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
     """
-    nv = tt.shape[0]
+    nv = M.shape[0]
     dms = int(nv / 2)
     jmt = jmatswap(dms)
     select = numpy.arange(0, nv, 2)
     rbase = numpy.stack((select, select), axis=1).flatten()
 
     # noinspection PyTupleAssignmentBalance
-    lmbd, vv = eig(tt)
+    lmbd, vv = eig(M)
     # Compute the norms
-    vp = numpy.dot(vv.conj().T, jmt)
+    vp = vv.conj().T @ jmt
     n = -0.5j * numpy.sum(vp.T * vv, axis=0)
     if any(abs(n) < 1.0E-12):
         raise AtError('Unstable ring')
@@ -82,7 +104,7 @@ def a_matrix(tt):
     #  n1x n1y n1z
     #  n2x n2y n2z
     #  n3x n3y n3z
-    nn = 0.5 * abs(numpy.sqrt(-1.j * vn.conj().T.dot(jmt).dot(_vxyz[dms - 1])))
+    nn = 0.5 * abs(numpy.sqrt(-1.j * vn.conj().T @ jmt @ _vxyz[dms - 1]))
     rows = list(select)
     order = []
     for ixz in select:
@@ -96,98 +118,128 @@ def a_matrix(tt):
     return aa, lmbd
 
 
-def amat(tt):
-    """A = amat(T)
-    Find the A matrix from one turn map matrix T
-    Provided for backward compatibility, see " A, eigval = a_matrix(T)"
+# noinspection PyPep8Naming
+def amat(M):
+    """Find the A matrix from one turn map matrix T
 
-    INPUT
-    T       (m, m)  transfer matrix for 1 turn
+    Provided for backward compatibility, see :py:func:`a_matrix`
 
-    OUTPUT
-    A       (m, m)  A-matrix
+    Parameters:
+        M:     (m, m)  transfer matrix for 1 turn
+
+    Returns:
+        A:     (m, m)  A-matrix
     """
-    aa, _ = a_matrix(tt)
+    aa, _ = a_matrix(M)
     return aa
 
 
 # noinspection PyPep8Naming
 def symplectify(M):
-    """
-    symplectify makes a matrix more symplectic
-    follow Healy algorithm as described by McKay
-    BNL-75461-2006-CP
+    """Makes A matrix more symplectic
+
+    following the Healy algorithm described by MacKay
+
+    Parameters:
+        M:  Almost symplectic matrix
+
+    Returns:
+        MS: Symplectic matrix
+
+    References:
+        **[1]** `W.W.MacKay, Comment on Healy's symplectification algorithm,
+        Proceedings of EPAC 2006
+        <https://accelconf.web.cern.ch/e06/PAPERS/WEPCH152.PDF>`_
     """
     nv = M.shape[0]
-    J = jmat(nv // 2)
+    S = jmat(nv // 2)
+    I = numpy.identity(nv)
 
-    V = numpy.dot(J.dot(numpy.identity(nv) - M), inv(numpy.identity(nv) + M))
+    V = S @ (I - M) @ inv(I + M)
     # V should be almost symmetric.  Replace with symmetrized version.
-
     W = (V + V.T) / 2
     # Now reconstruct M from W
-    JW = numpy.dot(J, W)
-    MS = numpy.dot(numpy.identity(nv) + JW, inv(numpy.identity(nv) - JW))
+    SW = S @ W
+    MS = (I + SW) @ inv(I - SW)
     return MS
 
 
-def get_mode_matrices(a):
-    """Given a (m, m) A matrix , find the R-matrices of the m/2 normal modes"""
+# noinspection PyPep8Naming
+def get_mode_matrices(A):
+    """Derives the R-matrices from the A-matrix
+
+    Parameters:
+        A:  A-matrix
+
+    Returns:
+        R:
+
+    References:
+        **[1]** Andrzej Wolski, Phys. Rev. ST Accel. Beams 9, 024001 –
+        Published 3 February 2006
+    """
 
     def mul2(slc):
-        return a[:, slc] @ tt[slc, slc]
+        return A[:, slc] @ tt[slc, slc]
 
-    dms = a.shape[0] // 2
+    dms = A.shape[0] // 2
     # Rk = A * Ik * A.T                     Only for symplectic
-    # modelist = [numpy.dot(a[:, sl], a.T[sl, :]) for sl in _submat[:dms]]
+    # modelist = [numpy.dot(A[:, sl], A.T[sl, :]) for sl in _submat[:dms]]
     # Rk = A * S * Ik * inv(A) * S.T        Even for non-symplectic
     ss = jmat(dms)
     tt = jmatswap(dms)
     a_s = numpy.concatenate([mul2(slc) for slc in _submat[:dms]], axis=1)
-    inva = solve(a, ss.T)
+    inva = solve(A, ss.T)
     modelist = [a_s[:, sl] @ inva[sl, :] for sl in _submat[:dms]]
     return numpy.stack(modelist, axis=0)
 
 
-def get_tunes_damp(tt, rr=None):
+# noinspection PyPep8Naming
+def get_tunes_damp(M, R=None):
+    r"""Computes the mode emittances, tunes and damping times
+
+    Parameters:
+        M:     (m, m) transfer matrix for 1 turn
+        R:     (m, m) beam matrix (optional), allows computing the mode
+                emittances
+
+    m, the dimension of :math:`\mathbf{M}`, may be 2 (single plane),
+    4 (betatron motion) or 6 (full motion)
+
+    Returns:
+        V:     record array with the following fields:
+
+          **tunes**             (m/2,) tunes of the m/2 normal modes
+
+          **damping_rates**     (m/2,) damping rates of the m/2 normal modes
+
+          **mode_matrices**     (m/2, m, m) the R-matrices of the m/2 normal
+          modes
+
+          **mode_emittances**   Only if R is specified: (m/2,) emittance of each
+          of the m/2 normal modes
     """
-    mode_emit, damping_rates, tunes = get_tunes_damp(T, R)
-
-    INPUT
-        T                   (m, m) transfer matrix for 1 turn
-        R                   (m, m) beam matrix (optional)
-
-        m can be 2 (single plane), 4 (betatron motion) or 6 (full motion)
-
-    OUTPUT
-        record array with the following fields:
-        tunes               (m/2,) tunes of the m/2 normal modes
-        damping_rates       (m/2,) damping rates of the m/2 normal modes
-        mode_matrices       (m/2, m, m) the R-matrices of the m/2 normal modes
-        mode_emittances     Only if R is specified: (m/2,) emittance of each
-                            of the m/2 normal modes
-    """
-    nv = tt.shape[0]
+    nv = M.shape[0]
     dms = int(nv / 2)
-    aa, vps = a_matrix(tt)
+    A, vps = a_matrix(M)
     tunes = numpy.mod(numpy.angle(vps) / 2.0 / pi, 1.0)
     damping_rates = -numpy.log(numpy.absolute(vps))
 
-    if rr is None:
+    if R is None:
         return numpy.rec.fromarrays(
             (numpy.array(tunes), numpy.array(damping_rates),
-             numpy.array(get_mode_matrices(aa))),
+             numpy.array(get_mode_matrices(A))),
             dtype=[('tunes', numpy.float64, (dms,)),
                    ('damping_rates', numpy.float64, (dms,)),
                    ('mode_matrices', numpy.float64, (dms, nv, nv))]
         )
     else:
         jmt = jmat(dms)
-        rdiag = numpy.diag(aa.T.dot(jmt.dot(rr.dot(jmt.dot(aa)))))
+        rdiag = numpy.diag(A.T @ jmt @ R @ jmt @ A)
         mode_emit = -0.5 * (rdiag[0:nv:2] + rdiag[1:nv:2])
         return numpy.rec.fromarrays(
             (numpy.array(tunes), numpy.array(damping_rates),
-             numpy.array(get_mode_matrices(aa)), mode_emit),
+             numpy.array(get_mode_matrices(A)), mode_emit),
             dtype=[('tunes', numpy.float64, (dms,)),
                    ('damping_rates', numpy.float64, (dms,)),
                    ('mode_matrices', numpy.float64, (dms, nv, nv)),

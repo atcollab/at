@@ -4,67 +4,65 @@ transfer matrix related functions
 A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 import numpy
-from at.lattice import Lattice, uint32_refpts, get_refpts, DConstant
-from at.lattice.elements import Bend, M66
-from at.tracking import lattice_pass, element_pass
-from at.physics import find_orbit4, find_orbit6, jmat, symplectify
+from typing import Optional
+from ..lattice import Lattice, Element, get_refpts, DConstant, Refpts
+from ..lattice.elements import Bend, M66
+from ..tracking import lattice_pass, element_pass
+from . import Orbit
+from . import find_orbit4, find_orbit6, jmat, symplectify
 
 __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 
 _jmt = jmat(2)
 
 
-def find_m44(ring, dp=0.0, refpts=None, dct=None, orbit=None,
-             keep_lattice=False, **kwargs):
-    """find_m44 numerically finds the 4x4 transfer matrix of an accelerator
-    lattice for a particle with relative momentum deviation DP
+def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
+             refpts: Optional[Refpts] = None,
+             dct: Optional[float] = None,
+             orbit: Optional[Orbit] = None,
+             keep_lattice: Optional[bool] = False, **kwargs):
+    """One turn 4x4 transfer matrix
 
-    IMPORTANT!!! find_m44 assumes constant momentum deviation.
-    PassMethod used for any element in the lattice SHOULD NOT
-    1.  change the longitudinal momentum dP
-        (cavities , magnets with radiation, ...)
-    2.  have any time dependence (localized impedance, fast kickers, ...)
+    :py:func:`find_m44` finds the 4x4 transfer matrix of an accelerator
+    lattice by differentiation of trajectories near the closed orbit.
 
-    m44, t = find_m44(lattice, dp=0.0, refpts)
-        return 4x4 transfer matrices between the entrance of the first element
-        and each element indexed by refpts.
-            m44:    full one-turn matrix at the entrance of the first element
-            t:      4x4 transfer matrices between the entrance of the first
-                    element and each element indexed by refpts:
-                    (Nrefs, 4, 4) array
+    Important:
+        :py:func:`find_m44` assumes constant momentum deviation.
+        The ``PassMethod`` used for any element **SHOULD NOT**:
 
-    Unless an input orbit is introduced, find_m44 assumes that the lattice is
-    a ring and first finds the closed orbit.
+        1.  change the longitudinal momentum dP
+            (cavities , magnets with radiation, ...)
+        2.  have any time dependence (localized impedance, fast kickers, ...)
 
-    PARAMETERS
-        ring            lattice description
-        dp              momentum deviation. Defaults to 0
-        refpts          elements at which data is returned. It can be:
-                        1) an integer in the range [-len(ring), len(ring)-1]
-                           selecting the element according to python indexing
-                           rules. As a special case, len(ring) is allowed and
-                           refers to the end of the last element,
-                        2) an ordered list of such integers without duplicates,
-                        3) a numpy array of booleans of maximum length
-                           len(ring)+1, where selected elements are True.
-                        Defaults to None, if refpts is None an empty array is
-                        returned for mstack.
+    Unless an input orbit is introduced, :py:func:`find_m44` assumes that the
+    lattice is a ring and first finds the closed orbit.
 
-    KEYWORDS
-        dct=None        path lengthening. If specified, dp is ignored and
-                        the off-momentum is deduced from the path lengthening.
-        orbit=None      avoids looking for the closed orbit if is already known
-                        ((6,) array)
-        keep_lattice=False  When True, assume no lattice change since the
-                        previous tracking.
-        full=False      When True, matrices are full 1-turn matrices at
-                        the entrance of each
-                        element indexed by refpts.
-        orbit=None      Avoids looking for the closed orbit if is already
-                        known (6,) array
-        XYStep=1.e-8    transverse step for numerical computation
+    Parameters:
+        ring:           Lattice description (radiation must be OFF)
+        dp:             Momentum deviation. Defaults to 0
+        refpts:         Observation points
+        dct:            Path lengthening. If specified, ``dp`` is ignored and
+          the off-momentum is deduced from the path lengthening.
+        orbit:          Avoids looking for initial the closed orbit if it is
+          already known ((6,) array).
+        keep_lattice:   Assume no lattice change since the previous tracking.
+          Default: False
 
-    See also find_m66, find_orbit4
+    Keyword Args:
+        full (Optional[bool]):      If True, matrices are full 1-turn matrices
+          at the entrance of each element indexed by refpts. If False (Default),
+          matrices are between the entrance of the first element and the
+          entrance of the selected element
+        XYStep (Optional[float]):   Step size.
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
+
+    Returns:
+        m44:    full one-turn matrix at the entrance of the first element
+        ms:     4x4 transfer matrices between the entrance of the first
+          element and each element indexed by refpts: (Nrefs, 4, 4) array
+
+    See also:
+         :py:func:`find_m66`, :py:func:`.find_orbit4`
     """
 
     def mrotate(m):
@@ -86,7 +84,7 @@ def find_m44(ring, dp=0.0, refpts=None, dct=None, orbit=None,
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
 
-    refs = uint32_refpts(refpts, len(ring))
+    refs = ring.uint32_refpts(refpts)
     out_mat = numpy.rollaxis(
         numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
                                    keep_lattice=keep_lattice), axis=3), -1
@@ -105,40 +103,39 @@ def find_m44(ring, dp=0.0, refpts=None, dct=None, orbit=None,
     return m44, mstack
 
 
-def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
-    """find_m66 numerically finds the 6x6 transfer matrix of an accelerator
-    lattice by differentiation of lattice_pass near the closed orbit.
-    find_m66 uses find_orbit6 to search for the closed orbit in 6-D
-    In order for this to work the ring MUST have a CAVITY element
+def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
+             orbit: Optional[Orbit] = None,
+             keep_lattice: Optional[bool] = False, **kwargs):
+    """One-turn 6x6 transfer matrix
 
-    m66, t = find_m66(lattice, refpts)
-        m66:    full one-turn 6-by-6 matrix at the entrance of the
-                first element.
-        t:      6x6 transfer matrices between the entrance of the first
-                element and each element indexed by refpts (nrefs, 6, 6) array.
+    :py:func:`find_m66` finds the 6x6 transfer matrix of an accelerator
+    lattice by differentiation of trajectories near the closed orbit.
 
-    PARAMETERS
-        ring            lattice description
-        dp              momentum deviation. Defaults to 0
-        refpts          elements at which data is returned. It can be:
-                        1) an integer in the range [-len(ring), len(ring)-1]
-                           selecting the element according to python indexing
-                           rules. As a special case, len(ring) is allowed and
-                           refers to the end of the last element,
-                        2) an ordered list of such integers without duplicates,
-                        3) a numpy array of booleans of maximum length
-                           len(ring)+1, where selected elements are True.
-                        Defaults to None, if refpts is None an empty array is
-                        returned for mstack.
+    :py:func:`find_m66` uses :py:func:`.find_orbit6` to search for the closed
+    orbit in 6-D. In order for this to work the ring **MUST** have a ``Cavity``
+    element
 
-    KEYWORDS
-        keep_lattice=False  When True, assume no lattice change since the
-                            previous tracking.
-        orbit=None          Avoids looking for the closed orbit if is already
-                            known (6,) array
-        XYStep=1.e-8        transverse step for numerical computation
+    Parameters:
+        ring:           Lattice description
+        refpts:         Observation points
+        orbit:          Avoids looking for initial the closed orbit if it is
+          already known ((6,) array).
+        keep_lattice:   Assume no lattice change since the previous tracking.
+          Default: False
 
-    See also find_m44, find_orbit6
+    Keyword Args:
+        XYStep (Optional[float]):       Step size.
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
+        DPStep (Optional[float]):       Momentum step size.
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
+
+    Returns:
+        m66:    full one-turn matrix at the entrance of the first element
+        ms:     6x6 transfer matrices between the entrance of the first
+          element and each element indexed by refpts: (Nrefs, 6, 6) array
+
+    See also:
+         :py:func:`find_m44`, :py:func:`.find_orbit6`
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
@@ -160,7 +157,7 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
 
     in_mat = orbit.reshape(6, 1) + dmat
 
-    refs = uint32_refpts(refpts, len(ring))
+    refs = ring.uint32_refpts(refpts)
     out_mat = numpy.rollaxis(
         numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
                                    keep_lattice=keep_lattice), axis=3), -1
@@ -177,20 +174,24 @@ def find_m66(ring, refpts=None, orbit=None, keep_lattice=False, **kwargs):
     return m66, mstack
 
 
-def find_elem_m66(elem, orbit=None, **kwargs):
-    """
-    Numerically find the 6x6 transfer matrix of a single element
+def find_elem_m66(elem: Element,
+                  orbit: Optional[Orbit] = None,
+                  **kwargs):
+    """Single element 6x6 transfer matrix
 
-    INPUT
-        elem                AT element
+    Numerically finds the 6x6 transfer matrix of a single element
 
-    KEYWORDS
-        orbit=None          closed orbit at the entrance of the element,
-                            default: 0.0
-        XYStep=1.e-8        transverse step for numerical computation
+    Parameters:
+        elem:       AT element
+        orbit:      Closed orbit at the entrance of the element,
+          default: 0.0
 
-    OUTPUT
-        m66                 (6, 6) transfer matrix
+    Keyword Args:
+        XYStep (Optional[float]):       Step size.
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
+
+    Returns:
+        m66:        6x6 transfer matrix
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     if orbit is None:
@@ -208,9 +209,18 @@ def find_elem_m66(elem, orbit=None, **kwargs):
     return m66
 
 
-def gen_m66_elem(ring, o4b, o4e):
-    """
-    converts a ring to a linear 6x6 matrix tracking elemtn
+def gen_m66_elem(ring: Lattice,
+                 o4b: Orbit,
+                 o4e: Orbit) -> M66:
+    """Converts a ring to a linear 6x6 matrix
+
+    Parameters:
+        ring:       Lattice description
+        o4b:
+        o4e:
+
+    Returns:
+        m66:        6x6 transfer matrix
     """
 
     dip_inds = get_refpts(ring, Bend)
@@ -219,7 +229,7 @@ def gen_m66_elem(ring, o4b, o4e):
     s_pos = ring.get_s_pos()
     s = numpy.diff(numpy.array([s_pos[0], s_pos[-1]]))[0]
     i2 = numpy.sum(numpy.abs(theta * theta / lendp))
-    m66_mat, _ = find_m66(ring, [], o4b)
+    m66_mat, _ = find_m66(ring, [], orbit=o4b)
     if ring.radiation is False:
         m66_mat = symplectify(m66_mat)  # remove for damping
     lin_elem = M66('Linear', m66_mat, T1=-o4b, T2=o4e, Length=s, I2=i2)

@@ -1,7 +1,9 @@
 """
 Functions relating to fast_ring
 """
+from functools import reduce
 import numpy
+from typing import Tuple
 from at.lattice import RFCavity, Marker, Lattice, get_cells, checkname
 from at.lattice import get_elements
 from at.physics import gen_m66_elem, gen_detuning_elem, gen_quantdiff_elem
@@ -11,7 +13,7 @@ import copy
 __all__ = ['fast_ring']
 
 
-def _rearrange(ring, split_inds=[]):
+def _rearrange(ring: Lattice, split_inds=[]):
     inds = numpy.append(split_inds, [0, len(ring)+1])
     inds = numpy.unique(inds)
     all_rings = [ring[int(b):int(e)] for b, e in zip(inds[:-1], inds[1:])]
@@ -28,7 +30,7 @@ def _rearrange(ring, split_inds=[]):
         uni_freq = numpy.unique([e.Frequency for e in cavs])
         for fr in numpy.atleast_1d(uni_freq):
             cavf = [c for c in cavs if c.Frequency == fr]
-            vol = numpy.sum([c.Voltage for c in cavf])
+            vol = reduce(lambda x, y: x+y, (c.Voltage for c in cavf))
             cavl = RFCavity('CAVL', 0, vol, fr,
                             cavf[0].HarmNumber, cavf[0].Energy)
             cavl.TimeLag = cavf[0].TimeLag
@@ -67,25 +69,27 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     return fastring
 
 
-def fast_ring(ring, split_inds=[]):
-    """Computes a fast ring consisting of:
-       -1 RF cavity per distinct frequency
-       -6x6 transfer map
-       -detuning and chromaticity element
-       -quantum diffusion element (for radiation ring)
+def fast_ring(ring: Lattice, split_inds=[]) -> Tuple[Lattice, Lattice]:
+    """Generates a "fast ring"
 
-    2 rings are returned one with radiation one without
-    The original ring is copied such that it is not modified
-    It is possible to split the original ring in multiple fastrings
-    using split_inds argument
-    fr,frrad = at.fast_ring(ring)
-    fr,frrad = at.fast_ring(ring, split_inds=[100,200])
+    A fast ring consisting in:
 
-    PARAMETERS
-        ring            lattice description
+    * a RF cavity per distinct frequency,
+    * a 6x6 linear transfer map,
+    * a detuning and chromaticity element,
+    * a quantum diffusion element (for radiation ring).
 
-    KEYWORDS
-        split_inds=[]   List of indexes where to split the ring
+    2 new lattices are returned, one with radiation and one without
+    It is possible to split the original ring in multiple "fastrings"
+    using the ``split_inds`` argument
+
+    Parameters:
+        ring:       Lattice description
+        split_inds: List of indexes where to split the ring
+
+    Returns:
+        fring (Lattice):    Fast ring without radiation
+        fringrad (Lattice): Fast ring with radiation
     """
     ringi = ring.deepcopy()
     fastringnorad = _fring(ringi.radiation_off(copy=True),
