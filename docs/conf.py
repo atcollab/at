@@ -44,7 +44,11 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx_copybutton',
               ]
 
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'matplotlib': ('https://matplotlib.org/stable/', None),
+                       'numpy': ('https://numpy.org/doc/stable/', None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+                       }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
