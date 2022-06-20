@@ -160,7 +160,7 @@ def get_1d_acceptance(
         dp: Optional[float] = None,
         grid_mode: Optional[GridMode] = GridMode.RADIAL,
         use_mp: Optional[bool] = False,
-        verbose: Optional[bool] = True,
+        verbose: Optional[bool] = False,
         divider: Optional[int] = 2,
         shift_zero: Optional[float] = 1.0e-9,
         start_method: Optional[str] = None,
@@ -226,7 +226,8 @@ def get_1d_acceptance(
     return numpy.squeeze(b), s, g
 
 
-def get_horizontal_acceptance(ring, resolution: float, amplitude: float,
+def get_horizontal_acceptance(ring: Lattice,
+                              resolution: float, amplitude: float,
                               *args, **kwargs):
     r"""Computes the 1D horizontal acceptance at ``refpts`` observation points
 
@@ -277,7 +278,8 @@ def get_horizontal_acceptance(ring, resolution: float, amplitude: float,
     return get_1d_acceptance(ring, 'x', resolution, amplitude, *args, **kwargs)
 
 
-def get_vertical_acceptance(ring, resolution: float, amplitude: float,
+def get_vertical_acceptance(ring: Lattice,
+                            resolution: float, amplitude: float,
                             *args, **kwargs):
     r"""Computes the 1D vertical acceptance at refpts observation points
 
@@ -328,7 +330,8 @@ def get_vertical_acceptance(ring, resolution: float, amplitude: float,
     return get_1d_acceptance(ring, 'y', resolution, amplitude, *args, **kwargs)
 
 
-def get_momentum_acceptance(ring, resolution: float, amplitude: float,
+def get_momentum_acceptance(ring: Lattice,
+                            resolution: float, amplitude: float,
                             *args, **kwargs):
     r"""Computes the 1D momentum acceptance at refpts observation points
 
