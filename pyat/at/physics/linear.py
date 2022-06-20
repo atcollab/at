@@ -495,11 +495,12 @@ def linopt2(ring: Lattice, *args, **kwargs):
                         to the entrance of the element [2]_
     **closed_orbit**    (6,) closed orbit vector
     **dispersion**      (4,) dispersion vector
-    **beta**            [betax, betay] vector
-    **alpha**           [alphax, alphay] vector
-    **mu**              [mux, muy], betatron phase (modulo :math:`2\pi`)
-    **W**               [Wx, Wy] only if ``get_w`` is :py:obj:`True`:
-                        chromatic amplitude function
+    **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
+    **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
+    **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+                        (modulo :math:`2\pi`)
+    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+                        is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
@@ -590,13 +591,14 @@ def linopt4(ring: Lattice, *args, **kwargs):
                         to the entrance of the element [6]_
     **closed_orbit**    (6,) closed orbit vector
     **dispersion**      (4,) dispersion vector
-    **beta**            [betax, betay] vector
-    **alpha**           [alphax, alphay] vector
-    **mu**              [mux, muy], betatron phase (modulo :math:`2\pi`)
+    **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
+    **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
+    **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+                        (modulo :math:`2\pi`)
     **gamma**           gamma parameter of the transformation to
                         eigenmodes [7]_
-    **W**               [Wx, Wy] only if ``get_w`` is :py:obj:`True`:
-                        chromatic amplitude function
+    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+                        is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
@@ -625,7 +627,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
     return _linopt(ring, _analyze4, *args, **kwargs)
 
 
-def linopt6(ring, *args, **kwargs):
+def linopt6(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a fully coupled lattice using normal modes
 
     For circular machines, :py:func:`linopt6` analyses
@@ -700,11 +702,12 @@ def linopt6(ring, *args, **kwargs):
     **dispersion**      (4,) dispersion vector
     **A**               (6,6) A-matrix
     **R**               (3, 6, 6) R-matrices
-    **beta**            [betax, betay] vector
-    **alpha**           [alphax, alphay] vector
-    **mu**              [mux, muy], betatron phase (modulo :math:`2\pi`)
-    **W**               [Wx, Wy] only if ``get_w`` is :py:obj:`True`:
-                        chromatic amplitude function
+    **beta**            :math:`\left[ \beta_x,\beta_y \right]` vector
+    **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
+    **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
+                        (modulo :math:`2\pi`)
+    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+                        is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
@@ -838,7 +841,7 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
 @check_radiation(False)
 def linopt(ring: Lattice, dp: Optional[float] = 0.0,
            refpts: Optional[Refpts] = None,
-           get_chrom: Optional[Refpts] = False, **kwargs):
+           get_chrom: Optional[bool] = False, **kwargs):
     """Linear analysis of a H/V coupled lattice (deprecated)
 
     PARAMETERS
@@ -924,7 +927,7 @@ def linopt(ring: Lattice, dp: Optional[float] = 0.0,
 @check_radiation(False)
 def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
              refpts: Optional[Refpts] = None, **kwargs):
-    """Linear analysis of a lattice with average values
+    r"""Linear analysis of a lattice with average values
 
     :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
     elements.
@@ -974,13 +977,16 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
     Returns:
         elemdata:   Linear optics at the points refered to by ``refpts``,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
-        avebeta:    Average beta functions [betax,betay] at ``refpts``
-        avemu:      Average phase advances [mux,muy] at ``refpts``
-        avedisp:    Average dispersion [Dx,Dx',Dy,Dy'] at ``refpts``
+        avebeta:    Average beta functions [:math:`\hat{\beta_x},\hat{\beta_y}`]
+          at ``refpts``
+        avemu:      Average phase advances [:math:`\hat{\mu_x},\hat{\mu_y}`]
+          at ``refpts``
+        avedisp:    Average dispersion [:math:`\hat{\eta_x}, \hat{\eta'_x},
+          \hat{\eta_y}, \hat{\eta'_y}`] at ``refpts``
         avespos:    Average s position at ``refpts``
-        tune:       [tune_A, tune_B], linear tunes for the two normal modes
-          of linear motion [1]
-        chrom:      [ksi_A , ksi_B], chromaticities
+        tune:       [:math:`\nu_1,\nu_2`], linear tunes for the two normal
+          modes of linear motion [1]
+        chrom:      [:math:`\xi_1,\xi_2`], chromaticities
 
     See also:
         :py:func:`linopt4`, :py:func:`get_optics`
@@ -1054,7 +1060,7 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
 def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
              dp: Optional[float] = None, dct: Optional[float] = None,
              orbit: Optional[Orbit] = None, **kwargs):
-    """Computes the tunes using several available methods
+    r"""Computes the tunes using several available methods
 
     Parameters:
         ring:       Lattice description.
@@ -1087,7 +1093,7 @@ def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
           Default: :py:obj:`False`
 
     Returns:
-        tunes (ndarray):                array([Qx,Qy])
+        tunes (ndarray):                array([:math:`\nu_x,\nu_y`])
     """
     # noinspection PyShadowingNames
     def gen_centroid(ring, ampl, nturns, remove_dc, ld):
@@ -1116,9 +1122,9 @@ def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
 
 
 def get_chrom(ring: Lattice, method: Optional[str] = 'linopt',
-              dp: Optional[float] = None, dct: Optional[float] = None,
-              cavpts=None, **kwargs):
-    """Computes the chromaticities using several available methods
+              dp: Optional[float] = 0, dct: Optional[float] = None,
+              cavpts: Optional[Refpts] = None, **kwargs):
+    r"""Computes the chromaticities using several available methods
 
     Parameters:
         ring:       Lattice description.
@@ -1156,7 +1162,7 @@ def get_chrom(ring: Lattice, method: Optional[str] = 'linopt',
           Default: :py:obj:`False`
 
     Returns:
-        chromaticities (ndarray):       array([Q'x,Q'y])
+        chromaticities (ndarray):       array([:math:`\xi_x,\xi_y`])
     """
 
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
