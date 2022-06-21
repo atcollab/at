@@ -1,8 +1,9 @@
 from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
+from typing import Optional
 from ..lattice import Lattice
-from ..lattice.constants import clight, Cgamma, Cq
+from ..constants import clight, Cgamma, Cq
 
 __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 
@@ -10,7 +11,7 @@ __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 class RingParameters(object):
     """Class for pretty printing the ring properties"""
 
-    props = {
+    _props = {
         'tunes':            '              Frac. tunes: {0}',
         'tunes6':           '  Frac. tunes (6D motion): {0}',
         'fulltunes':        '                    Tunes: {0}',
@@ -41,7 +42,7 @@ class RingParameters(object):
 
     def __str__(self):
         vrs = vars(self).copy()
-        vals = [(self.props[k], vrs.pop(k, None)) for k in self.props]
+        vals = [(self._props[k], vrs.pop(k, None)) for k in self._props]
         # Predefined attributes
         lines = [f.format(v) for f, v in vals if v is not None]
         # Other attributes
@@ -50,11 +51,14 @@ class RingParameters(object):
 
 
 # noinspection PyPep8Naming
-def radiation_parameters(ring, dp=None, params=None, **kwargs):
-    """Compute ring parameters from the radiation integrals. Valid for
-    uncoupled lattices with no RF cavity or radiating element.
+def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
+                         params: Optional[RingParameters] =None,
+                         **kwargs):
+    """Compute ring parameters from the radiation integrals
 
-    INPUT
+    Valid for uncoupled lattices with no RF cavity or radiating element.
+
+    Parameters:
         ring            Lattice object.
 
     KEYWORD
