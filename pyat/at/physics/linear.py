@@ -1117,7 +1117,7 @@ def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
         remove_dc = kwargs.pop('remove_dc', True)
         ld, _, _ = linopt6(ring, dp=dp, dct=dct, orbit=orbit)
         cents = gen_centroid(ring, ampl, nturns, remove_dc, ld)
-        tunes = get_tunes_harmonic(cents, method, **kwargs)
+        tunes = get_tunes_harmonic(cents, method=method, **kwargs)
     return tunes
 
 

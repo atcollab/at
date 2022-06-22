@@ -222,11 +222,11 @@ def get_radiation_integrals(ring, dp: Optional[float] = None,
             with or without longitudinal motion, normal mode analysis
 
     Returns:
-        i1 (float):
-        i2 (float):
-        i3 (float):
-        i4 (float):
-        i5 (float):
+        i1 (float): Radiation integrals - :math:`I_1 \quad [m]`
+        i2 (float): :math:`I_2 \quad [m^{-1}]`
+        i3 (float): :math:`I_3 \quad [m^{-2}]`
+        i4 (float): :math:`I_4 \quad [m^{-1}]`
+        i5 (float): :math:`I_5 \quad [m^{-1}]`
     """
 
     def dipole_radiation(elem: Dipole, vini, vend):

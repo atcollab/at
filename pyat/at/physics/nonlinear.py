@@ -44,8 +44,8 @@ def tunes_vs_amp(ring, amp=None, dim=0, window=1, nturns=512):
 
     if amp is not None:
         partx, party = _gen_part(ring, amp, dim, orbit, l0, nturns)
-        qx = get_tunes_harmonic(partx, 'laskar')
-        qy = get_tunes_harmonic(party, 'laskar')
+        qx = get_tunes_harmonic(partx, method='laskar')
+        qy = get_tunes_harmonic(party, method='laskar')
         tunes = numpy.vstack((qx, qy)).T
 
     return numpy.array(tunes)
