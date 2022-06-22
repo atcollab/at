@@ -23,7 +23,7 @@ Initialisation:
 - Load a pyAT ring from a .mat file::
 
     >>> import at
-    >>> ring = at.load_lattice('test_matlab/hmba.mat')
+    >>> ring = at.load_lattice('machine_data/hmba.mat')
 
 Basic Use:
 ----------

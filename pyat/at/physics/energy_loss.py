@@ -1,12 +1,18 @@
 from enum import Enum
 from warnings import warn
 from math import pi
+from typing import Optional, Tuple
 import numpy
 from scipy.optimize import least_squares
+<<<<<<< HEAD
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity
 from at.lattice import check_radiation, AtError, AtWarning
+=======
+from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
+from at.lattice import check_radiation, AtError
+>>>>>>> master
 from at.lattice import checktype, set_value_refpts, get_cells, refpts_len
-from at.lattice.constants import clight, Cgamma
+from at.constants import clight, Cgamma
 from at.tracking import lattice_pass
 
 __all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod',
@@ -14,25 +20,28 @@ __all__ = ['get_energy_loss', 'set_cavity_phase', 'ELossMethod',
 
 
 class ELossMethod(Enum):
-    """Enum class for energy loss methods"""
+    """methods for the computation of energy losses"""
+    #: The losses are obtained from
+    #: :math:`E_{loss}=C_\gamma/2\pi . E^4 . I_2`.
+    #: Takes into account bending magnets and wigglers.
     INTEGRAL = 1
+    #: The losses are obtained by tracking without cavities.
+    #: Needs radiation ON, takes into account all radiating elements
     TRACKING = 2
 
 
-def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
-    """Compute the energy loss per turn [eV]
+def get_energy_loss(ring: Lattice,
+                    method: Optional[ELossMethod] = ELossMethod.INTEGRAL
+                    ) -> float:
+    """Computes the energy loss per turn
 
-    PARAMETERS
-        ring                        lattice description
+    Parameters:
+        ring:           Lattice description
+        method:         Method for energy loss computation.
+          See :py:class:`ELossMethod`.
 
-    KEYWORDS
-        method=ELossMethod.INTEGRAL method for energy loss computation
-            The enum class ELossMethod declares 2 values
-            INTEGRAL: The losses are obtained from
-                Losses = Cgamma / 2pi * EGeV^4 * i2
-                Takes into account bending magnets and wigglers.
-            TRACKING: The losses are obtained by tracking without cavities.
-                Needs radiation ON, takes into account all radiating elements.
+    Returns:
+        eloss (float):  Energy loss per turn [eV]
     """
 
     # noinspection PyShadowingNames
@@ -40,14 +49,14 @@ def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
         """Losses = Cgamma / 2pi * EGeV^4 * i2
         """
 
-        def wiggler_i2(wiggler):
+        def wiggler_i2(wiggler: Wiggler):
             rhoinv = wiggler.Bmax / ring.BRho
             coefh = wiggler.By[1, :]
             coefv = wiggler.Bx[1, :]
             return wiggler.Length * (numpy.sum(coefh * coefh) + numpy.sum(
                 coefv*coefv)) * rhoinv ** 2 / 2
 
-        def dipole_i2(dipole):
+        def dipole_i2(dipole: Dipole):
             return dipole.BendingAngle ** 2 / dipole.Length
 
         i2 = 0.0
@@ -97,24 +106,25 @@ def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
 
 
 # noinspection PyPep8Naming
-def get_timelag_fromU0(ring, method=ELossMethod.TRACKING, cavpts=None):
+def get_timelag_fromU0(ring: Lattice,
+                       method: Optional[ELossMethod] = ELossMethod.INTEGRAL,
+                       cavpts: Optional[Refpts] = None) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
     An error occurs if all cavities do not have the same frequency.
     Used in set_cavity_phase()
 
-    PARAMETERS
-        ring        lattice description
 
-    KEYWORDS
-        method=ELossMethod.TRACKING
-                    method for energy loss computation. See "get_energy_loss".
-        cavpts=None Cavity location. If None, use all cavities.
-                    This allows to ignore harmonic cavities.
-    RETURN
-        timelag     Timelag
-        ts          Time difference with the present value
+    Parameters:
+        ring:               Lattice description
+        method:             Method for energy loss computation.
+          See :py:class:`ELossMethod`.
+        cavpts:             Cavity location. If None, use all cavities.
+          This allows to ignore harmonic cavities.
+    Returns:
+        timelag (float):    Timelag
+        ts (float):         Time difference with the present value
     """
     def singlev(values):
         vals = numpy.unique(values)
@@ -168,27 +178,28 @@ def get_timelag_fromU0(ring, method=ELossMethod.TRACKING, cavpts=None):
     return timelag, ts
 
 
-def set_cavity_phase(ring, method=ELossMethod.TRACKING,
-                     refpts=None, cavpts=None, copy=False):
+def set_cavity_phase(ring: Lattice,
+                     method=ELossMethod.TRACKING,
+                     refpts: Optional[Refpts] = None,
+                     cavpts: Optional[Refpts] = None,
+                     copy: Optional[bool] = False) -> None:
     """
-   Adjust the TimeLag attribute of RF cavities based on frequency,
-   voltage and energy loss per turn, so that the synchronous phase is zero.
-   An error occurs if all cavities do not have the same frequency.
+    Adjust the TimeLag attribute of RF cavities based on frequency,
+    voltage and energy loss per turn, so that the synchronous phase is zero.
+    An error occurs if all cavities do not have the same frequency.
 
-   !!!!WARNING!!!: This function changes the time reference,
-   this should be avoided
+    .. Warning::
 
-    PARAMETERS
-        ring        lattice description
+       This function changes the time reference, this should be avoided
 
-    KEYWORDS
-        method=ELossMethod.INTEGRAL
-                            method for energy loss computation.
-                            See "get_energy_loss".
-        cavpts=None         Cavity location. If None, use all cavities.
-                            This allows to ignore harmonic cavities.
-        copy=False          If True, returns a shallow copy of ring with new
-                            cavity elements. Otherwise, modify ring in-place.
+    Parameters:
+        ring:       Lattice description
+        method:     Method for energy loss computation.
+          See :py:class:`ELossMethod`.
+        cavpts:     Cavity location. If None, use all cavities.
+          This allows to ignore harmonic cavities.
+        copy:       If True, returns a shallow copy of ring with new
+          cavity elements. Otherwise, modify ring in-place.
     """
     # refpts is kept for backward compatibility
     if cavpts is None and refpts is not None:

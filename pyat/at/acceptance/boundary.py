@@ -1,9 +1,14 @@
-import at
-from at.lattice import AtError
+"""
+Functions used to
+calculate the loss boundary for different
+grid definitions
+"""
+
+from at.lattice import Lattice, AtError
 from at.tracking import lattice_pass, patpass
+from typing import Optional, Sequence
 from enum import Enum
 import numpy
-import warnings
 from scipy.ndimage import binary_dilation, binary_opening
 from collections import namedtuple
 import time
@@ -16,13 +21,12 @@ _pdict = {'x': 0, 'xp': 1,
 
 
 class GridMode(Enum):
-    """"
-    Class to defined the grid mode use when searching
-    for the boundary
     """
-    RADIAL = 0
-    CARTESIAN = 1
-    RECURSIVE = 2
+    Grid definition for 2D acceptance boundary search
+    """
+    RADIAL = 0      #: full [:math:`\:r, \theta\:`] grid
+    CARTESIAN = 1   #: full [:math:`\:x, y\:`] grid
+    RECURSIVE = 2   #: radial recursive search
 
 
 def grid_config(planes, amplitudes, npoints, bounds, grid_mode,
@@ -73,20 +77,14 @@ def set_ring_orbit(ring, dp, obspt, orbit):
     Returns a ring starting at obspt and initial
     closed orbit
     """
-    if ring.radiation:
-        newring = ring.set_rf_frequency(dp=dp, copy=True)
-        dp = None
-    else:
-        newring = ring
-
     if obspt is not None:
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
-        newring = newring.rotate(obspt)
+        ring = ring.rotate(obspt)
 
     if orbit is None:
-        orbit, _ = newring.find_orbit(dp=dp)
+        orbit = ring.find_orbit(dp=dp)[0]
 
-    return orbit, newring
+    return orbit, ring
 
 
 def grid_configuration(planes, npoints, amplitudes, grid_mode, bounds=None,
@@ -405,10 +403,15 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
     return result
 
 
-def boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
-                    obspt=None, dp=None, offset=None, bounds=None,
-                    grid_mode=GridMode.RADIAL, use_mp=False, verbose=True,
-                    shift_zero=1.0e-9, **kwargs):
+def boundary_search(ring: Lattice, planes, npoints, amplitudes,
+                    nturns: Optional[int] = 1024,
+                    obspt: Optional[int] = None, dp: Optional[float] = None,
+                    offset: Sequence[float] = None, bounds=None,
+                    grid_mode: Optional[GridMode] = GridMode.RADIAL,
+                    use_mp: Optional[bool] = False,
+                    verbose: Optional[bool] = True,
+                    shift_zero: Optional[float] = 1.0e-9,
+                    **kwargs):
     """
     Computes the loss boundary at a single point in the machine
     """
