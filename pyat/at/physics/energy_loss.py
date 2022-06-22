@@ -97,7 +97,7 @@ def get_energy_loss(ring, method=ELossMethod.INTEGRAL):
 
 
 # noinspection PyPep8Naming
-def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
+def get_timelag_fromU0(ring, method=ELossMethod.TRACKING, cavpts=None):
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -164,7 +164,7 @@ def get_timelag_fromU0(ring, method=ELossMethod.INTEGRAL, cavpts=None):
         vrf = numpy.sum(rfv)
         timelag = clight/(2*numpy.pi*frf)*numpy.arcsin(u0/vrf)
         ts = timelag - tml
-        timelag *= numpy.ones(at.refpts_len(ring,cavpts))
+        timelag *= numpy.ones(refpts_len(ring,cavpts))
     return timelag, ts
 
 
