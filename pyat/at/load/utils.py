@@ -2,21 +2,22 @@
 Conversion utilities for creating pyat elements
 """
 import collections
-import sys
 import os
 import re
 import numpy
 from warnings import warn
+from typing import Optional
 import sysconfig
 from at import integrators
 from at.lattice import AtWarning
 from at.lattice import CLASS_MAP, elements as elt
-from at.lattice import Particle
+from at.lattice import Particle, Element
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from numpy import array, uint8  # For global namespace
 
 _ext_suffix = sysconfig.get_config_var('EXT_SUFFIX')
+
 
 def _particle(value):
     if isinstance(value, Particle):
@@ -29,7 +30,9 @@ def _particle(value):
 
 
 class RingParam(elt.Element):
-    """Private class for Matlab RingParam element"""
+    """Private class for Matlab RingParam element
+    :meta private:
+    """
     REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
                                                              'Periodicity']
     _conversions = dict(elt.Element._conversions, Energy=float,
@@ -86,19 +89,19 @@ _class_to_matfunc = {
     elt.M66: 'atM66'}
 
 
-def hasattrs(kwargs, *attributes):
-    """Check if the element would have the specified attribute(s), i.e. if they
-    are in kwargs; allows checking for multiple attributes in one go.
+def hasattrs(kwargs: dict, *attributes) -> bool:
+    """Checks the presence of keys in a :py:class:`dict`
+
+    Returns :py:obj:`True` if any of the `àttributes``is in ``kwargs``
 
     Args:
-        kwargs (dict): The dictionary of keyword arguments passed to the
-                        Element constructor.
-        attributes (iterable): A list of strings, the attribute names to be
-                                checked.
+        kwargs:     The dictionary of keyword arguments passed to the
+          Element constructor.
+        attributes: A list of strings, the attribute names to be checked.
 
     Returns:
-        bool: A single boolean, True if the element has any of the specified
-               attributes.
+        found (bool):   True if the element has any of the specified
+          attributes.
     """
     for attribute in attributes:
         if attribute in kwargs:
@@ -106,14 +109,13 @@ def hasattrs(kwargs, *attributes):
     return False
 
 
-def find_class(elem_dict, quiet=False):
-    """Attempts to correctly identify the Class of the element from its kwargs.
+def find_class(elem_dict: dict, quiet: Optional[bool] = False) -> type(Element):
+    """Identify the Class of the element from its kwargs.
 
     Args:
-        elem_dict       The dictionary of keyword arguments passed to the
+        elem_dict:      The dictionary of keyword arguments passed to the
                         Element constructor.
-    Keywords:
-        quiet=False     If True, suppress the warning for non-standard classes
+        quiet:          Suppress the warning for non-standard classes
 
     Returns:
         element_class:  The guessed Class name
@@ -191,8 +193,19 @@ def find_class(elem_dict, quiet=False):
                     return elt.Element
 
 
-def element_from_dict(elem_dict, index=None, check=True, quiet=False):
-    """return an AT element from a dictionary of attributes
+def element_from_dict(elem_dict: dict, index: Optional[int] = None,
+                      check: Optional[bool] = True,
+                      quiet: Optional[bool] = False) -> Element:
+    """Returns an AT-element from a dictionary of attributes
+
+    Parameters:
+        elem_dict:      Dictionary of element attributes
+        index:          Element index
+        check:          Check the compatibility of class and PassMethod
+        quiet:          Suppress the warning for non-standard classes
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
     """
 
     # noinspection PyShadowingNames
@@ -205,7 +218,7 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
         Args:
             index:          element index
             cls:            Proposed class
-            elem_dict:      he dictionary of keyword arguments passed to the
+            elem_dict:      The dictionary of keyword arguments passed to the
                             Element constructor.
 
         Raises:
@@ -250,13 +263,27 @@ def element_from_dict(elem_dict, index=None, check=True, quiet=False):
     return element
 
 
-def element_from_string(elem_string):
-    """Generate an AT-element from its repr string"""
+def element_from_string(elem_string: str) -> Element:
+    """Generates an AT-element from its python :py:func:`repr` string
+
+    Parameters:
+        elem_string:    String representation of an :py:class:`.Element`
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
+    """
     return eval(elem_string, globals(), CLASS_MAP)
 
 
-def element_from_m(line):
-    """Generate a AT-element from a line in a m-file"""
+def element_from_m(line: str):
+    """Generates an AT-element from a line in an m-file
+
+    Parameters:
+        line:           Matlab string representation of an :py:class:`.Element`
+
+    Returns:
+        elem (Element): new :py:class:`.Element`
+    """
     def argsplit(value):
         return [a.strip() for a in split_ignoring_parentheses(value, ',')]
 
@@ -301,8 +328,15 @@ def element_from_m(line):
     return cls(*args, **kwargs)
 
 
-def element_to_dict(elem):
-    """Generate the Matlab structure for a AT element"""
+def element_to_dict(elem: Element) -> dict:
+    """Generates the Matlab structure of an AT element
+
+    Parameters:
+        elem:           :py:class:`.Element`
+
+    Returns:
+        dct (dict):     Dictionary of :py:class:`.Element` attributes
+    """
     dct = dict((k, _mattype_map.get(type(v), lambda attr: attr)(v))
                for k, v in elem.items())
     class_name = elem.__class__.__name__
@@ -310,8 +344,16 @@ def element_to_dict(elem):
     return dct
 
 
-def element_to_m(elem):
-    """Generate the Matlab-evaluable string for a AT element"""
+def element_to_m(elem: Element) -> str:
+    """Generate the Matlab-evaluable string for an AT element
+
+    Parameters:
+        elem:           :py:class:`.Element`
+
+    Returns:
+        mstr (str):     Matlab string representation of the
+          :py:class:`.Element` attributes
+    """
 
     def convert(arg):
         def convert_dict(pdir):
