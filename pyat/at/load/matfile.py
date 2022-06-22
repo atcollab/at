@@ -123,7 +123,7 @@ def ringparam_filter(params: dict, elem_iterator, *args)\
         warn(AtWarning('More than 1 RingParam element, the 1st one is used'))
 
 
-def load_mat(filename, **kwargs):
+def load_mat(filename: str, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Matlab mat-file
 
     Parameters:
@@ -185,7 +185,7 @@ def mfile_generator(params: dict, m_file: str)\
                 yield elem
 
 
-def load_m(filename: str, **kwargs):
+def load_m(filename: str, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Matlab m-file
 
     Parameters:
@@ -210,7 +210,7 @@ def load_m(filename: str, **kwargs):
                    iterator=params_filter, **kwargs)
 
 
-def load_var(matlat: Sequence[dict], **kwargs):
+def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice` from a Matlab cell array
 
     Parameters:

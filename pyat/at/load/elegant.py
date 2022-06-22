@@ -3,11 +3,11 @@
 This is not complete but can parse the example files that I have.
 This parser is quite similar to the Tracy parser in tracy.py.
 
-The Elegant file format is described briefly here:
-https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009
+The Elegant file format is described briefly
+`here <https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009>`_.
 
-It is similar to the MAD-X format, described briefly here:
-http://madx.web.cern.ch/madx/
+It is similar to the MAD-X format, described briefly
+`here <http://madx.web.cern.ch/madx/>`_.
 
 Note that Elegant scales magnet polynomials in a different way
 to AT, so the parsed coefficients need to be divided by n! for
@@ -32,6 +32,8 @@ from at.lattice.elements import (
 )
 from at.lattice import Lattice
 from at.load import register_format, utils
+
+__all__ = ['load_elegant']
 
 
 def create_drift(name, params, energy, harmonic_number):
@@ -318,7 +320,24 @@ def elegant_element_from_string(name, element_string, variables):
     return ELEMENT_MAP[element_type](name, params, energy, harmonic_number)
 
 
-def load_elegant(filename, **kwargs):
+def load_elegant(filename: str, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a Matlab mat-file
+
+    Parameters:
+        filename:                   name of an Elegant file
+
+    Keyword Args:
+        name (Optional[str]):       Name of the lattice. Default: taken from
+          the file.
+        energy (Optional[float]):   Energy of the lattice [eV]
+        periodicity(Optional[int]): Number of periods. Default: taken from the
+          elements, or 1
+        *:                          All other keywords will be set as Lattice
+          attributes
+
+    Returns:
+        lattice (Lattice):          New :py:class:`.Lattice` object
+    """
     try:
         energy = kwargs.pop("energy")
         lattice_key = kwargs.pop("lattice_key")
