@@ -22,7 +22,7 @@ def get_qs_beamloading(qs0, vbeam, volt, phis, psi):
 
 
 def get_params_beamloading(frf, current, volt, qfactor,
-                           rshunt, phil, phis, vb=None, qs0=None):
+                           rshunt, phil, phis, vb=None):
     '''
     This function computes some relevant quantities for beam loading
     Reference: Wilson, P B. Beam loading in high-energy storage rings.
