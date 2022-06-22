@@ -389,7 +389,7 @@ def gen_quantdiff_elem(ring: Lattice,
           already known ((6,) array).
 
     Returns:
-        diffElem (Element): Qunatum diffusion element
+        diffElem (Element): Quantum diffusion element
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))

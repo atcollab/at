@@ -1063,7 +1063,7 @@ def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
     r"""Computes the tunes using several available methods
 
     Parameters:
-        ring:       Lattice description.
+        ring:       Lattice description
         method:     ``'linopt'`` returns the tunes from the :py:func:`linopt6`
           function,
 
