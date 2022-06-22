@@ -8,7 +8,6 @@ import logging as log
 from os.path import abspath
 import re
 import numpy
-
 from at.lattice.elements import (
     Drift,
     Dipole,
@@ -21,6 +20,8 @@ from at.lattice.elements import (
 )
 from at.lattice import Lattice
 from at.load import register_format, utils
+
+__all__ = ['load_tracy']
 
 
 def create_drift(name, params, variables):
@@ -342,7 +343,24 @@ def tracy_element_from_string(name, element_string, variables):
     return ELEMENT_MAP[element_type](name, params, variables)
 
 
-def load_tracy(filename, **kwargs):
+def load_tracy(filename: str, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a Tracy file
+
+    Parameters:
+        filename:                   name of an Tracy file
+
+    Keyword Args:
+        name (Optional[str]):       Name of the lattice. Default: taken from
+          the file.
+        energy (Optional[float]):   Energy of the lattice [eV]
+        periodicity(Optional[int]): Number of periods. Default: taken from the
+          elements, or 1
+        *:                          All other keywords will be set as Lattice
+          attributes
+
+    Returns:
+        lattice (Lattice):          New :py:class:`.Lattice` object
+    """
     try:
         harmonic_number = kwargs.pop("harmonic_number")
         lattice_key = kwargs.pop("lattice_key", "cell")

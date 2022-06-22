@@ -321,7 +321,7 @@ def elegant_element_from_string(name, element_string, variables):
 
 
 def load_elegant(filename: str, **kwargs) -> Lattice:
-    """Create a :py:class:`.Lattice`  from a Matlab mat-file
+    """Create a :py:class:`.Lattice`  from an Elegant file
 
     Parameters:
         filename:                   name of an Elegant file

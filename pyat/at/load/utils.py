@@ -100,7 +100,7 @@ def hasattrs(kwargs: dict, *attributes) -> bool:
         attributes: A list of strings, the attribute names to be checked.
 
     Returns:
-        found (bool):   True if the element has any of the specified
+        found (bool):   :py:obj:`True` if the element has any of the specified
           attributes.
     """
     for attribute in attributes:

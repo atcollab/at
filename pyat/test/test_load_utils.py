@@ -7,7 +7,7 @@ from at.lattice import Lattice, elements, params_filter, no_filter
 from at.load.utils import find_class, element_from_dict
 from at.load.utils import _CLASS_MAP, _PASS_MAP
 from at.load.utils import RingParam, split_ignoring_parentheses
-from at.load import ringparam_filter
+from at.load.matfile import ringparam_filter
 
 
 def _matlab_scanner(element_list, **kwargs):

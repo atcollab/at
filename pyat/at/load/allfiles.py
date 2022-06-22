@@ -34,10 +34,9 @@ Keyword Args:
     mat_key (Optional[str]):        Name of the Matlab variable containing
       the lattice. Default: Matlab variable name if there is only one,
       otherwise ``'RING'``
-    check (Optional[bool]):     If Default: :py:obj:`False`, skip the
-      coherence tests. Default: :py:obj:`True`
-    quiet (Optional[bool]):     If :py:obj:`True`, suppress the warning for
-      non-standard classes. Default: :py:obj:`False`
+    check (Optional[bool]):     Run coherence tests. Default: :py:obj:`True`
+    quiet (Optional[bool]):     Suppress the warning for non-standard classes.
+      Default: :py:obj:`False`
     keep_all (Optional[bool]):  Keep Matlab RingParam elements as Markers.
       Default: :py:obj:`False`
 

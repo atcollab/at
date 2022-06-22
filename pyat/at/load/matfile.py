@@ -14,7 +14,7 @@ from .allfiles import register_format
 from .utils import element_from_dict, element_from_m, RingParam
 from .utils import element_to_dict, element_to_m
 
-__all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
+__all__ = ['load_mat', 'save_mat', 'load_m', 'save_m',
            'load_var']
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
@@ -133,11 +133,12 @@ def load_mat(filename: str, **kwargs) -> Lattice:
         mat_key (Optional[str]):    Name of the Matlab variable containing
           the lattice. Default: Matlab variable name if there is only one,
           otherwise 'RING'
-        check (Optional[bool]):     Run the coherence tests. Default: True
+        check (Optional[bool]):     Run the coherence tests. Default:
+          :py:obj:`True`
         quiet (Optional[bool]):     Suppress the warning for non-standard
-          classes. Default: False
+          classes. Default: :py:obj:`False`
         keep_all (Optional[bool]):  Keep RingParam elements as Markers.
-          Default: False
+          Default: :py:obj:`False`
         name (Optional[str]):       Name of the lattice. Default: taken from
           the lattice, or ``''``
         energy (Optional[float]):   Energy of the lattice [eV]. Default: taken
@@ -193,7 +194,7 @@ def load_m(filename: str, **kwargs) -> Lattice:
 
     Keyword Args:
         keep_all (Optional[bool]):  Keep RingParam elements as Markers.
-          Default: False
+          Default: :py:obj:`False`
         name (Optional[str]):       Name of the lattice. Default: taken from
           the lattice, or ``''``
         energy (Optional[float]):   Energy of the lattice [eV]. Default: taken
@@ -218,7 +219,7 @@ def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
 
     Keyword Args:
         keep_all (Optional[bool]):  Keep RingParam elements as Markers.
-          Default: False
+          Default: :py:obj:`False`
         name (Optional[str]):       Name of the lattice. Default: taken from
           the lattice, or ``''``
         energy (Optional[float]):   Energy of the lattice [eV]. Default: taken
