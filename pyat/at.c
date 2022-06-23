@@ -398,11 +398,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     outdims[0] = 6;
     outdims[1] = num_particles;
     outdims[2] = num_refpts;
-    if(silent){
-        outdims[3] = 1;
-    }else{
-        outdims[3] = num_turns;
-    }
+    outdims[3] = (silent) ? 1 : num_turns;
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
