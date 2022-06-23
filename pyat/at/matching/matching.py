@@ -11,7 +11,7 @@ from at.physics import get_optics, ohmi_envelope, find_orbit
 
 
 class Variable(object):
-    """A py:class:`Variable` is a scalar value acting on a lattice through the
+    """A :py:class:`Variable` is a scalar value acting on a lattice through the
     user-defined functions setfun and getfun
 
     Parameters:
@@ -32,7 +32,7 @@ class Variable(object):
           :py:class:`Variable` initialisation
         name:       Name of the Variable; Default: ``''``
         bounds:     Lower and upper bounds of the variable value
-        *args:      Positional arguments transmitted to ``setfun``and
+        *args:      Positional arguments transmitted to ``setfun`` and
           ``getfun`` functions
 
     Keyword Args:
@@ -51,10 +51,12 @@ class Variable(object):
         self.kwargs = kwargs
         super(Variable, self).__init__()
 
-    def set(self, ring, value):
+    def set(self, ring: Lattice, value):
+        """Set the variable value"""
         self.setfun(ring, value, *self.args, **self.kwargs)
 
-    def get(self, ring):
+    def get(self, ring: Lattice):
+        """Get the actual variable value"""
         return self.getfun(ring, *self.args, **self.kwargs)
 
     @staticmethod
@@ -62,7 +64,7 @@ class Variable(object):
         return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
             'Name', 'Initial', 'Final ', 'Variation')
 
-    def status(self, ring, vini=np.NaN):
+    def status(self, ring: Lattice, vini=np.NaN):
         vnow = self.get(ring)
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
             self.name, vini, vnow, (vnow - vini))
@@ -184,7 +186,8 @@ class Constraints(object):
             target:       Desired value.
             name:         Name of the constraint. If :py:obj:`None`, a ``name``
               is generated from the name of the evaluation function
-            weight:       Weight factor: the residual is (value-target)/weight
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
             bounds:       Lower and upper bounds. The parameter is constrained
               in the interval [target-low_bound target+up_bound]
 
@@ -299,7 +302,8 @@ class ElementConstraints(Constraints):
         Keyword Args:
             name:         Name of the constraint. If :py:obj:`None`, a ``name``
               is generated from the name of the evaluation function
-            weight:       Weight factor: the residual is (value-target)/weight
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
             bounds:       Lower and upper bounds. The parameter is constrained
               in the interval [target-low_bound target+up_bound]
 
@@ -417,7 +421,8 @@ class LinoptConstraints(ElementConstraints):
               generated from ``param`` and ``index``.
 
         Keyword Args:
-            weight:       weight factor: the residual is (value-target)/weight.
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
             bounds:       lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
             UseInteger:   Match integer part of mu, much slower as the optics
@@ -519,7 +524,8 @@ class OrbitConstraints(ElementConstraints):
             name:         name of the constraint. Default: ``'orbit'``
 
         Keyword Args:
-            weight:       weight factor: the residual is (value-target)/weight.
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
             bounds:       lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
 
@@ -553,7 +559,6 @@ class EnvelopeConstraints(ElementConstraints):
         ring:       Lattice description
     """
     def __init__(self, ring: Lattice):
-        """Build a EnvelopeConstraints container"""
         super(EnvelopeConstraints, self).__init__(ring, rad=True)
 
     def add(self, param, target, refpts: Optional[Refpts] = None,
@@ -585,7 +590,8 @@ class EnvelopeConstraints(ElementConstraints):
               generated from ``param`` and ``index``.
 
         Keyword Args:
-            weight:       weight factor: the residual is (value-target)/weight.
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
             bounds:       lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
 
