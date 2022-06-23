@@ -16,16 +16,17 @@ def load_lattice(filepath: str, **kwargs) -> Lattice:
 The file format is indicated by the filepath extension.
 
 Parameters:
-    filepath:        name of the file
+    filepath:           Name of the file
 
 Keyword Args:
-    name (str):         Name of the lattice
-      . Default: taken from the file, or ``''``
+    name (str):         Name of the lattice.
+      Default: taken from the file, or ``''``
     energy (float):     Energy of the lattice
-                    (default: taken from the file)
+      (default: taken from the file)
     periodicity (int]): Number of periods
-                    (default: taken from the file, or 1)
-    *:               all other keywords will be set as Lattice attributes
+      (default: taken from the file, or 1)
+    *:                  All other keywords will be set as :py:class:`.Lattice`
+      attributes
 
 Specific keywords for .mat files
 
@@ -84,9 +85,9 @@ def register_format(extension: str, load_func=None, save_func=None,
     """Register format-specific processing functions
 
     Parameters:
-        extension:      File extension string
-        load_func:      load function (default: None)
-        save_func:      save_lattice function (default: None)
+        extension:      File extension string.
+        load_func:      load function. Default: :py:obj:`None`
+        save_func:      save_lattice function Default: :py:obj:`None`
         descr:          File type description
     """
     if load_func is not None:

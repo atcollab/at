@@ -31,6 +31,7 @@ def _particle(value):
 
 class RingParam(elt.Element):
     """Private class for Matlab RingParam element
+
     :meta private:
     """
     REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
@@ -92,7 +93,7 @@ _class_to_matfunc = {
 def hasattrs(kwargs: dict, *attributes) -> bool:
     """Checks the presence of keys in a :py:class:`dict`
 
-    Returns :py:obj:`True` if any of the `àttributes``is in ``kwargs``
+    Returns :py:obj:`True` if any of the ``attributes`` is in ``kwargs``
 
     Args:
         kwargs:     The dictionary of keyword arguments passed to the
@@ -110,7 +111,7 @@ def hasattrs(kwargs: dict, *attributes) -> bool:
 
 
 def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
-    """Identify the Class of the element from its kwargs.
+    """Identify the class of an element from its attributes
 
     Args:
         elem_dict:      The dictionary of keyword arguments passed to the
@@ -195,7 +196,7 @@ def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
 
 def element_from_dict(elem_dict: dict, index: Optional[int] = None,
                       check: bool = True, quiet: bool = False) -> Element:
-    """Returns an AT-element from a dictionary of attributes
+    """Builds an :py:class:`.Element` from a dictionary of attributes
 
     Parameters:
         elem_dict:      Dictionary of element attributes
@@ -263,7 +264,7 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
 
 
 def element_from_string(elem_string: str) -> Element:
-    """Generates an AT-element from its python :py:func:`repr` string
+    """Builds an :py:class:`.Element` from its python :py:func:`repr` string
 
     Parameters:
         elem_string:    String representation of an :py:class:`.Element`
@@ -275,7 +276,7 @@ def element_from_string(elem_string: str) -> Element:
 
 
 def element_from_m(line: str) -> Element:
-    """Generates an AT-element from a line in an m-file
+    """Builds an :py:class:`.Element` from a line in an m-file
 
     Parameters:
         line:           Matlab string representation of an :py:class:`.Element`
@@ -328,7 +329,7 @@ def element_from_m(line: str) -> Element:
 
 
 def element_to_dict(elem: Element) -> dict:
-    """Generates the Matlab structure of an AT element
+    """Builds the Matlab structure of an :py:class:`.Element`
 
     Parameters:
         elem:           :py:class:`.Element`
@@ -344,7 +345,7 @@ def element_to_dict(elem: Element) -> dict:
 
 
 def element_to_m(elem: Element) -> str:
-    """Generate the Matlab-evaluable string for an AT element
+    """Builds the Matlab-evaluable string for an :py:class:`.Element`
 
     Parameters:
         elem:           :py:class:`.Element`
@@ -406,6 +407,7 @@ PASS_MAPPING = dict((key, cls.__name__) for (key, cls) in _PASS_MAP.items())
 
 
 def find_class_name(elem_dict, quiet=False):
+    """Derive the class name of an Element from its attributes"""
     return find_class(elem_dict, quiet=quiet).__name__
 
 
