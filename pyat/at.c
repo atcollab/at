@@ -305,9 +305,10 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
  *  - reuse: whether to reuse the cached state of the ring
  */
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"line","rin","nturns","refpts","turn",
+    static char *kwlist[] = {"line", "rin", "nturns", "refpts", "turn",
                              "energy", "particle", "keep_counter",
-                             "reuse","omp_num_threads","losses", NULL};
+                             "reuse", "omp_num_threads", "losses", "silent",
+                             NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
     static int valid = 0;
@@ -339,6 +340,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     int keep_counter=0;
     int counter=0;
     int losses=0;
+    int silent=0;
     npy_intp outdims[4];
     npy_intp pdims[1];
     npy_intp lxdims[2];
@@ -352,11 +354,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     particle=NULL;
     energy=NULL;
     refs=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIp", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpp", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
-        &keep_counter, &keep_lattice, &omp_num_threads, &losses)) {
+        &keep_counter, &keep_lattice, &omp_num_threads, &losses, &silent)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -396,7 +398,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     outdims[0] = 6;
     outdims[1] = num_particles;
     outdims[2] = num_refpts;
-    outdims[3] = num_turns;
+    if(silent){
+        outdims[3] = 1;
+    }else{
+        outdims[3] = num_turns;
+    }
     rout = PyArray_EMPTY(4, outdims, NPY_DOUBLE, 1);
     drout = PyArray_DATA((PyArrayObject *)rout);
 
@@ -517,14 +523,15 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         PyObject **pyintegrator = pyintegrator_list;
         PyObject **kwargs = kwargs_list;
         struct elem **elemdata = elemdata_list;
-        double s_coord = 0.0;
+        double s_coord = 0.0;       
 
       /*PySys_WriteStdout("turn: %i\n", param.nturn);*/
         nextrefindex = 0;
+        silent = (turn < num_turns-1) ? silent : 0;
         nextref= (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
         for (elem_index = 0; elem_index < num_elements; elem_index++) {
             param.s_coord = s_coord;
-            if (elem_index == nextref) {
+            if ((elem_index == nextref) && (!silent)) {
                 memcpy(drout, drin, np6*sizeof(double));
                 drout += np6; /*  shift the location to write to in the output array */
                 nextref = (nextrefindex<num_refpts) ? refpts[nextrefindex++] : INT_MAX;
@@ -551,7 +558,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
             kwargs++;
         }
         /* the last element in the ring */
-        if (num_elements == nextref) {
+        if ((num_elements == nextref) && (!silent)) {
             memcpy(drout, drin, np6*sizeof(double));
             drout += np6; /*  shift the location to write to in the output array */
         }
