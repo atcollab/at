@@ -36,15 +36,18 @@ from at.load import register_format, utils
 __all__ = ['load_elegant']
 
 
+# noinspection PyUnusedLocal
 def create_drift(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     return Drift(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_marker(name, params, energy, harmonic_number):
     return Marker(name, **params)
 
 
+# noinspection PyUnusedLocal
 def create_aperture(name, params, energy, harmonic_number):
     x_lim = float(params.get('x_max'))
     y_lim = float(params.get('y_max'))
@@ -52,6 +55,7 @@ def create_aperture(name, params, energy, harmonic_number):
     return Aperture(name, limits)
 
 
+# noinspection PyUnusedLocal
 def create_quad(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -60,6 +64,7 @@ def create_quad(name, params, energy, harmonic_number):
     return Quadrupole(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_sext(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -67,6 +72,7 @@ def create_sext(name, params, energy, harmonic_number):
     return Sextupole(name, length, k2 / 2, **params)
 
 
+# noinspection PyUnusedLocal
 def create_oct(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -76,6 +82,7 @@ def create_oct(name, params, energy, harmonic_number):
     return Octupole(name, length, PolynomA, PolynomB, **params)
 
 
+# noinspection PyUnusedLocal
 def create_multipole(name, params, energy, harmonic_number):
     def factorial(x, acc=1):
         if x == 0:
@@ -96,6 +103,7 @@ def create_multipole(name, params, energy, harmonic_number):
     return Multipole(name, length, PolynomA, PolynomB, **params)
 
 
+# noinspection PyUnusedLocal
 def create_dipole(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -117,6 +125,7 @@ def create_dipole(name, params, energy, harmonic_number):
     return Dipole(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_corrector(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     hkick = params.pop("hkick", 0)
@@ -324,19 +333,19 @@ def load_elegant(filename: str, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from an Elegant file
 
     Parameters:
-        filename:                   name of an Elegant file
+        filename:           Name of an Elegant file
 
     Keyword Args:
-        name (Optional[str]):       Name of the lattice. Default: taken from
+        name (str):         Name of the lattice. Default: taken from
           the file.
-        energy (Optional[float]):   Energy of the lattice [eV]
-        periodicity(Optional[int]): Number of periods. Default: taken from the
+        energy (float):     Energy of the lattice [eV]
+        periodicity(int):   Number of periods. Default: taken from the
           elements, or 1
-        *:                          All other keywords will be set as Lattice
+        *:                  All other keywords will be set as Lattice
           attributes
 
     Returns:
-        lattice (Lattice):          New :py:class:`.Lattice` object
+        lattice (Lattice):  New :py:class:`.Lattice` object
     """
     try:
         energy = kwargs.pop("energy")

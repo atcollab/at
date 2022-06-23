@@ -12,7 +12,7 @@ from at.load.utils import element_from_string
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from at.lattice import Particle
-from numpy import array
+
 __all__ = ['load_repr', 'save_repr']
 
 
@@ -20,16 +20,16 @@ def load_repr(filename: str, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a text repr-file
 
     Parameters:
-        filename:       name of a '.m' file
+        filename:           Name of a '.m' file
 
     Keyword Args:
-        name (Optional[str]):       Name of the lattice. Default: taken from
+        name (str):         Name of the lattice. Default: taken from
           the lattice
-        energy (Optional[float]):   Energy of the lattice [eV]. Default: taken
+        energy (float):     Energy of the lattice [eV]. Default: taken
           from the lattice elements
-        periodicity(Optional[int]): Number of periods. Default: taken from the
+        periodicity(int):   Number of periods. Default: taken from the
           elements, or 1
-        *:                          All other keywords will be set as Lattice
+        *:                  All other keywords will be set as Lattice
           attributes
 
     Returns:

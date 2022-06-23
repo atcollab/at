@@ -109,7 +109,7 @@ def hasattrs(kwargs: dict, *attributes) -> bool:
     return False
 
 
-def find_class(elem_dict: dict, quiet: Optional[bool] = False) -> type(Element):
+def find_class(elem_dict: dict, quiet: bool = False) -> type(Element):
     """Identify the Class of the element from its kwargs.
 
     Args:
@@ -194,8 +194,7 @@ def find_class(elem_dict: dict, quiet: Optional[bool] = False) -> type(Element):
 
 
 def element_from_dict(elem_dict: dict, index: Optional[int] = None,
-                      check: Optional[bool] = True,
-                      quiet: Optional[bool] = False) -> Element:
+                      check: bool = True, quiet: bool = False) -> Element:
     """Returns an AT-element from a dictionary of attributes
 
     Parameters:
@@ -275,7 +274,7 @@ def element_from_string(elem_string: str) -> Element:
     return eval(elem_string, globals(), CLASS_MAP)
 
 
-def element_from_m(line: str):
+def element_from_m(line: str) -> Element:
     """Generates an AT-element from a line in an m-file
 
     Parameters:

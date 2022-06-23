@@ -2,7 +2,6 @@
 determined by the file extension
 """
 import os.path
-from typing import Optional
 from at.lattice import Lattice
 
 __all__ = ['load_lattice', 'save_lattice', 'register_format']
@@ -20,24 +19,24 @@ Parameters:
     filepath:        name of the file
 
 Keyword Args:
-    name (Optional[str]):           Name of the lattice
+    name (str):         Name of the lattice
       . Default: taken from the file, or ``''``
-    energy (Optional[float]):       Energy of the lattice
+    energy (float):     Energy of the lattice
                     (default: taken from the file)
-    periodicity (Optional[int]):    Number of periods
+    periodicity (int]): Number of periods
                     (default: taken from the file, or 1)
     *:               all other keywords will be set as Lattice attributes
 
 Specific keywords for .mat files
 
 Keyword Args:
-    mat_key (Optional[str]):        Name of the Matlab variable containing
+    mat_key (str):      Name of the Matlab variable containing
       the lattice. Default: Matlab variable name if there is only one,
       otherwise ``'RING'``
-    check (Optional[bool]):     Run coherence tests. Default: :py:obj:`True`
-    quiet (Optional[bool]):     Suppress the warning for non-standard classes.
+    check (bool):       Run coherence tests. Default: :py:obj:`True`
+    quiet (bool):       Suppress the warning for non-standard classes.
       Default: :py:obj:`False`
-    keep_all (Optional[bool]):  Keep Matlab RingParam elements as Markers.
+    keep_all (bool):    Keep Matlab RingParam elements as Markers.
       Default: :py:obj:`False`
 
 Returns:
@@ -60,14 +59,14 @@ def save_lattice(ring: Lattice, filepath: str, **kwargs):
 The file format is indicated by the filepath extension.
 
 Parameters:
-    ring:           Lattice description
-    filepath:       Name of the file
+    ring:               Lattice description
+    filepath:           Name of the file
 
 Specific keywords for .mat files
 
 Keyword Args:
-    mat_key (Optional[str]):        Name of the Matlab variable containing
-      the lattice. Default: ``'RING'``
+    mat_key (str):      Name of the Matlab variable containing the lattice.
+      Default: ``'RING'``
 
 .. Admonition:: Known extensions are:
     """
@@ -81,7 +80,7 @@ Keyword Args:
 
 
 def register_format(extension: str, load_func=None, save_func=None,
-                    descr: Optional[str] = ''):
+                    descr: str = ''):
     """Register format-specific processing functions
 
     Parameters:

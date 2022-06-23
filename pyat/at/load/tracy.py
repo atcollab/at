@@ -29,6 +29,7 @@ def create_drift(name, params, variables):
     return Drift(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_marker(name, params, variables):
     return Marker(name, **params)
 
@@ -347,19 +348,19 @@ def load_tracy(filename: str, **kwargs) -> Lattice:
     """Create a :py:class:`.Lattice`  from a Tracy file
 
     Parameters:
-        filename:                   name of an Tracy file
+        filename:           Name of a Tracy file
 
     Keyword Args:
-        name (Optional[str]):       Name of the lattice. Default: taken from
+        name (str):         Name of the lattice. Default: taken from
           the file.
-        energy (Optional[float]):   Energy of the lattice [eV]
-        periodicity(Optional[int]): Number of periods. Default: taken from the
+        energy (float):     Energy of the lattice [eV]
+        periodicity(int):   Number of periods. Default: taken from the
           elements, or 1
-        *:                          All other keywords will be set as Lattice
+        *:                  All other keywords will be set as Lattice
           attributes
 
     Returns:
-        lattice (Lattice):          New :py:class:`.Lattice` object
+        lattice (Lattice):  New :py:class:`.Lattice` object
     """
     try:
         harmonic_number = kwargs.pop("harmonic_number")
