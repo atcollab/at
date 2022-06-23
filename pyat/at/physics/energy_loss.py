@@ -4,13 +4,8 @@ from math import pi
 from typing import Optional, Tuple
 import numpy
 from scipy.optimize import least_squares
-<<<<<<< HEAD
-from at.lattice import Lattice, Dipole, Wiggler, RFCavity
-from at.lattice import check_radiation, AtError, AtWarning
-=======
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
 from at.lattice import check_radiation, AtError
->>>>>>> master
 from at.lattice import checktype, set_value_refpts, get_cells, refpts_len
 from at.constants import clight, Cgamma
 from at.tracking import lattice_pass
