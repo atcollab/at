@@ -346,27 +346,28 @@ class LinoptConstraints(ElementConstraints):
         ring:       Lattice description
 
     Keyword Args:
-        dp (Optional[float]):   Momentum deviation.
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
+        dp (float):   Momentum deviation.
+        dct (float):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
         orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
           already known ((6,) array)
         twiss_in:   Initial twiss parameters for transfer line optics.
           See :py:func:`.linopt6`
-        method (Optional[Callable]):  Method used for the analysis of the
-          transfer matrix. Can be ``at.linopt2``, ``at.linopt4``, ``at.linopt6``
+        method (Callable):  Method used for the analysis of the
+          transfer matrix. Can be :py:obj:`~.linear.linopt2`,
+          :py:obj:`~.linear.linopt4`, :py:obj:`~.linear.linopt6`
 
-          * **linopt2**: No longitudinal motion, no H/V coupling,
-          * **linopt4**: No longitudinal motion, Sagan/Rubin 4D-analysis of
-            coupled motion,
-          * **linopt6** (default): With or without longitudinal motion,
-            normal mode analysis
+          * :py:obj:`~.linear.linopt2`: No longitudinal motion, no H/V coupling,
+          * :py:obj:`~.linear.linopt4`: No longitudinal motion, Sagan/Rubin
+            4D-analysis of coupled motion,
+          * :py:obj:`~.linear.linopt6` (default): With or without longitudinal
+            motion, normal mode analysis
 
     Example:
 
         >>> cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)
 
-        Add a :math:`\beta_x` (beta[0]) constraint at location ref_inj:
+        Add a beta x (beta[0]) constraint at location ref_inj:
 
         >>> cnstrs.add('beta', 18.0, refpts=ref_inj, name='beta_x_inj', index=0)
 
@@ -491,8 +492,8 @@ class OrbitConstraints(ElementConstraints):
         ring:       Lattice description
 
     Keyword Args:
-        dp (Optional[float]):   Momentum deviation.
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
+        dp (float):   Momentum deviation.
+        dct (float):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
         orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
           already known ((6,) array)
@@ -637,7 +638,7 @@ def match(ring: Lattice, variables: Sequence[Variable],
           constraints: Sequence[Constraints], verbose: int = 2,
           max_nfev: int = 1000,
           diff_step: float = 1.0e-10,
-          method=None, copy: Optional[bool] = True):
+          method=None, copy: bool = True):
     """Perform matching of constraints by varying variables
 
     Parameters:
@@ -658,7 +659,8 @@ def match(ring: Lattice, variables: Sequence[Variable],
         return np.concatenate(c, axis=None)
 
     if copy:
-        ring1 = ring.copy()         # Make a shallow copy of ring
+        # Make a shallow copy of ring
+        ring1 = ring.copy()
         varpts = ring.bool_refpts([])
         # build the list of variable elements
         for var in variables:
