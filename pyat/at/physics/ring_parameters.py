@@ -1,8 +1,9 @@
 from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
+from typing import Optional
 from ..lattice import Lattice
-from ..lattice.constants import clight, Cgamma, Cq
+from ..constants import clight, Cgamma, Cq
 
 __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 
@@ -10,7 +11,7 @@ __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
 class RingParameters(object):
     """Class for pretty printing the ring properties"""
 
-    props = {
+    _props = {
         'tunes':            '              Frac. tunes: {0}',
         'tunes6':           '  Frac. tunes (6D motion): {0}',
         'fulltunes':        '                    Tunes: {0}',
@@ -35,13 +36,12 @@ class RingParameters(object):
     }
 
     def __init__(self, **kwargs):
-        """Initialisation"""
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def __str__(self):
         vrs = vars(self).copy()
-        vals = [(self.props[k], vrs.pop(k, None)) for k in self.props]
+        vals = [(self._props[k], vrs.pop(k, None)) for k in self._props]
         # Predefined attributes
         lines = [f.format(v) for f, v in vals if v is not None]
         # Other attributes
@@ -50,54 +50,70 @@ class RingParameters(object):
 
 
 # noinspection PyPep8Naming
-def radiation_parameters(ring, dp=None, params=None, **kwargs):
-    """Compute ring parameters from the radiation integrals. Valid for
-    uncoupled lattices with no RF cavity or radiating element.
+def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
+                         params: Optional[RingParameters] = None,
+                         **kwargs):
+    r"""Compute ring parameters from the radiation integrals
 
-    INPUT
-        ring            Lattice object.
+    Valid for uncoupled lattices with no RF cavity or radiating element.
 
-    KEYWORD
-        params=None     RingParam object to be updated.
-        dp=0.0          Ignored if radiation is ON. Momentum deviation.
-        dct=None        Ignored if radiation is ON. Path lengthening.
-                        If specified, dp is ignored and the off-momentum is
-                        deduced from the path lengthening.
-        method=linopt6  Method used for the analysis of the transfer matrix.
-                        See get_optics.
-                        linopt6: default
-                        linopt2: faster if no longitudinal motion and
-                                 no H/V coupling,
+    Parameters:
+        ring:       Lattice description.
+        dp:         Momentum deviation.
+        params:     :py:class:`RingParameters` object to be updated.
+          Default: create a new one
 
-    OUTPUT
-        params          RingParam object. The computed attributes are,
+    Keyword Args:
+        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
+          ignored and the off-momentum is deduced from the path lengthening.
+        method (Optional[Callable]):  Method used for the analysis of the
+          transfer matrix. Can be ``at.linopt2`` or ``at.linopt6``
 
-            tunes           (3,) fractional (H, V, Long.) tunes
-            fulltunes       (3,) full tunes
-            chromaticities  (2,) H, V Chromaticities
-            alphac          Momentum compaction factor
-            etac            Frequency slip factor
-            E0              Energy [eV]
-            U0              nergy loss / turn [eV]
-            i1              Radiation integrals - I1 [m]
-            i2                                    I2 [m^-1]
-            i3                                    I3 [m^-2]
-            i4                                    I4 [m^-1]
-            i5                                    I5 [m^-1]
-            emittances      (3,) Mode emittances
-            J               (3,) Damping partition numbers
-            Tau             (3,) Damping times [s]
-            sigma_e         Energy spread
-            sigma_l         Bunch length [m]
-            voltage         Total accelerating voltage [V]
-            phi_s           Synchrotron phase [rad]
-            f_s             Synchrotron frequency [Hz]
+          linopt2
+            no longitudinal motion, no H/V coupling, faster
+          linopt6 (default)
+            with or without longitudinal motion, normal mode analysis
+        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+          already known ((6,) array)
+        XYStep (Optional[float]):       Step size.
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
+        DPStep (Optional[float]):       Momentum step size.
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
+
+    Returns:
+        params:             :py:class:`RingParameters` object.
+
+    **params** is a :py:class:`RingParameters` object with the following
+    attributes:
+
+    ==================  ========================================
+    **tunes**           (3,) fractional (H, V, Long.) tunes
+    **fulltunes**       (3,) full tunes
+    **chromaticities**  (2,) H, V Chromaticities
+    **alphac**          Momentum compaction factor
+    **etac**            Frequency slip factor
+    **E0**              Energy [eV]
+    **U0**              Energy loss / turn [eV]
+    **i1**              Radiation integrals - :math:`I_1 \quad [m]`
+    **i2**              :math:`I_2 \quad [m^{-1}]`
+    **i3**              :math:`I_3 \quad [m^{-2}]`
+    **i4**              :math:`I_4 \quad [m^{-1}]`
+    **i5**              :math:`I_5 \quad [m^{-1}]`
+    **emittances**      (3,) Mode emittances
+    **J**               (3,) Damping partition numbers
+    **Tau**             (3,) Damping times [s]
+    **sigma_e**         Energy spread
+    **sigma_l**         Bunch length [m]
+    **voltage**         Total accelerating voltage [V]
+    **phi_s**           Synchrotron phase [rad]
+    **f_s**             Synchrotron frequency [Hz]
+    ==================  ========================================
     """
     rp = RingParameters() if params is None else params
     _, ringdata, twiss = ring.get_optics(refpts=range(len(ring) + 1), dp=dp,
                                          get_chrom=True, **kwargs)
     rp.chromaticities = ringdata.chromaticity * ring.periodicity
-    integs = ring.get_radiation_integrals(dp, twiss=twiss)
+    integs = ring.get_radiation_integrals(dp=dp, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = numpy.array(integs) * ring.periodicity
     circumference = ring.circumference
     voltage = ring.rf_voltage
@@ -139,27 +155,33 @@ def radiation_parameters(ring, dp=None, params=None, **kwargs):
 
 
 # noinspection PyPep8Naming
-def envelope_parameters(ring, params=None):
-    """Compute ring parameters from ohmi_envelope
+def envelope_parameters(ring: Lattice,
+                        params: Optional[RingParameters] = None)\
+        -> RingParameters:
+    r"""Compute ring parameters from ohmi_envelope
 
-    INPUT
-        ring            Lattice object.
+    Parameters:
+        ring:       Lattice description.
+        params:     :py:class:`RingParameters` object to be updated.
+          Default: create a new one
 
-    KEYWORD
-        params=None     RingParam object to be updated.
+    Returns:
+        params:             :py:class:`RingParameters` object.
 
-    OUTPUT
-        params          RingParam object. The computed attributes are,
+    **params** is a :py:class:`RingParameters` object with the following
+    attributes:
 
-            tunes6          (3,) fractional (H, V, Long.) tunes (6D motion)
-            emittances      (3,) Mode emittances
-            J               (3,) Damping partition numbers
-            Tau             (3,) Damping times [s]
-            sigma_e         Energy spread
-            sigma_l         Bunch length [m]
-            voltage         Total accelerating voltage [V]
-            phi_s           Synchrotron phase [rad]
-            f_s             Synchrotron frequency [Hz]
+    ==================  ========================================
+    **tunes6**          (3,) fractional (H, V, Long.) tunes (6D motion)
+    **emittances**      (3,) Mode emittances
+    **J**               (3,) Damping partition numbers
+    **Tau**             (3,) Damping times [s]
+    **sigma_e**         Energy spread
+    **sigma_l**         Bunch length [m]
+    **voltage**         Total accelerating voltage [V]
+    **phi_s**           Synchrotron phase [rad]
+    **f_s**             Synchrotron frequency [Hz]
+    ==================  ========================================
     """
     rp = RingParameters() if params is None else params
     emit0, beamdata, emit = ring.ohmi_envelope()

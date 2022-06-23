@@ -3,14 +3,15 @@ Radiation and equilibrium emittances
 """
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
+from typing import Optional, Tuple
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice.constants import clight, e_mass
-from at.lattice import Lattice, check_radiation
+from at.constants import clight, e_mass
+from at.lattice import Lattice, check_radiation, Refpts
 from at.lattice import Element, Dipole, Wiggler, DConstant, Multipole
 from at.lattice import get_refpts, get_value_refpts
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
-from at.physics import find_orbit6, find_m66, find_elem_m66
+from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
 from at.physics import find_mpole_raddiff_matrix, get_tunes_damp
 from at.physics import ELossMethod
 
@@ -82,56 +83,56 @@ def _lmat(dmat):
 
 
 @check_radiation(True)
-def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
-    """
-    Calculate the equilibrium beam envelope in a
-    circular accelerator using Ohmi's beam envelope formalism [1]
+def ohmi_envelope(ring: Lattice, refpts: Optional[Refpts] = None,
+                  orbit: Optional[Orbit] = None,
+                  keep_lattice: Optional[bool] = False):
+    """Calculates the equilibrium beam envelope
 
-    emit0, beamdata, emit = ohmi_envelope(ring[, refpts])
+    Computation based on Ohmi's beam envelope formalism [1]_
 
-    PARAMETERS
-        ring            Lattice object.
-        refpts=None     elements at which data is returned. It can be:
-                        1) an integer in the range [-len(ring), len(ring)-1]
-                           selecting the element according to python indexing
-                           rules. As a special case, len(ring) is allowed and
-                           refers to the end of the last element,
-                        2) an ordered list of such integers without duplicates,
-                        3) a numpy array of booleans of maximum length
-                           len(ring)+1, where selected elements are True.
+    Parameters:
+        ring:           Lattice description. Radiation must be ON
+        refpts:         Observation points
+        orbit:          Avoids looking for initial the closed orbit if it is
+          already known ((6,) array).
+        keep_lattice:   Assume no lattice change since the previous tracking.
+          Default: False
 
-    KEYWORDS
-        orbit=None          Avoids looking for the closed orbit if it is
-                            already known ((6,) array)
-        keep_lattice=False  Assume no lattice change since the previous
-                            tracking
+    Returns:
+        emit0 (numpy.recarray):     Emittance data at the start/end of the ring
+        beamdata (numpy.recarray):  Beam parameters at the start of the ring
+        emit (numpy.recarray):      Emittance data at the points selected to by
+          ``refpts``
 
-    OUTPUT
-        emit0               emittance data at the start/end of the ring
-        beamdata            beam parameters at the start of the ring
-        emit                emittance data at the points refered to by refpts,
-                            if refpts is None an empty structure is returned.
+    **emit** is a :py:obj:`record array <numpy.recarray>` with the following
+    fields:
 
-        emit is a record array with fields:
-        r66                 (6, 6) equilibrium envelope matrix R
-        r44                 (4, 4) betatron emittance matrix (dpp = 0)
-        m66                 (6, 6) transfer matrix from the start of the ring
-        orbit6              (6,) closed orbit
-        emitXY              (2,) betatron emittance projected on xxp and yyp
-        emitXYZ             (3,) 6x6 emittance projected on xxp, yyp, ldp
+    ================    ===================================================
+    **r66**             (6, 6) equilibrium envelope matrix R
+    **r44**             (4, 4) betatron emittance matrix (dpp = 0)
+    **m66**             (6, 6) transfer matrix from the start of the ring
+    **orbit6**          (6,) closed orbit
+    **emitXY**          (2,) betatron emittance projected on xxp and yyp
+    **emitXYZ**         (3,) 6x6 emittance projected on xxp, yyp, ldp
+    ================    ===================================================
 
-        beamdata is a record array with fields:
-        tunes               tunes of the 3 normal modes
-        damping_rates       damping rates of the 3 normal modes
-        mode_matrices       R-matrices of the 3 normal modes
-        mode_emittances     equilibrium emittances of the 3 normal modes
+    Values given at the entrance of each element specified in ``refpts``.
 
-        Field values can be obtained with either
-        emit['r66']    or
-        emit.r66
+    Field values can be obtained with either
+    ``emit['r66']`` or ``emit.r66``
 
-    REFERENCES
-        [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
+    **beamdata** is a :py:obj:`record array <numpy.recarray>` with the
+    following fields:
+
+    ====================  ===================================================
+    **tunes**             tunes of the 3 normal modes
+    **damping_rates**     damping rates of the 3 normal modes
+    **mode_matrices**     R-matrices of the 3 normal modes
+    **mode_emittances**   equilibrium emittances of the 3 normal modes
+    ====================  ===================================================
+
+    References:
+        .. [1] K.Ohmi et al. Phys.Rev.E. Vol.49. (1994)
     """
 
     def process(r66):
@@ -198,31 +199,37 @@ def ohmi_envelope(ring, refpts=None, orbit=None, keep_lattice=False):
     return data0, r66data, data
 
 
-def get_radiation_integrals(ring, dp=None, twiss=None, **kwargs):
+def get_radiation_integrals(ring, dp: Optional[float] = None,
+                            twiss=None, **kwargs)\
+        -> Tuple[float, float, float, float, float]:
+    """Computes the 5 radiation integrals for uncoupled lattices.
+
+    Parameters:
+        ring:   Lattice description
+        dp:     Momentum deviation. Ignored if radiation is ON
+        twiss:  Linear optics at all points (from :py:func:`linopt6`).
+          If None, it will be computed.
+
+    Keyword Args:
+        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
+          ignored and the off-momentum is deduced from the path lengthening.
+        method (Optional[Callable]):  Method used for the analysis of the
+          transfer matrix. Can be ``at.linopt2``, ``at.linopt6``
+
+          linopt2
+            no longitudinal motion, no H/V coupling,
+          linopt6 (default)
+            with or without longitudinal motion, normal mode analysis
+
+    Returns:
+        i1 (float): Radiation integrals - :math:`I_1 \quad [m]`
+        i2 (float): :math:`I_2 \quad [m^{-1}]`
+        i3 (float): :math:`I_3 \quad [m^{-2}]`
+        i4 (float): :math:`I_4 \quad [m^{-1}]`
+        i5 (float): :math:`I_5 \quad [m^{-1}]`
     """
-    Compute the 5 radiation integrals for uncoupled lattices.
 
-    PARAMETERS
-        ring            lattice description.
-
-    KEYWORDS
-        twiss=None      linear optics at all points (from linopt). If None,
-                        it will be computed.
-        dp=0.0          Ignored if radiation is ON. Momentum deviation.
-        dct=None        Ignored if radiation is ON. Path lengthening.
-                        If specified, dp is ignored and the off-momentum is
-                        deduced from the path lengthening.
-        method=linopt6  Method used for the analysis of the transfer matrix.
-                        See get_optics.
-                        linopt6: default
-                        linopt2: faster if no longitudinal motion and
-                                 no H/V coupling,
-
-    OUTPUT
-        i1, i2, i3, i4, i5
-    """
-
-    def dipole_radiation(elem, vini, vend):
+    def dipole_radiation(elem: Dipole, vini, vend):
         """Analytically compute the radiation integrals in dipoles"""
         beta0 = vini.beta[0]
         alpha0 = vini.alpha[0]
@@ -278,7 +285,7 @@ def get_radiation_integrals(ring, dp=None, twiss=None, **kwargs):
         di5 = h_ave * ll / abs(rho) / rho2
         return numpy.array([di1, di2, di3, di4, di5])
 
-    def wiggler_radiation(elem, dini):
+    def wiggler_radiation(elem: Wiggler, dini):
         """Compute the radiation integrals in wigglers with the following
         approximations:
 
@@ -290,7 +297,7 @@ def get_radiation_integrals(ring, dp=None, twiss=None, **kwargs):
           otherwise
         """
 
-        def b_on_axis(wiggler, s):
+        def b_on_axis(wiggler: Wiggler, s):
             """On-axis wiggler field"""
 
             def harm(coef, h, phi):
@@ -354,16 +361,17 @@ def get_radiation_integrals(ring, dp=None, twiss=None, **kwargs):
 
 
 @check_radiation(True)
-def quantdiffmat(ring, orbit=None):
-    """
-    This function computes the diffusion matrix of the whole ring
+def quantdiffmat(ring: Lattice,
+                 orbit: Optional[Orbit] = None) -> numpy.ndarray:
+    """Computes the diffusion matrix of the whole ring
 
-    PARAMETERS
-        ring            lattice description.
-        orbit=None      initial orbit
+    Parameters:
+        ring:           Lattice description. Radiation must be ON
+        orbit:          Avoids looking for initial the closed orbit if it is
+          already known ((6,) array).
 
-    OUTPUT
-        diffusion matrix (6,6)
+    Returns:
+        diffmat (ndarray):  Diffusion matrix (6,6)
     """
     bbcum, _ = _dmatr(ring, orbit=orbit)
     diffmat = [(bbc + bbc.T) / 2 for bbc in bbcum]
@@ -371,9 +379,17 @@ def quantdiffmat(ring, orbit=None):
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring, orbit=None):
-    """
-    Generates a quantum diffusion element
+def gen_quantdiff_elem(ring: Lattice,
+                       orbit: Optional[Orbit] = None) -> Element:
+    """Generates a quantum diffusion element
+
+    Parameters:
+        ring:           Lattice description. Radiation must be ON
+        orbit:          Avoids looking for initial the closed orbit if it is
+          already known ((6,) array).
+
+    Returns:
+        diffElem (Element): Quantum diffusion element
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
@@ -382,27 +398,33 @@ def gen_quantdiff_elem(ring, orbit=None):
 
 
 @check_radiation(True)
-def tapering(ring, multipoles=True, niter=1, **kwargs):
-    """
-    Scales magnet strength with local energy to cancel the closed orbit
+def tapering(ring: Lattice, multipoles: Optional[bool] = True,
+             niter: Optional[int] = 1, **kwargs) -> None:
+    """Scales magnet strengths
+
+    Scales magnet strengths with local energy to cancel the closed orbit
     and optics errors due to synchrotron radiations. PolynomB is used for
     dipoles such that the machine geometry is maintained. This is the ideal
     tapering scheme where magnets and multipoles components (PolynomB and
     PolynomA) are scaled individually.
-    !!! WARNING: This method works only for lattices without errors and
-    corrections: if not all corrections and field errors will also be
-    scaled !!!
-    tapering(ring) or ring.tapering()
-    PARAMETERS
-        ring            lattice description.
 
-    KEYWORDS
-        multipoles=True scale all multipoles
-        method          Method for energy loss computation
-                        (see get_energy_loss)
-        niter=1         number of iteration
-        XYStep=1.0e-8   transverse step for numerical computation
-        DPStep=1.0E-6   momentum deviation used for computation of orbit6
+    Warning:
+        This method works only for lattices without errors and
+        corrections: if not all corrections and field errors will also be
+        scaled !!!
+
+    Parameters:
+        ring:           Lattice description
+        multipoles:     Scales all multipoles
+        niter:          Number of iteration
+
+    Keyword Args:
+        method (Optional[ELossMethod]): Method for energy loss computation.
+          See :py:class:`.ELossMethod`
+        XYStep (Optional[float]):       Step size.
+          Default: :py:data:`DConstant.XYStep <.DConstant>`
+        DPStep (Optional[float]):       Momentum step size.
+          Default: :py:data:`DConstant.DPStep <.DConstant>`
     """
 
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
