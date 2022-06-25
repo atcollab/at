@@ -42,8 +42,8 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
             (N, M) array share the same style and label
 
             left[3]   labels: (optional) iterable of strings as long as ydata
+
           ``right``: tuple returning the data for the secondary (right) axis
-          (optional)
         *args:          All other positional parameters are sent to the
 
     Keyword Args:
