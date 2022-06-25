@@ -17,7 +17,7 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
     :py:func:`baseplot` divides the region of interest of ring into small
     elements, calls the specified function to get the plot data and calls
     matplotlib functions to generate the plot.
-    By default it creates a new figure for the plot, but if provided with
+    By default, it creates a new figure for the plot, but if provided with
     :py:class:`~matplotlib.axes.Axes` objects it can be used as part of a GUI
 
     Parameters:
@@ -30,7 +30,7 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
 
           and should return 2 or 3 output:
 
-          ``title``: plot title or None
+          ``title``: plot title or :py:obj:`None`
 
           ``left``: tuple returning the data for the main (left) axis
 
@@ -53,7 +53,8 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
           (primary_axes, secondary_axes). Default: create new axes
         slices (int):       Number of slices. Default: 400
         legend (bool):      Show a legend on the plot
-        block (bool):       If True, block until the figure is closed
+        block (bool):       If :py:obj:`True`, block until the figure is closed.
+          Default: :py:obj:`False`
         dipole (dict):      Dictionary of properties overloading the default
           properties of dipole representation. See :py:func:`.plot_synopt`
           for details
@@ -65,7 +66,7 @@ def baseplot(ring: Lattice, plot_function: Callable, *args, **kwargs):
 
     Returns:
         left_axes (Axes):   Main (left) axes
-        right_axes (Axes):  Secondary (right) axes or None
+        right_axes (Axes):  Secondary (right) axes or :py:obj:`None`
         synopt_axes (Axes): Synoptic axes
     """
 

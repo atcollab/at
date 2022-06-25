@@ -28,10 +28,10 @@ def plot_synopt(ring: Lattice, axes: matplotlib.axes.Axes = None,
     Parameters:
         ring:           Lattice description.
         axes:           :py:class:`~matplotlib.axes.Axes` for plotting the
-          synoptic. If None, a new figure will be created. Otherwise, a new
-          axes object sharing the same x-axis as the given one is created.
+          synoptic. If :py:obj:`None`, a new figure will be created. Otherwise,
+          a new axes object sharing the same x-axis as the given one is created.
         dipole:         Dictionary of properties overloading the default
-                        properties. If None, dipoles will not be shown.
+          properties. If :py:obj:`None`, dipoles will not be shown.
         quadrupole:     Same definition as for dipole
         sextupole:      Same definition as for dipole
         multipole:      Same definition as for dipole
