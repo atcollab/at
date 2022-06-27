@@ -95,7 +95,6 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
           keep_counter is True. The turn number is necessary to compute the
           absolute path length used in RFCavityPass.
         losses (Optional[bool]):        Boolean to activate loss maps output
-        silent (Optional[bool]):        Boolean to activate silent output
         pool_size (Optional[int]):      number of processes. If None,
           ``min(npart,nproc)`` is used
         start_method (Optional[str]):   This parameter allows to change the
@@ -127,9 +126,6 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
           flag for particles lost (True -> particle lost), turn, element and
           coordinates at which the particle is lost. Set to zero for particles
           that survived
-          If silent is True, r_out: (6, N, R, 1) corresponds only the to the last
-          turn. This can be used for multi-particle tracking when the number of
-          macro-particles is very large to avoid memory issues
     """
     if not isinstance(ring, list):
         ring = list(ring)
