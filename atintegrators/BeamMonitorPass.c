@@ -31,7 +31,7 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
     double *nparts = [nbunch];
 
     for (i=0; i<nbunch; i++) {
-        npart[i] = 0.0;
+        nparts[i] = 0.0;
     }
     
     for (i=0; i<num_particles; i++) {
@@ -40,8 +40,8 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
             ib = i%nbunch;
             nparts[ib] += 1;
             for(ii=0; ii<6; ii++) {
-                positions[6*ib+ii] += r6[ii]
-                sizes[6*ib+ii] += r6[ii]*r6[ii]
+                positions[6*ib+ii] += r6[ii];
+                sizes[6*ib+ii] += r6[ii]*r6[ii];
             }
         }
     }   
