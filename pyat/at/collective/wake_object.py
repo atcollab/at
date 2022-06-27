@@ -12,32 +12,24 @@ from .wake_functions import transverse_reswall_wf
 
 class WakeType(Enum):
     """Enum class for wake type"""
-    #: Import from file
-    FILE = 1
-    #: Provide vectors
-    TABLE = 2
-    #: Analytical resonator
-    RESONATOR = 3
-    #: Analytical resistive wall
-    RESWALL = 4
+    FILE = 1        #: Import from file
+    TABLE = 2       #: Provide vectors
+    RESONATOR = 3   #: Analytical resonator
+    RESWALL = 4     #: Analytical resistive wall
 
 
 class WakeComponent(Enum):
     """Enum class for wake component"""
-    #: Dipole X
-    DX = 1
-    #: Dipole Y
-    DY = 2
-    #: Quadrupole X
-    QX = 3
-    #: Quadrupole Y
-    QY = 4
-    #: Longitudinal
-    Z = 5
+    DX = 1          #: Dipole X
+    DY = 2          #: Dipole Y
+    QX = 3          #: Quadrupole X
+    QY = 4          #: Quadrupole Y
+    Z = 5           #: Longitudinal
 
 
 # noinspection PyPep8Naming
 class Wake(object):
+    # noinspection PyUnresolvedReferences
     """Class to generate a wake object
 
     The wake object is defined by its srange, specified
@@ -51,11 +43,23 @@ class Wake(object):
     Parameters:
         srange:         vector of s position where to sample the wake
 
-    Usage:
-        wake = Wake(srange)
-        wake.add(WakeType,WakeComponent, *args, *kwargs)
+    Example:
+        >>> # Build the range
+        >>> srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2,
+        ... ring.circumference, ring.circumference)
+        >>> # Create the Wake object
+        >>> wake = Wake(srange)
+        >>> # Build a resonator and add it to the Wake
+        >>> freq = 10e9
+        >>> Q = 1
+        >>> Rs = 1e4
+        >>> wake.add(WakeType.RESONATOR, WakeComponent.Z, freq, Q, Rs,
+        ... ring.beta)
 
-    Components are retrieved with Wake.DX for example
+        See :py:meth:`Wake.long_resonator` for a simple way of creatong the
+        same :py:class:`Wake`
+
+    Components may be retrieved using :code:`wake.DX` for example
     """
     def __init__(self, srange):
         self._srange = srange
@@ -71,22 +75,27 @@ class Wake(object):
 
     @property
     def DX(self):
+        """Dipole X component"""
         return self.components[WakeComponent.DX]
 
     @property
     def DY(self):
+        """Dipole Y component"""
         return self.components[WakeComponent.DY]
 
     @property
     def QX(self):
+        """Quadrupole X component"""
         return self.components[WakeComponent.QX]
 
     @property
     def QY(self):
+        """Quadrupole Y component"""
         return self.components[WakeComponent.QY]
 
     @property
     def Z(self):
+        """Longitudinal component"""
         return self.components[WakeComponent.Z]
 
     def add(self, wtype: WakeType, wcomp: WakeComponent, *args, **kwargs):
@@ -95,6 +104,7 @@ class Wake(object):
         Parameters:
             wtype:      Wake type
             wcomp:      Wake component
+            *args:      parameters for the selected component
         """
         if wtype is WakeType.FILE:
             w = self._readwakefile(*args, **kwargs)
@@ -155,7 +165,7 @@ class Wake(object):
     def resonator(srange, wakecomp,
                   frequency, qfactor, rshunt,
                   beta: float, yokoya_factor=1, nelems: int = 1):
-        """Build a resonator wake object
+        r"""Factory method to build a resonator wake object
 
         Parameters:
             srange:         vector of s position where to sample the wake
@@ -166,6 +176,9 @@ class Wake(object):
             beta:           Relativistic :math:`\beta`
             yokoya_factor:  Yokoya factor
             nelems:         Number of resonators
+
+        Several resonators can be built in one step by setting ``nelems``> 1
+        and giving array parameters
         """
         wake = Wake(srange)
         try:
@@ -185,7 +198,8 @@ class Wake(object):
 
     @staticmethod
     def long_resonator(srange, frequency, qfactor, rshunt, beta, nelems=1):
-        """Build a longitudinal resonator wake object
+        # noinspection PyUnresolvedReferences
+        r"""Factory method to build a longitudinal resonator wake object
 
         Parameters:
             srange:         vector of s position where to sample the wake
@@ -194,6 +208,19 @@ class Wake(object):
             rshunt:         Shunt impedance
             beta:           Relativistic :math:`\beta`
             nelems:         Number of resonators
+
+        Several resonators can be built in one step by setting ``nelems``> 1
+        and giving array parameters
+
+        Example:
+            >>> # Build the range
+            >>> srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2,
+            ... ring.circumference, ring.circumference)
+            >>> # Create the resonator
+            >>> freq = 10e9
+            >>> Q = 1
+            >>> Rs = 1e4
+            >>> wake = Wake.long_resonator(srange, freq, Q, Rs, ring.beta)
         """
         return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
                               rshunt, beta, nelems=nelems)
@@ -202,7 +229,7 @@ class Wake(object):
     def resistive_wall(srange, wakecomp: WakeComponent,
                        length, rvac, conduct, beta: float,
                        yokoya_factor=1, nelems: int = 1):
-        """Bbuild a resistive wall wake object
+        r"""Factory method to build a resistive wall wake object
 
         Parameters:
             srange:         vector of s position where to sample the wake
@@ -246,8 +273,8 @@ class Wake(object):
                             around the bucket center
             short_step:     step size for the short range wake table
             long_step:      step size for the long range wake table
-            bunch_interval: minimum bunch interval data will be generate
-                            for each bunch_inteval step
+            bunch_interval: minimum bunch interval. Data will be generated
+                            for each ``bunch_interval`` step
             totallength:    total length of the wake table, has to contain
                             the full bunch extension
 
