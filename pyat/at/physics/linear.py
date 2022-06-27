@@ -443,7 +443,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
         ring:   Lattice description.
 
     Keyword Args:
-        refpts (Optional[Refpts]): Elements at which data is returned.
+        refpts (Refpts):        Elements at which data is returned.
           It can be:
 
           1. an integer in the range [-len(ring), len(ring)-1]
@@ -456,30 +456,32 @@ def linopt2(ring: Lattice, *args, **kwargs):
         dp (Optional[float]):   Momentum deviation.
         dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+        orbit (Orbit): Avoids looking for the closed orbit if is
           already known ((6,) array)
-        get_chrom (Optional[bool]): Compute chromaticities. Needs computing
+        get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
-        get_w (Optional[bool]):     Computes chromatic amplitude functions
+        get_w (bool):           Computes chromatic amplitude functions
           (W) [4]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        keep_lattice (Optional[bool]):   Assume no lattice change since the
+        keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        twiss_in:       Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, or dictionary. Keys:
+        twiss_in:               Initial conditions for transfer line optics.
+          Record array as output by :py:func:`.linopt6`, or dictionary. Keys:
 
-          alpha, beta
+          R or alpha, beta
             mandatory (2,) arrays
           closed_orbit
             Optional (6,) array, default 0
           dispersion
             Optional (6,) array, default 0
 
-          All other attributes are ignored.
+          If present, the attribute **R** will be used, otherwise the
+          attributes **alpha** and **beta** will be used. All other attributes
+          are ignored.
 
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
@@ -511,7 +513,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if get_chrom is
+    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
                         :py:obj:`True`
     =================   ======
 
@@ -539,7 +541,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
         ring:   Lattice description.
 
     Keyword Args:
-        refpts (Optional[Refpts]): Elements at which data is returned.
+        refpts (Refpts):        Elements at which data is returned.
           It can be:
 
           1. an integer in the range [-len(ring), len(ring)-1]
@@ -552,21 +554,28 @@ def linopt4(ring: Lattice, *args, **kwargs):
         dp (Optional[float]):   Momentum deviation.
         dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+        orbit (Orbit): Avoids looking for the closed orbit if is
           already known ((6,) array)
-        get_chrom (Optional[bool]): Compute chromaticities. Needs computing
+        get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
-        get_w (Optional[bool]):     Computes chromatic amplitude functions
+        get_w (bool):           Computes chromatic amplitude functions
           (W) [8]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        keep_lattice (Optional[bool]):   Assume no lattice change since the
+        keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        twiss_in:       Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, or dictionary. Keys:
+        twiss_in:               Initial conditions for transfer line optics.
+          Record array as output by :py:func:`.linopt6`, or dictionary. Keys:
+
+          R or alpha, beta
+            mandatory (2,) arrays
+          closed_orbit
+            Optional (6,) array, default 0
+          dispersion
+            Optional (6,) array, default 0
 
           alpha, beta
             mandatory (2,) arrays
@@ -575,7 +584,9 @@ def linopt4(ring: Lattice, *args, **kwargs):
           dispersion
             Optional (6,) array, default 0
 
-          All other attributes are ignored.
+          If present, the attribute **R** will be used, otherwise the
+          attributes **alpha** and **beta** will be used. All other attributes
+          are ignored.
 
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
@@ -609,7 +620,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if get_chrom is
+    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
                         :py:obj:`True`
     =================   ======
 
@@ -644,7 +655,7 @@ def linopt6(ring: Lattice, *args, **kwargs):
         ring:   Lattice description.
 
     Keyword Args:
-        refpts (Optional[Refpts]): Elements at which data is returned.
+        refpts (Refpts):        Elements at which data is returned.
           It can be:
 
           1. an integer in the range [-len(ring), len(ring)-1]
@@ -657,31 +668,30 @@ def linopt6(ring: Lattice, *args, **kwargs):
         dp (Optional[float]):   Momentum deviation.
         dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+        orbit (Orbit): Avoids looking for the closed orbit if is
           already known ((6,) array)
-        get_chrom (Optional[bool]): Compute chromaticities. Needs computing
+        get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
-        get_w (Optional[bool]):     Computes chromatic amplitude functions
+        get_w (bool):           Computes chromatic amplitude functions
           (W) [11]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        keep_lattice (Optional[bool]):   Assume no lattice change since the
+        keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        twiss_in:       Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, :py:func:`linopt6`, or
-          dictionary. Keys:
+        twiss_in:               Initial conditions for transfer line optics.
+          Record array as output by :py:func:`.linopt6`, or dictionary. Keys:
 
           R or alpha, beta
-            mandatory
+            mandatory (2,) arrays
           closed_orbit
             Optional (6,) array, default 0
           dispersion
             Optional (6,) array, default 0
 
-          If present, the attribute **R**' will be used, otherwise the
+          If present, the attribute **R** will be used, otherwise the
           attributes **alpha** and **beta** will be used. All other attributes
           are ignored.
         cavpts (Optional[Refpts]):  Cavity location for off-momentum tuning
@@ -718,7 +728,7 @@ def linopt6(ring: Lattice, *args, **kwargs):
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if get_chrom is
+    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
                         :py:obj:`True`
     **damping_time**    Damping times [s] (only if radiation is ON)
     =================   ======
@@ -741,11 +751,11 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
     ring.radiation=:py:obj:`False`. Otherwise the default :py:func:`linopt6`
     is used
 
-    Parameters: Same as linopt2 or linopt6
+    Parameters: Same as :py:func:`.linopt2` or :py:func:`.linopt6`
 
     Keyword Args;
-        coupled 5Optional[bool]):   If set to :py:obj:`False`, H/V coupling
-          will be ingnored to simplify the calculation, needs radiation OFF
+        coupled (bool):     If set to :py:obj:`False`, H/V coupling
+          will be ignored to simplify the calculation, needs radiation OFF
 
 
     Returns:
@@ -755,8 +765,8 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     Warning:
-        The output varies depending whether :py:func:`linopt2` or
-        :py:func:`linopt6` is called. To be used with care!
+        The output varies depending whether :py:func:`.linopt2` or
+        :py:func:`.linopt6` is called. To be used with care!
     """
     if not (kwargs.pop('coupled', True) or ring.radiation):
         return linopt2(ring, *args, **kwargs)
@@ -766,7 +776,7 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
 
 def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
                dp: Optional[float] = None,
-               method: Optional[Callable] = linopt6,
+               method: Callable = linopt6,
                **kwargs):
     """Linear analysis of a fully coupled lattice
 
@@ -783,44 +793,43 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
           3. a numpy array of booleans of maximum length len(ring)+1,
              where selected elements are :py:obj:`True`.
         dp (Optional[float]):   Momentum deviation.
-        method (Optional[Callable]):  Method used for the analysis of the
-          transfer matrix. Can be ``at.linopt2``, ``at.linopt4``, ``at.linopt6``
+        method (Callable):  Method for linear optics:
 
-          linopt2
-            no longitudinal motion, no H/V coupling,
-          linopt4
-            no longitudinal motion, Sagan/Rubin 4D-analysis of coupled motion,
-          linopt6 (default)
-            with or without longitudinal motion, normal mode analysis
+          :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
+
+          :py:obj:`~.linear.linopt4`: no longitudinal motion, Sagan/Rubin
+          4D-analysis of coupled motion,
+
+          :py:obj:`~.linear.linopt6` (default): with or without longitudinal
+          motion, normal mode analysis
 
     Keyword Args:
         dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+        orbit (Orbit): Avoids looking for the closed orbit if is
           already known ((6,) array)
-        get_chrom (Optional[bool]): Compute chromaticities. Needs computing
+        get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
-        get_w (Optional[bool]):     Computes chromatic amplitude functions
-          (W) [11]_. Needs to compute the optics at 2 different momentum
+        get_w (bool):           Computes chromatic amplitude functions
+          (W) [4]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        keep_lattice (Optional[bool]):   Assume no lattice change since the
+        keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        twiss_in:       Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, :py:func:`linopt6`, or
-          dictionary. Keys:
+        twiss_in:               Initial conditions for transfer line optics.
+          Record array as output by :py:func:`.linopt6`, or dictionary. Keys:
 
           R or alpha, beta
-            mandatory
+            mandatory (2,) arrays
           closed_orbit
             Optional (6,) array, default 0
           dispersion
             Optional (6,) array, default 0
 
-          If present, the attribute **R**' will be used, otherwise the
+          If present, the attribute **R** will be used, otherwise the
           attributes **alpha** and **beta** will be used. All other attributes
           are ignored.
 
@@ -841,7 +850,7 @@ def get_optics(ring: Lattice, refpts: Optional[Refpts] = None,
 @check_radiation(False)
 def linopt(ring: Lattice, dp: Optional[float] = 0.0,
            refpts: Optional[Refpts] = None,
-           get_chrom: Optional[bool] = False, **kwargs):
+           get_chrom: bool = False, **kwargs):
     """Linear analysis of a H/V coupled lattice (deprecated)
 
     PARAMETERS
@@ -949,30 +958,32 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
     Keyword Args:
         dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+        orbit (Orbit): Avoids looking for the closed orbit if is
           already known ((6,) array)
-        get_chrom (Optional[bool]): Compute chromaticities. Needs computing
+        get_chrom (bool):       Compute chromaticities. Needs computing
           the tune at 2 different momentum deviations around the central one.
-        get_w (Optional[bool]):     Computes chromatic amplitude functions
-          (W) [8]_. Needs to compute the optics at 2 different momentum
+        get_w (bool):           Computes chromatic amplitude functions
+          (W) [4]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        keep_lattice (Optional[bool]):   Assume no lattice change since the
+        keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        twiss_in:       Initial conditions for transfer line optics. Record
-          array as output by :py:func:`linopt2`, or dictionary. Keys:
+        twiss_in:               Initial conditions for transfer line optics.
+          Record array as output by :py:func:`.linopt6`, or dictionary. Keys:
 
-          alpha, beta
+          R or alpha, beta
             mandatory (2,) arrays
           closed_orbit
             Optional (6,) array, default 0
           dispersion
             Optional (6,) array, default 0
 
-          All other attributes are ignored.
+          If present, the attribute **R** will be used, otherwise the
+          attributes **alpha** and **beta** will be used. All other attributes
+          are ignored.
 
     Returns:
         elemdata:   Linear optics at the points refered to by ``refpts``,
@@ -1057,14 +1068,14 @@ def avlinopt(ring: Lattice, dp: Optional[float] = 0.0,
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
 
-def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
+def get_tune(ring: Lattice, method: str = 'linopt',
              dp: Optional[float] = None, dct: Optional[float] = None,
              orbit: Optional[Orbit] = None, **kwargs):
     r"""Computes the tunes using several available methods
 
     Parameters:
         ring:       Lattice description
-        method:     ``'linopt'`` returns the tunes from the :py:func:`linopt6`
+        method:     ``'linopt'`` returns the tunes from the :py:func:`.linopt6`
           function,
 
           ``'fft'`` tracks a single particle and computes the tunes with fft,
@@ -1080,20 +1091,20 @@ def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
     for the ``'fft'`` and ``'laskar'`` methods only:
 
     Keyword Args:
-        nturns (Optional[int]):         Number of turns. Default: 512
-        amplitude (Optional[float]):    Amplitude of oscillation.
+        nturns (int):           Number of turns. Default: 512
+        amplitude (float):      Amplitude of oscillation.
           Default: 1.E-6
-        remove_dc (Optional[bool]):     Remove the mean of oscillation data.
+        remove_dc (bool:        Remove the mean of oscillation data.
           Default: :py:obj:`True`
-        num_harmonics (Optional[int]):  Number of harmonic components to
+        num_harmonics (int):    Number of harmonic components to
           compute (before mask applied, default: 20)
-        fmin (Optional[float]):         Lower tune bound. Default: 0
-        fmax (Optional[float]):         Upper tune bound. Default: 1
-        hann (Optional[bool]):          Turn on Hanning window.
+        fmin (float):           Lower tune bound. Default: 0
+        fmax (float):           Upper tune bound. Default: 1
+        hann (bool):            Turn on Hanning window.
           Default: :py:obj:`False`
 
     Returns:
-        tunes (ndarray):                array([:math:`\nu_x,\nu_y`])
+        tunes (ndarray):        array([:math:`\nu_x,\nu_y`])
     """
     # noinspection PyShadowingNames
     def gen_centroid(ring, ampl, nturns, remove_dc, ld):
@@ -1121,7 +1132,7 @@ def get_tune(ring: Lattice, method: Optional[str] = 'linopt',
     return tunes
 
 
-def get_chrom(ring: Lattice, method: Optional[str] = 'linopt',
+def get_chrom(ring: Lattice, method: str = 'linopt',
               dp: Optional[float] = 0, dct: Optional[float] = None,
               cavpts: Optional[Refpts] = None, **kwargs):
     r"""Computes the chromaticities using several available methods
@@ -1143,26 +1154,26 @@ def get_chrom(ring: Lattice, method: Optional[str] = 'linopt',
           otherwise take all cavities.
 
     Keyword Args:
-        DPStep (Optional[float]):       Momentum step for differentiation
+        DPStep (float):       Momentum step for differentiation
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     for the ``'fft'`` and ``'laskar'`` methods only:
 
     Keyword Args:
-        nturns (Optional[int]):         Number of turns. Default: 512
-        amplitude (Optional[float]):    Amplitude of oscillation.
+        nturns (int):           Number of turns. Default: 512
+        amplitude (float):      Amplitude of oscillation.
           Default: 1.E-6
-        remove_dc (Optional[bool]):     Remove the mean of oscillation data.
+        remove_dc (bool):       Remove the mean of oscillation data.
           Default: :py:obj:`True`
-        num_harmonics (Optional[int]):  Number of harmonic components to
+        num_harmonics (int):    Number of harmonic components to
           compute (before mask applied, default: 20)
-        fmin (Optional[float]):         Lower tune bound. Default: 0
-        fmax (Optional[float]):         Upper tune bound. Default: 1
-        hann (Optional[bool]):          Turn on Hanning window.
+        fmin (float):           Lower tune bound. Default: 0
+        fmax (float):           Upper tune bound. Default: 1
+        hann (bool):            Turn on Hanning window.
           Default: :py:obj:`False`
 
     Returns:
-        chromaticities (ndarray):       array([:math:`\xi_x,\xi_y`])
+        chromaticities (ndarray):   array([:math:`\xi_x,\xi_y`])
     """
 
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)

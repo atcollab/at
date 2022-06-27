@@ -60,30 +60,29 @@ def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
     Parameters:
         ring:       Lattice description.
         dp:         Momentum deviation.
-        params:     :py:class:`RingParameters` object to be updated.
+        params:     :py:class:`.RingParameters` object to be updated.
           Default: create a new one
 
     Keyword Args:
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
+        dct (float):        Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        method (Optional[Callable]):  Method used for the analysis of the
-          transfer matrix. Can be ``at.linopt2`` or ``at.linopt6``
+        method (Callable):  Method for linear optics:
 
-          linopt2
-            no longitudinal motion, no H/V coupling, faster
-          linopt6 (default)
-            with or without longitudinal motion, normal mode analysis
-        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+          :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
+
+          :py:obj:`~.linear.linopt6` (default): with or without longitudinal
+          motion, normal mode analysis
+        orbit (Orbit):      Avoids looking for the closed orbit if is
           already known ((6,) array)
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):     Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):     Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
-        params:             :py:class:`RingParameters` object.
+        params:             :py:class:`.RingParameters` object.
 
-    **params** is a :py:class:`RingParameters` object with the following
+    **params** is a :py:class:`.RingParameters` object with the following
     attributes:
 
     ==================  ========================================
@@ -162,13 +161,13 @@ def envelope_parameters(ring: Lattice,
 
     Parameters:
         ring:       Lattice description.
-        params:     :py:class:`RingParameters` object to be updated.
+        params:     :py:class:`.RingParameters` object to be updated.
           Default: create a new one
 
     Returns:
-        params:             :py:class:`RingParameters` object.
+        params:             :py:class:`.RingParameters` object.
 
-    **params** is a :py:class:`RingParameters` object with the following
+    **params** is a :py:class:`.RingParameters` object with the following
     attributes:
 
     ==================  ========================================

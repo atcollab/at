@@ -99,7 +99,7 @@ def get_energy_loss(ring: Lattice,
 
 # noinspection PyPep8Naming
 def get_timelag_fromU0(ring: Lattice,
-                       method: Optional[ELossMethod] = ELossMethod.INTEGRAL,
+                       method: ELossMethod = ELossMethod.INTEGRAL,
                        cavpts: Optional[Refpts] = None) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
@@ -163,10 +163,10 @@ def get_timelag_fromU0(ring: Lattice,
 
 
 def set_cavity_phase(ring: Lattice,
-                     method=ELossMethod.TRACKING,
+                     method: ELossMethod = ELossMethod.TRACKING,
                      refpts: Optional[Refpts] = None,
                      cavpts: Optional[Refpts] = None,
-                     copy: Optional[bool] = False) -> None:
+                     copy: bool = False) -> None:
     """
     Adjust the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.

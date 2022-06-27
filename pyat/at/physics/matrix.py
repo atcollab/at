@@ -8,8 +8,8 @@ from typing import Optional
 from ..lattice import Lattice, Element, get_refpts, DConstant, Refpts
 from ..lattice.elements import Bend, M66
 from ..tracking import lattice_pass, element_pass
-from . import Orbit
-from . import find_orbit4, find_orbit6, jmat, symplectify
+from .orbit import Orbit, find_orbit4, find_orbit6
+from .amat import jmat, symplectify
 
 __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 
@@ -20,7 +20,7 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
              refpts: Optional[Refpts] = None,
              dct: Optional[float] = None,
              orbit: Optional[Orbit] = None,
-             keep_lattice: Optional[bool] = False, **kwargs):
+             keep_lattice: bool = False, **kwargs):
     """One turn 4x4 transfer matrix
 
     :py:func:`find_m44` finds the 4x4 transfer matrix of an accelerator
@@ -46,14 +46,14 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array).
         keep_lattice:   Assume no lattice change since the previous tracking.
-          Default: False
+          Default: :py:obj:`False`
 
     Keyword Args:
-        full (Optional[bool]):      If True, matrices are full 1-turn matrices
-          at the entrance of each element indexed by refpts. If False (Default),
-          matrices are between the entrance of the first element and the
-          entrance of the selected element
-        XYStep (Optional[float]):   Step size.
+        full (bool):    If :py:obj:`True`, matrices are full 1-turn matrices
+          at the entrance of each element indexed by refpts. If :py:obj:`False`
+          (Default), matrices are between the entrance of the first element and
+          the entrance of the selected element
+        XYStep (float): Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
@@ -105,7 +105,7 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
 
 def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
              orbit: Optional[Orbit] = None,
-             keep_lattice: Optional[bool] = False, **kwargs):
+             keep_lattice: bool = False, **kwargs):
     """One-turn 6x6 transfer matrix
 
     :py:func:`find_m66` finds the 6x6 transfer matrix of an accelerator
@@ -121,12 +121,12 @@ def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array).
         keep_lattice:   Assume no lattice change since the previous tracking.
-          Default: False
+          Default: :py:obj:`False`
 
     Keyword Args:
-        XYStep (Optional[float]):       Step size.
+        XYStep (float)  Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float): Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     Returns:
@@ -182,16 +182,16 @@ def find_elem_m66(elem: Element,
     Numerically finds the 6x6 transfer matrix of a single element
 
     Parameters:
-        elem:       AT element
-        orbit:      Closed orbit at the entrance of the element,
+        elem:           AT element
+        orbit:          Closed orbit at the entrance of the element,
           default: 0.0
 
     Keyword Args:
-        XYStep (Optional[float]):       Step size.
+        XYStep (float): Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
-        m66:        6x6 transfer matrix
+        m66:            6x6 transfer matrix
     """
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     if orbit is None:
