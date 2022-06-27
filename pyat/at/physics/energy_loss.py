@@ -102,7 +102,7 @@ def get_energy_loss(ring: Lattice,
 
 # noinspection PyPep8Naming
 def get_timelag_fromU0(ring: Lattice,
-                       method: Optional[ELossMethod] = ELossMethod.INTEGRAL,
+                       method: Optional[ELossMethod] = ELossMethod.TRACKING,
                        cavpts: Optional[Refpts] = None) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
