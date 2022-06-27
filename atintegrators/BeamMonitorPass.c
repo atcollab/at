@@ -57,7 +57,29 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
         for (ii=0; ii<6; ii++){
             positions[6*i+ii] = positions[6*i+ii]/nparts[i];
             sizes[6*i+ii] = sqrt(sizes[6*i+ii]/nparts[i]-positions[6*i+ii]*positions[6*i+ii]); 
-        }         
+        }
+    }        
+}
+
+
+#if defined(MATLAB_MEX_FILE) || defined(PYAT)
+ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
+                                      double *r_in, int num_particles)
+{
+    long nbunch;
+    double *sizes
+    double *positions;
+    if (!Elem) {
+        positions=atGetDoubleArray(ElemData,"_positions"); check_error();
+        sizes=atGetDoubleArray(ElemData,"_sizes"); check_error();
+        nbunch=atGetLong(ElemData,"_nbunch"); check_error();
+        Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        Elem->nbunch=nbunch;
+        Elem->sizes=sizes;
+        Elem->positions=positions;
     }
-        
-};
+    BeamMonitorPass(r_in, num_particles, Elem);
+    return Elem;
+}
+
+MODULE_DEF(BeamMonitorPass)        /* Dummy module initialisation */
