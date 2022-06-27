@@ -12,39 +12,48 @@ from .wake_functions import transverse_reswall_wf
 
 class WakeType(Enum):
     """Enum class for wake type"""
-    FILE = 1  # Import from file
-    TABLE = 2  # Provide vectors
-    RESONATOR = 3  # Analytical resonator
-    RESWALL = 4  # Analytical resistive wall
+    #: Import from file
+    FILE = 1
+    #: Provide vectors
+    TABLE = 2
+    #: Analytical resonator
+    RESONATOR = 3
+    #: Analytical resistive wall
+    RESWALL = 4
 
 
 class WakeComponent(Enum):
     """Enum class for wake component"""
-    DX = 1  # Dipole X
-    DY = 2  # Dipole Y
-    QX = 3  # Quadrupole X
-    QY = 4  # Quadrupole Y
-    Z = 5   # Longitudinal
+    #: Dipole X
+    DX = 1
+    #: Dipole Y
+    DY = 2
+    #: Quadrupole X
+    QX = 3
+    #: Quadrupole Y
+    QY = 4
+    #: Longitudinal
+    Z = 5
 
 
 # noinspection PyPep8Naming
 class Wake(object):
     """Class to generate a wake object
-    The wake object is define by its srange, specified
-    at initialization, and DX, DY, QY, Z corresponding
-    to transverse dipoles and quadrupoles and longitudinal
 
-    The srange is common to all components and cannot be changed
+    The wake object is defined by its srange, specified
+    at initialization, and one or several components corresponding
+    to transverse dipoles or quadrupoles, or longitudinal wakes.
+
+    The ``srange`` is common to all components and cannot be changed
     once initialized, all added component are resampled to the
-    srange
+    ``srange``.
 
-    usage:
-    wake = Wake(srange)
-    wake.add(WakeType,WakeComponent, *args, *kwargs)
+    Parameters:
+        srange:         vector of s position where to sample the wake
 
-    Component are WakeComponent.FILE (import from file),
-    WakeComponent.TABLE (provide vectors), WakeComponent.RESONATOR
-    (analytical resonator), WakeComponent.RESWALL (transverse RW)
+    Usage:
+        wake = Wake(srange)
+        wake.add(WakeType,WakeComponent, *args, *kwargs)
 
     Components are retrieved with Wake.DX for example
     """
@@ -80,7 +89,13 @@ class Wake(object):
     def Z(self):
         return self.components[WakeComponent.Z]
 
-    def add(self, wtype, wcomp, *args, **kwargs):
+    def add(self, wtype: WakeType, wcomp: WakeComponent, *args, **kwargs):
+        """Add a component to a :py:class:`.Wake`
+
+        Parameters:
+            wtype:      Wake type
+            wcomp:      Wake component
+        """
         if wtype is WakeType.FILE:
             w = self._readwakefile(*args, **kwargs)
         elif wtype is WakeType.TABLE:
@@ -137,10 +152,20 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
     @staticmethod
-    def resonator(srange, wakecomp, frequency, qfactor, rshunt, beta,
-                  yokoya_factor=1, nelems=1):
-        """
-        Method to build a resonator wake object
+    def resonator(srange, wakecomp,
+                  frequency, qfactor, rshunt,
+                  beta: float, yokoya_factor=1, nelems: int = 1):
+        """Build a resonator wake object
+
+        Parameters:
+            srange:         vector of s position where to sample the wake
+            wakecomp:       Wake component
+            frequency:      Resonator frequency
+            qfactor:        Q factor
+            rshunt:         Shunt impedance
+            beta:
+            yokoya_factor:  Yokoya factor
+            nelems:         Number of resonators
         """
         wake = Wake(srange)
         try:
@@ -148,8 +173,7 @@ class Wake(object):
             frequency = numpy.broadcast_to(frequency, (nelems, ))
             qfactor = numpy.broadcast_to(qfactor, (nelems, ))
             rshunt = numpy.broadcast_to(rshunt, (nelems, ))
-            yokoya_factor = numpy.broadcast_to(yokoya_factor,
-                                               (nelems, ))
+            yokoya_factor = numpy.broadcast_to(yokoya_factor, (nelems, ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
@@ -161,17 +185,34 @@ class Wake(object):
 
     @staticmethod
     def long_resonator(srange, frequency, qfactor, rshunt, beta, nelems=1):
-        """
-        Method to build a longitudinal resonator wake object
+        """Build a longitudinal resonator wake object
+
+        Parameters:
+            srange:         vector of s position where to sample the wake
+            frequency:      Resonator frequency
+            qfactor:        Q factor
+            rshunt:         Shunt impedance
+            beta:
+            nelems:         Number of resonators
         """
         return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
                               rshunt, beta, nelems=nelems)
 
     @staticmethod
-    def resistive_wall(srange, wakecomp, length, rvac, conduct, beta,
-                       yokoya_factor=1, nelems=1):
-        """
-        Method to build a resistive wall wake object
+    def resistive_wall(srange, wakecomp: WakeComponent,
+                       length, rvac, conduct, beta: float,
+                       yokoya_factor=1, nelems: int = 1):
+        """Bbuild a resistive wall wake object
+
+        Parameters:
+            srange:         vector of s position where to sample the wake
+            wakecomp:       Wake component
+            length:
+            rvac:
+            conduct:
+            beta:
+            yokoya_factor:  Yokoya factor
+            nelems:
         """
         wake = Wake(srange)
         try:
@@ -179,8 +220,7 @@ class Wake(object):
             length = numpy.broadcast_to(length, (nelems, ))
             rvac = numpy.broadcast_to(rvac, (nelems, ))
             conduct = numpy.broadcast_to(conduct, (nelems, ))
-            yokoya_factor = numpy.broadcast_to(yokoya_factor,
-                                               (nelems, ))
+            yokoya_factor = numpy.broadcast_to(yokoya_factor, (nelems, ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
@@ -190,28 +230,29 @@ class Wake(object):
         return wake
 
     @staticmethod
-    def build_srange(start, bunch_ext, short_step, long_step,
-                     bunch_interval, totallength):
+    def build_srange(start: float, bunch_ext: float, short_step: float,
+                     long_step: float,
+                     bunch_interval: float, totallength: float):
         """Function to build the wake table s column.
         This is not the slicing but the look-up table,
         however it generates data where bunches are located
         to avoid using too much memory to store the table.
 
-        PARAMETERS
-            start           starting s-coordinate of the table
+        Parameters:
+            start:          starting s-coordinate of the table
                             (can be negative for wake potential)
-            bunch_ext       maximum bunch extension, function
+            bunch_ext:      maximum bunch extension, function
                             generates data at +/- bunch_ext
                             around the bucket center
-            short_step      step size for the short range wake table
-            long_step       step size for the long range wake table
-            bunch_interval  minimum bunch interval data will be generate
+            short_step:     step size for the short range wake table
+            long_step:      step size for the long range wake table
+            bunch_interval: minimum bunch interval data will be generate
                             for each bunch_inteval step
-            totallength     total length of the wake table, has to contain
+            totallength:    total length of the wake table, has to contain
                             the full bunch extension
 
-        OUTPUT
-            srange          vector of s position where to sample the wake
+        Returns:
+            srange:         vector of s position where to sample the wake
         """
         srange = numpy.arange(start, bunch_ext, short_step)
         rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)
