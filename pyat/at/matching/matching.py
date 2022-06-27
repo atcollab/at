@@ -3,17 +3,45 @@ Classes for matching variables and constraints
 """
 from itertools import chain
 import numpy as np
+from typing import Optional, Sequence, Callable, Tuple, Union
 from scipy.optimize import least_squares
 from itertools import repeat
-from at.lattice import refpts_iterator, bool_refpts, uint32_refpts
+from at.lattice import Lattice, Refpts, bool_refpts
 from at.physics import get_optics, ohmi_envelope, find_orbit
 
 
 class Variable(object):
-    """A Variable is a scalar value acting on a lattice through the
+    """A :py:class:`Variable` is a scalar value acting on a lattice through the
     user-defined functions setfun and getfun
+
+    Parameters:
+        setfun:     User-defined function for setting the Variable. Called as:
+
+          :code:`setfun(ring, value, *args, **kwargs)`
+
+          where :code:`value` is the scalar value to apply
+
+          The positional and keyword parameters come from the
+          :py:class:`Variable` initialisation
+        getfun:     User-defined function for retrieving the actual value of
+          the variable: Called as:
+
+          :code:`value = getfun(ring, *args, **kwargs)`
+
+          The positional and keyword parameters come from the
+          :py:class:`Variable` initialisation
+        name:       Name of the Variable; Default: ``''``
+        bounds:     Lower and upper bounds of the variable value
+        *args:      Positional arguments transmitted to ``setfun`` and
+          ``getfun`` functions
+
+    Keyword Args:
+        **kwargs:   Keyword arguments transmitted to ``setfun``and
+          ``getfun`` functions
     """
-    def __init__(self, setfun, getfun, name='', bounds=(-np.inf, np.inf),
+    def __init__(self, setfun: Callable, getfun: Callable,
+                 name: str = '',
+                 bounds: Tuple[float, float] = (-np.inf, np.inf),
                  *args, **kwargs):
         self.setfun = setfun
         self.getfun = getfun
@@ -23,10 +51,12 @@ class Variable(object):
         self.kwargs = kwargs
         super(Variable, self).__init__()
 
-    def set(self, ring, value):
+    def set(self, ring: Lattice, value):
+        """Set the variable value"""
         self.setfun(ring, value, *self.args, **self.kwargs)
 
-    def get(self, ring):
+    def get(self, ring: Lattice):
+        """Get the actual variable value"""
         return self.getfun(ring, *self.args, **self.kwargs)
 
     @staticmethod
@@ -34,31 +64,46 @@ class Variable(object):
         return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
             'Name', 'Initial', 'Final ', 'Variation')
 
-    def status(self, ring, vini=np.NaN):
+    def status(self, ring: Lattice, vini=np.NaN):
         vnow = self.get(ring)
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
             self.name, vini, vnow, (vnow - vini))
 
 
 class ElementVariable(Variable):
-    """An ElementVariable is:
-    - a scalar attribute or
-    - an element of an array attribute
-    of one or several elements of a lattice"""
+    """An :py:class:`ElementVariable` is:
 
-    def __init__(self, refpts, attname, index=None, **kwargs):
+    * a scalar attribute or
+    * an element of an array attribute
+
+    of one or several :py:class:`.Element` (s) of a lattice.
+
+    Parameters:
+        refpts:     Location of variable :py:class:`.Element` (s)
+        attname:    Attribute name
+        index:      Index in the attribute array. Use :py:obj:`None` for
+          scalar attributes
+        name:       Name of the Variable; Default: ``''``
+        bounds:     Lower and upper bounds of the variable value
+    """
+
+    def __init__(self, refpts: Refpts, attname: str,
+                 index: Optional[int] = None,
+                 name: str = '',
+                 bounds: Tuple[float, float] = (-np.inf, np.inf)):
         setf, getf = self._access(index)
 
         def setfun(ring, value):
-            for elem in refpts_iterator(ring, refpts):
+            for elem in ring.select(refpts):
                 setf(elem, attname, value)
 
         def getfun(ring):
             values = np.array([getf(elem, attname) for elem in
-                               refpts_iterator(ring, refpts)])
+                               ring.select(refpts)])
             return np.average(values)
 
-        super(ElementVariable, self).__init__(setfun, getfun, **kwargs)
+        super(ElementVariable, self).__init__(setfun, getfun, name=name,
+                                              bounds=bounds)
         self.refpts = refpts
 
     @staticmethod
@@ -78,32 +123,39 @@ class ElementVariable(Variable):
 
 class Constraints(object):
     """Container for generic constraints:
-      - a constraint is defined by a user-defined evaluation function.
-      - constraints are added to the container with the Constraints.add method
 
-      Example:
-          # define an evaluation function for the ring circumference:
-          def circ_fun(ring):
-              return ring.get_s_pos(len(ring) + 1)
+    * a constraint is defined by a user-defined evaluation function,
+    * constraints are added to the container with the :py:meth:`add` method.
 
-          # define an evaluation function for the momentum compaction factor:
-          def mcf_fun(ring):
-              return ring.get_mcf()
+    Parameters:
+        *args:      Positional arguments sent to the evaluation functions
+          of all the embedded constraints
 
-          # Construct the container:
-          cnstrs = Constraints()
+    Keyword Args:
+        **kwargs:   Keyword arguments sent to the evaluation functions
+          of all the embedded constraints
 
-          # Add the two constraints:
-          cnstrs.add(circ_fun, 850.0)
-          cnstrs.add(mcf_fun, 1.0e-4, weight=0.1)
+    Examples:
+        Define an evaluation function for the ring circumference:
+
+        >>> def circ_fun(ring):
+        ...     return ring.get_s_pos(len(ring) + 1)
+
+        Define an evaluation function for the momentum compaction factor:
+
+        >>> def mcf_fun(ring):
+        ...     return ring.get_mcf()
+
+        Construct the container:
+
+        >>> cnstrs = Constraints()
+
+        Add the two constraints:
+
+        >>> cnstrs.add(circ_fun, 850.0)
+        >>> cnstrs.add(mcf_fun, 1.0e-4, weight=0.1)
     """
     def __init__(self, *args, **kwargs):
-        """Constraints(*args, **kwargs)
-        build a generic constraints container.
-
-        The positional and keyword parameters are provided to all
-        the evaluation functions.
-        """
         self.name = []
         self.fun = []
         self.target = []
@@ -114,24 +166,30 @@ class Constraints(object):
         self.args = args
         self.kwargs = kwargs
 
-    def add(self, fun, target, name=None, weight=1.0, bounds=(0.0, 0.0)):
-        """Add a target to the Constraints container
+    def add(self, fun: Callable, target, name: Optional[str] = None,
+            weight=1.0, bounds=(0.0, 0.0)):
+        """Add a target to the :py:class:`Constraints` container
 
-        PARAMETERS
-            fun           evaluation function. Called as:
-                          value = fun(ring, *args, **kwargs)
-                            value is the constrained parameter value
-                            value may be a scalar or an array.
-                            the positional and keyword parameters come from
-                            the Constraints initialisation
-            target        desired value.
+        .. highlight:: python
 
-        KEYWORDS
-            name=None     name of the constraint. If None, name is generated
-                          from the name of the evaluation function
-            weight=1.0    weight factor: the residual is (value-target)/weight
-            bounds=(0,0)  lower and upper bounds. The parameter is constrained
-                          in the interval [target-low_bound target+up_bound]
+        Parameters:
+            fun:          Evaluation function. Called as:
+
+              :code:`value = fun(ring, *args, **kwargs)`
+
+              ``value`` is the constrained parameter value,
+
+              ``value`` may be a scalar or an array.
+
+              The positional and keyword parameters come from
+              the :py:class:`Constraints` initialisation
+            target:       Desired value.
+            name:         Name of the constraint. If :py:obj:`None`, a ``name``
+              is generated from the name of the evaluation function
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
+            bounds:       Lower and upper bounds. The parameter is constrained
+              in the interval [target-low_bound target+up_bound]
 
         The "target", "weight" and "bounds" input must be broadcastable to the
         shape of "value".
@@ -146,11 +204,11 @@ class Constraints(object):
         self.lbound.append(lbound)
         self.ubound.append(ubound)
 
-    def values(self, ring):
+    def values(self, ring: Lattice):
         """Return the list of actual parameter values"""
         return [fun(ring, *self.args, **self.kwargs) for fun in self.fun]
 
-    def evaluate(self, ring):
+    def evaluate(self, ring: Lattice):
         """Return a flattened array of weighted residuals"""
 
         def res(value, target, weight, lbound, ubound):
@@ -172,7 +230,7 @@ class Constraints(object):
         return '\n{:>12s}{:>13s}{:>16s}{:>16s}{:>16s}\n'.format(
             'Name', 'Initial', 'Final ', 'Target', 'Residual')
 
-    def status(self, ring, initial=None):
+    def status(self, ring: Lattice, initial=None):
         """Return a string giving the actual state of constraints"""
         if initial is None:
             initial = repeat(np.NaN)
@@ -191,10 +249,10 @@ class Constraints(object):
 class ElementConstraints(Constraints):
     """Base class for position-related constraints: handle the refpoints
     of each target"""
-    def __init__(self, ring, *args, **kwargs):
+    def __init__(self, ring: Lattice, *args, **kwargs):
         self.nelems = len(ring)
         self.refs = []
-        self.refpts = bool_refpts([], self.nelems)
+        self.refpts = ring.bool_refpts([])
         super(ElementConstraints, self).__init__(*args, **kwargs)
 
     @staticmethod
@@ -223,7 +281,35 @@ class ElementConstraints(Constraints):
                 return getattr(lindata, attrname)[idx]
         return getf
 
-    def add(self, fun, target, refpts=None, **kwargs):
+    def add(self, fun: Callable, target,
+            refpts: Optional[Refpts] = None, **kwargs):
+        """Add a target to the :py:class:`ElementConstraints` container
+
+        Parameters:
+            fun:          Evaluation function. Called as:
+
+              :code:`value = fun(ring, *args, **kwargs)`
+
+              ``value`` is the constrained parameter value
+
+              ``value`` may be a scalar or an array.
+
+              the positional and keyword parameters come from
+              the :py:class:`ElementConstraints` initialisation
+            target:       Desired value.
+            refpts:       Location of the constraint
+
+        Keyword Args:
+            name:         Name of the constraint. If :py:obj:`None`, a ``name``
+              is generated from the name of the evaluation function
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
+            bounds:       Lower and upper bounds. The parameter is constrained
+              in the interval [target-low_bound target+up_bound]
+
+        The "target", "weight" and "bounds" input must be broadcastable to the
+        shape of "value".
+        """
         ref = bool_refpts(refpts, self.nelems)
         # Store the new refpoint
         self.refs.append(ref)
@@ -231,95 +317,116 @@ class ElementConstraints(Constraints):
         self.refpts = np.stack((self.refpts, ref), axis=0).any(axis=0)
         super(ElementConstraints, self).add(fun, target, **kwargs)
 
-    def values(self, ring):
+    def values(self, ring: Lattice):
         # Single optics computation
         vloc, vglob = self.compute(ring, *self.args, **self.kwargs)
         # Evaluate all constraints
         return [fun(loc, *vglob) for fun, loc in zip(self.fun, vloc)]
 
-    def compute(self, ring, *args, **kwargs):
+    def compute(self, ring: Lattice, *args, **kwargs):
         """Dummy computation. Compute must return:
         - an iterator over local data for each target
-        - a tuple of global data"""
+        - a tuple of global data
+        """
         return repeat(None), ()
 
 
 class LinoptConstraints(ElementConstraints):
+    # noinspection PyUnresolvedReferences
     """Container for linear optics constraints:
-      - a constraint can be set on any result of at.get_optics
-      - constraints are added to the container with the LinoptConstraints.add
-        method.
 
-      at.get_optics is called once before the evaluation of all constraints
+    * a constraint can be set on any result of at.get_optics
+    * constraints are added to the container with the LinoptConstraints.add
+      method.
 
-      Example:
-          cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)
+    :py:func:`.get_optics` is called once before the evaluation of all
+    constraints
 
-          # Add a beta H (beta[0]) constraint at location ref_inj
-          cnstrs.add('beta_x_inj', 'beta', 18.0, refpts=ref_inj, index=0)
+    Parameters:
+        ring:       Lattice description
 
-          # Add a tune constraint
-          cnstrs.add('tunes', 0.44, index=0, weight=0.01)
+    Keyword Args:
+        dp (float):   Momentum deviation.
+        dct (float):  Path lengthening. If specified, ``dp`` is
+          ignored and the off-momentum is deduced from the path lengthening.
+        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+          already known ((6,) array)
+        twiss_in:   Initial twiss parameters for transfer line optics.
+          See :py:func:`.linopt6`
+        method (Callable):  Method used for the analysis of the
+          transfer matrix. Can be :py:obj:`~.linear.linopt2`,
+          :py:obj:`~.linear.linopt4`, :py:obj:`~.linear.linopt6`
 
-          # Add a chromaticity constraint (both planes)
-          cnstrs.add('chroms', [0.0 0.0])
+          * :py:obj:`~.linear.linopt2`: No longitudinal motion, no H/V coupling,
+          * :py:obj:`~.linear.linopt4`: No longitudinal motion, Sagan/Rubin
+            4D-analysis of coupled motion,
+          * :py:obj:`~.linear.linopt6` (default): With or without longitudinal
+            motion, normal mode analysis
 
-          # define a constraint of phase advances between 2 points
-          def mu_diff(lindata, tune, chrom):
-              delta_mu = (lindata[1].mu - lindata[0].mu)/(2*np.pi)
-              return delta_mu % 1.0
+    Example:
 
-          # Add a H phase advance constraint, giving the desired locations
-          cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1], index=0)
-    """
-    def __init__(self, ring, **kwargs):
-        """Build a LinoptConstraints container
+        >>> cnstrs = LinoptConstraints(ring, dp=0.01, coupled=False)
 
-        KEYWORDS
-        dp=0.0          momentum deviation.
-        twiss_in=None   Initial twiss parameters for transfer line optics.
-                        "lindata" stucture, where only the beta and alpha are
-                        required and used.
-        orbit=None      Initial trajectory for transfer line
-                        ((6,) array)
-        method=linopt6  Method used for the analysis of the transfer matrix.
-                        Can be None, at.linopt2, at.linopt4, at.linopt6
-                        linopt2:    no longitudinal motion, no H/V coupling,
-                        linopt4:    no longitudinal motion, Sagan/Rubin
-                                    4D-analysis of coupled motion,
-                        linopt6:    with or without longitudinal motion, normal
-                                    mode analysis
+        Add a beta x (beta[0]) constraint at location ref_inj:
+
+        >>> cnstrs.add('beta', 18.0, refpts=ref_inj, name='beta_x_inj', index=0)
+
+        Add an horizontal tune (tunes[0]) constraint:
+
+        >>> cnstrs.add('tunes', 0.44, index=0, weight=0.01)
+
+        Add a chromaticity constraint (both planes):
+
+        >>> cnstrs.add('chroms', [0.0 0.0])
+
+        Define a constraint of phase advances between 2 points:
+
+        >>> def mu_diff(lindata, tune, chrom):
+        ...     delta_mu = (lindata[1].mu - lindata[0].mu)/(2*np.pi)
+        ...     return delta_mu % 1.0
+
+        Add a H phase advance constraint, giving the desired locations:
+
+        >>> cnstrs.add(mu_diff, 0.5, refpts=[sf0 sf1], index=0)
         """
+    def __init__(self, ring: Lattice, **kwargs):
         self.get_chrom = False
         super(LinoptConstraints, self).__init__(ring, **kwargs)
 
-    def add(self, param, target, refpts=None, index=None, name=None, **kwargs):
+    def add(self, param, target, refpts: Optional[Refpts] = None,
+            index: Optional[Union[int, slice]] = None,
+            name: Optional[str] = None, **kwargs):
         """Add a target to the LinoptConstraints container
 
-        PARAMETERS
-            param         2 possibilities:
-                          - parameter name: see at.linopt for the name of
-                            available parameters. In addition to local optical
-                            parameters, 'tunes' and 'chroms' are allowed.
-                          - user-supplied parameter evaluation function:
-                                value = param(lindata, tune, chrom)
-                            lindata contains the optics parameters at all the
-                              specified refpoints
-                            value is the constrained parameter value
-                              (scalar or array).
-            target        desired value.
+        Parameters:
+            param:         2 possibilities:
 
-        KEYWORDS
-            refpts=None   location of the constraint. Several locations may be
-                          given to apply the same constraint at several points.
-            index=None    index in the parameter array. If None, the full array
-                          is used.
-            name=None     name of the constraint. If None, name is generated
-                          from param and index.
-            weight=1.0    weight factor: the residual is (value-target)/weight.
-            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+              * parameter name: see :py:func:`.linopt6` for the
+                name of available parameters. In addition to local
+                optical parameters, ``'tunes'`` and ``'chroms'``
+                are allowed.
+              * user-supplied parameter evaluation function:
+
+                :code:`value = param(lindata, tune, chrom)`
+
+                ``lindata`` contains the optics parameters at all the
+                specified refpoints
+                ``value`` is the constrained parameter value
+                (scalar or array).
+            target:       desired value.
+            refpts:       location of the constraint. Several locations may be
+              given to apply the same constraint at several points.
+            index:        index in the parameter array. If :py:obj:`None`,
+              the full array is used.
+            name:         name of the constraint. If :py:obj:`None`, name is
+              generated from ``param`` and ``index``.
+
+        Keyword Args:
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
+            bounds:       lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
-            UseInteger    Match integer part of mu, much slower as the optics
+            UseInteger:   Match integer part of mu, much slower as the optics
                           calculation is done for all refpts
 
         The target, weight and bounds values must be broadcastable to the shape
@@ -363,7 +470,7 @@ class LinoptConstraints(ElementConstraints):
         super(LinoptConstraints, self).add(fun, target, refpts, name=name,
                                            **kwargs)
 
-    def compute(self, ring, *args, **kwargs):
+    def compute(self, ring: Lattice, *args, **kwargs):
         """Optics computation before evaluation of all constraints"""
         ld0, bd, ld = get_optics(ring, refpts=self.refpts,
                                  get_chrom=self.get_chrom, **kwargs)
@@ -372,49 +479,55 @@ class LinoptConstraints(ElementConstraints):
 
 
 class OrbitConstraints(ElementConstraints):
+    # noinspection PyUnresolvedReferences
     """Container for orbit constraints:
-    The closed orbit can be handled with LinoptConstraints, but for problems
-    which do not involve parameters other than orbit, like steering or
-    orbit bumps, OrbitConstraints is much faster.
+    The closed orbit can be handled with :py:class`LinoptConstraints`, but for
+    problems which do not involve parameters other than orbit, like steering or
+    orbit bumps, :py:class:`OrbitConstraints` is much faster.
 
-      at.find_orbit is called once before the evaluation of all constraints
+    :py:func:`.find_orbit` is called once before the evaluation of all
+    constraints
+
+    Parameters:
+        ring:       Lattice description
+
+    Keyword Args:
+        dp (float):   Momentum deviation.
+        dct (float):  Path lengthening. If specified, ``dp`` is
+          ignored and the off-momentum is deduced from the path lengthening.
+        orbit (Optional[Orbit]): Avoids looking for the closed orbit if is
+          already known ((6,) array)
 
     Example:
-        cnstrs = OrbitConstraints(ring, dp=0.01)
+        >>> cnstrs = OrbitConstraints(ring, dp=0.01)
 
-        # Add a bump (x=-0.004, x'=0) constraint at location ref_inj
-        cnstrs.add([-0.004, 0.0], refpts=ref_inj, index=slice(2))
+        Add a bump (x=-0.004, x'=0) constraint at location ref_inj
+
+        >>> cnstrs.add([-0.004, 0.0], refpts=ref_inj, index=slice(2))
     """
-    def __init__(self, ring, *args, **kwargs):
-        """Build a OrbitConstraints container
-
-        KEYWORDS
-        dp=0            Momentum deviation, when radiation is OFF
-        dct=0            Path lengthening, when radiation ids OFF
-        orbit=None          Initial trajectory for transfer line: (6,) array
-        """
+    def __init__(self, ring: Lattice, *args, **kwargs):
         if ring.radiation:
-            args.pop('dp', 0.0)
-            args.pop('dct', 0.0)
+            kwargs.pop('dp', 0.0)
+            kwargs.pop('dct', 0.0)
         super(OrbitConstraints, self).__init__(ring, *args, **kwargs)
 
-    def add(self, target, refpts=None, index=None, name=None, **kwargs):
+    def add(self, target, refpts: Optional[Refpts] = None,
+            index: Optional[Union[int, slice]] = None,
+            name: Optional[str] = None, **kwargs):
         """Add a target to the OrbitConstraints container
 
-        PARAMETERS
-            target        desired value.
+        Parameters:
+            target:       desired value.
+            refpts:       location of the constraint. Several locations may be
+              given to apply the same constraint at several points.
+            index:        index in the orbit vector. If :py:obj:`None`, the
+              full orbit is used.
+            name:         name of the constraint. Default: ``'orbit'``
 
-        KEYWORDS
-            refpts=None   location of the constraint. Several locations may be
-                          given to apply the same constraint at several points.
-            index=None    index in the orbit vector. If None, the full orbit
-                          is used. Example:
-                            index=0         # x
-                            index=2         # z
-                            index=slice(4)  # x, x', z, z'
-            name='orbit'  name of the constraint.
-            weight=1.0    weight factor: the residual is (value-target)/weight.
-            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+        Keyword Args:
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
+            bounds:       lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
 
         The target, weight and bounds values must be broadcastable to the shape
@@ -428,7 +541,7 @@ class OrbitConstraints(ElementConstraints):
         super(OrbitConstraints, self).add(fun, target, refpts, name=name,
                                           **kwargs)
 
-    def compute(self, ring, *args, **kwargs):
+    def compute(self, ring: Lattice, *args, **kwargs):
         """Orbit computation before evaluation of all constraints"""
         orbit0, orbit = find_orbit(ring, refpts=self.refpts, **kwargs)
         return (orbit[ref[self.refpts]].T for ref in self.refs), ()
@@ -436,45 +549,51 @@ class OrbitConstraints(ElementConstraints):
 
 class EnvelopeConstraints(ElementConstraints):
     """Container for envelope constraints:
-      - a constraint can be set on any result of at.ohmi_envelope
-      - constraints are added to the container with the EnvelopeConstraints.add
-        method.
 
-      at.ohmi_envelope is called once before the evaluation of all constraints
+    * a constraint can be set on any result of :py:func:`.ohmi_envelope`,
+    * constraints are added to the container with the :py:meth:`add` method.
 
-      Example:
-          cnstrs = EnvelopeConstraints(ring)
+    :py:func:`.ohmi_envelope` is called once before the evaluation of all
+    constraints.
+
+    Parameters:
+        ring:       Lattice description
     """
-    def __init__(self, ring):
-        """Build a EnvelopeConstraints container"""
+    def __init__(self, ring: Lattice):
         super(EnvelopeConstraints, self).__init__(ring, rad=True)
 
-    def add(self, param, target, refpts=None, index=None, name=None, **kwargs):
-        """Add a target to the EnvelopeConstraints container
+    def add(self, param, target, refpts: Optional[Refpts] = None,
+            index: Optional[Union[int, slice]] = None,
+            name: Optional[str] = None, **kwargs):
+        """Add a target to the :py:class:`EnvelopeConstraints` container
 
-        PARAMETERS
-            param         2 possibilities:
-                          - parameter name: see at.ohmi_envelope for the
-                            name of available parameters. In addition to
-                            local parameters, 'tunes', 'damping_rates',
-                            'mode_matrices' and 'mode_emittance' are allowed.
-                          - user-supplied parameter evaluation function:
-                                value = prm(emit_data, beam_data)
-                            emit_data contains the emittance data at all the
-                              specified refpoints
-                            value is the constrained parameter value
-                              (scalar or array).
-            target        desired value.
+        Parameters:
+            param:        2 possibilities:
 
-        KEYWORDS
-            refpts=None   location of the constraint. Several locations may be
-                          given to apply the same constraint at several points.
-            index=None    index in the parameter array. If None, the full array
-                          is used.
-            name=None     name of the constraint. If None, name is generated
-                          from param and index.
-            weight=1.0    weight factor: the residual is (value-target)/weight.
-            bounds=(0,0)  lower and upper bounds. The parameter is constrained
+              - parameter name: see :py:func:`.ohmi_envelope` for the
+                name of available parameters. In addition to local parameters,
+                ``'tunes'``, ``'damping_rates'``, ``'mode_matrices'`` and
+                ``'mode_emittance'`` are allowed.
+              - user-supplied parameter evaluation function:
+
+                :code:`value = param(emit_data, beam_data)`
+
+                ``emit_data`` contains the emittance data at all the
+                specified refpoints
+                ``value`` is the constrained parameter value
+                (scalar or array).
+            target:       desired value.
+            refpts:       location of the constraint. Several locations may be
+              given to apply the same constraint at several points.
+            index:        index in the parameter array. If :py:obj:`None`,
+              the full array is used.
+            name:         name of the constraint. If :py:obj:`None`, name is
+              generated from ``param`` and ``index``.
+
+        Keyword Args:
+            weight:       Weight factor: the residual is
+              :code:`(value-target)/weight`
+            bounds:       lower and upper bounds. The parameter is constrained
                           in the interval [target-low_bound target+up_bound]
 
         The target, weight and bounds values must be broadcastable to the shape
@@ -509,25 +628,28 @@ class EnvelopeConstraints(ElementConstraints):
         super(EnvelopeConstraints, self).add(fun, target, refpts, name=name,
                                              **kwargs)
 
-    def compute(self, ring, *args, **kwargs):
+    def compute(self, ring: Lattice, *args, **kwargs):
         """Optics computation before evaluation of all constraints"""
         em0, beamdata, em = ohmi_envelope(ring, refpts=self.refpts, **kwargs)
         return (em[ref[self.refpts]] for ref in self.refs), (beamdata,)
 
 
-def match(ring, variables, constraints, verbose=2, max_nfev=1000,
-          diff_step=1.0e-10, method=None, copy=True):
+def match(ring: Lattice, variables: Sequence[Variable],
+          constraints: Sequence[Constraints], verbose: int = 2,
+          max_nfev: int = 1000,
+          diff_step: float = 1.0e-10,
+          method=None, copy: bool = True):
     """Perform matching of constraints by varying variables
 
-    PARAMETERS
-        ring                ring lattice or transfer line
-        variables           sequence of Variable objects
-        constraints         sequence of Constraints objects
-
-    KEYWORDS
-        verbose=2           See scipy.optimize.least_squares
-        max_nfev=1000           "
-        diff_step=1.0e-10       "
+    Parameters:
+        ring:               Lattice description
+        variables:          sequence of Variable objects
+        constraints:        sequence of Constraints objects
+        verbose:            Print additional information
+        max_nfev:           Maximum number of evaluations
+        diff_step:          Convergence threshold
+        method:
+        copy:
     """
     def fun(vals):
         for value, variable in zip(vals, variables):
@@ -537,10 +659,16 @@ def match(ring, variables, constraints, verbose=2, max_nfev=1000,
         return np.concatenate(c, axis=None)
 
     if copy:
-        ring1 = ring.copy()         # Make a shallow copy of ring
-        for var in variables:       # Make a deep copy of varying elements
-            for ref in uint32_refpts(var.refpts, len(ring1)):
-                ring1[ref] = ring1[ref].deepcopy()
+        # Make a shallow copy of ring
+        ring1 = ring.copy()
+        varpts = ring.bool_refpts([])
+        # build the list of variable elements
+        for var in variables:
+            if isinstance(var, ElementVariable):
+                varpts |= ring.bool_refpts(var.refpts)
+        # make a deep copy of all the variable elements
+        for ref in ring.uint32_refpts(varpts):
+            ring1[ref] = ring1[ref].deepcopy()
     else:
         ring1 = ring
 
