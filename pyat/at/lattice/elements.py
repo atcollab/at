@@ -216,6 +216,19 @@ class Marker(Element):
 
 class Monitor(Element):
     """pyAT monitor element"""
+    
+    
+class BeamMonitor(Element):
+    """pyAT beam monitor element for multi-particles"""
+    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+
+    def __init__(self, family_name: str, **kwargs):
+        self.FamName = family_name
+        self._nbunch = kwargs.pop('nbunch', 1)
+        self.PassMethod = kwargs.setdefault('PassMethod', 'BeamMonitorPass')
+        self._sizes = numpy.zeros(6)
+        self._positions = numpy.zeros(6)
+        self.update(kwargs)
 
 
 class Aperture(Element):
