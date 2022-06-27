@@ -163,7 +163,7 @@ class Wake(object):
             frequency:      Resonator frequency
             qfactor:        Q factor
             rshunt:         Shunt impedance
-            beta:
+            beta:           Relativistic :math:`\beta`
             yokoya_factor:  Yokoya factor
             nelems:         Number of resonators
         """
@@ -192,7 +192,7 @@ class Wake(object):
             frequency:      Resonator frequency
             qfactor:        Q factor
             rshunt:         Shunt impedance
-            beta:
+            beta:           Relativistic :math:`\beta`
             nelems:         Number of resonators
         """
         return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
@@ -210,7 +210,7 @@ class Wake(object):
             length:
             rvac:
             conduct:
-            beta:
+            beta:           Relativistic :math:`\beta`
             yokoya_factor:  Yokoya factor
             nelems:
         """
