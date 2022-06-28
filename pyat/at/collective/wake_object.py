@@ -170,9 +170,10 @@ class Wake(object):
         Parameters:
             srange:         vector of s position where to sample the wake
             wakecomp:       Wake component
-            frequency:      Resonator frequency
+            frequency:      Resonator frequency [Hz]
             qfactor:        Q factor
-            rshunt:         Shunt impedance
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
             beta:           Relativistic :math:`\beta`
             yokoya_factor:  Yokoya factor
             nelems:         Number of resonators
@@ -203,9 +204,10 @@ class Wake(object):
 
         Parameters:
             srange:         vector of s position where to sample the wake
-            frequency:      Resonator frequency
+            frequency:      Resonator frequency [Hz]
             qfactor:        Q factor
-            rshunt:         Shunt impedance
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
             beta:           Relativistic :math:`\beta`
             nelems:         Number of resonators
 
@@ -222,7 +224,7 @@ class Wake(object):
             >>> Rs = 1e4
             >>> wake = Wake.long_resonator(srange, freq, Q, Rs, ring.beta)
         """
-        return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
+        return Wake.resonator(srange, WakeComponent.Z, rshunt, qfactor,
                               rshunt, beta, nelems=nelems)
 
     @staticmethod

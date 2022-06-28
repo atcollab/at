@@ -87,26 +87,32 @@ class WakeElement(Element):
 
     @property
     def WakeZ(self):
+        """Longitudinal component"""
         return getattr(self, '_wakeZ', None)
 
     @property
     def WakeDX(self):
+        """Dipole X component"""
         return getattr(self, '_wakeDX', None)
 
     @property
     def WakeDY(self):
+        """Dipole Y component"""
         return getattr(self, '_wakeDY', None)
 
     @property
     def WakeQX(self):
+        """Quadrupole X component"""
         return getattr(self, '_wakeQX', None)
 
     @property
     def WakeQY(self):
+        """Quadrupole Y component"""
         return getattr(self, '_wakeQY', None)
 
     @property
     def Nslice(self):
+        """Number of slices per bunch"""
         return self._nslice
 
     @Nslice.setter
@@ -116,6 +122,7 @@ class WakeElement(Element):
 
     @property
     def Nturns(self):
+        """Number of turn for the wake field"""
         return self._nslice
 
     @Nturns.setter
@@ -125,6 +132,7 @@ class WakeElement(Element):
 
     @property
     def Current(self):
+        """Bunch current [A]"""
         return self.NumParticles*self._charge2current
 
     @Current.setter
@@ -148,15 +156,16 @@ class ResonatorElement(WakeElement):
                  wakecomp: WakeComponent,
                  frequency: float, qfactor: float, rshunt: float,
                  yokoya_factor=1, **kwargs):
-        """
+        r"""
         Parameters:
             family name:    Element name
             ring:           Lattice in which the element will be inserted
             srange:         Vector of s position where to sample the wake
             wakecomp:       Wake component
-            frequency:      Resonator frequency
-            qfqctor:        Q factor
-            rshunt:         Shunt impedance
+            frequency:      Resonator frequency [Hz]
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
             yokoya_factor:  Yokoya factor
 
         Keyword Arguments:
@@ -187,6 +196,7 @@ class ResonatorElement(WakeElement):
 
     @property
     def ResFrequency(self):
+        """Resonator frequency [Hz]"""
         return self._resfrequency
 
     @ResFrequency.setter
@@ -196,6 +206,7 @@ class ResonatorElement(WakeElement):
 
     @property
     def Qfactor(self):
+        """Resonator Q factor"""
         return self._qfactor
 
     @Qfactor.setter
@@ -205,6 +216,8 @@ class ResonatorElement(WakeElement):
 
     @property
     def Rshunt(self):
+        r"""Resonator shunt impedance, [:math:`\Omega`] for longitudinal,
+        [:math:`\Omega/m`] for transverse"""
         return self._rshunt
 
     @Rshunt.setter
@@ -214,6 +227,7 @@ class ResonatorElement(WakeElement):
 
     @property
     def Yokoya(self):
+        """Resonator Yokoya factor"""
         return self._yokoya
 
     @Yokoya.setter
@@ -229,14 +243,15 @@ class LongResonatorElement(ResonatorElement):
     def __init__(self, family_name: str, ring: Lattice, srange,
                  frequency: float, qfactor: float, rshunt: float,
                  **kwargs):
-        """
+        r"""
         Parameters:
             family name:    Element name
             ring:           Lattice in which the element will be inserted
             srange:         Vector of s position where to sample the wake
-            frequency:      Resonator frequency
-            qfqctor:        Q factor
-            rshunt:         Shunt impedance
+            frequency:      Resonator frequency [Hz]
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
 
         Keyword Arguments:
             yokoya_factor:  Yokoya factor
