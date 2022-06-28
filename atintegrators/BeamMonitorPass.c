@@ -14,9 +14,9 @@
 
 struct elem
 {
-  int nbunch
-  double *sizes
-  double *positions  
+  int nbunch;
+  double *sizes;
+  double *positions;
 };
 
 
@@ -28,7 +28,7 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
     double *positions = Elem->positions;
         
     int i, ii, ib; 
-    double *nparts = [nbunch];
+    double nparts[nbunch];
 
     for (i=0; i<nbunch; i++) {
         nparts[i] = 0.0;
@@ -64,10 +64,10 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
-                                      double *r_in, int num_particles)
+                                      double *r_in, int num_particles, struct parameters *Param)
 {
     long nbunch;
-    double *sizes
+    double *sizes;
     double *positions;
     if (!Elem) {
         positions=atGetDoubleArray(ElemData,"_positions"); check_error();
@@ -83,3 +83,4 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 }
 
 MODULE_DEF(BeamMonitorPass)        /* Dummy module initialisation */
+#endif

@@ -225,9 +225,9 @@ class BeamMonitor(Element):
     def __init__(self, family_name: str, **kwargs):
         self.FamName = family_name
         self._nbunch = kwargs.pop('nbunch', 1)
-        self.PassMethod = kwargs.setdefault('PassMethod', 'BeamMonitorPass')
-        self._sizes = numpy.zeros(6)
-        self._positions = numpy.zeros(6)
+        kwargs.setdefault('PassMethod', 'BeamMonitorPass')
+        self._sizes = numpy.zeros((6, self._nbunch), order='F')
+        self._positions = numpy.zeros((6, self._nbunch), order='F')
         self.update(kwargs)
 
 
