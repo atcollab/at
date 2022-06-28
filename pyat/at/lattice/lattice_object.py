@@ -780,14 +780,13 @@ class Lattice(list):
                        iterator=self.attrs_filter, **kwargs)
 
     def reduce(self, **kwargs) -> "Lattice":
-        """Removes unnecessary elements and merges consecutive similar ones
-
-        Removes all elements with an ``IdentityPass`` PassMethod, merges
+        """Removes all elements with an ``IdentityPass`` PassMethod and merges
         compatible consecutive elements.
 
         Keyword Args:
             keep (Refpts):      Keep the selected elements, even with
               ``IdentityPass`` PassMethod. Default: keep :py:class:`.Monitor`
+              elements
 
         Warning:
             If radiation is OFF, RF cavities have an ``IdentityPass``
