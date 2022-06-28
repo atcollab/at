@@ -18,7 +18,7 @@ _vxyz = [_i2, block_diag(_i2, _i2), block_diag(_i2, _i2, _i2)]
 _submat = [slice(0, 2), slice(2, 4), slice(4, 6)]
 
 
-def jmat(ind):
+def jmat(ind: int):
     """antisymetric block diagonal matrix [[0, 1][-1, 0]]
 
     Parameters:
@@ -30,7 +30,7 @@ def jmat(ind):
     return _jm[ind - 1]
 
 
-def jmatswap(ind):
+def jmatswap(ind: int):
     """Modified antisymetric block diagonal matrix to deal with the swap of the
     longitudinal coordinates
     """
@@ -41,7 +41,7 @@ def jmatswap(ind):
 def a_matrix(M):
     r"""Find the :math:`\mathbf{A}` matrix from one turn map :math:`\mathbf{M}`
 
-    :math:`\mathbf{A}` represents A change of referential which converts the
+    :math:`\mathbf{A}` represents a change of referential which converts the
     one-turn transfer matrix :math:`\mathbf{M}` into a set of rotations:
 
     .. math:: \mathbf{M} = \mathbf{A} \cdot \mathbf{R} \cdot \mathbf{A}^{-1}

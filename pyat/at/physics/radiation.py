@@ -85,7 +85,7 @@ def _lmat(dmat):
 @check_radiation(True)
 def ohmi_envelope(ring: Lattice, refpts: Optional[Refpts] = None,
                   orbit: Optional[Orbit] = None,
-                  keep_lattice: Optional[bool] = False):
+                  keep_lattice: bool = False):
     """Calculates the equilibrium beam envelope
 
     Computation based on Ohmi's beam envelope formalism [1]_
@@ -211,15 +211,14 @@ def get_radiation_integrals(ring, dp: Optional[float] = None,
           If None, it will be computed.
 
     Keyword Args:
-        dct (Optional[float]):  Path lengthening. If specified, ``dp`` is
+        dct (float):  Path lengthening. If specified, ``dp`` is
           ignored and the off-momentum is deduced from the path lengthening.
-        method (Optional[Callable]):  Method used for the analysis of the
-          transfer matrix. Can be ``at.linopt2``, ``at.linopt6``
+        method (Callable):  Method for linear optics:
 
-          linopt2
-            no longitudinal motion, no H/V coupling,
-          linopt6 (default)
-            with or without longitudinal motion, normal mode analysis
+          :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
+
+          :py:obj:`~.linear.linopt6` (default): with or without longitudinal
+          motion, normal mode analysis
 
     Returns:
         i1 (float): Radiation integrals - :math:`I_1 \quad [m]`
@@ -398,8 +397,8 @@ def gen_quantdiff_elem(ring: Lattice,
 
 
 @check_radiation(True)
-def tapering(ring: Lattice, multipoles: Optional[bool] = True,
-             niter: Optional[int] = 1, **kwargs) -> None:
+def tapering(ring: Lattice, multipoles: bool = True,
+             niter: int = 1, **kwargs) -> None:
     """Scales magnet strengths
 
     Scales magnet strengths with local energy to cancel the closed orbit
@@ -419,11 +418,11 @@ def tapering(ring: Lattice, multipoles: Optional[bool] = True,
         niter:          Number of iteration
 
     Keyword Args:
-        method (Optional[ELossMethod]): Method for energy loss computation.
+        method (ELossMethod):   Method for energy loss computation.
           See :py:class:`.ELossMethod`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
     """
 

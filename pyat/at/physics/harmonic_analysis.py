@@ -191,10 +191,9 @@ HarmonicAnalysis._fft, HarmonicAnalysis._fftfreq = \
 ##############################################
 
 
-def get_spectrum_harmonic(cent, method: Optional[str] = 'laskar',
-                          num_harmonics: Optional[int] = 20,
-                          hann: Optional[bool] = False)\
-        -> Tuple[np.ndarray, np.ndarray]:
+def get_spectrum_harmonic(cent, method: str = 'laskar',
+                          num_harmonics: int = 20,
+                          hann: bool = False) -> Tuple[np.ndarray, np.ndarray]:
     """Frequency analysis of beam motion
 
     Parameters:
@@ -224,11 +223,9 @@ def get_spectrum_harmonic(cent, method: Optional[str] = 'laskar',
     return ha_tune, ha_amp
 
 
-def get_tunes_harmonic(cents, method: Optional[str] = 'laskar',
-                       num_harmonics: Optional[int] = 20,
-                       hann: Optional[bool] = False,
-                       fmin: Optional[float] = 0,
-                       fmax: Optional[float] = 1) -> np.ndarray:
+def get_tunes_harmonic(cents, method: str = 'laskar',
+                       num_harmonics: int = 20, hann: bool = False,
+                       fmin: float = 0, fmax: float = 1) -> np.ndarray:
     """Computes tunes from harmonic analysis
 
     Parameters:
