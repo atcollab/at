@@ -147,22 +147,26 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,double circumference
     /*slices beam and compute kick and update cavity params*/
     rotate_table_history(nturnsw,nslice,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturnsw,turnhistory,pslice,z_cuts);
-    compute_kicks_longres(nslice,nturnsw,turnhistory,normfact,kz,freqres,qfactor,rshunt,beta);
-    vbeam = get_vbeam(nslice,normfact,num_charges,kz);
+    if(normfact!=0){
+        compute_kicks_longres(nslice,nturnsw,turnhistory,normfact,kz,freqres,qfactor,rshunt,beta);
+        vbeam = get_vbeam(nslice,normfact,num_charges,kz);
+        /*apply kicks and RF*/
+        /* OpenMP not efficient. Too much shared data ?
+        #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+        shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
+        */   
+        for (c=0; c<num_particles; c++) {
+            double *r6 = r_in+c*6;
+            int islice=pslice[c];
+            if (!atIsNaN(r6[0])) {         
+                r6[4] += kz[islice]; 
+            }
+        }
+    } else{
+        vbeam = 0.0;
+    }
     update_params(vbeam,qfactor,rfv,phis,phil,rffreq,bl_params,mode);
    
-    /*apply kicks and RF*/
-    /* OpenMP not efficient. Too much shared data ?
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
-    */   
-    for (c=0; c<num_particles; c++) {
-        double *r6 = r_in+c*6;
-        int islice=pslice[c];
-        if (!atIsNaN(r6[0])) {         
-            r6[4] += kz[islice]; 
-        }
-    }
     atFree(buffer);
 }
 
