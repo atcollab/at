@@ -782,11 +782,6 @@ class Lattice(list):
             keep (Refpts):      Keep the selected elements, even with
                 ``IdentityPass`` PassMethod. Default: keep :py:class:`.Monitor`
                 and :py:class:`.RFCavity` elements
-
-        Warning:
-            If radiation is OFF, RF cavities have an ``IdentityPass``
-            PassMethod, and are therefore removed, unless they are selected in
-            ``keep``
         """
         def reduce_filter(_, itelem):
             try:
