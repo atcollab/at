@@ -32,7 +32,7 @@ from .utils import get_s_pos, get_elements, get_cells, get_refpts
 from .utils import get_value_refpts, set_value_refpts
 from .utils import set_shift, set_tilt
 from . import elements
-from .elements import Element, Monitor
+from .elements import Element, Monitor, RFCavity
 
 _TWO_PI_ERROR = 1.E-4
 Filter = Callable[..., Iterable[Element]]
@@ -46,17 +46,12 @@ numpy.seterr(divide='ignore', invalid='ignore')
 
 # noinspection PyAttributeOutsideInit
 class Lattice(list):
-    """Lattice object
+    """Lattice object.
 
-    An AT lattice is a sequence of AT elements which accepts extended indexing
-    (as a numpy ndarray). It has the following attributes:
-
-    Attributes:
-        name: Name of the lattice
-        energy: Particle energy
-        periodicity: Number of super-periods to describe the full self
-        particle: Circulating particle
-        harmonic_number: Harmonic number of the full self (periodicity x cells)
+    An AT lattice is a sequence of AT elements. In addition to :py:class:`list`
+    methods, :py:class:`Lattice` supports
+    `extended indexing <https://numpy.org/doc/stable/user/basics.indexing.html
+    #advanced-indexing>`_ as a numpy :py:obj:`~numpy.ndarray`.
     """
     # Attributes displayed:
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
@@ -785,8 +780,8 @@ class Lattice(list):
 
         Keyword Args:
             keep (Refpts):      Keep the selected elements, even with
-              ``IdentityPass`` PassMethod. Default: keep :py:class:`.Monitor`
-              elements
+                ``IdentityPass`` PassMethod. Default: keep :py:class:`.Monitor`
+                and :py:class:`.RFCavity` elements
 
         Warning:
             If radiation is OFF, RF cavities have an ``IdentityPass``
@@ -812,7 +807,7 @@ class Lattice(list):
             keep = self.bool_refpts(kwargs.pop('keep'))[:-1]
             print(keep.shape)
         except KeyError:
-            keep = self.get_cells(checktype(Monitor))
+            keep = self.get_cells(checktype((Monitor, RFCavity)))
             print(keep.shape)
 
         return Lattice(reduce_filter, self.select(kp | keep),

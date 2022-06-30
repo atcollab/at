@@ -152,8 +152,9 @@ class Element(object):
     def merge(self, other) -> None:
         """Merge another element"""
         if not self.is_compatible(other):
+            badname = getattr(other, 'FamName', type(other))
             raise TypeError('Cannot merge {0} and {1}'.format(self.FamName,
-                                                              other.FamName))
+                                                              badname))
 
 
 class LongElement(Element):
@@ -509,9 +510,9 @@ class Dipole(Multipole):
         def invrho(dip: Dipole):
             return dip.BendingAngle / dip.Length
 
-        return super().is_compatible(other) and \
-               self.ExitAngle == -other.EntranceAngle and \
-               abs(invrho(self) - invrho(other)) <= 1.e-6
+        return (super().is_compatible(other) and
+                self.ExitAngle == -other.EntranceAngle and
+                abs(invrho(self) - invrho(other)) <= 1.e-6)
 
     def merge(self, other) -> None:
         super().merge(other)
@@ -654,9 +655,9 @@ class RFCavity(LongElement):
         return pp
 
     def is_compatible(self, other) -> bool:
-        return super().is_compatible(other) and \
-               self.Frequency == other.Frequency and \
-               self.TimeLag == other.TimeLag
+        return (super().is_compatible(other) and
+                self.Frequency == other.Frequency and
+                self.TimeLag == other.TimeLag)
 
     def merge(self, other) -> None:
         super().merge(other)

@@ -17,7 +17,7 @@ returned values are given at the entrance of each element specified in refpts;
 """
 import numpy
 import functools
-from typing import Callable, Optional, Sequence, Iterator, TypeVar, Union
+from typing import Callable, Optional, Sequence, Iterator, TypeVar, Union, Tuple
 from itertools import compress
 from fnmatch import fnmatch
 from .elements import Element
@@ -288,7 +288,7 @@ def checkattr(attrname: str, attrvalue: Optional = None) \
     return testf
 
 
-def checktype(eltype: type) -> ElementFilter:
+def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     """Checks the type of an element
 
@@ -659,8 +659,10 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
 
     The rotation matrices are stored in the ``R1`` and ``R2`` attributes
 
-    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\ -sin\theta & cos\theta \end{pmatrix}`,
-    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\ sin\theta & cos\theta \end{pmatrix}`
+    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\
+    -sin\theta & cos\theta \end{pmatrix}`,
+    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\
+    sin\theta & cos\theta \end{pmatrix}`
 
     Parameters:
         elem:           Element to be tilted
