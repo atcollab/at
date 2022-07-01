@@ -318,13 +318,20 @@ def element_from_m(line: str) -> Element:
 
     left = line.index('(')
     right = line.rindex(')')
-    cls = _CLASS_MAP[line[:left].strip()[2:]]
+    matcls = line[:left].strip()[2:]
+    cls = _CLASS_MAP[matcls]
     arguments = argsplit(line[left + 1:right])
     ll = len(cls.REQUIRED_ATTRIBUTES)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
     args = [convert(v) for v in arguments[:ll]]
     kwargs = makedir(arguments[ll:])
+    if matcls == 'rbend':
+        # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
+        # necessary for using the python sector bend
+        halfangle = 0.5 * args[2]
+        kwargs.setdefault('EntranceAngle', halfangle)
+        kwargs.setdefault('ExitAngle', halfangle)
     return cls(*args, **kwargs)
 
 
