@@ -30,9 +30,13 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
     double *positions = Elem->positions;
         
     int i, ii, ib; 
-    double nparts[nbunch];
-    double avep[nbunch*6];
-    double sizep[nbunch*6];
+    size_t sz = 2*nbunch*6*sizeof(double) + nbunch*sizeof(double);
+    void *buffer = atMalloc(sz);
+    double *dptr = (double *) buffer;
+    
+    double *avep=dptr; dptr += nbunch*6;
+    double *sizep=dptr; dptr += nbunch*6;
+    double *nparts=dptr;
     
     for (i=0; i<nbunch; i++) {
         nparts[i] = 0.0;
@@ -79,7 +83,7 @@ void BeamMonitorPass(double *r_in, int num_particles, struct elem *Elem) {
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                                       double *r_in, int num_particles, struct parameters *Param)
 {
-    long nbunch, nturns;
+    long nbunch;
     double *sizes;
     double *positions;  
     if (!Elem) {   
