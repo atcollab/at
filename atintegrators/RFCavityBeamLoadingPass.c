@@ -153,7 +153,7 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,double circumference
         /*apply kicks and RF*/
         /* OpenMP not efficient. Too much shared data ?
         #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-        shared(r_in,num_particles,pslice,kx,kx2,ky,ky2,kz) private(c)
+        shared(r_in,num_particles,pslice,kz) private(c)
         */   
         for (c=0; c<num_particles; c++) {
             double *r6 = r_in+c*6;
@@ -165,8 +165,7 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,double circumference
     } else{
         vbeam = 0.0;
     }
-    update_params(vbeam,qfactor,rfv,phis,phil,rffreq,bl_params,mode);
-   
+    update_params(vbeam,qfactor,rfv,phis,phil,rffreq,bl_params,mode);  
     atFree(buffer);
 }
 
