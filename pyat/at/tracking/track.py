@@ -2,12 +2,19 @@ import numpy
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import DConstant, uint32_refpts
+from ..lattice import DConstant, uint32_refpts, get_elements
+from ..lattice import BeamMonitor
 
 
 __all__ = ['lattice_pass', 'element_pass', 'atpass', 'elempass']
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
+
+
+def _set_beam_monitors(ring, nturns):
+    monitors = get_elements(ring, BeamMonitor)
+    for m in monitors:
+        m.set_buffers(nturns)
 
 
 # noinspection PyIncorrectDocstring
@@ -84,6 +91,7 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
+    _set_beam_monitors(lattice, nturns)
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts

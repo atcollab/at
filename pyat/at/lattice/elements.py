@@ -226,9 +226,13 @@ class BeamMonitor(Element):
         self.FamName = family_name
         self._nbunch = kwargs.pop('nbunch', 1)
         kwargs.setdefault('PassMethod', 'BeamMonitorPass')
-        self._sizes = numpy.zeros((6, self._nbunch), order='F')
-        self._positions = numpy.zeros((6, self._nbunch), order='F')
+        self._sizes = numpy.zeros((6, self._nbunch, 0), order='F')
+        self._positions = numpy.zeros((6, self._nbunch, 0), order='F')
         self.update(kwargs)
+        
+    def set_buffers(self, nturns):
+        self._sizes = numpy.zeros((6, self._nbunch, nturns), order='F')
+        self._positions = numpy.zeros((6, self._nbunch, nturns), order='F')
 
 
 class Aperture(Element):
