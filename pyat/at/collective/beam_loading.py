@@ -45,7 +45,7 @@ def get_params_beamloading(frf, current, volt, qfactor,
     if vb is None:
         vb = 2*current*rshunt
     a = volt*numpy.cos(phil)
-    b = volt**numpy.sin(phil)-vb*numpy.cos(theta)
+    b = volt*numpy.sin(phil)-vb*numpy.cos(theta)
     psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
     vgen = volt*numpy.cos(psi)+vb*numpy.cos(psi)*numpy.sin(phis)
     fres = frf/(1-numpy.tan(psi)/(2*qfactor))
