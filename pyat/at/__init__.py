@@ -1,15 +1,12 @@
 """Python port of the Accelerator Toolbox"""
 
-import sys
-if sys.version_info.minor < 8:
-    from importlib_metadata import version, PackageNotFoundError
-else:
-    from importlib.metadata import version, PackageNotFoundError
 try:
-    __version__ = version('accelerator-toolbox')
-except PackageNotFoundError:
-    __version__ = "0.0.0"
-# from ._version import version as __version__
+    # setuptools_scm >= 7 for python >= 3.7
+    from ._version import __version__, __version_tuple__
+except ImportError:
+    # setuptools_scm < 7 for python 3.6
+    from ._version import version as __version__
+    from ._version import version_tuple as __version_tuple__
 # Make all functions visible in the at namespace:
 from .lattice import *
 from .tracking import *
