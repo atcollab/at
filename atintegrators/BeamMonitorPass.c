@@ -68,8 +68,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     long nbunch;
     double *sizes;
-    double *positions;
-    if (!Elem) {
+    double *positions;    
+    if (!Elem) {        
         positions=atGetDoubleArray(ElemData,"_positions"); check_error();
         sizes=atGetDoubleArray(ElemData,"_sizes"); check_error();
         nbunch=atGetLong(ElemData,"_nbunch"); check_error();
