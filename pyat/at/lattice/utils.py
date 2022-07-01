@@ -371,11 +371,9 @@ def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
             Returns a numpy array of booleans where all elements having a ``K``
             attribute equal to 0.0 are True
         """
-    if callable(args[0]):
-        testf = args[0]
-    else:
-        testf = checkattr(*args)
-    return numpy.array(tuple(map(testf, ring)), dtype=bool)
+    testf = args[0] if callable(args[0]) else checkattr(*args)
+    return numpy.append(numpy.fromiter(map(testf, ring), dtype=bool,
+                                       count=len(ring)), False)
 
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \

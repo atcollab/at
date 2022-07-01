@@ -778,6 +778,12 @@ class Lattice(list):
         """Removes all elements with an ``IdentityPass`` PassMethod and merges
         compatible consecutive elements.
 
+        The "reduced" lattice has the same optics as the original one, but
+        fewer elements. Compatible elements must have the same ``PolynomA``,
+        ``PolynomB`` and bending radius, so that the optics is preserved. But
+        magnet misalignments are not preserved, so this method should be
+        applied to lattices without errors.
+
         Keyword Args:
             keep (Refpts):      Keep the selected elements, even with
                 ``IdentityPass`` PassMethod. Default: keep :py:class:`.Monitor`
@@ -797,13 +803,10 @@ class Lattice(list):
             yield elem
 
         kp = self.get_cells(lambda el: el.PassMethod != 'IdentityPass')
-        print(kp.shape)
         try:
-            keep = self.bool_refpts(kwargs.pop('keep'))[:-1]
-            print(keep.shape)
+            keep = self.bool_refpts(kwargs.pop('keep'))
         except KeyError:
             keep = self.get_cells(checktype((Monitor, RFCavity)))
-            print(keep.shape)
 
         return Lattice(reduce_filter, self.select(kp | keep),
                        iterator=self.attrs_filter, **kwargs)
