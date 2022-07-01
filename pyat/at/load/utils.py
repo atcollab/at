@@ -328,7 +328,7 @@ def element_from_m(line: str) -> Element:
     kwargs = makedir(arguments[ll:])
     if matcls == 'rbend':
         # the Matlab 'rbend' has no equivalent in PyAT. This adds parameters
-        # necesary for using the python sector bend
+        # necessary for using the python sector bend
         halfangle = 0.5 * args[2]
         kwargs.setdefault('EntranceAngle', halfangle)
         kwargs.setdefault('ExitAngle', halfangle)
