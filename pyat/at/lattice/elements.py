@@ -12,7 +12,7 @@ from typing import Optional, Generator, Tuple, Union, List, Iterable
 from inspect import getmembers, isdatadescriptor
 
 
-_collective = ['ImpedanceTablePass', 'WakeFieldPass']
+_collective = ['ImpedanceTablePass', 'WakeFieldPass', 'BeamMonitorPass']
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):

@@ -15,6 +15,7 @@ def _set_beam_monitors(ring, nturns):
     monitors = get_elements(ring, BeamMonitor)
     for m in monitors:
         m.set_buffers(nturns)
+    return len(monitors)==0
 
 
 # noinspection PyIncorrectDocstring
@@ -91,7 +92,8 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
-    _set_beam_monitors(lattice, nturns)
+    no_bm = _set_beam_monitors(lattice, nturns)
+    keep_lattice = keep_lattice and no_bm
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts
