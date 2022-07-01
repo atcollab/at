@@ -67,7 +67,7 @@ double get_vbeam(int nslice, double normfact, double num_charge, double *kz){
     double vbeam;
     vbeam=0;
     for(i=0; i<nslice;i++){
-        vbeam += kz[i]/normfact/nslice;
+        vbeam += kz[i]/normfact;
     }
     vbeam = fabs(vbeam)*num_charge*QE;
     return vbeam;
