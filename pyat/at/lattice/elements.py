@@ -410,7 +410,7 @@ class Multipole(LongElement, ThinMultipole):
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and \
            self.MaxOrder == other.MaxOrder:
-            for i in range(self.MaxOrder):
+            for i in range(self.MaxOrder+1):
                 if self.PolynomB[i] != other.PolynomB[i]:
                     return False
                 if self.PolynomA[i] != other.PolynomA[i]:
@@ -516,6 +516,7 @@ class Dipole(Multipole):
 
     def merge(self, other) -> None:
         super().merge(other)
+        # noinspection PyAttributeOutsideInit
         self.ExitAngle = other.ExitAngle
         self.BendingAngle += other.BendingAngle
 
