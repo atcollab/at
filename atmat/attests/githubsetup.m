@@ -6,7 +6,7 @@ atmexall;
 if ispc
     execfile=fullfile(getenv('pythonLocation'),'pythonw.exe');
 else
-    execfile=fullfile(getenv('pythonLocation'),'bin','python'):
+    execfile=fullfile(getenv('pythonLocation'),'bin','python');
 end
 pyenv("Version", execfile,'ExecutionMode', execmode);
 end
