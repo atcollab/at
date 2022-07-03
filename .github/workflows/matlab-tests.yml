@@ -16,14 +16,18 @@ on:
 jobs:
   matlab_tests:
 
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
 
     steps:
 
     - uses: actions/checkout@v3
 
     - name: Set up python 3.9
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
