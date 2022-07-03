@@ -3,6 +3,11 @@ function githubsetup(execmode)
 
 savepath('pathdef.m');
 atmexall -c_only;
-pyenv('Version',fullfile(getenv('pythonLocation'),'bin','python'),...
+if ispc
+    pyenv("Version",'3.9','ExecutionMode', execmode))
+else
+    pyenv('Version',fullfile(getenv('pythonLocation'),'bin','python'),...
       'ExecutionMode', execmode);
+end
+disp(pyenv)
 end
