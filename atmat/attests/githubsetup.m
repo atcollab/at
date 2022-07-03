@@ -4,5 +4,5 @@ function githubsetup(execmode)
 savepath('pathdef.m');
 atmexall;
 pyenv('Version',fullfile(getenv('pythonLocation'),'bin','python'),...
-      'ExecutioMode', execmode);
+      'ExecutionMode', execmode);
 end
