@@ -16,7 +16,7 @@ on:
 jobs:
   matlab_tests:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
 
@@ -43,7 +43,7 @@ jobs:
     - name: Run tests
       uses: matlab-actions/run-command@v1
       with:
-        command: disp(table(assertSuccess(run(testsuite('atmat/attests',Tag='GitHub')))))
+        command: disp(table(assertSuccess(run(testsuite('atmat/attests')))))
 #
 #    - name: Set up Matlab engine for python
 #      run: python setup.py build --build-base=$(mktemp -d) install
