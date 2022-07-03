@@ -24,7 +24,7 @@ function atmexall(varargin)
 pdir=fullfile(fileparts(atroot),'atintegrators');
 [openmp,varargs]=getflag(varargin,'-openmp');
 [miss_only,varargs]=getflag(varargs,'-missing');
-[c_only,varargs]=getflag(varargs,'-c_only')
+[c_only,varargs]=getflag(varargs,'-c_only');
 force=~miss_only;
 
 atoptions={['-D',computer]};
