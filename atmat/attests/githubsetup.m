@@ -4,10 +4,9 @@ function githubsetup(execmode)
 savepath('pathdef.m');
 atmexall;
 if ispc
-    pyenv("Version",'3.9','ExecutionMode', execmode);
+    execfile=fullfile(getenv('pythonLocation'),'pythonw.exe');
 else
-    pyenv('Version',fullfile(getenv('pythonLocation'),'bin','python'),...
-      'ExecutionMode', execmode);
+    execfile=fullfile(getenv('pythonLocation'),'bin','python'):
 end
-disp(pyenv)
+pyenv("Version", execfile,'ExecutionMode', execmode);
 end
