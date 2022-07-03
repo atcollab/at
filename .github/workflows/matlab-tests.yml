@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-latest, ubuntu-latest]
 
     steps:
 
@@ -39,7 +39,7 @@ jobs:
     - name: Atmexall
       uses: matlab-actions/run-command@v1
       with:
-        command: run('atmat/atpath');savepath('pathdef.m');atmexall;pyenv('Version',fullfile(getenv('pythonLocation'),'bin','python'));
+        command: run('atmat/atpath');githubsetup('OutOfProcess');
 
     - name: Build and install at
       run: python -m pip install -e "./pyat[dev]"
