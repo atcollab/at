@@ -112,7 +112,7 @@ classdef pytests < matlab.unittest.TestCase
             a2=cell(lattice.p.find_m66());
             [pm66,~]=deal(a2{:});
             pm66=double(pm66);
-            testCase.verifyEqual(mm66,pm66,AbsTol=2.E-9);
+            testCase.verifyEqual(mm66,pm66,AbsTol=5.E-9);
         end
     end
 
