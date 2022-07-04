@@ -8,7 +8,7 @@ responsibility to ensure that the appropriate attributes are present.
 import re
 import numpy
 import copy
-from typing import Optional, Generator, Tuple, Union, List, Iterable
+from typing import Optional, Generator, Tuple, List, Iterable
 from inspect import getmembers, isdatadescriptor
 
 
@@ -76,7 +76,7 @@ class Element(object):
         attrs = dict(self.items())
         keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
         keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
-        return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
+        return '\n'.join((type(self).__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
         attrs = dict(self.items())
@@ -103,15 +103,15 @@ class Element(object):
 
         Parameters:
             frac:           length of each slice expressed as a fraction of the
-                            initial length. ``sum(frac)`` may differ from 1.
+              initial length. ``sum(frac)`` may differ from 1.
 
         Returns:
             elem_list:  a list of elements equivalent to the original.
 
-        Examples:
+        Example:
 
-        >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
-        [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
+            >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
+            [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
         # Bx default, the element is indivisible
         return [self]
@@ -145,6 +145,17 @@ class Element(object):
             if not k.startswith('_'):
                 yield k, getattr(self, k)
 
+    def is_compatible(self, other) -> bool:
+        """Checks if another Element can be merged"""
+        return False
+
+    def merge(self, other) -> None:
+        """Merge another element"""
+        if not self.is_compatible(other):
+            badname = getattr(other, 'FamName', type(other))
+            raise TypeError('Cannot merge {0} and {1}'.format(self.FamName,
+                                                              badname))
+
 
 class LongElement(Element):
     """pyAT long element
@@ -173,21 +184,6 @@ class LongElement(Element):
         return pp
 
     def divide(self, frac) -> List[Element]:
-        """split the element in len(frac) pieces whose length
-        is frac[i]*self.Length
-
-        Parameters:
-            frac:           length of each slice expressed as a fraction of the
-                            initial length. ``sum(frac)`` may differ from 1.
-
-        Returns:
-            elem_list:  a list of elements equivalent to the original.
-
-        Examples:
-
-        >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
-        [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
-        """
         def popattr(element, attr):
             val = getattr(element, attr)
             delattr(element, attr)
@@ -208,6 +204,14 @@ class LongElement(Element):
         for key, value in fout.items():
             setattr(element_list[-1], key, value)
         return element_list
+
+    def is_compatible(self, other) -> bool:
+        return type(other) is type(self) and \
+               self.PassMethod == other.PassMethod
+
+    def merge(self, other) -> None:
+        super().merge(other)
+        self.Length += other.Length
 
 
 class Marker(Element):
@@ -251,7 +255,7 @@ class Drift(LongElement):
         super(Drift, self).__init__(family_name, length, **kwargs)
 
     def insert(self,
-               insert_list: Iterable[Tuple[float, Union[Element, None]]]) \
+               insert_list: Iterable[Tuple[float, Optional[Element]]]) \
             -> List[Element]:
         """insert elements inside a drift
 
@@ -271,14 +275,15 @@ class Drift(LongElement):
 
         Examples:
 
-        >>> Drift('dr', 2.0).insert(((0.25, None), (0.75, None)))
-        [Drift('dr', 0.5), Drift('dr', 1.0), Drift('dr', 0.5)]
+            >>> Drift('dr', 2.0).insert(((0.25, None), (0.75, None)))
+            [Drift('dr', 0.5), Drift('dr', 1.0), Drift('dr', 0.5)]
 
-        >>> Drift('dr', 2.0).insert(((0.0, Marker('m1')), (0.5, Marker('m2'))))
-        [Marker('m1'), Drift('dr', 1.0), Marker('m2'), Drift('dr', 1.0)]
+            >>> Drift('dr', 2.0).insert(((0.0, Marker('m1')),
+            ... (0.5, Marker('m2'))))
+            [Marker('m1'), Drift('dr', 1.0), Marker('m2'), Drift('dr', 1.0)]
 
-        >>> Drift('dr', 2.0).insert(((0.5, Quadrupole('qp', 0.4, 0.0)),))
-        [Drift('dr', 0.8), Quadrupole('qp', 0.4), Drift('dr', 0.8)]
+            >>> Drift('dr', 2.0).insert(((0.5, Quadrupole('qp', 0.4, 0.0)),))
+            [Drift('dr', 0.8), Quadrupole('qp', 0.4), Drift('dr', 0.8)]
         """
         frac, elements = zip(*insert_list)
         lg = [0.0 if el is None else el.Length for el in elements]
@@ -289,7 +294,7 @@ class Drift(LongElement):
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
-        line = [None] * nline           # type: List[Union[Element, None]]
+        line = [None] * nline           # type: List[Optional[Element]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
@@ -402,6 +407,18 @@ class Multipole(LongElement, ThinMultipole):
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
 
+    def is_compatible(self, other) -> bool:
+        if super().is_compatible(other) and \
+           self.MaxOrder == other.MaxOrder:
+            for i in range(self.MaxOrder+1):
+                if self.PolynomB[i] != other.PolynomB[i]:
+                    return False
+                if self.PolynomA[i] != other.PolynomA[i]:
+                    return False
+            return True
+        else:
+            return False
+
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
@@ -489,6 +506,20 @@ class Dipole(Multipole):
         pp.ExitAngle = 0.0
         return pp
 
+    def is_compatible(self, other) -> bool:
+        def invrho(dip: Dipole):
+            return dip.BendingAngle / dip.Length
+
+        return (super().is_compatible(other) and
+                self.ExitAngle == -other.EntranceAngle and
+                abs(invrho(self) - invrho(other)) <= 1.e-6)
+
+    def merge(self, other) -> None:
+        super().merge(other)
+        # noinspection PyAttributeOutsideInit
+        self.ExitAngle = other.ExitAngle
+        self.BendingAngle += other.BendingAngle
+
 
 # Bend is a synonym of Dipole.
 Bend = Dipole
@@ -567,7 +598,8 @@ class Sextupole(Multipole):
 
     # noinspection PyPep8Naming
     @property
-    def H(self):
+    def H(self) -> float:
+        """Sextupolar strength"""
         return self.PolynomB[2]
 
     # noinspection PyPep8Naming
@@ -622,6 +654,15 @@ class RFCavity(LongElement):
         pp = super(RFCavity, self)._part(fr, sumfr)
         pp.Voltage = fr * self.Voltage
         return pp
+
+    def is_compatible(self, other) -> bool:
+        return (super().is_compatible(other) and
+                self.Frequency == other.Frequency and
+                self.TimeLag == other.TimeLag)
+
+    def merge(self, other) -> None:
+        super().merge(other)
+        self.Voltage += other.Voltage
 
 
 class M66(Element):
