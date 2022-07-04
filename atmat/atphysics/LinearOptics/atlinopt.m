@@ -116,6 +116,10 @@ if isempty(twiss_in)        % Circular machine
 else                        % Transfer line
     if isempty(orbitin)
         orbitin=zeros(6,1);
+        if isfield(twiss_in, 'ClosedOrbit')
+            lo=length(twiss_in.ClosedOrbit);
+            orbitin(1:lo)=twiss_in.ClosedOrbit;
+        end
     end
     try
         disp0=twiss_in.Dispersion;
