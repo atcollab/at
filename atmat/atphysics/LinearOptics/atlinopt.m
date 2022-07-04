@@ -114,7 +114,7 @@ if isempty(twiss_in)        % Circular machine
     [orbitP,o1P]=findorbit4(RING,dp+0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep);
     [orbitM,o1M]=findorbit4(RING,dp-0.5*DPStep,REFPTS,orbitin,'XYStep',XYStep);
 else                        % Transfer line
-    if ~isempty(orbitin)
+    if isempty(orbitin)
         orbitin=zeros(6,1);
     end
     try
@@ -123,8 +123,10 @@ else                        % Transfer line
         disp0=zeros(4,1);
     end
     dorbit=0.5*[DPStep*disp0;DPStep;0];
-    orbitP=linepass(RING,orbitin+dorbit,REFPTS);
-    orbitM=linepass(RING,orbitin-dorbit,REFPTS,'KeepLattice');
+    o1P = orbitin+dorbit;
+    o1M = orbitin-dorbit;
+    orbitP=linepass(RING,o1P,REFPTS);
+    orbitM=linepass(RING,o1M,REFPTS,'KeepLattice');
 end
 orbit=linepass(RING,orbitin,REFPTS);
 dispersion = (orbitP-orbitM)/DPStep;
