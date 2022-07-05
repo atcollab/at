@@ -119,7 +119,11 @@ args=getdparg(args(1:funcarg-1));
 
         function [s,plotdata]=ringplot(ring,dpp,plotfun,varargin)
             [linargs,vargs] = opticsoptions(varargin);
-            [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
+            if isfield(linargs{2}, 'R')
+                [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
+            else
+                [lindata, nu, ksi]=atlinopt(ring,dpp,1:length(ring)+1,linargs{:}); %#ok<ASGLU>
+            end
             s=cat(1,lindata.SPos);
             plotdata=plotfun(lindata,ring,dpp,vargs{:});
         end
