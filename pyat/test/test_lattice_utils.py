@@ -84,11 +84,11 @@ def test_checktype(simple_ring):
 
 
 def test_get_cells(simple_ring):
-    a = numpy.ones(6, dtype=bool)
+    a = numpy.array([True, True, True, True, True, True, False])
     numpy.testing.assert_equal(get_cells(simple_ring, checkattr('Length')), a)
-    a = numpy.array([False, True, False, False, False, False])
+    a = numpy.array([False, True, False, False, False, False, False])
     numpy.testing.assert_equal(get_cells(simple_ring, 'attr'), a)
-    a = numpy.array([True, False, False, False, False, False])
+    a = numpy.array([True, False, False, False, False, False, False])
     numpy.testing.assert_equal(get_cells(simple_ring, 'FamName', 'D1'), a)
 
 

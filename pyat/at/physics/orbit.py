@@ -118,7 +118,7 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
                 refpts: Optional[Refpts] = None,
                 dct: Optional[float] = None,
                 orbit: Optional[Orbit] = None,
-                keep_lattice: Optional[bool] = False, **kwargs):
+                keep_lattice: bool = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dp
 
     Finds the closed orbit in the 4-d transverse phase space by numerically
@@ -159,13 +159,13 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
           Default: False
 
     Keyword Args:
-        guess (Optional[Orbit]):        (6,) initial value for the
+        guess (Orbit):          (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+        convergence (float):    Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int):   Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):          Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
@@ -197,7 +197,7 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
                     refpts: Optional[Refpts] = None,
                     dp: Optional[float] = None,
                     orbit: Optional[Orbit] = None,
-                    keep_lattice: Optional[bool] = False, **kwargs):
+                    keep_lattice: bool = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dct
 
     Finds the closed orbit, synchronous with the RF cavity (first 5
@@ -238,13 +238,13 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
           Default: False
 
     Keyword Args:
-        guess (Optional[Orbit]):        (6,) initial value for the
+        guess (Orbit):          (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+        convergence (float):    Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int):   Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
@@ -384,17 +384,17 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
           Default: False
 
     Keyword Args:
-        guess (Optional[Orbit]):        (6,) initial value for the
+        guess (Orbit):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+        convergence (float):  Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int): Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):       Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):       Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        method (Optional[ELossMethod]): Method for energy loss computation.
+        method (ELossMethod): Method for energy loss computation.
           See :py:class:`.ELossMethod`.
         cavpts (Optional[Refpts]):      Cavity location. If None, use all
           cavities. This is used to compute the initial synchronous phase.

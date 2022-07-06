@@ -5,14 +5,16 @@ from __future__ import print_function
 import sys
 from os.path import abspath, basename, splitext
 from warnings import warn
+from typing import Optional, Generator, Sequence
 import scipy.io
 import numpy
-from at.lattice import elements, Lattice, AtWarning, params_filter, AtError
-from at.load import register_format
-from at.load.utils import element_from_dict, element_from_m, RingParam
-from at.load.utils import element_to_dict, element_to_m
+from ..lattice import elements, AtWarning, params_filter, AtError
+from ..lattice import Element, Lattice
+from .allfiles import register_format
+from .utils import element_from_dict, element_from_m, RingParam
+from .utils import element_to_dict, element_to_m
 
-__all__ = ['ringparam_filter', 'load_mat', 'save_mat', 'load_m', 'save_m',
+__all__ = ['load_mat', 'save_mat', 'load_m', 'save_m',
            'load_var']
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
@@ -24,17 +26,26 @@ _param_ignore = {'PassMethod', 'Length'}
 _matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
 
 
-def matfile_generator(params, mat_file):
-    """
-    run through matlab cells and generate AT elements
+def matfile_generator(params: dict, mat_file: str)\
+        -> Generator[Element, None, None]:
+    """Run through Matlab cells and generate AT elements
 
-    KEYWORDS
-        mat_file        name of the .mat file
-        mat_key         name of the Matlab variable containing the lattice.
-                        Default: Matlab variable name if there is only one,
-                        otherwise 'RING'
-        check=True      if False, skip the coherence tests
-        quiet=False     If True, suppress the warning for non-standard classes
+    Parameters:
+        params:         Lattice building parameters (see :py:class:`.Lattice`)
+        mat_file:       File name
+
+    The following keys in ``params`` are used:
+
+    ============    ===================
+    **mat_key**     name of the Matlab variable containing the lattice.
+                    Default: Matlab variable name if there is only one,
+                    otherwise 'RING'
+    **check**        Skip the coherence tests
+    **quiet**       Suppress the warning for non-standard classes
+    ============    ===================
+
+    Yields:
+        elem (Element): new Elements
     """
     def mclean(data):
         if data.dtype.type is numpy.str_:
@@ -69,12 +80,24 @@ def matfile_generator(params, mat_file):
         yield element_from_dict(kwargs, index=index, check=check, quiet=quiet)
 
 
-def ringparam_filter(params, elem_iterator, *args):
-    """"
-    Run through all elements, process and optionally removes RingParam elements
+def ringparam_filter(params: dict, elem_iterator, *args)\
+        -> Generator[Element, None, None]:
+    """Run through all elements, process and optionally removes
+    RingParam elements
 
-    KEYWORDS
-        keep_all=False  if True, keep RingParam elem_iterator as Markers
+    Parameters:
+        params:         Lattice building parameters (see :py:class:`.Lattice`)
+        elem_iterator:  Iterator over the lattice Elements
+
+
+    The following keys in ``params`` are used:
+
+    ============    ===================
+    **keep_all**    keep RingParam elem_iterator as Markers
+    ============    ===================
+
+    Yields:
+        elem (Element): new Elements
     """
     keep_all = params.pop('keep_all', False)
     ringparams = []
@@ -100,29 +123,33 @@ def ringparam_filter(params, elem_iterator, *args):
         warn(AtWarning('More than 1 RingParam element, the 1st one is used'))
 
 
-def load_mat(filename, **kwargs):
-    """Create a lattice object from a Matlab mat-file
+def load_mat(filename: str, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a Matlab mat-file
 
-    PARAMETERS
-        filename        name of a '.mat' file
+    Parameters:
+        filename:           Name of a '.mat' file
 
-    KEYWORDS
-        mat_key         name of the Matlab variable containing the lattice.
-                        Default: Matlab variable name if there is only one,
-                        otherwise 'RING'
-        check=True      if False, skip the coherence tests
-        quiet=False     If True, suppress the warning for non-standard classes
-        keep_all=False  if True, keep RingParam elements as Markers
-        name            Name of the lattice
-                        (default: taken from the lattice, or '')
-        energy          Energy of the lattice
-                        (default: taken from the elements)
-        periodicity     Number of periods
-                        (default: taken from the elements, or 1)
-        *               all other keywords will be set as Lattice attributes
+    Keyword Args:
+        mat_key (str):      Name of the Matlab variable containing
+          the lattice. Default: Matlab variable name if there is only one,
+          otherwise 'RING'
+        check (bool):       Run the coherence tests. Default:
+          :py:obj:`True`
+        quiet (bool):       Suppress the warning for non-standard
+          classes. Default: :py:obj:`False`
+        keep_all (bool):    Keep RingParam elements as Markers.
+          Default: :py:obj:`False`
+        name (str):         Name of the lattice. Default: taken from
+          the lattice, or ``''``
+        energy (float):     Energy of the lattice [eV]. Default: taken
+          from the lattice elements
+        periodicity(int):   Number of periods. Default: taken from the
+          elements, or 1
+        *:                  All other keywords will be set as Lattice
+          attributes
 
-    OUTPUT
-        Lattice object
+    Returns:
+        lattice (Lattice):  New :py:class:`.Lattice` object
     """
     if 'key' in kwargs:  # process the deprecated 'key' keyword
         kwargs.setdefault('mat_key', kwargs.pop('key'))
@@ -130,8 +157,17 @@ def load_mat(filename, **kwargs):
                    iterator=params_filter, **kwargs)
 
 
-def mfile_generator(params, m_file):
-    """Run through all lines of a m-file and generates AT elements"""
+def mfile_generator(params: dict, m_file: str)\
+        -> Generator[Element, None, None]:
+    """Run through the lines of a Matlab m-file and generate AT elements
+
+    Parameters:
+        params:         Lattice building parameters (see :py:class:`.Lattice`)
+        m_file:         File name
+
+    Yields:
+        elem (Element): new Elements
+"""
     with open(params.setdefault('m_file', m_file), 'rt') as file:
         _ = next(file)  # Matlab function definition
         _ = next(file)  # Cell array opening
@@ -150,32 +186,52 @@ def mfile_generator(params, m_file):
                 yield elem
 
 
-def load_m(filename, **kwargs):
-    """Create a lattice object from a matlab m-file
+def load_m(filename: str, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a Matlab m-file
 
-    PARAMETERS
-        filename        name of a '.m' file
+    Parameters:
+        filename:           Name of a '.m' file
 
-    KEYWORDS
-        keep_all=False  if True, keep RingParam elements as Markers
-        name            Name of the lattice
-                        (default: taken from the elements, or '')
-        energy          Energy of the lattice
-                        (default: taken from the elements)
-        periodicity     Number of periods
-                        (default: taken from the elements, or 1)
-        *               all other keywords will be set as Lattice attributes
+    Keyword Args:
+        keep_all (bool):    Keep RingParam elements as Markers.
+          Default: :py:obj:`False`
+        name (str):         Name of the lattice. Default: taken from
+          the lattice, or ``''``
+        energy (float):     Energy of the lattice [eV]. Default: taken
+          from the lattice elements
+        periodicity(int):   Number of periods. Default: taken from the
+          elements, or 1
+        *:                  All other keywords will be set as Lattice
+          attributes
 
-    OUTPUT
-        Lattice object
+    Returns:
+        lattice (Lattice):  New :py:class:`.Lattice` object
     """
     return Lattice(ringparam_filter, mfile_generator, abspath(filename),
                    iterator=params_filter, **kwargs)
 
 
-def load_var(matlat, **kwargs):
-    """Create a lattice from a Matlab cell array"""
+def load_var(matlat: Sequence[dict], **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice` from a Matlab cell array
 
+    Parameters:
+        matlat:             Matlab lattice
+
+    Keyword Args:
+        keep_all (bool):    Keep RingParam elements as Markers.
+          Default: :py:obj:`False`
+        name (str):         Name of the lattice. Default: taken from
+          the lattice, or ``''``
+        energy (float):     Energy of the lattice [eV]. Default: taken
+          from the lattice elements
+        periodicity(int):   Number of periods. Default: taken from the
+          elements, or 1
+        *:                  All other keywords will be set as Lattice
+          attributes
+
+    Returns:
+        lattice (Lattice):  New :py:class:`.Lattice` object
+    """
     # noinspection PyUnusedLocal
     def var_generator(params, latt):
         for elem in latt:
@@ -185,7 +241,7 @@ def load_var(matlat, **kwargs):
                    iterator=params_filter, **kwargs)
 
 
-def matlab_ring(ring):
+def matlab_ring(ring) -> Generator[Element, None, None]:
     """Prepend a RingParam element to a lattice"""
     dct = dict((_matattr_map.get(k, k.title()), v)
                for k, v in ring.attrs.items())
@@ -196,26 +252,27 @@ def matlab_ring(ring):
         yield elem
 
 
-def save_mat(ring, filename, mat_key='RING'):
-    """Save a Lattice object as a Matlab mat-file
+def save_mat(ring: Lattice, filename: str,
+             mat_key: str = 'RING') -> None:
+    """Save a :py:class:`.Lattice` as a Matlab mat-file
 
-    PARAMETERS
-        ring            Lattice object
-        filename        name of the '.mat' file
-
-    KEYWORDS
-        mat_key='RING'  Name of the Matlab variable representing the lattice
+    Parameters:
+        ring:           Lattice description
+        filename:       Name of the '.mat' file
+        mat_key (str):  Name of the Matlab variable containing
+          the lattice. Default: ``'RING'``
     """
     lring = tuple((element_to_dict(elem),) for elem in matlab_ring(ring))
     scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
 
 
-def save_m(ring, filename=None):
-    """Save a lattice as a Matlab m-file
+def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
+    """Save a :py:class:`.Lattice` as a Matlab m-file
 
-    PARAMETERS
-        ring            Lattice object
-        filename=None   name of the '.m' file. Default: output on sys.stdout
+    Parameters:
+        ring:           Lattice description
+        filename:       Name of the '.m' file. Default: outputs on
+          :py:obj:`sys.stdout`
     """
 
     def save(file):

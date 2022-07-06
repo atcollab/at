@@ -3,7 +3,8 @@ requires = [
     "numpy >= 1.16.6;python_version<'3.10'",
     "numpy >= 1.21.5;python_version>='3.10'",
     "setuptools >= 45",
-    "setuptools_scm>=6.2",
+    "setuptools_scm >= 7;python_version>='3.7'",
+    "setuptools_scm >= 6.4.2;python_version<'3.7'",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
@@ -20,6 +21,6 @@ archs = ["x86_64", "arm64"]
 
 [tool.setuptools_scm]
 root = ".."
-# write_to = "pyat/at/_version.py"
+write_to = "pyat/at/_version.py"
 git_describe_command = "git describe --dirty --tags --long --match pyat-[0-9]*"
 fallback_version = "0.0.0"

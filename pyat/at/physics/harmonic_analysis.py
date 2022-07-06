@@ -10,6 +10,7 @@ Full code can be found at: https://github.com/pylhc/harpy
 """
 
 import numpy as np
+from typing import Optional, Tuple
 
 PI2I = 2 * np.pi * complex(0, 1)
 
@@ -190,17 +191,21 @@ HarmonicAnalysis._fft, HarmonicAnalysis._fftfreq = \
 ##############################################
 
 
-def get_spectrum_harmonic(cent, num_harmonics=20, method='laskar', hann=False):
-    """
-    INPUT
-    cent: centroid motions of the particle
-    num_harmonics: number of harmonic components to compute (before mask
-    applied, default=20)
-    method: laskar or fft [default=laskar]
-    hann: flag to turn on hanning window [default-> False]
+def get_spectrum_harmonic(cent, method: str = 'laskar',
+                          num_harmonics: int = 20,
+                          hann: bool = False) -> Tuple[np.ndarray, np.ndarray]:
+    """Frequency analysis of beam motion
 
-    OUTPUT
-    freq,amp: numpy arrays for the frequency and amplitude
+    Parameters:
+        cent:           Centroid motions of the particle
+        method:         ``'laskar'`` or ``'fft'``. Default: ``'laskar'``
+        num_harmonics:  Number of harmonic components to compute (before mask
+          applied)
+        hann:           Turn on Hanning window. Default: :py:obj:`False`
+
+    Returns:
+        frequency (ndarray): (num_harmonics,) array of frequencies
+        amplitude (ndarray): (num_harmonics,) array of amplitudes
     """
     ha = HarmonicAnalysis(cent, hann=hann)
 
@@ -218,24 +223,23 @@ def get_spectrum_harmonic(cent, num_harmonics=20, method='laskar', hann=False):
     return ha_tune, ha_amp
 
 
-def get_tunes_harmonic(cents, method,
-                       num_harmonics=20,
-                       hann=False,
-                       fmin=0,
-                       fmax=1):
-    """
-    INPUT
-    cents: are the centroid motions of the particles
-    method: laskar or fft
-    num_harmonics: number of harmonic components to compute (before mask
-    applied, default=20)
-    fmin/fmax: determine the boundaries within which the tune is located
-    [default 0->1]
-    hann: flag to turn on hanning window [default-> False]
+def get_tunes_harmonic(cents, method: str = 'laskar',
+                       num_harmonics: int = 20, hann: bool = False,
+                       fmin: float = 0, fmax: float = 1) -> np.ndarray:
+    """Computes tunes from harmonic analysis
 
-    OUTPUT
-    tunes: numpy array of length len(cents), max of the spectrum within
-    fmin:fmax
+    Parameters:
+        cents:          Centroid motions of the particle
+        method:         ``'laskar'`` or ``'fft'``. Default: ``'laskar'``
+        num_harmonics:  Number of harmonic components to compute (before mask
+          applied)
+        fmin:           Lower bound for tune
+        fmax:           Upper bound for tune
+        hann:           Turn on Hanning window. Default: :py:obj:`False`
+
+    Returns:
+        tunes (ndarray):    numpy array of length len(cents), max of the
+          spectrum within [fmin fmax]
     """
     def get_max_spectrum(freq, amp, fmin, fmax):
         msk = np.logical_and(freq >= fmin, freq <= fmax)

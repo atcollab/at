@@ -10,32 +10,40 @@ _load_extension = {}
 _save_extension = {}
 
 
-def load_lattice(filepath, **kwargs):
+def load_lattice(filepath: str, **kwargs) -> Lattice:
     """Load a Lattice object from a file
 
-    The file format is indicated by the filepath extension.
+The file format is indicated by the filepath extension.
 
-    PARAMETERS
-        filepath        name of the file
+Parameters:
+    filepath:           Name of the file
 
-    KEYWORDS
-        name            Name of the lattice
-                        (default: taken from the file, or '')
-        energy          Energy of the lattice
-                        (default: taken from the file)
-        periodicity     Number of periods
-                        (default: taken from the file, or 1)
-        *               all other keywords will be set as Lattice attributes
+Keyword Args:
+    name (str):         Name of the lattice.
+      Default: taken from the file, or ``''``
+    energy (float):     Energy of the lattice
+      (default: taken from the file)
+    periodicity (int]): Number of periods
+      (default: taken from the file, or 1)
+    *:                  All other keywords will be set as :py:class:`.Lattice`
+      attributes
 
-    MAT-FILE SPECIFIC KEYWORDS
-        mat_key         name of the Matlab variable containing the lattice.
-                        Default: Matlab variable name if there is only one,
-                        otherwise 'RING'
-        check=True      if False, skip the coherence tests
-        quiet=False     If True, suppress the warning for non-standard classes
-        keep_all=False  if True, keep RingParam elements as Markers
+Specific keywords for .mat files
 
-    Known extensions are:
+Keyword Args:
+    mat_key (str):      Name of the Matlab variable containing
+      the lattice. Default: Matlab variable name if there is only one,
+      otherwise ``'RING'``
+    check (bool):       Run coherence tests. Default: :py:obj:`True`
+    quiet (bool):       Suppress the warning for non-standard classes.
+      Default: :py:obj:`False`
+    keep_all (bool):    Keep Matlab RingParam elements as Markers.
+      Default: :py:obj:`False`
+
+Returns:
+    lattice (Lattice):          New :py:class:`.Lattice` object
+
+.. Admonition:: Known extensions are:
     """
     _, ext = os.path.splitext(filepath)
     try:
@@ -46,19 +54,22 @@ def load_lattice(filepath, **kwargs):
         return load_func(filepath, **kwargs)
 
 
-def save_lattice(ring, filepath, **kwargs):
+def save_lattice(ring: Lattice, filepath: str, **kwargs):
     """Save a Lattice object
 
-    The file format is indicated by the filepath extension.
+The file format is indicated by the filepath extension.
 
-    PARAMETERS
-        ring            Lattice object
-        filepath        name of the file
+Parameters:
+    ring:               Lattice description
+    filepath:           Name of the file
 
-    MAT-FILE SPECIFIC KEYWORDS
-        mat_key='RING'  Name of the Matlab variable
+Specific keywords for .mat files
 
-    Known extensions are:
+Keyword Args:
+    mat_key (str):      Name of the Matlab variable containing the lattice.
+      Default: ``'RING'``
+
+.. Admonition:: Known extensions are:
     """
     _, ext = os.path.splitext(filepath)
     try:
@@ -69,21 +80,24 @@ def save_lattice(ring, filepath, **kwargs):
         return save_func(ring, filepath, **kwargs)
 
 
-def register_format(extension, load_func=None, save_func=None, descr=''):
+def register_format(extension: str, load_func=None, save_func=None,
+                    descr: str = ''):
     """Register format-specific processing functions
 
-    PARAMETERS
-        extension       File extension string
-        load_func       load function (default: None)
-        save_func       save_lattice function (default: None)
-        descr           File type description
+    Parameters:
+        extension:      File extension string.
+        load_func:      load function. Default: :py:obj:`None`
+        save_func:      save_lattice function Default: :py:obj:`None`
+        descr:          File type description
     """
     if load_func is not None:
         _load_extension[extension] = load_func
-        load_lattice.__doc__ += '\n    {0:<10}\t{1}'.format(extension, descr)
+        load_lattice.__doc__ += '\n    {0:<10}'\
+                                '\n        {1}\n'.format(extension, descr)
     if save_func is not None:
         _save_extension[extension] = save_func
-        save_lattice.__doc__ += '\n    {0:<10}\t{1}'.format(extension, descr)
+        save_lattice.__doc__ += '\n    {0:<10}'\
+                                '\n        {1}\n'.format(extension, descr)
 
 
 Lattice.load = staticmethod(load_lattice)

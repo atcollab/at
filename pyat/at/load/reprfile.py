@@ -1,9 +1,10 @@
 """Text representation of a python AT lattice with each element represented by
-its 'repr' string
+its :py:func:`repr` string
 """
 from __future__ import print_function
 import sys
 from os.path import abspath
+from typing import Optional
 import numpy
 from at.lattice import Lattice
 from at.load import register_format
@@ -11,24 +12,28 @@ from at.load.utils import element_from_string
 # imports necessary in' globals()' for 'eval'
 # noinspection PyUnresolvedReferences
 from at.lattice import Particle
-from numpy import array
+
 __all__ = ['load_repr', 'save_repr']
 
 
-def load_repr(filename, **kwargs):
-    """Load a Lattice object stored as a repr-file
+def load_repr(filename: str, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from a text repr-file
 
-    PARAMETERS
-        filename        name of the '.repr' file
+    Parameters:
+        filename:           Name of a '.m' file
 
-    KEYWORDS
-        name            Name of the lattice (default: taken from the file)
-        energy          Energy of the lattice (default: taken from the file)
-        periodicity     Number of periods (default: taken from the file)
-        *               all other keywords will be set as Lattice attributes
+    Keyword Args:
+        name (str):         Name of the lattice. Default: taken from
+          the lattice
+        energy (float):     Energy of the lattice [eV]. Default: taken
+          from the lattice elements
+        periodicity(int):   Number of periods. Default: taken from the
+          elements, or 1
+        *:                  All other keywords will be set as Lattice
+          attributes
 
-    OUTPUT
-        Lattice object
+    Returns:
+        lattice (Lattice):          New :py:class:`.Lattice` object
     """
     def elem_iterator(params, repr_file):
         with open(params.setdefault('repr_file', repr_file), 'rt') as file:
@@ -41,12 +46,13 @@ def load_repr(filename, **kwargs):
     return Lattice(abspath(filename), iterator=elem_iterator, **kwargs)
 
 
-def save_repr(ring, filename=None):
-    """Save a Lattice object as a repr-file
+def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
+    """Save a :py:class:`.Lattice` as a repr-file
 
-    PARAMETERS
-        ring            Lattice object
-        filename=None   name of the '.repr' file. Default: output on sys.stdout
+    Parameters:
+        ring:           Lattice description
+        filename:       Name of the '.repr' file. Default: outputs on
+          :py:obj:`sys.stdout`
     """
     def save(file):
         # print(repr(dict((k, v) for k, v in vars(ring).items()

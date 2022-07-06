@@ -27,18 +27,18 @@ from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
 # noinspection PyProtectedMember
 from .utils import _uint32_refs, _bool_refs, Uint32Refpts
-from .utils import refpts_iterator, refpts_len
+from .utils import refpts_iterator, refpts_len, checktype
 from .utils import get_s_pos, get_elements, get_cells, get_refpts
 from .utils import get_value_refpts, set_value_refpts
 from .utils import set_shift, set_tilt
 from . import elements
-from .elements import Element
+from .elements import Element, Monitor, RFCavity
 
 _TWO_PI_ERROR = 1.E-4
 Filter = Callable[..., Iterable[Element]]
 
 __all__ = ['Lattice', 'type_filter', 'params_filter', 'lattice_filter',
-           'no_filter']
+           'elem_generator', 'no_filter']
 
 # Don't warn on floating-pont errors
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -46,17 +46,12 @@ numpy.seterr(divide='ignore', invalid='ignore')
 
 # noinspection PyAttributeOutsideInit
 class Lattice(list):
-    """Lattice object
+    """Lattice object.
 
-    An AT lattice is a sequence of AT elements which accepts extended indexing
-    (as a numpy ndarray). It has the following attributes:
-
-    Attributes:
-        name: Name of the lattice
-        energy: Particle energy
-        periodicity: Number of super-periods to describe the full ring
-        particle: Circulating particle
-        harmonic_number: Harmonic number of the full ring (periodicity x cells)
+    An AT lattice is a sequence of AT elements. In addition to :py:class:`list`
+    methods, :py:class:`Lattice` supports
+    `extended indexing <https://numpy.org/doc/stable/user/basics.indexing.html
+    #advanced-indexing>`_ as a numpy :py:obj:`~numpy.ndarray`.
     """
     # Attributes displayed:
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
@@ -138,7 +133,7 @@ class Lattice(list):
         if iterator is None:
             arg1, = args or [[]]  # accept 0 or 1 argument
             if isinstance(arg1, Lattice):
-                elems = arg1.attrs_filter(kwargs, arg1)
+                elems = lattice_filter(kwargs, arg1)
             else:
                 elems = params_filter(kwargs, type_filter, arg1)
         else:
@@ -184,7 +179,8 @@ class Lattice(list):
                 rg = range(*key.indices(len(self)))
             else:                           # Array of integers or boolean
                 rg = _uint32_refs(self, key)
-            return Lattice((super(Lattice, self).__getitem__(i) for i in rg),
+            return Lattice(elem_generator,
+                           (super(Lattice, self).__getitem__(i) for i in rg),
                            iterator=self.attrs_filter)
 
     def __setitem__(self, key, values):
@@ -232,7 +228,8 @@ class Lattice(list):
                                'city set to 1'.format(self.periodicity, n)))
                 periodicity = 1
         # noinspection PyTypeChecker
-        return Lattice(itertools.chain(*itertools.repeat(self, n)),
+        return Lattice(elem_generator,
+                       itertools.chain(*itertools.repeat(self, n)),
                        iterator=self.attrs_filter, periodicity=periodicity)
 
     def _addition_filter(self, params: Dict, elems: Iterable[Element]):
@@ -329,7 +326,7 @@ class Lattice(list):
         Returns:
             newring:    New Lattice object
         """
-        def slice_iter(ibeg, iend):
+        def slice_generator(_, ibeg, iend):
             yield from self[:ibeg]
             for elem in self[ibeg:iend]:
                 nslices = int(math.ceil(elem.Length / size))
@@ -346,26 +343,24 @@ class Lattice(list):
             smin, smax = s_range
             size = (smax - smin) / slices
         i_range = self.i_range
-        return Lattice(slice_iter(i_range[0], i_range[-1]),
+        return Lattice(slice_generator, i_range[0], i_range[-1],
                        iterator=self.attrs_filter, s_range=s_range)
 
-    def attrs_filter(self, params: dict, elems: Iterable[Element]) \
+    def attrs_filter(self, params: dict, elem_filter: Filter, *args) \
             -> Iterable[Element]:
         """Filter function which duplicates the lattice attributes
 
         Parameters:
-            params:     Dictionary of Lattice attributes
-            elems:      iterable of lattice ``Elements``
-
-        Returns:
-            elems:  **elems** unchanged
+            params:         Dictionary of Lattice attributes
+            elem_filter:    Element filter
+            *args:          Arguments provided to ``elem_filter``
         """
         for key in self._std_attributes:
             try:
                 params.setdefault(key, getattr(self, key))
             except AttributeError:
                 pass
-        return elems
+        return elem_filter(params, *args)
 
     @property
     def s_range(self):
@@ -421,7 +416,7 @@ class Lattice(list):
 
     @property
     def circumference(self) -> float:
-        """Ring circumference (full ring) [m]"""
+        """Ring circumference (full self) [m]"""
         return self.periodicity * self.get_s_pos(len(self))[0]
 
     @property
@@ -444,7 +439,7 @@ class Lattice(list):
 
     @property
     def harmonic_number(self):
-        """Ring harmonic number (full ring)"""
+        """Ring harmonic number (full self)"""
         try:
             return self.periodicity * self._cell_harmnumber
         except AttributeError:
@@ -537,7 +532,7 @@ class Lattice(list):
         def lattice_copy(params):
             """Custom iterator for the creation of a new lattice"""
             radiate = False
-            for elem in self.attrs_filter(params, self):
+            for elem in self:
                 attrs = elem_modify(elem)
                 if attrs is not None:
                     elem = elem.copy()
@@ -549,7 +544,7 @@ class Lattice(list):
             params['_radiation'] = radiate
 
         if copy:
-            return Lattice(iterator=lattice_copy, **kwargs)
+            return Lattice(lattice_copy, iterator=self.attrs_filter, **kwargs)
         else:
             lattice_modify(**kwargs)
 
@@ -735,13 +730,13 @@ class Lattice(list):
             newring:    A new lattice with new elements inserted at breakpoints
         """
 
-        def sbreak_iterator(params):
+        def sbreak_iterator(_, itmk):
             """Iterate over elements and breaks where necessary"""
 
             def next_mk():
                 """Extract the next element to insert"""
                 try:
-                    return next(iter_mk)
+                    return next(itmk)
                 except StopIteration:
                     return sys.float_info.max, None
 
@@ -752,7 +747,7 @@ class Lattice(list):
             while smk < s_end:
                 smk, mk = next_mk()
 
-            for elem in self.attrs_filter(params, self):
+            for elem in self:
                 s_end += elem.Length
                 # loop over all insertions within the element
                 while smk < s_end:
@@ -776,7 +771,45 @@ class Lattice(list):
         # and create an iterator over the elements to be inserted
         iter_mk = zip(*numpy.broadcast_arrays(break_s, break_elems))
 
-        return Lattice(iterator=sbreak_iterator, **kwargs)
+        return Lattice(sbreak_iterator, iter_mk,
+                       iterator=self.attrs_filter, **kwargs)
+
+    def reduce(self, **kwargs) -> "Lattice":
+        """Removes all elements with an ``IdentityPass`` PassMethod and merges
+        compatible consecutive elements.
+
+        The "reduced" lattice has the same optics as the original one, but
+        fewer elements. Compatible elements must have the same ``PolynomA``,
+        ``PolynomB`` and bending radius, so that the optics is preserved. But
+        magnet misalignments are not preserved, so this method should be
+        applied to lattices without errors.
+
+        Keyword Args:
+            keep (Refpts):      Keep the selected elements, even with
+                ``IdentityPass`` PassMethod. Default: keep :py:class:`.Monitor`
+                and :py:class:`.RFCavity` elements
+        """
+        def reduce_filter(_, itelem):
+            try:
+                elem = next(itelem).copy()
+            except StopIteration:
+                return
+            for nxt in itelem:
+                try:
+                    elem.merge(nxt)
+                except TypeError:
+                    yield elem
+                    elem = nxt.copy()
+            yield elem
+
+        kp = self.get_cells(lambda el: el.PassMethod != 'IdentityPass')
+        try:
+            keep = self.bool_refpts(kwargs.pop('keep'))
+        except KeyError:
+            keep = self.get_cells(checktype((Monitor, RFCavity)))
+
+        return Lattice(reduce_filter, self.select(kp | keep),
+                       iterator=self.attrs_filter, **kwargs)
 
     def replace(self, refpts: Refpts, **kwargs) -> "Lattice":
         """Return a shallow copy of the lattice replacing the selected
@@ -790,7 +823,8 @@ class Lattice(list):
         else:
             check = iter(_bool_refs(self, refpts))
         elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
-        return Lattice(elems, iterator=self.attrs_filter, **kwargs)
+        return Lattice(elem_generator, elems,
+                       iterator=self.attrs_filter, **kwargs)
 
 
 def lattice_filter(params, lattice):
@@ -803,11 +837,11 @@ def lattice_filter(params, lattice):
     Yields:
         lattice ``Elements``
     """
-    return lattice.attrs_filter(params, lattice)
+    return lattice.attrs_filter(params, elem_generator, lattice)
 
 
 # noinspection PyUnusedLocal
-def no_filter(params, elems: Iterable[Element]) -> Iterable[Element]:
+def elem_generator(params, elems: Iterable[Element]) -> Iterable[Element]:
     """Run through all elements without any check
 
     Parameters:
@@ -818,6 +852,9 @@ def no_filter(params, elems: Iterable[Element]) -> Iterable[Element]:
         lattice ``Elements``
     """
     return elems
+
+
+no_filter = elem_generator  # provided for backward compatibility
 
 
 def type_filter(params, elems: Iterable[Element]) \

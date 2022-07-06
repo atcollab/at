@@ -44,7 +44,7 @@ def frequency_control(func):
 
 @check_radiation(False)
 def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
-            keep_lattice: Optional[bool] = False, **kwargs) -> float:
+            keep_lattice: bool = False, **kwargs) -> float:
     r"""Compute the momentum compaction factor :math:`\alpha`
 
     Parameters:

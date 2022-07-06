@@ -3,11 +3,11 @@
 This is not complete but can parse the example files that I have.
 This parser is quite similar to the Tracy parser in tracy.py.
 
-The Elegant file format is described briefly here:
-https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009
+The Elegant file format is described briefly
+`here <https://ops.aps.anl.gov/manuals/elegant_latest/elegantse9.html#x113-1120009>`_.
 
-It is similar to the MAD-X format, described briefly here:
-http://madx.web.cern.ch/madx/
+It is similar to the MAD-X format, described briefly
+`here <http://madx.web.cern.ch/madx/>`_.
 
 Note that Elegant scales magnet polynomials in a different way
 to AT, so the parsed coefficients need to be divided by n! for
@@ -33,16 +33,21 @@ from at.lattice.elements import (
 from at.lattice import Lattice
 from at.load import register_format, utils
 
+__all__ = ['load_elegant']
 
+
+# noinspection PyUnusedLocal
 def create_drift(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     return Drift(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_marker(name, params, energy, harmonic_number):
     return Marker(name, **params)
 
 
+# noinspection PyUnusedLocal
 def create_aperture(name, params, energy, harmonic_number):
     x_lim = float(params.get('x_max'))
     y_lim = float(params.get('y_max'))
@@ -50,6 +55,7 @@ def create_aperture(name, params, energy, harmonic_number):
     return Aperture(name, limits)
 
 
+# noinspection PyUnusedLocal
 def create_quad(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -58,6 +64,7 @@ def create_quad(name, params, energy, harmonic_number):
     return Quadrupole(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_sext(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -65,6 +72,7 @@ def create_sext(name, params, energy, harmonic_number):
     return Sextupole(name, length, k2 / 2, **params)
 
 
+# noinspection PyUnusedLocal
 def create_oct(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -74,6 +82,7 @@ def create_oct(name, params, energy, harmonic_number):
     return Octupole(name, length, PolynomA, PolynomB, **params)
 
 
+# noinspection PyUnusedLocal
 def create_multipole(name, params, energy, harmonic_number):
     def factorial(x, acc=1):
         if x == 0:
@@ -94,6 +103,7 @@ def create_multipole(name, params, energy, harmonic_number):
     return Multipole(name, length, PolynomA, PolynomB, **params)
 
 
+# noinspection PyUnusedLocal
 def create_dipole(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     params["NumIntSteps"] = params.pop("n_kicks", 10)
@@ -115,6 +125,7 @@ def create_dipole(name, params, energy, harmonic_number):
     return Dipole(name, length, **params)
 
 
+# noinspection PyUnusedLocal
 def create_corrector(name, params, energy, harmonic_number):
     length = params.pop("l", 0)
     hkick = params.pop("hkick", 0)
@@ -318,7 +329,24 @@ def elegant_element_from_string(name, element_string, variables):
     return ELEMENT_MAP[element_type](name, params, energy, harmonic_number)
 
 
-def load_elegant(filename, **kwargs):
+def load_elegant(filename: str, **kwargs) -> Lattice:
+    """Create a :py:class:`.Lattice`  from an Elegant file
+
+    Parameters:
+        filename:           Name of an Elegant file
+
+    Keyword Args:
+        name (str):         Name of the lattice. Default: taken from
+          the file.
+        energy (float):     Energy of the lattice [eV]
+        periodicity(int):   Number of periods. Default: taken from the
+          elements, or 1
+        *:                  All other keywords will be set as Lattice
+          attributes
+
+    Returns:
+        lattice (Lattice):  New :py:class:`.Lattice` object
+    """
     try:
         energy = kwargs.pop("energy")
         lattice_key = kwargs.pop("lattice_key")
