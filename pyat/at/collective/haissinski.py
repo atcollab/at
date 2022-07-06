@@ -63,7 +63,8 @@ class Haissinski(object):
         s = wake_object.srange/self.sigma_l
         self.ds = numpy.diff(s)[0]
         self.s = -s
-        self.wtot_fun = interp1d(self.s, -wake_object.Z)
+        self.wtot_fun = interp1d(self.s, -wake_object.Z,
+                                 bounds_error=False, fill_value = 0)
 
         if m % 2 != 0:
             raise AttributeError('m must be even and int')
@@ -102,6 +103,8 @@ class Haissinski(object):
         Equation 16
         '''
         print('Computing integrated wake potential')
+        print(self.q_array)
+        print(self.ds)
         sr = numpy.arange(2*numpy.amin(self.q_array),
                           numpy.abs(2*numpy.amin(self.q_array))
                           + self.ds, self.ds)
