@@ -115,7 +115,7 @@ class BeamLoadingElement(Element):
         self._bl_params = numpy.array([self.Frequency, 0.0,
                                        self.Voltage, self.Voltage, 0.0])
         _, ts = get_timelag_fromU0(ring)
-        self._phis = 2*numpy.pi*self.Frequency*ts/clight
+        self._phis = 2*numpy.pi*self.Frequency*(ts+self.TimeLag)/clight
         self.clear_history()
         self.NormFact = kwargs.pop('NormFact', 1.0)
         if zcuts is not None:
