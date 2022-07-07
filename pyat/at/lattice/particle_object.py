@@ -82,8 +82,8 @@ class Beam(object):
     def __init__(self, **kwargs):
         self.current = kwargs.pop('current',0.0)
         self._harmn = kwargs.pop('harmonic_number', None)
-        self._fillpattern = kwargs.pop('fillpattern',numpy.atleast_1d(1))
-        self._weights = kwargs.pop('weights',numpy.ones(1))
+        self._fillpattern = kwargs.pop('fillpattern',numpy.ones(1))
+        self._weights = kwargs.pop('weights', None)
         
     @property    
     def harmonic_number(self):
@@ -118,10 +118,31 @@ class Beam(object):
             fp = numpy.array(bunches)
         self._fillpattern = fp
         
+    @property    
+    def weights(self):
+        return self._weights
+
+    @weights.setter
+    def weights(self, weights):
+        assert len(weights)==len(self._fillpattern), \
+            'Weights and fill pattern must have the same length'                   
+        self._weights = numpy.array(weights)
+        
     @property
     def nbunch(self):
         return numpy.sum(self._fillpattern)
         
     @property
     def bunch_currents(self):
-        return self.current*self.weights/numpy.sum(self.weights)
+        if self._weights is None:
+            return self.current/self.nbunch*self._fillpattern
+        else:
+            return self.current*self._weights/numpy.sum(self._weights)
+        
+    def __repr__(self):
+        attrs = vars(self).copy()
+        attrs['nbunch'] = self.nbunch
+        attrs['bunch_currents'] = self.bunch_currents
+        attrs = dict((k, v) for (k, v) in attrs.items()
+                     if not k.startswith('_'))
+        return '{0}({1})'.format(self.__class__.__name__, attrs)
