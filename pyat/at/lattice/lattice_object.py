@@ -23,7 +23,7 @@ else:
     from typing import SupportsIndex
 from warnings import warn
 from ..constants import clight, e_mass
-from .particle_object import Particle
+from .particle_object import Particle, Beam
 from .utils import AtError, AtWarning, Refpts
 # noinspection PyProtectedMember
 from .utils import _uint32_refs, _bool_refs, Uint32Refpts
@@ -54,10 +54,10 @@ class Lattice(list):
     #advanced-indexing>`_ as a numpy :py:obj:`~numpy.ndarray`.
     """
     # Attributes displayed:
-    _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
+    _disp_attributes = ('name', 'energy', 'particle', 'beam', 'periodicity',
                         'harmonic_number')
     # Attributes propagated in copies:
-    _std_attributes = ('name', '_energy', '_particle', 'periodicity',
+    _std_attributes = ('name', '_energy', '_particle', '_beam', 'periodicity',
                        '_cell_harmnumber', '_radiation')
 
     # noinspection PyUnusedLocal
@@ -145,6 +145,7 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
+        kwargs.setdefault('_beam', Beam())
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_h = kwargs.pop('_harmnumber', None)
@@ -161,6 +162,8 @@ class Lattice(list):
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
+        if 'beam' in kwargs:
+            kwargs.pop('_beam', None)        
         # set attributes
         self.update(kwargs)
 
@@ -170,6 +173,10 @@ class Lattice(list):
         elif frequency is not None:
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
+            
+        # Needed to constraint the fillpattern length
+        if hasattr(self, '_cell_harmnumber'):
+            self.beam.harmonic_number = self.harmonic_number
 
     def __getitem__(self, key):
         try:                                # Integer
@@ -436,6 +443,15 @@ class Lattice(list):
             self._particle = particle
         else:
             self._particle = Particle(particle)
+            
+    @property
+    def beam(self) -> Beam:
+        """Circulating beam properties"""
+        return self._beam
+
+    @beam.setter
+    def beam(self, beam: Beam):
+        self._beam = Beam
 
     @property
     def harmonic_number(self):

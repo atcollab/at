@@ -75,3 +75,53 @@ class Particle(object):
     def charge(self) -> float:
         """Particle charge [elementary charge]"""
         return self._charge
+
+        
+class Beam(object):
+
+    def __init__(self, **kwargs):
+        self.current = kwargs.pop('current',0.0)
+        self._harmn = kwargs.pop('harmonic_number', None)
+        self._fillpattern = kwargs.pop('fillpattern',numpy.atleast_1d(1))
+        self._weights = kwargs.pop('weights',numpy.ones(1))
+        
+    @property    
+    def harmonic_number(self):
+        return self._harmn
+        
+    @harmonic_number.setter    
+    def harmonic_number(self, harmn):
+        self._harmn  = harmn   
+      
+    @property    
+    def fillpattern(self):
+        return self._fillpattern
+
+    @fillpattern.setter
+    def fillpattern(self, bunches):
+        if (self._harmn is None):
+            warn(UserWarning("Harmonic number not set in Beam(), "
+                             "nbunch and fillpattern set to 1"))    
+            fp = numpy.ones(1)        
+        elif numpy.isscalar(bunches):
+            if bunches ==1:
+                fp = numpy.ones(1)
+            else:
+                bs = int(self._harmn/bunches)
+                fp = numpy.zeros((self._harmn,))
+                fp[0::bs]=1
+        else:
+            assert len(bunches)==self._harmn, \
+                'Fill pattern has to be of shape ({0},)'.format(self._harmn)
+            assert numpy.all((bunches==0) | (bunches==1)), \
+                'Fill pattern can only contain 0 or 1'                       
+            fp = numpy.array(bunches)
+        self._fillpattern = fp
+        
+    @property
+    def nbunch(self):
+        return numpy.sum(self._fillpattern)
+        
+    @property
+    def bunch_currents(self):
+        return self.current*self.weights/numpy.sum(self.weights)
