@@ -1,8 +1,17 @@
 %Physical constants
 %
-% Automatically generated from scipy.constants.physical_constants
+%Automatically generated from scipy.constants.physical_constants
+%
+%  Source:  https://physics.nist.gov/cuu/Constants/
+%
+%The values of the constants provided at this site are recommended for
+%international use by CODATA and are the latest available. Termed the "2018
+%CODATA recommended values," they are generally recognized worldwide for use in
+%all fields of science and technology. The values became available on 20 May
+%2019 and replaced the 2014 CODATA set.
 
 classdef PhysConstant
+
     properties(Constant=true)
 
         Angstrom_star=struct('value',1.00001495e-10,'uncert',9e-17,'unit','m');
