@@ -13,7 +13,7 @@ def _py_data(ml_data):
 def _ml_refs(ring, py_refs):
     """Convert refpoints to Matlab"""
     uintrefs = ring.uint32_refpts(py_refs)
-    return matlab.double([ref+1 for ref in uintrefs])
+    return matlab.double([float(ref+1) for ref in uintrefs])
 
 
 def _compare_4d(py_data, ml_data, fields, atol=1.e-12, rtol=1.e-7):

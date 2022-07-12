@@ -8,7 +8,7 @@ import pytest
 def _ml_refs(refpts, nelems):
     """Convert refpoints to Matlab"""
     uintrefs = at.uint32_refpts(refpts, nelems)
-    return matlab.double([ref+1 for ref in uintrefs])
+    return matlab.double([float(ref+1) for ref in uintrefs])
 
 
 @pytest.mark.parametrize('dp', (-0.01, 0.0, 0.01))
