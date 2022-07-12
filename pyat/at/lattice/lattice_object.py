@@ -129,7 +129,6 @@ class Lattice(list):
                 runs through ``ringparam_filter(params, *args)``, looks for
                 energy and periodicity if not yet defined.
 """
-
         if iterator is None:
             arg1, = args or [[]]  # accept 0 or 1 argument
             if isinstance(arg1, Lattice):
@@ -214,8 +213,8 @@ class Lattice(list):
         return newring
 
     def __iadd__(self, elems):
-        elist = list(self._addition_filter({}, elems))
-        return super(Lattice, self).__iadd__(elist)
+        # elist = list(self._addition_filter(elems))
+        return super(Lattice, self).__iadd__(self._addition_filter(elems))
 
     def __mul__(self, n):
         """Repeats n times the lattice"""
@@ -232,9 +231,10 @@ class Lattice(list):
                        itertools.chain(*itertools.repeat(self, n)),
                        iterator=self.attrs_filter, periodicity=periodicity)
 
-    def _addition_filter(self, params: Dict, elems: Iterable[Element]):
+    def _addition_filter(self, elems: Iterable[Element]):
         cavities = []
         length = 0.0
+        params = {}
 
         for elem in type_filter(params, elems):
             if isinstance(elem, elements.RFCavity):
@@ -260,12 +260,16 @@ class Lattice(list):
 
     def insert(self, idx: SupportsIndex, elem: Element):
         # noinspection PyUnusedLocal
-        elist = list(self._addition_filter({}, [elem]))
-        super(Lattice, self).insert(idx, elem)
+        # scan the new element to update it
+        elist = list(self._addition_filter([elem]))
+        super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element]):
-        elist = list(self._addition_filter({}, elems))
-        super(Lattice, self).extend(elist)
+        if hasattr(self, '_energy'):
+            # When unpickling a Lattice, extend is called before the lattice
+            # is initialized. So skip this.
+            elems = self._addition_filter(elems)
+        super().extend(elems)
 
     def append(self, elem: Element):
         self.extend([elem])
