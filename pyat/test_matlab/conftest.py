@@ -37,7 +37,7 @@ def pytest_report_header(config):
 @pytest.fixture(scope='session')
 def engine():
     try:
-        eng = connect_matlab('pytest')
+        eng = connect_matlab()
         # Keep the existing Matlab path
     except EngineError:
         eng = start_matlab()
