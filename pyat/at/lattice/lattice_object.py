@@ -213,7 +213,6 @@ class Lattice(list):
         return newring
 
     def __iadd__(self, elems):
-        # elist = list(self._addition_filter(elems))
         return super(Lattice, self).__iadd__(self._addition_filter(elems))
 
     def __mul__(self, n):
