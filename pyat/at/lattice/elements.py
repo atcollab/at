@@ -351,12 +351,12 @@ class ThinMultipole(Element):
         poly_b, len_b, ord_b = getpol(_array(kwargs.pop('PolynomB', poly_b)))
         deforder = max(getattr(self, 'DefaultOrder', 0), ord_a, ord_b)
         maxorder = kwargs.pop('MaxOrder', deforder)
-        len_ab = max(maxorder + 1, len_a, len_b)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
         super(ThinMultipole, self).__init__(family_name, **kwargs)
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super(ThinMultipole, self).__setattr__('MaxOrder', maxorder)
         # Adjust polynom lengths and set them
+        len_ab = max(self.MaxOrder + 1, len_a, len_b)
         self.PolynomA = lengthen(poly_a, len_ab - len_a)
         self.PolynomB = lengthen(poly_b, len_ab - len_b)
 

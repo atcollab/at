@@ -146,14 +146,10 @@ class Lattice(list):
         kwargs.setdefault('_particle', Particle())
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
-        cell_h = kwargs.pop('_harmnumber', None)
         cell_length = kwargs.pop('_length', None)
+        cell_h = kwargs.pop('_harmnumber', math.nan)
+        ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
 
-        if 'harmonic_number' in kwargs:
-            cell_h, rem = divmod(kwargs.pop('harmonic_number'), periodicity)
-            if rem != 0:
-                raise AtError('harmonic number must be a multiple of {}'
-                              .format(periodicity))
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
         elif '_energy' not in kwargs:
@@ -164,11 +160,11 @@ class Lattice(list):
         self.update(kwargs)
 
         # Setting the harmonic number is delayed to have self.beta available
-        if cell_h is not None:
-            self._cell_harmnumber = cell_h
-        elif frequency is not None:
+        if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
+        elif not math.isnan(ring_h):
+            self.harmonic_number = ring_h
 
     def __getitem__(self, key):
         try:                                # Integer
@@ -444,20 +440,22 @@ class Lattice(list):
     def harmonic_number(self):
         """Ring harmonic number (full self)"""
         try:
-            return self.periodicity * self._cell_harmnumber
+            return int(self.periodicity * self._cell_harmnumber)
         except AttributeError:
             raise AttributeError('harmonic_number undefined: '
                                  'No cavity found in the lattice') from None
 
     @harmonic_number.setter
     def harmonic_number(self, value):
-        periods = int(self.periodicity)
-        cell_h, rem = divmod(int(value), periods)
-        if rem == 0:
-            self._cell_harmnumber = cell_h
-        else:
-            raise AtError('harmonic number must be a multiple of {}'
-                          .format(periods))
+        cell_h = float(value) / self.periodicity
+        # check on ring
+        if value-round(value) != 0:
+            raise AtError('harmonic number ({}) must be integer'.format(value))
+        # check on cell
+        # if cell_h-round(cell_h) != 0:
+        #     raise AtError('harmonic number ({}) must be a multiple of {}'
+        #                   .format(value, int(self.periodicity)))
+        self._cell_harmnumber = cell_h
 
     @property
     def gamma(self) -> float:
@@ -898,6 +896,14 @@ def params_filter(params, elem_filter: Filter, *args) \
     Yields:
         lattice ``Elements``
 
+    The following keys in ``params`` are set:
+
+    * ``_length``
+    * ``periodicity``
+    * ``energy`` (optional)
+    * ``_frequency`` (optional)
+    * ``harmonic_number`` (optional)
+
     energy is taken from:
         1) The params dictionary
         2) Cavity elements
@@ -928,7 +934,9 @@ def params_filter(params, elem_filter: Filter, *args) \
     if cavities:
         cavities.sort(key=lambda el: el.Frequency)
         c0 = cavities[0]
-        params['_harmnumber'] = getattr(c0, 'HarmNumber', None)
+        params.setdefault('harmonic_number',
+                          getattr(c0, 'HarmNumber', math.nan))
+        # params['_harmnumber'] = getattr(c0, 'HarmNumber', math.nan)
         params['_frequency'] = getattr(c0, 'Frequency', None)
 
     if 'energy' not in params:

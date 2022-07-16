@@ -19,8 +19,9 @@ __all__ = ['load_mat', 'save_mat', 'load_m', 'save_m',
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name', 'Particle': '_particle',
+                     'cell_harmnumber': '_harmcell',
                      'HarmNumber': 'harmonic_number'}
-_param_ignore = {'PassMethod', 'Length'}
+_param_ignore = {'PassMethod', 'Length', 'cavpts'}
 
 # Python to Matlab attribute translation
 _matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
@@ -89,6 +90,8 @@ def ringparam_filter(params: dict, elem_iterator, *args)\
         params:         Lattice building parameters (see :py:class:`.Lattice`)
         elem_iterator:  Iterator over the lattice Elements
 
+    Yields:
+        elem (Element): new Elements
 
     The following keys in ``params`` are used:
 
@@ -96,8 +99,15 @@ def ringparam_filter(params: dict, elem_iterator, *args)\
     **keep_all**    keep RingParam elem_iterator as Markers
     ============    ===================
 
-    Yields:
-        elem (Element): new Elements
+    The following keys in ``params`` are set:
+
+    * ``name``
+    * ``energy``
+    * ``periodicity``
+    * ``_harmnumber`` or
+    * ``harmonic_number``
+    * ``_particle``
+    * ``_radiation``
     """
     keep_all = params.pop('keep_all', False)
     ringparams = []
