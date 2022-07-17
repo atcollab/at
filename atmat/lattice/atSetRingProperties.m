@@ -15,15 +15,16 @@ function ring = atSetRingProperties(ring,varargin)
 %   'Particle'              particle (perticle name or Particle object)
 %   'particle'                  "         "      "
 %   'cavpts'                Location of the main cavities
-%   'rf_frequency'          RF frequency (main cavities) [Hz]
+%   'rf_frequency'          RF frequency (main cavities) [Hz]. Use 'nominal'
+%                           to set the nominal frequency
 %   'rf_timelag'            RF timelag (main cavities) [m]
 %
-% Properties for the full ring ('periods' x cells)
+% Properties for the full ring ('periods' x cells):
 %   'HarmNumber'            Harmonic number (cell_harmnumber * Periodicity)
 %   'harmonic_number'          "       "
 %   'rf_voltage'            RF voltage [V] (cell_rf_voltage * Periodicity)
 %
-% Properties for cell
+% Properties for one cell:
 %   'cell_harmnumber'       Harmonic number (cell)
 %   'cell_rf_voltage'       RF voltage [V] (main cavities)
 %

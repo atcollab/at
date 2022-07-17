@@ -26,15 +26,15 @@ function varargout = atGetRingProperties(ring,varargin)
 %   'mcf'                   Momentum compaction factor "alpha"
 %   'slip_factor'           Slip factor "eta"
 %
-% Properties for the full ring ('periods' x cells)
+% Properties for the full ring ('periods' x cells):
 %   'HarmNumber'            Harmonic number (cell_harmnumber * Periodicity)
 %   'harmonic_number'          "       "
-%   'Circumference'         Circumference [m] (cell_length * Periodicity)
+%   'Circumference'         Ring ircumference [m] (cell_length * Periodicity)
 %   'circumference'         "
 %   'rf_voltage'            RF voltage [V] (cell_rf_voltage * Periodicity)
 %   'revolution_frequency'  Revolution frequency [Hz] (cell_revolution_frequency / Periodicity)
 %
-% Properties for cell
+% Properties for one cell:
 %   'cell_harmnumber'       Harmonic number (cell)
 %   'cell_length'           Cell length [m]
 %   'cell_rf_voltage'       RF voltage [V] (main cavities)
