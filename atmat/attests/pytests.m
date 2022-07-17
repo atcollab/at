@@ -32,7 +32,7 @@ classdef pytests < matlab.unittest.TestCase
 
             function [ring4,ring6]=mload(fpath)
                 mr=atradoff(atloadlattice(fullfile(atroot,'..',fpath)));
-                pr=py.at.load_var(mr',pyargs('keep_all',true));
+                pr=atwritepy(mr,'keep_all',true);
                 ring4.m=mr;
                 ring4.p=pr;
                 ring6.m=atradon(mr);
@@ -101,7 +101,7 @@ classdef pytests < matlab.unittest.TestCase
             a2=cell(lattice.p.find_m44(dp));
             [pm44,~]=deal(a2{:});
             pm44=double(pm44);
-            testCase.verifyEqual(mm44,pm44,AbsTol=2.e-9);
+            testCase.verifyEqual(mm44,pm44,AbsTol=5.e-9);
         end
 
         function m66(testCase,lat2)
@@ -167,19 +167,21 @@ classdef pytests < matlab.unittest.TestCase
 
         function radiation_integrals(testCase,lat)
             lattice=testCase.ring4.(lat);
-            %mintegrals=atsummary(lattice.m,'NoDisplay').integrals(1:5);
-            mintegrals=ringpara(lattice.m).integrals(1:5);
+            mintegrals=atsummary(lattice.m,'NoDisplay').integrals(1:5);
+            %mintegrals=ringpara(lattice.m).integrals(1:5);
             pintegrals=double(lattice.p.get_radiation_integrals());
             testCase.verifyEqual(mintegrals,pintegrals,RelTol=1.E-12);
         end
 
         function ringparameters(testCase,lat2)
             lattice=testCase.ring4.(lat2);
-            mprops=atGetRingProperties(lattice.m);
+            [menergy,mharm,mperiodicity,mgamma]=atGetRingProperties(lattice.m,...
+                'Energy','HarmNumber','Periodicity','gamma');
             mmcf=mcf(lattice.m,0.0);
-            testCase.verifyEqual(mprops.Energy,lattice.p.energy);
-            testCase.verifyEqual(mprops.HarmNumber,double(lattice.p.harmonic_number));
-            testCase.verifyEqual(mprops.Periodicity,double(lattice.p.periodicity));
+            testCase.verifyEqual(menergy,lattice.p.energy);
+            testCase.verifyEqual(mharm,double(lattice.p.harmonic_number));
+            testCase.verifyEqual(mperiodicity,double(lattice.p.periodicity));
+            testCase.verifyEqual(mgamma,double(lattice.p.gamma));
             testCase.verifyEqual(mmcf,lattice.p.mcf,RelTol=1.E-8);
         end
     end
