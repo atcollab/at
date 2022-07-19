@@ -1,5 +1,9 @@
 function githubsetup()
-%GITHUBSETUP    Setup Matlab for AT tests in GitHib Actions
+%GITHUBSETUP    Private. Setup Matlab for AT tests in GitHib Actions
+%
+% This function prepares a workflow in GitHub actions for using AT and
+% calling python from Matlab. There is normally no reason to use it in a
+% user workflow.
 
 savepath('pathdef.m');
 atmexall;
