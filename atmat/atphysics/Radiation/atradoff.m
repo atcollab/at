@@ -33,7 +33,7 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %   OUPUTS
 %   1. RING2     Output ring
 %   2. RADINDEX  Indices of elements with radiation
-%   3. CAVINDEX  Indices of cavities
+%   3. CAVINDEX  Indices of active cavities
 %
 %  See also ATRADON, ATCAVITYON, ATCAVITYOFF
 
