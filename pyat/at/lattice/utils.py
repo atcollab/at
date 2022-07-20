@@ -357,7 +357,7 @@ def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
 
     Returns:
         bool_refs (BoolRefpts):  numpy Array of ``bool`` with length
-        len(ring)+1
+          len(ring)+1
 
     Examples:
 
