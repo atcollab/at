@@ -122,7 +122,30 @@ classdef pytests < matlab.unittest.TestCase
         % preventing the computation if eigenvectors.
         % Hypothesis: library conflict when running python under Matlab
 
+        function tunechrom4(testCase,lat,dp)
+            % test on and off-momentum tunes of 4D lattices
+            lattice=testCase.ring4.(lat);
+            [mtune,mchrom]=tunechrom(lattice.m,'get_chrom',dp=dp);
+            ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
+            pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
+            testCase.verifyEqual(mtune,ptune,AbsTol=2.e-9);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.e-4);
+        end
+
+        function tunechrom6(testCase,lat2,dp)
+            % test on and off-momentum tunes of 6D lattices
+            lattice=testCase.ring6.(lat2);
+            mlat=atsetcavity(lattice.m,frequency='nominal',dp=dp);
+            plat=lattice.p.set_rf_frequency(pyargs(dp=dp,copy=true));
+            [mtune,mchrom]=tunechrom(mlat,'get_chrom');
+            ptune=double(plat.get_tune());
+            pchrom=double(plat.get_chrom());
+            testCase.verifyEqual(mtune,ptune,AbsTol=1.e-9);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=1.e-4);
+        end
+
         function linopt1(testCase,dp)
+            %test linear optics of hmba 4D lattice
             lattice=testCase.ring4.hmba;
             mrefs=true(1,length(lattice.m)+1);
             prefs=py.numpy.array(mrefs);
@@ -155,7 +178,7 @@ classdef pytests < matlab.unittest.TestCase
             mprops=atGetRingProperties(lattice.m);
             mmcf=mcf(lattice.m,0.0);
             testCase.verifyEqual(mprops.Energy,lattice.p.energy);
-            testCase.verifyEqual(mprops.HarmNumber,lattice.p.harmonic_number);
+            testCase.verifyEqual(mprops.HarmNumber,double(lattice.p.harmonic_number));
             testCase.verifyEqual(mprops.Periodicity,double(lattice.p.periodicity));
             testCase.verifyEqual(mmcf,lattice.p.mcf,RelTol=1.E-8);
         end
