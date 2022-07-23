@@ -5,7 +5,7 @@ function [parmelem,pvals] = atparamscan(ring,parmelem,varargin)
 %
 %  See also ATGETRINGPROPERTIES, ATSETRINGPROPERTIES
 
-global GLOBVAL %#ok<GVMIS> 
+global GLOBVAL %#ok<GVMIS>
 
 TWO_PI_ERROR = 1.e-4;
 
@@ -59,8 +59,37 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
             case 'slip_factor'
                 gamma=get_gamma(ring);
                 v=1/gamma/gamma - get_mcf(ring);
+            case 'radiation'
+                radcav=getradcav(ring);
+                v=any(radcav);
+            case 'active_cavity'
+                radcav=getradcav(ring);
+                v=radcav(2);
             otherwise
                 v=parmelem.(param);
+        end
+    end
+
+    function radcav=getradcav(ring)
+        if isfield(store,'radcav')
+            radcav=store.radcav;
+        else
+            % disp('compute radon, cavon');
+            radon=false;
+            cavon=false;
+            for i=1:length(ring)
+                passmethod=ring{i}.PassMethod;
+                if endsWith(passmethod, {'RadPass', 'QuantDiffPass'})
+                    radon=true;
+                    if cavon, break; end
+                end
+                if endsWith(passmethod, 'CavityPass')
+                    cavon=true;
+                    if radon, break; end
+                end
+            end
+            radcav=[radon,cavon];
+            store.radcav=radcav;
         end
     end
 

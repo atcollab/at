@@ -31,6 +31,8 @@ function ring = atSetRingProperties(ring,varargin)
 % Additional custom fields may be added. They can be retrieved by
 % atGetRingProperties and are saved in files.
 %
+% Standard property names are case independent, custom property names are not.
+%
 % For fast access, the ring properties are stored in a RingParam element
 % ideally located in the 1st position of the lattice. If there is no such
 % element, atSetRingProperties will add it.
@@ -112,7 +114,7 @@ end
         switch lower(pname)
             case {'length','class','beta','gamma','cell_length','circumference',...
                     'cell_revolution_frequency','revolution_frequency','brho',...
-                    'mcf','slip_factor'}
+                    'mcf','slip_factor','radiation','active_cavity'}
                 error('AT:Invalid','The property "%s" is read-only',pname);
             case {'famname','name'}
                 parms.FamName=value;

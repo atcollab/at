@@ -25,6 +25,8 @@ function varargout = atGetRingProperties(ring,varargin)
 %   'BRho'                  Particle rigidity [T.m]
 %   'mcf'                   Momentum compaction factor "alpha"
 %   'slip_factor'           Slip factor "eta"
+%   'radiation'             Longitudinal motion (cavities, radiating elements, ...)
+%   'active_cavity'         Presence of an active RF cavity (implies 'radiation')
 %
 % Properties for the full ring ('periods' x cells):
 %   'HarmNumber'            Harmonic number (cell_harmnumber * Periodicity)
@@ -41,6 +43,8 @@ function varargout = atGetRingProperties(ring,varargin)
 %   'cell_revolution_frequency' Revolution frequency [Hz] (cell)
 %
 % Custom properties may be added with atSetRingProperties
+%
+% Standard property names are case independent, custom property names are not.
 %
 % Example:
 % >> [energy, beta] = atGetRingProperties(ring,'Energy','beta');
