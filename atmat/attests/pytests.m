@@ -101,7 +101,7 @@ classdef pytests < matlab.unittest.TestCase
             a2=cell(lattice.p.find_m44(dp));
             [pm44,~]=deal(a2{:});
             pm44=double(pm44);
-            testCase.verifyEqual(mm44,pm44,AbsTol=5.e-9);
+            testCase.verifyEqual(mm44,pm44,AbsTol=2.e-9);
         end
 
         function m66(testCase,lat2)
@@ -168,20 +168,18 @@ classdef pytests < matlab.unittest.TestCase
         function radiation_integrals(testCase,lat)
             lattice=testCase.ring4.(lat);
             mintegrals=atsummary(lattice.m,'NoDisplay').integrals(1:5);
-            %mintegrals=ringpara(lattice.m).integrals(1:5);
             pintegrals=double(lattice.p.get_radiation_integrals());
             testCase.verifyEqual(mintegrals,pintegrals,RelTol=1.E-12);
         end
 
         function ringparameters(testCase,lat2)
             lattice=testCase.ring4.(lat2);
-            [menergy,mharm,mperiodicity,mgamma]=atGetRingProperties(lattice.m,...
-                'Energy','HarmNumber','Periodicity','gamma');
-            mmcf=mcf(lattice.m,0.0);
+            [menergy,mharm,mperiodicity,mgamma,mmcf]=atGetRingProperties(lattice.m,...
+                'Energy','HarmNumber','Periodicity','gamma','mcf');
             testCase.verifyEqual(menergy,lattice.p.energy);
             testCase.verifyEqual(mharm,double(lattice.p.harmonic_number));
             testCase.verifyEqual(mperiodicity,double(lattice.p.periodicity));
-            testCase.verifyEqual(mgamma,double(lattice.p.gamma));
+            testCase.verifyEqual(mgamma,lattice.p.gamma);
             testCase.verifyEqual(mmcf,lattice.p.mcf,RelTol=1.E-8);
         end
     end
