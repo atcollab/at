@@ -60,36 +60,23 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
                 gamma=get_gamma(ring);
                 v=1/gamma/gamma - get_mcf(ring);
             case 'radiation'
-                radcav=getradcav(ring);
-                v=any(radcav);
+                v=getradcav(ring,{'RadPass', 'QuantDiffPass', 'CavityPass'});
             case 'active_cavity'
-                radcav=getradcav(ring);
-                v=radcav(2);
+                v=getradcav(ring,'CavityPass');
             otherwise
                 v=parmelem.(param);
         end
     end
 
-    function radcav=getradcav(ring)
-        if isfield(store,'radcav')
-            radcav=store.radcav;
-        else
-            % disp('compute radon, cavon');
-            radon=false;
-            cavon=false;
-            for i=1:length(ring)
-                passmethod=ring{i}.PassMethod;
-                if endsWith(passmethod, {'RadPass', 'QuantDiffPass'})
-                    radon=true;
-                    if cavon, break; end
-                end
-                if endsWith(passmethod, 'CavityPass')
-                    cavon=true;
-                    if radon, break; end
-                end
+    function found=getradcav(ring, pattern)
+        % disp('compute radon, cavon');
+        found=false;
+        for i=1:length(ring)
+            passmethod=ring{i}.PassMethod;
+            if endsWith(passmethod, pattern)
+                found=true;
+                break;
             end
-            radcav=[radon,cavon];
-            store.radcav=radcav;
         end
     end
 
