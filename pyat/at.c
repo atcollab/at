@@ -281,7 +281,9 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
         if (particle != NULL) {
             PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
             PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
-            PyObject *bcurrent = PyObject_GetAttrString(particle, "current");
+            PyObject *bcurrent = PyObject_GetAttrString(particle, "beam_current");
+            PyArrayObject *fpattern = (PyArrayObject *) PyObject_GetAttrString(particle, "_fillpattern");
+            PyArrayObject *bweights = (PyArrayObject *) PyObject_GetAttrString(particle, "_weights");
             if (prest_energy != NULL) {
                 param->rest_energy = PyFloat_AsDouble(prest_energy);
                 Py_DECREF(prest_energy);
@@ -291,9 +293,27 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
                 Py_DECREF(pcharge);
             }
             if (bcurrent != NULL) {
-                param->current = PyFloat_AsDouble(bcurrent);
+                param->beam_current = PyFloat_AsDouble(bcurrent);
                 Py_DECREF(bcurrent);
             }
+            if (fpattern != NULL && bweights != NULL) {
+                double *fillpattern = PyArray_DATA(fpattern);
+                int nbunch = PyArray_SIZE(fpattern);
+                double *weights = PyArray_DATA(bweights);
+                double ws = 0.0;  
+                double bunch_currents[nbunch];              
+                int i;
+                for(i=0;i<nbunch;i++){                   
+                    ws += weights[i];
+                };
+                for(i=0;i<nbunch;i++){                   
+                    bunch_currents[i]=param->beam_current*fillpattern[i]*weights[i]/ws;
+                };
+                param->nbunch = nbunch;
+                param->bunch_currents = bunch_currents;
+                Py_DECREF(fpattern);
+                Py_DECREF(bweights);
+            }                        
             Py_DECREF(particle);
          }
     }
@@ -505,6 +525,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     param.RingLength = lattice_length;
+    param.bunch_spacing = param.RingLength/param.nbunch;
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
     }
@@ -634,6 +655,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 
     param.RingLength = 0.0;
     param.T0 = 0.0;
+    param.bunch_spacing = 0.0;
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;

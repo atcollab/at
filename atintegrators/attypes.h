@@ -16,11 +16,10 @@ struct parameters
   double energy;
   double rest_energy;
   double charge;
-  double current;
+  double beam_current;
   double nbunch;
   double bunch_spacing;
-  double *fill_pattern;
-  double *bunch_weights;
+  double *bunch_currents;
 };
 
 #endif /*ATTYPES_H*/

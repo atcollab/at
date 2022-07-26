@@ -41,10 +41,10 @@ class Particle(object):
         self._rest_energy = numpy.array(kwargs.pop('rest_energy'), dtype=float)
         self._charge = kwargs.pop('charge')
         # Load parameters of the beam
-        self.current = kwargs.pop('current',0.0)
+        self.beam_current = kwargs.pop('beam_current',0.0)
         self._harmn = kwargs.pop('harmonic_number', None)
-        self._fillpattern = kwargs.pop('fillpattern',numpy.ones(1))
-        self._weights = kwargs.pop('weights', None)
+        self._fillpattern = kwargs.pop('fillpattern', numpy.ones(1))
+        self._weights = kwargs.pop('weights', numpy.ones(1))
         #load remaining keyword arguments
         for (key, val) in kwargs.items():
             setattr(self, key, val)
@@ -122,8 +122,4 @@ class Particle(object):
         
     @property
     def bunch_currents(self):
-        if self._weights is None:
-            return self.current/self.nbunch*self._fillpattern
-        else:
-            return self.current*self._weights/numpy.sum(self._weights)
-
+        return numpy.squeeze(self.current*self._weights/numpy.sum(self._weights))
