@@ -128,7 +128,7 @@ def get_timelag_fromU0(ring: Lattice,
         return vals[0]
 
     def eq(x, freq, rfv, tl0, u0):
-        omf = 2*numpy.pi*freq/clight   
+        omf = 2*numpy.pi*freq/clight
         eq1 = numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0
         eq2 = numpy.sum(-omf*rfv*numpy.cos(omf*(x-tl0)))
         if eq2 > 0:
@@ -152,15 +152,15 @@ def get_timelag_fromU0(ring: Lattice,
         tt0 = tl0[numpy.argmin(freq)]
         ts = ctmax/numpy.pi*numpy.arcsin(u0/numpy.sum(rfv))
         bounds = (-ctmax+tt0, ctmax+tt0)
-        args = (freq,rfv,tl0,u0)
-        r = [least_squares(eq,bounds[0]/4-ts, args=args, bounds=bounds),
-             least_squares(eq,bounds[1]/4-ts, args=args, bounds=bounds)]
+        args = (freq, rfv, tl0, u0)
+        r = [least_squares(eq, bounds[0]/4-ts, args=args, bounds=bounds),
+             least_squares(eq, bounds[1]/4-ts, args=args, bounds=bounds)]
         res = numpy.array([abs(ri.fun[0]) for ri in r])
         ok = res < 1.0e-6
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '
                           'RF settings')
-        if numpy.all(ok) and abs(r[0].x[0]-r[1].x[0])>1.0e-6:
+        if numpy.all(ok) and abs(r[0].x[0]-r[1].x[0]) > 1.0e-6:
             warn(AtWarning('More than one solution found for Phis: use '
                            'best fit, please check RF settings'))
         ts = -r[numpy.argmin(res)].x[0]
@@ -169,7 +169,7 @@ def get_timelag_fromU0(ring: Lattice,
         vrf = numpy.sum(rfv)
         timelag = clight/(2*numpy.pi*frf)*numpy.arcsin(u0/vrf)
         ts = timelag - tml
-        timelag *= numpy.ones(refpts_len(ring,cavpts))
+        timelag *= numpy.ones(refpts_len(ring, cavpts))
     return timelag, ts
 
 
