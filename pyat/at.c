@@ -281,6 +281,7 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
         if (particle != NULL) {
             PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
             PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
+            PyObject *bcurrent = PyObject_GetAttrString(particle, "current");
             if (prest_energy != NULL) {
                 param->rest_energy = PyFloat_AsDouble(prest_energy);
                 Py_DECREF(prest_energy);
@@ -288,6 +289,10 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
             if (pcharge != NULL) {
                 param->charge = PyFloat_AsDouble(pcharge);
                 Py_DECREF(pcharge);
+            }
+            if (bcurrent != NULL) {
+                param->current = PyFloat_AsDouble(bcurrent);
+                Py_DECREF(bcurrent);
             }
             Py_DECREF(particle);
          }

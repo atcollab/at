@@ -40,6 +40,12 @@ class Particle(object):
         # Use a numpy scalar to allow division by zero
         self._rest_energy = numpy.array(kwargs.pop('rest_energy'), dtype=float)
         self._charge = kwargs.pop('charge')
+        # Load parameters of the beam
+        self.current = kwargs.pop('current',0.0)
+        self._harmn = kwargs.pop('harmonic_number', None)
+        self._fillpattern = kwargs.pop('fillpattern',numpy.ones(1))
+        self._weights = kwargs.pop('weights', None)
+        #load remaining keyword arguments
         for (key, val) in kwargs.items():
             setattr(self, key, val)
 
@@ -47,23 +53,14 @@ class Particle(object):
         attrs = vars(self).copy()
         attrs['rest_energy'] = attrs.pop('_rest_energy')
         attrs['charge'] = attrs.pop('_charge')
+        attrs['nbunch'] = self.nbunch
+        attrs['bunch_currents'] = self.bunch_currents
         return attrs
 
     def __repr__(self):
-        if self.name in self._known:
-            return "Particle('{0}')".format(self.name)
-        else:
-            attrs = self.to_dict()
-            name = attrs.pop('name')
-            args = ', '.join('{0}={1!r}'.format(k, v)
-                             for k, v in attrs.items())
-            return "Particle('{0}', {1})".format(name, args)
-
-    def __str__(self):
-        if self.name in self._known:
-            return self.name
-        else:
-            return self.__repr__()
+        attrs = dict((k, v) for (k, v) in self.to_dict().items()
+                     if not k.startswith('_'))
+        return '{0}({1})'.format(self.__class__.__name__, attrs)
 
     # Use properties so that they are read-only
     @property
@@ -75,15 +72,6 @@ class Particle(object):
     def charge(self) -> float:
         """Particle charge [elementary charge]"""
         return self._charge
-
-        
-class Beam(object):
-
-    def __init__(self, **kwargs):
-        self.current = kwargs.pop('current',0.0)
-        self._harmn = kwargs.pop('harmonic_number', None)
-        self._fillpattern = kwargs.pop('fillpattern',numpy.ones(1))
-        self._weights = kwargs.pop('weights', None)
         
     @property    
     def harmonic_number(self):
@@ -104,14 +92,14 @@ class Beam(object):
                              "nbunch and fillpattern set to 1"))    
             fp = numpy.ones(1)        
         elif numpy.isscalar(bunches):
-            if bunches ==1:
+            if bunches == 1:
                 fp = numpy.ones(1)
             else:
                 bs = int(self._harmn/bunches)
                 fp = numpy.zeros((self._harmn,))
-                fp[0::bs]=1
+                fp[0::bs] = 1
         else:
-            assert len(bunches)==self._harmn, \
+            assert len(bunches) == self._harmn, \
                 'Fill pattern has to be of shape ({0},)'.format(self._harmn)
             assert numpy.all((bunches==0) | (bunches==1)), \
                 'Fill pattern can only contain 0 or 1'                       
@@ -138,11 +126,4 @@ class Beam(object):
             return self.current/self.nbunch*self._fillpattern
         else:
             return self.current*self._weights/numpy.sum(self._weights)
-        
-    def __repr__(self):
-        attrs = vars(self).copy()
-        attrs['nbunch'] = self.nbunch
-        attrs['bunch_currents'] = self.bunch_currents
-        attrs = dict((k, v) for (k, v) in attrs.items()
-                     if not k.startswith('_'))
-        return '{0}({1})'.format(self.__class__.__name__, attrs)
+
