@@ -298,21 +298,22 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
             }
             if (fpattern != NULL && bweights != NULL) {
                 double *fillpattern = PyArray_DATA(fpattern);
-                int nbunch = PyArray_SIZE(fpattern);
                 double *weights = PyArray_DATA(bweights);
+                int nbunch = PyArray_SIZE(fpattern);              
                 double ws = 0.0;  
-                double bunch_currents[nbunch];              
+                double *bcurrents = malloc(nbunch*sizeof(double));              
                 int i;
                 for(i=0;i<nbunch;i++){                   
                     ws += weights[i];
                 };
-                for(i=0;i<nbunch;i++){                   
-                    bunch_currents[i]=param->beam_current*fillpattern[i]*weights[i]/ws;
+                for(i=0;i<nbunch;i++){              
+                    bcurrents[i]=param->beam_current*fillpattern[i]*weights[i]/ws;
                 };
-                param->nbunch = nbunch;
-                param->bunch_currents = bunch_currents;
+                param->nbunch = (double)nbunch;
+                param->bunch_currents = bcurrents;
                 Py_DECREF(fpattern);
                 Py_DECREF(bweights);
+                free(bcurrents);
             }                        
             Py_DECREF(particle);
          }

@@ -105,6 +105,12 @@ class Particle(object):
                 'Fill pattern can only contain 0 or 1'                       
             fp = numpy.array(bunches)
         self._fillpattern = fp
+        if len(self._weights)==1:
+            self._weights = numpy.ones(int(self.nbunch))*self._weights 
+        elif len(self._weights) != len(self._fillpattern):
+            warn(UserWarning("Weights and fillpattern have inconsistent "
+                             "lengths, setting all weights to 1")) 
+            self._weights = numpy.ones(int(self.nbunch))            
         
     @property    
     def weights(self):
@@ -122,4 +128,5 @@ class Particle(object):
         
     @property
     def bunch_currents(self):
-        return numpy.squeeze(self.current*self._weights/numpy.sum(self._weights))
+        return numpy.squeeze(self.beam_current*self.fillpattern*
+                             self._weights/numpy.sum(self._weights))
