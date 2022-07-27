@@ -304,7 +304,7 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
                 double *bcurrents = malloc(nbunch*sizeof(double));              
                 int i;
                 for(i=0;i<nbunch;i++){                   
-                    ws += weights[i];
+                    ws += weights[i]*fillpattern[i];
                 };
                 for(i=0;i<nbunch;i++){              
                     bcurrents[i]=param->beam_current*fillpattern[i]*weights[i]/ws;

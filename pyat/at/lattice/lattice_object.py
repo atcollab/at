@@ -160,7 +160,7 @@ class Lattice(list):
         elif '_energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
-            kwargs.pop('_particle', None)      
+            kwargs.pop('_particle', None)
         # set attributes
         self.update(kwargs)
 
@@ -170,7 +170,7 @@ class Lattice(list):
         elif frequency is not None:
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
-            
+
         # Needed to constraint the fillpattern length
         if hasattr(self, '_cell_harmnumber'):
             self._particle.harmonic_number = self.harmonic_number
@@ -437,10 +437,17 @@ class Lattice(list):
     @particle.setter
     def particle(self, particle: Union[str, Particle]):
         if isinstance(particle, Particle):
-            self._particle = particle
+            if particle.harmonic_number is None or \
+                   particle.harmonic_number == self.harmonic_number:
+                self._particle = particle
+            else:
+                raise AtError('particle.harmonic_number={1}. It has to be '
+                              'None or equal to ring.harmonic_number={0}'
+                              .format(self.harmonic_number,
+                                      particle.harmonic_number))
         else:
             self._particle = Particle(particle)
-            
+
     @property
     def harmonic_number(self):
         """Ring harmonic number (full self)"""
@@ -456,6 +463,7 @@ class Lattice(list):
         cell_h, rem = divmod(int(value), periods)
         if rem == 0:
             self._cell_harmnumber = cell_h
+            self._particle.harmonic_number = self.harmonic_number
         else:
             raise AtError('harmonic number must be a multiple of {}'
                           .format(periods))

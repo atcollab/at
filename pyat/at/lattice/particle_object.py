@@ -8,7 +8,7 @@ from typing import Optional, Dict
 class Particle(object):
     """
     Particle object: it defines the properties of the particles circulating
-    in a ring
+    in a ring and the beam properties
     """
     _known = dict(
         relativistic=dict(rest_energy=0.0, charge=-1.0),
@@ -28,6 +28,18 @@ class Particle(object):
         Keyword Arguments:
             rest_energy:    Particle rest energy [ev]
             charge:         Particle charge [elementary charge]
+            beam_current    Total beam current [A]
+            harmonic_number ring harmonic number to generate the fill
+                              pattern (default=``None``)
+                              A change of harmonic number will reset
+                              ``fillpattern`` to its default value
+            fillpattern     vector of 1 and 0 to define filled buckets
+                              (default=``numpy.ones(1)``) of a scalar to define
+                              the number of equidistant bunches.
+                              Changing the length of ``fillpattern`` will reset
+                              all weights to 1
+            weights         vector of double to define bunch weights
+                              (default=``numpy.ones(len(fillpattern))``)
             *:              Other keywords will be set as attributes of the
                               particle
         """
@@ -41,11 +53,12 @@ class Particle(object):
         self._rest_energy = numpy.array(kwargs.pop('rest_energy'), dtype=float)
         self._charge = kwargs.pop('charge')
         # Load parameters of the beam
-        self.beam_current = kwargs.pop('beam_current',0.0)
+        self.beam_current = kwargs.pop('beam_current', 0.0)
         self._harmn = kwargs.pop('harmonic_number', None)
         self._fillpattern = kwargs.pop('fillpattern', numpy.ones(1))
-        self._weights = kwargs.pop('weights', numpy.ones(1))
-        #load remaining keyword arguments
+        self._weights = kwargs.pop('weights',
+                                   numpy.ones(len(self._fillpattern)))
+        # load remaining keyword arguments
         for (key, val) in kwargs.items():
             setattr(self, key, val)
 
@@ -72,16 +85,17 @@ class Particle(object):
     def charge(self) -> float:
         """Particle charge [elementary charge]"""
         return self._charge
-        
-    @property    
+
+    @property
     def harmonic_number(self):
         return self._harmn
-        
-    @harmonic_number.setter    
+
+    @harmonic_number.setter
     def harmonic_number(self, harmn):
-        self._harmn  = harmn   
-      
-    @property    
+        self._harmn = harmn
+        self.fillpattern = 1
+
+    @property
     def fillpattern(self):
         return self._fillpattern
 
@@ -89,8 +103,8 @@ class Particle(object):
     def fillpattern(self, bunches):
         if (self._harmn is None):
             warn(UserWarning("Harmonic number not set in Beam(), "
-                             "nbunch and fillpattern set to 1"))    
-            fp = numpy.ones(1)        
+                             "nbunch and fillpattern set to 1"))
+            fp = numpy.ones(1)
         elif numpy.isscalar(bunches):
             if bunches == 1:
                 fp = numpy.ones(1)
@@ -101,32 +115,29 @@ class Particle(object):
         else:
             assert len(bunches) == self._harmn, \
                 'Fill pattern has to be of shape ({0},)'.format(self._harmn)
-            assert numpy.all((bunches==0) | (bunches==1)), \
-                'Fill pattern can only contain 0 or 1'                       
+            assert numpy.all((bunches == 0) | (bunches == 1)), \
+                'Fill pattern can only contain 0 or 1'
             fp = numpy.array(bunches)
+        if len(fp) != len(self._fillpattern):
+            self._weights = numpy.ones(len(self._fillpattern))
         self._fillpattern = fp
-        if len(self._weights)==1:
-            self._weights = numpy.ones(int(self.nbunch))*self._weights 
-        elif len(self._weights) != len(self._fillpattern):
-            warn(UserWarning("Weights and fillpattern have inconsistent "
-                             "lengths, setting all weights to 1")) 
-            self._weights = numpy.ones(int(self.nbunch))            
-        
-    @property    
+
+    @property
     def weights(self):
         return self._weights
 
     @weights.setter
     def weights(self, weights):
-        assert len(weights)==len(self._fillpattern), \
-            'Weights and fill pattern must have the same length'                   
+        assert len(weights) == len(self._fillpattern), \
+            'Weights and fill pattern must have the same length'
         self._weights = numpy.array(weights)
-        
+
     @property
     def nbunch(self):
         return numpy.sum(self._fillpattern)
-        
+
     @property
     def bunch_currents(self):
-        return numpy.squeeze(self.beam_current*self.fillpattern*
-                             self._weights/numpy.sum(self._weights))
+        return numpy.squeeze(self.beam_current*self.fillpattern *
+                             self._weights/numpy.sum(self._weights *
+                                                     self._fillpattern))
