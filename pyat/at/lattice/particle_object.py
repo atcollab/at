@@ -67,13 +67,20 @@ class Particle(object):
         attrs['rest_energy'] = attrs.pop('_rest_energy')
         attrs['charge'] = attrs.pop('_charge')
         attrs['nbunch'] = self.nbunch
-        attrs['bunch_currents'] = self.bunch_currents
+        attrs = dict((k, v) for (k, v) in attrs.items()
+                     if not k.startswith('_'))
         return attrs
 
     def __repr__(self):
-        attrs = dict((k, v) for (k, v) in self.to_dict().items()
-                     if not k.startswith('_'))
-        return '{0}({1})'.format(self.__class__.__name__, attrs)
+        if self.name in self._known:
+            return ("Particle('{0}', beam_current={1}, nbunch={2})"
+                   .format(self.name, self.beam_current, self.nbunch))
+        else:
+            attrs = self.to_dict()
+            name = attrs.pop('name')
+            args = ', '.join('{0}={1!r}'.format(k,v)
+                             for k, v in attrs.items)
+            return "Particle('{0}', {1})".format(name, args)
 
     # Use properties so that they are read-only
     @property
