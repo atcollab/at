@@ -103,7 +103,8 @@ def get_energy_loss(ring: Lattice,
 # noinspection PyPep8Naming
 def get_timelag_fromU0(ring: Lattice,
                        method: Optional[ELossMethod] = ELossMethod.TRACKING,
-                       cavpts: Optional[Refpts] = None) -> Tuple[float, float]:
+                       cavpts: Optional[Refpts] = None,
+                       divider: Optional[float] = 4) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -150,17 +151,20 @@ def get_timelag_fromU0(ring: Lattice,
     except AtError:
         ctmax = clight/numpy.amin(freq)/2
         tt0 = tl0[numpy.argmin(freq)]
-        ts = ctmax/numpy.pi*numpy.arcsin(u0/numpy.sum(rfv))
-        bounds = (-ctmax+tt0, ctmax+tt0)
-        args = (freq, rfv, tl0, u0)
-        r = [least_squares(eq, bounds[0]/4-ts, args=args, bounds=bounds),
-             least_squares(eq, bounds[1]/4-ts, args=args, bounds=bounds)]
+        bounds = (-ctmax, ctmax)
+        args = (freq,rfv,tl0,u0)
+        r = []
+        for i in range(divider):
+            fact = (i+1)/divider
+            r.append(least_squares(eq,bounds[0]*fact+tt0, args=args, bounds=bounds+tt0))
+            r.append(least_squares(eq,bounds[1]*fact+tt0, args=args, bounds=bounds+tt0))
         res = numpy.array([abs(ri.fun[0]) for ri in r])
         ok = res < 1.0e-6
+        vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])    
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '
                           'RF settings')
-        if numpy.all(ok) and abs(r[0].x[0]-r[1].x[0]) > 1.0e-6:
+        if len(numpy.unique(vals[ok])) > 1:
             warn(AtWarning('More than one solution found for Phis: use '
                            'best fit, please check RF settings'))
         ts = -r[numpy.argmin(res)].x[0]
