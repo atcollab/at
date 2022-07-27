@@ -341,36 +341,36 @@ def checkname(pattern: str) -> ElementFilter:
 def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
     # noinspection PyUnresolvedReferences
     """
-        get_cells(ring, filtfunc)
-        get_cells(ring, attrname)
-        get_cells(ring, attrname, attrvalue)
-        Returns a bool array of element indices, selecting ring elements.
+    get_cells(ring, filtfunc)
+    get_cells(ring, attrname)
+    get_cells(ring, attrname, attrvalue)
+    Returns a bool array of element indices, selecting ring elements.
 
-        Parameters:
-            ring (Sequence[Element]):       Lattice description
-            filtfunc (ElementFilter):   Filter function. Selects ``Elements``
-              satisfying the filter function
-            attrname (str):   Attribute name
-            attrvalue (Any):  Attribute value. If absent, select the
-              presence of an ``attrname`` attribute. If present, select
-              ``Elements`` with ``attrname`` == ``attrvalue``.
+    Parameters:
+        ring (Sequence[Element]):       Lattice description
+        filtfunc (ElementFilter):   Filter function. Selects ``Elements``
+          satisfying the filter function
+        attrname (str):   Attribute name
+        attrvalue (Any):  Attribute value. If absent, select the
+          presence of an ``attrname`` attribute. If present, select
+          ``Elements`` with ``attrname`` == ``attrvalue``.
 
-        Returns:
-            bool_refs (BoolRefpts):  numpy Array of ``bool`` with the same
-              length as ``ring``
+    Returns:
+        bool_refs (BoolRefpts):  numpy Array of ``bool`` with length
+          len(ring)+1
 
-        Examples:
+    Examples:
 
-            >>> refpts = getcells(ring, 'Frequency')
+        >>> refpts = get_cells(ring, 'Frequency')
 
-            Returns a numpy array of booleans where all elements having a
-            ``Frequency`` attribute are True
+        Returns a numpy array of booleans where all elements having a
+        ``Frequency`` attribute are True
 
-            >>> refpts = getcells(ring, 'K', 0.0)
+        >>> refpts = get_cells(ring, 'K', 0.0)
 
-            Returns a numpy array of booleans where all elements having a ``K``
-            attribute equal to 0.0 are True
-        """
+        Returns a numpy array of booleans where all elements having a ``K``
+        attribute equal to 0.0 are True
+    """
     testf = args[0] if callable(args[0]) else checkattr(*args)
     return numpy.append(numpy.fromiter(map(testf, ring), dtype=bool,
                                        count=len(ring)), False)

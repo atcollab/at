@@ -129,7 +129,6 @@ class Lattice(list):
                 runs through ``ringparam_filter(params, *args)``, looks for
                 energy and periodicity if not yet defined.
 """
-
         if iterator is None:
             arg1, = args or [[]]  # accept 0 or 1 argument
             if isinstance(arg1, Lattice):
@@ -147,14 +146,10 @@ class Lattice(list):
         kwargs.setdefault('_particle', Particle())
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
-        cell_h = kwargs.pop('_harmnumber', None)
         cell_length = kwargs.pop('_length', None)
+        cell_h = kwargs.pop('_harmnumber', math.nan)
+        ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
 
-        if 'harmonic_number' in kwargs:
-            cell_h, rem = divmod(kwargs.pop('harmonic_number'), periodicity)
-            if rem != 0:
-                raise AtError('harmonic number must be a multiple of {}'
-                              .format(periodicity))
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
         elif '_energy' not in kwargs:
@@ -165,11 +160,11 @@ class Lattice(list):
         self.update(kwargs)
 
         # Setting the harmonic number is delayed to have self.beta available
-        if cell_h is not None:
-            self._cell_harmnumber = cell_h
-        elif frequency is not None:
+        if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
+        elif not math.isnan(ring_h):
+            self.harmonic_number = ring_h
 
         # Needed to constraint the fillpattern length
         if hasattr(self, '_cell_harmnumber'):
@@ -218,8 +213,7 @@ class Lattice(list):
         return newring
 
     def __iadd__(self, elems):
-        elist = list(self._addition_filter({}, elems))
-        return super(Lattice, self).__iadd__(elist)
+        return super(Lattice, self).__iadd__(self._addition_filter(elems))
 
     def __mul__(self, n):
         """Repeats n times the lattice"""
@@ -236,9 +230,10 @@ class Lattice(list):
                        itertools.chain(*itertools.repeat(self, n)),
                        iterator=self.attrs_filter, periodicity=periodicity)
 
-    def _addition_filter(self, params: Dict, elems: Iterable[Element]):
+    def _addition_filter(self, elems: Iterable[Element]):
         cavities = []
         length = 0.0
+        params = {}
 
         for elem in type_filter(params, elems):
             if isinstance(elem, elements.RFCavity):
@@ -264,12 +259,16 @@ class Lattice(list):
 
     def insert(self, idx: SupportsIndex, elem: Element):
         # noinspection PyUnusedLocal
-        elist = list(self._addition_filter({}, [elem]))
-        super(Lattice, self).insert(idx, elem)
+        # scan the new element to update it
+        elist = list(self._addition_filter([elem]))
+        super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element]):
-        elist = list(self._addition_filter({}, elems))
-        super(Lattice, self).extend(elist)
+        if hasattr(self, '_energy'):
+            # When unpickling a Lattice, extend is called before the lattice
+            # is initialized. So skip this.
+            elems = self._addition_filter(elems)
+        super().extend(elems)
 
     def append(self, elem: Element):
         self.extend([elem])
@@ -452,7 +451,7 @@ class Lattice(list):
     def harmonic_number(self):
         """Ring harmonic number (full self)"""
         try:
-            return self.periodicity * self._cell_harmnumber
+            return int(self.periodicity * self._cell_harmnumber)
         except AttributeError:
             raise AttributeError('harmonic_number undefined: '
                                  'No cavity found in the lattice') from None
@@ -909,6 +908,14 @@ def params_filter(params, elem_filter: Filter, *args) \
     Yields:
         lattice ``Elements``
 
+    The following keys in ``params`` are set:
+
+    * ``_length``
+    * ``periodicity``
+    * ``energy`` (optional)
+    * ``_frequency`` (optional)
+    * ``harmonic_number`` (optional)
+
     energy is taken from:
         1) The params dictionary
         2) Cavity elements
@@ -939,7 +946,9 @@ def params_filter(params, elem_filter: Filter, *args) \
     if cavities:
         cavities.sort(key=lambda el: el.Frequency)
         c0 = cavities[0]
-        params['_harmnumber'] = getattr(c0, 'HarmNumber', None)
+        params.setdefault('harmonic_number',
+                          getattr(c0, 'HarmNumber', math.nan))
+        # params['_harmnumber'] = getattr(c0, 'HarmNumber', math.nan)
         params['_frequency'] = getattr(c0, 'Frequency', None)
 
     if 'energy' not in params:

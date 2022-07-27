@@ -32,7 +32,7 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
             max. amplitude
           * :py:attr:`.GridMode.RECURSIVE`: initial step
         nturns (int):       Number of turns for the tracking
-        refpts (Refpts):    Observation points. Default: start of the machine
+        obspt (Refpts):    Observation points. Default: start of the machine
         dp (float):         Static momentum offset
         offset:             Initial orbit. Default: closed orbit
         bounds:             Defines the tracked range: range=bounds*amplitude.

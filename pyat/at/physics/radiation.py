@@ -202,7 +202,7 @@ def ohmi_envelope(ring: Lattice, refpts: Optional[Refpts] = None,
 def get_radiation_integrals(ring, dp: Optional[float] = None,
                             twiss=None, **kwargs)\
         -> Tuple[float, float, float, float, float]:
-    """Computes the 5 radiation integrals for uncoupled lattices.
+    r"""Computes the 5 radiation integrals for uncoupled lattices.
 
     Parameters:
         ring:   Lattice description
