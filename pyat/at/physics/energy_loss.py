@@ -74,9 +74,6 @@ def get_energy_loss(ring: Lattice,
                                      sextupole_pass=None,
                                      octupole_pass=None,
                                      copy=True)
-        diff_elem = ringtmp.get_elements('Diffusion')
-        for de in diff_elem:
-            ringtmp.remove(de)
 
         o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
                            refpts=len(ringtmp)))
@@ -143,8 +140,7 @@ def get_timelag_fromU0(ring: Lattice,
     freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
     tl0 = numpy.array([cav.TimeLag for cav in ring.select(cavpts)])
-    if u0 > numpy.sum(rfv):
-        raise AtError('Not enough RF voltage: unstable ring')
+
     try:
         frf = singlev(freq)
         tml = singlev(tl0)
@@ -170,6 +166,8 @@ def get_timelag_fromU0(ring: Lattice,
         ts = -r[numpy.argmin(res)].x[0]
         timelag = ts+tl0
     else:
+        if u0 > numpy.sum(rfv):
+            raise AtError('Not enough RF voltage: unstable ring')
         vrf = numpy.sum(rfv)
         timelag = clight/(2*numpy.pi*frf)*numpy.arcsin(u0/vrf)
         ts = timelag - tml
