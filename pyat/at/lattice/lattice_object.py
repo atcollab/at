@@ -456,17 +456,19 @@ class Lattice(list):
         except AttributeError:
             raise AttributeError('harmonic_number undefined: '
                                  'No cavity found in the lattice') from None
-
+                          
     @harmonic_number.setter
     def harmonic_number(self, value):
-        periods = int(self.periodicity)
-        cell_h, rem = divmod(int(value), periods)
-        if rem == 0:
-            self._cell_harmnumber = cell_h
-            self._particle.harmonic_number = self.harmonic_number
-        else:
-            raise AtError('harmonic number must be a multiple of {}'
-                          .format(periods))
+        cell_h = float(value) / self.periodicity
+        # check on ring
+        if value-round(value) != 0:
+            raise AtError('harmonic number ({}) must be integer'.format(value))
+        # check on cell
+        # if cell_h-round(cell_h) != 0:
+        #     raise AtError('harmonic number ({}) must be a multiple of {}'
+        #                   .format(value, int(self.periodicity)))
+        self._cell_harmnumber = cell_h
+        self._particle.harmonic_number = self.harmonic_number
 
     @property
     def gamma(self) -> float:
