@@ -7,8 +7,8 @@ from typing import Optional, Tuple
 from scipy.linalg import inv, det, solve_sylvester
 from at.constants import clight, e_mass
 from at.lattice import Lattice, check_radiation, Refpts
-from at.lattice import Element, Dipole, Wiggler, DConstant, Multipole
-from at.lattice import get_refpts, get_value_refpts
+from at.lattice import QuantDiffElement, Dipole, Wiggler, Multipole
+from at.lattice import get_refpts, get_value_refpts, DConstant
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
@@ -379,7 +379,7 @@ def quantdiffmat(ring: Lattice,
 
 @check_radiation(True)
 def gen_quantdiff_elem(ring: Lattice,
-                       orbit: Optional[Orbit] = None) -> Element:
+                       orbit: Optional[Orbit] = None) -> QuantDiffElement:
     """Generates a quantum diffusion element
 
     Parameters:
@@ -392,7 +392,7 @@ def gen_quantdiff_elem(ring: Lattice,
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
-    diff_elem = Element('Diffusion', Lmatp=lmat, PassMethod='QuantDiffPass')
+    diff_elem = QuantDiffElement('Diffusion', lmat)
     return diff_elem
 
 

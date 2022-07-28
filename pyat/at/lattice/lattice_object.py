@@ -576,7 +576,7 @@ class Lattice(list):
                 return octupole_func(elem)
             elif isinstance(elem, elements.Multipole):
                 return multipole_func(elem)
-            elif elem.PassMethod == 'QuantDiffPass':
+            elif isinstance(elem, elements.QuantDiffElement):
                 return diffusion_func(elem)
             else:
                 return None
