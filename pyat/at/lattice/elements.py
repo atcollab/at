@@ -762,23 +762,5 @@ class Wiggler(LongElement):
         self.NVharm = self.Bx.shape[1]
 
 
-class QuantDiffElement(Element):
-
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Lmatp']
-    _conversions = dict(Element._conversions, Lmatp=_array66)
-    
-    def __init__(self, family_name: str, Lmatp: [numpy.array((6,6))], **kwargs):
-        """
-        Args:
-            family_name:    Name of the element
-            Lmatp      :    Diffusion matrix for generation see 
-                               ``at.physics.radiation.gen_quandiff_elem``
-
-        Default PassMethod: ``QuantDiffPass``
-        """
-        kwargs.setdefault('PassMethod', 'QuantDiffPass')
-        super(QuantDiffElement, self).__init__(family_name, Lmatp=Lmatp, **kwargs)
-
-
 CLASS_MAP = dict((k, v) for k, v in locals().items()
                  if isinstance(v, type) and issubclass(v, Element))

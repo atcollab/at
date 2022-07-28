@@ -553,7 +553,7 @@ class Lattice(list):
     def _radiation_attrs(cavity_func, dipole_func,
                          quadrupole_func, wiggler_func,
                          sextupole_func, octupole_func,
-                         multipole_func, diffusion_func):
+                         multipole_func):
         """Create a function returning the modified attributes"""
 
         def elem_func(elem):
@@ -576,8 +576,6 @@ class Lattice(list):
                 return octupole_func(elem)
             elif isinstance(elem, elements.Multipole):
                 return multipole_func(elem)
-            elif isinstance(elem, elements.QuantDiffElement):
-                return diffusion_func(elem)
             else:
                 return None
 
@@ -591,7 +589,6 @@ class Lattice(list):
                      sextupole_pass: Optional[str] = None,
                      octupole_pass: Optional[str] = None,
                      multipole_pass: Optional[str] = None,
-                     diffusion_pass: Optional[str] = 'QuantDiffPass',
                      copy: Optional[bool] = False):
         r"""
         Turn acceleration and radiation on and return the lattice
@@ -601,7 +598,6 @@ class Lattice(list):
             dipole_pass='auto':         PassMethod set on dipoles
             quadrupole_pass='auto':     PassMethod set on quadrupoles
             wiggler_pass='auto':        PassMethod set on wigglers
-            diffusion_pass='auto':      PassMethod set on diffusion elements
             copy=False: If ``False``, the modification is done in-place,
               If ``True``, return a shallow copy of the lattice. Only the
               radiating elements are copied with PassMethod modified.
@@ -647,8 +643,7 @@ class Lattice(list):
                                           repfunc(wiggler_pass),
                                           repfunc(sextupole_pass),
                                           repfunc(octupole_pass),
-                                          repfunc(multipole_pass),
-                                          repfunc(diffusion_pass))
+                                          repfunc(multipole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     # noinspection PyShadowingNames
@@ -659,7 +654,6 @@ class Lattice(list):
                       sextupole_pass: Optional[str] = 'auto',
                       octupole_pass: Optional[str] = 'auto',
                       multipole_pass: Optional[str] = 'auto',
-                      diffusion_pass: Optional[str] = 'auto',
                       copy: Optional[int] = False):
         r"""
         Turn acceleration and radiation off and return the lattice
@@ -669,7 +663,6 @@ class Lattice(list):
             dipole_pass='auto':         PassMethod set on dipoles
             quadrupole_pass=None:       PassMethod set on quadrupoles
             wiggler_pass='auto':        PassMethod set on wigglers
-            diffusion_pass='auto':      PassMethod set on diffusion elements            
             copy=False: If ``False``, the modification is done in-place,
               If ``True``, return a shallow copy of the lattice. Only the
               radiating elements are copied with PassMethod modified.
@@ -700,13 +693,6 @@ class Lattice(list):
                 return {'PassMethod': newpass}
             else:
                 return None
-                
-        def auto_diffusion_pass(elem):
-            newpass = 'IdentityPass'
-            if elem.PassMethod != newpass:
-                return {'PassMethod': newpass}
-            else:
-                return None
 
         def repfunc(pass_method, auto_method):
             if pass_method is None:
@@ -730,8 +716,7 @@ class Lattice(list):
             repfunc(wiggler_pass, auto_multipole_pass),
             repfunc(sextupole_pass, auto_multipole_pass),
             repfunc(octupole_pass, auto_multipole_pass),
-            repfunc(multipole_pass, auto_multipole_pass),
-            repfunc(diffusion_pass, auto_diffusion_pass))
+            repfunc(multipole_pass, auto_multipole_pass))
         return self.modify_elements(elem_func, copy=copy)
 
     def sbreak(self, break_s, break_elems=None, **kwargs):
