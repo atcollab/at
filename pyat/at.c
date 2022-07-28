@@ -282,8 +282,7 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
             PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
             PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
             PyObject *bcurrent = PyObject_GetAttrString(particle, "beam_current");
-            PyArrayObject *fpattern = (PyArrayObject *) PyObject_GetAttrString(particle, "_fillpattern");
-            PyArrayObject *bweights = (PyArrayObject *) PyObject_GetAttrString(particle, "_weights");
+            PyArrayObject *bcurrents = (PyArrayObject *) PyObject_GetAttrString(particle, "_bunch_currents");
             if (prest_energy != NULL) {
                 param->rest_energy = PyFloat_AsDouble(prest_energy);
                 Py_DECREF(prest_energy);
@@ -296,22 +295,10 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
                 param->beam_current = PyFloat_AsDouble(bcurrent);
                 Py_DECREF(bcurrent);
             }
-            if (fpattern != NULL && bweights != NULL) {
-                double *fillpattern = PyArray_DATA(fpattern);
-                double *weights = PyArray_DATA(bweights);
-                int nbunch = PyArray_SIZE(fpattern);              
-                double ws = 0.0;  
-                param->bunch_currents = (double *)malloc(nbunch*sizeof(double));              
-                int i;
-                for(i=0;i<nbunch;i++){                   
-                    ws += weights[i]*fillpattern[i];
-                };
-                for(i=0;i<nbunch;i++){             
-                    param->bunch_currents[i]=param->beam_current*fillpattern[i]*weights[i]/ws;
-                };
-                param->nbunch = (double)nbunch;
-                Py_DECREF(fpattern);
-                Py_DECREF(bweights);
+            if (bcurrents != NULL) {
+                param->bunch_currents = PyArray_DATA(bcurrents);
+                param->nbunch = PyArray_SIZE(bcurrents);
+                Py_DECREF(bcurrents);
             }                        
             Py_DECREF(particle);
          }

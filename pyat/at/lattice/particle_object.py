@@ -48,9 +48,11 @@ class Particle(object):
         self._charge = kwargs.pop('charge')
         # Load parameters of the beam
         self.beam_current = kwargs.pop('beam_current', 0.0)
+        self._bunch_currents = None
         self._fillpattern = kwargs.pop('fillpattern', numpy.ones(1))
         self._weights = kwargs.pop('weights',
                                    numpy.ones(len(self._fillpattern)))
+        self._update_bunch_current()
         # load remaining keyword arguments
         for (key, val) in kwargs.items():
             setattr(self, key, val)
@@ -135,6 +137,7 @@ class Particle(object):
         self._fillpattern = numpy.array(fp)    
         if len(self.weights) != len(self._fillpattern):
             self.weights = numpy.ones(len(self._fillpattern))
+        self._update_bunch_current()
 
     @property
     def weights(self):
@@ -145,12 +148,17 @@ class Particle(object):
         assert len(weights) == len(self._fillpattern), \
             'Weights and fill pattern must have the same length'
         self._weights = numpy.array(weights)
+        self._update_bunch_current()
 
     @property
     def nbunch(self):
         return numpy.sum(self._fillpattern)
+        
+    def _update_bunch_current(self):
+        fw = self.weights*self._fillpattern
+        self._bunch_currents = numpy.squeeze(self.beam_current *
+                                            fw/numpy.sum(fw))
 
     @property
     def bunch_currents(self):
-        fw = self.weights[self.fillpattern]
-        return numpy.squeeze(self.beam_current*fw/numpy.sum(fw))
+        return self._bunch_currents
