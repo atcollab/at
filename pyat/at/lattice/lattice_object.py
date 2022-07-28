@@ -167,7 +167,7 @@ class Lattice(list):
         # Setting the harmonic number is delayed to have self.beta available
         if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
-            self.harmonic_number = int(round(frequency / rev))
+            self._cell_harmnumber = int(round(frequency / rev))
         elif not math.isnan(ring_h):
             self.harmonic_number = ring_h
 
