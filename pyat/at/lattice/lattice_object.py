@@ -461,7 +461,7 @@ class Lattice(list):
         else:
             assert len(bunches) == self.harmonic_number, \
                 'bunches array input has to be of shape ({0},)' \
-                .format(harmonic_number)
+                .format(self.harmonic_number)
             assert numpy.all((bunches == True) | (bunches == False)), \
                 'bunches array input should be a mask (array of bool)'
             fp = numpy.ones(self.harmonic_number)[bunches]
