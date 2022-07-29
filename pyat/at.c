@@ -281,8 +281,6 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
         if (particle != NULL) {
             PyObject *prest_energy = PyObject_GetAttrString(particle, "rest_energy");
             PyObject *pcharge = PyObject_GetAttrString(particle, "charge");
-            PyObject *bcurrent = PyObject_GetAttrString(particle, "beam_current");
-            PyArrayObject *bcurrents = (PyArrayObject *) PyObject_GetAttrString(particle, "_bunch_currents");
             if (prest_energy != NULL) {
                 param->rest_energy = PyFloat_AsDouble(prest_energy);
                 Py_DECREF(prest_energy);
@@ -290,18 +288,26 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
             if (pcharge != NULL) {
                 param->charge = PyFloat_AsDouble(pcharge);
                 Py_DECREF(pcharge);
-            }
-            if (bcurrent != NULL) {
-                param->beam_current = PyFloat_AsDouble(bcurrent);
-                Py_DECREF(bcurrent);
-            }
-            if (bcurrents != NULL) {
-                param->bunch_currents = PyArray_DATA(bcurrents);
-                param->nbunch = PyArray_SIZE(bcurrents);
-                Py_DECREF(bcurrents);
-            }                        
+            }                       
             Py_DECREF(particle);
          }
+          PyObject *bcurrent = PyObject_GetAttrString(lattice, "beam_current");
+          PyArrayObject *bspos = (PyArrayObject *) PyObject_GetAttrString(lattice, "_bunch_spos");
+          PyArrayObject *fpattern = (PyArrayObject *) PyObject_GetAttrString(lattice, "_fillpattern");
+          if (bcurrent != NULL) {
+              param->beam_current = PyFloat_AsDouble(bcurrent);
+              Py_DECREF(bcurrent);
+          }
+          if (bspos != NULL && fpattern != NULL) {
+              param->bunch_spos = PyArray_DATA(bspos);
+              param->nbunch = (int)PyArray_SIZE(bspos);
+              param->bunch_currents = malloc(param->nbunch*sizeof(double));
+              double *fill_pattern = PyArray_DATA(fpattern);
+              for(int i=0; i<param->nbunch; i++){
+                  param->bunch_currents[i]=param->beam_current*fill_pattern[i];
+              }
+              Py_DECREF(fpattern);
+          } 
     }
     PyErr_Clear();
 }
@@ -383,6 +389,11 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;
+    param.beam_current=0.0;
+    param.nbunch=1;
+    param.bunch_spos = (double[1]){0.0};
+    param.bunch_currents = (double[1]){0.0};
+    
     if (keep_counter)
         param.nturn = last_turn;
     else
@@ -511,7 +522,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     param.RingLength = lattice_length;
-    param.bunch_spacing = param.RingLength/param.nbunch;
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
     }
@@ -641,7 +651,10 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
 
     param.RingLength = 0.0;
     param.T0 = 0.0;
-    param.bunch_spacing = 0.0;
+    param.beam_current=0.0;
+    param.nbunch=1;
+    param.bunch_spos = (double[1]){0.0};
+    param.bunch_currents = (double[1]){0.0};
 
     PyPassMethod = PyObject_GetAttrString(element, "PassMethod");
     if (!PyPassMethod) return NULL;

@@ -17,8 +17,8 @@ struct parameters
   double rest_energy;
   double charge;
   double beam_current;
-  double nbunch;
-  double bunch_spacing;
+  int nbunch;
+  double *bunch_spos;
   double *bunch_currents;
 };
 
