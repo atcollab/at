@@ -55,7 +55,7 @@ class Lattice(list):
     """
     # Attributes displayed:
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
-                        'harmonic_number')
+                        'harmonic_number', 'beam_current', 'nbunch')
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
                        '_cell_harmnumber', '_radiation')
@@ -145,7 +145,7 @@ class Lattice(list):
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
         kwargs.setdefault('_beam_current', 0.0)
-        kwargs.setdefault('_fillpattern', numpy.array([True]))
+        kwargs.setdefault('_fillpattern', numpy.array([1.0]))
         kwargs.setdefault('_bunch_spos', numpy.array([0.0]))
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
@@ -162,7 +162,7 @@ class Lattice(list):
         if 'beam_current' in kwargs:
             kwargs.pop('_beam_current', 0.0)
         if 'fillpattern' in kwargs:
-            kwargs.pop('_fillpattern', numpy.array([True]))
+            kwargs.pop('_fillpattern', numpy.array([1.0]))
         if 'bunch_spos' in kwargs:
             kwargs.pop('_bunch_spos', numpy.array([0.0]))
         # set attributes

@@ -288,7 +288,7 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
             if (pcharge != NULL) {
                 param->charge = PyFloat_AsDouble(pcharge);
                 Py_DECREF(pcharge);
-            }                       
+            }
             Py_DECREF(particle);
          }
           PyObject *bcurrent = PyObject_GetAttrString(lattice, "beam_current");
