@@ -74,8 +74,8 @@ class Lattice(list):
               iterable of Element objects for building the lattice. It must
               also fill the``params`` dictionary providing the Lattice
               attributes.
-            params: dictionary of lattice parameters. A custom iterator may add,
-              remove or modify parameters. Finally, the remaining
+            params: dictionary of lattice parameters. A custom iterator may
+              add, remove or modify parameters. Finally, the remaining
               parameters will be set as Lattice attributes.
 
         Keyword Arguments:
@@ -88,12 +88,14 @@ class Lattice(list):
             iterator=None:  custom iterator (see below)
             *: all other keywords will be set as attributes of
               the Lattice object
+            beam_current:   Total current in the beam, used for collective
+              effects
 
         An iterator ``it`` is called as ``it(params, *args)`` where ``args``
-        and ``params`` are the arguments of the ``Lattice`` constructor. It must
-        yield the AT ``Elements`` for building the lattice. It must also fill
-        its ``params`` dictionary argument, which will be used to set the
-        ``Lattice`` attributes.
+        and ``params`` are the arguments of the ``Lattice`` constructor. It
+        must yield the AT ``Elements`` for building the lattice. It must
+        also fill its ``params`` dictionary argument, which will be used to
+        set the ``Lattice`` attributes.
         An iterator can be:
 
         - a "generator" which yields elements from scratch.
@@ -107,6 +109,18 @@ class Lattice(list):
            To reduce the inter-package dependencies, some methods of the
            lattice object are defined in other AT packages, in the module where
            the underlying function is implemented.
+
+        .. Note::
+
+           It is possible to define a filling pattern for the beam using the
+           function ``ring.set_fillingpattern()``. The default configuration
+           (no arguments) is for single bunch and is the one loaded at lattice
+           initialization.
+           Changing ``Lattice.harmonic_number`` will resetthe filling pattern
+           to its default configuration.
+           The filling pattern and beam current are used by collective effects
+           passmethods.
+
 
         Examples:
             Chaining iterators (taken from ``load_mat``):
@@ -161,10 +175,6 @@ class Lattice(list):
             kwargs.pop('_particle', None)
         if 'beam_current' in kwargs:
             kwargs.pop('_beam_current', 0.0)
-        if 'fillpattern' in kwargs:
-            kwargs.pop('_fillpattern', numpy.array([1.0]))
-        if 'bunch_spos' in kwargs:
-            kwargs.pop('_bunch_spos', numpy.array([0.0]))
         # set attributes
         self.update(kwargs)
 
@@ -444,13 +454,13 @@ class Lattice(list):
             self._particle = particle
         else:
             self._particle = Particle(particle)
-            
+
     def set_fillpattern(self, bunches=1, weights=None):
         if numpy.isscalar(bunches):
             if bunches == 1:
                 fp = numpy.ones(1)
                 fs = 0.0
-            elif self.harmonic_number%bunches == 0:
+            elif self.harmonic_number % bunches == 0:
                 fp = numpy.ones(bunches)
                 bs = self.circumference/bunches
                 fs = bs*numpy.arange(bunches)
@@ -462,43 +472,43 @@ class Lattice(list):
             assert len(bunches) == self.harmonic_number, \
                 'bunches array input has to be of shape ({0},)' \
                 .format(self.harmonic_number)
-            assert numpy.all((bunches == True) | (bunches == False)), \
+            assert numpy.all((bunches is True) | (bunches is False)), \
                 'bunches array input should be a mask (array of bool)'
             fp = numpy.ones(self.harmonic_number)[bunches]
             bs = self.circumference/self.harmonic_number
-            fs = bs*numpy.arange(self.harmonic_number)[bunches]      
-            
+            fs = bs*numpy.arange(self.harmonic_number)[bunches]
+
         if weights is not None:
             assert len(fp) == len(weights), \
-                'bunches and weights must have the same length' 
+                'bunches and weights must have the same length'
             fp *= weights
-            
+
         self._fillpattern = fp/numpy.sum(fp)
         self._bunch_spos = fs
-        
+
     @property
     def beam_current(self):
         return self._beam_current
-           
+
     @beam_current.setter
     def beam_current(self, value):
-        self._beam_current = value        
-        
+        self._beam_current = value
+
     @property
     def bunch_spos(self):
-        return self._bunch_spos 
-        
+        return self._bunch_spos
+
     @property
     def fillpattern(self):
         return self._fillpattern
-        
+
     @property
     def nbunch(self):
-        return len(self.fillpattern)  
-        
+        return len(self.fillpattern)
+
     @property
     def bunch_currents(self):
-        return self._beam_current*self._fillpattern          
+        return self._beam_current*self._fillpattern
 
     @property
     def harmonic_number(self):
@@ -520,11 +530,11 @@ class Lattice(list):
         #     raise AtError('harmonic number ({}) must be a multiple of {}'
         #                   .format(value, int(self.periodicity)))
         self._cell_harmnumber = cell_h
-        if len(self._fillpattern)>1:
-            warn(AtWarning('Harmonic number changed, resetting fillpattern to default '
-                           '(single bunch)'))
+        if len(self._fillpattern) > 1:
+            warn(AtWarning('Harmonic number changed, resetting fillpattern to '
+                           'default (single bunch)'))
             self.set_fillpattern()
-            
+
     @property
     def gamma(self) -> float:
         r"""Relativistic :math:`\gamma` of the particles"""
