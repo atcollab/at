@@ -115,7 +115,7 @@ class Lattice(list):
            It is possible to define a filling pattern for the beam using the
            function ``ring.set_fillingpattern()``. The default configuration
            (no arguments) is for single bunch and is the one loaded at lattice
-           initialization.
+           initialization. See function help for details.
            Changing ``Lattice.harmonic_number`` will resetthe filling pattern
            to its default configuration.
            The filling pattern and beam current are used by collective effects
@@ -456,6 +456,28 @@ class Lattice(list):
             self._particle = Particle(particle)
 
     def set_fillpattern(self, bunches=1, weights=None):
+        """Function to generate the filling pattern lof the ring.
+        The filling pattern is computed as:
+
+        ``bunches*weights/numpy.sum(bunches*weights)``
+
+        This function also generates the bunch spatial distribution
+        accessible with ``Lattice.bunch_spos``
+
+        Keyword Arguments:
+           bunches:  scalar or array of boolean to define the bunch
+                     distribution.
+                     For scalar input, equidistant bunches are assumed.
+                     ``ring.harmonic_number`` has to be a multiple of
+                     ``bunches``.
+                     For array input the condition
+                     ``len(bunches)==ring.harmonic_number`` is required.
+                     (default=1, single bunch configuration).
+           weights:  array of double allowing to generate bunch with varying
+                     current. ``len(weights)==len(bunches)`` is required.
+                     (default=None, all weights set to 1)
+        """
+
         if numpy.isscalar(bunches):
             if bunches == 1:
                 fp = numpy.ones(1)
@@ -488,6 +510,7 @@ class Lattice(list):
 
     @property
     def beam_current(self):
+        """Total beam current [A]"""
         return self._beam_current
 
     @beam_current.setter
@@ -496,18 +519,24 @@ class Lattice(list):
 
     @property
     def bunch_spos(self):
+        """Bunch position around the ring [m]"""
         return self._bunch_spos
 
     @property
     def fillpattern(self):
+        """Filling pattern describing the bunch relative
+        amplitudes such that ``sum(fillpattern)=1``
+        """
         return self._fillpattern
 
     @property
     def nbunch(self):
+        """Number of bunches"""
         return len(self.fillpattern)
 
     @property
     def bunch_currents(self):
+        """Bunch currents [A]"""
         return self._beam_current*self._fillpattern
 
     @property
