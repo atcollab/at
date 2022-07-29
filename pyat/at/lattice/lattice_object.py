@@ -118,6 +118,7 @@ class Lattice(list):
            initialization. See function help for details.
            Changing ``Lattice.harmonic_number`` will resetthe filling pattern
            to its default configuration.
+           The beam current can be changed with ``Lattice.beam_current=current``
            The filling pattern and beam current are used by collective effects
            passmethods.
 
@@ -158,7 +159,6 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
-        kwargs.setdefault('_beam_current', 0.0)
         kwargs.setdefault('_fillpattern', numpy.array([1.0]))
         kwargs.setdefault('_bunch_spos', numpy.array([0.0]))
         # Remove temporary keywords
@@ -166,6 +166,7 @@ class Lattice(list):
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
+        self.beam_current = kwargs.pop('beam_current', 0.0)
 
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
@@ -173,8 +174,6 @@ class Lattice(list):
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
-        if 'beam_current' in kwargs:
-            kwargs.pop('_beam_current', 0.0)
         # set attributes
         self.update(kwargs)
 
@@ -455,34 +454,28 @@ class Lattice(list):
         else:
             self._particle = Particle(particle)
 
-    def set_fillpattern(self, bunches=1, weights=None):
+    def set_fillpattern(self, bunches=1):
         """Function to generate the filling pattern lof the ring.
         The filling pattern is computed as:
 
-        ``bunches*weights/numpy.sum(bunches*weights)``
+        ``bunches/numpy.sum(bunches)``
 
         This function also generates the bunch spatial distribution
         accessible with ``Lattice.bunch_spos``
 
         Keyword Arguments:
-           bunches:  scalar or array of boolean to define the bunch
-                     distribution.
+           bunches:  scalar or array of positive double or bool to define
+                     the bunch distribution.
                      For scalar input, equidistant bunches are assumed.
                      ``ring.harmonic_number`` has to be a multiple of
                      ``bunches``.
                      For array input the condition
                      ``len(bunches)==ring.harmonic_number`` is required.
                      (default=1, single bunch configuration).
-           weights:  array of double allowing to generate bunch with varying
-                     current. ``len(weights)==len(bunches)`` is required.
-                     (default=None, all weights set to 1)
         """
 
         if numpy.isscalar(bunches):
-            if bunches == 1:
-                fp = numpy.ones(1)
-                fs = 0.0
-            elif self.harmonic_number % bunches == 0:
+            if self.harmonic_number % bunches == 0:
                 fp = numpy.ones(bunches)
                 bs = self.circumference/bunches
                 fs = bs*numpy.arange(bunches)
@@ -494,28 +487,14 @@ class Lattice(list):
             assert len(bunches) == self.harmonic_number, \
                 'bunches array input has to be of shape ({0},)' \
                 .format(self.harmonic_number)
-            assert numpy.all((bunches is True) | (bunches is False)), \
-                'bunches array input should be a mask (array of bool)'
-            fp = numpy.ones(self.harmonic_number)[bunches]
+            assert numpy.all(bunches >= 0.0), \
+                'bunches array can contain only positive numbers'
+            fp = numpy.ones(self.harmonic_number)[bunches>0.0]
             bs = self.circumference/self.harmonic_number
-            fs = bs*numpy.arange(self.harmonic_number)[bunches]
-
-        if weights is not None:
-            assert len(fp) == len(weights), \
-                'bunches and weights must have the same length'
-            fp *= weights
+            fs = bs*numpy.arange(self.harmonic_number)[bunches>0.0]
 
         self._fillpattern = fp/numpy.sum(fp)
         self._bunch_spos = fs
-
-    @property
-    def beam_current(self):
-        """Total beam current [A]"""
-        return self._beam_current
-
-    @beam_current.setter
-    def beam_current(self, value):
-        self._beam_current = value
 
     @property
     def bunch_spos(self):
@@ -537,7 +516,7 @@ class Lattice(list):
     @property
     def bunch_currents(self):
         """Bunch currents [A]"""
-        return self._beam_current*self._fillpattern
+        return self.beam_current*self._fillpattern
 
     @property
     def harmonic_number(self):
