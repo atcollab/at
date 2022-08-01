@@ -89,6 +89,9 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
+    bunch_currents = getattr(lattice, 'bunch_currents', numpy.ones(1))
+    bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    kwargs.update({'bunch_currents': bunch_currents, 'bunch_spos': bunch_spos})
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts

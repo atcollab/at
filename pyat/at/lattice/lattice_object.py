@@ -58,8 +58,8 @@ class Lattice(list):
                         'harmonic_number', 'beam_current', 'nbunch')
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
-                       '_cell_harmnumber', '_radiation', '_beam_current',
-                       '_fillpattern', '_bunch_spos', '_bunch_currents')
+                       '_cell_harmnumber', '_radiation', 'beam_current',
+                       '_fillpattern')
 
     # noinspection PyUnusedLocal
     def __init__(self, *args,
@@ -161,15 +161,14 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
-        kwargs.setdefault('_beam_current', 0.0)
         kwargs.setdefault('_fillpattern', numpy.array([1.0]))
-        kwargs.setdefault('_bunch_spos', numpy.array([0.0]))
-        kwargs.setdefault('_bunch_currents', numpy.array([0.0]))
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
+        
+        self.beam_current = kwargs.pop('beam_current', 0.0)
 
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
@@ -177,8 +176,6 @@ class Lattice(list):
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
-        if 'beam_current' in kwargs:
-            kwargs.pop('_beam_current', 0.0)
         # set attributes
         self.update(kwargs)
 
@@ -479,12 +476,12 @@ class Lattice(list):
                      ``len(bunches)==ring.harmonic_number`` is required.
                      (default=1, single bunch configuration).
         """
-
-        if numpy.isscalar(bunches):
+        if bunches == 1:
+            fp = numpy.ones(1)        
+        elif numpy.isscalar(bunches):
             if self.harmonic_number % bunches == 0:
-                fp = numpy.ones(bunches)
-                bs = self.circumference/bunches
-                fs = bs*numpy.arange(bunches)
+                fp = numpy.zeros(self.harmonic_number)
+                fp[::int(self.harmonic_number/bunches)] = 1
             else:
                 raise AtError('Harmonic number has to be a '
                               'multiple of the scalar input '
@@ -497,43 +494,28 @@ class Lattice(list):
                 .format(self.harmonic_number)
             assert numpy.all(bunches >= 0.0), \
                 'bunches array can contain only positive numbers'
-            fp = bunches[bunches > 0.0]
-            bs = self.circumference/self.harmonic_number
-            fs = bs*numpy.arange(self.harmonic_number)[bunches > 0.0]
+            fp = bunches
 
         self._fillpattern = fp/numpy.sum(fp)
-        self._bunch_spos = fs
-        self._update_bunch_currents()
-
-    def _update_bunch_currents(self):
-        self._bunch_currents = self.beam_current*self._fillpattern
-
-    @property
-    def bunch_currents(self):
-        """Bunch currents [A]"""
-        return self._bunch_currents
-
-    @property
-    def beam_current(self):
-        """Total beam current [A]"""
-        return self._beam_current
-
-    @beam_current.setter
-    def beam_current(self, value):
-        self._beam_current = value
-        self._update_bunch_currents()
-
-    @property
-    def bunch_spos(self):
-        """Bunch position around the ring [m]"""
-        return self._bunch_spos
-
+        
     @property
     def fillpattern(self):
         """Filling pattern describing the bunch relative
         amplitudes such that ``sum(fillpattern)=1``
         """
-        return self._fillpattern
+        return self._fillpattern[self._fillpattern > 0.0]
+
+    @property
+    def bunch_currents(self):
+        """Bunch currents [A]"""
+        return self.beam_current*self.fillpattern
+
+    @property
+    def bunch_spos(self):
+        """Bunch position around the ring [m]"""
+        bs = self.circumference/len(self._fillpattern)
+        allpos = bs*numpy.arange(len(self._fillpattern))
+        return allpos[self._fillpattern > 0]
 
     @property
     def nbunch(self):

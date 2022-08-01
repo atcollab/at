@@ -291,20 +291,18 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
             }
             Py_DECREF(particle);
          }
-          PyObject *bcurrent = PyObject_GetAttrString(lattice, "beam_current");
-          PyArrayObject *bspos = (PyArrayObject *) PyObject_GetAttrString(lattice, "_bunch_spos");
-          PyArrayObject *bcurrents = (PyArrayObject *) PyObject_GetAttrString(lattice, "_bunch_currents");
-          if (bcurrent != NULL) {
-              param->beam_current = PyFloat_AsDouble(bcurrent);
-              Py_DECREF(bcurrent);
-          }
-          if (bspos != NULL && bcurrents != NULL) {
-              param->bunch_spos = PyArray_DATA(bspos);
-              param->nbunch = PyArray_SIZE(bspos);
-              param->bunch_currents = PyArray_DATA(bcurrents);
-          } 
     }
     PyErr_Clear();
+}
+
+void set_current_fillpattern(PyObject *bspos, PyObject *bcurrents, struct parameters *param){
+    PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_MAXDIMS, 
+                                        PyArray_DESCR(bcurrents)->type_num, NULL);  
+    param->beam_current = PyFloat_AsDouble(bcurrentsum);
+    Py_DECREF(bcurrentsum);    
+    param->nbunch = PyArray_SIZE(bspos);
+    param->bunch_spos = PyArray_DATA(bspos);
+    param->bunch_currents = PyArray_DATA(bcurrents);    
 }
 
 /*
@@ -319,7 +317,8 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
 static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
-                             "reuse","omp_num_threads","losses", NULL};
+                             "reuse","omp_num_threads","losses",
+                             "bunch_spos", "bunch_currents", NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
     static int valid = 0;
@@ -339,6 +338,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     int *ixnelem = NULL;
     bool *bxlost = NULL;
     double *dxlostcoord = NULL;
+    PyArrayObject *bcurrents;
+    PyArrayObject *bspos;
     int num_turns;
     npy_uint32 omp_num_threads=0;
     npy_uint32 num_particles, np6;
@@ -364,11 +365,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     particle=NULL;
     energy=NULL;
     refs=NULL;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIp", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
-        &keep_counter, &keep_lattice, &omp_num_threads, &losses)) {
+        &keep_counter, &keep_lattice, &omp_num_threads, &losses,
+        &PyArray_Type, &bspos, &PyArray_Type, &bcurrents)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -383,18 +385,15 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     param.energy=0.0;
     param.rest_energy=0.0;
-    param.charge=-1.0;
-    param.beam_current=0.0;
-    param.nbunch=1;
-    param.bunch_spos = (double[1]){0.0};
-    param.bunch_currents = (double[1]){0.0};
+    param.charge=-1.0;       
     
     if (keep_counter)
         param.nturn = last_turn;
     else
         param.nturn = counter;
 
-    set_energy_particle(lattice, energy, particle, &param);
+    set_energy_particle(lattice, energy, particle, &param);   
+    set_current_fillpattern(bspos, bcurrents, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
