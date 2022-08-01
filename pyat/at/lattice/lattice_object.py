@@ -511,7 +511,7 @@ class Lattice(list):
     @property
     def bunch_currents(self):
         """Bunch currents [A]"""
-        return self._bunch_currents        
+        return self._bunch_currents
 
     @property
     def beam_current(self):
@@ -520,7 +520,7 @@ class Lattice(list):
     @beam_current.setter
     def beam_current(self, value):
         self._beam_current = value
-        self._update_bunch_currents()   
+        self._update_bunch_currents()
 
     @property
     def bunch_spos(self):
