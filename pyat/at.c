@@ -406,7 +406,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     set_energy_particle(lattice, energy, particle, &param);   
     set_current_fillpattern(bspos, bcurrents, &param);
-    printf("%f %f\n",param.beam_current, param.bunch_currents[0]);
 
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
