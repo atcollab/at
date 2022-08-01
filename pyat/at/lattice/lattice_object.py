@@ -515,6 +515,7 @@ class Lattice(list):
 
     @property
     def beam_current(self):
+        """Total beam current [A]"""
         return self._beam_current
 
     @beam_current.setter
