@@ -143,8 +143,8 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     refpts = uint32_refpts(refpts, len(ring))
     # noinspection PyProtectedMember
     pm_ok = [e.PassMethod in elements._collective for e in ring]
-    bunch_currents = getattr(lattice, 'bunch_currents', numpy.ones(1))
-    bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    bunch_currents = getattr(ring, 'bunch_currents', numpy.ones(1))
+    bunch_spos = getattr(ring, 'bunch_spos', numpy.zeros(1))
     kwargs.update({'bunch_currents': bunch_currents, 'bunch_spos': bunch_spos})
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
