@@ -58,7 +58,8 @@ class Lattice(list):
                         'harmonic_number', 'beam_current', 'nbunch')
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
-                       '_cell_harmnumber', '_radiation')
+                       '_cell_harmnumber', '_radiation', '_beam_current',
+                       '_fillpattern', '_bunch_spos', '_bunch_currents')
 
     # noinspection PyUnusedLocal
     def __init__(self, *args,
@@ -116,7 +117,7 @@ class Lattice(list):
            function ``ring.set_fillingpattern()``. The default configuration
            (no arguments) is for single bunch and is the one loaded at lattice
            initialization. See function help for details.
-           Changing ``Lattice.harmonic_number`` will resetthe filling pattern
+           Changing ``Lattice.harmonic_number`` will reset the filling pattern
            to its default configuration.
            The beam current can be changed with
            ``Lattice.beam_current=current``
@@ -160,14 +161,15 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
+        kwargs.setdefault('_beam_current', 0.0)
         kwargs.setdefault('_fillpattern', numpy.array([1.0]))
         kwargs.setdefault('_bunch_spos', numpy.array([0.0]))
+        kwargs.setdefault('_bunch_currents', numpy.array([0.0]))
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
-        self.beam_current = kwargs.pop('beam_current', 0.0)
 
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
@@ -175,6 +177,8 @@ class Lattice(list):
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
+        if 'beam_current' in kwargs:
+            kwargs.pop('_beam_current', 0.0)
         # set attributes
         self.update(kwargs)
 
@@ -486,7 +490,7 @@ class Lattice(list):
                               'multiple of the scalar input '
                               'bunches')
         else:
-            bunches = bunches.astype(dtype.float, casting='safe',
+            bunches = bunches.astype(dtype=float, casting='safe',
                                      copy=False)
             assert len(bunches) == self.harmonic_number, \
                 'bunches array input has to be of shape ({0},)' \
@@ -499,6 +503,24 @@ class Lattice(list):
 
         self._fillpattern = fp/numpy.sum(fp)
         self._bunch_spos = fs
+        self._update_bunch_currents()
+
+    def _update_bunch_currents(self):
+        self._bunch_currents = self.beam_current*self._fillpattern
+
+    @property
+    def bunch_currents(self):
+        """Bunch currents [A]"""
+        return self._bunch_currents        
+
+    @property
+    def beam_current(self):
+        return self._beam_current
+
+    @beam_current.setter
+    def beam_current(self, value):
+        self._beam_current = value
+        self._update_bunch_currents()   
 
     @property
     def bunch_spos(self):
@@ -516,11 +538,6 @@ class Lattice(list):
     def nbunch(self):
         """Number of bunches"""
         return len(self.fillpattern)
-
-    @property
-    def bunch_currents(self):
-        """Bunch currents [A]"""
-        return self.beam_current*self._fillpattern
 
     @property
     def harmonic_number(self):

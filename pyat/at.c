@@ -293,20 +293,15 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
          }
           PyObject *bcurrent = PyObject_GetAttrString(lattice, "beam_current");
           PyArrayObject *bspos = (PyArrayObject *) PyObject_GetAttrString(lattice, "_bunch_spos");
-          PyArrayObject *fpattern = (PyArrayObject *) PyObject_GetAttrString(lattice, "_fillpattern");
+          PyArrayObject *bcurrents = (PyArrayObject *) PyObject_GetAttrString(lattice, "_bunch_currents");
           if (bcurrent != NULL) {
               param->beam_current = PyFloat_AsDouble(bcurrent);
               Py_DECREF(bcurrent);
           }
-          if (bspos != NULL && fpattern != NULL) {
+          if (bspos != NULL && bcurrents != NULL) {
               param->bunch_spos = PyArray_DATA(bspos);
-              param->nbunch = (int)PyArray_SIZE(bspos);
-              param->bunch_currents = malloc(param->nbunch*sizeof(double));
-              double *fill_pattern = PyArray_DATA(fpattern);
-              for(int i=0; i<param->nbunch; i++){
-                  param->bunch_currents[i]=param->beam_current*fill_pattern[i];
-              }
-              Py_DECREF(fpattern);
+              param->nbunch = PyArray_SIZE(bspos);
+              param->bunch_currents = PyArray_DATA(bcurrents);
           } 
     }
     PyErr_Clear();
@@ -522,6 +517,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     param.RingLength = lattice_length;
+    printf("%f %f %f %f",
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
     }
