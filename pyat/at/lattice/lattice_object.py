@@ -118,7 +118,8 @@ class Lattice(list):
            initialization. See function help for details.
            Changing ``Lattice.harmonic_number`` will resetthe filling pattern
            to its default configuration.
-           The beam current can be changed with ``Lattice.beam_current=current``
+           The beam current can be changed with
+           ``Lattice.beam_current=current``
            The filling pattern and beam current are used by collective effects
            passmethods.
 
@@ -454,7 +455,8 @@ class Lattice(list):
         else:
             self._particle = Particle(particle)
 
-    def set_fillpattern(self, bunches=1):
+    def set_fillpattern(self, bunches: Union[int, float,
+                                             numpy.ndarray] = 1):
         """Function to generate the filling pattern lof the ring.
         The filling pattern is computed as:
 
@@ -484,14 +486,16 @@ class Lattice(list):
                               'multiple of the scalar input '
                               'bunches')
         else:
+            bunches = bunches.astype(dtype.float, casting='safe',
+                                     copy=False)
             assert len(bunches) == self.harmonic_number, \
                 'bunches array input has to be of shape ({0},)' \
                 .format(self.harmonic_number)
             assert numpy.all(bunches >= 0.0), \
                 'bunches array can contain only positive numbers'
-            fp = numpy.ones(self.harmonic_number)[bunches>0.0]
+            fp = bunches[bunches > 0.0]
             bs = self.circumference/self.harmonic_number
-            fs = bs*numpy.arange(self.harmonic_number)[bunches>0.0]
+            fs = bs*numpy.arange(self.harmonic_number)[bunches > 0.0]
 
         self._fillpattern = fp/numpy.sum(fp)
         self._bunch_spos = fs
