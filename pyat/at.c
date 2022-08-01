@@ -393,6 +393,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
         param.nturn = last_turn;
     else
         param.nturn = counter;
+
     set_energy_particle(lattice, energy, particle, &param);
 
     num_particles = (PyArray_SIZE(rin)/6);
@@ -517,7 +518,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     }
 
     param.RingLength = lattice_length;
-    printf("%f %f %f %f",
     if (param.rest_energy == 0.0) {
         param.T0 = param.RingLength/C0;
     }
