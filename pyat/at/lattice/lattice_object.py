@@ -167,7 +167,6 @@ class Lattice(list):
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
-        
         self.beam_current = kwargs.pop('beam_current', 0.0)
 
         if 'energy' in kwargs:
@@ -477,7 +476,7 @@ class Lattice(list):
                      (default=1, single bunch configuration).
         """
         if bunches == 1:
-            fp = numpy.ones(1)        
+            fp = numpy.ones(1)
         elif numpy.isscalar(bunches):
             if self.harmonic_number % bunches == 0:
                 fp = numpy.zeros(self.harmonic_number)
@@ -495,9 +494,8 @@ class Lattice(list):
             assert numpy.all(bunches >= 0.0), \
                 'bunches array can contain only positive numbers'
             fp = bunches
-
         self._fillpattern = fp/numpy.sum(fp)
-        
+
     @property
     def fillpattern(self):
         """Filling pattern describing the bunch relative

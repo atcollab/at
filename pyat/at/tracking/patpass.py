@@ -126,11 +126,11 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
           flag for particles lost (True -> particle lost), turn, element and
           coordinates at which the particle is lost. Set to zero for particles
           that survived
-          
+
     .. note::
 
-       * For multiparticle tracking with large number of turn the size of ``r_out``
-         may increase excessively. To avoid memory issues 
+       * For multiparticle tracking with large number of turn the size of
+         ``r_out`` may increase excessively. To avoid memory issues
          ``patpass(lattice, r_in, refpts=[])`` can be used. An empty list
          is returned and the tracking results of the last turn are stored in
          ``r_in``.

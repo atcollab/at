@@ -295,14 +295,23 @@ void set_energy_particle(PyObject *lattice, PyObject *energy,
     PyErr_Clear();
 }
 
-void set_current_fillpattern(PyObject *bspos, PyObject *bcurrents, struct parameters *param){
-    PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_MAXDIMS, 
-                                        PyArray_DESCR(bcurrents)->type_num, NULL);  
-    param->beam_current = PyFloat_AsDouble(bcurrentsum);
-    Py_DECREF(bcurrentsum);    
-    param->nbunch = PyArray_SIZE(bspos);
-    param->bunch_spos = PyArray_DATA(bspos);
-    param->bunch_currents = PyArray_DATA(bcurrents);    
+void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
+                             struct parameters *param){ 
+    if(bcurrents != NULL){
+        PyObject *bcurrentsum = PyArray_Sum(bcurrents, NPY_MAXDIMS, 
+                                            PyArray_DESCR(bcurrents)->type_num,
+                                            NULL); 
+        param->beam_current = PyFloat_AsDouble(bcurrentsum);
+        Py_DECREF(bcurrentsum);    
+        param->nbunch = PyArray_SIZE(bspos);
+        param->bunch_spos = PyArray_DATA(bspos);
+        param->bunch_currents = PyArray_DATA(bcurrents); 
+    }else{
+        param->beam_current=0.0;
+        param->nbunch=1;
+        param->bunch_spos = (double[1]){0.0};
+        param->bunch_currents = (double[1]){0.0};
+    }   
 }
 
 /*
@@ -365,6 +374,9 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     particle=NULL;
     energy=NULL;
     refs=NULL;
+    bspos=NULL;
+    bcurrents=NULL;
+    
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
@@ -394,6 +406,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
 
     set_energy_particle(lattice, energy, particle, &param);   
     set_current_fillpattern(bspos, bcurrents, &param);
+    printf("%f %f\n",param.beam_current, param.bunch_currents[0]);
 
     num_particles = (PyArray_SIZE(rin)/6);
     np6 = num_particles*6;
