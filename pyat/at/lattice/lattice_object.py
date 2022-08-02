@@ -57,7 +57,7 @@ class Lattice(list):
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
                         'harmonic_number', 'beam_current', 'nbunch')
     # excluded attributes
-    _excluded_attributes = ('nbunch', )                    
+    _excluded_attributes = ('nbunch', 'beam_current')                    
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
                        '_cell_harmnumber', '_radiation', 'beam_current',
@@ -158,7 +158,10 @@ class Lattice(list):
             elems = iterator(kwargs, *args)
 
         super(Lattice, self).__init__(elems)
-
+        
+        # removing excluded attributes  
+        for attr in self._excluded_attributes:  
+            kwargs.pop(attr, None)
         # set default values
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
@@ -177,11 +180,7 @@ class Lattice(list):
         elif '_energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
-            kwargs.pop('_particle', None)
-        
-        # removing excluded attributes  
-        for attr in self._excluded_attributes:  
-            kwargs.pop(attr, None)
+            kwargs.pop('_particle', None) 
             
         # set attributes
         self.update(kwargs)
@@ -192,6 +191,7 @@ class Lattice(list):
             self._cell_harmnumber = int(round(frequency / rev))  
             self.set_fillpattern()
         elif not math.isnan(ring_h):
+            print('test')
             self.harmonic_number = ring_h
 
 
@@ -567,7 +567,7 @@ class Lattice(list):
         if len(self._fillpattern) > 1:
             warn(AtWarning('Harmonic number changed, resetting fillpattern to '
                            'default (single bunch)'))
-            self.set_fillpattern()
+        self.set_fillpattern()
 
     @property
     def gamma(self) -> float:
