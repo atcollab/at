@@ -57,7 +57,7 @@ class Lattice(list):
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
                         'harmonic_number', 'beam_current', 'nbunch')
     # excluded attributes
-    _excluded_attributes = ('nbunch', 'beam_current')                    
+    _excluded_attributes = ('nbunch', 'beam_current')
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
                        '_cell_harmnumber', '_radiation', 'beam_current',
@@ -158,9 +158,9 @@ class Lattice(list):
             elems = iterator(kwargs, *args)
 
         super(Lattice, self).__init__(elems)
-        
-        # removing excluded attributes  
-        for attr in self._excluded_attributes:  
+
+        # removing excluded attributes
+        for attr in self._excluded_attributes:
             kwargs.pop(attr, None)
         # set default values
         kwargs.setdefault('name', '')
@@ -180,20 +180,19 @@ class Lattice(list):
         elif '_energy' not in kwargs:
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
-            kwargs.pop('_particle', None) 
-            
+            kwargs.pop('_particle', None)
+
         # set attributes
         self.update(kwargs)
 
         # Setting the harmonic number is delayed to have self.beta available
         if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
-            self._cell_harmnumber = int(round(frequency / rev))  
+            self._cell_harmnumber = int(round(frequency / rev))
             self.set_fillpattern()
         elif not math.isnan(ring_h):
             print('test')
             self.harmonic_number = ring_h
-
 
     def __getitem__(self, key):
         try:                                # Integer
@@ -476,7 +475,7 @@ class Lattice(list):
 
         Keyword Arguments:
            bunches:  integer or array of positive double or bool to define
-                     the bunch distribution. 
+                     the bunch distribution.
                      For scalar input, equidistant bunches are assumed.
                      ``ring.harmonic_number`` has to be a multiple of
                      ``bunches``.
@@ -493,8 +492,8 @@ class Lattice(list):
                               'multiple of the scalar input '
                               'bunches')
         elif numpy.isscalar(bunches):
-                raise AtError('Scalar input for bunches must be '
-                              'an integer')            
+            raise AtError('Scalar input for bunches must be '
+                          'an integer')
         else:
             bunches = bunches.astype(dtype=float, casting='safe',
                                      copy=False)
@@ -512,19 +511,19 @@ class Lattice(list):
         amplitudes such that ``sum(fillpattern)=1``
         """
         return self._fillpattern
-        
+
     @fillpattern.setter
     def fillpattern(self, value):
         """Filling pattern describing the bunch relative
         amplitudes such that ``sum(fillpattern)=1``.
         Calls the function ``Lattice.set_fillpattern``.
         """
-        self.set_fillpattern(value)   
-       
+        self.set_fillpattern(value)
+
     @property
     def bunch_list(self):
-       """Indices of filled bunches"""
-       return numpy.nonzero(self._fillpattern)
+        """Indices of filled bunches"""
+        return numpy.nonzero(self._fillpattern)
 
     @property
     def bunch_currents(self):
