@@ -161,7 +161,8 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
-        kwargs.setdefault('_fillpattern', None)
+        # dummy initialization in case the harmonic number is not found
+        kwargs.setdefault('_fillpattern', numpy.ones(1))
         kwargs.setdefault('beam_current', 0.0)
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
@@ -175,17 +176,21 @@ class Lattice(list):
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
+        
+        # removing nbunch if present    
+        kwargs.pop('nbunch', None)
+            
         # set attributes
         self.update(kwargs)
 
         # Setting the harmonic number is delayed to have self.beta available
         if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
-            self._cell_harmnumber = int(round(frequency / rev))
+            self._cell_harmnumber = int(round(frequency / rev))  
+            self.set_fillpattern()
         elif not math.isnan(ring_h):
             self.harmonic_number = ring_h
-        # Setting fill pattern now to have self.harmonic_number    
-        self.set_fillpattern()
+
 
     def __getitem__(self, key):
         try:                                # Integer
