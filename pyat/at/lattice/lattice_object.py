@@ -56,6 +56,8 @@ class Lattice(list):
     # Attributes displayed:
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
                         'harmonic_number', 'beam_current', 'nbunch')
+    # excluded attributes
+    _excluded_attributes = ('nbunch', )                    
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
                        '_cell_harmnumber', '_radiation', 'beam_current',
@@ -161,7 +163,7 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
-        # dummy initialization in case the harmonic number is not found
+        # dummy initialization in case the harmonic number is not there
         kwargs.setdefault('_fillpattern', numpy.ones(1))
         kwargs.setdefault('beam_current', 0.0)
         # Remove temporary keywords
@@ -177,8 +179,9 @@ class Lattice(list):
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
         
-        # removing nbunch if present    
-        kwargs.pop('nbunch', None)
+        # removing excluded attributes  
+        for attr in self._excluded_attributes:  
+            kwargs.pop(attr, None)
             
         # set attributes
         self.update(kwargs)
