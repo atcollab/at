@@ -161,13 +161,13 @@ class Lattice(list):
         kwargs.setdefault('name', '')
         periodicity = kwargs.setdefault('periodicity', 1)
         kwargs.setdefault('_particle', Particle())
-        kwargs.setdefault('_fillpattern', numpy.array([1.0]))
+        kwargs.setdefault('_fillpattern', None)
+        kwargs.setdefault('beam_current', 0.0)
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
-        self.beam_current = kwargs.pop('beam_current', 0.0)
 
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
@@ -184,6 +184,8 @@ class Lattice(list):
             self._cell_harmnumber = int(round(frequency / rev))
         elif not math.isnan(ring_h):
             self.harmonic_number = ring_h
+        # Setting fill pattern now to have self.harmonic_number    
+        self.set_fillpattern()
 
     def __getitem__(self, key):
         try:                                # Integer
@@ -455,8 +457,7 @@ class Lattice(list):
         else:
             self._particle = Particle(particle)
 
-    def set_fillpattern(self, bunches: Union[int, float,
-                                             numpy.ndarray] = 1):
+    def set_fillpattern(self, bunches: Union[int, numpy.ndarray] = 1):
         """Function to generate the filling pattern lof the ring.
         The filling pattern is computed as:
 
@@ -466,8 +467,8 @@ class Lattice(list):
         accessible with ``Lattice.bunch_spos``
 
         Keyword Arguments:
-           bunches:  scalar or array of positive double or bool to define
-                     the bunch distribution.
+           bunches:  integer or array of positive double or bool to define
+                     the bunch distribution. 
                      For scalar input, equidistant bunches are assumed.
                      ``ring.harmonic_number`` has to be a multiple of
                      ``bunches``.
@@ -475,9 +476,7 @@ class Lattice(list):
                      ``len(bunches)==ring.harmonic_number`` is required.
                      (default=1, single bunch configuration).
         """
-        if bunches == 1:
-            fp = numpy.ones(1)
-        elif numpy.isscalar(bunches):
+        if isinstance(bunches, int):
             if self.harmonic_number % bunches == 0:
                 fp = numpy.zeros(self.harmonic_number)
                 fp[::int(self.harmonic_number/bunches)] = 1
@@ -485,6 +484,9 @@ class Lattice(list):
                 raise AtError('Harmonic number has to be a '
                               'multiple of the scalar input '
                               'bunches')
+        elif numpy.isscalar(bunches):
+                raise AtError('Scalar input for bunches must be '
+                              'an integer')            
         else:
             bunches = bunches.astype(dtype=float, casting='safe',
                                      copy=False)
@@ -501,12 +503,26 @@ class Lattice(list):
         """Filling pattern describing the bunch relative
         amplitudes such that ``sum(fillpattern)=1``
         """
-        return self._fillpattern[self._fillpattern > 0.0]
+        return self._fillpattern
+        
+    @fillpattern.setter
+    def fillpattern(self, value):
+        """Filling pattern describing the bunch relative
+        amplitudes such that ``sum(fillpattern)=1``.
+        Calls the function ``Lattice.set_fillpattern``.
+        """
+        self.set_fillpattern(value)   
+       
+    @property
+    def bunch_list(self):
+       """Indices of filled bunches"""
+       return numpy.nonzero(self._fillpattern)
 
     @property
     def bunch_currents(self):
         """Bunch currents [A]"""
-        return self.beam_current*self.fillpattern
+        return self.beam_current * \
+            self._fillpattern[self._fillpattern > 0]
 
     @property
     def bunch_spos(self):
@@ -518,7 +534,7 @@ class Lattice(list):
     @property
     def nbunch(self):
         """Number of bunches"""
-        return len(self.fillpattern)
+        return numpy.count_nonzero(self._fillpattern)
 
     @property
     def harmonic_number(self):
