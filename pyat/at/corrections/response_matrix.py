@@ -3,6 +3,7 @@ Classes to compute arbitrary response matrices
 """
 from enum import Enum
 import numpy
+import pandas
 from at.matching import Variable, ElementVariable
 from at.matching import Constraints, ElementConstraints
 from at.matching import OrbitConstraints, LinoptConstraints
@@ -52,31 +53,40 @@ class ResponseMatrix(object):
         self.observables = numpy.atleast_1d(observables)
         self.mode = mode
         self.fullrm = None
+        self.obsnames = []
+        self.buildobsnames
+        
+    def build_obsnames(self):
+        for o in self.observables:
+           if hasattr(o, 'refpts'):
+               for r in o.refpts:
+                   self.obsnames.append(o.name+'_'+str(r))
+           else:
+               self.obsnames.append(o.name)      
         
     def compute(self,ring):
         var0 = [var.get(ring) for var in self.variables] 
         val0 = [obs.values(ring) for obs in self.observables]       
-        rv = []     
+             
         for var, v0 in zip(self.variables, var0):
             if self.mode == RMMode.PLUSMINUS:
-                var.set(ring, v0 + var.delta)  
-                op = numpy.squeeze([obs.values(ring) for obs in self.observables])
-                var.set(ring, v0 - var.delta)  
-                om = numpy.squeeze([obs.values(ring) for obs in self.observables])
-                rv.append((om-op)/2/var.delta)
+                var.set(ring, v0+var.delta)  
+                op = [obs.values(ring) for obs in self.observables]
+                var.set(ring, v0-var.delta)  
+                om = [obs.values(ring) for obs in self.observables]
+                do = [(oom-oop)/2/var.delta for oom, oop in zip(om, op)]
             elif self.mode == RMMode.PLUS:
-                var.set(ring, v0 + var.delta)  
-                op = numpy.squeeze([obs.values(ring) for obs in self.observables])
-                rv.append((val0-op)/var.delta)
+                var.set(ring, v0+var.delta)  
+                op = [numpy.array(obs.values(ring)) for obs in self.observables]
+                do = [(val0-oop)/var.delta for oom, oop in zip(om, op)]
             else:
-                var.set(ring, v0 - var.delta)  
-                om = numpy.squeeze([obs.values(ring) for obs in self.observables])
-                rv.append((om-val0)/var.delta)    
+                var.set(ring, v0-var.delta)  
+                om = [numpy.array(obs.values(ring)) for obs in self.observables]
+                do = [(oom-val0)/var.delta for oom, oop in zip(om, op)]  
             var.set(ring, v0)
-        self.fullrm = numpy.array(rv)
+            
+        self.fullrm = rv
         
-     def get_reduced_rm(self, mask_var, mask_obs, mask_refpts):
-        hasrefpts = [hasattr(obs, 'refpts'
          
         
      
