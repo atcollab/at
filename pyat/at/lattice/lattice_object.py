@@ -57,7 +57,7 @@ class Lattice(list):
     _disp_attributes = ('name', 'energy', 'particle', 'periodicity',
                         'harmonic_number', 'beam_current', 'nbunch')
     # excluded attributes
-    _excluded_attributes = ('nbunch', 'beam_current')
+    _excluded_attributes = ('nbunch', )
     # Attributes propagated in copies:
     _std_attributes = ('name', '_energy', '_particle', 'periodicity',
                        '_cell_harmnumber', '_radiation', 'beam_current',
@@ -191,7 +191,6 @@ class Lattice(list):
             self._cell_harmnumber = int(round(frequency / rev))
             self.set_fillpattern()
         elif not math.isnan(ring_h):
-            print('test')
             self.harmonic_number = ring_h
 
     def __getitem__(self, key):
@@ -523,7 +522,7 @@ class Lattice(list):
     @property
     def bunch_list(self):
         """Indices of filled bunches"""
-        return numpy.nonzero(self._fillpattern)
+        return numpy.flatnonzero(self._fillpattern)
 
     @property
     def bunch_currents(self):
