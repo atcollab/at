@@ -421,7 +421,7 @@ class Multipole(LongElement, ThinMultipole):
 
 
 class _KMixin:
-
+    """Mixin class adding the K property to Dipole and Quadrupole"""
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
