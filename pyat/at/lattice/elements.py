@@ -427,7 +427,7 @@ class _KMixin:
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
         # noinspection PyUnresolvedReferences
-        return 0.0 if len(PolynomB) < 2 else self.PolynomB[1]
+        return 0.0 if len(self.PolynomB) < 2 else self.PolynomB[1]
 
     # noinspection PyPep8Naming
     @K.setter
