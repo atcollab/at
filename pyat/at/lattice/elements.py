@@ -142,7 +142,7 @@ class Element(object):
             yield k, v
         # Get slots and properties
         for k, v in getmembers(self.__class__, isdatadescriptor):
-            if not k.startswith('_'):
+            if k in {'K', 'H'}:
                 yield k, getattr(self, k)
 
     def is_compatible(self, other) -> bool:
@@ -419,19 +419,24 @@ class Multipole(LongElement, ThinMultipole):
         else:
             return False
 
+
+class _KMixin:
+
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
-        return self.PolynomB[1]
+        # noinspection PyUnresolvedReferences
+        return 0.0 if len(PolynomB) < 2 else self.PolynomB[1]
 
     # noinspection PyPep8Naming
     @K.setter
     def K(self, strength: float):
+        # noinspection PyUnresolvedReferences
         self.PolynomB[1] = strength
 
 
-class Dipole(Multipole):
+class Dipole(_KMixin, Multipole):
     """pyAT dipole element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['BendingAngle',
                                                              'K']
@@ -525,7 +530,7 @@ class Dipole(Multipole):
 Bend = Dipole
 
 
-class Quadrupole(Multipole):
+class Quadrupole(_KMixin, Multipole):
     """pyAT quadrupole element"""
     REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
