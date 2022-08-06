@@ -1,17 +1,17 @@
 import numpy
 # noinspection PyProtectedMember
 from ..lattice import Lattice
-from ..lattice.elements import Element, _array
+from ..lattice.elements import Element, Collective, _array
 from ..constants import clight, qe
 from .wake_object import Wake, WakeComponent
 
 
 # noinspection PyPep8Naming
-class WakeElement(Element):
+class WakeElement(Collective, Element):
     """Class to generate an AT wake element using the passmethod WakeFieldPass
     """
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
-
+    default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
                         _nelem=int, NumParticles=float, Circumference=float,
                         NormFact=lambda v: _array(v, (3,)),
@@ -39,7 +39,7 @@ class WakeElement(Element):
               to account for beta function at the observation point for
               example. Default: (1,1,1)
 """
-        kwargs.setdefault('PassMethod', 'WakeFieldPass')
+        kwargs.setdefault('PassMethod', self.default_pass[True])
         zcuts = kwargs.pop('ZCuts', None)
         betrel = ring.beta
         self._charge2current = clight*betrel*qe/ring.circumference
