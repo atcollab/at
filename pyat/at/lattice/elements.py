@@ -178,7 +178,7 @@ class Collective(LongMotion):
 class Element(object):
     """Base class for AT elements"""
 
-    REQUIRED_ATTRIBUTES = ['FamName']
+    _BUILD_ATTRIBUTES = ['FamName']
     _conversions = dict(FamName=str, PassMethod=str, Length=float,
                         R1=_array66, R2=_array66,
                         T1=lambda v: _array(v, (6,)),
@@ -227,7 +227,7 @@ class Element(object):
     def __repr__(self):
         attrs = dict(self.items())
         arguments = [attrs.pop(k, getattr(self, k)) for k in
-                     self.REQUIRED_ATTRIBUTES]
+                     self._BUILD_ATTRIBUTES]
         defelem = self.__class__(*arguments)
         keywords = ['{0!r}'.format(arg) for arg in arguments]
         keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
@@ -283,7 +283,6 @@ class Element(object):
 
     def items(self) -> Generator[Tuple, None, None]:
         """Iterates through the data members"""
-        # Get attributes
         for k, v in vars(self).items():
             yield k, v
 
@@ -338,7 +337,7 @@ class LongElement(Element):
 
     Base class for long elements
     """
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Length']
 
     def __init__(self, family_name: str, length: float, *args, **kwargs):
         """
@@ -401,7 +400,7 @@ class Monitor(Element):
 
 class Aperture(Element):
     """pyAT aperture element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Limits']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
     def __init__(self, family_name, limits, **kwargs):
@@ -479,7 +478,7 @@ class Drift(LongElement):
 
 class Collimator(Drift):
     """pyAT collimator element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['RApertures']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['RApertures']
 
     def __init__(self, family_name: str, length: float, limits, **kwargs):
         """
@@ -497,8 +496,8 @@ class Collimator(Drift):
 
 class ThinMultipole(Element):
     """pyAT thin multipole element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['PolynomA',
-                                                         'PolynomB']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
+                                                     'PolynomB']
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -558,8 +557,8 @@ class ThinMultipole(Element):
 
 class Multipole(Radiative, LongElement, ThinMultipole):
     """pyAT multipole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['PolynomA',
-                                                             'PolynomB']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['PolynomA',
+                                                         'PolynomB']
     _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b,
@@ -621,8 +620,8 @@ class Multipole(Radiative, LongElement, ThinMultipole):
 
 class Dipole(Multipole):
     """pyAT dipole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['BendingAngle',
-                                                             'K']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['BendingAngle',
+                                                         'K']
     _conversions = dict(Multipole._conversions, EntranceAngle=float,
                         ExitAngle=float,
                         FringeInt1=float, FringeInt2=float,
@@ -719,7 +718,7 @@ Bend = Dipole
 
 class Quadrupole(Multipole):
     """pyAT quadrupole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['K']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
                         FringeQuadExit=int)
 
@@ -766,7 +765,7 @@ class Quadrupole(Multipole):
 
 class Sextupole(Multipole):
     """pyAT sextupole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['H']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['H']
 
     DefaultOrder = 2
 
@@ -799,17 +798,17 @@ class Sextupole(Multipole):
 
 class Octupole(Multipole):
     """pyAT octupole element, with no changes from multipole at present"""
-    REQUIRED_ATTRIBUTES = Multipole.REQUIRED_ATTRIBUTES
+    _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
 
     DefaultOrder = 3
 
 
 class RFCavity(LongElement):
     """pyAT RF cavity element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Voltage',
-                                                             'Frequency',
-                                                             'HarmNumber',
-                                                             'Energy']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Voltage',
+                                                         'Frequency',
+                                                         'HarmNumber',
+                                                         'Energy']
     default_pass = {False: 'DriftPass', True: 'RFCavityPass'}
     _conversions = dict(LongElement._conversions,
                         Voltage=float, Frequency=float,
@@ -873,7 +872,7 @@ class RFCavity(LongElement):
 
 class M66(Element):
     """Linear (6, 6) transfer matrix"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(Element._conversions, M66=_array66)
 
     def __init__(self, family_name: str, m66=None, **kwargs):
@@ -892,7 +891,7 @@ class M66(Element):
 
 class Corrector(LongElement):
     """pyAT corrector element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['KickAngle']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['KickAngle']
 
     def __init__(self, family_name: str, length: float, kick_angle, **kwargs):
         """
@@ -913,8 +912,8 @@ class Wiggler(Radiative, LongElement):
 
     See atwiggler.m
     """
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
-                                                             'Energy']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Lw', 'Bmax',
+                                                         'Energy']
     _conversions = dict(Element._conversions, Lw=float, Bmax=float,
                         Energy=float,
                         Bx=lambda v: _array(v, (6, -1)),
@@ -970,10 +969,10 @@ class Wiggler(Radiative, LongElement):
 
 class QuantumDiffusion(LongMotion, Element):
 
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Lmatp']
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Lmatp']
     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
     _conversions = dict(Element._conversions, Lmatp=_array66)
-
+    
     def __init__(self, family_name: str, lmatp: numpy.ndarray, **kwargs):
         """
         Args:

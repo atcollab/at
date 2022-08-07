@@ -1,6 +1,6 @@
 import numpy
-# noinspection PyProtectedMember
 from ..lattice import Lattice
+# noinspection PyProtectedMember
 from ..lattice.elements import Element, Collective, _array
 from ..constants import clight, qe
 from .wake_object import Wake, WakeComponent
@@ -10,7 +10,7 @@ from .wake_object import Wake, WakeComponent
 class WakeElement(Collective, Element):
     """Class to generate an AT wake element using the passmethod WakeFieldPass
     """
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
                         _nelem=int, NumParticles=float, Circumference=float,
