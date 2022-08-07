@@ -21,7 +21,7 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %               'auto' substitutes 'RadPass' with 'Pass' in any method
 %               (default: 'auto')
 %
-%  [...] = ATRADOFF(...,keyword,value)
+%  [...] = ATRADOFF(...[,keyword,value]...)
 %   The following keywords trigger the processing of the following elements:
 %
 %   'bendpass'      pass method for bending magnets. Default 'auto'
@@ -29,6 +29,7 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 %   'sextupass'     pass method for sextupoles. Default 'auto'
 %   'octupass'      pass method for bending magnets. Default 'auto'
 %   'wigglerpass'	pass method for wigglers. Default 'auto'
+%   'otherpass'     pass method for other elements. Default 'auto'
 %
 %   OUPUTS
 %   1. RING2     Output ring
@@ -43,9 +44,10 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 [wigglerpass,varargs]=getoption(varargs,'wigglerpass','auto');
 [bendpass,varargs]=getoption(varargs,'bendpass','auto');
 [cavipass,varargs]=getoption(varargs,'cavipass','auto');
+[otherpass,varargs]=getoption(varargs,'otherpass','auto');
 [cavipass,bendpass,quadpass]=getargs(varargs,cavipass,bendpass,quadpass);
 
-[ring,cavities]=changepass(ring,cavipass,@(rg) atgetcells(rg,'Frequency'),@autoCavityPass,'Cavity');
+[ring,cavities]=changepass(ring,cavipass,@(rg) atgetcells(rg,'Frequency'),@autoElemPass,'Cavity');
 
 [ring,dipoles]=changepass(ring,bendpass,@(rg) atgetcells(ring,'BendingAngle',@(elem,bangle) bangle~=0),@autoMultiPolePass,'Bend');
 
@@ -57,6 +59,8 @@ function [ring,radelemIndex,cavitiesIndex]=atradoff(ring,varargin)
 
 [ring,wigglers]=changepass(ring,wigglerpass,@(rg) atgetcells(rg,'Class','Wiggler'),@autoMultiPolePass,'Wiggler');
 
+[ring,others]=changepass(ring,otherpass,@(rg) atgetcells(rg,'Class','QuantDiff'),@autoElemPass,'Wiggler');
+
 cavitiesIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'CavityPass'));
 radelemIndex=atgetcells(ring,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));
 
@@ -64,9 +68,9 @@ if any(cavities)
     atdisplay(1,['Cavities modified at position ' num2str(find(cavities)')]);
 end
 
-radnum=sum(dipoles|quadrupoles|sextupoles|octupoles|wigglers);
+radnum=sum(dipoles|quadrupoles|sextupoles|octupoles|wigglers|others);
 if radnum > 0
-    atdisplay(1,[num2str(radnum) ' elements switched to include radiation']);
+    atdisplay(1,[num2str(radnum) ' elements switched to disable longitudinal motion']);
 end
 
     function [ring,mask]=changepass(ring,newpass,selfunc,autopass,code) %#ok<INUSD>
@@ -111,7 +115,7 @@ end
         newpass=strrep(elem.PassMethod,'RadPass','Pass');
     end
 
-    function newpass=autoCavityPass(elem)
+    function newpass=autoElemPass(elem)
         % Default PassMethod for cavities
         if (elem.Length == 0)
             newpass='IdentityPass';
