@@ -51,7 +51,7 @@ class LongMotion:
 
         >>> class QuantumDiffusion(LongMotion, Element):
         ...
-        ...    default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
+        ...     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
 
         Defines a class such that :py:meth:`set_long_motion` will select
         ``'IdentityPass'`` or ``'IdentityPass'``.
@@ -163,7 +163,9 @@ class Collective(LongMotion):
     The :py:class:`Collective` class must be set as the first base class.
 
     Example:
-        >>> class WakeElement(Collective, Element): pass
+        >>> class WakeElement(Collective, Element):
+        ...
+        ...     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
 
         Defines a class where the :py:obj:`collective` property is handled
     """
