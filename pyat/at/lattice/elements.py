@@ -30,30 +30,32 @@ class LongMotion:
     # noinspection PyShadowingNames
     """Mixin class for elements modifying the particle momentum
 
-        :py:class:`LongMotion` provides:
+    :py:class:`LongMotion` provides:
 
-        * a :py:meth:`set_long_motion` method setting the PassMethod according
-          to the ``default_pass`` dictionary.
-        * a :py:obj:`.long_motion` property set to true when the PassMethod is
-          ``default_pass[True]``
+    * a :py:meth:`set_long_motion` method setting the PassMethod according
+      to the ``default_pass`` dictionary.
+    * a :py:obj:`.long_motion` property set to true when the PassMethod is
+      ``default_pass[True]``
 
-        The class must have a ``default_pass`` class attribute, a dictionary
-        such that:
+    The class must have a ``default_pass`` class attribute, a dictionary
+    such that:
 
-        * ``default_pass[False]`` is the PassMethod when radiation is turned
-          OFF,
-        * ``default_pass[True]`` is the default PassMethod when radiation is
-          turned ON.
+    * ``default_pass[False]`` is the PassMethod when radiation is turned
+      OFF,
+    * ``default_pass[True]`` is the default PassMethod when radiation is
+      turned ON.
 
-        Example:
+    The :py:class:`LongMotion` class must be set as the first base class.
 
-            >>> class QuantumDiffusion(LongMotion, Element):
-            ...
-            ...    default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
+    Example:
 
-            Defines a class such that :py:meth:`set_long_motion` will select
-            ``'IdentityPass'`` or ``'IdentityPass'``.
-        """
+        >>> class QuantumDiffusion(LongMotion, Element):
+        ...
+        ...    default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
+
+        Defines a class such that :py:meth:`set_long_motion` will select
+        ``'IdentityPass'`` or ``'IdentityPass'``.
+    """
     def _get_long_motion(self):
         return self.PassMethod != self.default_pass[False]
 
@@ -87,22 +89,24 @@ class Radiative(LongMotion):
     # noinspection PyShadowingNames
     r"""Mixin class for radiating elements
 
-            :py:class:`Radiative` provides:
+    :py:class:`Radiative` provides:
 
-            * a :py:meth:`set_long_motion` method setting the PassMethod
-              according to the following rule:
+    * a :py:meth:`set_long_motion` method setting the PassMethod
+      according to the following rule:
 
-              * ``onoff == True``: replace \*Pass by \*RadPass
-              * ``onoff == False``: replace \*RadPass by \*Pass
-            * a :py:obj:`.long_motion` property set to true when the PassMethod
-              ends with RadPass
+      * ``onoff == True``: replace \*Pass by \*RadPass
+      * ``onoff == False``: replace \*RadPass by \*Pass
+    * a :py:obj:`.long_motion` property set to true when the PassMethod
+      ends with RadPass
 
-        Example:
-            >>> class Multipole(Radiative, LongElement, ThinMultipole):
+    The :py:class:`Radiative` class must be set as the first base class.
 
-            Defines a class where :py:meth:`set_long_motion` will convert the
-            PassMethod according to the \*Pass or \*RadPass suffix.
-        """
+    Example:
+        >>> class Multipole(Radiative, LongElement, ThinMultipole):
+
+        Defines a class where :py:meth:`set_long_motion` will convert the
+        PassMethod according to the \*Pass or \*RadPass suffix.
+    """
     def _get_long_motion(self):
         return self.PassMethod.endswith('RadPass')
 
@@ -155,6 +159,8 @@ class Collective(LongMotion):
       are turned OFF,
     * ``default_pass[True]`` is the default PassMethod when collective effects
       are turned ON.
+
+    The :py:class:`Collective` class must be set as the first base class.
 
     Example:
         >>> class WakeElement(Collective, Element): pass
