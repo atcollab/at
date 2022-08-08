@@ -31,7 +31,6 @@ class WakeElement(Element):
             wake:           :py:class:`.Wake` object
 
         Keyword Arguments:
-            Current (float):    Bunch current [A]
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
@@ -41,10 +40,8 @@ class WakeElement(Element):
 """
         kwargs.setdefault('PassMethod', 'WakeFieldPass')
         zcuts = kwargs.pop('ZCuts', None)
-        betrel = ring.beta
-        self._charge2current = clight*betrel*qe/ring.circumference
-        self._wakefact = -qe/(ring.energy*betrel**2)
-        self.NumParticles = kwargs.pop('NumParticles', 0.0)
+        self._wakefact = - ring.circumference/(clight*
+                                               ring.energy*ring.beta**3)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
         self._turnhistory = None    # Defined here to avoid warning
@@ -72,9 +69,12 @@ class WakeElement(Element):
     def rebuild_wake(self, wake):
         self._build(wake)
 
-    def clear_history(self):
-        self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
-                                        order='F')
+    def clear_history(self, ring=None):
+        if ring is None:
+            tl = self._nturns*self._nslice
+        else:
+            tl = self._nturns*self._nslice*ring.nbunch
+        self._turnhistory = numpy.zeros((tl, 4), order='F')                 
 
     def set_normfactxy(self, ring):
         l0, _, _ = ring.get_optics(ring)
@@ -129,15 +129,10 @@ class WakeElement(Element):
     def Nturns(self, nslice):
         self._nslice = nslice
         self.clear_history()
-
+        
     @property
-    def Current(self):
-        """Bunch current [A]"""
-        return self.NumParticles*self._charge2current
-
-    @Current.setter
-    def Current(self, current):
-        self.NumParticles = current/self._charge2current
+    def TurnHistory(self):
+        return self._turnhistory
 
     def __repr__(self):
         """Simplified __repr__ to avoid errors due to arguments
@@ -169,7 +164,6 @@ class ResonatorElement(WakeElement):
             yokoya_factor:  Yokoya factor
 
         Keyword Arguments:
-            Current (float):    Bunch current [A]
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
@@ -255,7 +249,6 @@ class LongResonatorElement(ResonatorElement):
 
         Keyword Arguments:
             yokoya_factor:  Yokoya factor
-            Current (float):    Bunch current [A]
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
@@ -292,7 +285,6 @@ class ResWallElement(WakeElement):
             yokoya_factor:  Yokoya factor
 
         Keyword Arguments:
-            Current (float):    Bunch current [A]
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive

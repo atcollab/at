@@ -303,7 +303,7 @@ void set_current_fillpattern(PyArrayObject *bspos, PyArrayObject *bcurrents,
                                             NULL); 
         param->beam_current = PyFloat_AsDouble(bcurrentsum);
         Py_DECREF(bcurrentsum);    
-        param->nbunch = PyArray_SIZE(bspos);
+        param->nbunch = PyArray_Size(bspos);
         param->bunch_spos = PyArray_DATA(bspos);
         param->bunch_currents = PyArray_DATA(bcurrents); 
     }else{
