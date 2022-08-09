@@ -77,44 +77,44 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
 };
 
 
-double *getbounds(double *r_in, int nbunch, int num_particles){
+void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
+               double *smax, double *z_cuts){
     double *rtmp;
     int i, ib;
-    double *bounds= malloc(2*nbunch*sizeof(double));
-    double *smin = malloc(nbunch*sizeof(double));
-    double *smax = malloc(nbunch*sizeof(double));
-    for(i=0;i<nbunch; i++){
-        smin[i] = DBL_MAX;
-        smax[i] = -DBL_MAX;
-    }
-    /*First find the min and the max of the distribution*/  
-    for (i=0;i<num_particles;i++) {
-        rtmp = r_in+i*6;
-        ib = i%nbunch;
-        if (!atIsNaN(rtmp[0])) {
-            register double ct = rtmp[5];
-            if (ct>smax[ib]) smax[ib] = ct;
-            if (ct<smin[ib]) smin[ib] = ct;
+    if(z_cuts){
+        for(i=0;i<nbunch; i++){
+            smin[i] = z_cuts[0];
+            smax[i] = z_cuts[1];
+        }
+    }else{
+        for(i=0;i<nbunch; i++){
+            smin[i] = DBL_MAX;
+            smax[i] = -DBL_MAX;
+        }
+        /*First find the min and the max of the distribution*/  
+        for (i=0;i<num_particles;i++) {
+            rtmp = r_in+i*6;
+            ib = i%nbunch;
+            if (!atIsNaN(rtmp[0])) {
+                register double ct = rtmp[5];
+                if (ct>smax[ib]) smax[ib] = ct;
+                if (ct<smin[ib]) smin[ib] = ct;
+            }
+        }
+
+        #ifdef MPI
+        MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
+        MPI_Barrier(MPI_COMM_WORLD);
+        #endif
+
+        for(i=0;i<nbunch;i++){
+            if(smin[i]==smax[i]){
+                smin[i] -= 1.0e-12;
+                smax[i] += 1.0e-12;
+            }
         }
     }
-
-    #ifdef MPI
-    MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
-    MPI_Barrier(MPI_COMM_WORLD);
-    #endif
-
-    for(i=0;i<nbunch;i++){
-        if(smin[i]==smax[i]){
-            smin[i] -= 1.0e-12;
-            smax[i] += 1.0e-12;
-        }
-        bounds[i]=smin[i];
-        bounds[i+nbunch]=smax[i];
-    }
-    free(smin);
-    free(smax);
-    return bounds;
 }
 
 
@@ -124,18 +124,15 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     
     int i,ii,ib;
     double *rtmp;
-
-    double *bounds = z_cuts ? z_cuts : getbounds(r_in,nbunch,num_particles); 
     
-    double smin[nbunch];
-    double smax[nbunch];
-    double hz[nbunch];
+    double *smin = malloc(nbunch*sizeof(double));
+    double *smax = malloc(nbunch*sizeof(double));
+    double *hz = malloc(nbunch*sizeof(double));
+    getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts);     
+    
     for(i=0;i<nbunch;i++){
-        smin[i] = bounds[i];
-        smax[i] = bounds[i+nbunch];
         hz[i] = (smax[i]-smin[i])/(nslice);
     }
-    free(bounds);
 
     double *xpos = turnhistory + (nturns-1)*nslice*nbunch;
     double *ypos = turnhistory + (2*nturns-1)*nslice*nbunch;
@@ -199,7 +196,9 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
         weight[i] *= bunch_currents[ib]/np_total;
     } 
-
+    free(smin);
+    free(smax);
+    free(hz);
 };
 
 void compute_kicks(int nslice,int nturns,int nelem,
