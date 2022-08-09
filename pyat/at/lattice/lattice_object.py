@@ -503,9 +503,7 @@ class Lattice(list):
                 'bunches array can contain only positive numbers'
             fp = bunches
         self._fillpattern = fp/numpy.sum(fp)
-        welems = [w for w in self if w.PassMethod=='WakeFieldPass']
-        for w in welems:
-            w.clear_history(ring=self)
+        self.set_wake_turnhistory()
 
     @property
     def fillpattern(self):

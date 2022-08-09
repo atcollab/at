@@ -344,3 +344,12 @@ class ResWallElement(WakeElement):
     def Yokoya(self, yokoya):
         self._yokoya = yokoya
         self.rebuild_wake()
+
+
+def set_wake_turnhistory(ring):        
+        welems = ring.get_elements(WakeElement)
+        for w in welems:
+            w.clear_history(ring=ring)
+
+            
+Lattice.set_wake_turnhistory = set_wake_turnhistory
