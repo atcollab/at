@@ -66,8 +66,6 @@ def _fring(ring, split_inds=[], detuning_elem=None):
     except ValueError:      # No synchrotron radiation => no diffusion element
         pass
     fastring = Lattice(fastring, **vars(ring))
-    fastring.fillpattern = ring.fillpattern
-    fastring.beam_current = ring.beam_current
     return fastring
 
 
