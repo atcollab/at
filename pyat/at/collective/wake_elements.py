@@ -40,7 +40,7 @@ class WakeElement(Element):
 """
         kwargs.setdefault('PassMethod', 'WakeFieldPass')
         zcuts = kwargs.pop('ZCuts', None)
-        self._wakefact = - ring.circumference/(clight*
+        self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
@@ -74,7 +74,7 @@ class WakeElement(Element):
             tl = self._nturns*self._nslice
         else:
             tl = self._nturns*self._nslice*ring.nbunch
-        self._turnhistory = numpy.zeros((tl, 4), order='F')                 
+        self._turnhistory = numpy.zeros((tl, 4), order='F')
 
     def set_normfactxy(self, ring):
         l0, _, _ = ring.get_optics(ring)
@@ -129,9 +129,10 @@ class WakeElement(Element):
     def Nturns(self, nslice):
         self._nslice = nslice
         self.clear_history()
-        
+
     @property
     def TurnHistory(self):
+        """Turn histroy of the slices center of mass"""
         return self._turnhistory
 
     def __repr__(self):
@@ -311,6 +312,7 @@ class ResWallElement(WakeElement):
 
     @property
     def RWLength(self):
+        """Length of the resistive wall"""
         return self._rwlength
 
     @RWLength.setter
@@ -320,6 +322,7 @@ class ResWallElement(WakeElement):
 
     @property
     def Conductivity(self):
+        """Conductivity of the beam pipe [S/m]"""
         return self._conductivity
 
     @Conductivity.setter
@@ -329,6 +332,7 @@ class ResWallElement(WakeElement):
 
     @property
     def Rvac(self):
+        """Radius of the beam pipe [m]"""
         return self._rvac
 
     @Rvac.setter
@@ -338,6 +342,7 @@ class ResWallElement(WakeElement):
 
     @property
     def Yokoya(self):
+        """Yokoya factor for the reistive wall"""
         return self._yokoya
 
     @Yokoya.setter
@@ -346,10 +351,13 @@ class ResWallElement(WakeElement):
         self.rebuild_wake()
 
 
-def set_wake_turnhistory(ring):        
-        welems = ring.get_elements(WakeElement)
-        for w in welems:
-            w.clear_history(ring=ring)
+def set_wake_turnhistory(ring):
+    """Function to set the shape of the turn history
+    based on the number of slices, turns and bunches
+    """
+    welems = ring.get_elements(WakeElement)
+    for w in welems:
+        w.clear_history(ring=ring)
 
-            
+
 Lattice.set_wake_turnhistory = set_wake_turnhistory

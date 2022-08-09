@@ -193,7 +193,7 @@ class Lattice(list):
                 fp = kwargs.pop('_fillpattern', numpy.ones(1))
                 self.set_fillpattern(bunches=fp)
             except AssertionError:
-                self.set_fillpattern()              
+                self.set_fillpattern()
         elif not math.isnan(ring_h):
             self.harmonic_number = ring_h
 
