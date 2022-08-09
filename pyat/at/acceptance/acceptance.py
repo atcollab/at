@@ -75,8 +75,8 @@ def get_acceptance(
 
     Returns:
         boundary:   (2,n) array: 2D acceptance
-        tracked:    (2,n) array: Coordinates of tracked particles
         survived:   (2,n) array: Coordinates of surviving particles
+        tracked:    (2,n) array: Coordinates of tracked particles
 
     In case of multiple refpts, return values are lists of arrays, with one
     array per ref. point.
@@ -90,9 +90,7 @@ def get_acceptance(
         >>> plt.show()
     """
     kwargs = {}
-    if not use_mp:
-        grid_mode = GridMode.RECURSIVE
-    elif start_method is not None:
+    if start_method is not None:
         kwargs['start_method'] = start_method
 
     if verbose:
