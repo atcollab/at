@@ -143,6 +143,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->turnhistory=turnhistory;
         Elem->z_cuts=z_cuts;
     }
+    if(num_particles<Param->nbunch){
+        return PyErr_Format(PyExc_ValueError, "Number of particles has to be greater or equal to the number of bunches.");
+    }else if (num_particles%Param->nbunch!=0){
+        PyErr_WarnFormat(PyExc_RuntimeWarning, 0, "Number of particles not a multiple of the number of bunches: uneven bunch load.");
+    }
     WakeFieldPass(r_in,num_particles,Param->RingLength,Param->nbunch,Param->bunch_spos,
                   Param->bunch_currents,Elem);
     return Elem;
