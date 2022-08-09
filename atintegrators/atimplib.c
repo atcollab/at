@@ -80,9 +80,9 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
 double *getbounds(double *r_in, int nbunch, int num_particles){
     double *rtmp;
     int i, ib;
-    double *bounds= (double *)malloc(2*nbunch*sizeof(double));
-    double smin[nbunch];
-    double smax[nbunch];
+    double *bounds= malloc(2*nbunch*sizeof(double));
+    double *smin = malloc(nbunch*sizeof(double));
+    double *smax = malloc(nbunch*sizeof(double));
     for(i=0;i<nbunch; i++){
         smin[i] = DBL_MAX;
         smax[i] = -DBL_MAX;
@@ -112,6 +112,8 @@ double *getbounds(double *r_in, int nbunch, int num_particles){
         bounds[i]=smin[i];
         bounds[i+nbunch]=smax[i];
     }
+    free(smin);
+    free(smax);
     return bounds;
 }
 
