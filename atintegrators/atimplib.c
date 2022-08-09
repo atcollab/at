@@ -122,7 +122,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
                  int nbunch,double *bunch_spos,double *bunch_currents,
                  double *turnhistory,int *pslice,double *z_cuts){
     
-    int i,ii,ib;
+    int i,ii,ib,is;
     double *rtmp;
     
     double *smin = malloc(nbunch*sizeof(double));
@@ -190,7 +190,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     /*Compute average x/y position and weight of each slice */
     for (i=0;i<nslice*nbunch;i++) {
         ib = (int)(i/nslice);
-        zpos[i] =  (weight[i]>0.0) ? zpos[i]/weight[i] : (smin[ib]+(i/nbunch+0.5)*hz[ib]);
+        zpos[i] =  (weight[i]>0.0) ? zpos[i]/weight[i] : smin[ib]+(i%nslice+0.5)*hz[ib];
         zpos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         xpos[i] =  (weight[i]>0.0) ? xpos[i]/weight[i] : 0.0;
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
