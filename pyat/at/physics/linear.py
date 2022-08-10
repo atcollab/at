@@ -1119,9 +1119,9 @@ def get_tune(ring: Lattice, method: str = 'linopt',
             p1 -= numpy.mean(p1, axis=1, keepdims=True)
         p2 = solve(ld.A, p1[:nv, :])
         return numpy.conjugate(p2.T.view(dtype=complex).T)
-    get_integer = kwargs.pop('get_integer',False)
+    get_integer = kwargs.pop('get_integer', False)
     if get_integer:
-        assert method=='linopt',\
+        assert method == 'linopt',\
            'Integer tune only accessible with method=linopt'
     if method == 'linopt':
         if get_integer:

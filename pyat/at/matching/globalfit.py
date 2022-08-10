@@ -65,7 +65,7 @@ def _fit_tune_chrom(ring: Lattice, index: int, func,
     print('Initial value', func(ring, dp, **kwargs))
     while sumsq > tol and n < niter:
         sumsq = _fit(ring, index, func, refpts1, refpts2, newval,
-                     J, dp=dp, **kwargs)                 
+                     J, dp=dp, **kwargs)
         print('iter#', n, 'Res.', sumsq)
         n += 1
     print('Final value', func(ring, dp, **kwargs), '\n')
@@ -82,18 +82,19 @@ def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         ring:       Lattice description
         refpts1:    Selection of the 1st family
         refpts2:    Selection of the 2nd family
-        newval:     New tunes
+        newval:     New tunes, in case an non-zero integer part
+                    is provided, fit_integer is set to True
         tol:        Tolerance for the matching; Default: 1.0e-12
         dp:         Momentum deviation. Default: 0
         niter:      Maximum number of iterations. Default 3
         fit_integer: bool (default=False), use integer tune
-    
+
     Typical usage:
     at.matching.fit_tune(ring, refpts1, refpts2, [0.1,0.25])
     """
     print('\nFitting Tune...')
-    if numpy.any(numpy.floor(newval)!=0.0):
-        kwargs['fit_integer'] = True   
+    if numpy.any(numpy.floor(newval) != 0.0):
+        kwargs['fit_integer'] = True
     _fit_tune_chrom(ring, 1, _get_tune, refpts1, refpts2, newval, tol=tol,
                     dp=dp, niter=niter, **kwargs)
 
