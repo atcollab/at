@@ -722,6 +722,7 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
 
 def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
     """Sets the translations of a list of elements.
+    
     Usage:
     
     .. code-block:: python
