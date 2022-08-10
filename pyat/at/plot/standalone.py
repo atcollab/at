@@ -105,7 +105,13 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
 
 def plot_geometry(ring: Lattice, start_coordinates=(0, 0, 0),
                   centered=False, offset=(0.0, 0.0), ax=None, label=''):
-    """Compute the 2D ring geometry in cartesian coordinates
+    """Compute the 2D ring geometry in cartesian coordinates.
+    
+    Usage:
+    
+    .. code-block:: python
+    
+       ring.plot_geometry()
 
     Parameters:
         ring: Lattice description
