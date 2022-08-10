@@ -90,7 +90,7 @@ def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         fit_integer: bool (default=False), use integer tune
 
     Typical usage:
-    at.matching.fit_tune(ring, refpts1, refpts2, [0.1,0.25])
+    at.fit_tune(ring, refpts1, refpts2, [0.1,0.25])
     """
     print('\nFitting Tune...')
     if numpy.any(numpy.floor(newval) != 0.0):
@@ -115,7 +115,7 @@ def fit_chrom(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         niter:      Maximum number of iterations. Default 3
 
     Typical usage:
-    at.matching.fit_chrom(ring, refpts1, refpts2, [10,5])
+    at.fit_chrom(ring, refpts1, refpts2, [10,5])
     """
     print('\nFitting Chromaticity...')
     _fit_tune_chrom(ring, 2, _get_chrom, refpts1, refpts2, newval, tol=tol,
