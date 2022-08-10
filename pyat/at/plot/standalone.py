@@ -103,4 +103,34 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
     return boundary, survived, grid
 
 
+def plot_geometry(ring: Lattice, start_coordinates=(0, 0, 0),
+                  centered=False, offset=(0.0, 0.0), ax=None, label=''):
+    """Compute the 2D ring geometry in cartesian coordinates
+
+    Parameters:
+        ring: Lattice description
+        start_coordinates: x,y,angle at starting point
+        centered: it True the coordinates origin is the center of the ring
+        offset: (dx, dy) offsets coordinates by the given amount
+        ax: axes where to plot, if not given axes are created
+        label: label of curve
+
+    Returns:
+        geomdata: recarray containing, x, y, angle
+        radius: machine radius
+        ax: plot axis
+    """
+    if not ax:
+        fig, ax = plt.subplots()
+    geom, radius = ring.get_geometry(start_coordinates=start_coordinates,
+                                     centered=centered, offset=offset)
+    ax.plot(geom['x'], geom['y'], 'o:', linewidth=0.5, markersize=2,
+            label=label)
+    ax.set_xlabel('x [m]')
+    ax.set_ylabel('y [m]')
+    ax.set_aspect('equal', 'box')
+    return geom, radius, ax
+
+
 Lattice.plot_acceptance = plot_acceptance
+Lattice.plot_geometry = plot_geometry
