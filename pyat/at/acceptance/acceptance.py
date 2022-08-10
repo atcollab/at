@@ -88,6 +88,12 @@ def get_acceptance(
         >>> plt.plot(*sf,'.')
         >>> plt.plot(*bf)
         >>> plt.show()
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     kwargs = {}
     if not use_mp:
@@ -212,7 +218,7 @@ def get_1d_acceptance(
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
-    
+
     .. note::
 
        * When``use_mp=True`` all the available CPUs will be used.
