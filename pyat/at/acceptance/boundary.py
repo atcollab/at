@@ -270,7 +270,7 @@ def get_grid_boundary(mask, grid, config):
         return bnd
 
     if not numpy.any(mask):
-        raise AtError("No particle survived, please check you grid "
+        raise AtError("No particle survived, please check your grid "
                       "or lattice.")
 
     if config.mode is GridMode.RADIAL:
