@@ -1,6 +1,6 @@
 """Global set of constants"""
 import os
-
+import multiprocessing
 
 class _Dst(object):
     """Set of constants for AT numerical analysis"""
@@ -11,7 +11,7 @@ class _Dst(object):
     OrbConvergence = 1.e-12  # Convergence criterion for orbit
     OrbMaxIter = 20          # Max. number of iterations for orbit
     omp_num_threads = int(os.environ.get('OMP_NUM_THREADS', '0'))
-
+    patpass_poolsize = multiprocessing.cpu_count()
     def __setattr__(self, name, value):
         _ = getattr(self, name)     # make sure attribute exists
         object.__setattr__(self, name, value)
