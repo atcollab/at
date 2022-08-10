@@ -1102,6 +1102,7 @@ def get_tune(ring: Lattice, method: str = 'linopt',
         fmax (float):           Upper tune bound. Default: 1
         hann (bool):            Turn on Hanning window.
           Default: :py:obj:`False`
+        get_integer(bool):   Turn on integer tune (slower)
 
     Returns:
         tunes (ndarray):        array([:math:`\nu_x,\nu_y`])
