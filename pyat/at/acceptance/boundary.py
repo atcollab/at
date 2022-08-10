@@ -175,10 +175,6 @@ def get_survived(parts, ring, nturns, use_mp, **kwargs):
         survived = numpy.invert(numpy.isnan(parts[0]))
     else:
         survived = numpy.invert(numpy.isnan(parts[0, :]))
-    if not numpy.any(survived):
-        raise AtError("No particle survived, please check you grid "
-                      "or lattice: GridMode.RADIAL can be used to "
-                      "find proper settings.")
     return survived
 
 
@@ -273,6 +269,10 @@ def get_grid_boundary(mask, grid, config):
             bnd[:, i] = search_bnd(ma, sa)
         return bnd
 
+    if not numpy.any(mask):
+        raise AtError("No particle survived, please check you grid "
+                      "or lattice.")
+
     if config.mode is GridMode.RADIAL:
         return radial_boundary(mask, grid)
     elif config.mode is GridMode.CARTESIAN:
@@ -360,8 +360,12 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                                  pm[planesi]]) if mask.size else pm[planesi]
             for i in range(len(angles)):
                 if not survived[i] and fact[i] > ftol:
-                    for j, pi in enumerate(planesi):
-                        part[pi, i] -= cs[j, i]*rsteps[j]*min(1, 2*fact[i])
+                    deltas = cs[:, i]*rsteps[:]*min(1, 2*fact[i])
+                    if numpy.any(abs(deltas) > abs(part[planesi, i])):
+                        part[planesi, i] = numpy.zeros(2)
+                    else:
+                        for j, pi in enumerate(planesi):
+                            part[pi, i] -= deltas[j]
                     survived[i] = True
                     fact[i] *= 1/divider
 
