@@ -47,7 +47,7 @@ _DEFAULT_PASS = {
         ('octupole_pass', elt.Octupole, 'auto'),
         ('multipole_pass', elt.Multipole, 'auto'),
         ('collective_pass', elt.Collective, 'auto'),
-        ('other_pass', elt.LongMotion, 'auto'),
+        ('diffusion_pass', elt.QuantumDiffusion, 'auto'),
     ),
     True: (
         ('cavity_pass', elt.RFCavity, 'auto'),
@@ -58,7 +58,7 @@ _DEFAULT_PASS = {
         ('octupole_pass', elt.Octupole, None),
         ('multipole_pass', elt.Multipole, None),
         ('collective_pass', elt.Collective, 'auto'),
-        ('other_pass', elt.LongMotion, 'auto'),
+        ('diffusion_pass', elt.QuantumDiffusion, 'auto'),
     )
 }
 

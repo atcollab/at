@@ -25,12 +25,27 @@ def _nop(value):
     return value
 
 
+class LongtMotion(object):
+    """Base class for all Element classes whose instances may modify the
+    particle momentum
+
+    Allows to identify elements potentially inducing longitudinal motion
+
+    Subclasses of :py:class:`LongtMotion` must provide two methods for
+    enabling longitudinal motion:
+
+    * ``_get_longt_motion(self)`` must return the activation state,
+    * ``set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs)``
+      must enable or disable longitudinal motion.
+    """
+
+
 # noinspection PyUnresolvedReferences
-class LongMotion:
+class DictLongtMotion(LongtMotion):
     # noinspection PyShadowingNames
     """Mixin class for elements modifying the particle momentum
 
-    :py:class:`LongMotion` provides:
+    :py:class:`DictLongtMotion` provides:
 
     * a :py:meth:`set_longt_motion` method setting the PassMethod according
       to the ``default_pass`` dictionary.
@@ -45,18 +60,17 @@ class LongMotion:
     * ``default_pass[True]`` is the default PassMethod when radiation is
       turned ON.
 
-    The :py:class:`LongMotion` class must be set as the first base class.
+    The :py:class:`DictLongtMotion` class must be set as the first base class.
 
     Example:
 
-        >>> class QuantumDiffusion(LongMotion, Element):
+        >>> class QuantumDiffusion(DictLongtMotion, Element):
         ...
         ...     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
 
         Defines a class such that :py:meth:`set_longt_motion` will select
         ``'IdentityPass'`` or ``'IdentityPass'``.
-    """
-
+        """
     def _get_longt_motion(self):
         return self.PassMethod != self.default_pass[False]
 
@@ -86,7 +100,7 @@ class LongMotion:
 
 
 # noinspection PyUnresolvedReferences
-class Radiative(LongMotion):
+class Radiative(LongtMotion):
     # noinspection PyShadowingNames
     r"""Mixin class for radiating elements
 
@@ -112,11 +126,11 @@ class Radiative(LongMotion):
     def _get_longt_motion(self):
         return self.PassMethod.endswith('RadPass')
 
-    def _autopass(self, onoff):
+    def _autopass(self, enable):
         rad = self.longt_motion
-        if onoff and not rad:
+        if enable and not rad:
             return ''.join((self.PassMethod[:-4], 'RadPass'))
-        elif not onoff and rad:
+        elif not enable and rad:
             return ''.join((self.PassMethod[:-7], 'Pass'))
         else:
             return None
@@ -145,14 +159,11 @@ class Radiative(LongMotion):
         setpass(self)
 
 
-class Collective(LongMotion):
+class Collective(DictLongtMotion):
     """Mixin class for elements representing collective effects
 
     Derived classes will automatically set the :py:obj:`is_collective`
     property when the element is active.
-
-    This is based in :py:class:`LongMotion`, so that collective effects can be
-    turned ON/OFF using :py:obj:`.Lattice.radiation_off()`.
 
     The class must have a ``default_pass`` class attribute, a dictionary such
     that:
@@ -971,7 +982,7 @@ class Wiggler(Radiative, LongElement):
         self.NVharm = self.Bx.shape[1]
 
 
-class QuantumDiffusion(LongMotion, Element):
+class QuantumDiffusion(DictLongtMotion, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Lmatp']
     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
     _conversions = dict(Element._conversions, Lmatp=_array66)
