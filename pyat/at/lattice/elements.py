@@ -32,10 +32,10 @@ class LongMotion:
 
     :py:class:`LongMotion` provides:
 
-    * a :py:meth:`set_long_motion` method setting the PassMethod according
+    * a :py:meth:`set_longt_motion` method setting the PassMethod according
       to the ``default_pass`` dictionary.
-    * a :py:obj:`.long_motion` property set to true when the PassMethod is
-      ``default_pass[True]``
+    * a :py:obj:`.longt_motion` property set to ``True`` when the PassMethod
+      is ``default_pass[True]``
 
     The class must have a ``default_pass`` class attribute, a dictionary
     such that:
@@ -53,19 +53,20 @@ class LongMotion:
         ...
         ...     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
 
-        Defines a class such that :py:meth:`set_long_motion` will select
+        Defines a class such that :py:meth:`set_longt_motion` will select
         ``'IdentityPass'`` or ``'IdentityPass'``.
     """
-    def _get_long_motion(self):
+
+    def _get_longt_motion(self):
         return self.PassMethod != self.default_pass[False]
 
     # noinspection PyShadowingNames,PyUnusedLocal,PyAttributeOutsideInit
-    def set_long_motion(self, onoff, newpass=None, copy=False, **kwargs):
+    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
         """Enable/Disable longitudinal motion
 
         Parameters:
-            onoff:      ``True`` for enabling, ``False`` for disabling
-            newpass:    New PassMethod:
+            enable:     ``True`` for enabling, ``False`` for disabling
+            new_pass:   New PassMethod:
 
               * ``None``: makes no change,
               * ``'auto'``: Uses the default conversion,
@@ -73,15 +74,15 @@ class LongMotion:
             copy:       If True, returns a modified copy of the element,
               otherwise modifies the element in-place
         """
-        if newpass == 'auto':
-            newpass = self.default_pass[onoff]
-        if newpass is None or newpass == self.PassMethod:
+        if new_pass == 'auto':
+            new_pass = self.default_pass[enable]
+        if new_pass is None or new_pass == self.PassMethod:
             return self if copy else None
         if copy:
             newelem = deepcopy(self)
-            newelem.PassMethod = newpass
+            newelem.PassMethod = new_pass
             return newelem
-        self.PassMethod = newpass
+        self.PassMethod = new_pass
 
 
 # noinspection PyUnresolvedReferences
@@ -91,12 +92,12 @@ class Radiative(LongMotion):
 
     :py:class:`Radiative` provides:
 
-    * a :py:meth:`set_long_motion` method setting the PassMethod
+    * a :py:meth:`set_longt_motion` method setting the PassMethod
       according to the following rule:
 
-      * ``onoff == True``: replace \*Pass by \*RadPass
-      * ``onoff == False``: replace \*RadPass by \*Pass
-    * a :py:obj:`.long_motion` property set to true when the PassMethod
+      * ``enable == True``: replace \*Pass by \*RadPass
+      * ``enable == False``: replace \*RadPass by \*Pass
+    * a :py:obj:`.longt_motion` property set to true when the PassMethod
       ends with RadPass
 
     The :py:class:`Radiative` class must be set as the first base class.
@@ -104,14 +105,15 @@ class Radiative(LongMotion):
     Example:
         >>> class Multipole(Radiative, LongElement, ThinMultipole):
 
-        Defines a class where :py:meth:`set_long_motion` will convert the
+        Defines a class where :py:meth:`set_longt_motion` will convert the
         PassMethod according to the \*Pass or \*RadPass suffix.
     """
-    def _get_long_motion(self):
+
+    def _get_longt_motion(self):
         return self.PassMethod.endswith('RadPass')
 
     def _autopass(self, onoff):
-        rad = self.long_motion
+        rad = self.longt_motion
         if onoff and not rad:
             return ''.join((self.PassMethod[:-4], 'RadPass'))
         elif not onoff and rad:
@@ -120,18 +122,18 @@ class Radiative(LongMotion):
             return None
 
     # noinspection PyTypeChecker,PyShadowingNames
-    def set_long_motion(self, onoff, copy=False, newpass=None, **kwargs):
-        if newpass == 'auto':
-            newpass = self._autopass(onoff)
-        if newpass is None or newpass == self.PassMethod:
+    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
+        if new_pass == 'auto':
+            new_pass = self._autopass(enable)
+        if new_pass is None or new_pass == self.PassMethod:
             return self if copy else None
-        if onoff:
+        if enable:
             def setpass(el):
-                el.PassMethod = newpass
+                el.PassMethod = new_pass
                 el.Energy = kwargs['energy']
         else:
             def setpass(el):
-                el.PassMethod = newpass
+                el.PassMethod = new_pass
                 try:
                     del el.Energy
                 except AttributeError:
@@ -146,7 +148,7 @@ class Radiative(LongMotion):
 class Collective(LongMotion):
     """Mixin class for elements representing collective effects
 
-    Derived classes will automatically set the :py:obj:`collective`
+    Derived classes will automatically set the :py:obj:`is_collective`
     property when the element is active.
 
     This is based in :py:class:`LongMotion`, so that collective effects can be
@@ -167,7 +169,7 @@ class Collective(LongMotion):
         ...
         ...     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
 
-        Defines a class where the :py:obj:`collective` property is handled
+        Defines a class where the :py:obj:`is_collective` property is handled
     """
 
     def _get_collective(self):
@@ -297,13 +299,14 @@ class Element(object):
             raise TypeError('Cannot merge {0} and {1}'.format(self.FamName,
                                                               badname))
 
-    # noinspection PyShadowingNames,PyIncorrectDocstring
-    def set_long_motion(self, onoff: bool, copy: bool = False, **kwargs):
+    # noinspection PyShadowingNames
+    def set_longt_motion(self, enable: bool, new_pass: str = None,
+                         copy: bool = False, **kwargs):
         """Enable/Disable longitudinal motion
 
         Parameters:
-            onoff:      ``True`` for enabling, ``False`` for disabling
-            newpass:    New PassMethod:
+            enable:     ``True`` for enabling, ``False`` for disabling
+            new_pass:   New PassMethod:
 
               * ``None``: makes no change,
               * ``'auto'``: Uses the default conversion,
@@ -314,7 +317,7 @@ class Element(object):
         return self if copy else None
 
     # noinspection PyMethodMayBeStatic
-    def _get_long_motion(self):
+    def _get_longt_motion(self):
         return False
 
     # noinspection PyMethodMayBeStatic
@@ -322,12 +325,12 @@ class Element(object):
         return False
 
     @property
-    def long_motion(self):
+    def longt_motion(self):
         """``True`` if longitudinal motion is affected by the element"""
-        return self._get_long_motion()
+        return self._get_longt_motion()
 
     @property
-    def collective(self):
+    def is_collective(self):
         """``True`` if the element involves collective effects"""
         return self._get_collective()
 
@@ -470,7 +473,7 @@ class Drift(LongElement):
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
-        line = [None] * nline           # type: List[Optional[Element]]
+        line = [None] * nline  # type: List[Optional[Element]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
@@ -512,6 +515,7 @@ class ThinMultipole(Element):
 
         Default PassMethod: ``ThinMPolePass``
         """
+
         def getpol(poly):
             nonzero = numpy.flatnonzero(poly != 0.0)
             return poly, len(poly), nonzero[-1] if len(nonzero) > 0 else -1
@@ -585,8 +589,8 @@ class Multipole(Radiative, LongElement, ThinMultipole):
 
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and \
-           self.MaxOrder == other.MaxOrder:
-            for i in range(self.MaxOrder+1):
+                self.MaxOrder == other.MaxOrder:
+            for i in range(self.MaxOrder + 1):
                 if self.PolynomB[i] != other.PolynomB[i]:
                     return False
                 if self.PolynomA[i] != other.PolynomA[i]:
@@ -853,21 +857,21 @@ class RFCavity(LongElement):
         super().merge(other)
         self.Voltage += other.Voltage
 
-    def _get_long_motion(self):
+    def _get_longt_motion(self):
         return self.PassMethod.endswith('CavityPass')
 
     # noinspection PyShadowingNames
-    def set_long_motion(self, onoff, copy=False, newpass=None, **kwargs):
-        rad = self.long_motion
-        if newpass is None or (rad and onoff) or not (rad or onoff):
+    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
+        rad = self.longt_motion
+        if new_pass is None or (rad and enable) or not (rad or enable):
             return self if copy else None
-        newpass = (self.default_pass[True] if onoff else
-                   ('IdentityPass' if self.Length == 0 else 'DriftPass'))
+        new_pass = (self.default_pass[True] if enable else
+                    ('IdentityPass' if self.Length == 0 else 'DriftPass'))
         if copy:
             newelem = deepcopy(self)
-            newelem.PassMethod = newpass
+            newelem.PassMethod = new_pass
             return newelem
-        self.PassMethod = newpass
+        self.PassMethod = new_pass
 
 
 class M66(Element):
@@ -952,13 +956,13 @@ class Wiggler(Radiative, LongElement):
                                       By=By, Bx=Bx, Energy=energy, **kwargs)
 
         for i, b in enumerate(self.By.T):
-            dk = abs(b[3]**2 - b[4]**2 - b[2]**2) / abs(b[4])
+            dk = abs(b[3] ** 2 - b[4] ** 2 - b[2] ** 2) / abs(b[4])
             if dk > 1e-6:
                 raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
                                  "{0}".format(i))
 
         for i, b in enumerate(self.Bx.T):
-            dk = abs(b[2]**2 - b[4]**2 - b[3]**2) / abs(b[4])
+            dk = abs(b[2] ** 2 - b[4] ** 2 - b[3] ** 2) / abs(b[4])
             if dk > 1e-6:
                 raise ValueError("Wiggler(V): ky^2 + kz^2 -kx^2 !=0, i = "
                                  "{0}".format(i))
@@ -968,11 +972,10 @@ class Wiggler(Radiative, LongElement):
 
 
 class QuantumDiffusion(LongMotion, Element):
-
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Lmatp']
     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
     _conversions = dict(Element._conversions, Lmatp=_array66)
-    
+
     def __init__(self, family_name: str, lmatp: numpy.ndarray, **kwargs):
         """
         Args:

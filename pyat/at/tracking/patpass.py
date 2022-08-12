@@ -145,7 +145,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     def collective(rg) -> bool:
         """True if any element involves collective effects"""
         for elem in rg:
-            if elem.collective:
+            if elem.is_collective:
                 return True
         return False
 

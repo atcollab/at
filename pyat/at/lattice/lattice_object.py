@@ -624,7 +624,7 @@ class Lattice(list):
         except AttributeError:
             radiate = False
             for elem in self:
-                if elem.long_motion:
+                if elem.longt_motion:
                     radiate = True
                     break
             # noinspection PyAttributeOutsideInit
@@ -632,10 +632,10 @@ class Lattice(list):
             return radiate
 
     @property
-    def collective(self) -> bool:
+    def is_collective(self) -> bool:
         """True if any element involves collective effects"""
         for elem in self:
-            if elem.collective:
+            if elem.is_collective:
                 return True
         return False
 
@@ -666,7 +666,7 @@ class Lattice(list):
                 attrs = elem_modify(elem)
                 if attrs is not None:
                     elem.update(attrs)
-                if elem.long_motion:
+                if elem.longt_motion:
                     radiate = True
             self._radiation = radiate
             self.update(kws)
@@ -679,7 +679,7 @@ class Lattice(list):
                 if attrs is not None:
                     elem = elem.copy()
                     elem.update(attrs)
-                if elem.long_motion:
+                if elem.longt_motion:
                     radiate = True
                 yield elem
             params['_radiation'] = radiate
@@ -689,15 +689,15 @@ class Lattice(list):
         else:
             lattice_modify(**kwargs)
 
-    def _set_radiation(self, onoff: bool, *args, **kwargs):
+    def _set_radiation(self, enable: bool, *args, **kwargs):
         """Set the lattice radiation state"""
 
         def lattice_modify():
             """Modifies the Lattice in place"""
             radiate = False
             for elem in self:
-                elem.set_long_motion(onoff, newpass=getpass(elem), **vargs)
-                if elem.long_motion:
+                elem.set_longt_motion(enable, new_pass=getpass(elem), **vargs)
+                if elem.longt_motion:
                     radiate = True
             self._radiation = radiate
             self.update(kwargs)
@@ -706,9 +706,9 @@ class Lattice(list):
             """Custom iterator for the creation of a new lattice"""
             radiate = False
             for elem in self:
-                elem = elem.set_long_motion(onoff, newpass=getpass(elem),
-                                            copy=True, **vargs)
-                if elem.long_motion:
+                elem = elem.set_longt_motion(enable, new_pass=getpass(elem),
+                                             copy=True, **vargs)
+                if elem.longt_motion:
                     radiate = True
                 yield elem
             params['_radiation'] = radiate
@@ -736,9 +736,9 @@ class Lattice(list):
         # for backwards compatibility
         kwargs.update(
             zip(('cavity_pass', 'dipole_pass', 'quadrupole_pass'), args))
-        vargs = dict(energy=self.energy) if onoff else {}
+        vargs = dict(energy=self.energy) if enable else {}
         # Build table of PassMethods
-        pass_table = [passm(*defs) for defs in _DEFAULT_PASS[onoff]]
+        pass_table = [passm(*defs) for defs in _DEFAULT_PASS[enable]]
 
         if cp:
             return Lattice(lattice_copy, iterator=self.attrs_filter, **kwargs)
@@ -1020,7 +1020,7 @@ def type_filter(params, elems: Iterable[Element]) \
     radiate = False
     for idx, elem in enumerate(elems):
         if isinstance(elem, Element):
-            if elem.long_motion:
+            if elem.longt_motion:
                 radiate = True
             yield elem
         else:
