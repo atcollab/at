@@ -9,7 +9,6 @@ import re
 import numpy
 import copy
 from typing import Optional, Generator, Tuple, List, Iterable
-from inspect import getmembers, isdatadescriptor
 
 
 _collective = ['ImpedanceTablePass', 'WakeFieldPass']
@@ -136,14 +135,10 @@ class Element(object):
         return copy.deepcopy(self)
 
     def items(self) -> Generator[Tuple, None, None]:
-        """Iterates through the data members including slots and properties"""
+        """Iterates through the data members"""
         # Get attributes
         for k, v in vars(self).items():
             yield k, v
-        # Get slots and properties
-        for k, v in getmembers(self.__class__, isdatadescriptor):
-            if not k.startswith('_'):
-                yield k, getattr(self, k)
 
     def is_compatible(self, other) -> bool:
         """Checks if another Element can be merged"""
@@ -423,12 +418,23 @@ class Multipole(LongElement, ThinMultipole):
     @property
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
-        return self.PolynomB[1]
+        return 0.0 if len(self.PolynomB) < 2 else self.PolynomB[1]
 
     # noinspection PyPep8Naming
     @K.setter
     def K(self, strength: float):
         self.PolynomB[1] = strength
+
+    # noinspection PyPep8Naming
+    @property
+    def H(self) -> float:
+        """Sextupolar strength"""
+        return 0.0 if len(self.PolynomB) < 3 else self.PolynomB[2]
+
+    # noinspection PyPep8Naming
+    @H.setter
+    def H(self, strength):
+        self.PolynomB[2] = strength
 
 
 class Dipole(Multipole):
@@ -499,6 +505,10 @@ class Dipole(Multipole):
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
+    def items(self) -> Generator[Tuple, None, None]:
+        yield from super().items()
+        yield 'K', self.K
+
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
@@ -567,6 +577,10 @@ class Quadrupole(Multipole):
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
 
+    def items(self) -> Generator[Tuple, None, None]:
+        yield from super().items()
+        yield 'K', self.K
+
 
 class Sextupole(Multipole):
     """pyAT sextupole element"""
@@ -596,16 +610,9 @@ class Sextupole(Multipole):
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
 
-    # noinspection PyPep8Naming
-    @property
-    def H(self) -> float:
-        """Sextupolar strength"""
-        return self.PolynomB[2]
-
-    # noinspection PyPep8Naming
-    @H.setter
-    def H(self, strength):
-        self.PolynomB[2] = strength
+    def items(self) -> Generator[Tuple, None, None]:
+        yield from super().items()
+        yield 'H', self.H
 
 
 class Octupole(Multipole):
