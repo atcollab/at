@@ -689,7 +689,7 @@ class Lattice(list):
         else:
             lattice_modify(**kwargs)
 
-    def _set_radiation(self, enable: bool, *args, **kwargs):
+    def _set_6d(self, enable: bool, *args, **kwargs):
         """Set the lattice radiation state"""
 
         def lattice_modify():
@@ -713,48 +713,67 @@ class Lattice(list):
                 yield elem
             params['_radiation'] = radiate
 
-        def passm(key, eltype, def_pass):
-            if allset:
-                def_pass = all_pass
-            return eltype, kwargs.pop(key, def_pass)
-
-        def getpass(elem):
-            for eltype, psm in pass_table:
-                if isinstance(elem, eltype):
-                    return psm
-            return None
-
         cp = kwargs.pop('copy', False)
-        # Look for global defaults
-        try:
-            all_pass = kwargs.pop('all_pass')
-        except KeyError:
-            allset = False
+        if len(args) == 1:
+            def getpass(elem):
+                return 'auto' if isinstance(elem, sel) else None
+
+            if len(kwargs) > 0:
+                raise AtError('No keyword allowed')
+            sel, = args
+        elif len(args) == 0:
+            def getpass(elem):
+                for eltype, psm in pass_table:
+                    if isinstance(elem, eltype):
+                        return psm
+                return None
+
+            def passm(key, eltype, def_pass):
+                if allset:
+                    def_pass = all_pass
+                return eltype, kwargs.pop(key, def_pass)
+
+            # Look for global defaults
+            try:
+                all_pass = kwargs.pop('all_pass')
+            except KeyError:
+                allset = False
+            else:
+                allset = True
+            vargs = dict(energy=self.energy) if enable else {}
+            # Build table of PassMethods
+            pass_table = [passm(*defs) for defs in _DEFAULT_PASS[enable]]
         else:
-            allset = True
-        # Keep cavity_pass, dipole_pass, quadrupole_pass as positional arguments
-        # for backwards compatibility
-        kwargs.update(
-            zip(('cavity_pass', 'dipole_pass', 'quadrupole_pass'), args))
-        vargs = dict(energy=self.energy) if enable else {}
-        # Build table of PassMethods
-        pass_table = [passm(*defs) for defs in _DEFAULT_PASS[enable]]
+            raise AtError('A single argument is allowed')
 
         if cp:
             return Lattice(lattice_copy, iterator=self.attrs_filter, **kwargs)
         else:
             lattice_modify()
 
-    # noinspection PyShadowingNames
-    def radiation_on(self, *args, **kwargs) -> Optional["Lattice"]:
+    # noinspection PyShadowingNames,PyIncorrectDocstring
+    def enable_6d(self, *args, **kwargs) -> Optional["Lattice"]:
         # noinspection PyUnresolvedReferences
         r"""
-        Turn acceleration and radiation on. By default, turn on
-        radiation in dipoles and quadrupoles, turn on RF cavities and
-        activates collective effects.
+        enable_6d(elem_class, copy=False)
+        enable_6d(cavity_pass='auto'[, dipole_pass='auto']..., copy=False)
+
+        Turn longitudinal motion on. By default, turn on
+        radiation in dipoles and quadrupoles, turn on RF cavities, activates
+        collective effects and other elements acting on momentum.
 
         Modify the lattice in-place or creates a new lattice, depending on the
-        ``copy`` keyword argument
+        ``copy`` keyword argument.
+
+        Parameters:
+            elem_class:                 :py:class:`.Element` subclass, or tuple
+              of :py:class:`.Element` subclasses. Longitudinal motion is turned
+              on for elements which are instances of any given ``elem_class``.
+
+              The default PassMethod conversion is used.
+
+              No keyword except ``copy`` is allowed if ``elem_class`` is
+              provided.
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
@@ -769,9 +788,8 @@ class Lattice(list):
               multipoles
             collective_pass='auto':     PassMethod set on collective effect
               elements (:py:class:`.WakeElement`,...)
-            other_pass='auto':          PassMethod set on other elements
-              affecting the longitudinal motion (:py:class:`.QuantumDiffusion`,
-              ...)
+            diffusion_pass='auto':      PassMethod set on
+              :py:class:`.QuantumDiffusion`
             copy=False: If ``False``, the modification is done in-place,
               If ``True``, return a shallow copy of the lattice. Only the
               radiating elements are copied with PassMethod modified.
@@ -790,29 +808,51 @@ class Lattice(list):
         * anything else:   set as the new PassMethod
 
         Examples:
-            >>> ring.radiation_on()
+            >>> ring.enable_6d()
 
             Modify `ring` in-place, turn cavities ON, turn synchrotron
             radiation ON in Dipoles and Quadrupoles, turn collective effects
             ON.
 
-            >>> newring = ring.radiation_on(all_pass=None, cavity_pass='auto',
+            >>> ring.enable_6d((at.RFCavity, at.Dipole))
+
+            Modify `ring` in-place, turn cavities ON, turn synchrotron
+            radiation ON in Dipoles.
+
+            >>> newring = ring.enable_6d(at.Collective, copy=True)
+
+            Returns a new lattice with collective effects turned ON and nothing
+            else changed
+
+            >>> newring = ring.enable_6d(all_pass=None, collective_pass='auto',
             ... copy=True)
 
-            Return a new Lattice (shallow copy) with cavities ON and everything
-            else unaffected.
+            Same as the previous example, using the keyword syntax.
         """
-        return self._set_radiation(True, *args, **kwargs)
+        return self._set_6d(True, *args, **kwargs)
 
-    # noinspection PyShadowingNames
-    def radiation_off(self, *args, **kwargs) -> Optional["Lattice"]:
+    # noinspection PyShadowingNames,PyIncorrectDocstring
+    def disable_6d(self, *args, **kwargs) -> Optional["Lattice"]:
         # noinspection PyUnresolvedReferences
         r"""
-        Turn acceleration and radiation off. By default, turn off radiation in
-        all magnets, turn off RF cavities and disables collective effects.
+        disable_6d(elem_class, copy=False)
+        disable_6d(cavity_pass='auto'[, dipole_pass='auto']..., copy=False)
+
+        Turn longitudinal motion off. By default, remove all longitudinal
+        motion.
 
         Modify the lattice in-place or creates a new lattice, depending on the
         ``copy`` keyword argument
+
+        Parameters:
+            elem_class:                 :py:class:`.Element` subclass, or tuple
+              of :py:class:`.Element` subclasses. Longitudinal motion is turned
+              off for elements which are instances of any given ``elem_class``.
+
+              The default PassMethod conversion is used.
+
+              No keyword except ``copy`` is allowed if ``elem_class`` is
+              provided.
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
@@ -827,9 +867,8 @@ class Lattice(list):
               multipoles
             collective_pass='auto':     PassMethod set on collective effect
               elements (:py:class:`.WakeElement`,...)
-            other_pass='auto':          PassMethod set on other elements
-              affecting the longitudinal motion (:py:class:`.QuantumDiffusion`,
-              ...)
+            diffusion_pass='auto':      PassMethod set on
+              :py:class:`.QuantumDiffusion`
             copy=False: If ``False``, the modification is done in-place,
               If ``True``, return a shallow copy of the lattice. Only the
               radiating elements are copied with PassMethod modified.
@@ -848,23 +887,31 @@ class Lattice(list):
         * anything else:   set as the new PassMethod
 
         Examples:
-            >>> ring.radiation_off()
+            >>> ring.disable_6d()
 
             Modify `ring` in-place, turn OFF everything affecting the
             longitudinal momentum.
 
-            >>> newring = ring.radiation_off(cavity_pass=None, copy=True)
+            >>> ring.disable_6d(at.RFCavity)
 
-            Return a new Lattice (shallow copy) with everything turned OFF
-            except RF cavities.
+            Turn cavities OFF (nothing else modified).
 
-            >>> newring = ring.radiation_off(all_pass=None,
+            >>> ring.disable_6d(all_pass=None, cavity_pass='auto')
+
+            Same as the previous example, but using the keyword syntax.
+
+            >>> newring = ring.disable_6d(cavity_pass=None, copy=True)
+
+            Return a new Lattice (shallow copy of `ring`) with everything
+            turned OFF except RF cavities.
+
+            >>> newring = ring.disable_6d(all_pass=None,
             ... sextupole_pass='DriftPass', copy=True)
 
-            Return a new Lattice (shallow copy) with sextupoles turned in
-            Drifts (turned off) and everything else not affected.
+            Return a new Lattice (shallow copy of `ring`) with sextupoles
+            turned into Drifts (turned off) and everything else unchangedd.
         """
-        return self._set_radiation(False, *args, **kwargs)
+        return self._set_6d(False, *args, **kwargs)
 
     def sbreak(self, break_s, break_elems=None, **kwargs):
         """Insert elements at selected locations in the lattice
@@ -973,6 +1020,39 @@ class Lattice(list):
         elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
         return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, **kwargs)
+
+    # Obsolete methods kept for compatibility
+    def radiation_on(self, *args, **kwargs) -> Optional["Lattice"]:
+        """Turn longitudinal motion on
+
+        The function name is misleading, since the function deals with
+        longitudinal motion in general.
+
+        For this reason **the method is obsolete** and replaced by
+        :py:meth:`.enable_6d`
+
+        See Also:
+            :py:meth:`.enable_6d`
+        """
+        kwargs.update(
+            zip(('cavity_pass', 'dipole_pass', 'quadrupole_pass'), args))
+        return self._set_6d(True, **kwargs)
+
+    def radiation_off(self, *args, **kwargs) -> Optional["Lattice"]:
+        """Turn longitudinal motion off
+
+        The function name is misleading, since the function deals with
+        longitudinal motion in general.
+
+        For this reason **the method is obsolete** and replaced by
+        :py:meth:`.disable_6d`
+
+        See Also:
+            :py:meth:`disable_6d`
+        """
+        kwargs.update(
+            zip(('cavity_pass', 'dipole_pass', 'quadrupole_pass'), args))
+        return self._set_6d(False, **kwargs)
 
 
 def lattice_filter(params, lattice):
