@@ -770,10 +770,11 @@ class Lattice(list):
               of :py:class:`.Element` subclasses. Longitudinal motion is turned
               on for elements which are instances of any given ``elem_class``.
 
-              The default PassMethod conversion is used.
+              The default PassMethod conversion is used, as with the ``'auto'``
+              keyword value..
 
-              No keyword except ``copy`` is allowed if ``elem_class`` is
-              provided.
+              **No keyword except** ``copy`` **is allowed if** ``elem_class``
+              **is provided**.
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
@@ -849,10 +850,11 @@ class Lattice(list):
               of :py:class:`.Element` subclasses. Longitudinal motion is turned
               off for elements which are instances of any given ``elem_class``.
 
-              The default PassMethod conversion is used.
+              The default PassMethod conversion is used, as with the ``'auto'``
+              keyword value.
 
-              No keyword except ``copy`` is allowed if ``elem_class`` is
-              provided.
+              **No keyword except** ``copy`` **is allowed if** ``elem_class``
+              **is provided**.
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default

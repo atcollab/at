@@ -100,11 +100,11 @@ class DictLongtMotion(LongtMotion):
 
 
 # noinspection PyUnresolvedReferences
-class Radiative(LongtMotion):
+class _Radiative(LongtMotion):
     # noinspection PyShadowingNames
     r"""Mixin class for radiating elements
 
-    :py:class:`Radiative` provides:
+    :py:class:`_Radiative` provides:
 
     * a :py:meth:`set_longt_motion` method setting the PassMethod
       according to the following rule:
@@ -114,10 +114,10 @@ class Radiative(LongtMotion):
     * a :py:obj:`.longt_motion` property set to true when the PassMethod
       ends with RadPass
 
-    The :py:class:`Radiative` class must be set as the first base class.
+    The :py:class:`_Radiative` class must be set as the first base class.
 
     Example:
-        >>> class Multipole(Radiative, LongElement, ThinMultipole):
+        >>> class Multipole(_Radiative, LongElement, ThinMultipole):
 
         Defines a class where :py:meth:`set_longt_motion` will convert the
         PassMethod according to the \*Pass or \*RadPass suffix.
@@ -157,6 +157,32 @@ class Radiative(LongtMotion):
             setpass(newelem)
             return newelem
         setpass(self)
+
+
+class Radiative(_Radiative):
+    # noinspection PyShadowingNames
+    r"""Mixin class for default radiating elements (:py:class:`.Dipole`,
+    :py:class:`.Quadrupole`)
+
+    :py:class:`Radiative` provides:
+
+    * a :py:meth:`.set_longt_motion` method setting the PassMethod
+      according to the following rule:
+
+      * ``enable == True``: replace \*Pass by \*RadPass
+      * ``enable == False``: replace \*RadPass by \*Pass
+    * a :py:obj:`.longt_motion` property set to true when the PassMethod
+      ends with RadPass
+
+    The :py:class:`Radiative` class must be set as the first base class.
+
+    Example:
+        >>> class Dipole(Radiative, Multipole):
+
+        Defines a class where :py:meth:`set_longt_motion` will convert the
+        PassMethod according to the \*Pass or \*RadPass suffix.
+    """
+    pass
 
 
 class Collective(DictLongtMotion):
@@ -570,7 +596,7 @@ class ThinMultipole(Element):
         super(ThinMultipole, self).__setattr__(key, value)
 
 
-class Multipole(Radiative, LongElement, ThinMultipole):
+class Multipole(_Radiative, LongElement, ThinMultipole):
     """pyAT multipole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['PolynomA',
                                                          'PolynomB']
@@ -633,7 +659,7 @@ class Multipole(Radiative, LongElement, ThinMultipole):
         self.PolynomB[2] = strength
 
 
-class Dipole(Multipole):
+class Dipole(Radiative, Multipole):
     """pyAT dipole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['BendingAngle',
                                                          'K']
@@ -731,7 +757,7 @@ class Dipole(Multipole):
 Bend = Dipole
 
 
-class Quadrupole(Multipole):
+class Quadrupole(Radiative, Multipole):
     """pyAT quadrupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
