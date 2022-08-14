@@ -614,7 +614,10 @@ class Lattice(list):
     @property
     def BRho(self) -> float:
         """Magnetic rigidity [T.m]"""
-        return math.sqrt(self.energy**2 - self.particle.rest_energy**2)/clight
+        rest_energy = self.particle.rest_energy
+        if rest_energy == 0.0:
+            rest_energy = e_mass
+        return math.sqrt(self.energy**2 - rest_energy**2)/clight
 
     @property
     def radiation(self) -> bool:
@@ -696,7 +699,9 @@ class Lattice(list):
             """Modifies the Lattice in place"""
             radiate = False
             for elem in self:
-                elem.set_longt_motion(enable, new_pass=getpass(elem), **vargs)
+                new_pass = getpass(elem)
+                if new_pass:
+                    elem.set_longt_motion(enable, new_pass=new_pass, **vargs)
                 if elem.longt_motion:
                     radiate = True
             self._radiation = radiate
@@ -706,7 +711,9 @@ class Lattice(list):
             """Custom iterator for the creation of a new lattice"""
             radiate = False
             for elem in self:
-                elem = elem.set_longt_motion(enable, new_pass=getpass(elem),
+                new_pass = getpass(elem)
+                if new_pass:
+                    elem = elem.set_longt_motion(enable, new_pass=new_pass,
                                              copy=True, **vargs)
                 if elem.longt_motion:
                     radiate = True
@@ -714,14 +721,16 @@ class Lattice(list):
             params['_radiation'] = radiate
 
         cp = kwargs.pop('copy', False)
-        if len(args) == 1:
+        if len(args) > 0:
             def getpass(elem):
-                return 'auto' if isinstance(elem, sel) else None
+                return 'auto' if isinstance(elem, args) else None
 
+            if not all(issubclass(cl, elt.LongtMotion) for cl in args):
+                raise TypeError("All arguments must be subclasses of"
+                                " 'LongtMotion'")
             if len(kwargs) > 0:
-                raise AtError('No keyword allowed')
-            sel, = args
-        elif len(args) == 0:
+                raise AtError('No keyword is allowed in this mode')
+        else:
             def getpass(elem):
                 for eltype, psm in pass_table:
                     if isinstance(elem, eltype):
@@ -740,12 +749,10 @@ class Lattice(list):
                 allset = False
             else:
                 allset = True
-            vargs = dict(energy=self.energy) if enable else {}
             # Build table of PassMethods
             pass_table = [passm(*defs) for defs in _DEFAULT_PASS[enable]]
-        else:
-            raise AtError('A single argument is allowed')
 
+        vargs = dict(energy=self.energy) if enable else {}
         if cp:
             return Lattice(lattice_copy, iterator=self.attrs_filter, **kwargs)
         else:
@@ -755,7 +762,7 @@ class Lattice(list):
     def enable_6d(self, *args, **kwargs) -> Optional["Lattice"]:
         # noinspection PyUnresolvedReferences
         r"""
-        enable_6d(elem_class, copy=False)
+        enable_6d(elem_class[, elem_class]..., copy=False)
         enable_6d(cavity_pass='auto'[, dipole_pass='auto']..., copy=False)
 
         Turn longitudinal motion on. By default, turn on
@@ -765,16 +772,30 @@ class Lattice(list):
         Modify the lattice in-place or creates a new lattice, depending on the
         ``copy`` keyword argument.
 
+        **Syntax using positional arguments:**
+
         Parameters:
-            elem_class:                 :py:class:`.Element` subclass, or tuple
-              of :py:class:`.Element` subclasses. Longitudinal motion is turned
-              on for elements which are instances of any given ``elem_class``.
+            elem_class:                 :py:class:`.Element` subclass.
+              Longitudinal motion is turned on for elements which are
+              instances of any given ``elem_class``.
+
+              In adition to single element classes, a few grouping classes are
+              available:
+
+              * :py:class:`.LongtMotion`: all elements possibly acting on
+                momentum,
+              * :py:class:`.Radiative`: default radiative elements:
+                :py:class:`.Dipole`, :py:class:`.Quadrupole`,
+                :py:class:`.Wiggler`,
+              * :py:class:`.Collective`: all elements dealing with collective
+                effects.
 
               The default PassMethod conversion is used, as with the ``'auto'``
               keyword value..
 
-              **No keyword except** ``copy`` **is allowed if** ``elem_class``
-              **is provided**.
+              **No keyword except** ``copy`` **is allowed in this syntax.**
+
+        **Syntax using keyword arguments:**
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
@@ -815,10 +836,10 @@ class Lattice(list):
             radiation ON in Dipoles and Quadrupoles, turn collective effects
             ON.
 
-            >>> ring.enable_6d((at.RFCavity, at.Dipole))
+            >>> ring.enable_6d(at.RFCavity, at.Radiative)
 
             Modify `ring` in-place, turn cavities ON, turn synchrotron
-            radiation ON in Dipoles.
+            radiation ON in dipoles and quadupoles.
 
             >>> newring = ring.enable_6d(at.Collective, copy=True)
 
@@ -836,25 +857,39 @@ class Lattice(list):
     def disable_6d(self, *args, **kwargs) -> Optional["Lattice"]:
         # noinspection PyUnresolvedReferences
         r"""
-        disable_6d(elem_class, copy=False)
+        disable_6d(elem_class[, elem_class]... , copy=False)
         disable_6d(cavity_pass='auto'[, dipole_pass='auto']..., copy=False)
 
         Turn longitudinal motion off. By default, remove all longitudinal
         motion.
 
         Modify the lattice in-place or creates a new lattice, depending on the
-        ``copy`` keyword argument
+        ``copy`` keyword argument.
+
+        **Syntax using positional arguments:**
 
         Parameters:
-            elem_class:                 :py:class:`.Element` subclass, or tuple
-              of :py:class:`.Element` subclasses. Longitudinal motion is turned
-              off for elements which are instances of any given ``elem_class``.
+            elem_class:                 :py:class:`.Element` subclass.
+              Longitudinal motion is turned off for elements which are
+              instances of any given ``elem_class``.
+
+              In adition to single element classes, a few grouping classes are
+              available:
+
+              * :py:class:`.LongtMotion`: all elements possibly acting on
+                momentum,
+              * :py:class:`.Radiative`: default radiative elements:
+                :py:class:`.Dipole`, :py:class:`.Quadrupole`,
+                :py:class:`.Wiggler`,
+              * :py:class:`.Collective`: all elements dealing with collective
+                effects.
 
               The default PassMethod conversion is used, as with the ``'auto'``
               keyword value.
 
-              **No keyword except** ``copy`` **is allowed if** ``elem_class``
-              **is provided**.
+              **No keyword except** ``copy`` **is allowed in this syntax.**
+
+        **Syntax using keyword arguments:**
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
