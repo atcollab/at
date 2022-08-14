@@ -32,7 +32,7 @@ from .utils import get_s_pos, get_elements, get_cells, get_refpts
 from .utils import get_value_refpts, set_value_refpts
 from .utils import set_shift, set_tilt, get_geometry
 from . import elements as elt
-from .elements import Element, Monitor, RFCavity
+from .elements import Element
 
 _TWO_PI_ERROR = 1.E-4
 Filter = Callable[..., Iterable[Element]]
@@ -714,7 +714,7 @@ class Lattice(list):
                 new_pass = getpass(elem)
                 if new_pass:
                     elem = elem.set_longt_motion(enable, new_pass=new_pass,
-                                             copy=True, **vargs)
+                                                 copy=True, **vargs)
                 if elem.longt_motion:
                     radiate = True
                 yield elem
@@ -1038,7 +1038,7 @@ class Lattice(list):
         try:
             keep = self.bool_refpts(kwargs.pop('keep'))
         except KeyError:
-            keep = self.get_cells(checktype((Monitor, RFCavity)))
+            keep = self.get_cells(checktype((elt.Monitor, elt.RFCavity)))
 
         return Lattice(reduce_filter, self.select(kp | keep),
                        iterator=self.attrs_filter, **kwargs)
