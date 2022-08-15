@@ -243,7 +243,7 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
     function beta=get_beta(ring)
         rest_energy=getparticle(ring).rest_energy;
         gammainv=rest_energy / getenergy(ring);
-        beta= sqrt(1.0 - gammainv/gammainv);
+        beta= sqrt(1.0 - gammainv*gammainv);
     end
 
     function [str,varargout]=strpop(str,varargin)
