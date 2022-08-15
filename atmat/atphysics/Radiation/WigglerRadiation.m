@@ -16,8 +16,6 @@ function [I1,I2,I3,I4,I5] = WigglerRadiation(ring,lindata)
 % I3 is integrated analytically for a single harmonic, numerically otherwise
 
 nstep=60;
-e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
-cspeed = PhysConstant.speed_of_light_in_vacuum.value;                   % m/s
 
 iswiggler=@(elem) isfield(elem,'Class') && strcmp(elem.Class,'Wiggler') ...
     && ~strcmp(elem.PassMethod,'DriftPass');
@@ -27,7 +25,7 @@ if any(wigglers)
     if length(energy) > 1
         error('AT:NoEnergy','Energy field not equal for all elements');
     end
-    Brho=sqrt(energy*energy - e_mass*e_mass)/cspeed;
+    Brho=atGetRingProperties(ring,'BRho');
     vini=lindata([wigglers;false])';
     [di1,di2,di3,di4,di5]=cellfun(@wigrad,ring(wigglers),num2cell(vini));
     I1=sum(di1);

@@ -53,6 +53,9 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
                 clight=PhysConstant.speed_of_light_in_vacuum.value;
                 energy=getenergy(ring);
                 rest_energy=getparticle(ring).rest_energy;
+                if rest_energy == 0
+                    rest_energy = 1.0e6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
+                end
                 v=sqrt(energy^2 - rest_energy^2)/clight;
             case 'mcf'
                 v=get_mcf(ring);
@@ -239,12 +242,8 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
 
     function beta=get_beta(ring)
         rest_energy=getparticle(ring).rest_energy;
-        if rest_energy == 0
-            beta=1.0;
-        else
-            gamma=getenergy(ring) / rest_energy;
-            beta= sqrt(1.0 - 1.0/gamma/gamma);
-        end
+        gammainv=rest_energy / getenergy(ring);
+        beta= sqrt(1.0 - gammainv/gammainv);
     end
 
     function [str,varargout]=strpop(str,varargin)
