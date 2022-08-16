@@ -88,6 +88,12 @@ def get_acceptance(
         >>> plt.plot(*sf,'.')
         >>> plt.plot(*bf)
         >>> plt.show()
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     kwargs = {}
     if not use_mp:
@@ -212,6 +218,12 @@ def get_1d_acceptance(
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     assert len(numpy.atleast_1d(plane)) == 1, \
         '1D acceptance: single plane required'
@@ -274,6 +286,12 @@ def get_horizontal_acceptance(ring: Lattice,
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     return get_1d_acceptance(ring, 'x', resolution, amplitude, *args, **kwargs)
 
@@ -326,6 +344,12 @@ def get_vertical_acceptance(ring: Lattice,
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     return get_1d_acceptance(ring, 'y', resolution, amplitude, *args, **kwargs)
 
@@ -378,6 +402,12 @@ def get_momentum_acceptance(ring: Lattice,
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     return get_1d_acceptance(ring, 'dp', resolution, amplitude, *args, **kwargs)
 
