@@ -771,7 +771,7 @@ def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
     yy = numpy.zeros((len(ring)+1, 1))
     angle = numpy.zeros((len(ring)+1, 1))
     x, y, t = start_coordinates
-    cost, sint = numpy.cos(t), numpy.sin(t) 
+    x0, y0, t0 = start_coordinates
 
     for ind, el in enumerate(ring+[ring[0]]):
         ang = 0.0
@@ -787,11 +787,11 @@ def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
         yy[ind] = y
         angle[ind] = t
 
-    radius = get_s_pos(ring, len(ring))[0] / abs(t) \
+    radius = get_s_pos(ring, len(ring))[0] / abs(t-t0) \
         if t != 0.0 else 0.0
     if centered:
-        xx += -abs(radius)*sint - start_coordinates[0]
-        yy += abs(radius)*cost - start_coordinates[1]
+        xx += -abs(radius)*numpy.sin(t0) - x0
+        yy += abs(radius)*numpy.cos(t0) - y0
     geomdata['x'] = xx
     geomdata['y'] = yy
     geomdata['angle'] = angle
