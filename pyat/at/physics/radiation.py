@@ -212,10 +212,10 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
           ignored and the off-momentum is deduced from the path lengthening.
         method (Callable):  Method for linear optics:
 
-          :py:obj:`.linopt2`: no longitudinal motion, no H/V coupling,
+          :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
 
-          :py:obj:`.linopt6` (default): with or without longitudinal motion,
-          normal mode analysis
+          :py:obj:`~.linear.linopt6` (default): with or without longitudinal
+          motion, normal mode analysis
 
     Returns:
         i1 (float): Radiation integrals - :math:`I_1 \quad [m]`

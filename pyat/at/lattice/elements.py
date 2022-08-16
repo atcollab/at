@@ -116,15 +116,16 @@ class _Radiative(LongtMotion):
     # noinspection PyShadowingNames
     r"""Mixin class for radiating elements
 
-    :py:class:`_Radiative` provides:
+    :py:class:`_Radiative` implements the mechanism for converting the pass
+    methods of radiating elements. It provides:
 
     * a :py:meth:`set_longt_motion` method setting the PassMethod
       according to the following rule:
 
-      * ``enable == True``: replace \*Pass by \*RadPass
-      * ``enable == False``: replace \*RadPass by \*Pass
+      * ``enable == True``: replace "\*Pass" by "\*RadPass"
+      * ``enable == False``: replace "\*RadPass" by "\*Pass"
     * a :py:obj:`.longt_motion` property set to true when the PassMethod
-      ends with RadPass
+      ends with "RadPass"
 
     The :py:class:`_Radiative` class must be set as the first base class.
 
@@ -176,23 +177,21 @@ class Radiative(_Radiative):
     r"""Mixin class for default radiating elements (:py:class:`.Dipole`,
     :py:class:`.Quadrupole`, :py:class:`.Wiggler`)
 
-    :py:class:`Radiative` provides:
+    :py:class:`Radiative` is a base class for the subset of radiative elements
+    considered as the ones to be turned on by default: :py:class:`.Dipole`,
+    :py:class:`.Quadrupole` and :py:class:`.Wiggler`, excluding the higher
+    order multipoles.
 
-    * a :py:meth:`set_longt_motion` method setting the PassMethod
-      according to the following rule:
-
-      * ``enable == True``: replace \*Pass by \*RadPass
-      * ``enable == False``: replace \*RadPass by \*Pass
-    * a :py:obj:`.longt_motion` property set to true when the PassMethod
-      ends with RadPass
-
-    The :py:class:`Radiative` class must be set as the first base class.
+    :py:class:`Radiative` inherits from :py:class:`_Radiative` and does not
+    add any new functionality. Its purpose is to identify the default set of
+    radiating elements.
 
     Example:
         >>> class Dipole(Radiative, Multipole):
 
-        Defines a class where :py:meth:`set_longt_motion` will convert the
-        PassMethod according to the \*Pass or \*RadPass suffix.
+        Defines a class belonging to the default radiating elements. It
+        converts the PassMethod according to the "\*Pass" or "\*RadPass"
+        suffix.
     """
     pass
 
