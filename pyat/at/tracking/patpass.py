@@ -7,7 +7,7 @@ from at.lattice import uint32_refpts
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass
-from at.lattice import AtWarning, elements, DConstant
+from at.lattice import AtWarning, DConstant
 import numpy
 
 
