@@ -4,7 +4,6 @@ such as the tune and the chromaticity
 """
 from typing import Optional
 import numpy
-from warnings import warn
 from ..lattice import Lattice, Refpts, set_value_refpts
 from ..lattice import AtWarning, AtError
 from ..physics import get_tune, get_chrom
@@ -84,6 +83,8 @@ def fit_tune(ring: Lattice, refpts1: Refpts, refpts2: Refpts, newval,
         refpts2:    Selection of the 2nd family
         newval:     New tunes, in case an non-zero integer part
                     is provided, fit_integer is set to True
+                    
+    Keyword arguments:
         tol:        Tolerance for the matching; Default: 1.0e-12
         dp:         Momentum deviation. Default: 0
         niter:      Maximum number of iterations. Default 3
