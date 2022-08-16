@@ -104,7 +104,7 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
 
 
 def plot_geometry(ring: Lattice, start_coordinates=(0, 0, 0),
-                  centered=False, offset=(0.0, 0.0), ax=None, label=''):
+                  centered=False, ax=None, label=''):
     """Compute the 2D ring geometry in cartesian coordinates.
     
     Usage:
@@ -129,7 +129,7 @@ def plot_geometry(ring: Lattice, start_coordinates=(0, 0, 0),
     if not ax:
         fig, ax = plt.subplots()
     geom, radius = ring.get_geometry(start_coordinates=start_coordinates,
-                                     centered=centered, offset=offset)
+                                     centered=centered)
     ax.plot(geom['x'], geom['y'], 'o:', linewidth=0.5, markersize=2,
             label=label)
     ax.set_xlabel('x [m]')

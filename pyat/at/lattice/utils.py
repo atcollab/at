@@ -17,7 +17,8 @@ returned values are given at the entrance of each element specified in refpts;
 """
 import numpy
 import functools
-from typing import Callable, Optional, Sequence, Iterator, TypeVar, Union, Tuple
+from typing import Callable, Optional, Sequence, Iterator, TypeVar
+from typing import Union, Tuple, List
 from itertools import compress
 from fnmatch import fnmatch
 from .elements import Element, Dipole
@@ -722,12 +723,6 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
 
 def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
     """Sets the translations of a list of elements.
-    
-    Usage:
-    
-    .. code-block:: python
-    
-       ring.get_geometry()
 
     Parameters:
         ring:           Lattice description
@@ -743,15 +738,20 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
         shift_elem(el, dx, dy, relative=relative)
 
 
-def get_geometry(ring: Sequence[Element], start_coordinates=(0, 0, 0),
-                 centered=False, offset=(0.0, 0.0)):
+def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
+                 centered=False):
     """Compute the 2D ring geometry in cartesian coordinates
+
+    Usage:
+
+    .. code-block:: python
+
+       ring.get_geometry()
 
     Parameters:
         ring: Lattice description
         start_coordinates: x,y,angle at starting point
         centered: it True the coordinates origin is the center of the ring
-        offset: (dx, dy) offsets coordinates by the given amount
 
     Returns:
         geomdata: recarray containing, x, y, angle
@@ -771,6 +771,7 @@ def get_geometry(ring: Sequence[Element], start_coordinates=(0, 0, 0),
     yy = numpy.zeros((len(ring)+1, 1))
     angle = numpy.zeros((len(ring)+1, 1))
     x, y, t = start_coordinates
+    cost, sint = numpy.cos(t), numpy.sin(t) 
 
     for ind, el in enumerate(ring+[ring[0]]):
         ang = 0.0
@@ -786,16 +787,11 @@ def get_geometry(ring: Sequence[Element], start_coordinates=(0, 0, 0),
         yy[ind] = y
         angle[ind] = t
 
-    try:
-        radius = ll / abs(t)
-    except ValueError as ex:
-        print(ex)
-        print('geometry: radius not computed, set to 0.0')
-        radius = 0.0
-    rshift = radius if centered else 0.0
-
-    xx += offset[0]
-    yy += offset[1] + abs(rshift)
+    radius = get_s_pos(ring, len(ring))[0] / abs(t) \
+        if t != 0.0 else 0.0
+    if centered:
+        xx += -abs(radius)*sint - start_coordinates[0]
+        yy += abs(radius)*cost - start_coordinates[1]
     geomdata['x'] = xx
     geomdata['y'] = yy
     geomdata['angle'] = angle
