@@ -17,10 +17,11 @@ returned values are given at the entrance of each element specified in refpts;
 """
 import numpy
 import functools
-from typing import Callable, Optional, Sequence, Iterator, TypeVar, Union, Tuple
+from typing import Callable, Optional, Sequence, Iterator, TypeVar
+from typing import Union, Tuple, List
 from itertools import compress
 from fnmatch import fnmatch
-from .elements import Element
+from .elements import Element, Dipole
 
 Refpts = TypeVar("Refpts", int, Sequence[int], bool, Sequence[bool])
 ElementFilter = Callable[[Element], bool]
@@ -35,7 +36,8 @@ __all__ = ['AtError', 'AtWarning', 'check_radiation', 'set_radiation',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
            'refpts_count', 'refpts_len', 'refpts_iterator',
            'set_shift', 'set_tilt', 'tilt_elem', 'shift_elem',
-           'get_value_refpts', 'set_value_refpts', 'Refpts']
+           'get_value_refpts', 'set_value_refpts', 'Refpts',
+           'get_geometry']
 
 
 class AtError(Exception):
@@ -734,3 +736,63 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
     dzs = numpy.broadcast_to(dzs, (len(ring),))
     for el, dx, dy in zip(ring, dxs, dzs):
         shift_elem(el, dx, dy, relative=relative)
+
+
+def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
+                 centered=False):
+    """Compute the 2D ring geometry in cartesian coordinates
+
+    Usage:
+
+    .. code-block:: python
+
+       ring.get_geometry()
+
+    Parameters:
+        ring: Lattice description
+        start_coordinates: x,y,angle at starting point
+        centered: it True the coordinates origin is the center of the ring
+
+    Returns:
+        geomdata: recarray containing, x, y, angle
+        radius: machine radius
+    """
+    def isDipole(el):
+        if isinstance(el, Dipole):
+            if el.BendingAngle != 0.0:
+                return True
+        return False
+
+    geom_dtype = [('x', numpy.float64, (1, )),
+                  ('y', numpy.float64, (1, )),
+                  ('angle', numpy.float64, (1, ))]
+    geomdata = numpy.recarray((len(ring)+1, ), dtype=geom_dtype)
+    xx = numpy.zeros((len(ring)+1, 1))
+    yy = numpy.zeros((len(ring)+1, 1))
+    angle = numpy.zeros((len(ring)+1, 1))
+    x, y, t = start_coordinates
+    x0, y0, t0 = start_coordinates
+
+    for ind, el in enumerate(ring+[ring[0]]):
+        ang = 0.0
+        ll = el.Length
+        if isDipole(el):
+            ang = 0.5 * el.BendingAngle
+            ll *= numpy.sin(ang)/ang
+        t -= ang
+        x += ll * numpy.cos(t)
+        y += ll * numpy.sin(t)
+        t -= ang
+        xx[ind] = x
+        yy[ind] = y
+        angle[ind] = t
+
+    radius = get_s_pos(ring, len(ring))[0] / abs(t-t0) \
+        if t != 0.0 else 0.0
+    if centered:
+        xx += -abs(radius)*numpy.sin(t0) - x0
+        yy += abs(radius)*numpy.cos(t0) - y0
+    geomdata['x'] = xx
+    geomdata['y'] = yy
+    geomdata['angle'] = angle
+    return geomdata, radius

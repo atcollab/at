@@ -30,7 +30,7 @@ from .utils import _uint32_refs, _bool_refs, Uint32Refpts
 from .utils import refpts_iterator, refpts_len, checktype
 from .utils import get_s_pos, get_elements, get_cells, get_refpts
 from .utils import get_value_refpts, set_value_refpts
-from .utils import set_shift, set_tilt
+from .utils import set_shift, set_tilt, get_geometry
 from . import elements
 from .elements import Element, Monitor, RFCavity
 
@@ -1085,3 +1085,4 @@ Lattice.select = refpts_iterator
 Lattice.refcount = refpts_len
 Lattice.get_value_refpts = get_value_refpts
 Lattice.set_value_refpts = set_value_refpts
+Lattice.get_geometry = get_geometry
