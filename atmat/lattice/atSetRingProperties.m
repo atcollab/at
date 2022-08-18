@@ -5,15 +5,12 @@ function ring = atSetRingProperties(ring,varargin)
 %   Add or modify the attributes of the RingParam element of the lattice,
 %   Insert a new RingParam element if necessary
 %
-% Available properties:
+% Available properties (property names are case-independent):
 %   'FamName'               Name of the lattice
 %   'name'                   "   "   "     "
 %   'Energy'                Ring energy [eV]
-%   'energy'                 "     "    
 %   'Periodicity'           Number of periods to build a full ring
-%   'periodicity'             "    "     "    "   "    "  "    "
 %   'Particle'              particle (perticle name or Particle object)
-%   'particle'                  "         "      "
 %   'cavpts'                Location of the main cavities
 %   'rf_frequency'          RF frequency (main cavities) [Hz]. Use 'nominal'
 %                           to set the nominal frequency
@@ -25,15 +22,14 @@ function ring = atSetRingProperties(ring,varargin)
 %   'rf_voltage'            RF voltage [V] (cell_rf_voltage * Periodicity)
 %
 % Properties for one cell:
-%   'cell_harmnumber'       Harmonic number (cell)
-%   'cell_rf_voltage'       RF voltage [V] (main cavities)
+%   'cell_harmnumber'       Harmonic number (for 1 cell)
+%   'cell_rf_voltage'       RF voltage per cell [V] (main cavities)
 %
 % Additional custom fields may be added. They can be retrieved by
-% atGetRingProperties and are saved in files.
+% atGetRingProperties and are saved in files. Custom field names are
+% case-dependent.
 %
-% Standard property names are case independent, custom property names are not.
-%
-% For fast access, the ring properties are stored in a RingParam element
+% For fast access, some ring properties are stored in a RingParam element
 % ideally located in the 1st position of the lattice. If there is no such
 % element, atSetRingProperties will add it.
 %
@@ -43,15 +39,6 @@ parms=struct();
 rfparms=struct();
 hparms=struct();
 cellfun(@canonical,varargin(1:2:end),varargin(2:2:end),'UniformOutput',false);
-
-if isfield(parms, 'Particle')
-    particle = parms.Particle;
-    if ischar(particle) || isstring(particle)
-        particle = atparticle(particle);
-    end
-    % Convert Particle object to struct for saving in .m or .mat files
-    parms.Particle=saveobj(particle);
-end
 
 idx = atlocateparam(ring);
 if isempty(idx)
@@ -71,6 +58,7 @@ else
     [parmelem,~]=atparamscan(ring,parmelem,'Particle','cell_harmnumber','cavpts');
 end
 
+% Delay the setting of harmonic number after the periodicity is known
 if isfield(hparms, 'HarmNumber')
     nperiods=parmelem.Periodicity;
     parmelem.cell_harmnumber=check_h(nperiods,hparms.HarmNumber);
@@ -114,16 +102,16 @@ end
         switch lower(pname)
             case {'length','class','beta','gamma','cell_length','circumference',...
                     'cell_revolution_frequency','revolution_frequency','brho',...
-                    'mcf','slip_factor','radiation','active_cavity'}
+                    'mcf','slip_factor','radiation','is_6d','has_cavity'}
                 error('AT:Invalid','The property "%s" is read-only',pname);
             case {'famname','name'}
                 parms.FamName=value;
             case 'energy'
                 parms.Energy=value;
             case 'periodicity'
-                parms.Periodicity=value;
+                parms.Periodicity=check_periodicity(value);
             case 'particle'
-                parms.Particle=value;
+                parms.Particle=check_particle(value);
             case {'harmnumber','harmonic_number'}
                 hparms.HarmNumber=value;
             case 'cell_harmnumber'
@@ -145,5 +133,21 @@ end
         vcell=reshape([fieldnames(vstruct)';struct2cell(vstruct)'],1,[]);
     end
 
+    function partstruct=check_particle(particle)
+        if ischar(particle) || isstring(particle)
+            particle = atparticle(particle);
+        elseif ~isa(particle,'atparticle')
+            error('AT:TypeError', 'Cannot convert argument to particle');
+        end
+        % Convert Particle object to struct for saving in .m or .mat files
+        partstruct=saveobj(particle);
+    end
 
+
+    function nper=check_periodicity(value)
+        if value <= 0
+            error('AT:ValueError','Periodicity must be positive');
+        end
+        nper=value;
+    end
 end

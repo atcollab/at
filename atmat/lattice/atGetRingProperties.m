@@ -8,15 +8,12 @@ function varargout = atGetRingProperties(ring,varargin)
 %
 % RING:             Ring structure
 %
-% Standard properties:
+% Standard properties (case independent names):
 %   'FamName'               Name of the lattice
 %   'name'                   "   "   "     "
 %   'Energy'                Ring energy [eV]
-%   'energy'                 "     "    
 %   'Periodicity'           Number of periods to build a full ring
-%   'periodicity'             "    "     "    "   "    "  "    "
 %   'Particle'              particle (Particle object)
-%   'particle'                  "         "      "
 %   'cavpts'                Location of the main cavities
 %   'beta'                  Relativistic beta of the particles
 %   'gamma'                 Relativistic gamma of the particles
@@ -25,26 +22,25 @@ function varargout = atGetRingProperties(ring,varargin)
 %   'BRho'                  Particle rigidity [T.m]
 %   'mcf'                   Momentum compaction factor "alpha"
 %   'slip_factor'           Slip factor "eta"
-%   'radiation'             Longitudinal motion (cavities, radiating elements, ...)
-%   'active_cavity'         Presence of an active RF cavity (implies 'radiation')
+%   'is_6d'                 Longitudinal motion (cavities, radiating elements, ...)
+%   'radiation'                  "          "
+%   'has_cavity'            Presence of an active RF cavity (implies 'radiation')
 %
 % Properties for the full ring ('periods' x cells):
 %   'HarmNumber'            Harmonic number (cell_harmnumber * Periodicity)
 %   'harmonic_number'          "       "
 %   'Circumference'         Ring ircumference [m] (cell_length * Periodicity)
-%   'circumference'         "
 %   'rf_voltage'            RF voltage [V] (cell_rf_voltage * Periodicity)
 %   'revolution_frequency'  Revolution frequency [Hz] (cell_revolution_frequency / Periodicity)
 %
 % Properties for one cell:
-%   'cell_harmnumber'       Harmonic number (cell)
+%   'cell_harmnumber'       Harmonic number (for 1 cell)
 %   'cell_length'           Cell length [m]
-%   'cell_rf_voltage'       RF voltage [V] (main cavities)
-%   'cell_revolution_frequency' Revolution frequency [Hz] (cell)
+%   'cell_rf_voltage'       RF voltage per cell [V] (main cavities)
+%   'cell_revolution_frequency' Revolution frequency [Hz] (for 1 cell)
 %
-% Custom properties may be added with atSetRingProperties
-%
-% Standard property names are case independent, custom property names are not.
+% Custom properties may be added with atSetRingProperties. Custom property
+% names are case dependent.
 %
 % Example:
 % >> [energy, beta] = atGetRingProperties(ring,'Energy','beta');
@@ -58,10 +54,14 @@ function varargout = atGetRingProperties(ring,varargin)
 %   'Periodicity'           Number of periods to build a full ring
 %   'Particle'              particle (Particle object)
 %   'HarmNumber'            Harmonic number (cell_harmnumber * Periodicity)
-%   'cell_harmnumber'       Harmonic number (cell)
+%   'cell_harmnumber'       Harmonic number (for 1 cell)
 %   'cavpts'                Location of the main cavities
 %
-% For fast access, the ring properties are stored in a RingParam element
+% PROPERTIES=ATGETRINGPROPERTIES(RING,'all')
+%   The PROPERTIES structure contains all the properties descbed above,
+%   both standard and custom.
+%
+% For fast access, some ring properties are stored in a RingParam element
 % ideally located in the 1st position of the lattice. Without such element,
 % the properties are deduced from the lattice contents. This is much slower
 % and ATGETRINGPROPERTIES displays a warning indicating how to add the
@@ -71,6 +71,7 @@ function varargout = atGetRingProperties(ring,varargin)
 %
 %  See also ATSETRINGPROPERTIES
 
+[show_all, varargin]=getflag(varargin, 'all');
 idx=atlocateparam(ring);
 if isempty(idx)
 %   t1='Slow access to properties because there is no RingParam element.';
@@ -85,8 +86,20 @@ if isempty(varargin)
         'Particle','cell_harmnumber','cavpts');
     props.Particle=atparticle.loadobj(props.Particle);
     props.HarmNumber=props.Periodicity*props.cell_harmnumber;
+    if show_all
+        prmlist={'beta', 'gamma', 'BRho', 'rf_frequency', 'rf_voltage', 'rf_timelag',...
+            'mcf', 'slip_factor', 'radiation', 'has_cavity',...
+            'Circumference', 'revolution_frequency',...     
+            'cell_length', 'cell_rf_voltage', 'cell_revolution_frequency'};
+        [~,prms]=atparamscan(ring,props,prmlist{:});
+        cellfun(@setprop,prmlist,prms);
+    end
     varargout={props,idx};
 else
     [~,varargout]=atparamscan(ring,props,varargin{:});
 end
+
+    function setprop(propname, propvalue)
+        props.(propname)=propvalue;
+    end
 end
