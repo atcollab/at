@@ -52,7 +52,8 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
             case 'brho'
                 clight=PhysConstant.speed_of_light_in_vacuum.value;
                 energy=getenergy(ring);
-                rest_energy=getparticle(ring).rest_energy;
+                part=getparticle(ring);
+                rest_energy=part.rest_energy;
                 if rest_energy == 0
                     rest_energy = 1.0e6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
                 end
@@ -62,9 +63,9 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
             case 'slip_factor'
                 gamma=get_gamma(ring);
                 v=1/gamma/gamma - get_mcf(ring);
-            case 'radiation'
+            case {'radiation', 'is_6d'}
                 v=getradcav(ring,{'RadPass', 'QuantDiffPass', 'CavityPass'});
-            case 'active_cavity'
+            case 'has_cavity'
                 v=getradcav(ring,'CavityPass');
             otherwise
                 v=parmelem.(param);
@@ -231,7 +232,8 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
         if isfield(store,'gamma')
             gamma=store.gamma;
         else
-            rest_energy=getparticle(ring).rest_energy;
+            part=getparticle(ring);
+            rest_energy=part.rest_energy;
             if rest_energy == 0
                 rest_energy = 1.0e6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
             end
@@ -241,7 +243,8 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
     end
 
     function beta=get_beta(ring)
-        rest_energy=getparticle(ring).rest_energy;
+        part=getparticle(ring);
+        rest_energy=part.rest_energy;
         gammainv=rest_energy / getenergy(ring);
         beta= sqrt(1.0 - gammainv*gammainv);
     end
