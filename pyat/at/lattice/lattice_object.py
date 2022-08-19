@@ -620,8 +620,13 @@ class Lattice(list):
         return math.sqrt(self.energy**2 - rest_energy**2)/clight
 
     @property
-    def radiation(self) -> bool:
-        """If True, at least one element modifies the beam energy"""
+    def is_6d(self) -> bool:
+        """True if at least one element modifies the beam momentum
+
+        See Also:
+
+            :py:meth:`enable_6d`, :py:meth:`disable_6d`.
+        """
         try:
             return self._radiation
         except AttributeError:
@@ -775,7 +780,7 @@ class Lattice(list):
         **Syntax using positional arguments:**
 
         Parameters:
-            elem_class:                 :py:class:`.Element` subclass.
+            elem_class:                 :py:class:`.LongtMotion` subclass.
               Longitudinal motion is turned on for elements which are
               instances of any given ``elem_class``.
 
@@ -850,6 +855,10 @@ class Lattice(list):
             ... copy=True)
 
             Same as the previous example, using the keyword syntax.
+
+        See Also:
+
+            :py:meth:`disable_6d`, :py:attr:`is_6d`.
         """
         return self._set_6d(True, *args, **kwargs)
 
@@ -869,7 +878,7 @@ class Lattice(list):
         **Syntax using positional arguments:**
 
         Parameters:
-            elem_class:                 :py:class:`.Element` subclass.
+            elem_class:                 :py:class:`.LongtMotion` subclass.
               Longitudinal motion is turned off for elements which are
               instances of any given ``elem_class``.
 
@@ -947,6 +956,10 @@ class Lattice(list):
 
             Return a new Lattice (shallow copy of `ring`) with sextupoles
             turned into Drifts (turned off) and everything else unchangedd.
+
+        See Also:
+
+            :py:meth:`enable_6d`, :py:attr:`is_6d`.
         """
         return self._set_6d(False, *args, **kwargs)
 
@@ -1060,7 +1073,7 @@ class Lattice(list):
 
     # Obsolete methods kept for compatibility
     def radiation_on(self, *args, **kwargs) -> Optional["Lattice"]:
-        """Turn longitudinal motion on
+        """Obsolete. Turn longitudinal motion on
 
         The function name is misleading, since the function deals with
         longitudinal motion in general.
@@ -1076,7 +1089,7 @@ class Lattice(list):
         return self._set_6d(True, **kwargs)
 
     def radiation_off(self, *args, **kwargs) -> Optional["Lattice"]:
-        """Turn longitudinal motion off
+        """Obsolete. Turn longitudinal motion off
 
         The function name is misleading, since the function deals with
         longitudinal motion in general.
@@ -1090,6 +1103,22 @@ class Lattice(list):
         kwargs.update(
             zip(('cavity_pass', 'dipole_pass', 'quadrupole_pass'), args))
         return self._set_6d(False, **kwargs)
+
+    @property
+    def radiation(self) -> bool:
+        """Obsolete. True if at least one element modifies the beam energy
+        Use :py:attr:`is_6d` instead"""
+        try:
+            return self._radiation
+        except AttributeError:
+            radiate = False
+            for elem in self:
+                if elem.longt_motion:
+                    radiate = True
+                    break
+            # noinspection PyAttributeOutsideInit
+            self._radiation = radiate
+            return radiate
 
 
 def lattice_filter(params, lattice):
