@@ -134,14 +134,12 @@ end
                 elem.PassMethod=strrep(elem.PassMethod,'Pass','RadPass');
             end
             elem.Energy=energy;
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
         
         function elem=fixelem(elem)
             % Explicit multipole modification
             elem.PassMethod=newpass;
             elem.Energy=energy;
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
     end
 
@@ -154,7 +152,6 @@ end
         function elem=modelem(elem)
             % Default element modification
             elem.PassMethod=newpass;
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
     end
 

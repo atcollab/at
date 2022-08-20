@@ -117,13 +117,11 @@ end
         function elem=varelem(elem)
             % 'auto' multipole modification
             elem.PassMethod=strrep(elem.PassMethod,'RadPass','Pass');
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
         
         function elem=fixelem(elem)
             % Explicit multipole modification
             elem.PassMethod=newpass;
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
     end
 
@@ -136,7 +134,6 @@ end
         function elem=modelem(elem)
             % Default element modification
             elem.PassMethod=newpass;
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
     end
 
@@ -154,13 +151,11 @@ end
             else
                 elem.PassMethod='IdentityPass';
             end
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
         
         function elem=fixelem(elem)
             % Explicit RF modification
             elem.PassMethod=newpass;
-            fprintf('%10s: %s\n', elem.FamName, elem.PassMethod);
         end
     end                
 
