@@ -64,7 +64,12 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
                 gamma=get_gamma(ring);
                 v=1/gamma/gamma - get_mcf(ring);
             case {'radiation', 'is_6d'}
-                v=getradcav(ring,{'RadPass', 'QuantDiffPass', 'CavityPass'});
+                if isfield(store,'is_6d')
+                    v=store.is_6d;
+                else
+                    v=getradcav(ring,{'RadPass', 'QuantDiffPass', 'CavityPass'});
+                    store.is_6d=v;
+                end
             case 'has_cavity'
                 v=getradcav(ring,'CavityPass');
             otherwise
@@ -229,17 +234,12 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
     end
 
     function gamma=get_gamma(ring)
-        if isfield(store,'gamma')
-            gamma=store.gamma;
-        else
-            part=getparticle(ring);
-            rest_energy=part.rest_energy;
-            if rest_energy == 0
-                rest_energy = 1.0e6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
-            end
-            gamma=getenergy(ring) / rest_energy;
-            store.gamma=gamma;
+        part=getparticle(ring);
+        rest_energy=part.rest_energy;
+        if rest_energy == 0
+            rest_energy = 1.0e6*PhysConstant.electron_mass_energy_equivalent_in_MeV.value;
         end
+        gamma=getenergy(ring) / rest_energy;
     end
 
     function beta=get_beta(ring)

@@ -29,7 +29,7 @@ function varargout = atGetRingProperties(ring,varargin)
 % Properties for the full ring ('periods' x cells):
 %   'HarmNumber'            Harmonic number (cell_harmnumber * Periodicity)
 %   'harmonic_number'          "       "
-%   'Circumference'         Ring ircumference [m] (cell_length * Periodicity)
+%   'Circumference'         Ring circumference [m] (cell_length * Periodicity)
 %   'rf_voltage'            RF voltage [V] (cell_rf_voltage * Periodicity)
 %   'revolution_frequency'  Revolution frequency [Hz] (cell_revolution_frequency / Periodicity)
 %
@@ -58,7 +58,7 @@ function varargout = atGetRingProperties(ring,varargin)
 %   'cavpts'                Location of the main cavities
 %
 % PROPERTIES=ATGETRINGPROPERTIES(RING,'all')
-%   The PROPERTIES structure contains all the properties descbed above,
+%   The PROPERTIES structure contains all the properties described above,
 %   both standard and custom.
 %
 % For fast access, some ring properties are stored in a RingParam element
@@ -88,7 +88,7 @@ if isempty(varargin)
     props.HarmNumber=props.Periodicity*props.cell_harmnumber;
     if show_all
         prmlist={'beta', 'gamma', 'BRho', 'rf_frequency', 'rf_voltage', 'rf_timelag',...
-            'mcf', 'slip_factor', 'radiation', 'has_cavity',...
+            'mcf', 'slip_factor', 'radiation', 'is_6d', 'has_cavity',...
             'Circumference', 'revolution_frequency',...     
             'cell_length', 'cell_rf_voltage', 'cell_revolution_frequency'};
         [~,prms]=atparamscan(ring,props,prmlist{:});
