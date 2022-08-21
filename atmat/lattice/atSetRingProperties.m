@@ -145,8 +145,14 @@ end
 
 
     function nper=check_periodicity(value)
-        if value <= 0
-            error('AT:ValueError','Periodicity must be positive');
+        if ~(isnumeric(value) && value > 0 && value == floor(value))
+            error('AT:ValueError','Periodicity must a positive integer');
+        end
+        bnd=atgetfieldvalues(ring,'BendingAngle');
+        totalangle=value*sum(bnd(isfinite(bnd)));
+        if totalangle > 2*pi
+            warning('AT:ValueWarning',['The total angle of the lattice (%g)',...
+                'is larger then 2 pi'], totalangle);
         end
         nper=value;
     end
