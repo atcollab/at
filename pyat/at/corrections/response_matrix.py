@@ -1,199 +1,70 @@
 """
 Classes to compute arbitrary response matrices
 """
-from enum import Enum
 import numpy
 import pandas
 #  needed -> ElementVariable.setv is not pickable
 import multiprocess as multiprocessing
-from functools import partial
-from at.matching import Variable, ElementVariable
-from at.matching import Constraints, ElementConstraints
-from at.matching import OrbitConstraints, LinoptConstraints
-from at.lattice import AtError, uint32_refpts
+from .elements import RMVariables, RMObservables
+from .elements import sum_polab, Observable 
 
-
-_ORBIT_NAMES = ['X', 'XP', 'Y', 'YP', 'DP', 'CT']
 
 globring = None
-
-            
-def _flat_results(values):
-    return numpy.concatenate(values, axis=1).ravel() 
-
-   
-class ObsType(Enum):
-    ORBIT = 1
-    LINOPT = 2
-
     
-class RMElementVariable(ElementVariable):
-    def __init__(self, refpts, attrname, delta, index=None, name=''):  
-        self.delta = delta
-        self.attrname = attrname
-        self.index = index
-        self.refpts = refpts        
-        super(RMElementVariable, self).__init__(refpts, attrname,
-                                                index=index, name=name) 
-
-class RMObservable(Constraints): 
-    """dummy""" 
-
-
-class RMOrbitObservable(OrbitConstraints): 
-    """dummy"""
-
-
-class RMLinoptObservable(LinoptConstraints):     
-     """dummy"""                                        
-
 
 class ElementResponseMatrix(object):
 
-    def __init__(self, ring, dp=0.0):
+    def __init__(self, ring, **kwargs):
         self.ring = ring.copy()
-        self.dp =dp
-        #  add attribute to ring such that they are
+        #  add attributes to ring such that they are
         #  accessible through the global variable
-        self.ring.variables = []
-        self.ring.observables = []
-        self.ring.obs_conf = None
-        self.ring.vars_conf = None
-        self.ring.arbobservable = RMObservable()
-        self.ring.orbitobservable = RMOrbitObservable(ring, dp) 
-        self.ring.linoptobservable = RMLinoptObservable(ring, dp=0.0)
+        self.ring.variables = RMVariables(**kwargs)
+        self.ring.observables = RMObservables(**kwargs)
         self.fullrm = None
-        self.excluded_refpts = None
-        self.excluded_obsnames = None
-        self.excluded_varnames = None
-        self.excluded_attrnames = None
-        self.excluded_obskeys = None  
+        self.excl_obs = []
+        self.excl_var = []
+        super(ElementResponseMatrix, self).__init__()
         
-    def add_variables(variables):
-        variables = numpy.atleast_1d(variables)
-        for v in variables:
-            v.name = v.name+'.'+str(len(self.ring.variables)+1)
-            self.ring.variables += [v]
-            
-    def add_observable(fun, target, name, weight=1):
-        self.ring.arbobservables.add(fun, target, name=name, weight=1)
+    def add_variables(self, variables):
+        self.ring.variables.add_elements(self.ring, variables)
         
-    def add_element_variables(self, refpts, attrname, delta, index=None, name=None):
-        refpts = numpy.atleast_1d(refpts)
-        if name is None:
-            names = [self.ring[r].FamName+'.'+str(i+len(self.ring.variables))
-                     for i, r in enumerate(refpts)]
-        else:
-            names = numpy.broadcast_to(name, (len(refpts), ))
-            names = [names[i]+'.'+str(i+len(self.ring.variables))
-                     for i in range(len(refpts))]
-        self.ring.variables += [RMElementVariable(r, attrname, delta, index=index, 
-                                                  name=names[i])
-                                for i, r in enumerate(refpts)] 
-                                             
-    def add_element_observables(self, refpts, index, target=None, obstype=ObsType.ORBIT):
-        if obstype is ObsType.ORBIT:
-            self._add_orbit_observables(refpts, index, target=target)
-        elif obstype is ObsType.LINOPT:
-            self._add_linopt_observables(refpts, index, target=target)
-        else:
-            raise AtError('ObsType {} not defined.'.format(obstype))
-            
-    def _add_orbit_observables(self, refpts, index, target=None): 
-        for r in refpts:         
-            self.ring.orbitobservable.add(target, refpts=r, index=[index],
-                                          name=_ORBIT_NAMES[index])           
-    
-    def _add_linopt_observables(self, refpts, index, target=None):
-        """Empty"""
+    def add_observables(self, observables):
+        self.ring.observables.add_elements(self.ring, observables)
         
-    def _fillobservables(self):
-        if len(self.ring.linoptobservable.name)>0:
-            self.ring.observables.append(self.ring.linoptobservable)
-        if len(self.ring.orbitobservable.name)>0:
-            self.ring.observables.append(self.ring.orbitobservable)  
-        if len(self.ring.arbobservable.name)>0:
-            self.ring.observables.append(self.ring.arbobservable) 
-        
-    def _config_vars_obs(self):
-        self._fillobservables()
-        obsnames = []
-        obsref = []
-        obskeys = []  
-        obstarget = [] 
-        obsvals = []   
-        for o in self.ring.observables:
-           vals = o.values(self.ring)              
-           for name, refpts, target, v in zip(o.name, o.refs, o.target, vals):  
-               if numpy.any(refpts):                
-                   for r, t in zip(uint32_refpts(refpts, o.nelems), target):
-                       obsnames.append(name)
-                       obsref.append(r)
-                       obstarget.append(t)
-                       kname = self.ring[r].FamName+'.'+name+'.'+str(r)
-                       obskeys.append(kname)
-                       obsvals.append(numpy.squeeze(v))
-               else:
-                   obsnames.append(name)
-                   obstarget.append(target)
-                   obskeys.append(name)
-                   obsvals.append(numpy.squeeze(v))
-               
-        obsd = {}
-        varsd = {} 
-        dobs = {key: name for key, name in zip(obskeys, obsnames)}
-        drefs = {key: ref for key, ref in zip(obskeys, obsref)}
-        dtarget = {key: target for key, target in zip(obskeys, obstarget)}
-        dvals = {key: v for key, v in zip(obskeys, obsvals)}
-        dattr = {v.name: v.attrname for v in self.ring.variables}
-        didx = {v.name: v.index for v in self.ring.variables}
-        obsd.update({'Obs': pandas.Series(dobs)})
-        obsd.update({'Refs': pandas.Series(drefs)})
-        obsd.update({'Target': pandas.Series(dtarget)})
-        obsd.update({'Value': pandas.Series(dvals)})
-        varsd.update({'Attr': pandas.Series(dattr)})
-        varsd.update({'Index': pandas.Series(didx)})
-        self.ring.obs_conf = pandas.DataFrame(obsd)
-        self.ring.vars_conf = pandas.DataFrame(varsd)                      
-        
-    def set_excluded(self, refpts=None, obskeys=None, obsnames=None,
-                     varnames=None, attrnames=None):
-        if refpts is not None:
-            self.excluded_refpts = refpts
-        if obskeys is not None:
-            self.excluded_obskeys = obskeys
-        if obsnames is not None:
-            self.excluded_obsnames = obsnames
-        if varnames is not None:
-            self.excluded_varnames = varnames
-        if attrnames is not None:
-            self.excluded_attrnames = attrnames        
-        
-    def set_target(obslist, targetlist):
-        for o, t in zip(obslist, targetlist):
-            if isinstance(o, int):
-                self.ring.obs_conf.iloc[o].Target = t
-            else:
-                self.ring.obs_conf.loc[o].Target = t  
-                
+    def add_variables_refpts(self, name, delta, refpts, attname,
+                             index=None, sum_zero=False):
+        self.ring.variables.add_elements_refpts(self.ring, name, 
+                                                delta, refpts,
+                                                attname, index=index)
+        if sum_zero:
+            assert 'Polynom' in attname,\
+               'sum_zero available only for PolynomA/B attribute'
+            assert index is not None,\
+               'index required for sum_zero'
+            sum_zero = Observable(name+'_SUM', fun=sum_polab,
+                                  args=(refpts, attname, index))
+            self.add_observables(sum_zero)
+                                                
+    def add_observables_refpts(self, name, refpts, index=None, weight=1):
+        self.ring.observables.add_elements_refpts(self.ring, name,
+                                                  refpts, index=index,
+                                                  weight=weight)
+                                  
     @staticmethod
-    def _resp_one(ring, variable):
+    def _resp_one(ring, variable, key):
         if ring is None:
             ring = globring
         v0 = variable.get(ring)
-        variable.set(ring, v0+variable.delta)  
-        op = numpy.squeeze([_flat_results(obs.values(ring))
-                            for obs in ring.observables])
+        variable.set(ring, v0+variable.delta)
+        op = ring.observables.values(ring)
         variable.set(ring, v0-variable.delta)  
-        om = numpy.squeeze([_flat_results(obs.values(ring))
-                            for obs in ring.observables])
+        om = ring.observables.values(ring)
         do = {key: (oom-oop)/2/variable.delta for key, oom, oop 
-              in zip(ring.obs_conf.index, om, op)}
+              in zip(ring.observables.conf.index, om, op)}
         variable.set(ring, v0)
-        return {variable.name: pandas.Series(do)}         
+        return {key: pandas.Series(do)}         
         
     def compute_fullrm(self, use_mp=False, pool_size=None, start_method=None):
-        self._config_vars_obs()
         rv = {}
         if use_mp:
             ctx = multiprocessing.get_context(start_method)
@@ -203,66 +74,122 @@ class ElementResponseMatrix(object):
             if ctx.get_start_method() == 'fork':
                 global globring
                 globring = self.ring
-                args = [(None, var) for var in self.ring.variables]
+                args = [(None, var, key) for var, key in zip(self.ring.variables,
+                                                             self.ring.variables.conf.index)]
                 with ctx.Pool(pool_size) as pool:
                     results = pool.starmap(partial(self._resp_one), args)
                 globring = None
             else:
-                args = [(self.ring, var) for var in self.ring.variables]
+                args = [(self.ring, var, key) for var in zip(self.ring.variables,
+                                                             self.ring.variables.conf.index)]
                 with ctx.Pool(pool_size) as pool:
                     results = pool.starmap(partial(self._resp_one), args)
             for r in results:
                 rv.update(r)             
         else: 
-            for var in self.ring.variables:  
-                rv.update(self.resp_one(self.ring, var,
-                                        self.ring.observables,
-                                        self.ring.obs_conf))
-        self.fullrm = pandas.DataFrame(rv)
+            for var, key in zip(self.ring.variables, self.ring.variables.conf.index):  
+                rv.update(self._resp_one(self.ring, var, key))
+        self.fullrm = pandas.DataFrame(rv)         
+        
+    def set_excluded(self, obsdictlist=None, vardictlist=None):
+    
+        def remove_element(conf, df):
+            cond = False
+            for c in numpy.atleast_1d(conf):
+                cond2 =True
+                for k, v in c.items():
+                    cond2 = cond2 & numpy.array([d[0] in v for d in df[k]], dtype=bool)
+            cond = cond | cond2
+            return df.loc[cond].index   
+        
+        if vardictlist is not None:           
+            self.excl_var = remove_element(vardictlist, self.ring.variables.conf)
+        if obsdictlist is not None:
+            self.excl_obs = remove_element(obsdictlist, self.ring.observables.conf)
        
-    def get_reduced_rm(self):
-        rtmp = self.fullrm
-        vtmp = self.ring.vars_conf
-        if self.excluded_obskeys is not None:
-            rtmp = rtmp.loc[[r for r in rtmp.index if r not in self.excluded_obskeys]]
-        if self.excluded_refpts is not None:
-            rtmp = rtmp.loc[~self.ring.obs_conf.Refs.isin(self.excluded_refpts)]
-        if self.excluded_obsnames is not None:
-            rtmp = rtmp.loc[~self.ring.obs_conf.Obs.isin(self.excluded_obsnames)]                                   
-        if self.excluded_attrnames is not None:
-            vtmp = vtmp[~vtmp.Attr.isin(self.excluded_attrnames)]
-        varnames = vtmp.index              
-        if self.excluded_varnames is not None:
-            varnames = [v for v in vtmp.index if v not in self.excluded_varnames]                        
-        return rtmp[varnames]
+    def get_mat(self):
+        assert self.fullrm is not None,\
+           ' Empty response matrix: please run compute_fullrm() first'                               
+        return self.fullrm.loc[~self.fullrm.index.isin(self.excl_obs),
+                               ~self.fullrm.columns.isin(self.excl_var)]                           
         
-    def get_reduced_vals(self):
-        obstmp = self.ring.obs_conf
-        if self.excluded_obskeys is not None:
-            obstmp = obstmp.loc[[o for o in obstmp.index if o not in self.excluded_obskeys]]
-        if self.excluded_refpts is not None:
-            obstmp = obstmp.loc[~self.ring.obs_conf.Refs.isin(self.excluded_refpts)]
-        if self.excluded_obsnames is not None:
-            obstmp = obstmp.loc[~self.ring.obs_conf.Obs.isin(self.excluded_obsnames)]                                               
-        return obstmp.Value, obstmp.Target
+    def get_vals(self, mat=None):
+        if mat is None:
+            mat = get_mat()
+        mask = self.ring.observables.conf.index.isin(mat.index)  
+        return numpy.array(self.ring.observables.values(self.ring, mask))
         
-    def svd_inv(self):
-        mat = self.get_reduced_rm()
-        self.U, self.W, self.V = numpy.linalg.svd(mat, full_matrices=False)
-        self.Winv = numpy.linalg.inv(numpy.diag(self.W))      
+    def svd_invert(self, mat=None):
+        if mat is None:
+            mat = self.get_mat()
+        U, W, V = numpy.linalg.svd(mat, full_matrices=False)                                                
                 
-    def svd_fit(self, svd_cut=0):
-        Wtmp = numpy.zeros(self.Winv.shape)
-        Wtmp[:len(self.Winv)-svd_cut]=self.Winv[:len(self.Winv)-svd_cut]
-        val, target = self.get_reduced_vals()
+    def svd_fit(self, target, mat=None, svd_cut=0):
+        if mat is None:
+            mat = self.get_mat()
+        val = self.get_vals(mat=mat)
         err = (val-target)
-        return self.V.T @ Wtmp @ self.U.T @ err
+        U, W, V = self.svd_invert(mat=mat)
+        Winv = numpy.linalg.inv(numpy.diag(W))
+        Wtmp = numpy.zeros(Winv.shape)
+        Wtmp[:len(Winv)-svd_cut]=Winv[:len(Winv)-svd_cut]
+        dk = V.T @ Wtmp @ U.T @ err
+        exp = mat @ dk
+        corr = {k: v for k, v in zip(mat.columns, dk)}
+        # = {k: numpy.array(v, t, exp
+        return corr
         
-    def apply_corrections(self, dk):
+    def apply_corrections(self, corr):
         var0 = [var.get(self.ring) for var in self.variables]
         for var, v0 in zip(self.variables, var0, dk):
             var.set(self.ring, v0-dk)
-                    
-    def get_fitted_obs(self, dk):
+
+        
+class OrbitResponseMatrix(ElementResponseMatrix):
+
+    _MAT_INDEX = {'X': ['X', 'HST_SUM'],
+                  'Y': ['Y', 'VST_SUM']}
+    _MAT_COLS = {'X': ['HST', 'RF'], 'Y': ['VST']}
+                
+
+    def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True):
+        super(OrbitResponseMatrix, self).__init__(ring)
+        self.set_bpms(bpms)
+        self.set_steerers(steerers, sum_zero=sum_zero)
+        if cavities is None:
+            ring = ring.radiation_off(copy=True)
+        else:
+            ring = ring.radiation_off(cavity_pass='RFCavityPass', copy=True)
+            self.set_cavities(cavities)   
+        
+    def set_bpms(self, refpts):
+        self.add_observables_refpts('closed_orbit', refpts=refpts, index=0)
+        self.add_observables_refpts('closed_orbit', refpts=refpts, index=2)
+        
+    def set_steerers(self, refpts, sum_zero=True):
+        self.add_variables_refpts('HST', 1.0e-4, refpts,'PolynomB', index=0, sum_zero=sum_zero)
+        self.add_variables_refpts('VST', 1.0e-4, refpts,'PolynomA', index=0, sum_zero=sum_zero)
+        
+    def set_cavities(self, refpts):
+        self.add_variables_refpts('RF', 10, [refpts],'Frequency')
+        
+    def set_excluded_bpms(self, bpmdictlist):
+        self.set_exluded(obsdistlist=bpmdictlist)
+        
+    def set_excluded_steerer(self, steerersdictlist):
+        self.set_exluded(vardistlist=steerersdictlist)
+        
+    def svd_fit(self, plane=['X', 'Y']):
         mat = self.get_reduced_rm()
-        return mat @ dk
+        matx = mat.loc[mat.index.isin(self._MAT_INDEX['X'], level=0),
+                       mat.columns.isin(self._MAT_COLS['X'], level=0)]
+        maty = mat.loc[mat.index.isin(self._MAT_INDEX['Y'], level=0),
+                       mat.columns.isin(self._MAT_COLS['Y'],level=0)]
+        print(mat)
+        print('')
+        print(matx)
+        print('')
+        print(maty)
+        print('')
+                
+                                
