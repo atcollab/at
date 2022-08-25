@@ -104,7 +104,6 @@ class Variable(object):
                                   for elem in ring.select(self.refpts)])
             return numpy.average(values)
             
-        
 
 class Observable(object):    
 

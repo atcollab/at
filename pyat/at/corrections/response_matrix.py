@@ -7,6 +7,7 @@ import pandas
 import multiprocess as multiprocessing
 from .elements import RMVariables, RMObservables
 from .elements import sum_polab, Observable 
+from functools import partial
 
 
 globring = None
@@ -91,7 +92,7 @@ class ElementResponseMatrix(object):
                 rv.update(self._resp_one(self.ring, var, key))
         self.fullrm = pandas.DataFrame(rv)         
         
-    def set_excluded(self, obsdictlist=None, vardictlist=None):
+    def exclude(self, obsdictlist=None, vardictlist=None):
     
         def remove_element(conf, df):
             cond = False
@@ -115,34 +116,43 @@ class ElementResponseMatrix(object):
         
     def get_vals(self, mat=None):
         if mat is None:
-            mat = get_mat()
+            mat = self.get_mat()
         mask = self.ring.observables.conf.index.isin(mat.index)  
-        return numpy.array(self.ring.observables.values(self.ring, mask))
+        obs = numpy.array(self.ring.observables.values(self.ring, mask))
+        mask = self.ring.variables.conf.index.isin(mat.columns)
+        var = numpy.array(self.ring.variables.get(self.ring, mask))
+        return obs, var
         
-    def svd_invert(self, mat=None):
+    def svd(self, mat=None):
         if mat is None:
             mat = self.get_mat()
-        U, W, V = numpy.linalg.svd(mat, full_matrices=False)                                                
+        return numpy.linalg.svd(mat, full_matrices=False)                                                
                 
-    def svd_fit(self, target, mat=None, svd_cut=0):
+    def svd_fit(self, target, mat=None, svd_cut=0, apply_correction=False):
         if mat is None:
             mat = self.get_mat()
-        val = self.get_vals(mat=mat)
+        val, var = self.get_vals(mat=mat)
         err = (val-target)
-        U, W, V = self.svd_invert(mat=mat)
+        U, W, V = self.svd(mat=mat)
         Winv = numpy.linalg.inv(numpy.diag(W))
         Wtmp = numpy.zeros(Winv.shape)
         Wtmp[:len(Winv)-svd_cut]=Winv[:len(Winv)-svd_cut]
         dk = V.T @ Wtmp @ U.T @ err
         exp = mat @ dk
-        corr = {k: v for k, v in zip(mat.columns, dk)}
-        # = {k: numpy.array(v, t, exp
-        return corr
-        
-    def apply_corrections(self, corr):
-        var0 = [var.get(self.ring) for var in self.variables]
-        for var, v0 in zip(self.variables, var0, dk):
-            var.set(self.ring, v0-dk)
+        corr = {'Vals': pandas.Series(var, mat.columns),
+                'Corr': pandas.Series(dk, mat.columns),
+                'Exp': pandas.Series(var+dk, mat.columns)}
+        obs = {'Vals': pandas.Series(val, mat.index),
+               'Target': pandas.Series(target, mat.index),
+               'Err': pandas.Series(err, mat.index),
+               'Exp': pandas.Series(exp, mat.index)}
+        if apply_correction:
+            mask = self.ring.variables.conf.index.isin(mat.columns) 
+            self.ring.variables.set(self.ring, var+dk, mask)
+        valn, varn = self.get_vals(mat=mat) 
+        corr.update({'New': pandas.Series(varn, mat.columns)})
+        obs.update({'New': pandas.Series(valn, mat.index)})
+        return pandas.DataFrame(corr), pandas.DataFrame(obs)
 
         
 class OrbitResponseMatrix(ElementResponseMatrix):
@@ -179,17 +189,16 @@ class OrbitResponseMatrix(ElementResponseMatrix):
     def set_excluded_steerer(self, steerersdictlist):
         self.set_exluded(vardistlist=steerersdictlist)
         
-    def svd_fit(self, plane=['X', 'Y']):
-        mat = self.get_reduced_rm()
-        matx = mat.loc[mat.index.isin(self._MAT_INDEX['X'], level=0),
-                       mat.columns.isin(self._MAT_COLS['X'], level=0)]
-        maty = mat.loc[mat.index.isin(self._MAT_INDEX['Y'], level=0),
-                       mat.columns.isin(self._MAT_COLS['Y'],level=0)]
-        print(mat)
-        print('')
-        print(matx)
-        print('')
-        print(maty)
-        print('')
-                
-                                
+    def correct_orbit(self, target=0, plane=['X', 'Y'], svd_cut=0, apply_correction=False):
+        mat = self.get_mat()
+        svd_cut = numpy.broadcast_to(svd_cut, len(plane))
+        target = numpy.broadcast_to(target, len(plane))
+        corr = pandas.DataFrame()
+        obs = pandas.DataFrame()
+        for t, p, s in zip(target, plane, svd_cut):
+            mati = mat.loc[mat.index.isin(self._MAT_INDEX[p], level=0),
+                           mat.columns.isin(self._MAT_COLS[p], level=0)]
+            c, o = self.svd_fit(t, mat=mati, svd_cut=s, apply_correction=apply_correction)
+            corr = pandas.concat((corr, c))
+            obs = pandas.concat((obs, o))
+        return corr, obs                             
