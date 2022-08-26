@@ -14,6 +14,9 @@ _DATA_NAMES = {'closed_orbit': ['X', 'XP', 'Y', 'YP', 'DP', 'CT'],
                'mu': ['MUX', 'MUY'],
                'dispersion': ['DX', 'DPY', 'DY', 'DPY'],
                'W': ['WX', 'WY']}
+               
+_VAR_ATTR = ['name', 'refpts', 'attname', 'attindex', 'delta']
+_OBS_ATTR = ['name', 'refpts', 'weight', 'parindex', 'parname', 'funname']
 
 
 def sum_polab(ring, refpts, attrname, index):
@@ -43,10 +46,54 @@ def get_keys(ring, variables, attrkey):
             keys.append((v.name, getattr(ring[r], attrkey)))
     return pandas.MultiIndex.from_tuples(gen_unique_keys(keys)) 
 
+
+def get_attkey(conf, attr):
+    attrs = [col for col in conf.columns if col not in attr]
+    cref = conf.loc[[r[0] is not None for r in conf.refpts]]
+    c0 = cref.iloc[0]
+    names = [n for n in c0.index if isinstance(numpy.atleast_1d(c0[n])[0], str)]
+    mask = [numpy.atleast_1d(c0[n])[0] in c0.name[1] for n in names]
+    return numpy.array(names)[mask][0], attrs
+
     
-def  load_confs(ring, oconf, vconf):
-    vgroups = vconf.index(level=0)
-    print(vgroup)
+def  load_confs(rm, oconf, vconf):
+    vattkey, vattrs = get_attkey(vconf, _VAR_ATTR)
+    oattkey, oattrs = get_attkey(oconf, _OBS_ATTR)
+    rm.ring.variables = RMVariables(attrkey=vattkey, attrlist=vattrs)
+    rm.ring.observables = RMObservables(attrkey=oattkey, attrlist=oattrs)    
+    vgroups = numpy.unique(vconf.index.get_level_values(0))
+    ogroups = numpy.unique(oconf.index.get_level_values(0))    
+    for name in vgroups:
+       refpts = vconf.refpts[name]     
+       if numpy.any(refpts.index == 'GLOBAL'):
+           print('No refpts found for {}, ignored.'.format(name))
+       else: 
+           if len(refpts) >1: 
+               refpts = numpy.concatenate(refpts.to_numpy(), axis=0).ravel()  
+           else:
+               refpts = numpy.array(refpts)  
+           delta = numpy.unique(vconf.delta[name][0])[0]
+           attname = numpy.unique(vconf.attname[name][0])[0]
+           attindex = numpy.unique(vconf.attindex[name][0])[0]
+           sum_zero =  name+'_SUM' in ogroups
+           rm.add_variables_refpts(name, delta, refpts, attname,
+                                   index=attindex, sum_zero=sum_zero)
+    for name in ogroups:
+       refpts = oconf.refpts[name]
+       if numpy.any(refpts.index == 'GLOBAL'):
+           if name not in rm.ring.observables.conf.index.get_level_values(level=0):
+               print('No refpts found for {}, ignored.'.format(name))
+       else: 
+           if len(refpts) >1:
+               refpts = numpy.concatenate(refpts.to_numpy(), axis=0).ravel()
+           else:
+               refpts = numpy.array(refpts)
+           weight = numpy.unique(oconf.weight[name][0])[0]
+           parname = numpy.unique(oconf.parname[name][0])[0]
+           parindex = numpy.unique(oconf.parindex[name][0])[0]
+           rm.add_observables_refpts(parname, refpts, index=parindex, weight=weight)
+    print(rm.ring.variables.conf)
+    print(rm.ring.observables.conf)
                
 
       
@@ -109,8 +156,8 @@ class Observable(object):
 
     def __init__(self, name, refpts=None, index=None, weight=1, fun=None, args=(), kwargs={}):
         self.refpts = refpts
-        self.parname = name
-        self.name =name
+        self.name = name
+        self.parname = None
         self.weight = weight
         self.parindex = index
         self.args = args
@@ -122,8 +169,8 @@ class Observable(object):
             assert refpts is not None, \
                 'repfts required for orbit or linopt observable'
             assert name in _DATA_NAMES.keys(),\
-                '{} observable not defined in at.get_optics'.format(name)
-            
+                '{} observable not defined in at.get_optics'.format(name) 
+            self.parname = name           
             self.name = _DATA_NAMES[name][index]
             if self.parname == 'closed_orbit':
                 fun = find_orbit
@@ -188,8 +235,7 @@ class RMElements(List):
 class RMVariables(RMElements):
 
     def __init__(self, attrkey='FamName', attrlist=[], variables=[]):
-        attrs = ['name', 'refpts', 'attname', 'attindex', 'delta']
-        super(RMVariables, self).__init__(attrs, attrkey=attrkey,
+        super(RMVariables, self).__init__(_VAR_ATTR, attrkey=attrkey,
                                           attrlist=attrlist,
                                           elements=variables)   
         
@@ -217,8 +263,7 @@ class RMObservables(RMElements):
 
     def __init__(self, attrkey='FamName', attrlist=[], observables=[]):
         self._ref_fun = ['find_orbit', 'get_optics']
-        attrs = ['name', 'refpts', 'weight', 'parindex', 'funname']
-        super(RMObservables, self).__init__(attrs, attrkey=attrkey,
+        super(RMObservables, self).__init__(_OBS_ATTR, attrkey=attrkey,
                                             attrlist=attrlist,
                                             elements=observables)
 

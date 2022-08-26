@@ -6,8 +6,9 @@ import pandas
 #  needed -> ElementVariable.setv is not pickable
 import multiprocess as multiprocessing
 from .elements import RMVariables, RMObservables
-from .elements import sum_polab, Observable 
+from .elements import sum_polab, Observable, load_confs
 from functools import partial
+import warnings
 
 
 globring = None
@@ -92,6 +93,27 @@ class ElementResponseMatrix(object):
                 rv.update(self._resp_one(self.ring, var, key))
         self.fullrm = pandas.DataFrame(rv)         
         
+    def save_fullrm(self, filename):
+        assert self.fullrm is not None,\
+           ' Empty response matrix: please run compute_fullrm() first' 
+        if not filename.endswith('.h5'):
+            filename += '.h5'
+        store = pandas.HDFStore(filename)
+        store['fullrm'] = self.fullrm
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', pandas.errors.PerformanceWarning)
+            store['vconf'] = self.ring.variables.conf
+            store['oconf'] = self.ring.observables.conf
+        store.close()
+        
+    def load_fullrm(self, filename):
+        store = pandas.HDFStore(filename)
+        self.fullrm = store['fullrm']
+        vconf = store['vconf']
+        oconf = store['oconf']
+        store.close()
+        load_confs(self, oconf, vconf)
+        
     def exclude(self, obsdictlist=None, vardictlist=None):
     
         def remove_element(conf, df):
@@ -159,8 +181,7 @@ class OrbitResponseMatrix(ElementResponseMatrix):
 
     _MAT_INDEX = {'X': ['X', 'HST_SUM'],
                   'Y': ['Y', 'VST_SUM']}
-    _MAT_COLS = {'X': ['HST', 'RF'], 'Y': ['VST']}
-                
+    _MAT_COLS = {'X': ['HST', 'RF'], 'Y': ['VST']}         
 
     def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True):
         super(OrbitResponseMatrix, self).__init__(ring)
@@ -196,6 +217,8 @@ class OrbitResponseMatrix(ElementResponseMatrix):
         corr = pandas.DataFrame()
         obs = pandas.DataFrame()
         for t, p, s in zip(target, plane, svd_cut):
+            assert p=='X' or p=='Y',\
+               'Orbit plane has to be X or Y'
             mati = mat.loc[mat.index.isin(self._MAT_INDEX[p], level=0),
                            mat.columns.isin(self._MAT_COLS[p], level=0)]
             c, o = self.svd_fit(t, mat=mati, svd_cut=s, apply_correction=apply_correction)
