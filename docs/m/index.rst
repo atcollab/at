@@ -31,3 +31,4 @@ higher-level functions to provide physics results.
    :hidden:
 
    releases/r2.3
+   releases/r2.4
