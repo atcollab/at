@@ -160,7 +160,10 @@ def load_mat(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
-    """
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
+   """
     if 'key' in kwargs:  # process the deprecated 'key' keyword
         kwargs.setdefault('mat_key', kwargs.pop('key'))
     return Lattice(ringparam_filter, matfile_generator, abspath(filename),
@@ -216,6 +219,9 @@ def load_m(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     return Lattice(ringparam_filter, mfile_generator, abspath(filename),
                    iterator=params_filter, **kwargs)
@@ -271,6 +277,9 @@ def save_mat(ring: Lattice, filename: str,
         filename:       Name of the '.mat' file
         mat_key (str):  Name of the Matlab variable containing
           the lattice. Default: ``'RING'``
+
+    See Also:
+        :py:func:`.save_lattice` for a generic lattice-saving function.
     """
     lring = tuple((element_to_dict(elem),) for elem in matlab_ring(ring))
     scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
@@ -283,6 +292,9 @@ def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
         ring:           Lattice description
         filename:       Name of the '.m' file. Default: outputs on
           :py:obj:`sys.stdout`
+
+    See Also:
+        :py:func:`.save_lattice` for a generic lattice-saving function.
     """
 
     def save(file):

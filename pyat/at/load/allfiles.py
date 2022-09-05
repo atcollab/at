@@ -43,6 +43,10 @@ Keyword Args:
 Returns:
     lattice (Lattice):          New :py:class:`.Lattice` object
 
+See Also:
+    :py:func:`.load_mat`, :py:func:`.load_m`, :py:func:`.load_repr`,
+    :py:func:`.load_elegant`, :py:func:`.load_tracy`
+
 .. Admonition:: Known extensions are:
     """
     _, ext = os.path.splitext(filepath)
@@ -68,6 +72,9 @@ Specific keywords for .mat files
 Keyword Args:
     mat_key (str):      Name of the Matlab variable containing the lattice.
       Default: ``'RING'``
+
+See Also:
+    :py:func:`.save_mat`, :py:func:`.save_m`, :py:func:`.save_repr`
 
 .. Admonition:: Known extensions are:
     """
