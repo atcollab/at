@@ -1,8 +1,7 @@
 import glob
 import os
-from os.path import abspath, basename, dirname, exists, join, splitext
+from os.path import basename, exists, join, splitext
 import sys
-import shutil
 from setuptools import setup, Extension
 
 # Numpy build dependency defined in pyproject.toml.
@@ -25,7 +24,7 @@ def select_omp():
         )))
 
 
-here = abspath(dirname(__file__))
+print("Entering setup.py:", str(sys.argv))
 macros = [('PYAT', None)]
 with_openMP = False
 
@@ -33,7 +32,8 @@ cflags = ['-std=c99']
 cppflags = []
 
 mpi = os.environ.get('MPI', None)
-if mpi is None:
+if mpi is None or (len(sys.argv) >= 2 and
+                   any(sys.argv[1] == arg for arg in ('egg_info', 'sdist'))):
     mpi_macros = []
     mpi_includes = []
 else:
@@ -86,24 +86,13 @@ if not sys.platform.startswith('win32'):
 # this file is executed each time any setup.py command is run.
 # It appears that only copying the files when they are available is
 # sufficient.
-integrator_src_orig = abspath(join(here, '..', 'atintegrators'))
-integrator_src = 'integrator-src'
-diffmatrix_orig = abspath(join(here, '..', 'atmat', 'atphysics', 'Radiation'))
+integrator_src_orig = 'atintegrators'
+diffmatrix_orig = join('atmat', 'atphysics', 'Radiation')
 
-if exists(integrator_src_orig):
-    # Copy files into pyat for distribution.
-    source_files = glob.glob(join(integrator_src_orig, '*.[ch]'))
-    source_files.extend(glob.glob(join(integrator_src_orig, '*.cc')))
-    source_files.append(join(diffmatrix_orig, 'findmpoleraddiffmatrix.c'))
-    if not exists(integrator_src):
-        os.makedirs(integrator_src)
-    for f in source_files:
-        shutil.copy2(f, integrator_src)
-
-c_pass_methods = glob.glob(join(integrator_src, '*Pass.c'))
-cpp_pass_methods = glob.glob(join(integrator_src, '*Pass.cc'))
-diffmatrix_source = join(integrator_src, 'findmpoleraddiffmatrix.c')
-at_source = 'at.c'
+c_pass_methods = glob.glob(join(integrator_src_orig, '*Pass.c'))
+cpp_pass_methods = glob.glob(join(integrator_src_orig, '*Pass.cc'))
+diffmatrix_source = join(diffmatrix_orig, 'findmpoleraddiffmatrix.c')
+at_source = join('pyat', 'at.c')
 
 
 def c_integrator_ext(pass_method):
@@ -112,7 +101,7 @@ def c_integrator_ext(pass_method):
     return Extension(
         name=name,
         sources=[pass_method],
-        include_dirs=[numpy.get_include(), mpi_includes, integrator_src],
+        include_dirs=[numpy.get_include(), mpi_includes, integrator_src_orig],
         define_macros=macros + omp_macros + mpi_macros,
         extra_compile_args=cflags + omp_cflags,
         extra_link_args=omp_lflags
@@ -125,7 +114,7 @@ def cpp_integrator_ext(pass_method):
     return Extension(
         name=name,
         sources=[pass_method],
-        include_dirs=[numpy.get_include(), mpi_includes, integrator_src],
+        include_dirs=[numpy.get_include(), mpi_includes, integrator_src_orig],
         define_macros=macros + omp_macros + mpi_macros,
         extra_compile_args=cppflags + omp_cflags,
         extra_link_args=omp_lflags
@@ -136,7 +125,7 @@ at = Extension(
     'at.tracking.atpass',
     sources=[at_source],
     define_macros=macros + omp_macros + mpi_macros,
-    include_dirs=[numpy.get_include(), integrator_src],
+    include_dirs=[numpy.get_include(), integrator_src_orig],
     extra_compile_args=cflags + omp_cflags,
     extra_link_args=omp_lflags
 )
@@ -144,7 +133,7 @@ at = Extension(
 diffmatrix = Extension(
     name='at.physics.diffmatrix',
     sources=[diffmatrix_source],
-    include_dirs=[numpy.get_include(), integrator_src],
+    include_dirs=[numpy.get_include(), integrator_src_orig],
     define_macros=macros,
     extra_compile_args=cflags
 )
@@ -154,3 +143,5 @@ setup(
                 [c_integrator_ext(pm) for pm in c_pass_methods] +
                 [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )
+
+print("Leaving setup.py")

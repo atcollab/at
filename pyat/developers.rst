@@ -44,9 +44,9 @@ Then:
 
     $ pip install --upgrade pip
 
-* Go to the pyat root directory::
+* Go to the AT root directory::
 
-    cd <atroot>/pyat
+    cd <atroot>
 
 * install AT, with the developer tools.
   2 option sets are available:

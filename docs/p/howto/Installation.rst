@@ -32,7 +32,7 @@ From GitHub
 
 3. Go to the pyAT installation directory::
 
-    $ cd at/pyat
+    $ cd at
 
 4. Build and install::
 

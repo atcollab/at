@@ -42,7 +42,6 @@ jobs:
         command: run('atmat/atpath');githubsetup();
 
     - name: Build and install at
-      working-directory: ./pyat
       run: python -m pip install .
 
     - name: Run tests

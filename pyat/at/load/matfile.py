@@ -193,7 +193,7 @@ def mfile_generator(params: dict, m_file: str)\
                 warn(AtWarning('Invalid line {0} skipped.'.format(lineno)))
                 continue
             except KeyError:
-                warn(AtWarning('Line {0}: Unknown class'))
+                warn(AtWarning('Line {0}: Unknown class.'.format(lineno)))
                 continue
             else:
                 yield elem
