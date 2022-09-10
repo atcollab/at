@@ -24,7 +24,7 @@ if nargin > 1
             if enable
                 ring=atenable_6d(ring);
             else
-                ring=atdiasable_6d(ring);
+                ring=atdisable_6d(ring);
             end
         else
             error('AT:Radiation',['''is_6d'' must be ' boolstring(enable)])
