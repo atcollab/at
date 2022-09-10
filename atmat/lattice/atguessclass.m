@@ -30,7 +30,8 @@ elseif isfield(elem,'PolynomB')
     if useclass && isfield(elem,'Class')
         atclass=elem.Class;
     elseif isfield(elem,'Length') && elem.Length~=0
-        loworder=find(abs(elem.PolynomB(2:end))~=0,1);
+        maxorder=elem.MaxOrder+1;
+        loworder=find(abs(elem.PolynomB(2:maxorder))~=0,1);
         if isempty(loworder)
             atclass='Drift';
         elseif loworder==1
