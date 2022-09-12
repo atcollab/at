@@ -3,11 +3,10 @@ Radiation and equilibrium emittances
 """
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
-from typing import Optional, Tuple
+from typing import Tuple
 from scipy.linalg import inv, det, solve_sylvester
-from at.constants import clight, e_mass
 from at.lattice import Lattice, check_radiation, Refpts
-from at.lattice import Element, Dipole, Wiggler, DConstant, Multipole
+from at.lattice import Dipole, Wiggler, DConstant, Multipole, QuantumDiffusion
 from at.lattice import get_refpts, get_value_refpts
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
@@ -41,7 +40,7 @@ def _cumulb(it):
         yield cumul
 
 
-def _dmatr(ring, orbit=None, keep_lattice=False):
+def _dmatr(ring: Lattice, orbit: Orbit = None, keep_lattice: bool = False):
     """
     compute the cumulative diffusion and orbit
     matrices over the ring
@@ -83,8 +82,7 @@ def _lmat(dmat):
 
 
 @check_radiation(True)
-def ohmi_envelope(ring: Lattice, refpts: Optional[Refpts] = None,
-                  orbit: Optional[Orbit] = None,
+def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
                   keep_lattice: bool = False):
     """Calculates the equilibrium beam envelope
 
@@ -199,16 +197,15 @@ def ohmi_envelope(ring: Lattice, refpts: Optional[Refpts] = None,
     return data0, r66data, data
 
 
-def get_radiation_integrals(ring, dp: Optional[float] = None,
-                            twiss=None, **kwargs)\
+def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         -> Tuple[float, float, float, float, float]:
     r"""Computes the 5 radiation integrals for uncoupled lattices.
 
     Parameters:
         ring:   Lattice description
         dp:     Momentum deviation. Ignored if radiation is ON
-        twiss:  Linear optics at all points (from :py:func:`linopt6`).
-          If None, it will be computed.
+        twiss:  Linear optics at all points (from :py:func:`.linopt6`).
+          If ``None``, it will be computed.
 
     Keyword Args:
         dct (float):  Path lengthening. If specified, ``dp`` is
@@ -342,7 +339,7 @@ def get_radiation_integrals(ring, dp: Optional[float] = None,
         di5 = max(H0 * di3, d5lim)
         return numpy.array([di1, di2, di3, di4, di5])
 
-    Brho = sqrt(ring.energy**2 - e_mass**2) / clight
+    Brho = ring.BRho
     integrals = numpy.zeros((5,))
 
     if twiss is None:
@@ -360,8 +357,7 @@ def get_radiation_integrals(ring, dp: Optional[float] = None,
 
 
 @check_radiation(True)
-def quantdiffmat(ring: Lattice,
-                 orbit: Optional[Orbit] = None) -> numpy.ndarray:
+def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> numpy.ndarray:
     """Computes the diffusion matrix of the whole ring
 
     Parameters:
@@ -378,8 +374,7 @@ def quantdiffmat(ring: Lattice,
 
 
 @check_radiation(True)
-def gen_quantdiff_elem(ring: Lattice,
-                       orbit: Optional[Orbit] = None) -> Element:
+def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
     """Generates a quantum diffusion element
 
     Parameters:
@@ -388,11 +383,11 @@ def gen_quantdiff_elem(ring: Lattice,
           already known ((6,) array).
 
     Returns:
-        diffElem (Element): Quantum diffusion element
+        diffElem (QuantumDiffusion): Quantum diffusion element
     """
     dmat = quantdiffmat(ring, orbit=orbit)
     lmat = numpy.asfortranarray(_lmat(dmat))
-    diff_elem = Element('Diffusion', Lmatp=lmat, PassMethod='QuantDiffPass')
+    diff_elem = QuantumDiffusion('Diffusion', lmat)
     return diff_elem
 
 
