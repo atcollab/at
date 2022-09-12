@@ -128,9 +128,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         epsabs, epsrel:  integral absolute and relative tolerances
 
     Returns:
-        Returns the touschek lifetime in seconds, the momentum aperture
-        with shape(len(refpts), 2), and the refpts (len(refpts),) at which
-        the aperture was computed
+        touschek lifetime: double, expressed in seconds 
+        momentum aperture: (len(refpts), 2) array
+        refpts at which the aperture was computed: (len(refpts), ) array
     """
 
     epsabs = kwargs.pop('epsabs', 1.0e-16)
