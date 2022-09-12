@@ -2,18 +2,36 @@ from setuptools import build_meta as _orig
 import os
 
 # Mandatory hooks
-build_wheel = _orig.build_wheel
 build_sdist = _orig.build_sdist
 
-_mpi = os.environ.get('MPI', None)
-if _mpi is not None:
-    _addlist = ["mpi4py"]
-else:
-    _addlist = []
+
+def _get_option(config, key, default_value):
+    val = os.environ.get(key.upper(), default_value)
+    if config is not None:
+        val = config.get(key.lower(), val)
+    return eval(val)
+
+
+def build_wheel(wheel_dir, config_settings=None, metadata_dir=None):
+    print("** Entering build_wheel. "
+          "Config settings:", config_settings)
+    os.environ["MPI"] = str(_get_option(config_settings, 'MPI', '0'))
+    os.environ["OPENMP"] = str(_get_option(config_settings, 'OPENMP', '0'))
+    print("** MPI:", os.environ.get('MPI', 'None'))
+    print("** OPENMP:", os.environ.get('OPENMP', 'None'))
+    ret = _orig.build_wheel(wheel_dir, config_settings, metadata_dir)
+    print("** Leaving build_wheel")
+    return ret
 
 
 # Optional hook
 def get_requires_for_build_wheel(config_settings=None):
-    print("config settings:", config_settings)
-    print("Additional modules:", _addlist)
-    return _orig.get_requires_for_build_wheel(config_settings) + _addlist
+    print("** Entering get_requires_for_build_wheel. "
+          "Config settings:", config_settings)
+    mpi = _get_option(config_settings, 'MPI', '0')
+    print("** MPI:", mpi)
+    addlist = ["mpi4py"] if mpi else []
+    print("** Additional modules:", addlist)
+    ret = _orig.get_requires_for_build_wheel(config_settings) + addlist
+    print("** Leaving get_requires_for_build_wheel")
+    return ret

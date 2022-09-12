@@ -24,16 +24,18 @@ def select_omp():
         )))
 
 
-print("Entering setup.py:", str(sys.argv))
+print("** Entering setup.py:", str(sys.argv))
+print("** MPI:", os.environ.get('MPI', None))
+print("** OPENMP:", os.environ.get('OPENMP', None))
 macros = [('PYAT', None)]
 with_openMP = False
 
 cflags = ['-std=c99']
 cppflags = []
 
-mpi = os.environ.get('MPI', None)
-if mpi is None or (len(sys.argv) >= 2 and
-                   any(sys.argv[1] == arg for arg in ('egg_info', 'sdist'))):
+mpi = eval(os.environ.get('MPI', 'None'))
+if not mpi or (len(sys.argv) >= 2 and
+               any(sys.argv[1] == arg for arg in ('egg_info', 'sdist'))):
     mpi_macros = []
     mpi_includes = []
 else:
@@ -48,8 +50,8 @@ else:
     mpi_includes = mpi4py.get_include()
 
 
-omp = os.environ.get('OPENMP', None)
-if omp is None:
+omp = eval(os.environ.get('OPENMP', 'None'))
+if not omp:
     omp_cflags = []
     omp_lflags = []
     omp_macros = []
@@ -144,4 +146,4 @@ setup(
                 [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )
 
-print("Leaving setup.py")
+print("** Leaving setup.py")
