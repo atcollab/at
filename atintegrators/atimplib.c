@@ -145,7 +145,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     for (i=0;i<num_particles;i++) {
         rtmp = r_in+i*6;
         ib = i%nbunch;
-        np_bunch[ib] += 1.0
+        np_bunch[ib] += 1.0;
         if (!atIsNaN(rtmp[0])) {
             register double x = rtmp[0];
             register double y = rtmp[2];
@@ -195,7 +195,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
         weight[i] *= bunch_currents[ib]/np_bunch[ib];
     } 
-    free(np_bunch)
+    free(np_bunch);
     free(smin);
     free(smax);
     free(hz);
