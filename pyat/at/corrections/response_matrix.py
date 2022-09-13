@@ -12,32 +12,30 @@ import warnings
 
 
 globring = None
+globobs = None
     
 
 class ElementResponseMatrix(object):
 
     def __init__(self, ring, **kwargs):
         self.ring = ring.copy()
-        #  add attributes to ring such that they are
-        #  accessible through the global variable
-        self.ring.variables = RMVariables(**kwargs)
-        self.ring.observables = RMObservables(**kwargs)
+        self.variables = RMVariables(**kwargs)
+        self.observables = RMObservables(**kwargs)
         self.fullrm = None
         self.excl_obs = []
         self.excl_var = []
         super(ElementResponseMatrix, self).__init__()
         
     def add_variables(self, variables):
-        self.ring.variables.add_elements(self.ring, variables)
+        self.variables.add_elements(self.ring, variables)
         
     def add_observables(self, observables):
-        self.ring.observables.add_elements(self.ring, observables)
+        self.observables.add_elements(self.ring, observables)
         
     def add_variables_refpts(self, name, delta, refpts, attname,
                              index=None, sum_zero=False):
-        self.ring.variables.add_elements_refpts(self.ring, name, 
-                                                delta, refpts,
-                                                attname, index=index)
+        self.variables.add_elements_refpts(self.ring, name, delta,
+                                           refpts, attname, index=index)
         if sum_zero:
             assert 'Polynom' in attname,\
                'sum_zero available only for PolynomA/B attribute'
@@ -48,21 +46,22 @@ class ElementResponseMatrix(object):
             self.add_observables(sum_zero)
                                                 
     def add_observables_refpts(self, name, refpts, index=None, weight=1):
-        self.ring.observables.add_elements_refpts(self.ring, name,
-                                                  refpts, index=index,
-                                                  weight=weight)
+        self.observables.add_elements_refpts(self.ring, name, refpts,
+                                             index=index, weight=weight)
                                   
     @staticmethod
-    def _resp_one(ring, variable, key):
+    def _resp_one(ring, observables, variable, key):
         if ring is None:
             ring = globring
+        if observables is None:
+            observables = globobs
         v0 = variable.get(ring)
         variable.set(ring, v0+variable.delta)
-        op = ring.observables.values(ring)
+        op = observables.values(ring)
         variable.set(ring, v0-variable.delta)  
-        om = ring.observables.values(ring)
+        om = observables.values(ring)
         do = {key: (oom-oop)/2/variable.delta for key, oom, oop 
-              in zip(ring.observables.conf.index, om, op)}
+              in zip(observables.conf.index, om, op)}
         variable.set(ring, v0)
         return {key: pandas.Series(do)}         
         
@@ -71,26 +70,27 @@ class ElementResponseMatrix(object):
         if use_mp:
             ctx = multiprocessing.get_context(start_method)
             if pool_size == None:
-                pool_size = min(len(self.ring.variables),
-                                multiprocessing.cpu_count())
+                pool_size = min(len(self.variables), multiprocessing.cpu_count())
             if ctx.get_start_method() == 'fork':
                 global globring
+                global globobs
                 globring = self.ring
-                args = [(None, var, key) for var, key in zip(self.ring.variables,
-                                                             self.ring.variables.conf.index)]
+                globobs = self.observables
+                args = [(None, None, var, key) 
+                        for var, key in zip(self.variables, self.variables.conf.index)]
                 with ctx.Pool(pool_size) as pool:
                     results = pool.starmap(partial(self._resp_one), args)
                 globring = None
             else:
-                args = [(self.ring, var, key) for var in zip(self.ring.variables,
-                                                             self.ring.variables.conf.index)]
+                args = [(self.ring, self.observables, var, key)
+                        for var, key in zip(self.variables, self.variables.conf.index)]
                 with ctx.Pool(pool_size) as pool:
                     results = pool.starmap(partial(self._resp_one), args)
             for r in results:
                 rv.update(r)             
         else: 
-            for var, key in zip(self.ring.variables, self.ring.variables.conf.index):  
-                rv.update(self._resp_one(self.ring, var, key))
+            for var, key in zip(self.variables, self.variables.conf.index):  
+                rv.update(self._resp_one(self.ring, self.observables, var, key))
         self.fullrm = pandas.DataFrame(rv)         
         
     def save_fullrm(self, filename):
@@ -102,8 +102,8 @@ class ElementResponseMatrix(object):
         store['fullrm'] = self.fullrm
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', pandas.errors.PerformanceWarning)
-            store['vconf'] = self.ring.variables.conf
-            store['oconf'] = self.ring.observables.conf
+            store['vconf'] = self.variables.conf
+            store['oconf'] = self.observables.conf
         store.close()
         
     def load_fullrm(self, filename):
@@ -126,9 +126,9 @@ class ElementResponseMatrix(object):
             return df.loc[cond].index   
         
         if vardictlist is not None:           
-            self.excl_var = remove_element(vardictlist, self.ring.variables.conf)
+            self.excl_var = remove_element(vardictlist, self.variables.conf)
         if obsdictlist is not None:
-            self.excl_obs = remove_element(obsdictlist, self.ring.observables.conf)
+            self.excl_obs = remove_element(obsdictlist, self.observables.conf)
        
     def get_mat(self):
         assert self.fullrm is not None,\
@@ -139,10 +139,10 @@ class ElementResponseMatrix(object):
     def get_vals(self, mat=None):
         if mat is None:
             mat = self.get_mat()
-        mask = self.ring.observables.conf.index.isin(mat.index)  
-        obs = numpy.array(self.ring.observables.values(self.ring, mask))
-        mask = self.ring.variables.conf.index.isin(mat.columns)
-        var = numpy.array(self.ring.variables.get(self.ring, mask))
+        mask = self.observables.conf.index.isin(mat.index)  
+        obs = numpy.array(self.observables.values(self.ring, mask))
+        mask = self.variables.conf.index.isin(mat.columns)
+        var = numpy.array(self.variables.get(self.ring, mask))
         return obs, var
         
     def svd(self, mat=None):
@@ -169,8 +169,8 @@ class ElementResponseMatrix(object):
                'Err': pandas.Series(err, mat.index),
                'Exp': pandas.Series(exp, mat.index)}
         if apply_correction:
-            mask = self.ring.variables.conf.index.isin(mat.columns) 
-            self.ring.variables.set(self.ring, var+dk, mask)
+            mask = self.variables.conf.index.isin(mat.columns) 
+            self.variables.set(self.ring, var+dk, mask)
         valn, varn = self.get_vals(mat=mat) 
         corr.update({'New': pandas.Series(varn, mat.columns)})
         obs.update({'New': pandas.Series(valn, mat.index)})

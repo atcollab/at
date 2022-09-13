@@ -59,8 +59,8 @@ def get_attkey(conf, attr):
 def  load_confs(rm, oconf, vconf):
     vattkey, vattrs = get_attkey(vconf, _VAR_ATTR)
     oattkey, oattrs = get_attkey(oconf, _OBS_ATTR)
-    rm.ring.variables = RMVariables(attrkey=vattkey, attrlist=vattrs)
-    rm.ring.observables = RMObservables(attrkey=oattkey, attrlist=oattrs)    
+    rm.variables = RMVariables(attrkey=vattkey, attrlist=vattrs)
+    rm.observables = RMObservables(attrkey=oattkey, attrlist=oattrs)    
     vgroups = numpy.unique(vconf.index.get_level_values(0))
     ogroups = numpy.unique(oconf.index.get_level_values(0))    
     for name in vgroups:
@@ -81,7 +81,7 @@ def  load_confs(rm, oconf, vconf):
     for name in ogroups:
        refpts = oconf.refpts[name]
        if numpy.any(refpts.index == 'GLOBAL'):
-           if name not in rm.ring.observables.conf.index.get_level_values(level=0):
+           if name not in rm.observables.conf.index.get_level_values(level=0):
                print('No refpts found for {}, ignored.'.format(name))
        else: 
            if len(refpts) >1:
@@ -92,8 +92,8 @@ def  load_confs(rm, oconf, vconf):
            parname = numpy.unique(oconf.parname[name][0])[0]
            parindex = numpy.unique(oconf.parindex[name][0])[0]
            rm.add_observables_refpts(parname, refpts, index=parindex, weight=weight)
-    print(rm.ring.variables.conf)
-    print(rm.ring.observables.conf)
+    print(rm.variables.conf)
+    print(rm.observables.conf)
                
 
       
