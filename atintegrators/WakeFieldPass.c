@@ -109,6 +109,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double *waketableZ;
         double *turnhistory;
         double *z_cuts;
+        int i;
 
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nelem=atGetLong(ElemData,"_nelem"); check_error();
@@ -130,7 +131,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->nslice=nslice;
         Elem->nelem=nelem;
         Elem->nturns=nturns;
-        for(int i=0;i<3;i++){
+        for(i=0;i<3;i++){
            lnf[i]=normfact[i]*wakefact;
         }
         Elem->normfact=lnf;
