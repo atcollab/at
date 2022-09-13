@@ -128,6 +128,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     double *smin = malloc(nbunch*sizeof(double));
     double *smax = malloc(nbunch*sizeof(double));
     double *hz = malloc(nbunch*sizeof(double));
+    double *np_bunch = malloc(nbunch*sizeof(double));
     getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts);     
     
     for(i=0;i<nbunch;i++){
@@ -144,6 +145,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     for (i=0;i<num_particles;i++) {
         rtmp = r_in+i*6;
         ib = i%nbunch;
+        np_bunch[ib] += 1.0
         if (!atIsNaN(rtmp[0])) {
             register double x = rtmp[0];
             register double y = rtmp[2];
@@ -173,13 +175,10 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         }
     }
 
-
-    double np_total = (double)num_particles;
-
     #ifdef MPI
     int mpsize;
     MPI_Comm_size(MPI_COMM_WORLD,&mpsize); 
-    np_total *= (double)mpsize;      
+    MPI_Allreduce(MPI_IN_PLACE,np_bunch,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);      
     MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,zpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -194,8 +193,9 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         zpos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         xpos[i] =  (weight[i]>0.0) ? xpos[i]/weight[i] : 0.0;
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
-        weight[i] *= bunch_currents[ib]/np_total;
+        weight[i] *= bunch_currents[ib]/np_bunch[ib];
     } 
+    free(np_bunch)
     free(smin);
     free(smax);
     free(hz);
