@@ -17,8 +17,7 @@ globobs = None
 
 class ElementResponseMatrix(object):
 
-    def __init__(self, ring, **kwargs):
-        self.ring = ring.copy()
+    def __init__(self, **kwargs):
         self.variables = RMVariables(**kwargs)
         self.observables = RMObservables(**kwargs)
         self.fullrm = None
@@ -26,15 +25,15 @@ class ElementResponseMatrix(object):
         self.excl_var = []
         super(ElementResponseMatrix, self).__init__()
         
-    def add_variables(self, variables):
-        self.variables.add_elements(self.ring, variables)
+    def add_variables(self, ring, variables):
+        self.variables.add_elements(ring, variables)
         
-    def add_observables(self, observables):
-        self.observables.add_elements(self.ring, observables)
+    def add_observables(self, ring, observables):
+        self.observables.add_elements(ring, observables)
         
-    def add_variables_refpts(self, name, delta, refpts, attname,
+    def add_variables_refpts(self, ring, name, delta, refpts, attname,
                              index=None, sum_zero=False):
-        self.variables.add_elements_refpts(self.ring, name, delta,
+        self.variables.add_elements_refpts(ring, name, delta,
                                            refpts, attname, index=index)
         if sum_zero:
             assert 'Polynom' in attname,\
@@ -43,10 +42,10 @@ class ElementResponseMatrix(object):
                'index required for sum_zero'
             sum_zero = Observable(name+'_SUM', fun=sum_polab,
                                   args=(refpts, attname, index))
-            self.add_observables(sum_zero)
+            self.add_observables(ring, sum_zero)
                                                 
-    def add_observables_refpts(self, name, refpts, index=None, weight=1):
-        self.observables.add_elements_refpts(self.ring, name, refpts,
+    def add_observables_refpts(self, ring, name, refpts, index=None, weight=1):
+        self.observables.add_elements_refpts(ring, name, refpts,
                                              index=index, weight=weight)
                                   
     @staticmethod
@@ -65,7 +64,7 @@ class ElementResponseMatrix(object):
         variable.set(ring, v0)
         return {key: pandas.Series(do)}         
         
-    def compute_fullrm(self, use_mp=False, pool_size=None, start_method=None):
+    def compute_fullrm(self, ring, use_mp=False, pool_size=None, start_method=None):
         rv = {}
         if use_mp:
             ctx = multiprocessing.get_context(start_method)
@@ -74,7 +73,7 @@ class ElementResponseMatrix(object):
             if ctx.get_start_method() == 'fork':
                 global globring
                 global globobs
-                globring = self.ring
+                globring = ring
                 globobs = self.observables
                 args = [(None, None, var, key) 
                         for var, key in zip(self.variables, self.variables.conf.index)]
@@ -82,7 +81,7 @@ class ElementResponseMatrix(object):
                     results = pool.starmap(partial(self._resp_one), args)
                 globring = None
             else:
-                args = [(self.ring, self.observables, var, key)
+                args = [(ring, self.observables, var, key)
                         for var, key in zip(self.variables, self.variables.conf.index)]
                 with ctx.Pool(pool_size) as pool:
                     results = pool.starmap(partial(self._resp_one), args)
@@ -90,7 +89,7 @@ class ElementResponseMatrix(object):
                 rv.update(r)             
         else: 
             for var, key in zip(self.variables, self.variables.conf.index):  
-                rv.update(self._resp_one(self.ring, self.observables, var, key))
+                rv.update(self._resp_one(ring, self.observables, var, key))
         self.fullrm = pandas.DataFrame(rv)         
         
     def save_fullrm(self, filename):
@@ -106,13 +105,13 @@ class ElementResponseMatrix(object):
             store['oconf'] = self.observables.conf
         store.close()
         
-    def load_fullrm(self, filename):
+    def load_fullrm(self, ring, filename):
         store = pandas.HDFStore(filename)
         self.fullrm = store['fullrm']
         vconf = store['vconf']
         oconf = store['oconf']
         store.close()
-        load_confs(self, oconf, vconf)
+        load_confs(self, ring, oconf, vconf)
         
     def exclude(self, obsdictlist=None, vardictlist=None):
     
@@ -136,13 +135,13 @@ class ElementResponseMatrix(object):
         return self.fullrm.loc[~self.fullrm.index.isin(self.excl_obs),
                                ~self.fullrm.columns.isin(self.excl_var)]                           
         
-    def get_vals(self, mat=None):
+    def get_vals(self, ring, mat=None):
         if mat is None:
             mat = self.get_mat()
         mask = self.observables.conf.index.isin(mat.index)  
-        obs = numpy.array(self.observables.values(self.ring, mask))
+        obs = numpy.array(self.observables.values(ring, mask))
         mask = self.variables.conf.index.isin(mat.columns)
-        var = numpy.array(self.variables.get(self.ring, mask))
+        var = numpy.array(self.variables.get(ring, mask))
         return obs, var
         
     def svd(self, mat=None):
@@ -150,10 +149,10 @@ class ElementResponseMatrix(object):
             mat = self.get_mat()
         return numpy.linalg.svd(mat, full_matrices=False)                                                
                 
-    def svd_fit(self, target, mat=None, svd_cut=0, apply_correction=False):
+    def svd_fit(self, ring, target, mat=None, svd_cut=0, apply_correction=False):
         if mat is None:
             mat = self.get_mat()
-        val, var = self.get_vals(mat=mat)
+        val, var = self.get_vals(ring, mat=mat)
         err = (val-target)
         U, W, V = self.svd(mat=mat)
         Winv = numpy.linalg.inv(numpy.diag(W))
@@ -170,8 +169,8 @@ class ElementResponseMatrix(object):
                'Exp': pandas.Series(exp, mat.index)}
         if apply_correction:
             mask = self.variables.conf.index.isin(mat.columns) 
-            self.variables.set(self.ring, var+dk, mask)
-        valn, varn = self.get_vals(mat=mat) 
+            self.variables.set(ring, var+dk, mask)
+        valn, varn = self.get_vals(ring, mat=mat) 
         corr.update({'New': pandas.Series(varn, mat.columns)})
         obs.update({'New': pandas.Series(valn, mat.index)})
         return pandas.DataFrame(corr), pandas.DataFrame(obs)
@@ -184,25 +183,23 @@ class OrbitResponseMatrix(ElementResponseMatrix):
     _MAT_COLS = {'X': ['HST', 'RF'], 'Y': ['VST']}         
 
     def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True):
-        super(OrbitResponseMatrix, self).__init__(ring)
-        self.set_bpms(bpms)
-        self.set_steerers(steerers, sum_zero=sum_zero)
-        if cavities is None:
-            ring = ring.radiation_off(copy=True)
-        else:
-            ring = ring.radiation_off(cavity_pass='RFCavityPass', copy=True)
-            self.set_cavities(cavities)   
+        super(OrbitResponseMatrix, self).__init__()
+        self.set_bpms(ring, bpms)
+        self.set_steerers(ring, steerers, sum_zero=sum_zero)
+        if cavities is not None:
+            self.set_cavities(ring, cavities)             
         
-    def set_bpms(self, refpts):
-        self.add_observables_refpts('closed_orbit', refpts=refpts, index=0)
-        self.add_observables_refpts('closed_orbit', refpts=refpts, index=2)
+    def set_bpms(self, ring, refpts):
+        self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=0)
+        self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=2)
         
-    def set_steerers(self, refpts, sum_zero=True):
-        self.add_variables_refpts('HST', 1.0e-4, refpts,'PolynomB', index=0, sum_zero=sum_zero)
-        self.add_variables_refpts('VST', 1.0e-4, refpts,'PolynomA', index=0, sum_zero=sum_zero)
+    def set_steerers(self, ring, refpts, deltax=1.0e-4, deltay=1.0e-4, sum_zero=True):
+        self.add_variables_refpts(ring, 'HST', deltax, refpts,'PolynomB', index=0, sum_zero=sum_zero)
+        self.add_variables_refpts(ring, 'VST', deltay, refpts,'PolynomA', index=0, sum_zero=sum_zero)
         
-    def set_cavities(self, refpts):
-        self.add_variables_refpts('RF', 10, [refpts],'Frequency')
+    def set_cavities(self, ring, refpts, delta=10):
+        print(ring.has_cavity)
+        self.add_variables_refpts(ring, 'RF', delta, [refpts],'Frequency')
         
     def set_excluded_bpms(self, bpmdictlist):
         self.set_exluded(obsdistlist=bpmdictlist)
@@ -210,7 +207,7 @@ class OrbitResponseMatrix(ElementResponseMatrix):
     def set_excluded_steerer(self, steerersdictlist):
         self.set_exluded(vardistlist=steerersdictlist)
         
-    def correct_orbit(self, target=0, plane=['X', 'Y'], svd_cut=0, apply_correction=False):
+    def correct_orbit(self, ring, target=0, plane=['X', 'Y'], svd_cut=0, apply_correction=False):
         mat = self.get_mat()
         svd_cut = numpy.broadcast_to(svd_cut, len(plane))
         target = numpy.broadcast_to(target, len(plane))
@@ -221,7 +218,7 @@ class OrbitResponseMatrix(ElementResponseMatrix):
                'Orbit plane has to be X or Y'
             mati = mat.loc[mat.index.isin(self._MAT_INDEX[p], level=0),
                            mat.columns.isin(self._MAT_COLS[p], level=0)]
-            c, o = self.svd_fit(t, mat=mati, svd_cut=s, apply_correction=apply_correction)
+            c, o = self.svd_fit(ring, t, mat=mati, svd_cut=s, apply_correction=apply_correction)
             corr = pandas.concat((corr, c))
             obs = pandas.concat((obs, o))
         return corr, obs                             

@@ -56,17 +56,19 @@ def get_attkey(conf, attr):
     return numpy.array(names)[mask][0], attrs
 
     
-def  load_confs(rm, oconf, vconf):
+def  load_confs(rm, ring, oconf, vconf):
     vattkey, vattrs = get_attkey(vconf, _VAR_ATTR)
     oattkey, oattrs = get_attkey(oconf, _OBS_ATTR)
     rm.variables = RMVariables(attrkey=vattkey, attrlist=vattrs)
     rm.observables = RMObservables(attrkey=oattkey, attrlist=oattrs)    
     vgroups = numpy.unique(vconf.index.get_level_values(0))
-    ogroups = numpy.unique(oconf.index.get_level_values(0))    
+    ogroups = numpy.unique(oconf.index.get_level_values(0))  
+      
     for name in vgroups:
        refpts = vconf.refpts[name]     
        if numpy.any(refpts.index == 'GLOBAL'):
            print('No refpts found for {}, ignored.'.format(name))
+           rm.variables.conf.drop(name)
        else: 
            if len(refpts) >1: 
                refpts = numpy.concatenate(refpts.to_numpy(), axis=0).ravel()  
@@ -76,13 +78,14 @@ def  load_confs(rm, oconf, vconf):
            attname = numpy.unique(vconf.attname[name][0])[0]
            attindex = numpy.unique(vconf.attindex[name][0])[0]
            sum_zero =  name+'_SUM' in ogroups
-           rm.add_variables_refpts(name, delta, refpts, attname,
+           rm.add_variables_refpts(ring, name, delta, refpts, attname,
                                    index=attindex, sum_zero=sum_zero)
     for name in ogroups:
        refpts = oconf.refpts[name]
        if numpy.any(refpts.index == 'GLOBAL'):
            if name not in rm.observables.conf.index.get_level_values(level=0):
                print('No refpts found for {}, ignored.'.format(name))
+               rm.observables.conf.drop(name)
        else: 
            if len(refpts) >1:
                refpts = numpy.concatenate(refpts.to_numpy(), axis=0).ravel()
@@ -91,11 +94,12 @@ def  load_confs(rm, oconf, vconf):
            weight = numpy.unique(oconf.weight[name][0])[0]
            parname = numpy.unique(oconf.parname[name][0])[0]
            parindex = numpy.unique(oconf.parindex[name][0])[0]
-           rm.add_observables_refpts(parname, refpts, index=parindex, weight=weight)
-    print(rm.variables.conf)
-    print(rm.observables.conf)
-               
+           rm.add_observables_refpts(ring, parname, refpts, index=parindex,
+                                     weight=weight)
 
+    rm.fullrm = rm.fullrm.reindex(index=rm.observables.conf.index)
+    rm.fullrm = rm.fullrm.reindex(columns=rm.variables.conf.index)
+          
       
 class Variable(object):
 
