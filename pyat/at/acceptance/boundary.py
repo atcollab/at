@@ -362,7 +362,7 @@ def recursive_boundary_search(ring, planes, npoints, amplitudes, nturns=1024,
                 if not survived[i] and fact[i] > ftol:
                     deltas = cs[:, i]*rsteps[:]*min(1, 2*fact[i])
                     if numpy.any(abs(deltas) > abs(part[planesi, i])):
-                        part[planesi, i] = numpy.zeros(2)
+                        part[planesi, i] = numpy.zeros(len(planesi))
                     else:
                         for j, pi in enumerate(planesi):
                             part[pi, i] -= deltas[j]
