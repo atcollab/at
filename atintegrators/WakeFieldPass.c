@@ -97,6 +97,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 {
     if (!Elem) {
         long nslice,nelem,nturns;
+        int i;
         double num_charges, wakefact;
         static double lnf[3];
         double *normfact;
@@ -130,7 +131,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->nslice=nslice;
         Elem->nelem=nelem;
         Elem->nturns=nturns;
-        for(int i=0;i<3;i++){
+        for (i=0;i<3;i++){
            lnf[i]=normfact[i]*num_charges*wakefact;
         }
         Elem->normfact=lnf;
@@ -159,6 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
+        int i;
         struct elem El, *Elem=&El;
 
         long nslice,nelem,nturns;
@@ -192,7 +194,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         Elem->nslice=nslice;
         Elem->nelem=nelem;
         Elem->nturns=nturns;
-        for(int i=0;i<3;i++){
+        for (i=0;i<3;i++){
            normfact[i]*=num_charges*wakefact;
         }
         Elem->normfact=normfact;

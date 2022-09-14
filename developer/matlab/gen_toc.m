@@ -2,7 +2,7 @@ function gen_toc()
 %GEN_TOC	Build the HTML files used by the Matlab help browser
 
 [devdir,~, ~]=fileparts(mfilename('fullpath'));
-docdir = fullfile(atroot,'..','docs','matlab');
+docdir = fullfile(atroot,'..','docs','atdocs','matlab');
 tocfile = fullfile(docdir,'helptoc.xml');
 [fid,fmess,fmid] = copyfile(fullfile(devdir,'helptoc.xml'),tocfile);
 if fid <= 0
@@ -11,14 +11,14 @@ end
 fid=openmfile(tocfile,'at');
 
 % User guide
-ugname=fullfile('m','ugsummary.m');
+ugname=fullfile(devdir,'m','ugsummary.m');
 hid=openmfile(ugname,'wt');
 fprintf(fid,'        <tocitem target="ugsummary.html"\n');
 fprintf(fid,'            image="HelpIcon.USER_GUIDE">AT User Guide\n');
 fprintf(hid,'%%%% AT User Guide\n%%\n%%%%\n');
 %   Loop on UG chapters
 for m=atchapters()
-    mname = fullfile('m', m.id+".m");
+    mname = fullfile(devdir,'m', m.id+".m");
     fprintf(hid,'%% <matlab:web(fullfile(docroot,''3ptoolbox'',''atacceleratortoolbox'',''doc'',''%s.html'')) %s>\n%%\n',m.id,m.title);
     fprintf(fid,'            <tocitem target="%s.html">%s</tocitem>\n',m.id,m.title);
     gid=openmfile(mname,'wt');
@@ -85,7 +85,7 @@ end
         fprintf(sumid,'%%%% %s\n%% \n%%%%\n', secname);
         for mm=chapfun()
             target=fullfile(secdir,mm.id+".html");
-            export(fullfile(secdir,mm.id+".mlx"),fullfile(docdir,target));
+            export(fullfile(devdir,secdir,mm.id+".mlx"),fullfile(docdir,target));
             fprintf(sumid,'%% <matlab:web(fullfile(docroot,''3ptoolbox'',''atacceleratortoolbox'',''doc'',''%s'')) %s>\n%%\n',target,mm.title);
             fprintf(fid,'            <tocitem target="%s">%s</tocitem>\n',target,mm.title);
         end
@@ -96,7 +96,7 @@ end
         function res=lst()
             vals=reshape(dir(fullfile(dirname,'*.mlx')),1,[]);
             [~,nms,~]=arrayfun(@fileparts,{vals.name},'UniformOutput',false);
-            nms=string(sort(nms));
+            nms=cellfun(@string,sort(nms),'UniformOutput',false);
             res=struct('id',nms,'title',nms);
         end
     end

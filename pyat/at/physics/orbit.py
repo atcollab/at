@@ -171,7 +171,7 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
+        orbit:          (Nrefs, 6) closed orbit vector at each location
                         specified in ``refpts``
 
     See also:
@@ -250,7 +250,7 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
+        orbit:          (Nrefs, 6) closed orbit vector at each location
                         specified in ``refpts``
 
     See also:
@@ -402,7 +402,7 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
+        orbit:          (Nrefs, 6) closed orbit vector at each location
                         specified in ``refpts``
 
 
@@ -427,7 +427,7 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
 def find_orbit(ring, refpts=None, **kwargs):
     r"""Gets the closed orbit in the general case
 
-    Depending on the the lattice, :py:func:`find_orbit` will:
+    Depending on the lattice, :py:func:`find_orbit` will:
 
     * use :py:func:`find_orbit6` if ring.radiation is ON,
     * use :py:func:`find_sync_orbit` if ring.radiation is OFF and ``dct``
@@ -460,7 +460,7 @@ def find_orbit(ring, refpts=None, **kwargs):
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
+        orbit:          (Nrefs, 6) closed orbit vector at each location
                         specified in ``refpts``
 
     See also:

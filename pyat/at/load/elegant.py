@@ -346,6 +346,9 @@ def load_elegant(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     try:
         energy = kwargs.pop("energy")

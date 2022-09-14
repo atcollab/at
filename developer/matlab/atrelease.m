@@ -46,7 +46,7 @@ end
 
 %Build doc search database
 try
-    builddocsearchdb(fullfile(rootdir,'docs','matlab'));
+    builddocsearchdb(fullfile(rootdir,'docs','atdocs','matlab'));
 catch me
     warning( me.message )
 end
