@@ -7,7 +7,7 @@ from at.lattice import uint32_refpts
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass
-from at.lattice import AtWarning, elements
+from at.lattice import AtWarning, elements, DConstant
 import numpy
 
 
@@ -126,14 +126,18 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
           flag for particles lost (True -> particle lost), turn, element and
           coordinates at which the particle is lost. Set to zero for particles
           that survived
-          
+
     .. note::
 
-       * For multiparticle tracking with large number of turn the size of ``r_out``
-         may increase excessively. To avoid memory issues 
+       * For multiparticle tracking with large number of turn the size of
+         ``r_out`` may increase excessively. To avoid memory issues
          ``patpass(lattice, r_in, refpts=[])`` can be used. An empty list
          is returned and the tracking results of the last turn are stored in
          ``r_in``.
+       * By default, ``patpass`` will use all the available CPUs, to change
+         the number of cores used in ALL functions using ``patpass``
+         (``acceptance`` module for example) it is possible to set
+         ``at.DConstant.patpass_poolsize`` to the desired value
 
     """
     if not isinstance(ring, list):
@@ -143,9 +147,13 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     refpts = uint32_refpts(refpts, len(ring))
     # noinspection PyProtectedMember
     pm_ok = [e.PassMethod in elements._collective for e in ring]
+    bunch_currents = getattr(ring, 'bunch_currents', numpy.zeros(1))
+    bunch_spos = getattr(ring, 'bunch_spos', numpy.zeros(1))
+    kwargs.update({'bunch_currents': bunch_currents, 'bunch_spos': bunch_spos})
     if len(numpy.atleast_1d(r_in[0])) > 1 and not any(pm_ok):
         if pool_size is None:
-            pool_size = min(len(r_in[0]), multiprocessing.cpu_count())
+            pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
+                            DConstant.patpass_poolsize)
         return _pass(ring, r_in, pool_size, start_method, nturns=nturns,
                      refpts=refpts, **kwargs)
     else:

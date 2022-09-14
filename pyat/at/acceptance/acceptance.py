@@ -58,9 +58,7 @@ def get_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
-          (most efficient in single core)
+          default use :py:func:`.lattice_pass`).
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -75,8 +73,8 @@ def get_acceptance(
 
     Returns:
         boundary:   (2,n) array: 2D acceptance
-        tracked:    (2,n) array: Coordinates of tracked particles
         survived:   (2,n) array: Coordinates of surviving particles
+        tracked:    (2,n) array: Coordinates of tracked particles
 
     In case of multiple refpts, return values are lists of arrays, with one
     array per ref. point.
@@ -88,11 +86,15 @@ def get_acceptance(
         >>> plt.plot(*sf,'.')
         >>> plt.plot(*bf)
         >>> plt.show()
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     kwargs = {}
-    if not use_mp:
-        grid_mode = GridMode.RECURSIVE
-    elif start_method is not None:
+    if start_method is not None:
         kwargs['start_method'] = start_method
 
     if verbose:
@@ -190,9 +192,9 @@ def get_1d_acceptance(
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
-          (most efficient in single core)
+          default use :py:func:`.lattice_pass`). In case multi-processing
+          is not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -212,12 +214,23 @@ def get_1d_acceptance(
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
+    if not use_mp:
+        grid_mode = GridMode.RECURSIVE
     assert len(numpy.atleast_1d(plane)) == 1, \
         '1D acceptance: single plane required'
     assert numpy.isscalar(resolution), '1D acceptance: scalar args required'
     assert numpy.isscalar(amplitude), '1D acceptance: scalar args required'
     npoint = numpy.ceil(amplitude/resolution)
+    if grid_mode is not GridMode.RECURSIVE:
+        assert npoint > 1, \
+            'Grid has only one point: increase amplitude or reduce resolution'
     b, s, g = get_acceptance(ring, plane, npoint, amplitude,
                              nturns=nturns, dp=dp, refpts=refpts,
                              grid_mode=grid_mode, use_mp=use_mp,
@@ -252,9 +265,9 @@ def get_horizontal_acceptance(ring: Lattice,
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
-          (most efficient in single core)
+          default use :py:func:`.lattice_pass`). In case multi-processing
+          is not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -274,6 +287,12 @@ def get_horizontal_acceptance(ring: Lattice,
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     return get_1d_acceptance(ring, 'x', resolution, amplitude, *args, **kwargs)
 
@@ -304,9 +323,9 @@ def get_vertical_acceptance(ring: Lattice,
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
-          (most efficient in single core)
+          default use :py:func:`.lattice_pass`). In case multi-processing
+          is not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -326,6 +345,12 @@ def get_vertical_acceptance(ring: Lattice,
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
     return get_1d_acceptance(ring, 'y', resolution, amplitude, *args, **kwargs)
 
@@ -356,9 +381,9 @@ def get_momentum_acceptance(ring: Lattice,
           * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp:         Use python multiprocessing (:py:func:`.patpass`,
-          default use :py:func:`.lattice_pass`). In case multi-processing is not
-          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
-          (most efficient in single core)
+          default use :py:func:`.lattice_pass`). In case multi-processing is
+          not enabled, ``grid_mode`` is forced to
+          :py:attr:`.GridMode.RECURSIVE` (most efficient in single core)
         verbose:        Print out some information
         divider:        Value of the divider used in
           :py:attr:`.GridMode.RECURSIVE` boundary search
@@ -378,8 +403,15 @@ def get_momentum_acceptance(ring: Lattice,
 
     In case of multiple ``tracked`` and ``survived`` are lists of arrays,
     with one array per ref. point.
+
+    .. note::
+
+       * When``use_mp=True`` all the available CPUs will be used.
+         This behavior can be changed by setting
+         ``at.DConstant.patpass_poolsize`` to the desired value
     """
-    return get_1d_acceptance(ring, 'dp', resolution, amplitude, *args, **kwargs)
+    return get_1d_acceptance(ring, 'dp', resolution, amplitude,
+                             *args, **kwargs)
 
 
 Lattice.get_acceptance = get_acceptance
