@@ -8,6 +8,7 @@ import multiprocess as multiprocessing
 from .elements import RMVariables, RMObservables
 from .elements import sum_polab, Observable, load_confs
 from functools import partial
+from fnmatch import fnmatch
 import warnings
 
 
@@ -17,9 +18,9 @@ globobs = None
 
 class ElementResponseMatrix(object):
 
-    def __init__(self, **kwargs):
-        self.variables = RMVariables(**kwargs)
-        self.observables = RMObservables(**kwargs)
+    def __init__(self, vkw={}, okw={}):
+        self.variables = RMVariables(**vkw)
+        self.observables = RMObservables(**okw)
         self.fullrm = None
         self.excl_obs = []
         self.excl_var = []
@@ -44,9 +45,10 @@ class ElementResponseMatrix(object):
                                   args=(refpts, attname, index))
             self.add_observables(ring, sum_zero)
                                                 
-    def add_observables_refpts(self, ring, name, refpts, index=None, weight=1):
-        self.observables.add_elements_refpts(ring, name, refpts,
-                                             index=index, weight=weight)
+    def add_observables_refpts(self, ring, name, refpts, index=None,
+                               weight=1):
+        self.observables.add_elements_refpts(ring, name, refpts,index=index,
+                                             weight=weight)
                                   
     @staticmethod
     def _resp_one(ring, observables, variable, key):
@@ -182,8 +184,8 @@ class OrbitResponseMatrix(ElementResponseMatrix):
                   'Y': ['Y', 'VST_SUM']}
     _MAT_COLS = {'X': ['HST', 'RF'], 'Y': ['VST']}         
 
-    def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True):
-        super(OrbitResponseMatrix, self).__init__()
+    def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True, **kwargs):
+        super(OrbitResponseMatrix, self).__init__(**kwargs)
         self.set_bpms(ring, bpms)
         self.set_steerers(ring, steerers, sum_zero=sum_zero)
         if cavities is not None:
@@ -198,7 +200,9 @@ class OrbitResponseMatrix(ElementResponseMatrix):
         self.add_variables_refpts(ring, 'VST', deltay, refpts,'PolynomA', index=0, sum_zero=sum_zero)
         
     def set_cavities(self, ring, refpts, delta=10):
-        print(ring.has_cavity)
+        active = [e.PassMethod.endswith('CavityPass') for e in ring[refpts]]
+        assert numpy.all(active), \
+            'Inactive cavities used for RM, please turn on your cavities'
         self.add_variables_refpts(ring, 'RF', delta, [refpts],'Frequency')
         
     def set_excluded_bpms(self, bpmdictlist):
@@ -207,18 +211,54 @@ class OrbitResponseMatrix(ElementResponseMatrix):
     def set_excluded_steerer(self, steerersdictlist):
         self.set_exluded(vardistlist=steerersdictlist)
         
-    def correct_orbit(self, ring, target=0, plane=['X', 'Y'], svd_cut=0, apply_correction=False):
-        mat = self.get_mat()
-        svd_cut = numpy.broadcast_to(svd_cut, len(plane))
-        target = numpy.broadcast_to(target, len(plane))
+    def correct(self, ring, mat=None, target=0, plane=['X', 'Y'], svd_cut=0, apply_correction=False):
+        if mat is None:
+            mat = self.get_mat()
+        svd_cut = numpy.broadcast_to(svd_cut, len(plane))       
+        target = numpy.broadcast_to(target, mat.shape[0])
         corr = pandas.DataFrame()
         obs = pandas.DataFrame()
-        for t, p, s in zip(target, plane, svd_cut):
-            assert p=='X' or p=='Y',\
+        for p, s in zip(plane, svd_cut):
+            assert fnmatch(p,'[XY]'),\
                'Orbit plane has to be X or Y'
             mati = mat.loc[mat.index.isin(self._MAT_INDEX[p], level=0),
                            mat.columns.isin(self._MAT_COLS[p], level=0)]
-            c, o = self.svd_fit(ring, t, mat=mati, svd_cut=s, apply_correction=apply_correction)
+            ti = target[mat.index.isin(self._MAT_INDEX[p], level=0)]
+            c, o = self.svd_fit(ring, ti, mat=mati, svd_cut=s, apply_correction=apply_correction)
             corr = pandas.concat((corr, c))
             obs = pandas.concat((obs, o))
-        return corr, obs                             
+        return corr, obs
+ 
+        
+class TrajectoryResponseMatrix(OrbitResponseMatrix): 
+
+    def __init__(self, ring, bpms, steerers, **kwargs):
+        super(TrajectoryResponseMatrix, self).__init__(ring, bpms, steerers,
+                                                       sum_zero=False, okw=kwargs)    
+    def set_bpms(self, ring, refpts):
+        self.add_observables_refpts(ring, 'trajectory', refpts=refpts, index=0)
+        self.add_observables_refpts(ring, 'trajectory', refpts=refpts, index=2)
+        
+    def correct(self, ring, mat=None, target=0, plane=['X', 'Y'], svd_cut=0,
+                           apply_correction=False, threshold=None):
+        if mat is None:
+            mat = self.get_mat()
+        target = numpy.broadcast_to(target, mat.shape[0])
+        svd_cut = numpy.broadcast_to(svd_cut, len(plane))
+        threshold = numpy.broadcast_to(threshold, len(plane))
+        corr = pandas.DataFrame()
+        obs = pandas.DataFrame()
+        for p, s, th in zip(plane, svd_cut, threshold):
+            assert fnmatch(p,'[XY]'),\
+               'Trajectory plane has to be X or Y'
+            mask = [fnmatch(idx, p+'*') for idx in mat.index.get_level_values(0)]
+            mati = mat.loc[mask, mat.columns.isin(self._MAT_COLS[p], level=0)]
+            ti = target[mask]
+            if th is not None:
+                mask = numpy.absolute(get_vals(mati)) <= th
+                mati = mati[mask]
+                ti = ti[mask]
+            c, o = self.svd_fit(ring, ti, mat=mati, svd_cut=s, apply_correction=apply_correction)
+            corr = pandas.concat((corr, c))
+            obs = pandas.concat((obs, o))
+        return corr, obs                       

@@ -6,9 +6,11 @@ from typing import List
 import pandas
 import numpy
 from at.physics import find_orbit, get_optics
+from at.tracking import lattice_pass
 
 
-_DATA_NAMES = {'closed_orbit': ['X', 'XP', 'Y', 'YP', 'DP', 'CT'],
+_DATA_NAMES = {'trajectory': ['X', 'XP', 'Y', 'YP', 'DP', 'CT'], 
+               'closed_orbit': ['X', 'XP', 'Y', 'YP', 'DP', 'CT'],
                'beta': ['BETX', 'BETY'],
                'alpha': ['ALFX', 'ALFY'],
                'mu': ['MUX', 'MUY'],
@@ -176,7 +178,10 @@ class Observable(object):
                 '{} observable not defined in at.get_optics'.format(name) 
             self.parname = name           
             self.name = _DATA_NAMES[name][index]
-            if self.parname == 'closed_orbit':
+            if self.parname == 'trajectory':
+                fun = lattice_pass
+                self.name += '_T'+str(kwargs.get('nturns', 1))
+            elif self.parname == 'closed_orbit':
                 fun = find_orbit
             else:
                 fun = get_optics
@@ -186,13 +191,18 @@ class Observable(object):
         super(Observable, self).__init__()
                
     def value(self, ring):
-        if self.fun is find_orbit:
-            orb0 = self.kwargs.pop('orbit', None)
+        if self.fun is lattice_pass:
+            orb0 = self.kwargs.get('init_coord', numpy.zeros((6, )))
+            turn = self.kwargs.get('nturns', 1)
+            _ = numpy.squeeze(self.fun(ring, orb0, nturns=self.turn,
+                                       refpts=self.refpts))
+            val = orb0[self.parindex]
+        elif self.fun is find_orbit:
             _, orbit = self.fun(ring, refpts=self.refpts, orbit=orb0)
             val = orbit[:, self.parindex][0]
         elif self.fun is get_optics:
             get_chrom = (self.parname == 'W')
-            twiss_in = self.kwargs.pop('twiss_in', None)
+            twiss_in = self.kwargs.get('twiss_in', None)
             _, _, ld = self.fun(ring, refpts=self.refpts,
                                 get_chrom=get_chrom, twiss_in=twiss_in)
             val = ld[self.parname][self.parindex][0]
@@ -205,10 +215,11 @@ class Observable(object):
         
 class RMElements(List):
 
-    def __init__(self, attrs, attrkey='FamName', attrlist=[], elements=[]):
+    def __init__(self, attrs, attrkey='FamName', attrlist=[], elements=[], **kwargs):
         self.attrkey = attrkey
         self.attrs = attrs
         self.attrlist = numpy.unique(attrlist+[attrkey])
+        self.kwargs = kwargs
         self.conf = pandas.DataFrame(columns=numpy.concatenate((attrs,
                                                                 attrlist)))
         super(RMElements, self).__init__(elements)   
@@ -238,10 +249,10 @@ class RMElements(List):
         
 class RMVariables(RMElements):
 
-    def __init__(self, attrkey='FamName', attrlist=[], variables=[]):
+    def __init__(self, attrkey='FamName', attrlist=[], variables=[], **kwargs):
         super(RMVariables, self).__init__(_VAR_ATTR, attrkey=attrkey,
                                           attrlist=attrlist,
-                                          elements=variables)   
+                                          elements=variables, **kwargs)   
         
     def add_elements_refpts(self, ring, name, delta, refpts, attname, index=None):                          
         attname = numpy.broadcast_to(attname, len(refpts))
@@ -265,19 +276,27 @@ class RMVariables(RMElements):
             
 class RMObservables(RMElements):
 
-    def __init__(self, attrkey='FamName', attrlist=[], observables=[]):
-        self._ref_fun = ['find_orbit', 'get_optics']
+    def __init__(self, attrkey='FamName', attrlist=[], observables=[], **kwargs):
         super(RMObservables, self).__init__(_OBS_ATTR, attrkey=attrkey,
                                             attrlist=attrlist,
-                                            elements=observables)
+                                            elements=observables, **kwargs)
 
     def add_elements_refpts(self, ring, name, refpts, index=None, weight=1):
+        traj = name == 'trajectory'
         name = numpy.broadcast_to(name, len(refpts))
         index = numpy.broadcast_to(index, len(refpts))
         weight = numpy.broadcast_to(weight, len(refpts))
         index = numpy.broadcast_to(index, len(refpts))
-        self += [Observable(n, r, index=i, weight=w, fun=None)
-                 for r, n, i, w in zip(refpts, name, index, weight)]   
+        if traj:
+            turn= self.kwargs.get('nturns', 1)
+            for t in range(turn):
+                kwargs = self.kwargs.copy()
+                kwargs['nturns'] = t + 1
+                self += [Observable(n, r, index=i, weight=w, fun=None, kwargs=kwargs)
+                         for r, n, i, w in zip(refpts, name, index, weight)]
+        else:
+            self += [Observable(n, r, index=i, weight=w, fun=None, kwargs=self.kwargs)
+                     for r, n, i, w in zip(refpts, name, index, weight)]    
         self._update(ring)       
 
     def values(self, ring, mask=None):
@@ -285,18 +304,33 @@ class RMObservables(RMElements):
             mask = numpy.ones(len(self), dtype=bool)
         allref = [n[0] for n in self.conf.refpts[mask] if n[0] is not None]
         allref = numpy.sort(numpy.unique(allref))
-        all_fun = numpy.unique([f[0] for f in self.conf.funname[mask]])
+        all_fun = numpy.unique([f[0] for f in self.conf.funname[mask]])     
+        trajectory = 'lattice_pass' in all_fun
         linopt = 'get_optics' in all_fun
-        orbit = 'find_orbit' in all_fun and not linopt
-        if linopt:
+        orbit = 'find_orbit' in all_fun
+        assert not (trajectory and orbit), \
+            'Trajectory and orbit observables cannot be combined'         
+        traj = []
+        valref = []
+        if trajectory:
+            turn= self.kwargs.get('nturns', 1)
+            o0 = self.kwargs.get('init_coord', numpy.zeros((6, )))
+            traj = lattice_pass(ring, o0, nturns=turn, refpts=allref)
+        elif linopt:
             get_chrom = numpy.any([n[0]=='W' for n in self.conf.name[mask]])
-            _, _, valref = get_optics(ring, refpts=allref, get_chrom=get_chrom)
-        if orbit:
+            twiss_in = self.kwargs.get('twiss_in', None)
+            _, _, valref = get_optics(ring, refpts=allref, get_chrom=get_chrom,
+                                      twiss_in=twiss_in)
+        elif orbit:
             _, valref = find_orbit(ring, refpts=allref)
+   
         vals = []
         for o in numpy.array(self)[mask]:
              if o.refpts is None:
-                 vals.append(o.value(ring)) 
+                 vals.append(o.value(ring))
+             elif o.parname == 'trajectory':
+                 t = o.kwargs.get('nturns', 1)-1
+                 vals.append(traj[o.parindex, 0, allref==o.refpts, t][0])  
              elif linopt:
                  vals.append(valref[allref == o.refpts][o.parname][o.parindex][0])
              elif orbit:
