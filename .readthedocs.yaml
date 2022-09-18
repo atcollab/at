@@ -27,7 +27,6 @@ sphinx:
 python:
   install:
     - method: pip
-      path: ./pyat
       extra_requirements:
       - plot
       - doc
