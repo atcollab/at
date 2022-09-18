@@ -18,11 +18,12 @@ Python :py:obj:`multiprocessing` package
 Some PyAT functions are based on the standard Python :obj:`multiprocessing`
 package.
 
-* Always available, for all platforms, with the default installation,
+* Always available, on all platforms, with the default installation,
 * Must be explicitly called, either by calling :py:func:`.patpass` instead
   of :py:func:`.lattice_pass` for tracking, or by specifying a ``use_mp``
-  ``bool`` keyword argument in some functions.
-* :py:class:`.Collective` element classes are not allowed in :py:func:`.patpass`.
+  boolean keyword argument in some functions (see :py:func:`.get_acceptance` for
+  example).
+* :py:class:`.Collective` element classes are not allowed.
 
 `OpenMP <https://www.openmp.org>`_
 ----------------------------------
@@ -30,10 +31,10 @@ PyAT C integrators can be compiled with `OpenMP <https://www.openmp.org>`_.
 Parallelism is activated inside each integrator, when possible.
 
 * Available on all platforms with a special installation procedure,
-* Fully transparent once installed: OpenMP is automatically activated for
-  trackings with more than ``OMP_PARTICLE_THRESHOLD`` particles (10 by
-  default). As a consequence, many internal PyAT functions (closed orbit,
-  transfer matrices…) benefit from parallelism,
+* Fully transparent once installed: `OpenMP <https://www.openmp.org>`_ is
+  automatically activated when tracking more than ``OMP_PARTICLE_THRESHOLD``
+  particles (10 by default). As a consequence, many internal PyAT functions
+  (closed orbit, transfer matrices…) benefit from parallelism,
 * No restriction on element classes,
 * Uses shared-memory multiprocessing: small overhead, but limited to
   single-node multicore machines,
@@ -46,17 +47,19 @@ does not require any preliminary installation, except for macOS:
 .. admonition:: macOS preliminary OpenMP installation
 
    While the ``clang`` compiler integrates `OpenMP <https://www.openmp.org>`_,
-   ``libomp.dylib`` must be installed with your favorite package manager:
+   ``libomp.dylib`` must be installed with your favorite package manager,
+   `Homebrew <https://brew.sh>`_ or `MacPorts <https://www.macports.org>`_:
 
    | Use ``$ brew install libomp``
-   | Or  ``$ sudo port install libomp``
+   | or  ``$ sudo port install libomp``
 
-Installing PyAT from the PyPI repository::
+From the PyPI repository, you must install from source (disable the binary
+distribution)::
 
     pip install --no-binary accelerator-toolbox --config-settings openmp=1 accelerator-toolbox
 
 
-Installing PyAT from a local clone: when switching from a standard install
+From a local clone: when switching from a standard install
 to an `OpenMP <https://www.openmp.org>`_ one or vice-versa, remove the
 ``build`` directory to force a re-compilation::
 
@@ -95,7 +98,8 @@ Installation
 `MPI <https://www.mpi-forum.org/docs/>`_ must be preliminary installed on the
 computer.
 
-Installing PyAT from the PyPI repository::
+From the PyPI repository, you must install from source (disable the binary
+distribution)::
 
     pip install --no-binary accelerator-toolbox --config-settings mpi=1 "accelerator-toolbox[mpi]"
 

@@ -60,7 +60,7 @@ Then:
 
 Finally, you should be able to run the tests::
 
-    $ python -m pytest test
+    $ python -m pytest pyat/test
 
 
 Comparing results with Matlab
