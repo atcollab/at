@@ -41,6 +41,7 @@ if not mpi or (len(sys.argv) >= 2 and
 else:
     mpi_macros = [('MPI', None)]
     os.environ["CC"] = 'mpicc'
+    os.environ["CXX"] = 'mpicxx'
     try:
         import mpi4py
     except ImportError:

@@ -38,6 +38,10 @@ From GitHub
 
     $ pip install .
 
+Parallel computation
+~~~~~~~~~~~~~~~~~~~~~
+PyAT can be compiled for parallel processing. See :ref:`parallel`
+
 Usage
 -----
 
