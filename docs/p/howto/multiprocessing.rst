@@ -71,7 +71,7 @@ Configuration
 .............
 The minimum number of particles triggering parallelism can be configured at
 compile time either by setting a ``OMP_PARTICLE_THRESHOLD`` environment variable
-or by specify a ``omp_particle_threshold`` configuration option::
+or by specifying the ``omp_particle_threshold`` configuration option::
 
     OPENMP=1 OMP_PARTICLE_THRESHOLD=4 pip install . # or
     pip install --config-settings openmp=1 --config-settings omp_particle_threshold=4 .

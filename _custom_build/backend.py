@@ -17,6 +17,10 @@ def build_wheel(wheel_dir, config_settings=None, metadata_dir=None):
           "Config settings:", config_settings)
     os.environ["MPI"] = str(_get_option(config_settings, 'MPI', '0'))
     os.environ["OPENMP"] = str(_get_option(config_settings, 'OPENMP', '0'))
+    omp_threshold = _get_option(config_settings,
+                                'OMP_PARTICLE_THRESHOLD', 'None')
+    if omp_threshold is not None:
+        os.environ["OMP_PARTICLE_THRESHOLD"] = str(omp_threshold)
     print("** MPI:", os.environ.get('MPI', 'None'))
     print("** OPENMP:", os.environ.get('OPENMP', 'None'))
     ret = _orig.build_wheel(wheel_dir, config_settings, metadata_dir)
