@@ -67,5 +67,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: tar.gz
-          path: ./pyat/dist/*.tar.gz
+          path: ./dist/*.tar.gz
           if-no-files-found: error
