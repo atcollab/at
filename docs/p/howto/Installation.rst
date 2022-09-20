@@ -32,11 +32,15 @@ From GitHub
 
 3. Go to the pyAT installation directory::
 
-    $ cd at/pyat
+    $ cd at
 
 4. Build and install::
 
     $ pip install .
+
+Parallel computation
+~~~~~~~~~~~~~~~~~~~~~
+PyAT can be compiled for parallel processing. See :ref:`parallel`
 
 Usage
 -----

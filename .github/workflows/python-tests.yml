@@ -8,10 +8,6 @@ on:
   push:
   pull_request:
 
-defaults:
-  run:
-    working-directory: pyat
-
 jobs:
   build_and_run_tests:
 
@@ -20,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
         os: [macos-latest, ubuntu-latest, windows-latest]
         exclude:
           - os: windows-latest
@@ -41,6 +37,7 @@ jobs:
       run: python -m pip install -e ".[dev]"
 
     - name: Lint with flake8
+      working-directory: pyat
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -48,4 +45,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest and coverage
+      working-directory: pyat
       run: python -m pytest test --cov-report term-missing --cov=at

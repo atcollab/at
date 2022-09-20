@@ -1,0 +1,9 @@
+prune atmat
+prune atintegrators
+prune atoctave
+prune jupyter
+prune doc
+prune docs
+prune developer
+global-exclude *.prj *.mltbx
+global-include *.c *.h *.cc

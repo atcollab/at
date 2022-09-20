@@ -8,10 +8,6 @@ on:
       - pyat-[0-9]*
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: pyat
-
 jobs:
   build_wheels:
     runs-on: ${{ matrix.os }}
