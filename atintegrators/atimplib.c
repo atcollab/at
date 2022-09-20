@@ -103,8 +103,8 @@ void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
         }
 
         #ifdef MPI
-        MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
+        MPI_Allreduce(MPI_IN_PLACE,smin,nbunch,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,smax,nbunch,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
         MPI_Barrier(MPI_COMM_WORLD);
         #endif
 
@@ -176,8 +176,6 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
     }
 
     #ifdef MPI
-    int mpsize;
-    MPI_Comm_size(MPI_COMM_WORLD,&mpsize); 
     MPI_Allreduce(MPI_IN_PLACE,np_bunch,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);      
     MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -235,7 +233,7 @@ void compute_kicks(int nslice,int nturns,int nelem,
                 if(wi>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
-                    index = binarySearch(waketableT,ds,nelem,0,0);             
+                    index = binarySearch(waketableT,ds,nelem,0,0);          
                     if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,ds,index);
                     if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,ds,index);
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,ds,index);
