@@ -30,7 +30,8 @@ Uint32Refpts = numpy.ndarray
 Key = Union[type, Element, str]
 
 
-__all__ = ['AtError', 'AtWarning', 'check_radiation', 'set_radiation',
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'check_6d',
+           'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
@@ -49,70 +50,124 @@ class AtWarning(UserWarning):
 
 
 def check_radiation(rad: bool) -> Callable:
-    """Function to be used as a decorator for optics functions
+    """Deprecated decorator for optics functions (see :py:func:`check_6d`).
 
-    Wraps a function like ``func(ring, *Args, **kwargs)`` where ring is a
-    `Lattice`` object.
+    :meta private:
+    """
+    return check_6d(rad)
+
+
+def set_radiation(rad: bool) -> Callable:
+    """Deprecated decorator for optics functions (see :py:func:`set_6d`).
+
+    :meta private:
+    """
+    return set_6d(rad)
+
+
+def check_6d(is_6d: bool) -> Callable:
+    """Decorator for optics functions
+
+    Wraps a function like ``func(ring, *args, **kwargs)`` where ring is a
+    :py:class:`.Lattice` object. Raise :py:class:`.AtError` if ``ring.is_6d``
+    is not the desired ``is_6d`` state. No test is performed if ring is not a
+    :py:class:`.Lattice`.
 
     Parameters:
-        rad: Desired radiation state
+        is_6d: Desired 6D state
 
-    If ring is a Lattice object, raises an exception if ring.radiation
-    is not the specified rad bool
+    Raises:
+        AtError: if ``ring.is_6d`` is not ``is_6d``
 
-    If ring is any other sequence, no test is performed
+    Example:
+
+        .. code-block:: python
+
+            @check_6d(False)
+            def find_orbit4(ring, dct=None, guess=None, **kwargs):
+                ...
+
+        Raises :py:class:`.AtError` if ``ring.is_6d`` is :py:obj:`True`
+
+    See Also:
+        :py:func:`set_6d`
     """
     def radiation_decorator(func):
         @functools.wraps(func)
         def wrapper(ring, *args, **kwargs):
-            ringrad = getattr(ring, 'radiation', rad)
-            if ringrad != rad:
+            ringrad = getattr(ring, 'is_6d', is_6d)
+            if ringrad != is_6d:
                 raise AtError('{0} needs radiation {1}'.format(
-                    func.__name__, 'ON' if rad else 'OFF'))
+                    func.__name__, 'ON' if is_6d else 'OFF'))
             return func(ring, *args, **kwargs)
         return wrapper
     return radiation_decorator
 
 
-def set_radiation(rad: bool) -> Callable:
-    """Function to be used as a decorator for optics functions
+def set_6d(is_6d: bool) -> Callable:
+    """Decorator for optics functions
 
-    Wraps a function like ``func(ring, *Args, **kwargs)`` where ring is a
-    ``Lattice`` object.
+    Wraps a function like ``func(ring, *args, **kwargs)`` where ``ring`` is a
+    :py:class:`.Lattice` object. If ``ring.is_6d`` is not the desired ``is_6d``
+    state, ``func`` will be called with a modified copy of ``ring`` satisfying
+    the ``is_6d`` state.
 
     Parameters:
-        rad: Desired radiation state
+        is_6d: Desired 6D state
 
-    ``func`` will be called with a copy of the ring such that its radiation
-    state is set to rad (no copy is done if it's already the case).
+    Example:
+
+        .. code-block:: python
+
+            @set_6d(True)
+            def compute(ring)
+                ...
+
+        is roughly equivalent to:
+
+        .. code-block:: python
+
+            if ring.is_6d:
+                compute(ring)
+            else:
+                compute(ring.enable_6d(copy=True))
+
+    See Also:
+        :py:func:`check_6d`, :py:meth:`.Lattice.enable_6d`,
+        :py:meth:`.Lattice.disable_6d`
     """
-    if rad:
+    if is_6d:
         def setrad_decorator(func):
             @functools.wraps(func)
             def wrapper(ring, *args, **kwargs):
-                rg = ring if ring.radiation else ring.radiation_on(copy=True)
+                rg = ring if ring.is_6d else ring.enable_6d(copy=True)
                 return func(rg, *args, **kwargs)
             return wrapper
     else:
         def setrad_decorator(func):
             @functools.wraps(func)
             def wrapper(ring, *args, **kwargs):
-                rg = ring.radiation_off(copy=True) if ring.radiation else ring
+                rg = ring.disable_6d(copy=True) if ring.is_6d else ring
                 return func(rg, *args, **kwargs)
             return wrapper
     return setrad_decorator
 
 
 def make_copy(copy: bool) -> Callable:
-    """Function to be used as a decorator for optics functions
+    """Decorator for optics functions
 
-    Wraps a function like ``func(ring, refpts, *Args, **kwargs)`` where ring
-    is a ``Lattice`` object.
+    Wraps a function like ``func(ring, refpts, *args, **kwargs)`` where
+    ``ring`` is a :py:class:`.Lattice` object.
 
-    If ``copy`` is False, the function is not modified,
-    If ``copy`` is True, a shallow copy of ring is done, then the elements
-    selected by refpts are deep-copied, then func is applied to the copy,
-    and the new ring is returned.
+    If ``copy`` is :py:obj:`False`, the function is not modified,
+
+    If ``copy`` is :py:obj:`True`, a shallow copy of ``ring`` is done, then the
+    elements selected by ``refpts`` are deep-copied, then ``func`` is applied
+    to the copy, and the new ring is returned.
+
+    Parameters:
+        copy:   If :py:obj:`True`, apply the decorated function to a copy of
+          ``ring``
     """
     if copy:
         def copy_decorator(func):
@@ -738,15 +793,10 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
         shift_elem(el, dx, dy, relative=relative)
 
 
-def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
-                 centered=False):
+def get_geometry(ring: List[Element],
+                 start_coordinates: Tuple[float, float, float] = (0, 0, 0),
+                 centered: bool = False):
     """Compute the 2D ring geometry in cartesian coordinates
-
-    Usage:
-
-    .. code-block:: python
-
-       ring.get_geometry()
 
     Parameters:
         ring: Lattice description
@@ -756,12 +806,11 @@ def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
     Returns:
         geomdata: recarray containing, x, y, angle
         radius: machine radius
+
+    Example:
+
+       >>> geomdata, radius = get_geometry(ring)
     """
-    def isDipole(el):
-        if isinstance(el, Dipole):
-            if el.BendingAngle != 0.0:
-                return True
-        return False
 
     geom_dtype = [('x', numpy.float64, (1, )),
                   ('y', numpy.float64, (1, )),
@@ -774,11 +823,12 @@ def get_geometry(ring: List[Element], start_coordinates=(0, 0, 0),
     x0, y0, t0 = start_coordinates
 
     for ind, el in enumerate(ring+[ring[0]]):
-        ang = 0.0
         ll = el.Length
-        if isDipole(el):
+        if isinstance(el, Dipole) and el.BendingAngle != 0:
             ang = 0.5 * el.BendingAngle
             ll *= numpy.sin(ang)/ang
+        else:
+            ang = 0.0
         t -= ang
         x += ll * numpy.cos(t)
         y += ll * numpy.sin(t)
