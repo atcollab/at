@@ -1,14 +1,21 @@
+# This configuration is used to build wheels with GitHub Actions
+# It differs from the standard pyproject.toml by fixing the numpy versions
+# to make sure that the binaries are compiled with the oldest compatible
+# version
+
 [build-system]
 requires = [
-    "numpy ~= 1.16.6;python_version<'3.8'",
-    "numpy ~= 1.17.3;python_version=='3.8'",
-    "numpy ~= 1.19.3;python_version=='3.9'",
-    "numpy ~= 1.21.3;python_version>='3.10'",
+    "numpy == 1.16.6;python_version<'3.8'",
+    "numpy == 1.17.3;python_version=='3.8'",
+    "numpy == 1.19.3;python_version=='3.9'",
+    "numpy == 1.21.3;python_version>='3.10'",
     "setuptools >= 62",
     "setuptools_scm >= 7",
     "wheel",
 ]
-build-backend = "setuptools.build_meta"
+# build-backend = "setuptools.build_meta"
+build-backend = "backend"
+backend-path = ["_custom_build"]
 
 [project]
 name = "accelerator-toolbox"
@@ -41,9 +48,22 @@ plot = ["matplotlib"]
 dev = ["pytest >= 2.9", "pytest-lazy-fixture", "pytest-cov", "flake8"]
 doc = ["Sphinx >= 5.0.2", "myst-parser", "pydata-sphinx-theme < 0.10", "sphinx-copybutton"]
 
+# tool.setuptools is still in BETA, so we keep temporarily setup.cfg
+
+#[tool.setuptools]
+#zip-safe = false
+#include-package-data = false
+
+#[tool.setuptools.packages.find]
+#where = ["pyat"]
+#namespaces = false
+
+#[tool.setuptools.package-data]
+#machine_data = ["*.m", "*.mat"]
+
 [tool.cibuildwheel]
 # Pypy does not have Scipy so we cannot support it.
-build = ["cp3{7,8,9,10}*"]
+build = ["cp3{7,8,9}*", "cp310*"]
 build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"
@@ -53,5 +73,5 @@ archs = ["x86_64", "arm64"]
 
 [tool.setuptools_scm]
 write_to = "pyat/at/_version.py"
-git_describe_command = "git describe --tags --long --match pyat-[0-9]* HEAD"
+git_describe_command = "git describe --dirty --tags --long --match pyat-[0-9]*"
 fallback_version = "0.0.0"
