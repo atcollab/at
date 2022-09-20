@@ -1,12 +1,16 @@
+# This configuration is used to build wheels with GitHub Actions
+# It differs from the standard pyproject.toml by fixing the numpy versions
+# to make sure that the binaries are compiled with the oldest compatible
+# version
+
 [build-system]
 requires = [
-    "numpy >= 1.16.6;python_version<'3.8'",
-    "numpy >= 1.17.3;python_version=='3.8'",
-    "numpy >= 1.19.3;python_version=='3.9'",
-    "numpy >= 1.21.3;python_version>='3.10'",
+    "numpy == 1.16.6;python_version<'3.8'",
+    "numpy == 1.17.3;python_version=='3.8'",
+    "numpy == 1.19.3;python_version=='3.9'",
+    "numpy == 1.21.3;python_version>='3.10'",
     "setuptools >= 62",
     "setuptools_scm >= 7",
-    "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
     "wheel",
 ]
 # build-backend = "setuptools.build_meta"
