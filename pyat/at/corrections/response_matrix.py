@@ -146,6 +146,10 @@ class ElementResponseMatrix(object):
         var = numpy.array(self.variables.get(ring, mask))
         return obs, var
         
+    def _get_weights(self):
+        mask = self.observables.conf.index.isin(self.get_mat().index)
+        return numpy.concatenate(self.observables.conf.weight[mask].to_numpy()) 
+        
     def svd(self, mat=None):
         if mat is None:
             mat = self.get_mat()
@@ -155,18 +159,20 @@ class ElementResponseMatrix(object):
         if mat is None:
             mat = self.get_mat()
         val, var = self.get_vals(ring, mat=mat)
+        weights = self._get_weights()
         err = (val-target)
-        U, W, V = self.svd(mat=mat)
+        U, W, V = self.svd(mat=mat.multiply(weights, axis=0))
         Winv = numpy.linalg.inv(numpy.diag(W))
         Wtmp = numpy.zeros(Winv.shape)
         Wtmp[:len(Winv)-svd_cut]=Winv[:len(Winv)-svd_cut]
-        dk = V.T @ Wtmp @ U.T @ err
+        dk = V.T @ Wtmp @ U.T @ (err*weights)
         exp = mat @ dk
         corr = {'Vals': pandas.Series(var, mat.columns),
                 'Corr': pandas.Series(dk, mat.columns),
                 'Exp': pandas.Series(var+dk, mat.columns)}
         obs = {'Vals': pandas.Series(val, mat.index),
                'Target': pandas.Series(target, mat.index),
+               'Weight': pandas.Series(weights, mat.index),
                'Err': pandas.Series(err, mat.index),
                'Exp': pandas.Series(exp, mat.index)}
         if apply_correction:
@@ -188,7 +194,7 @@ class OrbitResponseMatrix(ElementResponseMatrix):
                  deltax=1.0e-4, deltay=1.0e-4, **kwargs):
         super(OrbitResponseMatrix, self).__init__(**kwargs)
         self.set_bpms(ring, bpms)
-        self.set_steerers(ring, steerers, deltax=deltax, deltay=deltay, sum_zero=sum_zero)
+        self.set_steerers(ring, steerers, deltax, deltay, sum_zero)
         if cavities is not None:
             self.set_cavities(ring, cavities)             
         
@@ -196,7 +202,7 @@ class OrbitResponseMatrix(ElementResponseMatrix):
         self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=0)
         self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=2)
         
-    def set_steerers(self, ring, refpts, deltax=1.0e-4, deltay=1.0e-4, sum_zero=True):
+    def set_steerers(self, ring, refpts, deltax, deltay, sum_zero):
         self.add_variables_refpts(ring, 'HST', deltax, refpts,'PolynomB', index=0, sum_zero=sum_zero)
         self.add_variables_refpts(ring, 'VST', deltay, refpts,'PolynomA', index=0, sum_zero=sum_zero)
         
@@ -241,7 +247,7 @@ class TrajectoryResponseMatrix(OrbitResponseMatrix):
         self.add_observables_refpts(ring, 'trajectory', refpts=refpts, index=2)
         
     def correct(self, ring, mat=None, target=0, plane=['X', 'Y'], svd_cut=0,
-                           apply_correction=False, threshold=None):
+                apply_correction=False, threshold=None):
         if mat is None:
             mat = self.get_mat()
         target = numpy.broadcast_to(target, mat.shape[0])
@@ -269,28 +275,29 @@ class TrajectoryResponseMatrix(OrbitResponseMatrix):
         
 class LinoptResponseMatrix(ElementResponseMatrix):
 
-    def __init__(self, ring, bpms, quadrupoles, obsnames, obsidx,
+    def __init__(self, ring, bpms, quadrupoles, obsnames, obsidx, obsw=1,
                  deltax=1.0e-3, deltay=1.0e-3, fit_tune=True, **kwargs):
         assert len(obsnames) == len(obsidx), \
             'Linopt RM: observables names and indexes must have the same length' 
         super(LinoptResponseMatrix, self).__init__(okw=kwargs)
-        self.set_bpms(ring, bpms, obsnames, obsidx)
-        self.set_quadrupoles(ring, quadrupoles, deltax=deltax, deltay=deltay) 
+        self.set_bpms(ring, bpms, obsnames, obsidx, obsw)
+        self.set_quadrupoles(ring, quadrupoles, deltax, deltay) 
         if fit_tune:
-            qx = Observable('QX', fun=self.get_tune, args=(0,))
-            qy = Observable('QY', fun=self.get_tune, args=(1,))
+            qx = Observable('QX', fun=self.get_tune, args=(0,), weight=len(bpms))
+            qy = Observable('QY', fun=self.get_tune, args=(1,), weight=len(bpms))
             self.add_observables(ring, [qx, qy])            
         
     @staticmethod
     def get_tune(ring, index):
         return ring.get_tune()[index]
             
-    def set_bpms(self, ring, refpts, obsnames, obsidx):
-        for o, i in zip(obsnames, obsidx):
+    def set_bpms(self, ring, refpts, obsnames, obsidx, obsw):
+        obsw = numpy.broadcast_to(obsw, len(obsnames))
+        for o, i, w in zip(obsnames, obsidx, obsw):
             for ii in numpy.atleast_1d(i):
-                self.add_observables_refpts(ring, o, refpts=refpts, index=ii)
+                self.add_observables_refpts(ring, o, refpts=refpts, index=ii, weight=w)
             
-    def set_quadrupoles(self, ring, refpts, deltax=1.0e-3, deltay=1.0e-3):
+    def set_quadrupoles(self, ring, refpts, deltax, deltay):
         self.add_variables_refpts(ring, 'QUAD', deltax, refpts, 'PolynomB', index=1)
         
     def correct(self, ring, target, mat=None, svd_cut=0, apply_correction=False):
