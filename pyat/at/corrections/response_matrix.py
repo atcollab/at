@@ -270,12 +270,20 @@ class TrajectoryResponseMatrix(OrbitResponseMatrix):
 class LinoptResponseMatrix(ElementResponseMatrix):
 
     def __init__(self, ring, bpms, quadrupoles, obsnames, obsidx,
-                 deltax=1.0e-3, deltay=1.0e-3, **kwargs):
+                 deltax=1.0e-3, deltay=1.0e-3, fit_tune=True, **kwargs):
         assert len(obsnames) == len(obsidx), \
             'Linopt RM: observables names and indexes must have the same length' 
         super(LinoptResponseMatrix, self).__init__(okw=kwargs)
         self.set_bpms(ring, bpms, obsnames, obsidx)
-        self.set_quadrupoles(ring, quadrupoles, deltax=deltax, deltay=deltay)   
+        self.set_quadrupoles(ring, quadrupoles, deltax=deltax, deltay=deltay) 
+        if fit_tune:
+            qx = Observable('QX', fun=self.get_tune, args=(0,))
+            qy = Observable('QY', fun=self.get_tune, args=(1,))
+            self.add_observables(ring, [qx, qy])            
+        
+    @staticmethod
+    def get_tune(ring, index):
+        return ring.get_tune()[index]
             
     def set_bpms(self, ring, refpts, obsnames, obsidx):
         for o, i in zip(obsnames, obsidx):
