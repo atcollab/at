@@ -11,8 +11,7 @@ npts=400; % number of point
 [dpargs,varargs]=getoption(varargs,{'dp','df','dct'});
 [srange,varargs]=getargs(varargs,[0 inf],'check',@(x) isnumeric(x) && numel(x)==2);
 
-props = atGetRingProperties(ring);
-curve.periodicity=props.Periodicity;
+curve.periodicity=atGetRingProperties(ring,'Periodicity');
 elt0=length(ring);
 
 % Select the plotting range

@@ -34,8 +34,9 @@ class RingParam(elt.Element):
 
     :meta private:
     """
-    REQUIRED_ATTRIBUTES = elt.Element.REQUIRED_ATTRIBUTES + ['Energy',
-                                                             'Periodicity']
+    # noinspection PyProtectedMember
+    _BUILD_ATTRIBUTES = elt.Element._BUILD_ATTRIBUTES + ['Energy',
+                                                         'Periodicity']
     _conversions = dict(elt.Element._conversions, Energy=float,
                         Periodicity=int, Particle=_particle)
 
@@ -258,7 +259,7 @@ def element_from_dict(elem_dict: dict, index: Optional[int] = None,
     # Remove mandatory attributes from the keyword arguments.
     # Create list rather than generator to ensure that elements are removed
     # from elem_dict.
-    elem_args = [elem_dict.pop(attr, None) for attr in cls.REQUIRED_ATTRIBUTES]
+    elem_args = [elem_dict.pop(attr, None) for attr in cls._BUILD_ATTRIBUTES]
     element = cls(*(arg for arg in elem_args if arg is not None), **elem_dict)
     return element
 
@@ -321,7 +322,7 @@ def element_from_m(line: str) -> Element:
     matcls = line[:left].strip()[2:]
     cls = _CLASS_MAP[matcls]
     arguments = argsplit(line[left + 1:right])
-    ll = len(cls.REQUIRED_ATTRIBUTES)
+    ll = len(cls._BUILD_ATTRIBUTES)
     if ll < len(arguments) and arguments[ll].endswith("Pass'"):
         arguments.insert(ll, "'PassMethod'")
     args = [convert(v) for v in arguments[:ll]]
@@ -393,7 +394,8 @@ def element_to_m(elem: Element) -> str:
         return _class_to_matfunc.get(elclass, stdname)
 
     attrs = dict(elem.items())
-    args = [attrs.pop(k, getattr(elem, k)) for k in elem.REQUIRED_ATTRIBUTES]
+    # noinspection PyProtectedMember
+    args = [attrs.pop(k, getattr(elem, k)) for k in elem._BUILD_ATTRIBUTES]
     defelem = elem.__class__(*args)
     kwds = dict((k, v) for k, v in attrs.items()
                 if not numpy.array_equal(v, getattr(defelem, k, None)))

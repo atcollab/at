@@ -124,12 +124,13 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                          ``lattice_pass``). In case multi-processing is not
                          enabled ``GridMode`` is forced to
                          ``RECURSIVE`` (most efficient in single core)
-        verbose=True:    Print out some inform
+        verbose=False:   Print out some inform
         epsabs, epsrel:  integral absolute and relative tolerances
 
     Returns:
-        Returns the touschek lifetime in seconds, the momentum aperture
-        and the refpts at which the aperture was computed
+        tl: touschek lifetime, double expressed in seconds 
+        ma: momentum aperture (len(refpts), 2) array
+        refpts: refpts used for ma calcualtion (len(refpts), ) array
     """
 
     epsabs = kwargs.pop('epsabs', 1.0e-16)
