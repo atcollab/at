@@ -15,7 +15,7 @@ import copy
 import numpy
 import math
 import itertools
-from typing import Optional, Callable, Union, Dict
+from typing import Optional, Callable, Union, Dict, Tuple
 from typing import Iterable, Generator
 if sys.version_info.minor < 8:
     SupportsIndex = int
@@ -414,8 +414,8 @@ class Lattice(list):
         return elem_filter(params, *args)
 
     @property
-    def s_range(self):
-        """Range of interest: [s_min, s_max]. ``None`` means the full cell."""
+    def s_range(self) -> Union[None, Tuple[float, float]]:
+        """Range of interest: (s_min, s_max). ``None`` means the full cell."""
         try:
             return self._s_range
         except AttributeError:
@@ -530,7 +530,7 @@ class Lattice(list):
         self._fillpattern = fp/numpy.sum(fp)
 
     @property
-    def fillpattern(self):
+    def fillpattern(self) -> numpy.ndarray:
         """Filling pattern describing the bunch relative
         amplitudes such that ``sum(fillpattern)=1``
         """
@@ -545,30 +545,30 @@ class Lattice(list):
         self.set_fillpattern(value)
 
     @property
-    def bunch_list(self):
+    def bunch_list(self) -> numpy.ndarray:
         """Indices of filled bunches"""
         return numpy.flatnonzero(self._fillpattern)
 
     @property
-    def bunch_currents(self):
+    def bunch_currents(self) -> numpy.ndarray:
         """Bunch currents [A]"""
         return self.beam_current * \
             self._fillpattern[self._fillpattern > 0]
 
     @property
-    def bunch_spos(self):
+    def bunch_spos(self) -> numpy.ndarray:
         """Bunch position around the ring [m]"""
         bs = self.circumference/len(self._fillpattern)
         allpos = bs*numpy.arange(len(self._fillpattern))
         return allpos[self._fillpattern > 0]
 
     @property
-    def nbunch(self):
+    def nbunch(self) -> int:
         """Number of bunches"""
         return numpy.count_nonzero(self._fillpattern)
 
     @property
-    def harmonic_number(self):
+    def harmonic_number(self) -> int:
         """Ring harmonic number (full self)"""
         try:
             return int(self.periodicity * self._cell_harmnumber)
@@ -641,9 +641,19 @@ class Lattice(list):
 
     @property
     def is_collective(self) -> bool:
-        """True if any element involves collective effects"""
+        """:py:obj:`True` if any element involves collective effects"""
         for elem in self:
             if elem.is_collective:
+                return True
+        return False
+
+    @property
+    def has_cavity(self) -> bool:
+        """:py:obj:`True` if the lattice contains an active
+        :py:class:`RFCavity`
+        """
+        for elem in self:
+            if elem.PassMethod.endswith('CavityPass'):
                 return True
         return False
 
@@ -1106,8 +1116,10 @@ class Lattice(list):
 
     @property
     def radiation(self) -> bool:
-        """Obsolete. True if at least one element modifies the beam energy
-        Use :py:attr:`is_6d` instead"""
+        """Obsolete (see :py:attr:`is_6d` instead)
+
+        :meta private:
+        """
         try:
             return self._radiation
         except AttributeError:

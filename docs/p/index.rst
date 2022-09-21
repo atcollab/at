@@ -32,6 +32,7 @@ Sub-packages
    :hidden:
 
    howto/Installation
+   howto/multiprocessing
    howto/Primer
    howto/CavityControl
    howto/Collective

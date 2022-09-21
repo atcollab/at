@@ -8,10 +8,6 @@ on:
       - pyat-[0-9]*
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: pyat
-
 jobs:
   build_wheels:
     runs-on: ${{ matrix.os }}
@@ -20,14 +16,14 @@ jobs:
         os: [ubuntu-18.04, macos-10.15, windows-2019]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # Necessary to fetch tags and allow setuptools_scm
           # see: https://github.com/pypa/setuptools_scm/issues/480
           fetch-depth: 0
 
       - name: Install Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
@@ -36,8 +32,6 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
-        with:
-          package-dir: pyat
 
       - name: Upload wheels
         uses: actions/upload-artifact@v2
@@ -71,5 +65,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: tar.gz
-          path: ./pyat/dist/*.tar.gz
+          path: ./dist/*.tar.gz
           if-no-files-found: error
