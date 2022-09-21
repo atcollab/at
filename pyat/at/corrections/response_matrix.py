@@ -184,10 +184,11 @@ class OrbitResponseMatrix(ElementResponseMatrix):
                   'Y': ['Y', 'VST_SUM']}
     _MAT_COLS = {'X': ['HST', 'RF'], 'Y': ['VST']}         
 
-    def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True, **kwargs):
+    def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True,
+                 deltax=1.0e-4, deltay=1.0e-4, **kwargs):
         super(OrbitResponseMatrix, self).__init__(**kwargs)
         self.set_bpms(ring, bpms)
-        self.set_steerers(ring, steerers, sum_zero=sum_zero)
+        self.set_steerers(ring, steerers, deltax=deltax, deltay=deltay, sum_zero=sum_zero)
         if cavities is not None:
             self.set_cavities(ring, cavities)             
         
@@ -255,10 +256,39 @@ class TrajectoryResponseMatrix(OrbitResponseMatrix):
             mati = mat.loc[mask, mat.columns.isin(self._MAT_COLS[p], level=0)]
             ti = target[mask]
             if th is not None:
-                mask = numpy.absolute(get_vals(mati)) <= th
-                mati = mati[mask]
-                ti = ti[mask]
+                v, _ = self.get_vals(ring, mat=mati)
+                idx_values = numpy.where(numpy.absolute(v) >= th)[0]
+                if len(idx_values) > 0:
+                    mati = mati[:idx_values[0]]
+                    ti = ti[:idx_values[0]]
             c, o = self.svd_fit(ring, ti, mat=mati, svd_cut=s, apply_correction=apply_correction)
             corr = pandas.concat((corr, c))
             obs = pandas.concat((obs, o))
-        return corr, obs                       
+        return corr, obs
+        
+        
+class LinoptResponseMatrix(ElementResponseMatrix):
+
+    def __init__(self, ring, bpms, quadrupoles, obsnames, obsidx,
+                 deltax=1.0e-3, deltay=1.0e-3, **kwargs):
+        assert len(obsnames) == len(obsidx), \
+            'Linopt RM: observables names and indexes must have the same length' 
+        super(LinoptResponseMatrix, self).__init__(okw=kwargs)
+        self.set_bpms(ring, bpms, obsnames, obsidx)
+        self.set_quadrupoles(ring, quadrupoles, deltax=deltax, deltay=deltay)   
+            
+    def set_bpms(self, ring, refpts, obsnames, obsidx):
+        for o, i in zip(obsnames, obsidx):
+            for ii in numpy.atleast_1d(i):
+                self.add_observables_refpts(ring, o, refpts=refpts, index=ii)
+            
+    def set_quadrupoles(self, ring, refpts, deltax=1.0e-3, deltay=1.0e-3):
+        self.add_variables_refpts(ring, 'QUAD', deltax, refpts, 'PolynomB', index=1)
+        
+    def correct(self, ring, target, mat=None, svd_cut=0, apply_correction=False):
+        if mat is None:
+            mat = self.get_mat()      
+        assert len(target) == mat.shape[0], \
+            'Linopt RM: target must be of the same length as the matrix'
+        corr, obs = self.svd_fit(ring, target, mat=mat, svd_cut=svd_cut, apply_correction=apply_correction)
+        return corr, obs                        

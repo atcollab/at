@@ -332,7 +332,7 @@ class RMObservables(RMElements):
                  t = o.kwargs.get('nturns', 1)-1
                  vals.append(traj[o.parindex, 0, allref==o.refpts, t][0])  
              elif linopt:
-                 vals.append(valref[allref == o.refpts][o.parname][o.parindex][0])
+                 vals.append(valref[o.parname][allref == o.refpts, o.parindex][0])
              elif orbit:
                  vals.append(valref[allref == o.refpts, o.parindex][0])                                   
         return numpy.array(vals)
