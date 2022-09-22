@@ -7,6 +7,7 @@ import pandas
 import numpy
 from at.physics import find_orbit, get_optics
 from at.tracking import lattice_pass
+from fnmatch import fnmatch
 
 
 _DATA_NAMES = {'trajectory': ['X', 'XP', 'Y', 'YP', 'DP', 'CT'], 
@@ -201,10 +202,10 @@ class Observable(object):
             _, orbit = self.fun(ring, refpts=self.refpts, orbit=orb0)
             val = orbit[:, self.parindex][0]
         elif self.fun is get_optics:
-            get_chrom = (self.parname == 'W')
+            get_w = (self.parname == 'W')
             twiss_in = self.kwargs.get('twiss_in', None)
             _, _, ld = self.fun(ring, refpts=self.refpts,
-                                get_chrom=get_chrom, twiss_in=twiss_in)
+                                get_w=get_w, twiss_in=twiss_in)
             val = ld[self.parname][self.parindex][0]
         else:
             val = self.fun(ring, *self.args, **self.kwargs)
@@ -317,9 +318,9 @@ class RMObservables(RMElements):
             o0 = self.kwargs.get('init_coord', numpy.zeros((6, )))
             traj = lattice_pass(ring, o0, nturns=turn, refpts=allref)
         elif linopt:
-            get_chrom = numpy.any([n[0]=='W' for n in self.conf.name[mask]])
+            get_w = numpy.any([fnmatch(n[0], 'W[XY]') for n in self.conf.name[mask]])
             twiss_in = self.kwargs.get('twiss_in', None)
-            _, _, valref = get_optics(ring, refpts=allref, get_chrom=get_chrom,
+            _, _, valref = get_optics(ring, refpts=allref, get_w=get_w,
                                       twiss_in=twiss_in)
         elif orbit:
             _, valref = find_orbit(ring, refpts=allref)

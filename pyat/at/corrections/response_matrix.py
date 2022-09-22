@@ -272,33 +272,46 @@ class TrajectoryResponseMatrix(OrbitResponseMatrix):
             obs = pandas.concat((obs, o))
         return corr, obs
         
-        
-class LinoptResponseMatrix(ElementResponseMatrix):
 
-    def __init__(self, ring, bpms, quadrupoles, obsnames, obsidx, obsw=1,
-                 deltax=1.0e-3, deltay=1.0e-3, fit_tune=True, **kwargs):
-        assert len(obsnames) == len(obsidx), \
-            'Linopt RM: observables names and indexes must have the same length' 
-        super(LinoptResponseMatrix, self).__init__(okw=kwargs)
+class OpticsResponseMatrix(ElementResponseMatrix):
+
+    def __init__(self, ring, bpms, magnets, magnames, magattr, magidx,
+                 obsnames, obsidx, obsw=1, delta=1.0e-3, fit_tune=False,
+                 fit_chrom=False, **kwargs):
+        super(OpticsResponseMatrix, self).__init__(okw=kwargs)
         self.set_bpms(ring, bpms, obsnames, obsidx, obsw)
-        self.set_quadrupoles(ring, quadrupoles, deltax, deltay) 
+        self.set_magnets(ring, magnets, magnames, magattr, magidx, delta) 
         if fit_tune:
             qx = Observable('QX', fun=self.get_tune, args=(0,), weight=len(bpms))
             qy = Observable('QY', fun=self.get_tune, args=(1,), weight=len(bpms))
-            self.add_observables(ring, [qx, qy])            
+            self.add_observables(ring, [qx, qy])   
+        if fit_chrom:
+            qpx = Observable('QPX', fun=self.get_chrom, args=(0,), weight=len(bpms))
+            qpy = Observable('QPY', fun=self.get_chrom, args=(1,), weight=len(bpms))
+            self.add_observables(ring, [qpx, qpy])                 
         
     @staticmethod
     def get_tune(ring, index):
         return ring.get_tune()[index]
+        
+    @staticmethod
+    def get_chrom(ring, index):
+        return ring.get_tune()[index]    
             
     def set_bpms(self, ring, refpts, obsnames, obsidx, obsw):
+        assert len(obsnames) == len(obsidx), \
+            'Optics RM: observables names and indexes must have the same length' 
         obsw = numpy.broadcast_to(obsw, len(obsnames))
         for o, i, w in zip(obsnames, obsidx, obsw):
             for ii in numpy.atleast_1d(i):
                 self.add_observables_refpts(ring, o, refpts=refpts, index=ii, weight=w)
             
-    def set_quadrupoles(self, ring, refpts, deltax, deltay):
-        self.add_variables_refpts(ring, 'QUAD', deltax, refpts, 'PolynomB', index=1)
+    def set_magnets(self, ring, refpts, magnames, magattr, magidx, delta):
+        magnames = numpy.broadcast_to(magnames, len(refpts)) 
+        magattr = numpy.broadcast_to(magattr, len(refpts))
+        magidx = numpy.broadcast_to(magidx, len(refpts))
+        delta = numpy.broadcast_to(delta, len(refpts))
+        self.add_variables_refpts(ring, magnames, delta, refpts, magattr, index=magidx)
         
     def correct(self, ring, target, mat=None, svd_cut=0, apply_correction=False):
         if mat is None:
@@ -306,4 +319,24 @@ class LinoptResponseMatrix(ElementResponseMatrix):
         assert len(target) == mat.shape[0], \
             'Linopt RM: target must be of the same length as the matrix'
         corr, obs = self.svd_fit(ring, target, mat=mat, svd_cut=svd_cut, apply_correction=apply_correction)
-        return corr, obs                        
+        return corr, obs
+        
+        
+class LinoptResponseMatrix(OpticsResponseMatrix):
+
+    def __init__(self, ring, bpms, quadrupoles, obsnames, obsidx, obsw=1,
+                 delta=1.0e-3, fit_tune=True, **kwargs):
+        super(LinoptResponseMatrix, self).__init__(ring, bpms, quadrupoles, 'QUAD',
+                                                   'PolynomB', 1, obsnames, obsidx,
+                                                   obsw=obsw, delta=delta,
+                                                   fit_tune=fit_tune, okw=kwargs)
+                                                   
+                                                   
+class ChromoptResponseMatrix(OpticsResponseMatrix):
+
+    def __init__(self, ring, bpms, sextupoles, obsw=1, delta=1.0e-3,
+                 fit_chrom=True, **kwargs):
+        super(ChromoptResponseMatrix, self).__init__(ring, bpms, sextupoles, 'SEXT',
+                                                     'PolynomB', 2, ['W'], [[0, 1]],
+                                                     obsw=obsw, delta=delta,
+                                                     fit_chrom=fit_chrom, okw=kwargs)                      
