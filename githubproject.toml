@@ -71,6 +71,9 @@ build-verbosity = "1"
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
 
+[tool.cibuildwheel.linux]
+environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
+
 [tool.setuptools_scm]
 write_to = "pyat/at/_version.py"
 git_describe_command = "git describe --dirty --tags --long --match pyat-[0-9]*"
