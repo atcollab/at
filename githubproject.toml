@@ -72,6 +72,7 @@ build-verbosity = "1"
 archs = ["x86_64", "arm64"]
 
 [tool.cibuildwheel.linux]
+# Pass the detected PyAT version to the linux docker containers
 environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
 
 [tool.setuptools_scm]
