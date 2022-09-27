@@ -157,3 +157,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 MODULE_DEF(WakeFieldPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
+#if defined(MATLAB_MEX_FILE)
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{
+    atError("WakeFieldPass: mex function undefined");
+}
+#endif /*defined(MATLAB_MEX_FILE)*/
