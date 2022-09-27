@@ -158,9 +158,98 @@ MODULE_DEF(WakeFieldPass)        /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
-#if defined(MATLAB_MEX_FILE)
+
+#ifdef MATLAB_MEX_FILE
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    atError("WakeFieldPass: mex function undefined");
+    if (nrhs == 2) {
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[1]);
+        int i;
+        struct elem El, *Elem=&El;
+
+        long nslice,nelem,nturns;
+        double wakefact;
+        static double lnf[3];
+        double *normfact;
+        double *waketableT;
+        double *waketableDX;
+        double *waketableDY;
+        double *waketableQX;
+        double *waketableQY;
+        double *waketableZ;
+        double *turnhistory;
+        double *z_cuts;
+
+        nslice=atGetLong(ElemData,"_nslice"); check_error();
+        nelem=atGetLong(ElemData,"_nelem"); check_error();
+        nturns=atGetLong(ElemData,"_nturns"); check_error();
+        wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
+        waketableT=atGetDoubleArray(ElemData,"_wakeT"); check_error();
+        turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
+        normfact=atGetDoubleArray(ElemData,"NormFact"); check_error();
+        /*optional attributes*/
+        waketableDX=atGetOptionalDoubleArray(ElemData,"_wakeDX"); check_error();
+        waketableDY=atGetOptionalDoubleArray(ElemData,"_wakeDY"); check_error();
+        waketableQX=atGetOptionalDoubleArray(ElemData,"_wakeQX"); check_error();
+        waketableQY=atGetOptionalDoubleArray(ElemData,"_wakeQY"); check_error();
+        waketableZ=atGetOptionalDoubleArray(ElemData,"_wakeZ"); check_error();
+        z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+        
+        Elem->nslice=nslice;
+        Elem->nelem=nelem;
+        Elem->nturns=nturns;
+        for(i=0;i<3;i++){
+           lnf[i]=normfact[i]*wakefact;
+        }
+        Elem->normfact=lnf;
+        Elem->waketableT=waketableT;
+        Elem->waketableDX=waketableDX;
+        Elem->waketableDY=waketableDY;
+        Elem->waketableQX=waketableQX;
+        Elem->waketableQY=waketableQY;
+        Elem->waketableZ=waketableZ;
+        Elem->turnhistory=turnhistory;
+        Elem->z_cuts=z_cuts;
+
+        if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
+        /* ALLOCATE memory for the output array of the same size as the input  */
+        plhs[0] = mxDuplicateArray(prhs[1]);
+        r_in = mxGetDoubles(plhs[0]);
+        double *bspos = malloc(sizeof(double));
+        double *bcurr = malloc(sizeof(double));
+        bspos[0] = 0.0;
+        bcurr[0] = 0.0;
+        WakeFieldPass(r_in,num_particles, 1, 1, bspos, bcurr, Elem);
+        free(bspos);
+        free(bcurr);
+    }
+    else if (nrhs == 0) {
+        /* list of required fields */
+        plhs[0] = mxCreateCellMatrix(7,1);
+        mxSetCell(plhs[0],0,mxCreateString("_nelem"));
+        mxSetCell(plhs[0],1,mxCreateString("_nslice"));
+        mxSetCell(plhs[0],2,mxCreateString("_nturns"));
+        mxSetCell(plhs[0],3,mxCreateString("_wakefact"));
+        mxSetCell(plhs[0],4,mxCreateString("_wakeT"));
+        mxSetCell(plhs[0],5,mxCreateString("_turnhistory"));
+        mxSetCell(plhs[0],6,mxCreateString("Normfact"));
+
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(6,1); /* No optional fields */
+            mxSetCell(plhs[0],0,mxCreateString("_wakeDX"));
+            mxSetCell(plhs[0],1,mxCreateString("_wakeDY"));
+            mxSetCell(plhs[0],2,mxCreateString("_wakeQX"));
+            mxSetCell(plhs[0],3,mxCreateString("_wakeQY"));
+            mxSetCell(plhs[0],4,mxCreateString("_wakeZ"));
+            mxSetCell(plhs[0],5,mxCreateString("ZCuts"));
+        }
+    }
+    else {
+        mexErrMsgIdAndTxt("AT:WrongArg","Needs 2 or 0 arguments");
+    }
 }
-#endif /*defined(MATLAB_MEX_FILE)*/
+#endif
