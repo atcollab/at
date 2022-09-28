@@ -28,6 +28,6 @@ The package is organised as follows:
 
 
 
-.. math:: \vec Z = \begin{equation} W(\tau) = \left\{ \begin{array}{lr} \alpha R_{s} \text{for \tau=0} \\ 2\alpha R_{s}e^{-\alpha \tau} [cos(\omega_{bar}\tau) - \frac{\alpha}{\omega_{bar}}sin(\omega_{bar}\tau] \text{for \tau > 0} \\ \end{array} \right. \end{equation} 
+.. math:: \\begin{equation} W(\tau) = \left\{ \begin{array}{lr} \alpha R_{s} \text{for \tau=0} \\ 2\alpha R_{s}e^{-\alpha \tau} [cos(\omega_{bar}\tau) - \frac{\alpha}{\omega_{bar}}sin(\omega_{bar}\tau] \text{for \tau > 0} \\ \end{array} \right. \\end{equation} 
 
 
