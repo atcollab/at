@@ -14,7 +14,7 @@ def _py_data(ml_data):
 def _ml_refs(refpts, nelems):
     """Convert refpoints to Matlab"""
     uintrefs = uint32_refpts(refpts, nelems)
-    return matlab.double([ref+1 for ref in uintrefs])
+    return matlab.double([float(ref+1) for ref in uintrefs])
 
 
 @pytest.mark.parametrize('ct', (-0.0002, 0.0002))

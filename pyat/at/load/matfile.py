@@ -19,8 +19,9 @@ __all__ = ['load_mat', 'save_mat', 'load_m', 'save_m',
 
 _param_to_lattice = {'Energy': 'energy', 'Periodicity': 'periodicity',
                      'FamName': 'name', 'Particle': '_particle',
+                     'cell_harmnumber': '_harmcell',
                      'HarmNumber': 'harmonic_number'}
-_param_ignore = {'PassMethod', 'Length'}
+_param_ignore = {'PassMethod', 'Length', 'cavpts'}
 
 # Python to Matlab attribute translation
 _matattr_map = dict(((v, k) for k, v in _param_to_lattice.items()))
@@ -89,6 +90,8 @@ def ringparam_filter(params: dict, elem_iterator, *args)\
         params:         Lattice building parameters (see :py:class:`.Lattice`)
         elem_iterator:  Iterator over the lattice Elements
 
+    Yields:
+        elem (Element): new Elements
 
     The following keys in ``params`` are used:
 
@@ -96,8 +99,15 @@ def ringparam_filter(params: dict, elem_iterator, *args)\
     **keep_all**    keep RingParam elem_iterator as Markers
     ============    ===================
 
-    Yields:
-        elem (Element): new Elements
+    The following keys in ``params`` are set:
+
+    * ``name``
+    * ``energy``
+    * ``periodicity``
+    * ``_harmnumber`` or
+    * ``harmonic_number``
+    * ``_particle``
+    * ``_radiation``
     """
     keep_all = params.pop('keep_all', False)
     ringparams = []
@@ -150,7 +160,10 @@ def load_mat(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
-    """
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
+   """
     if 'key' in kwargs:  # process the deprecated 'key' keyword
         kwargs.setdefault('mat_key', kwargs.pop('key'))
     return Lattice(ringparam_filter, matfile_generator, abspath(filename),
@@ -180,7 +193,7 @@ def mfile_generator(params: dict, m_file: str)\
                 warn(AtWarning('Invalid line {0} skipped.'.format(lineno)))
                 continue
             except KeyError:
-                warn(AtWarning('Line {0}: Unknown class'))
+                warn(AtWarning('Line {0}: Unknown class.'.format(lineno)))
                 continue
             else:
                 yield elem
@@ -206,6 +219,9 @@ def load_m(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     return Lattice(ringparam_filter, mfile_generator, abspath(filename),
                    iterator=params_filter, **kwargs)
@@ -261,6 +277,9 @@ def save_mat(ring: Lattice, filename: str,
         filename:       Name of the '.mat' file
         mat_key (str):  Name of the Matlab variable containing
           the lattice. Default: ``'RING'``
+
+    See Also:
+        :py:func:`.save_lattice` for a generic lattice-saving function.
     """
     lring = tuple((element_to_dict(elem),) for elem in matlab_ring(ring))
     scipy.io.savemat(filename, {mat_key: lring}, long_field_names=True)
@@ -273,6 +292,9 @@ def save_m(ring: Lattice, filename: Optional[str] = None) -> None:
         ring:           Lattice description
         filename:       Name of the '.m' file. Default: outputs on
           :py:obj:`sys.stdout`
+
+    See Also:
+        :py:func:`.save_lattice` for a generic lattice-saving function.
     """
 
     def save(file):

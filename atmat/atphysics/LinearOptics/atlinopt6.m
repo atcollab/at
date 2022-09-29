@@ -86,7 +86,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
         [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
-        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
+        [cavargs,varargs]=getoption(varargs,{'cavpts'});
         [refpts,varargs]=getargs(varargs,1,'check',@(arg) isnumeric(arg) || islogical(arg));
 
         if isempty(twiss_in)        % Circular machine
@@ -122,8 +122,8 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
             if get_w || get_chrom
                 frf=get_rf_frequency(ring);
                 DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,cavargs{:});
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,cavargs{:});
                 [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
                 if get_w

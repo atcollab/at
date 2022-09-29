@@ -7,6 +7,7 @@ function atmexall(varargin)
 %
 %	-missing    Build only the outdated components
 %	-openmp     Build the integrators for OpenMP parallelisation
+%   -c_only     Do no compile C++ passmethods
 %   -DOMP_PARTICLE_THRESHOLD=n
 %               Set the parallelisation threshold to n particles
 %               (Default 10)
@@ -23,6 +24,7 @@ function atmexall(varargin)
 pdir=fullfile(fileparts(atroot),'atintegrators');
 [openmp,varargs]=getflag(varargin,'-openmp');
 [miss_only,varargs]=getflag(varargs,'-missing');
+[c_only,varargs]=getflag(varargs,'-c_only');
 force=~miss_only;
 
 atoptions={['-D',computer]};
@@ -110,9 +112,11 @@ compile(alloptions, fullfile(cdir,'nafflib.c'),...
 % Find all files matching '*Pass.c' wildcard
 cfiles = dir(fullfile(pdir,'*Pass.c'));
 passmethods = {cfiles.name};
-% Find all files matching '*Pass.cc' wildcard
-ccfiles = dir(fullfile(pdir, '*Pass.cc'));
-passmethods = [passmethods ccfiles.name];
+if ~c_only
+    % Find all files matching '*Pass.cc' wildcard
+    ccfiles = dir(fullfile(pdir, '*Pass.cc'));
+    passmethods = [passmethods ccfiles.name];
+end
 % Eliminate invisible files
 ok=cellfun(@(nm) nm(1)~='.',passmethods,'UniformOutput',false);
 passmethods = passmethods(cell2mat(ok));

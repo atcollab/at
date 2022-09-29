@@ -34,6 +34,9 @@ def load_repr(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):          New :py:class:`.Lattice` object
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     def elem_iterator(params, repr_file):
         with open(params.setdefault('repr_file', repr_file), 'rt') as file:
@@ -53,6 +56,9 @@ def save_repr(ring: Lattice, filename: Optional[str] = None) -> None:
         ring:           Lattice description
         filename:       Name of the '.repr' file. Default: outputs on
           :py:obj:`sys.stdout`
+
+    See Also:
+        :py:func:`.save_lattice` for a generic lattice-saving function.
     """
     def save(file):
         # print(repr(dict((k, v) for k, v in vars(ring).items()

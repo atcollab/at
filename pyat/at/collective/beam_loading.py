@@ -1,14 +1,8 @@
 import numpy
 from enum import IntEnum
-from at.lattice import Element, RFCavity
+from at.lattice import Element, RFCavity, Collective
 from at.physics import get_timelag_fromU0
 from at.constants import qe, clight
-
-
-class BLMethod(IntEnum):
-    """Enum class for beam loading methods"""
-    AUTO = 0
-    MANUAL = 1
 
 
 def get_qs_beamloading(qs0, vbeam, volt, phis, psi):
@@ -82,18 +76,16 @@ def remove_beamloading(ring, index):
     return cav_elem
 
 
-class BeamLoadingElement(Element):
+class BeamLoadingElement(Collective, Element):
 
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
-
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    default_pass = {False: 'IdentityPass', True: 'RFCavityBeamLoadingPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
                         NumParticles=float, Circumference=float,
                         NormFact=float, WakeFact=float)
 
-    def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMethod.AUTO,
-                 **kwargs):
-        kwargs.setdefault('PassMethod', 'RFCavityBeamLoadingPass')
-        self._mode = int(mode)
+    def __init__(self, ring, cavelem, qfactor, rshunt, **kwargs):
+        kwargs.setdefault('PassMethod', self.default_pass[True])
         zcuts = kwargs.pop('ZCuts', None)
         family_name = cavelem.FamName + '_BL'
         self.Length = cavelem.Length
@@ -105,46 +97,46 @@ class BeamLoadingElement(Element):
         self.Rshunt = rshunt
         self.Qfactor = qfactor
         self._beta = ring.beta
-        self._charge2current = clight*ring.beta*qe/ring.circumference
-        self._wakefact = -qe/(ring.energy*ring.beta**2)
-        self.NumParticles = kwargs.pop('NumParticles', 0.0)
+        self._wakefact = - ring.circumference/(clight *
+                                               ring.energy*ring.beta**3)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
         self.Phil = kwargs.pop('Phil', 0)
         self._turnhistory = None    # Defined here to avoid warning
+        self._vbunch = None
         self._bl_params = numpy.array([self.Frequency, 0.0,
                                        self.Voltage, self.Voltage, 0.0])
         _, ts = get_timelag_fromU0(ring)
         self._phis = 2*numpy.pi*self.Frequency*(ts+self.TimeLag)/clight
-        self.clear_history()
+        self.clear_history(ring=ring)
         self.NormFact = kwargs.pop('NormFact', 1.0)
+        self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
+        self.VoltGain = kwargs.pop('VoltGain', 1.0)
         if zcuts is not None:
             self.ZCuts = zcuts
         super(BeamLoadingElement, self).__init__(family_name, **kwargs)
 
-    @property
-    def Current(self):
-        return self.NumParticles*self._charge2current
+    def clear_history(self, ring=None):
+        if ring is None:
+            current = 0.0
+            nbunch = 1
+        else:
+            current = ring.beam_current
+            nbunch = ring.nbunch
+        tl = self._nturns*self._nslice*nbunch
+        self._turnhistory = numpy.zeros((tl, 4), order='F')
+        self._vbunch = numpy.zeros((nbunch, ), order='F')
+        self._init_bl_params(current)
 
-    @Current.setter
-    def Current(self, current):
-        self.NumParticles = current/self._charge2current
-        if self._mode == BLMethod.AUTO:
-            self.init_bl_params()
-
-    def clear_history(self):
-        self._turnhistory = numpy.zeros((self._nturns*self._nslice, 4),
-                                        order='F')
-
-    def init_bl_params(self):
+    def _init_bl_params(self, current):
         vgen, fres, psi, vcav = get_params_beamloading(self.Frequency,
-                                                       self.Current,
+                                                       current,
                                                        self.Voltage,
                                                        self.Qfactor,
                                                        self.Rshunt,
                                                        self.Phil,
                                                        self._phis)
-        self._bl_params = numpy.array([fres, 2*self.Current*self.Rshunt,
+        self._bl_params = numpy.array([fres, 2*current*self.Rshunt,
                                        vcav, vgen, psi])
 
     @property
@@ -158,6 +150,10 @@ class BeamLoadingElement(Element):
     @property
     def Vbeam(self):
         return self._bl_params[1]
+        
+    @property
+    def Vbunch(self):
+        return self._vbunch
 
     @property
     def Vcav(self):

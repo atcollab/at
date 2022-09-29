@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - sphinx_automation
   workflow_dispatch:
 
 jobs:
@@ -23,7 +22,6 @@ jobs:
 
     - name: Build and install at
       run: python -m pip install ".[plot, doc]"
-      working-directory: pyat
 
     - name: Compile docs
       run: make html

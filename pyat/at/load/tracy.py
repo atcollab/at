@@ -361,6 +361,9 @@ def load_tracy(filename: str, **kwargs) -> Lattice:
 
     Returns:
         lattice (Lattice):  New :py:class:`.Lattice` object
+
+    See Also:
+        :py:func:`.load_lattice` for a generic lattice-loading function.
     """
     try:
         harmonic_number = kwargs.pop("harmonic_number")
