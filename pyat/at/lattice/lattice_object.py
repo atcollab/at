@@ -214,7 +214,11 @@ class Lattice(list):
         if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
-            self.set_fillpattern()
+            try:
+                fp = kwargs.pop('_fillpattern', numpy.ones(1))
+                self.set_fillpattern(bunches=fp)
+            except AssertionError:
+                self.set_fillpattern()
         elif not math.isnan(ring_h):
             self.harmonic_number = ring_h
 
@@ -291,6 +295,8 @@ class Lattice(list):
                 elem.Energy = self._energy
             elif hasattr(elem, 'Energy'):
                 del elem.Energy
+            elif hasattr(elem, '_turnhistory'):
+                elem.clear_history(self)
             length += getattr(elem, 'Length', 0.0)
             yield elem
 
@@ -528,6 +534,7 @@ class Lattice(list):
                 'bunches array can contain only positive numbers'
             fp = bunches
         self._fillpattern = fp/numpy.sum(fp)
+        self.set_wake_turnhistory()
 
     @property
     def fillpattern(self) -> numpy.ndarray:
