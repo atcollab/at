@@ -155,7 +155,7 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
                 turnhistory,pslice,z_cuts);
     if(mode==2){
         compute_kicks_phasor(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
-                             qfactor,rshunt,vbeam_phasor,circumference,energy,beta);
+                             qfactor,rshunt,vbeam_phasor,circumference,energy,beta);      
     }else if(mode==1){
         compute_kicks_longres(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
                               qfactor,rshunt,beta);
@@ -252,6 +252,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     }else if (num_particles%Param->nbunch!=0){
         atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
+    #ifdef _MSC_VER
+    if(Elem->mode==1){
+        atError("Phasor mode not implemented in Windows.");
+    }
+    #endif
     RFCavityBeamLoadingPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
                             Param->bunch_currents,rl,nturn,Elem);
     return Elem;

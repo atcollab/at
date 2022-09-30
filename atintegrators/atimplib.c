@@ -330,7 +330,8 @@ void compute_kicks_longres(int nslice,int nturns, double *turnhistory,double nor
 void compute_kicks_phasor(int nslice, int nturns, double *turnhistory,double normfact,
                           double *kz,double freq, double qfactor, double rshunt,
                           double *vbeam, double circumference, double energy,
-                          double beta) {    
+                          double beta) {  
+    #ifndef _MSC_VER  
     int i;
     double wi;
     double dt =0.0;
@@ -359,4 +360,5 @@ void compute_kicks_phasor(int nslice, int nturns, double *turnhistory,double nor
     vbeamc = vbeamc*cexp((I*omr-omr/(2*qfactor))*dt);
     vbeam[0] = cabs(vbeamc);
     vbeam[1] = carg(vbeamc); 
+    #endif    
 };
