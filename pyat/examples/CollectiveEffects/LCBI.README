@@ -1,0 +1,17 @@
+To run the LCBI simulation you can use:
+
+python LCBI_run.py 
+
+or if you have MPI installed (by installing with MPI=1 python setup.py develop)
+
+mpirun -n 20 python LCBI_run.py
+
+This will run with 20 processes. The way the multibunching is done means that
+you have to have at least Nbunch particles per core. This is because the particles
+are accessed using the modulo (i.e. dp[20::Nbunches] gives all particles for bunch 20). 
+If you do not fulfill this condition, it may still run but some buckets will not be filled.
+
+The file will still run without MPI, but it will be a lot slower.
+
+The LCBI_run file will save an output pickle and a logfile, which are then called in LCBI_analyse.py
+
