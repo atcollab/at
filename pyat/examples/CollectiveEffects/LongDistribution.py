@@ -8,6 +8,8 @@ from at.collective.haissinski import Haissinski
 # First we define the ring, the BB resonator, the current and the wake element
 ring = at.load_m('../../../machine_data/esrf.m')
 
+
+
 freq = 10e9
 qfactor = 1
 Rs = 1e4
@@ -16,6 +18,7 @@ m = 50 #30 is quite coarse, 70 or 80 is very fine. 50 is middle
 kmax = 8
 
 srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
+srange = numpy.sort(numpy.concatenate((srange, [1e-24])))
 
 # Now we initialise the Haissinski class, and solve, then we normalise the distribution and shift the charge center to be at 0
 wobj = Wake.long_resonator(srange, freq, qfactor, Rs, ring.beta)
@@ -43,6 +46,7 @@ plt.show()
 
 '''
 
+#ring.beam_current = current
 # Now we set up and run the tracking. The final distribution is an average of the last numAve turns 
 welem = LongResonatorElement('wake', ring, srange, freq, qfactor, Rs, Nslice=300)
 welem.Current = current
@@ -66,7 +70,7 @@ id0 = 0
 for t in numpy.arange(Nturns):
     if t%1000==0:
         print('Tracking turn ', t, ' of ', Nturns)
-    part = at.lattice_pass(fring, part)[:,:,0,0]
+    _ = at.lattice_pass(fring, part)
     
     if t > Nturns-numAve:  
         if not histAveFlag:
@@ -102,6 +106,7 @@ ax1.plot(1e3*zr, prof, color='k', linestyle='dashed', label='Tracking')
 ax1.set_xlabel('z [mm]')
 ax1.set_ylabel(r'$\rho(z)$')
 ax1.legend()
+plt.savefig('./haissinski_dist.png')
 plt.show()
 
 

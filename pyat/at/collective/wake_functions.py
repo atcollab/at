@@ -32,7 +32,9 @@ def convolve_wakefun(srange, w, sigs):
 
 
 def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
-    """Define the wake function (longitudinal) of a resonator
+    """
+    
+    Define the wake function (longitudinal) of a resonator
     with the given parameters according to Alex Chao's resonator
     model (Eq. 2.82) and definitions of the resonator in HEADTAIL.
     """
@@ -56,7 +58,8 @@ def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
 
 def transverse_resonator_wf(srange, frequency, qfactor, rshunt,
                             yokoya_factor, beta):
-    """Define the wake function (transverse) of a resonator
+    """
+    Define the wake function (transverse) of a resonator
     with the given parameters according to Alex Chao's
     resonator model (Eq. 2.82) and definitions of the resonator
     in HEADTAIL.
@@ -82,7 +85,8 @@ def transverse_resonator_wf(srange, frequency, qfactor, rshunt,
 
 
 def transverse_reswall_wf(srange, yokoya_factor, length, rvac, conduct, beta):
-    """Define the wake function (transverse) of a resistive wall with the given
+    """
+    Define the wake function (transverse) of a resistive wall with the given
     parameters according to Alex Chao's RW model (2.53) and definitions used in
     HEADTAIL
     """

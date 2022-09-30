@@ -224,7 +224,7 @@ class Wake(object):
             >>> Rs = 1e4
             >>> wake = Wake.long_resonator(srange, freq, Q, Rs, ring.beta)
         """
-        return Wake.resonator(srange, WakeComponent.Z, rshunt, qfactor,
+        return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
                               rshunt, beta, nelems=nelems)
 
     @staticmethod
