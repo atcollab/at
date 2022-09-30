@@ -92,6 +92,8 @@ class BeamLoadingElement(Collective, Element):
     def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMode.WAKE,
                  **kwargs):
         kwargs.setdefault('PassMethod', self.default_pass[True])
+        assert isinstance(mode, BLMode), \
+            'Beam loading mode has to be an instance of BLMode'
         zcuts = kwargs.pop('ZCuts', None)
         family_name = cavelem.FamName + '_BL'
         self.Length = cavelem.Length
@@ -119,7 +121,7 @@ class BeamLoadingElement(Collective, Element):
         self.NormFact = kwargs.pop('NormFact', 1.0)
         self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
         self.VoltGain = kwargs.pop('VoltGain', 1.0)
-        self.vbeam_phasor = numpy.zeros(2)
+        self._vbeam_phasor = numpy.zeros(2)
         if zcuts is not None:
             self.ZCuts = zcuts
         super(BeamLoadingElement, self).__init__(family_name, **kwargs)

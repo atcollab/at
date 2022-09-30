@@ -8,7 +8,7 @@
 #endif
 
 
-#define TWOPI  4*asin(1)
+#define TWOPI  6.28318530717959
 #define C0     2.99792458e8 
 
 

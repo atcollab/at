@@ -8,9 +8,8 @@
  * User may contact simon.white@esrf.fr for questions and comments.
  */
  
-#define TWOPI  4*asin(1)
+#define TWOPI  6.28318530717959
 #define C0     2.99792458e8 
-#define QE     1.602176634e-19
 
 struct elem
 {
@@ -136,56 +135,43 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
 
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
     int c;
-
     int *pslice;
     double *kz;
     double freqres = bl_params[0];
     double vbeam = bl_params[1];
     double vgen = bl_params[3];
     double psi = bl_params[4];
-    
-    trackCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
-       
     void *buffer = atMalloc(sz);
     double *dptr = (double *) buffer;
     int *iptr;
-
     kz = dptr;
     dptr += nslice*nbunch;
     iptr = (int *) dptr;
     pslice = iptr; iptr += num_particles;
 
-    /*slices beam and compute kick and update cavity params*/
+    trackCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
     rotate_table_history(nturnsw,nslice*nbunch,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
                 turnhistory,pslice,z_cuts);
-    if(normfact!=0){
-        if(mode==2){
-            compute_kicks_phasor(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
-                                 qfactor,rshunt,vbeam_phasor,circumference,energy,beta);
+    if(mode==2){
+        compute_kicks_phasor(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
+                             qfactor,rshunt,vbeam_phasor,circumference,energy,beta);
+    }else if(mode==1){
+        compute_kicks_longres(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
+                              qfactor,rshunt,beta);
+    }
+    vbeam = get_vbeam(nslice,nbunch,energy,kz,vbunch);
+    /*apply kicks and RF*/
+    /* OpenMP not efficient. Too much shared data ?
+    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+    shared(r_in,num_particles,pslice,kz) private(c)
+    */   
+    for (c=0; c<num_particles; c++) {
+        double *r6 = r_in+c*6;
+        int islice=pslice[c];
+        if (!atIsNaN(r6[0])) {         
+            r6[4] += kz[islice]; 
         }
-        else if(mode==1){
-            compute_kicks_longres(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
-                                  qfactor,rshunt,beta);
-        }
-        else{
-            atError("Beam Loading: mode undefined");
-        }
-        vbeam = get_vbeam(nslice,nbunch,energy,kz,vbunch);
-        /*apply kicks and RF*/
-        /* OpenMP not efficient. Too much shared data ?
-        #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-        shared(r_in,num_particles,pslice,kz) private(c)
-        */   
-        for (c=0; c<num_particles; c++) {
-            double *r6 = r_in+c*6;
-            int islice=pslice[c];
-            if (!atIsNaN(r6[0])) {         
-                r6[4] += kz[islice]; 
-            }
-        }
-    } else{
-        vbeam = 0.0;
     }
     update_params(vbeam,qfactor,rfv,phis,phil,rffreq,bl_params,vbunch,nbunch,phasegain,voltgain); 
     atFree(buffer);
@@ -232,7 +218,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
         bl_params=atGetDoubleArray(ElemData,"_bl_params"); check_error();
         vbunch=atGetDoubleArray(ElemData,"_vbunch"); check_error();
-        vbeam_phasor=atGetDoubleArray(ElemData,"vbeam_phasor"); check_error(); 
+        vbeam_phasor=atGetDoubleArray(ElemData,"_vbeam_phasor"); check_error(); 
         /*optional attributes*/
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
        
@@ -260,6 +246,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->phasegain = phasegain;
         Elem->voltgain = voltgain;
         Elem->vbeam_phasor = vbeam_phasor;
+    }
+    if(num_particles<Param->nbunch){
+        atError("Number of particles has to be greater or equal to the number of bunches.");
+    }else if (num_particles%Param->nbunch!=0){
+        atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
     RFCavityBeamLoadingPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
                             Param->bunch_currents,rl,nturn,Elem);
