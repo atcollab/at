@@ -46,10 +46,9 @@ plt.show()
 
 '''
 
-#ring.beam_current = current
 # Now we set up and run the tracking. The final distribution is an average of the last numAve turns 
+ring.beam_current = current
 welem = LongResonatorElement('wake', ring, srange, freq, qfactor, Rs, Nslice=300)
-welem.Current = current
 
 
 ring.radiation_on()
