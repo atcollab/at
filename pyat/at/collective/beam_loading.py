@@ -5,6 +5,11 @@ from at.physics import get_timelag_fromU0
 from at.constants import qe, clight
 
 
+class BLMode(IntEnum):
+    WAKE = 1
+    PHASOR = 2
+
+
 def get_qs_beamloading(qs0, vbeam, volt, phis, psi):
     '''
     This function computes the analytical synchrotron tun shift
@@ -84,11 +89,13 @@ class BeamLoadingElement(Collective, Element):
                         NumParticles=float, Circumference=float,
                         NormFact=float, WakeFact=float)
 
-    def __init__(self, ring, cavelem, qfactor, rshunt, **kwargs):
+    def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMode.WAKE,
+                 **kwargs):
         kwargs.setdefault('PassMethod', self.default_pass[True])
         zcuts = kwargs.pop('ZCuts', None)
         family_name = cavelem.FamName + '_BL'
         self.Length = cavelem.Length
+        self._mode = int(mode)
         self.Voltage = cavelem.Voltage
         self.Energy = cavelem.Energy
         self.Frequency = cavelem.Frequency
@@ -112,6 +119,7 @@ class BeamLoadingElement(Collective, Element):
         self.NormFact = kwargs.pop('NormFact', 1.0)
         self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
         self.VoltGain = kwargs.pop('VoltGain', 1.0)
+        self.vbeam_phasor = numpy.zeros(2)
         if zcuts is not None:
             self.ZCuts = zcuts
         super(BeamLoadingElement, self).__init__(family_name, **kwargs)

@@ -1,13 +1,14 @@
 #include "atelem.c"
 #include <math.h>
 #include <float.h>
+#include <complex.h>
 #ifdef MPI
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
 #endif
 
 
-#define TWOPI  6.28318530717959
+#define TWOPI  4*asin(1)
 #define C0     2.99792458e8 
 
 
@@ -44,7 +45,7 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
 double wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta) {
 
     double omega, alpha, omegabar;
-    double wake;
+    double wake=0.0;
     double dt;
     
     omega = TWOPI * freqres;
@@ -326,4 +327,36 @@ void compute_kicks_longres(int nslice,int nturns, double *turnhistory,double nor
 };
 
 
+void compute_kicks_phasor(int nslice, int nturns, double *turnhistory,double normfact,
+                          double *kz,double freq, double qfactor, double rshunt,
+                          double *vbeam, double circumference, double energy,
+                          double beta) {    
+    int i;
+    double wi;
+    double dt =0.0;
+    double *turnhistoryZ = turnhistory+nslice*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nturns*3;
+    double omr = TWOPI*freq;
+    double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
+    double kick = rshunt*omr/(2*qfactor);
+    double bc = beta*C0;
 
+    for (i=0;i<nslice;i++) {
+        kz[i]=0.0;
+    }
+    for(i=nslice*(nturns-1);i<nslice*nturns;i++){
+        wi = turnhistoryW[i];
+        if(i==nslice*(nturns-1)){
+            dt = (circumference+turnhistoryZ[i])/bc;
+        }else{
+            dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
+        }      
+        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+        kz[i-nslice*(nturns-1)] = creal(vbeamc/energy+normfact*wi*kick);
+        vbeamc += 2*normfact*wi*kick*energy;    
+    }
+    dt = -turnhistoryZ[nslice*nturns-1]/bc;
+    vbeamc = vbeamc*cexp((I*omr-omr/(2*qfactor))*dt);
+    vbeam[0] = cabs(vbeamc);
+    vbeam[1] = carg(vbeamc); 
+};

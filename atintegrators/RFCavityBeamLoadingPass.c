@@ -16,6 +16,7 @@ struct elem
 {
   int nslice;
   int nturnsw;
+  int mode;
   double normfact;
   double phasegain;
   double voltgain;
@@ -35,6 +36,7 @@ struct elem
   /*pointer [freqres, vbeam, vcav, vgen, psi]*/
   double *bl_params;
   double *vbunch;
+  double *vbeam_phasor;
 };
 
 
@@ -82,7 +84,7 @@ void update_params(double vbeam, double qfactor, double rfv, double phis,
                    double *vbunch, int nbunch,double voltgain,double phasegain){ 
                                              
     double theta,a,b,vbn;
-    double vgen,freqres,vcav,psi; 
+    double vgen,psi; 
     int i;
     psi = bl_params[4];
     for(i=0;i<nbunch;i++){
@@ -111,6 +113,7 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
      */   
     long nslice = Elem->nslice;
     long nturnsw = Elem->nturnsw;
+    long mode = Elem->mode;
     double normfact = Elem->normfact;  
     double le = Elem->Length;
     double rfv = Elem->Voltage;
@@ -129,6 +132,7 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
     double *vbunch = Elem->vbunch;
     double phasegain = Elem->phasegain;
     double voltgain = Elem->voltgain;
+    double *vbeam_phasor = Elem->vbeam_phasor;
 
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
     int c;
@@ -156,7 +160,17 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
     slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
                 turnhistory,pslice,z_cuts);
     if(normfact!=0){
-        compute_kicks_longres(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,qfactor,rshunt,beta);
+        if(mode==2){
+            compute_kicks_phasor(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
+                                 qfactor,rshunt,vbeam_phasor,circumference,energy,beta);
+        }
+        else if(mode==1){
+            compute_kicks_longres(nslice*nbunch,nturnsw,turnhistory,normfact,kz,freqres,
+                                  qfactor,rshunt,beta);
+        }
+        else{
+            atError("Beam Loading: mode undefined");
+        }
         vbeam = get_vbeam(nslice,nbunch,energy,kz,vbunch);
         /*apply kicks and RF*/
         /* OpenMP not efficient. Too much shared data ?
@@ -173,7 +187,7 @@ void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
     } else{
         vbeam = 0.0;
     }
-    update_params(vbeam,qfactor,rfv,phis,phil,rffreq,bl_params,vbunch,nbunch,phasegain,voltgain);  
+    update_params(vbeam,qfactor,rfv,phis,phil,rffreq,bl_params,vbunch,nbunch,phasegain,voltgain); 
     atFree(buffer);
 }
 
@@ -194,6 +208,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double qfactor,rshunt,beta,phis,phil;
         double *bl_params;
         double *vbunch;
+        double *vbeam_phasor;
 
         /*attributes for RF cavity*/
         Length=atGetDouble(ElemData,"Length"); check_error();
@@ -204,6 +219,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         /*attributes for resonator*/
         nslice=atGetLong(ElemData,"_nslice"); check_error();
         nturns=atGetLong(ElemData,"_nturns"); check_error();
+        mode=atGetLong(ElemData,"_mode"); check_error();
         wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
         qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
         rshunt=atGetDouble(ElemData,"Rshunt"); check_error();
@@ -216,12 +232,14 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
         bl_params=atGetDoubleArray(ElemData,"_bl_params"); check_error();
         vbunch=atGetDoubleArray(ElemData,"_vbunch"); check_error();
+        vbeam_phasor=atGetDoubleArray(ElemData,"vbeam_phasor"); check_error(); 
         /*optional attributes*/
         z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
        
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         
         Elem->Length=Length;
+        Elem->mode=mode;
         Elem->Voltage=Voltage;
         Elem->Frequency=Frequency;
         Elem->HarmNumber=round(Frequency*rl/C0);
@@ -241,6 +259,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->vbunch = vbunch;
         Elem->phasegain = phasegain;
         Elem->voltgain = voltgain;
+        Elem->vbeam_phasor = vbeam_phasor;
     }
     RFCavityBeamLoadingPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
                             Param->bunch_currents,rl,nturn,Elem);
