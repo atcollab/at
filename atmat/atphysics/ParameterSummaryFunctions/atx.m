@@ -1,4 +1,4 @@
-function varargout=atz(ring,varargin)
+function varargout=atx(ring,varargin)
 %ATX Computes and displays global information
 %
 %BEAMDATA=ATX(RING) Computes linear optics, equilibrium emittances and damping times
@@ -99,7 +99,7 @@ function varargout=atz(ring,varargin)
 vargs=getdparg(vargs);
 [refusr,vargs]=getargs(vargs,1:length(ring),'check',@(arg) isnumeric(arg) || islogical(arg));
 if ~any(cellfun(@(m) isequal(m,linopt), {@atlinopt2,@atlinopt4,@atlinopt6}))
-    error('AT:WrongArgument','''method'' must be @atlinopt4 or @atlinopt6')
+    error('AT:WrongArgument','''method'' must be @atlinopt2, @atlinopt4 or @atlinopt6')
 end
 if go6d && ~isequal(linopt,@atlinopt6)
     error('AT:WrongArgument','''6d'' needs the @atlinopt6 method')
