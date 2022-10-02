@@ -39,7 +39,7 @@ global THERING %#ok<GVMIS>
 [Ux,varargs]=getargs(varargs,[],'check',@isfloat);
 [varargout{1:nargout}]=wrapper6d(ring,@doit,Ux,varargs{:});
 
-    function rp=doit(ring,~,Ux,varargin)
+    function rp=doit(ring,is6d,Ux,varargin)
         e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
         e_radius=PhysConstant.classical_electron_radius.value;                  % m
         hbar=PhysConstant.Planck_constant_over2pi_times_c_in_MeV_fm.value;
@@ -61,11 +61,13 @@ global THERING %#ok<GVMIS>
         I3=I3d+I3w;
         I4=I4d+I4w;
         I5=I5d+I5w;
-        if isempty(Ux)
-            U0 = 1.0e9*Cgamma/2/pi*(energy*1.e-9)^4*I2;    % eV
-        else
+        if ~isempty(Ux)
             U0 = Ux*1e6; %convert MeV to eV
             fprintf('dipole radiation loss:  %4.5f keV\n', U0/1000.);
+        elseif is6d
+            U0 = atgetU0(ring,'method','tracking');
+        else
+            U0 = 1.0e9*Cgamma/2/pi*(energy*1.e-9)^4*I2;    % eV
         end
         alphac = I1/circ;
         sigma_E = gamma*sqrt(Cq*I3/(2*I2+I4));

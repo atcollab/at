@@ -126,7 +126,7 @@ end
             atGetRingProperties(ron,'Energy','Periodicity','has_cavity',...
             'rf_voltage','cell_length','cell_revolution_frequency');
         radindex=atgetcells(ron,'PassMethod',@(elem,pass) endsWith(pass,'RadPass'));
-        eloss=atgetU0(ron);
+        eloss=atgetU0(ron,'method','tracking');
         % Add 1 and length(ring)+1 to refpts
         if islogical(refusr)
             refusr(end+1,length(roff)+1)=false;

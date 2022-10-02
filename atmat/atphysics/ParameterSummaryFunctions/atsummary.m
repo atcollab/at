@@ -52,10 +52,18 @@ global THERING %#ok<GVMIS>
         %[TD, smm.tunes, smm.chromaticity] = twissring(ring, 0, 1:length(ring)+1, 'chrom', 1e-8);
         [ringdata,TD] = atlinopt6(ring,1:length(ring)+1,varargs{:},'get_chrom');
         dp=TD(1).ClosedOrbit(5);
+
+        % For calculating the synchrotron integrals
+        [I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
+        [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
+        smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
+
         if is6d
             alphac=mcf(atdisable_6d(ring),dp);
+            eloss=atgetU0(ring,'method','tracking');            % eV
         else
             alphac=mcf(ring,dp);
+            eloss=1.0e9*Cgamma/2/pi*smm.e0.^4*smm.integrals(2); % eV
         end
         etac=1/gamma/gamma- alphac;
         smm.compactionFactor = alphac;
@@ -63,10 +71,6 @@ global THERING %#ok<GVMIS>
         smm.tunes = ringdata.tune;
         smm.chromaticity = ringdata.chromaticity;
 
-        % For calculating the synchrotron integrals
-        [I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
-        [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
-        smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
 
         % Damping numbers
         % Use Robinson's Theorem
@@ -74,7 +78,7 @@ global THERING %#ok<GVMIS>
         smm.damping(2) = 1;
         smm.damping(3) = 2 + smm.integrals(4)/smm.integrals(2);
 
-        smm.radiation           = Cgamma/2/pi*smm.e0.^4*smm.integrals(2);    % GeV
+        smm.radiation = 1.0e-9*eloss;   % GeV
         smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
         smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
 
@@ -82,13 +86,13 @@ global THERING %#ok<GVMIS>
         cf=smm.radiation/2/smm.revTime/smm.e0;
         smm.radiationDamping = 1./(cf*smm.damping);
 
-        smm.overvoltage = v_cav/(smm.radiation*1e9);
+        smm.overvoltage = v_cav/(eloss);
         % Assuming the harmon and overvoltage above.
         % references:  H. Winick, "Synchrotron Radiation Sources: A Primer",
         % World Scientific Publishing, Singapore, pp92-95. (1995)
         % Wiedemann, pp290,350. Chao, pp189.
-        if smm.overvoltage > 1
-            smm.syncphase = pi - asin(1/smm.overvoltage);
+        if v_cav > eloss
+            smm.syncphase = pi - asin(eloss/v_cav);
         else
             smm.syncphase = NaN;
         end
