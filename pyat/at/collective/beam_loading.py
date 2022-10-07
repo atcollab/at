@@ -10,49 +10,6 @@ class BLMode(IntEnum):
     PHASOR = 2
 
 
-def get_qs_beamloading(qs0, vbeam, volt, phis, psi):
-    '''
-    This function computes the analytical synchrotron tun shift
-    '''
-    xi = numpy.sin(psi)
-    qs = qs0*(numpy.sqrt(volt*numpy.cos(phis)+vbeam*numpy.cos(xi) *
-              numpy.sin(xi))/numpy.sqrt(volt*numpy.cos(phis)))
-    return qs
-
-
-def get_params_beamloading(frf, current, volt, qfactor,
-                           rshunt, phil, phis, vb=None):
-    '''
-    This function computes some relevant quantities for beam loading
-    Reference: Wilson, P B. Beam loading in high-energy storage rings.
-    United States: N. p., 1974. Web. doi:10.2172/7166384.
-    INPUTS
-    frf     RF frequency
-    current Total beam current
-    volt    total RF voltage
-    qfactor cavity Q factor
-    rshunt  cavity shunt impedance
-    phil    cavity loaded angle
-    phis    synchronous phase
-    OUTPUTS
-    vgen   generator voltage
-    fres   resonator frequency
-    psi    cavity phase offset (tuning angle)
-    vcav   cavity voltage
-    '''
-    theta = phis+phil
-    if vb is None:
-        vb = 2*current*rshunt
-    a = volt*numpy.cos(phil)
-    b = volt*numpy.sin(phil)-vb*numpy.cos(theta)
-    psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
-    vgen = volt*numpy.cos(psi)+vb*numpy.cos(psi)*numpy.sin(phis)
-    fres = frf/(1-numpy.tan(psi)/(2*qfactor))
-    vcav = (vgen*numpy.sin(theta-psi) -
-            vb*numpy.cos(psi)**2)/numpy.sin(phis)
-    return vgen, fres, psi, vcav
-
-
 def add_beamloading(ring, index, *args, **kwargs):
     c = ring[index]
     assert isinstance(c, RFCavity), \
@@ -95,9 +52,9 @@ class BeamLoadingElement(Collective, Element):
         assert isinstance(mode, BLMode), \
             'Beam loading mode has to be an instance of BLMode'
         zcuts = kwargs.pop('ZCuts', None)
+        phil = kwargs.pop('phil', 0)
         family_name = cavelem.FamName + '_BL'
         self.Length = cavelem.Length
-        self._mode = int(mode)
         self.Voltage = cavelem.Voltage
         self.Energy = cavelem.Energy
         self.Frequency = cavelem.Frequency
@@ -105,25 +62,27 @@ class BeamLoadingElement(Collective, Element):
         self.PhaseLag = getattr(cavelem, 'PhaseLag', 0.0)
         self.Rshunt = rshunt
         self.Qfactor = qfactor
+        self.NormFact = kwargs.pop('NormFact', 1.0)
+        self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
+        self.VoltGain = kwargs.pop('VoltGain', 1.0)
+        self._mode = int(mode)
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
         self._nslice = kwargs.pop('Nslice', 101)
         self._nturns = kwargs.pop('Nturns', 1)
-        self.Phil = kwargs.pop('Phil', 0)
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
-        self._bl_params = numpy.array([self.Frequency, 0.0,
-                                       self.Voltage, self.Voltage, 0.0])
         _, ts = get_timelag_fromU0(ring)
         self._phis = 2*numpy.pi*self.Frequency*(ts+self.TimeLag)/clight
-        self.clear_history(ring=ring)
-        self.NormFact = kwargs.pop('NormFact', 1.0)
-        self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
-        self.VoltGain = kwargs.pop('VoltGain', 1.0)
         self._vbeam_phasor = numpy.zeros(2)
+        self._vbeam = numpy.zeros(2)
+        self._vgen = numpy.zeros(2)
+        self._vcav = numpy.array([self.Voltage,
+                                  numpy.pi/2-self._phis-phil])
         if zcuts is not None:
             self.ZCuts = zcuts
+        self.clear_history(ring=ring)
         super(BeamLoadingElement, self).__init__(family_name, **kwargs)
 
     def clear_history(self, ring=None):
@@ -135,31 +94,28 @@ class BeamLoadingElement(Collective, Element):
             nbunch = ring.nbunch
         tl = self._nturns*self._nslice*nbunch
         self._turnhistory = numpy.zeros((tl, 4), order='F')
-        self._vbunch = numpy.zeros((nbunch, ), order='F')
+        self._vbunch = numpy.zeros((nbunch, 2), order='F')
         self._init_bl_params(current)
 
     def _init_bl_params(self, current):
-        vgen, fres, psi, vcav = get_params_beamloading(self.Frequency,
-                                                       current,
-                                                       self.Voltage,
-                                                       self.Qfactor,
-                                                       self.Rshunt,
-                                                       self.Phil,
-                                                       self._phis)
-        self._bl_params = numpy.array([fres, 2*current*self.Rshunt,
-                                       vcav, vgen, psi])
+        theta = -self._vcav[1]+numpy.pi/2
+        vb = 2*current*self.Rshunt
+        a = self.Voltage*numpy.cos(theta-self._phis)
+        b = self.Voltage*numpy.sin(theta-self._phis)-vb*numpy.cos(theta)
+        psi = numpy.arcsin(b/numpy.sqrt(a**2+b**2))
+        vgen = self.Voltage*numpy.cos(psi) + \
+            vb*numpy.cos(psi)*numpy.sin(self._phis)
+        self._vgen = numpy.array([vgen, psi])
+        self._vbeam = numpy.array([2*current*self.Rshunt*numpy.cos(psi),
+                                   numpy.pi-psi])
 
     @property
     def ResFrequency(self):
-        return self._bl_params[0]
-
-    @ResFrequency.setter
-    def ResFrequency(self, freq):
-        self._bl_params[0] = freq
+        return self.Frequency/(1-numpy.tan(self.Vgen[1])/(2*self.Qfactor))
 
     @property
     def Vbeam(self):
-        return self._bl_params[1]
+        return self._vbeam
         
     @property
     def Vbunch(self):
@@ -167,23 +123,15 @@ class BeamLoadingElement(Collective, Element):
 
     @property
     def Vcav(self):
-        return self._bl_params[2]
+        return self._vcav
 
     @property
     def Vgen(self):
-        return self._bl_params[3]
+        return self._vgen
 
     @Vgen.setter
-    def Vgen(self, volt):
-        self._bl_params[3] = volt
-
-    @property
-    def Psi(self):
-        return self._bl_params[4]
-
-    @Psi.setter
-    def Psi(self, psi):
-        self._bl_params[4] = psi
+    def Vgen(self, value):
+        self._vgen = value
 
     def __repr__(self):
         """Simplified __repr__ to avoid errors due to arguments

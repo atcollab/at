@@ -68,16 +68,7 @@ def get_energy_loss(ring: Lattice,
     def tracking(ring):
         """Losses from tracking
         """
-        ringtmp = ring.radiation_off(dipole_pass=None,
-                                     quadrupole_pass=None,
-                                     wiggler_pass=None,
-                                     sextupole_pass=None,
-                                     octupole_pass=None,
-                                     copy=True)
-        diff_elem = ringtmp.get_elements('Diffusion')
-        for de in diff_elem:
-            ringtmp.remove(de)
-
+        ringtmp = ring.disable_6d(copy=True)
         o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
                            refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
