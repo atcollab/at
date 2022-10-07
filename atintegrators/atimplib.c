@@ -435,18 +435,3 @@ void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double 
     vgen[0] += (vga-vgen[0])*voltgain;
     vgen[1] += (vgp-vgen[1])*phasegain;
 }
-
-
-double get_vbeam(int nslice, int nbunch, double energy, double *kz, double *vbunch){
-    int i,ib;
-    double vbeam=0.0;
-    for(i=0; i<nbunch;i++){
-        vbunch[i] = 0.0;
-    }    
-    for(i=0; i<nslice*nbunch;i++){
-        ib = (int)(i/nslice);
-        vbeam += kz[i]*energy;
-        vbunch[ib] += kz[i]*energy;
-    }
-    return vbeam/nbunch;
-}
