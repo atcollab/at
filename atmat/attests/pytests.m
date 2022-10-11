@@ -129,7 +129,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
             testCase.verifyEqual(mtune,ptune,AbsTol=2.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.e-4);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=3.e-4);
         end
 
         function tunechrom6(testCase,lat2,dp)
