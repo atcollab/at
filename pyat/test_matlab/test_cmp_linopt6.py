@@ -62,7 +62,7 @@ def test_4d_analysis(engine, lattices, dp):
                  atol=5.e-4, rtol=0)
 
     _compare_6d(py_data, ml_data, fields, atol=1.e-6, rtol=1e-8)
-    _compare_6d(py_data, ml_data, [('W', 'W')], atol=1.e-6, rtol=1e-4)
+    _compare_6d(py_data, ml_data, [('W', 'W')], atol=1.e-6, rtol=2.e-4)
 
 
 @pytest.mark.parametrize('lattices',
