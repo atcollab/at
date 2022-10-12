@@ -101,7 +101,7 @@ classdef pytests < matlab.unittest.TestCase
             a2=cell(lattice.p.find_m44(dp));
             [pm44,~]=deal(a2{:});
             pm44=double(pm44);
-            testCase.verifyEqual(mm44,pm44,AbsTol=2.e-9);
+            testCase.verifyEqual(mm44,pm44,AbsTol=3.e-9);
         end
 
         function m66(testCase,lat2)
