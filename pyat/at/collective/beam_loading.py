@@ -1,8 +1,9 @@
 import numpy
 from enum import IntEnum
+from ..lattice import Lattice
 from at.lattice import Element, RFCavity, Collective
 from at.physics import get_timelag_fromU0
-from at.constants import qe, clight
+from at.constants import clight
 
 
 class BLMode(IntEnum):
@@ -10,7 +11,32 @@ class BLMode(IntEnum):
     PHASOR = 2
 
 
-def add_beamloading(ring, index, *args, **kwargs):
+def add_beamloading(ring: Lattice, index: int, *args, **kwargs):
+    """Function to add beam loading to a cavity element, the cavity
+    element is changed to a beam loading element that combines the energy
+    kick from both the cavity and the resonator
+
+    Parameters:
+        ring:           Lattice object
+        index:          Index of the cavity element
+        qfactor:        Q factor
+        rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+            [:math:`\Omega/m`] for transverse
+
+    Keyword Arguments:
+        Nslice (int):       Number of slices per bunch. Default: 101
+        Nturns (int):       Number of turn for the wake field. Default: 1
+        ZCuts:              Limits for fixed slicing, default is adaptive
+        NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+            to account for beta function at the observation point for
+            example. Default: (1,1,1)
+        mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+            (default) uses the phasor method, BLMode.WAKE uses the wake
+            function. For high Q resonator, the phasor method should be
+            used
+    Returns:
+        bl_elem (Element): beam loading element
+    """
     c = ring[index]
     assert isinstance(c, RFCavity), \
         'Beam loading can only be assigned to a cavity element'
@@ -20,6 +46,18 @@ def add_beamloading(ring, index, *args, **kwargs):
 
 
 def remove_beamloading(ring, index):
+    """Function to remove beam loading from a cavity element, the beam
+    loading
+    element is changed to a beam loading element that combines the energy
+    kick from both the cavity and the resonator
+
+    Parameters:
+        ring:           Lattice object
+        index:          Index of the cavity element
+
+    Returns:
+        cav_elem (Element): cavity element
+    """
     c = ring[index]
     assert isinstance(c, BeamLoadingElement), \
         'Cannot remove beam loading: not a beam loading element'
@@ -39,15 +77,39 @@ def remove_beamloading(ring, index):
 
 
 class BeamLoadingElement(Collective, Element):
-
+    """Class to generate a beamloading element, inherits from Element
+       additional argument are ring, cavity, qfactor, rshunt
+    """
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'RFCavityBeamLoadingPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
                         NumParticles=float, Circumference=float,
                         NormFact=float, WakeFact=float)
 
-    def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMode.WAKE,
+    def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMode.PHASOR,
                  **kwargs):
+        """
+        Parameters:
+            ring:           Lattice object
+            index:          Index of the cavity element
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+                [:math:`\Omega/m`] for transverse
+
+            Keyword Arguments:
+            Nslice (int):       Number of slices per bunch. Default: 101
+            Nturns (int):       Number of turn for the wake field. Default: 1
+            ZCuts:              Limits for fixed slicing, default is adaptive
+            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
+                to account for beta function at the observation point for
+                example. Default: (1,1,1)
+            mode (BLMode):  method for beam loading calculation BLMode.PHASOR
+                (default) uses the phasor method, BLMode.WAKE uses the wake
+                function. For high Q resonator, the phasor method should be
+                used
+        Returns:
+            bl_elem (Element): beam loading element
+        """
         kwargs.setdefault('PassMethod', self.default_pass[True])
         assert isinstance(mode, BLMode), \
             'Beam loading mode has to be an instance of BLMode'
