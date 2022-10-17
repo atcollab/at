@@ -495,6 +495,15 @@ class Lattice(list):
             self._particle = particle
         else:
             self._particle = Particle(particle)
+            
+    def set_wake_turnhistory(self):
+        """Function to reset the shape of the turn history
+        in collective elements based on the number of slices,
+        turns and bunches
+        """
+        for e in self:
+            if e.is_collective:
+                e.clear_history(ring=self)
 
     def set_fillpattern(self, bunches: Union[int, numpy.ndarray] = 1):
         """Function to generate the filling pattern lof the ring.

@@ -344,15 +344,3 @@ class ResWallElement(WakeElement):
     def Yokoya(self, yokoya):
         self._yokoya = yokoya
         self.rebuild_wake()
-
-
-def set_wake_turnhistory(ring):
-    """Function to set the shape of the turn history
-    based on the number of slices, turns and bunches
-    """
-    for e in ring:
-        if e.is_collective:
-            e.clear_history(ring=ring)
-
-
-Lattice.set_wake_turnhistory = set_wake_turnhistory

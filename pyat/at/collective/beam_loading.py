@@ -83,8 +83,7 @@ class BeamLoadingElement(Collective, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'RFCavityBeamLoadingPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
-                        NumParticles=float, Circumference=float,
-                        NormFact=float, WakeFact=float)
+                        Circumference=float, NormFact=float, WakeFact=float)
 
     def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMode.PHASOR,
                  **kwargs):
@@ -96,7 +95,7 @@ class BeamLoadingElement(Collective, Element):
             rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
                 [:math:`\Omega/m`] for transverse
 
-            Keyword Arguments:
+        Keyword Arguments:
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
@@ -173,22 +172,27 @@ class BeamLoadingElement(Collective, Element):
 
     @property
     def ResFrequency(self):
+        """Resonator frequency"""
         return self.Frequency/(1-numpy.tan(self.Vgen[1])/(2*self.Qfactor))
 
     @property
     def Vbeam(self):
+        """Beam phasor (amplitude, phase)"""
         return self._vbeam
         
     @property
     def Vbunch(self):
+        """Bunch phasor (amplitude, phase)"""
         return self._vbunch
 
     @property
     def Vcav(self):
+        """Cavity phasor (amplitude, phase)"""
         return self._vcav
 
     @property
     def Vgen(self):
+        """Generator phasor (amplitude, phase)"""
         return self._vgen
 
     @Vgen.setter
