@@ -141,7 +141,7 @@ class Wake(object):
 
     def _resonator(self, wcomp, frequency, qfactor, rshunt, beta,
                    yokoya_factor=1):
-        if numpy.any(self._srange<0):
+        if numpy.any(self._srange < 0):
             warnings.warn(AtWarning('You are adding a wake function with '
                                     'negative srange. This may cause issues '
                                     'interpolating around zero.\n'))
@@ -156,7 +156,7 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
     def _reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
-        if numpy.any(self._srange<0):
+        if numpy.any(self._srange < 0):
             warnings.warn(AtWarning('You are adding a wake function with '
                                     'negative srange. This may cause issues '
                                     'interpolating around zero.\n'))

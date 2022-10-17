@@ -141,15 +141,17 @@ def get_timelag_fromU0(ring: Lattice,
         ctmax = clight/numpy.amin(freq)/2
         tt0 = tl0[numpy.argmin(freq)]
         bounds = (-ctmax, ctmax)
-        args = (freq,rfv,tl0,u0)
+        args = (freq, rfv, tl0, u0)
         r = []
         for i in range(divider):
             fact = (i+1)/divider
-            r.append(least_squares(eq,bounds[0]*fact+tt0, args=args, bounds=bounds+tt0))
-            r.append(least_squares(eq,bounds[1]*fact+tt0, args=args, bounds=bounds+tt0))
+            r.append(least_squares(eq, bounds[0]*fact+tt0,
+                                   args=args, bounds=bounds+tt0))
+            r.append(least_squares(eq, bounds[1]*fact+tt0,
+                                   args=args, bounds=bounds+tt0))
         res = numpy.array([abs(ri.fun[0]) for ri in r])
         ok = res < 1.0e-6
-        vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])    
+        vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '
                           'RF settings')
@@ -164,7 +166,7 @@ def get_timelag_fromU0(ring: Lattice,
         vrf = numpy.sum(rfv)
         timelag = clight/(2*numpy.pi*frf)*numpy.arcsin(u0/vrf)
         ts = timelag - tml
-        timelag *= numpy.ones(refpts_len(ring,cavpts))
+        timelag *= numpy.ones(refpts_len(ring, cavpts))
     return timelag, ts
 
 

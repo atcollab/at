@@ -207,7 +207,6 @@ class Lattice(list):
             raise AtError('Lattice energy is not defined')
         if 'particle' in kwargs:
             kwargs.pop('_particle', None)
-            
 
         # set attributes
         self.update(kwargs)
@@ -495,7 +494,7 @@ class Lattice(list):
             self._particle = particle
         else:
             self._particle = Particle(particle)
-            
+
     def set_wake_turnhistory(self):
         """Function to reset the shape of the turn history
         in collective elements based on the number of slices,
@@ -566,11 +565,11 @@ class Lattice(list):
     def bunch_list(self) -> numpy.ndarray:
         """Indices of filled bunches"""
         return numpy.flatnonzero(self._fillpattern)
-        
+
     @property
     def beam_current(self):
         return self._beam_current
-        
+
     @beam_current.setter
     def beam_current(self, value):
         self._beam_current = value

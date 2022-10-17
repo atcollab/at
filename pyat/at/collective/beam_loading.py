@@ -179,7 +179,7 @@ class BeamLoadingElement(Collective, Element):
     def Vbeam(self):
         """Beam phasor (amplitude, phase)"""
         return self._vbeam
-        
+
     @property
     def Vbunch(self):
         """Bunch phasor (amplitude, phase)"""
