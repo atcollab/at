@@ -27,9 +27,7 @@ def add_beamloading(ring: Lattice, index: int, *args, **kwargs):
         Nslice (int):       Number of slices per bunch. Default: 101
         Nturns (int):       Number of turn for the wake field. Default: 1
         ZCuts:              Limits for fixed slicing, default is adaptive
-        NormFact (Tuple[float,...]):    Normalization for the 3 planes,
-            to account for beta function at the observation point for
-            example. Default: (1,1,1)
+        NormFact (float):   Normalization factor
         mode (BLMode):  method for beam loading calculation BLMode.PHASOR
             (default) uses the phasor method, BLMode.WAKE uses the wake
             function. For high Q resonator, the phasor method should be
@@ -99,9 +97,7 @@ class BeamLoadingElement(Collective, Element):
             Nslice (int):       Number of slices per bunch. Default: 101
             Nturns (int):       Number of turn for the wake field. Default: 1
             ZCuts:              Limits for fixed slicing, default is adaptive
-            NormFact (Tuple[float,...]):    Normalization for the 3 planes,
-                to account for beta function at the observation point for
-                example. Default: (1,1,1)
+            NormFact (float):   Normalization factor
             mode (BLMode):  method for beam loading calculation BLMode.PHASOR
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
