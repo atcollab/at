@@ -59,7 +59,6 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     for(i=0;i<Elem->MaxOrder;i++){
         Elem->PolynomA[i] = Elem->AmplitudeA[i]*sin(TWOPI*Elem->Frequency*t);
         Elem->PolynomB[i] = Elem->AmplitudeB[i]*sin(TWOPI*Elem->Frequency*t);
-        printf("%f %f %f\n", t, Elem->PolynomA[i], Elem->PolynomB[i]);
     };    
     VariableThinMPolePass(r_in, Elem->PolynomA, Elem->PolynomB, Elem->MaxOrder, num_particles);
     return Elem;
