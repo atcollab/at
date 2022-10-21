@@ -466,7 +466,7 @@ static double getEnergy(double ec){
     
     
     ub = 0.99999;
-    lb = 0.02;
+    lb = 0.21;
     cst0=1.23159;
     ran = drand();
     mini = 0.0;

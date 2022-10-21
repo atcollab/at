@@ -80,9 +80,6 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
         double *r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             int m;
-            double p_norm = 1/(1+r6[4]);
-            double NormL1 = L1*p_norm;
-            double NormL2 = L2*p_norm;
             /*  misalignment at entrance  */
             if (T1) ATaddvv(r6,T1);
             if (R1) ATmultmv(r6,R1);
@@ -104,9 +101,12 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                 double ng, ec, de, energy, gamma, cstec, cstng;
                 double ds, rho, dxp, dyp;
                 int nph;
+                double p_norm = 1/(1+r6[4]);
+                double NormL1 = L1*p_norm;
+                double NormL2 = L2*p_norm;
                 double dpp0 = r6[4];
-                double xp0 = r6[1]/(1+r6[4]);
-                double yp0 = r6[3]/(1+r6[4]);
+                double xp0 = r6[1]*p_norm;
+                double yp0 = r6[3]*p_norm;
                 double s0 = r6[5];
                 
                 fastdrift(r6, NormL1);
@@ -123,8 +123,8 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                 cstec = 3.0*gamma*gamma*gamma*clight/(2.0)*hbar/qe;
                 cstng = 5.0*sqrt(3.0)*alpha0*gamma/(6.0);
                 
-                dxp = r6[1]/(1+r6[4])-xp0 - irho*SL;
-                dyp = r6[3]/(1+r6[4])-yp0;
+                dxp = r6[1]*p_norm-xp0 - irho*SL;
+                dyp = r6[3]*p_norm-yp0;
                 ds = r6[5]-s0;
                 
                 rho = (SL+ds)/sqrt(dxp*dxp+dyp*dyp);
@@ -138,12 +138,10 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                     for(i=0;i<nph;i++){
                         de = de + getEnergy(ec);
                     };
-                };
-                
-                r6[1] = r6[1]/(1+r6[4])*(1+r6[4]-de/E0);
-                r6[3] = r6[3]/(1+r6[4])*(1+r6[4]-de/E0);
+                };                
                 r6[4] = r6[4]-de/E0;
-                
+                r6[1] = r6[1]*p_norm*(1+r6[4]);
+                r6[3] = r6[3]*p_norm*(1+r6[4]);                
             }
             /* quadrupole gradient fringe */
             if (FringeQuadExit && B[1]!=0) {
