@@ -129,8 +129,8 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                 
                 rho = (SL+ds)/sqrt(dxp*dxp+dyp*dyp);
                 
-                ng =  cstng*1/rho*(SL+ds);
-                ec =  cstec*1/rho;
+                ng =  cstng/rho*(SL+ds);
+                ec =  cstec/rho;
                 
                 nph = poissonRandomNumber(ng);
                 de = 0.0;

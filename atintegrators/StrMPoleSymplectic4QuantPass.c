@@ -114,26 +114,26 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
                 cstec = 3.0*gamma*gamma*gamma*clight/(2.0)*hbar/qe;
                 cstng = 5.0*sqrt(3.0)*alpha0*gamma/(6.0);
                 
-                dxp = r6[1]/(1+r6[4])-xp0;
-                dyp = r6[3]/(1+r6[4])-yp0;
+                dxp = r6[1]*p_norm-xp0;
+                dyp = r6[3]*p_norm-yp0;
                 ds = r6[5]-s0;
                 
                 rho = (SL+ds)/sqrt(dxp*dxp+dyp*dyp);
                 
-                ng =  cstng*1/rho*(SL+ds);
-                ec =  cstec*1/rho;
+                ng =  cstng/rho*(SL+ds);
+                ec =  cstec/rho;
                 
                 nph = poissonRandomNumber(ng);
+                
                 de = 0.0;
                 if(nph>0){
                     for(i=0;i<nph;i++){
                         de = de + getEnergy(ec);
                     };
                 };
-                
-                r6[1] = r6[1]*p_norm*(1+r6[4]-de/E0);
-                r6[3] = r6[3]*p_norm*(1+r6[4]-de/E0);
                 r6[4] = r6[4]-de/E0;
+                r6[1] = r6[1]*p_norm*(1+r6[4]);
+                r6[3] = r6[3]*p_norm*(1+r6[4]);
             }
             if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
