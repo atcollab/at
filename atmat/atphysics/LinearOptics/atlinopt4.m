@@ -57,6 +57,10 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %   corresponding to a frequency shift. The resulting deltap/p is returned
 %   in the 5th component of the ClosedOrbit field.
 %
+% [...] = ATLINOPT4(...,'df',DF)
+%   Analyses the off-momentum lattice by specifying the RF frequency shift.
+%   The resulting deltap/p is returned in the 5th component of the ClosedOrbit field.
+%
 % [...] = ATLINOPT4(...,'orbit',ORBITIN)
 %   Do not search for closed orbit. Instead ORBITIN,a 6x1 vector
 %   of initial conditions is used: [x0; px0; y0; py0; DP; 0].
@@ -80,7 +84,7 @@ function [ringdata,elemdata] = atlinopt4(ring,varargin)
 %	[3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %	[4] D.Sagan, D.Rubin Phys.Rev.Spec.Top.-Accelerators and beams, vol.2 (1999)
 %
-%  See also atlinopt atlinopt2 atlinopt6 tunechrom
+%  See also atlinopt2 atlinopt6 tunechrom
 
 % [...] = ATLINOPT4(...,'coupled',flag)
 %   Private keyword for computation without coupling (used for atlinopt2)
@@ -94,9 +98,9 @@ NE = length(ring);
 [get_chrom,varargs]=getflag(varargin,'get_chrom');
 [get_w,varargs]=getflag(varargs,'get_w');
 [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
+[dp,varargs]=getoption(varargs,'dp',0.0);
+[dpargs,varargs]=getoption(varargs,{'orbit','dct','df'});
 [orbitin,varargs]=getoption(varargs,'orbit',[]);
-[ct,varargs]=getoption(varargs,'ct',NaN);
-[dp,varargs]=getoption(varargs,'dp',0);
 [coupled,varargs]=getoption(varargs,'coupled',true);
 [mkey,varargs]=getoption(varargs,'mkey','M');
 [DPStep,varargs]=getoption(varargs,'DPStep');
@@ -116,7 +120,7 @@ else
 end
 
 if isempty(twiss_in)        % Circular machine
-    [orbit,orbitin]=findorbit(ring,refpts,'dp',dp,'ct',ct,'orbit',orbitin,'XYStep',XYStep);
+    [orbit,orbitin]=findorbit4(ring,dp,refpts,dpargs{:},'XYStep',XYStep);
     dp=orbitin(5);
     [orbitP,o1P]=findorbit4(ring,dp+0.5*DPStep,refpts,orbitin,'XYStep',XYStep);
     [orbitM,o1M]=findorbit4(ring,dp-0.5*DPStep,refpts,orbitin,'XYStep',XYStep);
@@ -198,7 +202,7 @@ elemdata = struct(...
     'gamma',gamma, 'C',CL, 'A',AL, 'B',BL,...
     'beta',num2cell([BX,BY],2),...
     'alpha',num2cell([AX,AY],2),...
-    'mu',num2cell([MX,MY],2));
+    'mu',num2cell([MX,MY],2))';
 
 if get_w
     % Calculate optics for DP +/- DDP

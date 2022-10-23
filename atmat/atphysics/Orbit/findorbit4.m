@@ -1,4 +1,4 @@
-function [orb4,orbitin] = findorbit4(ring,dp,varargin)
+function [orb4,orbitin] = findorbit4(ring,varargin)
 %FINDORBIT4 finds closed orbit in the 4-d transverse phase
 % space by numerically solving  for a fixed point of the one turn
 % map M calculated with LINEPASS
@@ -21,26 +21,33 @@ function [orb4,orbitin] = findorbit4(ring,dp,varargin)
 %    1. change the longitudinal momentum dP (cavities , magnets with radiation)
 %    2. have any time dependence (localized impedance, fast kickers etc)
 %
-% FINDORBIT4(RING,dP) is 4x1 vector - fixed point at the
+%FINDORBIT4(RING) is 4x1 vector - fixed point at the
 %    entrance of the 1-st element of the RING (x,px,y,py)
 %
-% FINDORBIT4(RING,dP,REFPTS) is 4xLength(REFPTS)
+%FINDORBIT4(RING,REFPTS) is 4xLength(REFPTS)
 %   array of column vectors - fixed points (x,px,y,py)
 %   at the entrance of each element indexed by the REFPTS array.
 %   REFPTS is an array of increasing indexes that  select elements
 %   from the range 1 to length(RING)+1.
 %   See further explanation of REFPTS in the 'help' for FINDSPOS
 %
-% FINDORBIT4(RING,dP,REFPTS,GUESS)
-% FINDORBIT4(...,'guess',GUESS)     The search for the fixed point
+%FINDORBIT4(RING,DP,REFPTS,...) Obsolete syntax
+%FINDORBIT4(RING,...,'dp',DP)   Specifies the off-momentum
+%
+%FINDORBIT4(RING,...,'dct',DCT) Specifies the path lengthening
+%
+%FINDORBIT4(RING,...,'df',DF) Specifies RF frequency deviation
+%
+%FINDORBIT4(RING,dP,REFPTS,GUESS)
+%FINDORBIT4(...,'guess',GUESS)     The search for the fixed point
 %   starts from initial condition GUESS. Otherwise the search starts from
 %   [0; 0; 0; 0; 0; 0]. GUESS must be a 6x1 vector.
 %
-% FINDORBIT4(...,'orbit',ORBIT)     Specify the orbit at the entrance
+%FINDORBIT4(...,'orbit',ORBIT)     Specify the orbit at the entrance
 %   of the ring, if known. FINDORBIT4 will then transfer it to the
 %   reference points. ORBIT must be a 6x1 vector.
 %
-% [ORBIT, FIXEDPOINT] = FINDORBIT4( ... )
+%[ORBIT, FIXEDPOINT] = FINDORBIT4( ... )
 %	The optional second return parameter is a 6x1 vector:
 %   closed orbit at the entrance of the RING.
 %
@@ -50,13 +57,20 @@ if ~iscell(ring)
     error('First argument must be a cell array');
 end
 [orbitin,varargs]=getoption(varargin,'orbit',[]);
+[dp,varargs]=getdparg(varargs,0.0);
 [dct,varargs]=getoption(varargs,'dct',NaN);
+[df,varargs]=getoption(varargs,'df',NaN);
 [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
 if isempty(orbitin)
-    if isfinite(dct)
-        orbitin=xorbit_ct(ring,dct,varargs);
+    if isfinite(df)
+        [cell_l,cell_frev,cell_h]=atGetRingProperties(ring,'cell_length',...
+            'cell_harmnumber','cell_revolution_frequency');
+        dct=-cell_l*df/(cell_frev*cell_h+df);
+        orbitin=xorbit_ct(ring,dct,varargs{:});
+    elseif isfinite(dct)
+        orbitin=xorbit_ct(ring,dct,varargs{:});
     else
-        orbitin=xorbit_dp(ring,dp,varargs);
+        orbitin=xorbit_dp(ring,dp,varargs{:});
     end
     args={'KeepLattice'};
 else
