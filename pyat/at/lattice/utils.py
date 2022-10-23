@@ -97,8 +97,8 @@ def check_6d(is_6d: bool) -> Callable:
         def wrapper(ring, *args, **kwargs):
             ringrad = getattr(ring, 'is_6d', is_6d)
             if ringrad != is_6d:
-                raise AtError('{0} needs radiation {1}'.format(
-                    func.__name__, 'ON' if is_6d else 'OFF'))
+                raise AtError('{0} needs "ring.is_6d" {1}'.format(
+                    func.__name__, is_6d))
             return func(ring, *args, **kwargs)
         return wrapper
     return radiation_decorator
