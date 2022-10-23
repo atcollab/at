@@ -126,10 +126,8 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
                 nph = poissonRandomNumber(ng);
 
                 de = 0.0;
-                if(nph>0){
-                    for(i=0;i<nph;i++){
-                        de = de + getEnergy(ec);
-                    };
+                for(i=0;i<nph;i++){
+                    de = de + getEnergy(ec);
                 };
                 r6[4] = r6[4]-de/E0;
                 r6[1] = r6[1]*p_norm*(1+r6[4]);
