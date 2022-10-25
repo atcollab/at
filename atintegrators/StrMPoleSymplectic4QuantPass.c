@@ -1,6 +1,6 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkickrad.c"	/* drift6.c, strthinkickrad.c */
+#include "driftkick.c"	/* drift6.c, strthinkickrad.c */
 #include "quadfringe.c"		/* QuadFringePassP, QuadFringePassN */
 #include "atquantlib.c"
 
@@ -92,18 +92,21 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
                 double ng, ec, de, energy, gamma, cstec, cstng;
                 double ds, rho, dxp, dyp;
                 int nph;
+                double p_norm = 1.0/(1.0+r6[4]);
+                double NormL1 = L1*p_norm;
+                double NormL2 = L2*p_norm;
                 double dpp0 = r6[4];
-                double xp0 = r6[1]/(1+r6[4]);
-                double yp0 = r6[3]/(1+r6[4]);
+                double xp0 = r6[1]*p_norm;
+                double yp0 = r6[3]*p_norm;
                 double s0 = r6[5];
                 
-                ATdrift6(r6,L1);
-                strthinkickrad(r6, A, B, K1, E0, max_order);
-                ATdrift6(r6,L2);
-                strthinkickrad(r6, A, B, K2, E0, max_order);
-                ATdrift6(r6,L2);
-                strthinkickrad(r6, A, B, K1, E0, max_order);
-                ATdrift6(r6,L1);
+                fastdrift(r6, NormL1);
+                strthinkick(r6, A, B,  K1, max_order);
+                fastdrift(r6, NormL2);
+                strthinkick(r6, A, B, K2, max_order);
+                fastdrift(r6, NormL2);
+                strthinkick(r6, A, B,  K1, max_order);
+                fastdrift(r6, NormL1);
                 
                 energy = dpp0*E0+E0;
                 
@@ -111,26 +114,24 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
                 cstec = 3.0*gamma*gamma*gamma*clight/(2.0)*hbar/qe;
                 cstng = 5.0*sqrt(3.0)*alpha0*gamma/(6.0);
                 
-                dxp = r6[1]/(1+r6[4])-xp0;
-                dyp = r6[3]/(1+r6[4])-yp0;
+                dxp = r6[1]*p_norm-xp0;
+                dyp = r6[3]*p_norm-yp0;
                 ds = r6[5]-s0;
                 
                 rho = (SL+ds)/sqrt(dxp*dxp+dyp*dyp);
-                
-                ng =  cstng*1/rho*(SL+ds);
-                ec =  cstec*1/rho;
-                
+
+                ng =  cstng/rho*(SL+ds);
+                ec =  cstec/rho;
+
                 nph = poissonRandomNumber(ng);
+
                 de = 0.0;
-                if(nph>0){
-                    for(i=0;i<nph;i++){
-                        de = de + getEnergy(ec);
-                    };
+                for(i=0;i<nph;i++){
+                    de = de + getEnergy(ec);
                 };
-                
-                r6[1] = r6[1]/(1+r6[4])*(1+r6[4]-de/E0);
-                r6[3] = r6[3]/(1+r6[4])*(1+r6[4]-de/E0);
                 r6[4] = r6[4]-de/E0;
+                r6[1] = r6[1]*p_norm*(1+r6[4]);
+                r6[3] = r6[3]*p_norm*(1+r6[4]);
             }
             if (FringeQuadExit && B[1]!=0) {
                 if (useLinFrEleExit) /*Linear fringe fields from elegant*/
