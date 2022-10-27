@@ -931,7 +931,7 @@ def linopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None,
 
 # noinspection PyPep8Naming
 @check_6d(False)
-def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
+def avlinopt(ring: Lattice, dp: float = None, refpts: Refpts = None, **kwargs):
     r"""Linear analysis of a lattice with average values
 
     :py:func:`avlinopt` returns average beta, mu, dispersion over the lattice
@@ -1214,7 +1214,6 @@ Lattice.linopt2 = linopt2
 Lattice.linopt4 = linopt4
 Lattice.linopt6 = linopt6
 Lattice.get_optics = get_optics
-Lattice.avlinopt = avlinopt
 Lattice.avlinopt = avlinopt
 Lattice.get_tune = get_tune
 Lattice.get_chrom = get_chrom
