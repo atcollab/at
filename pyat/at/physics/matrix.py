@@ -15,7 +15,7 @@ __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 _jmt = jmat(2)
 
 
-def find_m44(ring: Lattice, dp: float = 0.0, refpts: Refpts = None,
+def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
              dct: float = None, df: float = None,
              orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     """One turn 4x4 transfer matrix

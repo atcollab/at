@@ -1065,7 +1065,7 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
 
-def get_tune(ring: Lattice, method: str = 'linopt',
+def get_tune(ring: Lattice, *, method: str = 'linopt',
              dp: float = None, dct: float = None, df: float = None,
              orbit: Orbit = None, **kwargs):
     r"""Computes the tunes using several available methods
@@ -1138,8 +1138,8 @@ def get_tune(ring: Lattice, method: str = 'linopt',
     return tunes
 
 
-def get_chrom(ring: Lattice, method: str = 'linopt',
-              dp: float = 0.0, dct: float = None, df: float = None,
+def get_chrom(ring: Lattice, *, method: str = 'linopt',
+              dp: float = None, dct: float = None, df: float = None,
               cavpts: Refpts = None, **kwargs):
     r"""Computes the chromaticities using several available methods
 
@@ -1200,6 +1200,8 @@ def get_chrom(ring: Lattice, method: str = 'linopt',
     else:
         if dct is not None or df is not None:
             dp = find_orbit4(ring, dct=dct, df=df)[0][4]
+        elif dp is None:
+            dp = 0.0
         tune_up = get_tune(ring, method=method, dp=dp + 0.5*dp_step, **kwargs)
         tune_down = get_tune(ring, method=method,
                              dp=dp - 0.5*dp_step, **kwargs)

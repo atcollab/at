@@ -121,7 +121,7 @@ def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
     return ref_in
 
 
-def find_orbit4(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, *,
+def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
                 dct: float = None,
                 df: float = None,
                 orbit: Orbit = None,
@@ -188,7 +188,8 @@ def find_orbit4(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, *,
         :py:func:`find_sync_orbit`, :py:func:`find_orbit6`
     """
     if len([v for v in (dp, dct, df) if v is not None]) > 1:
-        raise AtError("Only one of dp, dct and df may be specified")
+        raise AtError("For off-momentum specification, only one of "
+                      "dp, dct and df may be specified")
     if orbit is None:
         if df is not None:
             frf = ring.cell_revolution_frequency * ring.cell_harmnumber
@@ -209,7 +210,7 @@ def find_orbit4(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, *,
     return orbit, all_points
 
 
-def find_sync_orbit(ring: Lattice, dct: float = 0.0, refpts: Refpts = None, *,
+def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
                     dp: float = None,
                     df: float = None,
                     orbit: Orbit = None,
@@ -276,7 +277,8 @@ def find_sync_orbit(ring: Lattice, dct: float = 0.0, refpts: Refpts = None, *,
         :py:func:`find_orbit4`, :py:func:`find_orbit6`
     """
     if len([v for v in (dp, dct, df) if v is not None]) > 1:
-        raise AtError("Only one of dp, dct and df may be specified")
+        raise AtError("For off-momentum specification, only one of "
+                      "dp, dct and df may be specified")
     if orbit is None:
         if df is not None:
             frf = ring.cell_revolution_frequency * ring.cell_harmnumber
