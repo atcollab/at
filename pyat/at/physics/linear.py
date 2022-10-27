@@ -488,7 +488,7 @@ def linopt2(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     **elemdata** is a record array with fields:
@@ -503,19 +503,18 @@ def linopt2(ring: Lattice, *args, **kwargs):
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
                         (modulo :math:`2\pi`)
-    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+    **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
-    Field values can be obtained with either
-    ``lindata['idx']`` or ``lindata.idx``
+    Field values can be obtained with either *lindata['idx']* or *lindata.idx*
 
     **ringdata** is a record array with fields:
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
                         :py:obj:`True`
     =================   ======
 
@@ -580,13 +579,6 @@ def linopt4(ring: Lattice, *args, **kwargs):
           dispersion
             Optional (6,) array, default 0
 
-          alpha, beta
-            mandatory (2,) arrays
-          closed_orbit
-            Optional (6,) array, default 0
-          dispersion
-            Optional (6,) array, default 0
-
           If present, the attribute **R** will be used, otherwise the
           attributes **alpha** and **beta** will be used. All other attributes
           are ignored.
@@ -594,7 +586,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     **elemdata** is a record array with fields:
@@ -611,19 +603,19 @@ def linopt4(ring: Lattice, *args, **kwargs):
                         (modulo :math:`2\pi`)
     **gamma**           gamma parameter of the transformation to
                         eigenmodes [7]_
-    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+    **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
     Field values can be obtained with either
-    ``lindata['idx']`` or ``lindata.idx``
+    *lindata['idx']* or *lindata.idx*
 
     **ringdata** is a record array with fields:
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
                         :py:obj:`True`
     =================   ======
 
@@ -646,8 +638,8 @@ def linopt6(ring: Lattice, *args, **kwargs):
 
     For circular machines, :py:func:`linopt6` analyses
 
-    * the 4x4 1-turn transfer matrix if ``ring`` is 4D, or
-    * the 6x6 1-turn transfer matrix if  ``ring`` is 6D.
+    * the 4x4 1-turn transfer matrix if *ring* is 4D, or
+    * the 6x6 1-turn transfer matrix if  *ring* is 6D.
 
     For a transfer line, The "twiss_in" intput must contain either:
 
@@ -703,7 +695,7 @@ def linopt6(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     **elemdata** is a record array with fields:
@@ -720,19 +712,19 @@ def linopt6(ring: Lattice, *args, **kwargs):
     **alpha**           :math:`\left[ \alpha_x,\alpha_y \right]` vector
     **mu**              :math:`\left[ \mu_x,\mu_y \right]`, betatron phase
                         (modulo :math:`2\pi`)
-    **W**               :math:`\left[ W_x,W_y \right]` only if ``get_w``
+    **W**               :math:`\left[ W_x,W_y \right]` only if *get_w*
                         is :py:obj:`True`: chromatic amplitude function
     ================    ===================================================
 
     All values given at the entrance of each element specified in refpts.
     Field values can be obtained with either
-    ``lindata['idx']`` or ``lindata.idx``
+    *lindata['idx']* or *lindata.idx*
 
     **ringdata** is a record array with fields:
 
     =================   ======
     **tune**            Fractional tunes
-    **chromaticity**    Chromaticities, only computed if ``get_chrom`` is
+    **chromaticity**    Chromaticities, only computed if *get_chrom* is
                         :py:obj:`True`
     **damping_time**    Damping times [s] (only if radiation is ON)
     =================   ======
@@ -751,7 +743,7 @@ def linopt6(ring: Lattice, *args, **kwargs):
 def linopt_auto(ring: Lattice, *args, **kwargs):
     """
     This is a convenience function to automatically switch to the faster
-    :py:func:`linopt2` in case the ``coupled`` keyword argument is
+    :py:func:`linopt2` in case the *coupled* keyword argument is
     :py:obj:`False` **and** ring.is_6d is :py:obj:`False`.
     Otherwise the default :py:func:`linopt6` is used
 
@@ -766,7 +758,7 @@ def linopt_auto(ring: Lattice, *args, **kwargs):
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     Warning:
@@ -842,7 +834,7 @@ def get_optics(ring: Lattice, refpts: Refpts = None,
     Returns:
         elemdata0:      Linear optics data at the entrance of the ring
         ringdata:       Lattice properties
-        elemdata:       Linear optics at the points refered to by ``refpts``,
+        elemdata:       Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
 
     Warning:
@@ -991,15 +983,15 @@ def avlinopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None, **kwargs):
           are ignored.
 
     Returns:
-        elemdata:   Linear optics at the points refered to by ``refpts``,
+        elemdata:   Linear optics at the points refered to by *refpts*,
           if refpts is :py:obj:`None` an empty lindata structure is returned.
         avebeta:    Average beta functions [:math:`\hat{\beta_x},\hat{\beta_y}`]
-          at ``refpts``
+          at *refpts*
         avemu:      Average phase advances [:math:`\hat{\mu_x},\hat{\mu_y}`]
-          at ``refpts``
+          at *refpts*
         avedisp:    Average dispersion [:math:`\hat{\eta_x}, \hat{\eta'_x},
-          \hat{\eta_y}, \hat{\eta'_y}`] at ``refpts``
-        avespos:    Average s position at ``refpts``
+          \hat{\eta_y}, \hat{\eta'_y}`] at *refpts*
+        avespos:    Average s position at *refpts*
         tune:       [:math:`\nu_1,\nu_2`], linear tunes for the two normal
           modes of linear motion [1]
         chrom:      [:math:`\xi_1,\xi_2`], chromaticities

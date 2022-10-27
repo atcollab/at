@@ -410,7 +410,7 @@ class Lattice(list):
         Parameters:
             params:         Dictionary of Lattice attributes
             elem_filter:    Element filter
-            *args:          Arguments provided to ``elem_filter``
+            *args:          Arguments provided to *elem_filter*
         """
         for key in self._std_attributes:
             try:

@@ -12,21 +12,23 @@ __all__ = ['frequency_control', 'get_mcf', 'get_slip_factor',
 
 
 def frequency_control(func):
-    """Function to be used as decorator for ``func(ring, *args, **kwargs)``
+    r"""Function to be used as decorator for ``func(ring, *args, **kwargs)``
 
-    If ``ring.is_6d`` is :py:obj:`True` **and** ``dp``, ``dct`` or ``df``
-    is specified in ``kwargs``, make a copy of ``ring`` with a modified
-    RF frequency, remove ``dp``, ``dct`` or ``df`` from ``kwargs`` and call
-    ``func`` with the modified ``ring``.
+    If ``ring.is_6d`` is :py:obj:`True` **and** *dp*, *dct* or *df*
+    is specified in *kwargs*, make a copy of *ring* with a modified
+    RF frequency, remove *dp*, *dct* or *df* from *kwargs* and call
+    *func* with the modified *ring*.
 
-    If ``ring.is_6d`` is :py:obj:`False` **or** no ``dp``, ``dct`` or
-    ``df`` is specified in ``kwargs``, ``func`` is called unchanged.
+    If ``ring.is_6d`` is :py:obj:`False` **or** no *dp*, *dct* or
+    *df* is specified in *kwargs*, *func* is called unchanged.
 
     Examples:
 
-        @frequency_control
-        def func(ring, *args, dp=None, dct=None, **kwargs):
-            pass
+        .. code-block:: python
+
+            @frequency_control
+            def func(ring, *args, dp=None, dct=None, **kwargs):
+                pass
     """
     @functools.wraps(func)
     def wrapper(ring, *args, **kwargs):
@@ -92,7 +94,7 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     return etac
 
 
-def get_revolution_frequency(ring,
+def get_revolution_frequency(ring: Lattice,
                              dp: float = None,
                              dct: float = None,
                              df: float = None) -> float:
@@ -122,7 +124,7 @@ def get_revolution_frequency(ring,
     return cell_frev / ring.periodicity
 
 
-def set_rf_frequency(ring, frequency: float = None,
+def set_rf_frequency(ring: Lattice, frequency: float = None,
                      dp: float = None, dct: float = None, df: float = None,
                      **kwargs):
     """Set the RF frequency
@@ -137,16 +139,16 @@ def set_rf_frequency(ring, frequency: float = None,
     Keyword Args:
         cavpts (Optional[Refpts]):  If :py:obj:`None`, look for ring.cavpts, or
           otherwise take all cavities.
-        array (Optional[bool]):     If :py:obj:`False` (default), ``frequency``
+        array (Optional[bool]):     If :py:obj:`False` (default), *frequency*
           is applied to the selected cavities with the lowest frequency. The
           frequency of all the other selected cavities is scaled by the same
           ratio.
 
-          If :py:obj:`True`, directly apply ``frequency`` to the selected
+          If :py:obj:`True`, directly apply *frequency* to the selected
           cavities. The value must be broadcastable to the number of cavities.
         copy (Optional[bool]):     If :py:obj:`True`, returns a shallow copy of
-          ``ring`` with new cavity elements. Otherwise (default), modify
-          ``ring`` in-place
+          *ring* with new cavity elements. Otherwise (default), modify
+          *ring* in-place
     """
     if frequency is None:
         frequency = ring.get_revolution_frequency(dp=dp, dct=dct, df=df) \
