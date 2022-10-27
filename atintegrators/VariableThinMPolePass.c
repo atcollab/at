@@ -39,26 +39,31 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
     if (!Elem) {
         int MaxOrder;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
-        double frequency;
+        double FrequencyA, FrequencyB;
+        double PhaseA, PhaseB;
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         AmplitudeA=atGetDoubleArray(ElemData,"AmplitudeA"); check_error();
         AmplitudeB=atGetDoubleArray(ElemData,"AmplitudeB"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
         PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();        
-        frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        FrequencyA=atGetDouble(ElemData,"FrequencyA"); check_error();
+        FrequencyB=atGetDouble(ElemData,"FrequencyB"); check_error();
+        PhaseA=atGetDouble(ElemData,"PhaseA"); check_error();
+        PhaseB=atGetDouble(ElemData,"PhaseB"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         Elem->PolynomA=PolynomA;
         Elem->PolynomB=PolynomB;
         Elem->AmplitudeA=AmplitudeA;
         Elem->AmplitudeB=AmplitudeB;        
         Elem->MaxOrder=MaxOrder;
-        Elem->Frequency=frequency;
+        Elem->FrequencyA=FrequencyA;
+        Elem->FrequencyB=FrequencyB;
     }
     int i;
     double t=Param->T0*Param->nturn;
     for(i=0;i<Elem->MaxOrder;i++){
-        Elem->PolynomA[i] = Elem->AmplitudeA[i]*sin(TWOPI*Elem->Frequency*t);
-        Elem->PolynomB[i] = Elem->AmplitudeB[i]*sin(TWOPI*Elem->Frequency*t);
+        Elem->PolynomA[i] = Elem->AmplitudeA[i]*sin(TWOPI*Elem->FrequencyA*t+PhaseA);
+        Elem->PolynomB[i] = Elem->AmplitudeB[i]*sin(TWOPI*Elem->FrequencyB*t+PhaseB);
     };    
     VariableThinMPolePass(r_in, Elem->PolynomA, Elem->PolynomB, Elem->MaxOrder, num_particles);
     return Elem;
