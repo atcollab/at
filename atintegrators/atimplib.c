@@ -310,7 +310,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
     double ds,wi;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
-    double *wake;
+    double *wake = malloc(2*sizeof(double));
     double vba, vbp;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
@@ -321,8 +321,12 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
         vbr[ib] = 0.0;
         vbi[ib] = 0.0;
     }
+
     vbeamk[0] = 0.0;
     vbeamk[1] = 0.0;
+    wake[0] = 0.0;
+    wake[1] = 0.0;
+
 
     #ifdef MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -362,6 +366,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
+    free(wake);
 };
 
 
