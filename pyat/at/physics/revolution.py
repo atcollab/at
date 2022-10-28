@@ -12,14 +12,14 @@ __all__ = ['frequency_control', 'get_mcf', 'get_slip_factor',
 
 
 def frequency_control(func):
-    r"""Function to be used as decorator for ``func(ring, *args, **kwargs)``
+    r""" Function to be used as decorator for :pycode:`func(ring, *args, **kwargs)`
 
-    If ``ring.is_6d`` is :py:obj:`True` **and** *dp*, *dct* or *df*
+    If :pycode:`ring.is_6d` is :py:obj:`True` **and** *dp*, *dct* or *df*
     is specified in *kwargs*, make a copy of *ring* with a modified
     RF frequency, remove *dp*, *dct* or *df* from *kwargs* and call
     *func* with the modified *ring*.
 
-    If ``ring.is_6d`` is :py:obj:`False` **or** no *dp*, *dct* or
+    If :pycode:`ring.is_6d` is :py:obj:`False` **or** no *dp*, *dct* or
     *df* is specified in *kwargs*, *func* is called unchanged.
 
     Examples:
@@ -50,7 +50,7 @@ def get_mcf(ring: Lattice, dp: Optional[float] = 0.0,
     r"""Compute the momentum compaction factor :math:`\alpha`
 
     Parameters:
-        ring:           Lattice description (``ring.is_6d`` must be
+        ring:           Lattice description (:pycode:`ring.is_6d` must be
           :py:obj:`False`)
         dp:             Momentum deviation. Defaults to :py:obj:`None`
         keep_lattice:   Assume no lattice change since the previous tracking.
@@ -78,7 +78,7 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     r"""Compute the slip factor :math:`\eta`
 
     Parameters:
-        ring:           Lattice description (``ring.is_6d`` must be
+        ring:           Lattice description (:pycode:`ring.is_6d` must be
           :py:obj:`False`)
 
     Keyword Args:
