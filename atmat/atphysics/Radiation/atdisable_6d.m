@@ -103,7 +103,7 @@ end
         
         function elem=varelem(elem)
             % 'auto' multipole modification
-            strrep(elem.PassMethod,'QuantPass','Pass)')
+            strrep(elem.PassMethod,'QuantPass','Pass)');
             elem.PassMethod=strrep(strrep(elem.PassMethod,'QuantPass','Pass'),'RadPass','Pass');
             if isfield(elem,'Energy'), elem=rmfield(elem,'Energy'); end
         end
