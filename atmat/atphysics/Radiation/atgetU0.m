@@ -20,7 +20,7 @@ function U0 = atgetU0(ring,varargin)
 %
 % See also RINGPARA ATSETCAVITY ATENERGY
 
-[energy, nper]=atenergy(ring);
+[energy, nper]=atGetRingProperties(ring,'Energy','Periodicity');
 [nper,varargs]=getoption(varargin,'periods',nper);
 [method, varargs]=getoption(varargs,'method','integral'); %#ok<ASGLU>
 if strcmpi(method, 'integral')
@@ -63,9 +63,10 @@ end
     end
 
     function U0=tracking(ring)
-        check_radiation(ring,true);
-        ringtmp=atradoff(ring, 'bendpass', '', 'quadpass', '',...
-            'sextupass', '', 'octupass', '', 'wigglerpass','');
+        % Ensure 6d is enabled
+        check_6d(ring,true);
+        % Turn cavities off
+        ringtmp=atdisable_6d(ring,'allpass','','cavipass','auto');
         o0=zeros(6,1);
         o6=ringpass(ringtmp,o0);
         U0=-o6(5)*energy;

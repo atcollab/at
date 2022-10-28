@@ -31,44 +31,46 @@ global THERING %#ok<GVMIS>
         DisplayFlag=(nargout==0) || disp;
 
         s=warning('Off','AT:NoRingParam');  % Disable warning
-        [LatticeName,energy,cavpts,beta,gamma]=atGetRingProperties(ring,'FamName',...
-            'Energy','cavpts','beta','gamma');
+        % Do not take alphac and etac: dp may be non-zero
+        [LatticeName,energy,beta,gamma,cell_length,...
+            rev_frequency,v_cav,freq,harm_number]=...
+            atGetRingProperties(ring,'FamName','Energy','beta',...
+            'gamma','cell_length','cell_revolution_frequency',...
+            'cell_rf_voltage','rf_frequency','cell_harmnumber');
         warning(s);                         % Restore the warning state
         beta_c            = beta * cspeed;
 
-        cavities = ring(cavpts);
-        if ~isempty(cavities)
-            freq = cavities{1}.Frequency;
-            v_cav=sum(atgetfieldvalues(cavities,'Voltage'));
-        else
-            % Default
-            freq = 352.202e6;
-            v_cav = 3e6;
-        end
-
         % Structure to store info
         smm.e0            = energy*1e-9;
-        smm.circumference = findspos(ring, length(ring)+1);
-        smm.revTime       = smm.circumference / beta_c;
-        smm.revFreq       = beta_c / smm.circumference;
+        smm.circumference = cell_length;
+        smm.revTime       = 1.0 / rev_frequency;
+        smm.revFreq       = rev_frequency;
         smm.gamma         = gamma;
         smm.beta          = beta;
+        smm.harmon = harm_number;
 
         %[TD, smm.tunes, smm.chromaticity] = twissring(ring, 0, 1:length(ring)+1, 'chrom', 1e-8);
         [ringdata,TD] = atlinopt6(ring,1:length(ring)+1,varargs{:},'get_chrom');
         dp=TD(1).ClosedOrbit(5);
-        smm.tunes = ringdata.tune;
-        smm.chromaticity = ringdata.chromaticity;
-        if is6d
-            smm.compactionFactor = mcf(atradoff(ring),dp);
-        else
-            smm.compactionFactor = mcf(ring,dp);
-        end
 
         % For calculating the synchrotron integrals
         [I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
         smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
+
+        if is6d
+            alphac=mcf(atdisable_6d(ring),dp);
+            eloss=atgetU0(ring,'method','tracking');            % eV
+        else
+            alphac=mcf(ring,dp);
+            eloss=1.0e9*Cgamma/2/pi*smm.e0.^4*smm.integrals(2); % eV
+        end
+        etac=1/gamma/gamma- alphac;
+        smm.compactionFactor = alphac;
+        smm.etac = etac;
+        smm.tunes = ringdata.tune;
+        smm.chromaticity = ringdata.chromaticity;
+
 
         % Damping numbers
         % Use Robinson's Theorem
@@ -76,33 +78,27 @@ global THERING %#ok<GVMIS>
         smm.damping(2) = 1;
         smm.damping(3) = 2 + smm.integrals(4)/smm.integrals(2);
 
-        smm.radiation           = Cgamma/2/pi*smm.e0.^4*smm.integrals(2);    % GeV
-        smm.naturalEnergySpread = smm.gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
-        smm.naturalEmittance    = Cq*smm.gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
+        smm.radiation = 1.0e-9*eloss;   % GeV
+        smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
+        smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
 
         % Damping times
         cf=smm.radiation/2/smm.revTime/smm.e0;
-        smm.radiationDamping(1) = 1/(cf*smm.damping(1));
-        smm.radiationDamping(2) = 1/(cf*smm.damping(2));
-        smm.radiationDamping(3) = 1/(cf*smm.damping(3));
+        smm.radiationDamping = 1./(cf*smm.damping);
 
-        % Slip factor
-        smm.etac = smm.gamma^(-2) - smm.compactionFactor;
-
-        smm.harmon = freq/smm.revFreq;
-        smm.overvoltage = v_cav/(smm.radiation*1e9);
+        smm.overvoltage = v_cav/(eloss);
         % Assuming the harmon and overvoltage above.
         % references:  H. Winick, "Synchrotron Radiation Sources: A Primer",
         % World Scientific Publishing, Singapore, pp92-95. (1995)
         % Wiedemann, pp290,350. Chao, pp189.
-        if smm.overvoltage > 1
-            smm.syncphase = pi - asin(1/smm.overvoltage);
+        if v_cav > eloss
+            smm.syncphase = pi - asin(eloss/v_cav);
         else
             smm.syncphase = NaN;
         end
-        smm.energyacceptance = sqrt(v_cav*sin(smm.syncphase)*2*(sqrt(smm.overvoltage^2-1) - acos(1/smm.overvoltage))/(pi*smm.harmon*abs(smm.etac)*smm.e0*1e9));
-        smm.synctune = sqrt((smm.etac*smm.harmon*v_cav*cos(smm.syncphase))/(2*pi*smm.e0*1e9))/smm.beta;
-        bunchtime = abs(smm.etac)*smm.naturalEnergySpread/(smm.synctune*smm.revFreq*2*pi);
+        smm.energyacceptance = sqrt(v_cav*sin(smm.syncphase)*2*(sqrt(smm.overvoltage^2-1) - acos(1/smm.overvoltage))/(pi*harm_number*abs(etac)*energy));
+        smm.synctune = sqrt((etac*harm_number*v_cav*cos(smm.syncphase))/(2*pi*energy))/beta;
+        bunchtime = abs(etac)*smm.naturalEnergySpread/(smm.synctune*rev_frequency*2*pi);
         smm.bunchlength = beta_c * bunchtime;
         % optics
         % [bx by] = modelbeta;
