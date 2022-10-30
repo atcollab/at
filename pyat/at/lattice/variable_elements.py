@@ -22,9 +22,9 @@ class VariableMultipole(Element):
                         FuncA=_array, FuncB=_array, Ramps=_array)
 
     def __init__(self, family_name, AmplitudeA=None, AmplitudeB=None,
-                 mode=ACMode.SINE, **kwargs):
+                 mode=ACMode.SINE, MaxOrder=1, **kwargs):
         kwargs.setdefault('PassMethod', 'VariableThinMPolePass')
-        self.MaxOrder = 1
+        self.MaxOrder = MaxOrder
         self.Mode = int(mode)
         if AmplitudeA is None and AmplitudeB is None:
             raise AtError('Please provide at least one amplitude vector')
@@ -41,6 +41,9 @@ class VariableMultipole(Element):
 
     def _set_params(self, amplitude, mode, ab, **kwargs):
         if amplitude is not None:
+            if numpy.isscalar(amplitude):
+                amp = numpy.zeros(self.MaxOrder-1)
+                amplitude = numpy.append(amp, amplitude)
             setattr(self, 'Amplitude' + ab, amplitude)
             if mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
@@ -63,17 +66,3 @@ class VariableMultipole(Element):
             'Please provide a value for Func' + ab
         setattr(self, 'Func' + ab, func)
         setattr(self, 'NSamples' + ab, nsamp)
-
-
-class VariableMagnet(VariableMultipole):
-
-    def __init__(self, family_name, order=1, AmplitudeA=None,
-                 AmplitudeB=None, **kwargs):
-        amp = numpy.zeros(order)
-        if AmplitudeA is not None:
-            AmplitudeA = numpy.append(amp, AmplitudeA)
-            kwargs['AmplitudeA'] = AmplitudeA
-        if AmplitudeB is not None:
-            AmplitudeB = numpy.append(amp, AmplitudeB)
-            kwargs['AmplitudeB'] = AmplitudeB
-        super(VariableMagnet, self).__init__(family_name, **kwargs)

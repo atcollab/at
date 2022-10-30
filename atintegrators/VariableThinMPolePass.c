@@ -59,7 +59,7 @@ double get_amp(double amp, double *ramps, double t)
         if(t<=ramps[0]){
             ampt=0.0;
         }else if(t<=ramps[1]){
-            ampt=amp*(t-ramps[1])/(ramps[2]-ramps[1]);
+            ampt=amp*(t-ramps[0])/(ramps[1]-ramps[0]);
         }else if(t<=ramps[2]){
             ampt=amp;
         }else if(t<=ramps[3]){
@@ -81,7 +81,7 @@ double get_pol(struct elemab *elem, double *ramps, int mode,
     if(!amp){
         return 0.0;
     }
-    ampt=get_amp(amp[order],ramps,t);
+    ampt=get_amp(amp[order],ramps,turn);
     switch(mode){
     case 0:
         freq = elem->Frequency;
@@ -154,7 +154,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0);
         NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0);
-        NSamplesB=atGetOptionalLong(ElemData, "NSamplesA", 0);
+        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0);
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
