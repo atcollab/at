@@ -9,30 +9,32 @@
 
 #define TWOPI  6.28318530717959
 
+
+struct elemab
+{
+    double *Amplitude;
+    double Frequency;
+    double Phase;
+    int NSamples;
+    double *Func;
+};
+
 struct elem 
 {
     double *PolynomA;
     double *PolynomB;
-    double *AmplitudeA;
-    double *AmplitudeB;
-    double FrequencyA;
-    double FrequencyB;
-    double PhaseA;
-    double PhaseB;
-    double *Ramps;
-    int NSamples;
-    double *FuncA;
-    double *FuncB;
+    struct elemab *ElemA;
+    struct elemab *ElemB;
     int Seed;
     int Mode;
     int MaxOrder;
+    double *Ramps;
 };
 
 
-double *randn2(int seed)
+double randn(int seed)
 {
   double u, v, w, mult;
-  double *rv = malloc(2*sizeof(double));
   static int initseed=1;
 
   if(initseed){
@@ -47,9 +49,7 @@ double *randn2(int seed)
   }
   while (w >= 1 || w == 0);
   mult=sqrt ((-2 * log (w)) / w);
-  rv[0] = u*mult;
-  rv[1] = v*mult;
-  return rv;
+  return u*mult;
 }
 
 double get_amp(double amp, double *ramps, double t)
@@ -71,49 +71,55 @@ double get_amp(double amp, double *ramps, double t)
     return ampt;
 }
 
+double get_pol(struct elemab *elem, double *ramps, int mode,
+               double t, int turn, int seed, int order)
+{
+    int idx;
+    double ampt, freq, ph, val;
+    double *func;
+    double *amp = elem->Amplitude;
+    if(!amp){
+        return 0.0;
+    }
+    ampt=get_amp(amp[order],ramps,t);
+    switch(mode){
+    case 0:
+        freq = elem->Frequency;
+        ph = elem->Phase;
+        ampt *= sin(TWOPI*freq*t+ph);
+        return ampt;
+    case 1:
+        val = randn(seed);
+        ampt *= val;
+        return ampt;
+    case 2:
+        func = elem->Func;
+        idx = turn%elem->NSamples;
+        ampt *= func[idx];
+        return ampt;
+    }
+}
+
 
 void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, int num_particles)
 {
 
-    int i, c, idx;
+    int i, c;
     double *r6;
     double t = t0*turn;
-    double ampat, ampbt;
-    double *vals;
 
     int maxorder = Elem->MaxOrder;
     double *pola = Elem->PolynomA;
     double *polb = Elem->PolynomB;
-    double *ampa = Elem->AmplitudeA;
-    double *ampb = Elem->AmplitudeB;
-    double freqa = Elem->FrequencyA;
-    double freqb = Elem->FrequencyB;
-    double pha = Elem->PhaseA;
-    double phb = Elem->PhaseB;
-    double *ramps = Elem->Ramps;
-    int nsamples = Elem->NSamples;
-    double *funca = Elem->FuncA;
-    double *funcb = Elem->FuncB;
     int seed = Elem->Seed;
     int mode = Elem->Mode;
-
+    struct elemab *ElemA = Elem->ElemA;
+    struct elemab *ElemB = Elem->ElemB;
+    double *ramps = Elem->Ramps;
 
     for(i=0;i<maxorder;i++){
-        ampat=get_amp(ampa[i],ramps,t);
-        ampbt=get_amp(ampb[i],ramps,t);
-        switch(mode){
-        case 0:
-            pola[i] = ampat*sin(TWOPI*freqa*t+pha);
-            polb[i] = ampbt*sin(TWOPI*freqb*t+phb);
-        case 1:
-            vals = randn2(seed);
-            pola[i] = ampat*vals[0];
-            polb[i] = ampbt*vals[1];
-        case 2:
-            idx = turn%nsamples;
-            pola[i] = ampat*funca[idx];
-            polb[i] = ampbt*funcb[idx];
-        }
+        pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i);
+        polb[i]=get_pol(ElemB, ramps, mode, t, turn, seed, i);
     };
 
     for (c = 0;c<num_particles;c++){
@@ -122,7 +128,6 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
             strthinkick(r6, pola, polb, 1.0, maxorder);
         }
     }
-    free(vals);
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -130,42 +135,49 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {   
     if (!Elem) {
-        int MaxOrder, Mode, Seed, NSamples;
+        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
         double PhaseA, PhaseB;
+        struct elemab *ElemA, *ElemB;
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
         Mode=atGetLong(ElemData,"Mode"); check_error();
-        AmplitudeA=atGetDoubleArray(ElemData,"AmplitudeA"); check_error();
-        AmplitudeB=atGetDoubleArray(ElemData,"AmplitudeB"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();        
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        AmplitudeA=atGetOptionalDoubleArray(ElemData,"AmplitudeA"); check_error();
+        AmplitudeB=atGetOptionalDoubleArray(ElemData,"AmplitudeB"); check_error();
         FrequencyA=atGetOptionalDouble(ElemData,"FrequencyA", 0); check_error();
         FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0);
-        NSamples=atGetOptionalLong(ElemData, "NSamples", 0);
+        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0);
+        NSamplesB=atGetOptionalLong(ElemData, "NSamplesA", 0);
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
+        ElemA = (struct elemab *)atMalloc(sizeof(struct elemab));
+        ElemB = (struct elemab *)atMalloc(sizeof(struct elemab));
         Elem->PolynomA=PolynomA;
         Elem->PolynomB=PolynomB;
-        Elem->AmplitudeA=AmplitudeA;
-        Elem->AmplitudeB=AmplitudeB;        
-        Elem->MaxOrder=MaxOrder;
-        Elem->Mode=Mode;
-        Elem->FrequencyA=FrequencyA;
-        Elem->FrequencyB=FrequencyB;
-        Elem->PhaseA=PhaseA;
-        Elem->PhaseB=PhaseB;
         Elem->Ramps=Ramps;
         Elem->Seed=Seed;
-        Elem->NSamples=NSamples;
-        Elem->FuncA=FuncA;
-        Elem->FuncB=FuncB;
+        Elem->Mode=Mode;
+        Elem->MaxOrder=MaxOrder;
+        ElemA->Amplitude=AmplitudeA;
+        ElemB->Amplitude=AmplitudeB;
+        ElemA->Frequency=FrequencyA;
+        ElemB->Frequency=FrequencyB;
+        ElemA->Phase=PhaseA;
+        ElemB->Phase=PhaseB;
+        ElemA->NSamples=NSamplesA;
+        ElemB->NSamples=NSamplesB;
+        ElemA->Func=FuncA;
+        ElemB->Func=FuncB;
+        Elem->ElemA = ElemA;
+        Elem->ElemB = ElemB;
     }
     double t0=Param->T0;
     int turn=Param->nturn;
