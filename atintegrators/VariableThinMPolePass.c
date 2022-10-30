@@ -196,31 +196,76 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder;
-        double *PolynomA, *PolynomB;
-        double *AmplitudeA, *AmplitudeB;
-        double frequency;
+        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB;
+        double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
+        double *Ramps, *FuncA, *FuncB;
+        double FrequencyA, FrequencyB;
+        double PhaseA, PhaseB;
+        struct elemab ElA, *ElemA=&ElA;
+        struct elemab ElB, *ElemB=&ElB;
+        struct elem El, *Elem=&El;
         MaxOrder=atGetLong(ElemData,"MaxOrder"); check_error();
-        AmplitudeA=atGetDoubleArray(ElemData,"AmplitudeA"); check_error();
-        AmplitudeB=atGetDoubleArray(ElemData,"AmplitudeB"); check_error();
+        Mode=atGetLong(ElemData,"Mode"); check_error();
         PolynomA=atGetDoubleArray(ElemData,"PolynomA"); check_error();
-        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();        
-        frequency=atGetDouble(ElemData,"Frequency"); check_error();
+        PolynomB=atGetDoubleArray(ElemData,"PolynomB"); check_error();
+        AmplitudeA=atGetOptionalDoubleArray(ElemData,"AmplitudeA"); check_error();
+        AmplitudeB=atGetOptionalDoubleArray(ElemData,"AmplitudeB"); check_error();
+        FrequencyA=atGetOptionalDouble(ElemData,"FrequencyA", 0); check_error();
+        FrequencyB=atGetOptionalDouble(ElemData,"FrequencyB", 0); check_error();
+        PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
+        PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
+        Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
+        Seed=atGetOptionalLong(ElemData, "Seed", 0);
+        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0);
+        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0);
+        FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
+        FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        Elem->PolynomA=PolynomA;
+        Elem->PolynomB=PolynomB;
+        Elem->Ramps=Ramps;
+        Elem->Seed=Seed;
+        Elem->Mode=Mode;
+        Elem->MaxOrder=MaxOrder;
+        ElemA->Amplitude=AmplitudeA;
+        ElemB->Amplitude=AmplitudeB;
+        ElemA->Frequency=FrequencyA;
+        ElemB->Frequency=FrequencyB;
+        ElemA->Phase=PhaseA;
+        ElemB->Phase=PhaseB;
+        ElemA->NSamples=NSamplesA;
+        ElemB->NSamples=NSamplesB;
+        ElemA->Func=FuncA;
+        ElemB->Func=FuncB;
+        Elem->ElemA = ElemA;
+        Elem->ElemB = ElemB;
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        VariableThinMPolePass(r_in, PolynomA, PolynomB, MaxOrder,
-                              num_particles);
+        VariableThinMPolePass(r_in, Elem, 0, 0, num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
-        plhs[0] = mxCreateCellMatrix(6,1);
+        plhs[0] = mxCreateCellMatrix(4,1);
         mxSetCell(plhs[0],0,mxCreateString("MaxOrder"));
-        mxSetCell(plhs[0],1,mxCreateString("AmplitudeA"));
-        mxSetCell(plhs[0],2,mxCreateString("AmplitudeB"));
-        mxSetCell(plhs[0],3,mxCreateString("PolynomA"));
-        mxSetCell(plhs[0],4,mxCreateString("PolynomB"));
-        mxSetCell(plhs[0],5,mxCreateString("Frequency"));
+        mxSetCell(plhs[0],1,mxCreateString("Mode"));
+        mxSetCell(plhs[0],2,mxCreateString("PolynomA"));
+        mxSetCell(plhs[0],3,mxCreateString("PolynomB"));
+        if (nlhs>1) {
+            /* list of optional fields */
+            plhs[1] = mxCreateCellMatrix(12,1);
+            mxSetCell(plhs[0],0,mxCreateString("AmplitudeA"));
+            mxSetCell(plhs[0],1,mxCreateString("AmplitudeB"));
+            mxSetCell(plhs[0],2,mxCreateString("FrequencyA"));
+            mxSetCell(plhs[0],3,mxCreateString("FrequencyB"));
+            mxSetCell(plhs[0],4,mxCreateString("PhaseA"));
+            mxSetCell(plhs[0],5,mxCreateString("PhaseB"));
+            mxSetCell(plhs[0],6,mxCreateString("Ramps"));
+            mxSetCell(plhs[0],7,mxCreateString("Seed"));
+            mxSetCell(plhs[0],8,mxCreateString("FuncA"));
+            mxSetCell(plhs[0],9,mxCreateString("FuncB"));
+            mxSetCell(plhs[0],10,mxCreateString("NSamplesA"));
+            mxSetCell(plhs[0],11,mxCreateString("NSamplesB"));
+        }
     }
     else {
         mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
