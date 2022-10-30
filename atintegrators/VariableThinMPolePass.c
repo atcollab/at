@@ -117,7 +117,7 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
     struct elemab *ElemB = Elem->ElemB;
     double *ramps = Elem->Ramps;
 
-    for(i=0;i<maxorder;i++){
+    for(i=0;i<maxorder+1;i++){
         pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i);
         polb[i]=get_pol(ElemB, ramps, mode, t, turn, seed, i);
     };

@@ -22,34 +22,52 @@ class VariableMultipole(Element):
                         FuncA=_array, FuncB=_array, Ramps=_array)
 
     def __init__(self, family_name, AmplitudeA=None, AmplitudeB=None,
-                 mode=ACMode.SINE, MaxOrder=1, **kwargs):
+                 mode=ACMode.SINE, MaxOrder=0, **kwargs):
         kwargs.setdefault('PassMethod', 'VariableThinMPolePass')
         self.MaxOrder = MaxOrder
         self.Mode = int(mode)
         if AmplitudeA is None and AmplitudeB is None:
-            raise AtError('Please provide at least one amplitude vector')
-        self._set_params(AmplitudeB, mode, 'B', **kwargs)
-        self._set_params(AmplitudeA, mode, 'A', **kwargs)
+            raise AtError('Please provide at least one amplitude for A or B')
+        AmplitudeB = self._set_params(AmplitudeB, mode, 'B', **kwargs)
+        AmplitudeA = self._set_params(AmplitudeA, mode, 'A', **kwargs)
+        self._setmaxorder(AmplitudeA, AmplitudeB)
         if mode == ACMode.WHITENOISE:
             self.Seed = kwargs.pop('Seed', datetime.now().timestamp())
-        self.PolynomA = numpy.zeros(self.MaxOrder)
-        self.PolynomB = numpy.zeros(self.MaxOrder)
+        self.PolynomA = numpy.zeros(self.MaxOrder+1)
+        self.PolynomB = numpy.zeros(self.MaxOrder+1)
         ramps = kwargs.pop('Ramps', None)
         if ramps is not None:
             self.Ramps = ramps
         super(VariableMultipole, self).__init__(family_name, **kwargs)
 
+    def _setmaxorder(self, ampa, ampb):
+        mxa, mxb = 0, 0
+        if ampa is not None:
+            mxa = numpy.max(numpy.nonzero(ampa))
+        if ampb is not None:
+            mxb = numpy.max(numpy.nonzero(ampb))
+        self.MaxOrder = max(mxa, mxb)
+        if ampa is not None:
+            delta = self.MaxOrder - len(ampa)
+            if delta > 0:
+                ampa = numpy.pad(ampa, (0, delta))
+            setattr(self, 'AmplitudeA', ampa)
+        if ampb is not None:
+            delta = self.MaxOrder + 1 - len(ampb)
+            if delta > 0:
+                ampb = numpy.pad(ampb, (0, delta))
+            setattr(self, 'AmplitudeB', ampb)
+
     def _set_params(self, amplitude, mode, ab, **kwargs):
         if amplitude is not None:
             if numpy.isscalar(amplitude):
-                amp = numpy.zeros(self.MaxOrder-1)
+                amp = numpy.zeros(self.MaxOrder)
                 amplitude = numpy.append(amp, amplitude)
-            setattr(self, 'Amplitude' + ab, amplitude)
             if mode == ACMode.SINE:
                 self._set_sine(ab, **kwargs)
             if mode == ACMode.ARBITRARY:
                 self._set_arb(ab, **kwargs)
-            self.MaxOrder = max(self.MaxOrder, len(amplitude))
+        return amplitude
 
     def _set_sine(self, ab, **kwargs):
         frequency = kwargs.pop('Frequency' + ab, None)
