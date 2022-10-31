@@ -1,5 +1,22 @@
 function varargout = atsummary(varargin)
-%ATSUMMARY  Print out the parameters of the current AT lattice
+%ATSUMMARY  Print out various parameters of the current AT lattice
+%
+%ATSUMMARY()                Print parameters of the global variable THERING
+%ATSUMMARY(RING)            Print parameters of RING. RING may be 4D or 6D
+%
+%ATSUMMARY(...,'dp',DP)     Specify off-momentum. For off-momentum lattices,
+%   the equilibrium emittance and energy spread will not be computed
+%   because the quadrupole contribution is missing.
+%
+%ATSUMMARY(...,'dct',DCT)   Specify the path lengthening
+%
+%ATSUMMARY(...,'df',DF)     Specify the RF frequency deviation
+%
+%RINGPARAMS=ATSUMMARY(...)  Return the results in a structure instead of
+%   printing them
+%
+%RINGPARAMS=ATSUMMARY(...,'Display')  Restore the printout of parameters
+%
 %  The parameters that come after the Synchrotron Integrals are
 %  parameters that depend on the Integrals themselves. The equations to
 %  calculate them were taken from [1].
@@ -7,6 +24,8 @@ function varargout = atsummary(varargin)
 %  [1] Alexander Wu Chao and Maury Tigner, Handbook of Accelerator Physics
 %  and Engineering (World Scientific, Singapore, 1998), pp. 183-187. (or
 %  187-190 in ed. 2)
+%
+%See also ATX RINGPARA
 
 %
 %  Written by Eugene Tan
@@ -61,9 +80,11 @@ global THERING %#ok<GVMIS>
         if is6d
             alphac=mcf(atdisable_6d(ring),dp);
             eloss=atgetU0(ring,'method','tracking');            % eV
+            offmom = (abs(rev_frequency*harm_number - freq) > 2);
         else
             alphac=mcf(ring,dp);
             eloss=1.0e9*Cgamma/2/pi*smm.e0.^4*smm.integrals(2); % eV
+            offmom = (abs(dp) > 1.e-4);
         end
         etac=1/gamma/gamma- alphac;
         smm.compactionFactor = alphac;
@@ -79,8 +100,19 @@ global THERING %#ok<GVMIS>
         smm.damping(3) = 2 + smm.integrals(4)/smm.integrals(2);
 
         smm.radiation = 1.0e-9*eloss;   % GeV
-        smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
-        smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
+        if offmom
+            warning('AT:NoEmit','\n%s\n%s\n%s',...
+                'For off-momentum lattices, the equilibrium emittance',...
+                'cannot be computed because the contribution of quadrupoles is missing.',...
+                'To avoid this warning, use ">> warning(''off'',''AT:NoEmit'')"');
+            smm.naturalEnergySpread = NaN;
+            smm.naturalEmittance    = NaN;
+            alphac2=NaN;
+        else
+            smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
+            smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
+            alphac2 = smm.integrals(1)/smm.circumference;
+        end
 
         % Damping times
         cf=smm.radiation/2/smm.revTime/smm.e0;
@@ -145,7 +177,7 @@ global THERING %#ok<GVMIS>
             fprintf('                     V: \t% 4.5f [ms] or %4.2f turns\n', smm.radiationDamping(2)*1e3, smm.radiationDamping(2)/smm.revTime);
             fprintf('                     E: \t% 4.5f [ms] or %4.2f turns\n', smm.radiationDamping(3)*1e3, smm.radiationDamping(3)/smm.revTime);
             fprintf('   Slip factor: \t\t%4.5e\n', smm.etac);
-            fprintf('   Momentum compaction factor: \t %4.5e (%4.5e)\n',  smm.integrals(1)/smm.circumference, smm.compactionFactor);
+            fprintf('   Momentum compaction factor: \t %4.5e (%4.5e)\n',  alphac2, smm.compactionFactor);
             fprintf(SeparatorString);
             fprintf('   Assuming cavities Voltage: \t% 4.5f [kV]\n', v_cav/1e3);
             fprintf('                   Frequency: \t% 4.5f [MHz]\n', freq/1e6);
