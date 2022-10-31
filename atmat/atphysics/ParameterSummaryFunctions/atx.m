@@ -19,6 +19,9 @@ function varargout=atx(ring,varargin)
 %BEAMDATA=ATX(RING,...,'dct',DCT)
 %   Specify the path lengthening
 %
+%BEAMDATA=ATX(RING,...,'df',DF)
+%   Specify the RF frequency deviation from nominal
+%
 %BEAMDATA=ATX(RING,...,'method',OPTICSFUN)
 %   Specify the method for linear optics. Default: @atlinopt6
 %   Allowed values are @atlinopt2, @atlinopt4, @atlinopt6
