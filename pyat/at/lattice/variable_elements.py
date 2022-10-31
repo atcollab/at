@@ -1,17 +1,21 @@
 import numpy
 from .elements import Element, _array
 from .utils import AtError
+from typing import Optional, Union
 from enum import IntEnum
 from datetime import datetime
 
 
 class ACMode(IntEnum):
+    """Class to define the excitation types"""
     SINE = 0
     WHITENOISE = 1
     ARBITRARY = 2
 
 
 class VariableMultipole(Element):
+    """Class to generate an AT variable thin multipole element
+    """
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(Element._conversions,
                         Mode=int,
@@ -22,9 +26,49 @@ class VariableMultipole(Element):
                         FuncA=_array, FuncB=_array, Ramps=_array)
 
     def __init__(self, family_name, AmplitudeA=None, AmplitudeB=None,
-                 mode=ACMode.SINE, MaxOrder=0, **kwargs):
+                 mode=ACMode.SINE, **kwargs):
+        # noinspection PyUnresolvedReferences
+        r"""
+        Parameters:
+            family_name(str):    Element name
+
+        Keyword Arguments:
+            AmplitudeA(list,float): Amplitude of the excitation for PolynomA. Default None
+            AmplitudeB(list,float): Amplitude of the excitation for PolynomB. Default None
+            mode(ACMode): defines the evaluation grid. Default ACMode.SINE
+
+              * :py:attr:`.ACMode.SINE`: sine function
+              * :py:attr:`.ACMode.WHITENOISE`: gaussian white noise
+              * :py:attr:`.GridMode.ARBITRARY`: user defined turn-by-turn kick list
+            FrequencyA(float): Frequency of the sine excitation for PolynomA
+            FrequencyB(float): Frequency of the sine excitation for PolynomB
+            PhaseA(float): Phase of the sine excitation for PolynomA. Default 0
+            PhaseB(float): Phase of the sine excitation for PolynomB. Default 0
+            MaxOrder(int): Order of the multipole for scalar amplitude. Default 0
+            Seed(int): Seed of the random number generator for white
+                       noise excitation. Default datetime.now()
+            FuncA(list): User defined tbt kick list for PolynomA
+            FuncB(list): User defined tbt kick list for PolynomB
+            Ramps(list): Vector to define the start and end of linear
+                         ramp up and down
+
+        Examples:
+
+            >>> acmpole = at.VariableMultipole('ACMPOLE', AmplitudeB=amp, FrequencyB=frequency)
+            >>> acmpole = at.VariableMultipole('ACMPOLE', AmplitudeB=amp, mode=at.ACMode.WHITENOISE)
+            >>> acmpole = at.VariableMultipole('ACMPOLE', AmplitudeB=amp, FuncB=fun, mode=at.ACMode.ARBITRARY)
+
+        .. note::
+
+            * For all excitation modes all least one amplitude has to be provided.
+              The default excitation is ``ACMode.SINE``
+            * For ``mode=ACMode.SINE`` the ``Frequency(A,B)`` corresponding to the
+              ``Amplitude(A,B)`` has to be provided
+            * For ``mode=ACMode.ARBITRARY`` the ``Func(A,B)`` corresponding to the
+              ``Amplitude(A,B)`` has to be provided
+        """
         kwargs.setdefault('PassMethod', 'VariableThinMPolePass')
-        self.MaxOrder = MaxOrder
+        self.MaxOrder = kwargs.pop('MaxOrder', 0)
         self.Mode = int(mode)
         if AmplitudeA is None and AmplitudeB is None:
             raise AtError('Please provide at least one amplitude for A or B')
