@@ -153,8 +153,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
         Seed=atGetOptionalLong(ElemData, "Seed", 0);
-        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0);
-        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0);
+        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1);
+        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1);
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
