@@ -97,6 +97,8 @@ double get_pol(struct elemab *elem, double *ramps, int mode,
         idx = turn%elem->NSamples;
         ampt *= func[idx];
         return ampt;
+    default:
+        return 0.0;
     }
 }
 
