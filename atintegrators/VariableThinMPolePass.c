@@ -6,6 +6,7 @@
 #include "atelem.c"
 #include "atlalib.c"
 #include "driftkick.c"
+#include "atrandom.c"
 
 #define TWOPI  6.28318530717959
 
@@ -30,27 +31,6 @@ struct elem
     int MaxOrder;
     double *Ramps;
 };
-
-
-double randn(int seed)
-{
-  double u, v, w, mult;
-  static int initseed=1;
-
-  if(initseed){
-      srand(seed);
-      initseed=0;
-  }
-
-  do{
-      u = -1 + ((double) rand () / RAND_MAX) * 2;
-      v = -1 + ((double) rand () / RAND_MAX) * 2;
-      w = u*u + v*v;
-  }
-  while (w >= 1 || w == 0);
-  mult=sqrt ((-2 * log (w)) / w);
-  return u*mult;
-}
 
 double get_amp(double amp, double *ramps, double t)
 {
@@ -89,7 +69,7 @@ double get_pol(struct elemab *elem, double *ramps, int mode,
         ampt *= sin(TWOPI*freq*t+ph);
         return ampt;
     case 1:
-        val = randn(seed);
+        val = atrandn();
         ampt *= val;
         return ampt;
     case 2:
@@ -118,6 +98,8 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
     struct elemab *ElemA = Elem->ElemA;
     struct elemab *ElemB = Elem->ElemB;
     double *ramps = Elem->Ramps;
+    
+    init_seed(seed);
 
     for(i=0;i<maxorder+1;i++){
         pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i);
