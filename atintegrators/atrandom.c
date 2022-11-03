@@ -1,6 +1,6 @@
 #include <math.h>
 
-void init_seed(seed){
+void init_seed(int seed){
     static int initseed=1;
     if(initseed)
     {

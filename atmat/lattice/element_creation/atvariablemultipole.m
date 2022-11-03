@@ -19,8 +19,16 @@ function elem=atvariablemultipole(fname,varargin)
 %    PHASEA         Phase of SINE excitation for PolynomA
 %    PHASEB         Phase of SINE excitation for PolynomB
 %	 MAXORDER       Order of the multipole for a scalar amplitude
+%    SEED           Input seed for the random number generator
 %    FUNCA          ARBITRARY excitation turn-by-turn kick list for PolynomA
 %    FUNCB          ARBITRARY excitation turn-by-turn kick list for PolynomB
+%    PERIODIC       If true (default) the user input kick list is repeated
+%    RAMPS          Vector (t0, t1, t2, t3) in turn number to define the ramping of the excitation
+%                   * t<t0: excitation amlpitude is zero
+%                   * t0<t<t1: exciation amplitude is linearly ramped up
+%                   * t1<t<t2: exciation amplitude is constant             
+%                   * t2<t<t3: exciation amplitude is linearly ramped down
+%                   * t3<t: exciation amplitude is zero 
 %
 %  OUTPUTS
 %  1. ELEM - Structure with the AT element

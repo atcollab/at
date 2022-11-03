@@ -54,11 +54,11 @@ class VariableMultipole(Element):
             Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping 
                          of the excitation
 
-              * ``t<t0``: excitation is zero
-              * ``t0<t<t1``: exciation is linearly ramped up
-              * ``t1<t<t2``: exciation is constant             
-              * ``t2<t<t3``: exciation is linearly ramped down
-              * ``t3<t``: exciation is zero           
+              * ``t<t0``: excitation amplitude is zero
+              * ``t0<t<t1``: exciation amplitude is linearly ramped up
+              * ``t1<t<t2``: exciation amplitude is constant             
+              * ``t2<t<t3``: exciation amplitude is linearly ramped down
+              * ``t3<t``: exciation amplitude is zero           
 
         Examples:
 
