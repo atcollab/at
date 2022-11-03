@@ -30,6 +30,7 @@ struct elem
     int Mode;
     int MaxOrder;
     double *Ramps;
+    int Periodic;
 };
 
 double get_amp(double amp, double *ramps, double t)
@@ -52,7 +53,7 @@ double get_amp(double amp, double *ramps, double t)
 }
 
 double get_pol(struct elemab *elem, double *ramps, int mode,
-               double t, int turn, int seed, int order)
+               double t, int turn, int seed, int order, int periodic)
 {
     int idx;
     double ampt, freq, ph, val;
@@ -73,10 +74,14 @@ double get_pol(struct elemab *elem, double *ramps, int mode,
         ampt *= val;
         return ampt;
     case 2:
-        func = elem->Func;
-        idx = turn%elem->NSamples;
-        ampt *= func[idx];
-        return ampt;
+        if(periodic || turn<elem->NSamples){
+            func = elem->Func;
+            idx = turn%elem->NSamples;
+            ampt *= func[idx];
+            return ampt;
+        }else{
+            return 0.0;           
+        }
     default:
         return 0.0;
     }
@@ -91,6 +96,7 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
     double t = t0*turn;
 
     int maxorder = Elem->MaxOrder;
+    int periodic = Elem->Periodic;
     double *pola = Elem->PolynomA;
     double *polb = Elem->PolynomB;
     int seed = Elem->Seed;
@@ -102,8 +108,8 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
     init_seed(seed);
 
     for(i=0;i<maxorder+1;i++){
-        pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i);
-        polb[i]=get_pol(ElemB, ramps, mode, t, turn, seed, i);
+        pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
+        polb[i]=get_pol(ElemB, ramps, mode, t, turn, seed, i, periodic);
     };
 
     for (c = 0;c<num_particles;c++){
@@ -119,7 +125,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 			      double *r_in, int num_particles, struct parameters *Param)
 {   
     if (!Elem) {
-        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB;
+        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic	;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
@@ -141,6 +147,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1);
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
         ElemA = (struct elemab *)atMalloc(sizeof(struct elemab));
         ElemB = (struct elemab *)atMalloc(sizeof(struct elemab));
@@ -150,6 +157,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         Elem->Seed=Seed;
         Elem->Mode=Mode;
         Elem->MaxOrder=MaxOrder;
+        Elem->Periodic=Periodic;
         ElemA->Amplitude=AmplitudeA;
         ElemB->Amplitude=AmplitudeB;
         ElemA->Frequency=FrequencyA;
@@ -180,7 +188,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         double *r_in;
         const mxArray *ElemData = prhs[0];
         int num_particles = mxGetN(prhs[1]);
-        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB;
+        int MaxOrder, Mode, Seed, NSamplesA, NSamplesB, Periodic;
         double *PolynomA, *PolynomB, *AmplitudeA, *AmplitudeB;
         double *Ramps, *FuncA, *FuncB;
         double FrequencyA, FrequencyB;
@@ -204,12 +212,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0);
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
+        Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
         Elem->PolynomA=PolynomA;
         Elem->PolynomB=PolynomB;
         Elem->Ramps=Ramps;
         Elem->Seed=Seed;
         Elem->Mode=Mode;
         Elem->MaxOrder=MaxOrder;
+        Elem->Periodic=Periodic;
         ElemA->Amplitude=AmplitudeA;
         ElemB->Amplitude=AmplitudeB;
         ElemA->Frequency=FrequencyA;
@@ -236,7 +246,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],3,mxCreateString("PolynomB"));
         if (nlhs>1) {
             /* list of optional fields */
-            plhs[1] = mxCreateCellMatrix(12,1);
+            plhs[1] = mxCreateCellMatrix(13,1);
             mxSetCell(plhs[0],0,mxCreateString("AmplitudeA"));
             mxSetCell(plhs[0],1,mxCreateString("AmplitudeB"));
             mxSetCell(plhs[0],2,mxCreateString("FrequencyA"));
@@ -249,6 +259,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             mxSetCell(plhs[0],9,mxCreateString("FuncB"));
             mxSetCell(plhs[0],10,mxCreateString("NSamplesA"));
             mxSetCell(plhs[0],11,mxCreateString("NSamplesB"));
+            mxSetCell(plhs[0],12,mxCreateString("Periodic"));
         }
     }
     else {

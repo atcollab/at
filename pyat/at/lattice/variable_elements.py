@@ -23,7 +23,8 @@ class VariableMultipole(Element):
                         FrequencyA=float, FrequencyB=float,
                         PhaseA=float, PhaseB=float,
                         Seed=int, NSamplesA=int, NSamplesB=int,
-                        FuncA=_array, FuncB=_array, Ramps=_array)
+                        FuncA=_array, FuncB=_array, Ramps=_array,
+                        Periodic=bool)
 
     def __init__(self, family_name, AmplitudeA=None, AmplitudeB=None,
                  mode=ACMode.SINE, **kwargs):
@@ -49,8 +50,15 @@ class VariableMultipole(Element):
                        noise excitation. Default datetime.now()
             FuncA(list): User defined tbt kick list for PolynomA
             FuncB(list): User defined tbt kick list for PolynomB
-            Ramps(list): Vector to define the start and end of linear
-                         ramp up and down
+            Periodic(bool): If True (default) the user defined kick is repeated
+            Ramps(list): Vector (t0, t1, t2, t3) in turn number to define the ramping 
+                         of the excitation
+
+              * ``t<t0``: excitation is zero
+              * ``t0<t<t1``: exciation is linearly ramped up
+              * ``t1<t<t2``: exciation is constant             
+              * ``t2<t<t3``: exciation is linearly ramped down
+              * ``t3<t``: exciation is zero           
 
         Examples:
 
@@ -69,6 +77,7 @@ class VariableMultipole(Element):
         """
         kwargs.setdefault('PassMethod', 'VariableThinMPolePass')
         self.MaxOrder = kwargs.pop('MaxOrder', 0)
+        self.Periodic = kwargs.pop('Periodic', True)
         self.Mode = int(mode)
         if AmplitudeA is None and AmplitudeB is None:
             raise AtError('Please provide at least one amplitude for A or B')
@@ -81,6 +90,8 @@ class VariableMultipole(Element):
         self.PolynomB = numpy.zeros(self.MaxOrder+1)
         ramps = kwargs.pop('Ramps', None)
         if ramps is not None:
+            assert len(ramps)==4, \
+                'Ramps has to be a vector with 4 elements'
             self.Ramps = ramps
         super(VariableMultipole, self).__init__(family_name, **kwargs)
 
