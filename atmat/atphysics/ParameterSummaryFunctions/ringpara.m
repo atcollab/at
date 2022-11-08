@@ -1,18 +1,23 @@
 function varargout = ringpara(varargin)
-%RINGPARA Calculates various ring parameters
+%RINGPARA  Print out various parameters of the current AT lattice
 %
-% rp = ringpara, use global THERING
-% rp = ringpara(THERING)
-% rp = ringpara(THERING,U0), supply total radiation loss in MeV
+%RINGPARA()                 Print parameters of the global variable THERING
+%RINGPARA(RING)             Print parameters of RING. RING may be 4D or 6D
 %
-%  INPUTS
-%  1. THERING - AT structure
-%  2. DP - Energy offset
+%RINGPARA(RING,U0,...)      Supply the total radiation loss in MeV
 %
-%  OUPUTS
-%  1. RP - Structure with ring parameters
+%RINGPARA(...,'dp',DP)      Specify off-momentum For off-momentum lattices,
+%   the equilibrium emittance and energy spread will not be computed
+%   because the quadrupole contribution is missing.
 %
-%  See also atx atsummary
+%RINGPARA(...,'dct',DCT)    Specify the path lengthening
+%
+%RINGPARA(...,'df',DF)      Specify the RF frequency deviation
+%
+%RINGPARAMS=RINGPARA(...)   Return the results in a structure instead of
+%   printing them
+%
+%  See also ATX ATSUMMARY
 
 %
 %%Written by Xiaobiao Huang
@@ -39,7 +44,7 @@ global THERING %#ok<GVMIS>
 [Ux,varargs]=getargs(varargs,[],'check',@isfloat);
 [varargout{1:nargout}]=wrapper6d(ring,@doit,Ux,varargs{:});
 
-    function rp=doit(ring,is6d,Ux,varargin)
+    function varargout=doit(ring,is6d,Ux,varargin)
         e_mass=PhysConstant.electron_mass_energy_equivalent_in_MeV.value*1e6;	% eV
         e_radius=PhysConstant.classical_electron_radius.value;                  % m
         hbar=PhysConstant.Planck_constant_over2pi_times_c_in_MeV_fm.value;
@@ -49,11 +54,17 @@ global THERING %#ok<GVMIS>
         Cgamma=4.0E27*pi*e_radius/3/e_mass^3;                                   % [m/GeV^3]
 
         % Set values for 1 superperiod
-        [energy,betar,gamma,circ,Vrf,harm,freq_rf]=atGetRingProperties(ring,...
-            'Energy','beta','gamma','cell_length','cell_rf_voltage','cell_harmnumber','rf_frequency');
+        [energy,betar,gamma,circ,Vrf,frev,harm,freq_rf]=atGetRingProperties(ring,...
+            'Energy','beta','gamma','cell_length','cell_rf_voltage',...
+            'cell_revolution_frequency','cell_harmnumber','rf_frequency');
 
         beta_c = betar*cspeed;
         [ringdata,lindata]=atlinopt6(ring,1:length(ring)+1,varargin{:},'get_chrom');
+        if is6d
+            offmom = (abs(frev*harm - freq_rf) > 2);
+        else
+            offmom = (abs(lindata(1).ClosedOrbit(5)) > 1.e-4);
+        end
         [I1d,I2d,I3d,I4d,I5d,~,Iv] = DipoleRadiation(ring,lindata);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,lindata);
         I1=I1d+I1w;
@@ -69,12 +80,22 @@ global THERING %#ok<GVMIS>
         else
             U0 = 1.0e9*Cgamma/2/pi*(energy*1.e-9)^4*I2;    % eV
         end
-        alphac = I1/circ;
-        sigma_E = gamma*sqrt(Cq*I3/(2*I2+I4));
         Jx = 1-I4/I2;
         Jy = 1.00;
         Je = 2+I4/I2;
-        emittx = Cq*gamma^2*I5/(I2-I4);
+        if offmom
+            warning('AT:NoEmit','\n%s\n%s\n%s',...
+                'For off-momentum lattices, the equilibrium emittance',...
+                'cannot be computed because the contribution of quadrupoles is missing.',...
+                'To avoid this warning, use ">> warning(''off'',''AT:NoEmit'')"');
+            emittx = NaN;
+            sigma_E = NaN;
+            alphac = NaN;
+        else
+            emittx = Cq*gamma^2*I5/(I2-I4);
+            sigma_E = gamma*sqrt(Cq*I3/(2*I2+I4));
+            alphac = I1/circ;
+        end
 
         % minimum emittance due to radiation 1/gamma cone (Handbook, Chao, eq23, pag 211)
         emitty_lim = 13/55*Cq/Jy/I2*Iv;
@@ -144,7 +165,9 @@ global THERING %#ok<GVMIS>
         rp.emitty_d = emitty_d;
         % rp.emitty = emitty_d + emitty_c;
 
-        if nargout == 0
+        if nargout > 0
+            varargout{1} = rp;
+        else
             fprintf('\n');
             fprintf('   ******** AT Ring Parameter Summary ********\n');
             fprintf('   Energy:                     % 4.5f [GeV]\n', rp.E0/1E9);
