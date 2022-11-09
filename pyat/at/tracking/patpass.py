@@ -7,44 +7,43 @@ from at.lattice import uint32_refpts
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass
-from .track import fortran_align
 from at.lattice import AtWarning, DConstant
-import numpy as np
+import numpy
 
 
 __all__ = ['patpass']
 
-_atpassf = fortran_align(_atpass)
 
 globring = None
 
 
 def format_results(results, r_in, losses):
-    lin, lout = zip(*results)
-    # Update r_in with values at the end of tracking
-    np.concatenate(lin, out=r_in, axis=1)
+    numpy.concatenate([r['rin'] for r in results], out=r_in, axis=1)
     if losses:
-        lout, ldic = zip(*lout)
-        keys = ldic[0].keys()
-        dicout = dict(((k, np.hstack([li[k] for li in ldic])) for k in keys))
-        return np.concatenate(lout, axis=1), dicout
+        rout = numpy.concatenate([r['results'][0] for r in results], axis=1)
+        lin = [r['results'][1] for r in results]
+        lout = {}
+        for k in lin[0].keys():
+            lout[k] = numpy.hstack([li[k] for li in lin])
+        return rout, lout
     else:
-        return np.concatenate(lout, axis=1)
+        rout = numpy.concatenate([r['results'] for r in results], axis=1)
+        return rout
 
 
 def _atpass_one(ring, rin, **kwargs):
-    # kwargs['id'] = multiprocessing.current_process().ident
+    kwargs['id'] = multiprocessing.current_process().ident
     if ring is None:
         result = _atpass(globring, rin, **kwargs)
     else:
         result = _atpass(ring, rin, **kwargs)
-    return rin, result
+    return {'rin': rin, 'results': result}
 
 
-@fortran_align
 def _pass(ring, r_in, pool_size, start_method, **kwargs):
     ctx = multiprocessing.get_context(start_method)
-    args = np.array_split(r_in, pool_size, axis=1)
+#   args = (r_in[:, i] for i in range(r_in.shape[1]))
+    args=numpy.array_split(r_in, pool_size, axis=1)
     if ctx.get_start_method() == 'fork':
         global globring
         globring = ring
@@ -103,7 +102,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
           defaults that is considered safe. Available parameters:
           '``fork'``, ``'spawn'``, ``'forkserver'``. Default for linux is
           ``'fork'``, default for macOS and  Windows is ``'spawn'``. ``'fork'``
-          may be used for macOS to speed up the calculation or to solve
+          may used for macOS to speed up the calculation or to solve
           Runtime Errors, however it is considered unsafe.
         omp_num_threads (Optional[int]): number of OpenMP threads
           (default: automatic)
@@ -153,12 +152,11 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
-    bunch_currents = getattr(ring, 'bunch_currents', np.zeros(1))
-    bunch_spos = getattr(ring, 'bunch_spos', np.zeros(1))
+    bunch_currents = getattr(ring, 'bunch_currents', numpy.zeros(1))
+    bunch_spos = getattr(ring, 'bunch_spos', numpy.zeros(1))
     kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
     any_collective = collective(ring)
-    rshape = r_in.shape
-    if len(rshape) >= 2 and rshape[1] > 1 and not any_collective:
+    if len(numpy.atleast_1d(r_in[0])) > 1 and not any_collective:
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
                             DConstant.patpass_poolsize)
@@ -167,6 +165,12 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     else:
         if any_collective:
             warn(AtWarning('Collective PassMethod found: use single process'))
+        if r_in.flags.f_contiguous:
+            return _atpass(ring, r_in, nturns=nturns,
+                           refpts=refpts, **kwargs)
         else:
-            warn(AtWarning('no parallel computation for a single particle'))
-        return _atpassf(ring, r_in, nturns=nturns, refpts=refpts, **kwargs)
+            r_fin = numpy.asfortranarray(r_in)
+            r_out = _atpass(ring, r_fin, nturns=nturns,
+                            refpts=refpts, **kwargs)
+            r_in[:] = r_fin[:]
+            return r_out
