@@ -8,7 +8,7 @@ from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass
 from at.lattice import AtWarning, DConstant
-import numpy
+import numpy as np
 
 
 __all__ = ['patpass']
@@ -18,17 +18,16 @@ globring = None
 
 
 def format_results(results, r_in, losses):
-    numpy.concatenate([r['rin'] for r in results], out=r_in, axis=1)
+    lin, lout = zip(*results)
+    # Update r_in with values at the end of tracking
+    np.concatenate(lin, out=r_in, axis=1)
     if losses:
-        rout = numpy.concatenate([r['results'][0] for r in results], axis=1)
-        lin = [r['results'][1] for r in results]
-        lout = {}
-        for k in lin[0].keys():
-            lout[k] = numpy.hstack([li[k] for li in lin])
-        return rout, lout
+        lout, ldic = zip(*lout)
+        keys = ldic[0].keys()
+        dicout = dict(((k, np.hstack([li[k] for li in ldic])) for k in keys))
+        return np.concatenate(lout, axis=1), dicout
     else:
-        rout = numpy.concatenate([r['results'] for r in results], axis=1)
-        return rout
+        return np.concatenate(lout, axis=1)
 
 
 def _atpass_one(ring, rin, **kwargs):
@@ -37,13 +36,12 @@ def _atpass_one(ring, rin, **kwargs):
         result = _atpass(globring, rin, **kwargs)
     else:
         result = _atpass(ring, rin, **kwargs)
-    return {'rin': rin, 'results': result}
+    return rin, result
 
 
 def _pass(ring, r_in, pool_size, start_method, **kwargs):
     ctx = multiprocessing.get_context(start_method)
-#   args = (r_in[:, i] for i in range(r_in.shape[1]))
-    args=numpy.array_split(r_in, pool_size, axis=1)
+    args = np.array_split(r_in, pool_size, axis=1)
     if ctx.get_start_method() == 'fork':
         global globring
         globring = ring
@@ -152,11 +150,12 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     if refpts is None:
         refpts = len(ring)
     refpts = uint32_refpts(refpts, len(ring))
-    bunch_currents = getattr(ring, 'bunch_currents', numpy.zeros(1))
-    bunch_spos = getattr(ring, 'bunch_spos', numpy.zeros(1))
+    bunch_currents = getattr(ring, 'bunch_currents', np.zeros(1))
+    bunch_spos = getattr(ring, 'bunch_spos', np.zeros(1))
     kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
     any_collective = collective(ring)
-    if len(numpy.atleast_1d(r_in[0])) > 1 and not any_collective:
+    rshape = r_in.shape
+    if len(rshape) >= 2 and rshape[1] > 1 and not any_collective:
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
                             DConstant.patpass_poolsize)
@@ -169,7 +168,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
             return _atpass(ring, r_in, nturns=nturns,
                            refpts=refpts, **kwargs)
         else:
-            r_fin = numpy.asfortranarray(r_in)
+            r_fin = np.asfortranarray(r_in)
             r_out = _atpass(ring, r_fin, nturns=nturns,
                             refpts=refpts, **kwargs)
             r_in[:] = r_fin[:]
