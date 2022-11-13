@@ -7,12 +7,14 @@ from at.lattice import uint32_refpts
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass
+from .track import fortran_align
 from at.lattice import AtWarning, DConstant
 import numpy as np
 
 
 __all__ = ['patpass']
 
+_atpassf = fortran_align(_atpass)
 
 globring = None
 
@@ -39,6 +41,7 @@ def _atpass_one(ring, rin, **kwargs):
     return rin, result
 
 
+@fortran_align
 def _pass(ring, r_in, pool_size, start_method, **kwargs):
     ctx = multiprocessing.get_context(start_method)
     args = np.array_split(r_in, pool_size, axis=1)
@@ -100,7 +103,7 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
           defaults that is considered safe. Available parameters:
           '``fork'``, ``'spawn'``, ``'forkserver'``. Default for linux is
           ``'fork'``, default for macOS and  Windows is ``'spawn'``. ``'fork'``
-          may used for macOS to speed up the calculation or to solve
+          may be used for macOS to speed up the calculation or to solve
           Runtime Errors, however it is considered unsafe.
         omp_num_threads (Optional[int]): number of OpenMP threads
           (default: automatic)
@@ -164,12 +167,6 @@ def patpass(ring, r_in, nturns=1, refpts=None, pool_size=None,
     else:
         if any_collective:
             warn(AtWarning('Collective PassMethod found: use single process'))
-        if r_in.flags.f_contiguous:
-            return _atpass(ring, r_in, nturns=nturns,
-                           refpts=refpts, **kwargs)
         else:
-            r_fin = np.asfortranarray(r_in)
-            r_out = _atpass(ring, r_fin, nturns=nturns,
-                            refpts=refpts, **kwargs)
-            r_in[:] = r_fin[:]
-            return r_out
+            warn(AtWarning('no parallel computation for a single particle'))
+        return _atpassf(ring, r_in, nturns=nturns, refpts=refpts, **kwargs)
