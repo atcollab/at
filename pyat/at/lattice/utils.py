@@ -725,6 +725,8 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         yaw:            Yaw angle [rd]
         relative:       If True, the rotation is added to the previous one
     """
+    
+    def _get_rmat(le, titl, pitch, yaw):
     le = elem.Length
     ct, cp, cy = numpy.cos(tilt), numpy.cos(pitch), numpy.cos(yaw)
     st, sp, sy = numpy.sin(tilt), numpy.sin(pitch), numpy.sin(yaw)
@@ -750,14 +752,12 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     
     if relative:
         if hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-            r10 = elem.R1
-            r20 = elem.R2
             rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
-            rr10[:4, :4] = r10[:4, :4]
-            rt10 = rr10.T @ r10
-            rr20 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
-            rr20[:4, :4] = r20[:4, :4]
-            rt20 = rr20.T @ r20          
+            rr10[:4, :4] = elem.R1[:4, :4]
+            rt10 = rr10.T @ elem.R1     
+            titl0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
+            yaw0 = rt10[1, 4]/rr10[0, 0]
+            pitch0 = rt10[3, 4]/rr10[0, 0]  
         else:
             elem.R1 = r1
             elem.R2 = r2
