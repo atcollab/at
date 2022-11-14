@@ -350,7 +350,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
         }
     }
     #ifdef MPI
-    MPI_Allreduce(MPI_IN_PLACE,kz,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,kz,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbeamk,2,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbr,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,vbi,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
