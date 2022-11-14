@@ -707,6 +707,73 @@ def get_s_pos(ring: Sequence[Element], refpts: Optional[Refpts] = None) \
     s_pos = numpy.concatenate(([0.0], s_pos))
     refpts = _uint32_refs(ring, refpts)
     return s_pos[refpts]
+    
+    
+def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
+                yaw: float = 0.0, relative: bool = False) -> None:
+    r"""Set the tilt, pitch and yaw angle of an ``Element``.
+    The tilt is a rotation around the ``s`` axis, the pitch is a
+    rotation around the ``x``-axis and the yaw is a rotation around
+    the ``y``-axis.
+    A positive angle represent a clockwise rotation when looking in
+    the direction of the roation axis.
+
+    Parameters:
+        elem:           Element to be tilted
+        tilt:           Tilt angle [rd]
+        pitch:          Pitch angle [rd]
+        yaw:            Yaw angle [rd]
+        relative:       If True, the rotation is added to the previous one
+    """
+    le = elem.Length
+    ct, cp, cy = numpy.cos(tilt), numpy.cos(pitch), numpy.cos(yaw)
+    st, sp, sy = numpy.sin(tilt), numpy.sin(pitch), numpy.sin(yaw)
+    ap, ay = -0.5*le*numpy.sp, -0.5*le*numpy.sy
+    
+    rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
+    rr1[0, 2] = sn
+    rr1[1, 3] = sn
+    rr1[2, 0] = -sn
+    rr1[3, 1] = -sn
+    rr2 = tm1.T
+    
+    t1 = numpy.array([ay, -yaw, ap, -pitch, 0, 0])
+    t2 = numpy.array([ay, yaw, ap, pitch, 0, 0])
+    
+    rt1 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+    rt1[1, 4] =  ct*t1[1]
+    rt1[3, 4] =  ct*t1[3]
+    
+    rt2 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+    rt2[1, 4] =  ct*t2[1]
+    rt2[3, 4] =  ct*t2[3]
+    
+    if relative:
+        if hasattr(elem, 'R1') and hasattr(elem, 'R2'):
+            r10 = elem.R1
+            r20 = elem.R2
+            rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+            rr10[:4, :4] = r10[:4, :4]
+            rt10 = rr10.T @ r10
+            rr20 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+            rr20[:4, :4] = r20[:4, :4]
+            rt20 = rr20.T @ r20          
+        else:
+            elem.R1 = r1
+            elem.R2 = r2
+        if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
+            elem.T1 -= t1
+            elem.T2 += t2
+        else:
+            elem.T1 = t1
+            elem.T2 = t2        
+    else:
+        r1 = rr1 @ rt1
+        r2 = rt2 @ rr2
+        elem.R1 = r1
+        elem.R2 = r2
+        elem.T1 = t1
+        elem.T2 = t2
 
 
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
@@ -734,8 +801,8 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
     rm[2, 0] = -sn
     rm[3, 1] = -sn
     if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-        elem.R1 = elem.R1.dot(rm)
-        elem.R2 = rm.T.dot(elem.R2)
+        elem.R1 = rm @ elem.R1
+        elem.R2 = rm.T @ elem.R2
     else:
         elem.R1 = rm
         elem.R2 = rm.T
