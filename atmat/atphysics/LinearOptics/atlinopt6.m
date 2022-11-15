@@ -67,7 +67,10 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %   Specify off-momentum 
 %
 % [...] = ATLINOPT6(...,'dct',DCT)
-%   Specify path lengthening
+%   Specify the path lengthening
+%
+% [...] = ATLINOPT6(...,'df',DF)
+%   Specify the RF frequency deviation
 %
 %  REFERENCES
 %   [1] Etienne Forest, Phys. Rev. E 58, 2481 – Published 1 August 1998
@@ -75,7 +78,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
 %       Published 3 February 2006
 %   [3] Brian W. Montague Report LEP Note 165, CERN, 1979
 %
-%  See also atlinopt atlinopt2 atlinopt4 tunechrom
+%  See also atlinopt2 atlinopt4 tunechrom
 
 [ringdata,elemdata]=wrapper6d(ring,@xlinopt6,varargin{:});
 
@@ -83,7 +86,7 @@ function [ringdata,elemdata] = atlinopt6(ring, varargin)
         clight = PhysConstant.speed_of_light_in_vacuum.value;   % m/s
         [get_chrom, varargs]=getflag(varargin, 'get_chrom');
         [get_w, varargs]=getflag(varargs, 'get_w');
-        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
+        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct','df'});
         [twiss_in,varargs]=getoption(varargs,'twiss_in',[]);
         [DPStep,~]=getoption(varargs,'DPStep');
         [cavargs,varargs]=getoption(varargs,{'cavpts'});

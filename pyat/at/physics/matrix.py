@@ -4,7 +4,6 @@ transfer matrix related functions
 A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 import numpy
-from typing import Optional
 from ..lattice import Lattice, Element, get_refpts, DConstant, Refpts
 from ..lattice.elements import Bend, M66
 from ..tracking import lattice_pass, element_pass
@@ -16,11 +15,9 @@ __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 _jmt = jmat(2)
 
 
-def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
-             refpts: Optional[Refpts] = None,
-             dct: Optional[float] = None,
-             orbit: Optional[Orbit] = None,
-             keep_lattice: bool = False, **kwargs):
+def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
+             dct: float = None, df: float = None,
+             orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     """One turn 4x4 transfer matrix
 
     :py:func:`find_m44` finds the 4x4 transfer matrix of an accelerator
@@ -39,10 +36,10 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
 
     Parameters:
         ring:           Lattice description (radiation must be OFF)
-        dp:             Momentum deviation. Defaults to 0
+        dp:             Momentum deviation.
         refpts:         Observation points
-        dct:            Path lengthening. If specified, ``dp`` is ignored and
-          the off-momentum is deduced from the path lengthening.
+        dct:            Path lengthening.
+        df:             Deviation of RF frequency.
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array).
         keep_lattice:   Assume no lattice change since the previous tracking.
@@ -72,8 +69,8 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     full = kwargs.pop('full', False)
     if orbit is None:
-        orbit, _ = find_orbit4(ring, dp, dct=dct, keep_lattice=keep_lattice,
-                               XYStep=xy_step)
+        orbit, _ = find_orbit4(ring, dp=dp, dct=dct, df=df,
+                               keep_lattice=keep_lattice, XYStep=xy_step)
         keep_lattice = True
     # Construct matrix of plus and minus deltas
     # scaling = 2*xy_step*numpy.array([1.0, 0.1, 1.0, 0.1])
@@ -103,9 +100,8 @@ def find_m44(ring: Lattice, dp: Optional[float] = 0.0,
     return m44, mstack
 
 
-def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
-             orbit: Optional[Orbit] = None,
-             keep_lattice: bool = False, **kwargs):
+def find_m66(ring: Lattice, refpts: Refpts = None,
+             orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     """One-turn 6x6 transfer matrix
 
     :py:func:`find_m66` finds the 6x6 transfer matrix of an accelerator
@@ -174,9 +170,7 @@ def find_m66(ring: Lattice, refpts: Optional[Refpts] = None,
     return m66, mstack
 
 
-def find_elem_m66(elem: Element,
-                  orbit: Optional[Orbit] = None,
-                  **kwargs):
+def find_elem_m66(elem: Element, orbit: Orbit = None, **kwargs):
     """Single element 6x6 transfer matrix
 
     Numerically finds the 6x6 transfer matrix of a single element

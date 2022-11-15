@@ -11,6 +11,7 @@ from .elements import *
 from .utils import *
 from .lattice_object import *
 from .cavity_access import *
+from .variable_elements import *
 # Define the module "lattice.constants" for backward compatibility
 # noinspection PyUnresolvedReferences
 from .. import constants

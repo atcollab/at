@@ -42,7 +42,7 @@ Home="https://atcollab.github.io/at/"
 mpi = ["mpi4py"]
 plot = ["matplotlib"]
 dev = ["pytest >= 2.9", "pytest-lazy-fixture", "pytest-cov", "flake8"]
-doc = ["Sphinx >= 5.0.2", "myst-parser", "pydata-sphinx-theme < 0.10", "sphinx-copybutton"]
+doc = ["Sphinx ~= 5.3", "myst-parser", "pydata-sphinx-theme ~= 0.11.0", "sphinx-copybutton"]
 
 # tool.setuptools is still in BETA, so we keep temporarily setup.cfg
 

@@ -67,7 +67,7 @@ pvals=cellfun(@getany, varargin, 'UniformOutput', false);
                 if isfield(store,'is_6d')
                     v=store.is_6d;
                 else
-                    v=getradcav(ring,{'RadPass', 'QuantDiffPass', 'CavityPass'});
+                    v=getradcav(ring,{'RadPass', 'QuantPass', 'QuantDiffPass', 'CavityPass'});
                     store.is_6d=v;
                 end
             case 'has_cavity'
