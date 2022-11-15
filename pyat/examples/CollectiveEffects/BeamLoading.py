@@ -1,10 +1,57 @@
 import numpy
 import matplotlib.pyplot as plt
+import sys
 import at
-from at.collective import BeamLoadingElement, add_beamloading
-from at.collective import get_qs_beamloading, get_params_beamloading, BLMethod
+from at.collective import BeamLoadingElement, add_beamloading, BLMode
+from mpi4py import MPI
+from at.tracking.utils import get_bunches_std_mean
+import pickle as pkl
+from at.constants import qe
 from at.physics import harmonic_analysis
-from at.constants import clight, qe
+sys.path.append('/machfs/carver/pyat_dev/at/pyat')
+
+
+def analytical_qs(ring, I):
+
+    E0 = ring.energy * qe
+    alpha_c = at.get_mcf(ring.radiation_off(copy=True))
+    omega_rf = 2 * numpy.pi * ring.get_rf_frequency()
+    Vc = ring.get_rf_voltage()
+
+    envel = at.envelope_parameters(ring.radiation_on(copy=True))
+    U0 = envel.U0 * qe
+
+    Q0 = bl_elem.Qfactor * (1 + beta)
+    Rsh = 2 * bl_elem.Rshunt * (1 + beta)  # Difference in definition
+
+    phi_s = numpy.arccos(U0 / (qe * Vc))  # sync. phase in radian
+    psi = - numpy.arctan(Rsh * I * numpy.sin(phi_s) /
+                         (Vc * (1 + beta)))  # tuning angle
+
+    omega_res = (omega_rf
+                / (1 + Rsh * I * numpy.sin(phi_s)
+                / (2 * Q0 * Vc)))  # resonant freq.
+
+    h = ring.harmonic_number  # harmonic number
+    omega0 = omega_rf / h  # rev. freq.
+    T0 = 2 * numpy.pi / omega0  # rev. time
+
+    omega_s0 = numpy.sqrt(qe * Vc * omega_rf * alpha_c * numpy.sin(phi_s) /
+                          (E0 * T0))  # Synch. freq. for a single particle
+
+    K = alpha_c * qe * I / (E0 * T0) * (Rsh / 2) / (1 + beta)
+
+    # Synch. freq. with beam loading
+    tilde_omega_s = numpy.sqrt(omega_s0**2 +
+                               K * omega_rf * numpy.sin(2 * psi) + 1j * 0)
+    return tilde_omega_s / omega0
+
+
+comm = MPI.COMM_WORLD
+size = comm.Get_size()
+rank = comm.Get_rank()
+
+print(size, rank)
 
 ring = at.load_lattice('../../../machine_data/esrf.m')
 ring.radiation_on(cavity_pass='RFCavityPass')
@@ -14,115 +61,83 @@ ring.set_rf_frequency()
 # In fact, the following resonator parameters are for the EBS machine
 # Not the old ESRF SR, however for benchmarking this doesn't matter
 beta = 2.8
-qfactor = 37500/(1+beta)
-rshunt = 145*qfactor*13
-phil = 0.0
+q0 = 37500  # unloaded
+qfactor = q0 / (1 + beta)  # loaded
+rshunt = 145 * qfactor * 13  # loaded
 o6, _ = ring.find_orbit6()
 
+ring.set_rf_voltage(8.e6)
 
-# Generate the fast ring, but remove the quantum diffusion element in
-# order to get an easy and clean Qs measurement
+Nbunches = 16
+ring.set_fillpattern(Nbunches)
+
 _, fring = at.fast_ring(ring)
-fring.pop(-1)
+fring.pop(-1)  # drop diffusion element
 cavpts = at.get_refpts(fring, at.RFCavity)
 
+# Here we specify whether we want to use PHASOR or WAKE
+# beam loading models.
+mode = 'WAKE'
+if mode == 'WAKE':
+    blm = BLMode.WAKE
+else:
+    blm = BLMode.PHASOR
+    
+# Npart must be at least Nbunches per core
+Npart = Nbunches
+# Now we give the cavity position (cavpts[0]) and convert
+# it into a beam loaded cavity. 
+bl_elem = add_beamloading(fring, cavpts[0], qfactor, rshunt, Nslice=1,
+                          Nturns=50, mode=blm,
+                          VoltGain=0.0001, PhaseGain=0.0001)
+#ramp_time = 2000
+Nturns = 2**13# + ramp_time
+current = 200e-3
+fring.beam_current = current
 
-# Covnert the cavity element into a beam loading element
-Nslice = 1
-Npart = 1
-bl_elem = add_beamloading(fring, cavpts[0], qfactor, rshunt,
-                          Nslice=Nslice, Nturns=50, mode=BLMethod.AUTO)
 
+part = numpy.zeros((6, Npart))
+part = (part.T + o6).T
 
-qs0 = at.get_tune(ring)[2]
-u0 = ring.get_energy_loss(method=at.ELossMethod.TRACKING)
-frev = ring.revolution_frequency
-volt = ring.rf_voltage
-rffreq = ring.rf_frequency
-harm = ring.harmonic_number
-phis = numpy.pi - numpy.arcsin(u0/volt)
-
-
-print('u0', u0)
-print('RF Freq.', rffreq)
-print('Harm.', harm)
-print('Phi_l angle: ', phil/(2*numpy.pi)*360)
-print('Synch. phase: ', phis)
-print('Synch. freq.: ', qs0*frev)
-print('Q', qfactor)
-print('Rs', rshunt)
-
-# Number of turns for the tracking
-Nturns = 2**14
-
-allCurrents = numpy.linspace(0., 0.30, 31)
-allQs = numpy.zeros(len(allCurrents))
-
-for p, Ib in enumerate(allCurrents):
-
-    # Initialise Particles
-    part = numpy.zeros((6, Npart))
-    part = (part.T + o6).T
-
-    # Set the current within the beam loading element
-    # This wil automatically set the initial values assuming
-    # Vb of 2*Ib*Rshunt
-    bl_elem.Current = Ib
-    psi0 = bl_elem.Psi
-    vgen0 = bl_elem.Vgen
-    fres0 = bl_elem.ResFrequency
-    Vcav0 = bl_elem.Vcav
+if rank == 0:
 
     print('\n')
-    print('Current : ', Ib)
-    allPart = numpy.zeros((6, Npart, Nturns))
-    for i in numpy.arange(Nturns):
-        _ = at.lattice_pass(fring, part, nturns=1)
-        allPart[:, :, i] = part
+    print('Current:', current)
 
-    # Print the initial assumptions and the final converged values
-    print('Psi:', psi0, bl_elem.Psi)
-    print('Amplitude:', 2*Ib*rshunt*numpy.cos(psi0),
-          bl_elem.Vbeam*numpy.cos(bl_elem.Psi))
-    print('Phase:', phis,
-          2*numpy.pi*numpy.mean(part, axis=1)[5]*rffreq/clight + phis)
-    print('Vcav:', Vcav0, bl_elem.Vcav)
-    print('Vgen:', vgen0, bl_elem.Vgen)
-    print('Vb:', 2*Ib*rshunt*numpy.cos(psi0)**2,
-          bl_elem.Vbeam*numpy.cos(bl_elem.Psi)**2)
+    z_all = numpy.zeros((Nturns, Nbunches))
+    dp_all = numpy.zeros((Nturns, Nbunches))
 
-    # Perform a harmonic analysis and save the average of
-    # the synchrotron tune coming from dp and s
-    tbt_dp = numpy.mean(allPart[4, :, :], axis=0)
-    tbt_s = numpy.mean(allPart[5, :, :], axis=0)
-    try:
-        qs_dp = harmonic_analysis.get_tunes_harmonic(
-                    tbt_dp, 'laskar', num_harmonics=20, fmin=1e-5, fmax=0.1)
-        qs_s = harmonic_analysis.get_tunes_harmonic(
-                    tbt_s, 'laskar', num_harmonics=20, fmin=1e-5, fmax=0.1)
-    except ValueError:
-        qs_dp = 0
-        qs_s = 0
-    allQs[p] = (qs_dp + qs_dp)/2
-    print('Qs:', allQs[p])
+for i in numpy.arange(Nturns):
+    #if i<=ramp_time:
+    #    fring.beam_current = current * i / ramp_time
+    _ = at.lattice_pass(fring, part, nturns=1)
 
-# Now we compute the analytical values as a function of current
-# to make the comparison
-analCurrents = numpy.arange(0, numpy.amax(allCurrents)+0.001, 0.001)
-analVbeam = 2*analCurrents*rshunt
-analVgen, analFres, analPsi, analVcav = get_params_beamloading(
-        rffreq, analCurrents, volt, qfactor, rshunt, phil, phis, vb=None)
-analQs = get_qs_beamloading(qs0, analVbeam, volt, numpy.pi - phis, -analPsi)
+    allPartsg = comm.gather(part)
+    if rank == 0:
+        allPartsg = numpy.concatenate(allPartsg, axis=1)
+        stds, means = get_bunches_std_mean(allPartsg, Nbunches)
 
-# The two lines start to diverge at high current due to the fact
-# that we are lumping all the current into one single bunch.
-# This will be improved when simulating with multiple bunches
-fig = plt.figure()
-ax1 = fig.add_subplot(111)
-ax1.plot(analCurrents*1e3, analQs, 'r', label='Analytical')
-ax1.plot(allCurrents*1e3, allQs,
-         color='b', marker='x', label='PyAT', linestyle='None')
-ax1.set_ylabel('Qs')
-ax1.set_xlabel('I [mA]')
-ax1.legend()
-plt.show()
+        dp_all[i] = numpy.array([x[4] for x in means])
+        z_all[i] = numpy.array([x[5] for x in means])
+
+        print(rank, i, numpy.sum(numpy.isnan(allPartsg)),
+              numpy.mean(numpy.abs(dp_all[i])))
+
+if rank == 0:
+    qsone = numpy.zeros(Nbunches)
+    for ib in numpy.arange(Nbunches):
+        try:
+            qs = harmonic_analysis.get_tunes_harmonic(dp_all[:, ib], 'laskar',
+                                                      num_harmonics=20,
+                                                      fmin=1e-5, fmax=0.1)
+        except:
+            qs = 0
+        qsone[ib] = qs
+
+    qs_mn, qs_std = numpy.array([numpy.mean(qsone), numpy.std(qsone)])
+
+    qs_theory = analytical_qs(ring, current)
+
+    print('Analytical:', numpy.real(qs_theory))
+    print('Simulated:', qs_mn, 'pm', qs_std)
+    print(qsone)
