@@ -724,8 +724,7 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         pitch:          Pitch angle [rd]
         yaw:            Yaw angle [rd]
         relative:       If True, the rotation is added to the previous one
-    """
-    
+    """ 
     def _get_rm_tv(le, tilt, pitch, yaw):
         ct = numpy.cos(tilt)
         st = numpy.sin(tilt)
@@ -745,18 +744,20 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rt2[1, 4] =  ct*t2[1]
         rt2[3, 4] =  ct*t2[3]
         return rr1 @ rt1, rt2 @ rr2, t1, t2
-    
-    le = elem.Length
-    
-    if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-        rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
-        rr10[:4, :4] = elem.R1[:4, :4]
-        rt10 = rr10.T @ elem.R1     
-        tilt += numpy.arctan2(rr10[0, 2], rr10[0, 0])
-        yaw += rt10[1, 4]/rr10[0, 0]
-        pitch += rt10[3, 4]/rr10[0, 0]  
         
-    r1, r2, t1, t2 = _get_rm_tv(le, tilt, pitch, yaw)      
+    rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+    rr10[:4, :4] = elem.R1[:4, :4]
+    rt10 = rr10.T @ elem.R1     
+    tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
+    yaw0 = rt10[1, 4]/rr10[0, 0]
+    pitch0 = rt10[3, 4]/rr10[0, 0]
+    _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)    
+  
+  
+    if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
+ 
+        
+    r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)      
             
     if relative and hasattr(elem, 'T1') and hasattr(elem, 'T2'):
         t1 -= elem.T1
