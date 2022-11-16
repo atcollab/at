@@ -829,7 +829,7 @@ def set_rotation(ring: Sequence[Element], tilts=0.0,
     tilts = numpy.broadcast_to(tilts, (len(ring),))
     pitches = numpy.broadcast_to(tilts, (len(ring),))
     yaws = numpy.broadcast_to(tilts, (len(ring),))
-    for el, tilt, pitch, tilt in zip(ring, tilts, pitches, yaws):
+    for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
         rotate_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
 
 def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
