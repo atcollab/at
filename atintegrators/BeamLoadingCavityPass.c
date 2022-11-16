@@ -4,7 +4,7 @@
 #include <math.h>
 #include <float.h>
 /*
- * RFCavityBeamLoading pass method by Simon White.  
+ * BeamLoadingCavity pass method by Simon White.  
  * User may contact simon.white@esrf.fr for questions and comments.
  */
  
@@ -63,9 +63,9 @@ void trackCavity(double *r_in, double le, double nv, double freq, double h, doub
 } 
    
 
-void RFCavityBeamLoadingPass(double *r_in,int num_particles,int nbunch,
-                             double *bunch_spos,double *bunch_currents,
-                             double circumference,int nturn,struct elem *Elem) {
+void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
+                           double *bunch_spos,double *bunch_currents,
+                           double circumference,int nturn,struct elem *Elem) {
     /*
      * r_in - 6-by-N matrix of initial conditions reshaped into
      * 1-d array of 6*N elements
@@ -149,7 +149,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         double normfact, phasegain, voltgain;
         double *turnhistory;
         double *z_cuts;
-        double Voltage, Energy, Frequency, TimeLag, Length;
+        double Energy, Frequency, TimeLag, Length;
         double qfactor,rshunt,beta;
         double *vbunch;
         double *vbeam_phasor;
@@ -216,10 +216,10 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         atError("Beam loading Phasor mode not implemented in Windows.");
     }
     #endif
-    RFCavityBeamLoadingPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
-                            Param->bunch_currents,rl,nturn,Elem);
+    BeamLoadingCavityPass(r_in,num_particles,Param->nbunch,Param->bunch_spos,
+                          Param->bunch_currents,rl,nturn,Elem);
     return Elem;
 }
 
-MODULE_DEF(RFCavityBeamLoadingPass)       /* Dummy module initialisation */
+MODULE_DEF(BeamLoadingCavityPass)       /* Dummy module initialisation */
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
