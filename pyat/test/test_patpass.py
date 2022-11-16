@@ -9,7 +9,7 @@ import pytest
 def test_patpass_multiple_particles_and_turns():
     nturns = 10
     nparticles = 10
-    rin = numpy.zeros((6, nparticles), order='F')
+    rin = numpy.zeros((6, nparticles))
     d = elements.Drift('drift', 1.0)
     lattice = [d]
     rin[1, 0] = 1e-6
