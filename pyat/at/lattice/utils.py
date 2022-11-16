@@ -726,6 +726,9 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         relative:       If True, the rotation is added to the previous one
     """ 
     def _get_rm_tv(le, tilt, pitch, yaw):
+        tilt = numpy.around(tilt, decimals=15)
+        pitch = numpy.around(pitch, decimals=15)
+        yaw = numpy.around(yaw, decimals=15)
         ct, st = numpy.cos(tilt), numpy.sin(tilt)
         ap, ay = -0.5*le*numpy.sin(pitch), -0.5*le*numpy.sin(yaw)      
         rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
