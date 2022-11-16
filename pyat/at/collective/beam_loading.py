@@ -79,7 +79,7 @@ class BeamLoadingElement(Collective, Element):
        additional argument are ring, cavity, qfactor, rshunt
     """
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
-    default_pass = {False: 'IdentityPass', True: 'RFCavityBeamLoadingPass'}
+    default_pass = {False: 'DriftPass', True: 'BeamLoadingCavityPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
                         Circumference=float, NormFact=float, WakeFact=float)
 
