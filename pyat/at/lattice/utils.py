@@ -726,15 +726,14 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         relative:       If True, the rotation is added to the previous one
     """ 
     def _get_rm_tv(le, tilt, pitch, yaw):
-        ct = numpy.cos(tilt)
-        st = numpy.sin(tilt)
+        ct, st = numpy.cos(tilt), numpy.sin(tilt)
         ap, ay = -0.5*le*numpy.sin(pitch), -0.5*le*numpy.sin(yaw)      
         rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
         rr1[0, 2] = st
         rr1[1, 3] = st 
         rr1[2, 0] = -st
         rr1[3, 1] = -st
-        rr2 = tm1.T      
+        rr2 = rr1.T      
         t1 = numpy.array([ay, -yaw, ap, -pitch, 0, 0])
         t2 = numpy.array([ay, yaw, ap, pitch, 0, 0])     
         rt1 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
@@ -744,29 +743,33 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rt2[1, 4] =  ct*t2[1]
         rt2[3, 4] =  ct*t2[3]
         return rr1 @ rt1, rt2 @ rr2, t1, t2
-        
-    rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
-    rr10[:4, :4] = elem.R1[:4, :4]
-    rt10 = rr10.T @ elem.R1     
-    tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
-    yaw0 = rt10[1, 4]/rr10[0, 0]
-    pitch0 = rt10[3, 4]/rr10[0, 0]
-    _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)    
-  
-  
-    if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
- 
-        
-    r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)      
-            
-    if relative and hasattr(elem, 'T1') and hasattr(elem, 'T2'):
-        t1 -= elem.T1
-        t2 += elem.T2       
-     
-    elem.R1 = r1
-    elem.R2 = r2
-    elem.T1 = t1
-    elem.T2 = t2
+    
+    tilt0 = 0.0    
+    pitch0 = 0.0
+    yaw0 = 0.0    
+    t10 = numpy.zeros(6)
+    t20 = numpy.zeros(6)   
+    if hasattr(elem, 'R1') and hasattr(elem, 'R2'):
+        rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+        rr10[:4, :4] = elem.R1[:4, :4]
+        rt10 = rr10.T @ elem.R1     
+        tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
+        yaw0 = -rt10[1, 4]/rr10[0, 0]
+        pitch0 = -rt10[3, 4]/rr10[0, 0]       
+        _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)      
+    if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
+        t10 = elem.T1-t10
+        t20 = elem.T2-t20      
+    if relative:
+        tilt += tilt0
+        pitch += pitch0
+        yaw += yaw0
+    
+    r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)          
+    elem.R1 = numpy.round(r1, decimals = 15)
+    elem.R2 = numpy.round(r2, decimals = 15)
+    elem.T1 = numpy.round(t1+t10, decimals = 15)
+    elem.T2 = numpy.round(t2+t20, decimals = 15)
 
 
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
@@ -786,19 +789,7 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
           looking in the direction of the beam
         relative:       If True, the rotation is added to the previous one
     """
-    cs = numpy.cos(rots)
-    sn = numpy.sin(rots)
-    rm = numpy.asfortranarray(numpy.diag([cs, cs, cs, cs, 1.0, 1.0]))
-    rm[0, 2] = sn
-    rm[1, 3] = sn
-    rm[2, 0] = -sn
-    rm[3, 1] = -sn
-    if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-        elem.R1 = rm @ elem.R1
-        elem.R2 = rm.T @ elem.R2
-    else:
-        elem.R1 = rm
-        elem.R2 = rm.T
+    rotate_elem(elem, tilt=rots, relative=relative)
 
 
 def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
@@ -821,6 +812,25 @@ def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
         elem.T1 = -tr
         elem.T2 = tr
 
+def set_rotation(ring: Sequence[Element], tilts=0.0, 
+                 pitches=0.0, yaws=0.0, relative=False) -> None:
+    """Sets the tilts of a list of elements.
+
+    Parameters:
+        ring:           Lattice description
+        tilts:          Sequence of tilt values as long as ring or
+          scalar tilt value applied to all elements, default=0
+        pitches:          Sequence of pitch values as long as ring or
+          scalar tilt value applied to all elements, default=0
+        yaws:          Sequence of yaw values as long as ring or
+          scalar tilt value applied to all elements, default=0
+        relative:       If True, the rotation is added to the previous one
+    """
+    tilts = numpy.broadcast_to(tilts, (len(ring),))
+    pitches = numpy.broadcast_to(tilts, (len(ring),))
+    yaws = numpy.broadcast_to(tilts, (len(ring),))
+    for el, tilt, pitch, tilt in zip(ring, tilts, pitches, yaws):
+        rotate_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
 
 def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
     """Sets the tilts of a list of elements.
