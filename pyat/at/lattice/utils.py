@@ -766,10 +766,10 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         yaw += yaw0
     
     r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)          
-    elem.R1 = numpy.round(r1, decimals = 15)
-    elem.R2 = numpy.round(r2, decimals = 15)
-    elem.T1 = numpy.round(t1+t10, decimals = 15)
-    elem.T2 = numpy.round(t2+t20, decimals = 15)
+    elem.R1 = r1
+    elem.R2 = r2
+    elem.T1 = t1+t10
+    elem.T2 = t2+t20
 
 
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
