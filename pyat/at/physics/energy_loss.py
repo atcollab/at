@@ -68,7 +68,7 @@ def get_energy_loss(ring: Lattice,
     def tracking(ring):
         """Losses from tracking
         """
-        ringtmp = ring.disable_6d(copy=True)
+        ringtmp = ring.disable_6d(RFCavity, copy=True)
         o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
                            refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
