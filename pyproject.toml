@@ -3,7 +3,8 @@ requires = [
     "numpy >= 1.16.6;python_version<'3.8'",
     "numpy >= 1.17.3;python_version=='3.8'",
     "numpy >= 1.19.3;python_version=='3.9'",
-    "numpy >= 1.21.3;python_version>='3.10'",
+    "numpy >= 1.21.3;python_version=='3.10'",
+    "numpy >= 1.23.4;python_version>='3.11'",
     "setuptools >= 62",
     "setuptools_scm >= 7",
     "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
@@ -32,7 +33,7 @@ requires-python = ">=3.7"
 dependencies = [
     "importlib-resources;python_version<'3.9'",
     "numpy>=1.16.6",
-    "scipy>=0.16"
+    "scipy>=1.4.0"
 ]
 
 [project.urls]
@@ -60,7 +61,7 @@ doc = ["Sphinx ~= 5.3", "myst-parser", "pydata-sphinx-theme ~= 0.11.0", "sphinx-
 
 [tool.cibuildwheel]
 # Pypy does not have Scipy so we cannot support it.
-build = ["cp3{7,8,9}*", "cp310*"]
+build = ["cp3{7,8,9}*", "cp31{0, 1}*"]
 build-verbosity = "1"
 # "build" frontend fails on windows
 # build-frontend = "build"
