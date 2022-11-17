@@ -2,7 +2,7 @@
 
  * Accelerator Toolbox
  * Revision 3/10/04
- * A.Terebilo terebilo@ssrl.slac.stanford.edu
+ * A.Terebilo
  */
 
 #include "atelem.c"

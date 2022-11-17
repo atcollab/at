@@ -1,7 +1,7 @@
 /* QuadLinearPass.c 
    Accelerator Toolbox 
    Revision 6/27/00
-   A.Terebilo terebilo@ssrl.slac.stanford.edu
+   A.Terebilo
 */
 
 

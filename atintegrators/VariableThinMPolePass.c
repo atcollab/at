@@ -1,6 +1,6 @@
 /* VariableThinMPolePass
    Accelerator Toolbox 
-   S.White simon.white@esrf.fr
+   S.White
 */
 
 #include "atelem.c"

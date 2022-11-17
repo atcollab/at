@@ -1,14 +1,12 @@
 #include "atelem.c"
 #include "atimplib.c"
-#include "driftkickrad.c"
-#include <math.h>
-#include <float.h>
+#include "attrackfunc.c"
+
 /*
  * BeamLoadingCavity pass method by Simon White.  
- * User may contact simon.white@esrf.fr for questions and comments.
+ *
  */
  
-#define TWOPI  6.28318530717959
 #define C0     2.99792458e8 
 
 struct elem
@@ -36,31 +34,7 @@ struct elem
   double *vbeam;
   double *vcav;
   double *vgen;
-};
-
-
-void trackCavity(double *r_in, double le, double nv, double freq, double h, double lag, double philag,
-                 int nturn, double T0, int num_particles) {
-    int c;
-    if (le == 0) {
-        for (c = 0; c<num_particles; c++) {
-            double *r6 = r_in+c*6;
-            if(!atIsNaN(r6[0]))
-                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
-        }
-    }
-    else {
-        double halflength = le/2;
-        for (c = 0;c<num_particles;c++) {
-            double *r6 = r_in+c*6;
-            if(!atIsNaN(r6[0]))  {
-                drift6(r6, halflength);
-                r6[4] += -nv*sin(TWOPI*freq*((r6[5]-lag)/C0 - (h/freq-T0)*nturn) - philag);
-                drift6(r6, halflength);
-            }
-        }
-    }
-} 
+}; 
    
 
 void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
@@ -108,7 +82,7 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     iptr = (int *) dptr;
     pslice = iptr; iptr += num_particles;
 
-    trackCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
+    trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
     rotate_table_history(nturnsw,nslice*nbunch,turnhistory,circumference);
     slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
                 turnhistory,pslice,z_cuts);
