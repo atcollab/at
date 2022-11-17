@@ -720,6 +720,14 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     the ``y``-axis.
     A positive angle represent a clockwise rotation when looking in
     the direction of the roation axis.
+    
+    The transformations are not all commmutative, the tilt is always the
+    last transformation applied.
+    
+    In case ``relative=True``, the previous angle and shifts are derived
+    form the R and T matrix and incremented by the input arguments.
+    
+    The shift is always conserved regardless of the value of ``relative``
 
     Parameters:
         elem:           Element to be tilted
@@ -742,10 +750,10 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
         rr2 = rr1.T
         t1 = numpy.array([ay, -yaw, ap, -pitch, 0, 0])
         t2 = numpy.array([ay, yaw, ap, pitch, 0, 0])
-        rt1 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+        rt1 = numpy.eye(6, order='F')
         rt1[1, 4] = ct*t1[1]
         rt1[3, 4] = ct*t1[3]
-        rt2 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+        rt2 = numpy.eye(6, order='F')
         rt2[1, 4] = ct*t2[1]
         rt2[3, 4] = ct*t2[3]
         return rr1 @ rt1, rt2 @ rr2, t1, t2
@@ -756,7 +764,7 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
     t10 = numpy.zeros(6)
     t20 = numpy.zeros(6)
     if hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-        rr10 = numpy.asfortranarray(numpy.diag(numpy.ones(6)))
+        rr10 = numpy.eye(6, order='F')
         rr10[:4, :4] = elem.R1[:4, :4]
         rt10 = rr10.T @ elem.R1
         tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
