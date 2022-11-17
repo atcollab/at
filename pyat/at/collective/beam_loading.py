@@ -74,13 +74,13 @@ def remove_beamloading(ring, index):
     return cav_elem
 
 
-class BeamLoadingElement(Collective, Element):
+class BeamLoadingElement(RFCavity, Collective):
     """Class to generate a beamloading element, inherits from Element
        additional argument are ring, cavity, qfactor, rshunt
     """
-    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
+    _BUILD_ATTRIBUTES = RFCavity._BUILD_ATTRIBUTES
     default_pass = {False: 'DriftPass', True: 'BeamLoadingCavityPass'}
-    _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
+    _conversions = dict(RFCavity._conversions, _nslice=int, _nturns=int,
                         Circumference=float, NormFact=float, WakeFact=float)
 
     def __init__(self, ring, cavelem, qfactor, rshunt, mode=BLMode.PHASOR,
@@ -111,12 +111,6 @@ class BeamLoadingElement(Collective, Element):
         zcuts = kwargs.pop('ZCuts', None)
         phil = kwargs.pop('phil', 0)
         family_name = cavelem.FamName + '_BL'
-        self.Length = cavelem.Length
-        self.Voltage = cavelem.Voltage
-        self.Energy = cavelem.Energy
-        self.Frequency = cavelem.Frequency
-        self.TimeLag = getattr(cavelem, 'TimeLag', 0.0)
-        self.PhaseLag = getattr(cavelem, 'PhaseLag', 0.0)
         self.Rshunt = rshunt
         self.Qfactor = qfactor
         self.NormFact = kwargs.pop('NormFact', 1.0)
@@ -130,6 +124,21 @@ class BeamLoadingElement(Collective, Element):
         self._nturns = kwargs.pop('Nturns', 1)
         self._turnhistory = None    # Defined here to avoid warning
         self._vbunch = None
+        if zcuts is not None:
+            self.ZCuts = zcuts
+            
+        length = cavelem.Length
+        voltage = cavelem.Voltage
+        energy = cavelem.Energy
+        frequency = cavelem.Frequency
+        harmn = cavelem.HarmNumber
+        timelag = getattr(cavelem, 'TimeLag', 0.0)
+        phaselag = getattr(cavelem, 'PhaseLag', 0.0)
+        super(BeamLoadingElement, self).__init__(family_name, length, voltage,
+                                                 frequency, harmn, energy,
+                                                 TimeLag=timelag, PhaseLag=phaselag,
+                                                 **kwargs)
+        
         _, ts = get_timelag_fromU0(ring)
         self._phis = 2*numpy.pi*self.Frequency*(ts+self.TimeLag)/clight
         self._vbeam_phasor = numpy.zeros(2)
@@ -137,10 +146,7 @@ class BeamLoadingElement(Collective, Element):
         self._vgen = numpy.zeros(2)
         self._vcav = numpy.array([self.Voltage,
                                   numpy.pi/2-self._phis-phil])
-        if zcuts is not None:
-            self.ZCuts = zcuts
         self.clear_history(ring=ring)
-        super(BeamLoadingElement, self).__init__(family_name, **kwargs)
 
     def clear_history(self, ring=None):
         if ring is None:
