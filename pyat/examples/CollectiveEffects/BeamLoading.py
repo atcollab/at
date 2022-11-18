@@ -1,15 +1,14 @@
 import numpy
 import matplotlib.pyplot as plt
-import sys
+import matplotlib.cm as cmap
 import at
 from at.collective import BeamLoadingElement, add_beamloading, BLMode
 from mpi4py import MPI
 from at.tracking.utils import get_bunches_std_mean
-import pickle as pkl
 from at.constants import qe
 from at.physics import harmonic_analysis
-import matplotlib.cm as cmap
-sys.path.append('/machfs/carver/pyat_dev/at/pyat')
+
+
 
 
 def analytical_qs(ring, I):
@@ -93,7 +92,7 @@ add_beamloading(fring, qfactor, rshunt, Nslice=1,
                           Nturns=50, mode=blm,
                           VoltGain=0.1, PhaseGain=0.1)
                           
-bl_elem = fring[at.get_refpts(fring, at.BeamLoadingElement)[0]]
+bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
 
 # Specify some simulation parameters
 kickTurn = 500
