@@ -89,9 +89,12 @@ Npart = Nbunches
 
 # Now we give the cavity position (cavpts[0]) and convert
 # it into a beam loaded cavity.
-bl_elem = add_beamloading(fring, cavpts[0], qfactor, rshunt, Nslice=1,
+add_beamloading(fring, qfactor, rshunt, Nslice=1,
                           Nturns=50, mode=blm,
                           VoltGain=0.1, PhaseGain=0.1)
+                          
+bl_elem = fring[at.get_refpts(fring, at.BeamLoadingElement)[0]]
+
 # Specify some simulation parameters
 kickTurn = 500
 Nturns = 2**14 + kickTurn
