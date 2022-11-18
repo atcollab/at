@@ -240,6 +240,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vbeam_phasor=atGetDoubleArray(ElemData,"_vbeam_phasor"); check_error(); 
       /*optional attributes*/
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+      Elem->Length=Length;
+      Elem->mode=mode;
+      Elem->Frequency=Frequency;
+      Elem->HarmNumber=1;
+      Elem->Energy = Energy;
+      Elem->TimeLag=TimeLag;   
+      Elem->nslice=nslice;
+      Elem->nturnsw=nturns;
+      Elem->normfact=normfact*wakefact;
+      Elem->turnhistory=turnhistory;
+      Elem->Qfactor = qfactor;
+      Elem->Rshunt = rshunt;
+      Elem->Beta = beta;
+      Elem->z_cuts=z_cuts;
+      Elem->vbunch = vbunch;
+      Elem->vbeam = vbeam;
+      Elem->vgen = vgen;
+      Elem->vcav = vcav;
+      Elem->phasegain = phasegain;
+      Elem->voltgain = voltgain;
+      Elem->vbeam_phasor = vbeam_phasor;
       if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
