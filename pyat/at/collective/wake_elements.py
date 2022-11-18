@@ -13,9 +13,9 @@ class WakeElement(Collective, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
-                        _nelem=int, NumParticles=float, Circumference=float,
+                        _nelem=int, _wakeFact=float,
                         NormFact=lambda v: _array(v, (3,)),
-                        WakeFact=float,
+                        ZCuts=lambda v: _array(v),
                         _wakeDX=lambda v: _array(v),
                         _wakeDY=lambda v: _array(v),
                         _wakeQX=lambda v: _array(v),
