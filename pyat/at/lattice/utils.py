@@ -17,10 +17,11 @@ returned values are given at the entrance of each element specified in refpts;
 """
 import numpy
 import functools
-from typing import Callable, Optional, Sequence, Iterator, TypeVar, Union
+from typing import Callable, Optional, Sequence, Iterator, TypeVar
+from typing import Union, Tuple, List
 from itertools import compress
 from fnmatch import fnmatch
-from .elements import Element
+from .elements import Element, Dipole
 
 Refpts = TypeVar("Refpts", int, Sequence[int], bool, Sequence[bool])
 ElementFilter = Callable[[Element], bool]
@@ -29,13 +30,15 @@ Uint32Refpts = numpy.ndarray
 Key = Union[type, Element, str]
 
 
-__all__ = ['AtError', 'AtWarning', 'check_radiation', 'set_radiation',
+__all__ = ['AtError', 'AtWarning', 'check_radiation', 'check_6d',
+           'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
            'refpts_count', 'refpts_len', 'refpts_iterator',
            'set_shift', 'set_tilt', 'tilt_elem', 'shift_elem',
-           'get_value_refpts', 'set_value_refpts', 'Refpts']
+           'get_value_refpts', 'set_value_refpts', 'Refpts',
+           'get_geometry']
 
 
 class AtError(Exception):
@@ -47,70 +50,124 @@ class AtWarning(UserWarning):
 
 
 def check_radiation(rad: bool) -> Callable:
-    """Function to be used as a decorator for optics functions
+    """Deprecated decorator for optics functions (see :py:func:`check_6d`).
 
-    Wraps a function like ``func(ring, *Args, **kwargs)`` where ring is a
-    `Lattice`` object.
+    :meta private:
+    """
+    return check_6d(rad)
+
+
+def set_radiation(rad: bool) -> Callable:
+    """Deprecated decorator for optics functions (see :py:func:`set_6d`).
+
+    :meta private:
+    """
+    return set_6d(rad)
+
+
+def check_6d(is_6d: bool) -> Callable:
+    """Decorator for optics functions
+
+    Wraps a function like ``func(ring, *args, **kwargs)`` where ring is a
+    :py:class:`.Lattice` object. Raise :py:class:`.AtError` if ``ring.is_6d``
+    is not the desired ``is_6d`` state. No test is performed if ring is not a
+    :py:class:`.Lattice`.
 
     Parameters:
-        rad: Desired radiation state
+        is_6d: Desired 6D state
 
-    If ring is a Lattice object, raises an exception if ring.radiation
-    is not the specified rad bool
+    Raises:
+        AtError: if ``ring.is_6d`` is not ``is_6d``
 
-    If ring is any other sequence, no test is performed
+    Example:
+
+        .. code-block:: python
+
+            @check_6d(False)
+            def find_orbit4(ring, dct=None, guess=None, **kwargs):
+                ...
+
+        Raises :py:class:`.AtError` if ``ring.is_6d`` is :py:obj:`True`
+
+    See Also:
+        :py:func:`set_6d`
     """
     def radiation_decorator(func):
         @functools.wraps(func)
         def wrapper(ring, *args, **kwargs):
-            ringrad = getattr(ring, 'radiation', rad)
-            if ringrad != rad:
-                raise AtError('{0} needs radiation {1}'.format(
-                    func.__name__, 'ON' if rad else 'OFF'))
+            ringrad = getattr(ring, 'is_6d', is_6d)
+            if ringrad != is_6d:
+                raise AtError('{0} needs "ring.is_6d" {1}'.format(
+                    func.__name__, is_6d))
             return func(ring, *args, **kwargs)
         return wrapper
     return radiation_decorator
 
 
-def set_radiation(rad: bool) -> Callable:
-    """Function to be used as a decorator for optics functions
+def set_6d(is_6d: bool) -> Callable:
+    """Decorator for optics functions
 
-    Wraps a function like ``func(ring, *Args, **kwargs)`` where ring is a
-    ``Lattice`` object.
+    Wraps a function like ``func(ring, *args, **kwargs)`` where ``ring`` is a
+    :py:class:`.Lattice` object. If ``ring.is_6d`` is not the desired ``is_6d``
+    state, ``func`` will be called with a modified copy of ``ring`` satisfying
+    the ``is_6d`` state.
 
     Parameters:
-        rad: Desired radiation state
+        is_6d: Desired 6D state
 
-    ``func`` will be called with a copy of the ring such that its radiation
-    state is set to rad (no copy is done if it's already the case).
+    Example:
+
+        .. code-block:: python
+
+            @set_6d(True)
+            def compute(ring)
+                ...
+
+        is roughly equivalent to:
+
+        .. code-block:: python
+
+            if ring.is_6d:
+                compute(ring)
+            else:
+                compute(ring.enable_6d(copy=True))
+
+    See Also:
+        :py:func:`check_6d`, :py:meth:`.Lattice.enable_6d`,
+        :py:meth:`.Lattice.disable_6d`
     """
-    if rad:
+    if is_6d:
         def setrad_decorator(func):
             @functools.wraps(func)
             def wrapper(ring, *args, **kwargs):
-                rg = ring if ring.radiation else ring.radiation_on(copy=True)
+                rg = ring if ring.is_6d else ring.enable_6d(copy=True)
                 return func(rg, *args, **kwargs)
             return wrapper
     else:
         def setrad_decorator(func):
             @functools.wraps(func)
             def wrapper(ring, *args, **kwargs):
-                rg = ring.radiation_off(copy=True) if ring.radiation else ring
+                rg = ring.disable_6d(copy=True) if ring.is_6d else ring
                 return func(rg, *args, **kwargs)
             return wrapper
     return setrad_decorator
 
 
 def make_copy(copy: bool) -> Callable:
-    """Function to be used as a decorator for optics functions
+    """Decorator for optics functions
 
-    Wraps a function like ``func(ring, refpts, *Args, **kwargs)`` where ring
-    is a ``Lattice`` object.
+    Wraps a function like ``func(ring, refpts, *args, **kwargs)`` where
+    ``ring`` is a :py:class:`.Lattice` object.
 
-    If ``copy`` is False, the function is not modified,
-    If ``copy`` is True, a shallow copy of ring is done, then the elements
-    selected by refpts are deep-copied, then func is applied to the copy,
-    and the new ring is returned.
+    If ``copy`` is :py:obj:`False`, the function is not modified,
+
+    If ``copy`` is :py:obj:`True`, a shallow copy of ``ring`` is done, then the
+    elements selected by ``refpts`` are deep-copied, then ``func`` is applied
+    to the copy, and the new ring is returned.
+
+    Parameters:
+        copy:   If :py:obj:`True`, apply the decorated function to a copy of
+          ``ring``
     """
     if copy:
         def copy_decorator(func):
@@ -288,7 +345,7 @@ def checkattr(attrname: str, attrvalue: Optional = None) \
     return testf
 
 
-def checktype(eltype: type) -> ElementFilter:
+def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     """Checks the type of an element
 
@@ -341,41 +398,39 @@ def checkname(pattern: str) -> ElementFilter:
 def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
     # noinspection PyUnresolvedReferences
     """
-        get_cells(ring, filtfunc)
-        get_cells(ring, attrname)
-        get_cells(ring, attrname, attrvalue)
-        Returns a bool array of element indices, selecting ring elements.
+    get_cells(ring, filtfunc)
+    get_cells(ring, attrname)
+    get_cells(ring, attrname, attrvalue)
+    Returns a bool array of element indices, selecting ring elements.
 
-        Parameters:
-            ring (Sequence[Element]):       Lattice description
-            filtfunc (ElementFilter):   Filter function. Selects ``Elements``
-              satisfying the filter function
-            attrname (str):   Attribute name
-            attrvalue (Any):  Attribute value. If absent, select the
-              presence of an ``attrname`` attribute. If present, select
-              ``Elements`` with ``attrname`` == ``attrvalue``.
+    Parameters:
+        ring (Sequence[Element]):       Lattice description
+        filtfunc (ElementFilter):   Filter function. Selects ``Elements``
+          satisfying the filter function
+        attrname (str):   Attribute name
+        attrvalue (Any):  Attribute value. If absent, select the
+          presence of an ``attrname`` attribute. If present, select
+          ``Elements`` with ``attrname`` == ``attrvalue``.
 
-        Returns:
-            bool_refs (BoolRefpts):  numpy Array of ``bool`` with the same
-              length as ``ring``
+    Returns:
+        bool_refs (BoolRefpts):  numpy Array of ``bool`` with length
+          len(ring)+1
 
-        Examples:
+    Examples:
 
-            >>> refpts = getcells(ring, 'Frequency')
+        >>> refpts = get_cells(ring, 'Frequency')
 
-            Returns a numpy array of booleans where all elements having a
-            ``Frequency`` attribute are True
+        Returns a numpy array of booleans where all elements having a
+        ``Frequency`` attribute are True
 
-            >>> refpts = getcells(ring, 'K', 0.0)
+        >>> refpts = get_cells(ring, 'K', 0.0)
 
-            Returns a numpy array of booleans where all elements having a ``K``
-            attribute equal to 0.0 are True
-        """
-    if callable(args[0]):
-        testf = args[0]
-    else:
-        testf = checkattr(*args)
-    return numpy.array(tuple(map(testf, ring)), dtype=bool)
+        Returns a numpy array of booleans where all elements having a ``K``
+        attribute equal to 0.0 are True
+    """
+    testf = args[0] if callable(args[0]) else checkattr(*args)
+    return numpy.append(numpy.fromiter(map(testf, ring), dtype=bool,
+                                       count=len(ring)), False)
 
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
@@ -659,8 +714,10 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
 
     The rotation matrices are stored in the ``R1`` and ``R2`` attributes
 
-    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\ -sin\theta & cos\theta \end{pmatrix}`,
-    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\ sin\theta & cos\theta \end{pmatrix}`
+    :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\
+    -sin\theta & cos\theta \end{pmatrix}`,
+    :math:`R_2=\begin{pmatrix} cos\theta & -sin\theta \\
+    sin\theta & cos\theta \end{pmatrix}`
 
     Parameters:
         elem:           Element to be tilted
@@ -734,3 +791,58 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
     dzs = numpy.broadcast_to(dzs, (len(ring),))
     for el, dx, dy in zip(ring, dxs, dzs):
         shift_elem(el, dx, dy, relative=relative)
+
+
+def get_geometry(ring: List[Element],
+                 start_coordinates: Tuple[float, float, float] = (0, 0, 0),
+                 centered: bool = False):
+    """Compute the 2D ring geometry in cartesian coordinates
+
+    Parameters:
+        ring: Lattice description
+        start_coordinates: x,y,angle at starting point
+        centered: it True the coordinates origin is the center of the ring
+
+    Returns:
+        geomdata: recarray containing, x, y, angle
+        radius: machine radius
+
+    Example:
+
+       >>> geomdata, radius = get_geometry(ring)
+    """
+
+    geom_dtype = [('x', numpy.float64, (1, )),
+                  ('y', numpy.float64, (1, )),
+                  ('angle', numpy.float64, (1, ))]
+    geomdata = numpy.recarray((len(ring)+1, ), dtype=geom_dtype)
+    xx = numpy.zeros((len(ring)+1, 1))
+    yy = numpy.zeros((len(ring)+1, 1))
+    angle = numpy.zeros((len(ring)+1, 1))
+    x, y, t = start_coordinates
+    x0, y0, t0 = start_coordinates
+
+    for ind, el in enumerate(ring+[ring[0]]):
+        ll = el.Length
+        if isinstance(el, Dipole) and el.BendingAngle != 0:
+            ang = 0.5 * el.BendingAngle
+            ll *= numpy.sin(ang)/ang
+        else:
+            ang = 0.0
+        t -= ang
+        x += ll * numpy.cos(t)
+        y += ll * numpy.sin(t)
+        t -= ang
+        xx[ind] = x
+        yy[ind] = y
+        angle[ind] = t
+
+    radius = get_s_pos(ring, len(ring))[0] / abs(t-t0) \
+        if t != 0.0 else 0.0
+    if centered:
+        xx += -abs(radius)*numpy.sin(t0) - x0
+        yy += abs(radius)*numpy.cos(t0) - y0
+    geomdata['x'] = xx
+    geomdata['y'] = yy
+    geomdata['angle'] = angle
+    return geomdata, radius

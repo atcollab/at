@@ -5,14 +5,12 @@ Each element has a default PassMethod attribute for which it should have the
 appropriate attributes.  If a different PassMethod is set, it is the caller's
 responsibility to ensure that the appropriate attributes are present.
 """
+import abc
 import re
 import numpy
-import copy
-from typing import Optional, Generator, Tuple, Union, List, Iterable
-from inspect import getmembers, isdatadescriptor
-
-
-_collective = ['ImpedanceTablePass', 'WakeFieldPass', 'BeamMonitorPass']
+from copy import copy, deepcopy
+from abc import ABC
+from typing import Optional, Generator, Tuple, List, Iterable
 
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
@@ -29,10 +27,213 @@ def _nop(value):
     return value
 
 
+class LongtMotion(ABC):
+    """Abstract Base class for all Element classes whose instances may modify
+    the particle momentum
+
+    Allows to identify elements potentially inducing longitudinal motion.
+
+    Subclasses of :py:class:`LongtMotion` must provide two methods for
+    enabling longitudinal motion:
+
+    * ``_get_longt_motion(self)`` must return the activation state,
+    * ``set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs)``
+      must enable or disable longitudinal motion.
+    """
+    @abc.abstractmethod
+    def _get_longt_motion(self):
+        return False
+
+    # noinspection PyShadowingNames
+    @abc.abstractmethod
+    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
+        """Enable/Disable longitudinal motion
+
+        Parameters:
+            enable:     :py:obj:`True`: for enabling, :py:obj:`False` for
+              disabling
+            new_pass:   New PassMethod:
+
+              * :py:obj:`None`: makes no change,
+              * ``'auto'``: Uses the default conversion,
+              * Anything else is used as the new PassMethod.
+            copy:       If True, returns a modified copy of the element,
+              otherwise modifies the element in-place
+        """
+        # noinspection PyUnresolvedReferences
+        if new_pass is None or new_pass == self.PassMethod:
+            return self if copy else None
+        if copy:
+            newelem = deepcopy(self)
+            newelem.PassMethod = new_pass
+            return newelem
+        # noinspection PyAttributeOutsideInit
+        self.PassMethod = new_pass
+
+
+# noinspection PyUnresolvedReferences
+class _DictLongtMotion(LongtMotion):
+    # noinspection PyShadowingNames
+    """Mixin class for elements implementing a 'default_pass' class attribute
+
+    :py:class:`DictLongtMotion` provides:
+
+    * a :py:meth:`set_longt_motion` method setting the PassMethod according
+      to the ``default_pass`` dictionary.
+    * a :py:obj:`.longt_motion` property set to :py:obj:`True` when the
+      PassMethod is ``default_pass[True]``
+
+    The class must have a ``default_pass`` class attribute, a dictionary
+    such that:
+
+    * ``default_pass[False]`` is the PassMethod when radiation is turned
+      OFF,
+    * ``default_pass[True]`` is the default PassMethod when radiation is
+      turned ON.
+
+    The :py:class:`DictLongtMotion` class must be set as the first base class.
+
+    Example:
+
+        >>> class QuantumDiffusion(_DictLongtMotion, Element):
+        ...
+        ...     default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
+
+        Defines a class such that :py:meth:`set_longt_motion` will select
+        ``'IdentityPass'`` or ``'IdentityPass'``.
+        """
+    def _get_longt_motion(self):
+        return self.PassMethod != self.default_pass[False]
+
+    # noinspection PyShadowingNames
+    def set_longt_motion(self, enable, new_pass=None, **kwargs):
+        if new_pass == 'auto':
+            new_pass = self.default_pass[enable]
+        return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
+
+
+# noinspection PyUnresolvedReferences
+class _Radiative(LongtMotion):
+    # noinspection PyShadowingNames
+    r"""Mixin class for radiating elements
+
+    :py:class:`_Radiative` implements the mechanism for converting the pass
+    methods of radiating elements. It provides:
+
+    * a :py:meth:`set_longt_motion` method setting the PassMethod
+      according to the following rule:
+
+      * ``enable == True``: replace "\*Pass" by "\*RadPass"
+      * ``enable == False``: replace "\*RadPass" by "\*Pass"
+    * a :py:obj:`.longt_motion` property set to true when the PassMethod
+      ends with "RadPass"
+
+    The :py:class:`_Radiative` class must be set as the first base class.
+
+    Example:
+        >>> class Multipole(_Radiative, LongElement, ThinMultipole):
+
+        Defines a class where :py:meth:`set_longt_motion` will convert the
+        PassMethod according to the \*Pass or \*RadPass suffix.
+    """
+
+    def _get_longt_motion(self):
+        return self.PassMethod.endswith(('RadPass', 'QuantPass'))
+
+    def _autopass(self, enable):
+        if enable:
+            root = self.PassMethod.replace('QuantPass', 'Pass').\
+                replace('RadPass', 'Pass')
+            return ''.join((root[:-4], 'RadPass'))
+        elif self.longt_motion:
+            root = self.PassMethod.replace('QuantPass', 'Pass').\
+                replace('RadPass', 'Pass')
+            return root
+        else:
+            return None
+
+    # noinspection PyTypeChecker,PyShadowingNames
+    def set_longt_motion(self, enable, new_pass=None, copy=False, **kwargs):
+        if new_pass == 'auto':
+            new_pass = self._autopass(enable)
+        if new_pass is None or new_pass == self.PassMethod:
+            return self if copy else None
+        if enable:
+            def setpass(el):
+                el.PassMethod = new_pass
+                el.Energy = kwargs['energy']
+        else:
+            def setpass(el):
+                el.PassMethod = new_pass
+                try:
+                    del el.Energy
+                except AttributeError:
+                    pass
+        if copy:
+            newelem = deepcopy(self)
+            setpass(newelem)
+            return newelem
+        setpass(self)
+
+
+class Radiative(_Radiative):
+    # noinspection PyShadowingNames
+    r"""Mixin class for default radiating elements (:py:class:`.Dipole`,
+    :py:class:`.Quadrupole`, :py:class:`.Wiggler`)
+
+    :py:class:`Radiative` is a base class for the subset of radiative elements
+    considered as the ones to be turned on by default: :py:class:`.Dipole`,
+    :py:class:`.Quadrupole` and :py:class:`.Wiggler`, excluding the higher
+    order multipoles.
+
+    :py:class:`Radiative` inherits from :py:class:`_Radiative` and does not
+    add any new functionality. Its purpose is to identify the default set of
+    radiating elements.
+
+    Example:
+        >>> class Dipole(Radiative, Multipole):
+
+        Defines a class belonging to the default radiating elements. It
+        converts the PassMethod according to the "\*Pass" or "\*RadPass"
+        suffix.
+    """
+    pass
+
+
+class Collective(_DictLongtMotion):
+    """Mixin class for elements representing collective effects
+
+    Derived classes will automatically set the :py:attr:`~Element.is_collective`
+    property when the element is active.
+
+    The class must have a ``default_pass`` class attribute, a dictionary such
+    that:
+
+    * ``default_pass[False]`` is the PassMethod when collective effects
+      are turned OFF,
+    * ``default_pass[True]`` is the default PassMethod when collective effects
+      are turned ON.
+
+    The :py:class:`Collective` class must be set as the first base class.
+
+    Example:
+        >>> class WakeElement(Collective, Element):
+        ...
+        ...     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
+
+        Defines a class where the :py:attr:`~Element.is_collective` property is
+        handled
+    """
+
+    def _get_collective(self):
+        # noinspection PyUnresolvedReferences
+        return self.PassMethod != self.default_pass[False]
+
+
 class Element(object):
     """Base class for AT elements"""
 
-    REQUIRED_ATTRIBUTES = ['FamName']
+    _BUILD_ATTRIBUTES = ['FamName']
     _conversions = dict(FamName=str, PassMethod=str, Length=float,
                         R1=_array66, R2=_array66,
                         T1=lambda v: _array(v, (6,)),
@@ -76,12 +277,12 @@ class Element(object):
         attrs = dict(self.items())
         keywords = ['\t{0} : {1!s}'.format(k, attrs.pop(k)) for k in first3]
         keywords += ['\t{0} : {1!s}'.format(k, v) for k, v in attrs.items()]
-        return '\n'.join((self.__class__.__name__ + ':', '\n'.join(keywords)))
+        return '\n'.join((type(self).__name__ + ':', '\n'.join(keywords)))
 
     def __repr__(self):
         attrs = dict(self.items())
         arguments = [attrs.pop(k, getattr(self, k)) for k in
-                     self.REQUIRED_ATTRIBUTES]
+                     self._BUILD_ATTRIBUTES]
         defelem = self.__class__(*arguments)
         keywords = ['{0!r}'.format(arg) for arg in arguments]
         keywords += ['{0}={1!r}'.format(k, v) for k, v in sorted(attrs.items())
@@ -103,15 +304,15 @@ class Element(object):
 
         Parameters:
             frac:           length of each slice expressed as a fraction of the
-                            initial length. ``sum(frac)`` may differ from 1.
+              initial length. ``sum(frac)`` may differ from 1.
 
         Returns:
             elem_list:  a list of elements equivalent to the original.
 
-        Examples:
+        Example:
 
-        >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
-        [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
+            >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
+            [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
         """
         # Bx default, the element is indivisible
         return [self]
@@ -129,28 +330,51 @@ class Element(object):
 
     def copy(self) -> "Element":
         """Return a shallow copy of the element"""
-        return copy.copy(self)
+        return copy(self)
 
     def deepcopy(self) -> "Element":
         """Return a deep copy of the element"""
-        return copy.deepcopy(self)
+        return deepcopy(self)
 
     def items(self) -> Generator[Tuple, None, None]:
-        """Iterates through the data members including slots and properties"""
-        # Get attributes
+        """Iterates through the data members"""
         for k, v in vars(self).items():
             yield k, v
-        # Get slots and properties
-        for k, v in getmembers(self.__class__, isdatadescriptor):
-            if not k.startswith('_'):
-                yield k, getattr(self, k)
+
+    def is_compatible(self, other: "Element") -> bool:
+        """Checks if another :py:class:`Element` can be merged"""
+        return False
+
+    def merge(self, other) -> None:
+        """Merge another element"""
+        if not self.is_compatible(other):
+            badname = getattr(other, 'FamName', type(other))
+            raise TypeError('Cannot merge {0} and {1}'.format(self.FamName,
+                                                              badname))
+
+    # noinspection PyMethodMayBeStatic
+    def _get_longt_motion(self):
+        return False
+
+    # noinspection PyMethodMayBeStatic
+    def _get_collective(self):
+        return False
+
+    @property
+    def longt_motion(self) -> bool:
+        """:py:obj:`True` if longitudinal motion is affected by the element"""
+        return self._get_longt_motion()
+
+    @property
+    def is_collective(self) -> bool:
+        """:py:obj:`True` if the element involves collective effects"""
+        return self._get_collective()
 
 
 class LongElement(Element):
-    """pyAT long element
-
-    Bse class for long elements"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Length']
+    """Base class for long elements
+    """
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Length']
 
     def __init__(self, family_name: str, length: float, *args, **kwargs):
         """
@@ -173,21 +397,6 @@ class LongElement(Element):
         return pp
 
     def divide(self, frac) -> List[Element]:
-        """split the element in len(frac) pieces whose length
-        is frac[i]*self.Length
-
-        Parameters:
-            frac:           length of each slice expressed as a fraction of the
-                            initial length. ``sum(frac)`` may differ from 1.
-
-        Returns:
-            elem_list:  a list of elements equivalent to the original.
-
-        Examples:
-
-        >>> Drift('dr', 0.5).divide([0.2, 0.6, 0.2])
-        [Drift('dr', 0.1), Drift('dr', 0.3), Drift('dr', 0.1)]
-        """
         def popattr(element, attr):
             val = getattr(element, attr)
             delattr(element, attr)
@@ -209,15 +418,23 @@ class LongElement(Element):
             setattr(element_list[-1], key, value)
         return element_list
 
+    def is_compatible(self, other) -> bool:
+        return type(other) is type(self) and \
+               self.PassMethod == other.PassMethod
+
+    def merge(self, other) -> None:
+        super().merge(other)
+        self.Length += other.Length
+
 
 class Marker(Element):
-    """pyAT marker element"""
+    """Marker element"""
 
 
 class Monitor(Element):
-    """pyAT monitor element"""
-    
-    
+    """Monitor element"""
+
+
 class BeamMonitor(Element):
     """pyAT beam monitor element for multi-particles"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
@@ -236,8 +453,8 @@ class BeamMonitor(Element):
 
 
 class Aperture(Element):
-    """pyAT aperture element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['Limits']
+    """Aperture element"""
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Limits']
     _conversions = dict(Element._conversions, Limits=lambda v: _array(v, (4,)))
 
     def __init__(self, family_name, limits, **kwargs):
@@ -254,7 +471,7 @@ class Aperture(Element):
 
 
 class Drift(LongElement):
-    """pyAT drift space element"""
+    """Drift space element"""
 
     def __init__(self, family_name: str, length: float, **kwargs):
         """
@@ -268,7 +485,7 @@ class Drift(LongElement):
         super(Drift, self).__init__(family_name, length, **kwargs)
 
     def insert(self,
-               insert_list: Iterable[Tuple[float, Union[Element, None]]]) \
+               insert_list: Iterable[Tuple[float, Optional[Element]]]) \
             -> List[Element]:
         """insert elements inside a drift
 
@@ -278,7 +495,7 @@ class Drift(LongElement):
 
               1. the location where the center of the element
                  will be inserted, given as a fraction of the Drift length.
-              2. an element to be inserted at that location. If ``None``,
+              2. an element to be inserted at that location. If :py:obj:`None`,
                  the drift will be divided but no element will be inserted.
 
         Returns:
@@ -288,14 +505,15 @@ class Drift(LongElement):
 
         Examples:
 
-        >>> Drift('dr', 2.0).insert(((0.25, None), (0.75, None)))
-        [Drift('dr', 0.5), Drift('dr', 1.0), Drift('dr', 0.5)]
+            >>> Drift('dr', 2.0).insert(((0.25, None), (0.75, None)))
+            [Drift('dr', 0.5), Drift('dr', 1.0), Drift('dr', 0.5)]
 
-        >>> Drift('dr', 2.0).insert(((0.0, Marker('m1')), (0.5, Marker('m2'))))
-        [Marker('m1'), Drift('dr', 1.0), Marker('m2'), Drift('dr', 1.0)]
+            >>> Drift('dr', 2.0).insert(((0.0, Marker('m1')),
+            ... (0.5, Marker('m2'))))
+            [Marker('m1'), Drift('dr', 1.0), Marker('m2'), Drift('dr', 1.0)]
 
-        >>> Drift('dr', 2.0).insert(((0.5, Quadrupole('qp', 0.4, 0.0)),))
-        [Drift('dr', 0.8), Quadrupole('qp', 0.4), Drift('dr', 0.8)]
+            >>> Drift('dr', 2.0).insert(((0.5, Quadrupole('qp', 0.4, 0.0)),))
+            [Drift('dr', 0.8), Quadrupole('qp', 0.4), Drift('dr', 0.8)]
         """
         frac, elements = zip(*insert_list)
         lg = [0.0 if el is None else el.Length for el in elements]
@@ -306,15 +524,15 @@ class Drift(LongElement):
         drifts = numpy.ndarray((len(drfrac),), dtype='O')
         drifts[long_elems] = self.divide(drfrac[long_elems])
         nline = len(drifts) + len(elements)
-        line = [None] * nline           # type: List[Union[Element, None]]
+        line = [None] * nline  # type: List[Optional[Element]]
         line[::2] = drifts
         line[1::2] = elements
         return [el for el in line if el is not None]
 
 
 class Collimator(Drift):
-    """pyAT collimator element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['RApertures']
+    """Collimator element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['RApertures']
 
     def __init__(self, family_name: str, length: float, limits, **kwargs):
         """
@@ -331,9 +549,9 @@ class Collimator(Drift):
 
 
 class ThinMultipole(Element):
-    """pyAT thin multipole element"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES + ['PolynomA',
-                                                         'PolynomB']
+    """Thin multipole element"""
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
+                                                     'PolynomB']
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -348,6 +566,7 @@ class ThinMultipole(Element):
 
         Default PassMethod: ``ThinMPolePass``
         """
+
         def getpol(poly):
             nonzero = numpy.flatnonzero(poly != 0.0)
             return poly, len(poly), nonzero[-1] if len(nonzero) > 0 else -1
@@ -363,12 +582,12 @@ class ThinMultipole(Element):
         poly_b, len_b, ord_b = getpol(_array(kwargs.pop('PolynomB', poly_b)))
         deforder = max(getattr(self, 'DefaultOrder', 0), ord_a, ord_b)
         maxorder = kwargs.pop('MaxOrder', deforder)
-        len_ab = max(maxorder + 1, len_a, len_b)
         kwargs.setdefault('PassMethod', 'ThinMPolePass')
         super(ThinMultipole, self).__init__(family_name, **kwargs)
         # Set MaxOrder while PolynomA and PolynomB are not set yet
         super(ThinMultipole, self).__setattr__('MaxOrder', maxorder)
         # Adjust polynom lengths and set them
+        len_ab = max(self.MaxOrder + 1, len_a, len_b)
         self.PolynomA = lengthen(poly_a, len_ab - len_a)
         self.PolynomB = lengthen(poly_b, len_ab - len_b)
 
@@ -391,10 +610,10 @@ class ThinMultipole(Element):
         super(ThinMultipole, self).__setattr__(key, value)
 
 
-class Multipole(LongElement, ThinMultipole):
-    """pyAT multipole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['PolynomA',
-                                                             'PolynomB']
+class Multipole(_Radiative, LongElement, ThinMultipole):
+    """Multipole element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['PolynomA',
+                                                         'PolynomB']
     _conversions = dict(ThinMultipole._conversions, K=float, H=float)
 
     def __init__(self, family_name: str, length: float, poly_a, poly_b,
@@ -419,22 +638,45 @@ class Multipole(LongElement, ThinMultipole):
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
 
+    def is_compatible(self, other) -> bool:
+        if super().is_compatible(other) and \
+                self.MaxOrder == other.MaxOrder:
+            for i in range(self.MaxOrder + 1):
+                if self.PolynomB[i] != other.PolynomB[i]:
+                    return False
+                if self.PolynomA[i] != other.PolynomA[i]:
+                    return False
+            return True
+        else:
+            return False
+
     # noinspection PyPep8Naming
     @property
     def K(self) -> float:
         """Focusing strength [mˆ-2]"""
-        return self.PolynomB[1]
+        return 0.0 if len(self.PolynomB) < 2 else self.PolynomB[1]
 
     # noinspection PyPep8Naming
     @K.setter
     def K(self, strength: float):
         self.PolynomB[1] = strength
 
+    # noinspection PyPep8Naming
+    @property
+    def H(self) -> float:
+        """Sextupolar strength"""
+        return 0.0 if len(self.PolynomB) < 3 else self.PolynomB[2]
 
-class Dipole(Multipole):
-    """pyAT dipole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['BendingAngle',
-                                                             'K']
+    # noinspection PyPep8Naming
+    @H.setter
+    def H(self, strength):
+        self.PolynomB[2] = strength
+
+
+class Dipole(Radiative, Multipole):
+    """Dipole element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['BendingAngle',
+                                                         'K']
     _conversions = dict(Multipole._conversions, EntranceAngle=float,
                         ExitAngle=float,
                         FringeInt1=float, FringeInt2=float,
@@ -499,6 +741,10 @@ class Dipole(Multipole):
         kwargs.setdefault('PassMethod', 'BndMPoleSymplectic4Pass')
         super(Dipole, self).__init__(family_name, length, [], poly_b, **kwargs)
 
+    def items(self) -> Generator[Tuple, None, None]:
+        yield from super().items()
+        yield 'K', self.K
+
     def _part(self, fr, sumfr):
         pp = super(Dipole, self)._part(fr, sumfr)
         pp.BendingAngle = fr / sumfr * self.BendingAngle
@@ -506,14 +752,28 @@ class Dipole(Multipole):
         pp.ExitAngle = 0.0
         return pp
 
+    def is_compatible(self, other) -> bool:
+        def invrho(dip: Dipole):
+            return dip.BendingAngle / dip.Length
+
+        return (super().is_compatible(other) and
+                self.ExitAngle == -other.EntranceAngle and
+                abs(invrho(self) - invrho(other)) <= 1.e-6)
+
+    def merge(self, other) -> None:
+        super().merge(other)
+        # noinspection PyAttributeOutsideInit
+        self.ExitAngle = other.ExitAngle
+        self.BendingAngle += other.BendingAngle
+
 
 # Bend is a synonym of Dipole.
 Bend = Dipole
 
 
-class Quadrupole(Multipole):
-    """pyAT quadrupole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['K']
+class Quadrupole(Radiative, Multipole):
+    """Quadrupole element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
                         FringeQuadExit=int)
 
@@ -553,10 +813,14 @@ class Quadrupole(Multipole):
         super(Quadrupole, self).__init__(family_name, length, [], poly_b,
                                          **kwargs)
 
+    def items(self) -> Generator[Tuple, None, None]:
+        yield from super().items()
+        yield 'K', self.K
+
 
 class Sextupole(Multipole):
-    """pyAT sextupole element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['H']
+    """Sextupole element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['H']
 
     DefaultOrder = 2
 
@@ -582,30 +846,25 @@ class Sextupole(Multipole):
         super(Sextupole, self).__init__(family_name, length, [], poly_b,
                                         **kwargs)
 
-    # noinspection PyPep8Naming
-    @property
-    def H(self):
-        return self.PolynomB[2]
-
-    # noinspection PyPep8Naming
-    @H.setter
-    def H(self, strength):
-        self.PolynomB[2] = strength
+    def items(self) -> Generator[Tuple, None, None]:
+        yield from super().items()
+        yield 'H', self.H
 
 
 class Octupole(Multipole):
-    """pyAT octupole element, with no changes from multipole at present"""
-    REQUIRED_ATTRIBUTES = Multipole.REQUIRED_ATTRIBUTES
+    """Octupole element, with no changes from multipole at present"""
+    _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
 
     DefaultOrder = 3
 
 
-class RFCavity(LongElement):
-    """pyAT RF cavity element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Voltage',
-                                                             'Frequency',
-                                                             'HarmNumber',
-                                                             'Energy']
+class RFCavity(LongtMotion, LongElement):
+    """RF cavity element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Voltage',
+                                                         'Frequency',
+                                                         'HarmNumber',
+                                                         'Energy']
+    default_pass = {False: 'DriftPass', True: 'RFCavityPass'}
     _conversions = dict(LongElement._conversions,
                         Voltage=float, Frequency=float,
                         HarmNumber=int, TimeLag=float)
@@ -628,7 +887,7 @@ class RFCavity(LongElement):
         Default PassMethod: ``RFCavityPass``
         """
         kwargs.setdefault('TimeLag', 0.0)
-        kwargs.setdefault('PassMethod', 'RFCavityPass')
+        kwargs.setdefault('PassMethod', self.default_pass[True])
         super(RFCavity, self).__init__(family_name, length,
                                        Voltage=voltage,
                                        Frequency=frequency,
@@ -640,10 +899,29 @@ class RFCavity(LongElement):
         pp.Voltage = fr * self.Voltage
         return pp
 
+    def is_compatible(self, other) -> bool:
+        return (super().is_compatible(other) and
+                self.Frequency == other.Frequency and
+                self.TimeLag == other.TimeLag)
+
+    def merge(self, other) -> None:
+        super().merge(other)
+        self.Voltage += other.Voltage
+
+    def _get_longt_motion(self):
+        return self.PassMethod.endswith('CavityPass')
+
+    # noinspection PyShadowingNames
+    def set_longt_motion(self, enable, new_pass=None, **kwargs):
+        if new_pass == 'auto':
+            new_pass = (self.default_pass[True] if enable else
+                        ('IdentityPass' if self.Length == 0 else 'DriftPass'))
+        return super().set_longt_motion(enable, new_pass=new_pass, **kwargs)
+
 
 class M66(Element):
     """Linear (6, 6) transfer matrix"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     _conversions = dict(Element._conversions, M66=_array66)
 
     def __init__(self, family_name: str, m66=None, **kwargs):
@@ -661,8 +939,8 @@ class M66(Element):
 
 
 class Corrector(LongElement):
-    """pyAT corrector element"""
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['KickAngle']
+    """Corrector element"""
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['KickAngle']
 
     def __init__(self, family_name: str, length: float, kick_angle, **kwargs):
         """
@@ -678,13 +956,13 @@ class Corrector(LongElement):
                                         KickAngle=kick_angle, **kwargs)
 
 
-class Wiggler(LongElement):
-    """pyAT wiggler element
+class Wiggler(Radiative, LongElement):
+    """Wiggler element
 
     See atwiggler.m
     """
-    REQUIRED_ATTRIBUTES = LongElement.REQUIRED_ATTRIBUTES + ['Lw', 'Bmax',
-                                                             'Energy']
+    _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['Lw', 'Bmax',
+                                                         'Energy']
     _conversions = dict(Element._conversions, Lw=float, Bmax=float,
                         Energy=float,
                         Bx=lambda v: _array(v, (6, -1)),
@@ -723,13 +1001,13 @@ class Wiggler(LongElement):
                                       By=By, Bx=Bx, Energy=energy, **kwargs)
 
         for i, b in enumerate(self.By.T):
-            dk = abs(b[3]**2 - b[4]**2 - b[2]**2) / abs(b[4])
+            dk = abs(b[3] ** 2 - b[4] ** 2 - b[2] ** 2) / abs(b[4])
             if dk > 1e-6:
                 raise ValueError("Wiggler(H): kx^2 + kz^2 -ky^2 !=0, i = "
                                  "{0}".format(i))
 
         for i, b in enumerate(self.Bx.T):
-            dk = abs(b[2]**2 - b[4]**2 - b[3]**2) / abs(b[4])
+            dk = abs(b[2] ** 2 - b[4] ** 2 - b[3] ** 2) / abs(b[4])
             if dk > 1e-6:
                 raise ValueError("Wiggler(V): ky^2 + kz^2 -kx^2 !=0, i = "
                                  "{0}".format(i))
@@ -737,6 +1015,45 @@ class Wiggler(LongElement):
         self.NHharm = self.By.shape[1]
         self.NVharm = self.Bx.shape[1]
 
+
+class QuantumDiffusion(_DictLongtMotion, Element):
+    _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['Lmatp']
+    default_pass = {False: 'IdentityPass', True: 'QuantDiffPass'}
+    _conversions = dict(Element._conversions, Lmatp=_array66)
+
+    def __init__(self, family_name: str, lmatp: numpy.ndarray, **kwargs):
+        """Quantum diffusion element
+
+        Args:
+            family_name:    Name of the element
+            lmatp      :    Diffusion matrix for generation (see
+                               :py:func:`.gen_quantdiff_elem`)
+
+        Default PassMethod: ``QuantDiffPass``
+        """
+        kwargs.setdefault('PassMethod', self.default_pass[True])
+        super().__init__(family_name, Lmatp=lmatp, **kwargs)
+
+
+def build_class_map():  # Missing class aliases (Bend)
+    global CLASS_MAP
+
+    def subclasses_recursive(cl):
+        direct = cl.__subclasses__()
+        indirect = []
+        for subclass in direct:
+            indirect.extend(subclasses_recursive(subclass))
+        return frozenset([cl] + direct + indirect)
+
+    cls_list = subclasses_recursive(Element)
+    CLASS_MAP = {cls.__name__: cls for cls in cls_list}
+
+
+def get_class_map():
+    return CLASS_MAP
+
+
+# build_class_map()
 
 CLASS_MAP = dict((k, v) for k, v in locals().items()
                  if isinstance(v, type) and issubclass(v, Element))

@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import numpy
 from scipy.optimize import least_squares
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
-from at.lattice import check_radiation, AtError
+from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import checktype, set_value_refpts, get_cells, refpts_len
 from at.constants import clight, Cgamma
 from at.tracking import lattice_pass
@@ -99,13 +99,15 @@ def get_energy_loss(ring: Lattice,
 
 # noinspection PyPep8Naming
 def get_timelag_fromU0(ring: Lattice,
-                       method: Optional[ELossMethod] = ELossMethod.INTEGRAL,
-                       cavpts: Optional[Refpts] = None) -> Tuple[float, float]:
+                       method: Optional[ELossMethod] = ELossMethod.TRACKING,
+                       cavpts: Optional[Refpts] = None,
+                       divider: Optional[float] = 4) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
     An error occurs if all cavities do not have the same frequency.
     Used in set_cavity_phase()
+
 
     Parameters:
         ring:               Lattice description
@@ -123,50 +125,61 @@ def get_timelag_fromU0(ring: Lattice,
             raise AtError('values not equal for all cavities')
         return vals[0]
 
-    def eq(x):
-        return numpy.sum(rfv*numpy.sin(2*pi*freq*(x+tl0)/clight))-u0
-
-    def deq(x):
-        return numpy.sum(rfv*numpy.cos(2*pi*freq*(x+tl0)/clight))
+    def eq(x, freq, rfv, tl0, u0):
+        omf = 2*numpy.pi*freq/clight
+        eq1 = numpy.sum(-rfv*numpy.sin(omf*(x-tl0)))-u0
+        eq2 = numpy.sum(-omf*rfv*numpy.cos(omf*(x-tl0)))
+        if eq2 > 0:
+            return numpy.sqrt(eq1**2+eq2**2)
+        else:
+            return eq1
 
     if cavpts is None:
-        cavpts = get_cells(ring, checktype(RFCavity))
-    u0 = get_energy_loss(ring, method=method) / ring.periodicity
+        cavpts = ring.get_cells(checktype(RFCavity))
+    u0 = ring.get_energy_loss(method=method) / ring.periodicity
     freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
     tl0 = numpy.array([cav.TimeLag for cav in ring.select(cavpts)])
+
     try:
         frf = singlev(freq)
         tml = singlev(tl0)
     except AtError:
-        if u0 > numpy.sum(rfv):
-            raise AtError('Not enough RF voltage: unstable ring')
-        ctmax = 1/numpy.amin(freq)*clight/2
+        ctmax = clight/numpy.amin(freq)/2
         tt0 = tl0[numpy.argmin(freq)]
-        zero_diff = least_squares(deq, -tt0+ctmax/2,
-                                  bounds=(-tt0, ctmax-tt0)).x[0]
-        if numpy.sign(deq(zero_diff-1.0e-6)) > 0:
-            ts = least_squares(eq, (zero_diff-tt0)/2,
-                               bounds=(-tt0, zero_diff)).x[0]
-        else:
-            ts = least_squares(eq, (ctmax-tt0+zero_diff)/2,
-                               bounds=(zero_diff, ctmax-tt0)).x[0]
+        bounds = (-ctmax, ctmax)
+        args = (freq,rfv,tl0,u0)
+        r = []
+        for i in range(divider):
+            fact = (i+1)/divider
+            r.append(least_squares(eq,bounds[0]*fact+tt0, args=args, bounds=bounds+tt0))
+            r.append(least_squares(eq,bounds[1]*fact+tt0, args=args, bounds=bounds+tt0))
+        res = numpy.array([abs(ri.fun[0]) for ri in r])
+        ok = res < 1.0e-6
+        vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])    
+        if not numpy.any(ok):
+            raise AtError('No solution found for Phis, please check '
+                          'RF settings')
+        if len(numpy.unique(vals[ok])) > 1:
+            warn(AtWarning('More than one solution found for Phis: use '
+                           'best fit, please check RF settings'))
+        ts = -r[numpy.argmin(res)].x[0]
         timelag = ts+tl0
     else:
-        vrf = numpy.sum(rfv)
-        if u0 > vrf:
+        if u0 > numpy.sum(rfv):
             raise AtError('Not enough RF voltage: unstable ring')
-        timelag = clight/(2*pi*frf)*numpy.arcsin(u0/vrf)
+        vrf = numpy.sum(rfv)
+        timelag = clight/(2*numpy.pi*frf)*numpy.arcsin(u0/vrf)
         ts = timelag - tml
         timelag *= numpy.ones(refpts_len(ring, cavpts))
     return timelag, ts
 
 
 def set_cavity_phase(ring: Lattice,
-                     method=ELossMethod.TRACKING,
+                     method: ELossMethod = ELossMethod.TRACKING,
                      refpts: Optional[Refpts] = None,
                      cavpts: Optional[Refpts] = None,
-                     copy: Optional[bool] = False) -> None:
+                     copy: bool = False) -> None:
     """
     Adjust the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.

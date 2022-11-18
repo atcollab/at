@@ -95,7 +95,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                  zn=None, momap=None, refpts=None, **kwargs):
     """Touschek lifetime calculation
     
-    Computes the touschek lifetime using the piwinski formula
+    Computes the touschek lifetime using the Piwinski formula
 
     args:
         ring:            ring use for tracking
@@ -114,7 +114,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                          ring, ``len(refpts)>2`` is required
         resolution:      minimum distance between 2 grid points, default=1.0e-3
         amplitude:       max. amplitude for ``RADIAL`` and ``CARTESIAN`` or
-                         initial step in ``RECURSIVE`
+                         initial step in ``RECURSIVE``
                          default = 0.1
         nturns=1024:     Number of turns for the tracking
         dp=None:         static momentum offset
@@ -124,12 +124,13 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
                          ``lattice_pass``). In case multi-processing is not
                          enabled ``GridMode`` is forced to
                          ``RECURSIVE`` (most efficient in single core)
-        verbose=True:    Print out some inform
+        verbose=False:   Print out some inform
         epsabs, epsrel:  integral absolute and relative tolerances
 
     Returns:
-        Returns the touschek lifetime in seconds, the momentum aperture
-        and the refpts at which the aperture was computed
+        tl: touschek lifetime, double expressed in seconds 
+        ma: momentum aperture (len(refpts), 2) array
+        refpts: refpts used for ma calcualtion (len(refpts), ) array
     """
 
     epsabs = kwargs.pop('epsabs', 1.0e-16)

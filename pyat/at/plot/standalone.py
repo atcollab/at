@@ -1,70 +1,75 @@
 """AT plotting functions"""
+from typing import Tuple
 from at.lattice import Lattice
 import matplotlib.pyplot as plt
 import numpy
+from numpy import ndarray
 
 
 # Function to compute and plot acceptance
-def plot_acceptance(ring, *args, **kwargs):
-    """
-    Computes the acceptance at repfts observation points
-    Grid Coordiantes ordering is as follows: CARTESIAN: (x,y), RADIAL/RECURSIVE
-    (r, theta). Scalar inputs can be used for 1D grid.
-    The grid can be changed using grid_mode input:
-    at.GridMode.CARTESIAN: (x,y) grid
-    at.GridMode.RADIAL: (r,theta) grid
-    at.GridMode.RECURSIVE: (r,theta) recursive boundary search
+def plot_acceptance(ring: Lattice, *args, **kwargs):
+    # noinspection PyUnresolvedReferences
+    r"""Plots the acceptance
 
-    Example usage:
-    ring.plot_acceptance(planes, npoints, amplitudes)
-    plt.show()
+    Computes the acceptance at repfts observation points using
+    :py:func:`.get_acceptance` and plots the tracked
+    and survived particles, and the acceptance boundary.
 
-    PARAMETERS
-    PARAMETERS
-        ring            ring use for tracking
-        planes          max. dimension 2, defines the plane where to search
-                        for the acceptance, allowed values are: x,xp,y,yp,dp,ct
-        npoints         number of points in each dimension shape (len(planes),)
-        amplitudes      max. amplitude  or initial step in RECURSIVE in each
-                        dimension
-                        shape (len(planes),), for RADIAL/RECURSIVE grid:
-                        r = sqrt(x**2+y**2)
+    Parameters:
+        ring:           Lattice definition
 
+    Keyword Args:
+        acceptance(Tuple[ndarray, ndarray, ndarray]): Tuple containing
+          pre-computed acceptance ``(boundary, survived, grid)``
+        planes:         max. dimension 2, Plane(s) to scan for the acceptance.
+          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
+          ``'yp'``, ``'dp'``, ``'ct'``
+        npoints:        (len(planes),) array: number of points in each
+          dimension
+        amplitudes:     (len(planes),) array: set the search range:
 
-    KEYWORDS
-        acceptance=None tuple containing pre-computed acceptance
-                        (boundary, survived, grid)
-        nturns=1024     Number of turns for the tracking
-        refpts=None     Observation refpts, default start of the machine
-        dp=None         static momentum offset
-        offset=None     initial orbit, default closed orbit
-        bounds=None     Allows to define boundaries for the grid default
-                        values are:
-                        GridMode.CARTESIAN: ((-1,1),(0,1))
-                        GridMode.RADIAL/RECURSIVE: ((0,1),(pi,0))
-        grid_mode       at.GridMode.CARTESIAN/RADIAL: track full vector
-                        (default) at.GridMode.RECURSIVE: recursive search
-        use_mp=False    Use python multiprocessing (patpass, default use
-                        lattice_pass). In case multi-processing is not
-                        enabled GridMode is forced to
-                        RECURSIVE (most efficient in single core)
-        divider=2       Value of the divider used in RECURSIVE boundary search
-        verbose=True    Print out some inform
-        start_method    This parameter allows to change the python
-                        multiprocessing start method, default=None uses the
-                        python defaults that is considered safe.
-                        Available parameters: 'fork', 'spawn', 'forkserver'.
-                        Default for linux is fork, default for MacOS and
-                        Windows is spawn. fork may used for MacOS to speed-up
-                        the calculation or to solve Runtime Errors, however
-                        it is considered unsafe.
+          * :py:attr:`GridMode.CARTESIAN/RADIAL <.GridMode.RADIAL>`:
+            max. amplitude
+          * :py:attr:`.GridMode.RECURSIVE`: initial step
+        nturns (int):       Number of turns for the tracking
+        obspt (Refpts):    Observation points. Default: start of the machine
+        dp (float):         Static momentum offset
+        offset:             Initial orbit. Default: closed orbit
+        bounds:             Defines the tracked range: range=bounds*amplitude.
+          It can be used to select quadrants. For example, default values are:
 
+          * :py:attr:`.GridMode.CARTESIAN`: ((-1, 1), (0, 1))
+          * :py:attr:`GridMode.RADIAL/RECURSIVE <.GridMode.RADIAL>`: ((0, 1),
+            (:math:`\pi`, 0))
+        grid_mode (GridMode):   Defines the evaluation grid:
 
-    OUTPUT
-        Returns 3 lists containing the 2D acceptance, the grid that was
-        tracked and the particles of the grid that survived. The length
-        of the lists=refpts. In case len(refpts)=1 the acceptance, grid,
-        survived arrays are returned directly.
+          * :py:attr:`.GridMode.CARTESIAN`: full [:math:`\:x, y\:`] grid
+          * :py:attr:`.GridMode.RADIAL`: full [:math:`\:r, \theta\:`] grid
+          * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
+        use_mp (bool):      Use python multiprocessing (:py:func:`.patpass`,
+          default use :py:func:`.lattice_pass`). In case multiprocessing is not
+          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
+          (most efficient in single core)
+        verbose (bool):     Print out some information
+        divider (int):      Value of the divider used in
+          :py:attr:`.GridMode.RECURSIVE` boundary search
+        shift_zero:
+        start_method (str): Python multiprocessing start method. The default
+          :py:obj:`None` uses the python default that is considered safe.
+          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          The default for linux is ``'fork'``, the default for macOS and
+          Windows is ``'spawn'``. ``'fork'`` may used for macOS to speed up
+          the calculation or to solve runtime errors, however  it is
+          considered unsafe.
+
+    Returns:
+        boundary:   (2,n) array: 2D acceptance
+        tracked:    (2,n) array: Coordinates of tracked particles
+        survived:   (2,n) array: Coordinates of surviving particles
+
+    Example:
+        >>> ring.plot_acceptance(planes, npoints, amplitudes)
+        >>> plt.show()
     """
 
     units = {'x': '[m]', 'xp': '[rad]', 'y': '[m]',
@@ -98,4 +103,40 @@ def plot_acceptance(ring, *args, **kwargs):
     return boundary, survived, grid
 
 
+def plot_geometry(ring: Lattice, start_coordinates=(0, 0, 0),
+                  centered=False, ax=None, label=''):
+    """Compute the 2D ring geometry in cartesian coordinates.
+    
+    Usage:
+    
+    .. code-block:: python
+    
+       ring.plot_geometry()
+
+    Parameters:
+        ring: Lattice description
+        start_coordinates: x,y,angle at starting point
+        centered: it True the coordinates origin is the center of the ring
+        offset: (dx, dy) offsets coordinates by the given amount
+        ax: axes where to plot, if not given axes are created
+        label: label of curve
+
+    Returns:
+        geomdata: recarray containing, x, y, angle
+        radius: machine radius
+        ax: plot axis
+    """
+    if not ax:
+        fig, ax = plt.subplots()
+    geom, radius = ring.get_geometry(start_coordinates=start_coordinates,
+                                     centered=centered)
+    ax.plot(geom['x'], geom['y'], 'o:', linewidth=0.5, markersize=2,
+            label=label)
+    ax.set_xlabel('x [m]')
+    ax.set_ylabel('y [m]')
+    ax.set_aspect('equal', 'box')
+    return geom, radius, ax
+
+
 Lattice.plot_acceptance = plot_acceptance
+Lattice.plot_geometry = plot_geometry

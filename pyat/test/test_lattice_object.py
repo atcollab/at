@@ -22,6 +22,7 @@ def test_lattice_energy_radiation_periodicity():
     assert lat.energy == 3.e+6
     assert lat.periodicity == 32
     assert lat.radiation is True
+    assert lat.is_6d is True
 
 
 def test_lattice_voltage_harmonic_number():
@@ -47,7 +48,7 @@ def test_lattice_creation_from_lattice_inherits_attributes():
     assert lat2.name == 'lattice'
     assert lat2.energy == 3.e+6
     assert lat2.periodicity == 32
-    assert lat2.radiation is True
+    assert lat2.is_6d is True
     assert lat2.another_attr == 5
     with pytest.raises(AttributeError):
         assert lat2.an_attr == 12
@@ -70,14 +71,14 @@ def test_lattice_string_ordering():
     latstr = str(lat)
     assert latstr.startswith("Lattice(<1 elements>, name='lat', "
                              "energy=5, particle=Particle('relativistic'), "
-                             "periodicity=1")
+                             "periodicity=1, beam_current=0.0, nbunch=1")
     assert latstr.endswith("attr2=3)")
 
     latrepr = repr(lat)
     assert latrepr.startswith("Lattice([Drift('D0', 1.0, attr1=array(0))], "
                               "name='lat', "
                               "energy=5, particle=Particle('relativistic'), "
-                              "periodicity=1")
+                              "periodicity=1, beam_current=0.0, nbunch=1")
     assert latrepr.endswith("attr2=3)")
 
 
@@ -139,6 +140,7 @@ def test_radiation_change(hmba_lattice):
                                                          elements.Quadrupole)]
     hmba_lattice.radiation_on(None, 'pass2', 'auto')
     assert hmba_lattice.radiation is True
+    assert hmba_lattice.has_cavity is False
     for elem in rfs:
         assert elem.PassMethod == 'IdentityPass'
     for elem in dipoles:
@@ -163,9 +165,9 @@ def test_radiation_state_errors(hmba_lattice):
     hmba_lattice.linopt()
     with pytest.raises(AtError):
         hmba_lattice.ohmi_envelope()
-    hmba_lattice.radiation_on()
+    hmba_lattice.enable_6d()
     hmba_lattice.ohmi_envelope()
     with pytest.raises(AtError):
         hmba_lattice.get_mcf()
-    hmba_lattice.radiation_off()
+    hmba_lattice.disable_6d()
     hmba_lattice.get_mcf()

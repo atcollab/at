@@ -20,6 +20,7 @@ if nargin <= 1
     cavityPass='RFCavityPass';
 end
 
-[ring,~,ATCavityIndex,~]=atradon(ring,cavityPass,'','','','');
+ATCavityIndex=atgetcells(ring,'Frequency');
+ring=atradon(ring,cavityPass,'','','','','');
 
 end

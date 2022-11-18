@@ -54,6 +54,8 @@ static void *atCalloc(size_t count, size_t size)
 
 typedef mxArray atElem;
 #define check_error()
+#define atError(...) mexErrMsgIdAndTxt("AT:PassError", __VA_ARGS__)
+#define atWarning(...) mexWarnMsgIdAndTxt("AT:PassWarning", __VA_ARGS__)
 
 static mxArray *get_field(const mxArray *pm, const char *fieldname)
 {
@@ -141,6 +143,8 @@ static double* atGetOptionalDoubleArray(const mxArray *ElemData, const char *fie
 
 typedef PyObject atElem;
 #define check_error() if (PyErr_Occurred()) return NULL
+#define atError(...) return (struct elem *) PyErr_Format(PyExc_ValueError, __VA_ARGS__)
+#define atWarning(...) if (PyErr_WarnFormat(PyExc_RuntimeWarning, 0, __VA_ARGS__) != 0) return NULL
 
 static int array_imported = 0;
 

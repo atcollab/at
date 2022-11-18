@@ -12,41 +12,54 @@ from .wake_functions import transverse_reswall_wf
 
 class WakeType(Enum):
     """Enum class for wake type"""
-    FILE = 1  # Import from file
-    TABLE = 2  # Provide vectors
-    RESONATOR = 3  # Analytical resonator
-    RESWALL = 4  # Analytical resistive wall
+    FILE = 1        #: Import from file
+    TABLE = 2       #: Provide vectors
+    RESONATOR = 3   #: Analytical resonator
+    RESWALL = 4     #: Analytical resistive wall
 
 
 class WakeComponent(Enum):
     """Enum class for wake component"""
-    DX = 1  # Dipole X
-    DY = 2  # Dipole Y
-    QX = 3  # Quadrupole X
-    QY = 4  # Quadrupole Y
-    Z = 5   # Longitudinal
+    DX = 1          #: Dipole X
+    DY = 2          #: Dipole Y
+    QX = 3          #: Quadrupole X
+    QY = 4          #: Quadrupole Y
+    Z = 5           #: Longitudinal
 
 
 # noinspection PyPep8Naming
 class Wake(object):
+    # noinspection PyUnresolvedReferences
     """Class to generate a wake object
-    The wake object is define by its srange, specified
-    at initialization, and DX, DY, QY, Z corresponding
-    to transverse dipoles and quadrupoles and longitudinal
 
-    The srange is common to all components and cannot be changed
+    The wake object is defined by its srange, specified
+    at initialization, and one or several components corresponding
+    to transverse dipoles or quadrupoles, or longitudinal wakes.
+
+    The ``srange`` is common to all components and cannot be changed
     once initialized, all added component are resampled to the
-    srange
+    ``srange``.
 
-    usage:
-    wake = Wake(srange)
-    wake.add(WakeType,WakeComponent, *args, *kwargs)
+    Parameters:
+        srange:         vector of s position where to sample the wake
 
-    Component are WakeComponent.FILE (import from file),
-    WakeComponent.TABLE (provide vectors), WakeComponent.RESONATOR
-    (analytical resonator), WakeComponent.RESWALL (transverse RW)
+    Example:
+        >>> # Build the range
+        >>> srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2,
+        ... ring.circumference, ring.circumference)
+        >>> # Create the Wake object
+        >>> wake = Wake(srange)
+        >>> # Build a resonator and add it to the Wake
+        >>> freq = 10e9
+        >>> Q = 1
+        >>> Rs = 1e4
+        >>> wake.add(WakeType.RESONATOR, WakeComponent.Z, freq, Q, Rs,
+        ... ring.beta)
 
-    Components are retrieved with Wake.DX for example
+        See :py:meth:`Wake.long_resonator` for a simple way of creatong the
+        same :py:class:`Wake`
+
+    Components may be retrieved using :code:`wake.DX` for example
     """
     def __init__(self, srange):
         self._srange = srange
@@ -62,25 +75,37 @@ class Wake(object):
 
     @property
     def DX(self):
+        """Dipole X component"""
         return self.components[WakeComponent.DX]
 
     @property
     def DY(self):
+        """Dipole Y component"""
         return self.components[WakeComponent.DY]
 
     @property
     def QX(self):
+        """Quadrupole X component"""
         return self.components[WakeComponent.QX]
 
     @property
     def QY(self):
+        """Quadrupole Y component"""
         return self.components[WakeComponent.QY]
 
     @property
     def Z(self):
+        """Longitudinal component"""
         return self.components[WakeComponent.Z]
 
-    def add(self, wtype, wcomp, *args, **kwargs):
+    def add(self, wtype: WakeType, wcomp: WakeComponent, *args, **kwargs):
+        """Add a component to a :py:class:`.Wake`
+
+        Parameters:
+            wtype:      Wake type
+            wcomp:      Wake component
+            *args:      parameters for the selected component
+        """
         if wtype is WakeType.FILE:
             w = self._readwakefile(*args, **kwargs)
         elif wtype is WakeType.TABLE:
@@ -137,10 +162,24 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
     @staticmethod
-    def resonator(srange, wakecomp, frequency, qfactor, rshunt, beta,
-                  yokoya_factor=1, nelems=1):
-        """
-        Method to build a resonator wake object
+    def resonator(srange, wakecomp,
+                  frequency, qfactor, rshunt,
+                  beta: float, yokoya_factor=1, nelems: int = 1):
+        r"""Factory method to build a resonator wake object
+
+        Parameters:
+            srange:         vector of s position where to sample the wake
+            wakecomp:       Wake component
+            frequency:      Resonator frequency [Hz]
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
+            beta:           Relativistic :math:`\beta`
+            yokoya_factor:  Yokoya factor
+            nelems:         Number of resonators
+
+        Several resonators can be built in one step by setting ``nelems``> 1
+        and giving array parameters
         """
         wake = Wake(srange)
         try:
@@ -148,8 +187,7 @@ class Wake(object):
             frequency = numpy.broadcast_to(frequency, (nelems, ))
             qfactor = numpy.broadcast_to(qfactor, (nelems, ))
             rshunt = numpy.broadcast_to(rshunt, (nelems, ))
-            yokoya_factor = numpy.broadcast_to(yokoya_factor,
-                                               (nelems, ))
+            yokoya_factor = numpy.broadcast_to(yokoya_factor, (nelems, ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
@@ -161,17 +199,49 @@ class Wake(object):
 
     @staticmethod
     def long_resonator(srange, frequency, qfactor, rshunt, beta, nelems=1):
+        # noinspection PyUnresolvedReferences
+        r"""Factory method to build a longitudinal resonator wake object
+
+        Parameters:
+            srange:         vector of s position where to sample the wake
+            frequency:      Resonator frequency [Hz]
+            qfactor:        Q factor
+            rshunt:         Shunt impedance, [:math:`\Omega`] for longitudinal,
+              [:math:`\Omega/m`] for transverse
+            beta:           Relativistic :math:`\beta`
+            nelems:         Number of resonators
+
+        Several resonators can be built in one step by setting ``nelems``> 1
+        and giving array parameters
+
+        Example:
+            >>> # Build the range
+            >>> srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2,
+            ... ring.circumference, ring.circumference)
+            >>> # Create the resonator
+            >>> freq = 10e9
+            >>> Q = 1
+            >>> Rs = 1e4
+            >>> wake = Wake.long_resonator(srange, freq, Q, Rs, ring.beta)
         """
-        Method to build a longitudinal resonator wake object
-        """
-        return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
+        return Wake.resonator(srange, WakeComponent.Z, rshunt, qfactor,
                               rshunt, beta, nelems=nelems)
 
     @staticmethod
-    def resistive_wall(srange, wakecomp, length, rvac, conduct, beta,
-                       yokoya_factor=1, nelems=1):
-        """
-        Method to build a resistive wall wake object
+    def resistive_wall(srange, wakecomp: WakeComponent,
+                       length, rvac, conduct, beta: float,
+                       yokoya_factor=1, nelems: int = 1):
+        r"""Factory method to build a resistive wall wake object
+
+        Parameters:
+            srange:         vector of s position where to sample the wake
+            wakecomp:       Wake component
+            length:
+            rvac:
+            conduct:
+            beta:           Relativistic :math:`\beta`
+            yokoya_factor:  Yokoya factor
+            nelems:
         """
         wake = Wake(srange)
         try:
@@ -179,8 +249,7 @@ class Wake(object):
             length = numpy.broadcast_to(length, (nelems, ))
             rvac = numpy.broadcast_to(rvac, (nelems, ))
             conduct = numpy.broadcast_to(conduct, (nelems, ))
-            yokoya_factor = numpy.broadcast_to(yokoya_factor,
-                                               (nelems, ))
+            yokoya_factor = numpy.broadcast_to(yokoya_factor, (nelems, ))
         except ValueError:
             raise AtError('Wake object inputs should be either scalars '
                           'or with shape (len(wakecomp), )')
@@ -190,28 +259,29 @@ class Wake(object):
         return wake
 
     @staticmethod
-    def build_srange(start, bunch_ext, short_step, long_step,
-                     bunch_interval, totallength):
+    def build_srange(start: float, bunch_ext: float, short_step: float,
+                     long_step: float,
+                     bunch_interval: float, totallength: float):
         """Function to build the wake table s column.
         This is not the slicing but the look-up table,
         however it generates data where bunches are located
         to avoid using too much memory to store the table.
 
-        PARAMETERS
-            start           starting s-coordinate of the table
+        Parameters:
+            start:          starting s-coordinate of the table
                             (can be negative for wake potential)
-            bunch_ext       maximum bunch extension, function
+            bunch_ext:      maximum bunch extension, function
                             generates data at +/- bunch_ext
                             around the bucket center
-            short_step      step size for the short range wake table
-            long_step       step size for the long range wake table
-            bunch_interval  minimum bunch interval data will be generate
-                            for each bunch_inteval step
-            totallength     total length of the wake table, has to contain
+            short_step:     step size for the short range wake table
+            long_step:      step size for the long range wake table
+            bunch_interval: minimum bunch interval. Data will be generated
+                            for each ``bunch_interval`` step
+            totallength:    total length of the wake table, has to contain
                             the full bunch extension
 
-        OUTPUT
-            srange          vector of s position where to sample the wake
+        Returns:
+            srange:         vector of s position where to sample the wake
         """
         srange = numpy.arange(start, bunch_ext, short_step)
         rangel = numpy.arange(-bunch_ext, bunch_ext, long_step)

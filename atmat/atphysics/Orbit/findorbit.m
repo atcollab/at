@@ -17,6 +17,9 @@ function [orbs,orbitin]  = findorbit(ring,varargin)
 %[...]=FINDORBIT(RING,...,'dct',DCT) Specify the path lengthening when
 %   radiation is OFF (default: 0)
 %
+%[...]=FINDORBIT(RING,...,'df',DF) Specify the RF frequency deviation
+%   radiation is OFF (default: 0)
+%
 %[...]=FINDORBIT(RING,...,'orbit',ORBIT) Specify the orbit at the entrance
 %   of the ring, if known. FINDORBIT will then transfer it to the reference points
 %
@@ -31,12 +34,18 @@ function [orbs,orbitin]  = findorbit(ring,varargin)
 [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
 [dp,varargs]=getoption(varargs,'dp',NaN);
 [dct,varargs]=getoption(varargs,'dct',NaN);
+[df,varargs]=getoption(varargs,'df',NaN);
 if isempty(orbitin)
-    if check_radiation(ring)    % Radiation ON: 6D orbit
-        if isfinite(dp) || isfinite(dct)
-            warning('AT:linopt','In 6D, "dp" and "dct" are ignored');
+    if check_6d(ring)    % Radiation ON: 6D orbit
+        if isfinite(dp) || isfinite(dct) || isfinite(df)
+            warning('AT:linopt','In 6D, "dp", "dct" and "df" are ignored');
         end
         orbitin=xorbit_6(ring,varargs{:});
+    elseif isfinite(df)
+        [cell_l,cell_frev,cell_h]=atGetRingProperties(ring,'cell_length',...
+            'cell_harmnumber','cell_revolution_frequency');
+        dct=-cell_l*df/(cell_frev*cell_h+df);
+        orbitin=xorbit_ct(ring,dct,varargs{:});
     elseif isfinite(dct)
         orbitin=xorbit_ct(ring,dct,varargs{:});
     else

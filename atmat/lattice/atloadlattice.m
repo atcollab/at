@@ -30,6 +30,7 @@ if isempty(link_table)
 end
 
 [~,~,fext]=fileparts(fspec);
+fext=char(fext);
 
 if isempty(fext), fext='.mat'; end
 try

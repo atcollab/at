@@ -57,6 +57,10 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["README.rst", "**/*.so"]
+rst_prolog = """
+.. role:: pycode(code)
+   :language: python
+"""
 autodoc_default_options = {
         # Make sure that any autodoc declarations show the right members
         "members": True,

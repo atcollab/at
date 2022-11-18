@@ -2,9 +2,8 @@
 Closed orbit related functions
 """
 import numpy
-from typing import Optional
 from at.constants import clight
-from at.lattice import AtWarning, check_radiation, DConstant
+from at.lattice import AtError, AtWarning, check_6d, DConstant
 from at.lattice import Lattice, get_s_pos, uint32_refpts, Refpts
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
@@ -16,8 +15,8 @@ __all__ = ['Orbit', 'find_orbit4', 'find_sync_orbit', 'find_orbit6',
            'find_orbit']
 
 
-@check_radiation(False)
-def _orbit_dp(ring, dp=None, guess=None, **kwargs):
+@check_6d(False)
+def _orbit_dp(ring: Lattice, dp: float = None, guess: Orbit = None, **kwargs):
     """Solver for fixed energy deviation"""
     # We seek
     #  - f(x) = x
@@ -35,6 +34,10 @@ def _orbit_dp(ring, dp=None, guess=None, **kwargs):
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    rem = kwargs.keys()
+    if len(rem) > 0:
+        raise AtError(f'Unexpected keywords for orbit_dp: {", ".join(rem)}')
+
     ref_in = numpy.zeros((6,)) if guess is None else numpy.copy(guess)
     ref_in[4] = 0.0 if dp is None else dp
 
@@ -69,13 +72,17 @@ def _orbit_dp(ring, dp=None, guess=None, **kwargs):
     return ref_in
 
 
-@check_radiation(False)
-def _orbit_dct(ring, dct=None, guess=None, **kwargs):
+@check_6d(False)
+def _orbit_dct(ring: Lattice, dct: float = None, guess: Orbit = None, **kwargs):
     """Solver for fixed path lengthening"""
     keep_lattice = kwargs.pop('keep_lattice', False)
     convergence = kwargs.pop('convergence', DConstant.OrbConvergence)
     max_iterations = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
+    rem = kwargs.keys()
+    if len(rem) > 0:
+        raise AtError(f'Unexpected keywords for orbit_dct: {", ".join(rem)}')
+
     ref_in = numpy.zeros((6,)) if guess is None else numpy.copy(guess)
 
     scaling = xy_step * numpy.array([1.0, 1.0, 1.0, 1.0, 1.0])
@@ -114,11 +121,11 @@ def _orbit_dct(ring, dct=None, guess=None, **kwargs):
     return ref_in
 
 
-def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
-                refpts: Optional[Refpts] = None,
-                dct: Optional[float] = None,
-                orbit: Optional[Orbit] = None,
-                keep_lattice: Optional[bool] = False, **kwargs):
+def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
+                dct: float = None,
+                df: float = None,
+                orbit: Orbit = None,
+                keep_lattice: bool = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dp
 
     Finds the closed orbit in the 4-d transverse phase space by numerically
@@ -133,7 +140,7 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
     constraint on the 6-th coordinate :math:`c\tau`
 
     Important:
-        :py:func:`find_orbit4` imposes a constraint on ``dp`` and relaxes the
+        :py:func:`find_orbit4` imposes a constraint on *dp* and relaxes the
         constraint on the revolution frequency. A physical storage ring does
         exactly the opposite: the momentum deviation of a particle on the
         closed orbit settles at the value such that the revolution is
@@ -142,43 +149,53 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
     To impose this artificial constraint in :py:func:`find_orbit4`,
     the ``PassMethod`` used for any element **SHOULD NOT**:
 
-    1. Change the longitudinal momentum ``dp`` (cavities ,
+    1. Change the longitudinal momentum *dp* (cavities ,
        magnets with radiation)
     2. Have any time dependence (localized impedance, fast kickers etc)
 
     Parameters:
-        ring:           Lattice description (radiation must be OFF)
+        ring:           Lattice description (``is_6d`` must be :py:obj:`False`)
         dp:             Momentum deviation. Defaults to 0
         refpts:         Observation points
-        dct:            Path lengthening. If specified, ``dp`` is ignored and
+        dct:            Path lengthening. If specified, *dp* is ignored and
           the off-momentum is deduced from the path lengthening.
+        df:             Deviation from the nominal RF frequency. If specified,
+          *dp* is ignored and the off-momentum is deduced from the frequency
+          deviation.
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_orbit4` propagates it to
-          the specified ``refpts``.
+          the specified *refpts*.
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
     Keyword Args:
-        guess (Optional[Orbit]):        (6,) initial value for the
+        guess (Orbit):          (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+        convergence (float):    Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int):   Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):          Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
-                        specified in ``refpts``
+        orbit:          (Nrefs, 6) closed orbit vector at each location
+                        specified in *refpts*
 
     See also:
         :py:func:`find_sync_orbit`, :py:func:`find_orbit6`
     """
+    if len([v for v in (dp, dct, df) if v is not None]) > 1:
+        raise AtError("For off-momentum specification, only one of "
+                      "dp, dct and df may be specified")
     if orbit is None:
-        if dct is not None:
+        if df is not None:
+            frf = ring.cell_revolution_frequency * ring.cell_harmnumber
+            dct = -ring.cell_length * df / (frf+df)
+            orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
+        elif dct is not None:
             orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
         else:
             orbit = _orbit_dp(ring, dp, keep_lattice=keep_lattice, **kwargs)
@@ -193,11 +210,11 @@ def find_orbit4(ring: Lattice, dp: Optional[float] = 0.0,
     return orbit, all_points
 
 
-def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
-                    refpts: Optional[Refpts] = None,
-                    dp: Optional[float] = None,
-                    orbit: Optional[Orbit] = None,
-                    keep_lattice: Optional[bool] = False, **kwargs):
+def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
+                    dp: float = None,
+                    df: float = None,
+                    orbit: Orbit = None,
+                    keep_lattice: bool = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dct
 
     Finds the closed orbit, synchronous with the RF cavity (first 5
@@ -222,42 +239,52 @@ def find_sync_orbit(ring: Lattice, dct: Optional[float] = 0.0,
     To impose this artificial constraint in :py:func:`find_sync_orbit`,
     the ``PassMethod`` used for any element **SHOULD NOT**:
 
-    1. Change the longitudinal momentum ``dp`` (cavities ,
+    1. Change the longitudinal momentum *dp* (cavities ,
        magnets with radiation)
     2. Have any time dependence (localized impedance, fast kickers etc)
 
     Parameters:
-        ring:           Lattice description (radiation must be OFF)
+        ring:           Lattice description (``is_6d`` must be :py:obj:`False`)
         dct:            Path lengthening.
         refpts:         Observation points
-        dp:             Momentum deviation. Defaults to None
+        dp:             Momentum deviation. Defaults to :py:obj:`None`
+        df:             Deviation from the nominal RF frequency. If specified,
+          *dct* is ignored and the off-momentum is deduced from the frequency
+          deviation.
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
-          to the specified ``refpts``.
+          to the specified *refpts*.
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
     Keyword Args:
-        guess (Optional[Orbit]):        (6,) initial value for the
+        guess (Orbit):          (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+        convergence (float):    Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int):   Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
-                        specified in ``refpts``
+        orbit:          (Nrefs, 6) closed orbit vector at each location
+                        specified in *refpts*
 
     See also:
         :py:func:`find_orbit4`, :py:func:`find_orbit6`
     """
+    if len([v for v in (dp, dct, df) if v is not None]) > 1:
+        raise AtError("For off-momentum specification, only one of "
+                      "dp, dct and df may be specified")
     if orbit is None:
-        if dp is not None:
+        if df is not None:
+            frf = ring.cell_revolution_frequency * ring.cell_harmnumber
+            dct = -ring.cell_length * df / (frf+df)
+            orbit = _orbit_dct(ring, dct, keep_lattice=keep_lattice, **kwargs)
+        elif dp is not None:
             orbit = _orbit_dp(ring, dp, keep_lattice=keep_lattice, **kwargs)
         else:
             orbit = _orbit_dct(ring, dct,  keep_lattice=keep_lattice, **kwargs)
@@ -280,6 +307,9 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     xy_step = kwargs.pop('XYStep', DConstant.XYStep)
     dp_step = kwargs.pop('DPStep', DConstant.DPStep)
     method = kwargs.pop('method', ELossMethod.TRACKING)
+    rem = kwargs.keys()
+    if len(rem) > 0:
+        raise AtError(f'Unexpected keywords for orbit6: {", ".join(rem)}')
 
     l0 = get_s_pos(ring, len(ring))[0]
     f_rf = ring.get_rf_frequency()
@@ -332,14 +362,13 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
     return ref_in
 
 
-def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
-                orbit: Optional[Orbit] = None,
-                dp: Optional[float] = None,
-                dct: Optional[float] = None,
-                keep_lattice: Optional[bool] = False, **kwargs):
+# noinspection PyIncorrectDocstring
+def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
+                dp: float = None, dct: float = None, df: float = None,
+                orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     r"""Gets the closed orbit in the full 6-D phase space
 
-    Findsinds the closed orbit in the full 6-D phase space
+    Finds the closed orbit in the full 6-D phase space
     by numerically solving  for a fixed point of the one turn
     map M calculated with :py:func:`.lattice_pass`
 
@@ -377,40 +406,38 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
         refpts:         Observation points
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
-          to the specified ``refpts``.
-        dp:             Momentum deviation. Defaults to None
-        dct:            Path lengthening. Defaults to None
+          to the specified *refpts*.
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
     Keyword Args:
-        guess (Optional[Orbit]):        (6,) initial value for the
+        guess (Orbit):        (6,) initial value for the
           closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+        convergence (float):  Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int): Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):       Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):       Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
-        method (Optional[ELossMethod]): Method for energy loss computation.
+        method (ELossMethod): Method for energy loss computation.
           See :py:class:`.ELossMethod`.
-        cavpts (Optional[Refpts]):      Cavity location. If None, use all
+        cavpts (Refpts):      Cavity location. If :py:obj:`None`, use all
           cavities. This is used to compute the initial synchronous phase.
 
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
-                        specified in ``refpts``
+        orbit:          (Nrefs, 6) closed orbit vector at each location
+                        specified in *refpts*
 
 
     See also:
         :py:func:`find_orbit4`, :py:func:`find_sync_orbit`
     """
-    if not (dp is None and dct is None):
-        warnings.warn(AtWarning('In 6D, "dp" and "dct" are ignored'))
+    if dp is not None or dct is not None or df is not None:
+        raise AtError("orbit6: in 6d, dp, dct and df are not allowed")
     if orbit is None:
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
@@ -427,32 +454,34 @@ def find_orbit6(ring: Lattice, refpts: Optional[Refpts] = None,
 def find_orbit(ring, refpts=None, **kwargs):
     r"""Gets the closed orbit in the general case
 
-    Depending on the the lattice, :py:func:`find_orbit` will:
+    Depending on the lattice, :py:func:`find_orbit` will:
 
-    * use :py:func:`find_orbit6` if ring.radiation is ON,
-    * use :py:func:`find_sync_orbit` if ring.radiation is OFF and ``dct``
-      is specified,
-    * use :py:func:`find_orbit4` otherwise
+    * use :py:func:`find_orbit6` if ``ring.is_6d`` is :py:obj:`True`,
+    * use :py:func:`find_sync_orbit` if ``ring.is_6d`` is :py:obj:`False` and
+      *dct* or *df* is specified,
+    * use :py:func:`find_orbit4` otherwise.
 
     Parameters:
         ring:           Lattice description
         refpts:         Observation points
 
     Keyword Args:
-        orbit (Optional[Orbit]):       Avoids looking for initial the closed
+        orbit (Orbit):          Avoids looking for initial the closed
           orbit if it is already known. :py:func:`find_orbit` propagates it
-          to the specified ``refpts``.
-        dp (Optional[float]):           Momentum deviation. Defaults to None
-        dct (Optional[float]):          Path lengthening. Defaults to None
-        guess (Optional[Orbit]):        (6,) initial value for the
-          closed orbit. It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        convergence (Optional[float]):  Convergence criterion.
+          to the specified *refpts*.
+        dp (float):             Momentum deviation. Defaults to :py:obj:`None`
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation from the nominal RF frequency.
+          Defaults to :py:obj:`None`
+        guess (Orbit):          (6,) initial value for the closed orbit.
+          It may help convergence. Default: (0, 0, 0, 0, 0, 0)
+        convergence (float):    Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
-        max_iterations (Optional[int]): Maximum number of iterations.
+        max_iterations (int):   Maximum number of iterations.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
-        XYStep (Optional[float]):       Step size.
+        XYStep (float):         Step size.
           Default: :py:data:`DConstant.XYStep <.DConstant>`
-        DPStep (Optional[float]):       Momentum step size.
+        DPStep (float):         Momentum step size.
           Default: :py:data:`DConstant.DPStep <.DConstant>`
 
     For other keywords, refer to the underlying methods
@@ -460,14 +489,14 @@ def find_orbit(ring, refpts=None, **kwargs):
     Returns:
         orbit0:         (6,) closed orbit vector at the entrance of the
                         1-st element (x,px,y,py,dp,0)
-        orbit:          (6, Nrefs) closed orbit vector at each location
-                        specified in ``refpts``
+        orbit:          (Nrefs, 6) closed orbit vector at each location
+                        specified in *refpts*
 
     See also:
         :py:func:`find_orbit4`, :py:func:`find_sync_orbit`,
         :py:func:`find_orbit6`
     """
-    if ring.radiation:
+    if ring.is_6d:
         return find_orbit6(ring, refpts=refpts, **kwargs)
     else:
         return find_orbit4(ring, refpts=refpts, **kwargs)

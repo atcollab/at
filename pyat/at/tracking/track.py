@@ -72,16 +72,21 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
           coordinates at which the particle is lost. Set to zero for particles
           that survived
 
-    Notes:
+    .. note::
 
-    * ``lattice_pass(lattice, r_in, refpts=len(line))`` is the same as
-      ``lattice_pass(lattice, r_in)`` since the reference point len(line) is
-      the exit of the last element.
-    * ``lattice_pass(lattice, r_in, refpts=0)`` is a copy of ``r_in`` since
-      the reference point 0 is the entrance of the first element.
-    * To resume an interrupted tracking (for instance to get intermediate
-      results), one must use one of the ``turn`` or ``keep_counter`` keywords
-      to ensure the continuity of the turn number.
+       * ``lattice_pass(lattice, r_in, refpts=len(line))`` is the same as
+         ``lattice_pass(lattice, r_in)`` since the reference point len(line) is
+         the exit of the last element.
+       * ``lattice_pass(lattice, r_in, refpts=0)`` is a copy of ``r_in`` since
+         the reference point 0 is the entrance of the first element.
+       * To resume an interrupted tracking (for instance to get intermediate
+         results), one must use one of the ``turn`` or ``keep_counter``
+         keywords to ensure the continuity of the turn number.
+       * For multiparticle tracking with large number of turn the size of
+         ``r_out`` may increase excessively. To avoid memory issues
+         ``lattice_pass(lattice, r_in, refpts=[])`` can be used. An empty list
+         is returned and the tracking results of the last turn are stored in
+         ``r_in``.
 
     """
     assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
@@ -94,6 +99,10 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     refs = uint32_refpts(refpts, len(lattice))
     no_bm = _set_beam_monitors(lattice, nturns)
     keep_lattice = keep_lattice and no_bm
+    bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
+    bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    kwargs.update({'bunch_currents': bunch_currents,
+                   'bunch_spos': bunch_spos})
     # atpass returns 6xAxBxC array where n = x*y*z;
     # * A is number of particles;
     # * B is number of refpts

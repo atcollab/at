@@ -6,7 +6,7 @@ function varargout = wrapper6d(ring,func,varargin)
 %FUNC   Wrapped function, called as FUNC(RING,IS6D,VARARGIN{:})
 
 [warningdp6d,varargs]=getoption(varargin,'WarningDp6D');
-is6d=check_radiation(ring);
+is6d=check_6d(ring);
 if is6d
     [dpargs,varargs]=getoption(varargs,{'dp','dct','df'});
     if ~isempty(dpargs)
@@ -16,8 +16,8 @@ if is6d
                 'For a better efficiency, handle the RF frequency beforehand,',...
                 'or to avoid this warning, use "setoption(''WarningDp6D'',false)"');
         end
-        [cavpts,~]=getcavptsarg(varargs,ring);  % Look for main cavities
-        ring2=atsetcavity(ring,'Frequency','nominal',dpargs{:},'cavpts',cavpts);
+        [cavargs,~]=getoption(varargs,{'cavpts'});
+        ring2=atsetcavity(ring,'Frequency','nominal',dpargs{:},cavargs{:});
         [varargout{1:nargout}]=func(ring2,is6d,varargs{:});
     else
         [varargout{1:nargout}]=func(ring,is6d,varargs{:});

@@ -14,10 +14,13 @@ function varargout = tunechrom(ring,varargin)
 %   already known;
 %
 %[...]=TUNECHROM(RING,DP)       (obsolete)
-%[...]=TUNECHROM(...,'dp',DP)	Specify the momentum deviation when
+%[...]=TUNECHROM(RING,...,'dp',DP)	Specify the momentum deviation when
 %   radiation is OFF (default: 0)
 %
-%[...]=TUNECHROM(...,'dct',DCT) Specify the path lengthening when
+%[...]=TUNECHROM(RING,...,'dct',DCT) Specify the path lengthening when
+%   radiation is OFF (default: 0)
+%
+%[...]=TUNECHROM(RING,...,'df',DF) Specify the RF frequency deviation when
 %   radiation is OFF (default: 0)
 %
 % Note: TUNECHROM computes tunes and chromaticities from the one-turn
@@ -42,8 +45,8 @@ end
     function [tune, chrom] = xtunechrom(ring,is6d,varargin)
         [oldchrom,varargs]=getflag(varargin,'chrom');
         [chrom,varargs]=getflag(varargs,'get_chrom');
-        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct'});
-        [cavpts,varargs]=getoption(varargs,'cavpts',[]);
+        [dpargs,varargs]=getoption(varargs,{'orbit','dp','dct','df'});
+        [cavargs,varargs]=getoption(varargs,{'cavpts'});
         [DPStep,~]=getoption(varargs,'DPStep');
         if is6d
             tunefunc=@tune6;
@@ -59,8 +62,8 @@ end
             if is6d
                 frf=get_rf_frequency(ring);
                 DFStep=-DPStep*mcf(atradoff(ring))*frf;
-                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,'cavpts',cavpts);
-                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,'cavpts',cavpts);
+                rgup=atsetcavity(ring,'Frequency',frf+0.5*DFStep,cavargs{:});
+                rgdn=atsetcavity(ring,'Frequency',frf-0.5*DFStep,cavargs{:});
                 [~,o1P]=findorbit(rgup,'guess',orbitin,varargs{:});
                 [~,o1M]=findorbit(rgdn,'guess',orbitin,varargs{:});
                 deltap=o1P(5)-o1M(5);
