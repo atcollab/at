@@ -73,7 +73,6 @@ ring.set_fillpattern(Nbunches)
 
 _, fring = at.fast_ring(ring)
 fring.pop(-1)  # drop diffusion element
-cavpts = at.get_refpts(fring, at.RFCavity)
 
 # Here we specify whether we want to use PHASOR or WAKE
 # beam loading models.
@@ -86,8 +85,8 @@ else:
 # Npart must be at least Nbunches per core
 Npart = Nbunches
 
-# Now we give the cavity position (cavpts[0]) and convert
-# it into a beam loaded cavity.
+# Now we give the fring and convert it
+# into a beam loaded cavity.
 add_beamloading(fring, qfactor, rshunt, Nslice=1,
                           Nturns=50, mode=blm,
                           VoltGain=0.1, PhaseGain=0.1)
