@@ -134,12 +134,9 @@ for i in numpy.arange(Nturns):
 if rank == 0:
     qscoh = numpy.zeros(Nbunches)
     for ib in numpy.arange(Nbunches):
-        try:
-            qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
+        qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
                                                       num_harmonics=20,
                                                       fmin=1e-5, fmax=0.1)
-        except:
-            qs = 0
         qscoh[ib] = qs
 
     qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
