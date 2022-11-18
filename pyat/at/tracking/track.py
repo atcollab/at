@@ -17,7 +17,7 @@ def _set_beam_monitors(ring, nturns):
     monitors = get_elements(ring, BeamMoments)
     for m in monitors:
         m.set_buffers(nturns, ring.nbunch)
-    return len(monitors)==0
+    return len(monitors) == 0
 
 
 def fortran_align(func):

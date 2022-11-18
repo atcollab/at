@@ -444,7 +444,7 @@ class BeamMoments(Element):
         self._sizes = numpy.zeros((6, 1, 0), order='F')
         self._positions = numpy.zeros((6, 1, 0), order='F')
         self.update(kwargs)
-        
+
     def set_buffers(self, nturns, nbunch):
         self._sizes = numpy.zeros((6, nbunch, nturns), order='F')
         self._positions = numpy.zeros((6, nbunch, nturns), order='F')
