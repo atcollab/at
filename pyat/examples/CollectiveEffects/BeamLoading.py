@@ -8,6 +8,7 @@ from at.tracking.utils import get_bunches_std_mean
 import pickle as pkl
 from at.constants import qe
 from at.physics import harmonic_analysis
+import matplotlib.cm as cmap
 sys.path.append('/machfs/carver/pyat_dev/at/pyat')
 
 
@@ -28,9 +29,9 @@ def analytical_qs(ring, I):
     psi = - numpy.arctan(Rsh * I * numpy.sin(phi_s) /
                          (Vc * (1 + beta)))  # tuning angle
 
-    omega_res = (omega_rf
-                / (1 + Rsh * I * numpy.sin(phi_s)
-                / (2 * Q0 * Vc)))  # resonant freq.
+    omega_res = (omega_rf /
+                 (1 + Rsh * I * numpy.sin(phi_s) /
+                  (2 * Q0 * Vc)))  # resonant freq.
 
     h = ring.harmonic_number  # harmonic number
     omega0 = omega_rf / h  # rev. freq.
@@ -77,24 +78,25 @@ cavpts = at.get_refpts(fring, at.RFCavity)
 
 # Here we specify whether we want to use PHASOR or WAKE
 # beam loading models.
-mode = 'WAKE'
+mode = 'PHASOR'
 if mode == 'WAKE':
     blm = BLMode.WAKE
 else:
     blm = BLMode.PHASOR
-    
+
 # Npart must be at least Nbunches per core
 Npart = Nbunches
+
 # Now we give the cavity position (cavpts[0]) and convert
-# it into a beam loaded cavity. 
+# it into a beam loaded cavity.
 bl_elem = add_beamloading(fring, cavpts[0], qfactor, rshunt, Nslice=1,
                           Nturns=50, mode=blm,
-                          VoltGain=0.0001, PhaseGain=0.0001)
-#ramp_time = 2000
-Nturns = 2**13# + ramp_time
-current = 200e-3
+                          VoltGain=0.1, PhaseGain=0.1)
+# Specify some simulation parameters
+kickTurn = 500
+Nturns = 2**14 + kickTurn
+current = 150e-3
 fring.beam_current = current
-
 
 part = numpy.zeros((6, Npart))
 part = (part.T + o6).T
@@ -108,10 +110,13 @@ if rank == 0:
     dp_all = numpy.zeros((Nturns, Nbunches))
 
 for i in numpy.arange(Nturns):
-    #if i<=ramp_time:
-    #    fring.beam_current = current * i / ramp_time
+    # Apply a kick to ensure the coherent tune is large
+    if i == kickTurn:
+        part[4, :] += 3e-3
+
     _ = at.lattice_pass(fring, part, nturns=1)
 
+    # Gather particles over all cores (compatible with MPI on or off)
     allPartsg = comm.gather(part)
     if rank == 0:
         allPartsg = numpy.concatenate(allPartsg, axis=1)
@@ -119,25 +124,47 @@ for i in numpy.arange(Nturns):
 
         dp_all[i] = numpy.array([x[4] for x in means])
         z_all[i] = numpy.array([x[5] for x in means])
+        if i % 1000 == 0:
+            # Print the turn number and number of lost particles
+            print(i, numpy.sum(numpy.isnan(allPartsg)))
 
-        print(rank, i, numpy.sum(numpy.isnan(allPartsg)),
-              numpy.mean(numpy.abs(dp_all[i])))
 
+# Now we compute the tune of each bunch, and compare with the analytical
 if rank == 0:
-    qsone = numpy.zeros(Nbunches)
+    qscoh = numpy.zeros(Nbunches)
     for ib in numpy.arange(Nbunches):
         try:
-            qs = harmonic_analysis.get_tunes_harmonic(dp_all[:, ib], 'laskar',
+            qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
                                                       num_harmonics=20,
                                                       fmin=1e-5, fmax=0.1)
         except:
             qs = 0
-        qsone[ib] = qs
+        qscoh[ib] = qs
 
-    qs_mn, qs_std = numpy.array([numpy.mean(qsone), numpy.std(qsone)])
+    qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
 
     qs_theory = analytical_qs(ring, current)
 
     print('Analytical:', numpy.real(qs_theory))
     print('Simulated:', qs_mn, 'pm', qs_std)
-    print(qsone)
+
+    freq = numpy.fft.rfftfreq(Nturns - 500)
+    for i in numpy.arange(Nbunches):
+        fftdat = numpy.abs(numpy.fft.rfft(dp_all[kickTurn:, i]))
+        if i == 0:
+            plt.semilogy(freq, fftdat,
+                         color=cmap.jet(float(i + 1) / Nbunches),
+                         label='Bunch by Bunch FFT')
+        else:
+            plt.semilogy(freq, fftdat,
+                         color=cmap.jet(float(i + 1) / Nbunches))
+
+    plt.xlim([0, 8e-3])
+    plt.xlabel('Tune')
+    plt.ylabel('FFT Amp [A.U.]')
+    plt.axvline(numpy.mean(qscoh), label='Coherent Tune',
+                linestyle='dashed', color='k')
+    plt.axvline(numpy.real(qs_theory), label='Analytical Beam Loaded Tune',
+                linestyle='dashed', color='r')
+    plt.legend()
+    plt.show()
