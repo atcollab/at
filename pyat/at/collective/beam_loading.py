@@ -3,7 +3,8 @@ from enum import IntEnum
 from ..lattice import Lattice
 from at.lattice import Element, RFCavity, Collective
 from at.lattice.elements import _array
-from at.lattice.utils import Refpts, checktype, uint32_refpts
+from at.lattice.utils import Refpts, checktype
+from at.lattice.utils import uint32_refpts, make_copy
 from at.physics import get_timelag_fromU0
 from at.constants import clight
 from typing import Sequence, Optional, Union
@@ -16,7 +17,8 @@ class BLMode(IntEnum):
 
 def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
                     rshunt: Union[float, Sequence[float]],
-                    cavpts: Refpts = None, **kwargs):
+                    cavpts: Refpts = None, copy: Optional[bool] = False,
+                    **kwargs):
     r"""Function to add beam loading to a cavity element, the cavity
     element is changed to a beam loading element that combines the energy
     kick from both the cavity and the resonator
@@ -38,22 +40,32 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
             (default) uses the phasor method, BLMode.WAKE uses the wake
             function. For high Q resonator, the phasor method should be
             used
+        copy:       If True, returns a shallow copy of ring with new
+                    beam loading elements. Otherwise, modify ring in-place
     """
+    @make_copy(copy)
+    def apply(ring, cavpts, newelems):
+        for ref, elem in zip(cavpts, newelems):
+            ring[ref] = elem
+
     if cavpts is None:
         cavpts = ring.get_refpts(RFCavity)
     else:
         cavpts = uint32_refpts(cavpts, len(ring))
     qfactor = numpy.broadcast_to(qfactor, (len(cavpts), ))
     rshunt = numpy.broadcast_to(rshunt, (len(cavpts), ))
+    new_elems = []
     for ref, qf, rs in zip(cavpts, qfactor, rshunt):
         cav = ring[ref]
         assert isinstance(cav, RFCavity), \
             'Beam loading can only be assigned to a cavity element'
-        ring[ref] = BeamLoadingElement.build_from_cav(cav, ring, qf,
-                                                      rs, **kwargs)
+        new_elems.append(BeamLoadingElement.build_from_cav(cav, ring, qf,
+                                                           rs, **kwargs))
+    return apply(ring, cavpts, new_elems)
 
 
-def remove_beamloading(ring, cavpts: Refpts = None):
+def remove_beamloading(ring, cavpts: Refpts = None,
+                       copy: Optional[bool] = False):
     """Function to remove beam loading from a cavity element, the beam
     loading element is changed to a beam loading element that
     combines the energy kick from both the cavity and the resonator
@@ -64,21 +76,30 @@ def remove_beamloading(ring, cavpts: Refpts = None):
     Keyword Arguments:
         cavpts (Refpts):    refpts of the beam loading Elements.
                             If None (default) apply to all elements
+        copy:       If True, returns a shallow copy of ring with new
+                      cavity elements. Otherwise, modify ring in-place
     """
+    @make_copy(copy)
+    def apply(ring, cavpts, newelems):
+        for ref, elem in zip(cavpts, newelems):
+            ring[ref] = elem
+
     if cavpts is None:
         cavpts = ring.get_refpts(BeamLoadingElement)
     else:
         cavpts = uint32_refpts(cavpts, len(ring))
+    new_elems = []
     for ref in cavpts:
         bl = ring[ref]
         assert isinstance(bl, BeamLoadingElement), \
             'Cannot remove beam loading: not a beam loading element'
         family_name = bl.FamName.replace('_BL', '')
         harm = numpy.round(bl.Frequency*ring.circumference/clight)
-        ring[ref] = RFCavity(family_name, bl.Length, bl.Voltage,
-                             bl.Frequency, harm, bl.Energy,
-                             TimeLag=getattr(bl, 'TimeLag', 0.0),
-                             PhaseLag=getattr(bl, 'PhaseLag', 0.0))
+        new_elems.append(RFCavity(family_name, bl.Length, bl.Voltage,
+                                  bl.Frequency, harm, bl.Energy,
+                                  TimeLag=getattr(bl, 'TimeLag', 0.0),
+                                  PhaseLag=getattr(bl, 'PhaseLag', 0.0)))
+    return apply(ring, cavpts, new_elems)
 
 
 class BeamLoadingElement(RFCavity, Collective):
