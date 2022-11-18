@@ -13,12 +13,12 @@ __all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
-
 def _set_beam_monitors(ring, nturns):
     monitors = get_elements(ring, BeamMonitor)
     for m in monitors:
         m.set_buffers(nturns)
     return len(monitors)==0
+
 
 def fortran_align(func):
     """Ensure that r_in is Fortran-aligned"""
@@ -34,7 +34,6 @@ def fortran_align(func):
             return r_out
 
     return wrapper
-
 
 
 # noinspection PyIncorrectDocstring

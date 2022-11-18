@@ -435,14 +435,14 @@ class Monitor(Element):
     """Monitor element"""
 
 
-class BeamMonitor(Element):
-    """pyAT beam monitor element for multi-particles"""
+class BeamMoments(Element):
+    """Element to compute bunches mean and std"""
     REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
 
     def __init__(self, family_name: str, **kwargs):
         self.FamName = family_name
         self._nbunch = kwargs.pop('nbunch', 1)
-        kwargs.setdefault('PassMethod', 'BeamMonitorPass')
+        kwargs.setdefault('PassMethod', 'BeamMomentsPass')
         self._sizes = numpy.zeros((6, self._nbunch, 0), order='F')
         self._positions = numpy.zeros((6, self._nbunch, 0), order='F')
         self.update(kwargs)
