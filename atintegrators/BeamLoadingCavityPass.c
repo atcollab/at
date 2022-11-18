@@ -197,3 +197,94 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
 
 MODULE_DEF(BeamLoadingCavityPass)       /* Dummy module initialisation */
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
+
+#if defined(MATLAB_MEX_FILE)
+
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{ 	
+  if(nrhs == 2)
+  {
+      long nslice,nturns,mode;
+      double wakefact;
+      double normfact, phasegain, voltgain;
+      double *turnhistory;
+      double *z_cuts;
+      double Energy, Frequency, TimeLag, Length;
+      double qfactor,rshunt,beta;
+      double *vbunch;
+      double *vbeam_phasor;
+      double *vbeam;
+      double *vgen;
+      double *vcav;
+      /*attributes for RF cavity*/
+      Length=atGetDouble(ElemData,"Length"); check_error();
+      Energy=atGetDouble(ElemData,"Energy"); check_error();
+      Frequency=atGetDouble(ElemData,"Frequency"); check_error();
+      TimeLag=atGetOptionalDouble(ElemData,"TimeLag",0); check_error();
+      /*attributes for resonator*/
+      nslice=atGetLong(ElemData,"_nslice"); check_error();
+      nturns=atGetLong(ElemData,"_nturns"); check_error();
+      mode=atGetLong(ElemData,"_mode"); check_error();
+      wakefact=atGetDouble(ElemData,"_wakefact"); check_error();
+      qfactor=atGetDouble(ElemData,"Qfactor"); check_error();
+      rshunt=atGetDouble(ElemData,"Rshunt"); check_error();
+      beta=atGetDouble(ElemData,"_beta"); check_error();
+      normfact=atGetDouble(ElemData,"NormFact"); check_error();
+      phasegain=atGetDouble(ElemData,"PhaseGain"); check_error();
+      voltgain=atGetDouble(ElemData,"VoltGain"); check_error();
+      turnhistory=atGetDoubleArray(ElemData,"_turnhistory"); check_error();
+      vbunch=atGetDoubleArray(ElemData,"_vbunch"); check_error();
+      vbeam=atGetDoubleArray(ElemData,"_vbeam"); check_error();
+      vcav=atGetDoubleArray(ElemData,"_vcav"); check_error();
+      vgen=atGetDoubleArray(ElemData,"_vgen"); check_error();
+      vbeam_phasor=atGetDoubleArray(ElemData,"_vbeam_phasor"); check_error(); 
+      /*optional attributes*/
+      z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+      if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix");
+      /* ALLOCATE memory for the output array of the same size as the input  */
+      plhs[0] = mxDuplicateArray(prhs[1]);
+      r_in = mxGetDoubles(plhs[0]);
+      double *bspos = malloc(sizeof(double));
+      double *bcurr = malloc(sizeof(double));
+      bspos[0] = 0.0;
+      bcurr[0] = 0.0;
+      BeamLoadingCavityPass(r_in,num_particles,1,bspos,bcur,1,0,Elem);
+      free(bspos);
+      free(bcur);
+  }
+  else if (nrhs == 0)
+  {   /* return list of required fields */
+      plhs[0] = mxCreateCellMatrix(4,1);
+      mxSetCell(plhs[0],0,mxCreateString("Length"));
+      mxSetCell(plhs[0],1,mxCreateString("Energy"));
+      mxSetCell(plhs[0],2,mxCreateString("Frequency"));
+      mxSetCell(plhs[0],3,mxCreateString("_nslice"));
+      mxSetCell(plhs[0],4,mxCreateString("_nturns"));
+      mxSetCell(plhs[0],5,mxCreateString("_mode"));
+      mxSetCell(plhs[0],6,mxCreateString("_wakefact"));
+      mxSetCell(plhs[0],7,mxCreateString("Qfactor"));
+      mxSetCell(plhs[0],8,mxCreateString("Rshunt"));
+      mxSetCell(plhs[0],9,mxCreateString("_beta"));
+      mxSetCell(plhs[0],10,mxCreateString("NormFact"));
+      mxSetCell(plhs[0],11,mxCreateString("PhaseGain"));
+      mxSetCell(plhs[0],12,mxCreateString("VoltGain"));
+      mxSetCell(plhs[0],13,mxCreateString("_turnhistory"));
+      mxSetCell(plhs[0],14,mxCreateString("_vbunch"));
+      mxSetCell(plhs[0],15,mxCreateString("_vbeam"));
+      mxSetCell(plhs[0],16,mxCreateString("_vcav"));
+      mxSetCell(plhs[0],17,mxCreateString("_vgen"));
+      mxSetCell(plhs[0],18,mxCreateString("_vbeam_phasor"));
+      if(nlhs>1) /* optional fields */
+      {
+          plhs[1] = mxCreateCellMatrix(2,1);
+          mxSetCell(plhs[1],0,mxCreateString("TimeLag"));
+          mxSetCell(plhs[0],1,mxCreateString("ZCuts"));
+      }
+  }
+  else
+  {
+      mexErrMsgIdAndTxt("AT:WrongArg","Needs 0 or 2 arguments");
+  }
+  
+}
+#endif /* MATLAB_MEX_FILE */
