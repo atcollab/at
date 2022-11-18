@@ -4,7 +4,7 @@ from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
 from ..lattice import DConstant, uint32_refpts, get_elements
-from ..lattice import BeamMonitor
+from ..lattice import BeamMoments
 
 
 __all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
@@ -14,9 +14,9 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def _set_beam_monitors(ring, nturns):
-    monitors = get_elements(ring, BeamMonitor)
+    monitors = get_elements(ring, BeamMoments)
     for m in monitors:
-        m.set_buffers(nturns)
+        m.set_buffers(nturns, ring.nbunch)
     return len(monitors)==0
 
 

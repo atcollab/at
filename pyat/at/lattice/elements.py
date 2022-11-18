@@ -437,19 +437,17 @@ class Monitor(Element):
 
 class BeamMoments(Element):
     """Element to compute bunches mean and std"""
-    REQUIRED_ATTRIBUTES = Element.REQUIRED_ATTRIBUTES
 
     def __init__(self, family_name: str, **kwargs):
         self.FamName = family_name
-        self._nbunch = kwargs.pop('nbunch', 1)
         kwargs.setdefault('PassMethod', 'BeamMomentsPass')
-        self._sizes = numpy.zeros((6, self._nbunch, 0), order='F')
-        self._positions = numpy.zeros((6, self._nbunch, 0), order='F')
+        self._sizes = numpy.zeros((6, 1, 0), order='F')
+        self._positions = numpy.zeros((6, 1, 0), order='F')
         self.update(kwargs)
         
-    def set_buffers(self, nturns):
-        self._sizes = numpy.zeros((6, self._nbunch, nturns), order='F')
-        self._positions = numpy.zeros((6, self._nbunch, nturns), order='F')
+    def set_buffers(self, nturns, nbunch):
+        self._sizes = numpy.zeros((6, nbunch, nturns), order='F')
+        self._positions = numpy.zeros((6, nbunch, nturns), order='F')
 
 
 class Aperture(Element):
