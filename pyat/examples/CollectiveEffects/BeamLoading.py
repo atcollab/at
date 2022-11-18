@@ -146,7 +146,7 @@ if rank == 0:
     print('Analytical:', numpy.real(qs_theory))
     print('Simulated:', qs_mn, 'pm', qs_std)
 
-    freq = numpy.fft.rfftfreq(Nturns - 500)
+    freq = numpy.fft.rfftfreq(Nturns - kickTurn)
     for i in numpy.arange(Nbunches):
         fftdat = numpy.abs(numpy.fft.rfft(dp_all[kickTurn:, i]))
         if i == 0:
