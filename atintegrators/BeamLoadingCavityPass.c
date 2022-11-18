@@ -240,6 +240,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       vbeam_phasor=atGetDoubleArray(ElemData,"_vbeam_phasor"); check_error(); 
       /*optional attributes*/
       z_cuts=atGetOptionalDoubleArray(ElemData,"ZCuts"); check_error();
+      Elem = (struct elem*)atMalloc(sizeof(struct elem));
       Elem->Length=Length;
       Elem->mode=mode;
       Elem->Frequency=Frequency;
