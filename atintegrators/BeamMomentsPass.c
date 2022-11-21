@@ -15,33 +15,24 @@
 struct elem
 {
   int turn;
-  double *sizes;
-  double *positions;
+  double *stds;
+  double *means;
 };
 
 
 void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *Elem) {
 
     int turn = Elem->turn;
-    double *sizes = Elem->sizes;
-    double *positions = Elem->positions;
+    double *stds = Elem->stds;
+    double *means = Elem->means;
         
     int i, ii, ib; 
-    size_t sz = 2*nbunch*6*sizeof(double) + nbunch*sizeof(double);
-    void *buffer = atMalloc(sz);
+    void *buffer = atCalloc(2*nbunch*6+nbunch, sizeof(double));
     double *dptr = (double *) buffer;
     
-    double *avep=dptr; dptr += nbunch*6;
-    double *sizep=dptr; dptr += nbunch*6;
+    double *meanp=dptr; dptr += nbunch*6;
+    double *stdp=dptr; dptr += nbunch*6;
     double *nparts=dptr;
-    
-    for (i=0; i<nbunch; i++) {
-        nparts[i] = 0.0;
-        for(ii=0; ii<6; ii++) {
-            avep[i*6+ii] = 0.0;
-            sizep[i*6+ii] = 0.0;
-        }
-    }
     
     for (i=0; i<num_particles; i++) {
         double *r6 = r_in+i*6;
@@ -49,30 +40,31 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
             ib = i%nbunch;
             nparts[ib] += 1;
             for(ii=0; ii<6; ii++) {
-                avep[6*ib+ii] += r6[ii];
-                sizep[6*ib+ii] += r6[ii]*r6[ii];
+                meanp[6*ib+ii] += r6[ii];
+                stdp[6*ib+ii] += r6[ii]*r6[ii];
             }
         }
     }   
     
     #ifdef MPI     
-    MPI_Allreduce(MPI_IN_PLACE,sizep,6*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,avep,6*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,stdp,6*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,meanp,6*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE,nparts,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
     
     for (i=0; i<nbunch; i++){       
         for (ii=0; ii<6; ii++){
-            avep[6*i+ii] = avep[6*i+ii]/nparts[i];
-            sizep[6*i+ii] = sqrt(sizep[6*i+ii]/nparts[i]-avep[6*i+ii]*avep[6*i+ii]); 
+            meanp[6*i+ii] = meanp[6*i+ii]/nparts[i];
+            stdp[6*i+ii] = sqrt(stdp[6*i+ii]/nparts[i]-meanp[6*i+ii]*meanp[6*i+ii]); 
         }
     }    
      
-    positions += 6*nbunch*turn;
-    sizes += 6*nbunch*turn;
-    memcpy(positions, avep, 6*nbunch*sizeof(double)); 
-    memcpy(sizes, sizep, 6*nbunch*sizeof(double));     
+    means += 6*nbunch*turn;
+    stds += 6*nbunch*turn;
+    memcpy(means, meanp, 6*nbunch*sizeof(double)); 
+    memcpy(stds, stdp, 6*nbunch*sizeof(double));
+    free(buffer);  
 }
 
 
@@ -80,14 +72,14 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
 ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
                                       double *r_in, int num_particles, struct parameters *Param)
 {
-    double *sizes;
-    double *positions;  
+    double *means;
+    double *stds;  
     if (!Elem) {   
-        positions=atGetDoubleArray(ElemData,"_positions"); check_error();
-        sizes=atGetDoubleArray(ElemData,"_sizes"); check_error();
+        means=atGetDoubleArray(ElemData,"_means"); check_error();
+        stds=atGetDoubleArray(ElemData,"_stds"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
-        Elem->sizes=sizes;
-        Elem->positions=positions;
+        Elem->stds=stds;
+        Elem->means=means;
         Elem->turn = 0;
     }
     BeamMomentsPass(r_in, Param->nbunch, num_particles, Elem);
@@ -103,13 +95,13 @@ MODULE_DEF(BeamMomentsPass)        /* Dummy module initialisation */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
-        double *sizes;
-        double *positions; 
-        positions=atGetDoubleArray(ElemData,"_positions"); check_error();
-        sizes=atGetDoubleArray(ElemData,"_sizes"); check_error();
+        double *means;
+        double *stds; 
+        means=atGetDoubleArray(ElemData,"_means"); check_error();
+        stds=atGetDoubleArray(ElemData,"_stds"); check_error();
         Elem = (struct elem*)atMalloc(sizeof(struct elem));
-        Elem->sizes=sizes;
-        Elem->positions=positions;
+        Elem->stds=stds;
+        Elem->means=means;
         Elem->turn = 0;
         if (mxGetM(prhs[1]) != 6) mexErrMsgIdAndTxt("AT:WrongArg","Second argument must be a 6 x N matrix: particle array");
         /* ALLOCATE memory for the output array of the same size as the input  */
