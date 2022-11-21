@@ -1,10 +1,9 @@
 import numpy
 from enum import IntEnum
 from ..lattice import Lattice
-from at.lattice import Element, RFCavity, Collective
+from at.lattice import RFCavity, Collective
 from at.lattice.elements import _array
-from at.lattice.utils import Refpts, checktype
-from at.lattice.utils import uint32_refpts, make_copy
+from at.lattice.utils import Refpts, uint32_refpts, make_copy
 from at.physics import get_timelag_fromU0
 from at.constants import clight
 from typing import Sequence, Optional, Union
@@ -115,10 +114,10 @@ class BeamLoadingElement(RFCavity, Collective):
                         _nturns=int, _phis=float,
                         _turnhistory=lambda v: _array(v),
                         _vbunch=lambda v: _array(v),
-                        _vbeam_phasor=lambda v: _array(v),
-                        _vbeam=lambda v: _array(v),
-                        _vcav=lambda v: _array(v),
-                        _vgen=lambda v: _array(v))
+                        _vbeam_phasor=lambda v: _array(v, shape=(2,)),
+                        _vbeam=lambda v: _array(v, shape=(2,)),
+                        _vcav=lambda v: _array(v, shape=(2,)),
+                        _vgen=lambda v: _array(v, shape=(2,)))
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
