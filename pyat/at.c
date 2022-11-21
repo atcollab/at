@@ -691,28 +691,7 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     return (PyObject *) rin;
 }
 
-
-static PyObject *isopenmp(PyObject *self)
-{
-#ifdef _OPENMP
-    Py_RETURN_TRUE;
-#else
-    Py_RETURN_FALSE;
-#endif /*_OPENMP)*/
-}
-
-
-static PyObject *ismpi(PyObject *self)
-{
-#ifdef MPI
-    Py_RETURN_TRUE;
-#else
-    Py_RETURN_FALSE;
-#endif /*MPI)*/
-}
-
-
-/* Boilerplate to register methods. */
+/* Method table */
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
@@ -751,14 +730,6 @@ static PyMethodDef AtMethods[] = {
               "    charge:  particle charge [elementary charge]\n\n"
               ":meta private:"
             )},
-    {"isopenmp",  (PyCFunction)isopenmp, METH_NOARGS,
-    PyDoc_STR("isopenmp()\n\n"
-              "Return whether OpenMP is active.\n"
-             )},
-    {"ismpi",  (PyCFunction)ismpi, METH_NOARGS,
-    PyDoc_STR("ismpi()\n\n"
-              "Return whether MPI is active.\n"
-             )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

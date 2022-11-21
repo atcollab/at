@@ -7,7 +7,5 @@ at.tracking.atpass
 
    .. autosummary::
 
-      isopenmp
-      ismpi
       atpass
       elempass
