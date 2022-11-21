@@ -1,15 +1,14 @@
 import numpy
 import matplotlib.pyplot as plt
-import sys
+import matplotlib.cm as cmap
 import at
 from at.collective import BeamLoadingElement, add_beamloading, BLMode
 from mpi4py import MPI
 from at.tracking.utils import get_bunches_std_mean
-import pickle as pkl
 from at.constants import qe
 from at.physics import harmonic_analysis
-import matplotlib.cm as cmap
-sys.path.append('/machfs/carver/pyat_dev/at/pyat')
+
+
 
 
 def analytical_qs(ring, I):
@@ -74,7 +73,6 @@ ring.set_fillpattern(Nbunches)
 
 _, fring = at.fast_ring(ring)
 fring.pop(-1)  # drop diffusion element
-cavpts = at.get_refpts(fring, at.RFCavity)
 
 # Here we specify whether we want to use PHASOR or WAKE
 # beam loading models.
@@ -87,11 +85,14 @@ else:
 # Npart must be at least Nbunches per core
 Npart = Nbunches
 
-# Now we give the cavity position (cavpts[0]) and convert
-# it into a beam loaded cavity.
-bl_elem = add_beamloading(fring, cavpts[0], qfactor, rshunt, Nslice=1,
+# Now we give the fring and convert it
+# into a beam loaded cavity.
+add_beamloading(fring, qfactor, rshunt, Nslice=1,
                           Nturns=50, mode=blm,
                           VoltGain=0.1, PhaseGain=0.1)
+                          
+bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
+
 # Specify some simulation parameters
 kickTurn = 500
 Nturns = 2**14 + kickTurn
@@ -133,12 +134,9 @@ for i in numpy.arange(Nturns):
 if rank == 0:
     qscoh = numpy.zeros(Nbunches)
     for ib in numpy.arange(Nbunches):
-        try:
-            qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
+        qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
                                                       num_harmonics=20,
                                                       fmin=1e-5, fmax=0.1)
-        except:
-            qs = 0
         qscoh[ib] = qs
 
     qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
@@ -148,7 +146,7 @@ if rank == 0:
     print('Analytical:', numpy.real(qs_theory))
     print('Simulated:', qs_mn, 'pm', qs_std)
 
-    freq = numpy.fft.rfftfreq(Nturns - 500)
+    freq = numpy.fft.rfftfreq(Nturns - kickTurn)
     for i in numpy.arange(Nbunches):
         fftdat = numpy.abs(numpy.fft.rfft(dp_all[kickTurn:, i]))
         if i == 0:
