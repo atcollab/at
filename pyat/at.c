@@ -16,6 +16,7 @@
 #include <stdbool.h> 
 #include <math.h>
 #include <float.h>
+#include <atrandom.c>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
@@ -66,6 +67,10 @@ static PyObject **kwargs_list = NULL;
 static char integrator_path[300];
 static PyObject *particle_type;
 static PyObject *element_type;
+
+/* state buffers for RNGs */
+static pcg32_random_t common_state = PCG32_INITIALIZER;
+static pcg32_random_t thread_state = PCG32_INITIALIZER;
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
@@ -691,6 +696,33 @@ static PyObject *at_elempass(PyObject *self, PyObject *args, PyObject *kwargs)
     return (PyObject *) rin;
 }
 
+static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"rank", "seed", NULL};
+    uint64_t rank = 0;
+    uint64_t seed = 12345;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|K$K", kwlist,
+        &rank, &seed)) {
+        return NULL;
+    }
+    pcg32_srandom_r(&common_state, seed, 28502542541ULL);
+    pcg32_srandom_r(&thread_state, seed, rank);
+    Py_RETURN_NONE;
+}
+
+static PyObject *common_rng(PyObject *self)
+{
+    double drand = atrandd_r(&common_state);
+    return Py_BuildValue("d", drand);
+}
+
+static PyObject *thread_rng(PyObject *self)
+{
+    double drand = atrandd_r(&thread_state);
+    return Py_BuildValue("d", drand);
+}
+
 /* Method table */
 
 static PyMethodDef AtMethods[] = {
@@ -730,6 +762,21 @@ static PyMethodDef AtMethods[] = {
               "    charge:  particle charge [elementary charge]\n\n"
               ":meta private:"
             )},
+    {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
+    PyDoc_STR("reset_rng(rank=0, seed=None)\n\n"
+              "Reset the common and thread random generators.\n\n"
+              "Parameters:\n"
+              "    rank:    thread identifier (for MPI and python multiprocessing)\n"
+              "    seed:    single seed for both generators\n"
+            )},
+    {"common_rng",  (PyCFunction)common_rng, METH_NOARGS,
+    PyDoc_STR("common_rng()\n\n"
+              "Return a double from the common generator .\n"
+             )},
+    {"thread_rng",  (PyCFunction)thread_rng, METH_NOARGS,
+    PyDoc_STR("thread_rng()\n\n"
+              "Return a double from the thread generator .\n"
+             )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

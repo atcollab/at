@@ -9,3 +9,6 @@ at.tracking.atpass
 
       atpass
       elempass
+      reset_rng
+      common_rng
+      thread_rng
