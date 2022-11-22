@@ -64,7 +64,7 @@ void BeamMomentsPass(double *r_in, int nbunch, int num_particles, struct elem *E
     stds += 6*nbunch*turn;
     memcpy(means, meanp, 6*nbunch*sizeof(double)); 
     memcpy(stds, stdp, 6*nbunch*sizeof(double));
-    free(buffer);  
+    atFree(buffer);  
 }
 
 
