@@ -617,9 +617,10 @@ class Lattice(list):
         return self._beam_current
 
     @beam_current.setter
-    def beam_current(self, value):
+    def beam_current(self, value, clear_history=True):
         self._beam_current = value
-        self.set_wake_turnhistory()
+        if clear_history:
+            self.set_wake_turnhistory()
 
     @property
     def bunch_currents(self) -> numpy.ndarray:
