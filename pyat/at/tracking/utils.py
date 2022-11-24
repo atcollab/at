@@ -52,7 +52,8 @@ def get_bunches_std_mean(r_in: numpy.ndarray, nbunch: int,
     return std, mean
 
 
-def unfold_beam(ring: Lattice, beam: numpy.ndarray, **kwargs):
+def unfold_beam(ring: Lattice, beam: numpy.ndarray,
+                **kwargs) -> numpy.ndarray:
     """Function to unfold the beam based on the ring fill pattern.
     The input particle distribution has to be in on bucket 0.
     Particle are distributed in bunches using ``i%ring.nbunch``
@@ -60,7 +61,6 @@ def unfold_beam(ring: Lattice, beam: numpy.ndarray, **kwargs):
     For each bunches the absolute ``ct`` is computed using the 6D
     closed orbit search, this closed orbit is added to the input
     particles.
-    The particle coordinates are modified in-place.
 
     Parameters:
         ring: Lattice description
@@ -72,13 +72,17 @@ def unfold_beam(ring: Lattice, beam: numpy.ndarray, **kwargs):
         max_iterations (int):   Maximum number of iterations for
           6D orbit.
           Default: :py:data:`DConstant.OrbMaxIter <.DConstant>`
+    Return:
+        beam (numpy.ndarray): unfolded beam
     """
     conv = kwargs.pop('convergence', DConstant.OrbConvergence)
     maxiter = kwargs.pop('max_iterations', DConstant.OrbMaxIter)
     o60, _ = ring.find_orbit(max_iterations=maxiter, convergence=conv)
-    for i, spos in enumerate(ring.bunch_spos):
-        guess = o60
-        guess[5] += spos
+    unfolded_beam = numpy.zeros(beam.shape)
+    for i, spos in enumerate(ring.bunch_spos[::-1]):
+        guess = o60.copy()
+        guess[5] -= spos
         o6, _ = ring.find_orbit(guess=guess, max_iterations=maxiter,
                                 convergence=conv)
-        beam[:, i::ring.nbunch] = (beam[:, i::ring.nbunch].T + o6).T
+        unfolded_beam[:, i::ring.nbunch] = (beam[:, i::ring.nbunch].T + o6).T
+    return unfolded_beam
