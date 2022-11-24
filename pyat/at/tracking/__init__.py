@@ -7,6 +7,7 @@ from .atpass import isopenmp, ismpi
 from .patpass import patpass
 from .track import *
 from .particles import *
+from .utils import *
 # noinspection PyProtectedMember
 from ..lattice.options import _Dst
 

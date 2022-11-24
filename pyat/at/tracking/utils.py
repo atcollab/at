@@ -10,7 +10,7 @@ __all__ = ['get_bunches', 'get_bunches_std_mean', 'unfold_beam']
 
 
 def get_bunches(r_in: numpy.ndarray, nbunch: int,
-                selected_bunches Optional[numpy.ndarray]=None):
+                selected_bunches: Optional[numpy.ndarray] = None):
     """Function to get the bunches particles 6D coordinates
 
     Parameters:
@@ -32,7 +32,7 @@ def get_bunches(r_in: numpy.ndarray, nbunch: int,
 
 
 def get_bunches_std_mean(r_in: numpy.ndarray, nbunch: int,
-                         selected_bunches Optional[numpy.ndarray]=None):
+                         selected_bunches: Optional[numpy.ndarray] = None):
     """Function to get the bunches standard deviation and center
     of mass
 
@@ -81,4 +81,4 @@ def unfold_beam(ring: Lattice, beam: numpy.ndarray, **kwargs):
         guess[5] += spos
         o6, _ = ring.find_orbit(guess=guess, max_iterations=maxiter,
                                 convergence=conv)
-        parts[:, i::ring.nbunch] = (parts[:, i::ring.nbunch].T + o6).T
+        beam[:, i::ring.nbunch] = (beam[:, i::ring.nbunch].T + o6).T

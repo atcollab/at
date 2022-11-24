@@ -107,7 +107,7 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
          be used. The beam can be unfolded using the function
          ``at.traccking.utils.unfold_beam``. This function takes into account the
          true voltage in each bucket and distributes the particles in the bunches
-         defined by ``ring.fillpattern``.
+         defined by ``ring.fillpattern`` using a 6D orbit search.
 
     """
     if not isinstance(lattice, list):
