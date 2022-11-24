@@ -1,5 +1,5 @@
 """AT plotting functions"""
-from ..lattice import Lattice, Refpts
+from ..lattice import Lattice, Refpts, check_collective
 from ..tracking import lattice_pass
 from ..physics import get_optics, Orbit
 from .generic import baseplot
@@ -177,6 +177,7 @@ def plot_linear(ring: Lattice, *keys, **kwargs):
 # --------- Example 3 --------
 
 # Here the data generating function is embedded in the convenience function
+@check_collective(False)
 def plot_trajectory(ring: Lattice, r_in, nturns: int = 1, **kwargs):
     """Plot a particle's trajectory
 

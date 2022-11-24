@@ -5,7 +5,7 @@ from .boundary import GridMode
 from .boundary import boundary_search
 from typing import Optional, Sequence
 import multiprocessing
-from ..lattice import Lattice, Refpts
+from ..lattice import Lattice, Refpts, check_collective
 from ..physics import frequency_control
 
 
@@ -14,6 +14,7 @@ __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
 
 
 @frequency_control
+@check_collective(False)
 def get_acceptance(
         ring: Lattice, planes, npoints, amplitudes,
         nturns: Optional[int] = 1024,

@@ -5,7 +5,7 @@ from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
 from typing import Tuple
 from scipy.linalg import inv, det, solve_sylvester
-from at.lattice import Lattice, check_radiation, Refpts
+from at.lattice import Lattice, check_6d, Refpts, check_collective
 from at.lattice import Dipole, Wiggler, DConstant, Multipole, QuantumDiffusion
 from at.lattice import get_refpts, get_value_refpts
 from at.lattice import uint32_refpts, set_value_refpts
@@ -81,7 +81,8 @@ def _lmat(dmat):
     return lmat
 
 
-@check_radiation(True)
+@check_6d(True)
+@check_collective(False)
 def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
                   keep_lattice: bool = False):
     """Calculates the equilibrium beam envelope
@@ -197,6 +198,7 @@ def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
     return data0, r66data, data
 
 
+@check_collective(False)
 def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         -> Tuple[float, float, float, float, float]:
     r"""Computes the 5 radiation integrals for uncoupled lattices.
@@ -356,7 +358,8 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
     return tuple(integrals)
 
 
-@check_radiation(True)
+@check_6d(True)
+@check_collective(False)
 def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> numpy.ndarray:
     """Computes the diffusion matrix of the whole ring
 
@@ -373,7 +376,8 @@ def quantdiffmat(ring: Lattice, orbit: Orbit = None) -> numpy.ndarray:
     return numpy.round(diffmat[-1], 24)
 
 
-@check_radiation(True)
+@check_6d(True)
+@check_collective(False)
 def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
     """Generates a quantum diffusion element
 
@@ -391,7 +395,8 @@ def gen_quantdiff_elem(ring: Lattice, orbit: Orbit = None) -> QuantumDiffusion:
     return diff_elem
 
 
-@check_radiation(True)
+@check_6d(True)
+@check_collective(False)
 def tapering(ring: Lattice, multipoles: bool = True,
              niter: int = 1, **kwargs) -> None:
     """Scales magnet strengths

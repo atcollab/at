@@ -8,7 +8,8 @@ import warnings
 from scipy.linalg import solve
 from ..constants import clight
 from ..lattice import DConstant, get_s_pos, Refpts
-from ..lattice import AtWarning, Lattice, check_6d
+from ..lattice import AtWarning, Lattice
+from ..lattice import check_6d, check_collective
 from ..tracking import lattice_pass
 from .orbit import Orbit, find_orbit4, find_orbit6
 from .matrix import find_m44, find_m66
@@ -633,6 +634,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
     return _linopt(ring, _analyze4, *args, **kwargs)
 
 
+@check_collective(False)
 def linopt6(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a fully coupled lattice using normal modes
 
@@ -1065,6 +1067,7 @@ def avlinopt(ring: Lattice, dp: float = None, refpts: Refpts = None, **kwargs):
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
 
+@check_collective(False) 
 def get_tune(ring: Lattice, *, method: str = 'linopt',
              dp: float = None, dct: float = None, df: float = None,
              orbit: Orbit = None, **kwargs):
@@ -1138,6 +1141,7 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
     return tunes
 
 
+@check_collective(False)
 def get_chrom(ring: Lattice, *, method: str = 'linopt',
               dp: float = None, dct: float = None, df: float = None,
               cavpts: Refpts = None, **kwargs):

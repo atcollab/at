@@ -6,6 +6,7 @@ A collection of functions to compute 4x4 and 6x6 transfer matrices
 import numpy
 from ..lattice import Lattice, Element, get_refpts, DConstant, Refpts
 from ..lattice.elements import Bend, M66
+from at.lattice import check_collective, check_6d
 from ..tracking import lattice_pass, element_pass
 from .orbit import Orbit, find_orbit4, find_orbit6
 from .amat import jmat, symplectify
@@ -15,6 +16,7 @@ __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
 _jmt = jmat(2)
 
 
+@check_6d(False)
 def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
              dct: float = None, df: float = None,
              orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
@@ -100,6 +102,7 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
     return m44, mstack
 
 
+@check_collective(False)
 def find_m66(ring: Lattice, refpts: Refpts = None,
              orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     """One-turn 6x6 transfer matrix

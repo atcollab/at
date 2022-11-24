@@ -4,7 +4,7 @@ Non-linear optics
 import numpy
 from typing import Optional, Sequence
 from scipy.special import factorial
-from ..lattice import Element, Lattice
+from ..lattice import Element, Lattice, check_collective
 from ..tracking import lattice_pass
 from .orbit import Orbit, find_orbit
 from .linear import get_tune, get_chrom, linopt6
@@ -13,6 +13,7 @@ from .harmonic_analysis import get_tunes_harmonic
 __all__ = ['detuning', 'chromaticity', 'gen_detuning_elem']
 
 
+@check_collective(False)
 def tunes_vs_amp(ring: Lattice, amp: Optional[Sequence[float]] = None,
                  dim: Optional[int] = 0, window=1,
                  nturns: Optional[int] = 512) -> numpy.ndarray:

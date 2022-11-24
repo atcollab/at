@@ -4,6 +4,7 @@ Closed orbit related functions
 import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant
+from at.lattice import check_collective
 from at.lattice import Lattice, get_s_pos, uint32_refpts, Refpts
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
@@ -299,6 +300,7 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
     return orbit, all_points
 
 
+@check_collective(False)
 def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
             **kwargs):
     """Solver for 6D motion"""

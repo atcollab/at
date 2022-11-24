@@ -31,7 +31,7 @@ Key = Union[type, Element, str]
 
 
 __all__ = ['AtError', 'AtWarning', 'check_radiation', 'check_6d',
-           'set_radiation', 'set_6d',
+           'set_radiation', 'set_6d', 'check_collective',
            'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
@@ -151,6 +151,45 @@ def set_6d(is_6d: bool) -> Callable:
                 return func(rg, *args, **kwargs)
             return wrapper
     return setrad_decorator
+    
+    
+def check_collective(is_collective: bool) -> Callable:
+    """Decorator for optics functions
+
+    Wraps a function like ``func(ring, *args, **kwargs)`` where ring is a
+    :py:class:`.Lattice` object. Raise :py:class:`.AtError` if
+    ``ring.is_collective`` is not the desired ``is_collective`` state.
+    No test is performed if ring is not a :py:class:`.Lattice`.
+
+    Parameters:
+        is_collective: Desired collective state
+
+    Raises:
+        AtError: if ``ring.is_collective`` is not ``is_collective``
+
+    Example:
+
+        .. code-block:: python
+
+            @check_collective(False)
+            def find_orbit4(ring, dct=None, guess=None, **kwargs):
+                ...
+
+        Raises :py:class:`.AtError` if ``ring.is_collective`` is :py:obj:`True`
+
+    See Also:
+        :py:func:`set_6d`
+    """
+    def collective_decorator(func):
+        @functools.wraps(func)
+        def wrapper(ring, *args, **kwargs):
+            ringcol = getattr(ring, 'is_collective', is_collective)
+            if ringcol != is_collective:
+                raise AtError('{0} needs "ring.is_collective" {1}'.format(
+                    func.__name__, is_collective))
+            return func(ring, *args, **kwargs)
+        return wrapper
+    return collective_decorator
 
 
 def make_copy(copy: bool) -> Callable:
