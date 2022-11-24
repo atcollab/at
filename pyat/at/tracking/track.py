@@ -71,6 +71,10 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
           Default: ``lattice.particle`` if existing,
           otherwise ``Particle('relativistic')``
         energy (Optiona[float]):        lattice energy. Default 0.
+        unfold_beam (Bool): internal beam folding activate, this 
+            assumes the input particles are in bucket 0, works only
+            if all bucket see the same RF Voltage.
+            Default: ``True``
 
     If ``energy`` is not available, relativistic tracking if forced,
     ``rest_energy`` is ignored.
@@ -99,6 +103,11 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
          ``lattice_pass(lattice, r_in, refpts=[])`` can be used. An empty list
          is returned and the tracking results of the last turn are stored in
          ``r_in``.
+       * To model buckets with different RF voltage ``unfold_beam=False`` has to
+         be used. The beam can be unfolded using the function
+         ``at.traccking.utils.unfold_beam``. This function takes into account the
+         true voltage in each bucket and distributes the particles in the bunches
+         defined by ``ring.fillpattern``.
 
     """
     if not isinstance(lattice, list):
@@ -109,7 +118,11 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
-    bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    unfold_beam = kwargs.pop('unfold_beam', True)
+    if unfold_beam:
+        bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    else:
+        bunch_spos = numpy.zeros(len(bunch_currents))
     kwargs.update({'bunch_currents': bunch_currents,
                    'bunch_spos': bunch_spos})
     # atpass returns 6xAxBxC array where n = x*y*z;
