@@ -10,6 +10,7 @@
 #endif /*_OPENMP*/
 #include "attypes.h"
 #include "elempass.h"
+#include "atrandom.c"
 
 /* Get ready for R2018a C matrix API */
 #ifndef mxGetDoubles
@@ -55,6 +56,9 @@ typedef double mxDouble;
 									exceeds this limit it is marked as lost */
 #define C0  	2.99792458e8
 
+#define COMMON_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
+#define THREAD_INITIALIZER   { AT_RNG_STATE, 0ULL }
+
 
 typedef int*(*pass_function)(mxArray*, int*, double*, int, int);
 typedef struct elem*(*track_function)(mxArray*, struct elem*, double*, int, struct parameters*);
@@ -66,6 +70,10 @@ static double *elemlength_list = NULL;
 static track_function *integrator_list = NULL;
 static pass_function *pass_list = NULL;
 static int **field_numbers_ptr = NULL;
+
+/* state buffers for RNGs */
+static pcg32_random_t common_state = COMMON_INITIALIZER;
+static pcg32_random_t thread_state = THREAD_INITIALIZER;
 
 static struct LibraryListElement {
     const char *MethodName;
@@ -327,6 +335,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     #endif /*_OPENMP*/
 
+    param.common_rng = &common_state;
+    param.thread_rng = &thread_state;
     param.energy = 0.0;
     param.rest_energy = 0.0;
     param.charge = -1.0;

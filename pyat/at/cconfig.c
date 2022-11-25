@@ -38,8 +38,6 @@ static PyMethodDef methods[] = {
 
 PyMODINIT_FUNC PyInit_cconfig(void)
 {
-    PyObject *integ_path_obj;
-
     static struct PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT,
     "cconfig",    /* m_name */

@@ -8,17 +8,17 @@ import multiprocessing
 if ismpi():
     from mpi4py import MPI
     _comm = MPI.COMM_WORLD
-    _sz = _comm.Get_size()
-    _rank = _comm.Get_rank()
+    _MPI_sz = _comm.Get_size()
+    _MPI_rk = _comm.Get_rank()
 else:
-    _sz = 1
-    _rank = 0
+    _MPI_sz = 1
+    _MPI_rk = 0
 
 
 def _newgen(seed=12345):
     ss = SeedSequence(seed)
-    seeds = ss.spawn(_sz+1)
-    return Generator(PCG64(seeds[0])), Generator(PCG64(seeds[_rank+1]))
+    seeds = ss.spawn(_MPI_sz + 1)
+    return Generator(PCG64(seeds[0])), Generator(PCG64(seeds[_MPI_rk + 1]))
 
 
 class _Dst(object):
@@ -31,6 +31,7 @@ class _Dst(object):
     OrbMaxIter = 20          # Max. number of iterations for orbit
     omp_num_threads = int(os.environ.get('OMP_NUM_THREADS', '0'))
     patpass_poolsize = multiprocessing.cpu_count()
+    _rank = _MPI_rk         # MPI rank
 
     def __setattr__(self, name, value):
         _ = getattr(self, name)     # make sure attribute exists
@@ -46,6 +47,10 @@ class _Dst(object):
     @property
     def openmp(self):
         return isopenmp()
+
+    @property
+    def rank(self):
+        return self._rank
 
 
 class _Random(object):

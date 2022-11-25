@@ -408,6 +408,8 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     MPI_Comm_rank(MPI_COMM_WORLD, &id);
 #endif /*MPI)*/
 
+    param.common_rng=&common_state;
+    param.thread_rng=&thread_state;
     param.energy=0.0;
     param.rest_energy=0.0;
     param.charge=-1.0;       
@@ -700,13 +702,13 @@ static PyObject *reset_rng(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = {"rank", "seed", NULL};
     uint64_t rank = 0;
-    uint64_t seed = 12345;
+    uint64_t seed = AT_RNG_STATE;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|K$K", kwlist,
         &rank, &seed)) {
         return NULL;
     }
-    pcg32_srandom_r(&common_state, seed, 28502542541ULL);
+    pcg32_srandom_r(&common_state, seed, AT_RNG_INC);
     pcg32_srandom_r(&thread_state, seed, rank);
     Py_RETURN_NONE;
 }
@@ -727,9 +729,9 @@ static PyObject *thread_rng(PyObject *self)
 
 static PyMethodDef AtMethods[] = {
     {"atpass",  (PyCFunction)at_atpass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("atpass(line: Sequence[Element], rin, n_turns: int, refpts: Uint32_refs = [], "
+    PyDoc_STR("atpass(line: Sequence[Element], r_in, n_turns: int, refpts: Uint32_refs = [], "
               "reuse: Optional[bool] = False, omp_num_threads: Optional[int] = 0)\n\n"
-              "Track input particles rin along line for nturns turns.\n"
+              "Track input particles r_in along line for nturns turns.\n"
               "Record 6D phase space at elements corresponding to refpts for each turn.\n\n"
               "Parameters:\n"
               "    line:    list of elements\n"
@@ -751,8 +753,8 @@ static PyMethodDef AtMethods[] = {
               ":meta private:"
               )},
     {"elempass",  (PyCFunction)at_elempass, METH_VARARGS | METH_KEYWORDS,
-    PyDoc_STR("elempass(element, rin)\n\n"
-              "Track input particles rin through a single element.\n\n"
+    PyDoc_STR("elempass(element, r_in)\n\n"
+              "Track input particles r_in through a single element.\n\n"
               "Parameters:\n"
               "    element: AT element\n"
               "    rin:     6 x n_particles Fortran-ordered numpy array.\n"
@@ -764,18 +766,18 @@ static PyMethodDef AtMethods[] = {
             )},
     {"reset_rng",  (PyCFunction)reset_rng, METH_VARARGS | METH_KEYWORDS,
     PyDoc_STR("reset_rng(rank=0, seed=None)\n\n"
-              "Reset the common and thread random generators.\n\n"
+              "Reset the *common* and *thread* random generators.\n\n"
               "Parameters:\n"
-              "    rank:    thread identifier (for MPI and python multiprocessing)\n"
-              "    seed:    single seed for both generators\n"
+              "    rank (int):    thread identifier (for MPI and python multiprocessing)\n"
+              "    seed (int):    single seed for both generators\n"
             )},
     {"common_rng",  (PyCFunction)common_rng, METH_NOARGS,
     PyDoc_STR("common_rng()\n\n"
-              "Return a double from the common generator .\n"
+              "Return a double from the *common* generator .\n"
              )},
     {"thread_rng",  (PyCFunction)thread_rng, METH_NOARGS,
     PyDoc_STR("thread_rng()\n\n"
-              "Return a double from the thread generator .\n"
+              "Return a double from the *thread* generator .\n"
              )},
    {NULL, NULL, 0, NULL}        /* Sentinel */
 };
