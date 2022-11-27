@@ -11,6 +11,7 @@ requires = [
     "numpy ~= 1.21.3;python_version>='3.10'",
     "setuptools >= 62",
     "setuptools_scm >= 7",
+    "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
     "wheel",
 ]
 # build-backend = "setuptools.build_meta"
@@ -35,7 +36,7 @@ requires-python = ">=3.7"
 dependencies = [
     "importlib-resources;python_version<'3.9'",
     "numpy>=1.16.6",
-    "scipy>=0.16"
+    "scipy>=1.4.0"
 ]
 
 [project.urls]
@@ -46,7 +47,7 @@ Home="https://atcollab.github.io/at/"
 mpi = ["mpi4py"]
 plot = ["matplotlib"]
 dev = ["pytest >= 2.9", "pytest-lazy-fixture", "pytest-cov", "flake8"]
-doc = ["Sphinx >= 5.0.2", "myst-parser", "pydata-sphinx-theme < 0.10", "sphinx-copybutton"]
+doc = ["Sphinx ~= 5.3", "myst-parser", "pydata-sphinx-theme ~= 0.11.0", "sphinx-copybutton"]
 
 # tool.setuptools is still in BETA, so we keep temporarily setup.cfg
 
