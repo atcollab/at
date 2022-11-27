@@ -56,9 +56,6 @@ typedef double mxDouble;
 									exceeds this limit it is marked as lost */
 #define C0  	2.99792458e8
 
-#define COMMON_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
-#define THREAD_INITIALIZER   { AT_RNG_STATE, 0ULL }
-
 
 typedef int*(*pass_function)(mxArray*, int*, double*, int, int);
 typedef struct elem*(*track_function)(mxArray*, struct elem*, double*, int, struct parameters*);
@@ -72,8 +69,8 @@ static pass_function *pass_list = NULL;
 static int **field_numbers_ptr = NULL;
 
 /* state buffers for RNGs */
-static pcg32_random_t common_state = COMMON_INITIALIZER;
-static pcg32_random_t thread_state = THREAD_INITIALIZER;
+static pcg32_random_t common_state = COMMON_PCG32_INITIALIZER;
+static pcg32_random_t thread_state = THREAD_PCG32_INITIALIZER;
 
 static struct LibraryListElement {
     const char *MethodName;

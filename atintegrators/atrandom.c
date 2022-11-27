@@ -27,6 +27,13 @@
 #define TWOPI  6.28318530717959
 #endif /*TWOPI*/
 
+/* initial RNG definitions */
+#define AT_RNG_STATE 0x853c49e6748fea9bULL
+#define AT_RNG_INC 0xda3e39cb94b95bdbULL
+
+#define COMMON_PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
+#define THREAD_PCG32_INITIALIZER   { AT_RNG_STATE, 0ULL }
+
 struct pcg_state_setseq_64 {    // Internals are *Private*.
     uint64_t state;             // RNG state.  All values are possible.
     uint64_t inc;               // Controls which RNG sequence (stream) is
@@ -36,7 +43,7 @@ typedef struct pcg_state_setseq_64 pcg32_random_t;
 
 // If you *must* statically initialize it, here's one.
 
-#define PCG32_INITIALIZER   { 0x853c49e6748fea9bULL, 0xda3e39cb94b95bdbULL }
+#define PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
 
 static pcg32_random_t pcg32_global = PCG32_INITIALIZER;
 
@@ -156,7 +163,3 @@ static inline int atrandp(double lamb)
 {
     return atrandp_r(&pcg32_global, lamb);
 }
-
-/* initial RNG definitions */
-#define AT_RNG_STATE 0x853c49e6748fea9bULL
-#define AT_RNG_INC 28502542541ULL

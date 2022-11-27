@@ -69,8 +69,8 @@ static PyObject *particle_type;
 static PyObject *element_type;
 
 /* state buffers for RNGs */
-static pcg32_random_t common_state = PCG32_INITIALIZER;
-static pcg32_random_t thread_state = PCG32_INITIALIZER;
+static pcg32_random_t common_state = COMMON_PCG32_INITIALIZER;
+static pcg32_random_t thread_state = THREAD_PCG32_INITIALIZER;
 
 /* Directly copied from atpass.c */
 static struct LibraryListElement {
