@@ -3,13 +3,21 @@ import functools
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import DConstant, uint32_refpts
+from ..lattice import DConstant, uint32_refpts, get_elements
+from ..lattice import BeamMoments
 
 
 __all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
            'elempass']
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
+
+
+def _set_beam_monitors(ring, nturns):
+    monitors = get_elements(ring, BeamMoments)
+    for m in monitors:
+        m.set_buffers(nturns, ring.nbunch)
+    return len(monitors) == 0
 
 
 def fortran_align(func):
@@ -108,6 +116,8 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     if omp_num_threads is None:
         omp_num_threads = DConstant.omp_num_threads
     refs = uint32_refpts(refpts, len(lattice))
+    no_bm = _set_beam_monitors(lattice, nturns)
+    keep_lattice = keep_lattice and no_bm
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
     bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
     kwargs.update({'bunch_currents': bunch_currents,
