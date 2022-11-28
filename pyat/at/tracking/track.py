@@ -4,7 +4,8 @@ from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
 from ..lattice import Element, Particle, Refpts, uint32_refpts
-from typing import Iterable
+from ..lattice import elements, get_elements
+from typing import List, Iterable
 
 
 __all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
@@ -13,7 +14,15 @@ __all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
+def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
+    monitors = get_elements(ring, elements.BeamMoments)
+    for m in monitors:
+        m.set_buffers(nturns, nbunch)
+    return len(monitors) == 0
+
+
 def fortran_align(func):
+    # noinspection PyShadowingNames
     """decorator to ensure that *r_in* is Fortran-aligned
 
     :py:func:`fortran_align` ensures that the 2nd argument (usually *r_in*) of
@@ -125,10 +134,13 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     if refpts is None:
         refpts = len(lattice)
     refs = uint32_refpts(refpts, len(lattice))
+    # define properties if lattice is not a Lattice object
+    nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
     bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
     kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
-    kwargs['reuse'] = kwargs.pop('keep_lattice', False)
+    no_bm = _set_beam_monitors(lattice, nbunch, nturns)
+    kwargs['reuse'] = kwargs.pop('keep_lattice', False) and no_bm
     # atpass returns 6xNxRxT array
     # * N is number of particles;
     # * R is number of refpts
