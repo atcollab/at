@@ -1,10 +1,15 @@
 #include "atelem.c"
 #include <math.h>
 #include <float.h>
+#include <complex.h>
 #ifdef MPI
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
 #endif
+
+
+#define TWOPI  6.28318530717959
+#define C0     2.99792458e8 
 
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
@@ -122,7 +127,7 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
                  int nbunch,double *bunch_spos,double *bunch_currents,
                  double *turnhistory,int *pslice,double *z_cuts){
     
-    int i,ii,ib,is;
+    int i,ii,ib;
     double *rtmp;
     
     double *smin = malloc(nbunch*sizeof(double));
@@ -255,4 +260,183 @@ void compute_kicks(int nslice,int nturns,int nelem,
 };
 
 
+double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta) {
 
+    double omega, alpha, omegabar;
+    double *wake = malloc(2*sizeof(double));
+    wake[0] = 0.0;
+    wake[1] = 0.0;
+    double dt;
+    
+    omega = TWOPI * freqres;
+    alpha = omega / (2 * qfactor);
+    omegabar = sqrt(fabs(omega*omega - alpha*alpha));
+    
+    dt = -ds/(beta * C0);      
+             
+    if (dt==0) {
+        wake[0] = rshunt * alpha;
+        wake[1] = 0.0;
+    } else if (dt<0) {
+        if (qfactor > 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
+                      alpha / omegabar * sin(omegabar*dt));
+            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sin(omegabar * dt) - \
+                      alpha / omegabar * cos(omegabar*dt));
+        } else if (qfactor == 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
+            wake[1] = 0.0;
+        } else if (qfactor < 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
+                      alpha / omegabar * sinh(omegabar * dt)); 
+            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sinh(omegabar * dt) - \
+                      alpha / omegabar * cosh(omegabar*dt));
+        }       
+    } else {
+        wake[0] = 0.0;
+        wake[1] = 0.0;
+    }            
+    return wake;
+}
+
+
+void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
+                           double *kz,double freq, double qfactor, double rshunt,
+                           double beta, double *vbeamk, double energy, double *vbunch) {
+
+    int rank=0;
+    int size=1;
+    int i,ii,ib;
+    double ds,wi;
+    double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
+    double *wake = malloc(2*sizeof(double));
+    double vba, vbp;
+    double *vbr = vbunch;
+    double *vbi = vbunch+nbunch;
+
+    for (i=0;i<nslice*nbunch;i++) {
+        ib = (int)(i/nslice);
+        kz[i]=0.0;
+        vbr[ib] = 0.0;
+        vbi[ib] = 0.0;
+    }
+
+    vbeamk[0] = 0.0;
+    vbeamk[1] = 0.0;
+    wake[0] = 0.0;
+    wake[1] = 0.0;
+
+
+    #ifdef MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    #endif
+    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){  
+        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+        if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
+            for (ii=0;ii<nslice*nbunch*nturns;ii++){
+                ds = turnhistoryZ[i]-turnhistoryZ[ii];
+                if(turnhistoryW[ii]>0.0 && ds>=0){
+                    wi = turnhistoryW[ii];
+                    wake = wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta);       
+                    kz[i-nslice*nbunch*(nturns-1)] += normfact*wi*wake[0];
+                    vbeamk[0] += normfact*wi*wake[0]*energy/nbunch;
+                    vbeamk[1] -= normfact*wi*wake[1]*energy/nbunch;
+                    vbr[ib] += normfact*wi*wake[0]*energy;
+                    vbi[ib] -= normfact*wi*wake[1]*energy;
+                }            
+            }
+        }
+    }
+    #ifdef MPI
+    MPI_Allreduce(MPI_IN_PLACE,kz,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,vbeamk,2,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,vbr,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,vbi,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+    #endif
+    vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1]);   
+    vbp = atan2(vbeamk[1],vbeamk[0]);
+    vbeamk[0] = vba;
+    vbeamk[1] = vbp;
+    for(i=0;i<nbunch;i++){
+        double vr = vbr[i];
+        double vi = vbi[i];
+        vbr[i] = sqrt(vr*vr+vi*vi); 
+        vbi[i] = atan2(vi,vr);
+    }
+    free(wake);
+};
+
+
+void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
+                          double normfact, double *kz,double freq, double qfactor,
+                          double rshunt, double *vbeam, double circumference,
+                          double energy, double beta, double *vbeamk, double *vbunch){  
+    #ifndef _MSC_VER  
+    int i,ib;
+    double wi;
+    double dt =0.0;
+    double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
+    double omr = TWOPI*freq;
+    double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
+    double complex vbeamkc = 0.0;
+    double kick = rshunt*omr/(2*qfactor);
+    double bc = beta*C0;
+    double *vbr = vbunch;
+    double *vbi = vbunch+nbunch;
+    
+    for (i=0;i<nslice*nbunch;i++) {
+        ib = (int)(i/nslice);
+        kz[i]=0.0;
+        vbr[ib] = 0.0;
+        vbi[ib] = 0.0;
+    }
+    
+    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){
+        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+        wi = turnhistoryW[i];
+        if(i==nslice*nbunch*(nturns-1)){
+            dt = (circumference+turnhistoryZ[i])/bc;
+        }else{
+            dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
+        }      
+        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+        vbeamkc += vbeamc+normfact*wi*kick*energy;
+        vbr[ib] += creal(vbeamc+normfact*wi*kick*energy);
+        vbi[ib] += cimag(vbeamc+normfact*wi*kick*energy);
+        kz[i-nslice*nbunch*(nturns-1)] = creal(vbeamc/energy+normfact*wi*kick);
+        vbeamc += 2*normfact*wi*kick*energy;    
+    }
+    dt = -turnhistoryZ[nslice*nbunch*nturns-1]/bc;
+    vbeamc = vbeamc*cexp((I*omr-omr/(2*qfactor))*dt);
+    vbeam[0] = cabs(vbeamc);
+    vbeam[1] = carg(vbeamc); 
+    vbeamkc = vbeamkc/nslice/nbunch;
+    vbeamk[0] = cabs(vbeamkc);
+    vbeamk[1] = carg(vbeamkc);   
+    
+    for(i=0;i<nbunch;i++){
+        double vr = vbr[i]/nslice;
+        double vi = vbi[i]/nslice;
+        vbr[i] = sqrt(vr*vr+vi*vi); 
+        vbi[i] = atan2(vi,vr);
+    }
+    #endif    
+};
+
+
+void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
+    double vbeamr = vbeam[0]*cos(vbeam[1]);
+    double vbeami = vbeam[0]*sin(vbeam[1]);
+    double vcavr = vcav[0]*cos(vcav[1]);
+    double vcavi = vcav[0]*sin(vcav[1]);   
+    double vgenr = vcavr - vbeamr;
+    double vgeni = vcavi - vbeami; 
+    double vga = sqrt(vgenr*vgenr+vgeni*vgeni);   
+    double vgp = atan2(vgeni,vgenr)-vcav[1];
+    vgen[0] += (vga-vgen[0])*voltgain;
+    vgen[1] += (vgp-vgen[1])*phasegain;
+}

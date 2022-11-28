@@ -193,12 +193,13 @@ class Lattice(list):
         kwargs.setdefault('_particle', Particle())
         # dummy initialization in case the harmonic number is not there
         kwargs.setdefault('_fillpattern', numpy.ones(1))
-        kwargs.setdefault('beam_current', 0.0)
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
+        bcurrent = kwargs.pop('beam_current', 0.0)
+        kwargs.setdefault('_beam_current', bcurrent)
 
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
@@ -540,6 +541,15 @@ class Lattice(list):
         else:
             self._particle = Particle(particle)
 
+    def set_wake_turnhistory(self):
+        """Function to reset the shape of the turn history
+        in collective elements based on the number of slices,
+        turns and bunches
+        """
+        for e in self:
+            if e.is_collective:
+                e.clear_history(ring=self)
+
     def set_fillpattern(self, bunches: Union[int, numpy.ndarray] = 1):
         """Function to generate the filling pattern lof the ring.
         The filling pattern is computed as:
@@ -603,6 +613,16 @@ class Lattice(list):
         return numpy.flatnonzero(self._fillpattern)
 
     @property
+    def beam_current(self):
+        return self._beam_current
+
+    @beam_current.setter
+    def beam_current(self, value, clear_history=True):
+        self._beam_current = value
+        if clear_history:
+            self.set_wake_turnhistory()
+
+    @property
     def bunch_currents(self) -> numpy.ndarray:
         """Bunch currents [A]"""
         return self.beam_current * \
@@ -611,7 +631,12 @@ class Lattice(list):
     @property
     def bunch_spos(self) -> numpy.ndarray:
         """Bunch position around the ring [m]"""
-        bs = self.circumference/len(self._fillpattern)
+        try:
+            circ = self.beta*clight* \
+                self.harmonic_number/self.rf_frequency
+        except AtError:
+            circ = self.circumference       
+        bs = circ/len(self._fillpattern)
         allpos = bs*numpy.arange(len(self._fillpattern))
         return allpos[self._fillpattern > 0]
 

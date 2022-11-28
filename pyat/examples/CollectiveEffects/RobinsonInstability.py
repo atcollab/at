@@ -28,7 +28,7 @@ rshunt = 6e6
 bucket_size = clight/freqres
 current = 0.1   # A
 
-welem = LongResonatorElement('wake', ring, srange, fr, qfactor, rshunt, Nturns=wturns, Nslice=10)
+welem = LongResonatorElement('wake', ring, srange, fr, qfactor, rshunt, Nturns=wturns, Nslice=1)
 
 welem.Current = current
 fring.append(welem)

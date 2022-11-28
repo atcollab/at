@@ -228,6 +228,10 @@ class Collective(_DictLongtMotion):
     def _get_collective(self):
         # noinspection PyUnresolvedReferences
         return self.PassMethod != self.default_pass[False]
+        
+    @abc.abstractmethod
+    def clear_history(self):
+        pass
 
 
 class Element(object):
