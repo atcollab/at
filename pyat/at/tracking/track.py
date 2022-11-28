@@ -1,20 +1,40 @@
 import numpy
+import functools
 from warnings import warn
 # noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
 from ..lattice import DConstant, uint32_refpts
 
 
-__all__ = ['lattice_pass', 'element_pass', 'atpass', 'elempass']
+__all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
+           'elempass']
 
 DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
+def fortran_align(func):
+    """Ensure that r_in is Fortran-aligned"""
+    @functools.wraps(func)
+    def wrapper(lattice, r_in, *args, **kwargs):
+        assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
+        if r_in.flags.f_contiguous:
+            return func(lattice, r_in, *args, **kwargs)
+        else:
+            r_fin = numpy.asfortranarray(r_in)
+            r_out = func(lattice, r_fin, *args, **kwargs)
+            r_in[:] = r_fin[:]
+            return r_out
+
+    return wrapper
+
+
 # noinspection PyIncorrectDocstring
+@fortran_align
 def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
                  omp_num_threads=None, **kwargs):
     """
-    lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False, keep_counter=False, turn=0, losses=False, omp_num_threads=None)
+    lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
+    keep_counter=False, turn=0, losses=False, omp_num_threads=None)
 
     lattice_pass tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -81,7 +101,6 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
          ``r_in``.
 
     """
-    assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
     if not isinstance(lattice, list):
         lattice = list(lattice)
     if refpts is None:
@@ -97,21 +116,11 @@ def lattice_pass(lattice, r_in, nturns=1, refpts=None, keep_lattice=False,
     # * A is number of particles;
     # * B is number of refpts
     # * C is the number of turns
-    if r_in.flags.f_contiguous:
-        return _atpass(lattice, r_in, nturns, refpts=refs,
-                       reuse=keep_lattice,
-                       omp_num_threads=omp_num_threads,
-                       **kwargs)
-    else:
-        r_fin = numpy.asfortranarray(r_in)
-        r_out = _atpass(lattice, r_fin, nturns, refpts=refs,
-                        reuse=keep_lattice,
-                        omp_num_threads=omp_num_threads,
-                        **kwargs)
-        r_in[:] = r_fin[:]
-        return r_out
+    return _atpass(lattice, r_in, nturns, refpts=refs, reuse=keep_lattice,
+                   omp_num_threads=omp_num_threads, **kwargs)
 
 
+@fortran_align
 def element_pass(element, r_in, **kwargs):
     """Tracks particles through a single element.
 
@@ -134,7 +143,6 @@ def element_pass(element, r_in, **kwargs):
         r_out:              (6, N) array containing output the coordinates of
           the particles at the exit of the element.
     """
-    r_in = numpy.asfortranarray(r_in)
     return _elempass(element, r_in, **kwargs)
 
 
