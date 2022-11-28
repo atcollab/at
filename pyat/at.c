@@ -9,9 +9,6 @@
 #include <string.h>
 #include <omp.h>
 #endif /*_OPENMP*/
-#ifdef MPI
-#include <mpi.h>
-#endif /*MPI*/
 #include "attypes.h"
 #include <stdbool.h> 
 #include <math.h>
@@ -335,7 +332,7 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {"line","rin","nturns","refpts","turn",
                              "energy", "particle", "keep_counter",
                              "reuse","omp_num_threads","losses",
-                             "bunch_spos", "bunch_currents", "id", NULL};
+                             "bunch_spos", "bunch_currents", NULL};
     static double lattice_length = 0.0;
     static int last_turn = 0;
     static int valid = 0;
@@ -369,7 +366,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     int keep_counter=0;
     int counter=0;
     int losses=0;
-    int id=0;
     npy_intp outdims[4];
     npy_intp pdims[1];
     npy_intp lxdims[2];
@@ -386,12 +382,12 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     bspos=NULL;
     bcurrents=NULL;
     
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!i", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!i|O!$iO!O!ppIpO!O!", kwlist,
         &PyList_Type, &lattice, &PyArray_Type, &rin, &num_turns,
         &PyArray_Type, &refs, &counter,
         &PyFloat_Type ,&energy, particle_type, &particle,
         &keep_counter, &keep_lattice, &omp_num_threads, &losses,
-        &PyArray_Type, &bspos, &PyArray_Type, &bcurrents, &id)) {
+        &PyArray_Type, &bspos, &PyArray_Type, &bcurrents)) {
         return NULL;
     }
     if (PyArray_DIM(rin,0) != 6) {
@@ -403,10 +399,6 @@ static PyObject *at_atpass(PyObject *self, PyObject *args, PyObject *kwargs) {
     if ((PyArray_FLAGS(rin) & NPY_ARRAY_FARRAY_RO) != NPY_ARRAY_FARRAY_RO) {
         return PyErr_Format(PyExc_ValueError, "rin is not Fortran-aligned");
     }
-
-#ifdef MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-#endif /*MPI)*/
 
     param.common_rng=&common_state;
     param.thread_rng=&thread_state;
