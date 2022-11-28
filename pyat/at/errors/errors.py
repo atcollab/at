@@ -2,14 +2,21 @@ import numpy
 from typing import Callable
 import functools
 from at.lattice import refpts_iterator, Lattice
+from at.lattice import shift_elem, rotate_elem
 from at.physics import find_orbit4, find_sync_orbit
 from at.physics import find_orbit6, find_orbit
 from at.physics import linopt2, linopt4, linopt6
 from at.physics import get_optics
+from at.tracking import lattice_pass
 
 
 __all__ = ['find_orbit4_err', 'find_sync_orbit_err',
-           'find_orbit6_err', 'find_orbit_err']
+           'find_orbit6_err', 'find_orbit_err',
+           'linopt2_err', 'linopt4_err', 'linopt6_err',
+           'get_optics_err', 'get_ring_with_errors']
+
+
+_ERR_ATTRS = ['PolynomBErr', 'PolynomAErr']
 
 
 def _rotmat(theta):
@@ -28,13 +35,28 @@ def _apply_bpm_error(ring, orbit, refpts):
             if hasattr(e, 'BPMTilt'):
                 o6[[0, 2]] = _rotmat(e.BPMTilt) @ o6[[0, 2]]
     return orbit
- 
     
+    
+def _apply_alignment_errors(ring):
+    refpts = [(hasattr(e, 'ShiftErr') 
+              or hasattr(e, 'RotationsErr'))
+              for e in ring]
+    ring = ring.replace(refpts)
+    for e in ring[refpts]:
+        shift = getattr(e, 'ShiftErr', None) 
+        rots = getattr(e, 'RotationsErr', None)   
+        if shift is not None:   
+            shift_elem(e, shift[0], shift[1])
+        if rots is not None:
+            rotate_elem(e, tilt=rots[0], 
+                        pitch=rots[1], yaw=rots[2])
+    
+               
 def _apply_field_errors(ring): 
 
     def sanitize(e):
-        pola = getattr(e, 'PolynomA', None)
-        polb = getattr(e, 'PolynomB', None)
+        pola = getattr(e, 'PolynomA')
+        polb = getattr(e, 'PolynomB')
         lm = max(len(pola), len(polb))
         pan = numpy.zeros(lm)
         pbn = numpy.zeros(lm)
@@ -45,8 +67,8 @@ def _apply_field_errors(ring):
         e.MaxOrder = lm-1
  
     def set_polerr(e, pname):
-        pol = getattr(e, pname, None)
-        err = getattr(e, pname+'Err', None)
+        pol = getattr(e, pname)
+        err = getattr(e, pname+'Err')
         pn = numpy.zeros(max(len(pol), len(err)))
         if len(pol) > len(err):
             pn[:len(err)] = numpy.add(pol[:len(err)], err)
@@ -95,6 +117,15 @@ def _apply_linopt_errors(func) -> Callable:
                                                refpts)
         return ld0, bd, ld
     return wrapper
+    
+
+def get_ring_with_errors(ring):
+    ring = _apply_field_errors(ring) 
+    for e in ring:
+       for a in _ERR_ATTRS:
+           if hasattr(e, a):
+               delattr(e, a)
+    return ring
 
 
 find_orbit4_err = _apply_orbit_errors(find_orbit4)
