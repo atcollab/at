@@ -308,8 +308,9 @@ def checkattr(attrname: str, attrvalue: Optional = None) \
     # noinspection PyUnresolvedReferences
     """Checks the presence or the value of an attribute
 
-        Returns a function to be used as an ``Element`` filter, which checks the
-        presence or the value of an attribute of the provided ``Element``.
+        Returns a function to be used as an ``Element`` filter, which
+        checks the presence or the value of an attribute of the
+        provided ``Element``.
         This function can be used to extract from a ring all elements
         having a given attribute.
 
@@ -373,8 +374,8 @@ def checkname(pattern: str) -> ElementFilter:
     # noinspection PyUnresolvedReferences
     """Checks the name of an element
 
-        Returns a function to be used as an ``Element`` filter, which checks the
-        name of the provided ``Element``.
+        Returns a function to be used as an ``Element`` filter,
+        which checks the name of the provided ``Element``.
         This function can be used to extract from a ring all elements
         having a given name.
 
@@ -669,9 +670,11 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
             getattr(elem, attrname)[index] = value
 
     if increment:
-        attrvalues += get_value_refpts(ring, refpts, attrname, index=index)
+        attrvalues += get_value_refpts(ring, refpts,
+                                       attrname, index=index)
     else:
-        attrvalues = numpy.broadcast_to(attrvalues, (refpts_len(ring, refpts),))
+        attrvalues = numpy.broadcast_to(attrvalues,
+                                        (refpts_len(ring, refpts),))
 
     # noinspection PyShadowingNames
     @make_copy(copy)
@@ -709,6 +712,80 @@ def get_s_pos(ring: Sequence[Element], refpts: Optional[Refpts] = None) \
     return s_pos[refpts]
 
 
+def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
+                yaw: float = 0.0, relative: bool = False) -> None:
+    r"""Set the tilt, pitch and yaw angle of an ``Element``.
+    The tilt is a rotation around the ``s`` axis, the pitch is a
+    rotation around the ``x``-axis and the yaw is a rotation around
+    the ``y``-axis.
+    A positive angle represent a clockwise rotation when looking in
+    the direction of the roation axis.
+    
+    The transformations are not all commmutative, the tilt is always the
+    last transformation applied.
+    
+    In case ``relative=True``, the previous angle and shifts are derived
+    form the R and T matrix and incremented by the input arguments.
+    
+    The shift is always conserved regardless of the value of ``relative``
+
+    Parameters:
+        elem:           Element to be tilted
+        tilt:           Tilt angle [rd]
+        pitch:          Pitch angle [rd]
+        yaw:            Yaw angle [rd]
+        relative:       If True, the rotation is added to the previous one
+    """
+    def _get_rm_tv(le, tilt, pitch, yaw):
+        tilt = numpy.around(tilt, decimals=15)
+        pitch = numpy.around(pitch, decimals=15)
+        yaw = numpy.around(yaw, decimals=15)
+        ct, st = numpy.cos(tilt), numpy.sin(tilt)
+        ap, ay = -0.5*le*numpy.sin(pitch), -0.5*le*numpy.sin(yaw)
+        rr1 = numpy.asfortranarray(numpy.diag([ct, ct, ct, ct, 1.0, 1.0]))
+        rr1[0, 2] = st
+        rr1[1, 3] = st
+        rr1[2, 0] = -st
+        rr1[3, 1] = -st
+        rr2 = rr1.T
+        t1 = numpy.array([ay, -yaw, ap, -pitch, 0, 0])
+        t2 = numpy.array([ay, yaw, ap, pitch, 0, 0])
+        rt1 = numpy.eye(6, order='F')
+        rt1[1, 4] = ct*t1[1]
+        rt1[3, 4] = ct*t1[3]
+        rt2 = numpy.eye(6, order='F')
+        rt2[1, 4] = ct*t2[1]
+        rt2[3, 4] = ct*t2[3]
+        return rr1 @ rt1, rt2 @ rr2, t1, t2
+
+    tilt0 = 0.0
+    pitch0 = 0.0
+    yaw0 = 0.0
+    t10 = numpy.zeros(6)
+    t20 = numpy.zeros(6)
+    if hasattr(elem, 'R1') and hasattr(elem, 'R2'):
+        rr10 = numpy.eye(6, order='F')
+        rr10[:4, :4] = elem.R1[:4, :4]
+        rt10 = rr10.T @ elem.R1
+        tilt0 = numpy.arctan2(rr10[0, 2], rr10[0, 0])
+        yaw0 = -rt10[1, 4]/rr10[0, 0]
+        pitch0 = -rt10[3, 4]/rr10[0, 0]
+        _, _, t10, t20 = _get_rm_tv(elem.Length, tilt0, pitch0, yaw0)
+    if hasattr(elem, 'T1') and hasattr(elem, 'T2'):
+        t10 = elem.T1-t10
+        t20 = elem.T2-t20
+    if relative:
+        tilt += tilt0
+        pitch += pitch0
+        yaw += yaw0
+
+    r1, r2, t1, t2 = _get_rm_tv(elem.Length, tilt, pitch, yaw)
+    elem.R1 = r1
+    elem.R2 = r2
+    elem.T1 = t1+t10
+    elem.T2 = t2+t20
+
+
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
     r"""Set the tilt angle :math:`\theta` of an ``Element``
 
@@ -726,19 +803,7 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
           looking in the direction of the beam
         relative:       If True, the rotation is added to the previous one
     """
-    cs = numpy.cos(rots)
-    sn = numpy.sin(rots)
-    rm = numpy.asfortranarray(numpy.diag([cs, cs, cs, cs, 1.0, 1.0]))
-    rm[0, 2] = sn
-    rm[1, 3] = sn
-    rm[2, 0] = -sn
-    rm[3, 1] = -sn
-    if relative and hasattr(elem, 'R1') and hasattr(elem, 'R2'):
-        elem.R1 = elem.R1.dot(rm)
-        elem.R2 = rm.T.dot(elem.R2)
-    else:
-        elem.R1 = rm
-        elem.R2 = rm.T
+    rotate_elem(elem, tilt=rots, relative=relative)
 
 
 def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
@@ -760,6 +825,27 @@ def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
     else:
         elem.T1 = -tr
         elem.T2 = tr
+
+
+def set_rotation(ring: Sequence[Element], tilts=0.0,
+                 pitches=0.0, yaws=0.0, relative=False) -> None:
+    """Sets the tilts of a list of elements.
+
+    Parameters:
+        ring:           Lattice description
+        tilts:          Sequence of tilt values as long as ring or
+          scalar tilt value applied to all elements, default=0
+        pitches:          Sequence of pitch values as long as ring or
+          scalar tilt value applied to all elements, default=0
+        yaws:          Sequence of yaw values as long as ring or
+          scalar tilt value applied to all elements, default=0
+        relative:       If True, the rotation is added to the previous one
+    """
+    tilts = numpy.broadcast_to(tilts, (len(ring),))
+    pitches = numpy.broadcast_to(tilts, (len(ring),))
+    yaws = numpy.broadcast_to(tilts, (len(ring),))
+    for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
+        rotate_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
 
 
 def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
