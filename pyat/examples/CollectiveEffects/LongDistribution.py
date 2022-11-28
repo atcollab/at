@@ -15,7 +15,7 @@ current = 5e-4
 m = 50 #30 is quite coarse, 70 or 80 is very fine. 50 is middle
 kmax = 8
 
-srange = Wake.build_srange(-0.36, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
+srange = Wake.build_srange(0, 0.36, 1.0e-5, 1.0e-2, ring.circumference, ring.circumference)
 
 # Now we initialise the Haissinski class, and solve, then we normalise the distribution and shift the charge center to be at 0
 wobj = Wake.long_resonator(srange, freq, qfactor, Rs, ring.beta)
@@ -40,8 +40,8 @@ ax1.legend()
 ax1.set_xlabel('z [mm]')
 ax1.set_ylabel(r'$\rho(z)$')
 plt.show()
-
 '''
+
 
 # Now we set up and run the tracking. The final distribution is an average of the last numAve turns 
 welem = LongResonatorElement('wake', ring, srange, freq, qfactor, Rs, Nslice=300)

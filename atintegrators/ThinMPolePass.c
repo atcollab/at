@@ -1,6 +1,6 @@
 /* ThinMPolePass
    Accelerator Toolbox 
-   A.Terebilo terebilo@ssrl.slac.stanford.edu
+   A.Terebilo
 */
 
 #include "atelem.c"

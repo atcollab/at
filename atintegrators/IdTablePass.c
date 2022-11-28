@@ -1,7 +1,7 @@
 /* IdTablePass.c
  * Accelerator Toolbox
  * Created: 13/11/08
- * Z.Mart?? zeus@cells.es
+ * Zeus Marti
  *
  * Based in the matlab routine:
  * WigTablePass.m - The tracking table is described in
