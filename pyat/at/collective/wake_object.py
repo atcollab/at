@@ -232,6 +232,10 @@ class Wake(object):
             >>> Rs = 1e4
             >>> wake = Wake.long_resonator(srange, freq, Q, Rs, ring.beta)
         """
+        
+        # This is needed to avoid interpolation issues close to 0 
+        srange = numpy.sort(numpy.concatenate((srange, [1e-24])))
+        
         return Wake.resonator(srange, WakeComponent.Z, frequency, qfactor,
                               rshunt, beta, nelems=nelems)
 
