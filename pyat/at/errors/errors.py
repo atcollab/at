@@ -3,21 +3,41 @@ from typing import Callable
 import functools
 from at.lattice import refpts_iterator, Lattice
 from at.lattice import shift_elem, rotate_elem
-from at.physics import find_orbit4, find_sync_orbit
-from at.physics import find_orbit6, find_orbit
-from at.physics import linopt2, linopt4, linopt6
-from at.physics import get_optics
+from at.physics import find_orbit, get_optics
 from at.tracking import lattice_pass
+from scipy.stats import truncnorm, norm
+
+__all__ = ['find_orbit_err', 'get_optics_err', 'get_ring_with_errors']
 
 
-__all__ = ['find_orbit4_err', 'find_sync_orbit_err',
-           'find_orbit6_err', 'find_orbit_err',
-           'linopt2_err', 'linopt4_err', 'linopt6_err',
-           'get_optics_err', 'get_ring_with_errors']
+_BPM_ATTRS = ['BPMGain', 'BPMOffset', 'BPMTilt']
+_ERR_ATTRS = ['PolynomBErr', 'PolynomAErr', 'ShiftErr', 'RotationErr']
 
 
-_ERR_ATTRS = ['PolynomBErr', 'PolynomAErr']
+def _truncated_randn(shape, sigma=1.0, mean=0.0, truncation=None, seed=None):
+    if seed is not None:
+        numpy.random.seed(seed)
+    npoints = numpy.prod(shape)
+    sigmas = numpy.broadcast_to(sigma, shape)
+    means = numpy.broadcast_to(mean, shape)
+    if truncation is not None:
+        pts = truncnorm.rvs(-truncation, truncation, size=npoints)
+    else:
+        pts = norm.rvs(size=npoints)
+    return numpy.reshape(pts, shape) * sigmas + means
 
+
+def assign_errors(ring, key, truncation=None, seed=None, **kwargs):
+    elements = ring.get_elements(key)
+    for attr in _BPM_ATTRS+_ERR_ATTRS:
+        val = kwargs.pop(attr, None)
+        if val is not None:
+            vals = numpy.broadcast_to(val, (len(elements),
+                                            numpy.size([val])))                                            
+            rv = _truncated_randn(vals.shape, sigma=vals,
+                                  truncation=truncation, seed=seed)
+            [setattr(e, attr, v) for e, v in zip(elements, rv)]
+            
 
 def _rotmat(theta):
     cs = numpy.cos(theta)
@@ -25,21 +45,34 @@ def _rotmat(theta):
     return numpy.array([[cs, -sn], [sn, cs]])
     
 
-def _apply_bpm_error(ring, orbit, refpts):
-    if refpts is not None:
-        for e, o6 in zip(refpts_iterator(ring, refpts), orbit):
-            if hasattr(e, 'BPMGain'):
-                o6[[0, 2]] *= e.BPMGain
-            if hasattr(e, 'BPMOffset'):
-                o6[[0, 2]] += e.BPMOffset
-            if hasattr(e, 'BPMTilt'):
-                o6[[0, 2]] = _rotmat(e.BPMTilt) @ o6[[0, 2]]
+def _apply_bpm_orbit_error(ring, orbit, refpts):
+    for e, o6 in zip(refpts_iterator(ring, refpts), orbit):
+        if hasattr(e, 'BPMGain'):
+            o6[[0, 2]] *= e.BPMGain
+        if hasattr(e, 'BPMOffset'):
+            o6[[0, 2]] += e.BPMOffset
+        if hasattr(e, 'BPMTilt'):
+            o6[[0, 2]] = _rotmat(e.BPMTilt) @ o6[[0, 2]]
     return orbit
+    
+    
+def _apply_bpm_track_error(ring, trajectory, refpts):
+    for traj in trajectory.T:
+        print(traj.shape)
+        for e, o6 in zip(refpts_iterator(ring, refpts), traj):
+            if hasattr(e, 'BPMGain'):
+                o6[:, [0, 2]] *= e.BPMGain
+            if hasattr(e, 'BPMOffset'):
+                o6[:, [0, 2]] += e.BPMOffset
+            if hasattr(e, 'BPMTilt'):
+                o6[:, [0, 2]] = [_rotmat(e.BPMTilt) @ o2 
+                                 for o2 in o6[:, [0, 2]]]
+    return trajectory
     
     
 def _apply_alignment_errors(ring):
     refpts = [(hasattr(e, 'ShiftErr') 
-              or hasattr(e, 'RotationsErr'))
+              or hasattr(e, 'RotationErr'))
               for e in ring]
     ring = ring.replace(refpts)
     for e in ring[refpts]:
@@ -50,6 +83,7 @@ def _apply_alignment_errors(ring):
         if rots is not None:
             rotate_elem(e, tilt=rots[0], 
                         pitch=rots[1], yaw=rots[2])
+    return ring
     
                
 def _apply_field_errors(ring): 
@@ -93,34 +127,51 @@ def _apply_field_errors(ring):
     return ring      
 
 
-def _apply_orbit_errors(func) -> Callable:
+def _orbit_errors(func) -> Callable:
     @functools.wraps(func)
     def wrapper(ring, *args, **kwargs):
-        ring = _apply_field_errors(ring)          
+        ring = _apply_field_errors(ring)     
+        ring = _apply_alignment_errors(ring)     
         orbit0, orbit = func(ring, *args, **kwargs)
         refpts = kwargs.get('refpts', None)
         if refpts is not None:
-            orbit = _apply_bpm_error(ring, orbit, refpts)
+            orbit = _apply_bpm_orbit_error(ring, orbit, refpts)
         return orbit0, orbit
     return wrapper
     
     
-def _apply_linopt_errors(func) -> Callable:
+def _linopt_errors(func) -> Callable:
     @functools.wraps(func)
     def wrapper(ring, *args, **kwargs): 
-        ring = _apply_field_errors(ring)          
+        ring = _apply_field_errors(ring)     
+        ring = _apply_alignment_errors(ring)       
         ld0, bd, ld = func(ring, *args, **kwargs)
         refpts = kwargs.get('refpts', None)
         if refpts is not None:
-            ld.closed_orbit = _apply_bpm_error(ring, 
-                                               ld.closed_orbit,
-                                               refpts)
+            ld.closed_orbit = \
+                _apply_bpm_orbit_error(ring, ld.closed_orbit,
+                                       refpts)
         return ld0, bd, ld
     return wrapper
+    
+    
+def _track_errors(func) -> Callable:
+    @functools.wraps(func)
+    def wrapper(ring, *args, **kwargs): 
+        ring = _apply_field_errors(ring)     
+        ring = _apply_alignment_errors(ring)       
+        rout = func(ring, *args, **kwargs)
+        refpts = kwargs.get('refpts', None)
+        if refpts is not None:
+            rout = _apply_bpm_track_error(ring, rout,
+                                          refpts)
+        return rout
+    return wrapper    
     
 
 def get_ring_with_errors(ring):
     ring = _apply_field_errors(ring) 
+    ring = _apply_alignment_errors(ring) 
     for e in ring:
        for a in _ERR_ATTRS:
            if hasattr(e, a):
@@ -128,19 +179,8 @@ def get_ring_with_errors(ring):
     return ring
 
 
-find_orbit4_err = _apply_orbit_errors(find_orbit4)
-find_sync_orbit_err = _apply_orbit_errors(find_sync_orbit)
-find_orbit6_err = _apply_orbit_errors(find_orbit6)
-find_orbit_err = _apply_orbit_errors(find_orbit)
-Lattice.find_orbit4 = find_orbit4_err
-Lattice.find_sync_orbit_err = find_sync_orbit_err
-Lattice.find_orbit6_err = find_orbit6_err
+find_orbit_err = _orbit_errors(find_orbit)
 Lattice.find_orbit_err = find_orbit_err
-linopt2_err = _apply_linopt_errors(linopt2)
-linopt4_err = _apply_linopt_errors(linopt4)
-linopt6_err = _apply_linopt_errors(linopt6)
-get_optics_err = _apply_linopt_errors(get_optics)
-Lattice.linopt2_err = linopt2_err
-Lattice.linopt4_err = linopt4_err
-Lattice.linopt6_err = linopt6_err
+get_optics_err = _linopt_errors(get_optics)
 Lattice.get_optics_err = get_optics_err
+lattice_pass_err = _track_errors(lattice_pass)

@@ -55,7 +55,7 @@ __all__ = ['All', 'End', 'AtError', 'AtWarning', 'axis_descr',
            'set_shift', 'set_tilt', 'set_rotation',
            'tilt_elem', 'shift_elem', 'rotate_elem',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
-           'get_geometry']
+           'get_geometry', 'rotate_elem', 'set_rotation']
 
 _axis_def = dict(
     x=dict(index=0, label="x", unit=" [m]"),
