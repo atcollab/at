@@ -2,11 +2,12 @@
 Functions relating to particle generation
 """
 import numpy
+from warnings import warn
 from at.physics import ohmi_envelope, radiation_parameters
 from at.constants import clight
-from at.lattice import AtError
+from at.lattice import AtError, AtWarning
 
-__all__ = ['beam', 'sigma_matrix']
+__all__ = ['beam', 'sigma_matrix', 'sig_matrix']
 
 
 def _generate_2d_trans_matrix(emit, beta, alpha):
@@ -97,9 +98,135 @@ def _sigma_matrix_lattice(ring=None, twiss_in=None, emitx=None, emity=None,
         rmat6[2, 4:, 4:] = _generate_2d_long_Rmatrix(espread, blength)
     else:
         rmat6 = rmat
-    sig_matrix = _sigma_matrix_from_R66(rmat6, emitx, emity, blength,
-                                        espread)
-    return sig_matrix
+    sig_mat = _sigma_matrix_from_R66(rmat6, emitx, emity, blength, espread)
+    return sig_mat
+
+
+def sig_matrix(ring=None, **kwargs):
+    """
+    Calculate the correlation matrix to be used for particle generation
+
+    Keyword Parameters:
+        ring:           Lattice object or list of twiss parameters.
+        twiss_in:       Data structure containing input twiss parameters.
+        betax:          Input horizontal beta function [m]
+        alphax:         Input horizontal alpha function [m]
+        emitx:          Horizontal emittance [m.rad]
+        betay:          Input vertical beta function [m]
+        alphay:         Input vertical alpha function [m]
+        emity:          Vertical emittance [m.rad]
+        blength:        One sigma bunch length [m]
+        espread:        One sigma energy spread [dp/p]
+        verbose:        Boolean flag on whether to print information
+                        to the terminal
+    Returns:
+        sigma_matrix:    6x6 correlation matrix
+
+    If *twiss_in* is provided, its 'R' or 'alpha', 'beta' fields are used,
+    horizontal and vertical emittances must be provided.
+
+    Otherwise, if *ring* is provided, horizontal and vertical emittances must
+    be provided if ring is 4d. For a 6d ring, the provided emittances overload
+    the computed ones.
+
+    Otherwise, *alphax*, *betax*, *emitxx*, *alphay*, *betaxy* and *emitxx*
+    must be provided
+
+    If the lattice object is provided ``ohmi_envelope`` is used to
+    compute the correlated sigma matrix and missing emittances
+    and longitudinal parameters
+
+    If emittances and longitudinal parameters are provided, then
+    the 2x2 uncorrelated matrices are computed for each plane (x,y,z)
+    using the initial optics computed from ring.get_optics,
+    and are combined into the 6x6 matrix.
+
+    If neither a lattice object nor a twiss_in is provided,
+    then the ``beta``, ``alpha`` and ``emittance`` for horizontal and
+    vertical are required, as well as ``blength`` and ``espread``.
+    This then computes the analytical uncoupled sigma matrix
+    """
+    def require(message, *keys):
+        miss = [key for key in keys if key not in kwargs]
+        if len(miss) == 0:
+            return [kwargs[key] for key in keys]
+        else:
+            raise AtError('{0}: missing {1}'.format(message, ', '.join(miss)))
+
+    def ignore(message, *keys):
+        ok = [key for key in keys if key in kwargs]
+        if any(ok):
+            warn(AtWarning('{0}: {1} ignored'.format(message, ', '.join(ok))))
+
+    def r_4d(ax, ay, bx, by):
+        r6 = numpy.zeros((3, 6, 6))
+        r6[0, :2, :2] = numpy.array([[bx, -ax], [-ax, (1+ax**2)/bx]])
+        r6[1, 2:4, 2:4] = numpy.array([[by, -ay], [-ay, (1+ay**2)/by]])
+        return r6
+
+    def expand(rmat):
+        if rmat.shape[0] < 3:
+            r6 = numpy.zeros((3, 6, 6))
+            r6[:2, :4, :4] = rmat
+        else:
+            r6 = rmat
+        return r6
+
+    if ring is not None:
+        kwargs['ring'] = ring
+    emit = None
+    if 'twiss_in' in kwargs:
+        ignore('"twiss_in" is provided', 'ring', 'alphax', 'alphay',
+               'betax', 'betay')
+        twin = kwargs['twiss_in']
+        try:
+            Rin = twin['R']
+        except (ValueError, KeyError):  # record arrays throw ValueError !
+            Rm = r_4d(twin['alpha'][0], twin['beta'][0],
+                      twin['alpha'][1], twin['beta'][1])
+        else:
+            Rm = expand(Rin)
+    elif 'ring' in kwargs:
+        ignore('"ring" is provided', 'alphax', 'alphay', 'betax', 'betay')
+        ring = kwargs['ring']
+        if ring.is_6d:
+            _, beam0, _ = ohmi_envelope(ring)
+            Rm = beam0.mode_matrices
+            emit = beam0.mode_emittances
+        else:
+            el0, _, _ = ring.linopt6()
+            Rm = expand(el0['R'])
+    else:
+        alphax, alphay, betax, betay = require(
+            'Neither "twiss_in" nor "ring" is provided',
+            'alphax', 'alphay', 'betax', 'betay')
+        Rm = r_4d(alphax, alphay, betax, betay)
+
+    if emit is None:
+        emx, emy = require('Emittances must be provided', 'emitx', 'emity')
+        ems = None
+    else:
+        emx = kwargs.pop('emitx', emit[0])
+        emy = kwargs.pop('emity', emit[1])
+        ems = emit[2]
+        if any(('espread' in kwargs, 'blength' in kwargs)):
+            blength, espread = require('Both "blength" and "espread" required',
+                                       'blength', 'espread')
+            ems = blength * espread
+
+    sigm = emx * Rm[0, :, :] + emy * Rm[1, :, :]
+    if ems is None:
+        if any(('espread' in kwargs, 'blength' in kwargs)):
+            blength, espread = require('Both "blength" and "espread" required',
+                                       'blength', 'espread')
+            Rm[2, 4:6, 4:6] = numpy.array([[espread/blength, 0],
+                                           [0, blength/espread]])
+            ems = blength*espread
+            sigm += ems * Rm[2, :, :]
+        else:
+            warn(AtWarning('4D beam'))
+
+    return sigm
 
 
 def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
@@ -131,7 +258,7 @@ def sigma_matrix(ring=None, twiss_in=None, betax=None, alphax=None,
     If emittances and longitudinal parameters are provided, then
     the 2x2 uncorrelated matrices are computed for each plane (x,y,z)
     using the initial optics computed from ring.get_optics,
-    and are combined together into the 6x6 matrix.
+    and are combined into the 6x6 matrix.
 
     If ``twiss_in`` is provided, it has to be produced with ``linopt6`` and
     contain the rmatrix. ``ring`` is used only to compute missing emittances.
