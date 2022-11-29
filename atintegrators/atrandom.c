@@ -32,7 +32,7 @@
 #define AT_RNG_INC 0xda3e39cb94b95bdbULL
 
 #define COMMON_PCG32_INITIALIZER   { AT_RNG_STATE, AT_RNG_INC }
-#define THREAD_PCG32_INITIALIZER   { AT_RNG_STATE, 0ULL }
+#define THREAD_PCG32_INITIALIZER   { AT_RNG_STATE, 1ULL }
 
 struct pcg_state_setseq_64 {    // Internals are *Private*.
     uint64_t state;             // RNG state.  All values are possible.
