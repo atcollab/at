@@ -70,8 +70,6 @@ def launch():
     srange = Wake.build_srange(0., 0.41, 1.0e-3, 1.0e-1,
                                bunchSpacing, ring.circumference*wturns)
 
-    # This is needed to fix an interpolation issue with LongResElem
-    srange = np.sort(np.concatenate((srange, [1e-24])))
 
     fres = ring.get_rf_frequency() - ring.revolution_frequency - fs0
     qfactor = 1e4
@@ -81,33 +79,21 @@ def launch():
                                  rshunt, Nturns=wturns, Nslice=1)
     fring.append(welem)
 
+    bmon = at.BeamMoments('mon')
+    fring.append(bmon)
+    
     # Particle generation and tracking
     sigm = at.sigma_matrix(ring.radiation_on(copy=True))
     part = at.beam(Npart, sigm, orbit=ld0)
     part[4, :] = 0
     part[5, :] = 0
 
+    _ = at.lattice_pass(fring, part, nturns=nturns)
+
+    dp_all = bmon.means[4, :, :]
+    z_all = bmon.means[5, :, :]
     if rank == 0:
-        z_all = np.zeros((nturns, Nbunches))
-        dp_all = np.zeros((nturns, Nbunches))
-        turnMsk = np.zeros(nturns, dtype=bool)
-
-    for i in np.arange(nturns):
-        _ = at.lattice_pass(fring, part)
-        allPartsg = comm.gather(part)
-        if rank == 0:
-            allPartsg = np.concatenate(allPartsg, axis=1)
-            stds, means = get_bunches_std_mean(allPartsg, Nbunches)
-            dp_all[i] = np.array([x[4] for x in means])
-            z_all[i] = np.array([x[5] for x in means])
-
-            sumNan = np.sum(np.isnan(allPartsg))
-            if sumNan > 0:
-                turnMsk[i] = True
-            print(i, sumNan, np.mean(np.abs(dp_all[i])))
-
-    if rank == 0:
-        outDict = pkl.dump({'dp': dp_all, 'z': z_all, 'lostturn': ~turnMsk,
+        outDict = pkl.dump({'dp': dp_all.T, 'z': z_all.T,
                             'ring': ring, 'fres': fres, 'qfactor': qfactor,
                             'rshunt': rshunt, 'M': Nbunches,
                             'current': current},
