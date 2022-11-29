@@ -103,8 +103,6 @@ class Haissinski(object):
         Equation 16
         '''
         print('Computing integrated wake potential')
-        print(self.q_array)
-        print(self.ds)
         sr = numpy.arange(2*numpy.amin(self.q_array),
                           numpy.abs(2*numpy.amin(self.q_array))
                           + self.ds, self.ds)
