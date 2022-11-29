@@ -9,8 +9,6 @@ from at.constants import qe
 from at.physics import harmonic_analysis
 
 
-
-
 def analytical_qs(ring, I):
 
     E0 = ring.energy * qe
@@ -88,9 +86,9 @@ Npart = Nbunches
 # Now we give the fring and convert it
 # into a beam loaded cavity.
 add_beamloading(fring, qfactor, rshunt, Nslice=1,
-                          Nturns=50, mode=blm,
-                          VoltGain=0.1, PhaseGain=0.1)
-                          
+                Nturns=50, mode=blm,
+                VoltGain=0.1, PhaseGain=0.1)
+
 bl_elem = fring[at.get_refpts(fring, BeamLoadingElement)[0]]
 
 # Specify some simulation parameters
@@ -135,8 +133,8 @@ if rank == 0:
     qscoh = numpy.zeros(Nbunches)
     for ib in numpy.arange(Nbunches):
         qs = harmonic_analysis.get_tunes_harmonic(dp_all[kickTurn:, ib],
-                                                      num_harmonics=20,
-                                                      fmin=1e-5, fmax=0.1)
+                                                  num_harmonics=20,
+                                                  fmin=1e-5, fmax=0.1)
         qscoh[ib] = qs
 
     qs_mn, qs_std = numpy.array([numpy.mean(qscoh), numpy.std(qscoh)])
