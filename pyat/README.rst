@@ -16,7 +16,7 @@ higher-level functions to provide physics results.
 See the `pyAT website <https://atcollab.github.io/at/p/index.html>`_ for a
 more detailed introduction.
 
-pyAT supports Python 3.7 to 3.10.
+pyAT supports Python 3.7 to 3.11.
 
 Installation
 ------------
