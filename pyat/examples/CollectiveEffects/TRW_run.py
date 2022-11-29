@@ -65,7 +65,7 @@ def launch():
             sdInds.append(i)
     sdInds = np.array(sdInds)
     sfInds = np.array(sfInds)
-            
+      
     at.fit_chrom(ring, sfInds, sdInds, [0, 0])
 
     l0, _, _ = ring.get_optics()
@@ -87,13 +87,12 @@ def launch():
 
     bmon = at.BeamMoments('mon')
     fring.append(bmon)
-    
+
     # Particle generation and tracking
     sigm = at.sigma_matrix(ring.radiation_on(copy=True))
     part = at.beam(Npart, sigm)
     part[0, :] = 1e-6
     part[1, :] = 0
-
 
     _ = at.lattice_pass(fring, part, nturns=nturns)
 

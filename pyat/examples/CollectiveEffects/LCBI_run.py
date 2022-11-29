@@ -70,7 +70,6 @@ def launch():
     srange = Wake.build_srange(0., 0.41, 1.0e-3, 1.0e-1,
                                bunchSpacing, ring.circumference*wturns)
 
-
     fres = ring.get_rf_frequency() - ring.revolution_frequency - fs0
     qfactor = 1e4
     rshunt = 2e6
@@ -81,7 +80,7 @@ def launch():
 
     bmon = at.BeamMoments('mon')
     fring.append(bmon)
-    
+
     # Particle generation and tracking
     sigm = at.sigma_matrix(ring.radiation_on(copy=True))
     part = at.beam(Npart, sigm, orbit=ld0)
