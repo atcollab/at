@@ -61,7 +61,7 @@ class Haissinski(object):
 
         #  negative s to be consistent with paper and negative Wz
         s = wake_object.srange/self.sigma_l
-        self.ds = numpy.diff(s)[0]
+        self.ds = numpy.diff(s)[-1]
         self.s = -s
         self.wtot_fun = interp1d(self.s, -wake_object.Z,
                                  bounds_error=False, fill_value = 0)
