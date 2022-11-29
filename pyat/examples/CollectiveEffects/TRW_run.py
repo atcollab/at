@@ -85,34 +85,22 @@ def launch():
                            Nslice=1, Nturns=wturns)
     fring.append(welem)
 
+    bmon = at.BeamMoments('mon')
+    fring.append(bmon)
+    
     # Particle generation and tracking
     sigm = at.sigma_matrix(ring.radiation_on(copy=True))
     part = at.beam(Npart, sigm)
     part[0, :] = 1e-6
     part[1, :] = 0
 
+
+    _ = at.lattice_pass(fring, part, nturns=nturns)
+
+    x_all = bmon.means[0, :, :]
+    xp_all = bmon.means[1, :, :]
     if rank == 0:
-        x_all = np.zeros((nturns, Nbunches))
-        xp_all = np.zeros((nturns, Nbunches))
-        turnMsk = np.zeros(nturns, dtype=bool)
-
-    for i in np.arange(nturns):
-        _ = at.lattice_pass(fring, part)
-
-        allPartsg = comm.gather(part)
-        if rank == 0:
-            allPartsg = np.concatenate(allPartsg, axis=1)
-
-            stds, means = get_bunches_std_mean(allPartsg, Nbunches)
-            xp_all[i] = np.array([x[1] for x in means])
-            x_all[i] = np.array([x[0] for x in means])
-            nanpart = np.sum(np.isnan(allPartsg))
-            if nanpart > 0:
-                turnMsk[i] = True
-            print(rank, i, nanpart, np.mean(np.abs(x_all[i])))
-
-    if rank == 0:
-        outDict = pkl.dump({'x': x_all, 'xp': xp_all, 'lostturn': ~turnMsk,
+        outDict = pkl.dump({'x': x_all.T, 'xp': xp_all.T,
                             'ring': ring, 'sigmac': sigmac, 'rvac': rvac,
                             'M': Nbunches, 'alphax': l0['alpha'][0],
                             'betax': l0['beta'][0], 'current': current},
