@@ -6,7 +6,9 @@ from at.collective import Wake, LongResonatorElement
 
 # Set up the ring
 nturns = 10000
-Npart = 50000
+Npart = 10000
+Nbunches = 1
+current = 0.1   # A
 
 ring = at.load_m('../../../machine_data/esrf.m')
 ring.radiation_off()
@@ -14,7 +16,11 @@ ring.radiation_off()
 ring.set_rf_frequency()
 freqres = ring.rf_frequency
 
+ring.set_fillpattern(Nbunches)
+ring.beam_current = current
+
 fring, _ = at.fast_ring(ring)
+# Switch on RF cavity but have all other radiation sources off
 fring.radiation_on(cavity_pass='RFCavityPass', dipole_pass=None, quadrupole_pass=None)
 
 # Define the resonator parameters and current
@@ -26,22 +32,22 @@ fr = freqres + detuneHz
 qfactor = 4500
 rshunt = 6e6
 bucket_size = clight/freqres
-current = 0.1   # A
+
 
 welem = LongResonatorElement('wake', ring, srange, fr, qfactor, rshunt, Nturns=wturns, Nslice=1)
-
-welem.Current = current
 fring.append(welem)
+
+# Define beam monitor
+bmon = at.BeamMoments('mon')
+fring.append(bmon)
 
 # Particle generation and tracking
 sigm = at.sigma_matrix(ring.radiation_on(copy=True))
 part = at.beam(Npart, sigm)
 
-dp_all = np.zeros(nturns)
-for i in np.arange(nturns):
-    part = at.lattice_pass(fring, part)[:, :, 0, 0]
-    dp_all[i] = np.mean(part[4, :], axis=0)
+_ = at.lattice_pass(fring, part, nturns=nturns)
 
+dp_all = bmon.means[4,0,:]
 
 # Fit the results to obtain the simulated growth rate
 width = 1000
@@ -58,7 +64,7 @@ t_rev = 1.0/ring.revolution_frequency
 eta = ring.slip_factor
 params = ring.radiation_parameters()
 fs = params.f_s
-intensity = welem.NumParticles
+intensity = current * t_rev / qe / Nbunches
 
 
 # Compute the growth rate
