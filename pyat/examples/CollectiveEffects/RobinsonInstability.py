@@ -47,7 +47,7 @@ part = at.beam(Npart, sigm)
 
 _ = at.lattice_pass(fring, part, nturns=nturns)
 
-dp_all = bmon.means[4,0,:]
+dp_all = bmon.means[4, 0, :]
 
 # Fit the results to obtain the simulated growth rate
 width = 1000
