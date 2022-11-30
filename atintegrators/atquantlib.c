@@ -485,7 +485,7 @@ static int poissonRandomNumber(pcg32_random_t *rng, double lamb)
         u2 = atrandd_r(rng);
         if (u1 == 0.0) {
             u1 = 1e-18;
-        };
+        }
         pk = (int)floor((sqrt(-2.0 * log(u1)) * cos(twopi * u2)) * sqrt(lamb) + lamb);
     }
 
