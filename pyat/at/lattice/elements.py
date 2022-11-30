@@ -228,6 +228,10 @@ class Collective(_DictLongtMotion):
     def _get_collective(self):
         # noinspection PyUnresolvedReferences
         return self.PassMethod != self.default_pass[False]
+        
+    @abc.abstractmethod
+    def clear_history(self):
+        pass
 
 
 class Element(object):
@@ -433,6 +437,28 @@ class Marker(Element):
 
 class Monitor(Element):
     """Monitor element"""
+
+
+class BeamMoments(Element):
+    """Element to compute bunches mean and std"""
+
+    def __init__(self, family_name: str, **kwargs):
+        kwargs.setdefault('PassMethod', 'BeamMomentsPass')
+        self._stds = numpy.zeros((6, 1, 0), order='F')
+        self._means = numpy.zeros((6, 1, 0), order='F')
+        super(BeamMoments, self).__init__(family_name, **kwargs)
+
+    def set_buffers(self, nturns, nbunch):
+        self._stds = numpy.zeros((6, nbunch, nturns), order='F')
+        self._means = numpy.zeros((6, nbunch, nturns), order='F')
+        
+    @property
+    def stds(self):
+        return self._stds
+        
+    @property
+    def means(self):
+        return self._means    
 
 
 class Aperture(Element):

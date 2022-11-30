@@ -13,9 +13,9 @@ class WakeElement(Collective, Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES
     default_pass = {False: 'IdentityPass', True: 'WakeFieldPass'}
     _conversions = dict(Element._conversions, _nslice=int, _nturns=int,
-                        _nelem=int, NumParticles=float, Circumference=float,
+                        _nelem=int, _wakeFact=float,
                         NormFact=lambda v: _array(v, (3,)),
-                        WakeFact=float,
+                        ZCuts=lambda v: _array(v),
                         _wakeDX=lambda v: _array(v),
                         _wakeDY=lambda v: _array(v),
                         _wakeQX=lambda v: _array(v),
@@ -123,11 +123,11 @@ class WakeElement(Collective, Element):
     @property
     def Nturns(self):
         """Number of turn for the wake field"""
-        return self._nslice
+        return self._nturns
 
     @Nturns.setter
-    def Nturns(self, nslice):
-        self._nslice = nslice
+    def Nturns(self, nturns):
+        self._nturns = nturns
         self.clear_history()
 
     @property
@@ -261,11 +261,6 @@ class LongResonatorElement(ResonatorElement):
                                                    WakeComponent.Z, frequency,
                                                    qfactor, rshunt, **kwargs)
 
-    def rebuild_wake(self):
-        wake = Wake.long_resonator(self.WakeT, self._resfrequency,
-                                   self._qfactor, self._rshunt, self._beta)
-        self._build(wake)
-
 
 class ResWallElement(WakeElement):
     """Class to generate a resistive wall element, inherits from WakeElement
@@ -349,15 +344,3 @@ class ResWallElement(WakeElement):
     def Yokoya(self, yokoya):
         self._yokoya = yokoya
         self.rebuild_wake()
-
-
-def set_wake_turnhistory(ring):
-    """Function to set the shape of the turn history
-    based on the number of slices, turns and bunches
-    """
-    welems = ring.get_elements(WakeElement)
-    for w in welems:
-        w.clear_history(ring=ring)
-
-
-Lattice.set_wake_turnhistory = set_wake_turnhistory

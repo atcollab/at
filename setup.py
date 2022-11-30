@@ -133,6 +133,13 @@ at = Extension(
     extra_link_args=omp_lflags
 )
 
+cconfig = Extension(
+    'at.cconfig',
+    sources=[join('pyat', 'at', 'cconfig.c')],
+    define_macros=macros + omp_macros + mpi_macros,
+    extra_compile_args=cflags + omp_cflags,
+)
+
 diffmatrix = Extension(
     name='at.physics.diffmatrix',
     sources=[diffmatrix_source],
@@ -142,7 +149,7 @@ diffmatrix = Extension(
 )
 
 setup(
-    ext_modules=[at, diffmatrix] +
+    ext_modules=[at, cconfig, diffmatrix] +
                 [c_integrator_ext(pm) for pm in c_pass_methods] +
                 [cpp_integrator_ext(pm) for pm in cpp_pass_methods],
 )

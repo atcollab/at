@@ -1,7 +1,7 @@
 /* Interpolate.c 
    Accelerator Toolbox 
    Created: 14/11/08
-   Z.Martí zeus@cells.es
+   Z.Martí
  
   
   

@@ -1,6 +1,6 @@
 /* VariableThinMPolePass
    Accelerator Toolbox 
-   S.White simon.white@esrf.fr
+   S.White
 */
 
 #include "atelem.c"
@@ -104,8 +104,6 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
     struct elemab *ElemA = Elem->ElemA;
     struct elemab *ElemB = Elem->ElemB;
     double *ramps = Elem->Ramps;
-    
-    init_seed(seed);
 
     for(i=0;i<maxorder+1;i++){
         pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
