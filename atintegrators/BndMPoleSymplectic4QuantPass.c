@@ -54,7 +54,6 @@ void BndMPoleSymplectic4QuantPass(double* r, double le, double irho, double* A, 
     pcg32_random_t* rng,
     int num_particles)
 {
-    int c;
     double SL = le / num_int_steps;
     double L1 = SL * DRIFT1;
     double L2 = SL * DRIFT2;
@@ -75,8 +74,8 @@ void BndMPoleSymplectic4QuantPass(double* r, double le, double irho, double* A, 
         irho, gap, A, B, L1, L2, K1, K2, max_order, num_int_steps,                                          \
         FringeBendEntrance, entrance_angle, fint1, FringeBendExit, exit_angle, fint2,                       \
         FringeQuadEntrance, useLinFrEleEntrance, FringeQuadExit, useLinFrEleExit, fringeIntM0, fringeIntP0, \
-        emass, E0, hbar, clight, alpha0, qe, SL) private(c)
-    for (c = 0; c < num_particles; c++) { /* Loop over particles  */
+        emass, E0, hbar, clight, alpha0, qe, SL)
+    for (int c = 0; c < num_particles; c++) { /* Loop over particles  */
         double* r6 = r + c * 6;
         if (!atIsNaN(r6[0])) {
             int m;
