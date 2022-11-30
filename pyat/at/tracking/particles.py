@@ -88,7 +88,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
             ems = emit[2]
             if any(('espread' in kwargs, 'blength' in kwargs)):
                 blength, espread = require(
-                    'Both "blength" and "espread" required',
+                    'Both "blength" and "espread" are required',
                     'blength', 'espread')
                 ems = blength * espread
 
@@ -96,14 +96,14 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         if ems is None:
             if any(('espread' in kwargs, 'blength' in kwargs)):
                 blength, espread = require(
-                    'Both "blength" and "espread" required',
+                    'Both "blength" and "espread" are required',
                     'blength', 'espread')
                 rmat[2, 4:6, 4:6] = np.array([[espread / blength, 0],
                                               [0, blength / espread]])
                 ems = blength * espread
                 sigm += ems * rmat[2, :, :]
             else:
-                warn(AtWarning('4D beam'))
+                warn(AtWarning('Monochromatic beam: no energy spread'))
         else:
             sigm += ems * rmat[2, :, :]
         return sigm
@@ -118,7 +118,6 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         if orbit is None:
             orbit = np.mean(beam, axis=1)
         beam -= orbit.reshape((6, 1))
-        ignore(message)
         sigmat = (beam @ beam.T) / beam.shape[1]
 
     elif 'twiss_in' in kwargs:
