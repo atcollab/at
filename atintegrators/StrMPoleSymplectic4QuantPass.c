@@ -42,6 +42,7 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
         double *KickAngle, double E0,
+        pcg32_random_t *rng,
         int num_particles)
 {
     int c;
@@ -123,11 +124,11 @@ void StrMPoleSymplectic4QuantPass(double *r, double le, double *A, double *B,
                 ng =  cstng/rho*(SL+ds);
                 ec =  cstec/rho;
 
-                nph = poissonRandomNumber(ng);
+                nph = poissonRandomNumber(rng, ng);
 
                 de = 0.0;
                 for(i=0;i<nph;i++){
-                    de = de + getEnergy(ec);
+                    de = de + getEnergy(rng, ec);
                 };
                 r6[4] = r6[4]-de/E0;
                 r6[1] = r6[1]*p_norm*(1+r6[4]);
@@ -204,7 +205,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->MaxOrder,Elem->NumIntSteps,Elem->FringeQuadEntrance,
             Elem->FringeQuadExit,Elem->fringeIntM0,Elem->fringeIntP0,
             Elem->T1,Elem->T2,Elem->R1,Elem->R2,
-            Elem->RApertures,Elem->EApertures,Elem->KickAngle,Elem->Energy,num_particles);
+            Elem->RApertures,Elem->EApertures,Elem->KickAngle,Elem->Energy,
+            Param->thread_rng,
+            num_particles);
     return Elem;
 }
 
@@ -244,9 +247,12 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         /* ALLOCATE memory for the output array of the same size as the input  */
         plhs[0] = mxDuplicateArray(prhs[1]);
         r_in = mxGetDoubles(plhs[0]);
-        StrMPoleSymplectic4QuantPass(r_in,Length,PolynomA,PolynomB,MaxOrder,NumIntSteps,
+        StrMPoleSymplectic4QuantPass(r_in,Length,PolynomA,PolynomB,
+                MaxOrder,NumIntSteps,
                 FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Energy,num_particles);
+                T1,T2,R1,R2,RApertures,EApertures,KickAngle,Energy,
+                &pcg32_global,
+                num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */

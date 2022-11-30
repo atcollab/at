@@ -51,7 +51,9 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
         double *T1, double *T2,
         double *R1, double *R2,
         double *RApertures, double *EApertures,
-        double E0, int num_particles)
+        double E0,
+        pcg32_random_t *rng,
+        int num_particles)
 {
     int c;
     double SL = le/num_int_steps;
@@ -132,10 +134,10 @@ void BndMPoleSymplectic4QuantPass(double *r, double le, double irho, double *A, 
                 ng =  cstng/rho*(SL+ds);
                 ec =  cstec/rho;
                 
-                nph = poissonRandomNumber(ng);
+                nph = poissonRandomNumber(rng, ng);
                 de = 0.0;
                 for(i=0;i<nph;i++){
-                    de = de + getEnergy(ec);
+                    de = de + getEnergy(rng, ec);
                 };
                 r6[4] = r6[4]-de/E0;
                 r6[1] = r6[1]*p_norm*(1+r6[4]);
@@ -232,7 +234,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
             Elem->FringeInt1,Elem->FringeInt2,Elem->FullGap,
             Elem->FringeQuadEntrance,Elem->FringeQuadExit,
             Elem->fringeIntM0,Elem->fringeIntP0,Elem->T1,Elem->T2,
-            Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,Elem->Energy,num_particles);
+            Elem->R1,Elem->R2,Elem->RApertures,Elem->EApertures,Elem->Energy,
+            Param->thread_rng,
+            num_particles);
     return Elem;
 }
 
@@ -286,7 +290,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 MaxOrder,NumIntSteps,EntranceAngle,ExitAngle,
                 FringeBendEntrance,FringeBendExit,FringeInt1,FringeInt2,
                 FullGap,FringeQuadEntrance,FringeQuadExit,fringeIntM0,fringeIntP0,
-                T1,T2,R1,R2,RApertures,EApertures,Energy,num_particles);
+                T1,T2,R1,R2,RApertures,EApertures,Energy,
+                &pcg32_global,
+                num_particles);
     }
     else if (nrhs == 0) {
         /* list of required fields */
