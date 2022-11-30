@@ -151,7 +151,6 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
         bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
     else:
         bunch_spos = numpy.zeros(len(bunch_currents))
-    bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
     kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
     no_bm = _set_beam_monitors(lattice, nbunch, nturns)
     kwargs['reuse'] = kwargs.pop('keep_lattice', False) and no_bm
