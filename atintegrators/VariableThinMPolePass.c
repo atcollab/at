@@ -116,9 +116,10 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
         r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
             if(mode==0){
+                double tpart = t+r6[5]/C0;
                 for(i=0;i<maxorder+1;i++){
-                    pola[i]=get_pol(ElemA, ramps, mode, t+r6[5]/C0, turn, seed, i, periodic);
-                    polb[i]=get_pol(ElemB, ramps, mode, t+r6[5]/C0, turn, seed, i, periodic);
+                    pola[i]=get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
+                    polb[i]=get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
                 };
             };
             strthinkick(r6, pola, polb, 1.0, maxorder);
