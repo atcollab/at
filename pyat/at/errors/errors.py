@@ -58,7 +58,6 @@ def _apply_bpm_orbit_error(ring, orbit, refpts):
     
 def _apply_bpm_track_error(ring, trajectory, refpts):
     for traj in trajectory.T:
-        print(traj.shape)
         for e, o6 in zip(refpts_iterator(ring, refpts), traj):
             if hasattr(e, 'BPMGain'):
                 o6[:, [0, 2]] *= e.BPMGain
@@ -71,8 +70,7 @@ def _apply_bpm_track_error(ring, trajectory, refpts):
     
     
 def _apply_alignment_errors(ring):
-    refpts = [(hasattr(e, 'ShiftErr') 
-              or hasattr(e, 'RotationErr'))
+    refpts = [(hasattr(e, 'ShiftErr') or hasattr(e, 'RotationErr'))
               for e in ring]
     ring = ring.replace(refpts)
     for e in ring[refpts]:
@@ -81,8 +79,7 @@ def _apply_alignment_errors(ring):
         if shift is not None:   
             shift_elem(e, shift[0], shift[1])
         if rots is not None:
-            rotate_elem(e, tilt=rots[0], 
-                        pitch=rots[1], yaw=rots[2])
+            rotate_elem(e, tilt=rots[0], pitch=rots[1], yaw=rots[2])
     return ring
     
                
@@ -112,10 +109,8 @@ def _apply_field_errors(ring):
             pn[len(pol):] = err[len(pol):]
         setattr(e, pname, pn)
     
-    refpts = [(hasattr(e, 'PolynomBErr') 
-              or hasattr(e, 'PolynomAErr'))
-              and hasattr(e, 'PolynomB') 
-              and hasattr(e, 'PolynomA')
+    refpts = [(hasattr(e, 'PolynomBErr') or hasattr(e, 'PolynomAErr'))
+              and hasattr(e, 'PolynomB') and hasattr(e, 'PolynomA')
               for e in ring]
     ring = ring.replace(refpts)                            
     for e in ring[refpts]:
@@ -149,8 +144,7 @@ def _linopt_errors(func) -> Callable:
         refpts = kwargs.get('refpts', None)
         if refpts is not None:
             ld.closed_orbit = \
-                _apply_bpm_orbit_error(ring, ld.closed_orbit,
-                                       refpts)
+                _apply_bpm_orbit_error(ring, ld.closed_orbit, refpts)
         return ld0, bd, ld
     return wrapper
     
@@ -163,8 +157,7 @@ def _track_errors(func) -> Callable:
         rout = func(ring, *args, **kwargs)
         refpts = kwargs.get('refpts', None)
         if refpts is not None:
-            rout = _apply_bpm_track_error(ring, rout,
-                                          refpts)
+            rout = _apply_bpm_track_error(ring, rout, refpts)
         return rout
     return wrapper    
     
