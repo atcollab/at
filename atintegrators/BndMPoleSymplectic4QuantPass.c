@@ -131,7 +131,8 @@ void BndMPoleSymplectic4QuantPass(double* r, double le, double irho, double* A, 
                 ng = cstng / rho * (SL + ds);
                 ec = cstec / rho;
 
-                nph = poissonRandomNumber(rng, ng);
+                nph = atrandp_r(rng, ng);
+
                 de = 0.0;
                 for (i = 0; i < nph; i++) {
                     de = de + getEnergy(rng, ec);

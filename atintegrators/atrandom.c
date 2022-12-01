@@ -93,13 +93,13 @@ static void pcg32_srandom(uint64_t seed, uint64_t seq)
    external state variable */
 
 static double atrandd_r(pcg32_random_t* rng)
-/* Uniform [0, 1] distribution */
+/* Uniform [0, 1) distribution */
 {
     return ldexp(pcg32_random_r(rng), -32);
 }
 
-static double atrandn_r(pcg32_random_t* rng)
-/* gaussian distribution, sigma=1, mean=0 */
+static double atrandn_r(pcg32_random_t* rng, double mean, double stdDev)
+/* gaussian distribution */
 {
     /* Marsaglia polar method: https://en.wikipedia.org/wiki/Marsaglia_polar_method */
 
@@ -109,7 +109,7 @@ static double atrandn_r(pcg32_random_t* rng)
 
 	if (hasSpare) {
 		hasSpare = false;
-		return spare;
+		return mean + stdDev * spare;
 	}
 
 	hasSpare = true;	
@@ -121,7 +121,7 @@ static double atrandn_r(pcg32_random_t* rng)
 	while ((s >= 1.0) || (s == 0.0));
 	s = sqrt(-2.0 * log(s) / s);
 	spare = v * s;
-	return u * s;
+	return mean + stdDev * u * s;
 }
 
 static int atrandp_r(pcg32_random_t* rng, double lamb)
@@ -140,7 +140,7 @@ static int atrandp_r(pcg32_random_t* rng, double lamb)
         pk = k-1;
     }
     else {      /* Gaussian approximation */
-        pk = (int)floor(atrandn_r(rng)*sqrt(lamb)+lamb);
+        pk = (int)floor(atrandn_r(rng, lamb, sqrt(lamb)));
     }
 
     return pk;
@@ -154,9 +154,9 @@ static inline double atrandd(void)
     return atrandd_r(&pcg32_global);
 }
 
-static inline double atrandn(void)
+static inline double atrandn(double mean, double stdDev)
 {
-    return atrandn_r(&pcg32_global);
+    return atrandn_r(&pcg32_global, mean, stdDev);
 }
 
 static inline int atrandp(double lamb)

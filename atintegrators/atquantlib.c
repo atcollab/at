@@ -1,5 +1,5 @@
 #include <math.h>
-#include <atrandom.c>
+#include "atrandom.c"
 /*this is quite ugly....but avoids reading form file*/
 
 static int nt = 347;
@@ -430,64 +430,27 @@ static double interpolate(int ip, double p)
 
 static double getEnergy(pcg32_random_t *rng, double ec)
 {
-    double ub, lb;
-    double cst0;
-    double ran;
-    int ip;
     double re;
-    double mini, maxi, eps;
-    double e;
-
-    ub = 0.99999;
-    lb = 0.21;
-    cst0 = 1.23159;
-    ran = atrandd_r(rng);
-    mini = 0.0;
-    maxi = 1.0e2;
-    eps = maxi * 1.0e-4;
+    double lb = 0.21;
+    double ub = 0.99999;
+    double ran = atrandd_r(rng);
 
     if (ran <= lb) {
-        e = pow((ran / cst0), 3) * ec;
+        /* Low energy: 21% of cases, analytical approximation */
+        double cst0 = 1.23159;
+        re = pow((ran / cst0), 3);
     } else if (ran > ub) {
+        //* High energy: 0.001 % of cases, inversion of the upbranch function */
+        double mini = 0.0;
+        double maxi = 100.0;
+        double eps = maxi * 1.0e-4;
         re = bs_invfunc(ran, mini, maxi, eps);
-        e = re * ec;
     } else {
-        ip = bs_table(ran);
+        /* Intermediate energy: 79% of cases, table interpolation */
+        int ip = bs_table(ran);
         re = interpolate(ip, ran);
         /*printf("%d %lf %lf\n",ip,ran,re);*/
-        e = re * ec;
     };
 
-    return e;
-}
-
-static int poissonRandomNumber(pcg32_random_t *rng, double lamb)
-{
-    int pk, k;
-    double l, p, u, u1, u2, twopi;
-
-    l = -lamb;
-    k = 0;
-    p = 0.0;
-    twopi = 4.0 * asin(1.0);
-    pk = 0;
-
-    if (lamb < 11) {
-        do {
-            k = k + 1;
-            u = atrandd_r(rng);
-            p = p + log(u);
-        } while (p > l);
-
-        pk = k - 1;
-    } else {
-        u1 = atrandd_r(rng);
-        u2 = atrandd_r(rng);
-        if (u1 == 0.0) {
-            u1 = 1e-18;
-        }
-        pk = (int)floor((sqrt(-2.0 * log(u1)) * cos(twopi * u2)) * sqrt(lamb) + lamb);
-    }
-
-    return pk;
+    return re * ec;
 }

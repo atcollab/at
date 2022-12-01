@@ -119,7 +119,7 @@ void StrMPoleSymplectic4QuantPass(double* r, double le, double* A, double* B,
                 ng = cstng / rho * (SL + ds);
                 ec = cstec / rho;
 
-                nph = poissonRandomNumber(rng, ng);
+                nph = atrandp_r(rng, ng);
 
                 de = 0.0;
                 for (i = 0; i < nph; i++) {

@@ -5,28 +5,6 @@ struct elem {
     double* Lmatp;
 };
 
-static double generateGaussian(pcg32_random_t* rng, double mean, double stdDev)
-{
-    static bool hasSpare = false;
-    static double spare;
-    static double u, v, s;
-
-    if (hasSpare) {
-        hasSpare = false;
-        return mean + stdDev * spare;
-    }
-
-    hasSpare = true;
-    do {
-        u = atrandd_r(rng) * 2.0 - 1.0;
-        v = atrandd_r(rng) * 2.0 - 1.0;
-        s = u * u + v * v;
-    } while ((s >= 1.0) || (s == 0.0));
-    s = sqrt(-2.0 * log(s) / s);
-    spare = v * s;
-    return mean + stdDev * u * s;
-}
-
 void QuantDiffPass(double* r_in, double* Lmatp, int nturn,
     pcg32_random_t* rng,
     int num_particles)
@@ -45,7 +23,7 @@ void QuantDiffPass(double* r_in, double* Lmatp, int nturn,
         double* r6 = r_in + c * 6;
         for (i = 0; i < 6; i++) {
             diffusion[i] = 0.0;
-            randnorm[i] = generateGaussian(rng, 0.0, 1.0);
+            randnorm[i] = atrandn_r(rng, 0.0, 1.0);
         }
 
         for (i = 0; i < 6; i++) {

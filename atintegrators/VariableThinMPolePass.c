@@ -70,7 +70,7 @@ double get_pol(struct elemab *elem, double *ramps, int mode,
         ampt *= sin(TWOPI*freq*t+ph);
         return ampt;
     case 1:
-        val = atrandn();
+        val = atrandn(0.0, 1.0);
         ampt *= val;
         return ampt;
     case 2:
