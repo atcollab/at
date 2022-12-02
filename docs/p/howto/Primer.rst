@@ -25,7 +25,7 @@ relative to the ideal particle.
 Creation of Elements and Lattices
 ---------------------------------
 
-.. code:: ipython3
+.. code:: python
 
     import at
     import at.plot
@@ -40,7 +40,7 @@ functions. These functions output objects inheriting from the
 **Element** base class. For example, a quadrupole may be created with
 the function **Quadrupole**
 
-.. code:: ipython3
+.. code:: python
 
     QF=at.Quadrupole('QF',0.5,1.2)
     print(QF)
@@ -65,7 +65,7 @@ necessary to be able to pass an electron through this quadrupole (i.e.,
 the set of arguments required by the pass method). We now create some
 other elements needed in a FODO lattice:
 
-.. code:: ipython3
+.. code:: python
 
     Dr = at.Drift('Dr', 0.5)
     HalfDr = at.Drift('Dr2', 0.25)
@@ -87,7 +87,7 @@ bending angle to be :math:`2\pi/40` since there are two bends per cell.
 
 A cell of a FODO lattice may now be constructed as follows
 
-.. code:: ipython3
+.. code:: python
 
     FODOcell = at.Lattice([HalfDr, Bend, Dr, QF, Dr, Bend, Dr, QD, HalfDr],
                           name='Simple FODO cell', energy=1E9)
@@ -102,7 +102,7 @@ A cell of a FODO lattice may now be constructed as follows
 As mentioned, this cell is only 1/20 of a FODO lattice. The entire
 lattice may be created by repeating this cell 20 times as follows
 
-.. code:: ipython3
+.. code:: python
 
     FODO = FODOcell*20
     print(FODO)
@@ -139,7 +139,7 @@ arrays:
    indices. For instance, the elements at locations 3 and 7 of
    ``FODOcell`` may be selected with:
 
-.. code:: ipython3
+.. code:: python
 
     list(FODOcell[3, 7])
 
@@ -157,7 +157,7 @@ arrays:
    True value. The same elements as in the previous example may be
    selected with:
 
-.. code:: ipython3
+.. code:: python
 
     mask=np.zeros(len(FODOcell), dtype=bool)
     mask[3] = True
@@ -187,7 +187,7 @@ Such indexes can be generated with the **get_cells** function, which
 returns a boolean index of elements selected by the value of any of
 their attributes or by an user-supplied check function:
 
-.. code:: ipython3
+.. code:: python
 
     refqf = at.get_cells(FODOcell, 'FamName', 'QF')   # FamName attribute == QF
     print(list(FODOcell[refqf]))
@@ -206,7 +206,7 @@ their attributes or by an user-supplied check function:
 
 Using predefined check functions we can write:
 
-.. code:: ipython3
+.. code:: python
 
     refq1 = at.get_cells(FODOcell, at.checktype(at.Quadrupole))   # class == Quadrupole
     print(list(FODOcell[refq1]))
@@ -223,7 +223,7 @@ Using predefined check functions we can write:
 Both methods select the same elements. Since **get_cells** returns numpy
 boolean arrays, the same result can also be obtained as:
 
-.. code:: ipython3
+.. code:: python
 
     print(list(FODOcell[refqf | refqd]))
 
@@ -239,7 +239,7 @@ Iterating over selected elements
 The **select** method of the lattice object returns an iterator over the
 selected elements:
 
-.. code:: ipython3
+.. code:: python
 
     for elem in FODOcell.select(refqf | refqd):
         print(elem)
@@ -273,7 +273,7 @@ Extracting attribute values
 Following the previous example, we can get the quadrupole strengths
 (PolynomB[1]) with:
 
-.. code:: ipython3
+.. code:: python
 
     np.array([elem.PolynomB[1] for elem in FODOcell.select(refqf | refqd)])
 
@@ -289,7 +289,7 @@ Following the previous example, we can get the quadrupole strengths
 The same result is provided by the **get_value_refpts** convenience
 function:
 
-.. code:: ipython3
+.. code:: python
 
     at.get_value_refpts(FODOcell, refqf | refqd, 'PolynomB', index=1)
 
@@ -307,7 +307,7 @@ Setting attribute values
 
 Similarly, using a the Lattice iterator, we can write:
 
-.. code:: ipython3
+.. code:: python
 
     new_strengths = [1.1, -1.3]
     for elem, strength in zip(FODOcell.select(refqf | refqd), new_strengths):
@@ -326,7 +326,7 @@ Similarly, using a the Lattice iterator, we can write:
 
 Or with the **set_value_refpts** function:
 
-.. code:: ipython3
+.. code:: python
 
     initial_strengths = [1.2, -1.2]
     at.set_value_refpts(FODOcell, refqf | refqd, 'PolynomB', initial_strengths, index=1)
@@ -349,7 +349,7 @@ Once a lattice is defined, electrons may be tracked through it.
 **lattice_pass** is the function that does the tracking. An example of
 its use is as follows:
 
-.. code:: ipython3
+.. code:: python
 
     nturns=200
     Z01 = np.array([.001, 0, 0, 0, 0, 0])
@@ -379,7 +379,7 @@ In this example, we started with one initial condition, and all
 subsequent turns are returned by **lattice_pass**. We may also start
 with multiple initial conditions:
 
-.. code:: ipython3
+.. code:: python
 
     Z0=np.asfortranarray(np.vstack((Z01,Z02,Z03)).T)
     print('Z0.shape:', Z0.shape)
@@ -395,7 +395,7 @@ with multiple initial conditions:
 
 Now the same plot can be obtained with:
 
-.. code:: ipython3
+.. code:: python
 
     plt.plot(Z[0, 0, 0, :], Z[1, 0, 0, :],'.')
     plt.plot(Z[0, 1, 0, :], Z[1, 1, 0, :],'.')
@@ -423,14 +423,14 @@ would like to understand the linear properties such as Twiss parameters,
 tunes, chromaticities, etc. These can all be calculated with the
 function **get_optics**.
 
-.. code:: ipython3
+.. code:: python
 
     [_, beamdata, _] = at.get_optics(FODO, get_chrom=True)
 
 The first argument is the FODO lattice we have created. The second
 argument says we want to compute the optional chromaticity.
 
-.. code:: ipython3
+.. code:: python
 
     print(beamdata.tune)
     print(beamdata.chromaticity)
@@ -454,7 +454,7 @@ conditions and interpolating. The one turn transfer matrix (here we
 focus on 4x4) is computed with the function **find_m44** contained
 within **get_optics**. Calling this on the FODO lattice, we find
 
-.. code:: ipython3
+.. code:: python
 
     m44, _ = at.find_m44(FODO,0)
     print(m44)
@@ -497,7 +497,7 @@ built, the same quadrupole QF is used in each cell, so varying its
 strength will affect all cells. We just need to select the 1st one in
 the ring:
 
-.. code:: ipython3
+.. code:: python
 
     refqf = at.get_cells(FODO, at.checkname('QF')) # Select all QFs
     refqf1 = np.flatnonzero(refqf)[0]              # Get the 1st one
@@ -508,7 +508,7 @@ Then we can call the fitting function to set the tunes to
 :math:`\nu_x = 0.15` and :math:`\nu_y = 0.75` using the quadrupoles QF
 and QD.
 
-.. code:: ipython3
+.. code:: python
 
     at.fit_tune(FODO, refqf, refqd, [0.15, 0.75])
 
@@ -527,7 +527,7 @@ and QD.
 
 Let’s check the result:
 
-.. code:: ipython3
+.. code:: python
 
     [_, beamdata, _]=at.get_optics(FODO)
     beamdata.tune
@@ -549,7 +549,7 @@ instability and thus our FODO lattice, as is, is not acceptable. To fix
 this problem, we add sextupoles to our lattice. We define a focusing and
 defocussing sextupoles (0.1 meter long) as follows:
 
-.. code:: ipython3
+.. code:: python
 
     SF = at.Sextupole('SF', 0.1, 0)
     SD = at.Sextupole('SD', 0.1, 0)
@@ -560,7 +560,7 @@ effective. We will put them in the middle of the 0.5 meter drift
 sections: SF before the QF and SD before the QD. Let’s locate the
 drifts:
 
-.. code:: ipython3
+.. code:: python
 
     np.nonzero(at.get_cells(FODOcell, at.checkname("Dr")))
 
@@ -577,7 +577,7 @@ We will insert SF in the middle of element 2 and SD in the middle of
 element 6. Since the Lattice object is derived from the python ``list``,
 we can use all the ``list`` methods to do this. For instance:
 
-.. code:: ipython3
+.. code:: python
 
     FODOcellSext = FODOcell.copy()
     FODOcellSext[6:7] = [drs,SD,drs]
@@ -591,7 +591,7 @@ we can use all the ``list`` methods to do this. For instance:
     Lattice(<260 elements>, name='Simple FODO cell', energy=1000000000.0, particle=Particle('relativistic'), periodicity=1)
 
 
-.. code:: ipython3
+.. code:: python
 
     [_, beamdata, _] = at.get_optics(FODOSext, get_chrom=True)
     print(beamdata.tune)
@@ -610,12 +610,12 @@ This function works analogously to **fit_tune** except the sextupoles
 are varied instead of the quadrupoles. Let’s locate the first
 sextupoles:
 
-.. code:: ipython3
+.. code:: python
 
     refsext = at.get_cells(FODOSext, at.checktype(at.Sextupole)) # Select all sextpoles
     refsf,refsd = np.flatnonzero(refsext)[:2]                    # Take the 1st ones
 
-.. code:: ipython3
+.. code:: python
 
     at.fit_chrom(FODOSext, refsf, refsd, [0.5, 0.5])
 
@@ -633,7 +633,7 @@ sextupoles:
 
 After changing the tunes and fixing the chromaticities, we find:
 
-.. code:: ipython3
+.. code:: python
 
     [_, beamdata, _] = at.get_optics(FODOSext, get_chrom=True)
     print(beamdata.tune)
@@ -653,13 +653,13 @@ parameters. **elemdata0** is their values at the entrance of the ring,
 **elemdata** is the values at the selected points of interest. To
 compute them at all lattice elements, we call:
 
-.. code:: ipython3
+.. code:: python
 
     [elemdata0, beamdata, elemdata] = at.get_optics(FODOcellSext, range(len(FODOcellSext)+1))
 
 Examining **elemdata**, we find:
 
-.. code:: ipython3
+.. code:: python
 
     print('elemdata.shape:', elemdata.shape)
     print('elemdata.fields:')
@@ -694,7 +694,7 @@ Examining **elemdata**, we find:
 
 Let us use these results to plot the beta functions around the ring.
 
-.. code:: ipython3
+.. code:: python
 
     plt.plot(elemdata.s_pos, elemdata.beta)
     plt.xlabel('s [m]')
@@ -708,7 +708,7 @@ Let us use these results to plot the beta functions around the ring.
 We may also plot the lattice parameters using a dedicated plot function
 with the command:
 
-.. code:: ipython3
+.. code:: python
 
     FODOcellSext.plot_beta();
 
@@ -735,7 +735,7 @@ In order to use **ohmi_envelope**, we first need to make sure the beam
 is stable longitudinally as well, requiring us to add an RF cavity to
 our FODO lattice. Let’s add an inactive cavity with the command
 
-.. code:: ipython3
+.. code:: python
 
     RFC = at.RFCavity('RFC', 0.0, 0.0, 0.0, 1, 1.0E9, PassMethod='IdentityPass')
     FODOSext.insert(0, RFC)
@@ -744,7 +744,7 @@ our FODO lattice. Let’s add an inactive cavity with the command
 Now, we need to set the values of the RF cavity. This can be done with
 the function **set_cavity** as follows
 
-.. code:: ipython3
+.. code:: python
 
     FODOSext.set_cavity(Voltage=0.5E6, Frequency=at.Frf.NOMINAL)
     print(RFC)
@@ -768,7 +768,7 @@ which says that the each of the 20 RF cavities has a voltage of 25 kV.
 **radiation_parameters** gives a summary of the lattice properties,
 using the classical radiation integrals:
 
-.. code:: ipython3
+.. code:: python
 
     print(at.radiation_parameters(FODOSext))
 
@@ -800,7 +800,7 @@ using the classical radiation integrals:
 We may now turn radiation ON and call the function **ohmi_envelope** as
 follows
 
-.. code:: ipython3
+.. code:: python
 
     FODOSext.radiation_on()
     _, beamdata, _ = at.ohmi_envelope(FODOSext)
@@ -826,7 +826,7 @@ follows
 An easy way to summarize these results is provided by the
 **envelope_parameters** function:
 
-.. code:: ipython3
+.. code:: python
 
     print(at.envelope_parameters(FODOSext))
 
