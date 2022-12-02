@@ -6,6 +6,8 @@ function atmexall(varargin)
 % AT Options:
 %
 %	-missing    Build only the outdated components
+%   -fail       Throw an exception if compiling any passmethod fails
+%               (By defaults compilation goes on)
 %	-openmp     Build the integrators for OpenMP parallelisation
 %   -c_only     Do no compile C++ passmethods
 %   -DOMP_PARTICLE_THRESHOLD=n
@@ -25,6 +27,7 @@ pdir=fullfile(fileparts(atroot),'atintegrators');
 [openmp,varargs]=getflag(varargin,'-openmp');
 [miss_only,varargs]=getflag(varargs,'-missing');
 [c_only,varargs]=getflag(varargs,'-c_only');
+[fail,varargs]=getflag(varargs,'-fail');
 force=~miss_only;
 
 atoptions={['-D',computer]};
@@ -140,10 +143,18 @@ for i = 1:length(passmethods)
                 compile([map1, alloptions], PM);
             end
         catch err
-            fprintf(2, 'Could not compile %s: %s\n', PM, err.message);
+            if fail
+                rethrow(err);
+            else
+                fprintf(2, 'Could not compile %s:\n%s\n', PM, err.message);
+            end
         end
     else
-        fprintf(2,'%s not found, skip to next\n', PM);
+        if fail
+            error('AT:atmexall', '%s not found\n', PM);
+        else
+            fprintf(2,'%s not found, skip to next\n', PM);
+        end
     end
 end
 
