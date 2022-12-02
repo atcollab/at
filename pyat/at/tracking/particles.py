@@ -123,7 +123,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
     elif 'twiss_in' in kwargs:
         twin = kwargs.pop('twiss_in')
         message = "'twiss_in' is provided"
-        orbit = kwargs.pop('orbit', twin.get('closed_orbit', np.zeros(6)))
+#       orbit = kwargs.pop('orbit', twin.getattr('closed_orbit', np.zeros(6)))
         try:
             Rin = twin['R']
         except (ValueError, KeyError):  # record arrays throw ValueError !
@@ -150,7 +150,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         alphax, alphay, betax, betay = require(
             'Neither "twiss_in" nor "ring" is provided',
             'alphax', 'alphay', 'betax', 'betay')
-        orbit = kwargs.pop('orbit', np.zeros(6))
+        # orbit = kwargs.pop('orbit', np.zeros(6))
         Rm = r_4d(alphax, alphay, betax, betay)
         sigmat = sigma_from_rmat(Rm, None)
 
