@@ -9,7 +9,7 @@
 #include "atrandom.c"
 
 #define TWOPI  6.28318530717959
-
+#define C0  	2.99792458e8 
 
 struct elemab
 {
@@ -105,14 +105,23 @@ void VariableThinMPolePass(double *r, struct elem *Elem, double t0, int turn, in
     struct elemab *ElemB = Elem->ElemB;
     double *ramps = Elem->Ramps;
 
-    for(i=0;i<maxorder+1;i++){
-        pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
-        polb[i]=get_pol(ElemB, ramps, mode, t, turn, seed, i, periodic);
+    if(mode!=0){
+        for(i=0;i<maxorder+1;i++){
+            pola[i]=get_pol(ElemA, ramps, mode, t, turn, seed, i, periodic);
+            polb[i]=get_pol(ElemB, ramps, mode, t, turn, seed, i, periodic);
+        };
     };
 
     for (c = 0;c<num_particles;c++){
         r6 = r+c*6;
         if (!atIsNaN(r6[0])) {
+            if(mode==0){
+                double tpart = t+r6[5]/C0;
+                for(i=0;i<maxorder+1;i++){
+                    pola[i]=get_pol(ElemA, ramps, mode, tpart, turn, seed, i, periodic);
+                    polb[i]=get_pol(ElemB, ramps, mode, tpart, turn, seed, i, periodic);
+                };
+            };
             strthinkick(r6, pola, polb, 1.0, maxorder);
         }
     }
@@ -140,9 +149,9 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0);
-        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1);
-        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1);
+        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
+        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 1); check_error();
+        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 1); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
@@ -205,9 +214,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         PhaseA=atGetOptionalDouble(ElemData,"PhaseA", 0); check_error();
         PhaseB=atGetOptionalDouble(ElemData,"PhaseB", 0); check_error();
         Ramps=atGetOptionalDoubleArray(ElemData, "Ramps"); check_error();
-        Seed=atGetOptionalLong(ElemData, "Seed", 0);
-        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0);
-        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0);
+        Seed=atGetOptionalLong(ElemData, "Seed", 0); check_error();
+        NSamplesA=atGetOptionalLong(ElemData, "NSamplesA", 0); check_error();
+        NSamplesB=atGetOptionalLong(ElemData, "NSamplesB", 0); check_error();
         FuncA=atGetOptionalDoubleArray(ElemData,"FuncA"); check_error();
         FuncB=atGetOptionalDoubleArray(ElemData,"FuncB"); check_error();
         Periodic=atGetOptionalLong(ElemData,"Periodic", 1); check_error();
@@ -245,19 +254,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         if (nlhs>1) {
             /* list of optional fields */
             plhs[1] = mxCreateCellMatrix(13,1);
-            mxSetCell(plhs[0],0,mxCreateString("AmplitudeA"));
-            mxSetCell(plhs[0],1,mxCreateString("AmplitudeB"));
-            mxSetCell(plhs[0],2,mxCreateString("FrequencyA"));
-            mxSetCell(plhs[0],3,mxCreateString("FrequencyB"));
-            mxSetCell(plhs[0],4,mxCreateString("PhaseA"));
-            mxSetCell(plhs[0],5,mxCreateString("PhaseB"));
-            mxSetCell(plhs[0],6,mxCreateString("Ramps"));
-            mxSetCell(plhs[0],7,mxCreateString("Seed"));
-            mxSetCell(plhs[0],8,mxCreateString("FuncA"));
-            mxSetCell(plhs[0],9,mxCreateString("FuncB"));
-            mxSetCell(plhs[0],10,mxCreateString("NSamplesA"));
-            mxSetCell(plhs[0],11,mxCreateString("NSamplesB"));
-            mxSetCell(plhs[0],12,mxCreateString("Periodic"));
+            mxSetCell(plhs[1],0,mxCreateString("AmplitudeA"));
+            mxSetCell(plhs[1],1,mxCreateString("AmplitudeB"));
+            mxSetCell(plhs[1],2,mxCreateString("FrequencyA"));
+            mxSetCell(plhs[1],3,mxCreateString("FrequencyB"));
+            mxSetCell(plhs[1],4,mxCreateString("PhaseA"));
+            mxSetCell(plhs[1],5,mxCreateString("PhaseB"));
+            mxSetCell(plhs[1],6,mxCreateString("Ramps"));
+            mxSetCell(plhs[1],7,mxCreateString("Seed"));
+            mxSetCell(plhs[1],8,mxCreateString("FuncA"));
+            mxSetCell(plhs[1],9,mxCreateString("FuncB"));
+            mxSetCell(plhs[1],10,mxCreateString("NSamplesA"));
+            mxSetCell(plhs[1],11,mxCreateString("NSamplesB"));
+            mxSetCell(plhs[1],12,mxCreateString("Periodic"));
         }
     }
     else {
