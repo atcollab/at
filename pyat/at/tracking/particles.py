@@ -203,7 +203,7 @@ def beam(nparts: int, sigma, orbit: Orbit = None):
                 # Try x-delta 4x4 matrix
                 sel = [0, 1, 4, 5]
                 idx = np.ix_(sel, sel)
-                lmat[idx] = cholesky(idx)
+                lmat[idx] = cholesky(sigma[idx])
                 lmat[2:4, 2:4] = _get_single_plane(slice(2, 4))
                 print("h, delta")
             except LinAlgError:
