@@ -8,7 +8,7 @@ from at.tracking import lattice_pass
 from scipy.stats import truncnorm, norm
 
 
-__all__ = ['find_orbit_err', 'get_optics_err', 'get_ring_with_errors']
+__all__ = ['find_orbit_err', 'get_optics_err', 'enable_errors']
 
 
 _BPM_ATTRS = ['BPMGain', 'BPMOffset', 'BPMTilt']
@@ -82,9 +82,10 @@ def _apply_alignment_errors(ring):
         shift = getattr(e, 'ShiftErr', None) 
         rots = getattr(e, 'RotationsErr', None)   
         if shift is not None:   
-            shift_elem(e, shift[0], shift[1])
+            shift_elem(e, shift[0], shift[1], relative=True)
         if rots is not None:
-            rotate_elem(e, tilt=rots[0], pitch=rots[1], yaw=rots[2])
+            rotate_elem(e, tilt=rots[0], pitch=rots[1],
+                        yaw=rots[2], relative=True)
     return ring
 
 
@@ -112,13 +113,22 @@ def _apply_field_errors(ring):
     ring = set_polerr(ring, 'PolynomA')
     ring = set_polerr(ring, 'PolynomB')
     return ring
+    
+
+def enable_errors(ring):
+    if getattr(ring, '_has_errors', False): 
+        raise AtError('Errors already enabled on this ring')
+    else:
+        ring = _apply_field_errors(ring) 
+        ring = _apply_alignment_errors(ring)
+        ring._has_errors = True
+    return ring
 
 
 def _apply_errors(func) -> Callable:
     @functools.wraps(func)
     def wrapper(ring, *args, **kwargs):
-        ring = _apply_field_errors(ring)
-        ring = _apply_alignment_errors(ring)
+        ring = enable_errors(ring)
         refpts = kwargs.get('refpts', None)
         if func is lattice_pass:
             rout = func(ring, *args, **kwargs)
@@ -137,24 +147,17 @@ def _apply_errors(func) -> Callable:
             raise AtError('Error wrapper not available for {}'
                           .format(func.__name__))
     return wrapper
+
+
+def get_mean_std_err(ring, key, attr, index=0):
+    vals = [numpy.atleast_1d(getattr(e, attr, 0.0))[index]
+            for e in ring.get_elements(key)]
+    return numpy.mean(vals), numpy.std(vals)
     
-
-def get_ring_with_errors(ring):
-    ring = _apply_field_errors(ring) 
-    ring = _apply_alignment_errors(ring) 
-    for e in ring:
-        for a in _ERR_ATTRS:
-            if hasattr(e, a):
-                delattr(e, a)
-    return ring
-
-
-def get_mean_std_err(ring, key, errattr):
-    elems = ring.get_elements(key)
-
 
 find_orbit_err = _apply_errors(find_orbit)
 Lattice.find_orbit_err = find_orbit_err
 get_optics_err = _apply_errors(get_optics)
 Lattice.get_optics_err = get_optics_err
 lattice_pass_err = _apply_errors(lattice_pass)
+Lattice.enable_errors = enable_errors
