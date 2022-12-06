@@ -75,7 +75,7 @@ def transverse_resonator_wf(srange, frequency, qfactor, rshunt,
     if numpy.amin(srange) < 0:
         raise ValueError("""
                         Provided srange has negative values.
-                        This is not allowed for the longitudinal
+                        This is not allowed for the transverse
                         resonator wake function. Please correct.
                         """)
     if not numpy.any(srange == 0):
