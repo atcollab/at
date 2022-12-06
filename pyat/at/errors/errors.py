@@ -97,7 +97,7 @@ def _apply_field_errors(ring):
 
     def get_pol(e, pname):
         le = sorted((getattr(e, pname), getattr(e, pname + 'Err')), key=len)
-        pn = le[1].copy()
+        pn = numpy.copy(le[1])
         pn[:len(le[0])] += le[0]
         return pn
 
