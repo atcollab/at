@@ -20,6 +20,8 @@ struct parameters
   int nbunch;
   double *bunch_spos;
   double *bunch_currents;
+  struct pcg_state_setseq_64 *common_rng;
+  struct pcg_state_setseq_64 *thread_rng;
 };
 
 #endif /*ATTYPES_H*/

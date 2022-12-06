@@ -7,7 +7,8 @@ at.tracking.atpass
 
    .. autosummary::
 
-      isopenmp
-      ismpi
       atpass
       elempass
+      reset_rng
+      common_rng
+      thread_rng
