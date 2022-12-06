@@ -45,7 +45,7 @@ def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
     if not numpy.any(srange == 0):
         srange = numpy.concatenate(([0], srange))
     srange = numpy.sort(numpy.concatenate(([1e-24], srange)))
-    
+  
     omega = 2 * numpy.pi * frequency
     alpha = omega / (2 * qfactor)
     omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
@@ -81,8 +81,7 @@ def transverse_resonator_wf(srange, frequency, qfactor, rshunt,
     if not numpy.any(srange == 0):
         srange = numpy.concatenate(([0], srange))
     srange = numpy.sort(numpy.concatenate(([1e-24], srange)))
-    
-    
+
     omega = 2 * numpy.pi * frequency
     alpha = omega / (2 * qfactor)
     omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
