@@ -186,7 +186,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
     #ifdef _MSC_VER
-    if(Elem->mode==1){
+    if(Elem->mode==2){
         atError("Beam loading Phasor mode not implemented in Windows.");
     }
     #endif
