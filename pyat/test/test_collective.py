@@ -5,7 +5,7 @@ import unittest
 import pytest
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
-from at.collective.beam_loading import add_beamloading, remove_beamloading
+from at.collective import add_beamloading, remove_beamloading
 
 
 _issorted = lambda a: numpy.all(a[:-1] <= a[1:])
