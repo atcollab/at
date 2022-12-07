@@ -62,7 +62,7 @@ class Wake(object):
     Components may be retrieved using :code:`wake.DX` for example
     """
     def __init__(self, srange):
-        self._srange = srange
+        self._srange = numpy.unique(srange)
         self.components = {WakeComponent.DX: None,
                            WakeComponent.DY: None,
                            WakeComponent.QX: None,
@@ -204,7 +204,7 @@ class Wake(object):
         Several resonators can be built in one step by setting ``nelems``> 1
         and giving array parameters
         """
-        wake = Wake(numpy.unique(srange))
+        wake = Wake(srange)
         try:
             wakecomp = numpy.broadcast_to(wakecomp, (nelems, ))
             frequency = numpy.broadcast_to(frequency, (nelems, ))
@@ -266,7 +266,7 @@ class Wake(object):
             yokoya_factor:  Yokoya factor
             nelems:
         """
-        wake = Wake(numpy.unique(srange))
+        wake = Wake(srange)
         try:
             wakecomp = numpy.broadcast_to(wakecomp, (nelems, ))
             length = numpy.broadcast_to(length, (nelems, ))
