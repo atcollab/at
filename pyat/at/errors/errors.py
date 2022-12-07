@@ -128,7 +128,8 @@ def enable_errors(ring):
 def _apply_errors(func) -> Callable:
     @functools.wraps(func)
     def wrapper(ring, *args, **kwargs):
-        ring = enable_errors(ring)
+        if not getattr(ring, '_has_errors', False):
+            ring = enable_errors(ring)
         refpts = kwargs.get('refpts', None)
         if func is lattice_pass:
             rout = func(ring, *args, **kwargs)
