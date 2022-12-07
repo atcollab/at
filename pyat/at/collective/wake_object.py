@@ -168,9 +168,10 @@ class Wake(object):
             raise AtError('Invalid WakeComponent: {}'.format(wcomp))
 
     def _reswall(self, wcomp, length, rvac, conduct, beta, yokoya_factor=1):
-        if numpy.any(self._srange <= 0):
+    
+        if numpy.amin(self._srange) < 0:
             raise ValueError("""
-                            Provided srange has negative values or 0.
+                            Provided srange has negative values.
                             This is not allowed for the resistive wall
                             wake function. Please correct.
                             """)
