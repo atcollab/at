@@ -151,14 +151,11 @@ class Wake(object):
                             wake function. Please correct.
                             """)
 
-        # It is needed to have a point at 0 to sample properly the
-        # discontinuity in the longitudinal plane
-        if not numpy.any(self._srange == 0):
-            self._srange = numpy.concatenate(([0], self._srange))
+        # It is needed to have a point at 0 and 1e-24 to sample properly
+        # the discontinuity in the longitudinal plane
 
-        # This is needed to avoid interpolation issues close to 0
-        self._srange = numpy.sort(numpy.concatenate(([1e-24],
-                                                    self._srange)))
+        self._srange = numpy.unique(numpy.concatenate(([0.0, 1e-24],
+                                                        self._srange)))
 
         if wcomp is WakeComponent.Z:
             return long_resonator_wf(self._srange, frequency,
@@ -177,6 +174,13 @@ class Wake(object):
                             This is not allowed for the resistive wall
                             wake function. Please correct.
                             """)
+
+        # It is needed to have a point at 0 and 1e-24 to sample properly
+        # the discontinuity in the longitudinal plane (if combining with
+        # longres)
+        self._srange = numpy.unique(numpy.concatenate(([0.0, 1e-24],
+                                                       self._srange)))
+
         if wcomp is WakeComponent.Z:
             raise AtError('Resitive wall not available '
                           'for WakeComponent: {}'.format(wcomp))

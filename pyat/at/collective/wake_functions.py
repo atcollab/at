@@ -93,5 +93,7 @@ def transverse_reswall_wf(srange, yokoya_factor, length, rvac, conduct, beta):
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *
             numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
-
+            
+    wake[srange <= 0] = 0.0
+    
     return wake
