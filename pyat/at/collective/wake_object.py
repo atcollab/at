@@ -62,7 +62,9 @@ class Wake(object):
     Components may be retrieved using :code:`wake.DX` for example
     """
     def __init__(self, srange):
-        self._srange = numpy.unique(srange)
+        assert len(srange) == len(numpy.unique(srange)), \
+            "srange must contain unique values"            
+        self._srange = srange
         self.components = {WakeComponent.DX: None,
                            WakeComponent.DY: None,
                            WakeComponent.QX: None,
