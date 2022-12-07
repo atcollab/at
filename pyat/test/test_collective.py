@@ -4,7 +4,7 @@ import pytest
 from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
-from at.collective import add_beamloading, remove_beamloading
+from at.collective import add_beamloading, remove_beamloading, BLMode
 
 
 _issorted = lambda a: numpy.all(a[:-1] <= a[1:])
@@ -113,7 +113,7 @@ def test_track_beamloading(hmba_lattice):
     ring = hmba_lattice.radiation_on(copy=True)
     rin0 = numpy.zeros(6)
     at.lattice_pass(ring, rin0, refpts=[])
-    add_beamloading(ring, 44e3, 400)
+    add_beamloading(ring, 44e3, 400, mode=BLMode.WAKE)
     rin1 = numpy.zeros(6)
     at.lattice_pass(ring, rin1, refpts=[])    
     assert_close(rin0, rin1, atol=1e-21)
