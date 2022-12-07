@@ -1,8 +1,7 @@
 import at
 import numpy
-from numpy.testing import assert_allclose as assert_close
-import unittest
 import pytest
+from numpy.testing import assert_allclose as assert_close
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
 from at.collective import add_beamloading, remove_beamloading
@@ -107,4 +106,26 @@ def test_beamloading(hmba_lattice):
     remove_beamloading(ring)
     cavs = ring.get_elements(at.RFCavity)  
     for cav in cavs:
-        assert cav.PassMethod == 'RFCavityPass'    
+        assert cav.PassMethod == 'RFCavityPass' 
+    
+        
+def test_track_beamloading(hmba_lattice):
+    ring = hmba_lattice.radiation_on(copy=True)
+    rin0 = numpy.zeros(6)
+    at.lattice_pass(ring, rin0, refpts=[])
+    add_beamloading(ring, 44e3, 400)
+    rin1 = numpy.zeros(6)
+    at.lattice_pass(ring, rin1, refpts=[])    
+    assert_close(rin0, rin1, atol=1e-21)
+    ring.set_fillpattern(2)
+    ring.beam_current = 0.2
+    rin = numpy.zeros((6,1))
+    with pytest.raises(Exception):
+        at.lattice_pass(ring, rin, refpts=[])
+    rin = numpy.zeros((6,2))
+    at.lattice_pass(ring, rin, refpts=[])
+    assert_close(rin[:,0], numpy.array([-2.318948e-08, -1.599715e-09,
+                                        0.000000e+00,  0.000000e+00,
+                                        -1.313306e-05, -1.443748e-08]
+                                        ), atol=1e-10)
+    
