@@ -1,13 +1,15 @@
 """AT plotting functions"""
 from typing import Tuple
-from at.lattice import Lattice
+from at.lattice import Lattice, coord_descr
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import numpy
 from numpy import ndarray
+from math import sqrt
 
 
 # Function to compute and plot acceptance
-def plot_acceptance(ring: Lattice, *args, **kwargs):
+def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
     # noinspection PyUnresolvedReferences
     r"""Plots the acceptance
 
@@ -17,13 +19,13 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
 
     Parameters:
         ring:           Lattice definition
-
-    Keyword Args:
-        acceptance(Tuple[ndarray, ndarray, ndarray]): Tuple containing
-          pre-computed acceptance ``(boundary, survived, grid)``
         planes:         max. dimension 2, Plane(s) to scan for the acceptance.
           Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
           ``'yp'``, ``'dp'``, ``'ct'``
+
+    Keyword Args:
+        acceptance (Tuple[ndarray, ndarray, ndarray]): Tuple containing
+          pre-computed acceptance *(boundary, survived, grid)*
         npoints:        (len(planes),) array: number of points in each
           dimension
         amplitudes:     (len(planes),) array: set the search range:
@@ -48,7 +50,7 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
           * :py:attr:`.GridMode.RECURSIVE`: radial recursive search
         use_mp (bool):      Use python multiprocessing (:py:func:`.patpass`,
           default use :py:func:`.lattice_pass`). In case multiprocessing is not
-          enabled, ``grid_mode`` is forced to :py:attr:`.GridMode.RECURSIVE`
+          enabled, *grid_mode* is forced to :py:attr:`.GridMode.RECURSIVE`
           (most efficient in single core)
         verbose (bool):     Print out some information
         divider (int):      Value of the divider used in
@@ -71,10 +73,6 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
         >>> ring.plot_acceptance(planes, npoints, amplitudes)
         >>> plt.show()
     """
-
-    units = {'x': '[m]', 'xp': '[rad]', 'y': '[m]',
-             'yp': '[rad]', 'dp': '', 'ct': '[m]'}
-
     obspt = kwargs.pop('obspt', None)
     block = kwargs.pop('block', False)
     acceptance = kwargs.pop('acceptance', None)
@@ -82,60 +80,95 @@ def plot_acceptance(ring: Lattice, *args, **kwargs):
         assert numpy.isscalar(obspt), 'Scalar value needed for obspt'
     kwargs['refpts'] = obspt
     if acceptance is None:
-        boundary, survived, grid = ring.get_acceptance(*args, **kwargs)
+        boundary, survived, grid = ring.get_acceptance(planes, *args, **kwargs)
     else:
         boundary, survived, grid = acceptance
-    planes = args[0]
     plt.figure()
     plt.plot(*grid, '.', label='Tracked particles')
     plt.plot(*survived, '.', label='Survived particles')
     if len(planes) == 1:
+        pl0, = coord_descr(planes[0])
         plt.plot(boundary, numpy.zeros(2), label='Acceptance')
-        plt.title('1D {0} acceptance'.format(planes[0]))
-        plt.xlabel('{0} {1}'.format(planes[0], units[planes[0]]))
+        plt.title('1D {0} acceptance'.format(pl0['label']))
+        plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
     else:
+        pl0, pl1 = coord_descr(*planes)
         plt.plot(*boundary, label='Acceptance')
-        plt.title('2D {0} {1} acceptance'.format(planes[0], planes[1]))
-        plt.xlabel('{0} {1}'.format(planes[0], units[planes[0]]))
-        plt.ylabel('{0} {1}'.format(planes[1], units[planes[1]]))
+        plt.title('2D {0}-{1} acceptance'.format(pl0['label'], pl1['label']))
+        plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
+        plt.xlabel('{0}{1}'.format(pl1['label'], pl1['unit']))
     plt.legend()
     plt.show(block=block)
     return boundary, survived, grid
 
 
-def plot_geometry(ring: Lattice, start_coordinates=(0, 0, 0),
-                  centered=False, ax=None, label=''):
-    """Compute the 2D ring geometry in cartesian coordinates.
-    
-    Usage:
-    
-    .. code-block:: python
-    
-       ring.plot_geometry()
+def plot_geometry(ring: Lattice,
+                  start_coordinates: Tuple[float, float, float] = (0, 0, 0),
+                  centered: bool = False, ax: Axes = None, **kwargs):
+    """Compute and plot the 2D ring geometry in cartesian coordinates.
 
     Parameters:
         ring: Lattice description
         start_coordinates: x,y,angle at starting point
         centered: it True the coordinates origin is the center of the ring
-        offset: (dx, dy) offsets coordinates by the given amount
-        ax: axes where to plot, if not given axes are created
-        label: label of curve
+        ax: axes for the plot. If not given, new axes are created
+
+    Keyword arguments are forwarded to the underlying
+    :py:func:`~matplotlib.pyplot.plot` function
 
     Returns:
         geomdata: recarray containing, x, y, angle
         radius: machine radius
         ax: plot axis
+
+    Example:
+        >>> ring.plot_geometry()
     """
     if not ax:
         fig, ax = plt.subplots()
     geom, radius = ring.get_geometry(start_coordinates=start_coordinates,
                                      centered=centered)
-    ax.plot(geom['x'], geom['y'], 'o:', linewidth=0.5, markersize=2,
-            label=label)
+    ax.plot(geom['x'], geom['y'], 'o:',
+            linewidth=kwargs.pop('linewidth', 0.5),
+            markersize=kwargs.pop('markersize', 2),
+            **kwargs)
     ax.set_xlabel('x [m]')
     ax.set_ylabel('y [m]')
     ax.set_aspect('equal', 'box')
     return geom, radius, ax
+
+
+def plot_sigma(sigma, axis: Tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
+               ax: Axes = None, **kwargs):
+    r"""Plot the phase space for the given :math:`\Sigma`-matrix
+
+    Arguments:
+        sigma:  :math:`\Sigma`-matrix
+        axis:   tuple if indices defining the plane of the :math:`\Sigma`
+          projection. Default: ('x', 'xp')
+        scale:  Scaling factor for the emittance
+        ax: axes for the plot. If not given, new axes are created
+
+    Keyword arguments are forwarded to the underlying
+    :py:func:`~matplotlib.pyplot.plot` function
+    """
+    if not ax:
+        fig, ax = plt.subplots()
+    ax1, ax2 = coord_descr(*axis)
+    axid = coord_descr(*axis, key='index')
+    sig22 = sigma[numpy.ix_(axid, axid)]
+    eps = sqrt(sig22[0, 0] * sig22[1, 1] - sig22[1, 0] * sig22[0, 1])
+    sigx = sqrt(sig22[0, 0])
+    tr = numpy.array([[sigx, 0.0],
+                      [sig22[0, 1] / sigx, eps / sigx]])
+    loop = 2.0 * numpy.pi * numpy.arange(0.0, 1.0, 0.001)
+    normcoord = numpy.vstack((numpy.cos(loop), numpy.sin(loop)))
+    coord = tr @ normcoord
+    line = ax.plot(scale*coord[0, :], scale*coord[1, :], **kwargs)
+    ax.set_title('{0}-{1} phase space'.format(ax1['label'], ax2['label']))
+    ax.set_xlabel('{0}{1}'.format(ax1['label'], ax1['unit']))
+    ax.set_ylabel('{0}{1}'.format(ax2['label'], ax2['unit']))
+    return line
 
 
 Lattice.plot_acceptance = plot_acceptance

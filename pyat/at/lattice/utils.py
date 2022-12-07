@@ -30,7 +30,8 @@ Uint32Refpts = numpy.ndarray
 Key = Union[type, Element, str]
 
 
-__all__ = ['AtError', 'AtWarning', 'check_radiation', 'check_6d',
+__all__ = ['AtError', 'AtWarning', 'coord_descr',
+           'check_radiation', 'check_6d',
            'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
@@ -40,6 +41,17 @@ __all__ = ['AtError', 'AtWarning', 'check_radiation', 'check_6d',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
            'get_geometry']
 
+_coord_def = dict(
+    x=dict(index=0, label="x", unit=" [m]"),
+    xp=dict(index=1, label="x'", unit=" [rad]"),
+    y=dict(index=2, label="y", unit=" [m]"),
+    yp=dict(index=3, label="y'", unit=" [rad]"),
+    dp=dict(index=4, label=r"$\delta$", unit=""),
+    ct=dict(index=5, label=r"$\beta c \tau$", unit=" [m]"),
+)
+for vvv in [vv for vv in _coord_def.values()]:
+    _coord_def[vvv['index']] = vvv
+
 
 class AtError(Exception):
     pass
@@ -47,6 +59,56 @@ class AtError(Exception):
 
 class AtWarning(UserWarning):
     pass
+
+
+# noinspection PyIncorrectDocstring
+def coord_descr(*args, key=None) -> Tuple:
+    r"""coord_descr(coord [ ,coord], key=None)
+
+    Return a tuple containing for each input argument the requested information
+
+    Parameters:
+        coord (Union[int, str]):    either an index in 0:6 or a string in
+          ['x', 'xp', 'y', 'yp', 'dp', 'ct']
+        key:                        key in the coordinate description
+          dictionary, selecting the desired information. One of :
+
+          'index'
+            index in the standard AT coordinate vector
+          'label'
+            label for plot annotation
+          'unit'
+            coordinate unit
+          :py:obj:`None`
+            entire description dictionary
+
+    Returns:
+        descr (Tuple): requested information for each input argument.
+
+    Examples:
+
+        >>> coord_descr('x','dp', key='index')
+        (0, 4)
+
+        returns the indices in the standard coordinate vector
+
+        >>> dpunit, = coord_descr('dp', key='label')
+        >>> print(dpunit)
+        $\delta$
+
+        returns the coordinate label for plot annotation
+
+        >>> coord_descr('x','dp')
+        ({'idx': 0, 'label': 'x', 'unit': ' [m]'},
+         {'idx': 4, 'label': '$\\delta$', 'unit': ''})
+
+        returns the entire description directories
+
+    """
+    if key is None:
+        return tuple(_coord_def[k] for k in args)
+    else:
+        return tuple(_coord_def[k][key] for k in args)
 
 
 def check_radiation(rad: bool) -> Callable:
@@ -886,8 +948,9 @@ def get_geometry(ring: List[Element],
 
     Parameters:
         ring: Lattice description
-        start_coordinates: x,y,angle at starting point
-        centered: it True the coordinates origin is the center of the ring
+        start_coordinates: x ,y, angle at starting point
+        centered: if :py:obj:`True` the coordinates origin is the center of
+          the ring
 
     Returns:
         geomdata: recarray containing, x, y, angle
