@@ -3,6 +3,8 @@ from at import radiation_parameters
 from at.constants import clight, qe
 from scipy.interpolate import interp1d
 import time
+from at.collective import Wake
+from at.lattice import Lattice
 
 
 class Haissinski(object):
