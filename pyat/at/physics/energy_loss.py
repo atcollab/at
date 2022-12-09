@@ -6,6 +6,7 @@ import numpy
 from scipy.optimize import least_squares
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
 from at.lattice import check_radiation, AtError, AtWarning
+from at.lattice import QuantumDiffusion, Collective
 from at.lattice import checktype, set_value_refpts, get_cells, refpts_len
 from at.constants import clight, Cgamma
 from at.tracking import lattice_pass
@@ -68,13 +69,7 @@ def get_energy_loss(ring: Lattice,
     def tracking(ring):
         """Losses from tracking
         """
-        ringtmp = ring.radiation_off(dipole_pass=None,
-                                     quadrupole_pass=None,
-                                     wiggler_pass=None,
-                                     sextupole_pass=None,
-                                     octupole_pass=None,
-                                     copy=True)
-
+        ringtmp = ring.disable_6d(RFCavity, QuantumDiffusion, Collective, copy=True)
         o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
                            refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
@@ -140,7 +135,6 @@ def get_timelag_fromU0(ring: Lattice,
     freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
     tl0 = numpy.array([cav.TimeLag for cav in ring.select(cavpts)])
-
     try:
         frf = singlev(freq)
         tml = singlev(tl0)
@@ -148,15 +142,17 @@ def get_timelag_fromU0(ring: Lattice,
         ctmax = clight/numpy.amin(freq)/2
         tt0 = tl0[numpy.argmin(freq)]
         bounds = (-ctmax, ctmax)
-        args = (freq,rfv,tl0,u0)
+        args = (freq, rfv, tl0, u0)
         r = []
         for i in range(divider):
             fact = (i+1)/divider
-            r.append(least_squares(eq,bounds[0]*fact+tt0, args=args, bounds=bounds+tt0))
-            r.append(least_squares(eq,bounds[1]*fact+tt0, args=args, bounds=bounds+tt0))
+            r.append(least_squares(eq, bounds[0]*fact+tt0,
+                                   args=args, bounds=bounds+tt0))
+            r.append(least_squares(eq, bounds[1]*fact+tt0,
+                                   args=args, bounds=bounds+tt0))
         res = numpy.array([abs(ri.fun[0]) for ri in r])
         ok = res < 1.0e-6
-        vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])    
+        vals = numpy.array([abs(ri.x[0]).round(decimals=6) for ri in r])
         if not numpy.any(ok):
             raise AtError('No solution found for Phis, please check '
                           'RF settings')

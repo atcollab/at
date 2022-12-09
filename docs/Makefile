@@ -15,6 +15,9 @@ help:
 
 .PHONY: help Makefile
 
+show:
+	@python -m webbrowser -n "file://$$(pwd)/$(BUILDDIR)/html/index.html"
+
 test:	Makefile
 	@$(SPHINXBUILD) -M $@ -d "$(BUILDDIR)/doctrees" "$(SOURCEDIR)" "$(HTMLDIR)" $(SPHINXOPTS) $(O)
 

@@ -90,7 +90,7 @@ classdef pytests < matlab.unittest.TestCase
             porbit6=double(porbit6)';
             % Matlab
             [~,morbit6]=findorbit6(lattice.m);
-            testCase.verifyEqual(morbit6,porbit6,AbsTol=1.E-15 );
+            testCase.verifyEqual(morbit6,porbit6,AbsTol=5.E-15 );
         end
 
         function m44(testCase,lat2,dp)
@@ -101,7 +101,7 @@ classdef pytests < matlab.unittest.TestCase
             a2=cell(lattice.p.find_m44(dp));
             [pm44,~]=deal(a2{:});
             pm44=double(pm44);
-            testCase.verifyEqual(mm44,pm44,AbsTol=2.e-9);
+            testCase.verifyEqual(mm44,pm44,AbsTol=3.e-9);
         end
 
         function m66(testCase,lat2)
@@ -129,7 +129,7 @@ classdef pytests < matlab.unittest.TestCase
             ptune=double(lattice.p.get_tune(pyargs(dp=dp)));
             pchrom=double(lattice.p.get_chrom(pyargs(dp=dp)));
             testCase.verifyEqual(mtune,ptune,AbsTol=2.e-9);
-            testCase.verifyEqual(mchrom,pchrom,AbsTol=2.e-4);
+            testCase.verifyEqual(mchrom,pchrom,AbsTol=3.e-4);
         end
 
         function tunechrom6(testCase,lat2,dp)

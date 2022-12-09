@@ -1,10 +1,15 @@
 #include "atelem.c"
 #include <math.h>
 #include <float.h>
+#include <complex.h>
 #ifdef MPI
 #include <mpi.h>
 #include <mpi4py/mpi4py.h>
 #endif
+
+
+#define TWOPI  6.28318530717959
+#define C0     2.99792458e8 
 
 
 int binarySearch(double *array,double value,int upper,int lower,int nStep){
@@ -48,12 +53,12 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
     for (i=0;i<nturns-1;i++){
         xtmp0 = turnhistory + i*nslice;
         xtmp = turnhistory + (i+1)*nslice;
-        ytmp0 = turnhistory + i*nslice+nslice*nturns;
-        ytmp = turnhistory + (i+1)*nslice+nslice*nturns;
-        ztmp0 = turnhistory + i*nslice+nslice*nturns*2;
-        ztmp = turnhistory + (i+1)*nslice+nslice*nturns*2;
-        wtmp0 = turnhistory + i*nslice+nslice*nturns*3;
-        wtmp = turnhistory + (i+1)*nslice+nslice*nturns*3;
+        ytmp0 = turnhistory + (i+nturns)*nslice;
+        ytmp = turnhistory + (i+nturns+1)*nslice;
+        ztmp0 = turnhistory + (i+2*nturns)*nslice;
+        ztmp = turnhistory + (i+2*nturns+1)*nslice;
+        wtmp0 = turnhistory + (i+3*nturns)*nslice;
+        wtmp = turnhistory + (i+3*nturns+1)*nslice;
         for(ii=0;ii<nslice;ii++){
             xtmp0[ii]=xtmp[ii];
             ytmp0[ii]=ytmp[ii];
@@ -65,9 +70,9 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
     /*Now set last row to 0 (present slices)*/
     
     xtmp = turnhistory + (nturns-1)*nslice;
-    ytmp = turnhistory + (nturns-1)*nslice+nslice*nturns;
-    ztmp = turnhistory + (nturns-1)*nslice+nslice*nturns*2;
-    wtmp = turnhistory + (nturns-1)*nslice+nslice*nturns*3; 
+    ytmp = turnhistory + (2*nturns-1)*nslice;
+    ztmp = turnhistory + (3*nturns-1)*nslice;
+    wtmp = turnhistory + (4*nturns-1)*nslice; 
     for(ii=0;ii<nslice;ii++){
         xtmp[ii]=0.0;
         ytmp[ii]=0.0;
@@ -77,98 +82,127 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
 };
 
 
-
-double *getbounds(double *r_in,int num_particles){
+void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
+               double *smax, double *z_cuts){
     double *rtmp;
-    int i;
-    static double bounds[2];
-    double smin= DBL_MAX;
-    double smax= -DBL_MAX;
-    /*First find the min and the max of the distribution*/  
-    for (i=0;i<num_particles;i++) {
-        rtmp = r_in+i*6;
-        if (!atIsNaN(rtmp[0])) {
-            register double ct = rtmp[5];
-            if (ct>smax) smax = ct;
-            if (ct<smin) smin = ct;
+    int i, ib;
+    if(z_cuts){
+        for(i=0;i<nbunch; i++){
+            smin[i] = z_cuts[0];
+            smax[i] = z_cuts[1];
+        }
+    }else{
+        for(i=0;i<nbunch; i++){
+            smin[i] = DBL_MAX;
+            smax[i] = -DBL_MAX;
+        }
+        /*First find the min and the max of the distribution*/  
+        for (i=0;i<num_particles;i++) {
+            rtmp = r_in+i*6;
+            ib = i%nbunch;
+            if (!atIsNaN(rtmp[0])) {
+                register double ct = rtmp[5];
+                if (ct>smax[ib]) smax[ib] = ct;
+                if (ct<smin[ib]) smin[ib] = ct;
+            }
+        }
+
+        #ifdef MPI
+        MPI_Allreduce(MPI_IN_PLACE,smin,nbunch,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE,smax,nbunch,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
+        MPI_Barrier(MPI_COMM_WORLD);
+        #endif
+
+        for(i=0;i<nbunch;i++){
+            if(smin[i]==smax[i]){
+                smin[i] -= 1.0e-12;
+                smax[i] += 1.0e-12;
+            }
         }
     }
-
-    #ifdef MPI
-    MPI_Allreduce(MPI_IN_PLACE,&smin,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,&smax,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD); 
-    MPI_Barrier(MPI_COMM_WORLD);
-    #endif
-
-    bounds[0]=smin;
-    bounds[1]=smax;
-    return bounds;
 }
 
 
 void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
+                 int nbunch,double *bunch_spos,double *bunch_currents,
                  double *turnhistory,int *pslice,double *z_cuts){
     
-    int i,ii;
+    int i,ii,ib;
     double *rtmp;
+    
+    double *smin = malloc(nbunch*sizeof(double));
+    double *smax = malloc(nbunch*sizeof(double));
+    double *hz = malloc(nbunch*sizeof(double));
+    double *np_bunch = malloc(nbunch*sizeof(double));
+    getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts);     
+    
+    for(i=0;i<nbunch;i++){
+        hz[i] = (smax[i]-smin[i])/(nslice);
+        np_bunch[i] = 0.0;
+    }
 
-    double *bounds = z_cuts ? z_cuts : getbounds(r_in,num_particles); 
-    double smin = bounds[0];
-    double smax = bounds[1];
-
-    double hz = (smax-smin)/(nslice);
-    double *xpos = turnhistory + (nturns-1)*nslice;
-    double *ypos = turnhistory + (nturns-1)*nslice+nslice*nturns;
-    double *zpos = turnhistory + (nturns-1)*nslice+nslice*nturns*2;
-    double *weight = turnhistory + (nturns-1)*nslice+nslice*nturns*3;
+    double *xpos = turnhistory + (nturns-1)*nslice*nbunch;
+    double *ypos = turnhistory + (2*nturns-1)*nslice*nbunch;
+    double *zpos = turnhistory + (3*nturns-1)*nslice*nbunch;
+    double *weight = turnhistory + (4*nturns-1)*nslice*nbunch;
 
 
     /*slices sorted from head to tail (increasing ct)*/
     for (i=0;i<num_particles;i++) {
         rtmp = r_in+i*6;
+        ib = i%nbunch;
+        np_bunch[ib] += 1.0;
         if (!atIsNaN(rtmp[0])) {
             register double x = rtmp[0];
             register double y = rtmp[2];
             register double ct = rtmp[5];
-            if (ct < smin) {
-                pslice[i] = 0;
+            if (ct < smin[ib]) {
+                pslice[i] = ib*nslice;
             }
-            else if (ct >= smax) {
-                pslice[i] = nslice-1;
+            else if (ct >smax[ib]){
+                pslice[i] = nslice-1 + ib*nslice;
             }
-            else {
-                ii = (int)floor((ct-smin)/hz);
+            else if (ct == smax[ib]){
+                ii = nslice-1 + ib*nslice;
                 weight[ii] += 1.0;
                 xpos[ii] += x;
                 ypos[ii] += y;
                 zpos[ii] += ct;
-                pslice[i] = ii;                
+                pslice[i] = ii; 
+            }
+            else {
+                ii = (int)(floor((ct-smin[ib])/hz[ib])) + ib*nslice;
+                weight[ii] += 1.0;
+                xpos[ii] += x;
+                ypos[ii] += y;
+                zpos[ii] += ct;
+                pslice[i] = ii;              
             }
         }
     }
 
-
-    double np_total = (double)num_particles;
-
     #ifdef MPI
-    int mpsize;
-    MPI_Comm_size(MPI_COMM_WORLD,&mpsize); 
-    np_total *= (double)mpsize;      
-    MPI_Allreduce(MPI_IN_PLACE,xpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,ypos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,zpos,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Allreduce(MPI_IN_PLACE,weight,nslice,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,np_bunch,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);      
+    MPI_Allreduce(MPI_IN_PLACE,xpos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,ypos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,zpos,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,weight,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
     /*Compute average x/y position and weight of each slice */
-    for (i=0;i<nslice;i++) {
-        zpos[i] =  (weight[i]>0.0) ? zpos[i]/weight[i] : (smin + (i+0.5)*hz);
+    for (i=0;i<nslice*nbunch;i++) {
+        ib = (int)(i/nslice);
+        zpos[i] =  (weight[i]>0.0) ? zpos[i]/weight[i] : smin[ib]+(i%nslice+0.5)*hz[ib];
+        zpos[i] += bunch_spos[ib]-bunch_spos[nbunch-1];
         xpos[i] =  (weight[i]>0.0) ? xpos[i]/weight[i] : 0.0;
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
-        weight[i] /= np_total;
+        weight[i] *= bunch_currents[ib]/np_bunch[ib];
     } 
-
+    free(np_bunch);
+    free(smin);
+    free(smax);
+    free(hz);
 };
 
 void compute_kicks(int nslice,int nturns,int nelem,
@@ -201,11 +235,11 @@ void compute_kicks(int nslice,int nturns,int nelem,
         if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
             for (ii=0;ii<nslice*nturns;ii++){
                 ds = turnhistoryZ[i]-turnhistoryZ[ii];
-                if(turnhistoryW[ii]>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
-                    wi = turnhistoryW[ii];
+                wi = turnhistoryW[ii];
+                if(wi>0.0 && ds>=waketableT[0] && ds<waketableT[nelem-1]){
                     dx = turnhistoryX[ii];
                     dy = turnhistoryY[ii];
-                    index = binarySearch(waketableT,ds,nelem,0,0);              
+                    index = binarySearch(waketableT,ds,nelem,0,0);          
                     if(waketableDX)kx[i-nslice*(nturns-1)] += dx*normfact[0]*wi*getTableWake(waketableDX,waketableT,ds,index);
                     if(waketableDY)ky[i-nslice*(nturns-1)] += dy*normfact[1]*wi*getTableWake(waketableDY,waketableT,ds,index);
                     if(waketableQX)kx2[i-nslice*(nturns-1)] += normfact[0]*wi*getTableWake(waketableQX,waketableT,ds,index);
@@ -226,4 +260,183 @@ void compute_kicks(int nslice,int nturns,int nelem,
 };
 
 
+double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta) {
 
+    double omega, alpha, omegabar;
+    double *wake = malloc(2*sizeof(double));
+    wake[0] = 0.0;
+    wake[1] = 0.0;
+    double dt;
+    
+    omega = TWOPI * freqres;
+    alpha = omega / (2 * qfactor);
+    omegabar = sqrt(fabs(omega*omega - alpha*alpha));
+    
+    dt = -ds/(beta * C0);      
+             
+    if (dt==0) {
+        wake[0] = rshunt * alpha;
+        wake[1] = 0.0;
+    } else if (dt<0) {
+        if (qfactor > 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cos(omegabar * dt) + \
+                      alpha / omegabar * sin(omegabar*dt));
+            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sin(omegabar * dt) - \
+                      alpha / omegabar * cos(omegabar*dt));
+        } else if (qfactor == 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (1. + alpha * dt);
+            wake[1] = 0.0;
+        } else if (qfactor < 0.5) {
+            wake[0] = 2 * rshunt * alpha * exp(alpha * dt) * (cosh(omegabar * dt) + \
+                      alpha / omegabar * sinh(omegabar * dt)); 
+            wake[1] = 2 * rshunt * alpha * exp(alpha * dt) * (sinh(omegabar * dt) - \
+                      alpha / omegabar * cosh(omegabar*dt));
+        }       
+    } else {
+        wake[0] = 0.0;
+        wake[1] = 0.0;
+    }            
+    return wake;
+}
+
+
+void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
+                           double *kz,double freq, double qfactor, double rshunt,
+                           double beta, double *vbeamk, double energy, double *vbunch) {
+
+    int rank=0;
+    int size=1;
+    int i,ii,ib;
+    double ds,wi;
+    double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
+    double *wake = malloc(2*sizeof(double));
+    double vba, vbp;
+    double *vbr = vbunch;
+    double *vbi = vbunch+nbunch;
+
+    for (i=0;i<nslice*nbunch;i++) {
+        ib = (int)(i/nslice);
+        kz[i]=0.0;
+        vbr[ib] = 0.0;
+        vbi[ib] = 0.0;
+    }
+
+    vbeamk[0] = 0.0;
+    vbeamk[1] = 0.0;
+    wake[0] = 0.0;
+    wake[1] = 0.0;
+
+
+    #ifdef MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    #endif
+    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){  
+        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+        if(turnhistoryW[i]>0.0 && rank==(i+size)%size){
+            for (ii=0;ii<nslice*nbunch*nturns;ii++){
+                ds = turnhistoryZ[i]-turnhistoryZ[ii];
+                if(turnhistoryW[ii]>0.0 && ds>=0){
+                    wi = turnhistoryW[ii];
+                    wake = wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta);       
+                    kz[i-nslice*nbunch*(nturns-1)] += normfact*wi*wake[0];
+                    vbeamk[0] += normfact*wi*wake[0]*energy/nbunch;
+                    vbeamk[1] -= normfact*wi*wake[1]*energy/nbunch;
+                    vbr[ib] += normfact*wi*wake[0]*energy;
+                    vbi[ib] -= normfact*wi*wake[1]*energy;
+                }            
+            }
+        }
+    }
+    #ifdef MPI
+    MPI_Allreduce(MPI_IN_PLACE,kz,nslice*nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,vbeamk,2,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,vbr,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE,vbi,nbunch,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+    #endif
+    vba = sqrt(vbeamk[0]*vbeamk[0]+vbeamk[1]*vbeamk[1]);   
+    vbp = atan2(vbeamk[1],vbeamk[0]);
+    vbeamk[0] = vba;
+    vbeamk[1] = vbp;
+    for(i=0;i<nbunch;i++){
+        double vr = vbr[i];
+        double vi = vbi[i];
+        vbr[i] = sqrt(vr*vr+vi*vi); 
+        vbi[i] = atan2(vi,vr);
+    }
+    free(wake);
+};
+
+
+void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
+                          double normfact, double *kz,double freq, double qfactor,
+                          double rshunt, double *vbeam, double circumference,
+                          double energy, double beta, double *vbeamk, double *vbunch){  
+    #ifndef _MSC_VER  
+    int i,ib;
+    double wi;
+    double dt =0.0;
+    double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
+    double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
+    double omr = TWOPI*freq;
+    double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
+    double complex vbeamkc = 0.0;
+    double kick = rshunt*omr/(2*qfactor);
+    double bc = beta*C0;
+    double *vbr = vbunch;
+    double *vbi = vbunch+nbunch;
+    
+    for (i=0;i<nslice*nbunch;i++) {
+        ib = (int)(i/nslice);
+        kz[i]=0.0;
+        vbr[ib] = 0.0;
+        vbi[ib] = 0.0;
+    }
+    
+    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){
+        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+        wi = turnhistoryW[i];
+        if(i==nslice*nbunch*(nturns-1)){
+            dt = (circumference+turnhistoryZ[i])/bc;
+        }else{
+            dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
+        }      
+        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+        vbeamkc += vbeamc+normfact*wi*kick*energy;
+        vbr[ib] += creal(vbeamc+normfact*wi*kick*energy);
+        vbi[ib] += cimag(vbeamc+normfact*wi*kick*energy);
+        kz[i-nslice*nbunch*(nturns-1)] = creal(vbeamc/energy+normfact*wi*kick);
+        vbeamc += 2*normfact*wi*kick*energy;    
+    }
+    dt = -turnhistoryZ[nslice*nbunch*nturns-1]/bc;
+    vbeamc = vbeamc*cexp((I*omr-omr/(2*qfactor))*dt);
+    vbeam[0] = cabs(vbeamc);
+    vbeam[1] = carg(vbeamc); 
+    vbeamkc = vbeamkc/nslice/nbunch;
+    vbeamk[0] = cabs(vbeamkc);
+    vbeamk[1] = carg(vbeamkc);   
+    
+    for(i=0;i<nbunch;i++){
+        double vr = vbr[i]/nslice;
+        double vi = vbi[i]/nslice;
+        vbr[i] = sqrt(vr*vr+vi*vi); 
+        vbi[i] = atan2(vi,vr);
+    }
+    #endif    
+};
+
+
+void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
+    double vbeamr = vbeam[0]*cos(vbeam[1]);
+    double vbeami = vbeam[0]*sin(vbeam[1]);
+    double vcavr = vcav[0]*cos(vcav[1]);
+    double vcavi = vcav[0]*sin(vcav[1]);   
+    double vgenr = vcavr - vbeamr;
+    double vgeni = vcavi - vbeami; 
+    double vga = sqrt(vgenr*vgenr+vgeni*vgeni);   
+    double vgp = atan2(vgeni,vgenr)-vcav[1];
+    vgen[0] += (vga-vgen[0])*voltgain;
+    vgen[1] += (vgp-vgen[1])*phasegain;
+}

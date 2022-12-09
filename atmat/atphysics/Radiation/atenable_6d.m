@@ -107,7 +107,7 @@ end
         function elem=varelem(elem)
             % 'auto' multipole modification
             if ~(endsWith(elem.PassMethod,'RadPass') || (isfield(elem,'BendingAngle') && elem.BendingAngle == 0))
-                elem.PassMethod=strrep(elem.PassMethod,'Pass','RadPass');
+                elem.PassMethod=strrep(strrep(elem.PassMethod,'QuantPass','Pass'),'Pass','RadPass');
                 elem.Energy=energy;
             end
         end

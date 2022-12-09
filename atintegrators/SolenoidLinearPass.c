@@ -1,7 +1,7 @@
 /* SolenoidLinearPass.c 
    Accelerator Toolbox 
    Revision 7/17/03
-   A.Terebilo terebilo@slac.stanford.edu
+   A.Terebilo
 */
 
 #include "atelem.c"

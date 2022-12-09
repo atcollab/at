@@ -14,6 +14,6 @@ function [rsrc,varargout] = decodeatargs(default_values,args)
 %  See also getoption, getflag
 
 na=length(default_values);
-mandatory = @(arg) ~ischar(arg) || endsWith(arg, 'Pass');
+mandatory = @(arg) ~(ischar(arg) || isstring(arg)) || endsWith(arg, 'Pass');
 [varargout{1:na},rsrc]=getargs(args,default_values{:},'check',mandatory);
 end

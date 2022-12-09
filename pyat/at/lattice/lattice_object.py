@@ -193,12 +193,13 @@ class Lattice(list):
         kwargs.setdefault('_particle', Particle())
         # dummy initialization in case the harmonic number is not there
         kwargs.setdefault('_fillpattern', numpy.ones(1))
-        kwargs.setdefault('beam_current', 0.0)
         # Remove temporary keywords
         frequency = kwargs.pop('_frequency', None)
         cell_length = kwargs.pop('_length', None)
         cell_h = kwargs.pop('_harmnumber', math.nan)
         ring_h = kwargs.pop('harmonic_number', periodicity*cell_h)
+        bcurrent = kwargs.pop('beam_current', 0.0)
+        kwargs.setdefault('_beam_current', bcurrent)
 
         if 'energy' in kwargs:
             kwargs.pop('_energy', None)
@@ -214,7 +215,11 @@ class Lattice(list):
         if not (frequency is None or frequency == 0.0):
             rev = self.beta * clight / cell_length
             self._cell_harmnumber = int(round(frequency / rev))
-            self.set_fillpattern()
+            try:
+                fp = kwargs.pop('_fillpattern', numpy.ones(1))
+                self.set_fillpattern(bunches=fp)
+            except AssertionError:
+                self.set_fillpattern()
         elif not math.isnan(ring_h):
             self.harmonic_number = ring_h
 
@@ -291,6 +296,8 @@ class Lattice(list):
                 elem.Energy = self._energy
             elif hasattr(elem, 'Energy'):
                 del elem.Energy
+            elif hasattr(elem, '_turnhistory'):
+                elem.clear_history(self)
             length += getattr(elem, 'Length', 0.0)
             yield elem
 
@@ -404,7 +411,7 @@ class Lattice(list):
         Parameters:
             params:         Dictionary of Lattice attributes
             elem_filter:    Element filter
-            *args:          Arguments provided to ``elem_filter``
+            *args:          Arguments provided to *elem_filter*
         """
         for key in self._std_attributes:
             try:
@@ -415,7 +422,8 @@ class Lattice(list):
 
     @property
     def s_range(self) -> Union[None, Tuple[float, float]]:
-        """Range of interest: (s_min, s_max). ``None`` means the full cell."""
+        """Range of interest: (s_min, s_max). :py:obj:`None` means
+          the full cell."""
         try:
             return self._s_range
         except AttributeError:
@@ -466,13 +474,58 @@ class Lattice(list):
         self._energy = energy
 
     @property
+    def cell_length(self) -> float:
+        """Cell length (1 cell) [m]
+
+        See Also:
+
+            :py:meth:`circumference`.
+        """
+        return self.get_s_pos(len(self))[0]
+
+    @property
+    def cell_revolution_frequency(self) -> float:
+        """Revolution frequency for 1 cell [Hz]
+
+        See Also:
+
+            :py:meth:`revolution_frequency`.
+        """
+        beta = self.beta
+        return beta * clight / self.cell_length
+
+    @property
+    def cell_harmnumber(self) -> float:
+        """Harmonic number per cell
+
+        See Also:
+
+            :py:meth:`harmonic_number`.
+        """
+        try:
+            return self._cell_harmnumber
+        except AttributeError:
+            raise AttributeError('harmonic_number undefined: '
+                                 'No cavity found in the lattice') from None
+
+    @property
     def circumference(self) -> float:
-        """Ring circumference (full self) [m]"""
+        """Ring circumference (full ring) [m]
+
+        See Also:
+
+            :py:meth:`cell_length`.
+        """
         return self.periodicity * self.get_s_pos(len(self))[0]
 
     @property
     def revolution_frequency(self) -> float:
-        """Revolution frequency (fullring) [Hz]"""
+        """Revolution frequency (full ring) [Hz]
+
+        See Also:
+
+            :py:meth:`cell_revolution_frequency`.
+        """
         beta = self.beta
         return beta * clight / self.circumference
 
@@ -487,6 +540,15 @@ class Lattice(list):
             self._particle = particle
         else:
             self._particle = Particle(particle)
+
+    def set_wake_turnhistory(self):
+        """Function to reset the shape of the turn history
+        in collective elements based on the number of slices,
+        turns and bunches
+        """
+        for e in self:
+            if e.is_collective:
+                e.clear_history(ring=self)
 
     def set_fillpattern(self, bunches: Union[int, numpy.ndarray] = 1):
         """Function to generate the filling pattern lof the ring.
@@ -528,6 +590,7 @@ class Lattice(list):
                 'bunches array can contain only positive numbers'
             fp = bunches
         self._fillpattern = fp/numpy.sum(fp)
+        self.set_wake_turnhistory()
 
     @property
     def fillpattern(self) -> numpy.ndarray:
@@ -550,6 +613,16 @@ class Lattice(list):
         return numpy.flatnonzero(self._fillpattern)
 
     @property
+    def beam_current(self):
+        return self._beam_current
+
+    @beam_current.setter
+    def beam_current(self, value, clear_history=True):
+        self._beam_current = value
+        if clear_history:
+            self.set_wake_turnhistory()
+
+    @property
     def bunch_currents(self) -> numpy.ndarray:
         """Bunch currents [A]"""
         return self.beam_current * \
@@ -558,7 +631,12 @@ class Lattice(list):
     @property
     def bunch_spos(self) -> numpy.ndarray:
         """Bunch position around the ring [m]"""
-        bs = self.circumference/len(self._fillpattern)
+        try:
+            circ = self.beta*clight* \
+                self.harmonic_number/self.rf_frequency
+        except AtError:
+            circ = self.circumference       
+        bs = circ/len(self._fillpattern)
         allpos = bs*numpy.arange(len(self._fillpattern))
         return allpos[self._fillpattern > 0]
 
@@ -569,7 +647,12 @@ class Lattice(list):
 
     @property
     def harmonic_number(self) -> int:
-        """Ring harmonic number (full self)"""
+        """Ring harmonic number (full ring)
+
+        See Also:
+
+            :py:meth:`cell_harmnumber`.
+        """
         try:
             return int(self.periodicity * self._cell_harmnumber)
         except AttributeError:
@@ -664,7 +747,7 @@ class Lattice(list):
 
         Parameters:
             elem_modify : element selection function.
-              If ``elem_modify(elem)`` returns ``None``, the element is
+              If ``elem_modify(elem)`` returns :py:obj:`None`, the element is
               unchanged. Otherwise, ``elem_modify(elem)`` must return a
               dictionary of attribute name and values, to be set to elem.
             copy:         If True, return a shallow copy of the lattice.
@@ -672,7 +755,8 @@ class Lattice(list):
               If False, the modification is done in-place
 
         Returns:
-            newring:    New lattice if copy is True, None if copy is False
+            newring:    New lattice if copy is :py:obj:`True`, :py:obj:`None`
+              if copy is :py:obj:`False`
 
         Keyword Arguments:
         """
@@ -814,7 +898,7 @@ class Lattice(list):
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
-              values for all elements (``None`` or 'auto')
+              values for all elements (:py:obj:`None` or 'auto')
             cavity_pass='auto':         PassMethod set on cavities
             dipole_pass='auto':         PassMethod set on dipoles
             quadrupole_pass='auto':     PassMethod set on quadrupoles
@@ -827,7 +911,7 @@ class Lattice(list):
               elements (:py:class:`.WakeElement`,...)
             diffusion_pass='auto':      PassMethod set on
               :py:class:`.QuantumDiffusion`
-            copy=False: If ``False``, the modification is done in-place,
+            copy=False: If :py:obj:`False`, the modification is done in-place,
               If ``True``, return a shallow copy of the lattice. Only the
               radiating elements are copied with PassMethod modified.
 
@@ -839,7 +923,7 @@ class Lattice(list):
 
         For PassMethod names, the convention is:
 
-        * ``None``:        No change
+        * :py:obj:`None`:        No change
         * 'auto':          Use the default conversion (replace \*Pass by
           \*RadPass)
         * anything else:   set as the new PassMethod
@@ -912,7 +996,7 @@ class Lattice(list):
 
         Keyword arguments:
             all_pass:                   PassMethod overloading the default
-              values for all elements (``None`` or 'auto')
+              values for all elements (:py:obj:`None` or 'auto')
             cavity_pass='auto':         PassMethod set on cavities
             dipole_pass='auto':         PassMethod set on dipoles
             quadrupole_pass=auto:       PassMethod set on quadrupoles
@@ -925,7 +1009,7 @@ class Lattice(list):
               elements (:py:class:`.WakeElement`,...)
             diffusion_pass='auto':      PassMethod set on
               :py:class:`.QuantumDiffusion`
-            copy=False: If ``False``, the modification is done in-place,
+            copy=False: If :py:obj:`False`, the modification is done in-place,
               If ``True``, return a shallow copy of the lattice. Only the
               radiating elements are copied with PassMethod modified.
 
@@ -937,7 +1021,7 @@ class Lattice(list):
 
         For PassMethod names, the convention is:
 
-        * ``None``:        no change
+        * :py:obj:`None`:        no change
         * 'auto':          Use the default conversion (replace \*RadPass by
           \*Pass)
         * anything else:   set as the new PassMethod
