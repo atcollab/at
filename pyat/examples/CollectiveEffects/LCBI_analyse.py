@@ -115,19 +115,15 @@ expected_mode = np.argmax(gr_theory)
 gr_peak = gr_theory[expected_mode]
 
 
-# Find the last turn in the data where there were no lost particles
-try:
-    tend = np.where(not resDict['lostturn'])[0][0]
-except:
-    tend = len(resDict['dp'])
-
 data_dp = resDict['dp'].T
 data_z = resDict['z'].T
 
 # Plot all data dp, just to see how it looks
 bbs = np.arange(0, Nbunches)
 for bb in bbs:
-    plt.plot(data_dp[bb, :tend])
+    plt.plot(data_dp[bb, :])
+plt.xlabel('Turn')
+plt.ylabel('dp/p')
 plt.show()
 
 # Here we use dp and z and combine with betaz into one complex number
@@ -135,10 +131,10 @@ plt.show()
 inv = np.array([[1/np.sqrt(betaz), 0],
                 [0, np.sqrt(betaz)]])
 
-data = np.zeros(data_dp[:, :tend].shape) + 1j * 0
+data = np.zeros(data_dp[:, :].shape) + 1j * 0
 for i in np.arange(data_dp.shape[0]):
-    dp = data_dp[i, :tend]
-    z = data_z[i, :tend]
+    dp = data_dp[i, :]
+    z = data_z[i, :]
     datpos, datmom = np.matmul(inv, [z, dp])
     data[i, :] = datpos + 1j * datmom
 

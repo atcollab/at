@@ -95,6 +95,12 @@ MODULE_DEF(BeamMomentsPass)        /* Dummy module initialisation */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     if (nrhs == 2) {
+    
+        double *r_in;
+        const mxArray *ElemData = prhs[0];
+        int num_particles = mxGetN(prhs[1]);
+        struct elem El, *Elem=&El;
+        
         double *means;
         double *stds; 
         means=atGetDoubleArray(ElemData,"_means"); check_error();
