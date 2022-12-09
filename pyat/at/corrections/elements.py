@@ -102,7 +102,7 @@ def  load_confs(rm, ring, oconf, vconf):
 
     rm.fullrm = rm.fullrm.reindex(index=rm.observables.conf.index)
     rm.fullrm = rm.fullrm.reindex(columns=rm.variables.conf.index)
-          
+             
       
 class Variable(object):
 
@@ -116,32 +116,32 @@ class Variable(object):
         self.args = args
         self.kwargs = kwargs
         self.ufun = False
+        self.index = index
         
         if getsetf is None:   
             assert refpts is not None, \
                 'repfts required for element variable'  
             assert attname is not None, \
                 'attname required for element variable'                             
-            self.setf, self.getf = self._access(index)
+            if index is None:
+                self.setf = setattr
+                self.getf = getattr
+            else:
+                self.setf = self._setf
+                self.getf = self._getf                            
         else:
             self.ufun = True
             self.setf, self.getf = getsetf
 
         super(Variable, self).__init__()     
         
-    @staticmethod
-    def _access(index):
-        """Access to element attributes"""
-        if index is None:
-            setf = setattr
-            getf = getattr
-        else:
-            def setf(elem, attrname, value):
-                getattr(elem, attrname)[index] = value
 
-            def getf(elem, attrname):
-                return getattr(elem, attrname)[index]
-        return setf, getf       
+    def _setf(self, elem, attrname, value):
+        getattr(elem, attrname)[self.index] = value
+
+
+    def _getf(self, elem, attrname):
+        return getattr(elem, attrname)[self.index]    
         
     def set(self, ring, value):
         if self.ufun:

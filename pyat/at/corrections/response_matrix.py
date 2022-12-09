@@ -3,8 +3,7 @@ Classes to compute arbitrary response matrices
 """
 import numpy
 import pandas
-#  needed -> ElementVariable.setv is not pickable
-import multiprocess as multiprocessing
+import multiprocessing
 from .elements import RMVariables, RMObservables
 from .elements import sum_polab, Observable, load_confs
 from functools import partial
@@ -146,8 +145,10 @@ class ElementResponseMatrix(object):
         var = numpy.array(self.variables.get(ring, mask))
         return obs, var
         
-    def _get_weights(self):
-        mask = self.observables.conf.index.isin(self.get_mat().index)
+    def _get_weights(self, mat=None):
+        if mat is None:
+            mat = self.get_mat()
+        mask = self.observables.conf.index.isin(mat.index)
         return numpy.concatenate(self.observables.conf.weight[mask].to_numpy()) 
         
     def svd(self, mat=None):
@@ -159,7 +160,7 @@ class ElementResponseMatrix(object):
         if mat is None:
             mat = self.get_mat()
         val, var = self.get_vals(ring, mat=mat)
-        weights = self._get_weights()
+        weights = self._get_weights(mat=mat)
         err = (val-target)
         U, W, V = self.svd(mat=mat.multiply(weights, axis=0))
         Winv = numpy.linalg.inv(numpy.diag(W))
