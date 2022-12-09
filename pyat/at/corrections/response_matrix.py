@@ -133,21 +133,29 @@ class OrbitResponseMatrix(ElementResponseMatrix):
                   'Y': ['Y', 'VST_SUM']}
     _MAT_VARS = {'X': ['HST', 'RF'], 'Y': ['VST']}         
 
-    def __init__(self, ring, bpms, steerers, cavities=None, sum_zero=True,
-                 deltax=1.0e-4, deltay=1.0e-4, **kwargs):
+    def __init__(self, ring, bpmx=None, steererx=None, bpmy=None, steerery=None,
+                 cavities=None, sum_zero=True, deltax=1.0e-4, deltay=1.0e-4,
+                 weightx=1, weighty=1, **kwargs):
         super(OrbitResponseMatrix, self).__init__(**kwargs)
-        self.set_bpms(ring, bpms)
-        self.set_steerers(ring, steerers, deltax, deltay, sum_zero)
+        assert (bpmx is not None and steererx is not None) or \
+                   (bpmy is not None and steererx is not None), \
+                       'Provide at least one bpm and steerer input (x or y)'
+        if bpmx is not None:
+            self.set_bpms(ring, bpmx, weightx, 0)
+        if bpmy is not None:
+            self.set_bpms(ring, bpmy, weighty, 2)
+        if steererx is not None:
+            self.set_steerers(ring, 'HST', 'PolynomB', steererx, deltax, sum_zero)
+        if steerery is not None:
+            self.set_steerers(ring, 'VST', 'PolynomA', steerery, deltay, sum_zero)
         if cavities is not None:
             self.set_cavities(ring, cavities)             
         
-    def set_bpms(self, ring, refpts):
-        self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=0)
-        self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=2)
+    def set_bpms(self, ring, refpts, weights, index):
+        self.add_observables_refpts(ring, 'closed_orbit', refpts=refpts, index=index, weight=weights)
         
-    def set_steerers(self, ring, refpts, deltax, deltay, sum_zero):
-        self.add_variables_refpts(ring, 'HST', deltax, refpts,'PolynomB', index=0, sum_zero=sum_zero)
-        self.add_variables_refpts(ring, 'VST', deltay, refpts,'PolynomA', index=0, sum_zero=sum_zero)
+    def set_steerers(self, ring, name, attr, refpts, delta, sum_zero):
+        self.add_variables_refpts(ring, name, delta, refpts, attr, index=0, sum_zero=sum_zero)
         
     def set_cavities(self, ring, refpts, delta=10):
         active = [e.PassMethod.endswith('CavityPass') for e in ring[refpts]]
@@ -176,12 +184,16 @@ class OrbitResponseMatrix(ElementResponseMatrix):
         
 class TrajectoryResponseMatrix(OrbitResponseMatrix): 
 
-    def __init__(self, ring, bpms, steerers, **kwargs):
-        super(TrajectoryResponseMatrix, self).__init__(ring, bpms, steerers,
-                                                       sum_zero=False, okw=kwargs)    
-    def set_bpms(self, ring, refpts):
-        self.add_observables_refpts(ring, 'trajectory', refpts=refpts, index=0)
-        self.add_observables_refpts(ring, 'trajectory', refpts=refpts, index=2)
+    def __init__(self, ring, bpmx=None, steererx=None, bpmy=None, steerery=None,
+                 deltax=1.0e-4, deltay=1.0e-4, weightx=1, weighty=1, **kwargs):
+        super(TrajectoryResponseMatrix, self).__init__(ring, bpmx=bpmx, bpmy=bpmy,
+                                                       steererx=steererx, steerery=steerery,
+                                                       deltax = deltax, deltay=deltay,
+                                                       weightx=weightx, weighty=weighty,
+                                                       sum_zero=False, okw=kwargs)   
+                                                        
+    def set_bpms(self, ring, refpts, weights, index):
+        self.add_observables_refpts(ring, 'trajectory', refpts=refpts, index=index, weight=weights)
         
     def correct(self, ring, mat=None, target=0, plane=['X', 'Y'], svd_cut=0,
                 apply_correction=False, threshold=None, niter=1):
