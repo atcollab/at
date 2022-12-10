@@ -20,8 +20,8 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
     Parameters:
         ring:           Lattice definition
         planes:         max. dimension 2, Plane(s) to scan for the acceptance.
-          Allowed values are: ``'x'``, ``'xp'``, ``'y'``,
-          ``'yp'``, ``'dp'``, ``'ct'``
+          Allowed values are: *'x'*, *'xp'*, *'y'*,
+          *'yp'*, *'dp'*, *'ct'*
 
     Keyword Args:
         acceptance (Tuple[ndarray, ndarray, ndarray]): Tuple containing
@@ -58,9 +58,9 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
         shift_zero:
         start_method (str): Python multiprocessing start method. The default
           :py:obj:`None` uses the python default that is considered safe.
-          Available parameters: ``'fork'``, ``'spawn'``, ``'forkserver'``.
-          The default for linux is ``'fork'``, the default for macOS and
-          Windows is ``'spawn'``. ``'fork'`` may used for macOS to speed up
+          Available parameters: *'fork'*, *'spawn'*, *'forkserver'*.
+          The default for linux is *'fork'*, the default for macOS and
+          Windows is *'spawn'*. *'fork'* may used for macOS to speed up
           the calculation or to solve runtime errors, however  it is
           considered unsafe.
 
@@ -140,12 +140,14 @@ def plot_geometry(ring: Lattice,
 
 def plot_sigma(sigma, axis: Tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
                ax: Axes = None, **kwargs):
-    r"""Plot the phase space for the given :math:`\Sigma`-matrix
+    r"""Plot the projection of the phase space defined by a
+    :math:`\Sigma`-matrix on the selected plane.
 
     Arguments:
         sigma:  :math:`\Sigma`-matrix
         axis:   tuple if indices defining the plane of the :math:`\Sigma`
-          projection. Default: ('x', 'xp')
+          projection. Allowed values are: *'x'*, *'xp'*, *'y'*,
+          *'yp'*, *'dp'*, *'ct'*. Default: (*'x'*, *'xp'*)
         scale:  Scaling factor for the emittance
         ax: axes for the plot. If not given, new axes are created
 
