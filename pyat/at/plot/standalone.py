@@ -1,6 +1,6 @@
 """AT plotting functions"""
 from typing import Tuple
-from at.lattice import Lattice, coord_descr
+from at.lattice import Lattice, axis_descr
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 import numpy
@@ -87,12 +87,12 @@ def plot_acceptance(ring: Lattice, planes, *args, **kwargs):
     plt.plot(*grid, '.', label='Tracked particles')
     plt.plot(*survived, '.', label='Survived particles')
     if len(planes) == 1:
-        pl0, = coord_descr(planes[0])
+        pl0, = axis_descr(planes[0])
         plt.plot(boundary, numpy.zeros(2), label='Acceptance')
         plt.title('1D {0} acceptance'.format(pl0['label']))
         plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
     else:
-        pl0, pl1 = coord_descr(*planes)
+        pl0, pl1 = axis_descr(*planes)
         plt.plot(*boundary, label='Acceptance')
         plt.title('2D {0}-{1} acceptance'.format(pl0['label'], pl1['label']))
         plt.xlabel('{0}{1}'.format(pl0['label'], pl0['unit']))
@@ -156,8 +156,8 @@ def plot_sigma(sigma, axis: Tuple[str, str] = ('x', 'xp'), scale: float = 1.0,
     """
     if not ax:
         fig, ax = plt.subplots()
-    ax1, ax2 = coord_descr(*axis)
-    axid = coord_descr(*axis, key='index')
+    ax1, ax2 = axis_descr(*axis)
+    axid = axis_descr(*axis, key='index')
     sig22 = sigma[numpy.ix_(axid, axid)]
     eps = sqrt(sig22[0, 0] * sig22[1, 1] - sig22[1, 0] * sig22[0, 1])
     sigx = sqrt(sig22[0, 0])

@@ -30,7 +30,7 @@ Uint32Refpts = numpy.ndarray
 Key = Union[Type[Element], Element, str]
 
 
-__all__ = ['AtError', 'AtWarning', 'coord_descr',
+__all__ = ['AtError', 'AtWarning', 'axis_descr',
            'check_radiation', 'check_6d',
            'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
@@ -42,7 +42,7 @@ __all__ = ['AtError', 'AtWarning', 'coord_descr',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
            'get_geometry']
 
-_coord_def = dict(
+_axis_def = dict(
     x=dict(index=0, label="x", unit=" [m]"),
     xp=dict(index=1, label="x'", unit=" [rad]"),
     y=dict(index=2, label="y", unit=" [m]"),
@@ -50,8 +50,8 @@ _coord_def = dict(
     dp=dict(index=4, label=r"$\delta$", unit=""),
     ct=dict(index=5, label=r"$\beta c \tau$", unit=" [m]"),
 )
-for vvv in [vv for vv in _coord_def.values()]:
-    _coord_def[vvv['index']] = vvv
+for vvv in [vv for vv in _axis_def.values()]:
+    _axis_def[vvv['index']] = vvv
 
 
 class AtError(Exception):
@@ -63,13 +63,13 @@ class AtWarning(UserWarning):
 
 
 # noinspection PyIncorrectDocstring
-def coord_descr(*args, key=None) -> Tuple:
-    r"""coord_descr(coord [ ,coord], key=None)
+def axis_descr(*args, key=None) -> Tuple:
+    r"""axis_descr(axis [ ,coord], key=None)
 
     Return a tuple containing for each input argument the requested information
 
     Parameters:
-        coord (Union[int, str]):    either an index in 0:6 or a string in
+        axis (Union[int, str]):    either an index in 0:6 or a string in
           ['x', 'xp', 'y', 'yp', 'dp', 'ct']
         key:                        key in the coordinate description
           dictionary, selecting the desired information. One of :
@@ -88,18 +88,18 @@ def coord_descr(*args, key=None) -> Tuple:
 
     Examples:
 
-        >>> coord_descr('x','dp', key='index')
+        >>> axis_descr('x','dp', key='index')
         (0, 4)
 
         returns the indices in the standard coordinate vector
 
-        >>> dplabel, = coord_descr('dp', key='label')
+        >>> dplabel, = axis_descr('dp', key='label')
         >>> print(dplabel)
         $\delta$
 
         returns the coordinate label for plot annotation
 
-        >>> coord_descr('x','dp')
+        >>> axis_descr('x','dp')
         ({'index': 0, 'label': 'x', 'unit': ' [m]'},
          {'index': 4, 'label': '$\\delta$', 'unit': ''})
 
@@ -107,9 +107,9 @@ def coord_descr(*args, key=None) -> Tuple:
 
     """
     if key is None:
-        return tuple(_coord_def[k] for k in args)
+        return tuple(_axis_def[k] for k in args)
     else:
-        return tuple(_coord_def[k][key] for k in args)
+        return tuple(_axis_def[k][key] for k in args)
 
 
 def check_radiation(rad: bool) -> Callable:
