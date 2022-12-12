@@ -2,6 +2,7 @@ import at
 import numpy
 import pytest
 from numpy.testing import assert_allclose as assert_close
+from numpy.testing import assert_equal
 from at.collective import Wake, WakeElement, ResonatorElement
 from at.collective import WakeComponent, ResWallElement
 from at.collective import add_beamloading, remove_beamloading, BLMode
@@ -71,7 +72,9 @@ def test_resonator_element(hmba_lattice):
     welem = ResonatorElement('WELEM', ring, srange, WakeComponent.Z, 1.0e9, 1.0, 1.0e3)  
     assert welem.ResFrequency == 1.0e9
     assert welem.Qfactor == 1
-    assert welem.Rshunt == 1.0e3 
+    assert welem.Rshunt == 1.0e3
+    print(welem.WakeZ[[0,1]])
+    assert_close(welem.WakeZ[[0,1]], [3.14159265e+12, 6.28318531e+12], rtol = 1e-8)
     welem.ResFrequency += 100
     assert welem.ResFrequency == 1.0e9 + 100
     
@@ -82,6 +85,8 @@ def test_resistive_wall_element(hmba_lattice):
     welem = ResWallElement('WELEM', ring, srange, WakeComponent.DX, 1.0, 1.0e-2, 1.0e6)  
     assert welem.RWLength == 1.0
     assert welem.Conductivity == 1.0e6
+    print(welem.WakeDX[[0,1]])
+    assert_close(welem.WakeDX[[0,1]], [ 0.0000000e+00, -1.0449877e+24], rtol = 1e-8)
     welem.Conductivity += 100
     assert welem.Conductivity == 1.0e6 + 100
     
