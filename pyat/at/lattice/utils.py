@@ -1,24 +1,24 @@
-"""
+r"""
 Helper functions for working with AT lattices.
 
 A lattice as understood by pyAT is any sequence of elements.  These functions
 are useful for working with these sequences.
 
-The ``refpts`` argument allow functions to select points in the lattice,
-returned values are given at the entrance of each element specified in refpts;
-``refpts`` can be:
+The *refpts* argument allow functions to select points in the lattice,
+returned values are given at the entrance of each element specified in *refpts*.
+*refpts* can be:
 
 #. an integer in the range [-len(ring), len(ring)-1] selecting the element
    according to python indexing rules. As a special case, len(ring) is
    allowed and refers to the end of the last element,
 #. an ordered sequence of such integers without duplicates,
 #. a sequence of booleans of maximum length len(ring)+1, where selected
-   elements are True.
+   elements are :py:obj:`True`.
 """
 import numpy
 import functools
 from typing import Callable, Optional, Sequence, Iterator, TypeVar
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Type
 from itertools import compress
 from fnmatch import fnmatch
 from .elements import Element, Dipole
@@ -27,18 +27,31 @@ Refpts = TypeVar("Refpts", int, Sequence[int], bool, Sequence[bool])
 ElementFilter = Callable[[Element], bool]
 BoolRefpts = numpy.ndarray
 Uint32Refpts = numpy.ndarray
-Key = Union[type, Element, str]
+Key = Union[Type[Element], Element, str]
 
 
-__all__ = ['AtError', 'AtWarning', 'check_radiation', 'check_6d',
+__all__ = ['AtError', 'AtWarning', 'axis_descr',
+           'check_radiation', 'check_6d',
            'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
            'checkattr', 'checktype', 'checkname',
            'get_cells', 'get_elements', 'get_refpts', 'get_s_pos',
            'refpts_count', 'refpts_len', 'refpts_iterator',
-           'set_shift', 'set_tilt', 'tilt_elem', 'shift_elem',
+           'set_shift', 'set_tilt', 'set_rotation',
+           'tilt_elem', 'shift_elem', 'rotate_elem',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
            'get_geometry']
+
+_axis_def = dict(
+    x=dict(index=0, label="x", unit=" [m]"),
+    xp=dict(index=1, label="x'", unit=" [rad]"),
+    y=dict(index=2, label="y", unit=" [m]"),
+    yp=dict(index=3, label="y'", unit=" [rad]"),
+    dp=dict(index=4, label=r"$\delta$", unit=""),
+    ct=dict(index=5, label=r"$\beta c \tau$", unit=" [m]"),
+)
+for vvv in [vv for vv in _axis_def.values()]:
+    _axis_def[vvv['index']] = vvv
 
 
 class AtError(Exception):
@@ -49,8 +62,58 @@ class AtWarning(UserWarning):
     pass
 
 
+# noinspection PyIncorrectDocstring
+def axis_descr(*args, key=None) -> Tuple:
+    r"""axis_descr(axis [ ,coord], key=None)
+
+    Return a tuple containing for each input argument the requested information
+
+    Parameters:
+        axis (Union[int, str]):    either an index in 0:6 or a string in
+          ['x', 'xp', 'y', 'yp', 'dp', 'ct']
+        key:                        key in the coordinate description
+          dictionary, selecting the desired information. One of :
+
+          'index'
+            index in the standard AT coordinate vector
+          'label'
+            label for plot annotation
+          'unit'
+            coordinate unit
+          :py:obj:`None`
+            entire description dictionary
+
+    Returns:
+        descr (Tuple): requested information for each input argument.
+
+    Examples:
+
+        >>> axis_descr('x','dp', key='index')
+        (0, 4)
+
+        returns the indices in the standard coordinate vector
+
+        >>> dplabel, = axis_descr('dp', key='label')
+        >>> print(dplabel)
+        $\delta$
+
+        returns the coordinate label for plot annotation
+
+        >>> axis_descr('x','dp')
+        ({'index': 0, 'label': 'x', 'unit': ' [m]'},
+         {'index': 4, 'label': '$\\delta$', 'unit': ''})
+
+        returns the entire description directories
+
+    """
+    if key is None:
+        return tuple(_axis_def[k] for k in args)
+    else:
+        return tuple(_axis_def[k][key] for k in args)
+
+
 def check_radiation(rad: bool) -> Callable:
-    """Deprecated decorator for optics functions (see :py:func:`check_6d`).
+    r"""Deprecated decorator for optics functions (see :py:func:`check_6d`).
 
     :meta private:
     """
@@ -58,7 +121,7 @@ def check_radiation(rad: bool) -> Callable:
 
 
 def set_radiation(rad: bool) -> Callable:
-    """Deprecated decorator for optics functions (see :py:func:`set_6d`).
+    r"""Deprecated decorator for optics functions (see :py:func:`set_6d`).
 
     :meta private:
     """
@@ -66,28 +129,26 @@ def set_radiation(rad: bool) -> Callable:
 
 
 def check_6d(is_6d: bool) -> Callable:
-    """Decorator for optics functions
+    r"""Decorator for optics functions
 
-    Wraps a function like ``func(ring, *args, **kwargs)`` where ring is a
-    :py:class:`.Lattice` object. Raise :py:class:`.AtError` if ``ring.is_6d``
-    is not the desired ``is_6d`` state. No test is performed if ring is not a
-    :py:class:`.Lattice`.
+    Wraps a function like :pycode:`func(ring, *args, **kwargs)` where
+    :pycode:`ring` is a :py:class:`.Lattice` object. Raise :py:class:`.AtError`
+    if :pycode:`ring.is_6d` is not the desired *is_6d* state. No test is
+    performed if :pycode:`ring` is not a :py:class:`.Lattice`.
 
     Parameters:
         is_6d: Desired 6D state
 
     Raises:
-        AtError: if ``ring.is_6d`` is not ``is_6d``
+        AtError: if :pycode:`ring.is_6d` is not *is_6d*
 
     Example:
 
-        .. code-block:: python
-
-            @check_6d(False)
-            def find_orbit4(ring, dct=None, guess=None, **kwargs):
+        >>> @check_6d(False)
+        ... def find_orbit4(ring, dct=None, guess=None, **kwargs):
                 ...
 
-        Raises :py:class:`.AtError` if ``ring.is_6d`` is :py:obj:`True`
+        Raises :py:class:`.AtError` if :pycode:`ring.is_6d` is :py:obj:`True`
 
     See Also:
         :py:func:`set_6d`
@@ -105,37 +166,34 @@ def check_6d(is_6d: bool) -> Callable:
 
 
 def set_6d(is_6d: bool) -> Callable:
-    """Decorator for optics functions
+    # noinspection PyUnresolvedReferences
+    r"""Decorator for optics functions
 
-    Wraps a function like ``func(ring, *args, **kwargs)`` where ``ring`` is a
-    :py:class:`.Lattice` object. If ``ring.is_6d`` is not the desired ``is_6d``
-    state, ``func`` will be called with a modified copy of ``ring`` satisfying
-    the ``is_6d`` state.
+    Wraps a function like :pycode:`func(ring, *args, **kwargs)` where
+    :pycode:`ring` is a :py:class:`.Lattice` object. If :pycode:`ring.is_6d`
+    is not the desired *is_6d* state, :pycode:`func()` will be called with a
+    modified copy of :pycode:`ring` satisfying the *is_6d* state.
 
     Parameters:
         is_6d: Desired 6D state
 
     Example:
 
-        .. code-block:: python
-
-            @set_6d(True)
-            def compute(ring)
+        >>> @set_6d(True)
+        ... def compute(ring)
                 ...
 
         is roughly equivalent to:
 
-        .. code-block:: python
+        >>> if ring.is_6d:
+        ...     compute(ring)
+        ... else:
+        ...     compute(ring.enable_6d(copy=True))
 
-            if ring.is_6d:
-                compute(ring)
-            else:
-                compute(ring.enable_6d(copy=True))
-
-    See Also:
-        :py:func:`check_6d`, :py:meth:`.Lattice.enable_6d`,
-        :py:meth:`.Lattice.disable_6d`
-    """
+        See Also:
+            :py:func:`check_6d`, :py:meth:`.Lattice.enable_6d`,
+            :py:meth:`.Lattice.disable_6d`
+        """
     if is_6d:
         def setrad_decorator(func):
             @functools.wraps(func)
@@ -154,20 +212,20 @@ def set_6d(is_6d: bool) -> Callable:
 
 
 def make_copy(copy: bool) -> Callable:
-    """Decorator for optics functions
+    r"""Decorator for optics functions
 
-    Wraps a function like ``func(ring, refpts, *args, **kwargs)`` where
-    ``ring`` is a :py:class:`.Lattice` object.
+    Wraps a function like :pycode:`func(ring, refpts, *args, **kwargs)` where
+    :pycode:`ring` is a :py:class:`.Lattice` object.
 
-    If ``copy`` is :py:obj:`False`, the function is not modified,
+    If *copy* is :py:obj:`False`, the function is not modified,
 
-    If ``copy`` is :py:obj:`True`, a shallow copy of ``ring`` is done, then the
-    elements selected by ``refpts`` are deep-copied, then ``func`` is applied
-    to the copy, and the new ring is returned.
+    If *copy* is :py:obj:`True`, a shallow copy of :pycode:`ring` is done,
+    then the elements selected by *refpts* are deep-copied, then :pycode:`func`
+    is applied to the copy, and the new :pycode:`ring` is returned.
 
     Parameters:
         copy:   If :py:obj:`True`, apply the decorated function to a copy of
-          ``ring``
+          :pycode:`ring`
     """
     if copy:
         def copy_decorator(func):
@@ -184,7 +242,8 @@ def make_copy(copy: bool) -> Callable:
 
 
 def uint32_refpts(refpts: Refpts, n_elements: int) -> Uint32Refpts:
-    """Returns an integer array of element indices, selecting ring elements.
+    r"""Return a :py:obj:`~numpy.uint32` array of element indices selecting
+    ring elements.
 
     Parameters:
         refpts:     refpts may be:
@@ -195,8 +254,8 @@ def uint32_refpts(refpts: Refpts, n_elements: int) -> Uint32Refpts:
         n_elements: Length of the lattice
 
     Returns:
-        uint32_ref (Uint32Refpts): uint32 numpy array used for indexing
-          ``Elements`` in a lattice.
+        uint32_ref (Uint32Refpts):  :py:obj:`~numpy.uint32` numpy array used
+          for indexing :py:class:`.Element`\ s in a lattice.
     """
     refs = numpy.ravel(refpts)
     if (refpts is None) or (refs.size == 0):
@@ -224,7 +283,7 @@ def uint32_refpts(refpts: Refpts, n_elements: int) -> Uint32Refpts:
 
 # Private function accepting a callable for refpts
 def _uint32_refs(ring: Sequence[Element], refpts: Refpts) -> Uint32Refpts:
-    """Returns an integer array of element indices, selecting ring elements.
+    r"""Returns an integer array of element indices, selecting ring elements.
 
     Parameters:
         refpts:     refpts may be:
@@ -232,12 +291,12 @@ def _uint32_refs(ring: Sequence[Element], refpts: Refpts) -> Uint32Refpts:
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
 
     Returns:
         uint32_ref (Uint32Refpts): uint32 numpy array used for indexing
-          ``Elements`` in a lattice.
+          :py:class:`.Element`\ s in a lattice.
     """
     if callable(refpts):
         return numpy.array([i for i, el in enumerate(ring) if refpts(el)],
@@ -249,10 +308,11 @@ def _uint32_refs(ring: Sequence[Element], refpts: Refpts) -> Uint32Refpts:
 
 
 def bool_refpts(refpts: Refpts, n_elements: int) -> BoolRefpts:
-    """Returns n bool array of element indices, selecting ring elements.
+    r"""Returns a :py:class:`bool` array of element indices, selecting ring
+    elements.
 
     Parameters:
-        refpts:     refpts may be:
+        refpts:     *refpts* may be:
 
           #. an integer or a sequence of integers
              (0 indicating the first element)
@@ -261,7 +321,7 @@ def bool_refpts(refpts: Refpts, n_elements: int) -> BoolRefpts:
 
     Returns:
         bool_refs (BoolRefpts):  A bool numpy array used for indexing
-          ``Elements`` in a lattice.
+          :py:class:`.Element`\ s in a lattice.
     """
     refs = numpy.ravel(refpts)
     if (refpts is None) or (refs.size == 0):
@@ -280,7 +340,7 @@ def bool_refpts(refpts: Refpts, n_elements: int) -> BoolRefpts:
 
 # Private function accepting a callable for refpts
 def _bool_refs(ring: Sequence[Element], refpts: Refpts) -> BoolRefpts:
-    """Returns a bool array of element indices, selecting ring elements.
+    r"""Returns a bool array of element indices, selecting ring elements.
 
     Parameters:
         refpts:     refpts may be:
@@ -288,12 +348,12 @@ def _bool_refs(ring: Sequence[Element], refpts: Refpts) -> BoolRefpts:
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
 
     Returns:
         bool_refs (BoolRefpts):  A bool numpy array used for indexing
-          ``Elements`` in a lattice.
+          :py:class:`.Element`\ s in a lattice.
     """
     if callable(refpts):
         return numpy.array([refpts(el) for el in ring] + [False], dtype=bool)
@@ -306,19 +366,19 @@ def _bool_refs(ring: Sequence[Element], refpts: Refpts) -> BoolRefpts:
 def checkattr(attrname: str, attrvalue: Optional = None) \
         -> ElementFilter:
     # noinspection PyUnresolvedReferences
-    """Checks the presence or the value of an attribute
+    r"""Checks the presence or the value of an attribute
 
-        Returns a function to be used as an ``Element`` filter, which
+        Returns a function to be used as an :py:class:`.Element` filter, which
         checks the presence or the value of an attribute of the
-        provided ``Element``.
+        provided :py:class:`.Element`.
         This function can be used to extract from a ring all elements
         having a given attribute.
 
         Parameters:
             attrname: Attribute name
             attrvalue: Attribute value. If absent, the returned function checks
-              the presence of an ``attrname`` attribute. If present, the
-              returned function checks if ``attrname`` == ``attrvalue``.
+              the presence of an *attrname* attribute. If present, the
+              returned function checks if :pycode:`attrname == attrvalue`.
 
         Returns:
             checkfun (ElementFilter):   Element filter function
@@ -327,13 +387,13 @@ def checkattr(attrname: str, attrvalue: Optional = None) \
 
             >>> cavs = filter(checkattr('Frequency'), ring)
 
-            Returns an iterator over all elements in ring that have a
-            ``Frequency`` attribute
+            Returns an iterator over all elements in *ring* that have a
+            :pycode:`Frequency` attribute
 
             >>> elts = filter(checkattr('K', 0.0), ring)
 
-            Returns an iterator over all elements in ring that have a ``K``
-            attribute equal to 0.0
+            Returns an iterator over all elements in ring that have a
+            :pycode:`K` attribute equal to 0.0
         """
 
     def testf(el):
@@ -348,15 +408,15 @@ def checkattr(attrname: str, attrvalue: Optional = None) \
 
 def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
     # noinspection PyUnresolvedReferences
-    """Checks the type of an element
+    r"""Checks the type of an element
 
-    Returns a function to be used as an ``Element`` filter, which checks the
-    type of the provided ``Element``.
+    Returns a function to be used as an :py:class:`.Element` filter, which
+    checks the type of the provided :py:class:`.Element`.
     This function can be used to extract from a ring all elements
     having a given type.
 
     Parameters:
-        eltype: Desired ``Element`` type
+        eltype: Desired :py:class:`.Element` type
 
     Returns:
         checkfun (ElementFilter):   Element filter function
@@ -372,16 +432,16 @@ def checktype(eltype: Union[type, Tuple[type, ...]]) -> ElementFilter:
 
 def checkname(pattern: str) -> ElementFilter:
     # noinspection PyUnresolvedReferences
-    """Checks the name of an element
+    r"""Checks the name of an element
 
-        Returns a function to be used as an ``Element`` filter,
-        which checks the name of the provided ``Element``.
+        Returns a function to be used as an :py:class:`.Element` filter,
+        which checks the name of the provided :py:class:`.Element`.
         This function can be used to extract from a ring all elements
         having a given name.
 
         Parameters:
-            pattern: Desired ``Element`` name. Unix shell-style wildcards are
-              supported (see ``fnmatch.fnmatch``)
+            pattern: Desired :py:class:`.Element` name. Unix shell-style
+              wildcards are supported (see :py:func:`fnmatch.fnmatch`)
 
         Returns:
             checkfun (ElementFilter):   Element filter function
@@ -398,23 +458,23 @@ def checkname(pattern: str) -> ElementFilter:
 # noinspection PyIncorrectDocstring
 def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
     # noinspection PyUnresolvedReferences
-    """
-    get_cells(ring, filtfunc)
-    get_cells(ring, attrname)
-    get_cells(ring, attrname, attrvalue)
+    r"""
+    get_cells(ring, filtfunc) -> BoolRefpts
+    get_cells(ring, attrname) -> BoolRefpts
+    get_cells(ring, attrname, attrvalue) -> BoolRefpts
     Returns a bool array of element indices, selecting ring elements.
 
     Parameters:
         ring (Sequence[Element]):       Lattice description
-        filtfunc (ElementFilter):   Filter function. Selects ``Elements``
-          satisfying the filter function
+        filtfunc (ElementFilter):   Filter function. Selects
+          :py:class:`.Element`\ s satisfying the filter function
         attrname (str):   Attribute name
         attrvalue (Any):  Attribute value. If absent, select the
-          presence of an ``attrname`` attribute. If present, select
-          ``Elements`` with ``attrname`` == ``attrvalue``.
+          presence of an *attrname* attribute. If present, select
+          :py:class:`.Element`\ s with :pycode:`attrname == attrvalue`.
 
     Returns:
-        bool_refs (BoolRefpts):  numpy Array of ``bool`` with length
+        bool_refs (BoolRefpts):  numpy Array of :py:obj:`bool` with length
           len(ring)+1
 
     Examples:
@@ -422,12 +482,12 @@ def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
         >>> refpts = get_cells(ring, 'Frequency')
 
         Returns a numpy array of booleans where all elements having a
-        ``Frequency`` attribute are True
+        :pycode:`Frequency` attribute are :py:obj:`True`
 
         >>> refpts = get_cells(ring, 'K', 0.0)
 
-        Returns a numpy array of booleans where all elements having a ``K``
-        attribute equal to 0.0 are True
+        Returns a numpy array of booleans where all elements having a
+        :pycode:`K` attribute equal to 0.0 are :py:obj:`True`
     """
     testf = args[0] if callable(args[0]) else checkattr(*args)
     return numpy.append(numpy.fromiter(map(testf, ring), dtype=bool,
@@ -436,7 +496,7 @@ def get_cells(ring: Sequence[Element], *args) -> BoolRefpts:
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
         -> Iterator[Element]:
-    """Return an iterator over selected elements in a lattice
+    r"""Return an iterator over selected elements in a lattice
 
     Parameters:
         ring:       Lattice description
@@ -445,12 +505,12 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
 
     Returns:
-        elem_iter (Iterator[Element]):  Iterator over the elements in ``ring``
-          selected by ``refpts``.
+        elem_iter (Iterator[Element]):  Iterator over the elements in *ring*
+          selected by *refpts*.
     """
     if refpts is None:
         return iter(())
@@ -468,7 +528,7 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
 
 # noinspection PyUnusedLocal
 def refpts_count(refpts: Refpts, n_elements: int) -> int:
-    """Returns the number of reference points
+    r"""Returns the number of reference points
 
     Parameters:
         refpts:     refpts may be:
@@ -491,7 +551,7 @@ def refpts_count(refpts: Refpts, n_elements: int) -> int:
 
 
 def refpts_len(ring: Sequence[Element], refpts: Refpts) -> int:
-    """Returns the number of reference points
+    r"""Returns the number of reference points
 
     Parameters:
         ring:       Lattice description
@@ -500,8 +560,8 @@ def refpts_len(ring: Sequence[Element], refpts: Refpts) -> int:
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
 
     Returns:
         nrefs (int):  The number of reference points
@@ -515,27 +575,28 @@ def refpts_len(ring: Sequence[Element], refpts: Refpts) -> int:
 
 
 def get_refpts(ring: Sequence[Element], key: Key, quiet=True) -> Uint32Refpts:
-    """Returns an ``int`` array of element indices, selecting ring elements.
+    r"""Return a :py:obj:`~numpy.uint32` array of element indices selecting
+    ring elements.
 
     Parameters:
         ring:   Lattice description
         key:    Element selection key. May be:
 
                   #. an element instance, will return all elements of the same
-                     type in the lattice, e.g. key=Drift('d1', 1.0)
+                     type in the lattice, e.g. :pycode:`Drift('d1', 1.0)`
                   #. an element type, will return all elements of that type in
-                     the lattice, e.g. ``at.elements.Sextupole``
+                     the lattice, e.g. :pycode:`at.Sextupole`
                   #. a string to match against elements' ``FamName``, supports
                      Unix shell-style wildcards, e.g. ``'BPM_*1'``
-        quiet:  if false print information about matched elements for FamName
-               matches.
+        quiet:  if :py:obj:`False`, print information about matched elements
+          for FamName matches.
 
     Returns:
-        uint32_refs (Uint32Refs):    numpy Array of ``int`` as long as the
-          number of refpts
+        uint32_refs (Uint32Refs):    :py:obj:`~numpy.uint32` numpy array as
+          long as the number of refpts
 
     See also:
-        ``get_cells``
+        :py:func:`get_cells`
     """
     if isinstance(key, Element):
         checkfun = checktype(type(key))
@@ -558,23 +619,23 @@ def get_refpts(ring: Sequence[Element], key: Key, quiet=True) -> Uint32Refpts:
 
 def get_elements(ring: Sequence[Element], key: Key, quiet=True) \
         -> list:
-    """Returns a list of elements selected by ``key``.
+    r"""Returns a list of elements selected by *key*.
 
     Parameters:
         ring:   Lattice description
         key:    Element selection key. May be:
 
                   #. an element instance, will return all elements of the same
-                     type in the lattice, e.g. key=Drift('d1', 1.0)
+                     type in the lattice, e.g. :pycode:`Drift('d1', 1.0)`
                   #. an element type, will return all elements of that type in
-                     the lattice, e.g. ``at.elements.Sextupole``
+                     the lattice, e.g. :pycode:`at.Sextupole`
                   #. a string to match against elements' ``FamName``, supports
                      Unix shell-style wildcards, e.g. ``'BPM_*1'``
         quiet: if false print information about matched elements for FamName
                matches.
 
     Returns:
-        elem_list (list):  list of ``Elements`` matching key
+        elem_list (list):  list of :py:class:`.Element`\ s matching key
     """
     if isinstance(key, Element):
         checkfun = checktype(type(key))
@@ -597,7 +658,7 @@ def get_elements(ring: Sequence[Element], key: Key, quiet=True) \
 
 def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
                      attrname: str, index: Optional[int] = None):
-    """Extracts attribute values from selected lattice ``Elements``.
+    r"""Extracts attribute values from selected lattice :py:class:`.Element`\ s.
 
     Parameters:
         ring:       Lattice description
@@ -606,13 +667,13 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
         attrname:   Attribute name
-        index:      index of the value to retrieve if ``attrname`` is
+        index:      index of the value to retrieve if *attrname* is
           an array.
 
-          If ``None`` the full array is retrieved
+          If :py:obj:`None` the full array is retrieved
 
     Returns:
         attrvalues: numpy Array of attribute values.
@@ -631,7 +692,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
                      attrname: str, attrvalues, index: Optional[int] = None,
                      increment: Optional[bool] = False,
                      copy: Optional[bool] = False):
-    """Set the values of an attribute of an array of elements based on
+    r"""Set the values of an attribute of an array of elements based on
     their refpts
 
 
@@ -642,18 +703,19 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
         attrname:   Attribute name
         attrvalues: Attribute values
-        index:      index of the value to set if ``attrname`` is
-          an array. if ``None``, the full array is replaced by ``attrvalue``
+        index:      index of the value to set if *attrname* is
+          an array. if :py:obj:`None`, the full array is replaced by
+          *attrvalue*
         increment:  Add values to the initial values.
 
-          If False the initial value is replaced (Default)
-        copy:       If ``False``, the modification is done in-place,
+          If :py:obj:`False` the initial value is replaced (Default)
+        copy:       If :py:obj:`False`, the modification is done in-place,
 
-          If ``True``, return a shallow copy of the lattice. Only the
+          If :py:obj:`True`, return a shallow copy of the lattice. Only the
           modified elements are copied.
 
           .. Caution::
@@ -687,7 +749,7 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
 def get_s_pos(ring: Sequence[Element], refpts: Optional[Refpts] = None) \
         -> Sequence[float]:
-    """Returns the locations of selected elements
+    r"""Returns the locations of selected elements
 
     Parameters:
         ring:       Lattice description
@@ -696,11 +758,11 @@ def get_s_pos(ring: Sequence[Element], refpts: Optional[Refpts] = None) \
           #. an integer or a sequence of integers
              (0 indicating the first element)
           #. a sequence of booleans marking the selected elements
-          #. a callable ``filtfunc`` such that ``filtfunc(elem)`` is True for
-             selected elements
+          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
+             is :py:obj:`True` for selected elements
 
     Returns:
-        s_pos:  Array of locations of the elements selected by ``refpts``
+        s_pos:  Array of locations of the elements selected by *refpts*
     """
     if refpts is None:
         refpts = range(len(ring) + 1)
@@ -714,28 +776,30 @@ def get_s_pos(ring: Sequence[Element], refpts: Optional[Refpts] = None) \
 
 def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
                 yaw: float = 0.0, relative: bool = False) -> None:
-    r"""Set the tilt, pitch and yaw angle of an ``Element``.
-    The tilt is a rotation around the ``s`` axis, the pitch is a
-    rotation around the ``x``-axis and the yaw is a rotation around
-    the ``y``-axis.
+    r"""Set the tilt, pitch and yaw angle of an :py:class:`.Element`.
+    The tilt is a rotation around the *s*-axis, the pitch is a
+    rotation around the *x*-axis and the yaw is a rotation around
+    the *y*-axis.
     A positive angle represent a clockwise rotation when looking in
-    the direction of the roation axis.
+    the direction of the rotation axis.
     
     The transformations are not all commmutative, the tilt is always the
     last transformation applied.
     
-    In case ``relative=True``, the previous angle and shifts are derived
-    form the R and T matrix and incremented by the input arguments.
+    If *relative* is :py:obj:`True`, the previous angle and shifts are
+    rebuilt form the *R* and *T* matrix and incremented by the input arguments.
     
-    The shift is always conserved regardless of the value of ``relative``
+    The shift is always conserved regardless of the value of *relative*.
 
     Parameters:
         elem:           Element to be tilted
-        tilt:           Tilt angle [rd]
-        pitch:          Pitch angle [rd]
-        yaw:            Yaw angle [rd]
-        relative:       If True, the rotation is added to the previous one
+        tilt:           Tilt angle [rad]
+        pitch:          Pitch angle [rad]
+        yaw:            Yaw angle [rad]
+        relative:       If :py:obj:`True`, the rotation is added to the
+          previous one
     """
+    # noinspection PyShadowingNames
     def _get_rm_tv(le, tilt, pitch, yaw):
         tilt = numpy.around(tilt, decimals=15)
         pitch = numpy.around(pitch, decimals=15)
@@ -787,9 +851,10 @@ def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
 
 
 def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
-    r"""Set the tilt angle :math:`\theta` of an ``Element``
+    r"""Set the tilt angle :math:`\theta` of an :py:class:`.Element`
 
-    The rotation matrices are stored in the ``R1`` and ``R2`` attributes
+    The rotation matrices are stored in the :pycode:`R1` and :pycode:`R2`
+    attributes.
 
     :math:`R_1=\begin{pmatrix} cos\theta & sin\theta \\
     -sin\theta & cos\theta \end{pmatrix}`,
@@ -798,25 +863,28 @@ def tilt_elem(elem: Element, rots: float, relative: bool = False) -> None:
 
     Parameters:
         elem:           Element to be tilted
-        rots:           Tilt angle :math:`\theta` [rd].
-          ``rots`` > 0 corresponds to a corkscrew rotation of the element
-          looking in the direction of the beam
-        relative:       If True, the rotation is added to the previous one
+        rots:           Tilt angle :math:`\theta` [rd]. *rots* > 0 corresponds
+          to a corkscrew rotation of the element looking in the direction of
+          the beam
+        relative:       If :py:obj:`True`, the rotation is added to the
+          existing one
     """
     rotate_elem(elem, tilt=rots, relative=relative)
 
 
 def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
                relative: Optional[bool] = False) -> None:
-    """Sets the transverse displacement of an ``Element``
+    r"""Sets the transverse displacement of an :py:class:`.Element`
 
-    The translation vectors are stored in the ``T1`` and ``T2`` attributes
+    The translation vectors are stored in the :pycode:`T1` and :pycode:`T2`
+    attributes.
 
     Parameters:
         elem:           Element to be shifted
         deltax:         Horizontal displacement [m]
         deltaz:         Vertical displacement [m]
-        relative:       If True, the translation is added to the previous one
+        relative:       If :py:obj:`True`, the translation is added to the
+          existing one
     """
     tr = numpy.array([deltax, 0.0, deltaz, 0.0, 0.0, 0.0])
     if relative and hasattr(elem, 'T1') and hasattr(elem, 'T2'):
@@ -829,7 +897,7 @@ def shift_elem(elem: Element, deltax: float = 0.0, deltaz: float = 0.0,
 
 def set_rotation(ring: Sequence[Element], tilts=0.0,
                  pitches=0.0, yaws=0.0, relative=False) -> None:
-    """Sets the tilts of a list of elements.
+    r"""Sets the tilts of a list of elements.
 
     Parameters:
         ring:           Lattice description
@@ -839,23 +907,25 @@ def set_rotation(ring: Sequence[Element], tilts=0.0,
           scalar tilt value applied to all elements, default=0
         yaws:          Sequence of yaw values as long as ring or
           scalar tilt value applied to all elements, default=0
-        relative:       If True, the rotation is added to the previous one
+        relative:       If :py:obj:`True`, the rotations are added to the
+          existing ones
     """
     tilts = numpy.broadcast_to(tilts, (len(ring),))
-    pitches = numpy.broadcast_to(tilts, (len(ring),))
-    yaws = numpy.broadcast_to(tilts, (len(ring),))
+    pitches = numpy.broadcast_to(pitches, (len(ring),))
+    yaws = numpy.broadcast_to(yaws, (len(ring),))
     for el, tilt, pitch, yaw in zip(ring, tilts, pitches, yaws):
         rotate_elem(el, tilt=tilt, pitch=pitch, yaw=yaw, relative=relative)
 
 
 def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
-    """Sets the tilts of a list of elements.
+    r"""Sets the tilts of a list of elements.
 
     Parameters:
         ring:           Lattice description
         tilts:          Sequence of tilt values as long as ring or
           scalar tilt value applied to all elements
-        relative:       If True, the rotation is added to the previous one
+        relative:       If :py:obj:`True`, the rotation is added to the
+          existing one
     """
     tilts = numpy.broadcast_to(tilts, (len(ring),))
     for el, tilt in zip(ring, tilts):
@@ -863,7 +933,7 @@ def set_tilt(ring: Sequence[Element], tilts, relative=False) -> None:
 
 
 def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
-    """Sets the translations of a list of elements.
+    r"""Sets the translations of a list of elements.
 
     Parameters:
         ring:           Lattice description
@@ -871,7 +941,8 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
           ring or scalar value applied to all elements [m]
         dzs:            Sequence of vertical displacements values as long as
           ring or scalar value applied to all elements [m]
-        relative:       If True, the displacement is added to the previous one
+        relative:       If :py:obj:`True`, the displacement is added to the
+          existing one
     """
     dxs = numpy.broadcast_to(dxs, (len(ring),))
     dzs = numpy.broadcast_to(dzs, (len(ring),))
@@ -882,16 +953,17 @@ def set_shift(ring: Sequence[Element], dxs, dzs, relative=False) -> None:
 def get_geometry(ring: List[Element],
                  start_coordinates: Tuple[float, float, float] = (0, 0, 0),
                  centered: bool = False):
-    """Compute the 2D ring geometry in cartesian coordinates
+    r"""Compute the 2D ring geometry in cartesian coordinates
 
     Parameters:
-        ring: Lattice description
-        start_coordinates: x,y,angle at starting point
-        centered: it True the coordinates origin is the center of the ring
+        ring:               Lattice description
+        start_coordinates:  x ,y, angle at starting point
+        centered:           if :py:obj:`True` the coordinates origin is the
+          center of the ring
 
     Returns:
-        geomdata: recarray containing, x, y, angle
-        radius: machine radius
+        geomdata:           recarray containing, x, y, angle
+        radius:             machine radius
 
     Example:
 
