@@ -1,5 +1,5 @@
 """
-Simple parallelization of atpass() using multiprocessing.
+Simple parallelisation of atpass() using multiprocessing.
 """
 from functools import partial
 import multiprocessing
