@@ -74,53 +74,63 @@ def _apply_bpm_track_error(ring, trajectory, refpts):
     return trajectory
 
 
-def _apply_alignment_errors(ring):
+def _apply_alignment_errors(ring, **kwargs):
     refpts = [(hasattr(e, 'ShiftErr') or hasattr(e, 'RotationErr'))
               for e in ring]
     ring = ring.replace(refpts)
     for e in ring[refpts]:
         shift = getattr(e, 'ShiftErr', None) 
         rots = getattr(e, 'RotationsErr', None)   
-        if shift is not None:   
-            shift_elem(e, shift[0], shift[1], relative=True)
+        if shift is not None:
+            shiftx = kwargs.pop('shiftx', True)*shift[0]
+            shifty = kwargs.pop('shifty', True)*shift[1]
+            shift_elem(e, shiftx, shifty, relative=True)
         if rots is not None:
-            rotate_elem(e, tilt=rots[0], pitch=rots[1],
-                        yaw=rots[2], relative=True)
+            tilt = kwargs.pop('tilt', True)*rots[0]
+            pitch = kwargs.pop('pitch', True) * rots[1]
+            yaw = kwargs.pop('yaw', True) * rots[2]
+            rotate_elem(e, tilt=tilt, pitch=pitch,
+                        yaw=yaw, relative=True)
     return ring
 
 
-def _apply_field_errors(ring):
+def _apply_field_errors(ring, **kwargs):
     def sanitize(e):
         mo = max(len(e.PolynomA), len(e.PolynomB))
         e.PolynomA = numpy.pad(e.PolynomA, mo - len(e.PolynomA))
         e.PolynomB = numpy.pad(e.PolynomB, mo - len(e.PolynomB))
         e.MaxOrder = mo - 1
 
-    def get_pol(e, pname):
-        le = sorted((getattr(e, pname), getattr(e, pname + 'Err')), key=len)
+    def get_pol(e, pname, index):
+        perr = numpy.copy(getattr(e, pname + 'Err'))
+        if index is not None:
+            perr[range(len(perr)) != index] = 0.0
+        le = sorted((getattr(e, pname), perr), key=len)
         pn = numpy.copy(le[1])
         pn[:len(le[0])] += le[0]
         return pn
 
-    def set_polerr(ring, pname):
+    def set_polerr(ring, pname, index):
         refpts = [hasattr(e, pname) and hasattr(e, pname+'Err') for e in ring]
         rr = ring.replace(refpts)
         for e in rr[refpts]:
-            setattr(e, pname, get_pol(e, pname))
+            setattr(e, pname, get_pol(e, pname, index))
             sanitize(e)
         return rr
-    
-    ring = set_polerr(ring, 'PolynomA')
-    ring = set_polerr(ring, 'PolynomB')
+
+    for pol in ['A', 'B']:
+        if kwargs.pop('Polynom'+pol, True):
+            index = kwargs.pop('Index'+pol, None)
+            ring = set_polerr(ring, 'Polynom'+pol, index)
     return ring
     
 
-def enable_errors(ring):
+def enable_errors(ring, **kwargs):
     if getattr(ring, '_has_errors', False): 
         raise AtError('Errors already enabled on this ring')
     else:
-        ring = _apply_field_errors(ring) 
-        ring = _apply_alignment_errors(ring)
+        ring = _apply_field_errors(ring, **kwargs)
+        ring = _apply_alignment_errors(ring, **kwargs)
         ring._has_errors = True
     return ring
 
