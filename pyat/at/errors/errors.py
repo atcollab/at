@@ -128,6 +128,9 @@ def _apply_field_errors(ring, **kwargs):
 def enable_errors(ring, **kwargs):
     if getattr(ring, '_has_errors', False): 
         raise AtError('Errors already enabled on this ring')
+    elif kwargs.pop('all_false', False):
+        ring = ring.copy()
+        ring._has_errors = True
     else:
         ring = _apply_field_errors(ring, **kwargs)
         ring = _apply_alignment_errors(ring, **kwargs)
@@ -135,10 +138,14 @@ def enable_errors(ring, **kwargs):
     return ring
 
 
+def has_errors(ring):
+    return getattr(ring, '_has_errors', False)
+
+
 def _apply_errors(func) -> Callable:
     @functools.wraps(func)
     def wrapper(ring, *args, **kwargs):
-        if not getattr(ring, '_has_errors', False):
+        if not ring.has_errors:
             ring = enable_errors(ring)
         refpts = kwargs.get('refpts', None)
         if func is lattice_pass:
@@ -172,3 +179,4 @@ get_optics_err = _apply_errors(get_optics)
 Lattice.get_optics_err = get_optics_err
 lattice_pass_err = _apply_errors(lattice_pass)
 Lattice.enable_errors = enable_errors
+Lattice.has_errors = property(has_errors)
