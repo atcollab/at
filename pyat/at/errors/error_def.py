@@ -60,24 +60,28 @@ def assign_errors(ring: Lattice, key, truncation: Optional[float] = None,
     .. rubric:: Monitor errors:
 
     The beam positions returned at :py:class:`.Monitor` locations are computed
-    by applying in order a tilt :math:`\theta`, gains :math:`g_x`, :math:`g_y`
-    and offsets :math:`o_x`, :math:`o_y` resulting in:
+    by applying in order the offsets :math:`o_x` , :math:`o_y` ,
+    a tilt :math:`\theta`, and gains :math:`g_x` , :math:`g_y` resulting in:
 
     .. math::
 
-       \begin{pmatrix} x_{monitor} \\ y_{monitor} \end{pmatrix} =
-       \begin{pmatrix} o_x \\ o_y \end{pmatrix} +
-       \begin{pmatrix} g_x & 0 \\ -0 & g_y \end{pmatrix}
-       \begin{pmatrix} cos\theta & sin\theta \\
-       -sin\theta & cos\theta \end{pmatrix}
-       \begin{pmatrix} x_{beam} \\ y_{beam} \end{pmatrix}
+        \begin{pmatrix} x_{monitor} \\ y_{monitor} \end{pmatrix} =
+        \begin{pmatrix} g_x & 0 \\ -0 & g_y \end{pmatrix}
+        \begin{pmatrix} cos\theta & sin\theta \\
+        -sin\theta & cos\theta \end{pmatrix}
+        \left[
+        \begin{pmatrix} x_{beam} \\ y_{beam} \end{pmatrix} +
+        \begin{pmatrix} o_x \\ o_y \end{pmatrix}
+        \right]
+
+
 
     Note that this corresponds to the effect of:
 
-    #. rotating the monitor device by :math:`\theta`,
-    #. then applying the gains,
-    #. and finally shifting the monitor device by :math:`-o_x` horizontally and
-       :math:`-o_y` vertically
+    #. shifting the monitor device by :math:`-o_x` horizontally and
+       :math:`-o_y` vertically.
+    #. then rotating the monitor device by :math:`\theta`,
+    #. finally applying the gains.
 
     Keyword Args:
         BPMOffset:  Offsets may be:
@@ -154,12 +158,12 @@ def _rotmat(theta):
 def _apply_bpm_orbit_error(ring, refpts, orbit):
     for e, o6 in zip(refpts_iterator(ring, refpts), orbit):
         o6 = o6.reshape((-1, 6))
+        if hasattr(e, 'BPMOffset'):
+            o6[:, [0, 2]] += e.BPMOffset
         if hasattr(e, 'BPMTilt'):
             o6[:, [0, 2]] = _rotmat(e.BPMTilt) @ o6[:, [0, 2]]
         if hasattr(e, 'BPMGain'):
             o6[:, [0, 2]] *= e.BPMGain
-        if hasattr(e, 'BPMOffset'):
-            o6[:, [0, 2]] += e.BPMOffset
 
 
 def _apply_bpm_track_error(ring, refpts, trajectory):
@@ -285,6 +289,7 @@ def _sort_flags(kwargs):
             errargs[key] = kwargs.pop(key)
     return kwargs, errargs
 
+
 def find_orbit_err(ring: Lattice, refpts: Refpts = None, **kwargs):
     """Find the closed orbit if a lattice with errors
 
@@ -296,9 +301,15 @@ def find_orbit_err(ring: Lattice, refpts: Refpts = None, **kwargs):
         ring:       Lattice description
         refpts:
 
+    The *all*, *ShiftErr*, *RotationErr*, *PolynomBErr*, *PolynomBIndex*,
+    *PolynomAErr*, *PolynomAIndex* keywords are defined as in
+    :py:func:`enable_errors`
+
+    All other keywords are forwarded to :py:func:`.find_orbit`
+
     See also:
-        :py:func:`assign_errors`, :py:func:`get_optics_err`,
-        :py:func:`lattice_pass_err`
+        :py:func:`assign_errors`, :py:func:`.find_orbit`,
+        :py:func:`get_optics_err`, :py:func:`lattice_pass_err`
     """
     kwargs, errargs = _sort_flags(kwargs)
     ring = enable_errors(ring, **errargs)
@@ -319,10 +330,15 @@ def get_optics_err(ring: Lattice, refpts: Refpts = None, **kwargs):
         ring:       Lattice description
         refpts:
 
-    See also:
-        :py:func:`assign_errors`, :py:func:`find_orbit_err`,
-        :py:func:`lattice_pass_err`
+    The *all*, *ShiftErr*, *RotationErr*, *PolynomBErr*, *PolynomBIndex*,
+    *PolynomAErr*, *PolynomAIndex* keywords are defined as in
+    :py:func:`enable_errors`
 
+    All other keywords are forwarded to :py:func:`.get_optics`
+
+    See also:
+        :py:func:`assign_errors`, :py:func:`.get_optics`,
+        :py:func:`find_orbit_err`, :py:func:`lattice_pass_err`
     """
     kwargs, errargs = _sort_flags(kwargs)
     ring = enable_errors(ring, **errargs)
@@ -341,11 +357,11 @@ def lattice_pass_err(ring: Lattice, r_in, nturns: int = 1,
     The *ring* :py:class:`~.Lattice` is not modified.
 
     Parameters:
-        lattice:                lattice description
+        ring:                   lattice description
         r_in:                   (6, N) array: input coordinates of N particles.
           *r_in* is modified in-place and reports the coordinates at
           the end of the element. For the best efficiency, *r_in*
-          should be given as F_CONTIGUOUS numpy array.
+          should be given as *F_CONTIGUOUS* numpy array.
         nturns:                 number of turns to be tracked
         refpts:                 numpy array of indices of elements where
           output is desired:
@@ -353,10 +369,15 @@ def lattice_pass_err(ring: Lattice, r_in, nturns: int = 1,
           * len(line) means end of the last element (default)
           * 0 means entrance of the first element
 
-    See also:
-        :py:func:`assign_errors`, :py:func:`get_optics_err`,
-        :py:func:`find_orbit_err`
+    The *all*, *ShiftErr*, *RotationErr*, *PolynomBErr*, *PolynomBIndex*,
+    *PolynomAErr*, *PolynomAIndex* keywords are defined as in
+    :py:func:`enable_errors`
 
+    All other keywords are forwarded to :py:func:`.lattice_pass`
+
+    See also:
+        :py:func:`assign_errors`, :py:func:`.lattice_pass`,
+        :py:func:`get_optics_err`, :py:func:`find_orbit_err`
     """
     kwargs, errargs = _sort_flags(kwargs)
     ring = enable_errors(ring, **errargs)
