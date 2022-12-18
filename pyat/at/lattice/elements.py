@@ -23,8 +23,24 @@ def _array66(value):
     return _array(value, shape=(6, 6))
 
 
+def _resize(value, shape=(3,), dtype=numpy.float64):
+    if not numpy.all(value.shape == shape):
+        value = value.copy()
+        value.resize(shape)
+    return _array(value, shape=shape, dtype=dtype)
+
+
+def _broadcast(value, shape=(2,), dtype=numpy.float64):
+    v = numpy.broadcast_to(value, shape)
+    return _array(v, shape=shape, dtype=dtype)
+
+
 def _nop(value):
     return value
+
+# noinspection PyUnusedLocal
+def _not_allowed(value):
+    raise ValueError("Attribute cannot be set")
 
 
 class LongtMotion(ABC):
@@ -246,9 +262,15 @@ class Element(object):
                         EApertures=lambda v: _array(v, (2,)),
                         KickAngle=lambda v: _array(v, (2,)),
                         PolynomB=_array, PolynomA=_array,
+                        PolynomBErr=_array, PolynomAErr=_array,
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
+                        BPMGain=_broadcast,
+                        BPMOffset=_broadcast,
+                        BPMTilt=float,
+                        ShiftErr=_not_allowed,
+                        RotationErr=_not_allowed,
                         )
 
     _entrance_fields = ['T1', 'R1']
@@ -561,6 +583,9 @@ class ThinMultipole(Element):
     """Thin multipole element"""
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
+    _conversions = dict(Element._conversions,
+        ShiftErr=_broadcast,
+        RotationErr=_resize)
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -617,6 +642,11 @@ class ThinMultipole(Element):
                     'MaxOrder must be smaller than {0}'.format(lmax))
 
         super(ThinMultipole, self).__setattr__(key, value)
+
+    @property
+    def strength(self):
+        order = getattr(self, 'DefaultOrder', None)
+        return None if order is None else self.PolynomB[order]
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):

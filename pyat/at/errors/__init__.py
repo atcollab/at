@@ -1,1 +1,1 @@
-from .errors import *
+from .error_def import *
