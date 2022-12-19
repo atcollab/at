@@ -22,7 +22,8 @@ def _truncated_randn(truncation=None, **kwargs):
         return norm.rvs(**kwargs)
 
 
-def assign_errors(ring: Lattice, key, truncation: Optional[float] = None,
+def assign_errors(ring: Lattice, refpts: Refpts,
+                  truncation: Optional[float] = None,
                   seed: Optional[Union[int, np.random.Generator]] = None,
                   **kwargs):
     r"""Assign errors to selected elements
@@ -31,15 +32,12 @@ def assign_errors(ring: Lattice, key, truncation: Optional[float] = None,
     tracking (see :py:func:`enable_errors`).
 
     Args:
-        ring:   Lattice description.
-        key:    Element selector. May be:
+        ring:       Lattice description.
+        refpts:     Element selector. May be:
 
-                  #. an element instance, will return all elements of the same
-                     type in the lattice, e.g. :pycode:`Drift('d1', 1.0)`
-                  #. an element type, will return all elements of that type in
-                     the lattice, e.g. :pycode:`at.Sextupole`
-                  #. a string to match against elements' ``FamName``, supports
-                     Unix shell-style wildcards, e.g. ``'BPM_*1'``
+          #. an integer or a sequence of integers
+             (0 indicating the first element)
+          #. a sequence of booleans marking the selected elements
         truncation:     Truncation of the Gaussian error distribution at +/-
           *truncation* * :math:`\sigma`
         seed:   Seed for the random generator. It *seed* is :py:obj:`None`, the
@@ -90,14 +88,14 @@ def assign_errors(ring: Lattice, key, truncation: Optional[float] = None,
             in both planes to all elements
           * (2,) float array: [offset_x, offset_y] applied to all elements
           * (nelems, 1) or (nelems, 2) array: assign one value per element
-            (may be useful for systematic errors)
+            (this may be useful for systematic errors)
         BPMGain:    Monitor gain (scaling factor)
 
           * :py:class:`float` or (1,) float array: the same gain is applied
             in both planes to all elements
           * (2,) float array: [gain_x, gain_y] applied to all elements
           * (nelems, 1) or (nelems, 2) array: assign one value per element
-            (may be useful for systematic errors)
+            (this may be useful for systematic errors)
         BPMTilt:    :py:class:`float`, (1,) or (nelems, 1) float array
 
     .. rubric:: Magnet errors:
@@ -110,14 +108,14 @@ def assign_errors(ring: Lattice, key, truncation: Optional[float] = None,
           * (2,) float array: [shift\ :sub:`x`, shift\ :sub:`y`\ ] applied to
             all elements
           * (nelems, 1) or (nelems, 2) array: assign one value per element
-            (may be useful for systematic errors)
+            (this may be useful for systematic errors)
         RotationErr:    Magnet rotation
 
           * :py:class:`float` or (1,) float array: tilt error, no pitch nor yaw
           * (3,) float array: [tilt, pitch, yaw] rotations applied to all
             elements
           * (nelems, 1) or (nelems, 3) array: assign one value per element
-            (may be useful for systematic errors)
+            (this may be useful for systematic errors)
         PolynomAErr:    Field error. *PolynomAErr* is added to the magnet's
           *PolynomA*
         PolynomBErr:    Field error. *PolynomBErr* is added to the magnet's
@@ -126,7 +124,7 @@ def assign_errors(ring: Lattice, key, truncation: Optional[float] = None,
     See also:
         :py:func:`enable_errors`, :py:func:`get_optics_err`
     """
-    elements = ring.get_elements(key)
+    elements = ring[refpts]
     for attr in _BPM_ATTRS + _ERR_ATTRS:
         val = kwargs.pop(attr, None)
         if val is not None:
