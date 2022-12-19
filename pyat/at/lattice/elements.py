@@ -38,6 +38,7 @@ def _broadcast(value, shape=(2,), dtype=numpy.float64):
 def _nop(value):
     return value
 
+
 # noinspection PyUnusedLocal
 def _not_allowed(value):
     raise ValueError("Attribute cannot be set")
@@ -217,6 +218,7 @@ class Radiative(_Radiative):
 
 
 class Collective(_DictLongtMotion):
+    # noinspection PyAbstractClass
     """Mixin class for elements representing collective effects
 
     Derived classes will automatically set the :py:attr:`~Element.is_collective`
@@ -584,8 +586,8 @@ class ThinMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
     _conversions = dict(Element._conversions,
-        ShiftErr=_broadcast,
-        RotationErr=_resize)
+                        ShiftErr=_broadcast,
+                        RotationErr=_resize)
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
