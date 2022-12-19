@@ -632,7 +632,7 @@ class Lattice(list):
     def bunch_spos(self) -> numpy.ndarray:
         """Bunch position around the ring [m]"""
         try:
-            circ = self.beta*clight* \
+            circ = self.beta * clight * \
                 self.harmonic_number/self.rf_frequency
         except AtError:
             circ = self.circumference       

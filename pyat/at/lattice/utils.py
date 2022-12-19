@@ -281,10 +281,11 @@ def uint32_refpts(refpts: RefIndex, n_elements: int) -> Uint32Refpts:
             prev = refs[0]
             for nxt in refs[1:]:
                 if nxt < prev:
-                    raise ValueError('refpts should be given in ascending order')
+                    raise ValueError('refpts should be given in ascending'
+                                     ' order')
                 elif nxt == prev:
-                    raise ValueError('refpts contains duplicates or index(es) out'
-                                     ' of range')
+                    raise ValueError('refpts contains duplicates or index(es)'
+                                     ' out of range')
                 prev = nxt
 
         return refs
@@ -324,7 +325,7 @@ def _uint32_refs(ring: Sequence[Element], refpts: Refpts) -> Uint32Refpts:
     else:
         return uint32_refpts(refpts, len(ring))
 
-    return numpy.fromiter((i for i,el in enumerate(ring) if checkfun(el)),
+    return numpy.fromiter((i for i, el in enumerate(ring) if checkfun(el)),
                           dtype=numpy.uint32)
 
 
@@ -359,6 +360,7 @@ def bool_refpts(refpts: RefIndex, n_elements: int) -> BoolRefpts:
         return brefpts
     else:
         raise _type_error(refpts)
+
 
 # Private function accepting a callable for refpts
 def _bool_refs(ring: Sequence[Element], refpts: Refpts, *args,
@@ -400,6 +402,7 @@ def _bool_refs(ring: Sequence[Element], refpts: Refpts, *args,
 
     return numpy.append(numpy.fromiter(map(checkfun, ring), dtype=bool,
                                        count=len(ring)), False)
+
 
 def checkattr(attrname: str, attrvalue: Optional = None) \
         -> ElementFilter:
@@ -638,7 +641,8 @@ def refpts_len(ring: Sequence[Element], refpts: Refpts) -> int:
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
-def get_refpts(ring: Sequence[Element], refpts: Refpts, quiet=True) -> Uint32Refpts:
+def get_refpts(ring: Sequence[Element], refpts: Refpts,
+               quiet=True) -> Uint32Refpts:
     r"""Return a :py:obj:`~numpy.uint32` array of element indices selecting
     ring elements.
 
