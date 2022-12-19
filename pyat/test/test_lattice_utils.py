@@ -1,6 +1,4 @@
-import sys
 import numpy
-from io import BytesIO, StringIO
 from at.lattice import elements, uint32_refpts, bool_refpts, checkattr
 from at.lattice import checktype, get_cells, refpts_iterator, get_elements
 from at.lattice import get_s_pos, tilt_elem, shift_elem, set_tilt, set_shift
@@ -123,22 +121,7 @@ def test_get_elements(hmba_lattice):
     assert get_elements(hmba_lattice, elements.RFCavity) == [hmba_lattice[0]]
     # test invalid key raises TypeError
     with pytest.raises(TypeError):
-        get_elements(hmba_lattice, None)
-    # test quiet suppresses print statement correctly
-    if sys.version_info < (3, 0):
-        capturedOutput = BytesIO()
-    else:
-        capturedOutput = StringIO()
-    sys.stdout = capturedOutput
-    get_elements(hmba_lattice, 'BPM_06', quiet=True)
-    sys.stdout = sys.__stdout__
-    assert capturedOutput.getvalue() == ''
-    sys.stdout = capturedOutput
-    get_elements(hmba_lattice, 'BPM_06', quiet=False)
-    sys.stdout = sys.__stdout__
-    assert capturedOutput.getvalue() == ("String 'BPM_06' matched 1 family: "
-                                         "BPM_06\nall corresponding elements "
-                                         "have been returned.\n")
+        get_elements(hmba_lattice, 1.0)
 
 
 def test_get_s_pos_returns_zero_for_empty_lattice():
