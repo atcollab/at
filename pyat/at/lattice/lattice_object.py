@@ -1157,10 +1157,7 @@ class Lattice(list):
         Parameters:
             refpts: element selector
         """
-        if callable(refpts):
-            check = map(refpts, self)
-        else:
-            check = iter(_bool_refs(self, refpts))
+        check = _bool_refs(self, refpts)
         elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
         return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, **kwargs)
