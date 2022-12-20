@@ -23,16 +23,15 @@ def _array66(value):
     return _array(value, shape=(6, 6))
 
 
+def _array2(value):
+    return _array(value, shape=(2,))
+
+
 def _resize(value, shape=(3,), dtype=numpy.float64):
     if not numpy.all(value.shape == shape):
         value = value.copy()
         value.resize(shape)
     return _array(value, shape=shape, dtype=dtype)
-
-
-def _broadcast(value, shape=(2,), dtype=numpy.float64):
-    v = numpy.broadcast_to(value, shape)
-    return _array(v, shape=shape, dtype=dtype)
 
 
 def _nop(value):
@@ -261,15 +260,15 @@ class Element(object):
                         T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
                         RApertures=lambda v: _array(v, (4,)),
-                        EApertures=lambda v: _array(v, (2,)),
-                        KickAngle=lambda v: _array(v, (2,)),
+                        EApertures=_array2,
+                        KickAngle=_array2,
                         PolynomB=_array, PolynomA=_array,
                         PolynomBErr=_array, PolynomAErr=_array,
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
-                        BPMGain=_broadcast,
-                        BPMOffset=_broadcast,
+                        BPMGain=_array2,
+                        BPMOffset=_array2,
                         BPMTilt=float,
                         ShiftErr=_not_allowed,
                         RotationErr=_not_allowed,
@@ -586,7 +585,7 @@ class ThinMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
     _conversions = dict(Element._conversions,
-                        ShiftErr=_broadcast,
+                        ShiftErr=_array2,
                         RotationErr=_resize)
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
@@ -645,11 +644,6 @@ class ThinMultipole(Element):
 
         super(ThinMultipole, self).__setattr__(key, value)
 
-    @property
-    def strength(self):
-        order = getattr(self, 'DefaultOrder', None)
-        return None if order is None else self.PolynomB[order]
-
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
@@ -679,6 +673,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
 
+    # noinspection PyUnresolvedReferences
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and \
                 self.MaxOrder == other.MaxOrder:
@@ -793,6 +788,7 @@ class Dipole(Radiative, Multipole):
         pp.ExitAngle = 0.0
         return pp
 
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     def is_compatible(self, other) -> bool:
         def invrho(dip: Dipole):
             return dip.BendingAngle / dip.Length
@@ -940,6 +936,7 @@ class RFCavity(LongtMotion, LongElement):
         pp.Voltage = fr * self.Voltage
         return pp
 
+    # noinspection PyUnresolvedReferences
     def is_compatible(self, other) -> bool:
         return (super().is_compatible(other) and
                 self.Frequency == other.Frequency and

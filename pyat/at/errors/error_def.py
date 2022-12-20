@@ -10,9 +10,13 @@ from scipy.stats import truncnorm, norm
 __all__ = ['find_orbit_err', 'get_optics_err', 'lattice_pass_err',
            'assign_errors', 'enable_errors']
 
-_BPM_ATTRS = ('BPMGain', 'BPMOffset', 'BPMTilt')
-_ERR_ATTRS = ('PolynomBErr', 'PolynomAErr', 'ShiftErr', 'RotationErr')
-_SEL_ARGS = ('all', 'PolynomAIndex', 'PolynomBIndex')
+_BPM_ATTRS = {'BPMGain': (2,), 'BPMOffset': (2,), 'BPMTilt': (1,)}
+_ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None, 'ShiftErr': (2,),
+              'RotationErr': None}
+_ALL_ATTRS = dict(**_BPM_ATTRS, **_ERR_ATTRS)
+
+_SEL_ARGS = tuple(_ERR_ATTRS.keys()) + \
+            ('all', 'PolynomAIndex', 'PolynomBIndex')
 
 
 def _truncated_randn(truncation=None, **kwargs):
@@ -125,7 +129,7 @@ def assign_errors(ring: Lattice, refpts: Refpts,
         :py:func:`enable_errors`, :py:func:`get_optics_err`
     """
     elements = ring[refpts]
-    for attr in _BPM_ATTRS + _ERR_ATTRS:
+    for attr, sz in _ALL_ATTRS.items():
         val = kwargs.pop(attr, None)
         if val is not None:
             if isinstance(val, tuple):
@@ -135,7 +139,9 @@ def assign_errors(ring: Lattice, refpts: Refpts,
             else:
                 rand = np.atleast_2d(val)
                 syst = np.zeros(rand.shape)
-            rv = _truncated_randn(size=(len(elements), rand.shape[-1]),
+            if sz is None:
+                sz = (rand.shape[-1],)
+            rv = _truncated_randn(size=((len(elements),) + sz),
                                   truncation=truncation, random_state=seed)
             try:
                 vals = syst + rv*rand
@@ -159,7 +165,7 @@ def _apply_bpm_orbit_error(ring, refpts, orbit):
         if hasattr(e, 'BPMOffset'):
             o6[:, [0, 2]] += e.BPMOffset
         if hasattr(e, 'BPMTilt'):
-            o6[:, [0, 2]] = _rotmat(e.BPMTilt) @ o6[:, [0, 2]]
+            o6[:, [0, 2]] = o6[:, [0, 2]] @ _rotmat(e.BPMTilt).T
         if hasattr(e, 'BPMGain'):
             o6[:, [0, 2]] *= e.BPMGain
 
@@ -282,7 +288,7 @@ def get_mean_std_err(ring: Lattice, key, attr, index=0):
 
 def _sort_flags(kwargs):
     errargs = {}
-    for key in _ERR_ATTRS + _SEL_ARGS:
+    for key in _SEL_ARGS:
         if key in kwargs:
             errargs[key] = kwargs.pop(key)
     return kwargs, errargs
