@@ -51,7 +51,7 @@ __all__ = ['AtError', 'AtWarning', 'axis_descr',
            'set_shift', 'set_tilt', 'set_rotation',
            'tilt_elem', 'shift_elem', 'rotate_elem',
            'get_value_refpts', 'set_value_refpts', 'Refpts',
-           'get_geometry', 'rotate_elem', 'set_rotation']
+           'get_geometry']
 
 _axis_def = dict(
     x=dict(index=0, label="x", unit=" [m]"),
@@ -74,9 +74,13 @@ class AtWarning(UserWarning):
 
 
 def _type_error(refpts):
+    if isinstance(refpts, numpy.ndarray):
+        tp = refpts.dtype.type
+    else:
+        tp = type(refpts)
     return TypeError(
         "Invalid refpts type {0}. Allowed types: "
-        "Type[Element], ElementFilter, str, RefIndex".format(type(refpts)))
+        "Type[Element], ElementFilter, str, int, bool".format(tp))
 
 
 # noinspection PyIncorrectDocstring

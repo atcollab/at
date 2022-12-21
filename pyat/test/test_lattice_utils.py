@@ -15,8 +15,9 @@ import pytest
 ))
 def test_uint32_refpts_converts_numerical_inputs_correctly(ref_in, expected):
     numpy.testing.assert_equal(uint32_refpts(ref_in, 5), expected)
-    ref_in2 = numpy.asarray(ref_in).astype(numpy.float64)
-    numpy.testing.assert_equal(uint32_refpts(ref_in2, 5), expected)
+    # float indexes are deprecated
+    # ref_in2 = numpy.asarray(ref_in).astype(numpy.float64)
+    # numpy.testing.assert_equal(uint32_refpts(ref_in2, 5), expected)
     ref_in2 = numpy.asarray(ref_in).astype(numpy.int64)
     numpy.testing.assert_equal(uint32_refpts(ref_in2, 5), expected)
 
