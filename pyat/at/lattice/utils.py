@@ -4,19 +4,27 @@ Helper functions for working with AT lattices.
 A lattice as understood by pyAT is any sequence of elements.  These functions
 are useful for working with these sequences.
 
-The *refpts* argument allow functions to select points in the lattice,
-returned values are given at the entrance of each element specified in *refpts*.
-*refpts* may be:
+.. _refpts:
 
-#. an integer or a sequence of integers
- (0 indicating the first element)
-#. a sequence of booleans marking the selected elements
+**Selecting elements in a lattice:**
+
+The *refpts* argument allow functions to select elements in the lattice. The
+location refers to the entrance of selected elements. *refpts* may be:
+
+#. an integer in the range [-len(ring), len(ring)-1]
+   selecting the element according to python indexing rules.
+   As a special case, len(ring) is allowed and refers to the end
+   of the last element,
+#. an ordered list of such integers without duplicates,
+#. a numpy array of booleans of maximum length len(ring)+1,
+   where selected elements are :py:obj:`True`.
 #. an element type, selecting all elements of that type in
- the lattice, e.g. :pycode:`at.Sextupole`
-#. a string, selecting all elements whose `FamName` matching it.
- Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
+   the lattice, e.g. :pycode:`at.Sextupole`
+#. a string, selecting all elements whose `FamName` attribute matches it.
+   Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
 #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
- is :py:obj:`True` for selected elements
+   is :py:obj:`True` for selected elements
+
 """
 import numpy
 import functools
@@ -298,17 +306,8 @@ def _uint32_refs(ring: Sequence[Element], refpts: Refpts) -> Uint32Refpts:
     r"""Returns an integer array of element indices, selecting ring elements.
 
     Parameters:
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         uint32_ref (Uint32Refpts): uint32 numpy array used for indexing
@@ -363,24 +362,14 @@ def bool_refpts(refpts: RefIndex, n_elements: int) -> BoolRefpts:
 
 
 # Private function accepting a callable for refpts
-def _bool_refs(ring: Sequence[Element], refpts: Refpts, *args,
-               compatibility: bool = False) -> BoolRefpts:
+def _bool_refs(ring: Sequence[Element], refpts: Refpts) -> BoolRefpts:
     r"""
     bool_refpts(ring: Sequence[Element], refpts: Refpts)
     Returns a bool array of element indices, selecting ring elements.
 
     Parameters:
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         bool_refs (BoolRefpts):  A bool numpy array used for indexing
@@ -393,10 +382,7 @@ def _bool_refs(ring: Sequence[Element], refpts: Refpts, *args,
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
     elif numpy.issubdtype(type(refpts), numpy.str_):
-        if compatibility:
-            checkfun = checkattr(refpts, *args)
-        else:
-            checkfun = checkname(refpts)
+        checkfun = checkname(refpts)
     else:
         return bool_refpts(refpts, len(ring))
 
@@ -497,8 +483,7 @@ def checkname(pattern: str) -> ElementFilter:
 
 
 # noinspection PyIncorrectDocstring
-def get_cells(ring: Sequence[Element], refpts: Refpts, *args,
-              compatibility: bool = True) -> BoolRefpts:
+def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
     # noinspection PyShadowingNames
     r"""
     get_cells(ring, filtfunc) -> BoolRefpts
@@ -533,7 +518,9 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args,
         Returns a numpy array of booleans where all elements having a
         :pycode:`K` attribute equal to 0.0 are :py:obj:`True`
     """
-    return _bool_refs(ring, refpts, *args, compatibility=compatibility)
+    if isinstance(refpts, str):
+        refpts = checkattr(refpts, *args)
+    return _bool_refs(ring, refpts, *args)
 
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
@@ -570,7 +557,7 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
         refs = numpy.ravel(refpts)
         if (refpts is None) or (refs.size == 0):
             return iter(())
-        elif refs.dtype == bool:
+        elif numpy.issubdtype(refs.dtype, numpy.bool_):
             return compress(ring, refs)
         elif numpy.issubdtype(refs.dtype, numpy.integer):
             return (ring[i] for i in refs)
