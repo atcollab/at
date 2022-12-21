@@ -319,7 +319,7 @@ def _uint32_refs(ring: Sequence[Element], refpts: Refpts) -> Uint32Refpts:
         checkfun = refpts
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
-    elif numpy.issubdtype(type(refpts), numpy.str_):
+    elif isinstance(refpts, str):
         checkfun = checkname(refpts)
     else:
         return uint32_refpts(refpts, len(ring))
@@ -381,7 +381,7 @@ def _bool_refs(ring: Sequence[Element], refpts: Refpts) -> BoolRefpts:
         checkfun = refpts
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
-    elif numpy.issubdtype(type(refpts), numpy.str_):
+    elif isinstance(refpts, str):
         checkfun = checkname(refpts)
     else:
         return bool_refpts(refpts, len(ring))
@@ -520,7 +520,7 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
     """
     if isinstance(refpts, str):
         refpts = checkattr(refpts, *args)
-    return _bool_refs(ring, refpts, *args)
+    return _bool_refs(ring, refpts)
 
 
 def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
@@ -529,17 +529,8 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
 
     Parameters:
         ring:           Lattice description
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         elem_iter (Iterator[Element]):  Iterator over the elements in *ring*
@@ -551,7 +542,7 @@ def refpts_iterator(ring: Sequence[Element], refpts: Refpts) \
         checkfun = refpts
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
-    elif numpy.issubdtype(type(refpts), numpy.str_):
+    elif isinstance(refpts, str):
         checkfun = checkname(refpts)
     else:
         refs = numpy.ravel(refpts)
@@ -585,7 +576,7 @@ def refpts_count(refpts: RefIndex, n_elements: int) -> int:
     refs = numpy.ravel(refpts)
     if (refpts is None) or (refs.size == 0):
         return 0
-    elif refs.dtype == bool:
+    elif numpy.issubdtype(refs.dtype, numpy.bool_):
         return numpy.count_nonzero(refs)
     elif numpy.issubdtype(refs.dtype, numpy.integer):
         return len(refs)
@@ -598,17 +589,8 @@ def refpts_len(ring: Sequence[Element], refpts: Refpts) -> int:
 
     Parameters:
         ring:           Lattice description
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         nrefs (int):  The number of reference points
@@ -619,7 +601,7 @@ def refpts_len(ring: Sequence[Element], refpts: Refpts) -> int:
         checkfun = refpts
     elif isinstance(refpts, Element):
         checkfun = checktype(type(refpts))
-    elif numpy.issubdtype(type(refpts), numpy.str_):
+    elif isinstance(refpts, str):
         checkfun = checkname(refpts)
     else:
         return refpts_count(refpts, len(ring))
@@ -635,17 +617,8 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
 
     Parameters:
         ring:           Lattice description
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         uint32_refs (Uint32Refs):    :py:obj:`~numpy.uint32` numpy array as
@@ -664,17 +637,8 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, quiet=True) \
 
     Parameters:
         ring:           Lattice description
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         elem_list (list):  list of :py:class:`.Element`\ s matching key
@@ -688,17 +652,8 @@ def get_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
     Parameters:
         ring:           Lattice description
-        refpts:         Element selection key. *refpts* may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         attrname:   Attribute name
         index:      index of the value to retrieve if *attrname* is
           an array.
@@ -728,13 +683,8 @@ def set_value_refpts(ring: Sequence[Element], refpts: Refpts,
 
     Parameters:
         ring:       Lattice description
-        refpts:     refpts may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         attrname:   Attribute name
         attrvalues: Attribute values
         index:      index of the value to set if *attrname* is
@@ -783,17 +733,8 @@ def get_s_pos(ring: Sequence[Element], refpts: Optional[Refpts] = None) \
 
     Parameters:
         ring:       Lattice description
-        refpts:     refpts may be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. an element type, selecting all elements of that type in
-             the lattice, e.g. :pycode:`at.Sextupole`
-          #. a string, selecting all elements whose `FamName` matching it.
-             Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`
-          #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
-             is :py:obj:`True` for selected elements
+        refpts:         Element selection key.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
         s_pos:  Array of locations of the elements selected by *refpts*
