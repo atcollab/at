@@ -11,12 +11,13 @@ __all__ = ['find_orbit_err', 'get_optics_err', 'lattice_pass_err',
            'assign_errors', 'enable_errors']
 
 _BPM_ATTRS = {'BPMGain': (2,), 'BPMOffset': (2,), 'BPMTilt': (1,)}
-_ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None, 'ShiftErr': (2,),
-              'RotationErr': None}
+_ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None,
+              'ScalingPolynomBErr': None, 'ScalingPolynomAErr': None,
+              'ShiftErr': (2,), 'RotationErr': None}
 _ALL_ATTRS = dict(**_BPM_ATTRS, **_ERR_ATTRS)
 
-_SEL_ARGS = tuple(_ERR_ATTRS.keys()) + \
-            ('all', 'PolynomAIndex', 'PolynomBIndex')
+_SEL_ARGS = ('PolynomBErr', 'PolynomAErr', 'ShiftErr', 'RotationErr',
+             'all', 'PolynomAIndex', 'PolynomBIndex')
 
 
 def _truncated_randn(truncation=None, **kwargs):
@@ -140,7 +141,15 @@ def assign_errors(ring: Lattice, refpts: Refpts,
                 rand = np.atleast_2d(val)
                 syst = np.zeros(rand.shape)
             if sz is None:
-                sz = (rand.shape[-1],)
+                szsyst = syst.shape[1:]
+                szrand = rand.shape[1:]
+                # pad syst and rand to the same size
+                szmax = np.maximum(szsyst, szrand)
+                missyst = np.concatenate(([0], szmax-szsyst))
+                misrand = np.concatenate(([0], szmax-szrand))
+                rand = np.pad(rand, tuple((0, m) for m in misrand))
+                syst = np.pad(syst, tuple((0, m) for m in missyst))
+                sz = tuple(szmax)
             rv = _truncated_randn(size=((len(elements),) + sz),
                                   truncation=truncation, random_state=seed)
             try:
@@ -182,7 +191,7 @@ def _apply_alignment_errors(ring, **kwargs):
     alldef = kwargs.pop('all', True)
     for e in ring[refpts]:
         shift = getattr(e, 'ShiftErr')
-        rots = getattr(e, 'RotationsErr')
+        rots = getattr(e, 'RotationErr')
         if shift is not None:
             shiftx = kwargs.pop('shiftx', alldef)*shift[0]
             shifty = kwargs.pop('shifty', alldef)*shift[1]
@@ -198,25 +207,40 @@ def _apply_alignment_errors(ring, **kwargs):
 
 def _apply_field_errors(ring, **kwargs):
     def sanitize(e):
-        mo = max(len(e.PolynomA), len(e.PolynomB))
-        e.PolynomA = np.pad(e.PolynomA, mo - len(e.PolynomA))
-        e.PolynomB = np.pad(e.PolynomB, mo - len(e.PolynomB))
+        la = len(e.PolynomA)
+        lb = len(e.PolynomB)
+        mo = max(la, lb)
+        e.PolynomA = np.pad(e.PolynomA, (0, mo - la))
+        e.PolynomB = np.pad(e.PolynomB, (0, mo - lb))
         e.MaxOrder = mo - 1
 
-    def get_pol(e, pname, index):
-        perr = np.copy(getattr(e, pname + 'Err'))
-        if index is not None:
-            perr[range(len(perr)) != index] = 0.0
-        le = sorted((getattr(e, pname), perr), key=len)
-        pn = np.copy(le[1])
-        pn[:len(le[0])] += le[0]
+    def get_pol(e, pname, pstatic, pdynamic, index):
+        def get_err(elem, attribute, idx):
+            empty = np.array([], dtype=float)
+            if idx is None:
+                v = getattr(elem, attribute, empty)
+            else:
+                v = np.copy(getattr(elem, attribute, empty))
+                v[range(len(v)) != idx] = 0.0
+            return v
+
+        value = getattr(e, pname)
+        staticerr = get_err(e, pstatic, index)
+        dynamicerr = get_err(e, pdynamic, index)
+        pn = np.zeros(max(len(value), len(staticerr), len(dynamicerr)))
+        pn[:len(value)] += value
+        pn[:len(staticerr)] += staticerr
+        pn[:len(dynamicerr)] += e.strength*dynamicerr
         return pn
 
     def set_polerr(ring, pname, index):
-        refpts = [hasattr(e, pname) and hasattr(e, pname+'Err') for e in ring]
+        pstat = pname+'Err'
+        pdyn = 'Scaling' + pstat
+        refpts = [hasattr(e, pname) and (hasattr(e, pstat) or
+                                         hasattr(e, pdyn)) for e in ring]
         rr = ring.replace(refpts)
         for e in rr[refpts]:
-            setattr(e, pname, get_pol(e, pname, index))
+            setattr(e, pname, get_pol(e, pname, pstat, pdyn, index))
             sanitize(e)
         return rr
 

@@ -27,10 +27,10 @@ def _array2(value):
     return _array(value, shape=(2,))
 
 
-def _resize(value, shape=(3,), dtype=numpy.float64):
+def _pad(value, shape=(3,), dtype=numpy.float64, **kwargs):
     if not numpy.all(value.shape == shape):
-        value = value.copy()
-        value.resize(shape)
+        missing = numpy.array(shape)- numpy.array(value.shape)
+        value = numpy.pad(value, tuple((0, m) for m in missing), **kwargs)
     return _array(value, shape=shape, dtype=dtype)
 
 
@@ -263,7 +263,8 @@ class Element(object):
                         EApertures=_array2,
                         KickAngle=_array2,
                         PolynomB=_array, PolynomA=_array,
-                        PolynomBErr=_array, PolynomAErr=_array,
+                        ScalingPolynomBErr=_not_allowed,
+                        scalingPolynomAErr=_not_allowed,
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
@@ -586,7 +587,7 @@ class ThinMultipole(Element):
                                                      'PolynomB']
     _conversions = dict(Element._conversions,
                         ShiftErr=_array2,
-                        RotationErr=_resize)
+                        RotationErr=_pad)
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -643,6 +644,10 @@ class ThinMultipole(Element):
                     'MaxOrder must be smaller than {0}'.format(lmax))
 
         super(ThinMultipole, self).__setattr__(key, value)
+
+    @property
+    def integrated_strength(self):
+        return self.PolynomB[self.DefaultOrder]
 
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
@@ -708,6 +713,14 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     def H(self, strength):
         self.PolynomB[2] = strength
 
+    @property
+    def integrated_strength(self):
+        return self.PolynomB[self.DefaultOrder] * self.Length
+
+    @property
+    def strength(self):
+        return self.PolynomB[self.DefaultOrder]
+
 
 class Dipole(Radiative, Multipole):
     """Dipole element"""
@@ -717,7 +730,10 @@ class Dipole(Radiative, Multipole):
                         ExitAngle=float,
                         FringeInt1=float, FringeInt2=float,
                         FringeQuadEntrance=int, FringeQuadExit=int,
-                        FringeBendEntrance=int, FringeBendExit=int)
+                        FringeBendEntrance=int, FringeBendExit=int,
+                        ScalingPolynomBErr=_array,
+                        scalingPolynomAErr=_array,
+                        )
 
     _entrance_fields = Multipole._entrance_fields + ['EntranceAngle',
                                                      'FringeInt1',
@@ -812,7 +828,10 @@ class Quadrupole(Radiative, Multipole):
     """Quadrupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
-                        FringeQuadExit=int)
+                        FringeQuadExit=int,
+                        ScalingPolynomBErr=_array,
+                        scalingPolynomAErr=_array,
+                        )
 
     _entrance_fields = Multipole._entrance_fields + ['FringeQuadEntrance']
     _exit_fields = Multipole._exit_fields + ['FringeQuadExit']
@@ -858,6 +877,10 @@ class Quadrupole(Radiative, Multipole):
 class Sextupole(Multipole):
     """Sextupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['H']
+    _conversions = dict(Multipole._conversions,
+                        ScalingPolynomBErr=_array,
+                        scalingPolynomAErr=_array,
+                        )
 
     DefaultOrder = 2
 
@@ -891,6 +914,10 @@ class Sextupole(Multipole):
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
     _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
+    _conversions = dict(Multipole._conversions,
+                        ScalingPolynomBErr=_array,
+                        scalingPolynomAErr=_array,
+                        )
 
     DefaultOrder = 3
 

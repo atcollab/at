@@ -1,5 +1,5 @@
 import pytest
-from at import checktype, Monitor
+from at import checktype, Monitor, Quadrupole
 import numpy as np
 from numpy.testing import assert_allclose as assert_close
 
@@ -50,3 +50,30 @@ def test_random_bpm_errors(hmba_lattice):
     of = np.reshape(xyorbit0+bpmoff, (-1, 1, 2))
     expected = np.squeeze(of @ rotm) * bpmgain
     assert_close(xyorbit, expected, rtol=0, atol=0)
+
+
+def test_field_errors(hmba_lattice):
+    ring = hmba_lattice.copy()
+    qpoles = ring.get_cells(checktype(Quadrupole))
+    # Nominal quadrupoles strengths
+    k = np.array([el.PolynomB[1] for el in ring.select(qpoles)])
+    shifterr = 0.0001            # Random shift error both planes
+    rotationerr = 0.0002         # Random tilt
+    octu = 100.0
+    PAErr = 0.0001               # random vertical dipole
+    systPBErr = [0, 0, 0, octu]  # Systematic scaling octupole
+    randPBErr = [0, 0.001]       # Random strength error
+    # Assign errors on quadrupoles
+    ring.assign_errors(qpoles, ShiftErr=shifterr, RotationErr=rotationerr,
+                       ScalingPolynomAErr=PAErr,
+                       ScalingPolynomBErr=(systPBErr, randPBErr))
+    # Extract the assigned random strength errors
+    kerr = np.array([el.ScalingPolynomBErr[1] for el in ring.select(qpoles)])
+    # Enable the errors
+    errlat = hmba_lattice.enable_errors()
+    # Get the PolynomB including errors
+    pb = np.vstack([el.PolynomB[:4] for el in errlat.select(qpoles)])
+    # Check the random quadrupole
+    assert_close(pb[:, 1], k*(1+kerr), rtol=0, atol=1.0e-15)
+    # Check the systematic octupole
+    assert_close(pb[:, 3], k*octu, rtol=0, atol=0)
