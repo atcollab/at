@@ -10,8 +10,8 @@ from fnmatch import fnmatch
 import warnings
 
 
-globring = None
-globobs = None
+_globring = None
+_globobs = None
 
 
 class ElementResponseMatrix(object):
@@ -50,9 +50,9 @@ class ElementResponseMatrix(object):
     @staticmethod
     def _resp_one(ring, observables, variable):
         if ring is None:
-            ring = globring
+            ring = _globring
         if observables is None:
-            observables = globobs
+            observables = _globobs
         v0 = variable.get(ring)
         variable.set(ring, v0+variable.delta)
         op = observables.values(ring)
@@ -70,14 +70,15 @@ class ElementResponseMatrix(object):
                 pool_size = min(len(self.variables),
                                 multiprocessing.cpu_count())
             if ctx.get_start_method() == 'fork':
-                global globring
-                global globobs
-                globring = ring
-                globobs = self.observables
+                global _globring
+                global _globobs
+                _globring = ring
+                _globobs = self.observables
                 args = [(None, None, var) for var in self.variables]
                 with ctx.Pool(pool_size) as pool:
                     results = pool.starmap(partial(self._resp_one), args)
-                globring = None
+                _globring = None
+                _globobs = None
             else:
                 args = [(ring, self.observables, var)
                         for var in self.variables]
