@@ -647,6 +647,7 @@ class ThinMultipole(Element):
 
     @property
     def integrated_strength(self):
+        """Magnet integrated strength [m^(-order)]"""
         return self.PolynomB[self.DefaultOrder]
 
 
@@ -715,10 +716,12 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
 
     @property
     def integrated_strength(self):
+        """Magnet integrated strength [m^(-order)]"""
         return self.PolynomB[self.DefaultOrder] * self.Length
 
     @property
     def strength(self):
+        """Magnet strength [m^(-order-1)]"""
         return self.PolynomB[self.DefaultOrder]
 
 
@@ -726,13 +729,12 @@ class Dipole(Radiative, Multipole):
     """Dipole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['BendingAngle',
                                                          'K']
-    _conversions = dict(Multipole._conversions, EntranceAngle=float,
-                        ExitAngle=float,
+    _conversions = dict(Multipole._conversions,
+                        EntranceAngle=float, ExitAngle=float,
                         FringeInt1=float, FringeInt2=float,
                         FringeQuadEntrance=int, FringeQuadExit=int,
                         FringeBendEntrance=int, FringeBendExit=int,
-                        ScalingPolynomBErr=_array,
-                        scalingPolynomAErr=_array,
+                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
                         )
 
     _entrance_fields = Multipole._entrance_fields + ['EntranceAngle',
@@ -819,6 +821,15 @@ class Dipole(Radiative, Multipole):
         self.ExitAngle = other.ExitAngle
         self.BendingAngle += other.BendingAngle
 
+    @property
+    def integrated_strength(self):
+        """Magnet integrated strength [m^(-order)]"""
+        return self.BendingAngle
+
+    @property
+    def strength(self):
+        """Magnet strength [m^(-order-1)]"""
+        return self.BendingAngle / self.Length
 
 # Bend is a synonym of Dipole.
 Bend = Dipole
@@ -827,10 +838,9 @@ Bend = Dipole
 class Quadrupole(Radiative, Multipole):
     """Quadrupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
-    _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
-                        FringeQuadExit=int,
-                        ScalingPolynomBErr=_array,
-                        scalingPolynomAErr=_array,
+    _conversions = dict(Multipole._conversions,
+                        FringeQuadEntrance=int, FringeQuadExit=int,
+                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
                         )
 
     _entrance_fields = Multipole._entrance_fields + ['FringeQuadEntrance']
@@ -878,8 +888,7 @@ class Sextupole(Multipole):
     """Sextupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['H']
     _conversions = dict(Multipole._conversions,
-                        ScalingPolynomBErr=_array,
-                        scalingPolynomAErr=_array,
+                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
                         )
 
     DefaultOrder = 2
@@ -915,8 +924,7 @@ class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
     _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
     _conversions = dict(Multipole._conversions,
-                        ScalingPolynomBErr=_array,
-                        scalingPolynomAErr=_array,
+                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
                         )
 
     DefaultOrder = 3

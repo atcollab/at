@@ -1,3 +1,6 @@
+"""Functions assigning errors to the magnets and monitors of a lattice,
+enabling the errors and computing linear optics of the lattice with errors
+"""
 import numpy as np
 from typing import Optional, Union
 from at.lattice import refpts_iterator, Lattice, Refpts
@@ -16,8 +19,8 @@ _ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None,
               'ShiftErr': (2,), 'RotationErr': None}
 _ALL_ATTRS = dict(**_BPM_ATTRS, **_ERR_ATTRS)
 
-_SEL_ARGS = ('PolynomBErr', 'PolynomAErr', 'ShiftErr', 'RotationErr',
-             'all', 'PolynomAIndex', 'PolynomBIndex')
+_SEL_ARGS = ('all', 'shiftx', 'shifty', 'tilt', 'pitch', 'yaw',
+             'PolynomB', 'PolynomA', 'IndexB', 'IndexA')
 
 
 def _truncated_randn(truncation=None, **kwargs):
@@ -121,10 +124,31 @@ def assign_errors(ring: Lattice, refpts: Refpts,
             elements
           * (nelems, 1) or (nelems, 3) array: assign one value per element
             (this may be useful for systematic errors)
-        PolynomAErr:    Field error. *PolynomAErr* is added to the magnet's
-          *PolynomA*
-        PolynomBErr:    Field error. *PolynomBErr* is added to the magnet's
+        PolynomBErr:    Absolute field error. *PolynomAErr* is added to the
+          magnet's *PolynomB*
+        PolynomAErr:    Absolute field error. *PolynomBErr* is added to the
+          magnet's *PolynomA*
+        ScalingPolynomBErr:    Field error. *ScalingPolynomBErr* is the
+          multipolar field error relative to the main magnet field component.
+          When :py:func:`enabling the errors<enable_errors>`,
+          *ScalingPolynomBErr* is multiplied by the magnet strengh and added tp
           *PolynomB*
+        ScalingPolynomAErr:    Field error. *ScalingPolynomAErr* is the skew
+          multipolar field error relative to the main magnet field component.
+
+    Examples:
+
+        >>> qpoles =ring.get_cells(checktype(Quadrupole))
+        >>> shift_err = 0.0001      # 100 um random position error (both planes)
+        >>> rotation_err = 0.0002   # 200 urad random tilt error (both planes)
+        >>> syst_PBErr = [0, 0, 0, 98]  # systematic octupole component
+        >>> rand_PBErr = [0, 0.001]     # 1.e-3 relative gradient error
+        >>> assign_errors(ring, qpoles,
+        ... ShiftErr=shift_err,
+        ... RotationErr=rotation_err,
+        ... ScalingPolynomBErr=(syst_PBErr, rand_PBErr))
+
+
 
     See also:
         :py:func:`enable_errors`, :py:func:`get_optics_err`
@@ -217,11 +241,11 @@ def _apply_field_errors(ring, **kwargs):
     def get_pol(e, pname, pstatic, pdynamic, index):
         def get_err(elem, attribute, idx):
             empty = np.array([], dtype=float)
-            if idx is None:
-                v = getattr(elem, attribute, empty)
-            else:
-                v = np.copy(getattr(elem, attribute, empty))
-                v[range(len(v)) != idx] = 0.0
+            v = getattr(elem, attribute, empty)
+            if not (idx is None or idx >= len(v)):
+                tmp = v[idx]
+                v = np.zeros(idx+1)
+                v[idx] = tmp
             return v
 
         value = getattr(e, pname)
@@ -267,13 +291,16 @@ def enable_errors(ring: Lattice, **kwargs):
     Keyword Args:
         all (bool):         Set the default value for all the specific error
           flags. Default: :py:obj:`True`
-        ShiftErr (bool):    enable magnet shift errors. Default: *all*
-        RotationErr (bool): enable magnet rotation errors. Default: *all*
-        PolynomAErr (bool): enable polynomial errors. Default: *all*
-        PolynomAIndex (Optional[bool]): restrict the polynomial error to the
+        shiftx (bool):      enable horizontal shift errors. Default: *all*
+        shifty (bool):      enable vertical shift errors. Default: *all*
+        tilt (bool):        enable tilt errors. Default: *all*
+        pitch (bool):       enable pitch errors. Default: *all*
+        yaw (bool):         enable yaw errors. Default: *all*
+        PolynomB (bool):    enable polynomial errors. Default: *all*
+        IndexB (Optional[int]): restrict the polynomial errors to the
           specified index. Default: :py:obj:`None` meaning the whole polynom
-        PolynomBErr (bool): enable polynomial errors. Default: *all*
-        PolynomBIndex (Optional[bool]): restrict the polynomial error to the
+        PolynomA (bool):    enable polynomial errors. Default: *all*
+        IndexA (Optional[int]): restrict the skew polynomial error to the
           specified index. Default: :py:obj:`None` meaning the whole polynom
 
     Examples:
@@ -296,6 +323,7 @@ def enable_errors(ring: Lattice, **kwargs):
         ring = _apply_field_errors(ring, **kwargs)
         ring = _apply_alignment_errors(ring, **kwargs)
         ring._has_errors = True
+    print(ring[5])
     return ring
 
 
