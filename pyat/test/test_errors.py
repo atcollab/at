@@ -38,7 +38,6 @@ def test_random_bpm_errors(hmba_lattice):
     ring.assign_errors(bpms, BPMOffset=offset, BPMGain=gain, BPMTilt=tilt)
 
     xyorbit0 = ring.find_orbit(bpms)[1][:, [0, 2]]
-    xyorbit = ring.find_orbit_err(bpms, all=False)[1][:, [0, 2]]
 
     bpmoff = np.vstack([el.BPMOffset for el in ring.select(bpms)])
     bpmgain = np.vstack([el.BPMGain for el in ring.select(bpms)])
@@ -49,6 +48,12 @@ def test_random_bpm_errors(hmba_lattice):
     # reshape offset,
     of = np.reshape(xyorbit0+bpmoff, (-1, 1, 2))
     expected = np.squeeze(of @ rotm) * bpmgain
+
+    xyorbit = ring.find_orbit_err(bpms, all=False)[1][:, [0, 2]]
+    assert_close(xyorbit, expected, rtol=0, atol=0)
+
+    _, _, el = ring.get_optics_err(bpms, all=False)
+    xyorbit = el.closed_orbit[:, [0, 2]]
     assert_close(xyorbit, expected, rtol=0, atol=0)
 
 

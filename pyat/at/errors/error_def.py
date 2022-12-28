@@ -34,6 +34,7 @@ def assign_errors(ring: Lattice, refpts: Refpts,
                   truncation: Optional[float] = None,
                   seed: Optional[Union[int, np.random.Generator]] = None,
                   **kwargs):
+    # noinspection PyUnresolvedReferences
     r"""Assign errors to selected elements
 
     The errors are stored as additional attributes but are not enabled for
@@ -323,7 +324,6 @@ def enable_errors(ring: Lattice, **kwargs):
         ring = _apply_field_errors(ring, **kwargs)
         ring = _apply_alignment_errors(ring, **kwargs)
         ring._has_errors = True
-    print(ring[5])
     return ring
 
 
