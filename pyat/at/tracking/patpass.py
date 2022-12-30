@@ -89,11 +89,8 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
         nturns:                 number of turns to be tracked
-        refpts:                 numpy array of indices of elements where
-          output is desired:
-
-          * len(line) means end of the last element (default)
-          * 0 means entrance of the first element
+        refpts:                 Selects the location of coordinates output.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         pool_size:              number of processes. If None,
           ``min(npart,nproc)`` is used
         start_method:           python multiprocessing start method.

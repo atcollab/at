@@ -43,8 +43,8 @@ def test_uint32_refpts_converts_other_input_types_correctly(ref_in, expected):
 # indexing misordered
 @pytest.mark.parametrize('ref_in', ([0, 1, 2, 3], [2, 1], [0, 0], [-1, 0],
                                     [0, -2], [3, 0], [1, 3], [-1, 3], [3, -2]))
-def test_uint32_refpts_throws_ValueError_correctly(ref_in):
-    with pytest.raises(ValueError):
+def test_uint32_refpts_throws_IndexError_correctly(ref_in):
+    with pytest.raises(IndexError):
         uint32_refpts(ref_in, 2)
 
 

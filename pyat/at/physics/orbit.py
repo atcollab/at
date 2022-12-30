@@ -4,7 +4,7 @@ Closed orbit related functions
 import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant
-from at.lattice import Lattice, get_s_pos, uint32_refpts, Refpts
+from at.lattice import Lattice, get_s_pos, Refpts
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
 import warnings
@@ -154,9 +154,11 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
     2. Have any time dependence (localized impedance, fast kickers etc)
 
     Parameters:
-        ring:           Lattice description (``is_6d`` must be :py:obj:`False`)
+        ring:           Lattice description (:py:meth:`~.Lattice.is_6d` must be
+          :py:obj:`False`)
         dp:             Momentum deviation. Defaults to 0
-        refpts:         Observation points
+        refpts:         Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         dct:            Path lengthening. If specified, *dp* is ignored and
           the off-momentum is deduced from the path lengthening.
         df:             Deviation from the nominal RF frequency. If specified,
@@ -201,12 +203,13 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
             orbit = _orbit_dp(ring, dp, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
-    uint32refs = ring.uint32_refpts(refpts)
     # bug in numpy < 1.13
-    all_points = numpy.empty((0, 6), dtype=float) if len(
-        uint32refs) == 0 else numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=uint32refs,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
+    if ring.refcount(refpts) == 0:
+        all_points = numpy.empty((0, 6), dtype=float)
+    else:
+        all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
+                                  keep_lattice=keep_lattice)
+        all_points = numpy.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
 
@@ -244,9 +247,11 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
     2. Have any time dependence (localized impedance, fast kickers etc)
 
     Parameters:
-        ring:           Lattice description (``is_6d`` must be :py:obj:`False`)
+        ring:           Lattice description (:py:meth:`~.Lattice.is_6d` must be
+          :py:obj:`False`)
         dct:            Path lengthening.
-        refpts:         Observation points
+        refpts:         Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         dp:             Momentum deviation. Defaults to :py:obj:`None`
         df:             Deviation from the nominal RF frequency. If specified,
           *dct* is ignored and the off-momentum is deduced from the frequency
@@ -290,12 +295,13 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
             orbit = _orbit_dct(ring, dct,  keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
-    uint32refs = ring.uint32_refpts(refpts)
     # bug in numpy < 1.13
-    all_points = numpy.empty((0, 6), dtype=float) if len(
-        uint32refs) == 0 else numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=uint32refs,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
+    if ring.refcount(refpts) == 0:
+        all_points = numpy.empty((0, 6), dtype=float)
+    else:
+        all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
+                                  keep_lattice=keep_lattice)
+        all_points = numpy.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
 
@@ -403,7 +409,8 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
 
     Parameters:
         ring:           Lattice description
-        refpts:         Observation points
+        refpts:         Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
           to the specified *refpts*.
@@ -442,28 +449,32 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
-    uint32refs = ring.uint32_refpts(refpts)
     # bug in numpy < 1.13
-    all_points = numpy.empty((0, 6), dtype=float) if len(
-        uint32refs) == 0 else numpy.squeeze(
-        lattice_pass(ring, orbit.copy(order='K'), refpts=uint32refs,
-                     keep_lattice=keep_lattice), axis=(1, 3)).T
+    if ring.refcount(refpts) == 0:
+        all_points = numpy.empty((0, 6), dtype=float)
+    else:
+        all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
+                                  keep_lattice=keep_lattice)
+        all_points = numpy.squeeze(all_points, axis=(1, 3)).T
     return orbit, all_points
 
 
-def find_orbit(ring, refpts=None, **kwargs):
+def find_orbit(ring, refpts: Refpts = None, **kwargs):
     r"""Gets the closed orbit in the general case
 
     Depending on the lattice, :py:func:`find_orbit` will:
 
-    * use :py:func:`find_orbit6` if ``ring.is_6d`` is :py:obj:`True`,
-    * use :py:func:`find_sync_orbit` if ``ring.is_6d`` is :py:obj:`False` and
+    * use :py:func:`find_orbit6` if :py:meth:`~.Lattice.is_6d` is
+      :py:obj:`True`,
+    * use :py:func:`find_sync_orbit` if :py:meth:`~.Lattice.is_6d` is
+      :py:obj:`False` and
       *dct* or *df* is specified,
     * use :py:func:`find_orbit4` otherwise.
 
     Parameters:
         ring:           Lattice description
-        refpts:         Observation points
+        refpts:         Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Keyword Args:
         orbit (Orbit):          Avoids looking for initial the closed

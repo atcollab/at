@@ -1,31 +1,31 @@
 r"""
 Helper functions for working with AT lattices.
 
-A lattice as understood by pyAT is any sequence of elements.  These functions
+A lattice as understood by pyAT is a sequence of elements.  These functions
 are useful for working with these sequences.
 
 .. _refpts:
 
 **Selecting elements in a lattice:**
 
-The *refpts* argument allows functions to select elements in the lattice. The
-location refers to the entrance of selected elements. *refpts* may be:
+The *refpts* argument allows functions to select locations in the lattice. The
+location is defined as the entrance of the selected element. *refpts* may be:
 
-#. an integer in the range [-len(ring), len(ring)-1]
-   selecting the element according to python indexing rules.
-   As a special case, len(ring) is allowed and refers to the end
+#. an integer in the range *[-len(lattice), len(lattice)-1]*
+   selecting an element according to the python indexing rules.
+   As a special case, *len(lattice)* is allowed and refers to the end
    of the last element,
 #. an ordered list of such integers without duplicates,
-#. a numpy array of booleans of maximum length len(ring)+1,
+#. a numpy array of booleans of maximum length *len(lattice)+1*,
    where selected elements are :py:obj:`True`,
 #. :py:obj:`None`, meaning an empty selection,
 #. :py:obj:`.All`, meaning "all possible reference points": the entrance of all
    elements plus the end of the last element,
-#. :py:obj:`.End`, referring to the end of the last element
-#. an element type, selecting all elements of that type in
+#. :py:obj:`.End`, selecting the end of the last element,
+#. an element type, selecting all the elements of that type in
    the lattice, e.g. :pycode:`at.Sextupole`,
-#. a string, selecting all elements whose `FamName` attribute matches it.
-   Unix shell-style wildcards are accepted, e.g. `'BPM_*1'`,
+#. a string, selecting all the elements whose `FamName` attribute matches it.
+   Unix shell-style wildcards are accepted, e.g. `"Q[FD]*"`,
 #. a callable :pycode:`filtfunc` such that :pycode:`filtfunc(elem)`
    is :py:obj:`True` for selected elements.
 
@@ -299,11 +299,11 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
         refpts:     Element selector. *refpts* may be:
 
           #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. :py:obj:`None`, meaning empty selection
-          #. :py:obj:`.All`, meaning "all possible reference points".
-          #. :py:obj:`.End`, referring to the end of the last element
+             (0 indicating the first element),
+          #. a sequence of booleans marking the selected elements,
+          #. :py:obj:`None`, meaning empty selection,
+          #. :py:obj:`.All`, meaning "all possible reference points",
+          #. :py:obj:`.End`, selecting the end of the last element.
         endpoint:   if :py:obj:`True`, allow *n_elements* as a
           special index, referring to the end of the last element.
 
@@ -337,11 +337,10 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
             prev = refs[0]
             for nxt in refs[1:]:
                 if nxt < prev:
-                    raise ValueError('refpts should be given in ascending'
+                    raise IndexError('Index out of range or not in ascending'
                                      ' order')
                 elif nxt == prev:
-                    raise ValueError('refpts contains duplicates or index(es)'
-                                     ' out of range')
+                    raise IndexError('Duplicated index')
                 prev = nxt
 
         return refs
@@ -406,11 +405,11 @@ def bool_refpts(refpts: RefIndex, n_elements: int,
         refpts:     Element selector. *refpts* may be:
 
           #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. :py:obj:`None`, meaning empty selection
-          #. :py:obj:`.All`, meaning "all possible reference points".
-          #. :py:obj:`.End`, referring to the end of the last element
+             (0 indicating the first element),
+          #. a sequence of booleans marking the selected elements,
+          #. :py:obj:`None`, meaning empty selection,
+          #. :py:obj:`.All`, meaning "all possible reference points",
+          #. :py:obj:`.End`, selecting the end of the last element.
         n_elements: Length of the lattice
         endpoint:   if :py:obj:`True`, allow *n_elements* as a
           special index, referring to the end of the last element.
@@ -689,11 +688,11 @@ def refpts_count(refpts: RefIndex, n_elements: int,
         refpts:     refpts may be:
 
           #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-          #. :py:obj:`None`, meaning empty selection
-          #. :py:obj:`.All`, meaning "all possible reference points"
-          #. :py:obj:`.End`, referring to the end of the last element
+             (0 indicating the first element),
+          #. a sequence of booleans marking the selected elements,
+          #. :py:obj:`None`, meaning empty selection,
+          #. :py:obj:`.All`, meaning "all possible reference points",
+          #. :py:obj:`.End`, selecting the end of the last element.
         n_elements: Lattice length
         endpoint:   if :py:obj:`True`, allow *n_elements* as a
           special index, referring to the end of the last element.
