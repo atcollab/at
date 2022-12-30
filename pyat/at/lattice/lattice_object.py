@@ -26,8 +26,8 @@ from ..constants import clight, e_mass
 from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
 # noinspection PyProtectedMember
-from .utils import _uint32_refs, _bool_refs, Uint32Refpts
-from .utils import refpts_iterator, refpts_len, checktype
+from .utils import _uint32_refs, _bool_refs, _refcount, Uint32Refpts
+from .utils import refpts_iterator, checktype
 from .utils import get_s_pos, get_elements, get_cells, get_refpts
 from .utils import get_value_refpts, set_value_refpts
 from .utils import set_shift, set_tilt, get_geometry
@@ -230,7 +230,7 @@ class Lattice(list):
             if isinstance(key, slice):      # Slice
                 rg = range(*key.indices(len(self)))
             else:                           # Array of integers or boolean
-                rg = _uint32_refs(self, key)
+                rg = _uint32_refs(self, key, endpoint=False)
             return Lattice(elem_generator,
                            (super(Lattice, self).__getitem__(i) for i in rg),
                            iterator=self.attrs_filter)
@@ -239,7 +239,7 @@ class Lattice(list):
         try:                                # Integer or slice
             super(Lattice, self).__setitem__(key, values)
         except TypeError:                   # Array of integers or boolean
-            rg = _uint32_refs(self, key)
+            rg = _uint32_refs(self, key, endpoint=False)
             for i, v in zip(*numpy.broadcast_arrays(rg, values)):
                 super(Lattice, self).__setitem__(i, v)
 
@@ -247,7 +247,7 @@ class Lattice(list):
         try:                                # Integer or slice
             super(Lattice, self).__delitem__(key)
         except TypeError:                   # Array of integers or boolean
-            rg = _uint32_refs(self, key)
+            rg = _uint32_refs(self, key, endpoint=False)
             for i in reversed(rg):
                 super(Lattice, self).__delitem__(i)
 
@@ -1350,6 +1350,7 @@ def params_filter(params, elem_filter: Filter, *args) \
 
 Lattice.uint32_refpts = _uint32_refs
 Lattice.bool_refpts = _bool_refs
+Lattice.refcount = _refcount
 Lattice.get_cells = get_cells
 Lattice.get_refpts = get_refpts
 Lattice.set_shift = set_shift
@@ -1357,7 +1358,6 @@ Lattice.set_tilt = set_tilt
 Lattice.get_elements = get_elements
 Lattice.get_s_pos = get_s_pos
 Lattice.select = refpts_iterator
-Lattice.refcount = refpts_len
 Lattice.get_value_refpts = get_value_refpts
 Lattice.set_value_refpts = set_value_refpts
 Lattice.get_geometry = get_geometry

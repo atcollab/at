@@ -3,8 +3,10 @@ Simple parallelisation of atpass() using multiprocessing.
 """
 from functools import partial
 import multiprocessing
-from ..lattice import AtWarning, Element, uint32_refpts, DConstant, random
-from ..lattice import Refpts
+# noinspection PyProtectedMember
+from ..lattice.utils import _uint32_refs
+from ..lattice import AtWarning, Element, DConstant, random
+from ..lattice import Refpts, End
 from warnings import warn
 from .atpass import reset_rng, atpass as _atpass
 from .track import fortran_align
@@ -68,7 +70,7 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
 
 @fortran_align
 def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
-            refpts: Refpts = None, pool_size: int = None,
+            refpts: Refpts = End, pool_size: int = None,
             start_method: str = None, **kwargs):
     """
     Simple parallel implementation of :py:func:`.lattice_pass`.
@@ -166,9 +168,7 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
 
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    if refpts is None:
-        refpts = len(lattice)
-    refpts = uint32_refpts(refpts, len(lattice))
+    refpts = _uint32_refs(lattice, refpts)
     bunch_currents = getattr(lattice, 'bunch_currents', np.zeros(1))
     bunch_spos = getattr(lattice, 'bunch_spos', np.zeros(1))
     kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)

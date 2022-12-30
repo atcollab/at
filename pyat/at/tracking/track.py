@@ -2,7 +2,9 @@ import numpy
 import functools
 from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import Element, Particle, Refpts, uint32_refpts
+# noinspection PyProtectedMember
+from ..lattice.utils import _uint32_refs
+from ..lattice import Element, Particle, Refpts, End
 from ..lattice import elements, get_elements
 from typing import List, Iterable
 
@@ -51,7 +53,7 @@ def fortran_align(func):
 
 @fortran_align
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = None, **kwargs):
+                 refpts: Refpts = End, **kwargs):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -128,7 +130,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          keywords to ensure the continuity of the turn number.
        * For multiparticle tracking with large number of turn the size of
          *r_out* may increase excessively. To avoid memory issues
-         :pycode:`lattice_pass(lattice, r_in, refpts=[])` can be used.
+         :pycode:`lattice_pass(lattice, r_in, refpts=None)` can be used.
          An empty list is returned and the tracking results of the last turn
          are stored in *r_in*.
        * To model buckets with different RF voltage :pycode:`unfold_beam=False`
@@ -139,9 +141,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     """
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    if refpts is None:
-        refpts = len(lattice)
-    refs = uint32_refpts(refpts, len(lattice))
+    refs = _uint32_refs(lattice, refpts)
     # define properties if lattice is not a Lattice object
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))

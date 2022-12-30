@@ -201,7 +201,7 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
             orbit = _orbit_dp(ring, dp, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
-    uint32refs = uint32_refpts(refpts, len(ring))
+    uint32refs = ring.uint32_refpts(refpts)
     # bug in numpy < 1.13
     all_points = numpy.empty((0, 6), dtype=float) if len(
         uint32refs) == 0 else numpy.squeeze(
@@ -290,7 +290,7 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
             orbit = _orbit_dct(ring, dct,  keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
-    uint32refs = uint32_refpts(refpts, len(ring))
+    uint32refs = ring.uint32_refpts(refpts)
     # bug in numpy < 1.13
     all_points = numpy.empty((0, 6), dtype=float) if len(
         uint32refs) == 0 else numpy.squeeze(
@@ -442,7 +442,7 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
 
-    uint32refs = uint32_refpts(refpts, len(ring))
+    uint32refs = ring.uint32_refpts(refpts)
     # bug in numpy < 1.13
     all_points = numpy.empty((0, 6), dtype=float) if len(
         uint32refs) == 0 else numpy.squeeze(

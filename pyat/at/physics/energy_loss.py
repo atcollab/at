@@ -7,7 +7,7 @@ from scipy.optimize import least_squares
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import QuantumDiffusion, Collective
-from at.lattice import checktype, set_value_refpts, get_cells, refpts_len
+from at.lattice import checktype, set_value_refpts, get_cells
 from at.constants import clight, Cgamma
 from at.tracking import lattice_pass
 
@@ -69,7 +69,8 @@ def get_energy_loss(ring: Lattice,
     def tracking(ring):
         """Losses from tracking
         """
-        ringtmp = ring.disable_6d(RFCavity, QuantumDiffusion, Collective, copy=True)
+        ringtmp = ring.disable_6d(RFCavity, QuantumDiffusion, Collective,
+                                  copy=True)
         o6 = numpy.squeeze(lattice_pass(ringtmp, numpy.zeros(6),
                            refpts=len(ringtmp)))
         if numpy.isnan(o6[0]):
@@ -96,7 +97,7 @@ def get_energy_loss(ring: Lattice,
 def get_timelag_fromU0(ring: Lattice,
                        method: Optional[ELossMethod] = ELossMethod.TRACKING,
                        cavpts: Optional[Refpts] = None,
-                       divider: Optional[float] = 4) -> Tuple[float, float]:
+                       divider: Optional[int] = 4) -> Tuple[float, float]:
     """
     Get the TimeLag attribute of RF cavities based on frequency,
     voltage and energy loss per turn, so that the synchronous phase is zero.
@@ -167,7 +168,7 @@ def get_timelag_fromU0(ring: Lattice,
         vrf = numpy.sum(rfv)
         timelag = clight/(2*numpy.pi*frf)*numpy.arcsin(u0/vrf)
         ts = timelag - tml
-        timelag *= numpy.ones(refpts_len(ring, cavpts))
+        timelag *= numpy.ones(ring.refcount(cavpts))
     return timelag, ts
 
 
