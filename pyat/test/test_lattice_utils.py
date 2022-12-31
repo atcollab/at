@@ -126,7 +126,7 @@ def test_get_elements(hmba_lattice):
 
 
 def test_get_s_pos_returns_zero_for_empty_lattice():
-    numpy.testing.assert_equal(get_s_pos([], None), numpy.array((0,)))
+    numpy.testing.assert_equal(get_s_pos([]), numpy.array((0,)))
 
 
 def test_get_s_pos_returns_length_for_lattice_with_one_element():
@@ -134,12 +134,10 @@ def test_get_s_pos_returns_length_for_lattice_with_one_element():
     assert get_s_pos([e], [1]) == numpy.array([0.1])
 
 
-def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_and_refpts_None():
+def test_get_s_pos_returns_all_pts_for_lat_with_2_elements():
     e = elements.LongElement('e', 0.1)
     f = elements.LongElement('e', 2.1)
-    print(get_s_pos([e, f], None))
-    numpy.testing.assert_equal(get_s_pos([e, f], None),
-                               numpy.array([0, 0.1, 2.2]))
+    numpy.testing.assert_equal(get_s_pos([e, f]), numpy.array([0, 0.1, 2.2]))
 
 
 def test_get_s_pos_returns_all_pts_for_lat_with_2_elements_using_int_refpts():
