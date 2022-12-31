@@ -154,7 +154,7 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
     2. Have any time dependence (localized impedance, fast kickers etc)
 
     Parameters:
-        ring:           Lattice description (:py:meth:`~.Lattice.is_6d` must be
+        ring:           Lattice description (:py:attr:`~.Lattice.is_6d` must be
           :py:obj:`False`)
         dp:             Momentum deviation. Defaults to 0
         refpts:         Observation points.
@@ -247,7 +247,7 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
     2. Have any time dependence (localized impedance, fast kickers etc)
 
     Parameters:
-        ring:           Lattice description (:py:meth:`~.Lattice.is_6d` must be
+        ring:           Lattice description (:py:attr:`~.Lattice.is_6d` must be
           :py:obj:`False`)
         dct:            Path lengthening.
         refpts:         Observation points.
@@ -464,9 +464,9 @@ def find_orbit(ring, refpts: Refpts = None, **kwargs):
 
     Depending on the lattice, :py:func:`find_orbit` will:
 
-    * use :py:func:`find_orbit6` if :py:meth:`~.Lattice.is_6d` is
+    * use :py:func:`find_orbit6` if :py:attr:`~.Lattice.is_6d` is
       :py:obj:`True`,
-    * use :py:func:`find_sync_orbit` if :py:meth:`~.Lattice.is_6d` is
+    * use :py:func:`find_sync_orbit` if :py:attr:`~.Lattice.is_6d` is
       :py:obj:`False` and
       *dct* or *df* is specified,
     * use :py:func:`find_orbit4` otherwise.
