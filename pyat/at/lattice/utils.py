@@ -604,8 +604,10 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
     get_cells(ring, attrname, attrvalue) -> BoolRefpts
     Returns a bool array of element indices, selecting ring elements.
 
-    With minor modifications, this function can be replaced by
-    the method :py:meth:`.Lattice.bool_refpts`
+    Deprecated: :pycode:`get_cells(ring, refpts)` is
+    :pycode:`ring.bool_refpts(refpts)` except for :py:obj:`str` arguments:
+    :pycode:`get_cells(ring, attrname [, attrvalue])` is
+    :pycode:`ring.bool_refpts(checkattr(strkey [, attrvalue]))`
 
     Parameters:
         ring (Sequence[Element]):       Lattice description
@@ -770,7 +772,8 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
     r"""Return a :py:obj:`~numpy.uint32` array of element indices selecting
     ring elements.
 
-    This function is equivalent to :py:meth:`.Lattice.uint32_refpts`
+    Deprecated: :pycode:`get_elements(ring, refpts)` is
+    :pycode:`ring.uint32_refpts(refpts)`
 
     Parameters:
         ring:           Lattice description
@@ -792,8 +795,7 @@ def get_elements(ring: Sequence[Element], refpts: Refpts, quiet=True) \
         -> list:
     r"""Returns a list of elements selected by *key*.
 
-    This is equivalent to :pycode:`ring[refpts]`, except that it returns a
-    :py:class:`list` instead of a :py:class:`.Lattice`.
+    Deprecated: :pycode:`get_elements(ring, refpts)` is :pycode:`ring[refpts]`
 
     Parameters:
         ring:           Lattice description
