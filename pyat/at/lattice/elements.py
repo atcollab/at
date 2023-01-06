@@ -29,7 +29,7 @@ def _array2(value):
 
 def _pad(value, shape=(3,), dtype=numpy.float64, **kwargs):
     if not numpy.all(value.shape == shape):
-        missing = numpy.array(shape)- numpy.array(value.shape)
+        missing = numpy.array(shape) - numpy.array(value.shape)
         value = numpy.pad(value, tuple((0, m) for m in missing), **kwargs)
     return _array(value, shape=shape, dtype=dtype)
 
@@ -264,7 +264,7 @@ class Element(object):
                         KickAngle=_array2,
                         PolynomB=_array, PolynomA=_array,
                         ScalingPolynomBErr=_not_allowed,
-                        scalingPolynomAErr=_not_allowed,
+                        ScalingPolynomAErr=_not_allowed,
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
@@ -830,6 +830,7 @@ class Dipole(Radiative, Multipole):
     def strength(self):
         """Magnet strength [m^(-order-1)]"""
         return self.BendingAngle / self.Length
+
 
 # Bend is a synonym of Dipole.
 Bend = Dipole
