@@ -46,7 +46,7 @@ def test_random_bpm_errors(hmba_lattice):
     # Build all rotation matrices
     rotm = np.stack([_rotmat(v).T for v in bpmtilt], axis=0)
     # reshape offset,
-    of = np.reshape(xyorbit0+bpmoff, (-1, 1, 2))
+    of = np.reshape(xyorbit0 - bpmoff, (-1, 1, 2))
     expected = np.squeeze(of @ rotm) * bpmgain
 
     xyorbit = ring.find_orbit_err(bpms, all=False)[1][:, [0, 2]]
