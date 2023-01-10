@@ -77,7 +77,7 @@ def assign_errors(ring: Lattice, refpts: Refpts,
         \begin{pmatrix} cos\theta & sin\theta \\
         -sin\theta & cos\theta \end{pmatrix}
         \left[
-        \begin{pmatrix} x_{beam} \\ y_{beam} \end{pmatrix} +
+        \begin{pmatrix} x_{beam} \\ y_{beam} \end{pmatrix} -
         \begin{pmatrix} o_x \\ o_y \end{pmatrix}
         \right]
 
@@ -85,8 +85,8 @@ def assign_errors(ring: Lattice, refpts: Refpts,
 
     Note that this corresponds to the effect of:
 
-    #. shifting the monitor device by :math:`-o_x` horizontally and
-       :math:`-o_y` vertically.
+    #. shifting the monitor device by :math:`o_x` horizontally and
+       :math:`o_y` vertically.
     #. then rotating the monitor device by :math:`\theta`,
     #. finally applying the gains.
 
@@ -197,7 +197,7 @@ def _apply_bpm_orbit_error(ring, refpts, orbit):
     for e, o6 in zip(refpts_iterator(ring, refpts), orbit):
         o6 = o6.reshape((-1, 6))
         if hasattr(e, 'BPMOffset'):
-            o6[:, [0, 2]] += e.BPMOffset
+            o6[:, [0, 2]] -= e.BPMOffset
         if hasattr(e, 'BPMTilt'):
             o6[:, [0, 2]] = o6[:, [0, 2]] @ _rotmat(e.BPMTilt).T
         if hasattr(e, 'BPMGain'):
