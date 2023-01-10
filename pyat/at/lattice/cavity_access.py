@@ -3,7 +3,7 @@ from enum import Enum
 import numpy
 from typing import Optional
 from .elements import RFCavity
-from .utils import AtError, checktype, make_copy, get_cells, Refpts
+from .utils import AtError, make_copy, Refpts
 from .lattice_object import Lattice
 
 __all__ = ['get_rf_frequency', 'get_rf_voltage', 'set_rf_voltage',
@@ -21,7 +21,7 @@ def _select_cav(ring: Lattice, cavpts):
         try:
             cavpts = ring.cavpts
         except AttributeError:
-            cavpts = get_cells(ring, checktype(RFCavity))
+            cavpts = ring.get_bool_refpts(RFCavity)
     return cavpts
 
 

@@ -131,7 +131,7 @@ def get_timelag_fromU0(ring: Lattice,
             return eq1
 
     if cavpts is None:
-        cavpts = ring.get_cells(checktype(RFCavity))
+        cavpts = ring.get_bool_refpts(RFCavity)
     u0 = ring.get_energy_loss(method=method) / ring.periodicity
     freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
@@ -200,7 +200,7 @@ def set_cavity_phase(ring: Lattice,
         warn(FutureWarning('You should use "cavpts" instead of "refpts"'))
         cavpts = refpts
     elif cavpts is None:
-        cavpts = get_cells(ring, checktype(RFCavity))
+        cavpts = ring.get_bool_refpts(RFCavity)
     timelag, _ = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
 

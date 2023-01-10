@@ -2,10 +2,8 @@ import numpy
 import functools
 from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
-# noinspection PyProtectedMember
-from ..lattice.utils import _uint32_refs
 from ..lattice import Element, Particle, Refpts, End
-from ..lattice import elements, get_elements
+from ..lattice import elements, refpts_iterator, get_uint32_refpts
 from typing import List, Iterable
 
 
@@ -16,7 +14,7 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
-    monitors = get_elements(ring, elements.BeamMoments)
+    monitors = list(refpts_iterator(ring, elements.BeamMoments))
     for m in monitors:
         m.set_buffers(nturns, nbunch)
     return len(monitors) == 0
@@ -138,7 +136,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     """
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    refs = _uint32_refs(lattice, refpts)
+    refs = get_uint32_refpts(lattice, refpts)
     # define properties if lattice is not a Lattice object
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))

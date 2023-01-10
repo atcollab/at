@@ -26,9 +26,9 @@ from ..constants import clight, e_mass
 from .particle_object import Particle
 from .utils import AtError, AtWarning, Refpts
 # noinspection PyProtectedMember
-from .utils import _uint32_refs, _bool_refs, _refcount, Uint32Refpts
+from .utils import get_uint32_refpts, get_bool_refpts, _refcount, Uint32Refpts
 from .utils import refpts_iterator, checktype
-from .utils import get_s_pos, get_elements, get_cells, get_refpts
+from .utils import get_s_pos, get_elements
 from .utils import get_value_refpts, set_value_refpts
 from .utils import set_shift, set_tilt, get_geometry
 from . import elements as elt
@@ -98,10 +98,10 @@ class Lattice(list):
 
         Parameters:
             elements: iterable of Element objects
-            iter: function called as ``iter(params, *args)``. It must return an
-              iterable of Element objects for building the lattice. It must
-              also fill the``params`` dictionary providing the Lattice
-              attributes.
+            iter: function called as :pycode:`iter(params, *args)`. It must
+              return an iterable of :py:class:`.Element` objects for building
+              the lattice. It must also fill the *params* dictionary providing
+              the Lattice attributes.
             params: dictionary of lattice parameters. A custom iterator may
               add, remove or modify parameters. Finally, the remaining
               parameters will be set as Lattice attributes.
@@ -230,7 +230,7 @@ class Lattice(list):
             if isinstance(key, slice):      # Slice
                 rg = range(*key.indices(len(self)))
             else:                           # Array of integers or boolean
-                rg = _uint32_refs(self, key, endpoint=False)
+                rg = get_uint32_refpts(self, key, endpoint=False)
             return Lattice(elem_generator,
                            (super(Lattice, self).__getitem__(i) for i in rg),
                            iterator=self.attrs_filter)
@@ -239,7 +239,7 @@ class Lattice(list):
         try:                                # Integer or slice
             super(Lattice, self).__setitem__(key, values)
         except TypeError:                   # Array of integers or boolean
-            rg = _uint32_refs(self, key, endpoint=False)
+            rg = get_uint32_refpts(self, key, endpoint=False)
             for i, v in zip(*numpy.broadcast_arrays(rg, values)):
                 super(Lattice, self).__setitem__(i, v)
 
@@ -247,7 +247,7 @@ class Lattice(list):
         try:                                # Integer or slice
             super(Lattice, self).__delitem__(key)
         except TypeError:                   # Array of integers or boolean
-            rg = _uint32_refs(self, key, endpoint=False)
+            rg = get_uint32_refpts(self, key, endpoint=False)
             for i in reversed(rg):
                 super(Lattice, self).__delitem__(i)
 
@@ -454,7 +454,7 @@ class Lattice(list):
         except AttributeError:
             self.s_range = None
             i_range = self._i_range
-        return _uint32_refs(self, i_range)
+        return get_uint32_refpts(self, i_range)
 
     @property
     def energy(self) -> float:
@@ -1141,11 +1141,11 @@ class Lattice(list):
                     elem = nxt.copy()
             yield elem
 
-        kp = self.get_cells(lambda el: el.PassMethod != 'IdentityPass')
+        kp = get_bool_refpts(self, lambda el: el.PassMethod != 'IdentityPass')
         try:
-            keep = self.bool_refpts(kwargs.pop('keep'))
+            keep = get_bool_refpts(self, kwargs.pop('keep'))
         except KeyError:
-            keep = self.get_cells(checktype((elt.Monitor, elt.RFCavity)))
+            keep = get_bool_refpts(self, checktype((elt.Monitor, elt.RFCavity)))
 
         return Lattice(reduce_filter, self.select(kp | keep),
                        iterator=self.attrs_filter, **kwargs)
@@ -1157,7 +1157,7 @@ class Lattice(list):
         Parameters:
             refpts: element selector
         """
-        check = _bool_refs(self, refpts)
+        check = get_bool_refpts(self, refpts)
         elems = (el.deepcopy() if ok else el for el, ok in zip(self, check))
         return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, **kwargs)
@@ -1348,11 +1348,9 @@ def params_filter(params, elem_filter: Filter, *args) \
         params['periodicity'] = periodicity
 
 
-Lattice.uint32_refpts = _uint32_refs
-Lattice.bool_refpts = _bool_refs
+Lattice.get_uint32_refpts = get_uint32_refpts
+Lattice.get_bool_refpts = get_bool_refpts
 Lattice.refcount = _refcount
-Lattice.get_cells = get_cells
-Lattice.get_refpts = get_refpts
 Lattice.set_shift = set_shift
 Lattice.set_tilt = set_tilt
 Lattice.get_elements = get_elements
