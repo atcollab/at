@@ -1,5 +1,171 @@
-"""Functions assigning errors to the magnets and monitors of a lattice,
-enabling the errors and computing linear optics of the lattice with errors
+# noinspection PyUnresolvedReferences
+r"""Functions assigning errors to the magnets and monitors of a lattice,
+enabling the errors and computing linear optics of the lattice with errors.
+
+The processing of errors in PyAT is done in two steps:
+
+#. The definition of errors: errors are stored in dedicated attributes of the
+   lattice elements by :py:func:`assign_errors`. Random errors are generated,
+   cumulated with systematic errors and stored in dedicated attributes.
+   Nothing changes in tracking at this stage because the error attributes are
+   ignored,
+#. The activation of errors by :py:func:`enable_errors`: errors are moved into
+   the standard element attributes of a new :py:class:`.Lattice`.
+
+All error definitions may be given to the :py:func:`assign_errors` in 2
+possible forms:
+
+* **a tuple of values**: (*systematic*, *random*). The *systematic* value
+  is applied unchanged to all the selected elements, the *random* value is
+  taken as the standard deviation of the generated error distribution,
+* **a single value**: it acts as the *random* part of the previous form,
+  and there is no systematic error.
+
+.. _monitor-errors:
+
+Monitor errors
+==============
+
+The following errors are applied in that order:
+
+BPMOffset:
+    *[offset_x, offset_y]* array [m], all errors, electrical or mechanical,
+    acting as if the monitor was shifted from the reference axis.
+BPMTilt:
+    *tilt* [rd], all errors, electrical or mechanical, acting as if the monitor
+    was rotated around the z axis.
+BPMGain:
+    *[gain_x, gain_y]* array giving the magnification introduced by the monitor
+
+This results in the following computation:
+
+.. math::
+
+    \begin{pmatrix} x_{monitor} \\ y_{monitor} \end{pmatrix} =
+    \begin{pmatrix} g_x & 0 \\ 0 & g_y \end{pmatrix}
+    \begin{pmatrix} cos\theta & sin\theta \\
+    -sin\theta & cos\theta \end{pmatrix}
+    \left[
+    \begin{pmatrix} x_{beam} \\ y_{beam} \end{pmatrix} -
+    \begin{pmatrix} o_x \\ o_y \end{pmatrix}
+    \right]
+
+.. note::
+    Monitor errors may be applied to any element: when enabling errors, the
+    beam position reported at the element location, whatever it is, will be
+    affected by these attributes.
+
+.. _magnet-alignment-errors:
+
+Magnet alignment errors
+=======================
+
+ShiftErr:
+    *[shift_x, shift_y]* array [m], magnet shift from the
+    reference axis
+RotationErr:
+    *tilt* or *[tilt, pitch, yaw]* rotation around the z, x, y axis
+
+.. _magnet-field-errors:
+
+Magnet field errors
+===================
+
+PolynomBErr:
+    Absolute field error. *PolynomAErr* is added to the magnet's *PolynomB*
+PolynomAErr:
+    Absolute field error. *PolynomBErr* is added to the magnet's *PolynomA*
+ScalingPolynomBErr:
+    Relative field error. *ScalingPolynomBErr* is the multipolar field error
+    relative to the main magnet field component. When
+    :py:func:`enabling the errors<enable_errors>`, *ScalingPolynomBErr* is
+    multiplied by the magnet strengh and added to *PolynomB*
+ScalingPolynomAErr:
+    Relative field error. *ScalingPolynomAErr* is the skew multipolar field
+    error relative to the main magnet field component.
+
+.. admonition:: Example of use
+
+    Let's imagine a standard quadrupole and see how error attributes can be
+    related to the results of magnetic measurements:
+
+    Systematic errors:
+        The magnetic measurements at the nominal current give systematic
+        octupole and 12-pole components in addition to the quadrupole.
+        *PolynomB* looks like *[0, B2, 0, B4, 0, B6]*\ . The 1st step is to
+        normalise with respect to the quadrupole component:
+
+        *[0, 1, 0, B4/B2, 0, B6/B2]*
+
+        The 1 goes to the main field, the rest goes to errors:
+
+        >>> qp.PolynomB = [0, B2]
+        >>> qp.ScalingPolynomBErr = (0, [0, 0, 0, B4/B2, 0, B6/B2])
+
+        Note that the systematic error component must be in the 2nd position in
+        the error tuple.
+
+        Now assume that after tuning we set the quadrupole to C2 instead B2:
+
+        >>> qp.PolynomB = [0, C2]
+
+        :py:func:`enable_errors` will compute:
+
+        *[0, C2] + C2*[0, 0, 0, B4/B2, 0, B6/B2] =
+        [0, C2, 0, C2/B2*B4, 0, C2/B2*B6]*
+
+        which is the exact scaling of the measured field by a ratio C2/B2.
+
+    Random errors:
+        In addition, we know that we have a random relative field integral error
+        of 10\ :sup:`-3` and a random sextupole B3.  All this also scales with
+        the magnet current, so we add a random component:
+
+        >>> qp.ScalingPolynomBErr = ([0, 1.E-3, B3/B2, 1.E-3/B2, 0, 1.E-3/B2],
+        ...                          [0, 0, 0, B4/B2, 0, B6/B2])
+
+        After generating random numbers and multiplying by B2, we get the
+        correct random contribution.
+
+        Remark: in this example, if the field integral error results from
+        mechanical magnet length, the random contributions to B2,
+        B4 and B6 should be correlated, while the one of B3 is uncorrelated.
+        Here a random value is generated for each component, so there is no
+        correlation.
+
+    Case of an arbitrary multipole magnet:
+        Now let's consider a combined-function magnet, let's say a
+        quadrupole-sextupole:
+
+        >>> qp.PolynomB = [0, B2, B3]
+
+        For errors, we can arbitrarily decide it's a :py:class:`.Quadrupole`
+        and normalise the errors with B2:
+
+        >>> qp.ScalingPolynomBErr = (0, [0, 0, 0, B4/B2, 0, B6/B2])
+
+        which will then be multiplied by C2, strength of the quadrupole.
+
+        or decide it's a :py:class:`.Sextupole` and normalise the errors with B3
+
+        >>> qp.ScalingPolynomBErr = (0, [0, 0, 0, B4/B3, 0, B6/B3])
+
+        which will be multiplied by C3, strength of the sextupole.
+
+        Both choices are equivalent: the result will be **exactly the same**
+        (provided the user correctly scales the main field *[0, C2, C3]*\ ).
+        But we had to decide what is the "main order" of the magnet.
+
+
+    Here we do not use the static error attribute. *ScalingPolynomBErr* is meant
+    to be used for "single knob" magnets: the field scales with a single
+    parameter, the magnet current. *ScalingPolynomBErr* ensures the correct
+    scaling of errors without intervention, but it requires the "knob" to be
+    associated with a scalar value: the strength of the main component,
+    determined by the element class. For the :py:class:`.Multipole` class,
+    there is no default order defined. The user has to set the
+    *DefaultOrder* attribute to the order of its choice (dipole=0,
+    quadrupole=1,…) and normalise the errors with this.
 """
 import numpy as np
 from typing import Optional, Union
@@ -66,29 +232,7 @@ def assign_errors(ring: Lattice, refpts: Refpts,
 
     .. rubric:: Monitor errors:
 
-    The beam positions returned at :py:class:`.Monitor` locations are computed
-    by applying in order the offsets :math:`o_x` , :math:`o_y` ,
-    a tilt :math:`\theta`, and gains :math:`g_x` , :math:`g_y` resulting in:
-
-    .. math::
-
-        \begin{pmatrix} x_{monitor} \\ y_{monitor} \end{pmatrix} =
-        \begin{pmatrix} g_x & 0 \\ -0 & g_y \end{pmatrix}
-        \begin{pmatrix} cos\theta & sin\theta \\
-        -sin\theta & cos\theta \end{pmatrix}
-        \left[
-        \begin{pmatrix} x_{beam} \\ y_{beam} \end{pmatrix} -
-        \begin{pmatrix} o_x \\ o_y \end{pmatrix}
-        \right]
-
-
-
-    Note that this corresponds to the effect of:
-
-    #. shifting the monitor device by :math:`o_x` horizontally and
-       :math:`o_y` vertically.
-    #. then rotating the monitor device by :math:`\theta`,
-    #. finally applying the gains.
+    See :ref:`monitor-errors` for a definition of monitor errors.
 
     Keyword Args:
         BPMOffset:  Offsets may be:
@@ -108,6 +252,9 @@ def assign_errors(ring: Lattice, refpts: Refpts,
         BPMTilt:    :py:class:`float`, (1,) or (nelems, 1) float array
 
     .. rubric:: Magnet errors:
+
+    See :ref:`magnet-alignment-errors` and :ref:`magnet-field-errors` for
+    a definition of monitor errors.
 
     Keyword Args:
         ShiftErr:       Magnet shift [m]. Maybe:

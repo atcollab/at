@@ -263,6 +263,8 @@ class Element(object):
                         EApertures=_array2,
                         KickAngle=_array2,
                         PolynomB=_array, PolynomA=_array,
+                        PolynomBErr=_not_allowed,
+                        PolynomAErr=_not_allowed,
                         ScalingPolynomBErr=_not_allowed,
                         ScalingPolynomAErr=_not_allowed,
                         BendingAngle=float,
@@ -586,8 +588,10 @@ class ThinMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
     _conversions = dict(Element._conversions,
-                        ShiftErr=_array2,
-                        RotationErr=_pad)
+                        ShiftErr=_array2, RotationErr=_pad,
+                        PolynomBErr=_array, PolynomAErr=_array,
+                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
+                        )
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -734,7 +738,6 @@ class Dipole(Radiative, Multipole):
                         FringeInt1=float, FringeInt2=float,
                         FringeQuadEntrance=int, FringeQuadExit=int,
                         FringeBendEntrance=int, FringeBendExit=int,
-                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
                         )
 
     _entrance_fields = Multipole._entrance_fields + ['EntranceAngle',
@@ -841,7 +844,6 @@ class Quadrupole(Radiative, Multipole):
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
     _conversions = dict(Multipole._conversions,
                         FringeQuadEntrance=int, FringeQuadExit=int,
-                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
                         )
 
     _entrance_fields = Multipole._entrance_fields + ['FringeQuadEntrance']
@@ -888,9 +890,6 @@ class Quadrupole(Radiative, Multipole):
 class Sextupole(Multipole):
     """Sextupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['H']
-    _conversions = dict(Multipole._conversions,
-                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
-                        )
 
     DefaultOrder = 2
 
@@ -924,9 +923,6 @@ class Sextupole(Multipole):
 class Octupole(Multipole):
     """Octupole element, with no changes from multipole at present"""
     _BUILD_ATTRIBUTES = Multipole._BUILD_ATTRIBUTES
-    _conversions = dict(Multipole._conversions,
-                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
-                        )
 
     DefaultOrder = 3
 
