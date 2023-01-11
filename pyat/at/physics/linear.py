@@ -7,8 +7,8 @@ from typing import Callable
 import warnings
 from scipy.linalg import solve
 from ..constants import clight
-from ..lattice import DConstant, get_s_pos, Refpts
-from ..lattice import AtWarning, Lattice, check_6d
+from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
+from ..lattice import AtWarning, Lattice, check_6d, get_s_pos
 from ..tracking import lattice_pass
 from .orbit import Orbit, find_orbit4, find_orbit6
 from .matrix import find_m44, find_m66
@@ -355,8 +355,7 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
                            keep_lattice=keep_lattice)
-    # avoid problem if refpts is None
-    spos = ring.get_s_pos(ring.uint32_refpts(refpts))
+    spos = ring.get_s_pos(refpts)
 
     nrefs = orbs.shape[0]
     dms = vps.size
@@ -923,7 +922,7 @@ def linopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None,
     """
     analyze = _analyze4 if kwargs.pop('coupled', True) else _analyze2
     eld0, bd, eld = _linopt(ring, analyze, refpts, dp=dp, get_chrom=get_chrom,
-                            add0=(0,), adds=(ring.uint32_refpts(refpts),),
+                            add0=(0,), adds=(get_uint32_index(ring, refpts),),
                             addtype=[('idx', numpy.uint32)],
                             mname='m44', **kwargs)
     return eld0, bd.tune, bd.chromaticity, eld
@@ -1017,10 +1016,10 @@ def avlinopt(ring: Lattice, dp: float = None, refpts: Refpts = None, **kwargs):
     def dispfoc(dispp0, dispp1, k2, lg):
         return (dispp0 - dispp1) / k2 / lg
 
-    boolrefs = ring.bool_refpts(refpts)
+    boolrefs = get_bool_index(ring, refpts)
     length = numpy.array([el.Length for el in ring[boolrefs]])
     strength = numpy.array([get_strength(el) for el in ring[boolrefs]])
-    longelem = ring.bool_refpts([])
+    longelem = get_bool_index(ring, None)
     longelem[boolrefs] = (length != 0)
 
     shorti_refpts = (~longelem) & boolrefs

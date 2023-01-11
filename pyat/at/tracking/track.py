@@ -3,7 +3,7 @@ import functools
 from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
 from ..lattice import Element, Particle, Refpts, End
-from ..lattice import elements, refpts_iterator, get_uint32_refpts
+from ..lattice import elements, refpts_iterator, get_uint32_index
 from typing import List, Iterable
 
 
@@ -136,7 +136,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     """
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    refs = get_uint32_refpts(lattice, refpts)
+    refs = get_uint32_index(lattice, refpts)
     # define properties if lattice is not a Lattice object
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))

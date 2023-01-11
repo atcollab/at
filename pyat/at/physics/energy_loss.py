@@ -7,7 +7,7 @@ from scipy.optimize import least_squares
 from at.lattice import Lattice, Dipole, Wiggler, RFCavity, Refpts
 from at.lattice import check_radiation, AtError, AtWarning
 from at.lattice import QuantumDiffusion, Collective
-from at.lattice import checktype, set_value_refpts, get_cells
+from at.lattice import get_bool_index, set_value_refpts
 from at.constants import clight, Cgamma
 from at.tracking import lattice_pass
 
@@ -131,8 +131,8 @@ def get_timelag_fromU0(ring: Lattice,
             return eq1
 
     if cavpts is None:
-        cavpts = ring.get_bool_refpts(RFCavity)
-    u0 = ring.get_energy_loss(method=method) / ring.periodicity
+        cavpts = get_bool_index(ring, RFCavity)
+    u0 = get_energy_loss(ring, method=method) / ring.periodicity
     freq = numpy.array([cav.Frequency for cav in ring.select(cavpts)])
     rfv = numpy.array([cav.Voltage for cav in ring.select(cavpts)])
     tl0 = numpy.array([cav.TimeLag for cav in ring.select(cavpts)])
@@ -200,7 +200,7 @@ def set_cavity_phase(ring: Lattice,
         warn(FutureWarning('You should use "cavpts" instead of "refpts"'))
         cavpts = refpts
     elif cavpts is None:
-        cavpts = ring.get_bool_refpts(RFCavity)
+        cavpts = get_bool_index(ring, RFCavity)
     timelag, _ = get_timelag_fromU0(ring, method=method, cavpts=cavpts)
     set_value_refpts(ring, cavpts, 'TimeLag', timelag, copy=copy)
 

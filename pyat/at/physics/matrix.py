@@ -4,8 +4,8 @@ transfer matrix related functions
 A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 import numpy
-from ..lattice import Lattice, Element, get_refpts, DConstant, Refpts
-from ..lattice.elements import Bend, M66
+from ..lattice import Lattice, Element, get_uint32_index, DConstant, Refpts
+from ..lattice.elements import Dipole, M66
 from ..tracking import lattice_pass, element_pass
 from .orbit import Orbit, find_orbit4, find_orbit6
 from .amat import jmat, symplectify
@@ -81,7 +81,7 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
     # Add the deltas to multiple copies of the closed orbit
     in_mat = orbit.reshape(6, 1) + dmat
 
-    refs = ring.uint32_refpts(refpts)
+    refs = get_uint32_index(ring, refpts)
     out_mat = numpy.rollaxis(
         numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
                                    keep_lattice=keep_lattice), axis=3), -1
@@ -153,7 +153,7 @@ def find_m66(ring: Lattice, refpts: Refpts = None,
 
     in_mat = orbit.reshape(6, 1) + dmat
 
-    refs = ring.uint32_refpts(refpts)
+    refs = get_uint32_index(ring, refpts)
     out_mat = numpy.rollaxis(
         numpy.squeeze(lattice_pass(ring, in_mat, refpts=refs,
                                    keep_lattice=keep_lattice), axis=3), -1
@@ -217,9 +217,9 @@ def gen_m66_elem(ring: Lattice,
         m66:        6x6 transfer matrix
     """
 
-    dip_inds = get_refpts(ring, Bend)
-    theta = numpy.array([ring[ind].BendingAngle for ind in dip_inds])
-    lendp = numpy.array([ring[ind].Length for ind in dip_inds])
+    dipoles = ring[Dipole]
+    theta = numpy.array([elem.BendingAngle for elem in dipoles])
+    lendp = numpy.array([elem.Length for elem in dipoles])
     s_pos = ring.get_s_pos()
     s = numpy.diff(numpy.array([s_pos[0], s_pos[-1]]))[0]
     i2 = numpy.sum(numpy.abs(theta * theta / lendp))

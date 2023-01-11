@@ -1,7 +1,7 @@
 from .lattice_object import Lattice
 from .elements import Element
 from .utils import Refpts, BoolRefpts, Uint32Refpts
-from .utils import checkattr, get_uint32_refpts, get_bool_refpts
+from .utils import checkattr, get_uint32_index, get_bool_index
 from typing import Sequence
 
 __all__ = ['get_cells', 'get_refpts']
@@ -53,7 +53,7 @@ def get_cells(ring: Sequence[Element], refpts: Refpts, *args) -> BoolRefpts:
     """
     if isinstance(refpts, str):
         refpts = checkattr(refpts, *args)
-    return get_bool_refpts(ring, refpts)
+    return get_bool_index(ring, refpts)
 
 
 # noinspection PyUnusedLocal,PyIncorrectDocstring
@@ -77,10 +77,10 @@ def get_refpts(ring: Sequence[Element], refpts: Refpts,
     See also:
         :py:meth:`.Lattice.uint32_refpts`, :py:meth:`.Lattice.bool_refpts`
     """
-    return get_uint32_refpts(ring, refpts)
+    return get_uint32_index(ring, refpts)
 
 
-Lattice.uint32_refpts = get_uint32_refpts
-Lattice.bool_refpts = get_bool_refpts
+Lattice.uint32_refpts = get_uint32_index
+Lattice.bool_refpts = get_bool_index
 Lattice.get_cells = get_cells
 Lattice.get_refpts = get_refpts

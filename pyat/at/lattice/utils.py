@@ -48,7 +48,7 @@ __all__ = ['All', 'End', 'AtError', 'AtWarning', 'axis_descr',
            'check_radiation', 'check_6d',
            'set_radiation', 'set_6d',
            'make_copy', 'uint32_refpts', 'bool_refpts',
-           'get_uint32_refpts', 'get_bool_refpts',
+           'get_uint32_index', 'get_bool_index',
            'checkattr', 'checktype', 'checkname',
            'get_elements', 'get_s_pos',
            'refpts_count', 'refpts_iterator',
@@ -351,8 +351,8 @@ def uint32_refpts(refpts: RefIndex, n_elements: int,
 
 
 # noinspection PyIncorrectDocstring
-def get_uint32_refpts(ring: Sequence[Element], refpts: Refpts,
-                      endpoint: bool = True) -> Uint32Refpts:
+def get_uint32_index(ring: Sequence[Element], refpts: Refpts,
+                     endpoint: bool = True) -> Uint32Refpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
     r"""Returns an integer array of element indices, selecting ring elements.
 
@@ -368,17 +368,17 @@ def get_uint32_refpts(ring: Sequence[Element], refpts: Refpts,
 
     Examples:
 
-        >>> ring.uint32_refpts(at.Sextupole)
+        >>> get_uint32_index(ring, at.Sextupole)
         array([ 21,  27,  35,  89,  97, 103], dtype=uint32)
 
         numpy array of indices of all :py:class:`.Sextupole`\ s
 
-        >>> ring.uint32_refpts(at.End)
+        >>> get_uint32_index(ring, at.End)
         array([121], dtype=uint32)
 
         numpy array([:pycode:`len(ring)+1`])
 
-        >>> ring.uint32_refpts(at.checkattr('Frequency'))
+        >>> get_uint32_index(ring, at.checkattr('Frequency'))
         array([0], dtype=uint32)
 
         numpy array of indices of all elements having a 'Frequency'
@@ -450,12 +450,10 @@ def bool_refpts(refpts: RefIndex, n_elements: int,
 
 
 # noinspection PyIncorrectDocstring
-def get_bool_refpts(ring: Sequence[Element], refpts: Refpts,
-                    endpoint: bool = True) -> BoolRefpts:
+def get_bool_index(ring: Sequence[Element], refpts: Refpts,
+                   endpoint: bool = True) -> BoolRefpts:
     # noinspection PyUnresolvedReferences, PyShadowingNames
-    r"""bool_refpts(ring: Sequence[Element], refpts: Refpts)
-
-    Returns a bool array of element indices, selecting ring elements.
+    r"""Returns a bool array of element indices, selecting ring elements.
 
     Parameters:
         refpts:         Element selection key.
@@ -469,22 +467,22 @@ def get_bool_refpts(ring: Sequence[Element], refpts: Refpts,
 
     Examples:
 
-        >>> refpts = ring.bool_refpts(at.Quadrupole)
+        >>> refpts = get_bool_index(ring, at.Quadrupole)
 
         Returns a numpy array of booleans where all :py:class:`.Quadrupole`
         are :py:obj:`True`
 
-        >>> refpts = ring.bool_refpts("Q[FD]*")
+        >>> refpts = get_bool_index(ring, "Q[FD]*")
 
         Returns a numpy array of booleans where all elements whose *FamName*
         matches "Q[FD]*" are :py:obj:`True`
 
-        >>> refpts = ring.bool_refpts(at.checkattr('K', 0.0))
+        >>> refpts = get_bool_index(ring, at.checkattr('K', 0.0))
 
         Returns a numpy array of booleans where all elements whose *K*
         attribute is 0.0 are :py:obj:`True`
 
-        >>> refpts = ring.bool_refpts(None)
+        >>> refpts = get_bool_index(ring, None)
 
         Returns a numpy array of *len(ring)+1* :py:obj:`False` values
     """
@@ -825,7 +823,7 @@ def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
 
     Parameters:
         ring:       Lattice description
-        refpts:         Element selection key.
+        refpts:     Element selection key.
           See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Returns:
@@ -842,8 +840,7 @@ def get_s_pos(ring: Sequence[Element], refpts: Refpts = All) \
     s_pos = numpy.cumsum([getattr(el, 'Length', 0.0) for el in ring])
     # Prepend position at the start of the first element.
     s_pos = numpy.concatenate(([0.0], s_pos))
-    refpts = get_uint32_refpts(ring, refpts)
-    return s_pos[refpts]
+    return s_pos[get_bool_index(ring, refpts)]
 
 
 def rotate_elem(elem: Element, tilt: float = 0.0, pitch: float = 0.0,
