@@ -10,28 +10,28 @@ def convolve_wakefun(srange, w, sigs):
     """Convolution of a wake function with a pulse of rms
     length sigs, this is use to generate a wake potential
     that can be added to the output of EM code like GDFIDL"""
-    sigt = sigs / clight #Convert sigmaz to sigmat
-    
+    sigt = sigs / clight  # Convert sigmaz to sigmat
+
     # First we have to uniformly sample what is provided
     min_step = numpy.diff(srange)[0]
     s_out = numpy.arange(srange[0], srange[-1], min_step)
     sdiff = (s_out[-1]-s_out[0])
-    
+
     # The actual number of points must be doubled to overlap
-    # in the correct position. We fill with zeros everywhere 
+    # in the correct position. We fill with zeros everywhere
     # else
     npoints = len(s_out)
     nt = npoints + npoints-1
     func = interp1d(srange, w, bounds_error=False, fill_value=0)
     wout = func(s_out)
     wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
-    
-    # Perform the fft and multiply with gaussian in freq. 
+
+    # Perform the fft and multiply with gaussian in freq.
     fftr = numpy.fft.fft(wout)
     f = numpy.fft.fftfreq(nt, d=min_step/clight)
     fftl = numpy.exp(-(f*2*numpy.pi*sigt)**2/2)
     wout = numpy.fft.ifft(fftr*fftl)
-    
+
     # some manipulations to resample at the provided
     # srange and recenter the data
     wout = numpy.roll(wout, int(npoints/2))
@@ -39,7 +39,6 @@ def convolve_wakefun(srange, w, sigs):
     func = interp1d(s_out, wout, bounds_error=False, fill_value=0)
     wout = func(srange)
     return wout
-
 
 
 def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
@@ -104,7 +103,7 @@ def transverse_reswall_wf(srange, yokoya_factor, length, rvac, conduct, beta):
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *
             numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
-            
+
     wake[srange <= 0] = 0.0
-    
+
     return wake
