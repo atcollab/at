@@ -10,25 +10,36 @@ def convolve_wakefun(srange, w, sigs):
     """Convolution of a wake function with a pulse of rms
     length sigs, this is use to generate a wake potential
     that can be added to the output of EM code like GDFIDL"""
-    sigt = sigs / clight
+    sigt = sigs / clight #Convert sigmaz to sigmat
+    
+    # First we have to uniformly sample what is provided
     min_step = numpy.diff(srange)[0]
-    t_out = numpy.arange(srange[0], srange[-1], min_step)
-    sdiff = t_out[-1]-t_out[0]
-    npoints = len(t_out)
+    s_out = numpy.arange(srange[0], srange[-1], min_step)
+    sdiff = (s_out[-1]-s_out[0])
+    
+    # The actual number of points must be doubled to overlap
+    # in the correct position. We fill with zeros everywhere 
+    # else
+    npoints = len(s_out)
     nt = npoints + npoints-1
     func = interp1d(srange, w, bounds_error=False, fill_value=0)
-    wout = func(t_out)
+    wout = func(s_out)
     wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
+    
+    # Perform the fft and multiply with gaussian in freq. 
     fftr = numpy.fft.fft(wout)
-    f = numpy.fft.fftshift(numpy.linspace(-(npoints-1)/sdiff,
-                           (npoints-1)/sdiff, nt))
+    f = numpy.fft.fftfreq(nt, d=min_step/clight)
     fftl = numpy.exp(-(f*2*numpy.pi*sigt)**2/2)
     wout = numpy.fft.ifft(fftr*fftl)
+    
+    # some manipulations to resample at the provided
+    # srange and recenter the data
     wout = numpy.roll(wout, int(npoints/2))
-    t_out = numpy.linspace(t_out[0], t_out[-1], nt)
-    func = interp1d(t_out, wout, bounds_error=False, fill_value=0)
+    s_out = numpy.linspace(s_out[0], s_out[-1], nt)
+    func = interp1d(s_out, wout, bounds_error=False, fill_value=0)
     wout = func(srange)
     return wout
+
 
 
 def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
