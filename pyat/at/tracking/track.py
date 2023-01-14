@@ -2,8 +2,8 @@ import numpy
 import functools
 from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import Element, Particle, Refpts, uint32_refpts
-from ..lattice import elements, get_elements
+from ..lattice import Element, Particle, Refpts, End
+from ..lattice import elements, refpts_iterator, get_uint32_index
 from typing import List, Iterable
 
 
@@ -14,7 +14,7 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
-    monitors = get_elements(ring, elements.BeamMoments)
+    monitors = list(refpts_iterator(ring, elements.BeamMoments))
     for m in monitors:
         m.set_buffers(nturns, nbunch)
     return len(monitors) == 0
@@ -51,7 +51,7 @@ def fortran_align(func):
 
 @fortran_align
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = None, **kwargs):
+                 refpts: Refpts = End, **kwargs):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -64,11 +64,8 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
         nturns:                 number of turns to be tracked
-        refpts:                 numpy array of indices of elements where
-          output is desired:
-
-          * len(line) means end of the last element (default)
-          * 0 means entrance of the first element
+        refpts:                 Selects the location of coordinates output.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Keyword arguments:
         keep_lattice (bool):    Use elements persisted from a previous
@@ -128,7 +125,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          keywords to ensure the continuity of the turn number.
        * For multiparticle tracking with large number of turn the size of
          *r_out* may increase excessively. To avoid memory issues
-         :pycode:`lattice_pass(lattice, r_in, refpts=[])` can be used.
+         :pycode:`lattice_pass(lattice, r_in, refpts=None)` can be used.
          An empty list is returned and the tracking results of the last turn
          are stored in *r_in*.
        * To model buckets with different RF voltage :pycode:`unfold_beam=False`
@@ -139,9 +136,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     """
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    if refpts is None:
-        refpts = len(lattice)
-    refs = uint32_refpts(refpts, len(lattice))
+    refs = get_uint32_index(lattice, refpts)
     # define properties if lattice is not a Lattice object
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))

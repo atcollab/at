@@ -241,9 +241,9 @@ def test_linopt_no_refpts(dba_lattice):
     assert len(physics.linopt(dba_lattice, DP, get_chrom=True)) == 4
 
 
-@pytest.mark.parametrize('refpts', ([145], [1, 2, 3, 145]))
+@pytest.mark.parametrize('refpts', ([121], [1, 2, 3, 121]))
 def test_linopt_line(hmba_lattice, refpts):
-    refpts.append(len(hmba_lattice))
+#    refpts.append(len(hmba_lattice))
     l0, q, qp, ld = at.linopt(hmba_lattice, refpts=refpts)
     lt0, qt, qpt, ltd = at.linopt(hmba_lattice, refpts=refpts, twiss_in=l0)
     assert_close(ld['beta'], ltd['beta'], rtol=1e-12)
