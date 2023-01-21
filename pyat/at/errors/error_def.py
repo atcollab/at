@@ -100,7 +100,7 @@ ScalingPolynomAErr:
         The 1 goes to the main field, the rest goes to errors:
 
         >>> qp.PolynomB = [0, B2]
-        >>> qp.ScalingPolynomBErr = (0, [0, 0, 0, B4/B2, 0, B6/B2])
+        >>> qp.ScalingPolynomBErr = ([0, 0, 0, B4/B2, 0, B6/B2], 0)
 
         Note that the systematic error component must be in the 2nd position in
         the error tuple.
@@ -121,8 +121,8 @@ ScalingPolynomAErr:
         of 10\ :sup:`-3` and a random sextupole B3.  All this also scales with
         the magnet current, so we add a random component:
 
-        >>> qp.ScalingPolynomBErr = ([0, 1.E-3, B3/B2, 1.E-3/B2, 0, 1.E-3/B2],
-        ...                          [0, 0, 0, B4/B2, 0, B6/B2])
+        >>> qp.ScalingPolynomBErr = ([0, 0, 0, B4/B2, 0, B6/B2],
+        ...                          [0, 1.E-3, B3/B2, 1.E-3/B2, 0, 1.E-3/B2])
 
         After generating random numbers and multiplying by B2, we get the
         correct random contribution.
@@ -142,13 +142,13 @@ ScalingPolynomAErr:
         For errors, we can arbitrarily decide it's a :py:class:`.Quadrupole`
         and normalise the errors with B2:
 
-        >>> qp.ScalingPolynomBErr = (0, [0, 0, 0, B4/B2, 0, B6/B2])
+        >>> qp.ScalingPolynomBErr = ([0, 0, 0, B4/B2, 0, B6/B2], 0)
 
         which will then be multiplied by C2, strength of the quadrupole.
 
         or decide it's a :py:class:`.Sextupole` and normalise the errors with B3
 
-        >>> qp.ScalingPolynomBErr = (0, [0, 0, 0, B4/B3, 0, B6/B3])
+        >>> qp.ScalingPolynomBErr = ([0, 0, 0, B4/B3, 0, B6/B3], 0)
 
         which will be multiplied by C3, strength of the sextupole.
 
@@ -182,10 +182,6 @@ _ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None,
               'ScalingPolynomBErr': None, 'ScalingPolynomAErr': None,
               'ShiftErr': (2,), 'RotationErr': None}
 _ALL_ATTRS = dict(**_BPM_ATTRS, **_ERR_ATTRS)
-
-_SEL_ARGS = ('all', 'shiftx', 'shifty', 'tilt', 'pitch', 'yaw',
-             'PolynomB', 'PolynomA', 'IndexB', 'IndexA',
-             'BPMOffset', 'BPMGain', 'BPMTilt')
 
 
 def _truncated_randn(truncation=None, **kwargs):
@@ -285,7 +281,7 @@ def assign_errors(ring: Lattice, refpts: Refpts, **kwargs):
 
 
     See also:
-        :py:func:`enable_errors`, :py:func:`get_optics_err`
+        :py:func:`enable_errors`
     """
     elements = ring[refpts]
     nelems = len(elements)
@@ -480,7 +476,7 @@ def enable_errors(ring: Lattice,
           *truncation* * :math:`\sigma`. If None, no truncation is done.
         seed:   Seed for the random generator. It *seed* is :py:obj:`None`, a
           new :py:class:`~numpy.random.Generator` instance with fresh,
-           unpredictable entropy is created and used. If seed is an
+          unpredictable entropy is created and used. If seed is an
           :py:class:`int`, a new :py:class:`~numpy.random.Generator` instance
           with its initial state given by *seed*. If seed is already a
           :py:class:`~numpy.random.Generator` like :py:obj:`at.random.common`
@@ -513,12 +509,8 @@ def enable_errors(ring: Lattice,
 
         Only magnet shift errors are active
 
-        >>> ringerr = enable_errors(all=False)
-
-        No magnet errors are enabled. Only monitor errors will be active.
-
     See also:
-        :py:func:`assign_errors`, :py:func:`get_optics_err`
+        :py:func:`assign_errors`
     """
     def error_generator(trunc: float,
                         sd: Union[int, np.random.Generator]
@@ -560,20 +552,6 @@ def enable_errors(ring: Lattice,
 def has_errors(ring):
     """Get the error status of a lattice"""
     return getattr(ring, '_has_errors', False)
-
-
-def get_mean_std_err(ring: Lattice, key, attr, index=0):
-    vals = [np.atleast_1d(getattr(e, attr, 0.0))[index]
-            for e in ring.select(key)]
-    return np.mean(vals), np.std(vals)
-
-
-def _sort_flags(kwargs):
-    errargs = {}
-    for key in _SEL_ARGS:
-        if key in kwargs:
-            errargs[key] = kwargs.pop(key)
-    return kwargs, errargs
 
 
 Lattice.assign_errors = assign_errors
