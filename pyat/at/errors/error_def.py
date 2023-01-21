@@ -5,11 +5,11 @@ enabling the errors and computing linear optics of the lattice with errors.
 The processing of errors in PyAT is done in two steps:
 
 #. The definition of errors: errors are stored in dedicated attributes of the
-   lattice elements by :py:func:`assign_errors`. Random errors are generated,
-   cumulated with systematic errors and stored in dedicated attributes.
+   lattice elements by :py:func:`assign_errors`.
    Nothing changes in tracking at this stage because the error attributes are
-   ignored,
-#. The activation of errors by :py:func:`enable_errors`: errors are moved into
+   still ignored,
+#. The activation of errors by :py:func:`enable_errors`: Random errors are
+   generated and are cumulated with systematic errors. Errors are stored in
    the standard element attributes of a new :py:class:`.Lattice`.
 
 All error definitions may be given to the :py:func:`assign_errors` in 2
@@ -169,14 +169,12 @@ ScalingPolynomAErr:
 """
 import numpy as np
 from typing import Optional, Union
-from at.lattice import refpts_iterator, Lattice, Refpts
+from at.lattice import refpts_iterator, Lattice, Element, Refpts, elem_generator
 from at.lattice import shift_elem, rotate_elem
-from at.physics import find_orbit, get_optics
-from at.tracking import lattice_pass
 from scipy.stats import truncnorm, norm
 
 
-__all__ = ['find_orbit_err', 'get_optics_err', 'lattice_pass_err',
+__all__ = ['apply_bpm_orbit_errors', 'apply_bpm_track_errors',
            'assign_errors', 'enable_errors']
 
 _BPM_ATTRS = {'BPMGain': (2,), 'BPMOffset': (2,), 'BPMTilt': (1,)}
@@ -186,7 +184,8 @@ _ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None,
 _ALL_ATTRS = dict(**_BPM_ATTRS, **_ERR_ATTRS)
 
 _SEL_ARGS = ('all', 'shiftx', 'shifty', 'tilt', 'pitch', 'yaw',
-             'PolynomB', 'PolynomA', 'IndexB', 'IndexA')
+             'PolynomB', 'PolynomA', 'IndexB', 'IndexA',
+             'BPMOffset', 'BPMGain', 'BPMTilt')
 
 
 def _truncated_randn(truncation=None, **kwargs):
@@ -196,10 +195,7 @@ def _truncated_randn(truncation=None, **kwargs):
         return norm.rvs(**kwargs)
 
 
-def assign_errors(ring: Lattice, refpts: Refpts,
-                  truncation: Optional[float] = None,
-                  seed: Optional[Union[int, np.random.Generator]] = None,
-                  **kwargs):
+def assign_errors(ring: Lattice, refpts: Refpts, **kwargs):
     # noinspection PyUnresolvedReferences
     r"""Assign errors to selected elements
 
@@ -208,18 +204,8 @@ def assign_errors(ring: Lattice, refpts: Refpts,
 
     Args:
         ring:       Lattice description.
-        refpts:     Element selector. May be:
-
-          #. an integer or a sequence of integers
-             (0 indicating the first element)
-          #. a sequence of booleans marking the selected elements
-        truncation:     Truncation of the Gaussian error distribution at +/-
-          *truncation* * :math:`\sigma`
-        seed:   Seed for the random generator. It *seed* is :py:obj:`None`, the
-          :py:obj:`numpy.random.RandomState` singleton is used. If seed is an
-          :py:class:`int`, a new :py:class:`~numpy.random.RandomState` instance
-          is used. If seed is already a :py:class:`~numpy.random.Generator`
-          like :py:obj:`at.random.common` then that instance is used.
+        refpts:     Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Other keyword arguments specify the kind of errors to be assigned. Error
     definitions may be given in 2 forms:
@@ -302,6 +288,7 @@ def assign_errors(ring: Lattice, refpts: Refpts,
         :py:func:`enable_errors`, :py:func:`get_optics_err`
     """
     elements = ring[refpts]
+    nelems = len(elements)
     for attr, sz in _ALL_ATTRS.items():
         val = kwargs.pop(attr, None)
         if val is not None:
@@ -315,116 +302,170 @@ def assign_errors(ring: Lattice, refpts: Refpts,
             if sz is None:
                 szsyst = syst.shape[1:]
                 szrand = rand.shape[1:]
-                # pad syst and rand to the same size
-                szmax = np.maximum(szsyst, szrand)
-                missyst = np.concatenate(([0], szmax-szsyst))
-                misrand = np.concatenate(([0], szmax-szrand))
-                rand = np.pad(rand, tuple((0, m) for m in misrand))
-                syst = np.pad(syst, tuple((0, m) for m in missyst))
-                sz = tuple(szmax)
-            rv = _truncated_randn(size=((len(elements),) + sz),
-                                  truncation=truncation, random_state=seed)
-            try:
-                vals = syst + rv*rand
-            except Exception as exc:
-                exc.args = ('Attribute {0} does not accept value {1}: {2}'.
-                            format(attr, val, exc),)
-                raise
-            for el, val in zip(elements, vals):
-                setattr(el, attr, val)
+            else:
+                szsyst = szrand = sz
+            syst = np.broadcast_to(syst, ((nelems,) + szsyst))
+            rand = np.broadcast_to(rand, ((nelems,) + szrand))
+            for el, s, r in zip(elements, syst, rand):
+                setattr(el, attr, (s, r))
 
 
-def _rotmat(theta):
-    cs = np.cos(theta)
-    sn = np.sin(theta)
-    return np.array([[cs, sn], [-sn, cs]])
+# noinspection PyProtectedMember
+def apply_bpm_orbit_errors(ring: Lattice, refpts: Refpts, orbit):
+    """Apply the Monitor errors on an orbit array
 
+    Args:
+        ring:           Lattice description.
+        refpts:         Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        orbit:          (Nrefs, 6) closed orbit vector at each location
+                        specified in *refpts*
+    """
 
-def _apply_bpm_orbit_error(ring, refpts, orbit):
-    for e, o6 in zip(refpts_iterator(ring, refpts), orbit):
+    def _rotmat(theta):
+        cs = np.cos(theta)
+        sn = np.sin(theta)
+        return np.array([[cs, sn], [-sn, cs]])
+
+    for elem, o6 in zip(refpts_iterator(ring, refpts), orbit):
         o6 = o6.reshape((-1, 6))
-        if hasattr(e, 'BPMOffset'):
-            o6[:, [0, 2]] -= e.BPMOffset
-        if hasattr(e, 'BPMTilt'):
-            o6[:, [0, 2]] = o6[:, [0, 2]] @ _rotmat(e.BPMTilt).T
-        if hasattr(e, 'BPMGain'):
-            o6[:, [0, 2]] *= e.BPMGain
+        if hasattr(elem, '_BPMOffset'):
+            o6[:, [0, 2]] -= elem._BPMOffset
+        if hasattr(elem, '_BPMTilt'):
+            o6[:, [0, 2]] = o6[:, [0, 2]] @ _rotmat(elem._BPMTilt).T
+        if hasattr(elem, '_BPMGain'):
+            o6[:, [0, 2]] *= elem._BPMGain
 
 
-def _apply_bpm_track_error(ring, refpts, trajectory):
+def apply_bpm_track_errors(ring: Lattice, refpts: Refpts, trajectory):
+    r"""Apply the Monitor errors on a trajectory array
+
+    Args:
+        ring:           Lattice description.
+        refpts:         Observation points.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        trajectory:     (6, N, R, T) array containing output coordinates of
+          N particles at R reference points for T turns.
+    """
+    # Loop on turns
     for traj in trajectory.T:
-        _apply_bpm_orbit_error(ring, refpts, traj)
+        apply_bpm_orbit_errors(ring, refpts, traj)
 
 
-def _apply_alignment_errors(ring, **kwargs):
-    refpts = [(hasattr(e, 'ShiftErr') or hasattr(e, 'RotationErr'))
-              for e in ring]
-    ring = ring.replace(refpts)
-    alldef = kwargs.pop('all', True)
-    for e in ring[refpts]:
-        shift = getattr(e, 'ShiftErr')
-        rots = getattr(e, 'RotationErr')
-        if shift is not None:
-            shiftx = kwargs.pop('shiftx', alldef)*shift[0]
-            shifty = kwargs.pop('shifty', alldef)*shift[1]
-            shift_elem(e, shiftx, shifty, relative=True)
-        if rots is not None:
-            tilt = kwargs.pop('tilt', alldef)*rots[0]
-            pitch = kwargs.pop('pitch', alldef) * rots[1]
-            yaw = kwargs.pop('yaw', alldef) * rots[2]
-            rotate_elem(e, tilt=tilt, pitch=pitch,
-                        yaw=yaw, relative=True)
-    return ring
+def _sysrand(value,
+             truncation: float,
+             seed: Union[int, np.random.Generator]):
+    syst, rand = value
+    rv = _truncated_randn(size=rand.shape,
+                          truncation=truncation, random_state=seed)
+    return syst + rv*rand
 
 
-def _apply_field_errors(ring, **kwargs):
-    def sanitize(e):
-        la = len(e.PolynomA)
-        lb = len(e.PolynomB)
-        mo = max(la, lb)
-        e.PolynomA = np.pad(e.PolynomA, (0, mo - la))
-        e.PolynomB = np.pad(e.PolynomB, (0, mo - lb))
-        e.MaxOrder = mo - 1
-
-    def get_pol(e, pname, pstatic, pdynamic, index):
-        def get_err(elem, attribute, idx):
-            empty = np.array([], dtype=float)
-            v = getattr(elem, attribute, empty)
-            if not (idx is None or idx >= len(v)):
-                tmp = v[idx]
-                v = np.zeros(idx+1)
-                v[idx] = tmp
-            return v
-
-        value = getattr(e, pname)
-        staticerr = get_err(e, pstatic, index)
-        dynamicerr = get_err(e, pdynamic, index)
-        pn = np.zeros(max(len(value), len(staticerr), len(dynamicerr)))
-        pn[:len(value)] += value
-        pn[:len(staticerr)] += staticerr
-        pn[:len(dynamicerr)] += e.strength*dynamicerr
-        return pn
-
-    def set_polerr(ring, pname, index):
-        pstat = pname+'Err'
-        pdyn = 'Scaling' + pstat
-        refpts = [hasattr(e, pname) and (hasattr(e, pstat) or
-                                         hasattr(e, pdyn)) for e in ring]
-        rr = ring.replace(refpts)
-        for e in rr[refpts]:
-            setattr(e, pname, get_pol(e, pname, pstat, pdyn, index))
-            sanitize(e)
-        return rr
+def _set_bpm_errors(elem: Element, errors,
+                    truncation: float,
+                    seed: Union[int, np.random.Generator],
+                    **kwargs) -> Element:
+    """Apply Monitor errors"""
+    def set_locattr(el, err, inattr, outattr):
+        if err is not None:
+            delattr(el, inattr)
+            value = _sysrand(err, truncation, seed)
+            if kwargs.pop(inattr, alldef):
+                setattr(el, outattr, value)
 
     alldef = kwargs.pop('all', True)
-    for pol in ['A', 'B']:
-        if kwargs.pop('Polynom'+pol, alldef):
-            index = kwargs.pop('Index'+pol, None)
-            ring = set_polerr(ring, 'Polynom'+pol, index)
-    return ring
-    
+    offseterr, gainerr, tilterr = errors
+    set_locattr(elem, offseterr, 'BPMOffset', '_BPMOffset')
+    set_locattr(elem, gainerr, 'BPMGain', '_BPMGain')
+    set_locattr(elem, tilterr, 'BPMTilt', '_BPMTilt')
+    return elem
 
-def enable_errors(ring: Lattice, **kwargs):
+
+def _set_alignment_errors(elem: Element, errors,
+                          truncation: float,
+                          seed: Union[int, np.random.Generator],
+                          **kwargs) -> Element:
+    """Apply the defined magnet alignmemt errors"""
+    alldef = kwargs.pop('all', True)
+    shift, rots = errors
+
+    if shift is not None:
+        delattr(elem, 'ShiftErr')
+        shift = _sysrand(shift, truncation, seed)
+        shiftx = shift[0] + kwargs.pop('shiftx', alldef)
+        shifty = shift[1] * kwargs.pop('shifty', alldef)
+        shift_elem(elem, shiftx, shifty, relative=True)
+
+    if rots is not None:
+        delattr(elem, 'RotationErr')
+        rots = _sysrand(rots, truncation, seed)
+        tilt = rots[0] * kwargs.pop('tilt', alldef)
+        pitch = rots[1] * kwargs.pop('pitch', alldef)
+        yaw = rots[2] * kwargs.pop('yaw', alldef)
+        rotate_elem(elem, tilt=tilt, pitch=pitch, yaw=yaw, relative=True)
+    return elem
+
+
+def _set_field_errors(elem: Element, errors_a, errors_b,
+                      truncation: float,
+                      seed: Union[int, np.random.Generator],
+                      **kwargs):
+    """Apply the defined field errors"""
+
+    def sysrand(el: Element, error, attrname: str, enabled: bool, scale: float,
+                index: Union[int, None], plist: list):
+        """Append the errors attributes to the polynomial list"""
+        def vmask(v, idx, pl):
+            if idx is not None:
+                if idx < len(v):
+                    t = np.zeros(v.shape)
+                    t[idx] = v[idx]
+                    pl.append(t)
+            elif len(v) > 0:
+                pl.append(v)
+
+        if error is not None:
+            delattr(el, attrname)
+            syst, rand = error
+            rand = rand * _truncated_randn(size=rand.shape,
+                                           truncation=truncation,
+                                           random_state=seed)
+            if enabled:
+                vmask(scale*syst, index, plist)
+                vmask(scale*rand, index, plist)
+
+    def get_pol(el: Element, errs, pname: str, iname: str, **kwargs) -> list:
+        """Build a list of all 5 polynomials for A or B"""
+        errstatic, errdynamic = errs
+        pstatic = pname+'Err'
+        pdynamic = 'Scaling' + pstatic
+        alldef = kwargs.pop('all', True)
+        index = kwargs.pop(iname, None)
+        enabled = kwargs.pop(pname, alldef)
+        plist = [getattr(el, pname)]
+        sysrand(el, errstatic, pstatic, enabled, 1.0, index, plist)
+        sysrand(el, errdynamic, pdynamic, enabled, el.strength, index, plist)
+        return plist
+
+    def set_pol(el: Element, pname: str, plist: list, sz: int) -> None:
+        """Sum up all polynomials and set the PolynomA/B attribute"""
+        pn = np.zeros(sz)
+        for plnm in plist:
+            pn[:len(plnm)] += plnm
+        setattr(el, pname, pn)
+
+    alist = get_pol(elem, errors_a, 'PolynomA', 'IndexA', **kwargs)
+    blist = get_pol(elem, errors_b, 'PolynomB', 'IndexB', **kwargs)
+    psize = max(max(len(p) for p in alist), max(len(p) for p in blist))
+    set_pol(elem, 'PolynomA', alist, psize)
+    set_pol(elem, 'PolynomB', blist, psize)
+    return elem
+
+
+def enable_errors(ring: Lattice,
+                  truncation: Optional[float] = None,
+                  seed: Optional[Union[int, np.random.Generator]] = None,
+                  **kwargs):
     r"""Enable magnet errors
 
     Returns a shallow copy of *ring* where magnet errors defined by
@@ -435,6 +476,15 @@ def enable_errors(ring: Lattice, **kwargs):
 
     Args:
         ring:   Lattice description.
+        truncation:     Truncation of the normal error distribution at +/-
+          *truncation* * :math:`\sigma`. If None, no truncation is done.
+        seed:   Seed for the random generator. It *seed* is :py:obj:`None`, a
+          new :py:class:`~numpy.random.Generator` instance with fresh,
+           unpredictable entropy is created and used. If seed is an
+          :py:class:`int`, a new :py:class:`~numpy.random.Generator` instance
+          with its initial state given by *seed*. If seed is already a
+          :py:class:`~numpy.random.Generator` like :py:obj:`at.random.common`
+          then that instance is used.
 
     Keyword Args:
         all (bool):         Set the default value for all the specific error
@@ -450,6 +500,9 @@ def enable_errors(ring: Lattice, **kwargs):
         PolynomA (bool):    enable polynomial errors. Default: *all*
         IndexA (Optional[int]): restrict the skew polynomial error to the
           specified index. Default: :py:obj:`None` meaning the whole polynom
+        BPMOffset (bool):   enable Monitor offset errors. Default: *all*
+        BPMGain (bool):     enable Monitor gain errors. Default: *all*
+        BPMTilt (bool):     enable Monitor tilt errors. Default: *all*
 
     Examples:
         >>> ringerr = enable_errors(ring)
@@ -467,10 +520,40 @@ def enable_errors(ring: Lattice, **kwargs):
     See also:
         :py:func:`assign_errors`, :py:func:`get_optics_err`
     """
+    def error_generator(trunc: float,
+                        sd: Union[int, np.random.Generator]
+                        ):
+        def error_attributes(el, *args):
+            return tuple(getattr(el, attr, None) for attr in args)
+
+        for elem in ring:
+            pola_errors = error_attributes(elem,
+                                           'PolynomAErr', 'ScalingPolynomAErr')
+            polb_errors = error_attributes(elem,
+                                           'PolynomBErr', 'ScalingPolynomBErr')
+            if not all(a is None for a in pola_errors + polb_errors):
+                elem = _set_field_errors(elem.deepcopy(),
+                                         pola_errors, polb_errors,
+                                         truncation=trunc,
+                                         seed=sd, **kwargs)
+            align_errors = error_attributes(elem, 'ShiftErr', 'RotationErr')
+            if not all(a is None for a in align_errors):
+                elem = _set_alignment_errors(elem.deepcopy(), align_errors,
+                                             truncation=trunc,
+                                             seed=sd, **kwargs)
+            bpm_errors = error_attributes(elem,
+                                          'BPMOffset', 'BPMGain', 'BPMTilt')
+            if not all(a is None for a in bpm_errors):
+                elem = _set_bpm_errors(elem.deepcopy(), bpm_errors,
+                                       truncation=trunc,
+                                       seed=sd, **kwargs)
+            yield elem
+
     if not ring.has_errors:
-        ring = _apply_field_errors(ring, **kwargs)
-        ring = _apply_alignment_errors(ring, **kwargs)
-        ring._has_errors = True
+        gen = np.random.default_rng(seed)
+        ring = Lattice(elem_generator,
+                       error_generator(truncation, gen),
+                       iterator=ring.attrs_filter, _has_errors=True)
     return ring
 
 
@@ -481,7 +564,7 @@ def has_errors(ring):
 
 def get_mean_std_err(ring: Lattice, key, attr, index=0):
     vals = [np.atleast_1d(getattr(e, attr, 0.0))[index]
-            for e in ring.get_elements(key)]
+            for e in ring.select(key)]
     return np.mean(vals), np.std(vals)
 
 
@@ -493,104 +576,6 @@ def _sort_flags(kwargs):
     return kwargs, errargs
 
 
-def find_orbit_err(ring: Lattice, refpts: Refpts = None, **kwargs):
-    """Find the closed orbit if a lattice with errors
-
-    :py:func:`find_orbit_err` enables the selected errors, finds the closed
-    orbit and modifies the result according to monitor errors.
-    The *ring* :py:class:`~.Lattice` is not modified.
-
-    Args:
-        ring:       Lattice description
-        refpts:
-
-    The *all*, *ShiftErr*, *RotationErr*, *PolynomBErr*, *PolynomBIndex*,
-    *PolynomAErr*, *PolynomAIndex* keywords are defined as in
-    :py:func:`enable_errors`
-
-    All other keywords are forwarded to :py:func:`.find_orbit`
-
-    See also:
-        :py:func:`assign_errors`, :py:func:`.find_orbit`,
-        :py:func:`get_optics_err`, :py:func:`lattice_pass_err`
-    """
-    kwargs, errargs = _sort_flags(kwargs)
-    ring = enable_errors(ring, **errargs)
-    orbit0, orbit = find_orbit(ring, refpts=refpts, **kwargs)
-    _apply_bpm_orbit_error(ring, refpts, orbit)
-    return orbit0, orbit
-
-
-def get_optics_err(ring: Lattice, refpts: Refpts = None, **kwargs):
-    """Linear analysis of a lattice with errors
-
-    :py:func:`get_optics_err` enables the selected errors, makes the linear
-    analysis of the modified :py:class:`~.Lattice` and modifies the closed
-    orbit according to monitor errors.
-    The *ring* :py:class:`~.Lattice` is not modified.
-
-    Args:
-        ring:       Lattice description
-        refpts:
-
-    The *all*, *ShiftErr*, *RotationErr*, *PolynomBErr*, *PolynomBIndex*,
-    *PolynomAErr*, *PolynomAIndex* keywords are defined as in
-    :py:func:`enable_errors`
-
-    All other keywords are forwarded to :py:func:`.get_optics`
-
-    See also:
-        :py:func:`assign_errors`, :py:func:`.get_optics`,
-        :py:func:`find_orbit_err`, :py:func:`lattice_pass_err`
-    """
-    kwargs, errargs = _sort_flags(kwargs)
-    ring = enable_errors(ring, **errargs)
-    ld0, bd, ld = get_optics(ring, refpts=refpts, **kwargs)
-    _apply_bpm_orbit_error(ring, refpts, ld.closed_orbit)
-    return ld0, bd, ld
-
-
-def lattice_pass_err(ring: Lattice, r_in, nturns: int = 1,
-                     refpts: Refpts = None, **kwargs):
-    """Tracking through a lattice with errors
-
-    :py:func:`lattice_pass_err` enables the selected errors, and tracks through
-    the modified :py:class:`~.Lattice`. The coordinates on monitors are modified
-    according to monitor errors.
-    The *ring* :py:class:`~.Lattice` is not modified.
-
-    Parameters:
-        ring:                   lattice description
-        r_in:                   (6, N) array: input coordinates of N particles.
-          *r_in* is modified in-place and reports the coordinates at
-          the end of the element. For the best efficiency, *r_in*
-          should be given as *F_CONTIGUOUS* numpy array.
-        nturns:                 number of turns to be tracked
-        refpts:                 numpy array of indices of elements where
-          output is desired:
-
-          * len(line) means end of the last element (default)
-          * 0 means entrance of the first element
-
-    The *all*, *ShiftErr*, *RotationErr*, *PolynomBErr*, *PolynomBIndex*,
-    *PolynomAErr*, *PolynomAIndex* keywords are defined as in
-    :py:func:`enable_errors`
-
-    All other keywords are forwarded to :py:func:`.lattice_pass`
-
-    See also:
-        :py:func:`assign_errors`, :py:func:`.lattice_pass`,
-        :py:func:`get_optics_err`, :py:func:`find_orbit_err`
-    """
-    kwargs, errargs = _sort_flags(kwargs)
-    ring = enable_errors(ring, **errargs)
-    rout = lattice_pass(ring, r_in, nturns, refpts, **kwargs)
-    _apply_bpm_track_error(ring, refpts, rout)
-    return rout
-
-
 Lattice.assign_errors = assign_errors
-Lattice.find_orbit_err = find_orbit_err
-Lattice.get_optics_err = get_optics_err
 Lattice.enable_errors = enable_errors
 Lattice.has_errors = property(has_errors, doc="Error status")

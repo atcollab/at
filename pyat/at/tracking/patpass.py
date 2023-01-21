@@ -7,6 +7,7 @@ import multiprocessing
 from ..lattice.utils import get_uint32_index
 from ..lattice import AtWarning, Element, DConstant, random
 from ..lattice import Refpts, End
+from ..errors import apply_bpm_track_errors
 from warnings import warn
 from .atpass import reset_rng, atpass as _atpass
 from .track import fortran_align
@@ -70,7 +71,9 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
 
 @fortran_align
 def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
-            refpts: Refpts = End, pool_size: int = None,
+            refpts: Refpts = End,
+            monitor_errors: bool = False,
+            pool_size: int = None,
             start_method: str = None, **kwargs):
     """
     Simple parallel implementation of :py:func:`.lattice_pass`.
@@ -91,6 +94,7 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
         nturns:                 number of turns to be tracked
         refpts:                 Selects the location of coordinates output.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        monitor_errors:         Apply Monitor errors
         pool_size:              number of processes. If None,
           ``min(npart,nproc)`` is used
         start_method:           python multiprocessing start method.
@@ -176,11 +180,15 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
         if pool_size is None:
             pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
                             DConstant.patpass_poolsize)
-        return _pass(lattice, r_in, pool_size, start_method, nturns=nturns,
-                     refpts=refpts, **kwargs)
+        r_out = _pass(lattice, r_in, pool_size, start_method, nturns=nturns,
+                      refpts=refpts, **kwargs)
     else:
         if any_collective:
             warn(AtWarning('Collective PassMethod found: use single process'))
         else:
             warn(AtWarning('no parallel computation for a single particle'))
-        return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
+        r_out = _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
+
+    if monitor_errors:
+        apply_bpm_track_errors(lattice, refpts, r_out)
+    return r_out

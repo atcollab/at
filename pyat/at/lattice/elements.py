@@ -27,6 +27,10 @@ def _array2(value):
     return _array(value, shape=(2,))
 
 
+def _array1(value):
+    return _array(value, shape=(1,))
+
+
 def _pad(value, shape=(3,), dtype=numpy.float64, **kwargs):
     if not numpy.all(value.shape == shape):
         missing = numpy.array(shape) - numpy.array(value.shape)
@@ -36,6 +40,13 @@ def _pad(value, shape=(3,), dtype=numpy.float64, **kwargs):
 
 def _nop(value):
     return value
+
+
+def _tuple(value, fun=_array2):
+    if isinstance(value, tuple):
+        return tuple(fun(v) for v in value)
+    else:
+        return fun([0]), fun(value)
 
 
 # noinspection PyUnusedLocal
@@ -263,6 +274,8 @@ class Element(object):
                         EApertures=_array2,
                         KickAngle=_array2,
                         PolynomB=_array, PolynomA=_array,
+                        ShiftErr=_not_allowed,
+                        RotationErr=_not_allowed,
                         PolynomBErr=_not_allowed,
                         PolynomAErr=_not_allowed,
                         ScalingPolynomBErr=_not_allowed,
@@ -270,11 +283,12 @@ class Element(object):
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
-                        BPMGain=_array2,
-                        BPMOffset=_array2,
-                        BPMTilt=float,
-                        ShiftErr=_not_allowed,
-                        RotationErr=_not_allowed,
+                        BPMGain=_tuple,
+                        BPMOffset=_tuple,
+                        BPMTilt=lambda v: _tuple(v, fun=_array1),
+                        _BPMGain=_array2,
+                        _BPMOffset=_array2,
+                        _BPMTilt=float,
                         )
 
     _entrance_fields = ['T1', 'R1']
@@ -588,9 +602,12 @@ class ThinMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
     _conversions = dict(Element._conversions,
-                        ShiftErr=_array2, RotationErr=_pad,
-                        PolynomBErr=_array, PolynomAErr=_array,
-                        ScalingPolynomBErr=_array, ScalingPolynomAErr=_array,
+                        ShiftErr=_tuple,
+                        RotationErr=lambda v: _tuple(v, fun=_pad),
+                        PolynomBErr=lambda v: _tuple(v, fun=_array),
+                        PolynomAErr=lambda v: _tuple(v, fun=_array),
+                        ScalingPolynomBErr=lambda v: _tuple(v, fun=_array),
+                        ScalingPolynomAErr=lambda v: _tuple(v, fun=_array),
                         )
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):

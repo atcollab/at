@@ -4,6 +4,7 @@ from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
 from ..lattice import Element, Particle, Refpts, End
 from ..lattice import elements, refpts_iterator, get_uint32_index
+from ..errors import apply_bpm_track_errors
 from typing import List, Iterable
 
 
@@ -51,7 +52,9 @@ def fortran_align(func):
 
 @fortran_align
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = End, **kwargs):
+                 refpts: Refpts = End,
+                 monitor_errors: bool = False,
+                 **kwargs):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -66,6 +69,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
         nturns:                 number of turns to be tracked
         refpts:                 Selects the location of coordinates output.
           See ":ref:`Selecting elements in a lattice <refpts>`"
+        monitor_errors:         Apply Monitor errors
 
     Keyword arguments:
         keep_lattice (bool):    Use elements persisted from a previous
@@ -152,7 +156,10 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     # * N is number of particles;
     # * R is number of refpts
     # * T is the number of turns
-    return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+    r_out =_atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+    if monitor_errors:
+        apply_bpm_track_errors(lattice, refpts, r_out)
+    return r_out
 
 
 @fortran_align
