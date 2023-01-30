@@ -185,7 +185,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
       /* list of optional fields */
       int i1 = 0;
       plhs[1] = mxCreateCellMatrix(8, 1);
-      mxSetCell(plhs[1], i1++, mxCreateString("MultipoleFringe"))
+      mxSetCell(plhs[1], i1++, mxCreateString("MultipoleFringe"));
       mxSetCell(plhs[1], i1++, mxCreateString("T1"));
       mxSetCell(plhs[1], i1++, mxCreateString("T2"));
       mxSetCell(plhs[1], i1++, mxCreateString("R1"));
