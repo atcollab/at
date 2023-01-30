@@ -5,9 +5,9 @@
 #define delta_ 4
 #define ct_ 5
 
-static void multipole_fringe(double *r6, double L,
+static void multipole_fringe(double *r_in, double L,
                              double *polya, double *polyb, int max_order,
-                             double edge, int skip_b0)
+                             int edge)
 {
   // PTC multipole_fringer
   // Forest 13.29
@@ -15,8 +15,14 @@ static void multipole_fringe(double *r6, double L,
   // note this is the sum over n of Forest 13.29
   // one for each multipole component
 
-  double U, V, DU, DV, DUX, DVX, DUY, DVY, FX, FY, FX_X, FX_Y, FY_X, FY_Y,
+  double I, U, V, DU, DV, DUX, DVX, DUY, DVY, FX, FY, FX_X, FX_Y, FY_X, FY_Y,
       RX, IX, DRX, DIX;
+
+  if (edge == 0) {
+    I = 1;
+  } else {
+    I = -1;
+  }
 
   FX = 0;
   FY = 0;
@@ -42,22 +48,15 @@ static void multipole_fringe(double *r6, double L,
 
     // complex muls
 
-    RX = DRX * r6[x_] - DIX * r6[y_];
-    IX = DRX * r6[y_] + DIX * r6[x_];
+    RX = DRX * r_in[x_] - DIX * r_in[y_];
+    IX = DRX * r_in[y_] + DIX * r_in[x_];
 
-    if (n == 0 && skip_b0) {
-      U  =         - A * IX;
-      V  =         + A * RX;
-      DU =         - A * DIX;
-      DV =         + A * DRX;
-    }
-    else {
-      U = B * RX - A * IX;
-      V = B * IX + A * RX;
-      DU = B * DRX - A * DIX;
-      DV = B * DIX + A * DRX;
-    }
-    double f1 = -edge / 4.0 / (j + 1);
+    U = B * RX - A * IX;
+    V = B * IX + A * RX;
+    DU = B * DRX - A * DIX;
+    DV = B * DIX + A * DRX;
+
+    double f1 = -I / 4.0 / (j + 1);
 
     U = U * f1;
     V = V * f1;
@@ -71,17 +70,17 @@ static void multipole_fringe(double *r6, double L,
 
     double nf = 1.0 * (j + 2) / j;
 
-    FX += U * r6[x_] + nf * V * r6[y_];
-    FY += U * r6[y_] - nf * V * r6[x_];
+    FX += U * r_in[x_] + nf * V * r_in[y_];
+    FY += U * r_in[y_] - nf * V * r_in[x_];
 
-    FX_X += DUX * r6[x_] + U + nf * r6[y_] * DVX;
-    FX_Y += DUY * r6[x_] + nf * V + nf * r6[y_] * DVY;
+    FX_X += DUX * r_in[x_] + U + nf * r_in[y_] * DVX;
+    FX_Y += DUY * r_in[x_] + nf * V + nf * r_in[y_] * DVY;
 
-    FY_X += DUX * r6[y_] - nf * V - nf * r6[x_] * DVX;
-    FY_Y += DUY * r6[y_] + U - nf * r6[x_] * DVY;
+    FY_X += DUX * r_in[y_] - nf * V - nf * r_in[x_] * DVX;
+    FY_Y += DUY * r_in[y_] + U - nf * r_in[x_] * DVY;
   }
 
-  double DEL = 1.0 / (1 + r6[delta_]);
+  double DEL = 1.0 / (1 + r_in[delta_]);
 
   // solve 2x2 matrix equation
 
@@ -90,12 +89,12 @@ static void multipole_fringe(double *r6, double L,
   double D = 1 - FY_Y * DEL;
   double C = -FX_Y * DEL;
 
-  r6[x_] = r6[x_] - FX * DEL;
-  r6[y_] = r6[y_] - FY * DEL;
+  r_in[x_] = r_in[x_] - FX * DEL;
+  r_in[y_] = r_in[y_] - FY * DEL;
 
-  double pxf = (D * r6[px_] - B * r6[py_]) / (A * D - B * C);
-  double pyf = (A * r6[py_] - C * r6[px_]) / (A * D - B * C);
-  r6[py_] = pyf;
-  r6[px_] = pxf;
-  r6[ct_] = r6[ct_] - (r6[px_] * FX + r6[py_] * FY) * DEL * DEL;
+  double pxf = (D * r_in[px_] - B * r_in[py_]) / (A * D - B * C);
+  double pyf = (A * r_in[py_] - C * r_in[px_]) / (A * D - B * C);
+  r_in[py_] = pyf;
+  r_in[px_] = pxf;
+  r_in[ct_] = r_in[ct_] - (r_in[px_] * FX + r_in[py_] * FY) * DEL * DEL;
 }

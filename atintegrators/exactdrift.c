@@ -1,13 +1,13 @@
 
 #define SQR(X) ((X)*(X))
 
-static double get_pz(double *r6) {
-  return sqrt(SQR(1 + r6[4]) - SQR(r6[1]) - SQR(r6[3]));
+static double get_pz(double *r_in) {
+  return sqrt(SQR(1 + r_in[4]) - SQR(r_in[1]) - SQR(r_in[3]));
 }
 
-static void exact_drift(double *r6, double L) {
-  double NormL = L / get_pz(r6);
-  r6[0] += r6[1] * NormL;
-  r6[2] += r6[3] * NormL;
-  r6[5] += NormL * (1.0 + r6[4]) - L;
+static void exact_drift(double *r_in, double L) {
+  double NormL = L / get_pz(r_in);
+  r_in[0] += r_in[1] * NormL;
+  r_in[2] += r_in[3] * NormL;
+  r_in[5] += NormL * (1.0 + r_in[4]) - L;
 }
