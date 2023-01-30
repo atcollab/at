@@ -74,7 +74,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
   return Elem;
 }
 
-MODULE_DEF(DriftPass) /* Dummy module initialisation */
+MODULE_DEF(ExactDriftPass) /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
