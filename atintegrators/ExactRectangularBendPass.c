@@ -43,7 +43,7 @@ static void Yrot(double phi, double *r6)
 }
 
 static void ExactRectangularBend(
-  double *r, double le, double irho, bending_angle,
+  double *r, double le, double bending_angle,
   double *A, double *B, int max_order, int num_int_steps,
   int do_fringe, double gK,
   double *T1, double *T2, double *R1, double *R2, double *RApertures,
@@ -122,7 +122,6 @@ static void ExactRectangularBend(
 ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                                       double *r_in, int num_particles,
                                       struct parameters *Param) {
-  double irho;
   if (!Elem) {
     double Length = atGetDouble(ElemData, "Length"); check_error();
     double *PolynomA = atGetDoubleArray(ElemData, "PolynomA"); check_error();
@@ -159,8 +158,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->RApertures = RApertures;
     Elem->KickAngle = KickAngle;
   }
-  irho = Elem->BendingAngle/Elem->Length;
-  ExactRectangularBend(r_in, Elem->Length, irho, Elem->BendingAngle,
+  ExactRectangularBend(r_in, Elem->Length, Elem->BendingAngle,
                        Elem->PolynomA, Elem->PolynomB,
                        Elem->MaxOrder, Elem->NumIntSteps,
                        Elem->multipole_fringe, Elem->gK,
@@ -180,7 +178,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *r_in;
     const mxArray *ElemData = prhs[0];
     int num_particles = mxGetN(prhs[1]);
-    double irho;
 
     double Length = atGetDouble(ElemData, "Length"); check_error();
     double *PolynomA = atGetDoubleArray(ElemData, "PolynomA"); check_error();
@@ -202,8 +199,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     /* ALLOCATE memory for the output array of the same size as the input  */
     plhs[0] = mxDuplicateArray(prhs[1]);
     r_in = mxGetDoubles(plhs[0]);
-    irho = BendingAngle/Length;
-    ExactRectangularBend(r_in, Length, irho, BendingAngle,
+    ExactRectangularBend(r_in, Length, BendingAngle,
                          PolynomA, PolynomB, MaxOrder, NumIntSteps,
                          multipole_fringe, gK,
                          T1, T2, R1, R2,
