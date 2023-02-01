@@ -283,12 +283,9 @@ class Element(object):
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
-                        BPMGain=_tuple,
-                        BPMOffset=_tuple,
-                        BPMTilt=lambda v: _tuple(v, fun=_array1),
-                        _BPMGain=_array2,
-                        _BPMOffset=_array2,
-                        _BPMTilt=float,
+                        BPMGain=_array2,
+                        BPMOffset=_array2,
+                        BPMTilt= float
                         )
 
     _entrance_fields = ['T1', 'R1']
@@ -602,12 +599,12 @@ class ThinMultipole(Element):
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
     _conversions = dict(Element._conversions,
-                        ShiftErr=_tuple,
-                        RotationErr=lambda v: _tuple(v, fun=_pad),
-                        PolynomBErr=lambda v: _tuple(v, fun=_array),
-                        PolynomAErr=lambda v: _tuple(v, fun=_array),
-                        ScalingPolynomBErr=lambda v: _tuple(v, fun=_array),
-                        ScalingPolynomAErr=lambda v: _tuple(v, fun=_array),
+                        ShiftErr=_array2,
+                        RotationErr=lambda v: _array(v, (3,)),
+                        PolynomBErr=_array,
+                        PolynomAErr=_array,
+                        ScalingPolynomBErr=_array,
+                        ScalingPolynomAErr=_array,
                         )
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
