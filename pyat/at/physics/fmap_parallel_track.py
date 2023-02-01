@@ -32,6 +32,8 @@ def fmap_parallel_track(ring, \
         [xoffset, yoffset, nux, nuy, log10( sqrt(dnux*dnux + dnuy*dnuy)/tns )]
     for every tracked particle that survives 2*tns turns.
     Particles lost before 2*tns turns are ignored.
+    The log10 tune variation is limited to the interval from -10 to -2;
+    values above or below are set to the closer limit.
 
     The transverse offsets are given inside a rectangular coordinate window
         coords=[xmin,xmax,ymin,ymax]
