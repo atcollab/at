@@ -75,6 +75,14 @@ def fmap_parallel_track(ring, \
     else:
         addco = [np.zeros((6,1))]
 
+    # simple verbose to check flag only once
+    if verbose:
+        def verboseprint(*args):
+            # print each argument separately
+            for arg in args: print arg, ; print
+    else:
+        verboseprint = lambda *a: None
+
     # tns is the variable used in the frequency analysis
     # turns is the input variable from user
     # nturns is twice tns in order to get the tune in the first and second
@@ -134,7 +142,7 @@ def fmap_parallel_track(ring, \
               array_sum = np.sum(zOUT[:,ix_index,0]);
               array_has_nan = np.isnan(array_sum)
               if array_has_nan:
-                  if verbose: print("array has nan")
+                  verboseprint("array has nan")
                   continue
 
 
@@ -172,26 +180,25 @@ def fmap_parallel_track(ring, \
               # jump the cycle is no frequency is found
               xfreqfirst = PyNAFF.naff(xfirstpart,tns,1,0,False)
               if len(xfreqfirst) == 0:
-                  if verbose: print("  No frequency");
+                  verboseprint("  No frequency");
                   continue;
               xfreqlast  = PyNAFF.naff(xlastpart,tns,1,0,False)
               if len(xfreqlast) == 0:
-                  if verbose: print("  No frequency");
+                  verboseprint("  No frequency");
                   continue;
               yfreqfirst = PyNAFF.naff(yfirstpart,tns,1,0,False)
               if len(yfreqfirst) == 0:
-                  if verbose: print("  No frequency");
+                  verboseprint("  No frequency");
                   continue;
               yfreqlast  = PyNAFF.naff(ylastpart,tns,1,0,False)
               if len(yfreqlast) == 0:
-                  if verbose: print("  No frequency");
+                  verboseprint("  No frequency");
                   continue;
-              if verbose:
-                  print("NAFF results")
-                  print("H freq. first part =\t" ,xfreqfirst[0][1])
-                  print("H freq. last part =\t", xfreqlast[0][1])
-                  print("V freq. first part =\t", yfreqfirst[0][1])
-                  print("V freq. last part =\t", yfreqlast[0][1])
+              verboseprint("NAFF results", \
+                           "\nH freq. first part =\t" ,xfreqfirst[0][1], \
+                           "\nH freq. last part =\t", xfreqlast[0][1], \
+                           "\nV freq. first part =\t", yfreqfirst[0][1], \
+                           "\nV freq. last part =\t", yfreqlast[0][1])
 
               # metric
               xdiff=xfreqlast[0][1]-xfreqfirst[0][1];
