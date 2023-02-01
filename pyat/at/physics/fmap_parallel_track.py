@@ -201,9 +201,9 @@ def fmap_parallel_track(ring, \
                            "\nV freq. last part =\t", yfreqlast[0][1])
 
               # metric
-              xdiff=xfreqlast[0][1]-xfreqfirst[0][1];
-              ydiff=yfreqlast[0][1]-yfreqfirst[0][1];
-              nudiff=np.log10(np.sqrt(xdiff*xdiff + ydiff*ydiff)/tns)
+              xdiff = xfreqlast[0][1] - xfreqfirst[0][1];
+              ydiff = yfreqlast[0][1] - yfreqfirst[0][1];
+              nudiff = 0.5*np.log10((xdiff*xdiff + ydiff*ydiff)/tns)
               # min max diff
               if  nudiff >  -2:
                   nudiff =  -2;
