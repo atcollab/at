@@ -7,10 +7,15 @@ Frequency analysis (FMAP) using PyNAFF lib and pyat parallel tracking (patpass)
 # 2023jan16 tracking is parallel (patpass), NAFF analysis is serial
 # 2022jun07 serial version
 
-import at
+#import at
 from   at.tracking import patpass
-import numpy                      as np
+import numpy
 import PyNAFF
+
+# https://numpy.org/doc/stable/release/1.5.0-notes.html#warning-on-casting-complex-to-real
+import warnings
+warnings.simplefilter("ignore", numpy.ComplexWarning)
+
 
 __all__ = ['fmap_parallel_track']
 
@@ -20,7 +25,7 @@ def fmap_parallel_track(ring, \
         turns = 512, \
         ncpu = 30, \
         co = False, \
-        add_offset6D = np.zeros((6,1)), \
+        add_offset6D = numpy.zeros((6,1)), \
         verbose = False, \
         ):
     """
@@ -57,7 +62,7 @@ def fmap_parallel_track(ring, \
       turns:    default 512
       ncpu:     max. number of processors in parallel tracking patpass
       co:       default false
-      add_offset6D: default np.zeros((6,1))
+      add_offset6D: default numpy.zeros((6,1))
       verbose:  prints additional info
     Returns:
       tune_and_nudiff_array: numpy array with columns
@@ -75,29 +80,24 @@ def fmap_parallel_track(ring, \
         addco = at.physics.find_orbit(ring);
         print(f'Closed orbit:\t{addco}')
     else:
-        addco = [np.zeros((6,1))]
+        addco = [numpy.zeros((6,1))]
 
-    # simple verbose to check flag only once
-    if verbose:
-        def verboseprint(*args):
-            # print each argument separately
-            for arg in args: print arg, ; print
-    else:
-        verboseprint = lambda *a: None
+    # verboseprint to check flag only once
+    verboseprint = print if verbose else lambda *a, **k: None
 
     # tns is the variable used in the frequency analysis
-    # turns is the input variable from user
+    # turns is the inumpyut variable from user
     # nturns is twice tns in order to get the tune in the first and second
     #     part of the tracking
     tns = turns;
     nturns = 2*tns;
 
-    # scale the input coordinates
+    # scale the inumpyut coordinates
     xscale = 1e-3;
     yscale = 1e-3;
 
     # returned array
-    tune_and_nudiff_array = np.empty([])
+    tune_and_nudiff_array = numpy.empty([])
 
     # define rectangle and x,y step size
     xmin  = coords[0]
@@ -108,9 +108,9 @@ def fmap_parallel_track(ring, \
     ystep = step[1]
 
     # get the intervals
-    ixarray    = np.arange(xmin, xmax+1e-6, xstep)
+    ixarray    = numpy.arange(xmin, xmax+1e-6, xstep)
     lenixarray = len(ixarray);
-    iyarray    = np.arange(ymin, ymax+1e-6, ystep)
+    iyarray    = numpy.arange(ymin, ymax+1e-6, ystep)
     leniyarray = len(iyarray);
 
     print("Start tracking and NAFF analysis")
@@ -123,10 +123,10 @@ def fmap_parallel_track(ring, \
     # tracking in parallel multiple x coordinates with the same y coordinate
     for iy,iy_index in zip(iyarray, range(leniyarray)):
           print(f'Tracked particles {abs(-100.0*iy_index/leniyarray):.1f} %, with a max. cpu POOL size of {ncpu}');
-          print("y =",iy)
-          #z01 = np.array([ix*xscale+1e-9, 0,  0, 0,  0, 0])
+          verboseprint("y =",iy)
+          #z01 = numpy.array([ix*xscale+1e-9, 0,  0, 0,  0, 0])
           # add 1 nm to tracking to avoid zeros in array for the ideal lattice
-          z0 = np.zeros((6,lenixarray))
+          z0 = numpy.zeros((6,lenixarray))
           #z0 = z0 + add_offset6D + addco[0,:];
           #z0[0,:] = z0[0,:] + xscale*ixarray + 1e-9;
           #z0[2,:] = z0[2,:] + yscale*iy      + 1e-9;
@@ -141,8 +141,8 @@ def fmap_parallel_track(ring, \
           # start of serial frequency analysis
           for ix_index in range(lenixarray): # cycle over the track results
               # check if nan in arrays
-              array_sum = np.sum(zOUT[:,ix_index,0]);
-              array_has_nan = np.isnan(array_sum)
+              array_sum = numpy.sum(zOUT[:,ix_index,0]);
+              array_has_nan = numpy.isnan(array_sum)
               if array_has_nan:
                   verboseprint("array has nan")
                   continue
@@ -154,28 +154,28 @@ def fmap_parallel_track(ring, \
               # remove mean values
               # get the first turn in x
               xfirst     = z1[0, 0:tns];
-              xfirst     = xfirst - np.mean(xfirst);
+              xfirst     = xfirst - numpy.mean(xfirst);
               pxfirst    = z1[1, 0:tns];
-              pxfirst    = pxfirst - np.mean(pxfirst);
+              pxfirst    = pxfirst - numpy.mean(pxfirst);
               xfirstpart = xfirst + 1j*pxfirst;
               # get the last turns in x
               xlast      = z1[0, tns:2*tns];
-              xlast      = xlast - np.mean(xlast);
+              xlast      = xlast - numpy.mean(xlast);
               pxlast     = z1[1, tns:2*tns];
-              pxlast     = pxlast - np.mean(pxlast);
+              pxlast     = pxlast - numpy.mean(pxlast);
               xlastpart  = xlast + 1j*pxlast;
 
               # get the first turn in y
               yfirst     = z1[2, 0:tns];
-              yfirst     = yfirst - np.mean(yfirst);
+              yfirst     = yfirst - numpy.mean(yfirst);
               pyfirst    = z1[3, 0:tns];
-              pyfirst    = pyfirst - np.mean(pyfirst);
+              pyfirst    = pyfirst - numpy.mean(pyfirst);
               yfirstpart = yfirst + 1j*pyfirst;
               # get the last turns in y
               ylast      = z1[2, tns:2*tns];
-              ylast      = ylast - np.mean(ylast);
+              ylast      = ylast - numpy.mean(ylast);
               pylast     = z1[3, tns:2*tns];
-              pylast     = pylast - np.mean(pylast);
+              pylast     = pylast - numpy.mean(pylast);
               ylastpart  = ylast + 1j*pylast;
 
               # calc frequency from array,
@@ -205,21 +205,21 @@ def fmap_parallel_track(ring, \
               # metric
               xdiff = xfreqlast[0][1] - xfreqfirst[0][1];
               ydiff = yfreqlast[0][1] - yfreqfirst[0][1];
-              nudiff = 0.5*np.log10((xdiff*xdiff + ydiff*ydiff)/tns)
+              nudiff = 0.5*numpy.log10((xdiff*xdiff + ydiff*ydiff)/tns)
               # min max diff
               if  nudiff >  -2:
                   nudiff =  -2;
               if  nudiff < -10:
                   nudiff = -10;
               # save diff
-              tune_and_nudiff_array = np.append( \
-                      tune_and_nudiff_array, \
-                      ixarray[ix_index],iy, \
-                      [xfreqfirst[0][1], yfreqfirst[0][1], \
-                      nudiff]);
+              tune_and_nudiff_array = numpy.append( tune_and_nudiff_array, \
+                      [ ixarray[ix_index], iy, \
+                      xfreqfirst[0][1], yfreqfirst[0][1], \
+                      nudiff] \
+                      );
 
     # first element is garbage
-    tune_and_nudiff_array = np.delete(tune_and_nudiff_array,0);
+    tune_and_nudiff_array = numpy.delete(tune_and_nudiff_array,0);
     ## reshape for plots and output files
     tune_and_nudiff_array = tune_and_nudiff_array.reshape(-1,5);
 
