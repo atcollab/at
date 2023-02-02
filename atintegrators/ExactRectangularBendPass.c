@@ -3,11 +3,14 @@
 #include "driftkick.c"  /* fastdrift.c, strthinkick.c */
 #include "exactdrift.c"
 #include "exactmultipolefringe.c"
+#include "exactbendfringe.c"
 
 #define DRIFT1 0.6756035959798286638
 #define DRIFT2 -0.1756035959798286639
 #define KICK1 1.351207191959657328
 #define KICK2 -1.702414383919314656
+
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
 
 struct elem {
   double Length;
@@ -49,7 +52,7 @@ static void ExactRectangularBend(
   double *T1, double *T2, double *R1, double *R2, double *RApertures,
   double *EApertures, double *KickAngle, int num_particles)
 {
-  int c;
+  double irho = bending_angle / le;
   double phi2 = 0.5 * bending_angle;
   double LR = le * sin(phi2) / phi2;
   double SL = LR / num_int_steps;
@@ -57,19 +60,23 @@ static void ExactRectangularBend(
   double L2 = SL * DRIFT2;
   double K1 = SL * KICK1;
   double K2 = SL * KICK2;
+  double B0 = B[0];
+  double A0 = A[0];
 
   if (KickAngle) { /* Convert corrector component to polynomial coefficients */
     B[0] -= sin(KickAngle[0]) / le;
     A[0] += sin(KickAngle[1]) / le;
   }
+  B[0] += irho;
+
   #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) \
                        default(none) \
                        shared(r, num_particles, R1, T1, R2, T2, RApertures, \
-                       EApertures, A, B, L1, L2, K1, K2, max_order, \
+                       EApertures, A, B, B2, L1, L2, K1, K2, max_order, \
                        num_int_steps, FringeQuadEntrance, useLinFrEleEntrance, \
                        FringeQuadExit, useLinFrEleExit, fringeIntM0, fringeIntP0) \
                        private(c)
-  for (c = 0; c < num_particles; c++) { /*Loop over particles  */
+  for (int c = 0; c < num_particles; c++) { /*Loop over particles  */
     double *r6 = r + c * 6;
     if (!atIsNaN(r6[0])) {
       int m;
@@ -85,9 +92,9 @@ static void ExactRectangularBend(
       if (EApertures) checkiflostEllipticalAp(r6, EApertures);
 
       /*  integrator  */
-      /* bend_fringe(r6, F[0], gK);*/
+      bend_fringe(r6, irho, gK);
       if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, 0);
+        multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
         exact_drift(r6, L1);
         strthinkick(r6, A, B, K1, max_order);
@@ -97,9 +104,13 @@ static void ExactRectangularBend(
         strthinkick(r6, A, B, K1, max_order);
         exact_drift(r6, L1);
       }
+
+      /* Compensate the chqnge of referential */
+      r6[5] += (LR - le);
+
       if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, 1);
-      /* bend_fringe(r6, -F[0], gK);*/
+        multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
+      bend_fringe(r6, irho, gK);
 
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
@@ -112,10 +123,9 @@ static void ExactRectangularBend(
       if (T2) ATaddvv(r6, T2);
     }
   }
-  if (KickAngle) { /* Remove corrector component in polynomial coefficients */
-    B[0] += sin(KickAngle[0]) / le;
-    A[0] -= sin(KickAngle[1]) / le;
-  }
+  /* Remove corrector component in polynomial coefficients */
+  B[0] = B0;
+  A[0] = A0;
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
@@ -168,7 +178,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
   return Elem;
 }
 
-MODULE_DEF(ExactRectangularBend) /* Dummy module initialisation */
+MODULE_DEF(ExactRectangularBendPass) /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
