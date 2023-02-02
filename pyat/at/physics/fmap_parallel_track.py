@@ -24,7 +24,7 @@ def fmap_parallel_track(ring, \
         step = [0.05,0.05], \
         turns = 512, \
         ncpu = 30, \
-        co = False, \
+        co = True, \
         add_offset6D = numpy.zeros((6,1)), \
         verbose = False, \
         ):
