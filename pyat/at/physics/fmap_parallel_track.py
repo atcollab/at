@@ -98,7 +98,7 @@ def fmap_parallel_track(ring, \
     yscale = 1e-3;
 
     # returned array
-    tune_and_nudiff_array = numpy.empty([])
+    xy_nuxy_lognudiff_array = numpy.empty([])
 
     # define rectangle and x,y step size
     xmin  = coords[0]
@@ -213,16 +213,16 @@ def fmap_parallel_track(ring, \
               if  nudiff < -10:
                   nudiff = -10;
               # save diff
-              tune_and_nudiff_array = numpy.append( tune_and_nudiff_array, \
+              xy_nuxy_lognudiff_array = numpy.append( xy_nuxy_lognudiff_array, \
                       [ ixarray[ix_index], iy, \
                       xfreqfirst[0][1], yfreqfirst[0][1], \
                       nudiff] \
                       );
 
     # first element is garbage
-    tune_and_nudiff_array = numpy.delete(tune_and_nudiff_array,0);
+    xy_nuxy_lognudiff_array = numpy.delete(xy_nuxy_lognudiff_array,0);
     ## reshape for plots and output files
-    tune_and_nudiff_array = tune_and_nudiff_array.reshape(-1,5);
+    xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1,5);
 
     return tune_and_nudiff_array
 # the end
