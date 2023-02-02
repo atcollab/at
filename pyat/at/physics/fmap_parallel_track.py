@@ -28,6 +28,7 @@ def fmap_parallel_track(ring, \
         co = True, \
         add_offset6D = numpy.zeros((6,1)), \
         verbose = False, \
+        lossmap = False, \
         ):
     """
     This function calculates the norm of the transverse tune variation per turn
@@ -55,6 +56,9 @@ def fmap_parallel_track(ring, \
     Additionally, a six by one numpy array (add_offset6D) could be used to
     arbitrarily offset the initial coordinates of every particle.
 
+    A dictionary with particle losses is saved for every vertical offset.
+    See the patpass documentation.
+
     Parameters :
       ring:     a valid pyat ring
     Optional:
@@ -62,18 +66,24 @@ def fmap_parallel_track(ring, \
       step:     default [0.05,0.05]   in mm
       turns:    default 512
       ncpu:     max. number of processors in parallel tracking patpass
-      co:       default false
+      co:       default true
       add_offset6D: default numpy.zeros((6,1))
       verbose:  prints additional info
+      lossmap:  default false
     Returns:
       tune_and_nudiff_array: numpy array with columns
-                             [xcoor, ycoor, nux, ny, log10(sqrt(sum(dnu**2)/turns)) ]
+                [xcoor, ycoor, nux, ny, log10(sqrt(sum(dnu**2)/turns)) ]
+      loss_map : experimental format.
+                 if loss_map is True, it returns the losses dictionary
+                 provided by patpass per every vertical offset.
+                 if loss_map is False, it returs a one-element list.
 
     WARNING : points with NaN tracking results or non-defined frequency
               in x,y are ignored.
     WARNING : if co flag is used, the closed orbit is added using
                   at.physics.find_orbit
               however, it is not returned by this function.
+    WARNING : loss map format is experimental
     """
 
     if co:
@@ -99,6 +109,7 @@ def fmap_parallel_track(ring, \
 
     # returned array
     xy_nuxy_lognudiff_array = numpy.empty([])
+    loss_map_array = numpy.empty([])
 
     # define rectangle and x,y step size
     xmin  = coords[0]
@@ -137,7 +148,12 @@ def fmap_parallel_track(ring, \
           z0[3,:] =                + add_offset6D[3] + addco[0][3];
           z0[4,:] =                + add_offset6D[4] + addco[0][4];
           z0[5,:] =                + add_offset6D[5] + addco[0][5];
-          zOUT = patpass(ring, z0, nturns, pool_size=ncpu);
+          if lossmap:
+              # patpass output changes when losses flag is true
+              zOUT, dictloss = patpass(ring, z0, nturns, pool_size=ncpu, losses=lossmap);
+              loss_map_array = numpy.append(loss_map_array, dictloss)
+          else:
+              zOUT = patpass(ring, z0, nturns, pool_size=ncpu);
 
           # start of serial frequency analysis
           for ix_index in range(lenixarray): # cycle over the track results
@@ -224,6 +240,6 @@ def fmap_parallel_track(ring, \
     ## reshape for plots and output files
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1,5);
 
-    return xy_nuxy_lognudiff_array
+    return xy_nuxy_lognudiff_array,loss_map_array
 # the end
 
