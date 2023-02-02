@@ -224,6 +224,6 @@ def fmap_parallel_track(ring, \
     ## reshape for plots and output files
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1,5);
 
-    return tune_and_nudiff_array
+    return xy_nuxy_lognudiff_array
 # the end
 
