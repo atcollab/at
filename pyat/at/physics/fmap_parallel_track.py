@@ -9,6 +9,7 @@ Frequency analysis (FMAP) using PyNAFF lib and pyat parallel tracking (patpass)
 
 #import at
 from   at.tracking import patpass
+from   at.physics  import find_orbit
 import numpy
 import PyNAFF
 
@@ -77,7 +78,7 @@ def fmap_parallel_track(ring, \
 
     if co:
         # closed orbit values are not returned. It seems not necessary here
-        addco = at.physics.find_orbit(ring);
+        addco = find_orbit(ring);
         print(f'Closed orbit:\t{addco}')
     else:
         addco = [numpy.zeros((6,1))]
