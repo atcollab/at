@@ -38,6 +38,8 @@ static void multipole_pass(
   double L2 = SL * DRIFT2;
   double K1 = SL * KICK1;
   double K2 = SL * KICK2;
+  double B0 = B[0];
+  double A0 = A[0];
 
   if (KickAngle) { /* Convert corrector component to polynomial coefficients */
     B[0] -= sin(KickAngle[0]) / le;
@@ -65,7 +67,7 @@ static void multipole_pass(
 
       /*  integrator  */
       if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, 0);
+        multipole_fringe(r6, le, A, B, max_order, 1.0, 0);
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
         exact_drift(r6, L1);
         strthinkick(r6, A, B, K1, max_order);
@@ -76,7 +78,7 @@ static void multipole_pass(
         exact_drift(r6, L1);
       }
       if (do_fringe)
-        multipole_fringe(r6, le, A, B, max_order, 1);
+        multipole_fringe(r6, le, A, B, max_order, -1.0, 0);
 
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
@@ -87,10 +89,9 @@ static void multipole_pass(
       if (T2) ATaddvv(r6, T2);
     }
   }
-  if (KickAngle) { /* Remove corrector component in polynomial coefficients */
-    B[0] += sin(KickAngle[0]) / le;
-    A[0] -= sin(KickAngle[1]) / le;
-  }
+  /* Remove corrector component in polynomial coefficients */
+  B[0] = B0;
+  A[0] = A0;
 }
 
 #if defined(MATLAB_MEX_FILE) || defined(PYAT)
