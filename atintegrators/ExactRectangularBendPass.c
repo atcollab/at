@@ -54,7 +54,7 @@ static void ExactRectangularBend(
 {
   double irho = bending_angle / le;
   double phi2 = 0.5 * bending_angle;
-  double LR = le * sin(phi2) / phi2;
+  double LR = phi2 < 1.e-10 ? le : le *sin(phi2) / phi2;
   double SL = LR / num_int_steps;
   double L1 = SL * DRIFT1;
   double L2 = SL * DRIFT2;
