@@ -5,7 +5,6 @@ import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant
 from at.lattice import Lattice, get_s_pos, Refpts
-from at.errors import apply_bpm_orbit_errors
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
 import warnings
@@ -126,7 +125,6 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
                 dct: float = None,
                 df: float = None,
                 orbit: Orbit = None,
-                monitor_errors: bool = False,
                 keep_lattice: bool = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dp
 
@@ -169,7 +167,6 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_orbit4` propagates it to
           the specified *refpts*.
-        monitor_errors: Apply Monitor errors
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
@@ -213,8 +210,6 @@ def find_orbit4(ring: Lattice, dp: float = None, refpts: Refpts = None, *,
         all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
                                   keep_lattice=keep_lattice)
         all_points = numpy.squeeze(all_points, axis=(1, 3)).T
-        if monitor_errors:
-            apply_bpm_orbit_errors(ring, refpts, all_points)
     return orbit, all_points
 
 
@@ -222,7 +217,6 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
                     dp: float = None,
                     df: float = None,
                     orbit: Orbit = None,
-                    monitor_errors: bool = False,
                     keep_lattice: bool = False, **kwargs):
     r"""Gets the 4D closed orbit for a given dct
 
@@ -265,7 +259,6 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
           to the specified *refpts*.
-        monitor_errors: Apply Monitor errors
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
@@ -309,8 +302,6 @@ def find_sync_orbit(ring: Lattice, dct: float = None, refpts: Refpts = None, *,
         all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
                                   keep_lattice=keep_lattice)
         all_points = numpy.squeeze(all_points, axis=(1, 3)).T
-        if monitor_errors:
-            apply_bpm_orbit_errors(ring, refpts, all_points)
     return orbit, all_points
 
 
@@ -380,8 +371,7 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
 # noinspection PyIncorrectDocstring
 def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
                 dp: float = None, dct: float = None, df: float = None,
-                orbit: Orbit = None, monitor_errors: bool = False,
-                keep_lattice: bool = False, **kwargs):
+                orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     r"""Gets the closed orbit in the full 6-D phase space
 
     Finds the closed orbit in the full 6-D phase space
@@ -424,7 +414,6 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
           to the specified *refpts*.
-        monitor_errors: Apply Monitor errors
         keep_lattice:   Assume no lattice change since the previous tracking.
           Default: False
 
@@ -467,8 +456,6 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
         all_points = lattice_pass(ring, orbit.copy(order='K'), refpts=refpts,
                                   keep_lattice=keep_lattice)
         all_points = numpy.squeeze(all_points, axis=(1, 3)).T
-        if monitor_errors:
-            apply_bpm_orbit_errors(ring, refpts, all_points)
     return orbit, all_points
 
 
@@ -499,7 +486,6 @@ def find_orbit(ring, refpts: Refpts = None, **kwargs):
           Defaults to :py:obj:`None`
         guess (Orbit):          (6,) initial value for the closed orbit.
           It may help convergence. Default: (0, 0, 0, 0, 0, 0)
-        monitor_errors:         Apply Monitor errors
         convergence (float):    Convergence criterion.
           Default: :py:data:`DConstant.OrbConvergence <.DConstant>`
         max_iterations (int):   Maximum number of iterations.

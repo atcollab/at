@@ -5,6 +5,7 @@ from at.lattice import refpts_iterator, Lattice, Element, Refpts
 from at.lattice import shift_elem, rotate_elem
 from scipy.stats import truncnorm, norm
 import functools
+from collections import namedtuple
 import at.tracking
 
 
@@ -32,37 +33,52 @@ def _sysrand(syst, rand,
 
 class ErrorGenerator(object):
     def __init__(self, seed=None):
-        self.seed = seed
-        self.gen = np.random.default_rng(seed)
+        self.gen = None
+        self.seed = None
+        self.errors = []
+        self.init_gen(seed)
 
-    def assign_errors(self, ring: Lattice, refpts: Refpts, truncation=None, seed=None, **kwargs):
-        elements = ring[refpts]
-        nelems = len(elements)
-        if self.seed != seed:
-            self.gen = np.random.default_rng(seed)
-            self.seed = seed
-        for attr, sz in _ALL_ATTRS.items():
-            val = kwargs.pop(attr, None)
-            if val is not None:
-                if isinstance(val, tuple):
-                    syst, rand = val
-                    rand = np.atleast_2d(rand)
-                    syst = np.atleast_2d(syst)
-                else:
-                    rand = np.atleast_2d(val)
-                    syst = np.zeros(rand.shape)
-                if sz is None:
-                    szsyst = syst.shape[1:]
-                    szrand = rand.shape[1:]
-                else:
-                    szsyst = szrand = sz
-                syst = np.broadcast_to(syst, ((nelems,) + szsyst))
-                rand = np.broadcast_to(rand, ((nelems,) + szrand))
-                for el, s, r in zip(elements, syst, rand):
-                    err = _sysrand(s, r, truncation, self.gen)
-                    print(el.FamName, err, attr)
-                    setattr(el, attr, err)
-                    print(getattr(el, attr))
+    def init_gen(self, seed):
+        self.gen = np.random.default_rng(seed)
+        self.seed = seed
+
+    def add(self, refpts, attr, randval, sysval=None, **kwargs):
+        self.errors.append({'refpts': refpts,
+                            'attr': attr,
+                            'randval': randval,
+                            'sysval': sysval,
+                            **kwargs})
+
+    def clear_errors(self):
+        self.errors = []
+
+    def assign(self, ring: Lattice, seed=None):
+        self.init_gen(seed)
+        for error in self.errors:
+            refpts = error['refpts']
+            attr = error['attr']
+            rand = numpy.atleast_2d(error['randval'])
+            syst = error['sysval']
+            truncation = error.get('truncation', None)
+            elements = ring[refpts]
+            nelems = len(elements)
+            sz = _ALL_ATTRS[attr]
+            if syst is None:
+                syst = numpy.zeros(rand.shape)
+            else:
+                syst = numpy.atleast_2d(syst)
+            if sz is None:
+                szsyst = syst.shape[1:]
+                szrand = rand.shape[1:]
+            else:
+                szsyst = szrand = sz
+            syst = np.broadcast_to(syst, ((nelems,) + szsyst))
+            rand = np.broadcast_to(rand, ((nelems,) + szrand))
+            for el, s, r in zip(elements, syst, rand):
+                err = _sysrand(s, r, truncation, self.gen)
+                print(el.FamName, err, attr)
+                setattr(el, attr, err)
+                print(getattr(el, attr))
 
 
 def _apply_bpm_orbit_errors(ring: Lattice, refpts: Refpts, orbit):

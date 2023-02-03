@@ -247,7 +247,6 @@ def _analyze6(mt, ms):
 # noinspection PyShadowingNames,PyPep8Naming
 def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
             orbit=None, twiss_in=None, get_chrom=False, get_w=False,
-            monitor_errors: bool = False,
             keep_lattice=False, mname='M', add0=(), adds=(), cavpts=None,
             **kwargs):
     """"""
@@ -355,7 +354,6 @@ def _linopt(ring: Lattice, analyze, refpts=None, dp=None, dct=None, df=None,
 
     # Propagate the closed orbit
     orb0, orbs = get_orbit(ring, refpts=refpts, orbit=orbit,
-                           monitor_errors=monitor_errors,
                            keep_lattice=keep_lattice)
     spos = ring.get_s_pos(refpts)
 
@@ -466,7 +464,6 @@ def linopt2(ring: Lattice, *args, **kwargs):
         get_w (bool):           Computes chromatic amplitude functions
           (W) [4]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        monitor_errors:         If :py:obj:`True`, apply Monitor errors
         keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
         XYStep (float):         Step size.
@@ -565,7 +562,6 @@ def linopt4(ring: Lattice, *args, **kwargs):
         get_w (bool):           Computes chromatic amplitude functions
           (W) [8]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        monitor_errors:         If :py:obj:`True`, apply Monitor errors
         keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
         XYStep (float):         Step size.
@@ -674,7 +670,6 @@ def linopt6(ring: Lattice, *args, **kwargs):
         get_w (bool):           Computes chromatic amplitude functions
           (W) [11]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        monitor_errors:         If :py:obj:`True`, apply Monitor errors
         keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
         XYStep (float):         Step size.
@@ -815,7 +810,6 @@ def get_optics(ring: Lattice, refpts: Refpts = None,
         get_w (bool):           Computes chromatic amplitude functions
           (W) [4]_. Needs to compute the optics at 2 different momentum
           deviations around the central one.
-        monitor_errors:         If :py:obj:`True`, apply Monitor errors
         keep_lattice (bool):    Assume no lattice change since the
           previous tracking. Defaults to :py:obj:`False`
         XYStep (float):         Step size.
@@ -875,7 +869,6 @@ def linopt(ring: Lattice, dp: float = 0.0, refpts: Refpts = None,
         get_w=False     computes chromatic amplitude functions (W) [4].
                         Needs to compute the optics at 2 different momentum
                         deviations around the central one.
-        monitor_errors: If :py:obj:`True`, apply Monitor errors
         keep_lattice    Assume no lattice change since the previous tracking.
                         Defaults to :py:obj:`False`
         XYStep=1.0e-8   transverse step for numerical computation
