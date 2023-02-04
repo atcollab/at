@@ -22,7 +22,7 @@ __all__ = ['fmap_parallel_track']
 
 def fmap_parallel_track(ring, \
         coords = [-10,10,-3,3], \
-        step = [0.05,0.05], \
+        steps = [100,100], \
         turns = 512, \
         ncpu = 30, \
         co = True, \
@@ -44,7 +44,7 @@ def fmap_parallel_track(ring, \
 
     The transverse offsets are given inside a rectangular coordinate window
         coords=[xmin,xmax,ymin,ymax]
-    in milimeters, where the window is divided in steps of step=[xstep,ystep].
+    in milimeters, where the window is divided in n steps=[xsteps,ysteps].
     For each yoffset, particle tracking over the whole set of xoffsets is done
     in parallel, therefore, a number of cpus (ncpu) above the number of xsteps
     will not reduce the calculation time.
@@ -63,7 +63,7 @@ def fmap_parallel_track(ring, \
       ring:     a valid pyat ring
     Optional:
       coords:   default [-10,10,-3,3] in mm
-      step:     default [0.05,0.05]   in mm
+      steps:    default [100,100]
       turns:    default 512
       ncpu:     max. number of processors in parallel tracking patpass
       co:       default true
@@ -112,14 +112,16 @@ def fmap_parallel_track(ring, \
     loss_map_array = numpy.empty([])
 
     # define rectangle and x,y step size
-    xmin  = coords[0]
-    xmax  = coords[1]
-    ymin  = coords[2]
-    ymax  = coords[3]
-    xstep = step[0]
-    ystep = step[1]
+    xmin  = numpy.minimum(coords[0],coords[1])
+    xmax  = numpy.maximum(coords[0],coords[1])
+    ymin  = numpy.minimum(coords[2],coords[3])
+    ymax  = numpy.maximum(coords[2],coords[3])
+    xsteps= steps[0]
+    ysteps= steps[1]
 
     # get the intervals
+    xstep = 1.0*(xmax - xmin)/xsteps;
+    ystep = 1.0*(ymax - ymin)/ysteps;
     ixarray    = numpy.arange(xmin, xmax+1e-6, xstep)
     lenixarray = len(ixarray);
     iyarray    = numpy.arange(ymin, ymax+1e-6, ystep)
@@ -240,6 +242,6 @@ def fmap_parallel_track(ring, \
     ## reshape for plots and output files
     xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1,5);
 
-    return xy_nuxy_lognudiff_array,loss_map_array
+    return xy_nuxy_lognudiff_array, loss_map_array
 # the end
 
