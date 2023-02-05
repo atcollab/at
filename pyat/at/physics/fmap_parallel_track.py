@@ -26,7 +26,7 @@ warnings.simplefilter("ignore", numpy.ComplexWarning)
 __all__ = ['fmap_parallel_track']
 
 def fmap_parallel_track(ring, \
-        coords = [-10,10,-3,3], \
+        coords = [-10,10,-10,10], \
         steps = [100,100], \
         scale = 'linear', \
         turns = 512, \
@@ -68,19 +68,20 @@ def fmap_parallel_track(ring, \
     Parameters :
       ring:     a valid pyat ring
     Optional:
-      coords:   default [-10,10,-3,3] in mm
+      coords:   default [-10,10,-10,10] in mm
       steps:    default [100,100]
       scale:    default 'linear'; or 'non-linear'
       turns:    default 512
-      ncpu:     max. number of processors in parallel tracking patpass
+      ncpu:     default 30; max. number of processors
+                            in parallel tracking patpass
       co:       default true
       add_offset6D: default numpy.zeros((6,1))
       verbose:  prints additional info
       lossmap:  default false
     Returns:
-      tune_and_nudiff_array: numpy array with columns
+      xy_nuxy_lognudiff_array: numpy array with columns
                 [xcoor, ycoor, nux, ny, log10(sqrt(sum(dnu**2)/turns)) ]
-      loss_map : experimental format.
+      loss_map_array : experimental format.
                  if loss_map is True, it returns the losses dictionary
                  provided by patpass per every vertical offset.
                  if loss_map is False, it returs a one-element list.
