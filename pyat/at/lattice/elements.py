@@ -1109,9 +1109,9 @@ class InsertionDevice(Element):
                         # get the number of vertical points
                         v_points  = int(sline[0]);
                         # initialize element kicks and table_axes
-                        kick_map = np.zeros((v_points,h_points));
-                        haxis = np.zeros(h_points);
-                        vaxis = np.zeros(v_points);
+                        kick_map = numpy.zeros((v_points,h_points));
+                        haxis = numpy.zeros(h_points);
+                        vaxis = numpy.zeros(v_points);
                     else:
                         # read block of data
                         if sline[0] == "START" or sline[0] == "START\n" :
@@ -1126,11 +1126,11 @@ class InsertionDevice(Element):
                         if block_lines > v_points:
                             block_lines = 0;
                             if block_counter == 1:
-                                hkickmap    = np.copy(kick_map);
+                                hkickmap    = numpy.copy(kick_map);
                                 table_cols1 = haxis;
                                 table_rows1 = vaxis;
                             if block_counter == 2:
-                                vkickmap    = np.copy(kick_map);
+                                vkickmap    = numpy.copy(kick_map);
                                 table_cols2 = haxis;
                                 table_rows2 = vaxis;
                         block_lines += 1;
@@ -1139,12 +1139,12 @@ class InsertionDevice(Element):
         return el_length, hkickmap, vkickmap, table_cols1, table_rows1, table_cols2, table_rows2
 
     def sorted_table(self, table_in, sorted_index, order_axis):
-        # np.asfortranarray makes a copy of contiguous memory positions
-        table_out = np.copy(table_in);
+        # numpy.asfortranarray makes a copy of contiguous memory positions
+        table_out = numpy.copy(table_in);
         for i,iis in zip(range(len(sorted_index)), sorted_index):
             if order_axis == 'col': table_out[:,i] = table_in[ : ,iis]
             if order_axis == 'row': table_out[i,:] = table_in[iis, : ]
-        table_out2 = np.asfortranarray(table_out)
+        table_out2 = numpy.asfortranarray(table_out)
         return table_out2
 
     def __init__(self, family_name: str, Nslice: float, Filename_in: str, Energy: float, **kwargs):
@@ -1165,16 +1165,16 @@ class InsertionDevice(Element):
                 = self.readRadiaFieldMap(Filename_in);
 
         ## set to float
-        table_cols1array  = np.array(table_cols1, dtype='float64');
-        table_rows1array  = np.array(table_rows1, dtype='float64');
-        table_cols2array  = np.array(table_cols2, dtype='float64');
-        table_rows2array  = np.array(table_rows2, dtype='float64');
+        table_cols1array  = numpy.array(table_cols1, dtype='float64');
+        table_rows1array  = numpy.array(table_rows1, dtype='float64');
+        table_cols2array  = numpy.array(table_cols2, dtype='float64');
+        table_rows2array  = numpy.array(table_rows2, dtype='float64');
 
         ## Reorder table_axes and kick maps
-        cols1sorted_index = np.argsort(table_cols1array); table_cols1array.sort();
-        rows1sorted_index = np.argsort(table_rows1array); table_rows1array.sort();
-        cols2sorted_index = np.argsort(table_cols2array); table_cols2array.sort();
-        rows2sorted_index = np.argsort(table_rows2array); table_rows2array.sort();
+        cols1sorted_index = numpy.argsort(table_cols1array); table_cols1array.sort();
+        rows1sorted_index = numpy.argsort(table_rows1array); table_rows1array.sort();
+        cols2sorted_index = numpy.argsort(table_cols2array); table_cols2array.sort();
+        rows2sorted_index = numpy.argsort(table_rows2array); table_rows2array.sort();
         hkickmap_a  = self.sorted_table(hkickmap,   cols1sorted_index, 'col');
         hkickmap    = self.sorted_table(hkickmap_a, rows1sorted_index, 'row');
         vkickmap_a  = self.sorted_table(vkickmap,   cols2sorted_index, 'col');
