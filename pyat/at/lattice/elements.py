@@ -12,7 +12,7 @@ from copy import copy, deepcopy
 from abc import ABC
 from typing import Optional, Generator, Tuple, List, Iterable
 import io
-from   scipy.constants import c       as clight
+from scipy.constants import c as clight
 
 def _array(value, shape=(-1,), dtype=numpy.float64):
     # Ensure proper ordering(F) and alignment(A) for "C" access in integrators
