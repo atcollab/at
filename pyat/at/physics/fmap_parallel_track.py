@@ -11,7 +11,12 @@ Frequency analysis (FMAP) using PyNAFF lib and pyat parallel tracking (patpass)
 from   at.tracking import patpass
 from   at.physics  import find_orbit
 import numpy
+
+# PyNAFF uses numpy.Complex which is deprecated
+# https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+# I tested the compatibility up to 1.23.5
 import PyNAFF
+
 
 # https://numpy.org/doc/stable/release/1.5.0-notes.html#warning-on-casting-complex-to-real
 import warnings
@@ -23,6 +28,7 @@ __all__ = ['fmap_parallel_track']
 def fmap_parallel_track(ring, \
         coords = [-10,10,-3,3], \
         steps = [100,100], \
+        scale = 'linear', \
         turns = 512, \
         ncpu = 30, \
         co = True, \
@@ -64,6 +70,7 @@ def fmap_parallel_track(ring, \
     Optional:
       coords:   default [-10,10,-3,3] in mm
       steps:    default [100,100]
+      scale:    default 'linear'; or 'non-linear'
       turns:    default 512
       ncpu:     max. number of processors in parallel tracking patpass
       co:       default true
@@ -97,7 +104,7 @@ def fmap_parallel_track(ring, \
     verboseprint = print if verbose else lambda *a, **k: None
 
     # tns is the variable used in the frequency analysis
-    # turns is the inumpyut variable from user
+    # turns is the input variable from user
     # nturns is twice tns in order to get the tune in the first and second
     #     part of the tracking
     tns = turns;
@@ -111,7 +118,10 @@ def fmap_parallel_track(ring, \
     xy_nuxy_lognudiff_array = numpy.empty([])
     loss_map_array = numpy.empty([])
 
-    # define rectangle and x,y step size
+    # verify steps
+    if numpy.count_nonzero(steps) != 2:
+        raise ValueError('steps can not be zero');
+
     xmin  = numpy.minimum(coords[0],coords[1])
     xmax  = numpy.maximum(coords[0],coords[1])
     ymin  = numpy.minimum(coords[2],coords[3])
@@ -119,12 +129,29 @@ def fmap_parallel_track(ring, \
     xsteps= steps[0]
     ysteps= steps[1]
 
-    # get the intervals
-    xstep = 1.0*(xmax - xmin)/xsteps;
-    ystep = 1.0*(ymax - ymin)/ysteps;
-    ixarray    = numpy.arange(xmin, xmax+1e-6, xstep)
+    # define rectangle and x,y step size
+    if scale == "nonlinear":
+        verboseprint('non linear steps')
+        xinterval = 1.0*(xmax - xmin);
+        yinterval = 1.0*(ymax - ymin);
+        xauxsteps = numpy.arange(-0.5, 0.0 + 1e-9, 1./xsteps);
+        yauxsteps = numpy.arange(-0.5, 0.0 + 1e-9, 1./ysteps);
+        xnrsteps = 10**xauxsteps; xnrsteps = xnrsteps / sum(xnrsteps);
+        ynrsteps = 10**yauxsteps; ynrsteps = ynrsteps / sum(ynrsteps);
+        xscalesteps = numpy.concatenate((xnrsteps, \
+                numpy.flip(xnrsteps)), axis=None)
+        yscalesteps = numpy.concatenate((ynrsteps, \
+                numpy.flip(ynrsteps)), axis=None)
+        ixarray = xmin + 0.5 * xinterval * numpy.cumsum( xscalesteps );
+        iyarray = ymin + 0.5 * yinterval * numpy.cumsum( yscalesteps );
+    else: # scale == 'linear', ignore any other
+        verboseprint('linear steps')
+        # get the intervals
+        xstep = 1.0*(xmax - xmin)/xsteps;
+        ystep = 1.0*(ymax - ymin)/ysteps;
+        ixarray    = numpy.arange(xmin, xmax+1e-6, xstep)
+        iyarray    = numpy.arange(ymin, ymax+1e-6, ystep)
     lenixarray = len(ixarray);
-    iyarray    = numpy.arange(ymin, ymax+1e-6, ystep)
     leniyarray = len(iyarray);
 
     print("Start tracking and NAFF analysis")
@@ -132,7 +159,7 @@ def fmap_parallel_track(ring, \
     # Forcing a maximum value of cpus
     # I have no idea how to confirm the actual used value from patpass
     # at.DConstant.patpass_poolsize = ncpu;
-    print(f' POOL size : {ncpu}')
+    print(f' Requested POOL size : {ncpu}')
 
     # tracking in parallel multiple x coordinates with the same y coordinate
     for iy,iy_index in zip(iyarray, range(leniyarray)):
@@ -215,11 +242,13 @@ def fmap_parallel_track(ring, \
               if len(yfreqlast) == 0:
                   verboseprint("  No frequency");
                   continue;
-              verboseprint("NAFF results", \
-                           "\nH freq. first part =\t" ,xfreqfirst[0][1], \
-                           "\nH freq. last part =\t", xfreqlast[0][1], \
-                           "\nV freq. first part =\t", yfreqfirst[0][1], \
-                           "\nV freq. last part =\t", yfreqlast[0][1])
+              verboseprint("NAFF results, (x,y)=", \
+                            ixarray[ix_index], \
+                            iy, \
+                            "\nH freq. first part =\t" ,xfreqfirst[0][1], \
+                            "\nH freq. last part =\t", xfreqlast[0][1], \
+                            "\nV freq. first part =\t", yfreqfirst[0][1], \
+                            "\nV freq. last part =\t", yfreqlast[0][1])
 
               # metric
               xdiff = xfreqlast[0][1] - xfreqfirst[0][1];
