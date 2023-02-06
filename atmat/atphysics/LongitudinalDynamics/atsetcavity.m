@@ -147,7 +147,7 @@ else                            % Old syntax, for compatibility
         timelag= (lcell/(2*pi*harmcell))*asin(U0/vring);
         ring=atenable_6d(ring);  % set radiation on. nothing if radiation is already on
     else
-        ring=atdisable_6d(ring,'cavipass','');  % set radiation off. nothing if radiation is already off
+        ring=atdisable_6d(ring,'cavipass','RFCavityPass');  % set radiation off and turn on cavities
         timelag=0;
     end
     ring=atsetfieldvalues(ring, cavpts, 'TimeLag', timelag);
