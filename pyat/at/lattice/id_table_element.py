@@ -2,7 +2,7 @@ import numpy
 import io
 from scipy.constants import c as clight
 
-class InsertionDevice(Element):
+class IdTable(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 
@@ -161,5 +161,5 @@ class InsertionDevice(Element):
         # pyat issue #522
         #elem = Element('name', PassMethod='IdTablePass', xkick=x0, ykick=x1, \
         #                       xtable=x2, ytable=x3, Nslice=x4)
-        super(InsertionDevice, self).__init__(family_name, **kwargs)
+        super(IdTable, self).__init__(family_name, **kwargs)
 
