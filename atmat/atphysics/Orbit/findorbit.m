@@ -30,39 +30,41 @@ function [orbs,orbitin]  = findorbit(ring,varargin)
 %
 % See also FINDORBIT4, FINDSYNCORBIT, FINDORBIT6.
 
-[orbitin,varargs]=getoption(varargin,'orbit',[]);
-[refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
-[dp,varargs]=getoption(varargs,'dp',NaN);
-[dct,varargs]=getoption(varargs,'dct',NaN);
-[df,varargs]=getoption(varargs,'df',NaN);
-if isempty(orbitin)
-    if check_6d(ring)    % Radiation ON: 6D orbit
-        if isfinite(dp) || isfinite(dct) || isfinite(df)
-            warning('AT:linopt','In 6D, "dp", "dct" and "df" are ignored');
-        end
-        orbitin=xorbit_6(ring,varargs{:});
-    elseif isfinite(df)
-        [cell_l,cell_frev,cell_h]=atGetRingProperties(ring,'cell_length',...
-            'cell_harmnumber','cell_revolution_frequency');
-        dct=-cell_l*df/(cell_frev*cell_h+df);
-        orbitin=xorbit_ct(ring,dct,varargs{:});
-    elseif isfinite(dct)
-        orbitin=xorbit_ct(ring,dct,varargs{:});
-    else
-        orbitin=xorbit_dp(ring,dp,varargs{:});
-    end
-    args={'KeepLattice'};
-else
-    args={};
-end
+[orbs,orbitin]=frequency_control(@do,ring,varargin{:});
 
-if islogical(refpts)
-    refpts=find(refpts);
-end
-if isempty(refpts)
-    % return only the fixed point at the entrance of RING{1}
-    orbs=orbitin;
-else
-    orbs=linepass(ring,orbitin,refpts,args{:});
-end
+    function [orbs,orb0]=do(ring,varargin)
+        [orb0,varargs]=getoption(varargin,'orbit',[]);
+        [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+        [dp,varargs]=getoption(varargs,'dp',NaN);
+        [dct,varargs]=getoption(varargs,'dct',NaN);
+        [df,varargs]=getoption(varargs,'df',NaN);
+        [is_6d,varargs]=getoption(varargs,'is_6d',[]); % Always set by frequency_control
+        if isempty(orb0)
+            if is_6d   % Radiation ON: 6D orbit
+                orb0=xorbit_6(ring,varargs{:});
+            elseif isfinite(df)
+                [cell_l,cell_frev,cell_h]=atGetRingProperties(ring,'cell_length',...
+                    'cell_harmnumber','cell_revolution_frequency');
+                dct=-cell_l*df/(cell_frev*cell_h+df);
+                orb0=xorbit_ct(ring,dct,varargs{:});
+            elseif isfinite(dct)
+                orb0=xorbit_ct(ring,dct,varargs{:});
+            else
+                orb0=xorbit_dp(ring,dp,varargs{:});
+            end
+            args={'KeepLattice'};
+        else
+            args={};
+        end
+
+        if islogical(refpts)
+            refpts=find(refpts);
+        end
+        if isempty(refpts)
+            % return only the fixed point at the entrance of RING{1}
+            orbs=orb0;
+        else
+            orbs=linepass(ring,orb0,refpts,args{:});
+        end
+    end
 end

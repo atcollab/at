@@ -56,22 +56,27 @@ function [orb6,orbitin] = findorbit6(ring,varargin)
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[orbitin,varargs]=getoption(varargin,'orbit',[]);
-[refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
-if isempty(orbitin)
-    orbitin=xorbit_6(ring,varargs{:});
-    args={'KeepLattice'};
-else
-    args={};
-end
+[orb6,orbitin] = frequency_control(@do,ring,varargin{:});
 
-if islogical(refpts)
-    refpts=find(refpts);
-end
-if isempty(refpts)
-    % return only the fixed point at the entrance of RING{1}
-    orb6=orbitin;
-else
-    orb6 = linepass(ring,orbitin,refpts,args{:});
-end
+    function[orb6,orbitin] = do(ring,varargin)
+        [orbitin,varargs]=getoption(varargin,'orbit',[]);
+        [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
+        [~,varargs]=getoption(varargs,'is_6d',[]); %% Consume the is_6d option
+        if isempty(orbitin)
+            orbitin=xorbit_6(ring,varargs{:});
+            args={'KeepLattice'};
+        else
+            args={};
+        end
+
+        if islogical(refpts)
+            refpts=find(refpts);
+        end
+        if isempty(refpts)
+            % return only the fixed point at the entrance of RING{1}
+            orb6=orbitin;
+        else
+            orb6 = linepass(ring,orbitin,refpts,args{:});
+        end
+    end
 end
