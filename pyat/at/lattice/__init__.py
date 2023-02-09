@@ -8,6 +8,7 @@ import sys
 from .options import DConstant, random
 from .particle_object import Particle
 from .elements import *
+from .idtable_element import IdTable
 from .utils import *
 from .lattice_object import *
 from .cavity_access import *
