@@ -328,6 +328,34 @@ class Lattice(list):
     def append(self, elem: Element):
         self.extend([elem])
 
+    def develop(self, periods: Optional[int] = None) -> "Lattice":
+        """Develop a periodical lattice by repeating its elements
+        *self.periodicity* times
+
+        The elements of the new lattice are deep copies ot the original
+        elements, so that they are all independent
+
+        Args:
+            periods: The lattice is repeated *period* times instead of
+              *self.periodicity*
+
+        Returns:
+            newlattice: The developed lattice
+        """
+        def repeat(nb):
+            for _ in range(nb):
+                yield from self
+
+        if periods is None:
+            periods = self.periodicity
+        newper, rem = divmod(self.periodicity, periods)
+        if rem != 0:
+            mess = "{} must be a divider of {}"
+            raise ValueError(mess.format(periods, self.periodicity))
+        return Lattice(elem_generator, repeat(periods),
+                       iterator=self.attrs_filter, periodicity=newper,
+                       harmonic_number=self.harmonic_number)
+
     @property
     def attrs(self) -> Dict:
         """Dictionary of lattice attributes"""
@@ -670,10 +698,10 @@ class Lattice(list):
         #     raise AtError('harmonic number ({}) must be a multiple of {}'
         #                   .format(value, int(self.periodicity)))
         self._cell_harmnumber = cell_h
-        if len(self._fillpattern) > 1:
+        if len(self._fillpattern) != value:
             warn(AtWarning('Harmonic number changed, resetting fillpattern to '
                            'default (single bunch)'))
-        self.set_fillpattern()
+            self.set_fillpattern()
 
     @property
     def gamma(self) -> float:

@@ -3,14 +3,13 @@ Closed orbit related functions
 """
 import numpy
 from at.constants import clight
-from at.lattice import AtError, AtWarning, check_6d, DConstant
+from at.lattice import AtError, AtWarning, check_6d, DConstant, Orbit
 from at.lattice import Lattice, get_s_pos, Refpts
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
 import warnings
 
-Orbit = numpy.ndarray
-
+# For backward compatibility, Orbit is redefined from .lattice
 __all__ = ['Orbit', 'find_orbit4', 'find_sync_orbit', 'find_orbit6',
            'find_orbit']
 
