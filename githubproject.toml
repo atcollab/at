@@ -14,7 +14,6 @@ requires = [
     "setuptools_scm >= 7",
     "mpi4py; extra=='mpi'", # Does not work yet, so we need in-tree backend
     "wheel",
-    "PyNAFF",
 ]
 # build-backend = "setuptools.build_meta"
 build-backend = "backend"
@@ -39,8 +38,7 @@ requires-python = ">=3.7"
 dependencies = [
     "importlib-resources;python_version<'3.9'",
     "numpy>=1.16.6",
-    "scipy>=1.4.0",
-    "PyNAFF>=1.1.4",
+    "scipy>=1.4.0"
 ]
 
 [project.urls]
