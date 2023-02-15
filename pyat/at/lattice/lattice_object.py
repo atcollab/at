@@ -333,10 +333,10 @@ class Lattice(list):
         *self.periodicity* times
 
         The elements of the new lattice are deep copies ot the original
-        elements, so that they are all independent
+        elements, so that they are all independent.
 
         Args:
-            periods: The lattice is repeated *period* times instead of
+            periods: The lattice is repeated *periods* times instead of
               *self.periodicity*
 
         Returns:

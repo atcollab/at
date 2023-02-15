@@ -42,14 +42,15 @@ Sub-packages
    :caption: Packages:
    :recursive:
 
-   at.acceptance
-   at.collective
    at.lattice
+   at.tracking
+   at.physics
+   at.latticetools
    at.load
    at.matching
-   at.physics
+   at.acceptance
+   at.collective
    at.plot
-   at.tracking
    at.constants
 
 Indices and tables
