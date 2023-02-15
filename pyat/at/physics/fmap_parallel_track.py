@@ -15,8 +15,9 @@ import numpy
 # PyNAFF uses numpy.Complex which is deprecated
 # https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
 # I tested the compatibility up to 1.23.5
-import PyNAFF
-
+# import PyNAFF
+# Jaime Coello de Portugal (JCdP) frequency analysis implementation
+from .harmonic_analysis import get_tunes_harmonic
 
 # https://numpy.org/doc/stable/release/1.5.0-notes.html#warning-on-casting-complex-to-real
 import warnings
@@ -178,6 +179,8 @@ def fmap_parallel_track(ring, \
           z0[3,:] =                + add_offset6D[3] + addco[0][3];
           z0[4,:] =                + add_offset6D[4] + addco[0][4];
           z0[5,:] =                + add_offset6D[5] + addco[0][5];
+
+          verboseprint("tracking ...")
           if lossmap:
               # patpass output changes when losses flag is true
               zOUT, dictloss = patpass(ring, z0, nturns, pool_size=ncpu, losses=lossmap);
@@ -227,33 +230,37 @@ def fmap_parallel_track(ring, \
 
               # calc frequency from array,
               # jump the cycle is no frequency is found
-              xfreqfirst = PyNAFF.naff(xfirstpart,tns,1,0,False)
+              #xfreqfirst = PyNAFF.naff(xfirstpart,tns,1,0,False)
+              xfreqfirst = get_tunes_harmonic(xfirst, num_harmonics=1)
               if len(xfreqfirst) == 0:
                   verboseprint("  No frequency");
                   continue;
-              xfreqlast  = PyNAFF.naff(xlastpart,tns,1,0,False)
+              # xfreqlast  = PyNAFF.naff(xlastpart,tns,1,0,False)
+              xfreqlast = get_tunes_harmonic(xlast, num_harmonics=1)
               if len(xfreqlast) == 0:
                   verboseprint("  No frequency");
                   continue;
-              yfreqfirst = PyNAFF.naff(yfirstpart,tns,1,0,False)
+              # yfreqfirst = PyNAFF.naff(yfirstpart,tns,1,0,False)
+              yfreqfirst = get_tunes_harmonic(yfirst, num_harmonics=1)
               if len(yfreqfirst) == 0:
                   verboseprint("  No frequency");
                   continue;
-              yfreqlast  = PyNAFF.naff(ylastpart,tns,1,0,False)
+              # yfreqlast  = PyNAFF.naff(ylastpart,tns,1,0,False)
+              yfreqlast = get_tunes_harmonic(ylast, num_harmonics=1)
               if len(yfreqlast) == 0:
                   verboseprint("  No frequency");
                   continue;
               verboseprint("NAFF results, (x,y)=", \
                             ixarray[ix_index], \
                             iy, \
-                            "\nH freq. first part =\t" ,xfreqfirst[0][1], \
-                            "\nH freq. last part =\t", xfreqlast[0][1], \
-                            "\nV freq. first part =\t", yfreqfirst[0][1], \
-                            "\nV freq. last part =\t", yfreqlast[0][1])
+                            "\nH freq. first part =\t" ,xfreqfirst[0], \
+                            "\nH freq. last part =\t", xfreqlast[0], \
+                            "\nV freq. first part =\t", yfreqfirst[0], \
+                            "\nV freq. last part =\t", yfreqlast[0])
 
               # metric
-              xdiff = xfreqlast[0][1] - xfreqfirst[0][1];
-              ydiff = yfreqlast[0][1] - yfreqfirst[0][1];
+              xdiff = xfreqlast[0] - xfreqfirst[0];
+              ydiff = yfreqlast[0] - yfreqfirst[0];
               nudiff = 0.5*numpy.log10((xdiff*xdiff + ydiff*ydiff)/tns)
               # min max diff
               if  nudiff >  -2:
@@ -263,9 +270,8 @@ def fmap_parallel_track(ring, \
               # save diff
               xy_nuxy_lognudiff_array = numpy.append( xy_nuxy_lognudiff_array, \
                       [ ixarray[ix_index], iy, \
-                      xfreqfirst[0][1], yfreqfirst[0][1], \
-                      nudiff] \
-                      );
+                      xfreqfirst[0], yfreqfirst[0], \
+                      nudiff] );
 
     # first element is garbage
     xy_nuxy_lognudiff_array = numpy.delete(xy_nuxy_lognudiff_array,0);
