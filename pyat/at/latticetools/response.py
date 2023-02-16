@@ -226,8 +226,16 @@ class ResponseMatrix(SvdResponse):
         """Exclude items from :py:class:`.Observable`\ s
 
         Args:
-            obsname:    :py:class:`.Observable` name
+            obsname:    :py:class:`.Observable` name.
             excluded:   location of elements to excluse
+
+        Example:
+            >>> resp = OrbitResponseMatrix(ring, Monitor, Corrector)
+            >>> obslist.exclude('Orbit[0]', 'BPM_02')
+
+            Create an :py:class:`OrbitResponseMatrix` from
+            :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
+            and exclude the monitor with name "BPM_02"
         """
         self.observables.exclude(obsname, excluded)
 

@@ -10,6 +10,7 @@ from math import pi
 from enum import Enum
 from itertools import repeat
 from ..lattice import Lattice, Orbit, Refpts, All, End
+from ..lattice import AxisDef, axis_, plane_, optics_, nop_
 import numpy as np
 
 RefIndex = Union[int, Tuple[int, ...], slice]
@@ -217,7 +218,7 @@ class Observable(object):
 
     @staticmethod
     def _idx(index: RefIndex):
-        return slice(None) if (index is None) else index
+        return index
 
     @classmethod
     def _arrayaccess(cls, index: RefIndex):
@@ -243,7 +244,7 @@ class Observable(object):
     def _set_name(name, param, index):
         """Compute default observable names"""
         if name is None:
-            if index is None or index is Ellipsis:
+            if isinstance(index, str) and index in {":", "..."}:
                 subscript = ""
             else:
                 subscript = "[{}]".format(index)
@@ -336,15 +337,15 @@ class _ElementObservable(Observable):
     @staticmethod
     def _idx(index: RefIndex):
         if isinstance(index, tuple):
-            return (slice(None),) + tuple(Observable._idx(i) for i in index)
+            return (slice(None),) + index
         else:
-            return slice(None), Observable._idx(index)
+            return slice(None), index
 
 
 class OrbitObservable(_ElementObservable):
     """Observes the transfer matrix at selected locations"""
     def __init__(self, refpts: Refpts,
-                 axis: Optional[RefIndex] = None,
+                 axis: AxisDef = None,
                  name: Optional[str] = None, **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
@@ -376,8 +377,8 @@ class OrbitObservable(_ElementObservable):
 
             Observe the horizontal closed orbit at monitor locations
         """
-        name = self._set_name(name, 'orbit', axis)
-        fun = self._arrayaccess(axis)
+        name = self._set_name(name, 'orbit', axis_(axis, 'code'))
+        fun = self._arrayaccess(axis_(axis, 'index'))
         needs = {Need.ORBIT}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -385,7 +386,7 @@ class OrbitObservable(_ElementObservable):
 class MatrixObservable(_ElementObservable):
     """Observes the closed orbit at selected locations"""
     def __init__(self, refpts: Refpts,
-                 axis: Optional[RefIndex] = Ellipsis,
+                 axis: AxisDef = Ellipsis,
                  name: Optional[str] = None, **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
@@ -413,20 +414,20 @@ class MatrixObservable(_ElementObservable):
 
         Example:
 
-            >>> obs = MatrixObservable(Monitor, axis=(0, 1))
+            >>> obs = MatrixObservable(Monitor, axis=('x', 'px'))
 
             Observe the transfer matrix from origin to monitor locations and
             extract T[0,1]
         """
-        name = self._set_name(name, 'matrix', axis)
-        fun = self._arrayaccess(axis)
+        name = self._set_name(name, 'matrix', axis_(axis, 'code'))
+        fun = self._arrayaccess(axis_(axis, 'index'))
         needs = {Need.MATRIX}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
 class _GlobalOpticsObservable(Observable):
     def __init__(self, param: str, *args,
-                 index: Optional[RefIndex] = None,
+                 plane: AxisDef = None,
                  name: Optional[str] = None,
                  **kwargs):
         # noinspection PyUnresolvedReferences
@@ -436,7 +437,7 @@ class _GlobalOpticsObservable(Observable):
               or user-defined evaluation function called as:
               :pycode:`value = fun(ring, ringdata, *args, **kwargs)` and
               returning the value of the Observable
-            index:          Index in the parameter array, If :py:obj:`None`,
+            plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
@@ -458,12 +459,12 @@ class _GlobalOpticsObservable(Observable):
         shape of *value*.
         """
         needs = {Need.GLOBALOPTICS}
-        name = self._set_name(name, param, index)
+        name = self._set_name(name, param, optics_(param, plane, 'code'))
         if callable(param):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = self._recordaccess(param, index)
+            fun = self._recordaccess(param, optics_(param, plane, 'index'))
             if param == 'chromaticity':
                 needs.add(Need.CHROMATICITY)
         super().__init__(fun, *args, needs=needs, name=name, **kwargs)
@@ -472,7 +473,7 @@ class _GlobalOpticsObservable(Observable):
 class LocalOpticsObservable(_ElementObservable):
     """Observe a local optics parameter at selected locations"""
     def __init__(self, refpts: Refpts, param: Union[str, Callable], *args,
-                 index: Optional[RefIndex] = Ellipsis,
+                 plane: AxisDef = Ellipsis,
                  name: Optional[str] = None,
                  use_integer: bool = False,
                  **kwargs):
@@ -483,7 +484,7 @@ class LocalOpticsObservable(_ElementObservable):
               See ":ref:`Selecting elements in a lattice <refpts>`"
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or :ref:`user-defined evaluation function <localoptics_eval>`
-            index:          Index in the parameter array, If :py:obj:`Ellipsis`,
+            plane:          Index in the parameter array, If :py:obj:`Ellipsis`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
@@ -530,7 +531,7 @@ class LocalOpticsObservable(_ElementObservable):
             Observe the beta in both planes at all :py:class:`.Monitor`
             locations
 
-            >>> obs = LocalOpticsObservable(Quadrupole, 'beta', index=1,
+            >>> obs = LocalOpticsObservable(Quadrupole, 'beta', plane='y',
             ...                        statfun=np.max)
 
             Observe the maximum vertical beta in Quadrupoles
@@ -547,12 +548,12 @@ class LocalOpticsObservable(_ElementObservable):
             33 and 101 of the lattice
         """
         needs = {Need.LOCALOPTICS}
-        name = self._set_name(name, param, index)
+        name = self._set_name(name, param, optics_(param, plane, 'code'))
         if callable(param):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = self._recordaccess(param, index)
+            fun = self._recordaccess(param, optics_(param, plane, 'index'))
         if use_integer:
             needs.add(Need.ALL_POINTS)
 
@@ -562,7 +563,7 @@ class LocalOpticsObservable(_ElementObservable):
 class RingObservable(_ElementObservable):
     """Observe an attribute of selected lattice elements"""
     def __init__(self, refpts: Refpts, attrname: str,
-                 index: Optional[RefIndex] = Ellipsis,
+                 index: AxisDef = Ellipsis,
                  name: Optional[str] = None, **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
@@ -570,7 +571,7 @@ class RingObservable(_ElementObservable):
             refpts:         Elements to be observed
               See ":ref:`Selecting elements in a lattice <refpts>`"
             attrname:       Attribute name
-            index:          Index in the attribute array, If :py:obj:`Ellipsis`,
+            index:          Index in the attribute array. If :py:obj:`Ellipsis`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
@@ -581,7 +582,7 @@ class RingObservable(_ElementObservable):
 
         Example:
 
-            >>> obs = RingObservable(at.Sextupole, 'KickAngle', index=0,
+            >>> obs = RingObservable(at.Sextupole, 'KickAngle', plane=0,
             ...                      statfun=np.sum)
 
             Observe the sum of horizontal kicks in Sextupoles
@@ -591,21 +592,21 @@ class RingObservable(_ElementObservable):
             vals = [get_val(ring, el) for el in ring.select(self._boolrefs)]
             return np.array(vals)
 
-        get_val = Observable._recordaccess(attrname, index)
-        name = self._set_name(name, attrname, index)
+        get_val = Observable._recordaccess(attrname, nop_(index, 'index'))
+        name = self._set_name(name, attrname, nop_(index, 'code'))
         super().__init__(fun, refpts, name=name, **kwargs)
 
 
 class TrajectoryObservable(_ElementObservable):
     """Observe trajectory coordinates at selected locations"""
     def __init__(self, refpts: Refpts,
-                 index: Optional[RefIndex] = Ellipsis,
+                 axis: AxisDef = Ellipsis,
                  name: Optional[str] = None, **kwargs):
         r"""
         Args:
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
-            index:          Index in the orbit array, If :py:obj:`Ellipsis`,
+            axis:          Index in the orbit array, If :py:obj:`Ellipsis`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
@@ -624,8 +625,8 @@ class TrajectoryObservable(_ElementObservable):
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
         """
-        name = self._set_name(name, 'trajectory', index)
-        fun = self._arrayaccess(index)
+        name = self._set_name(name, 'trajectory', axis_(axis, 'code'))
+        fun = self._arrayaccess(axis_(axis, 'index'))
         needs = {Need.TRAJECTORY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -633,15 +634,16 @@ class TrajectoryObservable(_ElementObservable):
 class EmittanceObservable(Observable):
     """Observe emittance-related parameters"""
     def __init__(self, param: str,
-                 index: Optional[RefIndex] = None,
+                 plane: AxisDef = None,
                  name: Optional[str] = None,
                  **kwargs):
         r"""
         Args:
             param:          Parameter name (see
               :py:func:`.envelope_parameters`)
-            index:          Index in the parameter array, If :py:obj:`None`,
-              the whole array is specified
+            plane:          Plane is either an integer in 0:3 or
+              a string in {'x', 'X', 'h', 'H', 'y', 'Y', 'v', 'V', 'z', 'Z'}
+              identifying the
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
 
@@ -658,12 +660,12 @@ class EmittanceObservable(Observable):
 
         Example:
 
-            >>> EmittanceObservable('emittances', index=0)
+            >>> EmittanceObservable('emittances', plane='h')
 
             Observe the horizontal emittance
         """
-        name = self._set_name(name, param, index)
-        fun = self._recordaccess(param, index)
+        name = self._set_name(name, param, plane_(plane, 'code'))
+        fun = self._recordaccess(param, plane_(plane, 'index'))
         needs = {Need.EMITTANCE}
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
@@ -683,9 +685,9 @@ class ObservableList(list):
 
             Create an empty Observable list
 
-            >>> obslist.append(OrbitObservable(Monitor, index=0))
+            >>> obslist.append(OrbitObservable(Monitor, plane=0))
             >>> obslist.append(GlobalOpticsObservable('tune'))
-            >>> obslist.append(EmittanceObservable('emittances', index=0))
+            >>> obslist.append(EmittanceObservable('emittances', plane=0))
 
             Add observables for horizontal closed orbit at Monitor locations,
             tunes and horizontal emittance
@@ -778,7 +780,7 @@ class ObservableList(list):
             r_in:       Optional coordinate input for trajectory observables
             initial:    If :py:obj:`True`, store the values as *initial values*
         """
-        def eval(obs):
+        def obseval(obs):
             obsneeds = obs.needs
             obsrefs = getattr(obs, '_boolrefs', None)
             data = []
@@ -830,7 +832,7 @@ class ObservableList(list):
             emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
 
         for ob in self:
-            eval(ob)
+            obseval(ob)
 
     # noinspection PyProtectedMember
     def exclude(self, obsname: str, excluded: Refpts):
@@ -964,7 +966,7 @@ class ObservableList(list):
 
 # noinspection PyPep8Naming
 def GlobalOpticsObservable(param: str, *args,
-                           index: Optional[RefIndex] = Ellipsis,
+                           plane: AxisDef = Ellipsis,
                            name: Optional[str] = None,
                            use_integer: bool = False,
                            **kwargs):
@@ -974,7 +976,7 @@ def GlobalOpticsObservable(param: str, *args,
     Args:
         param:          Optics parameter name (see :py:func:`.get_optics`)
           or :ref:`user-defined evaluation function <globaloptics_eval>`
-        index:          Index in the parameter array, If :py:obj:`Ellipsis`,
+        plane:          Index in the parameter array, If :py:obj:`Ellipsis`,
           the whole array is specified
         name:           Observable name. If :py:obj:`None`, an explicit
           name will be generated
@@ -1015,22 +1017,23 @@ def GlobalOpticsObservable(param: str, *args,
 
         Observe the tune in both planes, including the integer part (slower)
 
-        >>> obs = GlobalOpticsObservable('chromaticity', index=0)
+        >>> obs = GlobalOpticsObservable('chromaticity', plane='v')
 
         Observe the vertical chromaticity
     """
     if param == 'tune' and use_integer:
         def tune(ring, data):
             # noinspection PyProtectedMember
-            mu = _ElementObservable._recordaccess('mu', index)(ring, data)
+            mu = _ElementObservable._recordaccess('mu', idx)(ring, data)
             return np.squeeze(mu, axis=0) / 2 / pi
 
+        idx = plane_(plane, 'index')
         # noinspection PyProtectedMember
-        name = _ElementObservable._set_name(name, tune, index)
+        name = _ElementObservable._set_name(name, param, plane_(plane, 'code'))
         return LocalOpticsObservable(End, tune, *args,
                                      name=name,
                                      summary=True,
                                      use_integer=True, **kwargs)
     else:
-        return _GlobalOpticsObservable(param, *args, index=index, name=name,
+        return _GlobalOpticsObservable(param, *args, plane=plane, name=name,
                                        **kwargs)
