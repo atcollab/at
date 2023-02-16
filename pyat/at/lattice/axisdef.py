@@ -53,7 +53,7 @@ def _descr(dd: dict, arg: AxisDef, key: Optional[str] = None):
     else:
         try:
             descr = dd[arg]
-        except TypeError:
+        except (TypeError, KeyError):
             descr = dict(index=arg, code=arg, label="", unit="")
         if key is None:
             return descr

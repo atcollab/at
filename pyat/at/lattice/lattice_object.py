@@ -344,7 +344,8 @@ class Lattice(list):
         """
         def repeat(nb):
             for _ in range(nb):
-                yield from self
+                for elem in self:
+                    yield elem.deepcopy()
 
         if periods is None:
             periods = self.periodicity
