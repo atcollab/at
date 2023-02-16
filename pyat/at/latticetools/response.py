@@ -239,7 +239,7 @@ class ResponseMatrix(SvdResponse):
         self.varweights = self.variables.deltas
         self.weighted_response = np.stack(results, axis=-1)
 
-    def exclude(self, obsname: str, excluded: Refpts) -> None:
+    def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
         # noinspection PyUnresolvedReferences
         r"""Exclude items from :py:class:`.Observable`\ s
 
@@ -249,7 +249,7 @@ class ResponseMatrix(SvdResponse):
 
         Example:
             >>> resp = OrbitResponseMatrix(ring, 'h', Monitor, Corrector)
-            >>> resp.exclude('h_orbit', 'BPM_02')
+            >>> resp.exclude_obs('h_orbit', 'BPM_02')
 
             Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
@@ -305,7 +305,9 @@ class OrbitResponseMatrix(ResponseMatrix):
               Observables
         """
         def steerer(ik):
-            return ElementVariable(ik, 'KickAngle', index=pl, delta=steerdelta)
+            name = f"V{ik:04}"
+            return ElementVariable(ik, 'KickAngle', index=pl, name=name,
+                                   delta=steerdelta)
 
         pl = plane_(plane, 'index')
         plcode = plane_(plane, 'code')
@@ -315,7 +317,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                                weight=bpmweight)
         observables = ObservableList(ring, [bpms])
         if steersum:
-            nm = "sum_{}_kicks".format(plcode)
+            nm = "{}_kicks".format(plcode)
             observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
                                               target=0.0, index=pl,
                                               statfun=np.sum))
@@ -327,6 +329,7 @@ class OrbitResponseMatrix(ResponseMatrix):
             if not all(active):
                 raise ValueError("Cavities are not active")
             variables.append(ElementVariable(cavrefs, 'Frequency',
+                                             name="RF frequency",
                                              delta=cavdelta))
 
         super().__init__(ring, variables, observables)
@@ -370,7 +373,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
               also the steerer weight
         """
         def steerer(ik):
-            return ElementVariable(ik, 'KickAngle', index=pl, delta=steerdelta)
+            name = f"V{ik:04}"
+            return ElementVariable(ik, 'KickAngle', index=pl, name=name,
+                                   delta=steerdelta)
 
         pl = plane_(plane, 'index')
         plcode = plane_(plane, 'code')

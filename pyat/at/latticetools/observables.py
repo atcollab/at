@@ -207,15 +207,16 @@ class Observable(object):
             deviation = None
         else:
             vnow = np.asarray(self.value)
+            vsh = vnow.shape
             if self.target is None:
-                deviation = np.broadcast_to(0.0, vnow.shape)
+                deviation = np.broadcast_to(0.0, vsh)
             else:
-                diff = vnow - np.broadcast_to(self.target, vnow.shape)
+                diff = np.atleast_1d(vnow - np.broadcast_to(self.target, vsh))
                 lb = diff - self.lbound
                 ub = diff - self.ubound
                 lb[lb >= 0] = 0
                 ub[ub <= 0] = 0
-                deviation = (lb + ub)
+                deviation = (lb + ub).reshape(vsh)
         return deviation
 
     @property
