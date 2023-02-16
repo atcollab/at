@@ -1,13 +1,10 @@
 """
-Classes for response matrix observables and variables
+Definition of :py:class:`.Variable` objects used in matching and
+response matrices
 """
-import sys
+from __future__ import annotations
 from typing import Optional
-if sys.version_info.minor < 9:
-    from typing import Callable, Tuple
-else:
-    from collections.abc import Callable
-    Tuple = tuple
+from collections.abc import Callable, Iterable, Sequence
 import numpy as np
 from ..lattice import Lattice, Refpts
 
@@ -16,11 +13,11 @@ class Variable(object):
     """A :py:class:`Variable` is a scalar value acting on a lattice
     """
     def __init__(self,
-                 setfun: Callable[..., None],
-                 getfun: Callable[..., float],
+                 setfun: Callable[[Lattice, float, ...], None],
+                 getfun: Callable[[Lattice, ...], float],
                  *args,
                  name: str = '',
-                 bounds: Tuple[float, float] = (-np.inf, np.inf),
+                 bounds: tuple[float, float] = (-np.inf, np.inf),
                  delta: float = 1.0,
                  **kwargs):
         """
@@ -108,11 +105,12 @@ class Variable(object):
 
         Returns:
             value:      Value of the variable
-
         """
         value = self.getfun(ring, *self.args, **self.kwargs)
         if initial:
             self._history = [value]
+        elif value != self._history[-1]:
+            self._history.append(value)
         return value
 
     def set_previous(self, ring: Lattice):
@@ -217,10 +215,17 @@ class ElementVariable(Variable):
 
 class VariableList(list):
 
-    def increment(self, ring: Lattice, values):
+    def get(self, ring: Lattice, initial=False) -> Sequence[float]:
+        return np.array([var.get(ring, initial=initial) for var in self])
+
+    def set(self, ring: Lattice, values: Iterable[float]) -> None:
+        for var, val in zip(self, values):
+            var.set(ring, val)
+
+    def increment(self, ring: Lattice, values: Iterable[float]):
         for var, val in zip(self, values):
             var.increment(ring, val)
 
     @property
-    def delta(self):
-        return np.array([v.delta for v in self])
+    def deltas(self):
+        return np.array([var.delta for var in self])

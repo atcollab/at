@@ -1,16 +1,15 @@
+"""
+Definition of :py:class:`.ResponseMatrix` objects
+"""
+from __future__ import annotations
 import numpy as np
 import copy
 import abc
 import multiprocessing
 from functools import partial
 from abc import ABC
-import sys
 from typing import Optional
-if sys.version_info.minor < 9:
-    from typing import Sequence
-else:
-    from collections.abc import Sequence
-from ..lattice import AtError, Lattice, Refpts, Orbit
+from ..lattice import AtError, Lattice, Refpts, Orbit, AxisDef, plane_
 from .observables import ObservableList, OrbitObservable, RingObservable
 from .observables import TrajectoryObservable
 from .variables import ElementVariable, VariableList
@@ -35,7 +34,7 @@ class SvdResponse(ABC):
         ...
 
     def solve(self):
-        """Computes the singular values of the response matrix"""
+        """Compute the singular values of the response matrix"""
         if self.weighted_response is None:
             raise AtError("No response matrix: run build() first")
         u, s, vh = np.linalg.svd(self.weighted_response, full_matrices=False)
@@ -53,8 +52,15 @@ class SvdResponse(ABC):
         return corr
 
     def check_norm(self):
-        """Displays the norm of the rows and columns of the weighted
+        """Display the norm of the rows and columns of the weighted
         response matrix
+
+        Adjusting the variables and observable weights to equalize the norms
+        of rows and columns is important.
+
+        Returns:
+            obs_norms:      Norms of observables (rows)
+            var_norms:      Norms of Variables (columns)
         """
         if self.weighted_response is None:
             raise AtError("No response matrix: run build() first")
@@ -83,7 +89,7 @@ class SvdResponse(ABC):
             return self.weighted_response * weights
 
     def get_correction(self, nvals: Optional[int] = None):
-        """Returns the correction matrix (pseudo-inverse of the response
+        """Return the correction matrix (pseudo-inverse of the response
         matrix)
 
         Args:
@@ -101,12 +107,19 @@ class SvdResponse(ABC):
 
 
 class ResponseMatrix(SvdResponse):
-    """Base class for response matrices"""
+    r"""Base class for response matrices
+
+    It is defined by any arbitrary set of :py:class:`.Variable`\ s and
+    :py:class:`.Observable`\s
+
+    Addition is defined on :py:class:`ResponseMatrix` objects as the addition
+    of their :py:class:`.Variable`\ s and :py:class:`.Observable`\s to produce
+    combined responses"""
     def __init__(self, ring: Lattice,
                  variables: VariableList,
                  observables: ObservableList, *,
                  r_in: Orbit = None):
-        """
+        r"""
 
         Args:
             ring:           Design lattice, used to compute the response
@@ -148,14 +161,18 @@ class ResponseMatrix(SvdResponse):
               *apply* must be :py:obj:`True`
 
         Returns:
-
+            correction: Vector or correction values
         """
+        self.variables.get(ring)
+        sumcorr = np.array([0.0])
+        obs = self.observables
         for _ in range(niter):
-            self.observables.evaluate(ring, r_in=self.r_in)
-            corr = self.svd_solution(self.observables.flat_values, nvals=nvals)
+            obs.evaluate(ring, r_in=self.r_in)
+            corr = self.svd_solution(-obs.flat_deviations, nvals=nvals)
+            sumcorr = sumcorr + corr    # non-broadcastable sumcorr
             if apply:
                 self.variables.increment(ring, corr)
-        return corr
+        return sumcorr
 
     @staticmethod
     def _resp_one(ring, observables, variable):
@@ -219,59 +236,89 @@ class ResponseMatrix(SvdResponse):
             results = [self._resp_one(ring, self.observables, var)
                        for var in self.variables]
         self.obsweights = self.observables.flat_weights
-        self.varweights = self.variables.delta
+        self.varweights = self.variables.deltas
         self.weighted_response = np.stack(results, axis=-1)
 
     def exclude(self, obsname: str, excluded: Refpts) -> None:
-        """Exclude items from :py:class:`.Observable`\ s
+        # noinspection PyUnresolvedReferences
+        r"""Exclude items from :py:class:`.Observable`\ s
 
         Args:
             obsname:    :py:class:`.Observable` name.
             excluded:   location of elements to excluse
 
         Example:
-            >>> resp = OrbitResponseMatrix(ring, Monitor, Corrector)
-            >>> obslist.exclude('Orbit[0]', 'BPM_02')
+            >>> resp = OrbitResponseMatrix(ring, 'h', Monitor, Corrector)
+            >>> resp.exclude('h_orbit', 'BPM_02')
 
-            Create an :py:class:`OrbitResponseMatrix` from
+            Create an horizontal :py:class:`OrbitResponseMatrix` from
             :py:class:`.Corrector` elements to :py:class:`.Monitor` elements,
             and exclude the monitor with name "BPM_02"
         """
         self.observables.exclude(obsname, excluded)
+        # Force a full rebuild
+        self.singular_values = None
+        self.weighted_response = None
 
 
 class OrbitResponseMatrix(ResponseMatrix):
-    """Orbit response matrix"""
-    def __init__(self, ring: Lattice,  plane: int,
+    r"""Orbit response matrix
+
+    Variables are a set of steerers and optionally the RF frequency.
+
+    Observables are the closed orbit position at selected points, named
+    ``h_orbit`` for the horizontal plane or ``v_orbit`` for vertical plane,
+    and optionally the sum of steerer angles
+
+    An :py:class:`OrbitResponseMatrix` applies to a single plane, horizontal or
+    vertical. A combined response matrix is obtained by adding horizontal and
+    vertical matrices"""
+    def __init__(self, ring: Lattice,  plane: AxisDef,
                  bpmrefs: Refpts,
                  steerrefs: Refpts, *,
                  cavrefs: Refpts = None,
                  bpmweight: float = 1.0,
+                 bpmtarget=0.0,
                  steerdelta: float = 0.0001,
                  cavdelta: float = 100.0,
                  steersum: bool = False):
         """
 
         Args:
-            ring:
-            plane:
-            bpmrefs:
-            steerrefs:
-            cavrefs:
-            bpmweight:
-            steerdelta:
-            cavdelta:
-            steersum:
+            ring:       Design lattice, used to compute the response
+            plane:      One out of {0, 'x', 'h', 'H'} for horizontal orbit, or
+              one of {1, 'y', 'v', 'V'} for vertical orbit
+            bpmrefs:    Location of closed orbit observation points.
+              See ":ref:`Selecting elements in a lattice <refpts>`"
+            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
+              is used.
+            cavrefs:    Location of RF cavities. Their *Frequency* attribute
+              is used. If :py:obj:`None`, no cavity is included in the response.
+              Cavities must be active.
+            bpmweight:  Weight on position readings
+            bpmtarget:  Target position.
+            steerdelta: Step on steerers for matrix computation [rad]. This is
+              also the steerer weight
+            cavdelta:   Step on RF frequency for matrix computation [Hz]. This
+              is also the cavity weight
+            steersum:   If :py:obj:`True`, the sum of steerers is added to the
+              Observables
         """
-        def steerer(idb):
-            return ElementVariable(idb, 'KickAngle', index=plane,
-                                   delta=steerdelta)
+        def steerer(ik):
+            return ElementVariable(ik, 'KickAngle', index=pl, delta=steerdelta)
+
+        pl = plane_(plane, 'index')
+        plcode = plane_(plane, 'code')
         # Observables
-        bpms = OrbitObservable(bpmrefs, axis=2*plane, weight=bpmweight)
+        nm = "{}_orbit".format(plcode)
+        bpms = OrbitObservable(bpmrefs, axis=2*pl, name=nm, target=bpmtarget,
+                               weight=bpmweight)
         observables = ObservableList(ring, [bpms])
         if steersum:
-            observables.append(RingObservable(steerrefs, 'KickAngle',
-                                              index=plane, statfun=np.sum))
+            nm = "sum_{}_kicks".format(plcode)
+            observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
+                                              target=0.0, index=pl,
+                                              statfun=np.sum))
         # Variables
         steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
         variables = VariableList(steerers)
@@ -286,36 +333,58 @@ class OrbitResponseMatrix(ResponseMatrix):
 
 
 class TrajectoryResponseMatrix(ResponseMatrix):
-    """Trajectory response matrix"""
-    def __init__(self, ring: Lattice, plane: int,
+    """Trajectory response matrix
+
+    Variables are a set of steerers,
+
+    Observables are the trajectory position at selected points, named
+    ``h_positions`` for the horizontal plane or ``v_positions`` for vertical
+    plane.
+
+    An :py:class:`TrajectoryResponseMatrix` applies to a single plane,
+    horizontal or vertical. A combined response matrix is obtained by adding
+    horizontal and vertical matrices"""
+
+    def __init__(self, ring: Lattice, plane: AxisDef,
                  bpmrefs: Refpts,
                  steerrefs: Refpts, *,
                  r_in: Orbit = None,
                  bpmweight: float = 1.0,
+                 bpmtarget=0.0,
                  steerdelta: float = 0.0001,
                  steersum: bool = False):
         """
 
         Args:
-            ring:
-            plane:
-            bpmrefs:
-            steerrefs:
-            r_in:
-            bpmweight:
-            steerdelta:
-            steersum:
+            ring:       Design lattice, used to compute the response
+            plane:      One out of {0, 'x', 'h', 'H'} for horizontal orbit, or
+              one of {1, 'y', 'v', 'V'} for vertical orbit
+            bpmrefs:    Location of closed orbit observation points.
+              See ":ref:`Selecting elements in a lattice <refpts>`"
+            steerrefs:  Location of orbit steerers. Their *KickAngle* attribute
+              is used.
+            r_in:       (6,) vector of initial coordinates of the trajectory
+            bpmweight:  Weight on position readings
+            bpmtarget:  Target position
+            steerdelta: Step on steerers for matrix computation [rad]. This is
+              also the steerer weight
         """
-        def steerer(idb):
-            return ElementVariable(idb, 'KickAngle', index=plane,
-                                   delta=steerdelta)
+        def steerer(ik):
+            return ElementVariable(ik, 'KickAngle', index=pl, delta=steerdelta)
 
+        pl = plane_(plane, 'index')
+        plcode = plane_(plane, 'code')
         # Observables
-        bpms = TrajectoryObservable(bpmrefs, axis=2*plane, weight=bpmweight)
+        nm = "{}_positions".format(plcode)
+        bpms = TrajectoryObservable(bpmrefs, axis=2*pl, name=nm,
+                                    target=bpmtarget,
+                                    weight=bpmweight)
         observables = ObservableList(ring, [bpms])
         if steersum:
-            observables.append(RingObservable(steerrefs, 'KickAngle',
-                                              index=plane, statfun=np.sum))
+            nm = "sum_{}_kicks".format(plcode)
+            observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
+                                              target=0.0, index=plane,
+                                              statfun=np.sum))
         # Variables
         steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
         variables = VariableList(steerers)

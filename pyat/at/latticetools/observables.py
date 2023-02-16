@@ -1,11 +1,12 @@
-import sys
+"""
+Definition of :py:class:`.Observable` objects used in matching and
+response matrices
+"""
+from __future__ import annotations
 from typing import Optional, Union
-if sys.version_info.minor < 9:
-    from typing import Callable, Container, Iterable, Tuple
-    from typing import AbstractSet as Set
-else:
-    from collections.abc import Callable, Container, Iterable, Set
-    Tuple = tuple
+# For sys.version_info.minor < 9:
+from typing import Tuple
+from collections.abc import Callable, Container, Iterable, Set
 from math import pi
 from enum import Enum
 from itertools import repeat
@@ -198,22 +199,33 @@ class Observable(object):
         return self._value / self.w
 
     @property
-    def residual(self):
-        """residual, computed as
-        :pycode:`residual = ((value-target)/weight)**2`"""
+    def deviation(self):
+        """Deviation from target value, computes as
+        :pycode:`deviation = value-target`
+        """
         if self._value is None:
-            res = None
+            deviation = None
         else:
             vnow = np.asarray(self.value)
             if self.target is None:
-                res = np.broadcast_to(0.0, vnow.shape)
+                deviation = np.broadcast_to(0.0, vnow.shape)
             else:
                 diff = vnow - np.broadcast_to(self.target, vnow.shape)
                 lb = diff - self.lbound
                 ub = diff - self.ubound
                 lb[lb >= 0] = 0
                 ub[ub <= 0] = 0
-                res = ((lb + ub) / self.w) ** 2
+                deviation = (lb + ub)
+        return deviation
+
+    @property
+    def residual(self):
+        """residual, computed as
+        :pycode:`residual = ((value-target)/weight)**2`"""
+        if self._value is None:
+            res = None
+        else:
+            res = (self.deviation/self.w) ** 2
         return res
 
     @staticmethod
@@ -641,9 +653,9 @@ class EmittanceObservable(Observable):
         Args:
             param:          Parameter name (see
               :py:func:`.envelope_parameters`)
-            plane:          Plane is either an integer in 0:3 or
-              a string in {'x', 'X', 'h', 'H', 'y', 'Y', 'v', 'V', 'z', 'Z'}
-              identifying the
+            plane:          One out of {0, 'x', 'h', 'H'} for horizontal plane,
+             one out of {1, 'y', 'v', 'V'} for vertival plane or one out of
+             {2, 'z', 'l', 'L'} for longitudinal plane
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
 
@@ -901,6 +913,18 @@ class ObservableList(list):
 
     residuals = property(get_residuals, doc="Residuals of the observable")
 
+    def get_deviations(self, select: Optional[Container[str]] = None) -> list:
+        """Return the deviations from target values
+
+        Args:
+            select:     :py:class:`~collections.abc.Container` of names for
+              selecting observables. If :py:obj:`None` select all
+        """
+        selected = _selector(select)
+        return [obs.deviation for obs in self if selected(obs)]
+
+    deviations = property(get_deviations, doc="Deviations from target values")
+
     def get_flat_values(self,
                         select: Optional[Container[str]] = None) -> np.ndarray:
         """Return a 1-D array of selected Observable values
@@ -947,6 +971,21 @@ class ObservableList(list):
 
     flat_weights = property(get_flat_weights,
                             doc="1-D array of Observable weights")
+
+    def get_flat_deviations(self,
+                            select: Optional[Container[str]] = None
+                            ) -> np.ndarray:
+        """Return a 1-D array of deviations from target values
+
+        Args:
+            select:     :py:class:`~collections.abc.Container` of names for
+              selecting observables. If :py:obj:`None` select all
+        """
+        vals = self.get_deviations(select)
+        return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
+
+    flat_deviations = property(get_flat_deviations,
+                               doc="1-D array of deviations from target value")
 
     def get_sum_residuals(self,
                           select: Optional[Container[str]] = None) -> float:
