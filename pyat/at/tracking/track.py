@@ -1,10 +1,9 @@
 import numpy
 import functools
 from warnings import warn
-# noinspection PyUnresolvedReferences
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import Element, Particle, Refpts, uint32_refpts
-from ..lattice import elements, get_elements
+from ..lattice import Element, Particle, Refpts, End
+from ..lattice import elements, refpts_iterator, get_uint32_index
 from typing import List, Iterable
 
 
@@ -15,7 +14,7 @@ DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
 
 
 def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
-    monitors = get_elements(ring, elements.BeamMoments)
+    monitors = list(refpts_iterator(ring, elements.BeamMoments))
     for m in monitors:
         m.set_buffers(nturns, nbunch)
     return len(monitors) == 0
@@ -52,7 +51,7 @@ def fortran_align(func):
 
 @fortran_align
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
-                 refpts: Refpts = None, **kwargs):
+                 refpts: Refpts = End, **kwargs):
     """
     :py:func:`lattice_pass` tracks particles through each element of a lattice
     calling the element-specific tracking function specified in the Element's
@@ -65,21 +64,18 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
         nturns:                 number of turns to be tracked
-        refpts:                 numpy array of indices of elements where
-          output is desired:
-
-          * len(line) means end of the last element (default)
-          * 0 means entrance of the first element
+        refpts:                 Selects the location of coordinates output.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
 
     Keyword arguments:
         keep_lattice (bool):    Use elements persisted from a previous
-          call. If True, assume that the lattice has not changed since
-          the previous call.
+          call. If :py:obj:`True`, assume that the lattice has not changed
+          since the previous call.
         keep_counter (bool):    Keep the turn number from the previous
           call.
         turn (int):             Starting turn number. Ignored if
-          keep_counter is True. The turn number is necessary to compute the
-          absolute path length used in RFCavityPass.
+          *keep_counter* is :py:obj:`True`. The turn number is necessary to
+          compute the absolute path length used in RFCavityPass.
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
@@ -89,13 +85,13 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
     Keyword arguments:
 
         particle (Optional[Particle]):  circulating particle.
-          Default: ``lattice.particle`` if existing,
-          otherwise ``Particle('relativistic')``
+          Default: :code:`lattice.particle` if existing,
+          otherwise :code:`Particle('relativistic')`
         energy (Optiona[float]):        lattice energy. Default 0.
-        unfold_beam (Bool): internal beam folding activate, this 
+        unfold_beam (bool): Internal beam folding activate, this
             assumes the input particles are in bucket 0, works only
             if all bucket see the same RF Voltage.
-            Default: ``True``
+            Default: :py:obj:`True`
 
     If *energy* is not available, relativistic tracking if forced,
     *rest_energy* is ignored.
@@ -119,30 +115,28 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
 
     .. note::
 
-       * ``lattice_pass(lattice, r_in, refpts=len(line))`` is the same as
-         ``lattice_pass(lattice, r_in)`` since the reference point len(line) is
-         the exit of the last element.
-       * ``lattice_pass(lattice, r_in, refpts=0)`` is a copy of *r_in* since
-         the reference point 0 is the entrance of the first element.
+       * :pycode:`lattice_pass(lattice, r_in, refpts=len(line))` is the same as
+         :pycode:`lattice_pass(lattice, r_in)` since the reference point
+         len(line) is the exit of the last element.
+       * :pycode:`lattice_pass(lattice, r_in, refpts=0)` is a copy of *r_in*
+         since the reference point 0 is the entrance of the first element.
        * To resume an interrupted tracking (for instance to get intermediate
          results), one must use one of the *turn* or *keep_counter*
          keywords to ensure the continuity of the turn number.
        * For multiparticle tracking with large number of turn the size of
          *r_out* may increase excessively. To avoid memory issues
-         ``lattice_pass(lattice, r_in, refpts=[])`` can be used. An empty list
-         is returned and the tracking results of the last turn are stored in
-         *r_in*.
-       * To model buckets with different RF voltage ``unfold_beam=False`` has to
-         be used. The beam can be unfolded using the function
-         ``at.traccking.utils.unfold_beam``. This function takes into account the
-         true voltage in each bucket and distributes the particles in the bunches
-         defined by ``ring.fillpattern`` using a 6D orbit search.
+         :pycode:`lattice_pass(lattice, r_in, refpts=None)` can be used.
+         An empty list is returned and the tracking results of the last turn
+         are stored in *r_in*.
+       * To model buckets with different RF voltage :pycode:`unfold_beam=False`
+         has to be used. The beam can be unfolded using the function
+         :py:func:`.unfold_beam`. This function takes into account
+         the true voltage in each bucket and distributes the particles in the
+         bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    if refpts is None:
-        refpts = len(lattice)
-    refs = uint32_refpts(refpts, len(lattice))
+    refs = get_uint32_index(lattice, refpts)
     # define properties if lattice is not a Lattice object
     nbunch = getattr(lattice, 'nbunch', 1)
     bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
@@ -174,8 +168,8 @@ def element_pass(element: Element, r_in, **kwargs):
 
     Keyword arguments:
         particle (Particle):    circulating particle.
-          Default: *lattice.particle* if existing,
-          otherwise *Particle('relativistic')*
+          Default: :code:`lattice.particle` if existing,
+          otherwise :code:`Particle('relativistic')`
         energy (float):         lattice energy. Default 0.
 
     If *energy* is not available, relativistic tracking if forced,

@@ -3,20 +3,21 @@ Simple parallelisation of atpass() using multiprocessing.
 """
 from functools import partial
 import multiprocessing
-from ..lattice import AtWarning, Element, uint32_refpts, DConstant, random
-from ..lattice import Refpts
+# noinspection PyProtectedMember
+from ..lattice.utils import get_uint32_index
+from ..lattice import AtWarning, Element, DConstant, random
+from ..lattice import Refpts, End
 from warnings import warn
-# noinspection PyUnresolvedReferences
-from .atpass import reset_rng, atpass as _atpass, common_rng, thread_rng
+from .atpass import reset_rng, atpass as _atpass
 from .track import fortran_align
-from typing import Iterable
+from typing import Iterable, Optional, List
 import numpy as np
 
 __all__ = ['patpass']
 
 _imax = np.iinfo(int).max
 
-globring = None
+_globring: Optional[List[Element]] = None
 
 
 def format_results(results, r_in, losses):
@@ -35,7 +36,7 @@ def format_results(results, r_in, losses):
 def _atpass_fork(seed, rank, rin, **kwargs):
     """Single forked job"""
     reset_rng(rank, seed=seed)
-    result = _atpass(globring, rin, **kwargs)
+    result = _atpass(_globring, rin, **kwargs)
     return rin, result
 
 
@@ -52,8 +53,8 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
     args = enumerate(np.array_split(r_in, pool_size, axis=1))
     # Generate a new starting point for C RNGs
     seed = random.common.integers(0, high=_imax, dtype=int)
-    global globring
-    globring = ring
+    global _globring
+    _globring = ring
     if ctx.get_start_method() == 'fork':
         passfunc = partial(_atpass_fork, seed, **kwargs)
     else:
@@ -61,7 +62,7 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
     # Start the parallel jobs
     with ctx.Pool(pool_size) as pool:
         results = pool.starmap(passfunc, args)
-    globring = None
+    _globring = None
     # Gather the results
     losses = kwargs.pop('losses', False)
     return format_results(results, r_in, losses)
@@ -69,7 +70,7 @@ def _pass(ring, r_in, pool_size, start_method, **kwargs):
 
 @fortran_align
 def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
-            refpts: Refpts = None, pool_size: int = None,
+            refpts: Refpts = End, pool_size: int = None,
             start_method: str = None, **kwargs):
     """
     Simple parallel implementation of :py:func:`.lattice_pass`.
@@ -88,30 +89,27 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
           the end of the element. For the best efficiency, *r_in*
           should be given as F_CONTIGUOUS numpy array.
         nturns:                 number of turns to be tracked
-        refpts:                 numpy array of indices of elements where
-          output is desired:
-
-          * len(line) means end of the last element (default)
-          * 0 means entrance of the first element
+        refpts:                 Selects the location of coordinates output.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
         pool_size:              number of processes. If None,
           ``min(npart,nproc)`` is used
         start_method:           python multiprocessing start method.
           :py:obj:`None` uses the python default that is considered safe.
-          Available values: '``fork'``, ``'spawn'``, ``'forkserver'``.
+          Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
           Default for linux is ``'fork'``, default for macOS and  Windows is
-          ``'spawn'``. ``'fork'`` may be used on MacOS to speed up the
+          ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
           calculation or to solve Runtime Errors, however it is considered
           unsafe.
 
     Keyword arguments:
         keep_lattice (bool):    Use elements persisted from a previous
-          call. If True, assume that the lattice has not changed since
-          the previous call.
+          call. If :py:obj:`True`, assume that the lattice has not changed
+          since the previous call.
         keep_counter (bool):    Keep the turn number from the previous
           call.
         turn (int):             Starting turn number. Ignored if
-          keep_counter is True. The turn number is necessary to compute the
-          absolute path length used in RFCavityPass.
+          *keep_counter* is :py:obj:`True`. The turn number is necessary to
+          compute the absolute path length used in RFCavityPass.
         losses (bool):          Boolean to activate loss maps output
         omp_num_threads (int):  Number of OpenMP threads
           (default: automatic)
@@ -148,9 +146,9 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
 
        * For multiparticle tracking with large number of turn the size of
          *r_out* may increase excessively. To avoid memory issues
-         ``patpass(lattice, r_in, refpts=[])`` can be used. An empty list
-         is returned and the tracking results of the last turn are stored in
-         *r_in*.
+         :pycode:`lattice_pass(lattice, r_in, refpts=[])` can be used.
+         An empty list is returned and the tracking results of the last turn
+         are stored in *r_in*.
        * By default, :py:func:`patpass` will use all the available CPUs.
          To change the number of cores used in ALL functions using
          :py:func:`patpass` (:py:mod:`~at.acceptance.acceptance` module for
@@ -167,9 +165,7 @@ def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
 
     if not isinstance(lattice, list):
         lattice = list(lattice)
-    if refpts is None:
-        refpts = len(lattice)
-    refpts = uint32_refpts(refpts, len(lattice))
+    refpts = get_uint32_index(lattice, refpts)
     bunch_currents = getattr(lattice, 'bunch_currents', np.zeros(1))
     bunch_spos = getattr(lattice, 'bunch_spos', np.zeros(1))
     kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)

@@ -10,12 +10,12 @@ def convolve_wakefun(srange, w, sigs):
     """Convolution of a wake function with a pulse of rms
     length sigs, this is use to generate a wake potential
     that can be added to the output of EM code like GDFIDL"""
-    sigt = sigs/clight
+    sigt = sigs / clight
     min_step = numpy.diff(srange)[0]
     t_out = numpy.arange(srange[0], srange[-1], min_step)
     sdiff = t_out[-1]-t_out[0]
     npoints = len(t_out)
-    nt = npoints+npoints-1
+    nt = npoints + npoints-1
     func = interp1d(srange, w, bounds_error=False, fill_value=0)
     wout = func(t_out)
     wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
@@ -36,6 +36,7 @@ def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
     with the given parameters according to Alex Chao's resonator
     model (Eq. 2.82) and definitions of the resonator in HEADTAIL.
     """
+
     omega = 2 * numpy.pi * frequency
     alpha = omega / (2 * qfactor)
     omegabar = numpy.sqrt(numpy.abs(omega**2 - alpha**2))
@@ -87,17 +88,12 @@ def transverse_reswall_wf(srange, yokoya_factor, length, rvac, conduct, beta):
     HEADTAIL
     """
 
-    if numpy.amin(srange) <= 0:
-        raise ValueError("""
-                        Provided srange has either negative values or 0s
-                        This is not allowed for the transverse resistive wall
-                        wake function. Please correct.
-                        """)
-
     z0 = 119.9169832 * numpy.pi
     dt = -srange/(beta * clight)
     wake = (yokoya_factor * (numpy.sign(dt) - 1) / 2. *
             beta * length / numpy.pi / rvac**3 *
             numpy.sqrt(-z0 * clight / conduct / numpy.pi / dt))
-
+            
+    wake[srange <= 0] = 0.0
+    
     return wake

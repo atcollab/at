@@ -186,7 +186,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData,struct elem *Elem,
         atWarning("Number of particles not a multiple of the number of bunches: uneven bunch load.");
     }
     #ifdef _MSC_VER
-    if(Elem->mode==1){
+    if(Elem->mode==2){
         atError("Beam loading Phasor mode not implemented in Windows.");
     }
     #endif
@@ -204,6 +204,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 { 	
   if(nrhs == 2)
   {
+  
+      double *r_in;
+      const mxArray *ElemData = prhs[0];
+      int num_particles = mxGetN(prhs[1]);
+      struct elem El, *Elem=&El;
+      
       long nslice,nturns,mode;
       double wakefact;
       double normfact, phasegain, voltgain;
@@ -266,13 +272,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       /* ALLOCATE memory for the output array of the same size as the input  */
       plhs[0] = mxDuplicateArray(prhs[1]);
       r_in = mxGetDoubles(plhs[0]);
-      double *bspos = malloc(sizeof(double));
-      double *bcurr = malloc(sizeof(double));
-      bspos[0] = 0.0;
-      bcurr[0] = 0.0;
-      BeamLoadingCavityPass(r_in,num_particles,1,bspos,bcur,1,0,Elem);
-      free(bspos);
-      free(bcur);
+
+      double bspos = 0.0;
+      double bcurr = 0.0;
+      BeamLoadingCavityPass(r_in,num_particles,1,&bspos,&bcurr,1,0,Elem);
   }
   else if (nrhs == 0)
   {   /* return list of required fields */

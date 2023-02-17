@@ -19,7 +19,7 @@ def get_growth_rates():
     R = ring.circumference/(2*np.pi)
 
     gr = (betax*omega0*current*R) / (4*np.pi*energy*beff**3) \
-         * ((2*clight*Z0*rho_material) / ((1-qx)*omega0))**0.5
+        * ((2*clight*Z0*rho_material) / ((1-qx)*omega0))**0.5
 
     return gr
 

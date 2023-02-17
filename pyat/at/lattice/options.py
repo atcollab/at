@@ -1,5 +1,4 @@
 """Global set of constants"""
-# noinspection PyUnresolvedReferences
 from ..cconfig import ismpi, isopenmp
 from numpy.random import Generator, PCG64, SeedSequence
 import os
