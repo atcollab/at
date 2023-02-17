@@ -7,7 +7,7 @@ import numpy
 from ..lattice import Lattice, Element, get_refpts, DConstant, Refpts
 from ..lattice.elements import Bend, M66
 from ..tracking import lattice_pass, element_pass
-from .orbit import Orbit, find_orbit4, find_orbit6
+from .orbit import Orbit, find_orbit4, find_orbit6, frequency_control
 from .amat import jmat, symplectify
 
 __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']
@@ -100,6 +100,7 @@ def find_m44(ring: Lattice, dp: float = None, refpts: Refpts = None,
     return m44, mstack
 
 
+@frequency_control
 def find_m66(ring: Lattice, refpts: Refpts = None,
              orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     """One-turn 6x6 transfer matrix
