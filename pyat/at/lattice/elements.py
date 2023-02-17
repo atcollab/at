@@ -23,8 +23,35 @@ def _array66(value):
     return _array(value, shape=(6, 6))
 
 
+def _array2(value):
+    return _array(value, shape=(2,))
+
+
+def _array1(value):
+    return _array(value, shape=(1,))
+
+
+def _pad(value, shape=(3,), dtype=numpy.float64, **kwargs):
+    if not numpy.all(value.shape == shape):
+        missing = numpy.array(shape) - numpy.array(value.shape)
+        value = numpy.pad(value, tuple((0, m) for m in missing), **kwargs)
+    return _array(value, shape=shape, dtype=dtype)
+
+
 def _nop(value):
     return value
+
+
+def _tuple(value, fun=_array2):
+    if isinstance(value, tuple):
+        return tuple(fun(v) for v in value)
+    else:
+        return fun([0]), fun(value)
+
+
+# noinspection PyUnusedLocal
+def _not_allowed(value):
+    raise ValueError("Attribute cannot be set")
 
 
 class LongtMotion(ABC):
@@ -201,6 +228,7 @@ class Radiative(_Radiative):
 
 
 class Collective(_DictLongtMotion):
+    # noinspection PyAbstractClass
     """Mixin class for elements representing collective effects
 
     Derived classes will automatically set the :py:attr:`~Element.is_collective`
@@ -243,12 +271,24 @@ class Element(object):
                         T1=lambda v: _array(v, (6,)),
                         T2=lambda v: _array(v, (6,)),
                         RApertures=lambda v: _array(v, (4,)),
-                        EApertures=lambda v: _array(v, (2,)),
-                        KickAngle=lambda v: _array(v, (2,)),
+                        EApertures=_array2,
+                        KickAngle=_array2,
                         PolynomB=_array, PolynomA=_array,
+                        ShiftErr=_not_allowed,
+                        RotationErr=_not_allowed,
+                        PolynomBErr=_not_allowed,
+                        PolynomAErr=_not_allowed,
+                        ScalingPolynomBErr=_not_allowed,
+                        ScalingPolynomAErr=_not_allowed,
                         BendingAngle=float,
                         MaxOrder=int, NumIntSteps=int,
                         Energy=float,
+                        BPMGain=_tuple,
+                        BPMOffset=_tuple,
+                        BPMTilt=lambda v: _tuple(v, fun=_array1),
+                        _BPMGain=_array2,
+                        _BPMOffset=_array2,
+                        _BPMTilt=float,
                         )
 
     _entrance_fields = ['T1', 'R1']
@@ -561,6 +601,14 @@ class ThinMultipole(Element):
     """Thin multipole element"""
     _BUILD_ATTRIBUTES = Element._BUILD_ATTRIBUTES + ['PolynomA',
                                                      'PolynomB']
+    _conversions = dict(Element._conversions,
+                        ShiftErr=_tuple,
+                        RotationErr=lambda v: _tuple(v, fun=_pad),
+                        PolynomBErr=lambda v: _tuple(v, fun=_array),
+                        PolynomAErr=lambda v: _tuple(v, fun=_array),
+                        ScalingPolynomBErr=lambda v: _tuple(v, fun=_array),
+                        ScalingPolynomAErr=lambda v: _tuple(v, fun=_array),
+                        )
 
     def __init__(self, family_name: str, poly_a, poly_b, **kwargs):
         """
@@ -618,6 +666,11 @@ class ThinMultipole(Element):
 
         super(ThinMultipole, self).__setattr__(key, value)
 
+    @property
+    def integrated_strength(self):
+        """Magnet integrated strength [m^(-order)]"""
+        return self.PolynomB[self.DefaultOrder]
+
 
 class Multipole(_Radiative, LongElement, ThinMultipole):
     """Multipole element"""
@@ -647,6 +700,7 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
         super(Multipole, self).__init__(family_name, length,
                                         poly_a, poly_b, **kwargs)
 
+    # noinspection PyUnresolvedReferences
     def is_compatible(self, other) -> bool:
         if super().is_compatible(other) and \
                 self.MaxOrder == other.MaxOrder:
@@ -681,16 +735,27 @@ class Multipole(_Radiative, LongElement, ThinMultipole):
     def H(self, strength):
         self.PolynomB[2] = strength
 
+    @property
+    def integrated_strength(self):
+        """Magnet integrated strength [m^(-order)]"""
+        return self.PolynomB[self.DefaultOrder] * self.Length
+
+    @property
+    def strength(self):
+        """Magnet strength [m^(-order-1)]"""
+        return self.PolynomB[self.DefaultOrder]
+
 
 class Dipole(Radiative, Multipole):
     """Dipole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['BendingAngle',
                                                          'K']
-    _conversions = dict(Multipole._conversions, EntranceAngle=float,
-                        ExitAngle=float,
+    _conversions = dict(Multipole._conversions,
+                        EntranceAngle=float, ExitAngle=float,
                         FringeInt1=float, FringeInt2=float,
                         FringeQuadEntrance=int, FringeQuadExit=int,
-                        FringeBendEntrance=int, FringeBendExit=int)
+                        FringeBendEntrance=int, FringeBendExit=int,
+                        )
 
     _entrance_fields = Multipole._entrance_fields + ['EntranceAngle',
                                                      'FringeInt1',
@@ -761,6 +826,7 @@ class Dipole(Radiative, Multipole):
         pp.ExitAngle = 0.0
         return pp
 
+    # noinspection PyUnresolvedReferences,PyTypeChecker
     def is_compatible(self, other) -> bool:
         def invrho(dip: Dipole):
             return dip.BendingAngle / dip.Length
@@ -775,6 +841,16 @@ class Dipole(Radiative, Multipole):
         self.ExitAngle = other.ExitAngle
         self.BendingAngle += other.BendingAngle
 
+    @property
+    def integrated_strength(self):
+        """Magnet integrated strength [m^(-order)]"""
+        return self.BendingAngle
+
+    @property
+    def strength(self):
+        """Magnet strength [m^(-order-1)]"""
+        return self.BendingAngle / self.Length
+
 
 # Bend is a synonym of Dipole.
 Bend = Dipole
@@ -783,8 +859,9 @@ Bend = Dipole
 class Quadrupole(Radiative, Multipole):
     """Quadrupole element"""
     _BUILD_ATTRIBUTES = LongElement._BUILD_ATTRIBUTES + ['K']
-    _conversions = dict(Multipole._conversions, FringeQuadEntrance=int,
-                        FringeQuadExit=int)
+    _conversions = dict(Multipole._conversions,
+                        FringeQuadEntrance=int, FringeQuadExit=int,
+                        )
 
     _entrance_fields = Multipole._entrance_fields + ['FringeQuadEntrance']
     _exit_fields = Multipole._exit_fields + ['FringeQuadExit']
@@ -908,6 +985,7 @@ class RFCavity(LongtMotion, LongElement):
         pp.Voltage = fr * self.Voltage
         return pp
 
+    # noinspection PyUnresolvedReferences
     def is_compatible(self, other) -> bool:
         return (super().is_compatible(other) and
                 self.Frequency == other.Frequency and

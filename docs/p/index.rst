@@ -44,6 +44,7 @@ Sub-packages
 
    at.acceptance
    at.collective
+   at.errors
    at.lattice
    at.load
    at.matching
