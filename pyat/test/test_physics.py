@@ -269,7 +269,7 @@ def test_nl_detuning_chromaticity(hmba_lattice):
     nlqpharm, _, _ = at.nonlinear.chromaticity(hmba_lattice,
                                                method='laskar', npoints=11)
     q0, q1, _, _, _, _ = at.nonlinear.detuning(hmba_lattice,
-                                               npoints=11, window=1)
+                                               npoints=11)
     assert_close(nlqplin, [[0.38156741, 0.17908231, 1.18656034, -16.47368694],
                            [0.85437409, 0.1224062, 2.01744075, -3.06407764]],
                  atol=1e-12, rtol=1e-5)
