@@ -4,7 +4,7 @@ import io
 from scipy.constants import c as clight
 
 
-class IdTable(Element):
+class InsertionDeviceKickMap(Element):
     """
     Insertion Device Element. Valid for a parallel electron beam.
 
@@ -180,4 +180,4 @@ class IdTable(Element):
         # elem = Element('name', PassMethod='IdTablePass', \
         #                       xkick=x0, ykick=x1, \
         #                       xtable=x2, ytable=x3, Nslice=x4)
-        super(IdTable, self).__init__(family_name, **kwargs)
+        super(InsertionDeviceKickMap, self).__init__(family_name, **kwargs)
