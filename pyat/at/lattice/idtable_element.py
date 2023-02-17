@@ -111,6 +111,15 @@ class InsertionDeviceKickMap(Element):
         table_out2 = numpy.asfortranarray(table_out)
         return table_out2
 
+    def set_DriftPass(self):
+        setattr(self, 'PassMethod', 'DriftPass')
+
+    def set_IdTablePass(self):
+        setattr(self, 'PassMethod', 'IdTablePass')
+
+    def get_PassMethod(self):
+        return getattr(self, 'PassMethod')
+
     def __init__(self,
                  family_name: str,
                  Nslice: float,
