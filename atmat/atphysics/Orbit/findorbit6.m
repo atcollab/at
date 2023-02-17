@@ -56,9 +56,9 @@ function [orb6,orbitin] = findorbit6(ring,varargin)
 if ~iscell(ring)
     error('First argument must be a cell array');
 end
-[orb6,orbitin] = frequency_control(@do,ring,varargin{:});
+[orb6,orbitin] = frequency_control(@xfindorbit6,ring,varargin{:});
 
-    function[orb6,orbitin] = do(ring,varargin)
+    function[orb6,orbitin] = xfindorbit6(ring,varargin)
         [orbitin,varargs]=getoption(varargin,'orbit',[]);
         [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
         [~,varargs]=getoption(varargs,'is_6d',[]); %% Consume the is_6d option

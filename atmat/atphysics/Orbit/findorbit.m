@@ -30,9 +30,9 @@ function [orbs,orbitin]  = findorbit(ring,varargin)
 %
 % See also FINDORBIT4, FINDSYNCORBIT, FINDORBIT6.
 
-[orbs,orbitin]=frequency_control(@do,ring,varargin{:});
+[orbs,orbitin]=frequency_control(@xfindorbit,ring,varargin{:});
 
-    function [orbs,orb0]=do(ring,varargin)
+    function [orbs,orb0]=xfindorbit(ring,varargin)
         [orb0,varargs]=getoption(varargin,'orbit',[]);
         [refpts,varargs]=getargs(varargs,[],'check',@(arg) isnumeric(arg) || islogical(arg));
         [dp,varargs]=getoption(varargs,'dp',NaN);
