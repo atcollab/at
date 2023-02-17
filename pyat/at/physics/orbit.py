@@ -5,14 +5,81 @@ import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant
 from at.lattice import Lattice, get_s_pos, Refpts
+from at.lattice import set_cavity
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
 import warnings
+import functools
 
 Orbit = numpy.ndarray
 
 __all__ = ['Orbit', 'find_orbit4', 'find_sync_orbit', 'find_orbit6',
-           'find_orbit']
+           'find_orbit', 'get_revolution_frequency', 'frequency_control']
+           
+           
+def frequency_control(func):
+    r""" Function to be used as decorator for :pycode:`func(ring, *args, **kwargs)`
+
+    If :pycode:`ring.is_6d` is :py:obj:`True` **and** *dp*, *dct* or *df*
+    is specified in *kwargs*, make a copy of *ring* with a modified
+    RF frequency, remove *dp*, *dct* or *df* from *kwargs* and call
+    *func* with the modified *ring*.
+
+    If :pycode:`ring.is_6d` is :py:obj:`False` **or** no *dp*, *dct* or
+    *df* is specified in *kwargs*, *func* is called unchanged.
+
+    Examples:
+
+        .. code-block:: python
+
+            @frequency_control
+            def func(ring, *args, dp=None, dct=None, **kwargs):
+                pass
+    """
+    @functools.wraps(func)
+    def wrapper(ring, *args, **kwargs):
+        if ring.is_6d:
+            momargs = {}
+            for key in ['dp', 'dct', 'df']:
+                v = kwargs.pop(key, None)
+                if v is not None:
+                    momargs[key] = v
+            if len(momargs) > 0:
+                frequency = ring.get_revolution_frequency(**momargs) \
+                    * ring.harmonic_number
+                ring = set_cavity(ring, Frequency=frequency, copy=True)
+        return func(ring, *args, **kwargs)
+    return wrapper
+           
+           
+def get_revolution_frequency(ring: Lattice,
+                             dp: float = None,
+                             dct: float = None,
+                             df: float = None) -> float:
+    """Compute the revolution frequency of the full ring [Hz]
+
+    Parameters:
+        ring:       Lattice description
+        dp:         Momentum deviation. Defaults to :py:obj:`None`
+        dct:        Path lengthening. Defaults to :py:obj:`None`
+        df:         Deviation of RF frequency. Defaults to :py:obj:`None`
+
+    Returns:
+        frev:       Revolution frequency [Hz]
+    """
+    lcell = ring.cell_length
+    cell_frev = ring.beta * clight / lcell
+    if dct is not None:
+        cell_frev *= lcell / (lcell + dct)
+    elif dp is not None:
+        # Find the path lengthening for dp
+        rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
+        orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
+        dct = numpy.squeeze(orbit)[5]
+        cell_frev *= lcell / (lcell + dct)
+    elif df is not None:
+        cell_frev += df / ring.cell_harmnumber
+    return cell_frev / ring.periodicity
 
 
 @check_6d(False)
@@ -369,6 +436,7 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
 
 
 # noinspection PyIncorrectDocstring
+@frequency_control
 def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
                 dp: float = None, dct: float = None, df: float = None,
                 orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
@@ -406,11 +474,20 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
             :math:`c*Nb/f_{RF}`,  Nb = 0:h-1
         5.  The value of the 6-th coordinate found at the cavity gives
             the equilibrium RF phase. If there is no radiation it is 0.
+        6.  ``dp``, ``dct`` and ``df`` arguments are applied with respect
+            to the **NOMINAL** on-momentum frequency. They overwrite
+            exisiting frequency offsets
+            
 
     Parameters:
         ring:           Lattice description
-        refpts:         Observation points.
-          See ":ref:`Selecting elements in a lattice <refpts>`"
+        dp:             Momentum deviation. Defaults to 0
+        refpts:         Observation points
+        dct:            Path lengthening. If specified, *dp* is ignored and
+          the off-momentum is deduced from the path lengthening.
+        df:             Deviation from the nominal RF frequency. If specified,
+          *dp* is ignored and the off-momentum is deduced from the frequency
+          deviation.
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
           to the specified *refpts*.
@@ -443,8 +520,6 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
     See also:
         :py:func:`find_orbit4`, :py:func:`find_sync_orbit`
     """
-    if dp is not None or dct is not None or df is not None:
-        raise AtError("orbit6: in 6d, dp, dct and df are not allowed")
     if orbit is None:
         orbit = _orbit6(ring, keep_lattice=keep_lattice, **kwargs)
         keep_lattice = True
@@ -517,3 +592,4 @@ Lattice.find_orbit4 = find_orbit4
 Lattice.find_sync_orbit = find_sync_orbit
 Lattice.find_orbit6 = find_orbit6
 Lattice.find_orbit = find_orbit
+Lattice.get_revolution_frequency = get_revolution_frequency

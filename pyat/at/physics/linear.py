@@ -11,6 +11,7 @@ from ..lattice import DConstant, Refpts, get_bool_index, get_uint32_index
 from ..lattice import AtWarning, Lattice, check_6d, get_s_pos
 from ..tracking import lattice_pass
 from .orbit import Orbit, find_orbit4, find_orbit6
+from .orbit import frequency_control
 from .matrix import find_m44, find_m66
 from .amat import a_matrix, jmat, jmatswap
 from .harmonic_analysis import get_tunes_harmonic
@@ -632,6 +633,7 @@ def linopt4(ring: Lattice, *args, **kwargs):
     return _linopt(ring, _analyze4, *args, **kwargs)
 
 
+@frequency_control
 def linopt6(ring: Lattice, *args, **kwargs):
     r"""Linear analysis of a fully coupled lattice using normal modes
 
@@ -1064,6 +1066,7 @@ def avlinopt(ring: Lattice, dp: float = None, refpts: Refpts = None, **kwargs):
     return lindata, avebeta, avemu, avedisp, aves, bd.tune, bd.chromaticity
 
 
+@frequency_control
 def get_tune(ring: Lattice, *, method: str = 'linopt',
              dp: float = None, dct: float = None, df: float = None,
              orbit: Orbit = None, **kwargs):
@@ -1137,6 +1140,7 @@ def get_tune(ring: Lattice, *, method: str = 'linopt',
     return tunes
 
 
+@frequency_control
 def get_chrom(ring: Lattice, *, method: str = 'linopt',
               dp: float = None, dct: float = None, df: float = None,
               cavpts: Refpts = None, **kwargs):

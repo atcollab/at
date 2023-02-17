@@ -4,44 +4,9 @@ from ..constants import clight
 from ..tracking import lattice_pass
 from .orbit import find_orbit4
 import numpy
-import functools
 from typing import Optional
 
-__all__ = ['frequency_control', 'get_mcf', 'get_slip_factor',
-           'get_revolution_frequency', 'set_rf_frequency']
-
-
-def frequency_control(func):
-    r""" Function to be used as decorator for :pycode:`func(ring, *args, **kwargs)`
-
-    If :pycode:`ring.is_6d` is :py:obj:`True` **and** *dp*, *dct* or *df*
-    is specified in *kwargs*, make a copy of *ring* with a modified
-    RF frequency, remove *dp*, *dct* or *df* from *kwargs* and call
-    *func* with the modified *ring*.
-
-    If :pycode:`ring.is_6d` is :py:obj:`False` **or** no *dp*, *dct* or
-    *df* is specified in *kwargs*, *func* is called unchanged.
-
-    Examples:
-
-        .. code-block:: python
-
-            @frequency_control
-            def func(ring, *args, dp=None, dct=None, **kwargs):
-                pass
-    """
-    @functools.wraps(func)
-    def wrapper(ring, *args, **kwargs):
-        if ring.is_6d:
-            momargs = {}
-            for key in ['dp', 'dct', 'df']:
-                v = kwargs.pop(key, None)
-                if v is not None:
-                    momargs[key] = v
-            if len(momargs) > 0:
-                ring = set_rf_frequency(ring, **momargs, copy=True)
-        return func(ring, *args, **kwargs)
-    return wrapper
+__all__ = ['get_mcf', 'get_slip_factor', 'set_rf_frequency']
 
 
 @check_6d(False)
@@ -94,36 +59,6 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     return etac
 
 
-def get_revolution_frequency(ring: Lattice,
-                             dp: float = None,
-                             dct: float = None,
-                             df: float = None) -> float:
-    """Compute the revolution frequency of the full ring [Hz]
-
-    Parameters:
-        ring:       Lattice description
-        dp:         Momentum deviation. Defaults to :py:obj:`None`
-        dct:        Path lengthening. Defaults to :py:obj:`None`
-        df:         Deviation of RF frequency. Defaults to :py:obj:`None`
-
-    Returns:
-        frev:       Revolution frequency [Hz]
-    """
-    lcell = ring.cell_length
-    cell_frev = ring.beta * clight / lcell
-    if dct is not None:
-        cell_frev *= lcell / (lcell + dct)
-    elif dp is not None:
-        # Find the path lengthening for dp
-        rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
-        orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
-        dct = numpy.squeeze(orbit)[5]
-        cell_frev *= lcell / (lcell + dct)
-    elif df is not None:
-        cell_frev += df / ring.cell_harmnumber
-    return cell_frev / ring.periodicity
-
-
 def set_rf_frequency(ring: Lattice, frequency: float = None,
                      dp: float = None, dct: float = None, df: float = None,
                      **kwargs):
@@ -158,7 +93,6 @@ def set_rf_frequency(ring: Lattice, frequency: float = None,
 
 Lattice.mcf = property(get_mcf, doc="Momentum compaction factor")
 Lattice.slip_factor = property(get_slip_factor, doc="Slip factor")
-Lattice.get_revolution_frequency = get_revolution_frequency
 Lattice.get_mcf = get_mcf
 Lattice.get_slip_factor = get_slip_factor
 Lattice.set_rf_frequency = set_rf_frequency
