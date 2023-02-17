@@ -34,8 +34,9 @@ def fmap_parallel_track(ring,
     for a particle tracked along a ring with a set of offsets in the initial
     coordinates.
 
-    It returns a numpy array containing 5 columns,
-        [xoffset, yoffset, nux, nuy, log10( sqrt(dnux*dnux + dnuy*dnuy)/tns )]
+    It returns a numpy array containing 7 columns,
+        [xoffset, yoffset, nux, nuy, dnux, dnuy,
+            log10( sqrt(dnux*dnux + dnuy*dnuy)/tns )]
     for every tracked particle that survives 2*tns turns.
     Particles lost before 2*tns turns are ignored.
     The log10 tune variation is limited to the interval from -10 to -2;
@@ -73,7 +74,8 @@ def fmap_parallel_track(ring,
         lossmap:  default false
     Returns:
         xy_nuxy_lognudiff_array: numpy array with columns
-                    [xcoor, ycoor, nux, ny, log10(sqrt(sum(dnu**2)/turns)) ]
+                    [xcoor, ycoor, nux, ny, dnux, dnuy,
+                        log10(sqrt(sum(dnu**2)/turns)) ]
         loss_map_array : experimental format.
                     if loss_map is True, it returns the losses dictionary
                     provided by patpass per every vertical offset.
@@ -268,13 +270,14 @@ def fmap_parallel_track(ring,
                                                     iy,
                                                     xfreqfirst[0],
                                                     yfreqfirst[0],
+                                                    xdiff,
+                                                    ydiff,
                                                     nudiff])
 
     # first element is garbage
     xy_nuxy_lognudiff_array = numpy.delete(xy_nuxy_lognudiff_array, 0)
     # reshape for plots and output files
-    xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1, 5)
+    xy_nuxy_lognudiff_array = xy_nuxy_lognudiff_array.reshape(-1, 7)
 
     return xy_nuxy_lognudiff_array, loss_map_array
 # the end
-
