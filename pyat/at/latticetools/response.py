@@ -264,15 +264,19 @@ class ResponseMatrix(SvdResponse):
 class OrbitResponseMatrix(ResponseMatrix):
     r"""Orbit response matrix
 
-    Variables are a set of steerers and optionally the RF frequency.
+    An :py:class:`OrbitResponseMatrix` applies to a single plane, horizontal or
+    vertical. A combined response matrix is obtained by adding horizontal and
+    vertical matrices.
+
+    Variables are a set of steerers and optionally the RF frequency. Steerer
+    variables are named ``hxxxx`` or ``vxxxx`` where xxxx is the index in the
+    lattice. The RF frequency variable is named ``RF frequency``.
 
     Observables are the closed orbit position at selected points, named
     ``h_orbit`` for the horizontal plane or ``v_orbit`` for vertical plane,
-    and optionally the sum of steerer angles
-
-    An :py:class:`OrbitResponseMatrix` applies to a single plane, horizontal or
-    vertical. A combined response matrix is obtained by adding horizontal and
-    vertical matrices"""
+    and optionally the sum of steerer angles named ``sum(h_kicks)`` or
+    ``sum(v_kicks)``
+    """
     def __init__(self, ring: Lattice,  plane: AxisDef,
                  bpmrefs: Refpts,
                  steerrefs: Refpts, *,
@@ -305,19 +309,19 @@ class OrbitResponseMatrix(ResponseMatrix):
               Observables
         """
         def steerer(ik):
-            name = f"V{ik:04}"
+            name = f"{plcode}{ik:04}"
             return ElementVariable(ik, 'KickAngle', index=pl, name=name,
                                    delta=steerdelta)
 
         pl = plane_(plane, 'index')
         plcode = plane_(plane, 'code')
         # Observables
-        nm = "{}_orbit".format(plcode)
+        nm = f"{plcode}_orbit"
         bpms = OrbitObservable(bpmrefs, axis=2*pl, name=nm, target=bpmtarget,
                                weight=bpmweight)
         observables = ObservableList(ring, [bpms])
         if steersum:
-            nm = "{}_kicks".format(plcode)
+            nm = f"{plcode}_kicks"
             observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
                                               target=0.0, index=pl,
                                               statfun=np.sum))
@@ -373,20 +377,20 @@ class TrajectoryResponseMatrix(ResponseMatrix):
               also the steerer weight
         """
         def steerer(ik):
-            name = f"V{ik:04}"
+            name = f"{plcode}{ik:04}"
             return ElementVariable(ik, 'KickAngle', index=pl, name=name,
                                    delta=steerdelta)
 
         pl = plane_(plane, 'index')
         plcode = plane_(plane, 'code')
         # Observables
-        nm = "{}_positions".format(plcode)
+        nm = f"{plcode}_positions"
         bpms = TrajectoryObservable(bpmrefs, axis=2*pl, name=nm,
                                     target=bpmtarget,
                                     weight=bpmweight)
         observables = ObservableList(ring, [bpms])
         if steersum:
-            nm = "sum_{}_kicks".format(plcode)
+            nm = f"{plcode}_kicks"
             observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
                                               target=0.0, index=plane,
                                               statfun=np.sum))

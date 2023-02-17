@@ -108,9 +108,10 @@ class Variable(object):
         """
         value = self.getfun(ring, *self.args, **self.kwargs)
         if initial:
-            self._history = [value]
-        elif value != self._history[-1]:
-            self._history.append(value)
+            self._history = []
+        h = self._history
+        if len(h) == 0 or value != h[-1]:
+            h.append(value)
         return value
 
     def set_previous(self, ring: Lattice):
@@ -145,15 +146,38 @@ class Variable(object):
         self._step(ring, -self.delta)
 
     @staticmethod
-    def header():
+    def _header():
         return '\n{:>12s}{:>13s}{:>16s}{:>16s}\n'.format(
             'Name', 'Initial', 'Final ', 'Variation')
 
-    def status(self, ring: Lattice):
-        vnow = self.get(ring)
-        vini = self.initial_value
+    def _line(self, ring: Lattice = None):
+        if ring is not None:
+            vnow = self.get(ring)
+            vini = self._history[0]
+        elif len(self._history) > 0:
+            vnow = self._history[-1]
+            vini = self._history[0]
+        else:
+            vnow = vini = np.nan
+
         return '{:>12s}{: 16e}{: 16e}{: 16e}'.format(
             self.name, vini, vnow, (vnow - vini))
+
+    def status(self, ring: Lattice = None):
+        """Return a string describing the current status of the observable
+
+        Args:
+            ring:   Lattice description. If :py:obj:`None`, the last archived
+              value is returned. Otherwise, new values are extracted from
+              *ring*
+
+        Returns:
+            status: Variable description
+        """
+        return "\n".join((self._header(), self._line(ring)))
+
+    def __str__(self):
+        return self.status()
 
 
 class ElementVariable(Variable):
@@ -226,6 +250,13 @@ class VariableList(list):
         for var, val in zip(self, values):
             var.increment(ring, val)
 
+    def status(self, ring: Lattice = None) -> str:
+        values = "\n".join(var._line(ring) for var in self)
+        return "\n".join((Variable._header(), values))
+
+    def __str__(self) -> str:
+        return self.status()
+
     @property
-    def deltas(self):
+    def deltas(self) -> Sequence[float]:
         return np.array([var.delta for var in self])
