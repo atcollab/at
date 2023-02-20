@@ -90,7 +90,7 @@ def fmap_parallel_track(ring,
     WARNING : loss map format is experimental
     """
 
-    if orbit == None:
+    if orbit is None:
         # closed orbit values are not returned. It seems not necessary here
         orbit, _ = find_orbit(ring)
         print(f'Closed orbit:\t{orbit}')
@@ -167,8 +167,8 @@ def fmap_parallel_track(ring,
         z0 = numpy.zeros((lenixarray, 6))  # transposed, and C-aligned
         z0 = z0 + add_offset6D + orbit
         # add 1 nm to tracking to avoid zeros in array for the ideal lattice
-        z0[:,0] = z0[:,0] + xscale*ixarray + 1e-9;
-        z0[:,2] = z0[:,2] + yscale*iy + 1e-9;
+        z0[:, 0] = z0[:, 0] + xscale*ixarray + 1e-9
+        z0[:, 2] = z0[:, 2] + yscale*iy + 1e-9
 
         verboseprint("tracking ...")
         # z0.T is Fortran-aligned
