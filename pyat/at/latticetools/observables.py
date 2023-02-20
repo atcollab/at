@@ -770,12 +770,16 @@ class ObservableList(list):
             self.passrefs |= obs._boolrefs
 
     def _scan(self, obs):
-        if not isinstance(obs, Observable):
-            raise TypeError("{} is not an Observable".format(obs))
-        # noinspection PyProtectedMember
-        obs._setup(self.ring)
-        self.needs |= obs.needs
-        self._update_reflists(obs)
+        # When unpickling the ObservableList, the list is built before
+        # self.__dict__ is restored, so the "ring" attribute is missing.
+        # The "needs" and reflists will be restored later
+        if hasattr(self, 'ring'):
+            if not isinstance(obs, Observable):
+                raise TypeError("{} is not an Observable".format(obs))
+            # noinspection PyProtectedMember
+            obs._setup(self.ring)
+            self.needs |= obs.needs
+            self._update_reflists(obs)
         return obs
 
     def __iadd__(self, other: "ObservableList"):
