@@ -24,7 +24,7 @@ def fmap_parallel_track(ring,
                         scale='linear',
                         turns=512,
                         ncpu=30,
-                        co=True,
+                        orbit=None,
                         add_offset6D=numpy.zeros((6, 1)),
                         verbose=False,
                         lossmap=False,
@@ -51,8 +51,9 @@ def fmap_parallel_track(ring,
 
     The frequency analysis uses a library that is not parallelized.
 
-    The closed orbit (co) could be calculated and added to the
-    initial particle offset of every particle by setting co=True.
+    The closed orbit (orbit) is calculated and added to the
+    initial particle offset of every particle, otherwise, one could set
+        orbit = tuple(numpy.zeros(6)) to avoid it.
     Additionally, a six by one numpy array (add_offset6D) could be used to
     arbitrarily offset the initial coordinates of every particle.
 
@@ -68,7 +69,7 @@ def fmap_parallel_track(ring,
         turns:    default 512
         ncpu:     default 30; max. number of processors
                                 in parallel tracking patpass
-        co:       default true
+        orbit:    default None
         add_offset6D: default numpy.zeros((6,1))
         verbose:  prints additional info
         lossmap:  default false
@@ -89,12 +90,10 @@ def fmap_parallel_track(ring,
     WARNING : loss map format is experimental
     """
 
-    if co:
+    if orbit == None:
         # closed orbit values are not returned. It seems not necessary here
-        addco = find_orbit(ring)
-        print(f'Closed orbit:\t{addco}')
-    else:
-        addco = [numpy.zeros((6, 1))]
+        orbit, _ = find_orbit(ring)
+        print(f'Closed orbit:\t{orbit}')
 
     # verboseprint to check flag only once
     verboseprint = print if verbose else lambda *a, **k: None
@@ -168,15 +167,15 @@ def fmap_parallel_track(ring,
         # z01 = numpy.array([ix*xscale+1e-9, 0,  0, 0,  0, 0])
         # add 1 nm to tracking to avoid zeros in array for the ideal lattice
         z0 = numpy.zeros((6, lenixarray))
-        # z0 = z0 + add_offset6D + addco[0,:];
+        # z0 = z0 + add_offset6D + orbit[0,:];
         # z0[0,:] = z0[0,:] + xscale*ixarray + 1e-9;
         # z0[2,:] = z0[2,:] + yscale*iy      + 1e-9;
-        z0[0, :] = xscale * ixarray + add_offset6D[0] + addco[0][0] + 1e-9
-        z0[1, :] = add_offset6D[1] + addco[0][1]
-        z0[2, :] = yscale * iy + add_offset6D[2] + addco[0][2] + 1e-9
-        z0[3, :] = add_offset6D[3] + addco[0][3]
-        z0[4, :] = add_offset6D[4] + addco[0][4]
-        z0[5, :] = add_offset6D[5] + addco[0][5]
+        z0[0, :] = xscale * ixarray + add_offset6D[0] + orbit[0] + 1e-9
+        z0[1, :] = add_offset6D[1] + orbit[1]
+        z0[2, :] = yscale * iy + add_offset6D[2] + orbit[2] + 1e-9
+        z0[3, :] = add_offset6D[3] + orbit[3]
+        z0[4, :] = add_offset6D[4] + orbit[4]
+        z0[5, :] = add_offset6D[5] + orbit[5]
 
         verboseprint("tracking ...")
         if lossmap:
