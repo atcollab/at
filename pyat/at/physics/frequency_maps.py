@@ -25,7 +25,7 @@ def fmap_parallel_track(ring,
                         turns=512,
                         ncpu=30,
                         orbit=None,
-                        add_offset6D=numpy.zeros((6, 1)),
+                        add_offset6D=numpy.zeros(6),
                         verbose=False,
                         lossmap=False,
                         ):
@@ -54,7 +54,7 @@ def fmap_parallel_track(ring,
     The closed orbit (orbit) is calculated and added to the
     initial particle offset of every particle, otherwise, one could set
         orbit = tuple(numpy.zeros(6)) to avoid it.
-    Additionally, a six by one numpy array (add_offset6D) could be used to
+    Additionally, a numpy array (add_offset6D) with 6 values could be used to
     arbitrarily offset the initial coordinates of every particle.
 
     A dictionary with particle losses is saved for every vertical offset.
@@ -164,27 +164,21 @@ def fmap_parallel_track(ring,
               end='')
         print(f', with a max. cpu POOL size of {ncpu}')
         verboseprint("y =", iy)
-        # z01 = numpy.array([ix*xscale+1e-9, 0,  0, 0,  0, 0])
+        z0 = numpy.zeros((lenixarray, 6))  # transposed, and C-aligned
+        z0 = z0 + add_offset6D + orbit
         # add 1 nm to tracking to avoid zeros in array for the ideal lattice
-        z0 = numpy.zeros((6, lenixarray))
-        # z0 = z0 + add_offset6D + orbit[0,:];
-        # z0[0,:] = z0[0,:] + xscale*ixarray + 1e-9;
-        # z0[2,:] = z0[2,:] + yscale*iy      + 1e-9;
-        z0[0, :] = xscale * ixarray + add_offset6D[0] + orbit[0] + 1e-9
-        z0[1, :] = add_offset6D[1] + orbit[1]
-        z0[2, :] = yscale * iy + add_offset6D[2] + orbit[2] + 1e-9
-        z0[3, :] = add_offset6D[3] + orbit[3]
-        z0[4, :] = add_offset6D[4] + orbit[4]
-        z0[5, :] = add_offset6D[5] + orbit[5]
+        z0[:,0] = z0[:,0] + xscale*ixarray + 1e-9;
+        z0[:,2] = z0[:,2] + yscale*iy + 1e-9;
 
         verboseprint("tracking ...")
+        # z0.T is Fortran-aligned
         if lossmap:
             # patpass output changes when losses flag is true
             zOUT, dictloss = \
-                patpass(ring, z0, nturns, pool_size=ncpu, losses=lossmap)
+                patpass(ring, z0.T, nturns, pool_size=ncpu, losses=lossmap)
             loss_map_array = numpy.append(loss_map_array, dictloss)
         else:
-            zOUT = patpass(ring, z0, nturns, pool_size=ncpu)
+            zOUT = patpass(ring, z0.T, nturns, pool_size=ncpu)
 
         # start of serial frequency analysis
         for ix_index in range(lenixarray):  # cycle over the track results
