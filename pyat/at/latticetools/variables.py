@@ -8,6 +8,10 @@ from collections.abc import Callable, Iterable, Sequence
 import numpy as np
 from ..lattice import Lattice, Refpts
 
+# Observables must be pickleable. For this, the set and get functions must be
+# module-level functions. No inner, nested function are allowed. So nested
+# functions are replaced be module-level callable class instances
+
 
 class _getf(object):
     def __init__(self, index):
@@ -253,36 +257,11 @@ class ElementVariable(Variable):
             bounds:     Lower and upper bounds of the variable value
             delta:      Step
         """
-        # setf, getf = self._access(index)
-        #
-        # def setfun(rng: Lattice, value):
-        #     for elem in rng.select(refpts):
-        #         setf(elem, attrname, value)
-        #
-        # def getfun(rng: Lattice):
-        #     values = np.array([getf(elem, attrname) for elem in
-        #                        rng.select(refpts)])
-        #     return np.average(values)
-
         setfun = _setfun(refpts, attrname, index)
         getfun = _getfun(refpts, attrname, index)
 
         self.refpts = refpts
         super(ElementVariable, self).__init__(setfun, getfun, **kwargs)
-    #
-    # @staticmethod
-    # def _access(index):
-    #     """Access to element attributes"""
-    #     if index is None:
-    #         setf = setattr
-    #         getf = getattr
-    #     else:
-    #         def setf(elem, attrname, value):
-    #             getattr(elem, attrname)[index] = value
-    #
-    #         def getf(elem, attrname):
-    #             return getattr(elem, attrname)[index]
-    #     return setf, getf
 
 
 class VariableList(list):
@@ -298,6 +277,7 @@ class VariableList(list):
         for var, val in zip(self, values):
             var.increment(ring, val)
 
+    # noinspection PyProtectedMember
     def status(self, ring: Lattice = None) -> str:
         values = "\n".join(var._line(ring) for var in self)
         return "\n".join((Variable._header(), values))

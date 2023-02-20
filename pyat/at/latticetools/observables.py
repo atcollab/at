@@ -16,12 +16,9 @@ import numpy as np
 
 RefIndex = Union[int, Tuple[int, ...], slice]
 
-
-def _selector(select: Container[str]):
-    if select is None:
-        return lambda obs: True
-    else:
-        return lambda obs: obs.name in select
+# Observables must be pickleable. For this, the evaluation function must be a
+# module-level function. No inner, nested function is allowed. So nested
+# functions are replaced be module-level callable class instances
 
 
 class _modfun(object):
@@ -50,7 +47,7 @@ class _recordaccess(object):
         return getattr(data, self.fieldname)[self.index]
 
 
-def _idx(index: RefIndex):
+def _all_rows(index: RefIndex):
     if isinstance(index, tuple):
         return (slice(None),) + index
     else:
@@ -76,6 +73,10 @@ class _ring(object):
         return np.array(vals)
 
 
+def _flatten(vals):
+    return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
+
+
 class Need(Enum):
     """Defines the computation requirements for an :py:class:`Observable`.
     """
@@ -86,16 +87,16 @@ class Need(Enum):
     #:  provide its *m44* or *m66* output to the evaluation function
     MATRIX = 2
     #:  Specify :py:func:`.get_optics` computation and provide its *ringdata*
-    #:  t to the evaluation function
+    #:  to the evaluation function
     GLOBALOPTICS = 3
     #:  Specify :py:func:`.get_optics` computation and provide its *elemdata*
-    #:  t to the evaluation function
+    #:  to the evaluation function
     LOCALOPTICS = 4
     #:  Specify :py:func:`.lattice_pass` computation and provide its *r_out*
-    #:  t to the evaluation function
+    #:  to the evaluation function
     TRAJECTORY = 5
     #:  Specify :py:func:`.envelope_parameters` computation and provide its
-    #:  *params* t to the evaluation function
+    #:  *params* to the evaluation function
     EMITTANCE = 6
     #:  Associated with LOCALOPTICS, require local optics computation at all
     #:  points: slower but avoids jumps in phase advance
@@ -200,7 +201,7 @@ class Observable(object):
                 return " {: 16.6} ".format(v)
 
         its = [pitem(v) for v in items]
-        return "    {:<12}".format(loc) + "".join(its)
+        return f"    {loc:<12}" + "".join(its)
 
     def _all_lines(self):
         if self._value is None:
@@ -226,10 +227,14 @@ class Observable(object):
     def evaluate(self, ring: Lattice, *data, initial: bool = False):
         """Compute and store the value of the observable
 
+        Evaluation needs the *data* argument which is normally provided by a
+        :py:class:`ObservableList` container. The direct evaluation of a single
+        Observable is normally not used.
+
         Args:
             ring:       Lattice description
             *data:      Raw data, sent to the evaluation function
-            initial:    It :py:obj:`None`, store the result as the initia;
+            initial:    It :py:obj:`None`, store the result as the initial
               value
         """
         val = self.fun(ring, *data, *self.args, **self.kwargs)
@@ -247,12 +252,17 @@ class Observable(object):
         return self._value
 
     @property
+    def weight(self):
+        return np.broadcast_to(self.w, np.asarray(self.value).shape)
+
+    @property
     def weighted_value(self):
+        """Weighted value o the Observable"""
         return self._value / self.w
 
     @property
     def deviation(self):
-        """Deviation from target value, computes as
+        """Deviation from target value, computed as
         :pycode:`deviation = value-target`
         """
         if self._value is None:
@@ -283,7 +293,7 @@ class Observable(object):
 
     @staticmethod
     def _set_name(name, param, index):
-        """Compute default observable names"""
+        """Compute a default observable names"""
         if name is None:
             if isinstance(index, str) and index in {":", "..."}:
                 subscript = ""
@@ -408,7 +418,7 @@ class OrbitObservable(_ElementObservable):
             Observe the horizontal closed orbit at monitor locations
         """
         name = self._set_name(name, 'orbit', axis_(axis, 'code'))
-        fun = _arrayaccess(_idx(axis_(axis, 'index')))
+        fun = _arrayaccess(_all_rows(axis_(axis, 'index')))
         needs = {Need.ORBIT}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -450,7 +460,7 @@ class MatrixObservable(_ElementObservable):
             extract T[0,1]
         """
         name = self._set_name(name, 'matrix', axis_(axis, 'code'))
-        fun = _arrayaccess(_idx(axis_(axis, 'index')))
+        fun = _arrayaccess(_all_rows(axis_(axis, 'index')))
         needs = {Need.MATRIX}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -583,7 +593,8 @@ class LocalOpticsObservable(_ElementObservable):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = _recordaccess(param, _idx(optics_(param, plane, 'index')))
+            fun = _recordaccess(param,
+                                _all_rows(optics_(param, plane, 'index')))
         if use_integer:
             needs.add(Need.ALL_POINTS)
 
@@ -651,7 +662,7 @@ class TrajectoryObservable(_ElementObservable):
         shape of *value*.
         """
         name = self._set_name(name, 'trajectory', axis_(axis, 'code'))
-        fun = _arrayaccess(_idx(axis_(axis, 'index')))
+        fun = _arrayaccess(_all_rows(axis_(axis, 'index')))
         needs = {Need.TRAJECTORY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -880,6 +891,12 @@ class ObservableList(list):
         for obs in self:
             obs.clear()
 
+    def _selected(self, select: Optional[Container[str]]):
+        if select is None:
+            return self
+        else:
+            return (obs for obs in self if obs.name in select)
+
     def get_values(self, select: Optional[Container[str]] = None) -> list:
         """Return the values of selected observables
 
@@ -887,61 +904,7 @@ class ObservableList(list):
             select:     :py:class:`~collections.abc.Container` of names for
               selecting observables. If :py:obj:`None` select all
         """
-        selected = _selector(select)
-        return [obs.value for obs in self if selected(obs)]
-
-    values = property(get_values, doc="Values of all the observables")
-
-    def get_weights(self, select: Optional[Container[str]] = None) -> list:
-        """Return the weights of selected observables
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        selected = _selector(select)
-        return [np.broadcast_to(obs.w, np.asarray(obs.value).shape)
-                for obs in self if selected(obs)]
-
-    weights = property(get_weights, doc="Weights of all the observables")
-
-    def get_weighted_values(self,
-                            select: Optional[Container[str]] = None) -> list:
-        """Return the weighted values of selected observables
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        selected = _selector(select)
-        return [obs.weighted_value for obs in self if selected(obs)]
-
-    weighted_values = property(get_weighted_values,
-                               doc="weighted values of all the observables")
-
-    def get_residuals(self, select: Optional[Container[str]] = None) -> list:
-        """Return the residuals of selected observable
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        selected = _selector(select)
-        return [obs.residual for obs in self if selected(obs)]
-
-    residuals = property(get_residuals, doc="Residuals of the observable")
-
-    def get_deviations(self, select: Optional[Container[str]] = None) -> list:
-        """Return the deviations from target values
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        selected = _selector(select)
-        return [obs.deviation for obs in self if selected(obs)]
-
-    deviations = property(get_deviations, doc="Deviations from target values")
+        return [obs.value for obs in self._selected(select)]
 
     def get_flat_values(self,
                         select: Optional[Container[str]] = None) -> np.ndarray:
@@ -951,12 +914,17 @@ class ObservableList(list):
             select:     :py:class:`~collections.abc.Container` of names for
               selecting observables. If :py:obj:`None` select all
         """
-        selected = _selector(select)
-        vals = (obs.value for obs in self if selected(obs))
-        return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
+        return _flatten(obs.value for obs in self._selected(select))
 
-    flat_values = property(get_flat_values,
-                           doc="1-D array of Observable values")
+    def get_weighted_values(self,
+                            select: Optional[Container[str]] = None) -> list:
+        """Return the weighted values of selected observables
+
+        Args:
+            select:     :py:class:`~collections.abc.Container` of names for
+              selecting observables. If :py:obj:`None` select all
+        """
+        return [obs.weighted_value for obs in self._selected(select)]
 
     def get_flat_weighted_values(self,
                                  select: Optional[Container[str]] = None
@@ -967,28 +935,16 @@ class ObservableList(list):
             select:     :py:class:`~collections.abc.Container` of names for
               selecting observables. If :py:obj:`None` select all
         """
-        selected = _selector(select)
-        vals = (obs.weighted_value for obs in self if selected(obs))
-        return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
+        return _flatten(obs.weighted_value for obs in self._selected(select))
 
-    flat_weighted_values = property(get_flat_weighted_values,
-                                    doc="1-D array of Observable "
-                                        "weigthed values")
-
-    def get_flat_weights(self,
-                         select: Optional[Container[str]] = None
-                         ) -> np.ndarray:
-        """Return a 1-D array of selected Observable weights
+    def get_deviations(self, select: Optional[Container[str]] = None) -> list:
+        """Return the deviations from target values
 
         Args:
             select:     :py:class:`~collections.abc.Container` of names for
               selecting observables. If :py:obj:`None` select all
         """
-        vals = self.get_weights(select)
-        return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
-
-    flat_weights = property(get_flat_weights,
-                            doc="1-D array of Observable weights")
+        return [obs.deviation for obs in self._selected(select)]
 
     def get_flat_deviations(self,
                             select: Optional[Container[str]] = None
@@ -999,11 +955,36 @@ class ObservableList(list):
             select:     :py:class:`~collections.abc.Container` of names for
               selecting observables. If :py:obj:`None` select all
         """
-        vals = self.get_deviations(select)
-        return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
+        return _flatten(obs.deviation for obs in self._selected(select))
 
-    flat_deviations = property(get_flat_deviations,
-                               doc="1-D array of deviations from target value")
+    def get_weights(self, select: Optional[Container[str]] = None) -> list:
+        """Return the weights of selected observables
+
+        Args:
+            select:     :py:class:`~collections.abc.Container` of names for
+              selecting observables. If :py:obj:`None` select all
+        """
+        return [obs.weight for obs in self._selected(select)]
+
+    def get_flat_weights(self,
+                         select: Optional[Container[str]] = None
+                         ) -> np.ndarray:
+        """Return a 1-D array of selected Observable weights
+
+        Args:
+            select:     :py:class:`~collections.abc.Container` of names for
+              selecting observables. If :py:obj:`None` select all
+        """
+        return _flatten(obs.weight for obs in self._selected(select))
+
+    def get_residuals(self, select: Optional[Container[str]] = None) -> list:
+        """Return the residuals of selected observable
+
+        Args:
+            select:     :py:class:`~collections.abc.Container` of names for
+              selecting observables. If :py:obj:`None` select all
+        """
+        return [obs.residual for obs in self._selected(select)]
 
     def get_sum_residuals(self,
                           select: Optional[Container[str]] = None) -> float:
@@ -1013,10 +994,24 @@ class ObservableList(list):
             select:     :py:class:`~collections.abc.Container` of names for
               selecting observables. If :py:obj:`None` select all
         """
-        selected = _selector(select)
-        residuals = [obs.residual for obs in self if selected(obs)]
+        residuals = (obs.residual for obs in self._selected(select))
         return sum(np.sum(res) for res in residuals)
 
+    values = property(get_values, doc="Values of all the observables")
+    flat_values = property(get_flat_values,
+                           doc="1-D array of Observable values")
+    weighted_values = property(get_weighted_values,
+                               doc="weighted values of all the observables")
+    flat_weighted_values = property(get_flat_weighted_values,
+                                    doc="1-D array of Observable "
+                                        "weigthed values")
+    deviations = property(get_deviations, doc="Deviations from target values")
+    flat_deviations = property(get_flat_deviations,
+                               doc="1-D array of deviations from target value")
+    weights = property(get_weights, doc="Weights of all the observables")
+    flat_weights = property(get_flat_weights,
+                            doc="1-D array of Observable weights")
+    residuals = property(get_residuals, doc="Residuals of the observable")
     sum_residuals = property(get_sum_residuals,
                              doc="Sum of all residual values")
 
@@ -1081,7 +1076,8 @@ def GlobalOpticsObservable(param: str, *args,
     if param == 'tune' and use_integer:
         # noinspection PyProtectedMember
         name = _ElementObservable._set_name(name, param, plane_(plane, 'code'))
-        return LocalOpticsObservable(End, _tune(_idx(plane_(plane, 'index'))),
+        return LocalOpticsObservable(End,
+                                     _tune(_all_rows(plane_(plane, 'index'))),
                                      name=name,
                                      summary=True,
                                      use_integer=True, **kwargs)
