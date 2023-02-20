@@ -55,7 +55,6 @@ def convolve_wakefun_numpy(srange, w, sigs, gauss_sigma=10):
         return ampl * expon
         
     ds = numpy.diff(srange)[-1]
-    fullds = srange[-1] - srange[0]
     s_gauss = numpy.arange(-gauss_sigma*sigs, gauss_sigma*sigs+1e-15, ds)
     gauss = _gauss(s_gauss)
 
