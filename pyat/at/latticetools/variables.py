@@ -9,6 +9,51 @@ import numpy as np
 from ..lattice import Lattice, Refpts
 
 
+class _getf(object):
+    def __init__(self, index):
+        self.index = index
+
+    def __call__(self, elem, attrname):
+        return getattr(elem, attrname)[self.index]
+
+
+class _setf(object):
+    def __init__(self, index: int):
+        self.index = index
+
+    def __call__(self, elem, attrname, value):
+        getattr(elem, attrname)[self.index] = value
+
+
+class _setfun(object):
+    def __init__(self, refpts: Refpts, attrname: str, index: int):
+        self.refpts = refpts
+        self.attrname = attrname
+        if index is None:
+            self.fun = setattr
+        else:
+            self.fun = _setf(index)
+
+    def __call__(self, ring: Lattice, value: float):
+        for elem in ring.select(self.refpts):
+            self.fun(elem, self.attrname, value)
+
+
+class _getfun(object):
+    def __init__(self, refpts: Refpts, attrname: str, index: int):
+        self.refpts = refpts
+        self.attrname = attrname
+        if index is None:
+            self.fun = getattr
+        else:
+            self.fun = _getf(index)
+
+    def __call__(self, ring: Lattice):
+        values = np.array([self.fun(elem, self.attrname) for elem in
+                           ring.select(self.refpts)])
+        return np.average(values)
+
+
 class Variable(object):
     """A :py:class:`Variable` is a scalar value acting on a lattice
     """
@@ -208,33 +253,36 @@ class ElementVariable(Variable):
             bounds:     Lower and upper bounds of the variable value
             delta:      Step
         """
-        setf, getf = self._access(index)
+        # setf, getf = self._access(index)
+        #
+        # def setfun(rng: Lattice, value):
+        #     for elem in rng.select(refpts):
+        #         setf(elem, attrname, value)
+        #
+        # def getfun(rng: Lattice):
+        #     values = np.array([getf(elem, attrname) for elem in
+        #                        rng.select(refpts)])
+        #     return np.average(values)
 
-        def setfun(rng: Lattice, value):
-            for elem in rng.select(refpts):
-                setf(elem, attrname, value)
-
-        def getfun(rng: Lattice):
-            values = np.array([getf(elem, attrname) for elem in
-                               rng.select(refpts)])
-            return np.average(values)
+        setfun = _setfun(refpts, attrname, index)
+        getfun = _getfun(refpts, attrname, index)
 
         self.refpts = refpts
         super(ElementVariable, self).__init__(setfun, getfun, **kwargs)
-
-    @staticmethod
-    def _access(index):
-        """Access to element attributes"""
-        if index is None:
-            setf = setattr
-            getf = getattr
-        else:
-            def setf(elem, attrname, value):
-                getattr(elem, attrname)[index] = value
-
-            def getf(elem, attrname):
-                return getattr(elem, attrname)[index]
-        return setf, getf
+    #
+    # @staticmethod
+    # def _access(index):
+    #     """Access to element attributes"""
+    #     if index is None:
+    #         setf = setattr
+    #         getf = getattr
+    #     else:
+    #         def setf(elem, attrname, value):
+    #             getattr(elem, attrname)[index] = value
+    #
+    #         def getf(elem, attrname):
+    #             return getattr(elem, attrname)[index]
+    #     return setf, getf
 
 
 class VariableList(list):

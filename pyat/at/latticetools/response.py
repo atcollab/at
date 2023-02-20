@@ -12,10 +12,25 @@ from typing import Optional
 from ..lattice import AtError, Lattice, Refpts, Orbit, AxisDef, plane_
 from .observables import ObservableList, OrbitObservable, RingObservable
 from .observables import TrajectoryObservable
-from .variables import ElementVariable, VariableList
+from .variables import Variable, ElementVariable, VariableList
 
 _globring = None
 _globobs = None
+
+
+def _resp_one(ring: Lattice, observables: ObservableList, variable: Variable):
+    variable.step_up(ring)
+    observables.evaluate(ring)
+    op = observables.flat_weighted_values
+    variable.step_down(ring)
+    observables.evaluate(ring)
+    om = observables.flat_weighted_values
+    variable.set_initial(ring)
+    return 0.5 * (op - om)
+
+
+def _resp_one_fork(variable: Variable):
+    return _resp_one(_globring, _globobs, variable)
 
 
 class SvdResponse(ABC):
@@ -174,21 +189,6 @@ class ResponseMatrix(SvdResponse):
                 self.variables.increment(ring, corr)
         return sumcorr
 
-    @staticmethod
-    def _resp_one(ring, observables, variable):
-        if ring is None:
-            ring = _globring
-        if observables is None:
-            observables = _globobs
-        variable.step_up(ring)
-        observables.evaluate(ring)
-        op = observables.flat_weighted_values
-        variable.step_down(ring)
-        observables.evaluate(ring)
-        om = observables.flat_weighted_values
-        variable.set_initial(ring)
-        return 0.5 * (op - om)
-
     def build(self, use_mp: bool = False, pool_size: Optional[int] = None,
               start_method: Optional[str] = None) -> None:
         """Build the response matrix
@@ -211,6 +211,9 @@ class ResponseMatrix(SvdResponse):
             var.get(self.ring, initial=True)
 
         ring = self.ring.replace(boolrefs)
+        self.observables.evaluate(ring)
+        self.obsweights = self.observables.flat_weights
+        self.varweights = self.variables.deltas
 
         if use_mp:
             ctx = multiprocessing.get_context(start_method)
@@ -222,21 +225,17 @@ class ResponseMatrix(SvdResponse):
                 global _globobs
                 _globring = ring
                 _globobs = self.observables
-                args = [(None, None, var) for var in self.variables]
                 with ctx.Pool(pool_size) as pool:
-                    results = pool.starmap(partial(self._resp_one), args)
+                    results = pool.map(_resp_one_fork, self.variables)
                 _globring = None
                 _globobs = None
             else:
-                args = [(ring, self.observables, var)
-                        for var in self.variables]
+                _resp_one_spawn = partial(_resp_one, ring, self.observables)
                 with ctx.Pool(pool_size) as pool:
-                    results = pool.starmap(partial(self._resp_one), args)
+                    results = pool.map(_resp_one_spawn, self.variables)
         else:
-            results = [self._resp_one(ring, self.observables, var)
+            results = [_resp_one(ring, self.observables, var)
                        for var in self.variables]
-        self.obsweights = self.observables.flat_weights
-        self.varweights = self.variables.deltas
         self.weighted_response = np.stack(results, axis=-1)
 
     def exclude_obs(self, obsname: str, excluded: Refpts) -> None:

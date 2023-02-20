@@ -24,6 +24,58 @@ def _selector(select: Container[str]):
         return lambda obs: obs.name in select
 
 
+class _modfun(object):
+    def __init__(self, fun, statfun):
+        self.fun = fun
+        self.statfun = statfun
+
+    def __call__(self, ring, *a):
+        return self.statfun(self.fun(ring, *a), axis=0)
+
+
+class _arrayaccess(object):
+    def __init__(self, index):
+        self.index = index
+
+    def __call__(self, ring, data):
+        return data[self.index]
+
+
+class _recordaccess(object):
+    def __init__(self, fieldname, index):
+        self.index = index
+        self.fieldname = fieldname
+
+    def __call__(self, ring, data):
+        return getattr(data, self.fieldname)[self.index]
+
+
+def _idx(index: RefIndex):
+    if isinstance(index, tuple):
+        return (slice(None),) + index
+    else:
+        return slice(None), index
+
+
+class _tune(object):
+    def __init__(self, idx):
+        self.fun = _recordaccess('mu', idx)
+
+    def __call__(self, ring, data):
+        mu = self.fun(ring, data)
+        return np.squeeze(mu, axis=0) / 2 / pi
+
+
+class _ring(object):
+    def __init__(self, attrname, index, refpts):
+        self.get_val = _recordaccess(attrname, index)
+        self.refpts = refpts
+
+    def __call__(self, ring):
+        vals = [self.get_val(ring, el) for el in ring.select(self.refpts)]
+        return np.array(vals)
+
+
 class Need(Enum):
     """Defines the computation requirements for an :py:class:`Observable`.
     """
@@ -230,30 +282,6 @@ class Observable(object):
         return res
 
     @staticmethod
-    def _idx(index: RefIndex):
-        return index
-
-    @classmethod
-    def _arrayaccess(cls, index: RefIndex):
-        """Access to array elements"""
-        idx = cls._idx(index)
-
-        # noinspection PyUnusedLocal
-        def array_element(ring, data):
-            return data[idx]
-        return array_element
-
-    @classmethod
-    def _recordaccess(cls, fieldname: str, index: RefIndex):
-        """Access to record elements"""
-        idx = cls._idx(index)
-
-        # noinspection PyUnusedLocal
-        def fun(ring, data):
-            return getattr(data, fieldname)[idx]
-        return fun
-
-    @staticmethod
     def _set_name(name, param, index):
         """Compute default observable names"""
         if name is None:
@@ -306,12 +334,8 @@ class _ElementObservable(Observable):
         if statfun:
             summary = True
             name = '{}({})'.format(statfun.__name__, name)
-
-            def modfun(ring, *a):
-                return statfun(fun(ring, *a), axis=0)
-        else:
-            modfun = fun
-        super().__init__(modfun, *args, name=name, **kwargs)
+            fun = _modfun(fun, statfun)
+        super().__init__(fun, *args, name=name, **kwargs)
         self.summary = summary
         self.refpts = refpts
         self._boolrefs = None
@@ -346,13 +370,6 @@ class _ElementObservable(Observable):
         if boolrefs[-1]:
             locs.append("End")
         self._locations = locs
-
-    @staticmethod
-    def _idx(index: RefIndex):
-        if isinstance(index, tuple):
-            return (slice(None),) + index
-        else:
-            return slice(None), index
 
 
 class OrbitObservable(_ElementObservable):
@@ -391,7 +408,7 @@ class OrbitObservable(_ElementObservable):
             Observe the horizontal closed orbit at monitor locations
         """
         name = self._set_name(name, 'orbit', axis_(axis, 'code'))
-        fun = self._arrayaccess(axis_(axis, 'index'))
+        fun = _arrayaccess(_idx(axis_(axis, 'index')))
         needs = {Need.ORBIT}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -433,7 +450,7 @@ class MatrixObservable(_ElementObservable):
             extract T[0,1]
         """
         name = self._set_name(name, 'matrix', axis_(axis, 'code'))
-        fun = self._arrayaccess(axis_(axis, 'index'))
+        fun = _arrayaccess(_idx(axis_(axis, 'index')))
         needs = {Need.MATRIX}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -477,7 +494,7 @@ class _GlobalOpticsObservable(Observable):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = self._recordaccess(param, optics_(param, plane, 'index'))
+            fun = _recordaccess(param, optics_(param, plane, 'index'))
             if param == 'chromaticity':
                 needs.add(Need.CHROMATICITY)
         super().__init__(fun, *args, needs=needs, name=name, **kwargs)
@@ -566,7 +583,7 @@ class LocalOpticsObservable(_ElementObservable):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = self._recordaccess(param, optics_(param, plane, 'index'))
+            fun = _recordaccess(param, _idx(optics_(param, plane, 'index')))
         if use_integer:
             needs.add(Need.ALL_POINTS)
 
@@ -600,12 +617,7 @@ class RingObservable(_ElementObservable):
 
             Observe the sum of horizontal kicks in Sextupoles
         """
-
-        def fun(ring):
-            vals = [get_val(ring, el) for el in ring.select(self._boolrefs)]
-            return np.array(vals)
-
-        get_val = Observable._recordaccess(attrname, nop_(index, 'index'))
+        fun = _ring(attrname, nop_(index, 'index'), refpts)
         name = self._set_name(name, attrname, nop_(index, 'code'))
         super().__init__(fun, refpts, name=name, **kwargs)
 
@@ -639,7 +651,7 @@ class TrajectoryObservable(_ElementObservable):
         shape of *value*.
         """
         name = self._set_name(name, 'trajectory', axis_(axis, 'code'))
-        fun = self._arrayaccess(axis_(axis, 'index'))
+        fun = _arrayaccess(_idx(axis_(axis, 'index')))
         needs = {Need.TRAJECTORY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -678,7 +690,7 @@ class EmittanceObservable(Observable):
             Observe the horizontal emittance
         """
         name = self._set_name(name, param, plane_(plane, 'code'))
-        fun = self._recordaccess(param, plane_(plane, 'index'))
+        fun = _recordaccess(param, plane_(plane, 'index'))
         needs = {Need.EMITTANCE}
         super().__init__(fun, needs=needs, name=name, **kwargs)
 
@@ -878,10 +890,10 @@ class ObservableList(list):
         selected = _selector(select)
         return [obs.value for obs in self if selected(obs)]
 
-    values = property(get_values, doc="Values of the observables")
+    values = property(get_values, doc="Values of all the observables")
 
     def get_weights(self, select: Optional[Container[str]] = None) -> list:
-        """Return the values of selected observables
+        """Return the weights of selected observables
 
         Args:
             select:     :py:class:`~collections.abc.Container` of names for
@@ -891,9 +903,11 @@ class ObservableList(list):
         return [np.broadcast_to(obs.w, np.asarray(obs.value).shape)
                 for obs in self if selected(obs)]
 
+    weights = property(get_weights, doc="Weights of all the observables")
+
     def get_weighted_values(self,
                             select: Optional[Container[str]] = None) -> list:
-        """Return the values of selected observables
+        """Return the weighted values of selected observables
 
         Args:
             select:     :py:class:`~collections.abc.Container` of names for
@@ -901,6 +915,9 @@ class ObservableList(list):
         """
         selected = _selector(select)
         return [obs.weighted_value for obs in self if selected(obs)]
+
+    weighted_values = property(get_weighted_values,
+                               doc="weighted values of all the observables")
 
     def get_residuals(self, select: Optional[Container[str]] = None) -> list:
         """Return the residuals of selected observable
@@ -1062,15 +1079,9 @@ def GlobalOpticsObservable(param: str, *args,
         Observe the vertical chromaticity
     """
     if param == 'tune' and use_integer:
-        def tune(ring, data):
-            # noinspection PyProtectedMember
-            mu = _ElementObservable._recordaccess('mu', idx)(ring, data)
-            return np.squeeze(mu, axis=0) / 2 / pi
-
-        idx = plane_(plane, 'index')
         # noinspection PyProtectedMember
         name = _ElementObservable._set_name(name, param, plane_(plane, 'code'))
-        return LocalOpticsObservable(End, tune, *args,
+        return LocalOpticsObservable(End, _tune(_idx(plane_(plane, 'index'))),
                                      name=name,
                                      summary=True,
                                      use_integer=True, **kwargs)
