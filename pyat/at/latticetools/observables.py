@@ -1,12 +1,70 @@
-"""
+r"""
 Definition of :py:class:`.Observable` objects used in matching and
 response matrices
+
+Observables are ways to monitor various lattice paramaters and use them in
+matching and correction procedures.
+
+Class hierarchy
+---------------
+
+:py:class:`Observable`\ (evalfun, name, target, weight, bounds, ...)
+    :py:func:`GlobalOpticsObservable`\ (attrname, plane, name, ...)
+
+    :py:class:`EmittanceObservable`\ (attrname, plane, name, ...)
+
+    :py:class:`_ElementObservable`\ (...)
+        :py:class:`OrbitObservable`\ (refpts, axis, name, ...)
+
+        :py:class:`BPMOrbitObservable`\ (refpts, axis, name, ...)
+
+        :py:class:`TrajectoryObservable`\ (refpts, axis, name, ...)
+
+        :py:class:`BPMTrajectoryObservable`\ (refpts, axis, name, ...)
+
+        :py:class:`MatrixObservable`\ (refpts, axis, name, ...)
+
+        :py:class:`LocalOpticsObservable`\ (refpts, attrname, axis, name, ...)
+
+        :py:class:`LatticeObservable`\ (refpts, attrname, index, name, ...)
+
+:py:class:`.Observable`\ s are usually not evaluated directly, but through a
+container which performs the required optics computation and feeds each
+:py:class:`.Observable` with its specific data. After evaluation, each
+:py:class:`.Observable` provides the following properties:
+
+- :py:attr:`~Observable.value`
+- :py:attr:`~Observable.weight`
+- :py:attr:`~Observable.weighted_value`: :pycode:`value / weight`
+- :py:attr:`~Observable.deviation`:  :pycode:`value - target`
+- :py:attr:`~Observable.residual`:  :pycode:`((value - target)/weight)**2`
+
+:py:class:`ObservableList`\ (lattice, ...)
+    This container based on :py:class:`list` is in charge of optics
+    computations and provides each individual :py:class:`.Observable` with its
+    specific data.
+
+:py:class:`ObservableList` provides the :py:meth:`~ObservableList.evaluate`
+method and the following properties:
+
+- :py:attr:`~ObservableList.values`
+- :py:attr:`~ObservableList.flat_values`
+- :py:attr:`~ObservableList.weights`
+- :py:attr:`~ObservableList.flat_weights`
+- :py:attr:`~ObservableList.weighted_values`:
+- :py:attr:`~ObservableList.flat_weighted_values`:
+- :py:attr:`~ObservableList.deviations`:
+- :py:attr:`~ObservableList.flat_deviations`:
+- :py:attr:`~ObservableList.residuals`:
+- :py:attr:`~ObservableList.sum_residuals`:
+
 """
 from __future__ import annotations
 from typing import Optional, Union
 # For sys.version_info.minor < 9:
 from typing import Tuple
 from collections.abc import Callable, Container, Iterable, Set
+from functools import reduce
 from math import pi
 from enum import Enum
 from itertools import repeat
@@ -149,7 +207,8 @@ class Observable(object):
         For user-defined evaluation functions using linear optics data or
         emittance data, it is recommended to use
         :py:class:`LocalOpticsObservable`, :py:obj:`GlobalOpticsObservable`
-        or :py:class:`EmittanceObservable`.
+        or :py:class:`EmittanceObservable` which provide the corresponding
+        *data* argument.
 
         Examples:
 
@@ -176,6 +235,7 @@ class Observable(object):
         self.kwargs = kwargs
         self.initial = None
         self._value = None
+        self._shape = None
 
     def __str__(self):
         return "\n".join((self._header(), self._all_lines()))
@@ -227,24 +287,23 @@ class Observable(object):
     def evaluate(self, ring: Lattice, *data, initial: bool = False):
         """Compute and store the value of the observable
 
-        Evaluation needs the *data* argument which is normally provided by a
-        :py:class:`ObservableList` container. The direct evaluation of a single
-        Observable is normally not used.
+        The direct evaluation of a single :py:class:`Observable` is normally
+        not used. This method is called by the :py:class:`ObservableList`
+        container which provides the *data* argument.
 
         Args:
             ring:       Lattice description
-            *data:      Raw data, sent to the evaluation function
+            *data:      Raw data, provided by :py:class:`ObservableList` and
+              sent to the evaluation function
             initial:    It :py:obj:`None`, store the result as the initial
               value
         """
         val = self.fun(ring, *data, *self.args, **self.kwargs)
+        if self._shape is None:
+            self._shape = np.asarray(val).shape
         if initial:
             self.initial = val
         self._value = val
-
-    def clear(self):
-        """Clear the initial value"""
-        self.initial = None
 
     @property
     def value(self):
@@ -253,11 +312,13 @@ class Observable(object):
 
     @property
     def weight(self):
+        """Observable weight"""
         return np.broadcast_to(self.w, np.asarray(self.value).shape)
 
     @property
     def weighted_value(self):
-        """Weighted value o the Observable"""
+        """Weighted value of the Observable, computed as
+        :pycode:`deviation = value/weight`"""
         return self._value / self.w
 
     @property
@@ -413,7 +474,7 @@ class OrbitObservable(_ElementObservable):
 
         Example:
 
-            >>> obs = OrbitObservable(Monitor, axis=0)
+            >>> obs = OrbitObservable(at.Monitor, axis=0)
 
             Observe the horizontal closed orbit at monitor locations
         """
@@ -454,7 +515,7 @@ class MatrixObservable(_ElementObservable):
 
         Example:
 
-            >>> obs = MatrixObservable(Monitor, axis=('x', 'px'))
+            >>> obs = MatrixObservable(at.Monitor, axis=('x', 'px'))
 
             Observe the transfer matrix from origin to monitor locations and
             extract T[0,1]
@@ -566,12 +627,12 @@ class LocalOpticsObservable(_ElementObservable):
 
         Examples:
 
-            >>> obs = LocalOpticsObservable(Monitor, 'beta')
+            >>> obs = LocalOpticsObservable(at.Monitor, 'beta')
 
             Observe the beta in both planes at all :py:class:`.Monitor`
             locations
 
-            >>> obs = LocalOpticsObservable(Quadrupole, 'beta', plane='y',
+            >>> obs = LocalOpticsObservable(at.Quadrupole, 'beta', plane='y',
             ...                        statfun=np.max)
 
             Observe the maximum vertical beta in Quadrupoles
@@ -601,7 +662,7 @@ class LocalOpticsObservable(_ElementObservable):
         super().__init__(fun, refpts, *args, needs=needs, name=name, **kwargs)
 
 
-class RingObservable(_ElementObservable):
+class LatticeObservable(_ElementObservable):
     """Observe an attribute of selected lattice elements"""
     def __init__(self, refpts: Refpts, attrname: str,
                  index: AxisDef = Ellipsis,
@@ -623,7 +684,7 @@ class RingObservable(_ElementObservable):
 
         Example:
 
-            >>> obs = RingObservable(at.Sextupole, 'KickAngle', plane=0,
+            >>> obs = LatticeObservable(at.Sextupole, 'KickAngle', plane=0,
             ...                      statfun=np.sum)
 
             Observe the sum of horizontal kicks in Sextupoles
@@ -707,12 +768,19 @@ class EmittanceObservable(Observable):
 
 
 class ObservableList(list):
-    """Handles a list of Observables to be evaluated together"""
+    """Handles a list of Observables to be evaluated together
+
+    :py:class:`ObservableList` supports all :py:class:`list` methods, like
+    appending, insertion or concatenation with the "+" operator.
+    """
     def __init__(self, ring: Lattice, obsiter: Iterable[Observable] = ()):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
-            ring:       Lattice description
+            ring:       Lattice description. This lattice is used for sorting
+              the locations of the different observables but is not used for
+              evaluation: the lattice used for evaluation is give as argument
+              to the :py:meth:`~ObservableList.evaluate` method
             obsiter:    Iterable of :py:class:`Observable`\ s
 
         Example:
@@ -721,7 +789,7 @@ class ObservableList(list):
 
             Create an empty Observable list
 
-            >>> obslist.append(OrbitObservable(Monitor, plane=0))
+            >>> obslist.append(OrbitObservable(at.Monitor, plane=0))
             >>> obslist.append(GlobalOpticsObservable('tune'))
             >>> obslist.append(EmittanceObservable('emittances', plane=0))
 
@@ -755,7 +823,7 @@ class ObservableList(list):
         super().__init__(self._scan(obs) for obs in obsiter)
 
     # noinspection PyProtectedMember
-    def _update_reflists(self, obs):
+    def _update_reflists(self, obs) -> None:
         needs = obs.needs
         if Need.ORBIT in needs:
             self.orbitrefs |= obs._boolrefs
@@ -769,7 +837,7 @@ class ObservableList(list):
         if Need.TRAJECTORY in needs:
             self.passrefs |= obs._boolrefs
 
-    def _scan(self, obs):
+    def _scan(self, obs) -> Observable:
         # When unpickling the ObservableList, the list is built before
         # self.__dict__ is restored, so the "ring" attribute is missing.
         # The "needs" and reflists will be restored later
@@ -791,7 +859,7 @@ class ObservableList(list):
         self.extend(other)
         return self
 
-    def __add__(self, other):
+    def __add__(self, other) -> ObservableList:
         nobs = ObservableList(self.ring, self)
         nobs += other
         return nobs
@@ -890,16 +958,19 @@ class ObservableList(list):
         for obs in self:
             self._update_reflists(obs)
 
-    def clear(self):
-        """Clear all the initial values"""
-        for obs in self:
-            obs.clear()
-
     def _selected(self, select: Optional[Container[str]]):
         if select is None:
             return self
         else:
             return (obs for obs in self if obs.name in select)
+
+    def get_shape(self, select: Optional[Container[str]] = None) -> list:
+        return [obs._shape for obs in self._selected(select)]
+
+    def get_flat_shape(self, select: Optional[Container[str]] = None):
+        vals = (reduce(lambda x, y: x*y, obs._shape, 1)
+                for obs in self._selected(select))
+        return sum(vals),
 
     def get_values(self, select: Optional[Container[str]] = None) -> list:
         """Return the values of selected observables
@@ -957,7 +1028,7 @@ class ObservableList(list):
 
         Args:
             select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
+              s electing observables. If :py:obj:`None` select all
         """
         return _flatten(obs.deviation for obs in self._selected(select))
 
@@ -1001,6 +1072,8 @@ class ObservableList(list):
         residuals = (obs.residual for obs in self._selected(select))
         return sum(np.sum(res) for res in residuals)
 
+    shape = property(get_shape, doc="list of shapes of values")
+    flat_shape = property(get_flat_shape, doc="shape of the flattened values")
     values = property(get_values, doc="Values of all the observables")
     flat_values = property(get_flat_values,
                            doc="1-D array of Observable values")
