@@ -51,12 +51,12 @@ method and the following properties:
 - :py:attr:`~ObservableList.flat_values`
 - :py:attr:`~ObservableList.weights`
 - :py:attr:`~ObservableList.flat_weights`
-- :py:attr:`~ObservableList.weighted_values`:
-- :py:attr:`~ObservableList.flat_weighted_values`:
-- :py:attr:`~ObservableList.deviations`:
-- :py:attr:`~ObservableList.flat_deviations`:
-- :py:attr:`~ObservableList.residuals`:
-- :py:attr:`~ObservableList.sum_residuals`:
+- :py:attr:`~ObservableList.weighted_values`
+- :py:attr:`~ObservableList.flat_weighted_values`
+- :py:attr:`~ObservableList.deviations`
+- :py:attr:`~ObservableList.flat_deviations`
+- :py:attr:`~ObservableList.residuals`
+- :py:attr:`~ObservableList.sum_residuals`
 
 """
 from __future__ import annotations
@@ -779,8 +779,9 @@ class ObservableList(list):
         Args:
             ring:       Lattice description. This lattice is used for sorting
               the locations of the different observables but is not used for
-              evaluation: the lattice used for evaluation is give as argument
-              to the :py:meth:`~ObservableList.evaluate` method
+              evaluation: the lattice used for evaluation is given as argument
+              to the :py:meth:`~ObservableList.evaluate` method. The design
+              lattice may be used here, for instance.
             obsiter:    Iterable of :py:class:`Observable`\ s
 
         Example:
@@ -789,9 +790,9 @@ class ObservableList(list):
 
             Create an empty Observable list
 
-            >>> obslist.append(OrbitObservable(at.Monitor, plane=0))
+            >>> obslist.append(OrbitObservable(at.Monitor, plane='x'))
             >>> obslist.append(GlobalOpticsObservable('tune'))
-            >>> obslist.append(EmittanceObservable('emittances', plane=0))
+            >>> obslist.append(EmittanceObservable('emittances', plane='h'))
 
             Add observables for horizontal closed orbit at Monitor locations,
             tunes and horizontal emittance
@@ -808,7 +809,7 @@ class ObservableList(list):
             array([3.81563019e-01, 8.54376397e-01, 1.09060730e-04]),
             1.320391045951568e-10]
 
-            >>> obslist.get_flat_values({'tune', 'emittances[0]'})
+            >>> obslist.get_flat_values({'tune', 'emittances[h]'})
             array([3.815630e-01, 8.543764e-01, 1.090607e-04, 1.320391e-10])
 
             Get a flattened array of tunes and horizontal emittance
@@ -884,7 +885,7 @@ class ObservableList(list):
         r"""Compute all the :py:class:`Observable` values
 
         Args:
-            ring:       Lattice description
+            ring:       Lattice description used for evaluation
             r_in:       Optional coordinate input for trajectory observables
             initial:    If :py:obj:`True`, store the values as *initial values*
         """
