@@ -11,7 +11,7 @@ from abc import ABC
 from typing import Optional, Union
 from collections.abc import Sequence
 from ..lattice import AtError, Lattice, Refpts, Orbit, AxisDef, plane_
-from .observables import ObservableList, OrbitObservable, RingObservable
+from .observables import ObservableList, OrbitObservable, LatticeObservable
 from .observables import TrajectoryObservable
 from .variables import Variable, ElementVariable, VariableList
 
@@ -347,9 +347,9 @@ class OrbitResponseMatrix(ResponseMatrix):
         observables = ObservableList(ring, [bpms])
         if steersum:
             nm = f"{plcode}_kicks"
-            observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
-                                              target=0.0, index=pl,
-                                              statfun=np.sum))
+            observables.append(LatticeObservable(steerrefs, 'KickAngle', name=nm,
+                                                 target=0.0, index=pl,
+                                                 statfun=np.sum))
         # Variables
         steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
         variables = VariableList(steerers)
@@ -416,9 +416,9 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         observables = ObservableList(ring, [bpms])
         if steersum:
             nm = f"{plcode}_kicks"
-            observables.append(RingObservable(steerrefs, 'KickAngle', name=nm,
-                                              target=0.0, index=plane,
-                                              statfun=np.sum))
+            observables.append(LatticeObservable(steerrefs, 'KickAngle', name=nm,
+                                                 target=0.0, index=plane,
+                                                 statfun=np.sum))
         # Variables
         steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
         variables = VariableList(steerers)
