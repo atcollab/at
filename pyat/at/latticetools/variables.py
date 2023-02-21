@@ -284,21 +284,20 @@ class VariableList(list):
     """
 
     def get(self, ring: Lattice, initial=False) -> Sequence[float]:
-        r"""Get the current :py:class:`Variable\ s' values
+        r"""Get the current :py:class:`Variable`\ s' values
 
         Args:
             ring:       Lattice description
-            initial:    If :py:obj:`True`, set the :py:class:`Variable\ s'
+            initial:    If :py:obj:`True`, set the :py:class:`Variable`\ s'
               initial value
 
         Returns:
             values:     1D array of values of all variables
-
         """
         return np.array([var.get(ring, initial=initial) for var in self])
 
     def set(self, ring: Lattice, values: Iterable[float]) -> None:
-        """
+        """Set the :py:class:`Variable`\ s' values
 
         Args:
             ring:       Lattice description
@@ -307,9 +306,15 @@ class VariableList(list):
         for var, val in zip(self, values):
             var.set(ring, val)
 
-    def increment(self, ring: Lattice, values: Iterable[float]):
-        for var, val in zip(self, values):
-            var.increment(ring, val)
+    def increment(self, ring: Lattice, increment: Iterable[float]) -> None:
+        """Increment the :py:class:`Variable`\ s' values
+
+        Args:
+            ring:       Lattice description
+            increment:  Iterable of values
+        """
+        for var, incr in zip(self, increment):
+            var.increment(ring, incr)
 
     # noinspection PyProtectedMember
     def status(self, ring: Lattice = None) -> str:
