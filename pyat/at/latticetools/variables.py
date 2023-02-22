@@ -297,7 +297,7 @@ class VariableList(list):
         return np.array([var.get(ring, initial=initial) for var in self])
 
     def set(self, ring: Lattice, values: Iterable[float]) -> None:
-        """Set the :py:class:`Variable`\ s' values
+        r"""Set the :py:class:`Variable`\ s' values
 
         Args:
             ring:       Lattice description
@@ -307,7 +307,7 @@ class VariableList(list):
             var.set(ring, val)
 
     def increment(self, ring: Lattice, increment: Iterable[float]) -> None:
-        """Increment the :py:class:`Variable`\ s' values
+        r"""Increment the :py:class:`Variable`\ s' values
 
         Args:
             ring:       Lattice description
