@@ -55,29 +55,24 @@ def plot_singular_values(resp: SvdResponse, ax: Axes = None,
     ax.set_title("Singular values")
 
 
-def plot_contents(resp: ResponseMatrix, error: Union[Lattice, Sequence[float]],
+def plot_contents(resp: ResponseMatrix, lattice: Lattice,
                   ax: Axes = None, logscale: bool = True) -> None:
     """Plot the decomposition of an error vector on the basis of singular
     vectors
 
     Args:
         resp:           Response matrix object
-        error:          Error to be analysed. *error* may be:
-
-          * a :py:class:`.Lattice`: The response matrix observables will be
-            evaluated for this :py:class:`.Lattice` and the deviation from
-            target will be decomposed on the basis of singular vectors,
-          * a Sequence of float: It will be decomposed on the basis of singular
-            vectors
+        ring:           Lattice description. The response matrix observables
+          will be evaluated for this :py:class:`.Lattice` and the deviation
+          from   target will be decomposed on the basis of singular vectors,
         logscale:       If :py:obj:`True`, use log scale
         ax:             If given, plots will be drawn in these axes.
     """
     if resp.singular_values is None:
         resp.solve()
-    if isinstance(error, Lattice):
-        obs = resp.observables
-        obs.evaluate(error, r_in=resp.r_in)
-        error = obs.flat_deviations
+    obs = resp.observables
+    obs.evaluate(lattice, r_in=resp.r_in)
+    error = obs.flat_deviations
     corr = resp.uh @ error
     if ax is None:
         fig, ax = plt.subplots()

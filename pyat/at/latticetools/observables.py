@@ -63,7 +63,7 @@ from __future__ import annotations
 from typing import Optional, Union
 # For sys.version_info.minor < 9:
 from typing import Tuple
-from collections.abc import Callable, Container, Iterable, Set
+from collections.abc import Callable, Iterable, Set
 from functools import reduce
 from math import pi
 from enum import Enum
@@ -131,8 +131,8 @@ class _ring(object):
         return np.array(vals)
 
 
-def _flatten(vals):
-    return np.concatenate([np.reshape(v, -1, order='F') for v in vals])
+def _flatten(vals, order='F'):
+    return np.concatenate([np.reshape(v, -1, order=order) for v in vals])
 
 
 class Need(Enum):
@@ -959,123 +959,81 @@ class ObservableList(list):
         for obs in self:
             self._update_reflists(obs)
 
-    def _selected(self, select: Optional[Container[str]]):
-        if select is None:
-            return self
-        else:
-            return (obs for obs in self if obs.name in select)
-
-    def get_shape(self, select: Optional[Container[str]] = None) -> list:
+    def get_shapes(self) -> list:
+        """Return the shapes of all values"""
         # noinspection PyProtectedMember
-        return [obs._shape for obs in self._selected(select)]
+        return [obs._shape for obs in self]
 
-    def get_flat_shape(self, select: Optional[Container[str]] = None):
+    def get_flat_shape(self):
+        """Return the shape of flattened values"""
         # noinspection PyProtectedMember
-        vals = (reduce(lambda x, y: x*y, obs._shape, 1)
-                for obs in self._selected(select))
+        vals = (reduce(lambda x, y: x*y, obs._shape, 1) for obs in self)
         return sum(vals),
 
-    def get_values(self, select: Optional[Container[str]] = None) -> list:
-        """Return the values of selected observables
+    def get_values(self) -> list:
+        """Return the values of all observables
+        """
+        return [obs.value for obs in self]
+
+    def get_flat_values(self, order: str = 'F') -> np.ndarray:
+        """Return a 1-D array of all Observable values
 
         Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
+            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return [obs.value for obs in self._selected(select)]
+        return _flatten((obs.value for obs in self), order=order)
 
-    def get_flat_values(self,
-                        select: Optional[Container[str]] = None) -> np.ndarray:
-        """Return a 1-D array of selected Observable values
+    def get_weighted_values(self) -> list:
+        """Return the weighted values of all observables
+        """
+        return [obs.weighted_value for obs in self]
+
+    def get_flat_weighted_values(self, order: str = 'F') -> np.ndarray:
+        """Return a 1-D array of all Observable weighted values
 
         Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
+            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return _flatten(obs.value for obs in self._selected(select))
+        return _flatten((obs.weighted_value for obs in self), order=order)
 
-    def get_weighted_values(self,
-                            select: Optional[Container[str]] = None) -> list:
-        """Return the weighted values of selected observables
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        return [obs.weighted_value for obs in self._selected(select)]
-
-    def get_flat_weighted_values(self,
-                                 select: Optional[Container[str]] = None
-                                 ) -> np.ndarray:
-        """Return a 1-D array of selected Observable weighted values
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        return _flatten(obs.weighted_value for obs in self._selected(select))
-
-    def get_deviations(self, select: Optional[Container[str]] = None) -> list:
+    def get_deviations(self) -> list:
         """Return the deviations from target values
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
         """
-        return [obs.deviation for obs in self._selected(select)]
+        return [obs.deviation for obs in self]
 
-    def get_flat_deviations(self,
-                            select: Optional[Container[str]] = None
-                            ) -> np.ndarray:
+    def get_flat_deviations(self, order: str = 'F') -> np.ndarray:
         """Return a 1-D array of deviations from target values
 
         Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              s electing observables. If :py:obj:`None` select all
+            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return _flatten(obs.deviation for obs in self._selected(select))
+        return _flatten((obs.deviation for obs in self), order=order)
 
-    def get_weights(self, select: Optional[Container[str]] = None) -> list:
-        """Return the weights of selected observables
+    def get_weights(self) -> list:
+        """Return the weights of all observables
+        """
+        return [obs.weight for obs in self]
+
+    def get_flat_weights(self, order: str = 'F') -> np.ndarray:
+        """Return a 1-D array of all Observable weights
 
         Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
+            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
-        return [obs.weight for obs in self._selected(select)]
+        return _flatten((obs.weight for obs in self), order=order)
 
-    def get_flat_weights(self,
-                         select: Optional[Container[str]] = None
-                         ) -> np.ndarray:
-        """Return a 1-D array of selected Observable weights
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
+    def get_residuals(self) -> list:
+        """Return the residuals of all observable
         """
-        return _flatten(obs.weight for obs in self._selected(select))
+        return [obs.residual for obs in self]
 
-    def get_residuals(self, select: Optional[Container[str]] = None) -> list:
-        """Return the residuals of selected observable
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
+    def get_sum_residuals(self) -> float:
+        """Return the sum of all residual values
         """
-        return [obs.residual for obs in self._selected(select)]
-
-    def get_sum_residuals(self,
-                          select: Optional[Container[str]] = None) -> float:
-        """Return the sum of selected residual values
-
-        Args:
-            select:     :py:class:`~collections.abc.Container` of names for
-              selecting observables. If :py:obj:`None` select all
-        """
-        residuals = (obs.residual for obs in self._selected(select))
+        residuals = (obs.residual for obs in self)
         return sum(np.sum(res) for res in residuals)
 
-    shape = property(get_shape, doc="list of shapes of values")
+    shapes = property(get_shapes, doc="list of shapes of values")
     flat_shape = property(get_flat_shape, doc="shape of the flattened values")
     values = property(get_values, doc="Values of all the observables")
     flat_values = property(get_flat_values,
