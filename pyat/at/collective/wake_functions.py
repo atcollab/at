@@ -6,7 +6,6 @@ from at.constants import clight
 from scipy.interpolate import interp1d
 
 
-   
 def convolve_wakefun(srange, w, sigs, gauss_sigma=10):
     """Convolution of a wake function with a pulse of rms
     length sigs, this is use to generate a wake potential
@@ -16,20 +15,20 @@ def convolve_wakefun(srange, w, sigs, gauss_sigma=10):
         ampl = 1 / (numpy.sqrt(2 * numpy.pi) * sigs)
         expon = numpy.exp(-s**2 / (2 * sigs**2))
         return ampl * expon
-        
+
     ds = numpy.diff(srange)[-1]
     s_gauss = numpy.arange(-gauss_sigma*sigs, gauss_sigma*sigs+1e-15, ds)
     gauss = _gauss(s_gauss)
 
     conv = numpy.convolve(gauss, w, mode='full') * ds
-    s_offset = gauss_sigma * sigs  - numpy.amin(srange)
-    s_conv = numpy.arange(len(conv)) * ds - s_offset 
+    s_offset = gauss_sigma * sigs - numpy.amin(srange)
+    s_conv = numpy.arange(len(conv)) * ds - s_offset
 
     ifun = interp1d(s_conv, conv, bounds_error=False, fill_value=0)
     conv_wf = ifun(srange)
     return conv_wf
-    
-    
+
+
 def long_resonator_wf(srange, frequency, qfactor, rshunt, beta):
     """Define the wake function (longitudinal) of a resonator
     with the given parameters according to Alex Chao's resonator
