@@ -69,7 +69,7 @@ from math import pi
 from enum import Enum
 from itertools import repeat
 from ..lattice import Lattice, Orbit, Refpts, All, End
-from ..lattice import AxisDef, axis_, plane_, optics_, nop_
+from ..lattice import AxisDef, axis_, plane_
 import numpy as np
 
 RefIndex = Union[int, Tuple[int, ...], slice]
@@ -114,7 +114,7 @@ def _all_rows(index: RefIndex):
 
 class _tune(object):
     def __init__(self, idx):
-        self.fun = _recordaccess('mu', idx)
+        self.fun = _recordaccess('mu', _all_rows(idx))
 
     def __call__(self, ring, data):
         mu = self.fun(ring, data)
@@ -560,12 +560,12 @@ class _GlobalOpticsObservable(Observable):
         shape of *value*.
         """
         needs = {Need.GLOBALOPTICS}
-        name = self._set_name(name, param, optics_(param, plane, 'code'))
+        name = self._set_name(name, param, plane_(plane, 'code'))
         if callable(param):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = _recordaccess(param, optics_(param, plane, 'index'))
+            fun = _recordaccess(param, plane_(plane, 'index'))
             if param == 'chromaticity':
                 needs.add(Need.CHROMATICITY)
         super().__init__(fun, *args, needs=needs, name=name, **kwargs)
@@ -648,14 +648,17 @@ class LocalOpticsObservable(_ElementObservable):
             between the 1st and last given reference points, here the elements
             33 and 101 of the lattice
         """
+        if param in {'M', 'closed_orbit', 'dispersion', 'A', 'R'}:
+            ax_ = axis_
+        else:
+            ax_ = plane_
         needs = {Need.LOCALOPTICS}
-        name = self._set_name(name, param, optics_(param, plane, 'code'))
+        name = self._set_name(name, param, ax_(plane, 'code'))
         if callable(param):
             fun = param
             needs.add(Need.CHROMATICITY)
         else:
-            fun = _recordaccess(param,
-                                _all_rows(optics_(param, plane, 'index')))
+            fun = _recordaccess(param, _all_rows(ax_(plane, 'index')))
         if use_integer:
             needs.add(Need.ALL_POINTS)
 
@@ -689,8 +692,8 @@ class LatticeObservable(_ElementObservable):
 
             Observe the sum of horizontal kicks in Sextupoles
         """
-        fun = _ring(attrname, nop_(index, 'index'), refpts)
-        name = self._set_name(name, attrname, nop_(index, 'code'))
+        fun = _ring(attrname, index, refpts)
+        name = self._set_name(name, attrname, index)
         super().__init__(fun, refpts, name=name, **kwargs)
 
 
@@ -1114,10 +1117,8 @@ def GlobalOpticsObservable(param: str, *args,
     if param == 'tune' and use_integer:
         # noinspection PyProtectedMember
         name = _ElementObservable._set_name(name, param, plane_(plane, 'code'))
-        return LocalOpticsObservable(End,
-                                     _tune(_all_rows(plane_(plane, 'index'))),
-                                     name=name,
-                                     summary=True,
+        return LocalOpticsObservable(End, _tune(plane_(plane, 'index')),
+                                     name=name, summary=True,
                                      use_integer=True, **kwargs)
     else:
         return _GlobalOpticsObservable(param, *args, plane=plane, name=name,

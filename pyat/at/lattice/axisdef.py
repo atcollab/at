@@ -1,9 +1,8 @@
-import sys
+"""Helper functions for axis and plane descriptions"""
+from __future__ import annotations
 from typing import Optional, Union
-if sys.version_info.minor < 9:
-    from typing import Tuple
-else:
-    Tuple = tuple
+# For sys.version_info.minor < 9:
+from typing import Tuple
 
 AxisCode = Union[str, int, slice, None, type(Ellipsis)]
 AxisDef = Union[AxisCode, Tuple[AxisCode, AxisCode]]
@@ -37,14 +36,8 @@ for xk, xv in [it for it in _plane_def.items()]:
     _plane_def[xk.upper()] = xv
 _plane_def['x'] = _plane_def['h']
 _plane_def['y'] = _plane_def['v']
-_plane_def['z'] = _plane_def['l']
 _plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
-
-_no_def = {
-    None: dict(index=slice(None), label="", unit="", code=":"),
-    Ellipsis: dict(index=Ellipsis, label="", unit="", code="...")
-}
 
 
 def _descr(dd: dict, arg: AxisDef, key: Optional[str] = None):
@@ -65,8 +58,23 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
     r"""Return axis descriptions
 
     Parameters:
-        axis:           code is either an integer in 0:6
-          or a string in ['x', 'px', 'y', 'py', 'dp', 'ct']
+        axis:           axis code or tuple of axis codes selecting axes in the
+          standard AT coordinate system. codes for the 6 axes are:
+
+          0, 'x', 'X'
+
+          1, 'px', PX', 'xp'
+
+          2, 'z', 'Z'
+
+          3, 'py', 'PY', 'yp'
+
+          4, 'dp', 'delta'
+
+          5, 'ct'
+
+          :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all axes
+
         key:            key in the coordinate descriptor dictionary,
           selecting the desired information. One of :
 
@@ -82,11 +90,11 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
             entire description dictionary
 
     Returns:
-        descr : requested information for each input argument.
+        descr : value of tuple[values]
 
     Examples:
 
-        >>> axis_(('x','dp'), key='plane')
+        >>> axis_(('x','dp'), key='index')
         (0, 4)
 
         returns the indices in the standard coordinate vector
@@ -97,7 +105,7 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
 
         returns the coordinate label for plot annotation
 
-        >>> axis_(('x','dp'))
+        >>> axis_((0,'dp'))
         ({'plane': 0, 'label': 'x', 'unit': ' [m]', 'code': 'x'},
          {'plane': 4, 'label': '$\\delta$', 'unit': '', 'code': 'dp'})
 
@@ -111,9 +119,17 @@ def plane_(plane: AxisDef, key: Optional[str] = None):
     r"""Return plane descriptions
 
     Parameters:
-        plane:          plane is either an integer in 0:3 or
-          a string in {'x', 'X', 'h', 'H', 'y', 'Y', 'v', 'V', 'z', 'Z'}
-        key:            key in the coordinate descriptor dictionary,
+        plane:          plane code or tuple[plane code] selecting planes.
+          planes for the 3 planes are:
+
+          0, 'h', 'H', 'x' for horizontal plane,
+
+          1, 'v', 'V', 'y' for vertical plane,
+
+          2, 'l', 'L' for the longitudinal plane
+
+          :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all planes
+        key:            key in the plane descriptor dictionary,
           selecting the desired information. One of :
 
           'plane'
@@ -128,33 +144,20 @@ def plane_(plane: AxisDef, key: Optional[str] = None):
             entire description dictionary
 
     Returns:
-        descr : requested information for each input argument.
+        descr : value or tuple[values]
 
     Examples:
 
-        >>> plane_('y', key='plane')
+        >>> plane_('v', key='index')
         1
 
         returns the indices in the standard coordinate vector
 
         >>> plane_(('x','y'))
-        ({'plane': 0, 'label': 'x', 'unit': ' [m]', 'code': 'x'},
-         {'plane': 1, 'label': 'y', 'unit': ' [m]', 'code': 'y'})
+        ({'plane': 0, 'label': 'h', 'unit': ' [m]', 'code': 'h'},
+         {'plane': 1, 'label': 'v', 'unit': ' [m]', 'code': 'v'})
 
         returns the entire description directories
 
     """
     return _descr(_plane_def, plane, key=key)
-
-
-def optics_(param: str, axis: AxisDef, key: Optional[str] = None):
-    if callable(param):
-        return _descr(_no_def, axis, key=key)
-    elif param in {'M', 'closed_orbit', 'dispersion', 'A', 'R'}:
-        return _descr(_axis_def, axis, key=key)
-    else:
-        return _descr(_plane_def, axis, key=key)
-
-
-def nop_(axis: AxisDef, key: Optional[str] = None):
-    return _descr(_no_def, axis, key=key)
