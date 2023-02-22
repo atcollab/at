@@ -8,8 +8,7 @@ import abc
 import multiprocessing
 from functools import partial
 from abc import ABC
-from typing import Optional, Union
-from collections.abc import Sequence
+from typing import Optional
 from ..lattice import AtError, Lattice, Refpts, Orbit, AxisDef, plane_
 from .observables import ObservableList, OrbitObservable, LatticeObservable
 from .observables import TrajectoryObservable
@@ -165,18 +164,15 @@ class ResponseMatrix(SvdResponse):
         nresp += other
         return nresp
 
-    def correct(self, error: Union[Lattice, Sequence[float]],
+    def correct(self, ring: Lattice,
                 nvals: int = None,
                 niter: int = 1, apply: bool = False):
         """Compute and optionally apply the correction
 
         Args:
-            error:      Error to be corrected. *error* may be:
-
-              * a :py:class:`.Lattice`: The response matrix observables will be
-                evaluated for *ring* and the deviation from target will be
-                corrected
-              * a Sequence of float: It will be corrected
+            ring:       Lattice description. The response matrix observables
+              will be evaluated for *ring* and the deviation from target will
+              be   corrected
             nvals:      Desired number of singular values. If :py:obj:`None`,
               use all singular values
             apply:      If :py:obj:`True`, apply the correction to *ring*
@@ -186,30 +182,15 @@ class ResponseMatrix(SvdResponse):
         Returns:
             correction: Vector of correction values
         """
-        if isinstance(error, Lattice):
-            # Lattice to be corrected
-            def get_deviation():
-                obs.evaluate(ring, r_in=self.r_in)
-                return obs.flat_deviations
-
-            if niter > 1 and not apply:
-                raise ValueError("needs: appli is True")
-            obs = self.observables
-            ring = error
-        else:
-            # Value to be corrected
-            def get_deviation():
-                return error
-
-            if niter > 1 or apply:
-                raise ValueError("needs: niter == 1 and apply is False")
-            ring = None
-
+        if niter > 1 and not apply:
+            raise ValueError("needs: appli is True")
+        obs = self.observables
         if apply:
             self.variables.get(ring)
         sumcorr = np.array([0.0])
         for _ in range(niter):
-            corr = self.svd_solution(-get_deviation(), nvals=nvals)
+            obs.evaluate(ring, r_in=self.r_in)
+            corr = self.svd_solution(-obs.flat_deviations, nvals=nvals)
             sumcorr = sumcorr + corr    # non-broadcastable sumcorr
             if apply:
                 self.variables.increment(ring, corr)
