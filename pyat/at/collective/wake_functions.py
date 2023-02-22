@@ -6,45 +6,8 @@ from at.constants import clight
 from scipy.interpolate import interp1d
 
 
-def convolve_wakefun_fft(srange, w, sigs, xr=2*0.09, npoints=500000):
-    """Convolution of a wake function with a pulse of rms
-    length sigs, this is use to generate a wake potential
-    that can be added to the output of EM code like GDFIDL"""
-
-    sigt = sigs / clight  # Convert sigmaz to sigmat
-    nt = npoints + npoints - 1
-    
-    # First we have to uniformly sample what is provided
-
-    s_out = numpy.linspace(-xr, xr, npoints)
-    min_step = numpy.diff(s_out)[0]
-    
-    # The actual number of points must be doubled to overlap
-    # in the correct position. We fill with zeros everywhere
-    # else
-    #npoints = len(s_out)
-
-    func = interp1d(srange, w, bounds_error=False, fill_value=0)
-    wout = func(s_out)
-    wout = numpy.append(wout, numpy.zeros(nt-len(wout)))
-    # Perform the fft and multiply with gaussian in freq.
-    fftr = numpy.fft.fft(wout)
-    
-    #f = numpy.fft.fftshift(numpy.linspace(-(npoints-1)/(4*xr/clight),(npoints-1)/(4*xr/clight),nt))
    
-    f = numpy.fft.fftfreq(nt, d=min_step/clight)
-    fftl = numpy.exp(-(f*2*numpy.pi*sigt)**2/2)
-    wout = numpy.fft.ifft(fftr*fftl)
-
-    # some manipulations to resample at the provided
-    # srange and recenter the data
-    wout = numpy.roll(wout, int(npoints/2))
-    s_out = numpy.linspace(-2*xr, 2*xr, nt)
-    func = interp1d(s_out, wout, bounds_error=False, fill_value=0)
-    wout = func(srange)
-    return wout
-    
-def convolve_wakefun_numpy(srange, w, sigs, gauss_sigma=10):
+def convolve_wakefun(srange, w, sigs, gauss_sigma=10):
     """Convolution of a wake function with a pulse of rms
     length sigs, this is use to generate a wake potential
     that can be added to the output of EM code like GDFIDL"""
@@ -58,7 +21,7 @@ def convolve_wakefun_numpy(srange, w, sigs, gauss_sigma=10):
     s_gauss = numpy.arange(-gauss_sigma*sigs, gauss_sigma*sigs+1e-15, ds)
     gauss = _gauss(s_gauss)
 
-    conv = numpy.convolve(gauss, w, mode='full')*ds
+    conv = numpy.convolve(gauss, w, mode='full') * ds
     s_offset = gauss_sigma * sigs  - numpy.amin(srange)
     s_conv = numpy.arange(len(conv)) * ds - s_offset 
 
