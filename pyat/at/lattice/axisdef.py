@@ -1,9 +1,11 @@
 """Helper functions for axis and plane descriptions"""
 from __future__ import annotations
 from typing import Optional, Union
+# For sys.version_info.minor < 9:
+from typing import Tuple
 
 AxisCode = Union[str, int, slice, None, type(Ellipsis)]
-AxisDef = Union[AxisCode, tuple[AxisCode, AxisCode]]
+AxisDef = Union[AxisCode, Tuple[AxisCode, AxisCode]]
 
 _axis_def = dict(
     x=dict(index=0, label="x", unit=" [m]"),
@@ -36,11 +38,6 @@ _plane_def['x'] = _plane_def['h']
 _plane_def['y'] = _plane_def['v']
 _plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
-
-_no_def = {
-    None: dict(index=slice(None), label="", unit="", code=":"),
-    Ellipsis: dict(index=Ellipsis, label="", unit="", code="...")
-}
 
 
 def _descr(dd: dict, arg: AxisDef, key: Optional[str] = None):
@@ -164,34 +161,3 @@ def plane_(plane: AxisDef, key: Optional[str] = None):
 
     """
     return _descr(_plane_def, plane, key=key)
-
-
-def optics_(fieldname: str, axis: AxisDef, key: Optional[str] = None):
-    r"""Return axis/plane descriptions
-
-    In optics structured arrays, some fields use "axis" indexing (0:6), like
-    *closed_orbit* or *M*, and some use "plane" indexing (0:3), like *beta* or
-    *tune*. This function selects the indexing corresonding to the given
-    *fieldname*
-
-    Args:
-        fieldname:      Name of the optics field
-        axis:           axis or tuple of axis (see :py:func:`axis_` and
-          :py:func:`axis_`)
-        key:            key in the coordinate descriptor dictionary.  (see
-          :py:func:`axis_` and :py:func:`axis_`)
-
-    Returns:
-        descr :         value or tuple[values]
-    """
-    if callable(fieldname):
-        return _descr(_no_def, axis, key=key)
-    elif fieldname in {'M', 'closed_orbit', 'dispersion', 'A', 'R'}:
-        return _descr(_axis_def, axis, key=key)
-    else:
-        return _descr(_plane_def, axis, key=key)
-
-
-def nop_(axis: AxisDef, key: Optional[str] = None):
-    """Handle a :py:obj:`None` index as slice(None)"""
-    return _descr(_no_def, axis, key=key)
