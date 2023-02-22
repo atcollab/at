@@ -76,7 +76,7 @@ RefIndex = Union[int, Tuple[int, ...], slice]
 
 # Observables must be pickleable. For this, the evaluation function must be a
 # module-level function. No inner, nested function is allowed. So nested
-# functions are replaced be module-level callable class instances
+# functions are replaced be module-level callable class instances:
 
 
 class _modfun(object):
@@ -966,9 +966,11 @@ class ObservableList(list):
             return (obs for obs in self if obs.name in select)
 
     def get_shape(self, select: Optional[Container[str]] = None) -> list:
+        # noinspection PyProtectedMember
         return [obs._shape for obs in self._selected(select)]
 
     def get_flat_shape(self, select: Optional[Container[str]] = None):
+        # noinspection PyProtectedMember
         vals = (reduce(lambda x, y: x*y, obs._shape, 1)
                 for obs in self._selected(select))
         return sum(vals),
