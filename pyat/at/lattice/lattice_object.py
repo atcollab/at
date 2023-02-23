@@ -342,18 +342,14 @@ class Lattice(list):
         Returns:
             newlattice: The developed lattice
         """
-        def repeat(nb):
-            for _ in range(nb):
-                for elem in self:
-                    yield elem.deepcopy()
-
         if periods is None:
             periods = self.periodicity
         newper, rem = divmod(self.periodicity, periods)
         if rem != 0:
             mess = "{} must be a divider of {}"
             raise ValueError(mess.format(periods, self.periodicity))
-        return Lattice(elem_generator, repeat(periods),
+        elist = (el.deepcopy() for _ in range(periods) for el in self)
+        return Lattice(elem_generator, elist,
                        iterator=self.attrs_filter, periodicity=newper,
                        harmonic_number=self.harmonic_number)
 
