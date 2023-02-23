@@ -2,7 +2,7 @@ r"""
 Definition of :py:class:`.Observable` objects used in matching and
 response matrices
 
-Observables are ways to monitor various lattice paramaters and use them in
+Observables are ways to monitor various lattice parameters and use them in
 matching and correction procedures.
 
 Class hierarchy
@@ -165,13 +165,12 @@ class Need(Enum):
 
 class Observable(object):
     """Base class for Observables. Can be used for user-defined observables"""
-    def __init__(self, fun: Callable, *args,
+    def __init__(self, fun: Callable,
                  name: Optional[str] = None,
                  target=None,
                  weight=1.0,
                  bounds=(0.0, 0.0),
-                 needs: Optional[Set[Need]] = None,
-                 **kwargs):
+                 needs: Optional[Set[Need]] = None):
         r"""
         Args:
             name:           Observable name. If :py:obj:`None`, an explicit
@@ -187,8 +186,6 @@ class Observable(object):
             needs:          Set of requirements. This selects the data provided
               to the evaluation function. *needs* items are members of the
               :py:class:`Need` enumeration
-            *args:          Positional arguments of the evaluation function
-            **kwargs:       Keyword arguments for the evaluation function
 
         The *target*, *weight* and *bounds* inputs must be broadcastable to the
         shape of *value*.
@@ -196,9 +193,9 @@ class Observable(object):
         .. _base_eval:
         .. rubric:: User-defined evaluation function
 
-        The general for is:
+        The general form is:
 
-        :pycode:`value = fun(ring, *data, *args, **kwargs)`
+        :pycode:`value = fun(ring, *data)`
 
         *data* depends on the *needs* argument, and by default is empty.
 
@@ -231,8 +228,6 @@ class Observable(object):
         self.target = target
         self.w = weight
         self.lbound, self.ubound = bounds
-        self.args = args
-        self.kwargs = kwargs
         self.initial = None
         self._value = None
         self._shape = None
@@ -298,7 +293,7 @@ class Observable(object):
             initial:    It :py:obj:`None`, store the result as the initial
               value
         """
-        val = self.fun(ring, *data, *self.args, **self.kwargs)
+        val = self.fun(ring, *data)
         if self._shape is None:
             self._shape = np.asarray(val).shape
         if initial:
@@ -356,38 +351,35 @@ class Observable(object):
     def _set_name(name, param, index):
         """Compute a default observable names"""
         if name is None:
-            if isinstance(index, str) and index in {":", "..."}:
+            if index is Ellipsis or index is None or \
+                    (isinstance(index, str) and index in {":", "..."}):
                 subscript = ""
             else:
-                subscript = "[{}]".format(index)
+                subscript = f"[{index}]"
             if callable(param):
                 base = param.__name__
             else:
                 base = param
-            return base + subscript
-        else:
-            return name
+            name = base + subscript
+        return name
 
 
 class _ElementObservable(Observable):
     """Base class for Observables linked to a position in the lattice"""
-    def __init__(self, fun: Callable, refpts: Refpts, *args,
+    def __init__(self, fun: Callable, refpts: Refpts,
                  name: Optional[str] = None,
                  summary: bool = False,
-                 statfun: Optional[Callable] = None, **kwargs):
+                 statfun: Optional[Callable] = None,
+                 **kwargs):
         r"""
         Args:
-            fun:            Evaluation function.
+            fun:            :ref:`evaluation function <base_eval>`
             refpts:         Observation points.
               See ":ref:`Selecting elements in a lattice <refpts>`"
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
             statfun:        Post-processing function called on the value of the
               observable. Example: :pycode:`statfun=numpy.mean`
-            *args:          Optional positional arguments for a user-defined
-              evaluation function
-            **kwargs:       Optional keyword arguments for a user-defined
-              evaluation function
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -406,7 +398,7 @@ class _ElementObservable(Observable):
             summary = True
             name = '{}({})'.format(statfun.__name__, name)
             fun = _modfun(fun, statfun)
-        super().__init__(fun, *args, name=name, **kwargs)
+        super().__init__(fun, name=name, **kwargs)
         self.summary = summary
         self.refpts = refpts
         self._boolrefs = None
@@ -445,9 +437,9 @@ class _ElementObservable(Observable):
 
 class OrbitObservable(_ElementObservable):
     """Observes the transfer matrix at selected locations"""
-    def __init__(self, refpts: Refpts,
-                 axis: AxisDef = None,
-                 name: Optional[str] = None, **kwargs):
+    def __init__(self, refpts: Refpts, axis: AxisDef = None,
+                 name: Optional[str] = None,
+                 **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
@@ -486,9 +478,9 @@ class OrbitObservable(_ElementObservable):
 
 class MatrixObservable(_ElementObservable):
     """Observes the closed orbit at selected locations"""
-    def __init__(self, refpts: Refpts,
-                 axis: AxisDef = Ellipsis,
-                 name: Optional[str] = None, **kwargs):
+    def __init__(self, refpts: Refpts, axis: AxisDef = Ellipsis,
+                 name: Optional[str] = None,
+                 **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
@@ -527,8 +519,7 @@ class MatrixObservable(_ElementObservable):
 
 
 class _GlobalOpticsObservable(Observable):
-    def __init__(self, param: str, *args,
-                 plane: AxisDef = None,
+    def __init__(self, param: str, plane: AxisDef = None,
                  name: Optional[str] = None,
                  **kwargs):
         # noinspection PyUnresolvedReferences
@@ -536,16 +527,12 @@ class _GlobalOpticsObservable(Observable):
         Args:
             param:          Optics parameter name (see :py:func:`.get_optics`)
               or user-defined evaluation function called as:
-              :pycode:`value = fun(ring, ringdata, *args, **kwargs)` and
-              returning the value of the Observable
+              :pycode:`value = fun(ring, ringdata)` and returning the value of
+              the Observable
             plane:          Index in the parameter array, If :py:obj:`None`,
               the whole array is specified
             name:           Observable name. If :py:obj:`None`, an explicit
               name will be generated
-            *args:          Optional positional arguments for a user-defined
-              evaluation function
-            **kwargs:       Optional keyword arguments for a user-defined
-              evaluation function
 
         Keyword Args:
             target:         Target value for a constraint. If :py:obj:`None`
@@ -568,12 +555,12 @@ class _GlobalOpticsObservable(Observable):
             fun = _recordaccess(param, plane_(plane, 'index'))
             if param == 'chromaticity':
                 needs.add(Need.CHROMATICITY)
-        super().__init__(fun, *args, needs=needs, name=name, **kwargs)
+        super().__init__(fun, needs=needs, name=name, **kwargs)
 
 
 class LocalOpticsObservable(_ElementObservable):
     """Observe a local optics parameter at selected locations"""
-    def __init__(self, refpts: Refpts, param: Union[str, Callable], *args,
+    def __init__(self, refpts: Refpts, param: Union[str, Callable],
                  plane: AxisDef = Ellipsis,
                  name: Optional[str] = None,
                  use_integer: bool = False,
@@ -591,10 +578,6 @@ class LocalOpticsObservable(_ElementObservable):
               name will be generated
             use_integer:    For  the *'mu'* parameter, compute the
               phase advance at all points to avoid discontinuities (slower)
-            *args:          Optional positional arguments for a user-defined
-              evaluation function
-            **kwargs:       Optional keyword arguments for a user-defined
-              evaluation function
 
         Keyword Args:
             summary:        Set to :py:obj:`True` if the user-defined
@@ -617,7 +600,7 @@ class LocalOpticsObservable(_ElementObservable):
 
         It is called as:
 
-        :pycode:`value = fun(ring, elemdata, *args, **kwargs)`
+        :pycode:`value = fun(ring, elemdata)`
 
         *elemdata* if the output of :py:func:`.get_optics`.
 
@@ -662,14 +645,14 @@ class LocalOpticsObservable(_ElementObservable):
         if use_integer:
             needs.add(Need.ALL_POINTS)
 
-        super().__init__(fun, refpts, *args, needs=needs, name=name, **kwargs)
+        super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
 
 class LatticeObservable(_ElementObservable):
     """Observe an attribute of selected lattice elements"""
-    def __init__(self, refpts: Refpts, attrname: str,
-                 index: AxisDef = Ellipsis,
-                 name: Optional[str] = None, **kwargs):
+    def __init__(self, refpts: Refpts, attrname: str, index: AxisDef = Ellipsis,
+                 name: Optional[str] = None,
+                 **kwargs):
         # noinspection PyUnresolvedReferences
         r"""
         Args:
@@ -699,9 +682,9 @@ class LatticeObservable(_ElementObservable):
 
 class TrajectoryObservable(_ElementObservable):
     """Observe trajectory coordinates at selected locations"""
-    def __init__(self, refpts: Refpts,
-                 axis: AxisDef = Ellipsis,
-                 name: Optional[str] = None, **kwargs):
+    def __init__(self, refpts: Refpts, axis: AxisDef = Ellipsis,
+                 name: Optional[str] = None,
+                 **kwargs):
         r"""
         Args:
             refpts:         Observation points.
@@ -733,8 +716,7 @@ class TrajectoryObservable(_ElementObservable):
 
 class EmittanceObservable(Observable):
     """Observe emittance-related parameters"""
-    def __init__(self, param: str,
-                 plane: AxisDef = None,
+    def __init__(self, param: str, plane: AxisDef = None,
                  name: Optional[str] = None,
                  **kwargs):
         r"""
@@ -1058,8 +1040,7 @@ class ObservableList(list):
 
 
 # noinspection PyPep8Naming
-def GlobalOpticsObservable(param: str, *args,
-                           plane: AxisDef = Ellipsis,
+def GlobalOpticsObservable(param: str, plane: AxisDef = Ellipsis,
                            name: Optional[str] = None,
                            use_integer: bool = False,
                            **kwargs):
@@ -1076,10 +1057,6 @@ def GlobalOpticsObservable(param: str, *args,
         use_integer:    For *'tune'* parameter: derive the tune from the
           phase advance to avoid skipping integers. Slower than looking only
           at the fractional part
-        *args:          Optional positional arguments for a user-defined
-          evaluation function
-        **kwargs:       Optional keyword arguments for a user-defined
-          evaluation function
 
     Keyword Args:
         target:         Target value for a constraint. If :py:obj:`None`
@@ -1098,7 +1075,7 @@ def GlobalOpticsObservable(param: str, *args,
 
     It is called as:
 
-    :pycode:`value = fun(ring, ringdata, *args, **kwargs)`
+    :pycode:`value = fun(ring, ringdata)`
 
     *ringdata* if the output of :py:func:`.get_optics`,
 
@@ -1118,8 +1095,7 @@ def GlobalOpticsObservable(param: str, *args,
         # noinspection PyProtectedMember
         name = _ElementObservable._set_name(name, param, plane_(plane, 'code'))
         return LocalOpticsObservable(End, _tune(plane_(plane, 'index')),
-                                     name=name, summary=True,
-                                     use_integer=True, **kwargs)
+                                     name=name, summary=True, use_integer=True,
+                                     **kwargs)
     else:
-        return _GlobalOpticsObservable(param, *args, plane=plane, name=name,
-                                       **kwargs)
+        return _GlobalOpticsObservable(param, plane=plane, name=name, **kwargs)
