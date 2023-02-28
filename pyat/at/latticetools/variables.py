@@ -13,6 +13,7 @@ from ..lattice import Lattice, Refpts
 # functions are replaced be module-level callable class instances
 
 
+# noinspection PyPep8Naming
 class _getf(object):
     def __init__(self, index):
         self.index = index
@@ -21,6 +22,7 @@ class _getf(object):
         return getattr(elem, attrname)[self.index]
 
 
+# noinspection PyPep8Naming
 class _setf(object):
     def __init__(self, index: int):
         self.index = index
@@ -29,6 +31,7 @@ class _setf(object):
         getattr(elem, attrname)[self.index] = value
 
 
+# noinspection PyPep8Naming
 class _setfun(object):
     def __init__(self, refpts: Refpts, attrname: str, index: int):
         self.refpts = refpts
@@ -43,6 +46,7 @@ class _setfun(object):
             self.fun(elem, self.attrname, value)
 
 
+# noinspection PyPep8Naming
 class _getfun(object):
     def __init__(self, refpts: Refpts, attrname: str, index: int):
         self.refpts = refpts
@@ -62,13 +66,11 @@ class Variable(object):
     """A :py:class:`Variable` is a scalar value acting on a lattice
     """
     def __init__(self,
-                 setfun: Callable[[Lattice, float, ...], None],
-                 getfun: Callable[[Lattice, ...], float],
-                 *args,
+                 setfun: Callable[[Lattice, float], None],
+                 getfun: Callable[[Lattice], float], *,
                  name: str = '',
                  bounds: tuple[float, float] = (-np.inf, np.inf),
-                 delta: float = 1.0,
-                 **kwargs):
+                 delta: float = 1.0):
         """
         Parameters:
             setfun:     User-defined function for setting the Variable. Called
@@ -90,18 +92,12 @@ class Variable(object):
             name:       Name of the Variable. Default: ``''``
             bounds:     Lower and upper bounds of the variable value
             delta:      Step
-            *args:      Positional arguments transmitted to ``setfun`` and
-              ``getfun`` functions
-            **kwargs:   Keyword arguments transmitted to ``setfun``and
-              ``getfun`` functions
         """
         self.setfun = setfun
         self.getfun = getfun
         self.name = name
         self.bounds = bounds
         self.delta = delta
-        self.args = args
-        self.kwargs = kwargs
         self._history = []
 
     @property
@@ -115,7 +111,7 @@ class Variable(object):
         if len(self._history) > 0:
             return self._history[0]
         else:
-            raise ValueError(f"{self.name}: Initial value has not been defined")
+            raise IndexError(f"{self.name}: No value has been set yet")
 
     @property
     def last_value(self) -> float:
@@ -123,7 +119,7 @@ class Variable(object):
         if len(self._history) > 0:
             return self._history[-1]
         else:
-            raise ValueError(f"{self.name}: No value has been set yet")
+            raise IndexError(f"{self.name}: No value has been set yet")
 
     @property
     def previous_value(self) -> float:
@@ -131,8 +127,7 @@ class Variable(object):
         if len(self._history) > 1:
             return self._history[-2]
         else:
-            mess = "{}: history too short"
-            raise ValueError(mess.format(self.name))
+            raise IndexError(f"{self.name}: history too short")
 
     def set(self, ring: Lattice, value: float) -> None:
         """Set the variable value
@@ -141,8 +136,8 @@ class Variable(object):
             ring:   Lattice description
             value:  New value to be applied on the variable
         """
+        self.setfun(ring, value)
         self._history.append(value)
-        self.setfun(ring, value, *self.args, **self.kwargs)
 
     def get(self, ring: Lattice, initial=False) -> float:
         """Get the actual variable value
@@ -154,7 +149,7 @@ class Variable(object):
         Returns:
             value:      Value of the variable
         """
-        value = self.getfun(ring, *self.args, **self.kwargs)
+        value = self.getfun(ring)
         if initial:
             self._history = []
         h = self._history
@@ -168,14 +163,7 @@ class Variable(object):
         Args:
             ring:   Lattice description
         """
-        try:
-            _ = self._history.pop()
-            previous = self._history.pop()
-        except IndexError:
-            mess = "{}: cannot find a previous value: history too short"
-            raise IndexError(mess.format(self.name))
-        else:
-            self.set(ring, previous)
+        self.set(ring, self.previous_value)
 
     def set_initial(self, ring: Lattice) -> None:
         """Set to initial value
