@@ -44,16 +44,22 @@ class SvdResponse(ABC):
         self.v = None
         self.singular_values = None
         self.uh = None
+        self._obsmask = None
+        self._varmask = None
 
     @abc.abstractmethod
     def build(self):
-        ...
+        nobs, nvar = self.weighted_response.shape
+        self._obsmask = np.ones(nobs, dtype=bool)
+        self._varmask = np.ones(nvar, dtype=bool)
 
     def solve(self):
         """Compute the singular values of the response matrix"""
-        if self.weighted_response is None:
+        resp = self.weighted_response
+        if resp is None:
             raise AtError("No response matrix: run build() first")
-        u, s, vh = np.linalg.svd(self.weighted_response, full_matrices=False)
+        u, s, vh = np.linalg.svd(resp[self._obsmask, self._varmask],
+                                 full_matrices=False)
         self.v = vh.T * (1/s) * self.varweights.reshape(-1, 1)
         self.uh = u.T / self.obsweights
         self.singular_values = s
@@ -131,19 +137,15 @@ class ResponseMatrix(SvdResponse):
     Addition is defined on :py:class:`ResponseMatrix` objects as the addition
     of their :py:class:`.Variable`\ s and :py:class:`.Observable`\s to produce
     combined responses"""
-    def __init__(self, ring: Lattice,
-                 variables: VariableList,
-                 observables: ObservableList, *,
+    def __init__(self, variables: VariableList, observables: ObservableList, *,
                  r_in: Orbit = None):
         r"""
 
         Args:
-            ring:           Design lattice, used to compute the response
             variables:      List of :py:class:`.Variable`\ s
             observables:    List of :py:class:`.Observable`\s
             r_in:
         """
-        self.ring = ring
         self.variables = variables
         self.observables = observables
         self.r_in = r_in
@@ -212,12 +214,13 @@ class ResponseMatrix(SvdResponse):
               calculation or to solve Runtime Errors, however it is considered
               unsafe.
         """
-        boolrefs = self.ring.get_bool_index(None)
+        ring = self.observables.ring
+        boolrefs = ring.get_bool_index(None)
         for var in self.variables:
-            boolrefs |= self.ring.get_bool_index(var.refpts)
-            var.get(self.ring, initial=True)
+            boolrefs |= ring.get_bool_index(var.refpts)
+            var.get(ring, initial=True)
 
-        ring = self.ring.replace(boolrefs)
+        ring = ring.replace(boolrefs)
         self.observables.evaluate(ring)
         self.obsweights = self.observables.flat_weights
         self.varweights = self.variables.deltas
@@ -244,6 +247,7 @@ class ResponseMatrix(SvdResponse):
             results = [_resp_one(ring, self.observables, var)
                        for var in self.variables]
         self.weighted_response = np.stack(results, axis=-1)
+        super().build()
 
     def exclude_obs(self, obsname: str, excluded: Refpts) -> None:
         # noinspection PyUnresolvedReferences
@@ -328,7 +332,8 @@ class OrbitResponseMatrix(ResponseMatrix):
         observables = ObservableList(ring, [bpms])
         if steersum:
             nm = f"{plcode}_kicks"
-            observables.append(LatticeObservable(steerrefs, 'KickAngle', name=nm,
+            observables.append(LatticeObservable(steerrefs, 'KickAngle',
+                                                 name=nm,
                                                  target=0.0, index=pl,
                                                  statfun=np.sum))
         # Variables
@@ -342,7 +347,7 @@ class OrbitResponseMatrix(ResponseMatrix):
                                              name="RF frequency",
                                              delta=cavdelta))
 
-        super().__init__(ring, variables, observables)
+        super().__init__(variables, observables)
 
 
 class TrajectoryResponseMatrix(ResponseMatrix):
@@ -397,11 +402,12 @@ class TrajectoryResponseMatrix(ResponseMatrix):
         observables = ObservableList(ring, [bpms])
         if steersum:
             nm = f"{plcode}_kicks"
-            observables.append(LatticeObservable(steerrefs, 'KickAngle', name=nm,
+            observables.append(LatticeObservable(steerrefs, 'KickAngle',
+                                                 name=nm,
                                                  target=0.0, index=plane,
                                                  statfun=np.sum))
         # Variables
         steerers = (steerer(idx) for idx in ring.get_uint32_index(steerrefs))
         variables = VariableList(steerers)
 
-        super().__init__(ring, variables, observables, r_in=r_in)
+        super().__init__(variables, observables, r_in=r_in)
