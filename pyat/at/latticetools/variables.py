@@ -76,20 +76,15 @@ class Variable(object):
             setfun:     User-defined function for setting the Variable. Called
               as:
 
-              :pycode:`setfun(ring, value, *args, **kwargs)`
+              :pycode:`setfun(ring, value)`
 
               where *value* is the scalar value to apply
-
-              The positional and keyword parameters come from the
-              :py:class:`Variable` initialisation
             getfun:     User-defined function for retrieving the actual value
               of the variable: Called as:
 
-              :pycode:`value = getfun(ring, *args, **kwargs)`
+              :pycode:`value = getfun(ring)`
 
-              The positional and keyword parameters come from the
-              :py:class:`Variable` initialisation
-            name:       Name of the Variable. Default: ``''``
+            name:       Name of the Variable
             bounds:     Lower and upper bounds of the variable value
             delta:      Step
         """
@@ -231,7 +226,7 @@ class Variable(object):
 
 
 class ElementVariable(Variable):
-    r"""An :py:class:`ElementVariable` associated with an attribute of
+    r"""A :py:class:`Variable` associated with an attribute of
     :py:class:`.Lattice` elements.
 
     It can be:
@@ -239,7 +234,7 @@ class ElementVariable(Variable):
     * a scalar attribute or
     * an element of an array attribute
 
-    of one or several :py:class:`.Element`\ (s) of a lattice.
+    of one or several :py:class:`.Element`\ s of a lattice.
     """
     def __init__(self,
                  refpts: Refpts, attrname: str,
@@ -247,15 +242,16 @@ class ElementVariable(Variable):
                  **kwargs):
         """
         Parameters:
-            refpts:     Location of variable :py:class:`.Element` (s)
+            refpts:     Location of variable :py:class:`.Element`\ s
             attrname:   Attribute name
             index:      Index in the attribute array. Use :py:obj:`None` for
               scalar attributes
 
         Keyword Args:
-            name:       Name of the Variable; Default: ``''``
-            bounds:     Lower and upper bounds of the variable value
-            delta:      Step
+            name (str):     Name of the Variable. Default: ``''``
+            bounds (tuple[float, float]):   Lower and upper bounds of the
+              variable value. Default: (-inf, inf)
+            delta (float):  Step. Default: 1.0
         """
         setfun = _setfun(refpts, attrname, index)
         getfun = _getfun(refpts, attrname, index)
