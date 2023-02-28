@@ -240,7 +240,7 @@ class ElementVariable(Variable):
                  refpts: Refpts, attrname: str,
                  index: Optional[int] = None,
                  **kwargs):
-        """
+        r"""
         Parameters:
             refpts:     Location of variable :py:class:`.Element`\ s
             attrname:   Attribute name
