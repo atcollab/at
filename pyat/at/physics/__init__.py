@@ -9,9 +9,9 @@ from .orbit import *
 from .matrix import *
 from .revolution import *
 from .linear import *
-from .ring_parameters import *
 from .diffmatrix import find_mpole_raddiff_matrix
 from .radiation import *
+from .ring_parameters import *
 from .harmonic_analysis import *
 from .nonlinear import *
 from .fastring import *
