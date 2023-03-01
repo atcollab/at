@@ -5,7 +5,6 @@ A :py:class:`.Lattice` in pyAT is a sequence of :py:class:`.Element` objects.
 These functions are useful for building ad manipulating these sequences.
 """
 import sys
-import numpy as np
 from .options import DConstant, random
 from .particle_object import Particle
 from .elements import *
@@ -19,6 +18,3 @@ from .deprecated import *
 # noinspection PyUnresolvedReferences
 from .. import constants
 sys.modules['at.lattice.constants'] = sys.modules['at.constants']
-
-# Type definitions
-Orbit = np.ndarray
