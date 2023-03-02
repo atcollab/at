@@ -9,39 +9,18 @@ def undulator_dipoles(L, nperiod,
               magnetmodel='rectangularbend',
               PoleDistance=0.0, name=''):
     """
+    Creates an AT lattice sequence describing and undulator
 
-    :param L:
-    :param nperiod:
-    :param BendAngle:
-    :param B0:
-    :param Energy:
-    :param magnetmodel:
-    :param PoleDistance:
-    :return:
+    :param L: length of undulator
+    :param nperiod: number of periods
+    :param BendAngle: bending angle of each pole in radians
+    :param B0: field of each pole in T
+    :param Energy: beam Energy in eV (used only if B0 is specified)
+    :param magnetmodel: may be 'rectangularbend' or 'multipoles'.
+                        in the second case no radiation effects will be visible
+    :param PoleDistance: distance without magnets between two consecutive poles
+    :return: at lattice sequence
 
-    input:
-       Lund= undulator length
-       nperiod = number of periods
-       'BendAngle', value : half pole bending angle in rad
-       'B0andEnergy', value (2x1): [half pole B0 field in T, Energy in eV]
-                                   converts to bending angle in rad.
-       'magnetmodel', value : 'multipoles' (default) or 'rectangularbend'
-       'PoleGap', value : drift space between gaps defualt (0.0)
-
-     if neither BendAngle nor B0andEnergy are provided then 'BendAngle' is 0.0
-
-     output:
-        cellarray of elements describing un undulator of length LUnd divided
-        in nperiod periods, each described as follows:
-            [negpole,drift,pospole,pospole,drift,negpole]
-        if 'PoleGap' is 0.0 (default), then
-        [negpole,pospole,pospole,negpole]
-
-    example:
-    1)  und=atundulator(1.6,61,'B0andEnergy',[0.4 6.04e9])
-    2)  und=atundulator(1.6,61,'BendAngle',-0.007984472464733)
-    3)  und=atundulator(1.6,61,'B0andEnergy',[0.4 6.04e9],'magnetmodel','rectangularbend')
-    4)  und=atundulator(1.6,61,'B0andEnergy',[0.4 6.04e9],'PoleGap',0.001);
     """
 
     # length of one period
