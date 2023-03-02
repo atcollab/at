@@ -1,9 +1,6 @@
 import at
-import at.plot
+# import at.plot
 import matplotlib.pyplot as plt
-from at.pyat.at.lattice.undulator_dipoles import undulator_dipoles, insert_undulator
-
-at.DConstant.patpass_poolsize = 120
 
 lattice_file_for_test = '/machfs/liuzzo/EBS/beamdyn/matlab/optics/sr/theory/betamodel.mat'
 lattice_variable_name = 'betamodel'
