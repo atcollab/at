@@ -338,6 +338,10 @@ class Observable(object):
         return deviation
 
     @property
+    def weighted_deviation(self):
+        return self.deviation / self.w
+
+    @property
     def residual(self):
         """residual, computed as
         :pycode:`residual = ((value-target)/weight)**2`"""
@@ -944,18 +948,21 @@ class ObservableList(list):
         for obs in self:
             self._update_reflists(obs)
 
-    def get_shapes(self) -> list:
-        """Return the shapes of all values"""
+    @property
+    def shapes(self) -> list:
+        """Shapes of all values"""
         # noinspection PyProtectedMember
         return [obs._shape for obs in self]
 
-    def get_flat_shape(self):
-        """Return the shape of flattened values"""
+    @property
+    def flat_shape(self):
+        """Shape of the flattened values"""
         # noinspection PyProtectedMember
         vals = (reduce(lambda x, y: x*y, obs._shape, 1) for obs in self)
         return sum(vals),
 
-    def get_values(self) -> list:
+    @property
+    def values(self) -> list:
         """Return the values of all observables
         """
         return [obs.value for obs in self]
@@ -968,9 +975,9 @@ class ObservableList(list):
         """
         return _flatten((obs.value for obs in self), order=order)
 
-    def get_weighted_values(self) -> list:
-        """Return the weighted values of all observables
-        """
+    @property
+    def weighted_values(self) -> list:
+        """Weighted values of all observables"""
         return [obs.weighted_value for obs in self]
 
     def get_flat_weighted_values(self, order: str = 'F') -> np.ndarray:
@@ -981,9 +988,9 @@ class ObservableList(list):
         """
         return _flatten((obs.weighted_value for obs in self), order=order)
 
-    def get_deviations(self) -> list:
-        """Return the deviations from target values
-        """
+    @property
+    def deviations(self) -> list:
+        """Deviations from target values"""
         return [obs.deviation for obs in self]
 
     def get_flat_deviations(self, order: str = 'F') -> np.ndarray:
@@ -994,9 +1001,22 @@ class ObservableList(list):
         """
         return _flatten((obs.deviation for obs in self), order=order)
 
-    def get_weights(self) -> list:
-        """Return the weights of all observables
+    @property
+    def weighted_deviations(self) -> list:
+        """Weighted deviations from target values"""
+        return [obs.weighted_deviation for obs in self]
+
+    def get_flat_weighted_deviations(self, order: str = 'F') -> np.ndarray:
+        """Return a 1-D array of weighted deviations from target values
+
+        Args:
+            order:      Ordering for reshaping. See :py:func:`~numpy.reshape`
         """
+        return _flatten((obs.weighted_deviation for obs in self), order=order)
+
+    @property
+    def weights(self) -> list:
+        """Weights of all observables"""
         return [obs.weight for obs in self]
 
     def get_flat_weights(self, order: str = 'F') -> np.ndarray:
@@ -1007,9 +1027,9 @@ class ObservableList(list):
         """
         return _flatten((obs.weight for obs in self), order=order)
 
-    def get_residuals(self) -> list:
-        """Return the residuals of all observable
-        """
+    @property
+    def residuals(self) -> list:
+        """Residuals of all observable"""
         return [obs.residual for obs in self]
 
     def get_sum_residuals(self) -> float:
@@ -1018,23 +1038,16 @@ class ObservableList(list):
         residuals = (obs.residual for obs in self)
         return sum(np.sum(res) for res in residuals)
 
-    shapes = property(get_shapes, doc="list of shapes of values")
-    flat_shape = property(get_flat_shape, doc="shape of the flattened values")
-    values = property(get_values, doc="Values of all the observables")
     flat_values = property(get_flat_values,
                            doc="1-D array of Observable values")
-    weighted_values = property(get_weighted_values,
-                               doc="weighted values of all the observables")
     flat_weighted_values = property(get_flat_weighted_values,
                                     doc="1-D array of Observable "
                                         "weigthed values")
-    deviations = property(get_deviations, doc="Deviations from target values")
     flat_deviations = property(get_flat_deviations,
                                doc="1-D array of deviations from target value")
-    weights = property(get_weights, doc="Weights of all the observables")
+    flat_weighted_deviations = property(get_flat_weighted_deviations)
     flat_weights = property(get_flat_weights,
                             doc="1-D array of Observable weights")
-    residuals = property(get_residuals, doc="Residuals of the observable")
     sum_residuals = property(get_sum_residuals,
                              doc="Sum of all residual values")
 

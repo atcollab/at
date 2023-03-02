@@ -10,12 +10,8 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-# sys.path.insert(0, os.path.abspath('../pyat'))
-# print(sys.path)
 import at
+import at.plot
 
 # -- Project information -----------------------------------------------------
 
@@ -106,6 +102,9 @@ html_logo = 'images/AT.png'
 html_copy_source = False
 html_theme_options = {
     "github_url": "https://github.com/atcollab/at",
+    "navbar_align": "content",
+    # https://github.com/pydata/pydata-sphinx-theme/issues/1220
+    "icon_links": [],
 }
 html_sidebars = {
     "index": [],
