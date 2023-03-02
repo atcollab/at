@@ -13,8 +13,8 @@ def undulator_dipoles(L, nperiod,
 
     :param L: length of undulator
     :param nperiod: number of periods
-    :param BendAngle: bending angle of each pole in radians
-    :param B0: field of each pole in T
+    :param BendAngle: bending angle of half pole in radians
+    :param B0: field of each half pole in T
     :param Energy: beam Energy in eV (used only if B0 is specified)
     :param magnetmodel: may be 'rectangularbend' or 'multipoles'.
                         in the second case no radiation effects will be visible
@@ -37,7 +37,7 @@ def undulator_dipoles(L, nperiod,
         AngPole = BendAngle
     else:
         AngPole = 0.0
-    print(f'half PoleAngle = {AngPole}')
+    # print(f'half PoleAngle = {AngPole}')
 
     # function to define one period of the undulator
     def makeundperiod(halfnegpole, halfpospole, driftpole):
