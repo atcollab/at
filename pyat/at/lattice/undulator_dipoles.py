@@ -82,14 +82,14 @@ def undulator_dipoles(L, nperiod,
 
         return undper
 
-    if magnetmodel is 'multipoles':
+    if magnetmodel == 'multipoles':
 
         undperiod = makeundperiod(
             at.Multipole('NegPole', LPole, -AngPole / LPole),
             at.Multipole('PosPole', LPole,  AngPole / LPole),
             at.Drift('PoleGap', DistPole))
 
-    elif magnetmodel is 'rectangularbend':
+    elif magnetmodel == 'rectangularbend':
 
         undperiod = makeundperiod(
             at.Dipole('NegPole', LPole, bending_angle=-AngPole,
@@ -147,10 +147,10 @@ def insert_undulator(ring, und, index, matchoptics=False):
     
         # add some PolynomB in case changes relative to 0.
         for ind, el in enumerate(ring_und):
-            if el.FamName is 'PosPole':
+            if el.FamName == 'PosPole':
                 el.MaxOrder = 1
                 el.PolynomB[1] = 0.0
-            if el.FamName is 'NegPole':
+            if el.FamName == 'NegPole':
                 el.MaxOrder = 1
                 el.PolynomB[1] = 0.0
         
