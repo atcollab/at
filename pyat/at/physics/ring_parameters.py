@@ -2,7 +2,9 @@ from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
 from typing import Optional
-from ..lattice import Lattice
+from .radiation import get_radiation_integrals, ohmi_envelope
+from .energy_loss import get_energy_loss
+from ..lattice import Lattice, Orbit
 from ..constants import clight, Cgamma, Cq
 
 __all__ = ['RingParameters', 'radiation_parameters', 'envelope_parameters']
@@ -112,7 +114,7 @@ def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
     _, ringdata, twiss = ring.get_optics(refpts=range(len(ring) + 1), dp=dp,
                                          get_chrom=True, **kwargs)
     rp.chromaticities = ringdata.chromaticity * ring.periodicity
-    integs = ring.get_radiation_integrals(dp=dp, twiss=twiss)
+    integs = get_radiation_integrals(ring, dp=dp, twiss=twiss)
     rp.i1, rp.i2, rp.i3, rp.i4, rp.i5 = numpy.array(integs) * ring.periodicity
     circumference = ring.circumference
     voltage = ring.rf_voltage
@@ -155,14 +157,19 @@ def radiation_parameters(ring: Lattice, dp: Optional[float] = None,
 
 # noinspection PyPep8Naming
 def envelope_parameters(ring: Lattice,
-                        params: Optional[RingParameters] = None)\
-        -> RingParameters:
+                        params: Optional[RingParameters] = None,
+                        orbit: Orbit = None,
+                        keep_lattice: bool = False) -> RingParameters:
     r"""Compute ring parameters from ohmi_envelope
 
     Parameters:
-        ring:       Lattice description.
-        params:     :py:class:`.RingParameters` object to be updated.
+        ring:           Lattice description.
+        params:         :py:class:`.RingParameters` object to be updated.
           Default: create a new one
+        orbit:          Avoids looking for the closed orbit if it is
+          already known ((6,) array)
+        keep_lattice:   Assume no lattice change since the
+          previous tracking.
 
     Returns:
         params:             :py:class:`.RingParameters` object.
@@ -183,10 +190,11 @@ def envelope_parameters(ring: Lattice,
     ==================  ========================================
     """
     rp = RingParameters() if params is None else params
-    emit0, beamdata, emit = ring.ohmi_envelope()
+    emit0, beamdata, emit = ohmi_envelope(ring, orbit=orbit,
+                                          keep_lattice=keep_lattice)
     voltage = ring.rf_voltage
     rp.E0 = ring.energy
-    rp.U0 = ring.energy_loss
+    rp.U0 = get_energy_loss(ring)
     rev_freq = ring.revolution_frequency
     rp.Tau = 1.0 / rev_freq / beamdata.damping_rates / ring.periodicity
     alpha = 1.0 / rp.Tau

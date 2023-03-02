@@ -2,7 +2,7 @@ import numpy
 import functools
 from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
-from ..lattice import Element, Particle, Refpts, End
+from ..lattice import Lattice, Element, Particle, Refpts, End
 from ..lattice import elements, refpts_iterator, get_uint32_index
 from typing import List, Iterable
 
@@ -241,3 +241,6 @@ def elempass(*args, **kwargs):
     """
     warn(UserWarning("The public interface for tracking is 'element_pass'"))
     return _elempass(*args, **kwargs)
+
+
+Lattice.lattice_pass = lattice_pass

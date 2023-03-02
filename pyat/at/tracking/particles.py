@@ -4,8 +4,7 @@ Functions relating to particle generation
 import numpy as np
 from numpy.linalg import cholesky, LinAlgError
 from warnings import warn
-from ..physics import Orbit, ohmi_envelope
-from ..lattice import AtError, AtWarning, Lattice, random
+from ..lattice import AtError, AtWarning, Lattice, Orbit, random
 
 __all__ = ['beam', 'sigma_matrix']
 
@@ -143,7 +142,7 @@ def sigma_matrix(ring: Lattice = None, **kwargs):
         orbit = el0.closed_orbit
         Rm = r_expand(el0['R'], r56)
         if ring.is_6d:
-            _, beam0, _ = ohmi_envelope(ring, orbit=orbit)
+            _, beam0, _ = ring.ohmi_envelope(orbit=orbit)
             sigmat = sigma_from_rmat(Rm, beam0.mode_emittances, em56)
         else:
             sigmat = sigma_from_rmat(Rm, None, em56)
