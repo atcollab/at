@@ -1,5 +1,5 @@
 import at
-# import at.plot
+import at.plot
 import matplotlib.pyplot as plt
 from at.lattice.undulator_dipoles import undulator_dipoles, insert_undulator
 
