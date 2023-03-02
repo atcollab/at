@@ -2,7 +2,8 @@ from math import pi, sqrt, asin, cos
 import numpy
 from numpy import nan
 from typing import Optional
-from . import get_radiation_integrals, ohmi_envelope, get_energy_loss
+from .radiation import get_radiation_integrals, ohmi_envelope
+from .energy_loss import get_energy_loss
 from ..lattice import Lattice, Orbit
 from ..constants import clight, Cgamma, Cq
 
