@@ -29,9 +29,8 @@ insertIDindex = ring.get_refpts('IDdownstream')[0]
 
 ring_w150, ring_w150_unmatched = insert_undulator(ring, und, insertIDindex)
 
-ring_w150.plot_beta()
-
-plt.show()
+# ring_w150.plot_beta()
+# plt.show()
 
 ring_w150.radiation_on(dipole_pass='BndMPoleSymplectic4RadPass')
 emit0, bbb, eee = ring_w150.ohmi_envelope()
