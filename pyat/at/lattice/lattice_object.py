@@ -328,29 +328,19 @@ class Lattice(list):
     def append(self, elem: Element):
         self.extend([elem])
 
-    def develop(self, periods: Optional[int] = None) -> "Lattice":
+    def develop(self) -> "Lattice":
         """Develop a periodical lattice by repeating its elements
         *self.periodicity* times
 
         The elements of the new lattice are deep copies ot the original
         elements, so that they are all independent.
 
-        Args:
-            periods: The lattice is repeated *periods* times instead of
-              *self.periodicity*
-
         Returns:
             newlattice: The developed lattice
         """
-        if periods is None:
-            periods = self.periodicity
-        newper, rem = divmod(self.periodicity, periods)
-        if rem != 0:
-            mess = "{} must be a divider of {}"
-            raise ValueError(mess.format(periods, self.periodicity))
-        elist = (el.deepcopy() for _ in range(periods) for el in self)
+        elist = (el.deepcopy() for _ in range(self.periodicity) for el in self)
         return Lattice(elem_generator, elist,
-                       iterator=self.attrs_filter, periodicity=newper,
+                       iterator=self.attrs_filter, periodicity=1,
                        harmonic_number=self.harmonic_number)
 
     @property
