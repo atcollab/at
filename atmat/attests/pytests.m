@@ -7,11 +7,6 @@ classdef pytests < matlab.unittest.TestCase
             "machine_data/spear3.m"];
     end
     
-    properties
-        ring4
-        ring6
-    end
-    
     properties(TestParameter)
         dp = {0., -0.01, 0.01};
         dct = {0., -0.00005, 0.00005};
@@ -19,11 +14,17 @@ classdef pytests < matlab.unittest.TestCase
         rad = struct("radoff","ring4","radon","ring6");
         lat2 = struct("hmba", "hmba","spear3","spear3");
     end
+    
+    properties
+        ring4
+        ring6
+    end
 
     methods(TestClassSetup)
         function load_lattice(testCase)
             % Shared setup for the entire test class
             t=warning('off','AT:atradon:NOCavity');
+            setoption('WarningDp6D',false);
             for fpath=testCase.mlist
                 [~,fname,~]=fileparts(fpath);
                 [testCase.ring4.(fname),testCase.ring6.(fname)]=mload(fpath);
@@ -35,8 +36,8 @@ classdef pytests < matlab.unittest.TestCase
                 pr=atwritepy(mr,'keep_all',true);
                 ring4.m=mr;
                 ring4.p=pr;
-                ring6.m=atradon(mr);
-                ring6.p=pr.radiation_on(pyargs('copy',true));
+                ring6.m=atenable_6d(mr);
+                ring6.p=pr.enable_6d(pyargs('copy',true));
             end
         end
     end
@@ -113,6 +114,16 @@ classdef pytests < matlab.unittest.TestCase
             [pm66,~]=deal(a2{:});
             pm66=double(pm66);
             testCase.verifyEqual(mm66,pm66,AbsTol=5.E-9);
+        end
+
+        function offmom(testCase, dp)
+            % Checks that off-momentum is correctly taken into account
+            % for 6D lattices
+            [ring1, elem1]=atlinopt6(testCase.ring4.hmba.m,'get_chrom', dp=dp);
+            [ring2, elem2]=atlinopt6(testCase.ring6.hmba.m,'get_chrom', dp=dp);
+            testCase.verifyEqual(ring1.tune, ring2.tune(1:2), AbsTol=1e-6);
+            testCase.verifyEqual(ring1.chromaticity, ring2.chromaticity(1:2), AbsTol=5.e-5);
+            testCase.verifyEqual(elem1.beta, elem2.beta, AbsTol=1.e-4)
         end
     end
 
