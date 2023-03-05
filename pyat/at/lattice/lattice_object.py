@@ -362,7 +362,7 @@ class Lattice(list):
                 warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
                                'city set to 1'.format(self.periodicity, n)))
                 periodicity = 1
-        elems = itertools.repeat(self, n-1)
+        elems = itertools.repeat(self, max(n-1, 0))
         lattice = self.concatenate(*elems, copy=copy)
         return Lattice(lattice, periodicity=periodicity)
 
