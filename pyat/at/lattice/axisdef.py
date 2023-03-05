@@ -27,17 +27,16 @@ _axis_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _axis_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
 _plane_def = dict(
-    h=dict(index=0, label="h", unit=" [m]"),
-    v=dict(index=1, label="v", unit=" [m]"),
-    l=dict(index=2, label="l", unit="")
+    h=dict(index=0, label="x", unit=" [m]"),
+    v=dict(index=1, label="y", unit=" [m]"),
+    l=dict(index=2, label="z", unit="")
 )
 for xk, xv in [it for it in _plane_def.items()]:
     xv['code'] = xk
     _plane_def[xv['index']] = xv
     _plane_def[xk.upper()] = xv
-_plane_def['x'] = _plane_def['h']
-_plane_def['y'] = _plane_def['v']
-_plane_def['z'] = _plane_def['l']
+_plane_def['h'] = _plane_def['x']
+_plane_def['v'] = _plane_def['y']
 _plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
@@ -124,11 +123,11 @@ def plane_(plane: AxisDef, key: Optional[str] = None):
         plane:          plane code or tuple[plane code] selecting planes.
           planes for the 3 planes are:
 
-          0, 'h', 'H', 'x' for horizontal plane,
+          0, 'x', 'X', 'h' for horizontal plane,
 
-          1, 'v', 'V', 'y' for vertical plane,
+          1, 'y', 'Y', 'v' for vertical plane,
 
-          2, 'l', 'L', 'z' for the longitudinal plane
+          2, 'z', 'Z'   for the longitudinal plane
 
           :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all planes
         key:            key in the plane descriptor dictionary,
