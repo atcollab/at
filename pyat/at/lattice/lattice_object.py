@@ -1258,7 +1258,8 @@ class Lattice(list):
             return radiate
 
 
-def merge_lattices(*lattices: Tuple[Union[Lattice, List], ...], copy=False):
+def merge_lattices(*lattices: Tuple[Union[Lattice, List], ...],
+                   copy=False) -> Lattice:
     """Merge several lattices together
 
     Equivalents syntaxes:
