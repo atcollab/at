@@ -22,6 +22,7 @@ for xk, xv in [it for it in _axis_def.items()]:
 _axis_def['xp'] = _axis_def['px']
 _axis_def['yp'] = _axis_def['py']
 _axis_def['delta'] = _axis_def['dp']
+_axis_def['s'] = _axis_def['ct']
 _axis_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _axis_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
@@ -36,6 +37,7 @@ for xk, xv in [it for it in _plane_def.items()]:
     _plane_def[xk.upper()] = xv
 _plane_def['x'] = _plane_def['h']
 _plane_def['y'] = _plane_def['v']
+_plane_def['z'] = _plane_def['l']
 _plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
@@ -69,9 +71,9 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
 
           3, 'py', 'PY', 'yp'
 
-          4, 'dp', 'delta'
+          4, 'dp', 'DP', 'delta'
 
-          5, 'ct'
+          5, 'ct', 'CT', 's'
 
           :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all axes
 
@@ -126,7 +128,7 @@ def plane_(plane: AxisDef, key: Optional[str] = None):
 
           1, 'v', 'V', 'y' for vertical plane,
 
-          2, 'l', 'L' for the longitudinal plane
+          2, 'l', 'L', 'z' for the longitudinal plane
 
           :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all planes
         key:            key in the plane descriptor dictionary,
