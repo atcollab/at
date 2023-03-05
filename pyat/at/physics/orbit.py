@@ -4,52 +4,15 @@ Closed orbit related functions
 import numpy
 from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant, Orbit
-from at.lattice import Lattice, get_s_pos, Refpts
-from at.lattice import set_cavity
+from at.lattice import Lattice, get_s_pos, Refpts, frequency_control
 from at.tracking import lattice_pass
 from . import ELossMethod, get_timelag_fromU0
 import warnings
-import functools
 
 # For backward compatibility, Orbit is redefined from .lattice
 __all__ = ['Orbit', 'find_orbit4', 'find_sync_orbit', 'find_orbit6',
-           'find_orbit', 'get_revolution_frequency', 'frequency_control']
-           
-           
-def frequency_control(func):
-    r""" Function to be used as decorator for :pycode:`func(ring, *args, **kwargs)`
+           'find_orbit', 'get_revolution_frequency']
 
-    If :pycode:`ring.is_6d` is :py:obj:`True` **and** *dp*, *dct* or *df*
-    is specified in *kwargs*, make a copy of *ring* with a modified
-    RF frequency, remove *dp*, *dct* or *df* from *kwargs* and call
-    *func* with the modified *ring*.
-
-    If :pycode:`ring.is_6d` is :py:obj:`False` **or** no *dp*, *dct* or
-    *df* is specified in *kwargs*, *func* is called unchanged.
-
-    Examples:
-
-        .. code-block:: python
-
-            @frequency_control
-            def func(ring, *args, dp=None, dct=None, **kwargs):
-                pass
-    """
-    @functools.wraps(func)
-    def wrapper(ring, *args, **kwargs):
-        if ring.is_6d:
-            momargs = {}
-            for key in ['dp', 'dct', 'df']:
-                v = kwargs.pop(key, None)
-                if v is not None:
-                    momargs[key] = v
-            if len(momargs) > 0:
-                frequency = ring.get_revolution_frequency(**momargs) \
-                    * ring.harmonic_number
-                ring = set_cavity(ring, Frequency=frequency, copy=True)
-        return func(ring, *args, **kwargs)
-    return wrapper
-           
            
 def get_revolution_frequency(ring: Lattice,
                              dp: float = None,
