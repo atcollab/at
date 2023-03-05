@@ -19,17 +19,16 @@ for xk, xv in [it for it in _axis_def.items()]:
     xv['code'] = xk
     _axis_def[xv['index']] = xv
     _axis_def[xk.upper()] = xv
-_axis_def['xp'] = _axis_def['px']
-_axis_def['yp'] = _axis_def['py']
 _axis_def['delta'] = _axis_def['dp']
 _axis_def['s'] = _axis_def['ct']
+_axis_def['S'] = _axis_def['ct']
 _axis_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _axis_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
 _plane_def = dict(
-    h=dict(index=0, label="x", unit=" [m]"),
-    v=dict(index=1, label="y", unit=" [m]"),
-    l=dict(index=2, label="z", unit="")
+    x=dict(index=0, label="x", unit=" [m]"),
+    y=dict(index=1, label="y", unit=" [m]"),
+    z=dict(index=2, label="z", unit="")
 )
 for xk, xv in [it for it in _plane_def.items()]:
     xv['code'] = xk
@@ -37,6 +36,8 @@ for xk, xv in [it for it in _plane_def.items()]:
     _plane_def[xk.upper()] = xv
 _plane_def['h'] = _plane_def['x']
 _plane_def['v'] = _plane_def['y']
+_plane_def['H'] = _plane_def['x']
+_plane_def['V'] = _plane_def['y']
 _plane_def[None] = dict(index=slice(None), label="", unit="", code=":")
 _plane_def[Ellipsis] = dict(index=Ellipsis, label="", unit="", code="...")
 
@@ -64,15 +65,15 @@ def axis_(axis: AxisDef, key: Optional[str] = None):
 
           0, 'x', 'X'
 
-          1, 'px', PX', 'xp'
+          1, 'px', PX'
 
-          2, 'z', 'Z'
+          2, 'y', 'Y'
 
-          3, 'py', 'PY', 'yp'
+          3, 'py', 'PY'
 
           4, 'dp', 'DP', 'delta'
 
-          5, 'ct', 'CT', 's'
+          5, 'ct', 'CT', 's', 'S'
 
           :py:obj:`None`, slice(None) and :py:obj:`Ellipsis` selects all axes
 
@@ -120,12 +121,12 @@ def plane_(plane: AxisDef, key: Optional[str] = None):
     r"""Return plane descriptions
 
     Parameters:
-        plane:          plane code or tuple[plane code] selecting planes.
-          planes for the 3 planes are:
+        plane:          plane code or tuple of plane codes selecting planes.
+          codes for the 3 planes are:
 
-          0, 'x', 'X', 'h' for horizontal plane,
+          0, 'x', 'X', 'h', 'H' for horizontal plane,
 
-          1, 'y', 'Y', 'v' for vertical plane,
+          1, 'y', 'Y', 'v', 'V' for vertical plane,
 
           2, 'z', 'Z'   for the longitudinal plane
 
