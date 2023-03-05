@@ -63,7 +63,7 @@ _DEFAULT_PASS = {
 }
 
 __all__ = ['Lattice', 'type_filter', 'params_filter', 'lattice_filter',
-           'elem_generator', 'no_filter', 'merge_lattices']
+           'elem_generator', 'no_filter']
 
 # Don't warn on floating-pont errors
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -261,10 +261,10 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        return merge_lattices(self, elems)
+        return self.concatenate(elems)
 
     def __iadd__(self, elems):
-        return merge_lattices(self, elems, inplace=True)
+        return self.concatenate(elems, inplace=True)
 
     def __mul__(self, n):
         return self.repeat(n)
@@ -362,15 +362,12 @@ class Lattice(list):
                 warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
                                'city set to 1'.format(self.periodicity, n)))
                 periodicity = 1
-        # noinspection PyTypeChecker
-        elems = Lattice(self)
-        for i in range(n-1):
-            elems.extend(self, copy=copy)
-        return Lattice(elem_generator, elems,
-                       iterator=self.attrs_filter, periodicity=periodicity)
+        elems = itertools.repeat(self, n-1)
+        lattice = self.concatenate(*elems, copy=copy)
+        return Lattice(lattice, periodicity=periodicity)
 
     def concatenate(self, *lattices: Tuple[Iterable[Element], ...],
-                    copy=False):
+                    copy=False, inplace=False):
         """Concatenate several `Iterable[Element]` with the lattice
 
         Equivalents syntaxes:
@@ -378,16 +375,26 @@ class Lattice(list):
         >>>newring = ring + r1 + r2 + r3
 
         Parameters:
-            lattices:  lattices to be merged to the ring
+            lattices: :py:obj:`Iterables[Element]` to be concatenanted
+                      to the Lattice
 
         Keyword Arguments:
             copy(bool): Default :py:obj:`False`. If :py:obj:`True`
-                        deepcopies of the elements of lattices
+                        deepcopies of the elements of lattices are used
+            inplace(bool): Default :py:obj:`False`. If :py:obj:`True`
+                           the lattice is modified in place.
+                           Oterwise a new Lattice object is returned
 
         Returns:
             newring(Lattice): concatenated Lattice
         """
-        return merge_lattices(self, *lattices, copy=copy)
+        if inplace:
+            lattice = self
+        else:
+            lattice = Lattice(self)
+        for lat in numpy.atleast_2d(lattices):
+            lattice.extend(lat, copy=copy)
+        return lattice
 
     @property
     def attrs(self) -> Dict:
@@ -1273,40 +1280,6 @@ class Lattice(list):
             # noinspection PyAttributeOutsideInit
             self._radiation = radiate
             return radiate
-
-
-def merge_lattices(lattice0: Lattice, *lattices: Tuple[Iterable[Element], ...],
-                   copy=False, inplace=False) -> Lattice:
-    """Merge several lattices together
-
-    Equivalents syntaxes:
-    >>>newring = merge_lattices(ring1, ring2)
-    >>>newring = ring1 + ring2
-
-    Parameters:
-        lattice0:  initial lattice
-        lattices:  lattices to be merged to lattice0
-
-    Keyword Arguments:
-        copy(bool): Default :py:obj:`False`. If :py:obj:`True`
-                            deepcopies of the elements of lattices
-        inplace(bool): Default :py:obj:`False`. If :py:obj:`True`
-                       the lattice `lattice0 is modified in place.
-                       Otherwise a new Lattice object is created.
-
-    Returns:
-        newring(Lattice): merged Lattice
-    """
-    if not isinstance(lattice0, Lattice):
-        raise AtError('Input argument lattice0 is not a Lattice object')
-
-    if inplace:
-        lattice = lattice0
-    else:
-        lattice = Lattice(lattice0)
-    for lat in numpy.atleast_2d(lattices):
-        lattice.extend(lat, copy=copy)
-    return lattice
 
 
 def lattice_filter(params, lattice):
