@@ -339,6 +339,10 @@ class Lattice(list):
             periodicity is set to 1, otherwise  it is et to
             `ring.periodicity /= n`.
 
+            Equivalents syntaxes:
+            >>>newring = ring.repeat(n)
+            >>>newring = ring * n
+
             Parameters:
                 n (int): number of repetition
 
@@ -349,12 +353,7 @@ class Lattice(list):
 
             Returns:
                 newring (Lattice): the new repeated lattice
-
-            Equivalents syntaxes:
-            >>>newring = ring.repeat(n)
-            >>>newring = ring * n
         """
-        """Repeats n times the lattice"""
         periodicity = self.periodicity
         if n != 0 and periodicity > 1:
             nbp = periodicity / n
