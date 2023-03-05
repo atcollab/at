@@ -309,10 +309,10 @@ class Lattice(list):
     def extend(self, elems: Iterable[Element]):
         r"""This method adds all the elements of `elems` to the end of the
             lattice. The behavior is the same as for a :py:obj:`list`
-            
-            Equivalents syntaxes:        
+
+            Equivalents syntaxes:
             >>>ring.extend(elems)
-            >>>ring += elems          
+            >>>ring += elems
         """
         if hasattr(self, '_energy'):
             # When unpickling a Lattice, extend is called before the lattice
@@ -321,36 +321,37 @@ class Lattice(list):
         super().extend(elems)
 
     def append(self, elem: Element):
-        r"""This method overwrites the inherited method :py:meth:`list.append()`,
-            it behavior is changed, it accepts only AT lattice elements 
-            :py:obj:`Element` as input argument.  
+        r"""This method overwrites the inherited method
+            :py:meth:`list.append()`,
+            it behavior is changed, it accepts only AT lattice elements
+            :py:obj:`Element` as input argument.
 
-            Equivalents syntaxes:        
+            Equivalents syntaxes:
             >>>ring.append(elem)
-            >>>ring += [elem]                     
+            >>>ring += [elem]
         """
         self.extend([elem])
-        
+
     def repeat(self, n: int, copy=True):
-        r"""This method allows to repeat the lattice `n` times. 
-            If `n` does not divide `ring.periodicity`, the new ring 
+        r"""This method allows to repeat the lattice `n` times.
+            If `n` does not divide `ring.periodicity`, the new ring
             periodicity is set to 1, otherwise  it is et to
             `ring.periodicity /= n`.
-            
+
             Parameters:
                 n (int): number of repetition
-            
+
             Keyword Arguments:
                 copy(bool): Default :py:obj:`True`. If :py:obj:`True`
                             deepcopies of the lattice are used for the
                             repetition
-                
+
             Returns:
                 newring (Lattice): the new repeated lattice
 
-            Equivalents syntaxes:        
+            Equivalents syntaxes:
             >>>newring = ring.repeat(n)
-            >>>newring = ring * n                     
+            >>>newring = ring * n
         """
         """Repeats n times the lattice"""
         periodicity = self.periodicity
@@ -365,10 +366,10 @@ class Lattice(list):
         elems = []
         for i in range(n):
             if copy:
-                elems += self.deepcopy() 
+                elems += self.deepcopy()
             else:
-                elems += self            
-        return Lattice(elem_generator, elems, 
+                elems += self
+        return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, periodicity=periodicity)
 
     @property
@@ -678,7 +679,7 @@ class Lattice(list):
             circ = self.beta * clight * \
                 self.harmonic_number/self.rf_frequency
         except AtError:
-            circ = self.circumference       
+            circ = self.circumference
         bs = circ/len(self._fillpattern)
         allpos = bs*numpy.arange(len(self._fillpattern))
         return allpos[self._fillpattern > 0]
@@ -1255,33 +1256,33 @@ class Lattice(list):
             # noinspection PyAttributeOutsideInit
             self._radiation = radiate
             return radiate
-            
-            
+
+
 def merge_lattices(*lattices: Tuple[Lattice, ...], copy=False):
     """Merge several lattices together
-    
-    Equivalents syntaxes:  
-    >>>newring = merge_lattices(ring1, ring2)           
-    >>>newring = ring1 + ring2 
+
+    Equivalents syntaxes:
+    >>>newring = merge_lattices(ring1, ring2)
+    >>>newring = ring1 + ring2
 
     Parameters:
         lattices:  lattices to be merged
-        
+
     Keyword Arguments:
         copy(bool): Default :py:obj:`False`. If :py:obj:`True`
-                            deepcopies are used to produce the merged
-                            newring
+                            deepcopies are used to produce the
+                            merged newring
 
     Returns:
         newring(Lattice): merged Lattice
-    """    
+    """
     newring = []
-    for l in lattices:
+    for lat in lattices:
         if copy:
-            newring += l.deepcopy()
+            newring += lat.deepcopy()
         else:
-            newring += l
-    return newring 
+            newring += lat
+    return newring
 
 
 def lattice_filter(params, lattice):
