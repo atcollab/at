@@ -261,10 +261,10 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        return merge_lattices(self, elems, copy=True)
+        return merge_lattices(self, elems)
 
     def __iadd__(self, elems):
-        return merge_lattices(self, elems)
+        return merge_lattices(self, elems, inplace=True)
 
     def __mul__(self, n):
         return self.repeat(n)
@@ -1256,8 +1256,8 @@ class Lattice(list):
             return radiate
 
 
-def merge_lattices(*lattices: Tuple[Iterable[Element], ...],
-                   copy=False) -> Lattice:
+def merge_lattices(lattice0: Lattice, *lattices: Tuple[Iterable[Element], ...],
+                   copy=False, inplace=False) -> Lattice:
     """Merge several lattices together
 
     Equivalents syntaxes:
@@ -1265,20 +1265,29 @@ def merge_lattices(*lattices: Tuple[Iterable[Element], ...],
     >>>newring = ring1 + ring2
 
     Parameters:
-        lattices:  lattices to be merged
+        lattice0:  initial lattice
+        lattices:  lattices to be merged to lattice0
 
     Keyword Arguments:
         copy(bool): Default :py:obj:`False`. If :py:obj:`True`
-                            deepcopies are used to produce the
-                            merged newring
+                            deepcopies of the elements of lattices
+        inplace(bool): Default :py:obj:`False`. If :py:obj:`True`
+                       the lattice `lattice0 is modified in place.
+                       Otherwise a new Lattice object is created.
 
     Returns:
         newring(Lattice): merged Lattice
     """
-    newring = Lattice(lattices[0])
-    for lat in lattices[1:]:
-        newring.extend(lat, copy=copy)
-    return newring
+    if not isinstance(lattice0, Lattice):
+        raise AtError('Input argument lattice0 is not a Lattice object')
+
+    if inplace:
+        lattice = lattice0
+    else:
+        lattice = Lattice(lattice0)
+    for lat in numpy.atleast_2d(lattices):
+        lattice.extend(lat, copy=copy)
+    return lattice
 
 
 def lattice_filter(params, lattice):
