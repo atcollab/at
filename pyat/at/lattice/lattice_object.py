@@ -261,17 +261,15 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        return merge_lattices(self, elems)
+        return merge_lattices(self, elems, copy=True)
 
     def __iadd__(self, elems):
-        newring = Lattice(self)
-        newring.extend(elems)
-        return newring
+        return merge_lattices(self, elems)
 
     def __mul__(self, n):
         return self.repeat(n)
 
-    def _addition_filter(self, elems: Iterable[Element]):
+    def _addition_filter(self, elems: Iterable[Element], copy=False):
         cavities = []
         length = 0.0
         params = {}
@@ -287,7 +285,10 @@ class Lattice(list):
             elif hasattr(elem, '_turnhistory'):
                 elem.clear_history(self)
             length += getattr(elem, 'Length', 0.0)
-            yield elem
+            if copy:
+                yield elem.deepcopy()
+            else:
+                yield elem
 
         if cavities and not hasattr(self, '_cell_harmnumber'):
             cavities.sort(key=lambda el: el.Frequency)
@@ -300,13 +301,13 @@ class Lattice(list):
                 self._cell_harmnumber = int(round(frequency / rev))
         self._radiation |= params.pop('_radiation')
 
-    def insert(self, idx: SupportsIndex, elem: Element):
+    def insert(self, idx: SupportsIndex, elem: Element, copy=False):
         # noinspection PyUnusedLocal
         # scan the new element to update it
-        elist = list(self._addition_filter([elem]))
+        elist = list(self._addition_filter([elem], copy=copy))
         super().insert(idx, elem)
 
-    def extend(self, elems: Iterable[Element]):
+    def extend(self, elems: Iterable[Element], copy=False):
         r"""This method adds all the elements of `elems` to the end of the
             lattice. The behavior is the same as for a :py:obj:`list`
 
@@ -317,10 +318,10 @@ class Lattice(list):
         if hasattr(self, '_energy'):
             # When unpickling a Lattice, extend is called before the lattice
             # is initialized. So skip this.
-            elems = self._addition_filter(elems)
+            elems = self._addition_filter(elems, copy=copy)
         super().extend(elems)
 
-    def append(self, elem: Element):
+    def append(self, elem: Element, copy=False):
         r"""This method overwrites the inherited method
             :py:meth:`list.append()`,
             it behavior is changed, it accepts only AT lattice elements
@@ -330,7 +331,7 @@ class Lattice(list):
             >>>ring.append(elem)
             >>>ring += [elem]
         """
-        self.extend([elem])
+        self.extend([elem], copy=copy)
 
     def repeat(self, n: int, copy=True):
         r"""This method allows to repeat the lattice `n` times.
@@ -363,12 +364,9 @@ class Lattice(list):
                                'city set to 1'.format(self.periodicity, n)))
                 periodicity = 1
         # noinspection PyTypeChecker
-        elems = []
-        for i in range(n):
-            if copy:
-                elems += self.deepcopy()
-            else:
-                elems += self
+        elems = Lattice(self)
+        for i in range(n-1):
+            elems.extend(self, copy=copy)
         return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, periodicity=periodicity)
 
@@ -1277,13 +1275,10 @@ def merge_lattices(*lattices: Tuple[Iterable[Element], ...],
     Returns:
         newring(Lattice): merged Lattice
     """
-    newring = []
-    for lat in lattices:
-        if copy:
-            newring += copy.deepcopy(lat)
-        else:
-            newring += lat
-    return Lattice(newring)
+    newring = Lattice(lattices[0])
+    for lat in lattices[1:]:
+        newring.extend(lat, copy=copy)
+    return newring
 
 
 def lattice_filter(params, lattice):
