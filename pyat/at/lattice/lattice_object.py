@@ -261,27 +261,15 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
+        return merge_lattices(self, elems)
+
+    def __iadd__(self, elems):
         newring = Lattice(self)
         newring.extend(elems)
         return newring
 
-    def __iadd__(self, elems):
-        return super(Lattice, self).__iadd__(self._addition_filter(elems))
-
     def __mul__(self, n):
-        """Repeats n times the lattice"""
-        periodicity = self.periodicity
-        if n != 0 and periodicity > 1:
-            nbp = periodicity / n
-            periodicity = int(round(nbp))
-            if abs(periodicity - nbp) > _TWO_PI_ERROR:
-                warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
-                               'city set to 1'.format(self.periodicity, n)))
-                periodicity = 1
-        # noinspection PyTypeChecker
-        return Lattice(elem_generator,
-                       itertools.chain(*itertools.repeat(self, n)),
-                       iterator=self.attrs_filter, periodicity=periodicity)
+        return self.repeat(n)
 
     def _addition_filter(self, elems: Iterable[Element]):
         cavities = []
@@ -319,6 +307,13 @@ class Lattice(list):
         super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element]):
+        r"""This method adds all the elements of `elems` to the end of the
+            lattice. The behavior is the same as for a :py:obj:`list`
+            
+            Equivalents syntaxes:        
+            >>>ring.extend(elems)
+            >>>ring += elems          
+        """
         if hasattr(self, '_energy'):
             # When unpickling a Lattice, extend is called before the lattice
             # is initialized. So skip this.
@@ -326,7 +321,55 @@ class Lattice(list):
         super().extend(elems)
 
     def append(self, elem: Element):
+        r"""This method overwrites the inherited method :py:meth:`list.append()`,
+            it behavior is changed, it accepts only AT lattice elements 
+            :py:obj:`Element` as input argument.  
+
+            Equivalents syntaxes:        
+            >>>ring.append(elem)
+            >>>ring += [elem]                     
+        """
         self.extend([elem])
+        
+    def repeat(self, n: int, copy=True):
+        r"""This method allows to repeat the lattice `n` times. 
+            If `n` does not divide `ring.periodicity`, the new ring 
+            periodicity is set to 1, otherwise  it is et to
+            `ring.periodicity /= n`.
+            
+            Parameters:
+                n (int): number of repetition
+            
+            Keyword Arguments:
+                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
+                            deepcopies of the lattice are used for the
+                            repetition
+                
+            Returns:
+                newring (Lattice): the new repeated lattice
+
+            Equivalents syntaxes:        
+            >>>newring = ring.repeat(n)
+            >>>newring = ring * n                     
+        """
+        """Repeats n times the lattice"""
+        periodicity = self.periodicity
+        if n != 0 and periodicity > 1:
+            nbp = periodicity / n
+            periodicity = int(round(nbp))
+            if abs(periodicity - nbp) > _TWO_PI_ERROR:
+                warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
+                               'city set to 1'.format(self.periodicity, n)))
+                periodicity = 1
+        # noinspection PyTypeChecker
+        elems = []
+        for i in range(n):
+            if copy:
+                elems += self.deepcopy() 
+            else:
+                elems += self            
+        return Lattice(elem_generator, elems, 
+                       iterator=self.attrs_filter, periodicity=periodicity)
 
     @property
     def attrs(self) -> Dict:
@@ -1212,6 +1255,33 @@ class Lattice(list):
             # noinspection PyAttributeOutsideInit
             self._radiation = radiate
             return radiate
+            
+            
+def merge_lattices(*lattices: Tuple[Lattice, ...], copy=False):
+    """Merge several lattices together
+    
+    Equivalents syntaxes:  
+    >>>newring = merge_lattices(ring1, ring2)           
+    >>>newring = ring1 + ring2 
+
+    Parameters:
+        lattices:  lattices to be merged
+        
+    Keyword Arguments:
+        copy(bool): Default :py:obj:`False`. If :py:obj:`True`
+                            deepcopies are used to produce the merged
+                            newring
+
+    Returns:
+        newring(Lattice): merged Lattice
+    """    
+    newring = []
+    for l in lattices:
+        if copy:
+            newring += l.deepcopy()
+        else:
+            newring += l
+    return newring 
 
 
 def lattice_filter(params, lattice):
