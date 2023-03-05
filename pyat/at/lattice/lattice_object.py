@@ -63,7 +63,7 @@ _DEFAULT_PASS = {
 }
 
 __all__ = ['Lattice', 'type_filter', 'params_filter', 'lattice_filter',
-           'elem_generator', 'no_filter']
+           'elem_generator', 'no_filter', 'merge_lattices']
 
 # Don't warn on floating-pont errors
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -369,6 +369,26 @@ class Lattice(list):
             elems.extend(self, copy=copy)
         return Lattice(elem_generator, elems,
                        iterator=self.attrs_filter, periodicity=periodicity)
+
+    def concatenate(self, *lattices: Tuple[Iterable[Element], ...],
+                    copy=False):
+        """Concatenate several `Iterable[Element]` with the lattice
+
+        Equivalents syntaxes:
+        >>>newring = ring.concatenate(r1, r2, r3)
+        >>>newring = ring + r1 + r2 + r3
+
+        Parameters:
+            lattices:  lattices to be merged to the ring
+
+        Keyword Arguments:
+            copy(bool): Default :py:obj:`False`. If :py:obj:`True`
+                        deepcopies of the elements of lattices
+
+        Returns:
+            newring(Lattice): concatenated Lattice
+        """
+        return merge_lattices(self, *lattices, copy=copy)
 
     @property
     def attrs(self) -> Dict:
