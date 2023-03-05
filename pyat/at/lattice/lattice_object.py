@@ -1258,7 +1258,7 @@ class Lattice(list):
             return radiate
 
 
-def merge_lattices(*lattices: Tuple[Lattice, ...], copy=False):
+def merge_lattices(*lattices: Tuple[Union[Lattice, List], ...], copy=False):
     """Merge several lattices together
 
     Equivalents syntaxes:
@@ -1279,10 +1279,10 @@ def merge_lattices(*lattices: Tuple[Lattice, ...], copy=False):
     newring = []
     for lat in lattices:
         if copy:
-            newring += lat.deepcopy()
+            newring += copy.deepcopy(lat)
         else:
             newring += lat
-    return newring
+    return Lattice(newring)
 
 
 def lattice_filter(params, lattice):
