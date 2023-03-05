@@ -302,6 +302,16 @@ class Lattice(list):
         self._radiation |= params.pop('_radiation')
 
     def insert(self, idx: SupportsIndex, elem: Element, copy=False):
+        r"""This method allow to insert an AT element in the lattice.
+
+            Parameters:
+                idx (SupportsIndex): index at which the lement is inserted
+                elem (Element): AT element to be inserted in the lattice
+
+            Keyword Arguments:
+                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
+                            a deep copy of elem is used
+        """
         # noinspection PyUnusedLocal
         # scan the new element to update it
         elist = list(self._addition_filter([elem], copy=copy))
@@ -314,6 +324,14 @@ class Lattice(list):
             Equivalents syntaxes:
             >>>ring.extend(elems)
             >>>ring += elems
+
+            Parameters:
+                elem (Iterable[Element]): Sequence of AT elements to be
+                                          appended to the lattice
+
+            Keyword Arguments:
+                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
+                            deep copies of each element of elems are used
         """
         if hasattr(self, '_energy'):
             # When unpickling a Lattice, extend is called before the lattice
@@ -330,6 +348,13 @@ class Lattice(list):
             Equivalents syntaxes:
             >>>ring.append(elem)
             >>>ring += [elem]
+
+            Parameters:
+                elem (Element): AT element to be appended to the lattice
+
+            Keyword Arguments:
+                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
+                            a deep copy of elem is used
         """
         self.extend([elem], copy=copy)
 
