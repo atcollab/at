@@ -10,17 +10,19 @@ automatically imported.
 
 As an example, see the at.physics.orbit module
 """
+from __future__ import annotations
 import sys
 import copy
 import numpy
 import math
 import itertools
-from typing import Optional, Callable, Union, Dict, Tuple
-from typing import Iterable, Generator
-if sys.version_info.minor < 8:
+from typing import Optional, Union
+if sys.version_info.minor < 9:
+    from typing import Callable, Iterable, Generator
     SupportsIndex = int
 else:
     from typing import SupportsIndex
+    from collections.abc import Callable, Iterable, Generator
 from warnings import warn
 from ..constants import clight, e_mass
 from .particle_object import Particle
@@ -328,8 +330,23 @@ class Lattice(list):
     def append(self, elem: Element):
         self.extend([elem])
 
+    def develop(self) -> "Lattice":
+        """Develop a periodical lattice by repeating its elements
+        *self.periodicity* times
+
+        The elements of the new lattice are deep copies ot the original
+        elements, so that they are all independent.
+
+        Returns:
+            newlattice: The developed lattice
+        """
+        elist = (el.deepcopy() for _ in range(self.periodicity) for el in self)
+        return Lattice(elem_generator, elist,
+                       iterator=self.attrs_filter, periodicity=1,
+                       harmonic_number=self.harmonic_number)
+
     @property
-    def attrs(self) -> Dict:
+    def attrs(self) -> dict:
         """Dictionary of lattice attributes"""
         def extattr(d):
             for k in self._disp_attributes:
@@ -421,7 +438,7 @@ class Lattice(list):
         return elem_filter(params, *args)
 
     @property
-    def s_range(self) -> Union[None, Tuple[float, float]]:
+    def s_range(self) -> Union[None, tuple[float, float]]:
         """Range of interest: (s_min, s_max). :py:obj:`None` means
           the full cell."""
         try:
@@ -432,7 +449,7 @@ class Lattice(list):
 
     # noinspection PyAttributeOutsideInit
     @s_range.setter
-    def s_range(self, value):
+    def s_range(self, value: Optional[tuple[float, float]]):
         spos = self.get_s_pos(range(len(self) + 1))
         if value is None:
             value = (0.0, spos[-1])
@@ -670,10 +687,10 @@ class Lattice(list):
         #     raise AtError('harmonic number ({}) must be a multiple of {}'
         #                   .format(value, int(self.periodicity)))
         self._cell_harmnumber = cell_h
-        if len(self._fillpattern) > 1:
+        if len(self._fillpattern) != value:
             warn(AtWarning('Harmonic number changed, resetting fillpattern to '
                            'default (single bunch)'))
-        self.set_fillpattern()
+            self.set_fillpattern()
 
     @property
     def gamma(self) -> float:
