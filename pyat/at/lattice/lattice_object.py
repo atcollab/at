@@ -10,17 +10,18 @@ automatically imported.
 
 As an example, see the at.physics.orbit module
 """
+from __future__ import annotations
 import sys
 import copy
 import numpy
 import math
 import itertools
-from typing import Optional, Callable, Union, Dict, Tuple
-from typing import Iterable, Generator
+from typing import Optional, Union
 if sys.version_info.minor < 8:
     SupportsIndex = int
 else:
     from typing import SupportsIndex
+from collections.abc import Callable, Iterable, Generator
 from warnings import warn
 from ..constants import clight, e_mass
 from .particle_object import Particle
@@ -344,7 +345,7 @@ class Lattice(list):
                        harmonic_number=self.harmonic_number)
 
     @property
-    def attrs(self) -> Dict:
+    def attrs(self) -> dict:
         """Dictionary of lattice attributes"""
         def extattr(d):
             for k in self._disp_attributes:
@@ -436,7 +437,7 @@ class Lattice(list):
         return elem_filter(params, *args)
 
     @property
-    def s_range(self) -> Union[None, Tuple[float, float]]:
+    def s_range(self) -> Union[None, tuple[float, float]]:
         """Range of interest: (s_min, s_max). :py:obj:`None` means
           the full cell."""
         try:
@@ -447,7 +448,7 @@ class Lattice(list):
 
     # noinspection PyAttributeOutsideInit
     @s_range.setter
-    def s_range(self, value):
+    def s_range(self, value: Optional[tuple[float, float]]):
         spos = self.get_s_pos(range(len(self) + 1))
         if value is None:
             value = (0.0, spos[-1])
