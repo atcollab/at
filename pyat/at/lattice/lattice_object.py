@@ -316,7 +316,8 @@ class Lattice(list):
         """
         # noinspection PyUnusedLocal
         # scan the new element to update it
-        elist = list(self._addition_filter([elem], copy_elements=copy_elements))
+        elist = list(self._addition_filter([elem],
+                     copy_elements=copy_elements))
         super().insert(idx, elem)
 
     def extend(self, elems: Iterable[Element], copy_elements=False):
@@ -384,11 +385,11 @@ class Lattice(list):
                 newring (Lattice): the new repeated lattice
         """
         def copy_fun(elem, copy):
-             if copy:
-                 return elem.deepcopy()
-             else:
-                 return elem
-        
+            if copy:
+                return elem.deepcopy()
+            else:
+                return elem
+
         periodicity = self.periodicity
         if n != 0 and periodicity > 1:
             nbp = periodicity / n
