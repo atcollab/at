@@ -17,11 +17,12 @@ import numpy
 import math
 import itertools
 from typing import Optional, Union
-if sys.version_info.minor < 8:
+if sys.version_info.minor < 9:
+    from typing import Callable, Iterable, Generator
     SupportsIndex = int
 else:
     from typing import SupportsIndex
-from collections.abc import Callable, Iterable, Generator
+    from collections.abc import Callable, Iterable, Generator
 from warnings import warn
 from ..constants import clight, e_mass
 from .particle_object import Particle
