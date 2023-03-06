@@ -264,12 +264,13 @@ class Lattice(list):
         return self.concatenate(elems)
 
     def __iadd__(self, elems):
-        return self.concatenate(elems, inplace=True)
+        self.concatenate(elems, copy=False)
+        return self
 
     def __mul__(self, n):
         return self.repeat(n)
 
-    def _addition_filter(self, elems: Iterable[Element], copy=False):
+    def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
         length = 0.0
         params = {}
@@ -285,7 +286,7 @@ class Lattice(list):
             elif hasattr(elem, '_turnhistory'):
                 elem.clear_history(self)
             length += getattr(elem, 'Length', 0.0)
-            if copy:
+            if copy_elements:
                 yield elem.deepcopy()
             else:
                 yield elem
@@ -301,7 +302,7 @@ class Lattice(list):
                 self._cell_harmnumber = int(round(frequency / rev))
         self._radiation |= params.pop('_radiation')
 
-    def insert(self, idx: SupportsIndex, elem: Element, copy=False):
+    def insert(self, idx: SupportsIndex, elem: Element, copy_elements=False):
         r"""This method allow to insert an AT element in the lattice.
 
             Parameters:
@@ -309,76 +310,85 @@ class Lattice(list):
                 elem (Element): AT element to be inserted in the lattice
 
             Keyword Arguments:
-                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
-                            a deep copy of elem is used
+                copy_elements(bool): Default :py:obj:`True`.
+                                     If :py:obj:`True` a deep copy of elem
+                                     is used.
         """
         # noinspection PyUnusedLocal
         # scan the new element to update it
-        elist = list(self._addition_filter([elem], copy=copy))
+        elist = list(self._addition_filter([elem], copy_elements=copy_elements))
         super().insert(idx, elem)
 
-    def extend(self, elems: Iterable[Element], copy=False):
+    def extend(self, elems: Iterable[Element], copy_elements=False):
         r"""This method adds all the elements of `elems` to the end of the
             lattice. The behavior is the same as for a :py:obj:`list`
 
             Equivalents syntaxes:
-            >>>ring.extend(elems)
-            >>>ring += elems
+            >>> ring.extend(elems)
+            >>> ring += elems
 
             Parameters:
                 elem (Iterable[Element]): Sequence of AT elements to be
                                           appended to the lattice
 
             Keyword Arguments:
-                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
-                            deep copies of each element of elems are used
+                copy_elements(bool): Default :py:obj:`True`.
+                                     If :py:obj:`True` deep copies of each
+                                     element of elems are used
         """
         if hasattr(self, '_energy'):
             # When unpickling a Lattice, extend is called before the lattice
             # is initialized. So skip this.
-            elems = self._addition_filter(elems, copy=copy)
+            elems = self._addition_filter(elems, copy_elements=copy_elements)
         super().extend(elems)
 
-    def append(self, elem: Element, copy=False):
+    def append(self, elem: Element, copy_elements=False):
         r"""This method overwrites the inherited method
             :py:meth:`list.append()`,
             it behavior is changed, it accepts only AT lattice elements
             :py:obj:`Element` as input argument.
 
             Equivalents syntaxes:
-            >>>ring.append(elem)
-            >>>ring += [elem]
+            >>> ring.append(elem)
+            >>> ring += [elem]
 
             Parameters:
                 elem (Element): AT element to be appended to the lattice
 
             Keyword Arguments:
-                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
-                            a deep copy of elem is used
+                copy_elements(bool): Default :py:obj:`True`.
+                                     If :py:obj:`True` a deep copy of elem
+                                     is used
         """
-        self.extend([elem], copy=copy)
+        self.extend([elem], copy_elements=copy_elements)
 
-    def repeat(self, n: int, copy=True):
+    def repeat(self, n: int, copy_elements=True):
         r"""This method allows to repeat the lattice `n` times.
             If `n` does not divide `ring.periodicity`, the new ring
             periodicity is set to 1, otherwise  it is et to
             `ring.periodicity /= n`.
 
             Equivalents syntaxes:
-            >>>newring = ring.repeat(n)
-            >>>newring = ring * n
+            >>> newring = ring.repeat(n)
+            >>> newring = ring * n
 
             Parameters:
                 n (int): number of repetition
 
             Keyword Arguments:
-                copy(bool): Default :py:obj:`True`. If :py:obj:`True`
-                            deepcopies of the lattice are used for the
-                            repetition
+                copy_elements(bool): Default :py:obj:`True`.
+                            If :py:obj:`True` deepcopies of the
+                            lattice are used for the repetition
 
             Returns:
                 newring (Lattice): the new repeated lattice
         """
+        def copy_fun(elem, copy):
+             if copy:
+                 return elem.deepcopy()
+             else:
+                 return elem
+        
         periodicity = self.periodicity
         if n != 0 and periodicity > 1:
             nbp = periodicity / n
@@ -387,39 +397,40 @@ class Lattice(list):
                 warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
                                'city set to 1'.format(self.periodicity, n)))
                 periodicity = 1
-        elems = itertools.repeat(self, max(n-1, 0))
-        lattice = self.concatenate(*elems, copy=copy)
-        return Lattice(lattice, periodicity=periodicity)
+        elems = (copy_fun(el, copy_elements) for _ in range(n) for el in self)
+        return Lattice(elem_generator, elems, iterator=self.attrs_filter,
+                       periodicity=periodicity)
 
     def concatenate(self, *lattices: Tuple[Iterable[Element], ...],
-                    copy=False, inplace=False):
+                    copy_elements=False, copy=True):
         """Concatenate several `Iterable[Element]` with the lattice
 
         Equivalents syntaxes:
-        >>>newring = ring.concatenate(r1, r2, r3)
-        >>>newring = ring + r1 + r2 + r3
+        >>> newring = ring.concatenate(r1, r2, r3)
+        >>> newring = ring + r1 + r2 + r3
 
         Parameters:
             lattices: :py:obj:`Iterables[Element]` to be concatenanted
                       to the Lattice
 
         Keyword Arguments:
-            copy(bool): Default :py:obj:`False`. If :py:obj:`True`
+            copy_elements(bool): Default :py:obj:`False`. If :py:obj:`True`
                         deepcopies of the elements of lattices are used
-            inplace(bool): Default :py:obj:`False`. If :py:obj:`True`
+            copy(bool): Default :py:obj:`True`. If :py:obj:`True`
                            the lattice is modified in place.
                            Oterwise a new Lattice object is returned
 
         Returns:
-            newring(Lattice): concatenated Lattice
+            newring(Lattice): concatenated Lattice, if `copy==True` the
+                              input lattice is returned
         """
-        if inplace:
-            lattice = self
-        else:
+        if copy:
             lattice = Lattice(self)
+        else:
+            lattice = self
         for lat in numpy.atleast_2d(lattices):
-            lattice.extend(lat, copy=copy)
-        return lattice
+            lattice.extend(lat, copy_elements=copy_elements)
+        return lattice if copy else None
 
     @property
     def attrs(self) -> Dict:
