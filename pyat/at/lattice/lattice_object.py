@@ -15,8 +15,7 @@ import sys
 import copy
 import numpy
 import math
-import itertools
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 if sys.version_info.minor < 9:
     from typing import Callable, Iterable, Generator
     SupportsIndex = int
