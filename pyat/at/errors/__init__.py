@@ -1,2 +1,2 @@
 """Error handling"""
-from .error_def import *
+from .errors_def import *

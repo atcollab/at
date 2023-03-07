@@ -5,8 +5,6 @@ from at.lattice import refpts_iterator, Lattice, Element, Refpts
 from at.lattice import shift_elem, rotate_elem
 from scipy.stats import truncnorm, norm
 import functools
-from collections import namedtuple
-import at.tracking
 
 
 _BPM_ATTRS = {'BPMGain': (2,), 'BPMOffset': (2,), 'BPMTilt': (1,)}
@@ -16,27 +14,23 @@ _ERR_ATTRS = {'PolynomBErr': None, 'PolynomAErr': None,
 _ALL_ATTRS = dict(**_BPM_ATTRS, **_ERR_ATTRS)
 
 
-def _truncated_randn(truncation=None, **kwargs):
-    if truncation is not None:
-        return truncnorm.rvs(-truncation, truncation, **kwargs)
-    else:
-        return norm.rvs(**kwargs)
-
-
-def _sysrand(syst, rand,
-             truncation: float,
-             seed: Union[int, np.random.Generator]):
-    rv = _truncated_randn(size=rand.shape,
-                          truncation=truncation, random_state=seed)
-    return syst + rv*rand
-
-
 class ErrorGenerator(object):
     def __init__(self, seed=None):
         self.gen = None
         self.seed = None
         self.errors = []
         self.init_gen(seed)
+
+    @staticmethod
+    def _sysrand(syst, rand,
+                 truncation: float,
+                 seed: Union[int, np.random.Generator]):
+        if truncation is not None:
+            rv = truncnorm.rvs(-truncation, truncation, size=rand.shape,
+                               random_state=seed)
+        else:
+            rv = norm.rvs(size=rand.shape, random_state=seed)
+        return syst + rv * rand
 
     def init_gen(self, seed):
         self.gen = np.random.default_rng(seed)
@@ -60,7 +54,7 @@ class ErrorGenerator(object):
             rand = numpy.atleast_2d(error['randval'])
             syst = error['sysval']
             truncation = error.get('truncation', None)
-            elements = ring[refpts]
+            elements = numpy.atleast_1d(ring[refpts])
             nelems = len(elements)
             sz = _ALL_ATTRS[attr]
             if syst is None:
@@ -75,10 +69,8 @@ class ErrorGenerator(object):
             syst = np.broadcast_to(syst, ((nelems,) + szsyst))
             rand = np.broadcast_to(rand, ((nelems,) + szrand))
             for el, s, r in zip(elements, syst, rand):
-                err = _sysrand(s, r, truncation, self.gen)
-                print(el.FamName, err, attr)
+                err = self._sysrand(s, r, truncation, self.gen)
                 setattr(el, attr, err)
-                print(getattr(el, attr))
 
 
 def _apply_bpm_orbit_errors(ring: Lattice, refpts: Refpts, orbit):
@@ -139,7 +131,7 @@ def _apply_field_errors(ring: Lattice, **kwargs):
             elif len(v) > 0:
                 pl.append(v)
 
-        error = getattr(el, attrname)
+        error = getattr(el, attrname, None)
         if error is not None and enabled:
             vmask(scale*error, index, plist)
 
@@ -177,27 +169,33 @@ def _apply_field_errors(ring: Lattice, **kwargs):
     return ring
 
 
-def _apply_track_errors(func) -> Callable:
-    @functools.wraps(func)
-    def wrapper(ring, *args, **kwargs):
-        if ring.errors_enabled:
-            ring = _apply_field_errors(ring, **kwargs)
-            ring = _apply_alignment_errors(ring)
-            refpts = kwargs.get('refpts', None)
-            rout = func(ring, *args, **kwargs)
-            rout = _apply_bpm_track_errors(ring, rout, refpts)
+def apply_track_errors(bpm_active=True) -> Callable:
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(ring, *args, **kwargs):
+            if ring.errors_enabled:
+                ring = _apply_field_errors(ring, **kwargs)
+                ring = _apply_alignment_errors(ring)
+                rout = func(ring, *args, **kwargs)
+                if bpm_active:
+                    refpts = kwargs.get('refpts', None)
+                    rout = _apply_bpm_track_errors(ring, refpts, rout)
+                ring.errors_enabled = False
+            else:
+                rout = func(ring, *args, **kwargs)
             return rout
-    return wrapper
+        return wrapper
+    return decorator
 
 
 def get_errors_enabled(ring):
     """Get the error status of a lattice"""
-    return getattr(ring, 'errors_enabled', False)
+    return getattr(ring, '_errors_enabled', False)
 
 
 def set_errors_enabled(ring, val):
     """Set the error status of a lattice"""
-    return setattr(ring, 'errors_enabled', val)
+    return setattr(ring, '_errors_enabled', val)
 
 
 def get_mean_std_err(ring, key, attr, index=0):
@@ -207,5 +205,5 @@ def get_mean_std_err(ring, key, attr, index=0):
 
 
 Lattice.errors_enabled = property(get_errors_enabled,
-                                  set_errors_enabled(),
+                                  set_errors_enabled,
                                   doc="Error enabled")

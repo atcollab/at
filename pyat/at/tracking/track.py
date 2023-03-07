@@ -5,6 +5,7 @@ from .atpass import atpass as _atpass, elempass as _elempass
 from ..lattice import Element, Particle, Refpts, End
 from ..lattice import elements, refpts_iterator, get_uint32_index
 from typing import List, Iterable
+from ..errors import apply_track_errors
 
 
 __all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
@@ -49,7 +50,32 @@ def fortran_align(func):
     return wrapper
 
 
+@apply_track_errors(bpm_active=False)
 @fortran_align
+def _lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
+                  refpts: Refpts = End, **kwargs):
+    if not isinstance(lattice, list):
+        lattice = list(lattice)
+    refs = get_uint32_index(lattice, refpts)
+    # define properties if lattice is not a Lattice object
+    nbunch = getattr(lattice, 'nbunch', 1)
+    bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
+    unfold_beam = kwargs.pop('unfold_beam', True)
+    if unfold_beam:
+        bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    else:
+        bunch_spos = numpy.zeros(len(bunch_currents))
+    kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
+    no_bm = _set_beam_monitors(lattice, nbunch, nturns)
+    kwargs['reuse'] = kwargs.pop('keep_lattice', False) and no_bm
+    # atpass returns 6xNxRxT array
+    # * N is number of particles;
+    # * R is number of refpts
+    # * T is the number of turns
+    return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+
+
+@apply_track_errors()
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
                  refpts: Refpts = End, **kwargs):
     """
@@ -134,25 +160,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          the true voltage in each bucket and distributes the particles in the
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
-    if not isinstance(lattice, list):
-        lattice = list(lattice)
-    refs = get_uint32_index(lattice, refpts)
-    # define properties if lattice is not a Lattice object
-    nbunch = getattr(lattice, 'nbunch', 1)
-    bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
-    unfold_beam = kwargs.pop('unfold_beam', True)
-    if unfold_beam:
-        bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
-    else:
-        bunch_spos = numpy.zeros(len(bunch_currents))
-    kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
-    no_bm = _set_beam_monitors(lattice, nbunch, nturns)
-    kwargs['reuse'] = kwargs.pop('keep_lattice', False) and no_bm
-    # atpass returns 6xNxRxT array
-    # * N is number of particles;
-    # * R is number of refpts
-    # * T is the number of turns
-    return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+    return _lattice_pass(lattice, r_in, nturns, refpts, **kwargs)
 
 
 @fortran_align
