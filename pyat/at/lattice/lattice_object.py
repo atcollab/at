@@ -261,7 +261,7 @@ class Lattice(list):
 
     def __add__(self, elems):
         """Add elems, an iterable of AT elements, to the lattice"""
-        return self.concatenate(elems)
+        return self.concatenate(elems, copy=True)
 
     def __iadd__(self, elems):
         self.concatenate(elems, copy=False)
@@ -398,17 +398,28 @@ class Lattice(list):
                 warn(AtWarning('Non-integer number of cells: {}/{}. Periodi'
                                'city set to 1'.format(self.periodicity, n)))
                 periodicity = 1
+        try:
+            cell_h = self._cell_harmnumber
+        except AttributeError:
+            hdict = {}
+        else:
+            hdict = dict(_cell_harmnumber=n*cell_h)
         elems = (copy_fun(el, copy_elements) for _ in range(n) for el in self)
         return Lattice(elem_generator, elems, iterator=self.attrs_filter,
-                       periodicity=periodicity)
+                       periodicity=periodicity, **hdict)
 
     def concatenate(self, *lattices: Tuple[Iterable[Element], ...],
-                    copy_elements=False, copy=True):
+                    copy_elements=False, copy=False):
         """Concatenate several `Iterable[Element]` with the lattice
 
         Equivalents syntaxes:
-        >>> newring = ring.concatenate(r1, r2, r3)
+        >>> newring = ring.concatenate(r1, r2, r3, copy=True)
         >>> newring = ring + r1 + r2 + r3
+
+        >>> ring.concatenate(r1, copy=False)
+        >>> ring += r1
+
+
 
         Parameters:
             lattices: :py:obj:`Iterables[Element]` to be concatenanted
@@ -417,7 +428,7 @@ class Lattice(list):
         Keyword Arguments:
             copy_elements(bool): Default :py:obj:`False`. If :py:obj:`True`
                         deepcopies of the elements of lattices are used
-            copy(bool): Default :py:obj:`True`. If :py:obj:`True`
+            copy(bool): Default :py:obj:`False`. If :py:obj:`True`
                            the lattice is modified in place.
                            Oterwise a new Lattice object is returned
 
