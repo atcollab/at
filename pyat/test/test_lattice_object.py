@@ -1,4 +1,5 @@
 import numpy
+from numpy.testing import assert_allclose
 import pytest
 from at import elements
 from at.lattice import Lattice, AtWarning, AtError
@@ -171,3 +172,16 @@ def test_radiation_state_errors(hmba_lattice):
         hmba_lattice.get_mcf()
     hmba_lattice.disable_6d()
     hmba_lattice.get_mcf()
+
+@pytest.mark.parametrize('ring',
+                         [pytest.lazy_fixture('hmba_lattice')])
+def test_develop(ring):
+    newring = ring.develop()
+    assert_allclose(ring.circumference, newring.circumference)
+    assert_allclose(ring.rf_voltage, newring.rf_voltage)
+    assert_allclose(ring.revolution_frequency*ring.harmonic_number,
+                    newring.revolution_frequency*newring.harmonic_number)
+    rp1 = ring.radiation_parameters()
+    rp2 = newring.radiation_parameters()
+    assert_allclose(rp1.fulltunes, rp2.fulltunes)
+    assert_allclose(rp1.U0, rp2.U0)
