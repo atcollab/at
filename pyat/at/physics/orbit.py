@@ -6,42 +6,10 @@ from at.constants import clight
 from at.lattice import AtError, AtWarning, check_6d, DConstant, Orbit
 from at.lattice import Lattice, get_s_pos, Refpts, frequency_control
 from at.tracking import lattice_pass
-from . import ELossMethod, get_timelag_fromU0
+from .energy_loss import ELossMethod, get_timelag_fromU0
 import warnings
 
-# For backward compatibility, Orbit is redefined from .lattice
-__all__ = ['Orbit', 'find_orbit4', 'find_sync_orbit', 'find_orbit6',
-           'find_orbit', 'get_revolution_frequency']
-
-           
-def get_revolution_frequency(ring: Lattice,
-                             dp: float = None,
-                             dct: float = None,
-                             df: float = None) -> float:
-    """Compute the revolution frequency of the full ring [Hz]
-
-    Parameters:
-        ring:       Lattice description
-        dp:         Momentum deviation. Defaults to :py:obj:`None`
-        dct:        Path lengthening. Defaults to :py:obj:`None`
-        df:         Deviation of RF frequency. Defaults to :py:obj:`None`
-
-    Returns:
-        frev:       Revolution frequency [Hz]
-    """
-    lcell = ring.cell_length
-    cell_frev = ring.beta * clight / lcell
-    if dct is not None:
-        cell_frev *= lcell / (lcell + dct)
-    elif dp is not None:
-        # Find the path lengthening for dp
-        rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
-        orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
-        dct = numpy.squeeze(orbit)[5]
-        cell_frev *= lcell / (lcell + dct)
-    elif df is not None:
-        cell_frev += df / ring.cell_harmnumber
-    return cell_frev / ring.periodicity
+__all__ = ['find_orbit4', 'find_sync_orbit', 'find_orbit6', 'find_orbit']
 
 
 @check_6d(False)
@@ -400,7 +368,6 @@ def _orbit6(ring: Lattice, cavpts=None, guess=None, keep_lattice=False,
 # noinspection PyIncorrectDocstring
 @frequency_control
 def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
-                dp: float = None, dct: float = None, df: float = None,
                 orbit: Orbit = None, keep_lattice: bool = False, **kwargs):
     r"""Gets the closed orbit in the full 6-D phase space
 
@@ -443,13 +410,7 @@ def find_orbit6(ring: Lattice, refpts: Refpts = None, *,
 
     Parameters:
         ring:           Lattice description
-        dp:             Momentum deviation. Defaults to 0
         refpts:         Observation points
-        dct:            Path lengthening. If specified, *dp* is ignored and
-          the off-momentum is deduced from the path lengthening.
-        df:             Deviation from the nominal RF frequency. If specified,
-          *dp* is ignored and the off-momentum is deduced from the frequency
-          deviation.
         orbit:          Avoids looking for initial the closed orbit if it is
           already known ((6,) array). :py:func:`find_sync_orbit` propagates it
           to the specified *refpts*.
@@ -554,4 +515,3 @@ Lattice.find_orbit4 = find_orbit4
 Lattice.find_sync_orbit = find_sync_orbit
 Lattice.find_orbit6 = find_orbit6
 Lattice.find_orbit = find_orbit
-Lattice.get_revolution_frequency = get_revolution_frequency
