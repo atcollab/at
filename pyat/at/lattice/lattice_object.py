@@ -271,6 +271,9 @@ class Lattice(list):
     def __mul__(self, n):
         return self.repeat(n)
 
+    def __reversed__(self):
+        return self.reverse(copy=True)
+
     def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
         length = 0.0
@@ -420,8 +423,6 @@ class Lattice(list):
         >>> ring.concatenate(r1, copy=False)
         >>> ring += r1
 
-
-
         Parameters:
             lattices: :py:obj:`Iterables[Element]` to be concatenanted
                       to the Lattice
@@ -434,8 +435,9 @@ class Lattice(list):
                            Oterwise a new Lattice object is returned
 
         Returns:
-            newring(Lattice): concatenated Lattice, if `copy==True` the
-                              input lattice is returned
+            lattice(Lattice): concatenated Lattice, if `copy==True` the
+                              new lattice object is returned
+                              otherwise None
         """
         if copy:
             lattice = Lattice(self)
@@ -443,6 +445,32 @@ class Lattice(list):
             lattice = self
         for lat in numpy.atleast_2d(lattices):
             lattice.extend(lat, copy_elements=copy_elements)
+        return lattice if copy else None
+
+    def reverse(self, copy=False):
+        """Concatenate several `Iterable[Element]` with the lattice
+
+        Equivalents syntaxes:
+        >>> newring = ring.reverse(copy=True)
+        >>> newring = reversed(ring)
+
+        Keyword Arguments:
+            copy(bool): Default :py:obj:`False`. If :py:obj:`True`
+                           the lattice is modified in place.
+                           Oterwise a new Lattice object is returned
+
+        Returns:
+            lattice(Lattice): reversed Lattice, if `copy==True` the
+                              new lattice object is returned
+                              otherwise None
+        """
+        if copy:
+            lattice = Lattice(self)
+        else:
+            lattice = self
+        lattice[:] = lattice[::-1]
+        for e in lattice:
+            e.swap_faces()
         return lattice if copy else None
 
     def develop(self) -> "Lattice":

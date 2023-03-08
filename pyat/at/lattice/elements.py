@@ -253,6 +253,7 @@ class Element(object):
 
     _entrance_fields = ['T1', 'R1']
     _exit_fields = ['T2', 'R2']
+    _no_swap = _entrance_fields + _exit_fields
 
     def __init__(self, family_name: str, **kwargs):
         """
@@ -320,6 +321,28 @@ class Element(object):
         """
         # Bx default, the element is indivisible
         return [self]
+
+    def swap_faces(self):
+        def swapattr(element, attro, attri):
+            val = getattr(element, attri)
+            delattr(element, attri)
+            return attro, val
+        # Remove and swap entrance and exit attributes
+        fin = dict(swapattr(self, kout, kin)
+                   for kin, kout in zip(self._entrance_fields,
+                                        self._exit_fields)
+                   if kin in vars(self)
+                   and kin not in self._no_swap)
+        fout = dict(swapattr(self, kin, kout)
+                    for kin, kout in zip(self._entrance_fields,
+                                         self._exit_fields)
+                    if kout in vars(self)
+                    and kout not in self._no_swap)
+        # Apply swapped entrance and exit attributes
+        for key, value in fin.items():
+            setattr(self, key, value)
+        for key, value in fout.items():
+            setattr(self, key, value)
 
     def update(self, *args, **kwargs):
         """
@@ -694,7 +717,7 @@ class Dipole(Radiative, Multipole):
 
     _entrance_fields = Multipole._entrance_fields + ['EntranceAngle',
                                                      'FringeInt1',
-                                                     'FringeBendEntrance'
+                                                     'FringeBendEntrance',
                                                      'FringeQuadEntrance']
     _exit_fields = Multipole._exit_fields + ['ExitAngle',
                                              'FringeInt2',
