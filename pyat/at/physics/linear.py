@@ -1,9 +1,10 @@
 """
 Coupled or non-coupled 4x4 linear motion
 """
+from __future__ import annotations
 import numpy
 from math import sqrt, pi, sin, cos, atan2
-from typing import Callable
+from collections.abc import Callable
 import warnings
 from scipy.linalg import solve
 from ..constants import clight
