@@ -348,4 +348,4 @@ def test_exit_entrance():
     q = elements.Quadrupole('quad', 0.4, k=1)
     for kin, kout in zip(q._entrance_fields, q._exit_fields):
         assert_equal(kin.replace('Entrance', ''). replace('1', ''),
-                     kin.replace('Entrance', '').replace('1', ''))
+                     kout.replace('Exit', '').replace('2', ''))
