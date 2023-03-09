@@ -4,7 +4,8 @@ Module to compute the touschek lifetime of the ring
 
 import at
 import numpy
-from ..lattice import Lattice, AtError
+from ..lattice import Lattice, AtError, AtWarning
+import warnings
 from scipy.special import iv
 from scipy import integrate
 from scipy.optimize import fsolve
@@ -143,8 +144,15 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         refpts = range(len(ring))
     else:
         refpts = ring.uint32_refpts(refpts)
-    refpts = numpy.array([r for r in refpts
-                          if ring[r].Length > 0.0])
+    if momap is not None:
+        assert len(momap) == len(refpts), \
+            'Input momap and refpts have different lengths'
+
+    mask = [ring[r].Length > 0.0 for r in refpts]
+    if not numpy.all(mask):
+        warnings.warn(AtWarning('zero-lentgh element removed '
+                                'from lifetime calcualtion'))
+    refpts = refpts[mask]
 
     if momap is None:
         resolution = kwargs.pop('resolution', 1.0e-3)
@@ -153,8 +161,7 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
         momap, _, _ = ring.get_momentum_acceptance(resolution,
                                                    amplitude, **kwargs)
     else:
-        assert len(momap) == len(refpts), \
-            'momap and refpts have different lengths'
+        momap = momap[mask]
 
     if interpolate:
         refpts_all = numpy.array([i for i in range(refpts[0],
