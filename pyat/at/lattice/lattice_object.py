@@ -448,7 +448,9 @@ class Lattice(list):
         return lattice if copy else None
 
     def reverse(self, copy=False):
-        """Concatenate several `Iterable[Element]` with the lattice
+        r"""Reverse the order of the lattice and swapt the faces
+        of elements. Alignment errors are not swapped
+
 
         Equivalents syntaxes:
         >>> newring = ring.reverse(copy=True)

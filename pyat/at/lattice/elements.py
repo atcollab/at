@@ -323,6 +323,7 @@ class Element(object):
         return [self]
 
     def swap_faces(self):
+        """Swap the faces of an element, alignment errors are ignored"""
         def swapattr(element, attro, attri):
             val = getattr(element, attri)
             delattr(element, attri)
