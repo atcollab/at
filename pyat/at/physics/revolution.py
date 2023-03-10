@@ -6,7 +6,8 @@ from .orbit import find_orbit4
 import numpy
 from typing import Optional
 
-__all__ = ['get_mcf', 'get_slip_factor', 'set_rf_frequency']
+__all__ = ['get_mcf', 'get_slip_factor', 'get_revolution_frequency',
+           'set_rf_frequency']
 
 
 @check_6d(False)
@@ -59,6 +60,36 @@ def get_slip_factor(ring: Lattice, **kwargs) -> float:
     return etac
 
 
+def get_revolution_frequency(ring: Lattice,
+                             dp: float = None,
+                             dct: float = None,
+                             df: float = None) -> float:
+    """Compute the revolution frequency of the full ring [Hz]
+
+    Parameters:
+        ring:       Lattice description
+        dp:         Momentum deviation. Defaults to :py:obj:`None`
+        dct:        Path lengthening. Defaults to :py:obj:`None`
+        df:         Deviation of RF frequency. Defaults to :py:obj:`None`
+
+    Returns:
+        frev:       Revolution frequency [Hz]
+    """
+    lcell = ring.cell_length
+    cell_frev = ring.beta * clight / lcell
+    if dct is not None:
+        cell_frev *= lcell / (lcell + dct)
+    elif dp is not None:
+        # Find the path lengthening for dp
+        rnorad = ring.disable_6d(copy=True) if ring.is_6d else ring
+        orbit = lattice_pass(rnorad, rnorad.find_orbit4(dp=dp)[0])
+        dct = numpy.squeeze(orbit)[5]
+        cell_frev *= lcell / (lcell + dct)
+    elif df is not None:
+        cell_frev += df / ring.cell_harmnumber
+    return cell_frev / ring.periodicity
+
+
 def set_rf_frequency(ring: Lattice, frequency: float = None,
                      dp: float = None, dct: float = None, df: float = None,
                      **kwargs):
@@ -86,7 +117,7 @@ def set_rf_frequency(ring: Lattice, frequency: float = None,
           *ring* in-place
     """
     if frequency is None:
-        frequency = ring.get_revolution_frequency(dp=dp, dct=dct, df=df) \
+        frequency = get_revolution_frequency(ring, dp=dp, dct=dct, df=df) \
                     * ring.harmonic_number
     return ring.set_cavity(Frequency=frequency, **kwargs)
 
@@ -95,6 +126,7 @@ Lattice.mcf = property(get_mcf, doc="Momentum compaction factor")
 Lattice.slip_factor = property(get_slip_factor, doc="Slip factor")
 Lattice.get_mcf = get_mcf
 Lattice.get_slip_factor = get_slip_factor
+Lattice.get_revolution_frequency = get_revolution_frequency
 Lattice.set_rf_frequency = set_rf_frequency
 Lattice.rf_frequency = property(get_rf_frequency, set_rf_frequency,
     doc="Fundamental RF frequency [Hz]. The special value "
