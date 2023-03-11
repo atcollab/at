@@ -69,7 +69,7 @@ from math import pi
 from enum import Enum
 from itertools import repeat
 from ..lattice import Lattice, Orbit, Refpts, All, End
-from ..lattice import AxisDef, axis_, plane_
+from ..lattice import AxisDef, axis_, plane_, frequency_control
 import numpy as np
 
 RefIndex = Union[int, Tuple[int, ...], slice]
@@ -90,10 +90,11 @@ class _modfun(object):
 
 class _arrayaccess(object):
     def __init__(self, index):
-        self.index = index
+        self.index = _all_rows(index)
 
     def __call__(self, ring, data):
-        return data[self.index]
+        index = self.index
+        return data if index is None else data[self.index]
 
 
 class _recordaccess(object):
@@ -102,10 +103,14 @@ class _recordaccess(object):
         self.fieldname = fieldname
 
     def __call__(self, ring, data):
-        return getattr(data, self.fieldname)[self.index]
+        index = self.index
+        data = getattr(data, self.fieldname)
+        return data if index is None else data[self.index]
 
 
 def _all_rows(index: RefIndex):
+    if index is None:
+        return None
     if isinstance(index, tuple):
         return (slice(None),) + index
     else:
@@ -358,6 +363,9 @@ class Observable(object):
             if index is Ellipsis or index is None or \
                     (isinstance(index, str) and index in {":", "..."}):
                 subscript = ""
+            elif isinstance(index, tuple):
+                ids = ", ".join(str(k) for k in index)
+                subscript = f"[{ids}]"
             else:
                 subscript = f"[{index}]"
             if callable(param):
@@ -475,7 +483,7 @@ class OrbitObservable(_ElementObservable):
             Observe the horizontal closed orbit at monitor locations
         """
         name = self._set_name(name, 'orbit', axis_(axis, 'code'))
-        fun = _arrayaccess(_all_rows(axis_(axis, 'index')))
+        fun = _arrayaccess(axis_(axis, 'index'))
         needs = {Need.ORBIT}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -517,7 +525,7 @@ class MatrixObservable(_ElementObservable):
             extract T[0,1]
         """
         name = self._set_name(name, 'matrix', axis_(axis, 'code'))
-        fun = _arrayaccess(_all_rows(axis_(axis, 'index')))
+        fun = _arrayaccess(axis_(axis, 'index'))
         needs = {Need.MATRIX}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -713,7 +721,7 @@ class TrajectoryObservable(_ElementObservable):
         shape of *value*.
         """
         name = self._set_name(name, 'trajectory', axis_(axis, 'code'))
-        fun = _arrayaccess(_all_rows(axis_(axis, 'index')))
+        fun = _arrayaccess(axis_(axis, 'index'))
         needs = {Need.TRAJECTORY}
         super().__init__(fun, refpts, needs=needs, name=name, **kwargs)
 
@@ -868,17 +876,24 @@ class ObservableList(list):
         values = "\n".join(obs._all_lines() for obs in self)
         return "\n".join((Observable._header(), values))
 
-    def evaluate(self, ring: Lattice,
+    def evaluate(self, ring: Lattice, *,
                  r_in: Orbit = None,
-                 initial: bool = False):
+                 initial: bool = False, **kwargs):
         r"""Compute all the :py:class:`Observable` values
 
         Args:
             ring:       Lattice description used for evaluation
             r_in:       Optional coordinate input for trajectory observables
             initial:    If :py:obj:`True`, store the values as *initial values*
+
+        Keyword Args:
+            dp (float):     Momentum deviation. Defaults to :py:obj:`None`
+            dct (float):    Path lengthening. Defaults to :py:obj:`None`
+            df (float):     Deviation from the nominal RF frequency.
+              Defaults to :py:obj:`None`
         """
         def obseval(obs):
+            """Evaluate a single observable"""
             obsneeds = obs.needs
             obsrefs = getattr(obs, '_boolrefs', None)
             data = []
@@ -896,38 +911,54 @@ class ObservableList(list):
                 data.append(emdata)
             obs.evaluate(ring, *data, initial=initial)
 
-        trajs = orbits = rgdata = eldata = emdata = mxdata = None
-        needs = self.needs
+        @frequency_control
+        def ringeval(ring, dp: Optional[float] = None,
+                     dct: Optional[float] = None,
+                     df: Optional[float] = None,
+                     r_in: Orbit = None):
+            """Optics computations"""
 
-        if Need.TRAJECTORY in needs:
-            if r_in is None:
-                r_in = np.zeros(6)
-            r_out = ring.lattice_pass(r_in.copy(), 1, refpts=self.passrefs)
-            trajs = r_out[:, 0, :, 0].T
+            trajs = orbits = rgdata = eldata = emdata = mxdata = None
+            needs = self.needs
 
-        if not needs.isdisjoint({Need.ORBIT, Need.MATRIX, Need.LOCALOPTICS,
-                                 Need.GLOBALOPTICS, Need.EMITTANCE}):
-            o0, orbits = ring.find_orbit(refpts=self.orbitrefs)
+            if Need.TRAJECTORY in needs:
+                if r_in is None:
+                    r_in = np.zeros(6)
+                r_out = ring.lattice_pass(r_in.copy(), 1, refpts=self.passrefs)
+                trajs = r_out[:, 0, :, 0].T
 
-        if Need.MATRIX in needs:
-            if ring.is_6d:
+            if not needs.isdisjoint({Need.ORBIT, Need.MATRIX, Need.LOCALOPTICS,
+                                     Need.GLOBALOPTICS, Need.EMITTANCE}):
+                o0, orbits = ring.find_orbit(refpts=self.orbitrefs,
+                                             dp=dp, dct=dct, df=df)
+
+            if Need.MATRIX in needs:
+                if ring.is_6d:
+                    # noinspection PyUnboundLocalVariable
+                    _, mxdata = ring.find_m66(refpts=self.matrixrefs,
+                                              dp=dp, dct=dct, df=df,
+                                              orbit=o0, keep_lattice=True)
+                else:
+                    # noinspection PyUnboundLocalVariable
+                    _, mxdata = ring.find_m44(refpts=self.matrixrefs,
+                                              dp=dp, dct=dct, df=df,
+                                              orbit=o0, keep_lattice=True)
+
+            if not needs.isdisjoint({Need.LOCALOPTICS, Need.GLOBALOPTICS}):
+                get_chrom = Need.CHROMATICITY in needs
                 # noinspection PyUnboundLocalVariable
-                _, mxdata = ring.find_m66(refpts=self.matrixrefs,
-                                          orbit=o0, keep_lattice=True)
-            else:
-                # noinspection PyUnboundLocalVariable
-                _, mxdata = ring.find_m44(refpts=self.matrixrefs,
-                                          orbit=o0, keep_lattice=True)
+                _, rgdata, eldata = ring.get_optics(refpts=self.opticsrefs,
+                                                    dp=dp, dct=dct, df=df,
+                                                    orbit=o0, keep_lattice=True,
+                                                    get_chrom=get_chrom)
 
-        if not needs.isdisjoint({Need.LOCALOPTICS, Need.GLOBALOPTICS}):
-            get_chrom = Need.CHROMATICITY in needs
-            # noinspection PyUnboundLocalVariable
-            _, rgdata, eldata = ring.get_optics(refpts=self.opticsrefs,
-                                                orbit=o0, keep_lattice=True,
-                                                get_chrom=get_chrom)
+            if Need.EMITTANCE in needs:
+                emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
 
-        if Need.EMITTANCE in needs:
-            emdata = ring.envelope_parameters(orbit=o0, keep_lattice=True)
+            return trajs, orbits, rgdata, eldata, emdata, mxdata
+
+        trajs, orbits, rgdata, eldata, emdata, mxdata = \
+            ringeval(ring, r_in=r_in, **kwargs)
 
         for ob in self:
             obseval(ob)
