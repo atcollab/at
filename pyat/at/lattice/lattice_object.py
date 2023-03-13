@@ -412,7 +412,7 @@ class Lattice(list):
         return Lattice(elem_generator, elems, iterator=self.attrs_filter,
                        periodicity=periodicity, **hdict)
 
-    def concatenate(self, *lattices: Tuple[Iterable[Element], ...],
+    def concatenate(self, *lattices: Iterable[Element],
                     copy_elements=False, copy=False):
         """Concatenate several `Iterable[Element]` with the lattice
 
@@ -425,7 +425,8 @@ class Lattice(list):
 
         Parameters:
             lattices: :py:obj:`Iterables[Element]` to be concatenanted
-                      to the Lattice
+                      to the Lattice, several lattices are allowed
+                      (see example)
 
         Keyword Arguments:
             copy_elements(bool): Default :py:obj:`False`. If :py:obj:`True`
@@ -443,7 +444,7 @@ class Lattice(list):
             lattice = Lattice(self)
         else:
             lattice = self
-        for lat in numpy.atleast_2d(lattices):
+        for lat in lattices:
             lattice.extend(lat, copy_elements=copy_elements)
         return lattice if copy else None
 
