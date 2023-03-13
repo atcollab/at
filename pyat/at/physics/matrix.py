@@ -4,10 +4,11 @@ transfer matrix related functions
 A collection of functions to compute 4x4 and 6x6 transfer matrices
 """
 import numpy
-from ..lattice import Lattice, Element, get_uint32_index, DConstant, Refpts
+from ..lattice import Lattice, Element, DConstant, Refpts, Orbit
+from ..lattice import frequency_control, get_uint32_index
 from ..lattice.elements import Dipole, M66
 from ..tracking import lattice_pass, element_pass
-from .orbit import Orbit, find_orbit4, find_orbit6, frequency_control
+from .orbit import find_orbit4, find_orbit6
 from .amat import jmat, symplectify
 
 __all__ = ['find_m44', 'find_m66', 'find_elem_m66', 'gen_m66_elem']

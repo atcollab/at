@@ -5,8 +5,7 @@ from .boundary import GridMode
 from .boundary import boundary_search
 from typing import Optional, Sequence
 import multiprocessing
-from ..lattice import Lattice, Refpts
-from ..physics import frequency_control
+from ..lattice import Lattice, Refpts, frequency_control
 
 
 __all__ = ['get_acceptance', 'get_1d_acceptance', 'get_horizontal_acceptance',
