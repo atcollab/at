@@ -468,7 +468,7 @@ class Lattice(list):
                               otherwise None
         """
         if copy:
-            lattice = Lattice(self)
+            lattice = Lattice(self).deepcopy()
         else:
             lattice = self
         lattice[:] = lattice[::-1]
