@@ -468,7 +468,7 @@ class Lattice(list):
                               otherwise None
         """
         if copy:
-            elems = (el.swap_faces(copy=copy) for el in self)
+            elems = (el.swap_faces(copy=copy) for el in self[::-1])
             return Lattice(elem_generator, elems, iterator=self.attrs_filter,
                            periodicity=self.periodicity)            
         else:
