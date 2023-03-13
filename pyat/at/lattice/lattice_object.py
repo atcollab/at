@@ -272,8 +272,7 @@ class Lattice(list):
         return self.repeat(n)
 
     def __reversed__(self):
-        for elem in self[::-1]:
-            yield elem.swap_faces(copy=True)
+        return self.reverse(copy=True)
 
     def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
