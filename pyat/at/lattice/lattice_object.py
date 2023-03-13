@@ -475,7 +475,7 @@ class Lattice(list):
         else:
             reversed_list = self[::-1]
             for el in reversed_list:
-                e.swap_faces()
+                el.swap_faces()
             self[:] = reversed_list
 
     def develop(self) -> "Lattice":
