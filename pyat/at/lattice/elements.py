@@ -322,28 +322,33 @@ class Element(object):
         # Bx default, the element is indivisible
         return [self]
 
-    def swap_faces(self):
+    def swap_faces(self, copy=False):
         """Swap the faces of an element, alignment errors are ignored"""
         def swapattr(element, attro, attri):
             val = getattr(element, attri)
             delattr(element, attri)
             return attro, val
+        if copy: 
+            el = self.copy()
+        else:
+            el = self
         # Remove and swap entrance and exit attributes
-        fin = dict(swapattr(self, kout, kin)
-                   for kin, kout in zip(self._entrance_fields,
-                                        self._exit_fields)
-                   if kin in vars(self)
-                   and kin not in self._no_swap)
-        fout = dict(swapattr(self, kin, kout)
-                    for kin, kout in zip(self._entrance_fields,
-                                         self._exit_fields)
-                    if kout in vars(self)
-                    and kout not in self._no_swap)
+        fin = dict(swapattr(el, kout, kin)
+                   for kin, kout in zip(el._entrance_fields,
+                                        el._exit_fields)
+                   if kin in vars(el)
+                   and kin not in el._no_swap)
+        fout = dict(swapattr(el, kin, kout)
+                    for kin, kout in zip(el._entrance_fields,
+                                         el._exit_fields)
+                    if kout in vars(el)
+                    and kout not in el._no_swap)
         # Apply swapped entrance and exit attributes
         for key, value in fin.items():
-            setattr(self, key, value)
+            setattr(el, key, value)
         for key, value in fout.items():
-            setattr(self, key, value)
+            setattr(el, key, value)
+        return el if copy else None
 
     def update(self, *args, **kwargs):
         """

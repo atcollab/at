@@ -272,7 +272,8 @@ class Lattice(list):
         return self.repeat(n)
 
     def __reversed__(self):
-        return self.reverse(copy=True)
+        for elem in self[::-1]:
+            yield elem.swap_faces(copy=True)
 
     def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
@@ -468,13 +469,14 @@ class Lattice(list):
                               otherwise None
         """
         if copy:
-            lattice = Lattice(self).deepcopy()
+            elems = (el.swap_faces(copy=copy) for el in self)
+            return Lattice(elem_generator, elems, iterator=self.attrs_filter,
+                           periodicity=self.periodicity)            
         else:
-            lattice = self
-        lattice[:] = lattice[::-1]
-        for e in lattice:
-            e.swap_faces()
-        return lattice if copy else None
+            reversed_list = self[::-1]
+            for el in reversed_list:
+                e.swap_faces()
+            self[:] = reversed_list
 
     def develop(self) -> "Lattice":
         """Develop a periodical lattice by repeating its elements
