@@ -1,55 +1,71 @@
 import numpy
-import functools
-from warnings import warn
 from .atpass import atpass as _atpass, elempass as _elempass
+from .utils import fortran_align, has_collective, format_results
+from .utils import initialize_args
 from ..lattice import Lattice, Element, Particle, Refpts, End
-from ..lattice import elements, refpts_iterator, get_uint32_index
-from typing import List, Iterable
+from ..lattice import get_uint32_index
+from ..lattice import AtWarning, DConstant, random
+from typing import List, Iterable, Optional
+from functools import partial
+import multiprocessing
+from warnings import warn
+from .atpass import reset_rng
+import numpy as np
 
 
-__all__ = ['fortran_align', 'lattice_pass', 'element_pass', 'atpass',
-           'elempass']
-
-DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
+__all__ = ['lattice_pass', 'element_pass', 'patpass']
 
 
-def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
-    monitors = list(refpts_iterator(ring, elements.BeamMoments))
-    for m in monitors:
-        m.set_buffers(nturns, nbunch)
-    return len(monitors) == 0
+_imax = np.iinfo(int).max
+_globring: Optional[List[Element]] = None
 
 
-def fortran_align(func):
-    # noinspection PyShadowingNames
-    """decorator to ensure that *r_in* is Fortran-aligned
+def _atpass_fork(seed, rank, rin, **kwargs):
+    """Single forked job"""
+    reset_rng(rank, seed=seed)
+    result = _atpass(_globring, rin, **kwargs)
+    return rin, result
 
-    :py:func:`fortran_align` ensures that the 2nd argument (usually *r_in*) of
-    the decorated function is Fortran-aligned before calling the function
 
-    Example:
+def _atpass_spawn(ring, seed, rank, rin, **kwargs):
+    """Single spawned job"""
+    reset_rng(rank, seed=seed)
+    result = _atpass(ring, rin, **kwargs)
+    return rin, result
 
-        >>> @fortran_align
-        ... def element_pass(element: Element, r_in, **kwargs):
-        ... ...
 
-        Ensure than *r_in* is Fortran-aligned
-    """
-    @functools.wraps(func)
-    def wrapper(lattice, r_in, *args, **kwargs):
-        assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
-        if r_in.flags.f_contiguous:
-            return func(lattice, r_in, *args, **kwargs)
-        else:
-            r_fin = numpy.asfortranarray(r_in)
-            r_out = func(lattice, r_fin, *args, **kwargs)
-            r_in[:] = r_fin[:]
-            return r_out
-
-    return wrapper
+def _pass(ring, r_in, pool_size, start_method, **kwargs):
+    ctx = multiprocessing.get_context(start_method)
+    # Split input in as many slices as processes
+    args = enumerate(np.array_split(r_in, pool_size, axis=1))
+    # Generate a new starting point for C RNGs
+    seed = random.common.integers(0, high=_imax, dtype=int)
+    global _globring
+    _globring = ring
+    if ctx.get_start_method() == 'fork':
+        passfunc = partial(_atpass_fork, seed, **kwargs)
+    else:
+        passfunc = partial(_atpass_spawn, ring, seed, **kwargs)
+    # Start the parallel jobs
+    with ctx.Pool(pool_size) as pool:
+        results = pool.starmap(passfunc, args)
+    _globring = None
+    # Gather the results
+    losses = kwargs.pop('losses', False)
+    return format_results(results, r_in, losses)
 
 
 @fortran_align
+def _lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
+                  refpts: Refpts = End, **kwargs):
+    if not isinstance(lattice, list):
+        lattice = list(lattice)
+    refs = get_uint32_index(lattice, refpts)
+    kwargs['reuse'] = kwargs.pop('keep_lattice', False)
+    return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+
+
+@initialize_args
 def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
                  refpts: Refpts = End, **kwargs):
     """
@@ -134,25 +150,7 @@ def lattice_pass(lattice: Iterable[Element], r_in, nturns: int = 1,
          the true voltage in each bucket and distributes the particles in the
          bunches defined by :code:`ring.fillpattern` using a 6D orbit search.
     """
-    if not isinstance(lattice, list):
-        lattice = list(lattice)
-    refs = get_uint32_index(lattice, refpts)
-    # define properties if lattice is not a Lattice object
-    nbunch = getattr(lattice, 'nbunch', 1)
-    bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
-    unfold_beam = kwargs.pop('unfold_beam', True)
-    if unfold_beam:
-        bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
-    else:
-        bunch_spos = numpy.zeros(len(bunch_currents))
-    kwargs.update(bunch_currents=bunch_currents, bunch_spos=bunch_spos)
-    no_bm = _set_beam_monitors(lattice, nbunch, nturns)
-    kwargs['reuse'] = kwargs.pop('keep_lattice', False) and no_bm
-    # atpass returns 6xNxRxT array
-    # * N is number of particles;
-    # * R is number of refpts
-    # * T is the number of turns
-    return _atpass(lattice, r_in, nturns, refpts=refs, **kwargs)
+    return _lattice_pass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
 @fortran_align
@@ -182,65 +180,112 @@ def element_pass(element: Element, r_in, **kwargs):
     return _elempass(element, r_in, **kwargs)
 
 
-# noinspection PyIncorrectDocstring
-def atpass(*args, **kwargs):
+@initialize_args
+@fortran_align
+def patpass(lattice: Iterable[Element], r_in, nturns: int = 1,
+            refpts: Refpts = End, pool_size: int = None,
+            start_method: str = None, **kwargs):
     """
-    atpass(line, r_in, nturns, refpts=[], reuse=False, omp_num_threads=0)
+    Simple parallel implementation of :py:func:`.lattice_pass`.
+    If more than one particle is supplied, use multiprocessing. For a
+    single particle or if the lattice contains :py:class:`.Collective`
+    elements, :py:func:`.atpass` is used.
 
-    Track input particles *r_in* along line for *nturns* turns.
+    :py:func:`patpass` tracks particles through each element of a lattice
+    calling the element-specific tracking function specified in the Element's
+    *PassMethod* field.
 
     Parameters:
-        line (Sequence[Element]): list of elements
-        r_in:                   6 x n_particles Fortran-ordered numpy array.
-          On return, rin contains the final coordinates of the particles
-        nturns (int):           number of turns to be tracked
+        lattice:                list of elements
+        r_in:                   (6, N) array: input coordinates of N particles.
+          *r_in* is modified in-place and reports the coordinates at
+          the end of the element. For the best efficiency, *r_in*
+          should be given as F_CONTIGUOUS numpy array.
+        nturns:                 number of turns to be tracked
+        refpts:                 Selects the location of coordinates output.
+          See ":ref:`Selecting elements in a lattice <refpts>`"
+        pool_size:              number of processes. If None,
+          ``min(npart,nproc)`` is used
+        start_method:           python multiprocessing start method.
+          :py:obj:`None` uses the python default that is considered safe.
+          Available values: ``'fork'``, ``'spawn'``, ``'forkserver'``.
+          Default for linux is ``'fork'``, default for macOS and  Windows is
+          ``'spawn'``. ``'fork'`` may be used on macOS to speed up the
+          calculation or to solve Runtime Errors, however it is considered
+          unsafe.
 
     Keyword arguments:
-        refpts (Uint32_refs):   numpy array of indices of elements where
-          output is desired:
+        keep_lattice (bool):    Use elements persisted from a previous
+          call. If :py:obj:`True`, assume that the lattice has not changed
+          since the previous call.
+        keep_counter (bool):    Keep the turn number from the previous
+          call.
+        turn (int):             Starting turn number. Ignored if
+          *keep_counter* is :py:obj:`True`. The turn number is necessary to
+          compute the absolute path length used in RFCavityPass.
+        losses (bool):          Boolean to activate loss maps output
+        omp_num_threads (int):  Number of OpenMP threads
+          (default: automatic)
 
-          * 0 means entrance of the first element
-          * len(line) means end of the last element
+    The following keyword arguments overload the Lattice values
 
-        energy:                 nominal energy [eV]
-        rest_energy:            rest_energy of the particle [eV]
-        charge:                 particle charge [elementary charge]
-        reuse (bool):           if True, use previously cached description
-          of the lattice.
-        omp_num_threads (int):  number of OpenMP threads
-          (default 0: automatic)
-        losses (bool):          if True, process losses
+    Keyword arguments:
+        particle (Particle):    circulating particle.
+          Default: *lattice.particle* if existing,
+          otherwise *Particle('relativistic')*
+        energy (float):         lattice energy. Default 0.
+
+    If *energy* is not available, relativistic tracking if forced,
+    *rest_energy* is ignored.
 
     Returns:
-        r_out:  6 x n_particles x n_refpts x n_turns Fortran-ordered
-          numpy array of particle coordinates
+        r_out: (6, N, R, T) array containing output coordinates of N particles
+          at R reference points for T turns.
+        loss_map: If *losses* is :py:obj:`True`: dictionary with the
+          following key:
 
-    :meta private:
+          ==============    ===================================================
+          **islost**        (npart,) bool array indicating lost particles
+          **turn**          (npart,) int array indicating the turn at
+                            which the particle is lost
+          **element**       ((npart,) int array indicating the element at
+                            which the particle is lost
+          **coord**         (6, npart) float array giving the coordinates at
+                            which the particle is lost (zero for surviving
+                            particles)
+          ==============    ===================================================
+
+    .. note::
+
+       * For multiparticle tracking with large number of turn the size of
+         *r_out* may increase excessively. To avoid memory issues
+         :pycode:`lattice_pass(lattice, r_in, refpts=[])` can be used.
+         An empty list is returned and the tracking results of the last turn
+         are stored in *r_in*.
+       * By default, :py:func:`patpass` will use all the available CPUs.
+         To change the number of cores used in ALL functions using
+         :py:func:`patpass` (:py:mod:`~at.acceptance.acceptance` module for
+         example) it is possible to set ``at.DConstant.patpass_poolsize``
+         to the desired value.
+
     """
-    warn(UserWarning("The public interface for tracking is 'lattice_pass'"))
-    return _atpass(*args, **kwargs)
-
-
-# noinspection PyIncorrectDocstring
-def elempass(*args, **kwargs):
-    """elempass(element, r_in)
-
-    Track input particles *r_in* through a single element.
-
-    Parameters:
-        element (Element):  AT element
-        rin:                6 x n_particles Fortran-ordered numpy array.
-          On return, rin contains the final coordinates of the particles
-
-    Keyword arguments:
-        energy:             nominal energy [eV]
-        rest_energy:        rest_energy of the particle [eV]
-        charge:             particle charge [elementary charge]
-
-    :meta private:
-    """
-    warn(UserWarning("The public interface for tracking is 'element_pass'"))
-    return _elempass(*args, **kwargs)
+    if not isinstance(lattice, list):
+        lattice = list(lattice)
+    refpts = get_uint32_index(lattice, refpts)
+    any_collective = has_collective(lattice)
+    rshape = r_in.shape
+    if len(rshape) >= 2 and rshape[1] > 1 and not any_collective:
+        if pool_size is None:
+            pool_size = min(len(r_in[0]), multiprocessing.cpu_count(),
+                            DConstant.patpass_poolsize)
+        return _pass(lattice, r_in, pool_size, start_method, nturns=nturns,
+                     refpts=refpts, **kwargs)
+    else:
+        if any_collective:
+            warn(AtWarning('Collective PassMethod found: use single process'))
+        else:
+            warn(AtWarning('no parallel computation for a single particle'))
+        return _atpass(lattice, r_in, nturns=nturns, refpts=refpts, **kwargs)
 
 
 Lattice.lattice_pass = lattice_pass

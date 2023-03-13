@@ -2,11 +2,102 @@
 Utility functions for tracking simulations
 """
 import numpy
-from at.lattice import Lattice, DConstant
-from typing import Optional
+import functools
+from typing import List, Optional
+from .utils import fortran_align, has_collective, format_results
+from ..lattice import Lattice, Element
+from ..lattice import elements, refpts_iterator
+from ..lattice import  DConstant
 
 
-__all__ = ['get_bunches', 'get_bunches_std_mean', 'unfold_beam']
+__all__ = ['fortran_align', 'get_bunches', 'format_results',
+           'get_bunches_std_mean', 'unfold_beam', 'has_collective',
+           'initialize_args']
+
+
+DIMENSION_ERROR = 'Input to lattice_pass() must be a 6xN array.'
+
+
+def _set_beam_monitors(ring: List[Element], nbunch: int, nturns: int):
+    """Function to initialize the beam monitors"""
+    monitors = list(refpts_iterator(ring, elements.BeamMoments))
+    for m in monitors:
+        m.set_buffers(nturns, nbunch)
+    return len(monitors) == 0
+
+
+def _get_bunch_config(lattice, unfold_beam):
+    """Function to get the bunch configuration"""
+    nbunch = getattr(lattice, 'nbunch', 1)
+    bunch_currents = getattr(lattice, 'bunch_currents', numpy.zeros(1))
+    if unfold_beam:
+        bunch_spos = getattr(lattice, 'bunch_spos', numpy.zeros(1))
+    else:
+        bunch_spos = numpy.zeros(len(bunch_currents))
+    return nbunch, bunch_spos, bunch_currents
+
+
+def initialize_args(func):
+    @functools.wraps(func)
+    def wrapper(lattice, r_in, *args, **kwargs):
+        unfold_beam = kwargs.pop('unfold_beam', False)
+        nturns = kwargs.get('nturns', 1)
+        nbunch, bspos, bcurrents = _get_bunch_config(lattice, unfold_beam)
+        kwargs.update(bunch_currents=bcurrents, bunch_spos=bspos)
+        no_bm = _set_beam_monitors(lattice, nbunch, nturns)
+        kwargs['keep_lattice'] = kwargs.get('keep_lattice', False) and no_bm
+        return func(lattice, r_in, *args, **kwargs)
+    return wrapper
+
+
+def has_collective(ring) -> bool:
+    """True if any element involves collective effects"""
+    for elem in ring:
+        if elem.is_collective:
+            return True
+    return False
+
+
+def fortran_align(func):
+    # noinspection PyShadowingNames
+    """decorator to ensure that *r_in* is Fortran-aligned
+
+    :py:func:`fortran_align` ensures that the 2nd argument (usually *r_in*) of
+    the decorated function is Fortran-aligned before calling the function
+
+    Example:
+
+        >>> @fortran_align
+        ... def element_pass(element: Element, r_in, **kwargs):
+        ... ...
+
+        Ensure than *r_in* is Fortran-aligned
+    """
+    @functools.wraps(func)
+    def wrapper(lattice, r_in, *args, **kwargs):
+        assert r_in.shape[0] == 6 and r_in.ndim in (1, 2), DIMENSION_ERROR
+        if r_in.flags.f_contiguous:
+            return func(lattice, r_in, *args, **kwargs)
+        else:
+            r_fin = numpy.asfortranarray(r_in)
+            r_out = func(lattice, r_fin, *args, **kwargs)
+            r_in[:] = r_fin[:]
+            return r_out
+    return wrapper
+
+
+def format_results(results, r_in, losses):
+    """Function to format the ouput of parallelized tracking"""
+    lin, lout = zip(*results)
+    # Update r_in with values at the end of tracking
+    numpy.concatenate(lin, out=r_in, axis=1)
+    if losses:
+        lout, ldic = zip(*lout)
+        keys = ldic[0].keys()
+        dicout = dict(((k, numpy.hstack([li[k] for li in ldic])) for k in keys))
+        return numpy.concatenate(lout, axis=1), dicout
+    else:
+        return numpy.concatenate(lout, axis=1)
 
 
 def get_bunches(r_in: numpy.ndarray, nbunch: int,
