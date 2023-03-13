@@ -150,8 +150,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
 
     mask = [ring[r].Length > 0.0 for r in refpts]
     if not numpy.all(mask):
-        warnings.warn(AtWarning('zero-length elements removed '
-                                'from lifetime calculation'))
+        zerolength_warning = ('zero-length elements removed '
+                              'from lifetime calculation')
+        warnings.warn(AtWarning(zerolength_warning))
     refpts = refpts[mask]
 
     if momap is None:
