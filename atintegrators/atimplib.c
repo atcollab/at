@@ -260,10 +260,9 @@ void compute_kicks(int nslice,int nturns,int nelem,
 };
 
 
-double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta) {
+double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
 
     double omega, alpha, omegabar;
-    double *wake = malloc(2*sizeof(double));
     wake[0] = 0.0;
     wake[1] = 0.0;
     double dt;
@@ -296,7 +295,6 @@ double *wakefunc_long_resonator(double ds, double freqres, double qfactor, doubl
         wake[0] = 0.0;
         wake[1] = 0.0;
     }            
-    return wake;
 }
 
 
@@ -310,7 +308,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
     double ds,wi;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
-    double *wake = malloc(2*sizeof(double));
+    double *wake = atMalloc(2*sizeof(double));
     double vba, vbp;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
@@ -339,7 +337,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
                 ds = turnhistoryZ[i]-turnhistoryZ[ii];
                 if(turnhistoryW[ii]>0.0 && ds>=0){
                     wi = turnhistoryW[ii];
-                    wake = wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta);       
+                    wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta,wake);       
                     kz[i-nslice*nbunch*(nturns-1)] += normfact*wi*wake[0];
                     vbeamk[0] += normfact*wi*wake[0]*energy/nbunch;
                     vbeamk[1] -= normfact*wi*wake[1]*energy/nbunch;
@@ -366,7 +364,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
-    free(wake);
+    atFree(wake);
 };
 
 
