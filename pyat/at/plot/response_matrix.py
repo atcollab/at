@@ -1,8 +1,7 @@
 from __future__ import annotations
 from ..lattice import Lattice
 from ..latticetools import SvdResponse, ResponseMatrix
-from typing import Optional, Union
-from collections.abc import Sequence
+from typing import Optional
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
@@ -46,6 +45,8 @@ def plot_singular_values(resp: SvdResponse, ax: Axes = None,
         logscale:       If :py:obj:`True`, use log scale
         ax:             If given, plots will be drawn in these axes.
     """
+    if resp.singular_values is None:
+        resp.solve()
     singvals = resp.singular_values
     if ax is None:
         fig, ax = plt.subplots()
@@ -55,14 +56,14 @@ def plot_singular_values(resp: SvdResponse, ax: Axes = None,
     ax.set_title("Singular values")
 
 
-def plot_contents(resp: ResponseMatrix, lattice: Lattice,
-                  ax: Axes = None, logscale: bool = True) -> None:
+def plot_obs_analysis(resp: ResponseMatrix, lattice: Lattice,
+                      ax: Axes = None, logscale: bool = True) -> None:
     """Plot the decomposition of an error vector on the basis of singular
     vectors
 
     Args:
         resp:           Response matrix object
-        ring:           Lattice description. The response matrix observables
+        lattice:        Lattice description. The response matrix observables
           will be evaluated for this :py:class:`.Lattice` and the deviation
           from   target will be decomposed on the basis of singular vectors,
         logscale:       If :py:obj:`True`, use log scale
@@ -72,8 +73,7 @@ def plot_contents(resp: ResponseMatrix, lattice: Lattice,
         resp.solve()
     obs = resp.observables
     obs.evaluate(lattice, r_in=resp.r_in)
-    error = obs.flat_deviations
-    corr = resp.uh @ error
+    corr = resp.uh @ obs.flat_deviations
     if ax is None:
         fig, ax = plt.subplots()
     ax.bar(range(len(corr)), corr)
@@ -83,6 +83,33 @@ def plot_contents(resp: ResponseMatrix, lattice: Lattice,
     ax.set_xlabel("Singular vector #")
 
 
+def plot_var_analysis(resp: ResponseMatrix, lattice: Lattice,
+                      ax: Axes = None, logscale: bool = False) -> None:
+    """Plot the decomposition of a correction vector on the basis of singular
+    vectors
+
+    Args:
+        resp:           Response matrix object
+        lattice:        Lattice description. The variables will be evaluated
+          for this :py:class:`.Lattice` and will be decomposed on the basis
+          of singular vectors,
+        logscale:       If :py:obj:`True`, use log scale
+        ax:             If given, plots will be drawn in these axes.
+    """
+    if resp.singular_values is None:
+        resp.solve()
+    var = resp.variables
+    if ax is None:
+        fig, ax = plt.subplots()
+    corr = (resp.v*resp.singular_values).T @ var.get(lattice)
+    ax.bar(range(len(corr)), corr)
+    if logscale:
+        ax.set_yscale('log')
+    ax.set_title("SVD decomposition")
+    ax.set_xlabel("Singular vector #")
+
+
 SvdResponse.plot_norm = plot_norm
 SvdResponse.plot_singular_values = plot_singular_values
-ResponseMatrix.plot_contents = plot_contents
+ResponseMatrix.plot_obs_analysis = plot_obs_analysis
+ResponseMatrix.plot_var_analysis = plot_var_analysis

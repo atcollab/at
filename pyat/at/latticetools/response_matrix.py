@@ -58,8 +58,8 @@ class SvdResponse(ABC):
         resp = self.weighted_response
         if resp is None:
             raise AtError("No response matrix: run build() first")
-        u, s, vh = np.linalg.svd(resp[self._obsmask, self._varmask],
-                                 full_matrices=False)
+        selected = np.ix_(self._obsmask, self._varmask)
+        u, s, vh = np.linalg.svd(resp[selected], full_matrices=False)
         self.v = vh.T * (1/s) * self.varweights.reshape(-1, 1)
         self.uh = u.T / self.obsweights
         self.singular_values = s
