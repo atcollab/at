@@ -469,8 +469,7 @@ class Lattice(list):
         """
         if copy:
             elems = (el.swap_faces(copy=copy) for el in self[::-1])
-            return Lattice(elem_generator, elems, iterator=self.attrs_filter,
-                           periodicity=self.periodicity)            
+            return Lattice(elem_generator, elems, iterator=self.attrs_filter)
         else:
             reversed_list = self[::-1]
             for el in reversed_list:
