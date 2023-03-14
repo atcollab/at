@@ -142,7 +142,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
   return Elem;
 }
 
-MODULE_DEF(ExactMultipolePass) /* Dummy module initialisation */
+MODULE_DEF(ExactMultipoleRadPass) /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
