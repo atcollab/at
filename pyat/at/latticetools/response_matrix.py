@@ -127,6 +127,17 @@ class SvdResponse(ABC):
             nvals = len(self.singular_values)
         return self.v[:, :nvals] @ self.uh[:nvals, :]
 
+    def save(self, file):
+        if self.weighted_response is None:
+            raise AtError("No response matrix: run build() first")
+        np.save(file, self.weighted_response)
+
+    def load(self, file):
+        self.weighted_response = np.load(file)
+        nobs, nvar = self.weighted_response.shape
+        self._obsmask = np.ones(nobs, dtype=bool)
+        self._varmask = np.ones(nvar, dtype=bool)
+
 
 class ResponseMatrix(SvdResponse):
     r"""Base class for response matrices
