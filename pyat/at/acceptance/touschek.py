@@ -141,9 +141,9 @@ def get_lifetime(ring, emity, bunch_curr, emitx=None, sigs=None, sigp=None,
     emitx, sigs, sigp = get_beam_sizes(ring, bunch_curr, zn=zn,
                                        emitx=emitx, sigs=sigs, sigp=sigp)
     if refpts is None:
-        refpts = range(len(ring))
+        refpts = ring.get_uint32_index(at.All, endpoint=False)
     else:
-        refpts = ring.uint32_refpts(refpts)
+        refpts = ring.get_uint32_index(refpts)
     if momap is not None:
         assert len(momap) == len(refpts), \
             'Input momap and refpts have different lengths'
