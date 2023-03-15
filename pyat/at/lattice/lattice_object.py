@@ -272,7 +272,7 @@ class Lattice(list):
         return self.repeat(n)
 
     def __reversed__(self):
-        return self.reverse(copy=True)
+        return (el.swap_faces(copy=True) for el in self[::-1])
 
     def _addition_filter(self, elems: Iterable[Element], copy_elements=False):
         cavities = []
@@ -453,9 +453,8 @@ class Lattice(list):
         of elements. Alignment errors are not swapped
 
 
-        Equivalents syntaxes:
+        Usage:
         >>> newring = ring.reverse(copy=True)
-        >>> newring = reversed(ring)
 
         Keyword Arguments:
             copy(bool): Default :py:obj:`False`. If :py:obj:`True`
