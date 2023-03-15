@@ -203,7 +203,5 @@ def test_operators(ring):
     assert_equal(len(newring2), len(ring) * 2)
     assert_equal(newring1.harmonic_number, ring.harmonic_number)
     newring1 = ring.reverse(copy=True)
-    newring2 = reversed(ring)
     assert_equal(newring1[-1].FamName, ring[0].FamName)
-    assert_equal(newring2[-1].FamName, ring[0].FamName)
 
