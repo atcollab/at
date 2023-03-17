@@ -3,109 +3,79 @@
 #include "elempass.h"
 #include "atlalib.c"
 #include "atphyslib.c"
+/*
+Modified 7/1/2013 by X. Huang for particles to lose energy stochastically. 
+*/
 
 #define DRIFT1    0.6756035959798286638
 #define DRIFT2   -0.1756035959798286639
 #define KICK1     1.351207191959657328
 #define KICK2    -1.702414383919314656
 
-/*  
- *Straight dipole w/ multipole using Symplectic Integration and rotation at dipole faces
- *Created by Xiaobiao Huang, 7/31/2018
- */
+
 #define SQR(X) ((X)*(X))
 
-/*At entrance edge: move particles to the field edge and convert coordinates to x, dx/dz, y, dy/dz, then
- convert to x, px, y, py as integration is done with px, py*/
-void E1rotation(double *r,double X0ref, double E1)
-{
-    double x0,dxdz0, dydz0, psi;
-    double fac;
+
+
+double B2perp(double bx, double by, double irho, 
+                            double x, double xpr, double y, double ypr)
+/* Calculates sqr(|e x B|) , where e is a unit vector in the direction of velocity  */
     
-    dxdz0 = r[1]/sqrt(SQR(1+r[4])-SQR(r[1])-SQR(r[3]));
-    dydz0 = r[3]/sqrt(SQR(1+r[4])-SQR(r[1])-SQR(r[3]));
-    x0 = r[0];
-    
-    psi = atan(dxdz0);
-    r[0] = r[0]*cos(psi)/cos(E1+psi)+X0ref;
-    r[1] = tan(E1+psi);
-    r[3] = dydz0/(cos(E1)-dxdz0*sin(E1));
-    r[2] += x0*sin(E1)*r[3];
-    
-    r[5] += x0*tan(E1)/(1-dxdz0*tan(E1))*sqrt(1+SQR(dxdz0)+SQR(dydz0));
-    
-    /*convert to px, py*/
-    fac = sqrt(1+SQR(r[1])+SQR(r[3]));
-    r[1] = r[1]*(1+r[4])/fac;
-    r[3] = r[3]*(1+r[4])/fac;
+{	double v_norm2;
+	v_norm2 = 1/(SQR(1+x*irho)+ SQR(xpr) + SQR(ypr));
+
+	/* components of the  velocity vector
+	   double ex, ey, ez;
+	    ex = xpr; 
+	    ey = ypr; 
+	    ez = (1+x*irho);
+	*/
+  	
+	return((SQR(by*(1+x*irho)) + SQR(bx*(1+x*irho)) + SQR(bx*ypr - by*xpr) )*v_norm2) ;
+
+} 
+ 
+double rand_gauss (void) {
+  double v1,v2,s;
+
+  do {
+    v1 = 2.0 * ((double) rand()/RAND_MAX) - 1;
+    v2 = 2.0 * ((double) rand()/RAND_MAX) - 1;
+
+    s = v1*v1 + v2*v2;
+  } while ( s >= 1.0 );
+
+  if (s == 0.0)
+    return 0.0;
+  else
+    return (v1*sqrt(-2.0 * log(s) / s));
 }
-/* At Exit Edge: : move particles to arc edge and convert coordinates to x, px, y, py  */
-void E2rotation(double *r,double X0ref, double E2)
-{
-    double x0;
-    double dxdz0, dydz0, psi, fac;
-    
-    dxdz0 = r[1]/sqrt(SQR(1+r[4])-SQR(r[1])-SQR(r[3]));
-    dydz0 = r[3]/sqrt(SQR(1+r[4])-SQR(r[1])-SQR(r[3]));
-    x0 = r[0];
-    
-    psi = atan(dxdz0);
-    fac = sqrt(1+SQR(dxdz0)+SQR(dydz0));
-    
-    r[0] = (r[0]-X0ref)*cos(psi)/cos(E2+psi);
-    r[1] = tan(E2+psi);
-    r[3] = dydz0/(cos(E2)-dxdz0*sin(E2));
-    r[2] += r[3]*(x0-X0ref)*sin(E2);
-    
-    r[5] += (x0-X0ref)*tan(E2)/(1-dxdz0*tan(E2))*fac;
-
-    /*convert to px, py*/
-    fac = sqrt(1+SQR(r[1])+SQR(r[3]));
-    r[1] = r[1]*(1+r[4])/fac;
-    r[3] = r[3]*(1+r[4])/fac;
-    
-}
-
-void edgey(double* r, double inv_rho, double edge_angle)
-{	/* Edge focusing in dipoles with hard-edge field for vertical only*/
-    double psi = inv_rho*tan(edge_angle);
-
-    /*r[1]+=r[0]*psi;*/
-	r[3]-=r[2]*psi;
-}
-
-
-void edgey_fringe(double* r, double inv_rho, double edge_angle, double fint, double gap)
-{   /* Edge focusing in dipoles with fringe field, for vertical only */
-    double fx = inv_rho*tan(edge_angle);
-    double psi_bar = edge_angle-inv_rho*gap*fint*(1+sin(edge_angle)*sin(edge_angle))/cos(edge_angle)/(1+r[4]);
-    double fy = inv_rho*tan(psi_bar);
-    /*r[1]+=r[0]*fx;*/
-    r[3]-=r[2]*fy;    
-}
-
-
-void ladrift6(double* r, double L)
-/* large angle drift, X. Huang, 7/31/2018  
- * Input parameter L is the physical length
-     1/(1+delta) normalization is done internally
- * Hamiltonian H = (1+\delta)-sqrt{(1+\delta)^2-p_x^2-p_y^2}, change sign for $\Delta z$ in AT
-*/
-{	double p_norm = 1./sqrt(SQR(1+r[4])-SQR(r[1])-SQR(r[3])); 
-	double NormL  = L*p_norm;   
-	r[0]+= NormL*r[1]; 
-	r[2]+= NormL*r[3];
-	r[5]+= L*(p_norm*(1+r[4])-1.);
-}
-
-
-void bndstrthinkick(double* r, double* A, double* B, double L, double irho, int max_order)
+/* double rand_gauss(double mean, double sigma); */
+void bndthinkickrad(double* r, double* A, double* B, double L, double irho, double E0, int max_order)
 
 /***************************************************************************** 
-Calculate multipole kick in a straight bending magnet, This is not the usual Bends!
- *created by X. Huang, 7/31/2018
-The reference coordinate system  is straight in s. 
- *The B vector does not contain b0, we assume b0=irho
+Calculate multipole kick in a curved elemrnt (bending magnet)
+The reference coordinate system  has the curvature given by the inverse 
+(design) radius irho.
+IMPORTANT !!!
+The magnetic field Bo that provides this curvature MUST NOT be included in the dipole term
+PolynomB[1](MATLAB notation)(C: B[0] in this function) of the By field expansion
+HOWEVER!!! to calculate the effect of classical radiation the full field must be 
+used in the square of the |v x B|.
+When calling B2perp(Bx, By, ...), use the By = RESum + irho, where ImSum is the sum of
+the polynomial terms in PolynomB.
+
+The kick is given by
+
+           e L      L delta      L x
+theta  = - --- B  + -------  -  -----  , 
+     x     p    y     rho           2
+            0                    rho
+
+         e L
+theta  = --- B
+     y    p   x
+           0
 
 Note: in the US convention the transverse multipole field is written as:
 
@@ -139,174 +109,195 @@ Note: in the US convention the transverse multipole field is written as:
 	B[i] (C++,C) =  PolynomB(i+1) (MATLAB) 
 	i = 0 .. MaxOrder
 
+
 ******************************************************************************/
 {  int i;
-	double ReSum = B[max_order];
- 	double ImSum = A[max_order];
+ 	double ReSumTemp;
+	double ImSum = A[max_order];
+	double ReSum = B[max_order];	
+	double x ,xpr, y, ypr, p_norm,dp_0, B2P;
 
-	double ReSumTemp;
-
+	#define TWOPI		6.28318530717959
+	#define CGAMMA 	8.846056192e-05 
+	
+	double CRAD = CGAMMA*E0*E0*E0/(TWOPI*1e27);	/* [m]/[GeV^3] M.Sands (4.1) */
+	double uc_E0 = 0.665*E0*E0/1.0e18/2.99792458E8*fabs(irho)*1000; /*=uc/E0, with uc being the nominal critical photon energy   */
+	double delta_dpp,mean_dpp, sigma_dpp;
+	
   	/* recursively calculate the local transvrese magnetic field
-	   Bx = ReSum, By = ImSum
+	    Bx = ReSum, By = ImSum
 	*/
-    B[0] = irho; 
 	for(i=max_order-1;i>=0;i--)
 		{	ReSumTemp = ReSum*r[0] - ImSum*r[2] + B[i];
 			ImSum = ImSum*r[0] +  ReSum*r[2] + A[i];
 			ReSum = ReSumTemp;
 		}
 	
+
+	/* calculate angles from momentums 	*/
+	p_norm = 1/(1+r[4]);
+	x   = r[0];
+	xpr = r[1]*p_norm;
+	y   = r[2];
+	ypr = r[3]*p_norm;
+
+	B2P = B2perp(ImSum, ReSum +irho, irho, x , xpr, y ,ypr);
+
+	dp_0 = r[4];
+	mean_dpp = CRAD*SQR(1+r[4])*B2P*(1 + x*irho + (SQR(xpr)+SQR(ypr))/2 )*L;
+	if (mean_dpp>=0)
+		sigma_dpp = sqrt(55*sqrt(3)/72.0*uc_E0*mean_dpp);
+	else
+		sigma_dpp = sqrt(-55*sqrt(3)/72.0*uc_E0*mean_dpp);
+	/*delta_dpp = rand_gauss(mean_dpp, sigma_dpp);*/
+	delta_dpp = mean_dpp+rand_gauss()*sigma_dpp;
+	/*mexPrintf("%e\t%e\t%e\t%e\n", uc_E0,mean_dpp, sigma_dpp,delta_dpp);*/
+	
+	r[4] = r[4] - delta_dpp;
+
+	/* recalculate momentums from angles after losing energy for radiation 	*/
+	p_norm = 1/(1+r[4]);
+	r[1] = xpr/p_norm;
+	r[3] = ypr/p_norm;
+
   	
-	r[1] -=  L*(ReSum);
+	r[1] -=  L*(ReSum-(dp_0-r[0]*irho)*irho);
 	r[3] +=  L*ImSum;
-	r[5] +=  0; /* pathlength */
+	r[5] +=  L*irho*r[0]; /* pathlength */
 
 
 }
 
 
 
-void BndStrMPoleSymplectic4Pass(double *r, double le, double irho, double *A, double *B,
+
+
+void BndMPoleSymplectic4RadPass(double *r, double le, double irho, double *A, double *B,
 					int max_order, int num_int_steps,
-					double entrance_angle, 	double exit_angle,double X0ref, double ByError,double RefDZ,
+					double entrance_angle, 	double exit_angle,
 					double fint1, double fint2, double gap,
 					double *T1, double *T2,	
-					double *R1, double *R2, int num_particles)
+					double *R1, double *R2,
+					double E0,
+					int num_particles)
 
 
 {	int c,m;	
 	double *r6;   
 	double SL, L1, L2, K1, K2;
 	bool useT1, useT2, useR1, useR2, useFringe1, useFringe2;
-    
 	SL = le/num_int_steps;
 	L1 = SL*DRIFT1;
 	L2 = SL*DRIFT2;
 	K1 = SL*KICK1;
 	K2 = SL*KICK2;
 		
-    /*mexPrintf("E0ref=%f\n",X0ref);*/
-    
-	if(T1==NULL)
+	if (T1==NULL)
 	    useT1=false;
 	else 
 	    useT1=true;  
 	    
-    if(T2==NULL)
+    if (T2==NULL)
 	    useT2=false; 
 	else 
 	    useT2=true;  
 	
-	if(R1==NULL)
+	if (R1==NULL)
 	    useR1=false; 
 	else 
 	    useR1=true;  
 	    
-    if(R2==NULL)
+    if (R2==NULL)
 	    useR2=false;
 	else 
 	    useR2=true;
 	    
 	/* if either is 0 - do not calculate fringe effects */    
-    if( fint1==0 || gap==0) 
+    if (fint1==0 || gap==0) 
 	    useFringe1 = false;
 	else 
 	    useFringe1=true;  
 	
-	if( fint2==0 || gap==0) 
+	if (fint2==0 || gap==0) 
 	    useFringe2 = false;
 	else 
 	    useFringe2=true;  
 	
-    
-	    
-	for(c = 0;c<num_particles;c++)	/* Loop over particles  */
-			{	r6 = r+c*6;	
+	
+	for(c = 0;c<num_particles;c++)	/* Loop over particles */
+			{   r6 = r+c*6;	
 			    if(!mxIsNaN(r6[0]))
 			    {
 					
 					/*  misalignment at entrance  */
-					if(useT1)
+					if (useT1)
 			            ATaddvv(r6,T1);
-			        if(useR1)
+			        if (useR1)
 			            ATmultmv(r6,R1);
 					
-                    
 					/* edge focus */				
-				 	if(useFringe1)
-			            edgey_fringe(r6, irho+B[1]*X0ref, entrance_angle,fint1,gap);
+				 	if (useFringe1)
+			            edge_fringe(r6, irho, entrance_angle,fint1,gap);
 			        else
-			            edgey(r6, irho+B[1]*X0ref, entrance_angle);
+			            edge(r6, irho, entrance_angle);
 				 	
-                    /*
-                     Rotate and translate to straight Cartesian coordinate
-                     */
-                    E1rotation(r6, X0ref, entrance_angle);
-                    
-                    /* integrator */
-					for(m=0; m < num_int_steps; m++) /* Loop over slices*/			
+
+					/* integrator  */
+					for(m=0; m < num_int_steps; m++) /* Loop over slices */		
 						{		r6 = r+c*6;	
 								
-								ladrift6(r6,L1);
-           					    bndstrthinkick(r6, A, B, K1, irho, max_order);
-								ladrift6(r6,L2);
-           					    bndstrthinkick(r6, A, B, K2, irho, max_order);
-								ladrift6(r6,L2);
-		     					bndstrthinkick(r6, A, B,  K1, irho, max_order);
-								ladrift6(r6,L1);	
+						/*		ATdrift6(r6,L1);
+           					bndthinkickrad(r6, A, B, K1, irho, E0, max_order);
+								ATdrift6(r6,L2);
+           					bndthinkickrad(r6, A, B, K2, irho, E0, max_order);
+								ATdrift6(r6,L2);
+		     					bndthinkickrad(r6, A, B,  K1, irho, E0, max_order);
+								ATdrift6(r6,L1);	
+								*/
+								ATdrift6(r6,0.5*SL);
+           					bndthinkickrad(r6, A, B, SL, irho, E0, max_order);
+								ATdrift6(r6,0.5*SL);
+	
 						}  
 					
-                     /*
-                     Rotate and translate back to curvilinear coordinate
-                     */
-                    E2rotation(r6, X0ref, exit_angle);
-                    r6[5] -= RefDZ;
-                    
-					if(useFringe2)
-			            edgey_fringe(r6, irho+B[1]*X0ref, exit_angle,fint2,gap);
+					if (useFringe2)
+			            edge_fringe(r6, irho, exit_angle,fint2,gap);
 			        else
-			            edgey(r6, irho+B[1]*X0ref, exit_angle);	
+			            edge(r6, irho, exit_angle);	
 					/* edge focus */
 
 
-                   
-                    
 					 /* Misalignment at exit */	
-			        if(useR2)
+			        if (useR2)
 			            ATmultmv(r6,R2);
-		            if(useT2)   
+		            if (useT2)   
 			            ATaddvv(r6,T2);
-				}
 
+                }
 
 			}
 }
 
 
-    	
-
-
-
 ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 								double *r_in, int num_particles, int mode)
 
-#define NUM_FIELDS_2_REMEMBER 15
+#define NUM_FIELDS_2_REMEMBER 16
 
 
 {	double *A , *B;
 	double  *pr1, *pr2, *pt1, *pt2, fint1, fint2, gap;   
 	double entrance_angle, exit_angle;
-    double X0ref, ByError,flen,RefDZ;
-
+	double E0;		/* Design energy [eV] */
 	int max_order, num_int_steps;
 	double le,ba,irho;
 	int *returnptr;
 	int *NewFieldNumbers, fnum;
+	
 
-	ByError =0;
-    
+	
 	switch(mode)
-		{   case MAKE_LOCAL_COPY: 	/* Find field numbers first
+		{	case MAKE_LOCAL_COPY: 	/* Find field numbers first
 										Save a list of field number in an array
 										and make returnptr point to that array
 									*/
@@ -356,10 +347,17 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 					
 					
+					fnum = mxGetFieldNumber(ElemData,"Energy");
+					if(fnum<0) 
+					    mexErrMsgTxt("Required field 'Energy' was not found in the element data structure"); 
+					NewFieldNumbers[5] = fnum;
+					E0 = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
+					
+					
 					fnum = mxGetFieldNumber(ElemData,"BendingAngle");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'BendingAngle' was not found in the element data structure"); 
-					NewFieldNumbers[5] = fnum;
+					NewFieldNumbers[6] = fnum;
 					ba = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 					
 					
@@ -369,19 +367,21 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 	                fnum = mxGetFieldNumber(ElemData,"EntranceAngle");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'EntranceAngle' was not found in the element data structure"); 
-					NewFieldNumbers[6] = fnum;
+					NewFieldNumbers[7] = fnum;
 					entrance_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 	                
 	                fnum = mxGetFieldNumber(ElemData,"ExitAngle");
 					if(fnum<0) 
 					    mexErrMsgTxt("Required field 'ExitAngle' was not found in the element data structure"); 
-					NewFieldNumbers[7] = fnum;
+					NewFieldNumbers[8] = fnum;
 					exit_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 					
 					
 					
+					
+					
 					fnum = mxGetFieldNumber(ElemData,"FringeInt1");/* Optional field FringeInt */
-                    NewFieldNumbers[8] = fnum;
+                    NewFieldNumbers[9] = fnum;
 					if(fnum<0) 
 					    fint1 = 0;
 					else
@@ -389,22 +389,22 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 					    
 					    
 					fnum = mxGetFieldNumber(ElemData,"FringeInt2");/* Optional field FringeInt */
-                    NewFieldNumbers[9] = fnum;
+                    NewFieldNumbers[10] = fnum;
 					if(fnum<0) 
 					    fint2 = 0;
 					else
 					    fint2 = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 					
 					fnum = mxGetFieldNumber(ElemData,"FullGap");
-					NewFieldNumbers[10] = fnum;
+					NewFieldNumbers[11] = fnum;
 					if(fnum<0) 
 					    gap = 0;
 					else
 					    gap = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
 					
-		
+				
                     fnum = mxGetFieldNumber(ElemData,"R1");
-					NewFieldNumbers[11] = fnum;
+					NewFieldNumbers[12] = fnum;
 					if(fnum<0)
 					    pr1 = NULL;
 					else
@@ -412,7 +412,7 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 					
 
 					fnum = mxGetFieldNumber(ElemData,"R2");
-					NewFieldNumbers[12] = fnum;
+					NewFieldNumbers[13] = fnum;
 					if(fnum<0)
 					    pr2 = NULL;
 					else
@@ -420,7 +420,7 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 					
 					
                     fnum = mxGetFieldNumber(ElemData,"T1");
-	                NewFieldNumbers[13] = fnum;
+	                NewFieldNumbers[14] = fnum;
 					if(fnum<0)
 					    pt1 = NULL;
 					else
@@ -428,129 +428,97 @@ ExportMode int* passFunction(const mxArray *ElemData, int *FieldNumbers,
 					
 	                
 	                fnum = mxGetFieldNumber(ElemData,"T2");
-	                NewFieldNumbers[14] = fnum;
+	                NewFieldNumbers[15] = fnum;
 					if(fnum<0)
 					    pt2 = NULL;
 					else
 					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,fnum));
-					
 				
-                    fnum = mxGetFieldNumber(ElemData,"X0ref");
-					NewFieldNumbers[15] = fnum;
-					if(fnum<0) 
-					    X0ref = 0;
-					else
-					    X0ref = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-                    
-                    fnum = mxGetFieldNumber(ElemData,"ByError");
-					NewFieldNumbers[16] = fnum;
-					if(fnum<0) 
-					    ByError = 0;
-					else
-					    ByError = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-                    
-                    fnum = mxGetFieldNumber(ElemData,"RefDZ");
-					NewFieldNumbers[17] = fnum;
-					if(fnum<0) 
-					    RefDZ = 0;
-					else
-					    RefDZ = mxGetScalar(mxGetFieldByNumber(ElemData,0,fnum));
-                    
 					returnptr = NewFieldNumbers;
-
+					
 				}	break;
 
+
 			case	USE_LOCAL_COPY:	/* Get fields from MATLAB using field numbers
-									    The second argument ponter to the array of field 
-									    numbers is previously created with 
+										The second argument ponter to the array of field 
+										numbers is previously created with 
 										QuadLinPass( ..., MAKE_LOCAL_COPY)
-									*/	
+									*/
+											
 				{	A = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[0]));
 					B = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[1]));
 					max_order = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[2]));
 					num_int_steps = (int)mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[3]));
 					le = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[4]));
-					ba = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
-					entrance_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
-					exit_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
+					E0 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[5]));
+					ba = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[6]));
+					entrance_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[7]));
+					exit_angle = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[8]));
 					
 					/* Optional fields */
 					
-					if(FieldNumbers[8]<0) 
+					if(FieldNumbers[9]<0) 
 					    fint1 = 0;
 					else
-					    fint1 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[8]));
+					    fint1 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[9]));
 					
-					    
-					if(FieldNumbers[9]<0) 
-					    fint2 = 0;
-					else
-					    fint2 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[9]));
 					    
 					if(FieldNumbers[10]<0) 
+					    fint2 = 0;
+					else
+					    fint2 = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[10]));
+					    
+					if(FieldNumbers[11]<0) 
 					    gap = 0;
 					else
-					gap = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[10]));
+					gap = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[11]));
 					
 					/* Optional fields */
-					if(FieldNumbers[11]<0)
+					if(FieldNumbers[12]<0)
 					    pr1 = NULL;
 					else
-					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[11]));
+					    pr1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[12]));
 					
-					if(FieldNumbers[12]<0)
+					if(FieldNumbers[13]<0)
 					    pr2 = NULL;
 					else
-					    pr2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[12]));
+					    pr2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[13]));
 					
-					    
-					if(FieldNumbers[13]<0)
-					    pt1 = NULL;
-					else    
-					    pt1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[13]));
 					    
 					if(FieldNumbers[14]<0)
+					    pt1 = NULL;
+					else    
+					    pt1 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[14]));
+					    
+					if(FieldNumbers[15]<0)
 					    pt2 = NULL;
 					else 
-					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[14]));
+					    pt2 = mxGetPr(mxGetFieldByNumber(ElemData,0,FieldNumbers[15]));
 					
-                    if(FieldNumbers[15]<0) 
-					    X0ref = 0;
-					else
-					    X0ref = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[15]));
-                    
-					if(FieldNumbers[16]<0) 
-					    ByError = 0;
-					else
-					    ByError = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[16]));
-                    
-                    if(FieldNumbers[17]<0) 
-					    RefDZ = 0;
-					else
-					    RefDZ = mxGetScalar(mxGetFieldByNumber(ElemData,0,FieldNumbers[17]));
-                    
+			
+					
 					returnptr = FieldNumbers;
 				}	break;
 			default:
-				{	mexErrMsgTxt("No match for calling mode in function BndStrMPoleSymplectic4Pass\n");
+				{	mexErrMsgTxt("No match for calling mode in function BndMPoleSymplectic4RadPass\n");
 				}
 		}
 
 
+	
+
+
 	irho = ba/le;
-	flen = 2.0/irho*sin(ba/2.0); /*field length*/
-	BndStrMPoleSymplectic4Pass(r_in, flen, irho, A, B, max_order, num_int_steps, 
-								entrance_angle, exit_angle, X0ref, ByError,RefDZ,fint1, fint2, gap, pt1, pt2, pr1, pr2, num_particles);
+
+	
+	BndMPoleSymplectic4RadPass(r_in, le, irho, A, B, max_order, num_int_steps, 
+								entrance_angle, exit_angle, fint1, fint2, gap, pt1, pt2, pr1, pr2, E0, num_particles);
 	
 
 	
 	return(returnptr);
 
 }
-
-
- 
-
 
 
 
@@ -560,18 +528,13 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {	int m,n;
 	double *r_in;
 	double le, ba, *A, *B;  
+	mxArray *tmpmxptr;
+	double E0;		/* Design energy [eV] */
+	double  *pr1, *pr2, *pt1, *pt2, fint1, fint2, gap;  
 	double irho;
 	int max_order, num_int_steps;
 	double entrance_angle, exit_angle ;
-	double  *pr1, *pr2, *pt1, *pt2, fint1, fint2, gap;  
-    double X0ref, ByError, RefDZ;
-    double flen;
-    
-    mxArray *tmpmxptr;
 
-    X0ref = 0;
-    ByError = 0;
-    
     if(nrhs)
     {
     /* ALLOCATE memory for the output array of the same size as the input */
@@ -580,9 +543,9 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(m!=6) 
 		mexErrMsgTxt("Second argument must be a 6 x N matrix");
 	
+
 	
-	
-    tmpmxptr =mxGetField(prhs[0],0,"PolynomA");
+	tmpmxptr =mxGetField(prhs[0],0,"PolynomA");
 	if(tmpmxptr)
 		A = mxGetPr(tmpmxptr);
 	else
@@ -610,7 +573,13 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	if(tmpmxptr)
 	    le = mxGetScalar(tmpmxptr);
 	else
-		mexErrMsgTxt("Required field 'Length' was not found in the element data structure");    
+		mexErrMsgTxt("Required field 'Length' was not found in the element data structure");
+		
+	tmpmxptr = mxGetField(prhs[0],0,"Energy");
+	if(tmpmxptr)
+	    E0 = mxGetScalar(tmpmxptr);
+	else
+		mexErrMsgTxt("Required field 'Energy' was not found in the element data structure");   	
 					    
 	tmpmxptr = mxGetField(prhs[0],0,"BendingAngle");
 	if(tmpmxptr)
@@ -637,12 +606,12 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	        fint1 = mxGetScalar(tmpmxptr);
 	    else
 	        fint1 = 0;
-	        
-	tmpmxptr = mxGetField(prhs[0],0,"FringeInt2");
+	
+    tmpmxptr = mxGetField(prhs[0],0,"FringeInt2");
 	    if(tmpmxptr)
 	        fint2 = mxGetScalar(tmpmxptr);
 	    else
-	        fint2 = 0;
+	        fint2 = 0;	        
 	    
 	    tmpmxptr = mxGetField(prhs[0],0,"FullGap");
 	    if(tmpmxptr)
@@ -675,38 +644,19 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	    if(tmpmxptr)
 	        pt2=mxGetPr(tmpmxptr);
 	    else
-	        pt2=NULL;  
-		
-		tmpmxptr = mxGetField(prhs[0],0,"X0ref");
-	    if(tmpmxptr)
-	        X0ref = mxGetScalar(tmpmxptr);
-	    else
-	        X0ref = 0;
-        
-        tmpmxptr = mxGetField(prhs[0],0,"ByError");
-	    if(tmpmxptr)
-	        ByError = mxGetScalar(tmpmxptr);
-	    else
-	        ByError = 0;
- 
-        tmpmxptr = mxGetField(prhs[0],0,"RefDZ");
-	    if(tmpmxptr)
-	        RefDZ = mxGetScalar(tmpmxptr);
-	    else
-	        RefDZ = 0;
-        
+	        pt2=NULL;
+
     irho = ba/le;
-    flen = 2.0/irho*sin(ba/2.0); /*field length*/
     
     plhs[0] = mxDuplicateArray(prhs[1]);
 	r_in = mxGetPr(plhs[0]);
-	BndStrMPoleSymplectic4Pass(r_in, flen, irho, A, B, max_order, num_int_steps, 
-								entrance_angle, exit_angle, X0ref, ByError, RefDZ, fint1, fint2, gap, pt1, pt2, pr1, pr2, n);
-
+	BndMPoleSymplectic4RadPass(r_in, le, irho, A, B, max_order, num_int_steps, 
+								entrance_angle, exit_angle, 
+								fint1, fint2, gap, pt1, pt2, pr1, pr2, E0, n);
 	}
 	else
 	{   /* return list of required fields */
-	    plhs[0] = mxCreateCellMatrix(8,1);
+	    plhs[0] = mxCreateCellMatrix(9,1);
 	    
 	    mxSetCell(plhs[0],0,mxCreateString("Length"));
 	    mxSetCell(plhs[0],1,mxCreateString("BendingAngle"));
@@ -715,7 +665,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         mxSetCell(plhs[0],4,mxCreateString("PolynomA"));
 	    mxSetCell(plhs[0],5,mxCreateString("PolynomB"));
 	    mxSetCell(plhs[0],6,mxCreateString("MaxOrder"));
-	    mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));	 	    
+	    mxSetCell(plhs[0],7,mxCreateString("NumIntSteps"));
+	    mxSetCell(plhs[0],8,mxCreateString("Energy"));
 	    
 	    if(nlhs>1) /* Required and optional fields */ 
 	    {   plhs[1] = mxCreateCellMatrix(7,1);
@@ -726,14 +677,8 @@ void mexFunction(	int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	        mxSetCell(plhs[1],4,mxCreateString("T2"));
 	        mxSetCell(plhs[1],5,mxCreateString("R1"));
 	        mxSetCell(plhs[1],6,mxCreateString("R2"));
-            mxSetCell(plhs[1],7,mxCreateString("X0ref"));
-	        mxSetCell(plhs[1],8,mxCreateString("ByError"));
-            mxSetCell(plhs[1],9,mxCreateString("RefDZ"));
 	    }
 	}
-
-
-
 }
 
 
