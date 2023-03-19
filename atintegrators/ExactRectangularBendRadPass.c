@@ -1,6 +1,6 @@
 #include "atelem.c"
 #include "atlalib.c"
-#include "driftkick.c"  /* fastdrift.c, strthinkick.c */
+#include "driftkickrad.c"  /* fastdrift.c, strthinkick.c */
 #include "exactdrift.c"
 #include "exactmultipolefringe.c"
 #include "exactbendfringe.c"
@@ -21,6 +21,7 @@ struct elem {
   double BendingAngle;
   double EntranceAngle;
   double ExitAngle;
+  double Energy;
   /* Optional fields */
   int multipole_fringe;
   double gK;
@@ -56,7 +57,7 @@ static void ExactRectangularBend(
   double entrance_angle, double exit_angle,
   int do_fringe, double gK,
   double *T1, double *T2, double *R1, double *R2, double *RApertures,
-  double *EApertures, double *KickAngle, int num_particles)
+  double *EApertures, double *KickAngle, double E0, int num_particles)
 {
   double irho = bending_angle / le;
   double phi2 = 0.5 * bending_angle;
@@ -105,11 +106,11 @@ static void ExactRectangularBend(
       bend_edge(r6, irho, phi2-entrance_angle);
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
         exact_drift(r6, L1);
-        strthinkick(r6, A, B, K1, max_order);
+        strthinkickrad(r6, A, B, K1, E0, max_order);
         exact_drift(r6, L2);
-        strthinkick(r6, A, B, K2, max_order);
+        strthinkickrad(r6, A, B, K2, E0, max_order);
         exact_drift(r6, L2);
-        strthinkick(r6, A, B, K1, max_order);
+        strthinkickrad(r6, A, B, K1, E0, max_order);
         exact_drift(r6, L1);
       }
 
@@ -150,6 +151,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     double BendingAngle = atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
     double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
     double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
+    double Energy=atGetDouble(ElemData,"Energy"); check_error();
     /*optional fields*/
     int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
     double gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
@@ -168,6 +170,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     Elem->MaxOrder = MaxOrder;
     Elem->NumIntSteps = NumIntSteps;
     Elem->BendingAngle = BendingAngle;
+    Elem->Energy=Energy;
     /*optional fields*/
     Elem->multipole_fringe = multipole_fringe;
     Elem->gK = gK;
@@ -186,11 +189,11 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
                        Elem->multipole_fringe, Elem->gK,
                        Elem->T1, Elem->T2, Elem->R1, Elem->R2,
                        Elem->RApertures, Elem->EApertures,
-                       Elem->KickAngle, num_particles);
+                       Elem->KickAngle, Elem->Energy, num_particles);
   return Elem;
 }
 
-MODULE_DEF(ExactRectangularBendPass) /* Dummy module initialisation */
+MODULE_DEF(ExactRectangularBendRadPass) /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
@@ -209,6 +212,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double BendingAngle = atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
     double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
     double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
+    double Energy=atGetDouble(ElemData,"Energy"); check_error();
     /*optional fields*/
     int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
     double gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
@@ -229,17 +233,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                          multipole_fringe, gK,
                          T1, T2, R1, R2,
                          RApertures, EApertures,
-                         KickAngle, num_particles);
+                         KickAngle, Energy, num_particles);
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;
-    plhs[0] = mxCreateCellMatrix(6, 1);
+    plhs[0] = mxCreateCellMatrix(9, 1);
     mxSetCell(plhs[0], i0++, mxCreateString("Length"));
     mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
     mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
     mxSetCell(plhs[0], i0++, mxCreateString("MaxOrder"));
     mxSetCell(plhs[0], i0++, mxCreateString("NumIntSteps"));
     mxSetCell(plhs[0], i0++, mxCreateString("BendingAngle"));
+    mxSetCell(plhs[0], i0++, mxCreateString("EntranceAngle"));
+    mxSetCell(plhs[0], i0++, mxCreateString("ExitAngle"));
+    mxSetCell(plhs[0], i0++, mxCreateString("Energy"));
     if (nlhs > 1) {
       /* list of optional fields */
       int i1 = 0;
