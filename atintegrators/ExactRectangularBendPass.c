@@ -86,7 +86,7 @@ static void ExactRectangularBend(
       bend_fringe(r6, irho, gK);
       if (do_fringe)
         multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
-      /*Urot(r6, irho, phi2-entrance_angle);*/
+      Urot(r6, irho, phi2-entrance_angle);
       for (m = 0; m < num_int_steps; m++) { /*  Loop over slices */
         exact_drift(r6, L1);
         strthinkick(r6, A, B, K1, max_order);
@@ -100,10 +100,10 @@ static void ExactRectangularBend(
       /* Compensate the change of referential */
       r6[5] += (LR - le);
 
-      /*Urot(r6, irho, phi2-exit_angle);*/
+      Urot(r6, irho, phi2-exit_angle);
       if (do_fringe)
         multipole_fringe(r6, le, A, B, max_order, -1.0, 1);
-      bend_fringe(r6, irho, gK);
+      bend_fringe(r6, -irho, gK);
 
       /* Check physical apertures at the exit of the magnet */
       if (RApertures) checkiflostRectangularAp(r6, RApertures);
