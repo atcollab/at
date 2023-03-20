@@ -65,7 +65,8 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double *vbeamk = Elem->vbeam;
     double *vcavk = Elem->vcav;
     double *vgenk = Elem->vgen;
-
+    double tot_current=0.0;
+    int i;
     size_t sz = nslice*nbunch*sizeof(double) + num_particles*sizeof(int);
     int c;
     int *pslice;
@@ -74,40 +75,50 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     double vgen = vgenk[0];
     double psi = vgenk[1];
     
-    void *buffer = atMalloc(sz);
-    double *dptr = (double *) buffer;
-    int *iptr;
-    kz = dptr;
-    dptr += nslice*nbunch;
-    iptr = (int *) dptr;
-    pslice = iptr; iptr += num_particles;
+    for(i=0;i<nbunch;i++){
+        tot_current += bunch_currents[i];
+    }
 
+    /*Track RF cavity is always done. */
     trackRFCavity(r_in,le,vgen/energy,rffreq,harmn,tlag,-psi,nturn,circumference/C0,num_particles);
-    rotate_table_history(nturnsw,nslice*nbunch,turnhistory,circumference);
-    slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
-                turnhistory,pslice,z_cuts);
-    if(mode==2){
-        compute_kicks_phasor(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
-                             qfactor,rshunt,vbeam_phasor,circumference,energy,beta,
-                             vbeamk,vbunch);                        
-    }else if(mode==1){
-        compute_kicks_longres(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
-                              qfactor,rshunt,beta,vbeamk,energy,vbunch);
-    }
-    /*apply kicks and RF*/
-    /* OpenMP not efficient. Too much shared data ?
-    #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
-    shared(r_in,num_particles,pslice,kz) private(c)
-    */   
-    for (c=0; c<num_particles; c++) {
-        double *r6 = r_in+c*6;
-        int islice=pslice[c];
-        if (!atIsNaN(r6[0])) {         
-            r6[4] += kz[islice]; 
+
+    
+    /*Only allocate memory if current is > 0*/
+    if(tot_current>0){
+        void *buffer = atMalloc(sz);
+        double *dptr = (double *) buffer;
+        int *iptr;
+        kz = dptr;
+        dptr += nslice*nbunch;
+        iptr = (int *) dptr;
+        pslice = iptr; iptr += num_particles;
+       
+        rotate_table_history(nturnsw,nslice*nbunch,turnhistory,circumference);
+        slice_bunch(r_in,num_particles,nslice,nturnsw,nbunch,bunch_spos,bunch_currents,
+                    turnhistory,pslice,z_cuts);
+        if(mode==2){
+            compute_kicks_phasor(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
+                                 qfactor,rshunt,vbeam_phasor,circumference,energy,beta,
+                                 vbeamk,vbunch);                        
+        }else if(mode==1){
+            compute_kicks_longres(nslice,nbunch,nturnsw,turnhistory,normfact,kz,freqres,
+                                  qfactor,rshunt,beta,vbeamk,energy,vbunch);
         }
+        /*apply kicks and RF*/
+        /* OpenMP not efficient. Too much shared data ?
+        #pragma omp parallel for if (num_particles > OMP_PARTICLE_THRESHOLD) default(none) \
+        shared(r_in,num_particles,pslice,kz) private(c)
+        */   
+        for (c=0; c<num_particles; c++) {
+            double *r6 = r_in+c*6;
+            int islice=pslice[c];
+            if (!atIsNaN(r6[0])) {         
+                r6[4] += kz[islice]; 
+            }
+        }
+        update_vgen(vbeamk,vcavk,vgenk,phasegain,voltgain); 
+        atFree(buffer);
     }
-    update_vgen(vbeamk,vcavk,vgenk,phasegain,voltgain); 
-    atFree(buffer);
 }
 
 
