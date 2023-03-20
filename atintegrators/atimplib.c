@@ -339,10 +339,10 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
                     wi = turnhistoryW[ii];
                     wakefunc_long_resonator(ds,freq,qfactor,rshunt,beta,wake);       
                     kz[i-nslice*nbunch*(nturns-1)] += normfact*wi*wake[0];
-                    vbeamk[0] += normfact*wi*wake[0]*energy/nbunch;
-                    vbeamk[1] -= normfact*wi*wake[1]*energy/nbunch;
-                    vbr[ib] += normfact*wi*wake[0]*energy;
-                    vbi[ib] -= normfact*wi*wake[1]*energy;
+                    vbeamk[0] += normfact*wi*wake[0]*energy/nbunch/nslice;
+                    vbeamk[1] -= normfact*wi*wake[1]*energy/nbunch/nslice;
+                    vbr[ib] += normfact*wi*wake[0]*energy/nslice;
+                    vbi[ib] -= normfact*wi*wake[1]*energy/nslice;
                 }            
             }
         }
@@ -373,52 +373,77 @@ void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistor
                           double rshunt, double *vbeam, double circumference,
                           double energy, double beta, double *vbeamk, double *vbunch){  
     #ifndef _MSC_VER  
-    int i,ib;
+    int i,ib,it,is;
     double wi;
+    double selfkick;
+    double sliceperturn = nslice*nbunch;
     double dt =0.0;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
     double omr = TWOPI*freq;
     double complex vbeamc = vbeam[0]*cexp(I*vbeam[1]);
     double complex vbeamkc = 0.0;
-    double kick = rshunt*omr/(2*qfactor);
+    double kloss = rshunt*omr/(2*qfactor);
     double bc = beta*C0;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
+    double totalW=0.0;
     
-    for (i=0;i<nslice*nbunch;i++) {
+    for (i=0;i<sliceperturn;i++) {
         ib = (int)(i/nslice);
         kz[i]=0.0;
         vbr[ib] = 0.0;
         vbi[ib] = 0.0;
     }
     
-    for(i=nslice*nbunch*(nturns-1);i<nslice*nbunch*nturns;i++){
-        ib = (int)((i-nslice*nbunch*(nturns-1))/nslice);
+    for(i=sliceperturn*(nturns-1);i<sliceperturn*nturns;i++){
+        ib = (int)((i-sliceperturn*(nturns-1))/nslice);
         wi = turnhistoryW[i];
-        if(i==nslice*nbunch*(nturns-1)){
+        selfkick = normfact*wi*kloss*energy;
+
+        if(i==sliceperturn*(nturns-1)){
+            /*At the end of the turn, the vbeamc is
+            reverted to -final value, which stores the
+            dt information from previous turn. This extra
+            circumference is needed to take this into account. */
             dt = (circumference+turnhistoryZ[i])/bc;
         }else{
+            /* This is dt between each slice*/
             dt = (turnhistoryZ[i]-turnhistoryZ[i-1])/bc;
         }      
-        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
-        vbeamkc += vbeamc+normfact*wi*kick*energy;
-        vbr[ib] += creal(vbeamc+normfact*wi*kick*energy);
-        vbi[ib] += cimag(vbeamc+normfact*wi*kick*energy);
-        kz[i-nslice*nbunch*(nturns-1)] = creal(vbeamc/energy+normfact*wi*kick);
-        vbeamc += 2*normfact*wi*kick*energy;    
+        
+        vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);   
+        
+        /*vbeamkc is average kick i.e. average vbeam*/   
+        vbeamkc += (vbeamc+selfkick)*wi;
+        totalW += wi;
+        kz[i-sliceperturn*(nturns-1)] = creal((vbeamc + selfkick)/energy);
+                
+        vbr[ib] += creal((vbeamc + selfkick)*wi);
+        vbi[ib] += cimag((vbeamc + selfkick)*wi);
+
+        vbeamc += 2*selfkick;    
     }
-    dt = -turnhistoryZ[nslice*nbunch*nturns-1]/bc;
-    vbeamc = vbeamc*cexp((I*omr-omr/(2*qfactor))*dt);
+    
+    /*This takes the vbeam backwards in time to effectively store the
+    final slice position */
+    dt = -turnhistoryZ[sliceperturn*nturns-1]/bc;    
+    vbeamc *= cexp((I*omr-omr/(2*qfactor))*dt);
+
     vbeam[0] = cabs(vbeamc);
     vbeam[1] = carg(vbeamc); 
-    vbeamkc = vbeamkc/nslice/nbunch;
+    
+    vbeamkc /= (totalW);
     vbeamk[0] = cabs(vbeamkc);
     vbeamk[1] = carg(vbeamkc);   
     
     for(i=0;i<nbunch;i++){
-        double vr = vbr[i]/nslice;
-        double vi = vbi[i]/nslice;
+        totalW = 0.0;
+        for(is=nslice*i;is<nslice*(i+1);is++){
+            totalW += turnhistoryW[is];
+        }
+        double vr = vbr[i]/totalW;
+        double vi = vbi[i]/totalW;
         vbr[i] = sqrt(vr*vr+vi*vi); 
         vbi[i] = atan2(vi,vr);
     }
