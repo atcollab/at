@@ -245,13 +245,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;
-    plhs[0] = mxCreateCellMatrix(6, 1);
+    plhs[0] = mxCreateCellMatrix(8, 1);
     mxSetCell(plhs[0], i0++, mxCreateString("Length"));
     mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
     mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
     mxSetCell(plhs[0], i0++, mxCreateString("MaxOrder"));
     mxSetCell(plhs[0], i0++, mxCreateString("NumIntSteps"));
     mxSetCell(plhs[0], i0++, mxCreateString("BendingAngle"));
+    mxSetCell(plhs[0], i0++, mxCreateString("EntranceAngle"));
+    mxSetCell(plhs[0], i0++, mxCreateString("ExitAngle"));
     if (nlhs > 1) {
       /* list of optional fields */
       int i1 = 0;
