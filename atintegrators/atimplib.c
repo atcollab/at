@@ -376,7 +376,7 @@ void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistor
     int i,ib,it,is;
     double wi;
     double selfkick;
-    double sliceperturn = nslice*nbunch;
+    int sliceperturn = nslice*nbunch;
     double dt =0.0;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
