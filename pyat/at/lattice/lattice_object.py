@@ -637,6 +637,8 @@ class Lattice(list):
         if clear_history:
             self.set_wake_turnhistory()
 
+    beam_current = property(get_beam_current, set_beam_current)
+
     @property
     def bunch_currents(self) -> numpy.ndarray:
         """Bunch currents [A]"""
@@ -1374,5 +1376,3 @@ Lattice.select = refpts_iterator
 Lattice.get_value_refpts = get_value_refpts
 Lattice.set_value_refpts = set_value_refpts
 Lattice.get_geometry = get_geometry
-Lattice.beam_current = property(Lattice.get_beam_current,
-                                Lattice.set_beam_current)
