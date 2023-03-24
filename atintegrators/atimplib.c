@@ -308,7 +308,7 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
     double ds,wi,wii;
     double *turnhistoryZ = turnhistory+nslice*nbunch*nturns*2;
     double *turnhistoryW = turnhistory+nslice*nbunch*nturns*3;
-    double *wake = atMalloc(2*sizeof(double));
+    double wake[2];
     double vba, vbp;
     double *vbr = vbunch;
     double *vbi = vbunch+nbunch;
@@ -383,7 +383,6 @@ static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turn
     vbp = atan2(vbeamk[1],vbeamk[0]);
     vbeamk[0] = vba;
     vbeamk[1] = vbp;
-    atFree(wake);
 };
 
 
