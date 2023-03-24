@@ -105,10 +105,10 @@ global THERING %#ok<GVMIS>
                 'For off-momentum lattices, the contribution of quadrupoles is missing.',...
                 'The emittances returned are the ones of the on-energy lattice',...
                 'To avoid this warning, use ">> warning(''off'',''AT:NoEmit'')"');
+        end
         smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
         smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
         alphac2 = smm.integrals(1)/smm.circumference;
-        end
 
         % Damping times
         cf=smm.radiation/2/smm.revTime/smm.e0;
