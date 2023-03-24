@@ -6,7 +6,8 @@ function BL = atBunchLength (ring,Ib,Zn)
 %
 % Ib is the bunch current [A] (it may be a vector for multiple values)
 % Zn is the longitudinal broadband impedance [Ohms]
-% ring is the at ring without radiation
+% ring is the at lattice (4D or 6D)
+%
 % BL is the bunch length in metres 
 %
 %   see also: BunchLength, blgrowth
