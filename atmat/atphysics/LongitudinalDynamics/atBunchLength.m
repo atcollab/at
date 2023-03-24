@@ -9,14 +9,25 @@ function BL = atBunchLength (ring,Ib,Zn)
 % ring is the at ring without radiation
 % BL is the bunch length in metres 
 %
-%   see also: BunchLength
+%   see also: BunchLength, blgrowth
 
-rp=ringpara(ring);
-[E0,~,Vrf,h,U0]=atenergy(ring);
-alpha=rp.alphac;
-sigdelta=rp.sigma_E;
+is6d=check_6d(ring);
 circ=findspos(ring,length(ring)+1);
 
-BL = BunchLength(Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta,circ);
-
+if ~is6d
+    [E0,~,Vrf,h,U0]=atenergy(ring);
+    rp=ringpara(ring);
+    alpha=rp.alphac;
+    sigdelta=rp.sigma_E;
+    BL = BunchLength(Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta,circ);
+else
+    [~,ringdata]=atx(ring,1);
+    [~,~,Vrf,h]=atenergy(ring);
+    alpha = ringdata.alpha;
+    E0 = ringdata.energy;
+    U0 = ringdata.eloss;
+    sigdelta = ringdata.espread;
+    bl0 = ringdata.blength;
+    BL = bl0 * blgrowth(Ib,Zn,Vrf,U0,E0,h,alpha,sigdelta);
+end
 end
