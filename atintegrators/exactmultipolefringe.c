@@ -1,9 +1,3 @@
-#define x_ 0
-#define px_ 1
-#define y_ 2
-#define py_ 3
-#define delta_ 4
-#define ct_ 5
 
 static void multipole_fringe(double *r6, double L,
                              double *polya, double *polyb, int max_order,
