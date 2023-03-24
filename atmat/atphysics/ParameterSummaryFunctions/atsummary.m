@@ -102,16 +102,12 @@ global THERING %#ok<GVMIS>
         smm.radiation = 1.0e-9*eloss;   % GeV
         if offmom
             warning('AT:NoEmit','\n%s\n%s\n%s',...
-                'For off-momentum lattices, the equilibrium emittance',...
-                'cannot be computed because the contribution of quadrupoles is missing.',...
+                'For off-momentum lattices, the contribution of quadrupoles is missing.',...
+                'The emittance returned corresponds to the lattice on-energy' ,...
                 'To avoid this warning, use ">> warning(''off'',''AT:NoEmit'')"');
-            smm.naturalEnergySpread = NaN;
-            smm.naturalEmittance    = NaN;
-            alphac2=NaN;
-        else
-            smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
-            smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
-            alphac2 = smm.integrals(1)/smm.circumference;
+        smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
+        smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
+        alphac2 = smm.integrals(1)/smm.circumference;
         end
 
         % Damping times
