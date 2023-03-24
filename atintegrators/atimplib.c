@@ -31,7 +31,7 @@ int binarySearch(double *array,double value,int upper,int lower,int nStep){
 };
 
 
-double getTableWake(double *waketable,double *waketableT,double distance,int index){
+static double getTableWake(double *waketable,double *waketableT,double distance,int index){
     double w = waketable[index] + (distance-waketableT[index])*(waketable[index+1]-waketable[index])/
           (waketableT[index+1]-waketableT[index]);
     if(atIsNaN(w)){
@@ -42,7 +42,7 @@ double getTableWake(double *waketable,double *waketableT,double distance,int ind
 };
 
 
-void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
+static void rotate_table_history(long nturns,long nslice,double *turnhistory,double circumference){
     double *xtmp,*xtmp0;
     double *ytmp,*ytmp0;
     double *ztmp,*ztmp0;
@@ -82,7 +82,7 @@ void rotate_table_history(long nturns,long nslice,double *turnhistory,double cir
 };
 
 
-void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
+static void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
                double *smax, double *z_cuts){
     double *rtmp;
     int i, ib;
@@ -123,17 +123,17 @@ void getbounds(double *r_in, int nbunch, int num_particles, double *smin,
 }
 
 
-void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
+static void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
                  int nbunch,double *bunch_spos,double *bunch_currents,
                  double *turnhistory,int *pslice,double *z_cuts){
     
     int i,ii,ib;
     double *rtmp;
     
-    double *smin = malloc(nbunch*sizeof(double));
-    double *smax = malloc(nbunch*sizeof(double));
-    double *hz = malloc(nbunch*sizeof(double));
-    double *np_bunch = malloc(nbunch*sizeof(double));
+    double *smin = atMalloc(nbunch*sizeof(double));
+    double *smax = atMalloc(nbunch*sizeof(double));
+    double *hz = atMalloc(nbunch*sizeof(double));
+    double *np_bunch = atMalloc(nbunch*sizeof(double));
     getbounds(r_in,nbunch,num_particles,smin,smax,z_cuts);     
     
     for(i=0;i<nbunch;i++){
@@ -199,13 +199,13 @@ void slice_bunch(double *r_in,int num_particles,int nslice,int nturns,
         ypos[i] =  (weight[i]>0.0) ? ypos[i]/weight[i] : 0.0;
         weight[i] *= bunch_currents[ib]/np_bunch[ib];
     } 
-    free(np_bunch);
-    free(smin);
-    free(smax);
-    free(hz);
+    atFree(np_bunch);
+    atFree(smin);
+    atFree(smax);
+    atFree(hz);
 };
 
-void compute_kicks(int nslice,int nturns,int nelem,
+static void compute_kicks(int nslice,int nturns,int nelem,
                    double *turnhistory,double *waketableT,double *waketableDX,
                    double *waketableDY,double *waketableQX,double *waketableQY,
                    double *waketableZ,double *normfact, double *kx,double *ky,
@@ -260,7 +260,7 @@ void compute_kicks(int nslice,int nturns,int nelem,
 };
 
 
-double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
+static double *wakefunc_long_resonator(double ds, double freqres, double qfactor, double rshunt, double beta, double *wake) {
 
     double omega, alpha, omegabar;
     wake[0] = 0.0;
@@ -298,7 +298,7 @@ double *wakefunc_long_resonator(double ds, double freqres, double qfactor, doubl
 }
 
 
-void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
+static void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory,double normfact,
                            double *kz,double freq, double qfactor, double rshunt,
                            double beta, double *vbeamk, double energy, double *vbunch) {
 
@@ -387,7 +387,7 @@ void compute_kicks_longres(int nslice,int nbunch,int nturns, double *turnhistory
 };
 
 
-void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
+static void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistory,
                           double normfact, double *kz,double freq, double qfactor,
                           double rshunt, double *vbeam, double circumference,
                           double energy, double beta, double *vbeamk, double *vbunch){  
@@ -470,7 +470,7 @@ void compute_kicks_phasor(int nslice, int nbunch, int nturns, double *turnhistor
 };
 
 
-void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
+static void update_vgen(double *vbeam,double *vcav,double *vgen,double voltgain,double phasegain){
     double vbeamr = vbeam[0]*cos(vbeam[1]);
     double vbeami = vbeam[0]*sin(vbeam[1]);
     double vcavr = vcav[0]*cos(vcav[1]);
