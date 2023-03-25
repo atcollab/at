@@ -1,11 +1,3 @@
-#include <math.h>
-
-#define x_ 0
-#define px_ 1
-#define y_ 2
-#define py_ 3
-#define delta_ 4
-#define ct_ 5
 
 double Sec(double x)
 {

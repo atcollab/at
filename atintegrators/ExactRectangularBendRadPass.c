@@ -146,8 +146,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     double BendingAngle = atGetOptionalDouble(ElemData,"BendingAngle", 0.0); check_error();
     double EntranceAngle=atGetDouble(ElemData,"EntranceAngle"); check_error();
     double ExitAngle=atGetDouble(ElemData,"ExitAngle"); check_error();
-    double Energy=atGetDouble(ElemData,"Energy"); check_error();
     /*optional fields*/
+    double Energy=atGetOptionalDouble(ElemData,"Energy", Param->energy); check_error();
     int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
     double gK = atGetOptionalDouble(ElemData,"gK", 0.0); check_error();
     double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
