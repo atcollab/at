@@ -117,8 +117,8 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
     double *PolynomB = atGetDoubleArray(ElemData, "PolynomB"); check_error();
     int MaxOrder = atGetLong(ElemData, "MaxOrder"); check_error();
     int NumIntSteps = atGetLong(ElemData, "NumIntSteps"); check_error();
-    double Energy=atGetDouble(ElemData,"Energy"); check_error();
     /*optional fields*/
+    double Energy=atGetOptionalDouble(ElemData,"Energy",Param->energy); check_error();
     int multipole_fringe = atGetOptionalLong(ElemData, "MultipoleFringe", 0); check_error();
     double *R1 = atGetOptionalDoubleArray(ElemData, "R1"); check_error();
     double *R2 = atGetOptionalDoubleArray(ElemData, "R2"); check_error();
@@ -192,17 +192,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   } else if (nrhs == 0) {
     /* list of required fields */
     int i0 = 0;
-    plhs[0] = mxCreateCellMatrix(6, 1);
+    plhs[0] = mxCreateCellMatrix(5, 1);
     mxSetCell(plhs[0], i0++, mxCreateString("Length"));
     mxSetCell(plhs[0], i0++, mxCreateString("PolynomA"));
     mxSetCell(plhs[0], i0++, mxCreateString("PolynomB"));
     mxSetCell(plhs[0], i0++, mxCreateString("MaxOrder"));
     mxSetCell(plhs[0], i0++, mxCreateString("NumIntSteps"));
-    mxSetCell(plhs[0], i0++, mxCreateString("Energy"));
     if (nlhs > 1) {
       /* list of optional fields */
       int i1 = 0;
-      plhs[1] = mxCreateCellMatrix(8, 1);
+      plhs[1] = mxCreateCellMatrix(9, 1);
+      mxSetCell(plhs[0], i0++, mxCreateString("Energy"));
       mxSetCell(plhs[1], i1++, mxCreateString("MultipoleFringe"));
       mxSetCell(plhs[1], i1++, mxCreateString("T1"));
       mxSetCell(plhs[1], i1++, mxCreateString("T2"));

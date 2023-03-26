@@ -53,7 +53,7 @@ static void ExactSectorBend(
 {
   double irho = bending_angle / le;
   double phi2 = 0.5 * bending_angle;
-  double SL = le / num_int_steps;
+  double SL = num_int_steps == 0 ? le : le / num_int_steps;
   double L1 = SL * DRIFT1;
   double L2 = SL * DRIFT2;
   double K1 = SL * KICK1;
@@ -94,14 +94,19 @@ static void ExactSectorBend(
         multipole_fringe(r6, le, A, B, max_order, 1.0, 1);
       bend_edge(r6, irho, -entrance_angle);
 
-      for (m = 0; m < num_int_steps; m++) {
-        exact_bend(r6, irho, L1);
-        strthinkick(r6, A, B, K1, max_order);
-        exact_bend(r6, irho, L2);
-        strthinkick(r6, A, B, K2, max_order);
-        exact_bend(r6, irho, L2);
-        strthinkick(r6, A, B, K1, max_order);
-        exact_bend(r6, irho, L1);
+      if (num_int_steps == 0) {
+        exact_bend(r6, irho, SL);
+      }
+      else {
+        for (m = 0; m < num_int_steps; m++) {
+          exact_bend(r6, irho, L1);
+          strthinkick(r6, A, B, K1, max_order);
+          exact_bend(r6, irho, L2);
+          strthinkick(r6, A, B, K2, max_order);
+          exact_bend(r6, irho, L2);
+          strthinkick(r6, A, B, K1, max_order);
+          exact_bend(r6, irho, L1);
+        }
       }
 
       bend_edge(r6, irho, -exit_angle);

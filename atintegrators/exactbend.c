@@ -1,6 +1,8 @@
 
 static void exact_bend(double *r6, double irho, double L)
 {
+    /* Forest 12.18, bend-kick split, map W(L,irho) */
+
     double dp1 = 1.0 + r6[delta_];
     double pz = pxyz(dp1, r6[px_], r6[py_]);
     double cs = cos(irho*L);
