@@ -3,11 +3,12 @@ Radiation and equilibrium emittances
 """
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
-from typing import Tuple
+from typing import Tuple, Union
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, Refpts
-from at.lattice import Dipole, Wiggler, DConstant, Multipole, QuantumDiffusion
-from at.lattice import get_refpts, get_value_refpts
+from at.lattice import Dipole, Wiggler, DConstant
+from at.lattice import Quadrupole, Multipole, QuantumDiffusion
+from at.lattice import get_refpts, get_value_refpts, frequency_control
 from at.lattice import uint32_refpts, set_value_refpts
 from at.tracking import lattice_pass
 from at.physics import find_orbit6, find_m66, find_elem_m66, Orbit
@@ -197,6 +198,7 @@ def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
     return data0, r66data, data
 
 
+@frequency_control
 def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         -> Tuple[float, float, float, float, float]:
     r"""Computes the 5 radiation integrals for uncoupled lattices.
@@ -208,8 +210,9 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
           If ``None``, it will be computed.
 
     Keyword Args:
-        dct (float):  Path lengthening. If specified, ``dp`` is
-          ignored and the off-momentum is deduced from the path lengthening.
+        dp (float):             Momentum deviation. Defaults to :py:obj:`None`
+        dct (float):            Path lengthening. Defaults to :py:obj:`None`
+        df (float):             Deviation of RF frequency. Defaults to       
         method (Callable):  Method for linear optics:
 
           :py:obj:`~.linear.linopt2`: no longitudinal motion, no H/V coupling,
@@ -225,21 +228,28 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         i5 (float): :math:`I_5 \quad [m^{-1}]`
     """
 
-    def dipole_radiation(elem: Dipole, vini, vend):
+    def element_radiation(elem: Union[Dipole, Quadrupole], vini, vend):
         """Analytically compute the radiation integrals in dipoles"""
         beta0 = vini.beta[0]
         alpha0 = vini.alpha[0]
         eta0 = vini.dispersion[0]
         etap0 = vini.dispersion[1]
+        theta = getattr(elem, 'BendingAngle', None)
+        if theta is None:
+            xpi = vini.closed_orbit[1]/(1+vini.closed_orbit[4])
+            xpo = vend.closed_orbit[1]/(1+vend.closed_orbit[4])
+            theta = xpi-xpo
+        if theta==0:
+            return numpy.zeros(5)
+        angin = getattr(elem, 'EntranceAngle', 0.0)
+        angout = getattr(elem, 'ExitAngle', 0.0)
 
         ll = elem.Length
-        theta = elem.BendingAngle
         rho = ll / theta
         rho2 = rho * rho
         k2 = elem.K + 1.0 / rho2
-        eps1 = tan(elem.EntranceAngle) / rho
-        eps2 = tan(elem.ExitAngle) / rho
-
+        eps1 = tan(angin) / rho
+        eps2 = tan(angout) / rho
         eta3 = vend.dispersion[0]
         alpha1 = alpha0 - beta0 * eps1
         gamma1 = (1.0 + alpha1 * alpha1) / beta0
@@ -349,8 +359,8 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         raise ValueError('length of Twiss data should be {0}'
                          .format(len(ring) + 1))
     for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
-        if isinstance(el, Dipole) and el.BendingAngle != 0.0:
-            integrals += dipole_radiation(el, vini, vend)
+        if isinstance(el, Dipole) or isinstance(el, Quadrupole):
+            integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != 'DriftPass':
             integrals += wiggler_radiation(el, vini)
     return tuple(integrals)
