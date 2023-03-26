@@ -70,22 +70,10 @@ global THERING %#ok<GVMIS>
 
         %[TD, smm.tunes, smm.chromaticity] = twissring(ring, 0, 1:length(ring)+1, 'chrom', 1e-8);
         [ringdata,TD] = atlinopt6(ring,1:length(ring)+1,varargs{:},'get_chrom');
-        dp=TD(1).ClosedOrbit(5);
-
         % For calculating the synchrotron integrals
         [I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
         smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
-
-        if is6d
-            alphac=mcf(atdisable_6d(ring),dp);
-            eloss=atgetU0(ring,'method','tracking');            % eV
-            offmom = (abs(rev_frequency*harm_number - freq) > 2);
-        else
-            alphac=mcf(ring,dp);
-            eloss=1.0e9*Cgamma/2/pi*smm.e0.^4*smm.integrals(2); % eV
-            offmom = (abs(dp) > 1.e-4);
-        end
         etac=1/gamma/gamma- alphac;
         smm.compactionFactor = alphac;
         smm.etac = etac;
@@ -100,12 +88,6 @@ global THERING %#ok<GVMIS>
         smm.damping(3) = 2 + smm.integrals(4)/smm.integrals(2);
 
         smm.radiation = 1.0e-9*eloss;   % GeV
-        if offmom
-            warning('AT:NoEmit','\n%s\n%s\n%s',...
-                'For off-momentum lattices, the contribution of quadrupoles is missing.',...
-                'The emittances returned are the ones of the on-energy lattice',...
-                'To avoid this warning, use ">> warning(''off'',''AT:NoEmit'')"');
-        end
         smm.naturalEnergySpread = gamma*sqrt(Cq*smm.integrals(3)/(2*smm.integrals(2) + smm.integrals(4)));
         smm.naturalEmittance    = Cq*gamma.^2*smm.integrals(5)/(smm.integrals(2)-smm.integrals(4));
         alphac2 = smm.integrals(1)/smm.circumference;
