@@ -772,15 +772,15 @@ class Lattice(list):
         """Indices of filled bunches"""
         return numpy.flatnonzero(self._fillpattern)
 
-    @property
-    def beam_current(self):
+    def get_beam_current(self):
         return self._beam_current
 
-    @beam_current.setter
-    def beam_current(self, value, clear_history=True):
+    def set_beam_current(self, value, clear_history=True):
         self._beam_current = value
         if clear_history:
             self.set_wake_turnhistory()
+
+    beam_current = property(get_beam_current, set_beam_current)
 
     @property
     def bunch_currents(self) -> numpy.ndarray:
