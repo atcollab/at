@@ -73,7 +73,7 @@ global THERING %#ok<GVMIS>
         dp=TD(1).ClosedOrbit(5);
 
         % For calculating the synchrotron integrals
-        [I1d,I2d,I3d,I4d,I5d,I6,~] = DipoleRadiation(ring,TD);
+        [I1d,I2d,I3d,I4d,I5d,I6,~] = ElementRadiation(ring,TD);
         [I1w,I2w,I3w,I4w,I5w] = WigglerRadiation(ring,TD);
         smm.integrals=[I1d+I1w,I2d+I2w,I3d+I3w,I4d+I4w,I5d+I5w,I6];
         

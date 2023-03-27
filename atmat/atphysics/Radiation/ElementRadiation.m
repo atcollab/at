@@ -45,13 +45,23 @@ Iv=sum(div);
             xpo = dend.ClosedOrbit(2)/(1+dini.ClosedOrbit(5));
             theta = xpi-xpo;
         end
+        if theta==0.0
+            di1 = 0.0;
+            di2 = 0.0;
+            di3 = 0.0;
+            di4 = 0.0;
+            di5 = 0.0;
+            di6 = 0.0;
+            div = 0.0;
+            return
+        end
         try
             ange = elem.EntranceAngle;
         catch
             ange = 0.0;
         end
         try
-            ango = elem.EntranceAngle;
+            ango = elem.ExitAngle;
         catch
             ango = 0.0;
         end
