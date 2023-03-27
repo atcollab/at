@@ -15,7 +15,7 @@ import sys
 import copy
 import numpy
 import math
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 if sys.version_info.minor < 9:
     from typing import Callable, Iterable, Generator
     SupportsIndex = int
@@ -546,7 +546,7 @@ class Lattice(list):
         def slice_generator(_):
             check = get_bool_index(self, refpts)
             for el, ok in zip(self, check):
-                if ok:
+                if ok and (slices>1):
                     frac = numpy.ones(slices) / slices
                     for elem in el.divide(frac):
                         yield elem

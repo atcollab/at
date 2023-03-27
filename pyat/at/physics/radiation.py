@@ -1,9 +1,10 @@
 """
 Radiation and equilibrium emittances
 """
+from __future__ import annotations
 from math import sin, cos, tan, sqrt, sinh, cosh, pi
 import numpy
-from typing import Tuple, Union
+from typing import Union
 from scipy.linalg import inv, det, solve_sylvester
 from at.lattice import Lattice, check_radiation, Refpts
 from at.lattice import Dipole, Wiggler, DConstant
@@ -200,12 +201,11 @@ def ohmi_envelope(ring: Lattice, refpts: Refpts = None, orbit: Orbit = None,
 
 @frequency_control
 def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
-        -> Tuple[float, float, float, float, float]:
+        -> tuple[float, float, float, float, float]:
     r"""Computes the 5 radiation integrals for uncoupled lattices.
 
     Parameters:
         ring:   Lattice description
-        dp:     Momentum deviation. Ignored if radiation is ON
         twiss:  Linear optics at all points (from :py:func:`.linopt6`).
           If ``None``, it will be computed.
 
@@ -359,7 +359,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
         raise ValueError('length of Twiss data should be {0}'
                          .format(len(ring) + 1))
     for (el, vini, vend) in zip(ring, twiss[:-1], twiss[1:]):
-        if isinstance(el, Dipole) or isinstance(el, Quadrupole):
+        if isinstance(el, (Dipole, Quadrupole)):
             integrals += element_radiation(el, vini, vend)
         elif isinstance(el, Wiggler) and el.PassMethod != 'DriftPass':
             integrals += wiggler_radiation(el, vini)
