@@ -13,7 +13,10 @@ class BLMode(IntEnum):
     WAKE = 1
     PHASOR = 2
 
-
+class CavityMode(IntEnum):
+    ACTIVE = 1
+    PASSIVE = 2
+    
 def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
                     rshunt: Union[float, Sequence[float]],
                     cavpts: Refpts = None, copy: Optional[bool] = False,
@@ -41,6 +44,7 @@ def add_beamloading(ring: Lattice, qfactor: Union[float, Sequence[float]],
             used
         copy:       If True, returns a shallow copy of ring with new
                     beam loading elements. Otherwise, modify ring in-place
+        Passive (bool):     Define Passive (True) or active (False) cavity 
     """
     @make_copy(copy)
     def apply(ring, cavpts, newelems):
@@ -110,18 +114,20 @@ class BeamLoadingElement(RFCavity, Collective):
                         Rshunt=float, Qfactor=float, NormFact=float,
                         PhaseGain=float, VoltGain=float, _mode=int,
                         _beta=float, _wakefact=float, _nslice=int,
-                        ZCuts=lambda v: _array(v),
+                        ZCuts=lambda v: _array(v), _cavitymode=int,
                         _nturns=int, _phis=float,
                         _turnhistory=lambda v: _array(v),
                         _vbunch=lambda v: _array(v),
                         _vbeam_phasor=lambda v: _array(v, shape=(2,)),
                         _vbeam=lambda v: _array(v, shape=(2,)),
                         _vcav=lambda v: _array(v, shape=(2,)),
-                        _vgen=lambda v: _array(v, shape=(2,)))
+                        _vgen=lambda v: _array(v, shape=(2,)),
+                        )
 
     def __init__(self, family_name: str, length: float, voltage: float,
                  frequency: float, ring: Lattice, qfactor: float,
                  rshunt: float, mode: Optional[BLMode] = BLMode.PHASOR,
+                 cavitymode: Optional[CavityMode] = CavityMode.ACTIVE,
                  **kwargs):
         r"""
         Parameters:
@@ -141,6 +147,7 @@ class BeamLoadingElement(RFCavity, Collective):
                 (default) uses the phasor method, BLMode.WAKE uses the wake
                 function. For high Q resonator, the phasor method should be
                 used
+            cavitymode (CavityMode):  Define cavity as active (default) or passive 
         Returns:
             bl_elem (Element): beam loading element
         """
@@ -157,6 +164,7 @@ class BeamLoadingElement(RFCavity, Collective):
         self.PhaseGain = kwargs.pop('PhaseGain', 1.0)
         self.VoltGain = kwargs.pop('VoltGain', 1.0)
         self._mode = int(mode)
+        self._cavitymode = int(cavitymode)
         self._beta = ring.beta
         self._wakefact = - ring.circumference/(clight *
                                                ring.energy*ring.beta**3)
