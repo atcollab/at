@@ -13,7 +13,7 @@ angle=atgetfieldvalues(ring,'BendingAngle');
 isdipole=isfinite(angle) & (angle~=0);
 
 if quadon
-    class=atgetfieldvalues(ring,'Class', 'Quadrupole');
+    class=atgetcells(ring,'Class','Quadrupole');
     pb = atgetfieldvalues(ring,'PolynomB',{2});
     isquadrupole=class & (pb~=0);
     iselement = isdipole | isquadrupole;
