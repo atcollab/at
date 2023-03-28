@@ -80,10 +80,6 @@ void BeamLoadingCavityPass(double *r_in,int num_particles,int nbunch,
     }
 
     if(cavitymode==2){
-        double vgen = 0;
-        double psi = 0;
-        vgenk[0] = 0;
-        vgenk[1] = 0;
         freqres = rffreq;
     }else if(cavitymode==1){
         double vgen = vgenk[0];
