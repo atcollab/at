@@ -43,11 +43,6 @@ function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 
 % Written by Laurent S. Nadolski
 % April 6th, 2007
-% Modification September 2009: 
-%  test if constant data or nan data
-
-% BUG in nafflib: returns nan even if valid data. Number of try
-nitermax = 10;
 
 % Flag factory
 [wraw1,args]=getflag(varargin,'Raw'); %#ok<ASGLU>
@@ -57,7 +52,6 @@ nitermax = 10;
 [DisplayFlag,args]=getflag(args,'Display');
 [WindowType,nfreq,DebugFlag]=getargs(args,0,10,double(dbg));
 if whann, WindowType=1; end
-
 
 % Test wether nan or constant data
 if any(isnan(Y(1,:)))
@@ -71,15 +65,6 @@ elseif (mean(Y) == Y(1) && mean(Yp) == Yp(1))
     frequency = 0; amplitude = 0;  phase = 0;
 else % Frequency map analysis
     [frequency,amplitude,phase] = nafflib(Y, Yp, WindowType,nfreq,DebugFlag);
-    %It seems there is a bug in nafflib, something returns nan even for valid data 
-    niter = 0;
-    while any(isnan(frequency)) && (niter < nitermax)
-        pause(2);
-        fprintf('Warning Nan returned by NAFF (x%d)\n', niter);
-        niter = niter +1;
-        [frequency,amplitude,phase] = nafflib(Y, Yp, WindowType,nfreq,1); % add debugging
-    end
-        
     if DisplayFlag
         fprintf('*** Naff run on %s\n', datestr(clock))
         for k = 1:length(frequency)
