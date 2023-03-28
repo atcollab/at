@@ -15,7 +15,7 @@ import sys
 import copy
 import numpy
 import math
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 if sys.version_info.minor < 9:
     from typing import Callable, Iterable, Generator
     SupportsIndex = int
@@ -529,6 +529,31 @@ class Lattice(list):
     def deepcopy(self) -> "Lattice":
         """Returns a deep copy of the lattice"""
         return copy.deepcopy(self)
+        
+    def slice_elements(self, refpts, slices: Optional[int] = 1) \
+            -> "Lattice":
+        """Create a new lattice by slicing the elements at refpts
+
+        Keyword arguments:
+            size=None:      Length of a slice. Default: computed from the
+              range and number of points: ``size = (s_max-s_min)/slices``.
+            slices=1:       Number of slices in the specified range. Ignored if
+              size is specified. Default: no slicing
+
+        Returns:
+            newring:    New Lattice object
+        """
+        def slice_generator(_):
+            check = get_bool_index(self, refpts)
+            for el, ok in zip(self, check):
+                if ok and (slices>1):
+                    frac = numpy.ones(slices) / slices
+                    for elem in el.divide(frac):
+                        yield elem
+                else:
+                    yield el
+
+        return Lattice(slice_generator, iterator=self.attrs_filter)        
 
     def slice(self, size: Optional[float] = None, slices: Optional[int] = 1) \
             -> "Lattice":
