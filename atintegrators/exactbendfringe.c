@@ -13,19 +13,21 @@ static void Yrot(double *r6, double phi)
 {
     /* Forest 10.26, rotation in free space */
 
-    double dp1 = 1.0 + r6[delta_];
-    double c = cos(phi);
-    double s = sin(phi);
-    double pz = pxyz(dp1, r6[px_], r6[py_]);
-    double p = c*pz - s*r6[px_];
-    double px = s*pz + c*r6[px_];
-    double x = r6[x_]*pz/p;
-    double dy = r6[x_]*r6[py_]*s/p;
-    double dct = dp1*r6[x_]*s/p;
-    r6[x_] = x;
-    r6[px_] = px;
-    r6[y_] += dy;
-    r6[ct_] += dct;
+    if (phi != 0.0) {
+        double dp1 = 1.0 + r6[delta_];
+        double c = cos(phi);
+        double s = sin(phi);
+        double pz = pxyz(dp1, r6[px_], r6[py_]);
+        double p = c*pz - s*r6[px_];
+        double px = s*pz + c*r6[px_];
+        double x = r6[x_]*pz/p;
+        double dy = r6[x_]*r6[py_]*s/p;
+        double dct = dp1*r6[x_]*s/p;
+        r6[x_] = x;
+        r6[px_] = px;
+        r6[y_] += dy;
+        r6[ct_] += dct;
+    }
 }
 
 void bend_fringe(double *r6, double irho, double gK)
@@ -78,14 +80,16 @@ void bend_fringe(double *r6, double irho, double gK)
     /* solve quadratic equation in yf (Forest fringe_part_I.pdf) */
 
     double yf = (2 * r6[y_]) / (1 + sqrt(1 - 2 * dpy * r6[y_]));
-    double xf = r6[x_] + 0.5 * dpx * yf * yf;
-    double lf = r6[ct_] - 0.5 * dd * yf * yf;
-    double pyf = py - phi * yf;
+    double dxf = 0.5 * dpx * yf * yf;
+    double dct = 0.5 * dd * yf * yf;
+    double dpyf = phi * yf;
+    atPrintf("Fringe dx, dpy, dct: %g, %g, %g\n", dxf, dpyf, dct);
+
 
     r6[y_]  = yf;
-    r6[x_]  = xf;
-    r6[py_] = pyf;
-    r6[ct_] = lf;
+    r6[x_]  += dxf;
+    r6[py_] -= dpyf;
+    r6[ct_] -= dct;
 }
 
 static void bend_edge(double *r6, double rhoinv, double theta)
