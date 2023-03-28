@@ -45,7 +45,7 @@ Iv=sum(div);
             xpo = dend.ClosedOrbit(2)/(1+dini.ClosedOrbit(5));
             theta = xpi-xpo;
         end
-        if theta==0.0
+        if abs(theta)<1.0e-7
             di1 = 0.0;
             di2 = 0.0;
             di3 = 0.0;

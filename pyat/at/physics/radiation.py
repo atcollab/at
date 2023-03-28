@@ -239,7 +239,7 @@ def get_radiation_integrals(ring, dp: float = None, twiss=None, **kwargs)\
             xpi = vini.closed_orbit[1]/(1+vini.closed_orbit[4])
             xpo = vend.closed_orbit[1]/(1+vend.closed_orbit[4])
             theta = xpi-xpo
-        if theta==0:
+        if abs(theta)<1.0e-7:
             return numpy.zeros(5)
         angin = getattr(elem, 'EntranceAngle', 0.0)
         angout = getattr(elem, 'ExitAngle', 0.0)
