@@ -47,8 +47,10 @@ double *amplitude_out, double *phase_out, int win, int nfreq, int debug)
     double *d_in, *d_out;
     t_complexe *c_in;
     
-    /* ndata is truncated to be a multiple of 6 if is not yet) */
-    ndata = 6*(int )(ndata/6.0);
+    /* ndata is truncated to be a multiple of 6 if is not yet)
+     * ndata-1 to make sure valid data is read when 
+     * writing ydata/ypdata to g_NAFVariable.ZTABS */
+    ndata = 6*(int )((ndata-1)/6.0);
     
     g_NAFVariable.DTOUR=2*M_PI; /* size of a "cadran" */
     g_NAFVariable.XH=1;         /* step */
@@ -80,7 +82,7 @@ double *amplitude_out, double *phase_out, int win, int nfreq, int debug)
     naf_initnaf();
     
  /*Transform initial data to complex data since algorithm is optimized for cx data*/
-    for (i=0;i<ndata;i++) {
+    for (i=0;i<=ndata;i++) {
         g_NAFVariable.ZTABS[i].reel = ydata[i];
         g_NAFVariable.ZTABS[i].imag = ypdata[i];
     }
