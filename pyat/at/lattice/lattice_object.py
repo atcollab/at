@@ -530,13 +530,13 @@ class Lattice(list):
         """Returns a deep copy of the lattice"""
         return copy.deepcopy(self)
         
-    def slice_elements(self, refpts, slices: Optional[int] = 1) \
+    def slice_elements(self, refpts: Refpts, slices: Optional[int] = 1) \
             -> "Lattice":
         """Create a new lattice by slicing the elements at refpts
+        Parameters:
+            refpts: element selector
 
         Keyword arguments:
-            size=None:      Length of a slice. Default: computed from the
-              range and number of points: ``size = (s_max-s_min)/slices``.
             slices=1:       Number of slices in the specified range. Ignored if
               size is specified. Default: no slicing
 
