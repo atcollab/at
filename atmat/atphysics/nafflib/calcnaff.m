@@ -4,7 +4,7 @@ function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 %
 %  INPUTS
 %  1. Y  - position vector
-%  2. Yp -
+%  2. Yp - angle vector
 %  3. WindowType  - Window type - 0 {Default} no windowing
 %                                 1 Window of Hann
 %                                 2 etc
@@ -33,7 +33,7 @@ function [frequency,amplitude,phase] = calcnaff(Y, Yp, varargin)
 %  above 1024 = pow2(10)
 %
 %  Examples
-%  NT = 9996; % divided by 6
+%  NT = 9996; % divisible by 6
 %  simple quasiperiodic (even period) motion 
 %  y =2+0.1*cos(pi*(0:NT-1))+0.00125*cos(pi/3*(0:NT-1));
 %  yp=2+0.1*sin(pi*(0:NT-1))+0.00125*sin(pi/3*(0:NT-1));
@@ -57,7 +57,7 @@ if whann, WindowType=1; end
 if any(isnan(Y(1,:)))
     fprintf('Warning Y contains NaNs\n');
     frequency =NaN; amplitude = NaN;  phase = NaN;
-elseif any(isnan(Y(1,:)))
+elseif any(isnan(Yp(1,:)))
     fprintf('Warning Yp contains NaNs\n');
     frequency =NaN; amplitude = NaN;  phase = NaN;
 elseif (mean(Y) == Y(1) && mean(Yp) == Yp(1))
