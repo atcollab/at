@@ -191,7 +191,7 @@ ExportMode struct elem *trackFunction(const atElem *ElemData, struct elem *Elem,
   return Elem;
 }
 
-MODULE_DEF(ExactRectangularBendPass) /* Dummy module initialisation */
+MODULE_DEF(ExactRectBendPass) /* Dummy module initialisation */
 
 #endif /*defined(MATLAB_MEX_FILE) || defined(PYAT)*/
 
